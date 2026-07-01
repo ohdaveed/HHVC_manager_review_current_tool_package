@@ -328,7 +328,7 @@ window.HHVC_PAGES["pestsTopic"] = {
         },
         {
           "title": "What happens after you report",
-          "text": "Learn how 311 reports are reviewed and when an inspector may contact you.",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
           "target": "afterReport",
           "karl": "Topic page resource item"
         },
@@ -356,13 +356,13 @@ window.HHVC_PAGES["pestsTopic"] = {
         },
         {
           "title": "What happens after you report",
-          "text": "Learn what may happen after your report is sent to Environmental Health.",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
           "target": "afterReport",
           "karl": "Topic page resource item"
         },
         {
           "title": "Bed bug rules and prevention",
-          "text": "Learn about bed bug prevention, treatment preparation, and rules.",
+          "text": "Learn about bed bug rules, treatment preparation, and prevention.",
           "target": "bedBugsInfo",
           "karl": "Topic page resource item"
         }
@@ -445,14 +445,14 @@ window.HHVC_PAGES["ratsReport"] = {
       "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
       "kind": "body",
       "paragraphs": [
-        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.",
         "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
-        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.",
         "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
       ],
       "callout": {
         "karl": "Body note: Tenant rights / anti-retaliation reassurance",
-        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
       }
     },
     {
@@ -552,14 +552,14 @@ window.HHVC_PAGES["cockroachesReport"] = {
       "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
       "kind": "body",
       "paragraphs": [
-        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.",
         "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
-        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.",
         "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
       ],
       "callout": {
         "karl": "Body note: Tenant rights / anti-retaliation reassurance",
-        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
       }
     },
     {
@@ -658,29 +658,28 @@ window.HHVC_PAGES["bedBugsReport"] = {
       "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
       "kind": "body",
       "paragraphs": [
-        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.",
         "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
-        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.",
         "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
       ],
       "callout": {
         "karl": "Body note: Tenant rights / anti-retaliation reassurance",
-        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
       }
     },
     {
       "heading": "Bed bug rules",
-      "karl": "Body: External reference link to official bed bug Director’s Rules PDF",
+      "karl": "Body: Pointer to the Info page's own Director's Rules reference, instead of duplicating the external PDF link on both the Report and Info pages.",
       "kind": "placement",
       "paragraphs": [
-        "For detailed bed bug prevention and control rules, use the official SFDPH Director’s Rules."
+        "For detailed bed bug prevention and control rules, see the bed bug rules and prevention page."
       ],
       "cards": [
         {
-          "title": "San Francisco Department of Public Health — Director’s Rules and Regulations for Prevention and Control of Bed Bugs",
-          "text": "Reference the Director’s Rules for bed bug prevention, control, owner responsibilities, and treatment preparation standards.",
-          "url": "https://drive.google.com/file/d/1PPwhA3IeJ-jl5es0TvbmSAB_J8UjK8LP/view",
-          "karl": "Body link or external reference link: official bed bug Director’s Rules PDF"
+          "title": "Bed bug rules and prevention",
+          "text": "Learn about bed bug rules, treatment preparation, and prevention, including the official Director's Rules reference.",
+          "target": "bedBugsInfo"
         }
       ]
     },
@@ -902,12 +901,17 @@ window.HHVC_PAGES["mosquitoesReport"] = {
     },
     {
       "heading": "What may happen next",
-      "karl": "Body: After-report expectations",
+      "karl": "Body: After-report expectations, concise enforcement statement, and tenant rights callout — brought to parity with the other 4 report pages.",
       "kind": "body",
       "paragraphs": [
-        "Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins when appropriate.",
-        "If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit."
-      ]
+        "Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.",
+        "If you gave contact information, an inspector may contact you to ask questions or schedule a visit.",
+        "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
+      ],
+      "callout": {
+        "karl": "Body note: Tenant rights / anti-retaliation reassurance",
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
+      }
     },
     {
       "heading": "Related pages",
@@ -1088,7 +1092,7 @@ window.HHVC_PAGES["moldReport"] = {
           ],
           "callout": {
             "karl": "Body note: Mold kit guidance",
-            "text": "Do not buy a mold test kit. SFDPH does not accept or use third-party mold kits for HHVC review."
+            "text": "Do not buy a mold test kit. HHVC does not accept or use third-party mold kits for review."
           },
           "karl": "Body step 3: Report details checklist"
         }
@@ -1108,14 +1112,14 @@ window.HHVC_PAGES["moldReport"] = {
       "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
       "kind": "body",
       "paragraphs": [
-        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.",
         "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
-        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.",
         "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
       ],
       "callout": {
         "karl": "Body note: Tenant rights / anti-retaliation reassurance",
-        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
       }
     },
     {
@@ -1173,6 +1177,7 @@ window.HHVC_PAGES["scopeInfo"] = {
       "kind": "body",
       "paragraphs": [
         "This page helps you understand whether Healthy Housing and Vector Control may review a pest, vector, or housing health issue.",
+        "Healthy Housing and Vector Control (HHVC) is part of the Environmental Health division of the San Francisco Department of Public Health (DPH). You may see any of these names used across this site — they refer to the same program.",
         "Tenants, tenant representatives, friends, family members, and employees usually use reporting pages to report active pest or vector problems.",
         "Property owners and managers may use this page to understand HHVC scope before asking for prevention guidance or best-practice assistance."
       ]
@@ -1465,14 +1470,14 @@ window.HHVC_PAGES["afterReport"] = {
         {
           "title": "An inspector may contact you",
           "text": [
-            "If contact information is provided, an inspector may contact the person who reported the problem to ask questions or schedule a visit."
+            "If you gave contact information, an inspector may contact you to ask questions or schedule a visit."
           ],
           "karl": "Body step: Inspector contact"
         },
         {
           "title": "An inspection may happen",
           "text": [
-            "If no contact information is provided, an inspection may still occur without notice when appropriate and when areas can be accessed."
+            "If you did not give contact information, an inspection may still happen without notice when areas can be accessed, for example if the report describes an urgent health or safety risk."
           ],
           "karl": "Body step: Inspection expectations"
         }
@@ -1484,7 +1489,7 @@ window.HHVC_PAGES["afterReport"] = {
       "kind": "body",
       "paragraphs": [
         "Tenants have rights when they ask for repairs or report housing conditions to the City. HHVC does not share the reporter’s identity with the property owner or manager.",
-        "A landlord cannot retaliate because a tenant reports a housing condition to 311 or a health department."
+        "A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department."
       ],
       "button": "Tenant rights and reporting",
       "buttonStyle": "secondary",
@@ -1499,8 +1504,8 @@ window.HHVC_PAGES["afterReport"] = {
         "• Imminent Hazards (48 to 72 hours): Urgent issues like raw sewage backups or severe biohazard contamination require immediate correction.",
         "• Vector Control and Vegetation (14 days): Overgrown vegetation, trash piles, or other rodent harborages must be resolved within 14 days.",
         "• Standard Repairs and Mold (30 days): General sanitation problems, minor gaps/cracks, and mold remediation must be completed within 30 days.",
-        "• Bed Bug Treatment: Landlords must initiate professional treatment within 2 working days of confirmation.",
-        "If a property owner does not correct the problem by the deadline, DPH may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).",
+        "• Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.",
+        "If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).",
         "Persistent violations can result in citations, administrative fines of up to $1,000 per day, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs."
       ]
     },
@@ -1709,7 +1714,7 @@ window.HHVC_PAGES["ratsPrevent"] = {
       "karl": "Body: Reporting threshold + body link to related Transaction page",
       "kind": "body",
       "paragraphs": [
-        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues, affects a shared area, or the property owner or manager does not respond.",
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.",
         "Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance."
       ],
       "button": "Report rats or mice",
@@ -1798,7 +1803,7 @@ window.HHVC_PAGES["cockroachesPrevent"] = {
       "karl": "Body: Reporting threshold + body link to related Transaction page",
       "kind": "body",
       "paragraphs": [
-        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues, affects a shared area, or the property owner or manager does not respond.",
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.",
         "Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance."
       ],
       "button": "Report cockroaches",
@@ -1889,7 +1894,7 @@ window.HHVC_PAGES["mosquitoesPrevent"] = {
       "karl": "Body: Reporting threshold + body link to related Transaction page",
       "kind": "body",
       "paragraphs": [
-        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues, affects a shared area, or the property owner or manager does not respond.",
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.",
         "Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance."
       ],
       "button": "Report mosquitoes",
@@ -1941,31 +1946,28 @@ window.HHVC_PAGES["payFee"] = {
     },
     {
       "heading": "Who may need to pay",
-      "karl": "Body: Who may need to pay",
+      "karl": "Body: Who may need to pay. BLOCKED — exact fee amount, due dates, account requirements, and payment instructions are not yet confirmed. Do not publish this page live until Finance/HHVC supplies verified values.",
       "kind": "body",
       "paragraphs": [
         "Healthy Housing program fees may apply to residential buildings with 3 or more units.",
-        "A building with 3 units is exempt if one unit is occupied by the owner.",
-        "Fee details, due dates, account requirements, and payment instructions must be verified before publication."
+        "A building with 3 units is exempt if one unit is occupied by the owner."
       ]
     },
     {
       "heading": "Pay your fee",
-      "karl": "Body: Pay your fee steps",
+      "karl": "Body: Pay your fee steps. BLOCKED — do not route this page through 311 unless HHVC or SF.gov confirms a support route that uses 311. buttonTarget/URL is pending a confirmed SF.gov payment link; the button is non-functional until one is added.",
       "kind": "body",
       "paragraphs": [
-        "Use the approved SF.gov payment or billing route to pay your Healthy Housing fee.",
-        "Do not route this page through 311 unless HHVC or SF.gov confirms a support route that uses 311."
+        "Use the approved SF.gov payment or billing route to pay your Healthy Housing fee."
       ],
       "button": "Pay your Healthy Housing fee"
     },
     {
       "heading": "If you need help",
-      "karl": "Body: If you need help",
+      "karl": "Body: If you need help. BLOCKED — do not publish staff-only payment instructions, internal account notes, or unverified fee details until confirmed.",
       "kind": "body",
       "paragraphs": [
-        "Use the contact or help route listed on the final SF.gov fee page or payment notice.",
-        "Do not publish staff-only payment instructions, internal account notes, or unverified fee details."
+        "Use the contact or help route listed on the final SF.gov fee page or payment notice."
       ]
     },
     {
@@ -2102,7 +2104,7 @@ window.HHVC_PAGES["reduceMoisture"] = {
       "paragraphs": [
         "For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.",
         "Do not paint over mold. Remove the mold first.",
-        "SFDPH does not recommend using bleach for routine small-area mold cleanup."
+        "HHVC does not recommend using bleach for routine small-area mold cleanup."
       ]
     },
     {
@@ -2111,7 +2113,7 @@ window.HHVC_PAGES["reduceMoisture"] = {
       "kind": "body",
       "paragraphs": [
         "Do not buy third-party mold test kits for an HHVC complaint.",
-        "SFDPH does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. SFDPH inspectors conduct their own on-site visual assessments in response to complaints."
+        "HHVC does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. HHVC inspectors conduct their own on-site visual assessments in response to complaints."
       ]
     },
     {
