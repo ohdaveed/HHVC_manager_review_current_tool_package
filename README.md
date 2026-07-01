@@ -22,8 +22,29 @@ The manager-review interface now includes:
 - Fast page search by title, page type, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
+- Local browser persistence for review state using `localStorage`
 
 These additions are review aids only. They do not publish content, change page source data, or replace legal/source review.
+
+## Local review persistence
+
+Review state is saved in the browser under this versioned key:
+
+```text
+hhvcManagerReviewState:v1
+```
+
+The tool saves:
+
+- Last selected page
+- Karl tag visibility preference
+- Reviewer name
+- Per-page review date, decision, notes, risks or blockers, and follow-up owner
+- Per-page edited title, summary, CTA, SEO title, meta description, and URL slug
+
+Use **Export saved local reviews CSV** to download all locally saved page decisions for Google Sheets, Make.com, or the master workbook.
+
+Use **Clear local saved reviews** only when you want to reset the local browser cache. This does not change source files, GitHub, or exported CSV files.
 
 ## Open
 
@@ -92,3 +113,5 @@ HHVC_manager_review_current_tool_package/
 Best workflow: export manager-review CSV files into a watched Drive folder, then use Make.com to update only matching review rows in the master workbook by `page_key` or `url_slug`.
 
 The new copyable review summary can also be used for lightweight manual triage in GitHub issues, Gmail, Teams, or the master workbook before CSV import is automated.
+
+The saved local review CSV is the better automation handoff when reviewing multiple pages in one browser session, because it exports all saved local decisions in one file.
