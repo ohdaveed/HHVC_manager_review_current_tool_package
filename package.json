@@ -1,0 +1,7 @@
+{
+  "name": "hhvc-manager-review-mockup-tool",
+  "private": true,
+  "devDependencies": {
+    "@sfgov/design-system": "0.0.1"
+  }
+}

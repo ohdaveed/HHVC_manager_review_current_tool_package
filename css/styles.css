@@ -91,6 +91,10 @@
   
     .audience-section ul { margin: 10px 0 0 22px; color: var(--sfds-slate-1); }
     .audience-section li { margin: 6px 0; }
+    #mockPage { view-transition-name: mock-page-content; }
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+    }
 
 
 /* Manager review package additions */

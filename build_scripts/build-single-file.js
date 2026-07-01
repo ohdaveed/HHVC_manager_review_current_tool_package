@@ -9,11 +9,14 @@ const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
 let html = read('index.html');
 
-// Inline the stylesheet.
-const css = read('css/styles.css');
+// Inline every local stylesheet link, preserving order. Absolute
+// http(s) links (e.g. Google Fonts) are left as external links.
 html = html.replace(
-  /[ \t]*<link rel="stylesheet" href="css\/styles\.css"[^>]*>\s*/,
-  `  <style>\n${css}\n  </style>\n`
+  /[ \t]*<link rel="stylesheet" href="([^"]+)"[^>]*>\s*/g,
+  (match, href) => {
+    if (/^https?:\/\//.test(href)) return match;
+    return `  <style>\n${read(href)}\n  </style>\n`;
+  }
 );
 
 // Inline each external script in place, preserving order.
