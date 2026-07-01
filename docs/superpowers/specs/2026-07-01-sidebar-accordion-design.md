@@ -20,6 +20,7 @@ accessible by default: keyboard-toggleable, and screen readers announce expanded
 state via the built-in disclosure widget semantics.
 
 Rejected alternatives:
+
 - **Custom JS accordion** (`button` + `aria-expanded` + max-height transitions) — reimplements
   what `<details>` does natively; only justified if animated open/close were required, which
   isn't a stated goal here.
@@ -31,13 +32,13 @@ Rejected alternatives:
 Seven `<details>` panels, in this order, replacing the current seven `control-group` divs
 (the "Choose a page mockup" and "Preview URL slug" groups merge into one panel):
 
-1. **Page mockup** *(open by default)* — page `<select>` + preview URL slug input
-2. **Live content editor** *(collapsed)* — title / summary / CTA fields
-3. **Search metadata** *(collapsed)* — SEO title / meta description + search preview
-4. **Karl CMS tags** *(collapsed)* — placement tag toggle + help text
-5. **Applied rules** *(collapsed)* — compliance checklist
-6. **Manager review** *(open by default)* — reviewer name/date/decision/notes/risks/owner + export buttons
-7. **Reading targets** *(collapsed)* — static reference table
+1. **Page mockup** _(open by default)_ — page `<select>` + preview URL slug input
+2. **Live content editor** _(collapsed)_ — title / summary / CTA fields
+3. **Search metadata** _(collapsed)_ — SEO title / meta description + search preview
+4. **Karl CMS tags** _(collapsed)_ — placement tag toggle + help text
+5. **Applied rules** _(collapsed)_ — compliance checklist
+6. **Manager review** _(open by default)_ — reviewer name/date/decision/notes/risks/owner + export buttons
+7. **Reading targets** _(collapsed)_ — static reference table
 
 Default-open state is set via the `open` attribute in the HTML at load time. No persistence
 across reloads (localStorage, etc.) — the sidebar is never torn down or re-rendered when
@@ -51,11 +52,11 @@ the user works, and that's sufficient.
 - `<summary>` becomes the section header: same weight/size as the current `.eyebrow` label,
   with a chevron indicator (rotates on open, via a `::marker` or `::after` triangle — default
   browser disclosure triangle is suppressed via `list-style: none` / `-webkit-details-marker:
-  none` and replaced with a custom one for consistent cross-browser look).
+none` and replaced with a custom one for consistent cross-browser look).
 - `summary` gets hover and focus-visible states using the corrected Karl tokens
   (`--sfds-action-blue` / `--sfds-slate-*`), consistent with the rest of the tool's interactive
   elements (buttons, links).
-- No change to the content markup *inside* each section — only the wrapping element changes
+- No change to the content markup _inside_ each section — only the wrapping element changes
   from `<div class="control-group">` to `<details class="control-group">` with a `<summary>`
   wrapping the existing `<div class="eyebrow">` label (or a new summary label where the group
   currently has no eyebrow, e.g. "Choose a page mockup" / "Preview URL slug" merge needs one

@@ -2,13 +2,13 @@
    These styles layer on top of the existing mockup tool without changing page content. */
 
 :root {
-  --ux-panel-bg: #ffffff;
-  --ux-panel-border: #d7dada;
-  --ux-soft-bg: #f7fafc;
-  --ux-warning-bg: #fff7e6;
-  --ux-warning-border: #f2c94c;
-  --ux-danger-bg: #fff1f0;
-  --ux-danger-border: #d92d20;
+  --ux-panel-bg: var(--sfds-white);
+  --ux-panel-border: var(--sfds-border);
+  --ux-soft-bg: var(--sfds-slate-5);
+  --ux-warning-bg: var(--sfds-warning-bg);
+  --ux-warning-border: var(--sfds-warning-border);
+  --ux-danger-bg: var(--sfds-danger-bg);
+  --ux-danger-border: var(--sfds-danger-border);
 }
 
 .canvas-toolbar {
@@ -66,21 +66,21 @@
 }
 
 .status-chip.pass {
-  border-color: #a6d8a8;
-  background: #ecf8ed;
-  color: #075e0a;
+  border-color: var(--sfds-success-border);
+  background: var(--sfds-success-bg);
+  color: var(--sfds-success-text);
 }
 
 .status-chip.warn {
   border-color: var(--ux-warning-border);
   background: var(--ux-warning-bg);
-  color: #6f4a00;
+  color: var(--sfds-warning-text);
 }
 
 .status-chip.fail {
   border-color: var(--ux-danger-border);
   background: var(--ux-danger-bg);
-  color: #8f1d15;
+  color: var(--sfds-danger-text);
 }
 
 .review-dashboard-grid {
@@ -102,7 +102,7 @@
 .metric-label {
   display: block;
   margin-bottom: 0.22rem;
-  color: #5a5c5c;
+  color: var(--sfds-slate-3);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -120,7 +120,7 @@
 .metric-help {
   display: block;
   margin-top: 0.22rem;
-  color: #5a5c5c;
+  color: var(--sfds-slate-3);
   font-size: 0.78rem;
   line-height: 1.3;
 }
@@ -155,7 +155,7 @@
 }
 
 .compliance-item::before {
-  content: "";
+  content: '';
   width: 0.9rem;
   height: 0.9rem;
   margin-top: 0.22rem;
@@ -168,7 +168,7 @@
 }
 
 .compliance-item.warn::before {
-  background: #b7791f;
+  background: var(--sfds-warning-border);
 }
 
 .compliance-rule {
@@ -182,7 +182,7 @@
 .compliance-detail {
   display: block;
   margin-top: 0.15rem;
-  color: #5a5c5c;
+  color: var(--sfds-slate-3);
   font-size: 0.78rem;
   line-height: 1.35;
 }
@@ -191,7 +191,7 @@
   margin: 0.25rem 0 0.8rem;
 }
 
-input[type="search"] {
+input[type='search'] {
   width: 100%;
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
@@ -201,7 +201,7 @@ input[type="search"] {
   background: var(--sfds-white);
 }
 
-input[type="search"]:focus {
+input[type='search']:focus {
   outline: 3px solid rgba(42, 96, 175, 0.25);
   outline-offset: 2px;
 }
@@ -231,31 +231,31 @@ input[type="search"]:focus {
 .page-quick-button:hover,
 .page-quick-button:focus-visible {
   border-color: var(--sfds-action-blue);
-  background: #f1f4ff;
+  background: var(--sfds-blue-soft-bg);
   color: var(--sfds-action-blue-hover);
 }
 
 .page-quick-type {
   display: block;
   margin-top: 0.12rem;
-  color: #5a5c5c;
+  color: var(--sfds-slate-3);
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .tool-btn.copy-summary {
-  background: #0b0c0c;
-  border-color: #0b0c0c;
+  background: var(--sfds-slate-1);
+  border-color: var(--sfds-slate-1);
 }
 
 .tool-btn.copy-summary:hover {
-  background: #383939;
-  border-color: #383939;
+  background: var(--sfds-slate-2);
+  border-color: var(--sfds-slate-2);
 }
 
 .review-decision-note {
   margin: 0.45rem 0 0;
-  color: #5a5c5c;
+  color: var(--sfds-slate-3);
   font-size: 0.78rem;
   line-height: 1.35;
 }

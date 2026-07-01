@@ -46,6 +46,7 @@ Files modified (no new files created):
 ### Task 1: Stop internal editorial notes from leaking into `pay-healthy-housing-fee.js` public copy
 
 **Files:**
+
 - Modify: `pages/pay-healthy-housing-fee.js`
 
 **Interfaces:** None (standalone content file, no cross-file dependents for this task).
@@ -163,6 +164,7 @@ git commit -m "fix: move internal fee-page directives out of public copy into ka
 ### Task 2: Define the HHVC / Environmental Health / DPH relationship once, and standardize naming
 
 **Files:**
+
 - Modify: `pages/hhvc-inspection-scope.js`
 - Modify: `pages/what-happens-after-report.js`
 - Modify: `pages/reduce-indoor-moisture.js`
@@ -212,15 +214,15 @@ to:
 In the `"Do not buy third-party mold test kits"` section, change:
 
 ```js
-        "Do not buy third-party mold test kits for an HHVC complaint.",
-        "SFDPH does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. SFDPH inspectors conduct their own on-site visual assessments in response to complaints."
+;('Do not buy third-party mold test kits for an HHVC complaint.',
+  'SFDPH does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. SFDPH inspectors conduct their own on-site visual assessments in response to complaints.')
 ```
 
 to:
 
 ```js
-        "Do not buy third-party mold test kits for an HHVC complaint.",
-        "HHVC does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. HHVC inspectors conduct their own on-site visual assessments in response to complaints."
+;('Do not buy third-party mold test kits for an HHVC complaint.',
+  'HHVC does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. HHVC inspectors conduct their own on-site visual assessments in response to complaints.')
 ```
 
 - [ ] **Step 4: Standardize `SFDPH` to `HHVC` in `report-mold-humidity-condensation.js`**
@@ -267,6 +269,7 @@ git commit -m "fix: define HHVC/Environmental Health/DPH relationship once, stan
 These six files each print the same "an inspector may contact **the person who reported** the issue" phrasing right after a second-person ("you") context, plus a vague "when appropriate" qualifier describing no-notice inspections. This task rewrites all six identically (adapted to each file's exact surrounding text).
 
 **Files:**
+
 - Modify: `pages/report-bed-bugs.js`
 - Modify: `pages/report-cockroaches.js`
 - Modify: `pages/report-rats-or-mice.js`
@@ -387,6 +390,7 @@ git commit -m "fix: address reader as you consistently, replace vague no-notice-
 ### Task 4: Standardize "landlord" to "property owner or manager"; give `report-mosquitoes.js` the same tenant-rights parity as its sibling pages
 
 **Files:**
+
 - Modify: `pages/report-bed-bugs.js`
 - Modify: `pages/report-cockroaches.js`
 - Modify: `pages/report-rats-or-mice.js`
@@ -415,13 +419,13 @@ to:
 Change:
 
 ```js
-        "A landlord cannot retaliate because a tenant reports a housing condition to 311 or a health department."
+'A landlord cannot retaliate because a tenant reports a housing condition to 311 or a health department.'
 ```
 
 to:
 
 ```js
-        "A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department."
+'A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department.'
 ```
 
 - [ ] **Step 3: Add the missing enforcement sentence + anti-retaliation callout to `report-mosquitoes.js`**
@@ -485,6 +489,7 @@ git commit -m "fix: standardize property owner/manager terminology, add missing 
 ### Task 5: Align Info-page reporting threshold with the Report-page 72-hour standard
 
 **Files:**
+
 - Modify: `pages/prevent-cockroaches.js`
 - Modify: `pages/prevent-mosquitoes.js`
 - Modify: `pages/keep-rats-and-mice-out.js`
@@ -527,6 +532,7 @@ git commit -m "fix: align Info-page reporting threshold with the 72-hour standar
 ### Task 6: Dedupe conflicting related-page card descriptions in `agency-service-grouping.js`
 
 **Files:**
+
 - Modify: `pages/agency-service-grouping.js`
 
 **Interfaces:** None (prose-only; card `target` values are unchanged, so `validate.js`'s link-target check is unaffected).
@@ -630,9 +636,11 @@ git commit -m "fix: dedupe conflicting related-page card descriptions on the top
 ### Task 7: Replace the duplicated Director's Rules card on `report-bed-bugs.js` with a pointer to the Info page
 
 **Files:**
+
 - Modify: `pages/report-bed-bugs.js`
 
 **Interfaces:**
+
 - Consumes: `bedBugsInfo` page key (defined in `pages/bed-bug-rules-prevention.js`, already a valid `HHVC_PAGES` key — unchanged by this task).
 
 - [ ] **Step 1: Replace the external card with an internal pointer card**
@@ -700,6 +708,7 @@ git commit -m "fix: link to the bed bug rules Info page instead of duplicating i
 ### Task 8: Rebuild single-file exports and do a manual visual pass
 
 **Files:**
+
 - Modify (generated, not hand-edited): `manager-review-single-file.html`, `single-file-export-current-source.html`
 
 **Interfaces:** None (build step only).

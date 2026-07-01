@@ -30,12 +30,12 @@ Review the Topic page first. Confirm that it:
 
 ## Decision options
 
-| Decision | Meaning |
-|---|---|
-| Approved | Manager accepts page structure and content direction. |
-| Approved with edits | Minor wording or ordering changes needed. |
+| Decision            | Meaning                                                          |
+| ------------------- | ---------------------------------------------------------------- |
+| Approved            | Manager accepts page structure and content direction.            |
+| Approved with edits | Minor wording or ordering changes needed.                        |
 | Revise and resubmit | Page needs structural, legal, or policy changes before approval. |
-| Blocked | Cannot proceed until a policy/source issue is resolved. |
+| Blocked             | Cannot proceed until a policy/source issue is resolved.          |
 
 ## Suggested automation handoff
 
