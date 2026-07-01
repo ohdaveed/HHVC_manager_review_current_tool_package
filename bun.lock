@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 0,
+  "workspaces": {
+    "": {
+      "name": "hhvc-manager-review-mockup-tool",
+      "devDependencies": {
+        "@sfgov/design-system": "0.0.1",
+      },
+    },
+  },
+  "packages": {
+    "@sfgov/design-system": ["@sfgov/design-system@0.0.1", "", { "peerDependencies": { "react": "^18.2.0", "react-dom": "^18.2.0", "tailwindcss": "^2.2.19" }, "optionalPeers": ["react", "react-dom", "tailwindcss"] }, "sha512-6ylKYdSO3ycJuWouw6O8PBJzB5EUmPPa2W55j4BUerpmj60CNpedBJmQ65G7ppFRVuwLhIhb7bdhgpbtc/wYAg=="],
+  }
+}

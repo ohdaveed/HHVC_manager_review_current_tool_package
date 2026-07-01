@@ -89,6 +89,21 @@ Then open:
 http://localhost:8000/
 ```
 
+You can also use the included Bun dev server instead:
+
+```bash
+bun install
+bun run dev
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8080/
+```
+
+Use `PORT=3000 bun run dev` to change the port, or `HOST=0.0.0.0 bun run dev` to listen on all interfaces.
+
 ## File structure
 
 ```text

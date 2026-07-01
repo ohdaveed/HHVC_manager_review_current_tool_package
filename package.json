@@ -3,5 +3,9 @@
   "private": true,
   "devDependencies": {
     "@sfgov/design-system": "0.0.1"
+  },
+  "scripts": {
+    "dev": "bun run --watch server.ts",
+    "start": "bun run server.ts"
   }
 }
