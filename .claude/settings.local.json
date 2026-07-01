@@ -10,7 +10,11 @@
       "Bash(node build_scripts/build-single-file.js)",
       "Bash(node -e \"const {JSDOM}=\\(\\(\\)=>{try{return require\\('jsdom'\\)}catch\\(e\\){return {}}}\\)\\(\\); console.log\\('jsdom:',!!JSDOM\\)\")",
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
-      "mcp__plugin_playwright_playwright__browser_close"
+      "mcp__plugin_playwright_playwright__browser_close",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "Bash(pkill -f \"http.server 8791\")"
     ]
   }
 }
