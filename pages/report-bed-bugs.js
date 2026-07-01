@@ -73,17 +73,16 @@ window.HHVC_PAGES["bedBugsReport"] = {
     },
     {
       "heading": "Bed bug rules",
-      "karl": "Body: External reference link to official bed bug Director’s Rules PDF",
+      "karl": "Body: Pointer to the Info page's own Director's Rules reference, instead of duplicating the external PDF link on both the Report and Info pages.",
       "kind": "placement",
       "paragraphs": [
-        "For detailed bed bug prevention and control rules, use the official SFDPH Director’s Rules."
+        "For detailed bed bug prevention and control rules, see the bed bug rules and prevention page."
       ],
       "cards": [
         {
-          "title": "San Francisco Department of Public Health — Director’s Rules and Regulations for Prevention and Control of Bed Bugs",
-          "text": "Reference the Director’s Rules for bed bug prevention, control, owner responsibilities, and treatment preparation standards.",
-          "url": "https://drive.google.com/file/d/1PPwhA3IeJ-jl5es0TvbmSAB_J8UjK8LP/view",
-          "karl": "Body link or external reference link: official bed bug Director’s Rules PDF"
+          "title": "Bed bug rules and prevention",
+          "text": "Learn about bed bug rules, treatment preparation, and prevention, including the official Director's Rules reference.",
+          "target": "bedBugsInfo"
         }
       ]
     },
