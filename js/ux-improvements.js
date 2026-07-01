@@ -535,7 +535,7 @@
       textarea.select();
       const copied = document.execCommand('copy');
       if (!copied) {
-        return Promise.reject(new Error('Copy command was not successful.'));
+        return Promise.reject(new Error('Failed to copy text to clipboard.'));
       }
       return Promise.resolve();
     } catch (error) {
@@ -679,7 +679,7 @@
         }
       }).catch(() => {
         const status = document.getElementById('reviewExportStatus');
-        if (status) status.textContent = 'Could not copy review summary. Copy manually instead.';
+        if (status) status.textContent = 'Copy failed. Copy manually instead.';
         if (typeof window.showToast === 'function') {
           window.showToast('Copy failed. Copy manually instead.', 'warn');
         }
