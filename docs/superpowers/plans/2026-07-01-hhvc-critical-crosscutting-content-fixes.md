@@ -143,8 +143,8 @@ to:
 
 - [ ] **Step 4: Verify no leaked directive text remains in public fields**
 
-Run: `grep -n "must be verified before publication\|Do not route this page\|Do not publish staff-only" pages/pay-healthy-housing-fee.js`
-Expected: 3 matches, all on lines containing `"karl":` (not `"paragraphs":` entries).
+Run: `grep -niI "do not route this page\|do not publish staff-only\|not yet confirmed" pages/pay-healthy-housing-fee.js`
+Expected: 3 matches, all on lines containing `"karl":` (not `"paragraphs":` entries). (Corrected during execution: the original pattern used case/wording that didn't match the actual after-text specified in Steps 1-3 above.)
 
 - [ ] **Step 5: Run structural validation**
 

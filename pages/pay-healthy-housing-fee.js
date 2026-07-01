@@ -21,31 +21,28 @@ window.HHVC_PAGES["payFee"] = {
     },
     {
       "heading": "Who may need to pay",
-      "karl": "Body: Who may need to pay",
+      "karl": "Body: Who may need to pay. BLOCKED — exact fee amount, due dates, account requirements, and payment instructions are not yet confirmed. Do not publish this page live until Finance/HHVC supplies verified values.",
       "kind": "body",
       "paragraphs": [
         "Healthy Housing program fees may apply to residential buildings with 3 or more units.",
-        "A building with 3 units is exempt if one unit is occupied by the owner.",
-        "Fee details, due dates, account requirements, and payment instructions must be verified before publication."
+        "A building with 3 units is exempt if one unit is occupied by the owner."
       ]
     },
     {
       "heading": "Pay your fee",
-      "karl": "Body: Pay your fee steps",
+      "karl": "Body: Pay your fee steps. BLOCKED — do not route this page through 311 unless HHVC or SF.gov confirms a support route that uses 311. buttonTarget/URL is pending a confirmed SF.gov payment link; the button is non-functional until one is added.",
       "kind": "body",
       "paragraphs": [
-        "Use the approved SF.gov payment or billing route to pay your Healthy Housing fee.",
-        "Do not route this page through 311 unless HHVC or SF.gov confirms a support route that uses 311."
+        "Use the approved SF.gov payment or billing route to pay your Healthy Housing fee."
       ],
       "button": "Pay your Healthy Housing fee"
     },
     {
       "heading": "If you need help",
-      "karl": "Body: If you need help",
+      "karl": "Body: If you need help. BLOCKED — do not publish staff-only payment instructions, internal account notes, or unverified fee details until confirmed.",
       "kind": "body",
       "paragraphs": [
-        "Use the contact or help route listed on the final SF.gov fee page or payment notice.",
-        "Do not publish staff-only payment instructions, internal account notes, or unverified fee details."
+        "Use the contact or help route listed on the final SF.gov fee page or payment notice."
       ]
     },
     {
