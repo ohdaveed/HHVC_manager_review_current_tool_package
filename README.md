@@ -19,12 +19,27 @@ The manager-review interface now includes:
 
 - A live manager review dashboard above the page preview
 - A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
+- A dashboard guidance panel that consolidates instructional copy from the sidebar
 - Fast page search by title, page type, summary, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
 - Local browser persistence for review state using `localStorage`
 
 These additions are review aids only. They do not publish content, change page source data, or replace legal/source review.
+
+## Dashboard guidance copy
+
+Descriptive review instructions now live in the dashboard instead of being repeated throughout the sidebar.
+
+The dashboard guidance panel explains:
+
+- How to review page patterns
+- How to test wording safely
+- How to use Karl placement tags
+- How review exports work
+- Which reading targets apply by page type
+
+The sidebar remains focused on controls and inputs. The guidance module hides duplicated sidebar helper copy at runtime without deleting the underlying HTML.
 
 ## Local review persistence
 
@@ -71,6 +86,7 @@ HHVC_manager_review_current_tool_package/
 ├─ js/page-data.js
 ├─ js/app.js
 ├─ js/ux-improvements.js
+├─ js/dashboard-guidance.js
 ├─ pages/*.js
 ├─ data/page_inventory.json
 ├─ data/page_inventory.csv
@@ -85,7 +101,7 @@ HHVC_manager_review_current_tool_package/
 
 - Edit public page content in `pages/*.js`.
 - Edit render behavior in `js/app.js`.
-- Edit UX review helpers in `js/ux-improvements.js` and `css/ux-improvements.css`.
+- Edit UX review helpers in `js/ux-improvements.js`, `js/dashboard-guidance.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.
