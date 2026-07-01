@@ -1,15 +1,19 @@
 /* SF.gov HHVC mockup tool styles. Split from single-file export. */
+/* Color and type tokens sourced from the Karl / SF.gov visual design style guide
+   (sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-visual-design-style-guide). */
 :root {
-      --sfds-action-blue: #495ED4;
-      --sfds-action-blue-hover: #3547B8;
-      --sfds-slate-1: #002B48;
-      --sfds-slate-2: #1F4E6B;
-      --sfds-slate-3: #5A7A92;
-      --sfds-slate-4: #C2D1DB;
-      --sfds-slate-5: #F4F7F9;
-      --sfds-white: #FFFFFF;
-      --sfds-border: #D7E0E7;
-      --sfds-green: #1B7F5C;
+      --sfds-action-blue: #2A60AF;
+      --sfds-action-blue-hover: #001D4E;
+      --sfds-slate-1: #0B0C0C;
+      --sfds-slate-2: #383939;
+      --sfds-slate-3: #6E7070;
+      --sfds-slate-4: #C9CACA;
+      --sfds-slate-5: #F0F0F0;
+      --sfds-white: #FCFCFC;
+      --sfds-border: #E9EAEA;
+      --sfds-green: #026800;
+      --sfds-info-dark: #0046C2;
+      --sfds-info-light: #E5F1FF;
       --page-max: 1120px;
       --content-max: 760px;
       --radius: 8px;
@@ -17,14 +21,14 @@
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
-    body { font-family: "Rubik", Arial, sans-serif; color: var(--sfds-slate-1); background: var(--sfds-slate-5); font-size: 16px; line-height: 1.55; }
+    body { font-family: "Roboto", Arial, sans-serif; color: var(--sfds-slate-1); background: var(--sfds-slate-5); font-size: 16px; line-height: 1.55; }
     a { color: var(--sfds-action-blue); text-decoration: underline; text-underline-offset: 3px; }
     a:hover { color: var(--sfds-action-blue-hover); }
     p { margin: 0 0 1rem; }
     ul, ol { margin-top: .35rem; margin-bottom: 1rem; padding-left: 1.45rem; }
     li { margin-bottom: .35rem; }
     h1, h2, h3, h4 { color: var(--sfds-slate-1); line-height: 1.15; margin-top: 0; }
-    h1 { font-size: clamp(2.2rem, 4vw, 4rem); letter-spacing: -0.04em; margin-bottom: 1rem; }
+    h1 { font-family: "Roboto Slab", Georgia, serif; font-size: clamp(2.2rem, 4vw, 4rem); letter-spacing: -0.04em; margin-bottom: 1rem; }
     h2 { font-size: clamp(1.6rem, 2.6vw, 2.25rem); letter-spacing: -0.025em; margin-bottom: .75rem; }
     h3 { font-size: 1.25rem; margin-bottom: .55rem; }
     .app { display: grid; grid-template-columns: 370px minmax(0, 1fr); min-height: 100vh; }
@@ -32,10 +36,17 @@
     .sidebar h2 { font-size: 1.15rem; margin-bottom: .35rem; }
     .eyebrow { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--sfds-slate-3); margin-bottom: .75rem; }
     .control-group { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--sfds-border); }
+    details.control-group > summary { display: flex; align-items: center; justify-content: space-between; width: 100%; list-style: none; cursor: pointer; }
+    details.control-group > summary::-webkit-details-marker { display: none; }
+    details.control-group > summary::after { content: "▾"; margin-left: .5rem; color: var(--sfds-slate-3); flex: 0 0 auto; transition: transform .15s ease; }
+    details.control-group[open] > summary::after { transform: rotate(180deg); }
+    details.control-group > summary:hover { color: var(--sfds-action-blue); }
+    details.control-group > summary:focus-visible { outline: 3px solid rgba(42, 96, 175, 0.25); outline-offset: 2px; border-radius: 4px; }
+    details.control-group .details-body { margin-top: .5rem; }
     label { display: block; font-size: .88rem; font-weight: 600; margin-bottom: .4rem; color: var(--sfds-slate-2); }
     select, input[type="text"], textarea { width: 100%; border: 1px solid var(--sfds-border); border-radius: var(--radius); padding: .85rem .9rem; font: inherit; color: var(--sfds-slate-1); background: var(--sfds-white); }
     textarea { min-height: 5.5rem; resize: vertical; }
-    select:focus, input[type="text"]:focus, textarea:focus, button:focus, a:focus { outline: 3px solid rgba(73, 94, 212, 0.25); outline-offset: 2px; }
+    select:focus, input[type="text"]:focus, textarea:focus, button:focus, a:focus { outline: 3px solid rgba(42, 96, 175, 0.25); outline-offset: 2px; }
     .field-help { margin: .35rem 0 .75rem; color: var(--sfds-slate-3); font-size: .78rem; }
     .char-count { display: flex; justify-content: space-between; gap: .75rem; margin: .35rem 0 .75rem; font-size: .78rem; color: var(--sfds-slate-3); }
     .char-count .ok { color: var(--sfds-green); font-weight: 700; }
@@ -70,7 +81,7 @@
     .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 2px solid var(--sfds-action-blue); background: var(--sfds-action-blue); color: var(--sfds-white); padding: .75rem 1.05rem; text-decoration: none; font-weight: 700; line-height: 1.1; min-height: 44px; margin: .25rem 0 1rem; gap: .45rem; flex-wrap: wrap; }
     .btn:hover { background: var(--sfds-action-blue-hover); border-color: var(--sfds-action-blue-hover); color: var(--sfds-white); }
     .btn.secondary { background: var(--sfds-white); color: var(--sfds-action-blue); }
-    .callout { border-left: 5px solid var(--sfds-action-blue); background: #F1F4FF; padding: 1rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; margin: 1rem 0; }
+    .callout { border-left: 5px solid var(--sfds-info-dark); background: var(--sfds-info-light); padding: 1rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; margin: 1rem 0; }
     .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
     .card { border: 1px solid var(--sfds-border); border-radius: var(--radius); padding: 1rem; background: var(--sfds-white); }
     .card h3 { font-size: 1rem; margin-bottom: .35rem; } .card p { color: var(--sfds-slate-2); font-size: .95rem; margin-bottom: .5rem; }
