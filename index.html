@@ -6,7 +6,7 @@
   <title>HHVC Manager Review Mockup Tool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/base.css" />
   <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/typography.css" />
   <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/components.css" />
@@ -15,8 +15,13 @@
 <body>
 <div class="app">
     <aside class="sidebar" aria-label="Mockup controls">
-      <div class="eyebrow">SFDS rebuild</div>
-      <h2>HHVC mockup review tool</h2>
+      <div class="sidebar-header">
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Collapse sidebar">◀</button>
+        <div>
+          <div class="eyebrow">SFDS rebuild</div>
+          <h2>HHVC mockup review tool</h2>
+        </div>
+      </div>
       <p>Use this selector to review rebuilt SF.gov page patterns for Environmental Health and HHVC.</p>
       <details class="control-group" open>
         <summary class="eyebrow">Page mockup</summary>
@@ -31,11 +36,20 @@
         <summary class="eyebrow">Live content editor</summary>
         <div class="details-body">
           <label for="titleInput">Page title</label>
-          <input id="titleInput" type="text" aria-label="Page title">
+          <div class="field-with-reset">
+            <input id="titleInput" type="text" aria-label="Page title">
+            <button type="button" class="reset-field-btn" id="resetTitleBtn" aria-label="Reset page title to original" title="Reset to original">↺</button>
+          </div>
           <label for="descriptionInput">Short summary / description</label>
-          <textarea id="descriptionInput" aria-label="Short summary or description"></textarea>
+          <div class="field-with-reset">
+            <textarea id="descriptionInput" aria-label="Short summary or description"></textarea>
+            <button type="button" class="reset-field-btn" id="resetDescriptionBtn" aria-label="Reset description to original" title="Reset to original">↺</button>
+          </div>
           <label for="ctaInput">Primary CTA label</label>
-          <input id="ctaInput" type="text" aria-label="Primary CTA label">
+          <div class="field-with-reset">
+            <input id="ctaInput" type="text" aria-label="Primary CTA label">
+            <button type="button" class="reset-field-btn" id="resetCtaBtn" aria-label="Reset CTA to original" title="Reset to original">↺</button>
+          </div>
           <p class="field-help">Use this to test page title, short summary, and primary CTA wording without editing the source data.</p>
         </div>
       </details>
@@ -60,8 +74,12 @@
         <summary class="eyebrow">Karl CMS tags</summary>
         <div class="details-body">
           <div class="karl-tag-toggle"><span>Show placement tags</span><label class="karl-switch" aria-label="Show Karl CMS placement tags"><input id="tagToggle" type="checkbox" checked><span class="karl-slider"></span></label></div>
-          <div class="cms-help">Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes.</div>
-          <div class="cms-help"><strong>Note:</strong> Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.</div>
+          <p class="field-help">Toggle Karl CMS placement tags on/off in the page mockup.</p>
+          <details class="karl-help-nested">
+            <summary class="field-help" style="cursor:pointer;font-weight:600">What are Karl tags?</summary>
+            <div class="cms-help">Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes.</div>
+            <div class="cms-help" style="margin-top:.5rem"><strong>Note:</strong> Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.</div>
+          </details>
         </div>
       </details>
       <details class="control-group">
@@ -89,7 +107,7 @@
           <label for="reviewerInput">Reviewer name</label>
           <input id="reviewerInput" type="text" aria-label="Reviewer name" placeholder="Name or initials">
           <label for="reviewDateInput">Review date</label>
-          <input id="reviewDateInput" type="text" aria-label="Review date">
+          <input id="reviewDateInput" type="date" aria-label="Review date">
           <label for="reviewDecision">Decision</label>
           <select id="reviewDecision" aria-label="Review decision">
             <option value="Needs review">Needs review</option>
@@ -116,10 +134,11 @@
         <summary class="eyebrow">Reading targets</summary>
         <div class="details-body">
           <p><strong>Transaction:</strong> Grade 5–6<br><strong>Prevention:</strong> Grade 6<br><strong>Inspection/process:</strong> Grade 6–7<br><strong>Enforcement/NOV:</strong> Grade 7–8</p>
+          <p class="field-help" id="readingCurrent" style="margin-top:.65rem;font-weight:600">Current page target: <span id="readingTargetValue">—</span></p>
         </div>
       </details>
     </aside>
-    <main class="canvas"><div class="browser-shell"><div class="browser-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div></div><div id="mockPage"><div class="page-body"><h1>Loading HHVC mockup…</h1><p>If this message stays visible, JavaScript did not run.</p></div></div></div></main>
+    <main class="canvas"><div class="canvas-toolbar"><span id="currentPageBadge" class="page-badge"></span></div><div class="browser-shell"><div class="browser-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div></div><div id="mockPage"><div class="page-body"><h1>Loading HHVC mockup…</h1><p>If this message stays visible, JavaScript did not run.</p></div></div></div><div id="toastContainer" class="toast-container" aria-live="polite"></div></main>
   </div>
 
   <script src="pages/agency-service-grouping.js"></script>

@@ -1,8 +1,9 @@
-const DATA = window.HHVC_DATA;
-if (!DATA || !DATA.pages || !DATA.order) {
-  throw new Error('HHVC mockup page data did not load. Check script order in index.html.');
-}
-const pageData = DATA.pages;
+    const DATA = window.HHVC_DATA;
+    if (!DATA || !DATA.pages || !DATA.order) {
+      throw new Error('HHVC mockup page data did not load. Check script order in index.html.');
+    }
+    const ORIGINAL_DATA = JSON.parse(JSON.stringify(DATA));
+    const pageData = DATA.pages;
     const pageOrder = DATA.order;
     function escapeHtml(value) { return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
     function karlTag(label, kind = "body") { return `<div class="karl-tag" data-kind="${kind}"><strong>Karl:</strong> ${escapeHtml(label)}</div>`; }
@@ -53,6 +54,103 @@ const pageData = DATA.pages;
       updateSearchPreview();
     }
 
+    // ── Helper functions for dirty state, toast, sidebar, checklist, etc. ──
+    function updateDirtyIndicators(key) {
+      const page = pageData[key];
+      const orig = ORIGINAL_DATA.pages[key];
+      if (!page || !orig) return;
+      const titleWrap = document.getElementById('titleInput')?.closest('.field-with-reset');
+      if (titleWrap) titleWrap.classList.toggle('modified', page.title !== orig.title);
+      const descWrap = document.getElementById('descriptionInput')?.closest('.field-with-reset');
+      if (descWrap) descWrap.classList.toggle('modified', page.summary !== orig.summary);
+      const ctaWrap = document.getElementById('ctaInput')?.closest('.field-with-reset');
+      if (ctaWrap) ctaWrap.classList.toggle('modified', getPrimaryCta(page) !== getPrimaryCta(orig));
+    }
+    function showToast(message, type) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const el = document.createElement('div');
+      el.className = 'toast' + (type ? ' ' + type : '');
+      el.textContent = message;
+      const close = document.createElement('button');
+      close.className = 'toast-close';
+      close.textContent = '\u00d7';
+      close.setAttribute('aria-label', 'Dismiss');
+      close.addEventListener('click', () => el.remove());
+      el.appendChild(close);
+      container.appendChild(el);
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 4000);
+    }
+    function updateReadingTarget(page) {
+      const el = document.getElementById('readingTargetValue');
+      if (el && page && page.reading) { el.textContent = page.reading; } else if (el) { el.textContent = '\u2014'; }
+    }
+    function updatePageBadge(title) {
+      const badge = document.getElementById('currentPageBadge');
+      if (!badge) return;
+      badge.textContent = 'Viewing: ' + escapeHtml(title || '');
+      badge.classList.add('visible');
+      clearTimeout(badge._timeout);
+      badge._timeout = setTimeout(() => badge.classList.remove('visible'), 5000);
+    }
+    function saveSidebarScroll() {
+      const sb = document.querySelector('.sidebar');
+      if (sb) sessionStorage.setItem('sidebarScroll', String(sb.scrollTop));
+    }
+    function restoreSidebarScroll() {
+      const saved = sessionStorage.getItem('sidebarScroll');
+      if (saved !== null) requestAnimationFrame(() => { const sb = document.querySelector('.sidebar'); if (sb) sb.scrollTop = parseInt(saved, 10); });
+    }
+    function resetField(fieldKey) {
+      const key = currentPageKey;
+      const orig = ORIGINAL_DATA.pages[key];
+      const page = pageData[key];
+      if (!orig || !page) return;
+      if (fieldKey === 'title') { page.title = orig.title; setField('titleInput', orig.title); const h1 = document.querySelector('#mockPage h1'); if (h1) h1.textContent = orig.title; }
+      else if (fieldKey === 'summary') { page.summary = orig.summary; setField('descriptionInput', orig.summary); const s = document.querySelector('#mockPage .summary'); if (s) s.textContent = orig.summary; }
+      else if (fieldKey === 'cta') { setPrimaryCta(page, getPrimaryCta(orig)); setField('ctaInput', getPrimaryCta(orig)); const pb = document.querySelector('#mockPage .btn:not(.secondary)'); if (pb) pb.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(getPrimaryCta(orig)); }
+      updateDirtyIndicators(key);
+      showToast((fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1)) + ' reset to original.', 'info');
+    }
+    function toggleSidebar() {
+      const app = document.querySelector('.app');
+      const btn = document.getElementById('sidebarToggle');
+      if (!app || !btn) return;
+      app.classList.toggle('sidebar-collapsed');
+      const coll = app.classList.contains('sidebar-collapsed');
+      btn.textContent = coll ? '\u25b6' : '\u25c0';
+      btn.setAttribute('aria-label', coll ? 'Expand sidebar' : 'Collapse sidebar');
+    }
+    function buildPageSelect() {
+      const select = document.getElementById('pageSelect');
+      if (!select) return;
+      const groups = { Topic: [], Transaction: [], Information: [] };
+      pageOrder.forEach(([key, label]) => {
+        const type = label.startsWith('Topic') ? 'Topic' : label.startsWith('Transaction') ? 'Transaction' : 'Information';
+        groups[type].push([key, label.replace(/^(Topic|Transaction|Information):\s*/, '')]);
+      });
+      select.innerHTML = Object.entries(groups).map(([type, items]) =>
+        '<optgroup label="' + escapeHtml(type) + ' pages">' + items.map(([k, l]) => '<option value="' + k + '">' + escapeHtml(l) + '</option>').join('') + '</optgroup>'
+      ).join('');
+    }
+    function initChecklist() {
+      document.querySelectorAll('.checklist .check').forEach((el, i) => {
+        el.setAttribute('data-check-index', i);
+        el.addEventListener('click', function() {
+          this.classList.toggle('unchecked');
+          if (currentPageKey) sessionStorage.setItem('check_' + currentPageKey + '_' + i, this.classList.contains('unchecked') ? '0' : '1');
+        });
+      });
+    }
+    function applyChecklistState(key) {
+      document.querySelectorAll('.checklist .check').forEach((el, i) => {
+        const saved = sessionStorage.getItem('check_' + key + '_' + i);
+        if (saved === '0') el.classList.add('unchecked');
+        else el.classList.remove('unchecked');
+      });
+    }
+    // ── End helper functions ──
+
     function renderAudience(audience = []) {
       if (!Array.isArray(audience)) return '';
       return audience.map(item => `<li>${escapeHtml(item)}</li>`).join('');
@@ -76,6 +174,7 @@ const pageData = DATA.pages;
     }
     function applyPageContent(key) {
       const page = pageData[key]; if (!page) return;
+      saveSidebarScroll();
       currentPageKey = key;
       document.getElementById('browserUrl').textContent = 'https://' + page.slug;
       document.getElementById('urlInput').value = page.slug;
@@ -86,6 +185,11 @@ const pageData = DATA.pages;
         <main class="page-body"><div class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`)}</div><div class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></div>${page.sections.map(renderSection).join('')}</main>
         <footer class="footer"><div class="footer-inner"><strong>City and County of San Francisco</strong><br>This is a design mockup for HHVC content review, not a live SF.gov page.</div></footer>`;
       syncEditorFields(page);
+      updateDirtyIndicators(key);
+      updateReadingTarget(page);
+      updatePageBadge(page.title);
+      applyChecklistState(key);
+      restoreSidebarScroll();
     }
     function renderPage(key) {
       if (!pageData[key]) return;
@@ -99,16 +203,21 @@ const pageData = DATA.pages;
       });
     }
     function init() {
+      buildPageSelect();
       const select = document.getElementById('pageSelect');
-      select.innerHTML = pageOrder.map(([key,label]) => `<option value="${key}">${escapeHtml(label)}</option>`).join('');
       select.addEventListener('change', e => renderPage(e.target.value));
       document.getElementById('urlInput').addEventListener('input', e => { document.getElementById('browserUrl').textContent = 'https://' + e.target.value; updateSearchPreview(); });
-      document.getElementById('titleInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.title = e.target.value; const h1 = document.querySelector('#mockPage h1'); if (h1) h1.textContent = e.target.value; if (!page.seoTitleEdited) { setField('seoTitleInput', defaultSeoTitle(page)); } updateSearchPreview(); });
-      document.getElementById('descriptionInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.summary = e.target.value; const summary = document.querySelector('#mockPage .summary'); if (summary) summary.textContent = e.target.value; if (!page.metaDescriptionEdited) { setField('metaDescriptionInput', defaultMetaDescription(page)); } updateSearchPreview(); });
-      document.getElementById('ctaInput').addEventListener('input', e => { const page = pageData[currentPageKey]; setPrimaryCta(page, e.target.value); const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)'); if (primaryButton) primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(e.target.value); });
+      document.getElementById('titleInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.title = e.target.value; const h1 = document.querySelector('#mockPage h1'); if (h1) h1.textContent = e.target.value; if (!page.seoTitleEdited) { setField('seoTitleInput', defaultSeoTitle(page)); } updateSearchPreview(); updateDirtyIndicators(currentPageKey); });
+      document.getElementById('descriptionInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.summary = e.target.value; const summary = document.querySelector('#mockPage .summary'); if (summary) summary.textContent = e.target.value; if (!page.metaDescriptionEdited) { setField('metaDescriptionInput', defaultMetaDescription(page)); } updateSearchPreview(); updateDirtyIndicators(currentPageKey); });
+      document.getElementById('ctaInput').addEventListener('input', e => { const page = pageData[currentPageKey]; setPrimaryCta(page, e.target.value); const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)'); if (primaryButton) primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(e.target.value); updateDirtyIndicators(currentPageKey); });
       document.getElementById('seoTitleInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.seoTitle = e.target.value; page.seoTitleEdited = true; updateSearchPreview(); });
       document.getElementById('metaDescriptionInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.metaDescription = e.target.value; page.metaDescriptionEdited = true; updateSearchPreview(); });
       document.getElementById('tagToggle').addEventListener('change', e => { document.body.classList.toggle('hide-karl-tags', !e.target.checked); });
+      document.getElementById('resetTitleBtn')?.addEventListener('click', () => resetField('title'));
+      document.getElementById('resetDescriptionBtn')?.addEventListener('click', () => resetField('summary'));
+      document.getElementById('resetCtaBtn')?.addEventListener('click', () => resetField('cta'));
+      document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar);
+      initChecklist();
       renderPage('pestsTopic');
     }
     init();
@@ -165,11 +274,13 @@ function exportCurrentManagerReviewCsv() {
   const rows = [headers, headers.map(h => snapshot[h])];
   managerReviewDownload(`${snapshot.page_key}-manager-review.csv`, managerReviewToCsv(rows), 'text/csv;charset=utf-8');
   setText('reviewExportStatus', `Exported CSV for ${snapshot.page_title}.`);
+  showToast(`CSV exported for ${snapshot.page_title}`, 'success');
 }
 function exportCurrentManagerReviewJson() {
   const snapshot = getManagerReviewSnapshot();
   managerReviewDownload(`${snapshot.page_key}-manager-review.json`, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
   setText('reviewExportStatus', `Exported JSON for ${snapshot.page_title}.`);
+  showToast(`JSON exported for ${snapshot.page_title}`, 'success');
 }
 function exportAllPageDecisionTemplateCsv() {
   const headers = ['review_date','reviewer','page_key','page_title','page_type','url_slug','decision','notes','risks_or_blockers','follow_up_owner','seo_title','meta_description','primary_cta','reading_target'];
@@ -183,6 +294,7 @@ function exportAllPageDecisionTemplateCsv() {
   }
   managerReviewDownload('hhvc-all-page-manager-review-template.csv', managerReviewToCsv(rows), 'text/csv;charset=utf-8');
   setText('reviewExportStatus', 'Exported all-page decision template.');
+  showToast('All-page decision template exported', 'success');
 }
 function updateManagerReviewPageLabel() {
   const page = pageData[currentPageKey] || {};
