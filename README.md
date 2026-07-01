@@ -19,7 +19,7 @@ The manager-review interface now includes:
 
 - A live manager review dashboard above the page preview
 - A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
-- Fast page search by title, page type, or page key
+- Fast page search by title, page type, summary, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
 - Local browser persistence for review state using `localStorage`

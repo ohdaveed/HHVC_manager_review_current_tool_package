@@ -64,7 +64,6 @@
       for (const step of section.steps || []) {
         if (step.button) return step.button;
       }
-      if (section.button) return section.button;
     }
     return page.primaryCta || '';
   }
@@ -76,10 +75,6 @@
           step.button = label;
           return;
         }
-      }
-      if (section.button) {
-        section.button = label;
-        return;
       }
     }
     page.primaryCta = label;
@@ -110,7 +105,7 @@
     const metaDescription = getMetaDescription(page);
     const primaryCta = getValue('ctaInput') || getPrimaryCta(page);
     const relatedLinks = countRelatedLinks(page);
-    const isTransaction = page.type === 'Transaction page';
+    const isTransaction = String(page.type || '').toLowerCase().startsWith('transaction');
 
     return [
       {
@@ -479,7 +474,7 @@
     control.className = 'page-filter-control';
     control.innerHTML = `
       <label for="pageFilterInput">Find a page fast</label>
-      <input id="pageFilterInput" type="search" aria-label="Search page mockups" placeholder="Search by page title, type, or page key">
+      <input id="pageFilterInput" type="search" aria-label="Search page mockups" placeholder="Search by page title, type, summary, or page key">
       <div id="pageQuickList" class="page-quick-list" aria-label="Quick page results"></div>
     `;
     selectLabel.parentNode.insertBefore(control, selectLabel);
@@ -536,10 +531,18 @@
     textarea.style.position = 'fixed';
     textarea.style.left = '-9999px';
     document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    textarea.remove();
-    return Promise.resolve();
+    try {
+      textarea.select();
+      const copied = document.execCommand('copy');
+      if (!copied) {
+        return Promise.reject(new Error('Copy command was not successful.'));
+      }
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    } finally {
+      textarea.remove();
+    }
   }
 
   function csvEscape(value) {
@@ -673,6 +676,12 @@
         if (status) status.textContent = 'Copied review summary to clipboard.';
         if (typeof window.showToast === 'function') {
           window.showToast('Review summary copied', 'success');
+        }
+      }).catch(() => {
+        const status = document.getElementById('reviewExportStatus');
+        if (status) status.textContent = 'Could not copy review summary. Copy manually instead.';
+        if (typeof window.showToast === 'function') {
+          window.showToast('Copy failed. Copy manually instead.', 'warn');
         }
       });
     });
