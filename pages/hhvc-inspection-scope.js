@@ -20,6 +20,7 @@ window.HHVC_PAGES["scopeInfo"] = {
       "kind": "body",
       "paragraphs": [
         "This page helps you understand whether Healthy Housing and Vector Control may review a pest, vector, or housing health issue.",
+        "Healthy Housing and Vector Control (HHVC) is part of the Environmental Health division of the San Francisco Department of Public Health (DPH). You may see any of these names used across this site — they refer to the same program.",
         "Tenants, tenant representatives, friends, family members, and employees usually use reporting pages to report active pest or vector problems.",
         "Property owners and managers may use this page to understand HHVC scope before asking for prevention guidance or best-practice assistance."
       ]

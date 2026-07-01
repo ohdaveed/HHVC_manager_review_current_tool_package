@@ -98,7 +98,7 @@ window.HHVC_PAGES["reduceMoisture"] = {
       "paragraphs": [
         "For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.",
         "Do not paint over mold. Remove the mold first.",
-        "SFDPH does not recommend using bleach for routine small-area mold cleanup."
+        "HHVC does not recommend using bleach for routine small-area mold cleanup."
       ]
     },
     {
@@ -107,7 +107,7 @@ window.HHVC_PAGES["reduceMoisture"] = {
       "kind": "body",
       "paragraphs": [
         "Do not buy third-party mold test kits for an HHVC complaint.",
-        "SFDPH does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. SFDPH inspectors conduct their own on-site visual assessments in response to complaints."
+        "HHVC does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. HHVC inspectors conduct their own on-site visual assessments in response to complaints."
       ]
     },
     {

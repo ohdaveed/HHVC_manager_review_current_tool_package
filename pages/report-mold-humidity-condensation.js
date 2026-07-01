@@ -52,7 +52,7 @@ window.HHVC_PAGES["moldReport"] = {
           ],
           "callout": {
             "karl": "Body note: Mold kit guidance",
-            "text": "Do not buy a mold test kit. SFDPH does not accept or use third-party mold kits for HHVC review."
+            "text": "Do not buy a mold test kit. HHVC does not accept or use third-party mold kits for review."
           },
           "karl": "Body step 3: Report details checklist"
         }
