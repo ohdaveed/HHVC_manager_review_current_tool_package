@@ -1,2 +1,5 @@
 # WSL/Windows mark-of-the-web download artifacts
 *:Zone.Identifier
+
+# npm
+node_modules/
