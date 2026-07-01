@@ -16,7 +16,7 @@ The Topic page is now organized into four low-choice clusters:
 Review the Topic page first. Confirm that it:
 
 - Uses the Karl page type: **Topic page**
-- Opens at `sf.gov/topics/pests-and-housing-problems`
+- Opens at `sf.gov/topic-pests-and-housing-problems`
 - Uses short, plain-language text for a 5th to 6th-grade reading target
 - Keeps the public page limited to Article 11 / HHVC issues
 - Does not add non-HHVC routing paths to the Topic page

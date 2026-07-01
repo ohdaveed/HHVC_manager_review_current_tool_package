@@ -1,6 +1,6 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {};
 window.HHVC_PAGES["pestsTopic"] = {
-  "slug": "sf.gov/topics/pests-and-housing-problems",
+  "slug": "sf.gov/topic-pests-and-housing-problems",
   "type": "Topic page",
   "title": "Pests and housing problems",
   "summary": "Get help with pests, mold, garbage, and other housing health problems.",
@@ -26,7 +26,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Report a problem",
-      "karl": "Topic page Services section — Report a problem",
+      "karl": "Topic page Services section, subheading: Report a problem",
       "kind": "placement",
       "paragraphs": [
         "Use these pages if you are affected by a pest or housing health problem."
@@ -72,7 +72,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Prevent pests and housing health problems",
-      "karl": "Topic page Resources section — Prevention",
+      "karl": "Topic page Resources section, subheading: Prevention",
       "kind": "placement",
       "paragraphs": [
         "Use these pages to stop problems before they spread."
@@ -118,7 +118,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Know what HHVC can inspect",
-      "karl": "Topic page Resources section — Scope and process",
+      "karl": "Topic page Resources section, subheading: Scope and process",
       "kind": "placement",
       "paragraphs": [
         "Use these pages if you are not sure where to start."
@@ -146,7 +146,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Tenant rights and help",
-      "karl": "Topic page Resources section — Tenant support",
+      "karl": "Topic page Resources section, subheading: Tenant support",
       "kind": "placement",
       "paragraphs": [
         "Use these pages if you are worried about reporting a housing condition."
