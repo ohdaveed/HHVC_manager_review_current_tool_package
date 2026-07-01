@@ -15,7 +15,7 @@ The Topic page opens first and uses four scannable clusters:
 
 ## Open
 
-Open `index.html` in a browser. If browser security blocks local scripts, run:
+Run `npm install` once to fetch `@sfgov/design-system` (used for base/typography/component CSS). Then open `index.html` in a browser. If browser security blocks local scripts, run:
 
 ```bash
 python3 -m http.server 8000
@@ -31,6 +31,7 @@ http://localhost:8000/
 
 ```text
 HHVC_manager_review_current_tool_package/
+├─ package.json
 ├─ index.html
 ├─ css/styles.css
 ├─ js/page-data.js
