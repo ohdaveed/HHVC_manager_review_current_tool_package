@@ -461,10 +461,12 @@ to:
 
 (Note: this task must run after Task 3's edit to this same paragraph block — the "before" text above already reflects Task 3's fix.)
 
-- [ ] **Step 4: Verify no remaining "landlord" references outside this file's own already-updated text**
+- [ ] **Step 4: Verify no remaining "landlord" references in the 6 files this task touches**
 
-Run: `grep -rin "landlord" pages/`
-Expected: no matches (all replaced with "property owner or manager").
+Run: `grep -in "landlord" pages/report-bed-bugs.js pages/report-cockroaches.js pages/report-rats-or-mice.js pages/report-mold-humidity-condensation.js pages/what-happens-after-report.js pages/report-mosquitoes.js`
+Expected: no matches.
+
+(Corrected during execution: the original pattern ran repo-wide (`grep -rin "landlord" pages/`) and expected zero matches globally, but `bed-bug-rules-prevention.js` and `tenant-rights-reporting.js` — files outside this task's 6-file scope — also contain "landlord" in unrelated contexts (owner-responsibility headings, a Rent Board link description). Those 2 files are out of scope for this task; see "Still Open After This Plan" below.)
 
 - [ ] **Step 5: Run structural validation**
 
@@ -733,3 +735,4 @@ These were identified in the full content review but are intentionally not cover
 - Official (non–Google Drive) host for the bed bug Director's Rules PDF.
 - URL verification for the two external links in `tenant-rights-reporting.js`.
 - Per-page prose simplification: `reduce-indoor-moisture.js`'s dense "When to report instead" sentence, `what-happens-after-report.js`'s legal jargon in the enforcement section, and first-use definitions for "Article 11," "SRO," "vector," and "hygrometer" across several pages.
+- **Found during Task 4 execution:** `bed-bug-rules-prevention.js` (3 instances: "Landlord responsibilities" heading, "the landlord must provide...", "Landlords must provide...") and `tenant-rights-reporting.js` (1 instance: "landlord rules" in a Rent Board link description) still use "landlord" rather than "property owner or manager." Both were out of Task 4's declared 6-file scope, so were deliberately left untouched. Worth folding into a follow-up terminology pass.
