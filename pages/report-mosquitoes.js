@@ -62,8 +62,8 @@ window.HHVC_PAGES["mosquitoesReport"] = {
       "karl": "Body: After-report expectations",
       "kind": "body",
       "paragraphs": [
-        "Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins when appropriate.",
-        "If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit."
+        "Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.",
+        "If you gave contact information, an inspector may contact you to ask questions or schedule a visit."
       ]
     },
     {

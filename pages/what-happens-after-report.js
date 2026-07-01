@@ -35,14 +35,14 @@ window.HHVC_PAGES["afterReport"] = {
         {
           "title": "An inspector may contact you",
           "text": [
-            "If contact information is provided, an inspector may contact the person who reported the problem to ask questions or schedule a visit."
+            "If you gave contact information, an inspector may contact you to ask questions or schedule a visit."
           ],
           "karl": "Body step: Inspector contact"
         },
         {
           "title": "An inspection may happen",
           "text": [
-            "If no contact information is provided, an inspection may still occur without notice when appropriate and when areas can be accessed."
+            "If you did not give contact information, an inspection may still happen without notice when areas can be accessed, for example if the report describes an urgent health or safety risk."
           ],
           "karl": "Body step: Inspection expectations"
         }
