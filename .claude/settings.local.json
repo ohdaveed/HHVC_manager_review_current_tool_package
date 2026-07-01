@@ -9,9 +9,6 @@
       "Bash(unzip -l HHVC_manager_review_current_tool_package.zip)",
       "Bash(node build_scripts/build-single-file.js)",
       "Bash(node -e \"const {JSDOM}=\\(\\(\\)=>{try{return require\\('jsdom'\\)}catch\\(e\\){return {}}}\\)\\(\\); console.log\\('jsdom:',!!JSDOM\\)\")",
-      "Bash(git add *)",
-      "Bash(git commit *)",
-      "mcp__plugin_playwright_playwright__browser_navigate",
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "mcp__plugin_playwright_playwright__browser_close"
     ]
