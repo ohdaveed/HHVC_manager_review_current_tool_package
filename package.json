@@ -2,10 +2,18 @@
   "name": "hhvc-manager-review-mockup-tool",
   "private": true,
   "devDependencies": {
-    "@sfgov/design-system": "0.0.1"
+    "@sfgov/design-system": "0.0.1",
+    "csv-writer": "^1.6.0",
+    "zod": "^3.24.1",
+    "prettier": "^3.5.1"
   },
   "scripts": {
     "dev": "bun run --watch server.ts",
-    "start": "bun run server.ts"
+    "start": "bun run server.ts",
+    "validate": "bun build_scripts/validate.js",
+    "export": "bun build_scripts/extract-pages.js",
+    "build": "bun run validate && bun run export && bun build_scripts/build-single-file.js",
+    "format": "prettier --write \"**/*.{js,ts,json,md,css,html}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json,md,css,html}\""
   }
 }

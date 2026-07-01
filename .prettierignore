@@ -1,0 +1,8 @@
+data/
+node_modules/
+dist/
+build/
+*.svg
+server.ts
+manager-review-single-file.html
+single-file-export-current-source.html
