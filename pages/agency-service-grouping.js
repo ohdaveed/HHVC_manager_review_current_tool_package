@@ -132,7 +132,7 @@ window.HHVC_PAGES["pestsTopic"] = {
         },
         {
           "title": "What happens after you report",
-          "text": "Learn how 311 reports are reviewed and when an inspector may contact you.",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
           "target": "afterReport",
           "karl": "Topic page resource item"
         },
@@ -160,13 +160,13 @@ window.HHVC_PAGES["pestsTopic"] = {
         },
         {
           "title": "What happens after you report",
-          "text": "Learn what may happen after your report is sent to Environmental Health.",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
           "target": "afterReport",
           "karl": "Topic page resource item"
         },
         {
           "title": "Bed bug rules and prevention",
-          "text": "Learn about bed bug prevention, treatment preparation, and rules.",
+          "text": "Learn about bed bug rules, treatment preparation, and prevention.",
           "target": "bedBugsInfo",
           "karl": "Topic page resource item"
         }
