@@ -6,20 +6,36 @@
   <title>HHVC Manager Review Mockup Tool</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+*,:after,:before{border-color:currentColor}*{box-sizing:border-box}body{margin:0;padding:0}a{color:#495ed4}.focus,:focus{outline:2px dotted #a1a1a1;outline-offset:3px}::-webkit-input-placeholder{color:#5a7a92}::placeholder{color:#5a7a92}
+/*# sourceMappingURL=base.css.map */
+  </style>
+  <style>
+*{font-family:Rubik,ui-sans-serif,sans-serif}body{font-size:16px;line-height:24px}b,strong{font-weight:600}pre{white-space:pre-wrap}code,pre{font-family:Roboto mono,monospace;font-size:14px;line-height:18px}code *,pre *{font-family:inherit}.display-lg{font-size:44px;line-height:48px}.display-lg,.display-sm{font-weight:300;letter-spacing:-1px}.display-sm{font-size:36px;line-height:40px}.title-xl{font-size:32px;line-height:36px}.title-lg,.title-xl{font-weight:600;letter-spacing:-1px}.title-lg{font-size:28px;line-height:32px}.title-md,.title-sm{font-size:24px;font-weight:600;line-height:28px}.title-xs{font-size:20px;font-weight:600;line-height:24px}.big-desc{font-size:20px;font-weight:400;line-height:28px}.small{font-size:14px!important;line-height:18px!important}.font-mono{font-size:14px;line-height:18px}@media (min-width:768px){.display-lg{font-size:72px;font-weight:300;letter-spacing:-2px;line-height:76px}.display-sm{font-size:48px;font-weight:300;letter-spacing:-1px;line-height:52px}.title-xl{font-size:60px;letter-spacing:-1px;line-height:64px}.title-lg{font-size:44px;letter-spacing:-1px;line-height:52px}.title-md{font-size:32px;font-weight:600;line-height:36px}.title-sm{font-size:24px;font-weight:600;line-height:28px}.title-xs{font-size:20px;font-weight:600;line-height:24px}.big-desc{font-size:24px;font-weight:400;line-height:32px}}
+/*# sourceMappingURL=typography.css.map */
+  </style>
+  <style>
+.btn{align-items:center;-webkit-appearance:none;appearance:none;background-color:#495ed4;border:0 solid;border-radius:8px;color:#fff;cursor:pointer;display:inline-flex;font-size:16px;font-weight:600;justify-content:center;line-height:24px;padding:8px 20px;text-align:center;text-decoration:none;white-space:nowrap}.btn.focus,.btn.hover,.btn:focus,.btn:hover,.hocus\:bg-blue-dark:focus,.hocus\:bg-blue-dark:hover{background-color:#0c1464}.btn-inverse{color:#495ed4}.btn-inverse,.btn-inverse:focus,.btn-inverse:hover{background-color:#fff}.btn-inverse:focus,.btn-inverse:hover{color:#0c1464}.btn-inverse.focus,.btn-inverse.hover{background-color:#fff;color:#0c1464}.btn-secondary{border-width:3px;color:#495ed4}.btn-secondary,.btn-secondary:focus,.btn-secondary:hover,.hocus\:bg-white:focus,.hocus\:bg-white:hover{background-color:#fff}.btn-secondary:focus,.btn-secondary:hover,.hocus\:text-blue-dark:focus,.hocus\:text-blue-dark:hover{color:#0c1464}.btn-secondary.focus,.btn-secondary.hover{background-color:#fff;color:#0c1464}.btn-link,.btn-link:focus,.btn-link:hover,.hocus\:border-0:focus,.hocus\:border-0:hover{border-width:0}.btn-link{color:#495ed4}.btn-link,.btn-link:hover{background-color:transparent}.btn-link:hover{color:#0c1464}.btn-link{text-decoration:underline}.btn-link.focus,.btn-link.hover{background-color:transparent;color:#0c1464}.btn-block{display:flex;width:100%}.details-reset summary{list-style:none}.details-reset summary::-webkit-details-marker,.details-reset summary::marker{display:none}.responsive-grid{display:grid;gap:20px;grid-template-columns:repeat(6,minmax(0,1fr))}@media (min-width:420px){.responsive-grid{gap:28px;grid-template-columns:repeat(12,minmax(0,1fr))}}.responsive-container{margin-left:20px;margin-right:20px;max-width:1076px}@media (min-width:420px){.responsive-container{margin-left:28px;margin-right:28px}}@media (min-width:768px){.responsive-container{margin-left:96px;margin-right:96px}}@media (min-width:1090px){.responsive-container{margin-left:auto;margin-right:auto}}kbd{border-radius:2px;border-style:solid;border-width:1px;color:#1d4d70;display:inline-block;font-family:Roboto mono,monospace;font-size:14px;font-weight:400;line-height:18px;margin-bottom:2px;margin-top:2px;padding:2px 8px}
+/*# sourceMappingURL=components.css.map */
+  </style>
   <style>
 /* SF.gov HHVC mockup tool styles. Split from single-file export. */
+/* Color and type tokens sourced from the Karl / SF.gov visual design style guide
+   (sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-visual-design-style-guide). */
 :root {
-      --sfds-action-blue: #495ED4;
-      --sfds-action-blue-hover: #3547B8;
-      --sfds-slate-1: #002B48;
-      --sfds-slate-2: #1F4E6B;
-      --sfds-slate-3: #5A7A92;
-      --sfds-slate-4: #C2D1DB;
-      --sfds-slate-5: #F4F7F9;
-      --sfds-white: #FFFFFF;
-      --sfds-border: #D7E0E7;
-      --sfds-green: #1B7F5C;
+      --sfds-action-blue: #2A60AF;
+      --sfds-action-blue-hover: #001D4E;
+      --sfds-slate-1: #0B0C0C;
+      --sfds-slate-2: #383939;
+      --sfds-slate-3: #6E7070;
+      --sfds-slate-4: #C9CACA;
+      --sfds-slate-5: #F0F0F0;
+      --sfds-white: #FCFCFC;
+      --sfds-border: #E9EAEA;
+      --sfds-green: #026800;
+      --sfds-info-dark: #0046C2;
+      --sfds-info-light: #E5F1FF;
       --page-max: 1120px;
       --content-max: 760px;
       --radius: 8px;
@@ -27,14 +43,14 @@
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
-    body { font-family: "Rubik", Arial, sans-serif; color: var(--sfds-slate-1); background: var(--sfds-slate-5); font-size: 16px; line-height: 1.55; }
+    body { font-family: "Roboto", Arial, sans-serif; color: var(--sfds-slate-1); background: var(--sfds-slate-5); font-size: 16px; line-height: 1.55; }
     a { color: var(--sfds-action-blue); text-decoration: underline; text-underline-offset: 3px; }
     a:hover { color: var(--sfds-action-blue-hover); }
     p { margin: 0 0 1rem; }
     ul, ol { margin-top: .35rem; margin-bottom: 1rem; padding-left: 1.45rem; }
     li { margin-bottom: .35rem; }
     h1, h2, h3, h4 { color: var(--sfds-slate-1); line-height: 1.15; margin-top: 0; }
-    h1 { font-size: clamp(2.2rem, 4vw, 4rem); letter-spacing: -0.04em; margin-bottom: 1rem; }
+    h1 { font-family: "Roboto Slab", Georgia, serif; font-size: clamp(2.2rem, 4vw, 4rem); letter-spacing: -0.04em; margin-bottom: 1rem; }
     h2 { font-size: clamp(1.6rem, 2.6vw, 2.25rem); letter-spacing: -0.025em; margin-bottom: .75rem; }
     h3 { font-size: 1.25rem; margin-bottom: .55rem; }
     .app { display: grid; grid-template-columns: 370px minmax(0, 1fr); min-height: 100vh; }
@@ -42,10 +58,17 @@
     .sidebar h2 { font-size: 1.15rem; margin-bottom: .35rem; }
     .eyebrow { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--sfds-slate-3); margin-bottom: .75rem; }
     .control-group { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--sfds-border); }
+    details.control-group > summary { display: flex; align-items: center; justify-content: space-between; width: 100%; list-style: none; cursor: pointer; }
+    details.control-group > summary::-webkit-details-marker { display: none; }
+    details.control-group > summary::after { content: "▾"; margin-left: .5rem; color: var(--sfds-slate-3); flex: 0 0 auto; transition: transform .15s ease; }
+    details.control-group[open] > summary::after { transform: rotate(180deg); }
+    details.control-group > summary:hover { color: var(--sfds-action-blue); }
+    details.control-group > summary:focus-visible { outline: 3px solid rgba(42, 96, 175, 0.25); outline-offset: 2px; border-radius: 4px; }
+    details.control-group .details-body { margin-top: .5rem; }
     label { display: block; font-size: .88rem; font-weight: 600; margin-bottom: .4rem; color: var(--sfds-slate-2); }
     select, input[type="text"], textarea { width: 100%; border: 1px solid var(--sfds-border); border-radius: var(--radius); padding: .85rem .9rem; font: inherit; color: var(--sfds-slate-1); background: var(--sfds-white); }
     textarea { min-height: 5.5rem; resize: vertical; }
-    select:focus, input[type="text"]:focus, textarea:focus, button:focus, a:focus { outline: 3px solid rgba(73, 94, 212, 0.25); outline-offset: 2px; }
+    select:focus, input[type="text"]:focus, textarea:focus, button:focus, a:focus { outline: 3px solid rgba(42, 96, 175, 0.25); outline-offset: 2px; }
     .field-help { margin: .35rem 0 .75rem; color: var(--sfds-slate-3); font-size: .78rem; }
     .char-count { display: flex; justify-content: space-between; gap: .75rem; margin: .35rem 0 .75rem; font-size: .78rem; color: var(--sfds-slate-3); }
     .char-count .ok { color: var(--sfds-green); font-weight: 700; }
@@ -80,7 +103,7 @@
     .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 2px solid var(--sfds-action-blue); background: var(--sfds-action-blue); color: var(--sfds-white); padding: .75rem 1.05rem; text-decoration: none; font-weight: 700; line-height: 1.1; min-height: 44px; margin: .25rem 0 1rem; gap: .45rem; flex-wrap: wrap; }
     .btn:hover { background: var(--sfds-action-blue-hover); border-color: var(--sfds-action-blue-hover); color: var(--sfds-white); }
     .btn.secondary { background: var(--sfds-white); color: var(--sfds-action-blue); }
-    .callout { border-left: 5px solid var(--sfds-action-blue); background: #F1F4FF; padding: 1rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; margin: 1rem 0; }
+    .callout { border-left: 5px solid var(--sfds-info-dark); background: var(--sfds-info-light); padding: 1rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; margin: 1rem 0; }
     .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
     .card { border: 1px solid var(--sfds-border); border-radius: var(--radius); padding: 1rem; background: var(--sfds-white); }
     .card h3 { font-size: 1rem; margin-bottom: .35rem; } .card p { color: var(--sfds-slate-2); font-size: .95rem; margin-bottom: .5rem; }
@@ -149,18 +172,6 @@
 }
 
   </style>
-  <style>
-*,:after,:before{border-color:currentColor}*{box-sizing:border-box}body{margin:0;padding:0}a{color:#495ed4}.focus,:focus{outline:2px dotted #a1a1a1;outline-offset:3px}::-webkit-input-placeholder{color:#5a7a92}::placeholder{color:#5a7a92}
-/*# sourceMappingURL=base.css.map */
-  </style>
-  <style>
-*{font-family:Rubik,ui-sans-serif,sans-serif}body{font-size:16px;line-height:24px}b,strong{font-weight:600}pre{white-space:pre-wrap}code,pre{font-family:Roboto mono,monospace;font-size:14px;line-height:18px}code *,pre *{font-family:inherit}.display-lg{font-size:44px;line-height:48px}.display-lg,.display-sm{font-weight:300;letter-spacing:-1px}.display-sm{font-size:36px;line-height:40px}.title-xl{font-size:32px;line-height:36px}.title-lg,.title-xl{font-weight:600;letter-spacing:-1px}.title-lg{font-size:28px;line-height:32px}.title-md,.title-sm{font-size:24px;font-weight:600;line-height:28px}.title-xs{font-size:20px;font-weight:600;line-height:24px}.big-desc{font-size:20px;font-weight:400;line-height:28px}.small{font-size:14px!important;line-height:18px!important}.font-mono{font-size:14px;line-height:18px}@media (min-width:768px){.display-lg{font-size:72px;font-weight:300;letter-spacing:-2px;line-height:76px}.display-sm{font-size:48px;font-weight:300;letter-spacing:-1px;line-height:52px}.title-xl{font-size:60px;letter-spacing:-1px;line-height:64px}.title-lg{font-size:44px;letter-spacing:-1px;line-height:52px}.title-md{font-size:32px;font-weight:600;line-height:36px}.title-sm{font-size:24px;font-weight:600;line-height:28px}.title-xs{font-size:20px;font-weight:600;line-height:24px}.big-desc{font-size:24px;font-weight:400;line-height:32px}}
-/*# sourceMappingURL=typography.css.map */
-  </style>
-  <style>
-.btn{align-items:center;-webkit-appearance:none;appearance:none;background-color:#495ed4;border:0 solid;border-radius:8px;color:#fff;cursor:pointer;display:inline-flex;font-size:16px;font-weight:600;justify-content:center;line-height:24px;padding:8px 20px;text-align:center;text-decoration:none;white-space:nowrap}.btn.focus,.btn.hover,.btn:focus,.btn:hover,.hocus\:bg-blue-dark:focus,.hocus\:bg-blue-dark:hover{background-color:#0c1464}.btn-inverse{color:#495ed4}.btn-inverse,.btn-inverse:focus,.btn-inverse:hover{background-color:#fff}.btn-inverse:focus,.btn-inverse:hover{color:#0c1464}.btn-inverse.focus,.btn-inverse.hover{background-color:#fff;color:#0c1464}.btn-secondary{border-width:3px;color:#495ed4}.btn-secondary,.btn-secondary:focus,.btn-secondary:hover,.hocus\:bg-white:focus,.hocus\:bg-white:hover{background-color:#fff}.btn-secondary:focus,.btn-secondary:hover,.hocus\:text-blue-dark:focus,.hocus\:text-blue-dark:hover{color:#0c1464}.btn-secondary.focus,.btn-secondary.hover{background-color:#fff;color:#0c1464}.btn-link,.btn-link:focus,.btn-link:hover,.hocus\:border-0:focus,.hocus\:border-0:hover{border-width:0}.btn-link{color:#495ed4}.btn-link,.btn-link:hover{background-color:transparent}.btn-link:hover{color:#0c1464}.btn-link{text-decoration:underline}.btn-link.focus,.btn-link.hover{background-color:transparent;color:#0c1464}.btn-block{display:flex;width:100%}.details-reset summary{list-style:none}.details-reset summary::-webkit-details-marker,.details-reset summary::marker{display:none}.responsive-grid{display:grid;gap:20px;grid-template-columns:repeat(6,minmax(0,1fr))}@media (min-width:420px){.responsive-grid{gap:28px;grid-template-columns:repeat(12,minmax(0,1fr))}}.responsive-container{margin-left:20px;margin-right:20px;max-width:1076px}@media (min-width:420px){.responsive-container{margin-left:28px;margin-right:28px}}@media (min-width:768px){.responsive-container{margin-left:96px;margin-right:96px}}@media (min-width:1090px){.responsive-container{margin-left:auto;margin-right:auto}}kbd{border-radius:2px;border-style:solid;border-width:1px;color:#1d4d70;display:inline-block;font-family:Roboto mono,monospace;font-size:14px;font-weight:400;line-height:18px;margin-bottom:2px;margin-top:2px;padding:2px 8px}
-/*# sourceMappingURL=components.css.map */
-  </style>
 </head>
 <body>
 <div class="app">
@@ -168,51 +179,114 @@
       <div class="eyebrow">SFDS rebuild</div>
       <h2>HHVC mockup review tool</h2>
       <p>Use this selector to review rebuilt SF.gov page patterns for Environmental Health and HHVC.</p>
-      <div class="control-group"><label for="pageSelect">Choose a page mockup</label><select id="pageSelect"></select></div>
-      <div class="control-group"><label for="urlInput">Preview URL slug</label><input id="urlInput" type="text" value="sf.gov/topics/pests-and-housing-problems" aria-label="Preview URL slug"></div>
-      <div class="control-group" aria-label="Live content editor"><div class="eyebrow">Live content editor</div><label for="titleInput">Page title</label><input id="titleInput" type="text" aria-label="Page title"><label for="descriptionInput">Short summary / description</label><textarea id="descriptionInput" aria-label="Short summary or description"></textarea><label for="ctaInput">Primary CTA label</label><input id="ctaInput" type="text" aria-label="Primary CTA label"><p class="field-help">Use this to test page title, short summary, and primary CTA wording without editing the source data.</p></div>
-      <div class="control-group" aria-label="Search metadata editor"><div class="eyebrow">Search metadata</div><label for="seoTitleInput">SEO Page Title</label><input id="seoTitleInput" type="text" aria-label="SEO Page Title"><div class="char-count"><span id="seoTitleCount">0 characters</span><span id="seoTitleStatus">Target: 60 or fewer</span></div><label for="metaDescriptionInput">Meta Description</label><textarea id="metaDescriptionInput" aria-label="Meta Description"></textarea><div class="char-count"><span id="metaDescriptionCount">0 characters</span><span id="metaDescriptionStatus">Target: 110 or fewer</span></div><div class="search-preview" aria-label="Search result preview"><div id="seoPreviewTitle" class="search-preview-title">Search title preview</div><div id="seoPreviewUrl" class="search-preview-url">https://sf.gov/topics/pests-and-housing-problems</div><div id="seoPreviewDescription" class="search-preview-desc">Search description preview</div></div><p class="field-help">SEO fields support the content model fields: SEO Title and SEO Description. Keep the meta description short enough for SF.gov review.</p></div>
-      <div class="control-group"><div class="eyebrow">Karl CMS tags</div><div class="karl-tag-toggle"><span>Show placement tags</span><label class="karl-switch" aria-label="Show Karl CMS placement tags"><input id="tagToggle" type="checkbox" checked><span class="karl-slider"></span></label></div><div class="cms-help">Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes.</div><div class="cms-help"><strong>Note:</strong> Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.</div></div>
-      <div class="control-group"><div class="eyebrow">Applied rules</div><div class="checklist"><div class="check">Rubik typography and SFDS-style spacing</div><div class="check">Action Blue for links and primary action</div><div class="check">Topic page uses scannable link clusters</div><div class="check">Article 11 / HHVC scope only</div><div class="check">72-hour tenant notice where applicable</div><div class="check">No standard photo requirement</div><div class="check">Report, prevent, scope, and tenant-help clusters</div><div class="check">Enforcement pathway included without overloading Transaction pages</div><div class="check">Tenant rights and anti-retaliation reassurance included</div></div></div>
-
-      <div class="control-group manager-review" aria-label="Manager review tools">
-        <div class="eyebrow">Manager review</div>
-        <p class="field-help">Use these fields during review. Exports download to your browser only; they do not change source files or publish pages.</p>
-        <div class="review-page-label" id="reviewPageLabel">Current page: Pests and housing problems</div>
-        <label for="reviewerInput">Reviewer name</label>
-        <input id="reviewerInput" type="text" aria-label="Reviewer name" placeholder="Name or initials">
-        <label for="reviewDateInput">Review date</label>
-        <input id="reviewDateInput" type="text" aria-label="Review date">
-        <label for="reviewDecision">Decision</label>
-        <select id="reviewDecision" aria-label="Review decision">
-          <option value="Needs review">Needs review</option>
-          <option value="Approved">Approved</option>
-          <option value="Approved with edits">Approved with edits</option>
-          <option value="Revise and resubmit">Revise and resubmit</option>
-          <option value="Blocked">Blocked</option>
-        </select>
-        <label for="reviewNotes">Decision notes</label>
-        <textarea id="reviewNotes" aria-label="Decision notes" placeholder="What needs to change before approval?"></textarea>
-        <label for="reviewRisks">Risks or blockers</label>
-        <textarea id="reviewRisks" aria-label="Risks or blockers" placeholder="Legal/source review, policy issue, broken link, unclear scope, etc."></textarea>
-        <label for="reviewOwner">Follow-up owner</label>
-        <input id="reviewOwner" type="text" aria-label="Follow-up owner" placeholder="Name, role, or team">
-        <div class="review-actions" aria-label="Review export actions">
-          <button type="button" class="tool-btn" id="exportReviewCsv">Export current review CSV</button>
-          <button type="button" class="tool-btn secondary-tool" id="exportReviewJson">Export current review JSON</button>
-          <button type="button" class="tool-btn secondary-tool" id="exportAllTemplateCsv">Export all-page decision template</button>
+      <details class="control-group" open>
+        <summary class="eyebrow">Page mockup</summary>
+        <div class="details-body">
+          <label for="pageSelect">Choose a page mockup</label>
+          <select id="pageSelect"></select>
+          <label for="urlInput">Preview URL slug</label>
+          <input id="urlInput" type="text" value="sf.gov/topic-pests-and-housing-problems" aria-label="Preview URL slug">
         </div>
-        <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
-      </div>
-      <div class="control-group"><div class="eyebrow">Reading targets</div><p><strong>Transaction:</strong> Grade 5–6<br><strong>Prevention:</strong> Grade 6<br><strong>Inspection/process:</strong> Grade 6–7<br><strong>Enforcement/NOV:</strong> Grade 7–8</p></div>
+      </details>
+      <details class="control-group">
+        <summary class="eyebrow">Live content editor</summary>
+        <div class="details-body">
+          <label for="titleInput">Page title</label>
+          <input id="titleInput" type="text" aria-label="Page title">
+          <label for="descriptionInput">Short summary / description</label>
+          <textarea id="descriptionInput" aria-label="Short summary or description"></textarea>
+          <label for="ctaInput">Primary CTA label</label>
+          <input id="ctaInput" type="text" aria-label="Primary CTA label">
+          <p class="field-help">Use this to test page title, short summary, and primary CTA wording without editing the source data.</p>
+        </div>
+      </details>
+      <details class="control-group">
+        <summary class="eyebrow">Search metadata</summary>
+        <div class="details-body">
+          <label for="seoTitleInput">SEO Page Title</label>
+          <input id="seoTitleInput" type="text" aria-label="SEO Page Title">
+          <div class="char-count"><span id="seoTitleCount">0 characters</span><span id="seoTitleStatus">Target: 60 or fewer</span></div>
+          <label for="metaDescriptionInput">Meta Description</label>
+          <textarea id="metaDescriptionInput" aria-label="Meta Description"></textarea>
+          <div class="char-count"><span id="metaDescriptionCount">0 characters</span><span id="metaDescriptionStatus">Target: 110 or fewer</span></div>
+          <div class="search-preview" aria-label="Search result preview">
+            <div id="seoPreviewTitle" class="search-preview-title">Search title preview</div>
+            <div id="seoPreviewUrl" class="search-preview-url">https://sf.gov/topic-pests-and-housing-problems</div>
+            <div id="seoPreviewDescription" class="search-preview-desc">Search description preview</div>
+          </div>
+          <p class="field-help">SEO fields support the content model fields: SEO Title and SEO Description. Keep the meta description short enough for SF.gov review.</p>
+        </div>
+      </details>
+      <details class="control-group">
+        <summary class="eyebrow">Karl CMS tags</summary>
+        <div class="details-body">
+          <div class="karl-tag-toggle"><span>Show placement tags</span><label class="karl-switch" aria-label="Show Karl CMS placement tags"><input id="tagToggle" type="checkbox" checked><span class="karl-slider"></span></label></div>
+          <div class="cms-help">Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes.</div>
+          <div class="cms-help"><strong>Note:</strong> Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.</div>
+        </div>
+      </details>
+      <details class="control-group">
+        <summary class="eyebrow">Applied rules</summary>
+        <div class="details-body">
+          <div class="checklist">
+            <div class="check">Roboto/Roboto Slab typography and SFDS-style spacing</div>
+            <div class="check">Action Blue for links and primary action</div>
+            <div class="check">Topic page uses scannable link clusters</div>
+            <div class="check">Article 11 / HHVC scope only</div>
+            <div class="check">72-hour tenant notice where applicable</div>
+            <div class="check">No standard photo requirement</div>
+            <div class="check">Report, prevent, scope, and tenant-help clusters</div>
+            <div class="check">Enforcement pathway included without overloading Transaction pages</div>
+            <div class="check">Tenant rights and anti-retaliation reassurance included</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="control-group manager-review" open>
+        <summary class="eyebrow">Manager review</summary>
+        <div class="details-body">
+          <p class="field-help">Use these fields during review. Exports download to your browser only; they do not change source files or publish pages.</p>
+          <div class="review-page-label" id="reviewPageLabel">Current page: Pests and housing problems</div>
+          <label for="reviewerInput">Reviewer name</label>
+          <input id="reviewerInput" type="text" aria-label="Reviewer name" placeholder="Name or initials">
+          <label for="reviewDateInput">Review date</label>
+          <input id="reviewDateInput" type="text" aria-label="Review date">
+          <label for="reviewDecision">Decision</label>
+          <select id="reviewDecision" aria-label="Review decision">
+            <option value="Needs review">Needs review</option>
+            <option value="Approved">Approved</option>
+            <option value="Approved with edits">Approved with edits</option>
+            <option value="Revise and resubmit">Revise and resubmit</option>
+            <option value="Blocked">Blocked</option>
+          </select>
+          <label for="reviewNotes">Decision notes</label>
+          <textarea id="reviewNotes" aria-label="Decision notes" placeholder="What needs to change before approval?"></textarea>
+          <label for="reviewRisks">Risks or blockers</label>
+          <textarea id="reviewRisks" aria-label="Risks or blockers" placeholder="Legal/source review, policy issue, broken link, unclear scope, etc."></textarea>
+          <label for="reviewOwner">Follow-up owner</label>
+          <input id="reviewOwner" type="text" aria-label="Follow-up owner" placeholder="Name, role, or team">
+          <div class="review-actions" aria-label="Review export actions">
+            <button type="button" class="tool-btn" id="exportReviewCsv">Export current review CSV</button>
+            <button type="button" class="tool-btn secondary-tool" id="exportReviewJson">Export current review JSON</button>
+            <button type="button" class="tool-btn secondary-tool" id="exportAllTemplateCsv">Export all-page decision template</button>
+          </div>
+          <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
+        </div>
+      </details>
+      <details class="control-group">
+        <summary class="eyebrow">Reading targets</summary>
+        <div class="details-body">
+          <p><strong>Transaction:</strong> Grade 5–6<br><strong>Prevention:</strong> Grade 6<br><strong>Inspection/process:</strong> Grade 6–7<br><strong>Enforcement/NOV:</strong> Grade 7–8</p>
+        </div>
+      </details>
     </aside>
-    <main class="canvas"><div class="browser-shell"><div class="browser-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><div class="url" id="browserUrl">https://sf.gov/topics/pests-and-housing-problems</div></div><div id="mockPage"><div class="page-body"><h1>Loading HHVC mockup…</h1><p>If this message stays visible, JavaScript did not run.</p></div></div></div></main>
+    <main class="canvas"><div class="browser-shell"><div class="browser-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div></div><div id="mockPage"><div class="page-body"><h1>Loading HHVC mockup…</h1><p>If this message stays visible, JavaScript did not run.</p></div></div></div></main>
   </div>
 
   <script>
 window.HHVC_PAGES = window.HHVC_PAGES || {};
 window.HHVC_PAGES["pestsTopic"] = {
-  "slug": "sf.gov/topics/pests-and-housing-problems",
+  "slug": "sf.gov/topic-pests-and-housing-problems",
   "type": "Topic page",
   "title": "Pests and housing problems",
   "summary": "Get help with pests, mold, garbage, and other housing health problems.",
@@ -238,7 +312,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Report a problem",
-      "karl": "Topic page Services section — Report a problem",
+      "karl": "Topic page Services section, subheading: Report a problem",
       "kind": "placement",
       "paragraphs": [
         "Use these pages if you are affected by a pest or housing health problem."
@@ -284,7 +358,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Prevent pests and housing health problems",
-      "karl": "Topic page Resources section — Prevention",
+      "karl": "Topic page Resources section, subheading: Prevention",
       "kind": "placement",
       "paragraphs": [
         "Use these pages to stop problems before they spread."
@@ -330,7 +404,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Know what HHVC can inspect",
-      "karl": "Topic page Resources section — Scope and process",
+      "karl": "Topic page Resources section, subheading: Scope and process",
       "kind": "placement",
       "paragraphs": [
         "Use these pages if you are not sure where to start."
@@ -358,7 +432,7 @@ window.HHVC_PAGES["pestsTopic"] = {
     },
     {
       "heading": "Tenant rights and help",
-      "karl": "Topic page Resources section — Tenant support",
+      "karl": "Topic page Resources section, subheading: Tenant support",
       "kind": "placement",
       "paragraphs": [
         "Use these pages if you are worried about reporting a housing condition."
