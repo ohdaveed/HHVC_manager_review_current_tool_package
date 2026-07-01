@@ -1,0 +1,359 @@
+- generic [ref=f5e2]:
+  - complementary "Mockup controls" [ref=f5e3]:
+    - generic [ref=f5e4]: SFDS rebuild
+    - heading "HHVC mockup review tool" [level=2] [ref=f5e5]
+    - paragraph [ref=f5e6]: Use this selector to review rebuilt SF.gov page patterns for Environmental Health and HHVC.
+    - generic [ref=f5e7]:
+      - generic [ref=f5e8]: Choose a page mockup
+      - combobox "Choose a page mockup" [ref=f5e9]:
+        - 'option "Topic: Pests and housing problems" [selected]'
+        - 'option "Transaction: Report rats or mice"'
+        - 'option "Transaction: Report cockroaches"'
+        - 'option "Transaction: Report bed bugs"'
+        - 'option "Information: Bed bug rules and prevention"'
+        - 'option "Transaction: Report mosquitoes"'
+        - 'option "Transaction: Report vegetation or garbage"'
+        - 'option "Transaction: Report mold from humidity or condensation"'
+        - 'option "Transaction: Pay your Healthy Housing fee"'
+        - 'option "Information: Learn what HHVC can inspect"'
+        - 'option "Information: Integrated pest management for property managers"'
+        - 'option "Information: What happens after you report"'
+        - 'option "Information: Tenant rights and reporting"'
+        - 'option "Information: Keep rats and mice out"'
+        - 'option "Information: Prevent cockroaches"'
+        - 'option "Information: Prevent mosquitoes"'
+        - 'option "Information: Reduce indoor moisture, condensation, and humidity"'
+    - generic [ref=f5e10]:
+      - generic [ref=f5e11]: Preview URL slug
+      - textbox "Preview URL slug" [ref=f5e12]: sf.gov/topics/pests-and-housing-problems
+    - generic "Live content editor" [ref=f5e13]:
+      - generic [ref=f5e14]: Live content editor
+      - generic [ref=f5e15]: Page title
+      - textbox "Page title" [ref=f5e16]: Pests and housing problems
+      - generic [ref=f5e17]: Short summary / description
+      - textbox "Short summary or description" [ref=f5e18]: Get help with pests, mold, garbage, and other housing health problems.
+      - generic [ref=f5e19]: Primary CTA label
+      - textbox "Primary CTA label" [ref=f5e20]
+      - paragraph [ref=f5e21]: Use this to test page title, short summary, and primary CTA wording without editing the source data.
+    - generic "Search metadata editor" [ref=f5e22]:
+      - generic [ref=f5e23]: Search metadata
+      - generic [ref=f5e24]: SEO Page Title
+      - textbox "SEO Page Title" [ref=f5e25]: Pests and housing problems
+      - generic [ref=f5e26]:
+        - generic [ref=f5e27]: 26 characters
+        - generic [ref=f5e28]: "OK: 60 or fewer"
+      - generic [ref=f5e29]: Meta Description
+      - textbox "Meta Description" [ref=f5e30]: Report or prevent pests, mold, garbage, and other housing health problems.
+      - generic [ref=f5e31]:
+        - generic [ref=f5e32]: 74 characters
+        - generic [ref=f5e33]: "OK: 110 or fewer"
+      - generic "Search result preview" [ref=f5e34]:
+        - generic [ref=f5e35]: Pests and housing problems
+        - generic [ref=f5e36]: https://sf.gov/topics/pests-and-housing-problems
+        - generic [ref=f5e37]: Report or prevent pests, mold, garbage, and other housing health problems.
+      - paragraph [ref=f5e38]: "SEO fields support the content model fields: SEO Title and SEO Description. Keep the meta description short enough for SF.gov review."
+    - generic [ref=f5e39]:
+      - generic [ref=f5e40]: Karl CMS tags
+      - generic [ref=f5e41]:
+        - generic [ref=f5e42]: Show placement tags
+        - generic "Show Karl CMS placement tags" [ref=f5e43]:
+          - checkbox "Show Karl CMS placement tags" [checked]
+      - generic [ref=f5e45]: "Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes."
+      - generic [ref=f5e46]:
+        - strong [ref=f5e47]: "Note:"
+        - text: Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.
+    - generic [ref=f5e48]:
+      - generic [ref=f5e49]: Applied rules
+      - generic [ref=f5e50]:
+        - generic [ref=f5e51]: ✓ Rubik typography and SFDS-style spacing
+        - generic [ref=f5e52]: ✓ Action Blue for links and primary action
+        - generic [ref=f5e53]: ✓ Topic page uses scannable link clusters
+        - generic [ref=f5e54]: ✓ Article 11 / HHVC scope only
+        - generic [ref=f5e55]: ✓ 72-hour tenant notice where applicable
+        - generic [ref=f5e56]: ✓ No standard photo requirement
+        - generic [ref=f5e57]: ✓ Report, prevent, scope, and tenant-help clusters
+        - generic [ref=f5e58]: ✓ Enforcement pathway included without overloading Transaction pages
+        - generic [ref=f5e59]: ✓ Tenant rights and anti-retaliation reassurance included
+    - generic "Manager review tools" [ref=f5e60]:
+      - generic [ref=f5e61]: Manager review
+      - paragraph [ref=f5e62]: Use these fields during review. Exports download to your browser only; they do not change source files or publish pages.
+      - generic [ref=f5e63]: "Current page: Pests and housing problems"
+      - generic [ref=f5e64]: Reviewer name
+      - textbox "Reviewer name" [ref=f5e65]:
+        - /placeholder: Name or initials
+      - generic [ref=f5e66]: Review date
+      - textbox "Review date" [ref=f5e67]: 2026-07-01
+      - generic [ref=f5e68]: Decision
+      - combobox "Review decision" [ref=f5e69]:
+        - option "Needs review" [selected]
+        - option "Approved"
+        - option "Approved with edits"
+        - option "Revise and resubmit"
+        - option "Blocked"
+      - generic [ref=f5e70]: Decision notes
+      - textbox "Decision notes" [ref=f5e71]:
+        - /placeholder: What needs to change before approval?
+      - generic [ref=f5e72]: Risks or blockers
+      - textbox "Risks or blockers" [ref=f5e73]:
+        - /placeholder: Legal/source review, policy issue, broken link, unclear scope, etc.
+      - generic [ref=f5e74]: Follow-up owner
+      - textbox "Follow-up owner" [ref=f5e75]:
+        - /placeholder: Name, role, or team
+      - generic "Review export actions" [ref=f5e76]:
+        - button "Export current review CSV" [ref=f5e77] [cursor=pointer]
+        - button "Export current review JSON" [ref=f5e78] [cursor=pointer]
+        - button "Export all-page decision template" [ref=f5e79] [cursor=pointer]
+      - paragraph [ref=f5e80]: No review exported yet.
+    - generic [ref=f5e81]:
+      - generic [ref=f5e82]: Reading targets
+      - paragraph [ref=f5e83]:
+        - strong [ref=f5e84]: "Transaction:"
+        - text: Grade 5–6
+        - strong [ref=f5e85]: "Prevention:"
+        - text: Grade 6
+        - strong [ref=f5e86]: "Inspection/process:"
+        - text: Grade 6–7
+        - strong [ref=f5e87]: "Enforcement/NOV:"
+        - text: Grade 7–8
+  - main [ref=f5e88]:
+    - generic [ref=f5e89]:
+      - generic [ref=f5e94]: https://sf.gov/topics/pests-and-housing-problems
+      - generic [ref=f5e95]:
+        - generic [ref=f5e97]:
+          - link "SF SF.gov" [ref=f5e98] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=f5e99]: SF
+            - generic [ref=f5e100]: SF.gov
+          - navigation "Example navigation" [ref=f5e101]:
+            - link "Services" [ref=f5e102] [cursor=pointer]:
+              - /url: "#"
+            - link "Departments" [ref=f5e103] [cursor=pointer]:
+              - /url: "#"
+            - link "Search" [ref=f5e104] [cursor=pointer]:
+              - /url: "#"
+        - generic [ref=f5e106]:
+          - generic [ref=f5e107]:
+            - strong [ref=f5e108]: "Karl:"
+            - text: "Metadata: Karl page type"
+          - generic [ref=f5e109]: Topic page
+          - generic [ref=f5e110]:
+            - strong [ref=f5e111]: "Karl:"
+            - text: Page title field
+          - heading "Pests and housing problems" [level=1] [ref=f5e112]
+          - generic [ref=f5e113]:
+            - strong [ref=f5e114]: "Karl:"
+            - text: Short summary / Description field
+          - paragraph [ref=f5e115]: Get help with pests, mold, garbage, and other housing health problems.
+          - generic [ref=f5e116]:
+            - strong [ref=f5e117]: "Karl:"
+            - text: "Metadata: Agency, program, reading target"
+          - generic [ref=f5e118]:
+            - generic [ref=f5e119]: Environmental Health
+            - generic [ref=f5e120]: HHVC
+            - generic [ref=f5e121]: Grade 5–6
+        - main [ref=f5e122]:
+          - generic [ref=f5e123]:
+            - generic [ref=f5e124]:
+              - strong [ref=f5e125]: "Karl:"
+              - text: Editor-only QA note / Do not publish
+            - strong [ref=f5e126]: "Editor QA:"
+            - text: "Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths."
+          - generic [ref=f5e127]:
+            - generic [ref=f5e128]:
+              - strong [ref=f5e129]: "Karl:"
+              - text: "Body: Audience section"
+            - heading "Who this page is for" [level=2] [ref=f5e130]
+            - paragraph [ref=f5e131]: "This page can help if you are:"
+            - list [ref=f5e132]:
+              - listitem [ref=f5e133]: A tenant with a pest or housing health problem
+              - listitem [ref=f5e134]: A friend, family member, advocate, or helper reporting for a tenant
+              - listitem [ref=f5e135]: A property owner or manager trying to prevent pests
+              - listitem [ref=f5e136]: A building worker who handles pest or housing health issues
+          - generic [ref=f5e137]:
+            - generic [ref=f5e138]:
+              - strong [ref=f5e139]: "Karl:"
+              - text: "Topic page body: Introductory text"
+            - heading "About this topic" [level=2] [ref=f5e140]
+            - paragraph [ref=f5e141]: Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11.
+            - paragraph [ref=f5e142]: This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation.
+          - generic [ref=f5e143]:
+            - generic [ref=f5e144]:
+              - strong [ref=f5e145]: "Karl:"
+              - text: Topic page Services section — Report a problem
+            - heading "Report a problem" [level=2] [ref=f5e146]
+            - paragraph [ref=f5e147]: Use these pages if you are affected by a pest or housing health problem.
+            - generic [ref=f5e148]:
+              - article [ref=f5e149]:
+                - generic [ref=f5e150]:
+                  - strong [ref=f5e151]: "Karl:"
+                  - text: Topic page service item
+                - heading "Report rats or mice" [level=3] [ref=f5e152]:
+                  - link "Report rats or mice" [ref=f5e153] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e154]: Report rat or mouse activity in a home, building, yard, or shared area.
+              - article [ref=f5e155]:
+                - generic [ref=f5e156]:
+                  - strong [ref=f5e157]: "Karl:"
+                  - text: Topic page service item
+                - heading "Report cockroaches" [level=3] [ref=f5e158]:
+                  - link "Report cockroaches" [ref=f5e159] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e160]: Report cockroaches in a unit, shared area, SRO, hotel, or workplace.
+              - article [ref=f5e161]:
+                - generic [ref=f5e162]:
+                  - strong [ref=f5e163]: "Karl:"
+                  - text: Topic page service item
+                - heading "Report bed bugs" [level=3] [ref=f5e164]:
+                  - link "Report bed bugs" [ref=f5e165] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e166]: Report an active bed bug problem in rental housing, an SRO, or a residential hotel.
+              - article [ref=f5e167]:
+                - generic [ref=f5e168]:
+                  - strong [ref=f5e169]: "Karl:"
+                  - text: Topic page service item
+                - heading "Report mosquitoes" [level=3] [ref=f5e170]:
+                  - link "Report mosquitoes" [ref=f5e171] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e172]: Report mosquitoes or standing water around a home, yard, building, or shared area.
+              - article [ref=f5e173]:
+                - generic [ref=f5e174]:
+                  - strong [ref=f5e175]: "Karl:"
+                  - text: Topic page service item
+                - heading "Report garbage, clutter, animal waste, or overgrown plants" [level=3] [ref=f5e176]:
+                  - link "Report garbage, clutter, animal waste, or overgrown plants" [ref=f5e177] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e178]: Report conditions that may attract pests or vectors.
+              - article [ref=f5e179]:
+                - generic [ref=f5e180]:
+                  - strong [ref=f5e181]: "Karl:"
+                  - text: Topic page service item
+                - heading "Report mold from humidity or condensation" [level=3] [ref=f5e182]:
+                  - link "Report mold from humidity or condensation" [ref=f5e183] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e184]: Report mold or moisture caused by humidity, condensation, or poor ventilation.
+          - generic [ref=f5e185]:
+            - generic [ref=f5e186]:
+              - strong [ref=f5e187]: "Karl:"
+              - text: Topic page Resources section — Prevention
+            - heading "Prevent pests and housing health problems" [level=2] [ref=f5e188]
+            - paragraph [ref=f5e189]: Use these pages to stop problems before they spread.
+            - generic [ref=f5e190]:
+              - article [ref=f5e191]:
+                - generic [ref=f5e192]:
+                  - strong [ref=f5e193]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Keep rats and mice out" [level=3] [ref=f5e194]:
+                  - link "Keep rats and mice out" [ref=f5e195] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e196]: Learn how to reduce food, water, shelter, and entry points.
+              - article [ref=f5e197]:
+                - generic [ref=f5e198]:
+                  - strong [ref=f5e199]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Prevent cockroaches" [level=3] [ref=f5e200]:
+                  - link "Prevent cockroaches" [ref=f5e201] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e202]: Learn how to reduce food, water, and hiding places for cockroaches.
+              - article [ref=f5e203]:
+                - generic [ref=f5e204]:
+                  - strong [ref=f5e205]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Prevent mosquitoes" [level=3] [ref=f5e206]:
+                  - link "Prevent mosquitoes" [ref=f5e207] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e208]: Learn how to remove standing water and reduce mosquito breeding.
+              - article [ref=f5e209]:
+                - generic [ref=f5e210]:
+                  - strong [ref=f5e211]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Bed bug rules and prevention" [level=3] [ref=f5e212]:
+                  - link "Bed bug rules and prevention" [ref=f5e213] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e214]: Learn about bed bug rules, treatment preparation, and prevention.
+              - article [ref=f5e215]:
+                - generic [ref=f5e216]:
+                  - strong [ref=f5e217]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Integrated pest management for property managers" [level=3] [ref=f5e218]:
+                  - link "Integrated pest management for property managers" [ref=f5e219] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e220]: Use prevention, monitoring, repairs, and resident outreach to reduce pests in buildings.
+              - article [ref=f5e221]:
+                - generic [ref=f5e222]:
+                  - strong [ref=f5e223]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Reduce indoor moisture, condensation, and humidity" [level=3] [ref=f5e224]:
+                  - link "Reduce indoor moisture, condensation, and humidity" [ref=f5e225] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e226]: Learn how to reduce moisture and humidity to prevent mold growth.
+          - generic [ref=f5e227]:
+            - generic [ref=f5e228]:
+              - strong [ref=f5e229]: "Karl:"
+              - text: Topic page Resources section — Scope and process
+            - heading "Know what HHVC can inspect" [level=2] [ref=f5e230]
+            - paragraph [ref=f5e231]: Use these pages if you are not sure where to start.
+            - generic [ref=f5e232]:
+              - article [ref=f5e233]:
+                - generic [ref=f5e234]:
+                  - strong [ref=f5e235]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Learn what Healthy Housing and Vector Control can inspect" [level=3] [ref=f5e236]:
+                  - link "Learn what Healthy Housing and Vector Control can inspect" [ref=f5e237] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e238]: Check if Environmental Health may review your pest or housing health problem.
+              - article [ref=f5e239]:
+                - generic [ref=f5e240]:
+                  - strong [ref=f5e241]: "Karl:"
+                  - text: Topic page resource item
+                - heading "What happens after you report" [level=3] [ref=f5e242]:
+                  - link "What happens after you report" [ref=f5e243] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e244]: Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.
+              - article [ref=f5e245]:
+                - generic [ref=f5e246]:
+                  - strong [ref=f5e247]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Pay your Healthy Housing fee" [level=3] [ref=f5e248]:
+                  - link "Pay your Healthy Housing fee" [ref=f5e249] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e250]: Pay the program fee for residential buildings with 3 or more units.
+          - generic [ref=f5e251]:
+            - generic [ref=f5e252]:
+              - strong [ref=f5e253]: "Karl:"
+              - text: Topic page Resources section — Tenant support
+            - heading "Tenant rights and help" [level=2] [ref=f5e254]
+            - paragraph [ref=f5e255]: Use these pages if you are worried about reporting a housing condition.
+            - generic [ref=f5e256]:
+              - article [ref=f5e257]:
+                - generic [ref=f5e258]:
+                  - strong [ref=f5e259]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Tenant rights when reporting housing conditions" [level=3] [ref=f5e260]:
+                  - link "Tenant rights when reporting housing conditions" [ref=f5e261] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e262]: Learn about tenant protections and where to get help.
+              - article [ref=f5e263]:
+                - generic [ref=f5e264]:
+                  - strong [ref=f5e265]: "Karl:"
+                  - text: Topic page resource item
+                - heading "What happens after you report" [level=3] [ref=f5e266]:
+                  - link "What happens after you report" [ref=f5e267] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e268]: Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.
+              - article [ref=f5e269]:
+                - generic [ref=f5e270]:
+                  - strong [ref=f5e271]: "Karl:"
+                  - text: Topic page resource item
+                - heading "Bed bug rules and prevention" [level=3] [ref=f5e272]:
+                  - link "Bed bug rules and prevention" [ref=f5e273] [cursor=pointer]:
+                    - /url: "#"
+                - paragraph [ref=f5e274]: Learn about bed bug rules, treatment preparation, and prevention.
+          - generic [ref=f5e275]:
+            - generic [ref=f5e276]:
+              - strong [ref=f5e277]: "Karl:"
+              - text: "Topic page body: Scope note / Article 11 only"
+            - heading "Scope note" [level=2] [ref=f5e278]
+            - paragraph [ref=f5e279]: Healthy Housing and Vector Control reviews pest, vector, and housing health conditions. This topic page is limited to HHVC and Article 11-related issues.
+        - generic [ref=f5e281]:
+          - strong [ref=f5e282]: City and County of San Francisco
+          - text: This is a design mockup for HHVC content review, not a live SF.gov page.
