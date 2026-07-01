@@ -13,6 +13,18 @@ The Topic page opens first and uses four scannable clusters:
 3. Know what HHVC can inspect
 4. Tenant rights and help
 
+## UX/UI review improvements
+
+The manager-review interface now includes:
+
+- A live manager review dashboard above the page preview
+- A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
+- Fast page search by title, page type, or page key
+- Review status chips that update when the manager decision changes
+- A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
+
+These additions are review aids only. They do not publish content, change page source data, or replace legal/source review.
+
 ## Open
 
 Run `npm install` once to fetch `@sfgov/design-system` (used for base/typography/component CSS). Then open `index.html` in a browser. If browser security blocks local scripts, run:
@@ -34,8 +46,10 @@ HHVC_manager_review_current_tool_package/
 ├─ package.json
 ├─ index.html
 ├─ css/styles.css
+├─ css/ux-improvements.css
 ├─ js/page-data.js
 ├─ js/app.js
+├─ js/ux-improvements.js
 ├─ pages/*.js
 ├─ data/page_inventory.json
 ├─ data/page_inventory.csv
@@ -50,6 +64,7 @@ HHVC_manager_review_current_tool_package/
 
 - Edit public page content in `pages/*.js`.
 - Edit render behavior in `js/app.js`.
+- Edit UX review helpers in `js/ux-improvements.js` and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.
@@ -75,3 +90,5 @@ HHVC_manager_review_current_tool_package/
 ## Automation note
 
 Best workflow: export manager-review CSV files into a watched Drive folder, then use Make.com to update only matching review rows in the master workbook by `page_key` or `url_slug`.
+
+The new copyable review summary can also be used for lightweight manual triage in GitHub issues, Gmail, Teams, or the master workbook before CSV import is automated.
