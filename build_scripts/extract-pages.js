@@ -9,7 +9,8 @@ const files = [
   'pages/agency-service-grouping.js','pages/report-rats-or-mice.js','pages/report-cockroaches.js','pages/report-bed-bugs.js',
   'pages/bed-bug-rules-prevention.js','pages/report-mosquitoes.js','pages/report-vegetation-garbage.js','pages/report-mold-humidity-condensation.js','pages/hhvc-inspection-scope.js',
   'pages/integrated-pest-management-property-managers.js','pages/what-happens-after-report.js','pages/tenant-rights-reporting.js',
-  'pages/keep-rats-and-mice-out.js','pages/prevent-cockroaches.js','pages/prevent-mosquitoes.js','js/page-data.js'
+  'pages/keep-rats-and-mice-out.js','pages/prevent-cockroaches.js','pages/prevent-mosquitoes.js',
+  'pages/pay-healthy-housing-fee.js','pages/reduce-indoor-moisture.js','js/page-data.js'
 ];
 for (const f of files) {
   const code = fs.readFileSync(path.join(root, f), 'utf8');

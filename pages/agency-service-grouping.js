@@ -107,6 +107,12 @@ window.HHVC_PAGES["pestsTopic"] = {
           "text": "Use prevention, monitoring, repairs, and resident outreach to reduce pests in buildings.",
           "target": "ownerGuidance",
           "karl": "Topic page resource item"
+        },
+        {
+          "title": "Reduce indoor moisture, condensation, and humidity",
+          "text": "Learn how to reduce moisture and humidity to prevent mold growth.",
+          "target": "reduceMoisture",
+          "karl": "Topic page resource item"
         }
       ]
     },
@@ -128,6 +134,12 @@ window.HHVC_PAGES["pestsTopic"] = {
           "title": "What happens after you report",
           "text": "Learn how 311 reports are reviewed and when an inspector may contact you.",
           "target": "afterReport",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "Pay your Healthy Housing fee",
+          "text": "Pay the program fee for residential buildings with 3 or more units.",
+          "target": "payFee",
           "karl": "Topic page resource item"
         }
       ]

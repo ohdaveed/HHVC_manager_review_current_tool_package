@@ -65,9 +65,13 @@ window.HHVC_PAGES["afterReport"] = {
       "karl": "Body: Compliance and enforcement pathway",
       "kind": "body",
       "paragraphs": [
-        "An inspection may identify conditions that need to be corrected. Property owners or responsible parties may need to fix the problem.",
-        "If violations are not corrected, Environmental Health may issue a Notice of Violation and set a compliance period.",
-        "Follow-up inspections, reinspection fees, citations, or a Director’s Hearing may follow if the problem remains unresolved."
+        "If an inspection identifies a violation, Environmental Health will issue a Notice of Violation (NOV) to the responsible parties. The NOV will outline required corrections and set a specific compliance deadline based on severity:",
+        "• Imminent Hazards (48 to 72 hours): Urgent issues like raw sewage backups or severe biohazard contamination require immediate correction.",
+        "• Vector Control and Vegetation (14 days): Overgrown vegetation, trash piles, or other rodent harborages must be resolved within 14 days.",
+        "• Standard Repairs and Mold (30 days): General sanitation problems, minor gaps/cracks, and mold remediation must be completed within 30 days.",
+        "• Bed Bug Treatment: Landlords must initiate professional treatment within 2 working days of confirmation.",
+        "If a property owner does not correct the problem by the deadline, DPH may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).",
+        "Persistent violations can result in citations, administrative fines of up to $1,000 per day, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs."
       ]
     },
     {

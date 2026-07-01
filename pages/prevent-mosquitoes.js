@@ -12,18 +12,47 @@ window.HHVC_PAGES["mosquitoesPrevent"] = {
   "reading": "Grade 6",
   "sections": [
     {
-      "heading": "How to prevent mosquitoes",
-      "karl": "Body: Prevention guidance section",
+      "heading": "Eliminate standing water",
+      "karl": "Body: Eliminate standing water",
       "kind": "body",
       "paragraphs": [
-        "Focus on the things pests need to live: food, water, shelter, and access."
+        "Mosquitoes must have standing water to develop and breed. Mosquito eggs hatch into active, wiggling larvae that live at the water surface. Eliminating standing water helps prevent mosquitoes and reduce pests around your property.",
+        "Standing water under houses or in basements is a major source of mosquitoes in urban areas."
       ],
       "bullets": [
-        "Empty buckets, plant saucers, toys, and other containers",
-        "Clean gutters and drains",
-        "Cover or remove items that collect rainwater",
-        "Maintain fountains, ponds, and water features",
-        "Report standing water that you cannot remove"
+        "Containers: Empty, invert, cover, or throw away buckets, drums, plant saucers, and other outdoor containers that hold water.",
+        "Rainwater: Clean gutters and drains regularly, and cover items that collect rainwater.",
+        "Pools and Spas: Keep them chlorinated and covered tightly when not in use. Drain water off the covers.",
+        "Backyard Ponds: Stock fishponds with mosquito fish, remove excess weeds, and maintain proper water flow.",
+        "Bird Baths: Change the water at least once a week.",
+        "Basements and Crawls: Keep areas under houses dry. Repair leaking pipes, dripping faucets, and condensation lines.",
+        "Tires: Store tires indoors, cover them, or dispose of them properly so they do not collect water."
+      ]
+    },
+    {
+      "heading": "Follow West Nile virus precautions",
+      "karl": "Body: West Nile virus precautions",
+      "kind": "body",
+      "paragraphs": [
+        "West Nile virus is spread to humans through the bite of an infected mosquito. Mosquitoes become infected when they feed on infected birds. Protect yourself and your property with these simple steps:"
+      ],
+      "bullets": [
+        "Install window screens: Repair or install screens on windows and doors. Keep windows closed before dusk.",
+        "Avoid overwatering: Do not overwater gardens or lawns. Allow the soil to dry between watering sessions.",
+        "Trim plants: Thin dense shrubs, vines, and groundcover where adult mosquitoes hide and rest.",
+        "Protect skin: Wear insect repellent and long clothing when mosquitoes are active."
+      ]
+    },
+    {
+      "heading": "Report standing water and mosquitoes",
+      "karl": "Body: Mosquito reporting",
+      "kind": "body",
+      "paragraphs": [
+        "You can report standing water or mosquito concerns to the City. DPH will investigate complaints and can treat catch basins and standing water to prevent breeding."
+      ],
+      "bullets": [
+        "Report unusual mosquito activity or standing water to the SFDPH Mosquito Control Program at 415-252-3806 or by calling 311.",
+        "For additional information, visit SFMosquito.org, WestNile.ca.gov, or call 1-877-WNV-BIRD."
       ]
     },
     {

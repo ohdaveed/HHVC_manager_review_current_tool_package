@@ -35,6 +35,10 @@ window.HHVC_DATA = {
     "Transaction: Report mold from humidity or condensation"
   ],
   [
+    "payFee",
+    "Transaction: Pay your Healthy Housing fee"
+  ],
+  [
     "scopeInfo",
     "Information: Learn what HHVC can inspect"
   ],
@@ -61,6 +65,10 @@ window.HHVC_DATA = {
   [
     "mosquitoesPrevent",
     "Information: Prevent mosquitoes"
+  ],
+  [
+    "reduceMoisture",
+    "Information: Reduce indoor moisture, condensation, and humidity"
   ]
 ]
 };

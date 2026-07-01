@@ -14,11 +14,11 @@ window.HHVC_PAGES["ownerGuidance"] = {
   "sections": [
     {
       "heading": "Use IPM to prevent pests",
-      "karl": "Information page body: Introduction. Editor note: legal/source review needed before final Article 11 or SF Housing Code citation.",
+      "karl": "Information page body: Introduction.",
       "kind": "body",
       "paragraphs": [
         "Property owners, managers, and building operators have responsibilities to keep buildings free of vermin under San Francisco health and housing rules.",
-        "Integrated Pest Management, or IPM, is a prevention-first approach. It uses inspection, maintenance, sanitation, exclusion, monitoring, and targeted treatment to reduce pests and limit heavy pesticide use."
+        "Integrated Pest Management, or IPM, is a prevention-first approach. It uses inspection, maintenance, sanitation, exclusion, monitoring, and targeted treatment to reduce pests and limit heavy pesticide use under Article 11 of the San Francisco Health Code."
       ],
       "bullets": [
         "Prevent pests before infestations spread",
@@ -28,7 +28,22 @@ window.HHVC_PAGES["ownerGuidance"] = {
       ]
     },
     {
-      "heading": "1. Set policies, plans, and lease expectations",
+      "heading": "1. Follow San Francisco owner responsibilities",
+      "karl": "Information page body section. SFDPH Director's Rules and Regulations requirements.",
+      "kind": "body",
+      "paragraphs": [
+        "The San Francisco Department of Public Health (SFDPH) Director's Rules and Regulations set specific legal requirements for rental property owners and managers to prevent and control rodents and other vectors."
+      ],
+      "bullets": [
+        "Investigate reports: Investigate any tenant reports of pest activity within 72 hours.",
+        "Recordkeeping: Keep accurate records of pest complaints, inspections, and pest control services for at least 2 years. Make these records available to DPH on request.",
+        "Hire licensed professionals: Hire only licensed Pest Control Operators (PCOs) to apply pesticides or conduct rat trapping.",
+        "Garbage management: Provide enough rigid plastic or metal containers with tight-fitting lids. Ensure the garbage area is clean and serviced regularly to prevent overflow.",
+        "Staff training: Train building staff on pest recognition, sanitation, exclusion, and safe disposal of infested items."
+      ]
+    },
+    {
+      "heading": "2. Set policies, plans, and lease expectations",
       "karl": "Information page body section. External link supports policy, plan, and lease-language templates.",
       "kind": "placement",
       "paragraphs": [
@@ -50,17 +65,18 @@ window.HHVC_PAGES["ownerGuidance"] = {
       ]
     },
     {
-      "heading": "2. Prevent pests and seal entry points",
+      "heading": "3. Prevent pests and seal entry points",
       "karl": "Information page body section. External links support pest prevention, exclusion, and SFED design guidance.",
       "kind": "placement",
       "paragraphs": [
-        "Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance and sanitation are core parts of IPM."
+        "Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance, landscape management, and sanitation are core parts of IPM."
       ],
       "bullets": [
-        "Seal gaps around doors, windows, pipes, vents, and utility openings",
-        "Keep garbage areas clean, covered, and serviced often enough to prevent overflow",
-        "Remove clutter, standing water, and dense vegetation that can shelter pests",
-        "Build pest-proofing into repair, remodeling, and construction work"
+        "Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings using steel wool, hardware cloth, or mortar.",
+        "Maintain tree and shrub branches at least 3 feet away from walls or roofs to prevent rodents from climbing onto structures.",
+        "Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.",
+        "Apply gravel around foundations to prevent burrowing, and stack wood piles or lumber at least 6 inches off the ground.",
+        "Build pest-proofing into repair, remodeling, and construction work."
       ],
       "cards": [
         {
@@ -78,17 +94,18 @@ window.HHVC_PAGES["ownerGuidance"] = {
       ]
     },
     {
-      "heading": "3. Track pest activity and follow-up work",
+      "heading": "4. Track pest activity and coordinate treatments",
       "karl": "Information page body section. External link supports monitoring logs and recordkeeping templates.",
       "kind": "placement",
       "paragraphs": [
-        "Track pest activity so you can see patterns and respond before problems spread. Records help staff, pest control contractors, and inspectors understand what has already been reported or repaired."
+        "Track pest activity so you can see patterns and respond before problems spread. Coordinated pest control services are required to handle infestations effectively."
       ],
       "bullets": [
-        "Use one system for pest complaints and follow-up work",
-        "Log where pests are found and what conditions may be supporting them",
-        "Track repairs, sanitation work, contractor visits, and treatment notices",
-        "Review records regularly to find repeated or building-wide problems"
+        "Use one system to log complaints, repairs, sanitation work, and contractor visits.",
+        "Ensure the PCO conducts a complete inspection and identifies the type and level of infestation.",
+        "Inspect adjacent units: When an infestation is reported, the PCO must inspect all adjacent units (and treat them if necessary).",
+        "Use least-toxic methods: Prioritize non-chemical methods (vacuuming, heat, steam, freezing) and gel baits over chemical sprays.",
+        "Review records regularly to find repeated or building-wide problems."
       ],
       "cards": [
         {
@@ -100,17 +117,17 @@ window.HHVC_PAGES["ownerGuidance"] = {
       ]
     },
     {
-      "heading": "4. Share clear instructions with residents",
+      "heading": "5. Share clear instructions and support residents",
       "karl": "Information page body section. External link supports resident education and multilingual handouts.",
       "kind": "placement",
       "paragraphs": [
-        "Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions and respond quickly when they report pest activity."
+        "Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions, advance notification, and help those who need it."
       ],
       "bullets": [
-        "Explain how residents should report pest activity",
-        "Give clear notices before inspections or treatment",
-        "Share simple prevention steps for food storage, garbage, clutter, and access for treatment",
-        "Use translated materials when possible"
+        "Explain how residents should report pest activity in writing.",
+        "Give proper written notice before pesticide treatments, following state laws.",
+        "Provide assistance to tenants who cannot safely prepare their unit for treatment due to a disability or medical need by contacting support services.",
+        "Use translated materials to share simple food storage, garbage, and clutter prevention steps."
       ],
       "cards": [
         {

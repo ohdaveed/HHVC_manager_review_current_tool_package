@@ -108,6 +108,12 @@
               "text": "Use prevention, monitoring, repairs, and resident outreach to reduce pests in buildings.",
               "target": "ownerGuidance",
               "karl": "Topic page resource item"
+            },
+            {
+              "title": "Reduce indoor moisture, condensation, and humidity",
+              "text": "Learn how to reduce moisture and humidity to prevent mold growth.",
+              "target": "reduceMoisture",
+              "karl": "Topic page resource item"
             }
           ]
         },
@@ -129,6 +135,12 @@
               "title": "What happens after you report",
               "text": "Learn how 311 reports are reviewed and when an inspector may contact you.",
               "target": "afterReport",
+              "karl": "Topic page resource item"
+            },
+            {
+              "title": "Pay your Healthy Housing fee",
+              "text": "Pay the program fee for residential buildings with 3 or more units.",
+              "target": "payFee",
               "karl": "Topic page resource item"
             }
           ]
@@ -526,31 +538,58 @@
           ]
         },
         {
-          "heading": "What the bed bug rules cover",
-          "karl": "Body: Plain-language summary of linked Director’s Rules",
+          "heading": "Owner and manager responsibilities",
+          "karl": "Body: Landlord responsibilities",
           "kind": "body",
           "paragraphs": [
-            "The Director’s Rules explain detailed prevention and control requirements for bed bugs in San Francisco."
+            "San Francisco Health Code Article 11A and DPH regulations outline clear requirements for property owners and managers to control bed bugs professionally:"
           ],
           "bullets": [
-            "Owner, operator, and property manager responsibilities",
-            "Tenant preparation before treatment",
-            "Treatment coordination and follow-up",
-            "Written prevention and control plans",
-            "Employee training and building practices"
+            "Hire licensed professionals: Owners cannot use uncertified building staff to treat bed bugs. They must hire a licensed Pest Control Operator (PCO).",
+            "Investigate early: Investigate any tenant reports of suspected bed bugs within 72 hours.",
+            "Inspect adjacent units: Upon confirming bed bug activity, owners must direct a PCO to inspect all adjacent units (above, below, and on both sides of the infested unit).",
+            "Pre-tenancy disclosure: Before a new tenant moves in, the landlord must provide a written history of any bed bug infestations and treatments in the unit over the last 24 months.",
+            "Provide mattress encasements: Furnished units must be supplied with breathable, bed bug-proof encasements for all mattresses and box springs at move-in."
           ]
         },
         {
-          "heading": "What this page is for",
-          "karl": "Body: Plain-language information section",
+          "heading": "Tenant responsibilities and preparation",
+          "karl": "Body: Tenant responsibilities",
           "kind": "body",
           "paragraphs": [
-            "This page helps tenants, tenant helpers, property owners, and managers find the official rules and understand what topics they cover."
+            "Tenants are required to cooperate with inspections and treatments under San Francisco rules. Failure to cooperate can result in a Notice of Violation."
           ],
           "bullets": [
-            "Tenants can use the rules to understand treatment preparation and what to expect during a bed bug response",
-            "Property owners and managers can use the rules to understand prevention, control, and written-plan expectations",
-            "Use the official PDF when detailed rule language is needed"
+            "Report quickly: Report any signs of suspected bed bugs to the owner or manager in writing within two working days of detecting them.",
+            "Grant access: Allow reasonable access for inspections and PCO treatment visits.",
+            "Wash and dry clothing: Launder all clothes, bedding, and fabrics in hot water, and dry them on the hottest setting for at least 30 minutes.",
+            "Store in sealed bags: Keep laundered items in durable, sealed plastic bags outside the unit or in a designated area until the PCO clears the unit.",
+            "Clear furniture space: Move all furniture at least 12 inches away from walls to give the PCO access to baseboards."
+          ]
+        },
+        {
+          "heading": "Safe disposal of infested items",
+          "karl": "Body: Infested item disposal",
+          "kind": "body",
+          "paragraphs": [
+            "To prevent sidewalk scavenging and stop the spread of bed bugs, discarded items must be labeled and disposed of correctly."
+          ],
+          "bullets": [
+            "Items must be treated by the PCO, double-bagged in durable plastic, and sealed.",
+            "Label bags in English, Spanish, and Chinese: 'INFESTED MATERIAL - DO NOT TAKE' | 'CHINCHES DE CAMA' | '床 蝨'."
+          ]
+        },
+        {
+          "heading": "Eradication and abatement timeline",
+          "karl": "Body: Abatement monitoring timeline",
+          "kind": "body",
+          "paragraphs": [
+            "Legally, a bed bug infestation is not considered resolved (abated) immediately after treatment."
+          ],
+          "bullets": [
+            "4-Week Monitoring Period: Abatement is achieved only after a 28-day period of zero bed bug activity, verified by a PCO using monitoring devices (interceptors).",
+            "Abatement Notice: Landlords must provide a written 'Abatement Achieved' notice to the tenant after the 28-day clear period.",
+            "DPH Re-inspection: DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation."
           ]
         },
         {
@@ -1000,11 +1039,11 @@
       "sections": [
         {
           "heading": "Use IPM to prevent pests",
-          "karl": "Information page body: Introduction. Editor note: legal/source review needed before final Article 11 or SF Housing Code citation.",
+          "karl": "Information page body: Introduction.",
           "kind": "body",
           "paragraphs": [
             "Property owners, managers, and building operators have responsibilities to keep buildings free of vermin under San Francisco health and housing rules.",
-            "Integrated Pest Management, or IPM, is a prevention-first approach. It uses inspection, maintenance, sanitation, exclusion, monitoring, and targeted treatment to reduce pests and limit heavy pesticide use."
+            "Integrated Pest Management, or IPM, is a prevention-first approach. It uses inspection, maintenance, sanitation, exclusion, monitoring, and targeted treatment to reduce pests and limit heavy pesticide use under Article 11 of the San Francisco Health Code."
           ],
           "bullets": [
             "Prevent pests before infestations spread",
@@ -1014,7 +1053,22 @@
           ]
         },
         {
-          "heading": "1. Set policies, plans, and lease expectations",
+          "heading": "1. Follow San Francisco owner responsibilities",
+          "karl": "Information page body section. SFDPH Director's Rules and Regulations requirements.",
+          "kind": "body",
+          "paragraphs": [
+            "The San Francisco Department of Public Health (SFDPH) Director's Rules and Regulations set specific legal requirements for rental property owners and managers to prevent and control rodents and other vectors."
+          ],
+          "bullets": [
+            "Investigate reports: Investigate any tenant reports of pest activity within 72 hours.",
+            "Recordkeeping: Keep accurate records of pest complaints, inspections, and pest control services for at least 2 years. Make these records available to DPH on request.",
+            "Hire licensed professionals: Hire only licensed Pest Control Operators (PCOs) to apply pesticides or conduct rat trapping.",
+            "Garbage management: Provide enough rigid plastic or metal containers with tight-fitting lids. Ensure the garbage area is clean and serviced regularly to prevent overflow.",
+            "Staff training: Train building staff on pest recognition, sanitation, exclusion, and safe disposal of infested items."
+          ]
+        },
+        {
+          "heading": "2. Set policies, plans, and lease expectations",
           "karl": "Information page body section. External link supports policy, plan, and lease-language templates.",
           "kind": "placement",
           "paragraphs": [
@@ -1036,17 +1090,18 @@
           ]
         },
         {
-          "heading": "2. Prevent pests and seal entry points",
+          "heading": "3. Prevent pests and seal entry points",
           "karl": "Information page body section. External links support pest prevention, exclusion, and SFED design guidance.",
           "kind": "placement",
           "paragraphs": [
-            "Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance and sanitation are core parts of IPM."
+            "Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance, landscape management, and sanitation are core parts of IPM."
           ],
           "bullets": [
-            "Seal gaps around doors, windows, pipes, vents, and utility openings",
-            "Keep garbage areas clean, covered, and serviced often enough to prevent overflow",
-            "Remove clutter, standing water, and dense vegetation that can shelter pests",
-            "Build pest-proofing into repair, remodeling, and construction work"
+            "Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings using steel wool, hardware cloth, or mortar.",
+            "Maintain tree and shrub branches at least 3 feet away from walls or roofs to prevent rodents from climbing onto structures.",
+            "Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.",
+            "Apply gravel around foundations to prevent burrowing, and stack wood piles or lumber at least 6 inches off the ground.",
+            "Build pest-proofing into repair, remodeling, and construction work."
           ],
           "cards": [
             {
@@ -1064,17 +1119,18 @@
           ]
         },
         {
-          "heading": "3. Track pest activity and follow-up work",
+          "heading": "4. Track pest activity and coordinate treatments",
           "karl": "Information page body section. External link supports monitoring logs and recordkeeping templates.",
           "kind": "placement",
           "paragraphs": [
-            "Track pest activity so you can see patterns and respond before problems spread. Records help staff, pest control contractors, and inspectors understand what has already been reported or repaired."
+            "Track pest activity so you can see patterns and respond before problems spread. Coordinated pest control services are required to handle infestations effectively."
           ],
           "bullets": [
-            "Use one system for pest complaints and follow-up work",
-            "Log where pests are found and what conditions may be supporting them",
-            "Track repairs, sanitation work, contractor visits, and treatment notices",
-            "Review records regularly to find repeated or building-wide problems"
+            "Use one system to log complaints, repairs, sanitation work, and contractor visits.",
+            "Ensure the PCO conducts a complete inspection and identifies the type and level of infestation.",
+            "Inspect adjacent units: When an infestation is reported, the PCO must inspect all adjacent units (and treat them if necessary).",
+            "Use least-toxic methods: Prioritize non-chemical methods (vacuuming, heat, steam, freezing) and gel baits over chemical sprays.",
+            "Review records regularly to find repeated or building-wide problems."
           ],
           "cards": [
             {
@@ -1086,17 +1142,17 @@
           ]
         },
         {
-          "heading": "4. Share clear instructions with residents",
+          "heading": "5. Share clear instructions and support residents",
           "karl": "Information page body section. External link supports resident education and multilingual handouts.",
           "kind": "placement",
           "paragraphs": [
-            "Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions and respond quickly when they report pest activity."
+            "Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions, advance notification, and help those who need it."
           ],
           "bullets": [
-            "Explain how residents should report pest activity",
-            "Give clear notices before inspections or treatment",
-            "Share simple prevention steps for food storage, garbage, clutter, and access for treatment",
-            "Use translated materials when possible"
+            "Explain how residents should report pest activity in writing.",
+            "Give proper written notice before pesticide treatments, following state laws.",
+            "Provide assistance to tenants who cannot safely prepare their unit for treatment due to a disability or medical need by contacting support services.",
+            "Use translated materials to share simple food storage, garbage, and clutter prevention steps."
           ],
           "cards": [
             {
@@ -1204,9 +1260,13 @@
           "karl": "Body: Compliance and enforcement pathway",
           "kind": "body",
           "paragraphs": [
-            "An inspection may identify conditions that need to be corrected. Property owners or responsible parties may need to fix the problem.",
-            "If violations are not corrected, Environmental Health may issue a Notice of Violation and set a compliance period.",
-            "Follow-up inspections, reinspection fees, citations, or a Director’s Hearing may follow if the problem remains unresolved."
+            "If an inspection identifies a violation, Environmental Health will issue a Notice of Violation (NOV) to the responsible parties. The NOV will outline required corrections and set a specific compliance deadline based on severity:",
+            "• Imminent Hazards (48 to 72 hours): Urgent issues like raw sewage backups or severe biohazard contamination require immediate correction.",
+            "• Vector Control and Vegetation (14 days): Overgrown vegetation, trash piles, or other rodent harborages must be resolved within 14 days.",
+            "• Standard Repairs and Mold (30 days): General sanitation problems, minor gaps/cracks, and mold remediation must be completed within 30 days.",
+            "• Bed Bug Treatment: Landlords must initiate professional treatment within 2 working days of confirmation.",
+            "If a property owner does not correct the problem by the deadline, DPH may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).",
+            "Persistent violations can result in citations, administrative fines of up to $1,000 per day, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs."
           ]
         },
         {
@@ -1316,18 +1376,89 @@
       "reading": "Grade 6",
       "sections": [
         {
-          "heading": "How to prevent rats or mice",
-          "karl": "Body: Prevention guidance section",
+          "heading": "1. Inspect and identify signs of activity",
+          "karl": "Body: Step 1 Inspect and Identify",
           "kind": "body",
           "paragraphs": [
-            "Focus on the things pests need to live: food, water, shelter, and access."
+            "Look for signs of rodents before starting treatment. Knowing the type of rodent helps you target control efforts.",
+            "Norway Rats are 1 to 1.5 feet long with shorter tails. They prefer basements and burrows.",
+            "Roof Rats weigh 0.5 to 0.6 lbs and have tails longer than their bodies. They live in attics and ceilings.",
+            "House Mice are 2.5 to 3.5 inches long with tails longer than their bodies. They hide in drawers and cupboards."
           ],
           "bullets": [
-            "Store food in sealed metal, glass, or hard plastic containers",
-            "Keep garbage areas clean and covered",
-            "Remove clutter and storage that can shelter pests",
-            "Seal holes and openings with rodent-proof materials",
-            "Trim plants and branches away from buildings"
+            "Droppings: Fresh droppings are dark and moist. Old droppings are gray and hard.",
+            "Rub marks: Look for dark, oily smears along walls, pipes, and beams.",
+            "Gnaw marks: Check baseboards, cords, and packaging for tooth marks.",
+            "Burrows: Norway rats dig holes about 3 inches wide near foundations and outdoors.",
+            "Night Rule: Seeing rodents during the day usually means a serious, overpopulated infestation."
+          ]
+        },
+        {
+          "heading": "2. Seal entry points (Exclusion)",
+          "karl": "Body: Step 2 Exclusion",
+          "kind": "body",
+          "paragraphs": [
+            "Keep rodents out by sealing gaps and building physical barriers. Rodents can chew through wood, plastic, and plaster to find food."
+          ],
+          "bullets": [
+            "Seal all gaps larger than 1/4 inch (about the width of a pencil) with steel wool, sheet metal, or wire mesh.",
+            "Check entry points around pipes, cables, conduits, floors, and baseboards.",
+            "Install door sweeps on exterior doors and escutcheon plates around plumbing pipes.",
+            "Screen vents and crawl spaces with 1/4-inch corrosion-resistant hardware cloth.",
+            "Clear brush, grass, and clutter at least 2 feet around building foundations.",
+            "Trim tree branches and vegetation at least 4 feet away from roofs and balconies. Roof rats use overhanging branches to reach attics."
+          ]
+        },
+        {
+          "heading": "3. Sanitation and prevention",
+          "karl": "Body: Step 3 Sanitation and Prevention",
+          "kind": "body",
+          "paragraphs": [
+            "Starve rodents out by removing their food, water, and nesting places. Rodents need access to water and food daily."
+          ],
+          "bullets": [
+            "Store all food in sealed pest-proof containers made of metal, glass, or hard plastic.",
+            "Secure garbage in covered bins and keep trash areas clean.",
+            "Fix leaking pipes and dripping faucets to remove water sources.",
+            "Remove indoor and outdoor clutter, wood piles, and debris where rodents can nest.",
+            "IPM Action Threshold: Any confirmed rodent activity in a home meets the threshold. Act immediately instead of waiting for multiple signs."
+          ]
+        },
+        {
+          "heading": "4. Use traps for active control",
+          "karl": "Body: Step 4 Active Management and Control",
+          "kind": "body",
+          "paragraphs": [
+            "Prioritize traps over poison to control rodents safely. Rodenticides (poison baits) pose secondary poisoning risks to children, pets, and wildlife."
+          ],
+          "bullets": [
+            "Use snap traps or electrocution traps as first-line control.",
+            "Wear gloves when setting and handling traps, as human scent can deter rodents.",
+            "Place traps perpendicular to walls with the trigger end facing the baseboard.",
+            "Cluster multiple traps in high-activity zones (near droppings or rub marks).",
+            "Space mouse traps 6 to 10 feet apart along walls.",
+            "Space rat traps 15 to 30 feet apart. Target elevated runs for roof rats, and ground levels or burrows for Norway rats.",
+            "Check traps every 24 to 48 hours for mice, and every 48 to 72 hours for rats.",
+            "Relocate unsprung traps to a new position if they catch nothing after 3 days.",
+            "Seek a licensed Pest Control Operator (PCO) for severe or building-wide infestations."
+          ]
+        },
+        {
+          "heading": "5. Safe cleanup and disinfection",
+          "karl": "Body: Step 5 Safe Cleanup and Disinfection",
+          "kind": "body",
+          "paragraphs": [
+            "Clean up rodent areas carefully to avoid spreading diseases like Hantavirus. Never sweep or vacuum dry droppings or nests."
+          ],
+          "bullets": [
+            "1:10 Disinfection Rule: Mix 1 part bleach with 10 parts water. Thoroughly wet droppings and nesting material.",
+            "Let the bleach solution soak for 5 minutes before wiping up.",
+            "Use damp paper towels or a wet mop. Never sweep or vacuum, which can release virus particles into the air.",
+            "Ventilate the area by opening windows and doors for 30 minutes before cleaning.",
+            "Double-bag all waste in plastic bags, seal them tightly, and dispose of them in an outdoor garbage bin immediately.",
+            "Wear an N95 respirator (minimum) and nitrile or rubber gloves (not latex) during cleanup.",
+            "Wear disposable coveralls for heavy infestations and eye protection if spraying disinfectant.",
+            "Wash hands thoroughly with soap and water after removing gloves."
           ]
         },
         {
@@ -1374,18 +1505,45 @@
       "reading": "Grade 6",
       "sections": [
         {
-          "heading": "How to prevent cockroaches",
-          "karl": "Body: Prevention guidance section",
+          "heading": "Starve them of food and water",
+          "karl": "Body: Starve cockroaches",
           "kind": "body",
           "paragraphs": [
-            "Focus on the things pests need to live: food, water, shelter, and access."
+            "Cockroaches need food, water, and shelter to survive. Removing their food and moisture is the most effective way to prevent cockroaches from nesting in your home."
           ],
           "bullets": [
-            "Store food in sealed containers",
-            "Clean food debris and grease",
-            "Keep garbage covered and remove it often",
-            "Reduce clutter where cockroaches can hide",
-            "Fix moisture problems when possible"
+            "Clean grease and crumbs daily from countertops, stoves, sinks, and under kitchen appliances.",
+            "Store all food in sealed plastic, glass, or metal containers.",
+            "Keep kitchen sinks dry and fix any plumbing leaks immediately. Cockroaches need daily access to water.",
+            "Keep trash bins clean and covered, and empty garbage containers every night.",
+            "Do not leave pet food or water bowls out overnight."
+          ]
+        },
+        {
+          "heading": "Eliminate cockroach hiding spots",
+          "karl": "Body: Eliminate cockroach shelter",
+          "kind": "body",
+          "paragraphs": [
+            "Cockroaches hide in dark, tight spaces during the day. Reducing clutter and sealing openings prevents them from establishing nests."
+          ],
+          "bullets": [
+            "Seal gaps and cracks in cabinets, baseboards, walls, and where pipes or conduits enter walls.",
+            "Remove cardboard boxes, paper bags, and piles of newspapers. Cockroaches feed on glue and use paper for shelter and breeding.",
+            "Keep storage areas clean, organized, and elevated off the floor."
+          ]
+        },
+        {
+          "heading": "Use safe treatment methods",
+          "karl": "Body: Safe cockroach treatment",
+          "kind": "body",
+          "paragraphs": [
+            "Prioritize non-chemical or low-toxic treatments. Standard chemical sprays often scatter cockroaches to other units instead of eliminating them.",
+            "Gel baits are generally safer than sprays if chemicals must be used."
+          ],
+          "bullets": [
+            "Use sticky traps (glue traps) to monitor cockroach activity and identify high-activity areas.",
+            "Use cockroach gel baits or bait stations. Baits are highly targeted and safer than aerosol sprays, especially around children and pets.",
+            "Avoid using chemical bug bombs or aerosol sprays, which can spread pesticides into living spaces and irritate breathing."
           ]
         },
         {
@@ -1432,18 +1590,47 @@
       "reading": "Grade 6",
       "sections": [
         {
-          "heading": "How to prevent mosquitoes",
-          "karl": "Body: Prevention guidance section",
+          "heading": "Eliminate standing water",
+          "karl": "Body: Eliminate standing water",
           "kind": "body",
           "paragraphs": [
-            "Focus on the things pests need to live: food, water, shelter, and access."
+            "Mosquitoes must have standing water to develop and breed. Mosquito eggs hatch into active, wiggling larvae that live at the water surface. Eliminating standing water helps prevent mosquitoes and reduce pests around your property.",
+            "Standing water under houses or in basements is a major source of mosquitoes in urban areas."
           ],
           "bullets": [
-            "Empty buckets, plant saucers, toys, and other containers",
-            "Clean gutters and drains",
-            "Cover or remove items that collect rainwater",
-            "Maintain fountains, ponds, and water features",
-            "Report standing water that you cannot remove"
+            "Containers: Empty, invert, cover, or throw away buckets, drums, plant saucers, and other outdoor containers that hold water.",
+            "Rainwater: Clean gutters and drains regularly, and cover items that collect rainwater.",
+            "Pools and Spas: Keep them chlorinated and covered tightly when not in use. Drain water off the covers.",
+            "Backyard Ponds: Stock fishponds with mosquito fish, remove excess weeds, and maintain proper water flow.",
+            "Bird Baths: Change the water at least once a week.",
+            "Basements and Crawls: Keep areas under houses dry. Repair leaking pipes, dripping faucets, and condensation lines.",
+            "Tires: Store tires indoors, cover them, or dispose of them properly so they do not collect water."
+          ]
+        },
+        {
+          "heading": "Follow West Nile virus precautions",
+          "karl": "Body: West Nile virus precautions",
+          "kind": "body",
+          "paragraphs": [
+            "West Nile virus is spread to humans through the bite of an infected mosquito. Mosquitoes become infected when they feed on infected birds. Protect yourself and your property with these simple steps:"
+          ],
+          "bullets": [
+            "Install window screens: Repair or install screens on windows and doors. Keep windows closed before dusk.",
+            "Avoid overwatering: Do not overwater gardens or lawns. Allow the soil to dry between watering sessions.",
+            "Trim plants: Thin dense shrubs, vines, and groundcover where adult mosquitoes hide and rest.",
+            "Protect skin: Wear insect repellent and long clothing when mosquitoes are active."
+          ]
+        },
+        {
+          "heading": "Report standing water and mosquitoes",
+          "karl": "Body: Mosquito reporting",
+          "kind": "body",
+          "paragraphs": [
+            "You can report standing water or mosquito concerns to the City. DPH will investigate complaints and can treat catch basins and standing water to prevent breeding."
+          ],
+          "bullets": [
+            "Report unusual mosquito activity or standing water to the SFDPH Mosquito Control Program at 415-252-3806 or by calling 311.",
+            "For additional information, visit SFMosquito.org, WestNile.ca.gov, or call 1-877-WNV-BIRD."
           ]
         },
         {
@@ -1476,6 +1663,262 @@
           ]
         }
       ]
+    },
+    "payFee": {
+      "slug": "sf.gov/pay-healthy-housing-fee-buildings-3-or-more-units",
+      "type": "Transaction",
+      "title": "Pay your Healthy Housing fee for buildings with 3 or more units",
+      "summary": "Pay or learn about the Healthy Housing program fee for some San Francisco residential buildings.",
+      "audience": [
+        "People who own a residential building in San Francisco",
+        "Property managers and billing contacts helping an owner pay or understand the fee"
+      ],
+      "reading": "Grade 6 to 8",
+      "sections": [
+        {
+          "heading": "Before you pay",
+          "karl": "Body: Before you pay",
+          "kind": "body",
+          "paragraphs": [
+            "Have your notice, property address, or account information ready before you start.",
+            "Use the payment route listed on your notice when one is provided."
+          ]
+        },
+        {
+          "heading": "Who may need to pay",
+          "karl": "Body: Who may need to pay",
+          "kind": "body",
+          "paragraphs": [
+            "Healthy Housing program fees may apply to residential buildings with 3 or more units.",
+            "A building with 3 units is exempt if one unit is occupied by the owner.",
+            "Fee details, due dates, account requirements, and payment instructions must be verified before publication."
+          ]
+        },
+        {
+          "heading": "Pay your fee",
+          "karl": "Body: Pay your fee steps",
+          "kind": "body",
+          "paragraphs": [
+            "Use the approved SF.gov payment or billing route to pay your Healthy Housing fee.",
+            "Do not route this page through 311 unless HHVC or SF.gov confirms a support route that uses 311."
+          ],
+          "button": "Pay your Healthy Housing fee"
+        },
+        {
+          "heading": "If you need help",
+          "karl": "Body: If you need help",
+          "kind": "body",
+          "paragraphs": [
+            "Use the contact or help route listed on the final SF.gov fee page or payment notice.",
+            "Do not publish staff-only payment instructions, internal account notes, or unverified fee details."
+          ]
+        },
+        {
+          "heading": "Related pages",
+          "karl": "Related section: right-panel linked pages",
+          "kind": "placement",
+          "cards": [
+            {
+              "title": "Learn what Healthy Housing and Vector Control can inspect",
+              "text": "Check whether Environmental Health may review a pest, vector, or housing health condition.",
+              "target": "scopeInfo"
+            },
+            {
+              "title": "What happens after you report a housing or pest problem",
+              "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+              "target": "afterReport"
+            },
+            {
+              "title": "Pests and housing problems",
+              "text": "Return to the main Topic page for HHVC pest, vector, and housing health issues.",
+              "target": "pestsTopic"
+            },
+            {
+              "title": "Integrated pest management for property managers",
+              "text": "Use prevention, monitoring, and resident outreach to reduce pests in buildings.",
+              "target": "ownerGuidance"
+            }
+          ]
+        }
+      ],
+      "seoTitle": "Pay your Healthy Housing fee | SF.gov",
+      "metaDescription": "Pay or learn about the Healthy Housing fee for San Francisco residential buildings."
+    },
+    "reduceMoisture": {
+      "slug": "sf.gov/information/reduce-indoor-moisture-condensation-humidity",
+      "type": "Information",
+      "title": "Reduce indoor moisture, condensation, and humidity",
+      "summary": "Learn how to reduce moisture, condensation, and humidity that can lead to mold.",
+      "audience": [
+        "People who rent or live in a San Francisco home",
+        "People who live in an SRO or residential hotel in San Francisco",
+        "People who own or manage a residential building in San Francisco",
+        "Building staff or maintenance staff who help prevent indoor moisture problems"
+      ],
+      "reading": "Grade 6",
+      "sections": [
+        {
+          "heading": "Why moisture control matters",
+          "karl": "Body: Moisture control intro",
+          "kind": "body",
+          "paragraphs": [
+            "Mold grows when moisture, warmth, and organic material are present. Many mold problems can be prevented by controlling humidity, improving ventilation, and fixing water problems quickly."
+          ]
+        },
+        {
+          "heading": "Keep indoor humidity in a safer range",
+          "karl": "Body: Humidity control",
+          "kind": "body",
+          "paragraphs": [
+            "Use a hygrometer to check indoor humidity.",
+            "Aim to keep indoor humidity below 55% when possible. A range around 40% to 50% is a good target for many homes.",
+            "Use a dehumidifier when humidity stays above 55%."
+          ]
+        },
+        {
+          "heading": "Ventilate when rooms get wet",
+          "karl": "Body: Ventilation recommendations",
+          "kind": "body",
+          "paragraphs": [
+            "Use ventilation when you shower, cook, dry clothes, or see condensation on surfaces."
+          ],
+          "bullets": [
+            "Run the bathroom fan during showers and for 15 to 20 minutes after.",
+            "Use a range hood while cooking.",
+            "Cover pots while cooking to reduce steam.",
+            "Vent dryers to the outside. Do not vent dryers indoors.",
+            "Open windows for 5 to 15 minutes when outdoor conditions make it safe and practical."
+          ]
+        },
+        {
+          "heading": "Improve airflow",
+          "karl": "Body: Airflow recommendations",
+          "kind": "body",
+          "paragraphs": [
+            "Airflow helps remove damp air, reduce condensation, and dry wet surfaces faster."
+          ],
+          "bullets": [
+            "Pull furniture at least 6 inches away from cold exterior walls.",
+            "Leave closet doors slightly open when possible.",
+            "Do not overstuff closets, especially on exterior walls.",
+            "Do not block vents with furniture or stored items.",
+            "Use table, floor, or ceiling fans when helpful.",
+            "Replace HVAC filters as recommended."
+          ]
+        },
+        {
+          "heading": "Reduce condensation",
+          "karl": "Body: Condensation recommendations",
+          "kind": "body",
+          "paragraphs": [
+            "Condensation can happen when warm, damp air touches cold windows, walls, or other surfaces."
+          ],
+          "bullets": [
+            "Wipe condensation from windows and sills.",
+            "Do not let water drip into walls or window frames.",
+            "Use fans or open windows to move damp air out.",
+            "Reduce steam when cooking or showering."
+          ]
+        },
+        {
+          "heading": "Fix leaks and water problems",
+          "karl": "Body: Leaks and water problems",
+          "kind": "body",
+          "paragraphs": [
+            "Leaks and water intrusion should be addressed quickly. Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem."
+          ],
+          "bullets": [
+            "Dripping pipes",
+            "Roof leaks",
+            "Window leaks",
+            "Water heater leaks",
+            "Wet cabinets or flooring",
+            "Recurring water stains"
+          ]
+        },
+        {
+          "heading": "Clean small mold areas safely",
+          "karl": "Body: Cleaning small mold",
+          "kind": "body",
+          "paragraphs": [
+            "For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.",
+            "Do not paint over mold. Remove the mold first.",
+            "SFDPH does not recommend using bleach for routine small-area mold cleanup."
+          ]
+        },
+        {
+          "heading": "Do not buy third-party mold test kits",
+          "karl": "Body: Third-party testing warning",
+          "kind": "body",
+          "paragraphs": [
+            "Do not buy third-party mold test kits for an HHVC complaint.",
+            "SFDPH does not accept third-party mold test results as part of a complaint investigation. Private laboratory results cannot be independently verified by the Department. SFDPH inspectors conduct their own on-site visual assessments in response to complaints."
+          ]
+        },
+        {
+          "heading": "Room-by-room prevention checklist",
+          "karl": "Body: Room by room guide",
+          "kind": "body",
+          "paragraphs": [
+            "Bathroom: Run the exhaust fan, wipe or squeegee shower walls, check caulking, and clean small areas with soap and water.",
+            "Kitchen: Use the range hood, wipe condensation, check under the sink, and clean refrigerator drip areas.",
+            "Basement: Use a dehumidifier if humidity is high, store items off the floor, avoid storing in cardboard, and check walls/joints.",
+            "Bedroom and living areas: Avoid drying large amounts of laundry indoors, pull large furniture away from exterior walls, wipe window condensation, and do not overwater houseplants.",
+            "Laundry area: Vent the dryer outside, do not leave wet clothes in the machine, clean the lint trap, and check behind appliances."
+          ]
+        },
+        {
+          "heading": "Helpful tools",
+          "karl": "Body: Helpful tools",
+          "kind": "body",
+          "paragraphs": [
+            "Hygrometer: Measures indoor humidity. Place one on each floor if possible.",
+            "Dehumidifier: Removes excess moisture. Use when indoor humidity stays high.",
+            "Fans: Move air and help surfaces dry faster.",
+            "HEPA air purifier: May help capture airborne particles, but it does not fix the moisture source."
+          ]
+        },
+        {
+          "heading": "When to report instead",
+          "karl": "Body: Reporting mold threshold",
+          "kind": "body",
+          "paragraphs": [
+            "Use the reporting page if visible mold affects walls or ceilings and covers 10 square feet or more, moisture or mold keeps coming back, the property owner does not respond, or it affects a shared SRO area."
+          ],
+          "button": "Report mold, moisture, or condensation problems",
+          "buttonStyle": "secondary",
+          "buttonTarget": "moldReport"
+        },
+        {
+          "heading": "Related pages",
+          "karl": "Related section: right-panel linked pages",
+          "kind": "placement",
+          "cards": [
+            {
+              "title": "Report mold from humidity or condensation",
+              "text": "Report mold or moisture caused by humidity, condensation, or poor ventilation.",
+              "target": "moldReport"
+            },
+            {
+              "title": "Learn what Healthy Housing and Vector Control can inspect",
+              "text": "Check whether Environmental Health may review a pest, vector, or housing health condition.",
+              "target": "scopeInfo"
+            },
+            {
+              "title": "What happens after you report a housing or pest problem",
+              "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+              "target": "afterReport"
+            },
+            {
+              "title": "Tenant rights when reporting housing conditions",
+              "text": "Learn about tenant protections and where to get help.",
+              "target": "tenantRights"
+            }
+          ]
+        }
+      ],
+      "seoTitle": "Reduce indoor moisture, condensation, and humidity | SF.gov",
+      "metaDescription": "Learn how to reduce moisture, condensation, and humidity that can lead to mold."
     }
   },
   "order": [
@@ -1512,6 +1955,10 @@
       "Transaction: Report mold from humidity or condensation"
     ],
     [
+      "payFee",
+      "Transaction: Pay your Healthy Housing fee"
+    ],
+    [
       "scopeInfo",
       "Information: Learn what HHVC can inspect"
     ],
@@ -1538,6 +1985,10 @@
     [
       "mosquitoesPrevent",
       "Information: Prevent mosquitoes"
+    ],
+    [
+      "reduceMoisture",
+      "Information: Reduce indoor moisture, condensation, and humidity"
     ]
   ]
 }

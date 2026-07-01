@@ -29,31 +29,58 @@ window.HHVC_PAGES["bedBugsInfo"] = {
       ]
     },
     {
-      "heading": "What the bed bug rules cover",
-      "karl": "Body: Plain-language summary of linked Director’s Rules",
+      "heading": "Owner and manager responsibilities",
+      "karl": "Body: Landlord responsibilities",
       "kind": "body",
       "paragraphs": [
-        "The Director’s Rules explain detailed prevention and control requirements for bed bugs in San Francisco."
+        "San Francisco Health Code Article 11A and DPH regulations outline clear requirements for property owners and managers to control bed bugs professionally:"
       ],
       "bullets": [
-        "Owner, operator, and property manager responsibilities",
-        "Tenant preparation before treatment",
-        "Treatment coordination and follow-up",
-        "Written prevention and control plans",
-        "Employee training and building practices"
+        "Hire licensed professionals: Owners cannot use uncertified building staff to treat bed bugs. They must hire a licensed Pest Control Operator (PCO).",
+        "Investigate early: Investigate any tenant reports of suspected bed bugs within 72 hours.",
+        "Inspect adjacent units: Upon confirming bed bug activity, owners must direct a PCO to inspect all adjacent units (above, below, and on both sides of the infested unit).",
+        "Pre-tenancy disclosure: Before a new tenant moves in, the landlord must provide a written history of any bed bug infestations and treatments in the unit over the last 24 months.",
+        "Provide mattress encasements: Furnished units must be supplied with breathable, bed bug-proof encasements for all mattresses and box springs at move-in."
       ]
     },
     {
-      "heading": "What this page is for",
-      "karl": "Body: Plain-language information section",
+      "heading": "Tenant responsibilities and preparation",
+      "karl": "Body: Tenant responsibilities",
       "kind": "body",
       "paragraphs": [
-        "This page helps tenants, tenant helpers, property owners, and managers find the official rules and understand what topics they cover."
+        "Tenants are required to cooperate with inspections and treatments under San Francisco rules. Failure to cooperate can result in a Notice of Violation."
       ],
       "bullets": [
-        "Tenants can use the rules to understand treatment preparation and what to expect during a bed bug response",
-        "Property owners and managers can use the rules to understand prevention, control, and written-plan expectations",
-        "Use the official PDF when detailed rule language is needed"
+        "Report quickly: Report any signs of suspected bed bugs to the owner or manager in writing within two working days of detecting them.",
+        "Grant access: Allow reasonable access for inspections and PCO treatment visits.",
+        "Wash and dry clothing: Launder all clothes, bedding, and fabrics in hot water, and dry them on the hottest setting for at least 30 minutes.",
+        "Store in sealed bags: Keep laundered items in durable, sealed plastic bags outside the unit or in a designated area until the PCO clears the unit.",
+        "Clear furniture space: Move all furniture at least 12 inches away from walls to give the PCO access to baseboards."
+      ]
+    },
+    {
+      "heading": "Safe disposal of infested items",
+      "karl": "Body: Infested item disposal",
+      "kind": "body",
+      "paragraphs": [
+        "To prevent sidewalk scavenging and stop the spread of bed bugs, discarded items must be labeled and disposed of correctly."
+      ],
+      "bullets": [
+        "Items must be treated by the PCO, double-bagged in durable plastic, and sealed.",
+        "Label bags in English, Spanish, and Chinese: 'INFESTED MATERIAL - DO NOT TAKE' | 'CHINCHES DE CAMA' | '床 蝨'."
+      ]
+    },
+    {
+      "heading": "Eradication and abatement timeline",
+      "karl": "Body: Abatement monitoring timeline",
+      "kind": "body",
+      "paragraphs": [
+        "Legally, a bed bug infestation is not considered resolved (abated) immediately after treatment."
+      ],
+      "bullets": [
+        "4-Week Monitoring Period: Abatement is achieved only after a 28-day period of zero bed bug activity, verified by a PCO using monitoring devices (interceptors).",
+        "Abatement Notice: Landlords must provide a written 'Abatement Achieved' notice to the tenant after the 28-day clear period.",
+        "DPH Re-inspection: DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation."
       ]
     },
     {

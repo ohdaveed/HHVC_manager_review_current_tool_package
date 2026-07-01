@@ -12,18 +12,45 @@ window.HHVC_PAGES["cockroachesPrevent"] = {
   "reading": "Grade 6",
   "sections": [
     {
-      "heading": "How to prevent cockroaches",
-      "karl": "Body: Prevention guidance section",
+      "heading": "Starve them of food and water",
+      "karl": "Body: Starve cockroaches",
       "kind": "body",
       "paragraphs": [
-        "Focus on the things pests need to live: food, water, shelter, and access."
+        "Cockroaches need food, water, and shelter to survive. Removing their food and moisture is the most effective way to prevent cockroaches from nesting in your home."
       ],
       "bullets": [
-        "Store food in sealed containers",
-        "Clean food debris and grease",
-        "Keep garbage covered and remove it often",
-        "Reduce clutter where cockroaches can hide",
-        "Fix moisture problems when possible"
+        "Clean grease and crumbs daily from countertops, stoves, sinks, and under kitchen appliances.",
+        "Store all food in sealed plastic, glass, or metal containers.",
+        "Keep kitchen sinks dry and fix any plumbing leaks immediately. Cockroaches need daily access to water.",
+        "Keep trash bins clean and covered, and empty garbage containers every night.",
+        "Do not leave pet food or water bowls out overnight."
+      ]
+    },
+    {
+      "heading": "Eliminate cockroach hiding spots",
+      "karl": "Body: Eliminate cockroach shelter",
+      "kind": "body",
+      "paragraphs": [
+        "Cockroaches hide in dark, tight spaces during the day. Reducing clutter and sealing openings prevents them from establishing nests."
+      ],
+      "bullets": [
+        "Seal gaps and cracks in cabinets, baseboards, walls, and where pipes or conduits enter walls.",
+        "Remove cardboard boxes, paper bags, and piles of newspapers. Cockroaches feed on glue and use paper for shelter and breeding.",
+        "Keep storage areas clean, organized, and elevated off the floor."
+      ]
+    },
+    {
+      "heading": "Use safe treatment methods",
+      "karl": "Body: Safe cockroach treatment",
+      "kind": "body",
+      "paragraphs": [
+        "Prioritize non-chemical or low-toxic treatments. Standard chemical sprays often scatter cockroaches to other units instead of eliminating them.",
+        "Gel baits are generally safer than sprays if chemicals must be used."
+      ],
+      "bullets": [
+        "Use sticky traps (glue traps) to monitor cockroach activity and identify high-activity areas.",
+        "Use cockroach gel baits or bait stations. Baits are highly targeted and safer than aerosol sprays, especially around children and pets.",
+        "Avoid using chemical bug bombs or aerosol sprays, which can spread pesticides into living spaces and irritate breathing."
       ]
     },
     {
