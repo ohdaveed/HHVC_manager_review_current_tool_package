@@ -139,8 +139,7 @@
     const metaDescription = getMetaDescription(page);
     const rules = getRuleResults(page);
     const passed = rules.filter(rule => rule.pass).length;
-    const reviewReady = decision === 'Approved' && passed === rules.length;
-    const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision);
+    const chipClass = (decision === 'Approved' && passed < rules.length) ? 'warn' : getStatusChipClass(decision);
     const primaryCta = getValue('ctaInput') || getPrimaryCta(page) || 'None set';
 
     dashboard.innerHTML = `
