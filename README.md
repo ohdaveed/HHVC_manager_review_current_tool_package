@@ -20,12 +20,26 @@ The manager-review interface now includes:
 - A live manager review dashboard above the page preview
 - A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
 - A dashboard guidance panel that consolidates instructional copy from the sidebar
+- An interactive sitemap diagram with clickable page nodes, page-type filters, and selected-page details
 - Fast page search by title, page type, summary, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
 - Local browser persistence for review state using `localStorage`
 
 These additions are review aids only. They do not publish content, change page source data, or replace legal/source review.
+
+## Interactive sitemap
+
+The interactive sitemap is rendered by `js/interactive-sitemap.js` and reads from the existing `HHVC_DATA` page registry.
+
+The sitemap lets reviewers:
+
+- Select a node to open that page mockup
+- Filter the map by Topic, Transaction, or Information page type
+- See selected-page details, including reading target, CTA, audience count, linked items, and URL slug
+- Review how pages cluster around report/pay, prevention, inspection/rights, and information/education paths
+
+This sitemap is a review aid only. It does not replace the source page inventory, live SF.gov IA, or publication approval.
 
 ## Dashboard guidance copy
 
@@ -87,6 +101,7 @@ HHVC_manager_review_current_tool_package/
 ├─ js/app.js
 ├─ js/ux-improvements.js
 ├─ js/dashboard-guidance.js
+├─ js/interactive-sitemap.js
 ├─ pages/*.js
 ├─ data/page_inventory.json
 ├─ data/page_inventory.csv
@@ -101,7 +116,7 @@ HHVC_manager_review_current_tool_package/
 
 - Edit public page content in `pages/*.js`.
 - Edit render behavior in `js/app.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/dashboard-guidance.js`, and `css/ux-improvements.css`.
+- Edit UX review helpers in `js/ux-improvements.js`, `js/dashboard-guidance.js`, `js/interactive-sitemap.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.
