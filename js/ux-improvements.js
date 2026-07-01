@@ -105,7 +105,8 @@
     const metaDescription = getMetaDescription(page);
     const primaryCta = getValue('ctaInput') || getPrimaryCta(page);
     const relatedLinks = countRelatedLinks(page);
-    const isTransaction = String(page.type || '').toLowerCase().startsWith('transaction');
+    const normalizedType = String(page.type || '').trim().toLowerCase();
+    const isTransaction = normalizedType === 'transaction' || normalizedType === 'transaction page';
 
     return [
       {
@@ -535,7 +536,7 @@
       textarea.select();
       const copied = document.execCommand('copy');
       if (!copied) {
-        return Promise.reject(new Error('Failed to copy text to clipboard.'));
+        return Promise.reject(new Error('Failed to copy text to clipboard. Browser clipboard access may be blocked.'));
       }
       return Promise.resolve();
     } catch (error) {
