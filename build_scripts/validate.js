@@ -1,3 +1,6 @@
+// Validate the HHVC page data model before inventory exports or single-file builds.
+// This loads the browser-style page modules in a Node VM context, then enforces
+// required fields and shape constraints with Zod so bad page data fails fast.
 const fs = require('fs')
 const path = require('path')
 const vm = require('vm')
@@ -8,6 +11,8 @@ const ctx = { window: {} }
 ctx.window.HHVC_PAGES = {}
 vm.createContext(ctx)
 
+// Page modules to execute in the shared VM context. `js/app.js` is intentionally
+// excluded because it expects the full DOM and runtime globals.
 const files = [
   'pages/agency-service-grouping.js',
   'pages/report-rats-or-mice.js',

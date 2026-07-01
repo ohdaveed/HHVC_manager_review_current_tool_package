@@ -1,3 +1,6 @@
+// Export structured page inventory from the HHVC source data modules.
+// This runs the page-definition files in a VM to avoid browser-only globals,
+// then writes JSON and CSV artifacts for review and build automation.
 const fs = require('fs')
 const vm = require('vm')
 const path = require('path')
@@ -7,6 +10,9 @@ const root = path.resolve(__dirname, '..')
 const ctx = { window: {} }
 ctx.window.HHVC_PAGES = {}
 vm.createContext(ctx)
+
+// Source page modules to evaluate. The VM context populates `window.HHVC_PAGES`
+// and ultimately `window.HHVC_DATA`, which is what the app consumes at runtime.
 const files = [
   'pages/agency-service-grouping.js',
   'pages/report-rats-or-mice.js',

@@ -75,9 +75,63 @@ Use **Export saved local reviews CSV** to download all locally saved page decisi
 
 Use **Clear local saved reviews** only when you want to reset the local browser cache. This does not change source files, GitHub, or exported CSV files.
 
+## Project tooling
+
+This project uses Bun for development and scripting.
+
+### Setup
+
+```bash
+bun install
+```
+
+### Available scripts
+
+```bash
+# Start the Bun dev server
+bun run dev
+
+# Validate page data structure with Zod
+bun run validate
+
+# Export JSON and CSV page inventory
+bun run export
+
+# Run validation, export, and regenerate single-file HTML in one step
+bun run build
+
+# Check code formatting
+bun run format:check
+
+# Auto-format source files with Prettier
+bun run format
+```
+
+The `validate` script checks the `pages/*.js` and `js/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
+
+The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data.
+
+The `build` script runs validation and export, then rebuilds the self-contained HTML exports.
+
+## Code style
+
+This repo uses Prettier with the following conventions:
+
+- No semicolons
+- Single quotes
+- 2-space indentation
+- 100-character print width
+- Trailing commas where valid in ES5
+
 ## Open
 
-Run `npm install` once to fetch `@sfgov/design-system` (used for base/typography/component CSS). Then open `index.html` in a browser. If browser security blocks local scripts, run:
+Then open:
+
+```text
+http://127.0.0.1:8080/
+```
+
+Or use the static server of your choice:
 
 ```bash
 python3 -m http.server 8000
@@ -89,19 +143,6 @@ Then open:
 http://localhost:8000/
 ```
 
-You can also use the included Bun dev server instead:
-
-```bash
-bun install
-bun run dev
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8080/
-```
-
 Use `PORT=3000 bun run dev` to change the port, or `HOST=0.0.0.0 bun run dev` to listen on all interfaces.
 
 ## File structure
@@ -109,7 +150,11 @@ Use `PORT=3000 bun run dev` to change the port, or `HOST=0.0.0.0 bun run dev` to
 ```text
 HHVC_manager_review_current_tool_package/
 ├─ package.json
+├─ bun.lock
 ├─ index.html
+├─ server.ts
+├─ .prettierrc.json
+├─ .prettierignore
 ├─ css/styles.css
 ├─ css/ux-improvements.css
 ├─ js/page-data.js
