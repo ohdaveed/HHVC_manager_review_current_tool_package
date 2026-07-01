@@ -1,0 +1,100 @@
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["scopeInfo"] = {
+  "slug": "sf.gov/information/learn-what-hhvc-can-inspect",
+  "type": "Information",
+  "title": "Learn what Healthy Housing and Vector Control can inspect",
+  "summary": "Check whether Environmental Health may review a pest, vector, or housing health condition.",
+  "audience": [
+    "A tenant or tenant representative deciding whether to report a problem",
+    "An employee deciding whether to report a pest or vector concern at work",
+    "A person unsure whether HHVC may review a pest or housing health problem",
+    "A property owner, property manager, or building staff member looking for prevention guidance or best practices"
+  ],
+  "reading": "Grade 6–7",
+  "seoTitle": "Learn what HHVC can inspect",
+  "metaDescription": "Check whether HHVC may review a pest, vector, or housing health condition.",
+  "sections": [
+    {
+      "heading": "Use this page before you report",
+      "karl": "Body: Intro / Article 11 scope page purpose",
+      "kind": "body",
+      "paragraphs": [
+        "This page helps you understand whether Healthy Housing and Vector Control may review a pest, vector, or housing health issue.",
+        "Tenants, tenant representatives, friends, family members, and employees usually use reporting pages to report active pest or vector problems.",
+        "Property owners and managers may use this page to understand HHVC scope before asking for prevention guidance or best-practice assistance."
+      ]
+    },
+    {
+      "heading": "Problems HHVC may inspect",
+      "karl": "Body: Scope list / HHVC may inspect",
+      "kind": "body",
+      "bullets": [
+        "Rats or mice",
+        "Cockroaches",
+        "Bed bugs",
+        "Mosquitoes or standing water",
+        "Garbage, clutter, or animal waste that may attract pests",
+        "Overgrown vegetation that may support pests or vectors",
+        "Mold from humidity, condensation, or poor ventilation when the affected area is about 10 square feet or more",
+        "Shared SRO kitchens, bathrooms, garbage areas, or other shared spaces"
+      ]
+    },
+    {
+      "heading": "How to choose the right page",
+      "karl": "Body: Article 11 issue matching table",
+      "kind": "body",
+      "table": [
+        [
+          "Problem",
+          "Start here"
+        ],
+        [
+          "Rats or mice",
+          "Report rats or mice"
+        ],
+        [
+          "Cockroaches",
+          "Report cockroaches"
+        ],
+        [
+          "Bed bugs",
+          "Report bed bugs"
+        ],
+        [
+          "Mosquitoes or standing water",
+          "Report mosquitoes"
+        ],
+        [
+          "Garbage, clutter, animal waste, or overgrown plants",
+          "Report garbage, clutter, animal waste, or overgrown plants"
+        ],
+        [
+          "Mold from humidity or condensation",
+          "Report mold from humidity or condensation"
+        ]
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Pests and housing problems",
+          "text": "Return to the Topic page for HHVC pest, vector, and housing health issues.",
+          "target": "pestsTopic"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights"
+        }
+      ]
+    }
+  ]
+};

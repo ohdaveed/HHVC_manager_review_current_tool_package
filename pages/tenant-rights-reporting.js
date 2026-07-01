@@ -1,0 +1,64 @@
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["tenantRights"] = {
+  "slug": "sf.gov/information/tenant-rights-and-reporting-housing-conditions",
+  "type": "Information",
+  "title": "Tenant rights when reporting housing conditions",
+  "summary": "Learn about tenant protections and where to get help if you are worried about retaliation.",
+  "audience": [
+    "A tenant worried about reporting a housing, pest, or vector problem",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person living in an SRO or residential hotel who is worried about retaliation"
+  ],
+  "reading": "Grade 6–7",
+  "sections": [
+    {
+      "heading": "You can ask the City for help",
+      "karl": "Body: Tenant reassurance section",
+      "kind": "body",
+      "paragraphs": [
+        "Tenants have rights when they ask for repairs or report housing conditions to the City.",
+        "Retaliation can include trying to evict you, raising rent, reducing services, or threatening you because you reported a condition."
+      ],
+      "callout": {
+        "karl": "Body note: Rights reassurance / verify before publication",
+        "text": "This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization for help with your situation."
+      }
+    },
+    {
+      "heading": "Where to get tenant help",
+      "karl": "Body: External resource links / verify active URLs before publication",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "SF Rent Board",
+          "text": "Get information about tenant rights, landlord rules, and rent-related questions.",
+          "url": "https://www.sf.gov/departments/rent-board",
+          "karl": "Body link or Related section external resource, if allowed by page configuration"
+        },
+        {
+          "title": "Get tenant help",
+          "text": "Use tenant support resources if you are worried about retaliation or eviction.",
+          "url": "https://www.sf.gov/topics/housing",
+          "karl": "Body link to tenant support resource / verify final SF.gov destination"
+        }
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review the issue.",
+          "target": "scopeInfo"
+        }
+      ]
+    }
+  ]
+};

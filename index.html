@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HHVC Manager Review Mockup Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar" aria-label="Mockup controls">
+      <div class="eyebrow">SFDS rebuild</div>
+      <h2>HHVC mockup review tool</h2>
+      <p>Use this selector to review rebuilt SF.gov page patterns for Environmental Health and HHVC.</p>
+      <div class="control-group"><label for="pageSelect">Choose a page mockup</label><select id="pageSelect"></select></div>
+      <div class="control-group"><label for="urlInput">Preview URL slug</label><input id="urlInput" type="text" value="sf.gov/topics/pests-and-housing-problems" aria-label="Preview URL slug"></div>
+      <div class="control-group" aria-label="Live content editor"><div class="eyebrow">Live content editor</div><label for="titleInput">Page title</label><input id="titleInput" type="text" aria-label="Page title"><label for="descriptionInput">Short summary / description</label><textarea id="descriptionInput" aria-label="Short summary or description"></textarea><label for="ctaInput">Primary CTA label</label><input id="ctaInput" type="text" aria-label="Primary CTA label"><p class="field-help">Use this to test page title, short summary, and primary CTA wording without editing the source data.</p></div>
+      <div class="control-group" aria-label="Search metadata editor"><div class="eyebrow">Search metadata</div><label for="seoTitleInput">SEO Page Title</label><input id="seoTitleInput" type="text" aria-label="SEO Page Title"><div class="char-count"><span id="seoTitleCount">0 characters</span><span id="seoTitleStatus">Target: 60 or fewer</span></div><label for="metaDescriptionInput">Meta Description</label><textarea id="metaDescriptionInput" aria-label="Meta Description"></textarea><div class="char-count"><span id="metaDescriptionCount">0 characters</span><span id="metaDescriptionStatus">Target: 110 or fewer</span></div><div class="search-preview" aria-label="Search result preview"><div id="seoPreviewTitle" class="search-preview-title">Search title preview</div><div id="seoPreviewUrl" class="search-preview-url">https://sf.gov/topics/pests-and-housing-problems</div><div id="seoPreviewDescription" class="search-preview-desc">Search description preview</div></div><p class="field-help">SEO fields support the content model fields: SEO Title and SEO Description. Keep the meta description short enough for SF.gov review.</p></div>
+      <div class="control-group"><div class="eyebrow">Karl CMS tags</div><div class="karl-tag-toggle"><span>Show placement tags</span><label class="karl-switch" aria-label="Show Karl CMS placement tags"><input id="tagToggle" type="checkbox" checked><span class="karl-slider"></span></label></div><div class="cms-help">Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes.</div><div class="cms-help"><strong>Note:</strong> Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.</div></div>
+      <div class="control-group"><div class="eyebrow">Applied rules</div><div class="checklist"><div class="check">Rubik typography and SFDS-style spacing</div><div class="check">Action Blue for links and primary action</div><div class="check">Topic page uses scannable link clusters</div><div class="check">Article 11 / HHVC scope only</div><div class="check">72-hour tenant notice where applicable</div><div class="check">No standard photo requirement</div><div class="check">Report, prevent, scope, and tenant-help clusters</div><div class="check">Enforcement pathway included without overloading Transaction pages</div><div class="check">Tenant rights and anti-retaliation reassurance included</div></div></div>
+
+      <div class="control-group manager-review" aria-label="Manager review tools">
+        <div class="eyebrow">Manager review</div>
+        <p class="field-help">Use these fields during review. Exports download to your browser only; they do not change source files or publish pages.</p>
+        <div class="review-page-label" id="reviewPageLabel">Current page: Pests and housing problems</div>
+        <label for="reviewerInput">Reviewer name</label>
+        <input id="reviewerInput" type="text" aria-label="Reviewer name" placeholder="Name or initials">
+        <label for="reviewDateInput">Review date</label>
+        <input id="reviewDateInput" type="text" aria-label="Review date">
+        <label for="reviewDecision">Decision</label>
+        <select id="reviewDecision" aria-label="Review decision">
+          <option value="Needs review">Needs review</option>
+          <option value="Approved">Approved</option>
+          <option value="Approved with edits">Approved with edits</option>
+          <option value="Revise and resubmit">Revise and resubmit</option>
+          <option value="Blocked">Blocked</option>
+        </select>
+        <label for="reviewNotes">Decision notes</label>
+        <textarea id="reviewNotes" aria-label="Decision notes" placeholder="What needs to change before approval?"></textarea>
+        <label for="reviewRisks">Risks or blockers</label>
+        <textarea id="reviewRisks" aria-label="Risks or blockers" placeholder="Legal/source review, policy issue, broken link, unclear scope, etc."></textarea>
+        <label for="reviewOwner">Follow-up owner</label>
+        <input id="reviewOwner" type="text" aria-label="Follow-up owner" placeholder="Name, role, or team">
+        <div class="review-actions" aria-label="Review export actions">
+          <button type="button" class="tool-btn" id="exportReviewCsv">Export current review CSV</button>
+          <button type="button" class="tool-btn secondary-tool" id="exportReviewJson">Export current review JSON</button>
+          <button type="button" class="tool-btn secondary-tool" id="exportAllTemplateCsv">Export all-page decision template</button>
+        </div>
+        <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
+      </div>
+      <div class="control-group"><div class="eyebrow">Reading targets</div><p><strong>Transaction:</strong> Grade 5–6<br><strong>Prevention:</strong> Grade 6<br><strong>Inspection/process:</strong> Grade 6–7<br><strong>Enforcement/NOV:</strong> Grade 7–8</p></div>
+    </aside>
+    <main class="canvas"><div class="browser-shell"><div class="browser-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><div class="url" id="browserUrl">https://sf.gov/topics/pests-and-housing-problems</div></div><div id="mockPage"><div class="page-body"><h1>Loading HHVC mockup…</h1><p>If this message stays visible, JavaScript did not run.</p></div></div></div></main>
+  </div>
+
+  <script src="pages/agency-service-grouping.js"></script>
+  <script src="pages/report-rats-or-mice.js"></script>
+  <script src="pages/report-cockroaches.js"></script>
+  <script src="pages/report-bed-bugs.js"></script>
+  <script src="pages/bed-bug-rules-prevention.js"></script>
+  <script src="pages/report-mosquitoes.js"></script>
+  <script src="pages/report-vegetation-garbage.js"></script>
+  <script src="pages/report-mold-humidity-condensation.js"></script>
+  <script src="pages/hhvc-inspection-scope.js"></script>
+  <script src="pages/integrated-pest-management-property-managers.js"></script>
+  <script src="pages/what-happens-after-report.js"></script>
+  <script src="pages/tenant-rights-reporting.js"></script>
+  <script src="pages/keep-rats-and-mice-out.js"></script>
+  <script src="pages/prevent-cockroaches.js"></script>
+  <script src="pages/prevent-mosquitoes.js"></script>
+  <script src="js/page-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

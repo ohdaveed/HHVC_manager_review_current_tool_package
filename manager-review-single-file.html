@@ -1,0 +1,1998 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HHVC Manager Review Mockup Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+/* SF.gov HHVC mockup tool styles. Split from single-file export. */
+:root {
+      --sfds-action-blue: #495ED4;
+      --sfds-action-blue-hover: #3547B8;
+      --sfds-slate-1: #002B48;
+      --sfds-slate-2: #1F4E6B;
+      --sfds-slate-3: #5A7A92;
+      --sfds-slate-4: #C2D1DB;
+      --sfds-slate-5: #F4F7F9;
+      --sfds-white: #FFFFFF;
+      --sfds-border: #D7E0E7;
+      --sfds-green: #1B7F5C;
+      --page-max: 1120px;
+      --content-max: 760px;
+      --radius: 8px;
+      --shadow: 0 10px 24px rgba(0, 43, 72, 0.10);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body { font-family: "Rubik", Arial, sans-serif; color: var(--sfds-slate-1); background: var(--sfds-slate-5); font-size: 16px; line-height: 1.55; }
+    a { color: var(--sfds-action-blue); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--sfds-action-blue-hover); }
+    p { margin: 0 0 1rem; }
+    ul, ol { margin-top: .35rem; margin-bottom: 1rem; padding-left: 1.45rem; }
+    li { margin-bottom: .35rem; }
+    h1, h2, h3, h4 { color: var(--sfds-slate-1); line-height: 1.15; margin-top: 0; }
+    h1 { font-size: clamp(2.2rem, 4vw, 4rem); letter-spacing: -0.04em; margin-bottom: 1rem; }
+    h2 { font-size: clamp(1.6rem, 2.6vw, 2.25rem); letter-spacing: -0.025em; margin-bottom: .75rem; }
+    h3 { font-size: 1.25rem; margin-bottom: .55rem; }
+    .app { display: grid; grid-template-columns: 370px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--sfds-white); border-right: 1px solid var(--sfds-border); padding: 1.5rem; }
+    .sidebar h2 { font-size: 1.15rem; margin-bottom: .35rem; }
+    .eyebrow { display: inline-flex; align-items: center; gap: .45rem; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--sfds-slate-3); margin-bottom: .75rem; }
+    .control-group { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--sfds-border); }
+    label { display: block; font-size: .88rem; font-weight: 600; margin-bottom: .4rem; color: var(--sfds-slate-2); }
+    select, input[type="text"], textarea { width: 100%; border: 1px solid var(--sfds-border); border-radius: var(--radius); padding: .85rem .9rem; font: inherit; color: var(--sfds-slate-1); background: var(--sfds-white); }
+    textarea { min-height: 5.5rem; resize: vertical; }
+    select:focus, input[type="text"]:focus, textarea:focus, button:focus, a:focus { outline: 3px solid rgba(73, 94, 212, 0.25); outline-offset: 2px; }
+    .field-help { margin: .35rem 0 .75rem; color: var(--sfds-slate-3); font-size: .78rem; }
+    .char-count { display: flex; justify-content: space-between; gap: .75rem; margin: .35rem 0 .75rem; font-size: .78rem; color: var(--sfds-slate-3); }
+    .char-count .ok { color: var(--sfds-green); font-weight: 700; }
+    .char-count .warn { color: #B45309; font-weight: 700; }
+    .search-preview { border: 1px solid var(--sfds-border); border-radius: var(--radius); background: var(--sfds-white); padding: .9rem; margin-top: .85rem; }
+    .search-preview-title { color: #1A0DAB; font-size: .95rem; line-height: 1.3; margin-bottom: .2rem; }
+    .search-preview-url { color: #006621; font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: .35rem; }
+    .search-preview-desc { color: #4D5156; font-size: .82rem; line-height: 1.35; }
+    .checklist { display: grid; gap: .65rem; margin: .75rem 0 0; }
+    .check { display: grid; grid-template-columns: 1.15rem minmax(0, 1fr); gap: .55rem; font-size: .9rem; color: var(--sfds-slate-2); align-items: start; }
+    .check::before { content: "✓"; width: 1.15rem; height: 1.15rem; border-radius: 50%; color: var(--sfds-white); background: var(--sfds-green); display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 700; margin-top: .2rem; }
+    .canvas { padding: 2rem; }
+    .browser-shell { max-width: var(--page-max); margin: 0 auto; background: var(--sfds-white); border: 1px solid var(--sfds-border); box-shadow: var(--shadow); border-radius: 14px; overflow: hidden; }
+    .browser-bar { display: flex; align-items: center; gap: .65rem; border-bottom: 1px solid var(--sfds-border); background: #EEF3F7; padding: .7rem .95rem; color: var(--sfds-slate-3); font-size: .78rem; }
+    .dot { width: .7rem; height: .7rem; border-radius: 999px; display: block; } .dot.red { background: #FF5F56; } .dot.yellow { background: #FFBD2E; } .dot.green { background: #27C93F; }
+    .url { flex: 1; border: 1px solid var(--sfds-border); border-radius: 999px; background: var(--sfds-white); padding: .35rem .75rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .site-header { background: var(--sfds-slate-1); color: var(--sfds-white); padding: .85rem 2rem; }
+    .site-header-inner { max-width: var(--page-max); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: .75rem; color: var(--sfds-white); text-decoration: none; font-weight: 700; font-size: 1.15rem; }
+    .brand-mark { width: 2.2rem; height: 2.2rem; border: 2px solid rgba(255,255,255,.75); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; letter-spacing: -.04em; }
+    .site-nav { display: flex; gap: 1rem; font-size: .9rem; } .site-nav a { color: var(--sfds-white); text-decoration: underline; }
+    .hero { background: var(--sfds-slate-5); border-bottom: 1px solid var(--sfds-border); padding: 3.25rem 2rem 2.75rem; }
+    .hero-inner, .page-body, .footer-inner { max-width: var(--content-max); margin: 0 auto; }
+    .page-body { padding: 2.25rem 2rem 3rem; }
+    .summary { font-size: 1.25rem; color: var(--sfds-slate-2); margin-bottom: 1.25rem; }
+    .metadata { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.15rem; }
+    .pill { display: inline-flex; align-items: center; border-radius: 999px; background: #E9EEF9; color: var(--sfds-slate-1); padding: .35rem .7rem; font-size: .82rem; font-weight: 600; }
+    .section { padding: 1.4rem 0; border-bottom: 1px solid var(--sfds-border); } .section:last-child { border-bottom: 0; }
+    .step-list { counter-reset: steps; display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
+    .step { counter-increment: steps; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: 1rem; padding: 1.15rem; border: 1px solid var(--sfds-border); border-radius: var(--radius); background: var(--sfds-white); }
+    .step::before { content: counter(steps); width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--sfds-action-blue); color: var(--sfds-white); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 2px solid var(--sfds-action-blue); background: var(--sfds-action-blue); color: var(--sfds-white); padding: .75rem 1.05rem; text-decoration: none; font-weight: 700; line-height: 1.1; min-height: 44px; margin: .25rem 0 1rem; gap: .45rem; flex-wrap: wrap; }
+    .btn:hover { background: var(--sfds-action-blue-hover); border-color: var(--sfds-action-blue-hover); color: var(--sfds-white); }
+    .btn.secondary { background: var(--sfds-white); color: var(--sfds-action-blue); }
+    .callout { border-left: 5px solid var(--sfds-action-blue); background: #F1F4FF; padding: 1rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; margin: 1rem 0; }
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .card { border: 1px solid var(--sfds-border); border-radius: var(--radius); padding: 1rem; background: var(--sfds-white); }
+    .card h3 { font-size: 1rem; margin-bottom: .35rem; } .card p { color: var(--sfds-slate-2); font-size: .95rem; margin-bottom: .5rem; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: .95rem; } .table th, .table td { text-align: left; border: 1px solid var(--sfds-border); padding: .75rem; vertical-align: top; } .table th { background: var(--sfds-slate-5); font-weight: 700; }
+    .footer { border-top: 1px solid var(--sfds-border); background: var(--sfds-slate-5); padding: 1.5rem 2rem; color: var(--sfds-slate-3); font-size: .9rem; }
+    .editor-note { max-width: var(--content-max); margin: 0 auto 1.25rem; border: 1px dashed var(--sfds-slate-4); background: #FBFCFE; color: var(--sfds-slate-2); padding: 1rem; border-radius: var(--radius); font-size: .92rem; }
+    .editor-note strong { color: var(--sfds-slate-1); }
+    .karl-tag-toggle { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem .85rem; border: 1px solid var(--sfds-border); border-radius: var(--radius); background: #F7FAFC; font-size: .92rem; color: var(--sfds-slate-2); }
+    .karl-switch { inline-size: 3rem; block-size: 1.6rem; position: relative; display: inline-block; flex: 0 0 auto; } .karl-switch input { opacity: 0; inline-size: 0; block-size: 0; }
+    .karl-slider { position: absolute; cursor: pointer; inset: 0; background: var(--sfds-slate-4); border-radius: 999px; transition: .2s ease; }
+    .karl-slider::before { content: ""; position: absolute; inline-size: 1.15rem; block-size: 1.15rem; left: .22rem; top: .22rem; background: var(--sfds-white); border-radius: 50%; transition: .2s ease; box-shadow: 0 1px 3px rgba(0, 43, 72, .22); }
+    .karl-switch input:checked + .karl-slider { background: var(--sfds-action-blue); } .karl-switch input:checked + .karl-slider::before { transform: translateX(1.38rem); }
+    .cms-help { margin-top: .75rem; padding: .9rem; border: 1px solid var(--sfds-border); border-radius: var(--radius); background: #FBFCFE; color: var(--sfds-slate-2); font-size: .9rem; }
+    .karl-tag { display: inline-flex; align-items: center; gap: .35rem; width: fit-content; max-width: 100%; margin: 0 0 .55rem; padding: .22rem .48rem; border-radius: 999px; background: #F5EFFF; color: #4A2A7A; border: 1px solid #DECDF6; font-size: .72rem; line-height: 1.25; font-weight: 700; text-transform: uppercase; letter-spacing: .045em; }
+    .karl-tag strong { color: inherit; font-weight: 800; } .karl-tag[data-kind="meta"] { background: #EAF3F8; color: #1F4E6B; border-color: #C7DAE5; } .karl-tag[data-kind="body"] { background: #F5EFFF; color: #4A2A7A; border-color: #DECDF6; } .karl-tag[data-kind="placement"] { background: #FFF7E3; color: #785100; border-color: #F2D88D; } .karl-tag[data-kind="editor"] { background: #EAF8F2; color: #1B5F48; border-color: #BDE2D2; }
+    body.hide-karl-tags .karl-tag, body.hide-karl-tags .cms-help { display: none !important; }
+    @media (max-width: 980px) { .app { grid-template-columns: 1fr; } .sidebar { position: relative; height: auto; } .canvas { padding: 1rem; } .cards { grid-template-columns: 1fr; } .site-header-inner { align-items: flex-start; flex-direction: column; } .site-nav { flex-wrap: wrap; } }
+  
+    .audience-section ul { margin: 10px 0 0 22px; color: var(--sfds-slate-1); }
+    .audience-section li { margin: 6px 0; }
+
+
+/* Manager review package additions */
+.manager-review .review-page-label {
+  border: 1px solid var(--sfds-border);
+  border-radius: var(--radius);
+  background: #FBFCFE;
+  padding: .75rem .85rem;
+  margin: .75rem 0 1rem;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--sfds-slate-1);
+}
+.review-actions {
+  display: grid;
+  gap: .55rem;
+  margin-top: .85rem;
+}
+.tool-btn {
+  width: 100%;
+  min-height: 44px;
+  border: 2px solid var(--sfds-action-blue);
+  border-radius: var(--radius);
+  background: var(--sfds-action-blue);
+  color: var(--sfds-white);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  padding: .7rem .85rem;
+}
+.tool-btn:hover {
+  background: var(--sfds-action-blue-hover);
+  border-color: var(--sfds-action-blue-hover);
+}
+.secondary-tool {
+  background: var(--sfds-white);
+  color: var(--sfds-action-blue);
+}
+.secondary-tool:hover {
+  background: #F1F4FF;
+  color: var(--sfds-action-blue-hover);
+}
+
+  </style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar" aria-label="Mockup controls">
+      <div class="eyebrow">SFDS rebuild</div>
+      <h2>HHVC mockup review tool</h2>
+      <p>Use this selector to review rebuilt SF.gov page patterns for Environmental Health and HHVC.</p>
+      <div class="control-group"><label for="pageSelect">Choose a page mockup</label><select id="pageSelect"></select></div>
+      <div class="control-group"><label for="urlInput">Preview URL slug</label><input id="urlInput" type="text" value="sf.gov/topics/pests-and-housing-problems" aria-label="Preview URL slug"></div>
+      <div class="control-group" aria-label="Live content editor"><div class="eyebrow">Live content editor</div><label for="titleInput">Page title</label><input id="titleInput" type="text" aria-label="Page title"><label for="descriptionInput">Short summary / description</label><textarea id="descriptionInput" aria-label="Short summary or description"></textarea><label for="ctaInput">Primary CTA label</label><input id="ctaInput" type="text" aria-label="Primary CTA label"><p class="field-help">Use this to test page title, short summary, and primary CTA wording without editing the source data.</p></div>
+      <div class="control-group" aria-label="Search metadata editor"><div class="eyebrow">Search metadata</div><label for="seoTitleInput">SEO Page Title</label><input id="seoTitleInput" type="text" aria-label="SEO Page Title"><div class="char-count"><span id="seoTitleCount">0 characters</span><span id="seoTitleStatus">Target: 60 or fewer</span></div><label for="metaDescriptionInput">Meta Description</label><textarea id="metaDescriptionInput" aria-label="Meta Description"></textarea><div class="char-count"><span id="metaDescriptionCount">0 characters</span><span id="metaDescriptionStatus">Target: 110 or fewer</span></div><div class="search-preview" aria-label="Search result preview"><div id="seoPreviewTitle" class="search-preview-title">Search title preview</div><div id="seoPreviewUrl" class="search-preview-url">https://sf.gov/topics/pests-and-housing-problems</div><div id="seoPreviewDescription" class="search-preview-desc">Search description preview</div></div><p class="field-help">SEO fields support the content model fields: SEO Title and SEO Description. Keep the meta description short enough for SF.gov review.</p></div>
+      <div class="control-group"><div class="eyebrow">Karl CMS tags</div><div class="karl-tag-toggle"><span>Show placement tags</span><label class="karl-switch" aria-label="Show Karl CMS placement tags"><input id="tagToggle" type="checkbox" checked><span class="karl-slider"></span></label></div><div class="cms-help">Tags identify where each text block should be entered in Karl CMS: metadata fields, body sections, primary actions, body links, Related section links, Agency page link sections, Resource Collection items, or editor-only notes.</div><div class="cms-help"><strong>Note:</strong> Visual boxes are mockup previews. Karl placement is determined by the tag text, not by the visual box shape.</div></div>
+      <div class="control-group"><div class="eyebrow">Applied rules</div><div class="checklist"><div class="check">Rubik typography and SFDS-style spacing</div><div class="check">Action Blue for links and primary action</div><div class="check">Topic page uses scannable link clusters</div><div class="check">Article 11 / HHVC scope only</div><div class="check">72-hour tenant notice where applicable</div><div class="check">No standard photo requirement</div><div class="check">Report, prevent, scope, and tenant-help clusters</div><div class="check">Enforcement pathway included without overloading Transaction pages</div><div class="check">Tenant rights and anti-retaliation reassurance included</div></div></div>
+
+      <div class="control-group manager-review" aria-label="Manager review tools">
+        <div class="eyebrow">Manager review</div>
+        <p class="field-help">Use these fields during review. Exports download to your browser only; they do not change source files or publish pages.</p>
+        <div class="review-page-label" id="reviewPageLabel">Current page: Pests and housing problems</div>
+        <label for="reviewerInput">Reviewer name</label>
+        <input id="reviewerInput" type="text" aria-label="Reviewer name" placeholder="Name or initials">
+        <label for="reviewDateInput">Review date</label>
+        <input id="reviewDateInput" type="text" aria-label="Review date">
+        <label for="reviewDecision">Decision</label>
+        <select id="reviewDecision" aria-label="Review decision">
+          <option value="Needs review">Needs review</option>
+          <option value="Approved">Approved</option>
+          <option value="Approved with edits">Approved with edits</option>
+          <option value="Revise and resubmit">Revise and resubmit</option>
+          <option value="Blocked">Blocked</option>
+        </select>
+        <label for="reviewNotes">Decision notes</label>
+        <textarea id="reviewNotes" aria-label="Decision notes" placeholder="What needs to change before approval?"></textarea>
+        <label for="reviewRisks">Risks or blockers</label>
+        <textarea id="reviewRisks" aria-label="Risks or blockers" placeholder="Legal/source review, policy issue, broken link, unclear scope, etc."></textarea>
+        <label for="reviewOwner">Follow-up owner</label>
+        <input id="reviewOwner" type="text" aria-label="Follow-up owner" placeholder="Name, role, or team">
+        <div class="review-actions" aria-label="Review export actions">
+          <button type="button" class="tool-btn" id="exportReviewCsv">Export current review CSV</button>
+          <button type="button" class="tool-btn secondary-tool" id="exportReviewJson">Export current review JSON</button>
+          <button type="button" class="tool-btn secondary-tool" id="exportAllTemplateCsv">Export all-page decision template</button>
+        </div>
+        <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
+      </div>
+      <div class="control-group"><div class="eyebrow">Reading targets</div><p><strong>Transaction:</strong> Grade 5–6<br><strong>Prevention:</strong> Grade 6<br><strong>Inspection/process:</strong> Grade 6–7<br><strong>Enforcement/NOV:</strong> Grade 7–8</p></div>
+    </aside>
+    <main class="canvas"><div class="browser-shell"><div class="browser-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><div class="url" id="browserUrl">https://sf.gov/topics/pests-and-housing-problems</div></div><div id="mockPage"><div class="page-body"><h1>Loading HHVC mockup…</h1><p>If this message stays visible, JavaScript did not run.</p></div></div></div></main>
+  </div>
+
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["pestsTopic"] = {
+  "slug": "sf.gov/topics/pests-and-housing-problems",
+  "type": "Topic page",
+  "title": "Pests and housing problems",
+  "summary": "Get help with pests, mold, garbage, and other housing health problems.",
+  "audience": [
+    "A tenant with a pest or housing health problem",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A property owner or manager trying to prevent pests",
+    "A building worker who handles pest or housing health issues"
+  ],
+  "reading": "Grade 5–6",
+  "seoTitle": "Pests and housing problems",
+  "metaDescription": "Report or prevent pests, mold, garbage, and other housing health problems.",
+  "editorNote": "Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths.",
+  "sections": [
+    {
+      "heading": "About this topic",
+      "karl": "Topic page body: Introductory text",
+      "kind": "body",
+      "paragraphs": [
+        "Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11.",
+        "This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation."
+      ]
+    },
+    {
+      "heading": "Report a problem",
+      "karl": "Topic page Services section — Report a problem",
+      "kind": "placement",
+      "paragraphs": [
+        "Use these pages if you are affected by a pest or housing health problem."
+      ],
+      "cards": [
+        {
+          "title": "Report rats or mice",
+          "text": "Report rat or mouse activity in a home, building, yard, or shared area.",
+          "target": "ratsReport",
+          "karl": "Topic page service item"
+        },
+        {
+          "title": "Report cockroaches",
+          "text": "Report cockroaches in a unit, shared area, SRO, hotel, or workplace.",
+          "target": "cockroachesReport",
+          "karl": "Topic page service item"
+        },
+        {
+          "title": "Report bed bugs",
+          "text": "Report an active bed bug problem in rental housing, an SRO, or a residential hotel.",
+          "target": "bedBugsReport",
+          "karl": "Topic page service item"
+        },
+        {
+          "title": "Report mosquitoes",
+          "text": "Report mosquitoes or standing water around a home, yard, building, or shared area.",
+          "target": "mosquitoesReport",
+          "karl": "Topic page service item"
+        },
+        {
+          "title": "Report garbage, clutter, animal waste, or overgrown plants",
+          "text": "Report conditions that may attract pests or vectors.",
+          "target": "vegetationReport",
+          "karl": "Topic page service item"
+        },
+        {
+          "title": "Report mold from humidity or condensation",
+          "text": "Report mold or moisture caused by humidity, condensation, or poor ventilation.",
+          "target": "moldReport",
+          "karl": "Topic page service item"
+        }
+      ]
+    },
+    {
+      "heading": "Prevent pests and housing health problems",
+      "karl": "Topic page Resources section — Prevention",
+      "kind": "placement",
+      "paragraphs": [
+        "Use these pages to stop problems before they spread."
+      ],
+      "cards": [
+        {
+          "title": "Keep rats and mice out",
+          "text": "Learn how to reduce food, water, shelter, and entry points.",
+          "target": "ratsPrevent",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "Prevent cockroaches",
+          "text": "Learn how to reduce food, water, and hiding places for cockroaches.",
+          "target": "cockroachesPrevent",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "Prevent mosquitoes",
+          "text": "Learn how to remove standing water and reduce mosquito breeding.",
+          "target": "mosquitoesPrevent",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "Bed bug rules and prevention",
+          "text": "Learn about bed bug rules, treatment preparation, and prevention.",
+          "target": "bedBugsInfo",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "Integrated pest management for property managers",
+          "text": "Use prevention, monitoring, repairs, and resident outreach to reduce pests in buildings.",
+          "target": "ownerGuidance",
+          "karl": "Topic page resource item"
+        }
+      ]
+    },
+    {
+      "heading": "Know what HHVC can inspect",
+      "karl": "Topic page Resources section — Scope and process",
+      "kind": "placement",
+      "paragraphs": [
+        "Use these pages if you are not sure where to start."
+      ],
+      "cards": [
+        {
+          "title": "Learn what Healthy Housing and Vector Control can inspect",
+          "text": "Check if Environmental Health may review your pest or housing health problem.",
+          "target": "scopeInfo",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how 311 reports are reviewed and when an inspector may contact you.",
+          "target": "afterReport",
+          "karl": "Topic page resource item"
+        }
+      ]
+    },
+    {
+      "heading": "Tenant rights and help",
+      "karl": "Topic page Resources section — Tenant support",
+      "kind": "placement",
+      "paragraphs": [
+        "Use these pages if you are worried about reporting a housing condition."
+      ],
+      "cards": [
+        {
+          "title": "Tenant rights when reporting housing conditions",
+          "text": "Learn about tenant protections and where to get help.",
+          "target": "tenantRights",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn what may happen after your report is sent to Environmental Health.",
+          "target": "afterReport",
+          "karl": "Topic page resource item"
+        },
+        {
+          "title": "Bed bug rules and prevention",
+          "text": "Learn about bed bug prevention, treatment preparation, and rules.",
+          "target": "bedBugsInfo",
+          "karl": "Topic page resource item"
+        }
+      ]
+    },
+    {
+      "heading": "Scope note",
+      "karl": "Topic page body: Scope note / Article 11 only",
+      "kind": "body",
+      "paragraphs": [
+        "Healthy Housing and Vector Control reviews pest, vector, and housing health conditions. This topic page is limited to HHVC and Article 11-related issues."
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["ratsReport"] = {
+  "slug": "sf.gov/report-rats-or-mice",
+  "type": "Transaction",
+  "title": "Report rats or mice",
+  "summary": "Report an active rat or mouse problem in San Francisco.",
+  "audience": [
+    "A tenant affected by rats or mice",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person reporting rats or mice in a shared area",
+    "An employee reporting rats or mice at work"
+  ],
+  "reading": "Grade 5–6",
+  "sections": [
+    {
+      "heading": "What to do",
+      "karl": "Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "Start your report",
+          "text": [
+            "Use 311 to report an active problem to the City.",
+            "If the problem is urgent, report now."
+          ],
+          "button": "Report through 311",
+          "karl": "Body step 1 + Primary action button. Keep the 311 action first."
+        },
+        {
+          "title": "If you rent, give 72 hours when possible",
+          "text": [
+            "Tell the property owner or manager about the rat or mouse problem.",
+            "If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.",
+            "Do not wait 72 hours if there is an urgent health or safety concern."
+          ],
+          "karl": "Body step 2: Conditional 72-hour tenant notice + timeline expectation"
+        },
+        {
+          "title": "Tell us where the problem is",
+          "text": [
+            "Include only the details that apply:"
+          ],
+          "bullets": [
+            "The address or location",
+            "Where you saw rats or mice",
+            "Whether it is inside, outside, or in a shared area",
+            "How long it has been happening",
+            "Whether you told the property owner or manager, if you rent",
+            "Any garbage, clutter, holes, overgrown plants, or other conditions you noticed",
+            "Your contact information, if you want an inspector to contact you"
+          ],
+          "callout": {
+            "karl": "Body note: Photo guidance",
+            "text": "Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager."
+          },
+          "karl": "Body step 3: Report details checklist"
+        }
+      ]
+    },
+    {
+      "heading": "What happens next",
+      "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
+      "kind": "body",
+      "paragraphs": [
+        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
+        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
+      ],
+      "callout": {
+        "karl": "Body note: Tenant rights / anti-retaliation reassurance",
+        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+      }
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review this type of issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Keep rats and mice out of your home",
+          "text": "Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.",
+          "target": "ratsPrevent"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["cockroachesReport"] = {
+  "slug": "sf.gov/report-cockroaches",
+  "type": "Transaction",
+  "title": "Report cockroaches",
+  "summary": "Report an active cockroach problem in San Francisco.",
+  "audience": [
+    "A tenant affected by cockroaches",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person reporting cockroaches in an SRO kitchen, bathroom, or shared area",
+    "An employee reporting cockroaches at work"
+  ],
+  "reading": "Grade 5–6",
+  "sections": [
+    {
+      "heading": "What to do",
+      "karl": "Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "Start your report",
+          "text": [
+            "Use 311 to report an active problem to the City.",
+            "If the problem is urgent, report now."
+          ],
+          "button": "Report through 311",
+          "karl": "Body step 1 + Primary action button. Keep the 311 action first."
+        },
+        {
+          "title": "If you rent, give 72 hours when possible",
+          "text": [
+            "Tell the property owner or manager about the cockroach problem.",
+            "If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.",
+            "Do not wait 72 hours if there is an urgent health or safety concern."
+          ],
+          "karl": "Body step 2: Conditional 72-hour tenant notice + timeline expectation"
+        },
+        {
+          "title": "Tell us where the problem is",
+          "text": [
+            "Include only the details that apply:"
+          ],
+          "bullets": [
+            "The address or location",
+            "Where you saw cockroaches",
+            "Whether it is inside a unit or in a shared area",
+            "How long it has been happening",
+            "Whether you told the property owner or manager, if you rent",
+            "Any garbage, food debris, clutter, moisture, or other conditions you noticed",
+            "Your contact information, if you want an inspector to contact you"
+          ],
+          "callout": {
+            "karl": "Body note: Photo guidance",
+            "text": "Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager."
+          },
+          "karl": "Body step 3: Report details checklist"
+        }
+      ]
+    },
+    {
+      "heading": "What happens next",
+      "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
+      "kind": "body",
+      "paragraphs": [
+        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
+        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
+      ],
+      "callout": {
+        "karl": "Body note: Tenant rights / anti-retaliation reassurance",
+        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+      }
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review this type of issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Prevent cockroaches",
+          "text": "See prevention steps and best practices.",
+          "target": "cockroachesPrevent"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["bedBugsReport"] = {
+  "slug": "sf.gov/report-bed-bugs",
+  "type": "Transaction",
+  "title": "Report bed bugs",
+  "summary": "Report an active bed bug problem in San Francisco rental housing.",
+  "audience": [
+    "A tenant affected by bed bugs",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person reporting bed bugs in rental housing, an SRO, or a residential hotel"
+  ],
+  "reading": "Grade 5–6",
+  "sections": [
+    {
+      "heading": "What to do",
+      "karl": "Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "Start your report",
+          "text": [
+            "Use 311 to report an active problem to the City.",
+            "If the problem is urgent, report now."
+          ],
+          "button": "Report through 311",
+          "karl": "Body step 1 + Primary action button. Keep the 311 action first."
+        },
+        {
+          "title": "If you rent, give 72 hours when possible",
+          "text": [
+            "Tell the property owner or manager about the bed bug problem.",
+            "If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.",
+            "Do not wait 72 hours if there is an urgent health or safety concern."
+          ],
+          "karl": "Body step 2: Conditional 72-hour tenant notice + timeline expectation"
+        },
+        {
+          "title": "Tell us where the problem is",
+          "text": [
+            "Include only the details that apply:"
+          ],
+          "bullets": [
+            "The address or location",
+            "Where bed bugs were seen or where bites happened",
+            "Whether the problem is in a unit, room, or shared residential area",
+            "How long it has been happening",
+            "Whether you told the property owner or manager, if you rent",
+            "Any treatment, inspection, or response that has already happened",
+            "Your contact information, if you want an inspector to contact you"
+          ],
+          "callout": {
+            "karl": "Body note: Photo guidance",
+            "text": "Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager."
+          },
+          "karl": "Body step 3: Report details checklist"
+        }
+      ]
+    },
+    {
+      "heading": "What happens next",
+      "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
+      "kind": "body",
+      "paragraphs": [
+        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
+        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
+      ],
+      "callout": {
+        "karl": "Body note: Tenant rights / anti-retaliation reassurance",
+        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+      }
+    },
+    {
+      "heading": "Bed bug rules",
+      "karl": "Body: External reference link to official bed bug Director’s Rules PDF",
+      "kind": "placement",
+      "paragraphs": [
+        "For detailed bed bug prevention and control rules, use the official SFDPH Director’s Rules."
+      ],
+      "cards": [
+        {
+          "title": "San Francisco Department of Public Health — Director’s Rules and Regulations for Prevention and Control of Bed Bugs",
+          "text": "Reference the Director’s Rules for bed bug prevention, control, owner responsibilities, and treatment preparation standards.",
+          "url": "https://drive.google.com/file/d/1PPwhA3IeJ-jl5es0TvbmSAB_J8UjK8LP/view",
+          "karl": "Body link or external reference link: official bed bug Director’s Rules PDF"
+        }
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review this type of issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Bed bug rules and prevention",
+          "text": "Learn what tenants and property owners should know about bed bug prevention and control.",
+          "target": "bedBugsInfo",
+          "karl": "Related section link to Information page"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["bedBugsInfo"] = {
+  "slug": "sf.gov/information/bed-bug-rules-and-prevention",
+  "type": "Information",
+  "title": "Bed bug rules and prevention",
+  "summary": "Learn about bed bug prevention, treatment preparation, and rules for San Francisco rental housing.",
+  "audience": [
+    "A tenant preparing for bed bug treatment",
+    "A friend, family member, advocate, or helper supporting a tenant",
+    "A property owner or manager looking for bed bug prevention and control requirements",
+    "Building staff or maintenance staff supporting bed bug prevention"
+  ],
+  "reading": "Grade 6",
+  "sections": [
+    {
+      "heading": "Use the official bed bug rules",
+      "karl": "Body: External reference link to official bed bug Director’s Rules PDF",
+      "kind": "placement",
+      "paragraphs": [
+        "SFDPH has Director’s Rules and Regulations for preventing and controlling bed bugs in San Francisco. Use them as the detailed reference for requirements."
+      ],
+      "cards": [
+        {
+          "title": "San Francisco Department of Public Health — Director’s Rules and Regulations for Prevention and Control of Bed Bugs",
+          "text": "Reference the Director’s Rules for bed bug prevention, control, owner responsibilities, and treatment preparation standards.",
+          "url": "https://drive.google.com/file/d/1PPwhA3IeJ-jl5es0TvbmSAB_J8UjK8LP/view",
+          "karl": "Body link or external reference link: official bed bug Director’s Rules PDF"
+        }
+      ]
+    },
+    {
+      "heading": "What the bed bug rules cover",
+      "karl": "Body: Plain-language summary of linked Director’s Rules",
+      "kind": "body",
+      "paragraphs": [
+        "The Director’s Rules explain detailed prevention and control requirements for bed bugs in San Francisco."
+      ],
+      "bullets": [
+        "Owner, operator, and property manager responsibilities",
+        "Tenant preparation before treatment",
+        "Treatment coordination and follow-up",
+        "Written prevention and control plans",
+        "Employee training and building practices"
+      ]
+    },
+    {
+      "heading": "What this page is for",
+      "karl": "Body: Plain-language information section",
+      "kind": "body",
+      "paragraphs": [
+        "This page helps tenants, tenant helpers, property owners, and managers find the official rules and understand what topics they cover."
+      ],
+      "bullets": [
+        "Tenants can use the rules to understand treatment preparation and what to expect during a bed bug response",
+        "Property owners and managers can use the rules to understand prevention, control, and written-plan expectations",
+        "Use the official PDF when detailed rule language is needed"
+      ]
+    },
+    {
+      "heading": "When someone should report",
+      "karl": "Body: Reporting threshold + body link to related Transaction page",
+      "kind": "body",
+      "paragraphs": [
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if there is an active bed bug problem and the property owner or manager does not respond. Do not wait 72 hours for urgent health or safety concerns."
+      ],
+      "button": "Report bed bugs",
+      "buttonStyle": "secondary",
+      "buttonTarget": "bedBugsReport"
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Report bed bugs",
+          "text": "Report an active bed bug problem through 311.",
+          "target": "bedBugsReport"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["mosquitoesReport"] = {
+  "slug": "sf.gov/report-mosquitoes-home-backyard",
+  "type": "Transaction",
+  "title": "Report mosquitoes in your home or backyard",
+  "summary": "Report mosquitoes or standing water in San Francisco.",
+  "audience": [
+    "A tenant or resident affected by mosquitoes",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person reporting standing water around a home, yard, building, or shared area",
+    "An employee reporting mosquitoes or standing water at work"
+  ],
+  "reading": "Grade 5–6",
+  "sections": [
+    {
+      "heading": "What to do",
+      "karl": "Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "Start your report",
+          "text": [
+            "Use 311 to report an active problem to the City.",
+            "If the problem is urgent, report now."
+          ],
+          "button": "Report through 311",
+          "karl": "Body step 1 + Primary action button. Keep the 311 action first."
+        },
+        {
+          "title": "If you rent, give 72 hours when possible",
+          "text": [
+            "Tell the property owner or manager about the mosquito or standing water problem.",
+            "If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.",
+            "Do not wait 72 hours if there is an urgent health or safety concern."
+          ],
+          "karl": "Body step 2: Conditional 72-hour tenant notice + timeline expectation"
+        },
+        {
+          "title": "Tell us where mosquitoes or standing water are",
+          "text": [
+            "Include only the details that apply:"
+          ],
+          "bullets": [
+            "The address or location",
+            "Where you saw mosquitoes or standing water",
+            "Whether the water is in a yard, drain, basement, container, fountain, pool, or shared area",
+            "How long the water or mosquito activity has been there",
+            "Whether you told the property owner or manager, if you rent",
+            "Whether you can safely remove the standing water yourself",
+            "Your contact information, if you want an inspector to contact you"
+          ],
+          "callout": {
+            "karl": "Body note: Photo guidance",
+            "text": "Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager."
+          },
+          "karl": "Body step 3: Report details checklist"
+        }
+      ]
+    },
+    {
+      "heading": "What may happen next",
+      "karl": "Body: After-report expectations",
+      "kind": "body",
+      "paragraphs": [
+        "Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins when appropriate.",
+        "If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit."
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Prevent mosquitoes",
+          "text": "See prevention steps and best practices.",
+          "target": "mosquitoesPrevent"
+        },
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review this type of issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["vegetationReport"] = {
+  "slug": "sf.gov/report-overgrown-vegetation-garbage",
+  "type": "Transaction",
+  "title": "Report overgrown vegetation or garbage",
+  "summary": "Report garbage, clutter, or overgrown plants that may attract pests or vectors.",
+  "audience": [
+    "A tenant or resident affected by garbage, clutter, animal waste, or overgrown vegetation",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person reporting conditions in a shared area",
+    "An employee reporting a pest or vector concern at work"
+  ],
+  "reading": "Grade 5–6",
+  "sections": [
+    {
+      "heading": "What to do",
+      "karl": "Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "Start your report",
+          "text": [
+            "Use 311 to report an active problem to the City.",
+            "If the problem is urgent, report now."
+          ],
+          "button": "Report through 311",
+          "karl": "Body step 1 + Primary action button. Keep the 311 action first."
+        },
+        {
+          "title": "If you rent, give 72 hours when possible",
+          "text": [
+            "Tell the property owner or manager about the vegetation, garbage, or pest-attracting condition.",
+            "If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.",
+            "Do not wait 72 hours if there is an urgent health or safety concern."
+          ],
+          "karl": "Body step 2: Conditional 72-hour tenant notice + timeline expectation"
+        },
+        {
+          "title": "Describe the condition",
+          "text": [
+            "Include only the details that apply:"
+          ],
+          "bullets": [
+            "The address or location",
+            "Whether the condition is garbage, debris, clutter, storage, overgrown plants, standing water, or animal waste",
+            "Whether it is inside, outside, or in a shared area",
+            "How long it has been happening",
+            "Whether you told the property owner or manager, if you rent",
+            "Whether you saw pests, mosquitoes, or other vectors nearby",
+            "Your contact information, if you want an inspector to contact you"
+          ],
+          "callout": {
+            "karl": "Body note: Photo guidance",
+            "text": "Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager."
+          },
+          "karl": "Body step 3: Report details checklist"
+        }
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review this type of issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Report rats or mice",
+          "text": "Use this page for rat or mouse activity.",
+          "target": "ratsReport"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["moldReport"] = {
+  "slug": "sf.gov/report-mold-humidity-condensation",
+  "type": "Transaction",
+  "title": "Report mold from humidity or condensation",
+  "summary": "Report mold or moisture caused by humidity, condensation, or poor ventilation.",
+  "audience": [
+    "A tenant affected by mold or moisture",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person reporting mold in an SRO, residential hotel, or shared residential area"
+  ],
+  "reading": "Grade 5–6",
+  "seoTitle": "Report mold from humidity or condensation",
+  "metaDescription": "Report mold or moisture caused by humidity, condensation, or poor ventilation.",
+  "sections": [
+    {
+      "heading": "What to do",
+      "karl": "Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "Start your report",
+          "text": [
+            "Use 311 to report an active problem to the City.",
+            "If the problem is urgent, report now."
+          ],
+          "button": "Report through 311",
+          "karl": "Body step 1 + Primary action button. Keep the 311 action first."
+        },
+        {
+          "title": "If you rent, give 72 hours when possible",
+          "text": [
+            "Tell the property owner or manager about the mold or moisture problem.",
+            "If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.",
+            "Do not wait 72 hours if there is an urgent health or safety concern."
+          ],
+          "karl": "Body step 2: Conditional 72-hour tenant notice + timeline expectation"
+        },
+        {
+          "title": "Tell us where the problem is",
+          "text": [
+            "Include only the details that apply:"
+          ],
+          "bullets": [
+            "The address or location",
+            "Where you see mold or moisture",
+            "About how large the mold area is",
+            "Whether the problem may be from humidity, condensation, or poor ventilation",
+            "How long it has been happening",
+            "Whether you told the property owner or manager, if you rent",
+            "Your contact information, if you want an inspector to contact you"
+          ],
+          "callout": {
+            "karl": "Body note: Mold kit guidance",
+            "text": "Do not buy a mold test kit. SFDPH does not accept or use third-party mold kits for HHVC review."
+          },
+          "karl": "Body step 3: Report details checklist"
+        }
+      ]
+    },
+    {
+      "heading": "When HHVC may review mold",
+      "karl": "Body: Article 11 mold threshold and HHVC scope",
+      "kind": "body",
+      "paragraphs": [
+        "HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.",
+        "For mold smaller than 10 square feet, clean hard surfaces with soap and water. Reduce humidity and condensation so it does not come back."
+      ]
+    },
+    {
+      "heading": "What happens next",
+      "karl": "Body: After-report expectations, weekday processing note, and concise enforcement statement",
+      "kind": "body",
+      "paragraphs": [
+        "Environmental Health may review the report. If contact information is provided, an inspector may contact the person who reported the issue to ask questions or schedule a visit.",
+        "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.",
+        "If no contact information is provided, an inspection may still occur without notice when appropriate.",
+        "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
+      ],
+      "callout": {
+        "karl": "Body note: Tenant rights / anti-retaliation reassurance",
+        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+      }
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review this type of issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        },
+        {
+          "title": "Integrated pest management for property managers",
+          "text": "Use prevention, monitoring, repairs, and resident outreach to reduce pests and housing health problems.",
+          "target": "ownerGuidance"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["scopeInfo"] = {
+  "slug": "sf.gov/information/learn-what-hhvc-can-inspect",
+  "type": "Information",
+  "title": "Learn what Healthy Housing and Vector Control can inspect",
+  "summary": "Check whether Environmental Health may review a pest, vector, or housing health condition.",
+  "audience": [
+    "A tenant or tenant representative deciding whether to report a problem",
+    "An employee deciding whether to report a pest or vector concern at work",
+    "A person unsure whether HHVC may review a pest or housing health problem",
+    "A property owner, property manager, or building staff member looking for prevention guidance or best practices"
+  ],
+  "reading": "Grade 6–7",
+  "seoTitle": "Learn what HHVC can inspect",
+  "metaDescription": "Check whether HHVC may review a pest, vector, or housing health condition.",
+  "sections": [
+    {
+      "heading": "Use this page before you report",
+      "karl": "Body: Intro / Article 11 scope page purpose",
+      "kind": "body",
+      "paragraphs": [
+        "This page helps you understand whether Healthy Housing and Vector Control may review a pest, vector, or housing health issue.",
+        "Tenants, tenant representatives, friends, family members, and employees usually use reporting pages to report active pest or vector problems.",
+        "Property owners and managers may use this page to understand HHVC scope before asking for prevention guidance or best-practice assistance."
+      ]
+    },
+    {
+      "heading": "Problems HHVC may inspect",
+      "karl": "Body: Scope list / HHVC may inspect",
+      "kind": "body",
+      "bullets": [
+        "Rats or mice",
+        "Cockroaches",
+        "Bed bugs",
+        "Mosquitoes or standing water",
+        "Garbage, clutter, or animal waste that may attract pests",
+        "Overgrown vegetation that may support pests or vectors",
+        "Mold from humidity, condensation, or poor ventilation when the affected area is about 10 square feet or more",
+        "Shared SRO kitchens, bathrooms, garbage areas, or other shared spaces"
+      ]
+    },
+    {
+      "heading": "How to choose the right page",
+      "karl": "Body: Article 11 issue matching table",
+      "kind": "body",
+      "table": [
+        [
+          "Problem",
+          "Start here"
+        ],
+        [
+          "Rats or mice",
+          "Report rats or mice"
+        ],
+        [
+          "Cockroaches",
+          "Report cockroaches"
+        ],
+        [
+          "Bed bugs",
+          "Report bed bugs"
+        ],
+        [
+          "Mosquitoes or standing water",
+          "Report mosquitoes"
+        ],
+        [
+          "Garbage, clutter, animal waste, or overgrown plants",
+          "Report garbage, clutter, animal waste, or overgrown plants"
+        ],
+        [
+          "Mold from humidity or condensation",
+          "Report mold from humidity or condensation"
+        ]
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Pests and housing problems",
+          "text": "Return to the Topic page for HHVC pest, vector, and housing health issues.",
+          "target": "pestsTopic"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.",
+          "target": "tenantRights"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["ownerGuidance"] = {
+  "slug": "sf.gov/information/integrated-pest-management-for-property-managers",
+  "type": "Information",
+  "title": "Integrated pest management for property managers",
+  "summary": "Use prevention, monitoring, and resident outreach to reduce pests in buildings.",
+  "audience": [
+    "A property owner responsible for a residential building",
+    "A property manager or building operator",
+    "Building maintenance staff or janitorial staff",
+    "A housing provider looking for pest prevention best practices"
+  ],
+  "reading": "Grade 6–7",
+  "sections": [
+    {
+      "heading": "Use IPM to prevent pests",
+      "karl": "Information page body: Introduction. Editor note: legal/source review needed before final Article 11 or SF Housing Code citation.",
+      "kind": "body",
+      "paragraphs": [
+        "Property owners, managers, and building operators have responsibilities to keep buildings free of vermin under San Francisco health and housing rules.",
+        "Integrated Pest Management, or IPM, is a prevention-first approach. It uses inspection, maintenance, sanitation, exclusion, monitoring, and targeted treatment to reduce pests and limit heavy pesticide use."
+      ],
+      "bullets": [
+        "Prevent pests before infestations spread",
+        "Fix building conditions that attract or shelter pests",
+        "Use records and monitoring to find repeated problems",
+        "Share clear instructions with residents and staff"
+      ]
+    },
+    {
+      "heading": "1. Set policies, plans, and lease expectations",
+      "karl": "Information page body section. External link supports policy, plan, and lease-language templates.",
+      "kind": "placement",
+      "paragraphs": [
+        "Put pest prevention expectations in building policies, written plans, staff procedures, and lease materials. Clear expectations help residents, managers, maintenance staff, and pest control contractors respond consistently."
+      ],
+      "bullets": [
+        "Set a clear way for residents to report pest activity",
+        "Explain how residents should prepare for inspections or treatment",
+        "Define staff roles for sanitation, repairs, monitoring, and follow-up",
+        "Keep pest prevention language consistent across leases, notices, and house rules"
+      ],
+      "cards": [
+        {
+          "title": "UC IPM: Policies, plans, and templates",
+          "text": "Use UC IPM policy, IPM plan, and pest-related lease language resources.",
+          "url": "https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/policies-plans-and-templates/",
+          "karl": "Body external link: UC IPM policies, plans, and lease-language templates"
+        }
+      ]
+    },
+    {
+      "heading": "2. Prevent pests and seal entry points",
+      "karl": "Information page body section. External links support pest prevention, exclusion, and SFED design guidance.",
+      "kind": "placement",
+      "paragraphs": [
+        "Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance and sanitation are core parts of IPM."
+      ],
+      "bullets": [
+        "Seal gaps around doors, windows, pipes, vents, and utility openings",
+        "Keep garbage areas clean, covered, and serviced often enough to prevent overflow",
+        "Remove clutter, standing water, and dense vegetation that can shelter pests",
+        "Build pest-proofing into repair, remodeling, and construction work"
+      ],
+      "cards": [
+        {
+          "title": "UC IPM: Pest prevention",
+          "text": "Use UC IPM prevention tips and pest prevention checklists for multi-unit housing.",
+          "url": "https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-prevention/",
+          "karl": "Body external link: UC IPM pest prevention checklist"
+        },
+        {
+          "title": "SF Environment: Pest Prevention by Design",
+          "text": "Use SF Environment guidance for pest-proofing design, construction, and renovation work.",
+          "url": "https://sfenvironment.org/download/pest-prevention-by-design-guidelines",
+          "karl": "Body external link: SF Environment Pest Prevention by Design guidance"
+        }
+      ]
+    },
+    {
+      "heading": "3. Track pest activity and follow-up work",
+      "karl": "Information page body section. External link supports monitoring logs and recordkeeping templates.",
+      "kind": "placement",
+      "paragraphs": [
+        "Track pest activity so you can see patterns and respond before problems spread. Records help staff, pest control contractors, and inspectors understand what has already been reported or repaired."
+      ],
+      "bullets": [
+        "Use one system for pest complaints and follow-up work",
+        "Log where pests are found and what conditions may be supporting them",
+        "Track repairs, sanitation work, contractor visits, and treatment notices",
+        "Review records regularly to find repeated or building-wide problems"
+      ],
+      "cards": [
+        {
+          "title": "UC IPM: Pest monitoring and recordkeeping",
+          "text": "Use UC IPM monitoring guidance, sample logs, reports, and recordkeeping tools.",
+          "url": "https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-monitoring-and-recordkeeping/",
+          "karl": "Body external link: UC IPM monitoring and recordkeeping templates"
+        }
+      ]
+    },
+    {
+      "heading": "4. Share clear instructions with residents",
+      "karl": "Information page body section. External link supports resident education and multilingual handouts.",
+      "kind": "placement",
+      "paragraphs": [
+        "Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions and respond quickly when they report pest activity."
+      ],
+      "bullets": [
+        "Explain how residents should report pest activity",
+        "Give clear notices before inspections or treatment",
+        "Share simple prevention steps for food storage, garbage, clutter, and access for treatment",
+        "Use translated materials when possible"
+      ],
+      "cards": [
+        {
+          "title": "UC IPM: Outreach to residents",
+          "text": "Find resident handouts, notices, and pest information resources, including materials available in multiple languages.",
+          "url": "https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/outreach-to-residents/",
+          "karl": "Body external link: UC IPM resident outreach and handouts"
+        }
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Information page Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check when Environmental Health may review a housing or pest condition.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "Keep rats and mice out of your home",
+          "text": "Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.",
+          "target": "ratsPrevent"
+        },
+        {
+          "title": "Prevent cockroaches",
+          "text": "See prevention steps for cockroach problems.",
+          "target": "cockroachesPrevent"
+        },
+        {
+          "title": "Prevent mosquitoes",
+          "text": "See prevention steps for standing water and mosquito problems.",
+          "target": "mosquitoesPrevent"
+        }
+      ]
+    }
+  ],
+  "seoTitle": "Integrated pest management for property managers",
+  "metaDescription": "Use IPM policies, prevention, monitoring, and resident outreach to reduce pests in buildings."
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["afterReport"] = {
+  "slug": "sf.gov/information/what-happens-after-you-report-housing-pest-problem",
+  "type": "Information",
+  "title": "What happens after you report a housing or pest problem",
+  "summary": "Learn what may happen after a 311 report is sent to Environmental Health.",
+  "audience": [
+    "A person who filed a 311 report",
+    "A tenant or tenant representative waiting for follow-up",
+    "An employee who reported a pest or vector concern",
+    "A property owner or manager responding to a reported condition"
+  ],
+  "reading": "Grade 6–7",
+  "sections": [
+    {
+      "heading": "How a report moves through the City",
+      "karl": "Body: Process step list",
+      "kind": "body",
+      "steps": [
+        {
+          "title": "You report through 311",
+          "text": [
+            "311 receives the report and sends it to the right City department when possible."
+          ],
+          "karl": "Body step: 311 intake"
+        },
+        {
+          "title": "Environmental Health reviews the report",
+          "text": [
+            "HHVC may review the complaint if it may involve a housing or pest-related public health concern.",
+            "It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays."
+          ],
+          "karl": "Body step: HHVC review + weekday processing expectation"
+        },
+        {
+          "title": "An inspector may contact you",
+          "text": [
+            "If contact information is provided, an inspector may contact the person who reported the problem to ask questions or schedule a visit."
+          ],
+          "karl": "Body step: Inspector contact"
+        },
+        {
+          "title": "An inspection may happen",
+          "text": [
+            "If no contact information is provided, an inspection may still occur without notice when appropriate and when areas can be accessed."
+          ],
+          "karl": "Body step: Inspection expectations"
+        }
+      ]
+    },
+    {
+      "heading": "Tenant rights and retaliation",
+      "karl": "Body: Tenant reassurance section",
+      "kind": "body",
+      "paragraphs": [
+        "Tenants have rights when they ask for repairs or report housing conditions to the City. HHVC does not share the reporter’s identity with the property owner or manager.",
+        "A landlord cannot retaliate because a tenant reports a housing condition to 311 or a health department."
+      ],
+      "button": "Tenant rights and reporting",
+      "buttonStyle": "secondary",
+      "buttonTarget": "tenantRights"
+    },
+    {
+      "heading": "If a problem is found",
+      "karl": "Body: Compliance and enforcement pathway",
+      "kind": "body",
+      "paragraphs": [
+        "An inspection may identify conditions that need to be corrected. Property owners or responsible parties may need to fix the problem.",
+        "If violations are not corrected, Environmental Health may issue a Notice of Violation and set a compliance period.",
+        "Follow-up inspections, reinspection fees, citations, or a Director’s Hearing may follow if the problem remains unresolved."
+      ]
+    },
+    {
+      "heading": "What this page does not promise",
+      "karl": "Body: Limitations / no promises",
+      "kind": "body",
+      "bullets": [
+        "It does not promise that every report will lead to an inspection",
+        "It does not promise a specific inspection date",
+        "It does not replace a notice, citation, or legal document",
+        "Complaints are not assigned instantly. 311 routing and HHVC inspector assignment can take a few days and are processed on weekdays."
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether HHVC may review the issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "Tenant rights and reporting",
+          "text": "Find help if you are worried about retaliation after making a report.",
+          "target": "tenantRights",
+          "karl": "Related section link to tenant support / rights information"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["tenantRights"] = {
+  "slug": "sf.gov/information/tenant-rights-and-reporting-housing-conditions",
+  "type": "Information",
+  "title": "Tenant rights when reporting housing conditions",
+  "summary": "Learn about tenant protections and where to get help if you are worried about retaliation.",
+  "audience": [
+    "A tenant worried about reporting a housing, pest, or vector problem",
+    "A friend, family member, advocate, or helper reporting for a tenant",
+    "A person living in an SRO or residential hotel who is worried about retaliation"
+  ],
+  "reading": "Grade 6–7",
+  "sections": [
+    {
+      "heading": "You can ask the City for help",
+      "karl": "Body: Tenant reassurance section",
+      "kind": "body",
+      "paragraphs": [
+        "Tenants have rights when they ask for repairs or report housing conditions to the City.",
+        "Retaliation can include trying to evict you, raising rent, reducing services, or threatening you because you reported a condition."
+      ],
+      "callout": {
+        "karl": "Body note: Rights reassurance / verify before publication",
+        "text": "This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization for help with your situation."
+      }
+    },
+    {
+      "heading": "Where to get tenant help",
+      "karl": "Body: External resource links / verify active URLs before publication",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "SF Rent Board",
+          "text": "Get information about tenant rights, landlord rules, and rent-related questions.",
+          "url": "https://www.sf.gov/departments/rent-board",
+          "karl": "Body link or Related section external resource, if allowed by page configuration"
+        },
+        {
+          "title": "Get tenant help",
+          "text": "Use tenant support resources if you are worried about retaliation or eviction.",
+          "url": "https://www.sf.gov/topics/housing",
+          "karl": "Body link to tenant support resource / verify final SF.gov destination"
+        }
+      ]
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        },
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review the issue.",
+          "target": "scopeInfo"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["ratsPrevent"] = {
+  "slug": "sf.gov/information/keep-rats-and-mice-out-your-home",
+  "type": "Information",
+  "title": "Keep rats and mice out of your home",
+  "summary": "Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.",
+  "audience": [
+    "A tenant or resident trying to reduce pest activity",
+    "A property owner or manager looking for best practices",
+    "A building employee or maintenance worker supporting pest prevention"
+  ],
+  "reading": "Grade 6",
+  "sections": [
+    {
+      "heading": "How to prevent rats or mice",
+      "karl": "Body: Prevention guidance section",
+      "kind": "body",
+      "paragraphs": [
+        "Focus on the things pests need to live: food, water, shelter, and access."
+      ],
+      "bullets": [
+        "Store food in sealed metal, glass, or hard plastic containers",
+        "Keep garbage areas clean and covered",
+        "Remove clutter and storage that can shelter pests",
+        "Seal holes and openings with rodent-proof materials",
+        "Trim plants and branches away from buildings"
+      ]
+    },
+    {
+      "heading": "When someone should report",
+      "karl": "Body: Reporting threshold + body link to related Transaction page",
+      "kind": "body",
+      "paragraphs": [
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues, affects a shared area, or the property owner or manager does not respond.",
+        "Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance."
+      ],
+      "button": "Report rats or mice",
+      "buttonStyle": "secondary",
+      "buttonTarget": "ratsReport"
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review the issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["cockroachesPrevent"] = {
+  "slug": "sf.gov/information/prevent-cockroaches",
+  "type": "Information",
+  "title": "Prevent cockroaches",
+  "summary": "Learn how to reduce food, water, and shelter that can attract cockroaches.",
+  "audience": [
+    "A tenant or resident trying to reduce cockroach activity",
+    "A property owner or manager looking for best practices",
+    "A building employee or maintenance worker supporting pest prevention"
+  ],
+  "reading": "Grade 6",
+  "sections": [
+    {
+      "heading": "How to prevent cockroaches",
+      "karl": "Body: Prevention guidance section",
+      "kind": "body",
+      "paragraphs": [
+        "Focus on the things pests need to live: food, water, shelter, and access."
+      ],
+      "bullets": [
+        "Store food in sealed containers",
+        "Clean food debris and grease",
+        "Keep garbage covered and remove it often",
+        "Reduce clutter where cockroaches can hide",
+        "Fix moisture problems when possible"
+      ]
+    },
+    {
+      "heading": "When someone should report",
+      "karl": "Body: Reporting threshold + body link to related Transaction page",
+      "kind": "body",
+      "paragraphs": [
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues, affects a shared area, or the property owner or manager does not respond.",
+        "Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance."
+      ],
+      "button": "Report cockroaches",
+      "buttonStyle": "secondary",
+      "buttonTarget": "cockroachesReport"
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review the issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_PAGES["mosquitoesPrevent"] = {
+  "slug": "sf.gov/information/prevent-mosquitoes",
+  "type": "Information",
+  "title": "Prevent mosquitoes",
+  "summary": "Learn how to remove standing water and reduce mosquito breeding around your home.",
+  "audience": [
+    "A tenant or resident trying to reduce mosquitoes",
+    "A property owner or manager looking for best practices",
+    "A building employee or maintenance worker who can remove standing water"
+  ],
+  "reading": "Grade 6",
+  "sections": [
+    {
+      "heading": "How to prevent mosquitoes",
+      "karl": "Body: Prevention guidance section",
+      "kind": "body",
+      "paragraphs": [
+        "Focus on the things pests need to live: food, water, shelter, and access."
+      ],
+      "bullets": [
+        "Empty buckets, plant saucers, toys, and other containers",
+        "Clean gutters and drains",
+        "Cover or remove items that collect rainwater",
+        "Maintain fountains, ponds, and water features",
+        "Report standing water that you cannot remove"
+      ]
+    },
+    {
+      "heading": "When someone should report",
+      "karl": "Body: Reporting threshold + body link to related Transaction page",
+      "kind": "body",
+      "paragraphs": [
+        "A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues, affects a shared area, or the property owner or manager does not respond.",
+        "Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance."
+      ],
+      "button": "Report mosquitoes",
+      "buttonStyle": "secondary",
+      "buttonTarget": "mosquitoesReport"
+    },
+    {
+      "heading": "Related pages",
+      "karl": "Related section: right-panel linked pages",
+      "kind": "placement",
+      "cards": [
+        {
+          "title": "Learn what HHVC can inspect",
+          "text": "Check whether Environmental Health may review the issue.",
+          "target": "scopeInfo"
+        },
+        {
+          "title": "What happens after you report",
+          "text": "Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.",
+          "target": "afterReport"
+        }
+      ]
+    }
+  ]
+};
+
+  </script>
+  <script>
+window.HHVC_PAGES = window.HHVC_PAGES || {};
+window.HHVC_DATA = {
+  pages: window.HHVC_PAGES,
+  order: [
+  [
+    "pestsTopic",
+    "Topic: Pests and housing problems"
+  ],
+  [
+    "ratsReport",
+    "Transaction: Report rats or mice"
+  ],
+  [
+    "cockroachesReport",
+    "Transaction: Report cockroaches"
+  ],
+  [
+    "bedBugsReport",
+    "Transaction: Report bed bugs"
+  ],
+  [
+    "bedBugsInfo",
+    "Information: Bed bug rules and prevention"
+  ],
+  [
+    "mosquitoesReport",
+    "Transaction: Report mosquitoes"
+  ],
+  [
+    "vegetationReport",
+    "Transaction: Report vegetation or garbage"
+  ],
+  [
+    "moldReport",
+    "Transaction: Report mold from humidity or condensation"
+  ],
+  [
+    "scopeInfo",
+    "Information: Learn what HHVC can inspect"
+  ],
+  [
+    "ownerGuidance",
+    "Information: Integrated pest management for property managers"
+  ],
+  [
+    "afterReport",
+    "Information: What happens after you report"
+  ],
+  [
+    "tenantRights",
+    "Information: Tenant rights and reporting"
+  ],
+  [
+    "ratsPrevent",
+    "Information: Keep rats and mice out"
+  ],
+  [
+    "cockroachesPrevent",
+    "Information: Prevent cockroaches"
+  ],
+  [
+    "mosquitoesPrevent",
+    "Information: Prevent mosquitoes"
+  ]
+]
+};
+
+  </script>
+  <script>
+const DATA = window.HHVC_DATA;
+if (!DATA || !DATA.pages || !DATA.order) {
+  throw new Error('HHVC mockup page data did not load. Check script order in index.html.');
+}
+const pageData = DATA.pages;
+    const pageOrder = DATA.order;
+    function escapeHtml(value) { return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+    function karlTag(label, kind = "body") { return `<div class="karl-tag" data-kind="${kind}"><strong>Karl:</strong> ${escapeHtml(label)}</div>`; }
+    function paragraphList(paragraphs = []) { return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join(''); }
+    let currentPageKey = 'pestsTopic';
+    function defaultSeoTitle(page) { return page.seoTitle || `${page.title} | San Francisco`; }
+    function defaultMetaDescription(page) { return page.metaDescription || page.summary || ''; }
+    function getPrimaryCta(page) {
+      for (const section of page.sections || []) {
+        for (const step of section.steps || []) {
+          if (step.button) return step.button;
+        }
+      }
+      return page.primaryCta || '';
+    }
+    function setPrimaryCta(page, label) {
+      for (const section of page.sections || []) {
+        for (const step of section.steps || []) {
+          if (step.button) { step.button = label; return; }
+        }
+      }
+      page.primaryCta = label;
+    }
+    function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+    function setField(id, value) { const el = document.getElementById(id); if (el) el.value = value || ''; }
+    function statusClass(length, max) { return length <= max ? 'ok' : 'warn'; }
+    function updateSearchPreview() {
+      const page = pageData[currentPageKey]; if (!page) return;
+      const seoTitle = document.getElementById('seoTitleInput')?.value || defaultSeoTitle(page);
+      const metaDescription = document.getElementById('metaDescriptionInput')?.value || defaultMetaDescription(page);
+      const slug = document.getElementById('urlInput')?.value || page.slug;
+      setText('seoPreviewTitle', seoTitle);
+      setText('seoPreviewUrl', 'https://' + slug);
+      setText('seoPreviewDescription', metaDescription);
+      const titleStatus = document.getElementById('seoTitleStatus');
+      const descStatus = document.getElementById('metaDescriptionStatus');
+      setText('seoTitleCount', `${seoTitle.length} characters`);
+      setText('metaDescriptionCount', `${metaDescription.length} characters`);
+      if (titleStatus) { titleStatus.className = statusClass(seoTitle.length, 60); titleStatus.textContent = seoTitle.length <= 60 ? 'OK: 60 or fewer' : 'Over 60 characters'; }
+      if (descStatus) { descStatus.className = statusClass(metaDescription.length, 110); descStatus.textContent = metaDescription.length <= 110 ? 'OK: 110 or fewer' : 'Over 110 characters'; }
+    }
+    function syncEditorFields(page) {
+      setField('titleInput', page.title);
+      setField('descriptionInput', page.summary);
+      setField('ctaInput', getPrimaryCta(page));
+      setField('seoTitleInput', defaultSeoTitle(page));
+      setField('metaDescriptionInput', defaultMetaDescription(page));
+      updateSearchPreview();
+    }
+
+    function renderAudience(audience = []) {
+      if (!Array.isArray(audience)) return '';
+      return audience.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+    }
+    function bulletList(bullets = []) { if (!bullets.length) return ''; return `<ul>${bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`; }
+    function button(label, kind = "primary", target = null) { const cls = kind === 'secondary' ? 'btn secondary' : 'btn'; const onclick = target ? ` onclick="renderPage('${target}'); return false;"` : ''; return `<a class="${cls}" href="#"${onclick}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`; }
+    function renderCards(cards = []) { return `<div class="cards">${cards.map(c => { const href = c.url ? escapeHtml(c.url) : '#'; const attr = c.url ? ' target="_blank" rel="noopener"' : ` onclick="${c.target ? `renderPage('${c.target}'); return false;` : 'return false;'}"`; return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}</a></h3><p>${escapeHtml(c.text)}</p></article>`; }).join('')}</div>`; }
+    function renderSteps(steps = []) { return `<ol class="step-list">${steps.map(s => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary') : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`; }
+    function renderTable(rows = []) { if (!rows.length) return ''; const [head, ...body] = rows; return `<table class="table"><thead><tr>${head.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${body.map(r => `<tr>${r.map(c => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }
+    function renderSection(section) {
+      const kind = section.kind || 'body';
+      let inner = `${karlTag(section.karl || 'Body section', kind)}<h2>${escapeHtml(section.heading)}</h2>`;
+      inner += paragraphList(section.paragraphs || []);
+      inner += section.steps ? renderSteps(section.steps) : '';
+      inner += bulletList(section.bullets || []);
+      inner += section.table ? renderTable(section.table) : '';
+      if (section.callout) inner += `<div class="callout">${karlTag(section.callout.karl || 'Body callout', 'body')}${escapeHtml(section.callout.text)}</div>`;
+      if (section.button) inner += button(section.button, section.buttonStyle || 'primary', section.buttonTarget || null);
+      if (section.cards) inner += renderCards(section.cards);
+      return `<div class="section">${inner}</div>`;
+    }
+    function renderPage(key) {
+      const page = pageData[key]; if (!page) return;
+      currentPageKey = key;
+      document.getElementById('browserUrl').textContent = 'https://' + page.slug;
+      document.getElementById('urlInput').value = page.slug;
+      document.getElementById('pageSelect').value = key;
+      document.getElementById('mockPage').innerHTML = `
+        <header class="site-header"><div class="site-header-inner"><a href="#" class="brand"><span class="brand-mark">SF</span><span>SF.gov</span></a><nav class="site-nav" aria-label="Example navigation"><a href="#">Services</a><a href="#">Departments</a><a href="#">Search</a></nav></div></header>
+        <section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1>${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span></div></div></section>
+        <main class="page-body"><div class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`)}</div><div class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></div>${page.sections.map(renderSection).join('')}</main>
+        <footer class="footer"><div class="footer-inner"><strong>City and County of San Francisco</strong><br>This is a design mockup for HHVC content review, not a live SF.gov page.</div></footer>`;
+      syncEditorFields(page);
+    }
+    function init() {
+      const select = document.getElementById('pageSelect');
+      select.innerHTML = pageOrder.map(([key,label]) => `<option value="${key}">${escapeHtml(label)}</option>`).join('');
+      select.addEventListener('change', e => renderPage(e.target.value));
+      document.getElementById('urlInput').addEventListener('input', e => { document.getElementById('browserUrl').textContent = 'https://' + e.target.value; updateSearchPreview(); });
+      document.getElementById('titleInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.title = e.target.value; const h1 = document.querySelector('#mockPage h1'); if (h1) h1.textContent = e.target.value; if (!page.seoTitleEdited) { setField('seoTitleInput', defaultSeoTitle(page)); } updateSearchPreview(); });
+      document.getElementById('descriptionInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.summary = e.target.value; const summary = document.querySelector('#mockPage .summary'); if (summary) summary.textContent = e.target.value; if (!page.metaDescriptionEdited) { setField('metaDescriptionInput', defaultMetaDescription(page)); } updateSearchPreview(); });
+      document.getElementById('ctaInput').addEventListener('input', e => { const page = pageData[currentPageKey]; setPrimaryCta(page, e.target.value); const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)'); if (primaryButton) primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(e.target.value); });
+      document.getElementById('seoTitleInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.seoTitle = e.target.value; page.seoTitleEdited = true; updateSearchPreview(); });
+      document.getElementById('metaDescriptionInput').addEventListener('input', e => { const page = pageData[currentPageKey]; page.metaDescription = e.target.value; page.metaDescriptionEdited = true; updateSearchPreview(); });
+      document.getElementById('tagToggle').addEventListener('change', e => { document.body.classList.toggle('hide-karl-tags', !e.target.checked); });
+      renderPage('pestsTopic');
+    }
+    init();
+
+
+// Manager review package additions. Runs locally in the browser only.
+function managerReviewCsvEscape(value) {
+  const text = String(value ?? '');
+  return /[",\n\r]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
+}
+function managerReviewToCsv(rows) {
+  return rows.map(row => row.map(managerReviewCsvEscape).join(',')).join('\n') + '\n';
+}
+function managerReviewDownload(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+function managerReviewToday() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+function getManagerReviewSnapshot() {
+  const page = pageData[currentPageKey] || {};
+  return {
+    review_date: document.getElementById('reviewDateInput')?.value || managerReviewToday(),
+    reviewer: document.getElementById('reviewerInput')?.value || '',
+    page_key: currentPageKey,
+    page_title: page.title || '',
+    page_type: page.type || '',
+    url_slug: document.getElementById('urlInput')?.value || page.slug || '',
+    decision: document.getElementById('reviewDecision')?.value || 'Needs review',
+    notes: document.getElementById('reviewNotes')?.value || '',
+    risks_or_blockers: document.getElementById('reviewRisks')?.value || '',
+    follow_up_owner: document.getElementById('reviewOwner')?.value || '',
+    seo_title: document.getElementById('seoTitleInput')?.value || defaultSeoTitle(page),
+    meta_description: document.getElementById('metaDescriptionInput')?.value || defaultMetaDescription(page),
+    primary_cta: getPrimaryCta(page),
+    reading_target: page.reading || ''
+  };
+}
+function exportCurrentManagerReviewCsv() {
+  const snapshot = getManagerReviewSnapshot();
+  const headers = Object.keys(snapshot);
+  const rows = [headers, headers.map(h => snapshot[h])];
+  managerReviewDownload(`${snapshot.page_key}-manager-review.csv`, managerReviewToCsv(rows), 'text/csv;charset=utf-8');
+  setText('reviewExportStatus', `Exported CSV for ${snapshot.page_title}.`);
+}
+function exportCurrentManagerReviewJson() {
+  const snapshot = getManagerReviewSnapshot();
+  managerReviewDownload(`${snapshot.page_key}-manager-review.json`, JSON.stringify(snapshot, null, 2), 'application/json;charset=utf-8');
+  setText('reviewExportStatus', `Exported JSON for ${snapshot.page_title}.`);
+}
+function exportAllPageDecisionTemplateCsv() {
+  const headers = ['review_date','reviewer','page_key','page_title','page_type','url_slug','decision','notes','risks_or_blockers','follow_up_owner','seo_title','meta_description','primary_cta','reading_target'];
+  const rows = [headers];
+  for (const [key] of pageOrder) {
+    const page = pageData[key] || {};
+    rows.push([
+      managerReviewToday(), '', key, page.title || '', page.type || '', page.slug || '', 'Needs review', '', '', '',
+      defaultSeoTitle(page), defaultMetaDescription(page), getPrimaryCta(page), page.reading || ''
+    ]);
+  }
+  managerReviewDownload('hhvc-all-page-manager-review-template.csv', managerReviewToCsv(rows), 'text/csv;charset=utf-8');
+  setText('reviewExportStatus', 'Exported all-page decision template.');
+}
+function updateManagerReviewPageLabel() {
+  const page = pageData[currentPageKey] || {};
+  setText('reviewPageLabel', `Current page: ${page.title || currentPageKey}`);
+}
+(function attachManagerReviewTools() {
+  const dateInput = document.getElementById('reviewDateInput');
+  if (dateInput && !dateInput.value) dateInput.value = managerReviewToday();
+  document.getElementById('exportReviewCsv')?.addEventListener('click', exportCurrentManagerReviewCsv);
+  document.getElementById('exportReviewJson')?.addEventListener('click', exportCurrentManagerReviewJson);
+  document.getElementById('exportAllTemplateCsv')?.addEventListener('click', exportAllPageDecisionTemplateCsv);
+  const originalRenderPage = renderPage;
+  renderPage = function patchedRenderPage(key) {
+    originalRenderPage(key);
+    updateManagerReviewPageLabel();
+  };
+  updateManagerReviewPageLabel();
+})();
+
+  </script>
+</body>
+</html>
