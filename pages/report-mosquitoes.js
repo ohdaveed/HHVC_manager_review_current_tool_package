@@ -59,12 +59,17 @@ window.HHVC_PAGES["mosquitoesReport"] = {
     },
     {
       "heading": "What may happen next",
-      "karl": "Body: After-report expectations",
+      "karl": "Body: After-report expectations, concise enforcement statement, and tenant rights callout — brought to parity with the other 4 report pages.",
       "kind": "body",
       "paragraphs": [
         "Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.",
-        "If you gave contact information, an inspector may contact you to ask questions or schedule a visit."
-      ]
+        "If you gave contact information, an inspector may contact you to ask questions or schedule a visit.",
+        "If HHVC finds a violation, the City may require the property owner or responsible party to correct it."
+      ],
+      "callout": {
+        "karl": "Body note: Tenant rights / anti-retaliation reassurance",
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
+      }
     },
     {
       "heading": "Related pages",

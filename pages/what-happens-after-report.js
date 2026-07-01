@@ -54,7 +54,7 @@ window.HHVC_PAGES["afterReport"] = {
       "kind": "body",
       "paragraphs": [
         "Tenants have rights when they ask for repairs or report housing conditions to the City. HHVC does not share the reporter’s identity with the property owner or manager.",
-        "A landlord cannot retaliate because a tenant reports a housing condition to 311 or a health department."
+        "A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department."
       ],
       "button": "Tenant rights and reporting",
       "buttonStyle": "secondary",
@@ -69,7 +69,7 @@ window.HHVC_PAGES["afterReport"] = {
         "• Imminent Hazards (48 to 72 hours): Urgent issues like raw sewage backups or severe biohazard contamination require immediate correction.",
         "• Vector Control and Vegetation (14 days): Overgrown vegetation, trash piles, or other rodent harborages must be resolved within 14 days.",
         "• Standard Repairs and Mold (30 days): General sanitation problems, minor gaps/cracks, and mold remediation must be completed within 30 days.",
-        "• Bed Bug Treatment: Landlords must initiate professional treatment within 2 working days of confirmation.",
+        "• Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.",
         "If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).",
         "Persistent violations can result in citations, administrative fines of up to $1,000 per day, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs."
       ]

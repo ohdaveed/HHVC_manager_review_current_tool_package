@@ -69,7 +69,7 @@ window.HHVC_PAGES["cockroachesReport"] = {
       ],
       "callout": {
         "karl": "Body note: Tenant rights / anti-retaliation reassurance",
-        "text": "Tenants have rights to safe and habitable housing. Landlords cannot retaliate because a tenant reports housing conditions to the City."
+        "text": "Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City."
       }
     },
     {
