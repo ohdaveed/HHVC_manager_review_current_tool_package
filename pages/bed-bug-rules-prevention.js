@@ -31,6 +31,20 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       ],
     },
     {
+      heading: 'How to spot bed bugs',
+      karl: 'Body: Signs of bed bugs (added for depth). Helps tenants and staff detect early.',
+      kind: 'body',
+      paragraphs: [
+        'Bed bugs are small and hide well. Knowing what to look for helps you find a problem before it spreads.',
+      ],
+      bullets: [
+        'Small reddish-brown insects about the size of an apple seed.',
+        'Itchy bites, often in a line or small cluster.',
+        'Small blood spots or dark specks on sheets, mattress seams, and box springs.',
+        'Shed skins or tiny eggs near seams, cracks, and headboards.',
+      ],
+    },
+    {
       heading: 'Owner and manager responsibilities',
       karl: 'Body: Landlord responsibilities',
       kind: 'body',
