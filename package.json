@@ -16,6 +16,7 @@
     "build:workshop-form": "npm install --prefix forms/mosquito-workshop-request && npm run build --prefix forms/mosquito-workshop-request",
     "build:netlify": "node build_scripts/validate.js && node build_scripts/build-netlify-dist.js",
     "format": "prettier --write \"**/*.{js,ts,json,md,css,html}\"",
-    "format:check": "prettier --check \"**/*.{js,ts,json,md,css,html}\""
+    "format:check": "prettier --check \"**/*.{js,ts,json,md,css,html}\"",
+    "test": "bun test"
   }
 }
