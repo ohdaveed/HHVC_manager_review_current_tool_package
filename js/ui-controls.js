@@ -44,11 +44,9 @@ function buildPageSelect() {
   if (!select) return
   const groups = { Topic: [], Transaction: [], Information: [] }
   pageOrder.forEach(([key, label]) => {
-    const type = label.startsWith('Topic')
-      ? 'Topic'
-      : label.startsWith('Transaction')
-        ? 'Transaction'
-        : 'Information'
+    const pageType = pageData[key]?.type || ''
+    const type =
+      pageType === 'Topic page' ? 'Topic' : pageType === 'Transaction' ? 'Transaction' : 'Information'
     groups[type].push([key, label.replace(/^(Topic|Transaction|Information):\s*/, '')])
   })
   select.innerHTML = Object.entries(groups)
