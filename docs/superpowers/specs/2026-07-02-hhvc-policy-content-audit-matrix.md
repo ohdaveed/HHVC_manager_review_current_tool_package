@@ -62,3 +62,4 @@
 | mold-tenants-landlords-guidance | SFDPH Mold Guidance for Tenants and Landlords | Full mold IPM/responsibility guidance; companion to mold-moisture-guidance short form |
 | ipm-mosquitoes-7451 | UC IPM Pest Notes: Mosquitoes | Supports future `mosquitoesPrevent` IPM content; standing water/breeding site rationale |
 | ipm-flies-7457 | UC IPM Pest Notes: Flies | Aligns with violation-master Flies category; no Phase 1 mockup page |
+| ipm-yellowjackets-7450 | UC IPM Pest Notes: Yellowjackets | Supplementary stinging-insect IPM; not in Phase 1 mockups |

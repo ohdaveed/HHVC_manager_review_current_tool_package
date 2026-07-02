@@ -24,6 +24,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-vegetation-overgrowth-notice.pdf` / `.md` | Vegetation Overgrowth Notice (SFDPH) | Phase 1 | Sec. 581 overgrowth authority; supports `vegetationReport` scope and pest/vector rationale |
 | `2026-07-02-ipm-pests-mosquitoes.pdf` / `.md` | UC IPM Pest Notes 7451: Mosquitoes | Supplementary | IPM prevention for standing water/breeding sites; supports future `mosquitoesPrevent` audits |
 | `2026-07-02-ipm-pests-flies.pdf` / `.md` | UC IPM Pest Notes 7457: Flies | Supplementary | IPM sanitation reference; aligns with violation-master Flies category; no Phase 1 mockup page |
+| `2026-07-02-ipm-pests-yellowjackets.pdf` / `.md` | UC IPM Pest Notes 7450: Yellowjackets | Supplementary | IPM reference for stinging insects; no Phase 1 mockup page |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -104,6 +105,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR IPM guidance on house flies, stable flies, blow flies, and sanitation-based control. Aligns with violation-master Flies (Sec 581(b)(8)). No dedicated flies page in Phase 1 mockups; may inform garbage/sanitation prevention content later.
+
+### 2026-07-02-ipm-pests-yellowjackets.pdf
+
+- **Original Drive file:** `1rE2-R0rr1FgBXHhJWprOeQ9zZvyZArLH`
+- **Source title:** UC IPM Pest Notes 7450: Yellowjackets and Other Social Wasps (March 2012)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR IPM guidance on yellowjackets, paper wasps, and mud daubers. Not an Article 11 violation category in violation-master. No Phase 1 mockup page; supplementary IPM only.
 
 ## Documents still expected for Phase 1
 
