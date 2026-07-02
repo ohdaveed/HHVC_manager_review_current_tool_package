@@ -105,7 +105,7 @@ aids only, not publishing tools.
 See `build_scripts/validate.js` for the enforced Zod schema: `slug`, `type`
 (`Topic page` | `Transaction` | `Information`), `title`, `summary`,
 `audience[]`, `reading` (grade-level string), and `sections[]`. Sections
-carry `cards[]` and/or `steps[]`; steps can have `bullets`, `callout`, and
+carry `cards[]`, `bullets[]`, and/or `steps[]`; steps can have `text`, `callout`, and
 `button` (the primary CTA). Optional SEO/review fields: `seoTitle`,
 `metaDescription`, `primaryCta`, `editorNote`.
 
