@@ -238,7 +238,8 @@ HHVC_manager_review_current_tool_package/
 - Report bed bugs — Transaction
 - Bed bug rules and prevention — Information
 - Report mosquitoes in your home or backyard — Transaction
-- Report overgrown vegetation or garbage — Transaction
+- Report garbage or clutter — Transaction
+- Report overgrown vegetation — Transaction
 - Report mold from humidity or condensation — Transaction
 - Learn what Healthy Housing and Vector Control can inspect — Information
 - Integrated pest management for property managers — Information

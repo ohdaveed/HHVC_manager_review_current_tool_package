@@ -68,8 +68,14 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Topic page service item',
         },
         {
-          title: 'Report garbage, clutter, animal waste, or overgrown plants',
-          text: 'Report conditions that may attract pests or vectors.',
+          title: 'Report garbage or clutter',
+          text: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
+          target: 'garbageReport',
+          karl: 'Topic page service item',
+        },
+        {
+          title: 'Report overgrown vegetation',
+          text: 'Report overgrown plants, weeds, or brush that may attract or shelter pests or vectors.',
           target: 'vegetationReport',
           karl: 'Topic page service item',
         },
