@@ -19,7 +19,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-program-manager-reporter-privacy.md` | HHVC Program Manager — reporter privacy | Phase 1 | **Operational authority** — identities shared only with City Attorney's Office; not via public records requests |
 | `2026-07-02-program-manager-tenant-safe-housing-rights.md` | HHVC Program Manager — tenant safe housing rights | Phase 1 | **Operational authority** for safe/habitable housing rights callout (first sentence) |
 | `2026-07-02-sf-gov-report-health-nuisance-or-hazards.md` | SF.gov — Report a health nuisance or hazards | Phase 1 | **Supplementary** public-records framing for reporter privacy |
-| `2026-07-02-sf-gov-housing-discrimination-help.md` | SF.gov — Get help for discrimination in housing | Supplementary | HRC/fair-housing referral; does not verify anti-retaliation callouts |
+| `2026-07-02-sf-rent-ordinance-sec-37-9-retaliation.md` | SF Rent Ordinance Sec. 37.9(d) — retaliation | Phase 1 | **Legal authority** for anti-retaliation callouts on report pages |
 | `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
@@ -225,11 +225,19 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Confirms first sentence of *What happens next* callout on five report pages (*"Tenants have rights to safe and habitable housing"*). Does **not** cover anti-retaliation sentence in same callout.
 
+### 2026-07-02-sf-rent-ordinance-sec-37-9-retaliation.md
+
+- **Original URL:** https://www.sf.gov/information--sec-379-evictions
+- **Source title:** Sec. 37.9 - Evictions (subsection d)
+- **Authority:** San Francisco Rent Ordinance
+- **Export date:** 2026-07-02
+- **Format:** md (web extract)
+- **Reviewer:** CA
+- **Note:** Prohibits landlord retaliation for tenant exercise of legal rights. Supports report-page anti-retaliation callouts and related-card retaliation routing.
+
 ## Documents still expected for Phase 1
 
-- Anti-retaliation authority for reporting housing conditions to the City (second sentence of report-page callouts; e.g. Rent Ordinance Sec. 37.9(d) or program manager attestation)
-- Bed bug rules / Director's Rules source (detailed) — **partial:** tenant guidelines ingested; full Director's Rules PDF still recommended
-- Fee / payment authority for Healthy Housing program fees
+- Healthy Housing **fee / payment authority** (`payFee`, `pestsTopic` fee card)
 - HHVC inspection / complaint handling policy (operational detail beyond master template)
 
 ## Naming convention

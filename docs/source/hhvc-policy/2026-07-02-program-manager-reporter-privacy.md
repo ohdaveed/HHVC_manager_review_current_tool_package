@@ -42,5 +42,4 @@ Combined card text keeps the retaliation intro (still blocked separately):
 
 ## Not covered by this attestation
 
-- Anti-retaliation claims (*"cannot retaliate because a tenant reports housing conditions to the City"*)
-- Related-card intro (*"Find help if you are worried about retaliation"*) — still needs separate authority
+- Anti-retaliation claims — see `2026-07-02-sf-rent-ordinance-sec-37-9-retaliation.md` (Rent Ordinance Sec. 37.9(d))

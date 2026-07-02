@@ -15,7 +15,7 @@ This spec covers only the Topic page and Transaction pages:
 
 Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matrix can produce rewrite instructions. Claims marked `missing_source` stay blocked.
 
-**Sources ingested 2026-07-02:** violation-pages master content, program manager attestations (72-hour notice, reporter privacy, tenant safe housing rights), and supplementary IPM PDFs.
+**Sources ingested 2026-07-02:** violation-pages master content; program manager attestations (72-hour notice, reporter privacy, tenant safe housing); SF Rent Ordinance Sec. 37.9(d); SF.gov environmental health 311 page; supplementary IPM PDFs.
 
 ## page_key: pestsTopic
 
@@ -80,12 +80,21 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-tenant-safe-housing — stakeholder attestation
   - Reason: Program manager confirms tenants have rights to safe housing.
 
+- `sections[1].callout.text` (anti-retaliation)
+  - Current: A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Reporting housing conditions to the City is exercise of rights under the law; ordinance prohibits retaliatory acts.
+
+- `sections[2].cards[3].text` (retaliation intro)
+  - Current: Find help if you are worried about retaliation.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Educational routing to tenantRights; consistent with retaliation protections.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text` (anti-retaliation)
-  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
-  - Block reason: missing source
-  - Required source: anti-retaliation authority for reporting housing conditions to the City
+- None remaining for this page.
 
 ### Acceptance checks
 
@@ -127,12 +136,21 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-tenant-safe-housing — stakeholder attestation
   - Reason: Program manager confirms tenants have rights to safe housing.
 
+- `sections[1].callout.text` (anti-retaliation)
+  - Current: A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Reporting housing conditions to the City is exercise of rights under the law; ordinance prohibits retaliatory acts.
+
+- `sections[2].cards[3].text` (retaliation intro)
+  - Current: Find help if you are worried about retaliation.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Educational routing to tenantRights; consistent with retaliation protections.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text` (anti-retaliation)
-  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
-  - Block reason: missing source
-  - Required source: anti-retaliation authority for reporting housing conditions to the City
+- None remaining for this page.
 
 ### Acceptance checks
 
@@ -180,12 +198,21 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-tenant-safe-housing — stakeholder attestation
   - Reason: Program manager confirms tenants have rights to safe housing.
 
+- `sections[1].callout.text` (anti-retaliation)
+  - Current: A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Reporting housing conditions to the City is exercise of rights under the law; ordinance prohibits retaliatory acts.
+
+- `sections[3].cards[3].text` (retaliation intro)
+  - Current: Find help if you are worried about retaliation.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Educational routing to tenantRights; consistent with retaliation protections.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text` (anti-retaliation)
-  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
-  - Block reason: missing source
-  - Required source: anti-retaliation authority for reporting housing conditions to the City
+- None remaining for this page.
 
 ### Previously blocked (now resolved)
 
@@ -234,12 +261,21 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-tenant-safe-housing — stakeholder attestation
   - Reason: Program manager confirms tenants have rights to safe housing.
 
+- `sections[1].callout.text` (anti-retaliation)
+  - Current: A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Reporting housing conditions to the City is exercise of rights under the law; ordinance prohibits retaliatory acts.
+
+- `sections[2].cards[3].text` (retaliation intro)
+  - Current: Find help if you are worried about retaliation.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Educational routing to tenantRights; consistent with retaliation protections.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text` (anti-retaliation)
-  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
-  - Block reason: missing source
-  - Required source: anti-retaliation authority for reporting housing conditions to the City
+- None remaining for this page.
 
 ### Acceptance checks
 
@@ -275,18 +311,21 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
   - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
+- `sections[1].cards[3].text` (retaliation intro)
+  - Current: Find help if you are worried about retaliation.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Educational routing to tenantRights; consistent with retaliation protections.
+
 - `sections[1].cards[3].text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
   - Replace with: Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
   - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
-  - Reason: Privacy portion of tenant-rights related card; retaliation intro remains blocked separately.
+  - Reason: Privacy and retaliation intro on tenant-rights related card; both verified.
 
 ### Blocked fields
 
-- Target field path: `sections[1].cards[3].text` (retaliation intro)
-  - Current text (exact): Find help if you are worried about retaliation.
-  - Block reason: missing source
-  - Required source: anti-retaliation authority for reporting housing conditions to the City
+- None remaining for this page.
 
 ### Acceptance checks
 
@@ -322,6 +361,18 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-tenant-safe-housing — stakeholder attestation
   - Reason: Program manager confirms tenants have rights to safe housing.
 
+- `sections[1].callout.text` (anti-retaliation)
+  - Current: A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Reporting housing conditions to the City is exercise of rights under the law; ordinance prohibits retaliatory acts.
+
+- `sections[2].cards[3].text` (retaliation intro)
+  - Current: Find help if you are worried about retaliation.
+  - Replace with: *(keep current)*
+  - Source: sf-rent-ordinance-37-9d — Sec. 37.9(d)
+  - Reason: Educational routing to tenantRights; consistent with retaliation protections.
+
 - `sections[1].paragraphs[0]`
   - Current: HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.
   - Replace with: Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet.
@@ -336,15 +387,13 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text` (anti-retaliation)
-  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
-  - Block reason: missing source
-  - Required source: anti-retaliation authority for reporting housing conditions to the City
+- None remaining for this page.
 
 ### Previously blocked (now resolved)
 
 - Target field path: `sections[2].paragraphs[3]` — enforcement wording updated in prior commit.
 - Target field path: `sections[1].callout.text` (safe housing) — verified against program manager tenant safe housing attestation.
+- Target field path: `sections[1].callout.text` (anti-retaliation) — verified against Rent Ordinance Sec. 37.9(d).
 
 ### Acceptance checks
 
