@@ -21,7 +21,7 @@ function createDomStub() {
     addEventListener() {},
     createElement: stubElement,
     getElementById() {
-      return null
+      return stubElement()
     },
     body: {},
   }
@@ -29,14 +29,17 @@ function createDomStub() {
 
 /**
  * Execute the given repo-relative script files in one shared vm context.
+ * `window` is aliased to the context itself, matching the browser's
+ * `window === globalThis`, so `window.foo(...)` and bare `foo(...)` reach
+ * the same top-level function/const declarations either way.
  * @param {string[]} files repo-relative paths, loaded in order
  * @returns {vm.Context}
  */
 function loadScripts(files) {
-  const ctx = { window: {} }
-  ctx.window.addEventListener = () => {}
+  const ctx = {}
+  ctx.window = ctx
+  ctx.addEventListener = () => {}
   ctx.document = createDomStub()
-  ctx.window.document = ctx.document
   vm.createContext(ctx)
   for (const f of files) {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f })

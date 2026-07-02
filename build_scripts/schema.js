@@ -14,6 +14,7 @@ const cardSchema = z.object({
 const stepSchema = z.object({
   title: z.string().min(1),
   text: z.array(z.string()).optional(),
+  bullets: z.array(z.string()).optional(),
   button: z.string().optional(),
   buttonTarget: z.string().optional(),
   buttonUrl: z.string().optional(),
