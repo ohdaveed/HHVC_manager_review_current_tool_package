@@ -81,7 +81,7 @@
   function getRuleResultsFor(page, { useEditor = false } = {}) {
     const seoTitle = useEditor ? getSeoTitle(page) : defaultSeoTitle(page)
     const metaDescription = useEditor ? getMetaDescription(page) : defaultMetaDescription(page)
-    const primaryCta = useEditor ? getValue('ctaInput') || getPrimaryCta(page) : getPrimaryCta(page)
+    const primaryCta = (useEditor && getValue('ctaInput')) || getPrimaryCta(page)
     const relatedLinks = countRelatedLinks(page)
     const normalizedType = String(page.type || '')
       .trim()
@@ -357,8 +357,7 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function getPortfolioRows() {
-    const savedPages = readLocalState().pages
+  function getPortfolioRows(savedPages) {
     return DATA.order.map(([key, label]) => {
       const page = DATA.pages[key] || {}
       const rules = getRuleResultsFor(page)
@@ -376,8 +375,9 @@
   }
 
   function renderPortfolioOverview() {
-    const rows = getPortfolioRows()
-    const failingOnly = Boolean(readLocalState().ui.checks_failing_only)
+    const state = readLocalState()
+    const rows = getPortfolioRows(state.pages)
+    const failingOnly = Boolean(state.ui.checks_failing_only)
     const allPassCount = rows.filter((row) => row.failingLabels.length === 0).length
     const visibleRows = failingOnly ? rows.filter((row) => row.failingLabels.length > 0) : rows
     const sortedRows = visibleRows
@@ -698,6 +698,8 @@
       window.showToast(`Decision set: ${decision}`, tone)
     }
   }
+
+  window.reviewDecisions = { set: applyDecisionToCurrentPage }
 
   function renderMetric(label, value, help) {
     return `

@@ -50,15 +50,7 @@
   }
 
   function setDecision(decision) {
-    const select = document.getElementById('reviewDecision')
-    if (!select) return
-    if (select.value === decision) return
-    select.value = decision
-    select.dispatchEvent(new Event('change', { bubbles: true }))
-    if (typeof window.showToast === 'function') {
-      const tone = decision === 'Blocked' || decision === 'Revise and resubmit' ? 'warn' : 'success'
-      window.showToast(`Decision set: ${decision}`, tone)
-    }
+    window.reviewDecisions?.set?.(decision)
   }
 
   function focusPageSearch() {
