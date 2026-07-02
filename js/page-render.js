@@ -17,21 +17,30 @@ function bulletList(bullets = []) {
   if (!bullets.length) return ''
   return `<ul>${bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`
 }
+// Mockup-internal navigation for buttons/cards rendered from page data.
+// A delegated listener avoids inline onclick handlers, which would execute
+// page-data strings in a JS context that escapeHtml does not protect.
+document.addEventListener('click', (event) => {
+  const link = event.target.closest('a[data-render-target], a[data-render-inert]')
+  if (!link) return
+  event.preventDefault()
+  const key = link.getAttribute('data-render-target')
+  if (key) window.renderPage(key)
+})
 function button(label, kind = 'primary', target = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
-  // Escape target to prevent XSS in onclick handler
-  const escapedTarget = target ? escapeHtml(target) : ''
-  const onclick = target ? ` onclick="renderPage('${escapedTarget}'); return false;"` : ''
-  return `<a class="${cls}" href="#"${onclick}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
+  const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
+  return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
 }
 function renderCards(cards = []) {
   return `<div class="cards">${cards
     .map((c) => {
       const href = c.url ? escapeHtml(c.url) : '#'
-      const escapedTarget = c.target ? escapeHtml(c.target) : ''
       const attr = c.url
         ? ' target="_blank" rel="noopener"'
-        : ` onclick="${escapedTarget ? `renderPage('${escapedTarget}'); return false;` : 'return false;'}"`
+        : c.target
+          ? ` data-render-target="${escapeHtml(c.target)}"`
+          : ' data-render-inert=""'
       return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}</a></h3><p>${escapeHtml(c.text)}</p></article>`
     })
     .join('')}</div>`
@@ -85,10 +94,23 @@ function renderPage(key) {
     return
   }
   const transition = document.startViewTransition(() => applyPageContent(key))
-  transition.finished.finally(() => {
-    document.querySelector('#mockPage h1')?.focus()
-  })
+  // `ready` rejects with AbortError whenever a transition is skipped (e.g.
+  // rapid navigation); left unhandled it triggers the global error banner.
+  transition.ready.catch(() => {})
+  transition.finished
+    .then(() => {
+      document.querySelector('#mockPage h1')?.focus()
+    })
+    .catch((err) => {
+      // Rapid navigation skips the pending transition with an AbortError; the
+      // DOM update still ran, so that is not an error worth surfacing.
+      if (err?.name !== 'AbortError') throw err
+    })
   // Let wrappers (page label, UX refresh, sitemap) wait until applyPageContent
   // has actually run — the transition applies the DOM update asynchronously.
-  return transition.updateCallbackDone
+  // Skip aborts resolve normally so wrappers still refresh; real errors from
+  // applyPageContent stay rejected and reach the global error banner.
+  return transition.updateCallbackDone.catch((err) => {
+    if (err?.name !== 'AbortError') throw err
+  })
 }

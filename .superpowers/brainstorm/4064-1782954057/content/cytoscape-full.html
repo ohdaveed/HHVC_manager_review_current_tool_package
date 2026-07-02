@@ -1,0 +1,362 @@
+<h2>Full HHVC sitemap &mdash; real data, real connections</h2>
+<p class="subtitle">
+  All 17 pages, all ~70 actual links pulled straight from <code>pages/*.js</code> (same data the
+  current tool uses). Node size = how many pages link TO it. Toggle "show all links" to see why that
+  matters.
+</p>
+
+<div class="mockup">
+  <div class="mockup-header">Live graph &mdash; real HHVC_DATA</div>
+  <div class="mockup-body" style="padding: 10px">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center">
+      <button class="mock-button" id="btn-tree">Tree layout</button>
+      <button class="mock-button" id="btn-force" style="background: #eef1f4; color: #1b1f24">
+        Force layout
+      </button>
+      <button
+        class="mock-button"
+        id="btn-clear"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Clear highlight
+      </button>
+      <label
+        style="
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.8rem;
+          color: #1b1f24;
+          margin-left: 8px;
+        "
+      >
+        <input type="checkbox" id="chk-all-links" /> Show all links at once (not just topic + hover)
+      </label>
+    </div>
+    <div
+      id="cy"
+      style="
+        width: 100%;
+        height: 520px;
+        border: 1px solid #d8dde3;
+        border-radius: 8px;
+        background: #fafbfc;
+      "
+    ></div>
+    <div
+      style="
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+        font-size: 0.76rem;
+        color: #4b5563;
+        flex-wrap: wrap;
+      "
+    >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2166ac;
+            margin-right: 4px;
+          "
+        ></span
+        >Topic</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #1a7f4f;
+            margin-right: 4px;
+          "
+        ></span
+        >Transaction</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #b7791f;
+            margin-right: 4px;
+          "
+        ></span
+        >Information</span
+      >
+      <span>Bigger circle = more pages link to it</span>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>What the real data shows</h4>
+    <ul>
+      <li>
+        The topic page links directly to all 16 other pages &mdash; that's the real primary
+        structure, not a 4-branch tree. The tree layout reflects that honestly (wide, shallow fan).
+      </li>
+      <li>
+        3 pages are heavy inbound hubs: <strong>"Learn what HHVC can inspect,"</strong>
+        <strong>"What happens after you report,"</strong> and
+        <strong>"Tenant rights and reporting"</strong> &mdash; almost every transaction page links
+        to all three. That's ~40 of the ~70 edges right there.
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Why "reduce complexity" is a real constraint here</h4>
+    <ul>
+      <li>
+        Check "show all links at once" &mdash; with real data (not the 11-node sample from before)
+        it turns into a hairball almost immediately. A full-time all-edges diagram would NOT be
+        simpler than the current text list.
+      </li>
+      <li>
+        So the diagram only earns its keep if cross-links stay hidden until you click a node (as
+        shown here) &mdash; confirms the click-to-reveal interaction from the last demo isn't
+        optional polish, it's the thing that makes this readable at all.
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var pageNodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic'],
+      ['ratsReport', 'Report rats or mice', 'Transaction'],
+      ['cockroachesReport', 'Report cockroaches', 'Transaction'],
+      ['bedBugsReport', 'Report bed bugs', 'Transaction'],
+      ['bedBugsInfo', 'Bed bug rules and prevention', 'Information'],
+      ['mosquitoesReport', 'Report mosquitoes', 'Transaction'],
+      ['vegetationReport', 'Report vegetation or garbage', 'Transaction'],
+      ['moldReport', 'Report mold from humidity/condensation', 'Transaction'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information'],
+      ['ownerGuidance', 'Integrated pest mgmt for property mgrs', 'Information'],
+      ['afterReport', 'What happens after you report', 'Information'],
+      ['tenantRights', 'Tenant rights and reporting', 'Information'],
+      ['ratsPrevent', 'Keep rats and mice out', 'Information'],
+      ['cockroachesPrevent', 'Prevent cockroaches', 'Information'],
+      ['mosquitoesPrevent', 'Prevent mosquitoes', 'Information'],
+      ['reduceMoisture', 'Reduce indoor moisture/condensation', 'Information'],
+    ]
+
+    var rawEdges = [
+      ['pestsTopic', 'ratsReport'],
+      ['pestsTopic', 'cockroachesReport'],
+      ['pestsTopic', 'bedBugsReport'],
+      ['pestsTopic', 'mosquitoesReport'],
+      ['pestsTopic', 'vegetationReport'],
+      ['pestsTopic', 'moldReport'],
+      ['pestsTopic', 'ratsPrevent'],
+      ['pestsTopic', 'cockroachesPrevent'],
+      ['pestsTopic', 'mosquitoesPrevent'],
+      ['pestsTopic', 'bedBugsInfo'],
+      ['pestsTopic', 'ownerGuidance'],
+      ['pestsTopic', 'reduceMoisture'],
+      ['pestsTopic', 'scopeInfo'],
+      ['pestsTopic', 'afterReport'],
+      ['pestsTopic', 'payFee'],
+      ['pestsTopic', 'tenantRights'],
+      ['ratsReport', 'scopeInfo'],
+      ['ratsReport', 'afterReport'],
+      ['ratsReport', 'ratsPrevent'],
+      ['ratsReport', 'tenantRights'],
+      ['cockroachesReport', 'scopeInfo'],
+      ['cockroachesReport', 'afterReport'],
+      ['cockroachesReport', 'cockroachesPrevent'],
+      ['cockroachesReport', 'tenantRights'],
+      ['bedBugsReport', 'bedBugsInfo'],
+      ['bedBugsReport', 'scopeInfo'],
+      ['bedBugsReport', 'afterReport'],
+      ['bedBugsReport', 'tenantRights'],
+      ['bedBugsInfo', 'bedBugsReport'],
+      ['bedBugsInfo', 'tenantRights'],
+      ['bedBugsInfo', 'afterReport'],
+      ['mosquitoesReport', 'mosquitoesPrevent'],
+      ['mosquitoesReport', 'scopeInfo'],
+      ['mosquitoesReport', 'afterReport'],
+      ['mosquitoesReport', 'tenantRights'],
+      ['vegetationReport', 'scopeInfo'],
+      ['vegetationReport', 'afterReport'],
+      ['vegetationReport', 'ratsReport'],
+      ['vegetationReport', 'tenantRights'],
+      ['moldReport', 'scopeInfo'],
+      ['moldReport', 'afterReport'],
+      ['moldReport', 'tenantRights'],
+      ['moldReport', 'ownerGuidance'],
+      ['payFee', 'scopeInfo'],
+      ['payFee', 'afterReport'],
+      ['payFee', 'pestsTopic'],
+      ['payFee', 'ownerGuidance'],
+      ['scopeInfo', 'pestsTopic'],
+      ['scopeInfo', 'afterReport'],
+      ['scopeInfo', 'tenantRights'],
+      ['ownerGuidance', 'scopeInfo'],
+      ['ownerGuidance', 'ratsPrevent'],
+      ['ownerGuidance', 'cockroachesPrevent'],
+      ['ownerGuidance', 'mosquitoesPrevent'],
+      ['afterReport', 'tenantRights'],
+      ['afterReport', 'scopeInfo'],
+      ['tenantRights', 'afterReport'],
+      ['tenantRights', 'scopeInfo'],
+      ['ratsPrevent', 'ratsReport'],
+      ['ratsPrevent', 'scopeInfo'],
+      ['ratsPrevent', 'afterReport'],
+      ['cockroachesPrevent', 'cockroachesReport'],
+      ['cockroachesPrevent', 'scopeInfo'],
+      ['cockroachesPrevent', 'afterReport'],
+      ['mosquitoesPrevent', 'mosquitoesReport'],
+      ['mosquitoesPrevent', 'scopeInfo'],
+      ['mosquitoesPrevent', 'afterReport'],
+      ['reduceMoisture', 'moldReport'],
+      ['reduceMoisture', 'scopeInfo'],
+      ['reduceMoisture', 'afterReport'],
+      ['reduceMoisture', 'tenantRights'],
+    ]
+
+    var indeg = {}
+    pageNodes.forEach(function (n) {
+      indeg[n[0]] = 0
+    })
+    rawEdges.forEach(function (e) {
+      indeg[e[1]] = (indeg[e[1]] || 0) + 1
+    })
+
+    var elements = pageNodes
+      .map(function (n) {
+        var size = 34 + Math.min(indeg[n[0]], 12) * 3.2
+        return {
+          data: { id: n[0], label: n[1], type: n[2], indeg: indeg[n[0]] },
+          style: { width: size, height: size },
+        }
+      })
+      .concat(
+        rawEdges.map(function (e, i) {
+          return {
+            data: {
+              id: 'e' + i,
+              source: e[0],
+              target: e[1],
+              kind: e[0] === 'pestsTopic' ? 'hub' : 'cross',
+            },
+          }
+        })
+      )
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'font-size': 8,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': 64,
+            shape: 'ellipse',
+            'background-color': '#ffffff',
+            'border-width': 2.5,
+            'border-color': '#d8dde3',
+            color: '#1b1f24',
+          },
+        },
+        {
+          selector: 'node[type="Topic"]',
+          style: {
+            'background-color': '#2166ac',
+            'border-color': '#2166ac',
+            color: '#ffffff',
+            'font-weight': 'bold',
+          },
+        },
+        { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+        { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.2,
+            'line-color': '#c3c9d1',
+            'target-arrow-color': '#c3c9d1',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'arrow-scale': 0.7,
+            opacity: 0.35,
+          },
+        },
+        {
+          selector: 'edge[kind="cross"]',
+          style: { 'line-color': '#8a94a3', 'target-arrow-color': '#8a94a3', opacity: 0.12 },
+        },
+        { selector: 'edge.show-all', style: { opacity: 0.45 } },
+        { selector: '.faded', style: { opacity: 0.06 } },
+        { selector: '.highlighted', style: { opacity: 1, 'z-index': 999, width: 2 } },
+      ],
+      layout: {
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 20,
+      },
+    })
+
+    function clearHighlight() {
+      cy.elements().removeClass('faded highlighted')
+    }
+
+    cy.on('tap', 'node', function (evt) {
+      var node = evt.target
+      var neighborhood = node.closedNeighborhood()
+      cy.elements().addClass('faded')
+      neighborhood.removeClass('faded').addClass('highlighted')
+    })
+
+    cy.on('tap', function (evt) {
+      if (evt.target === cy) clearHighlight()
+    })
+
+    document.getElementById('btn-tree').addEventListener('click', function () {
+      clearHighlight()
+      cy.layout({
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 20,
+      }).run()
+    })
+    document.getElementById('btn-force').addEventListener('click', function () {
+      clearHighlight()
+      cy.layout({ name: 'cose', animate: true, padding: 20, nodeRepulsion: 9000 }).run()
+    })
+    document.getElementById('btn-clear').addEventListener('click', clearHighlight)
+
+    document.getElementById('chk-all-links').addEventListener('change', function (evt) {
+      if (evt.target.checked) {
+        cy.edges().addClass('show-all')
+      } else {
+        cy.edges().removeClass('show-all')
+      }
+    })
+  })()
+</script>

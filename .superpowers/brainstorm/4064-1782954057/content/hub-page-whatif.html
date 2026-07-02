@@ -1,0 +1,320 @@
+<h2>What if: a "Report a problem" hub page?</h2>
+<p class="subtitle">
+  Left: today's real structure (topic links to all 6 report pages directly). Right: topic links to
+  one new hub page ("Report a problem" &mdash; "On the next pages, you can report any pest
+  problem"), which then fans out to the 6 report pages. Click either topic node to see its direct
+  neighborhood.
+</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Before &mdash; topic fans out to everything</div>
+    <div class="mockup-body" style="padding: 8px">
+      <div
+        id="cy-before"
+        style="
+          width: 100%;
+          height: 440px;
+          border: 1px solid #d8dde3;
+          border-radius: 8px;
+          background: #fafbfc;
+        "
+      ></div>
+      <p style="font-size: 0.74rem; color: #4b5563; margin: 6px 2px 0">
+        Topic page direct links: <strong id="deg-before">-</strong>
+      </p>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">After &mdash; report pages sit behind a hub</div>
+    <div class="mockup-body" style="padding: 8px">
+      <div
+        id="cy-after"
+        style="
+          width: 100%;
+          height: 440px;
+          border: 1px solid #d8dde3;
+          border-radius: 8px;
+          background: #fafbfc;
+        "
+      ></div>
+      <p style="font-size: 0.74rem; color: #4b5563; margin: 6px 2px 0">
+        Topic page direct links: <strong id="deg-after">-</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div
+  style="
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 0.76rem;
+    color: #4b5563;
+    flex-wrap: wrap;
+  "
+>
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #2166ac;
+        margin-right: 4px;
+      "
+    ></span
+    >Topic</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid #1a7f4f;
+        margin-right: 4px;
+      "
+    ></span
+    >Transaction</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid #b7791f;
+        margin-right: 4px;
+      "
+    ></span
+    >Information</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #7c3aed;
+        margin-right: 4px;
+      "
+    ></span
+    >New hub page (hypothetical)</span
+  >
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>What changes structurally</h4>
+    <ul>
+      <li>
+        Topic page's direct fan-out drops from 16 to 11 &mdash; the 6 report links move one level
+        deeper, behind a page whose whole job is "here's how reporting works, pick your pest"
+      </li>
+      <li>
+        Still real navigation, not just a UI trick: a person landing on the topic page sees fewer
+        choices up front, then a focused set of report options once they signal intent to report
+      </li>
+      <li>
+        This is the same "Report or pay" grouping the tool already infers visually
+        (<code>getCluster()</code>) &mdash; the hub would make that grouping real in the data, not
+        just a display heuristic
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Worth deciding before building it for real</h4>
+    <ul>
+      <li>
+        Does "report a problem" replace the topic page's existing report cards, or supplement them
+        (topic still shows top 1-2 most common reports directly, hub covers the rest)?
+      </li>
+      <li>
+        Same pattern could apply to the 6 "prevent" pages under a "Prevent problems" hub &mdash;
+        want that scoped now too, or just report pages first?
+      </li>
+      <li>
+        This is a real content change (new page copy, new URL/slug, updated "related pages" cards on
+        all 6 report pages) &mdash; bigger than a diagram tweak, per your last answer we're keeping
+        this exploratory for now
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var pageNodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic'],
+      ['ratsReport', 'Report rats or mice', 'Transaction'],
+      ['cockroachesReport', 'Report cockroaches', 'Transaction'],
+      ['bedBugsReport', 'Report bed bugs', 'Transaction'],
+      ['mosquitoesReport', 'Report mosquitoes', 'Transaction'],
+      ['vegetationReport', 'Report vegetation or garbage', 'Transaction'],
+      ['moldReport', 'Report mold', 'Transaction'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information'],
+      ['ownerGuidance', 'Integrated pest mgmt', 'Information'],
+      ['afterReport', 'What happens after you report', 'Information'],
+      ['tenantRights', 'Tenant rights and reporting', 'Information'],
+      ['ratsPrevent', 'Keep rats and mice out', 'Information'],
+      ['cockroachesPrevent', 'Prevent cockroaches', 'Information'],
+      ['mosquitoesPrevent', 'Prevent mosquitoes', 'Information'],
+      ['bedBugsInfo', 'Bed bug rules and prevention', 'Information'],
+      ['reduceMoisture', 'Reduce indoor moisture', 'Information'],
+    ]
+
+    var reportKeys = [
+      'ratsReport',
+      'cockroachesReport',
+      'bedBugsReport',
+      'mosquitoesReport',
+      'vegetationReport',
+      'moldReport',
+    ]
+    var nonReportFromTopic = [
+      'payFee',
+      'scopeInfo',
+      'ownerGuidance',
+      'afterReport',
+      'tenantRights',
+      'ratsPrevent',
+      'cockroachesPrevent',
+      'mosquitoesPrevent',
+      'bedBugsInfo',
+      'reduceMoisture',
+    ]
+
+    var beforeEdges = reportKeys
+      .map(function (k) {
+        return ['pestsTopic', k]
+      })
+      .concat(
+        nonReportFromTopic.map(function (k) {
+          return ['pestsTopic', k]
+        })
+      )
+
+    var afterNodes = pageNodes.concat([['reportHub', 'Report a problem', 'Hub']])
+    var afterEdges = [['pestsTopic', 'reportHub']]
+      .concat(
+        reportKeys.map(function (k) {
+          return ['reportHub', k]
+        })
+      )
+      .concat(
+        nonReportFromTopic.map(function (k) {
+          return ['pestsTopic', k]
+        })
+      )
+
+    function buildGraph(containerId, nodes, edges, rootId, degEl) {
+      var elements = nodes
+        .map(function (n) {
+          return { data: { id: n[0], label: n[1], type: n[2] } }
+        })
+        .concat(
+          edges.map(function (e, i) {
+            return { data: { id: containerId + '-e' + i, source: e[0], target: e[1] } }
+          })
+        )
+
+      var cy = cytoscape({
+        container: document.getElementById(containerId),
+        elements: elements,
+        style: [
+          {
+            selector: 'node',
+            style: {
+              label: 'data(label)',
+              'font-size': 8,
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'text-wrap': 'wrap',
+              'text-max-width': 60,
+              width: 44,
+              height: 44,
+              shape: 'ellipse',
+              'background-color': '#ffffff',
+              'border-width': 2.5,
+              'border-color': '#d8dde3',
+              color: '#1b1f24',
+            },
+          },
+          {
+            selector: 'node[type="Topic"]',
+            style: {
+              'background-color': '#2166ac',
+              'border-color': '#2166ac',
+              color: '#ffffff',
+              'font-weight': 'bold',
+              width: 56,
+              height: 56,
+            },
+          },
+          {
+            selector: 'node[type="Hub"]',
+            style: {
+              'background-color': '#7c3aed',
+              'border-color': '#7c3aed',
+              color: '#ffffff',
+              'font-weight': 'bold',
+              width: 50,
+              height: 50,
+            },
+          },
+          { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+          { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+          {
+            selector: 'edge',
+            style: {
+              width: 1.4,
+              'line-color': '#c3c9d1',
+              'target-arrow-color': '#c3c9d1',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier',
+              'arrow-scale': 0.7,
+            },
+          },
+          { selector: '.faded', style: { opacity: 0.1 } },
+          { selector: '.highlighted', style: { opacity: 1, 'z-index': 999 } },
+        ],
+        layout: {
+          name: 'breadthfirst',
+          roots: '#' + rootId,
+          directed: true,
+          spacingFactor: 1.1,
+          padding: 16,
+        },
+      })
+
+      cy.on('tap', 'node', function (evt) {
+        var node = evt.target
+        cy.elements().addClass('faded')
+        node.closedNeighborhood().removeClass('faded').addClass('highlighted')
+      })
+      cy.on('tap', function (evt) {
+        if (evt.target === cy) cy.elements().removeClass('faded highlighted')
+      })
+
+      var topicDeg = cy.$('#' + rootId).outgoers('edge').length
+      document.getElementById(degEl).textContent = topicDeg
+
+      return cy
+    }
+
+    buildGraph('cy-before', pageNodes, beforeEdges, 'pestsTopic', 'deg-before')
+    buildGraph('cy-after', afterNodes, afterEdges, 'pestsTopic', 'deg-after')
+  })()
+</script>

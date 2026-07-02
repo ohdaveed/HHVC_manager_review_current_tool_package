@@ -1,0 +1,3 @@
+[     420ms] [ERROR] Unhandled promise rejection: AbortError: Transition was skipped @ http://127.0.0.1:8080/js/utils.js:85
+[     424ms] Transition was skipped
+[     470ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:8080/favicon.ico:0

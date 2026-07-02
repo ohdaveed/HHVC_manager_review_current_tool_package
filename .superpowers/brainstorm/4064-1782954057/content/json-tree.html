@@ -1,0 +1,214 @@
+<h2>Option D — Collapsible tree map</h2>
+<p class="subtitle">
+  Instead of showing every node's link data at once, collapse the whole sitemap into an expandable
+  outline (like a JSON/file tree). Nothing renders until you open it.
+</p>
+
+<div class="mockup">
+  <div class="mockup-header">Preview: collapsed by default</div>
+  <div
+    class="mockup-body"
+    style="
+      font-family: ui-monospace, 'SF Mono', monospace;
+      font-size: 0.82rem;
+      padding: 14px;
+      background: #fafbfc;
+    "
+  >
+    <div style="padding: 4px 0">
+      <span style="cursor: pointer; color: #2166ac; font-weight: 700">&#9662; HHVC topic</span>
+      <span style="color: #9aa3ad; margin-left: 6px">pestsTopic</span>
+    </div>
+
+    <div style="padding: 4px 0 4px 18px">
+      <span style="cursor: pointer; color: #2166ac; font-weight: 700">&#9656; Report or pay</span>
+      <span
+        style="
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          border-radius: 999px;
+          background: #eaf1fb;
+          color: #2166ac;
+          font-size: 0.68rem;
+          font-weight: 800;
+          margin-left: 6px;
+        "
+        >3</span
+      >
+    </div>
+
+    <div style="padding: 2px 0 2px 18px; background: #eef3fb; border-radius: 6px">
+      <div style="padding: 4px 6px">
+        <span style="cursor: pointer; color: #2166ac; font-weight: 700"
+          >&#9662; Prevent problems</span
+        >
+        <span
+          style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 999px;
+            background: #eaf1fb;
+            color: #2166ac;
+            font-size: 0.68rem;
+            font-weight: 800;
+            margin-left: 6px;
+          "
+          >4</span
+        >
+      </div>
+      <div style="padding: 3px 0 3px 26px">
+        <span style="color: #8a94a3">&#9656;</span>
+        <span style="color: #1b1f24; font-weight: 600"> Keep pests out</span>
+        <span style="color: #9aa3ad; font-size: 0.72rem"> &nbsp;&#8594;2 &#8592;1</span>
+      </div>
+      <div style="padding: 3px 0 3px 26px; background: #e2ecfa; border-radius: 4px">
+        <span style="color: #2166ac; cursor: pointer">&#9662;</span>
+        <span style="color: #1b1f24; font-weight: 600"> Integrated pest management</span>
+        <span style="color: #9aa3ad; font-size: 0.72rem"> &nbsp;&#8594;3 &#8592;2</span>
+        <div style="padding: 4px 0 2px 20px; font-size: 0.76rem">
+          <div style="color: #4b5563">
+            &#8594; links to
+            <span style="color: #2166ac; cursor: pointer; text-decoration: underline"
+              >Pay a fee</span
+            >
+          </div>
+          <div style="color: #4b5563">
+            &#8594; links to
+            <span style="color: #2166ac; cursor: pointer; text-decoration: underline"
+              >Report cockroaches</span
+            >
+          </div>
+          <div style="color: #4b5563">
+            &#8592; linked from
+            <span style="color: #2166ac; cursor: pointer; text-decoration: underline"
+              >Topic landing</span
+            >
+          </div>
+        </div>
+      </div>
+      <div style="padding: 3px 0 3px 26px">
+        <span style="color: #8a94a3">&#9656;</span>
+        <span style="color: #1b1f24; font-weight: 600"> Rules for property owners</span>
+        <span style="color: #9aa3ad; font-size: 0.72rem"> &nbsp;&#8594;1 &#8592;3</span>
+      </div>
+    </div>
+
+    <div style="padding: 4px 0 4px 18px">
+      <span style="cursor: pointer; color: #2166ac; font-weight: 700"
+        >&#9656; Inspection and rights</span
+      >
+      <span
+        style="
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          border-radius: 999px;
+          background: #eaf1fb;
+          color: #2166ac;
+          font-size: 0.68rem;
+          font-weight: 800;
+          margin-left: 6px;
+        "
+        >2</span
+      >
+    </div>
+
+    <div style="padding: 4px 0 4px 18px">
+      <span style="cursor: pointer; color: #2166ac; font-weight: 700"
+        >&#9656; Information and education</span
+      >
+      <span
+        style="
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          border-radius: 999px;
+          background: #eaf1fb;
+          color: #2166ac;
+          font-size: 0.68rem;
+          font-weight: 800;
+          margin-left: 6px;
+        "
+        >5</span
+      >
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li>
+        Directly attacks "too much text/data" &mdash; collapsed clusters show almost nothing, you
+        open only what you're inspecting
+      </li>
+      <li>
+        One page's links (in AND out) unfold inline right where you're looking, no separate detail
+        panel needed
+      </li>
+      <li>
+        Familiar interaction pattern (file tree / JSON viewer) &mdash; no new mental model to teach
+        reviewers
+      </li>
+      <li>
+        Scales well: 40 pages collapsed is still a short list; only expanded branches take space
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li>
+        Still text-based at the leaf level (&#8594;2 &#8592;1) unless combined with dot icons from
+        Option A
+      </li>
+      <li>Loses the at-a-glance "shape of the whole site" that a diagram (Option B) gives you</li>
+      <li>
+        Biggest rebuild of the three visual directions &mdash; replaces the current two-column
+        tree+detail layout, not just the badges
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="tree-alone" onclick="toggleSelect(this)">
+    <div class="content">
+      <h3>Use the tree, replacing the current layout</h3>
+      <p>Detail panel goes away; everything lives in the expandable tree.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="tree-plus-dots" onclick="toggleSelect(this)">
+    <div class="content">
+      <h3>Tree + dot icons <span class="label">recommended</span></h3>
+      <p>
+        Collapsed tree for structure, dot indicators (Option A) instead of &#8594;N &#8592;N text at
+        each leaf.
+      </p>
+    </div>
+  </div>
+  <div class="option" data-choice="keep-current-layout" onclick="toggleSelect(this)">
+    <div class="content">
+      <h3>Prefer the original 3 options</h3>
+      <p>
+        Keep the current two-column tree/detail layout; just fix the link visualization within it
+        (A, B, or C from before).
+      </p>
+    </div>
+  </div>
+</div>

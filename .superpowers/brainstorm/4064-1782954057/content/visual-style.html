@@ -1,0 +1,333 @@
+<h2>How should link relationships look?</h2>
+<p class="subtitle">
+  Same node ("Report cockroaches") shown 3 ways. Pick the one that reads fastest at a glance.
+</p>
+
+<div class="options" style="grid-template-columns: 1fr">
+  <div class="option" data-choice="dots" onclick="toggleSelect(this)">
+    <div class="content" style="width: 100%">
+      <h3>A — Dot indicators <span class="label">recommended</span></h3>
+      <p>
+        Numeric badges (→3 ←2) become small filled/hollow dot rows. No reading required, just glance
+        at density.
+      </p>
+      <div class="mockup">
+        <div class="mockup-body" style="font-family: system-ui; padding: 14px">
+          <div
+            style="
+              border: 1px solid #d8dde3;
+              border-left: 4px solid #2166ac;
+              border-radius: 8px;
+              padding: 10px 12px;
+              max-width: 340px;
+            "
+          >
+            <div style="font-weight: 800; font-size: 0.85rem; color: #1b1f24">
+              Report cockroaches
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 6px; align-items: center">
+              <div style="display: flex; align-items: center; gap: 3px" title="Links to 3 pages">
+                <span style="font-size: 0.65rem; color: #6b7280">out</span>
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #2166ac;
+                    display: inline-block;
+                  "
+                ></span>
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #2166ac;
+                    display: inline-block;
+                  "
+                ></span>
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #2166ac;
+                    display: inline-block;
+                  "
+                ></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 3px" title="Linked from 2 pages">
+                <span style="font-size: 0.65rem; color: #6b7280">in</span>
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    border: 1.5px solid #6b7280;
+                    display: inline-block;
+                  "
+                ></span>
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    border: 1.5px solid #6b7280;
+                    display: inline-block;
+                  "
+                ></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Fits in the existing compact node list, no layout change</li>
+            <li>Cheap to build on top of current data</li>
+            <li>Scannable across many nodes at once</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>Doesn't show WHICH pages connect &mdash; still text chips for that</li>
+            <li>High counts (8+) need a cap like "5+"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="lines" onclick="toggleSelect(this)">
+    <div class="content" style="width: 100%">
+      <h3>B — Connector diagram</h3>
+      <p>
+        An actual node graph: selected page in the center, lines drawn to linked pages, arrows show
+        direction.
+      </p>
+      <div class="mockup">
+        <div class="mockup-body" style="font-family: system-ui; padding: 14px">
+          <svg width="340" height="160" viewBox="0 0 340 160">
+            <line
+              x1="170"
+              y1="80"
+              x2="60"
+              y2="25"
+              stroke="#2166ac"
+              stroke-width="1.5"
+              marker-end="url(#arrow)"
+            />
+            <line
+              x1="170"
+              y1="80"
+              x2="280"
+              y2="25"
+              stroke="#2166ac"
+              stroke-width="1.5"
+              marker-end="url(#arrow)"
+            />
+            <line
+              x1="170"
+              y1="80"
+              x2="70"
+              y2="135"
+              stroke="#2166ac"
+              stroke-width="1.5"
+              marker-end="url(#arrow)"
+            />
+            <line
+              x1="260"
+              y1="135"
+              x2="170"
+              y2="80"
+              stroke="#8a94a3"
+              stroke-width="1.5"
+              marker-end="url(#arrowgrey)"
+            />
+            <defs>
+              <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 z" fill="#2166ac" />
+              </marker>
+              <marker
+                id="arrowgrey"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 z" fill="#8a94a3" />
+              </marker>
+            </defs>
+            <rect x="120" y="65" width="100" height="30" rx="6" fill="#2166ac" />
+            <text x="170" y="84" text-anchor="middle" font-size="10" fill="white" font-weight="700">
+              Report cockroaches
+            </text>
+            <rect x="10" y="10" width="100" height="26" rx="6" fill="white" stroke="#d8dde3" />
+            <text x="60" y="27" text-anchor="middle" font-size="9" fill="#1b1f24">Pay a fee</text>
+            <rect x="230" y="10" width="100" height="26" rx="6" fill="white" stroke="#d8dde3" />
+            <text x="280" y="27" text-anchor="middle" font-size="9" fill="#1b1f24">
+              File a complaint
+            </text>
+            <rect x="20" y="120" width="100" height="26" rx="6" fill="white" stroke="#d8dde3" />
+            <text x="70" y="137" text-anchor="middle" font-size="9" fill="#1b1f24">
+              Prevention tips
+            </text>
+            <rect x="210" y="120" width="100" height="26" rx="6" fill="white" stroke="#d8dde3" />
+            <text x="260" y="137" text-anchor="middle" font-size="9" fill="#1b1f24">
+              Topic landing
+            </text>
+          </svg>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>Most visual, immediately reads as "a sitemap"</li>
+            <li>Direction is obvious from arrows, not text</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>
+              Needs its own layout pass separate from the cluster tree &mdash; can't overlay on the
+              current grid without lines crossing clusters messily
+            </li>
+            <li>Gets cluttered fast past ~5 connections</li>
+            <li>More build effort: positioning, redraw on filter/search</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="content" style="width: 100%">
+      <h3>C — Visual pills, no counts</h3>
+      <p>
+        Drop the →3 ←2 numbers and "Links to N page(s)" sentence entirely. Keep only the existing
+        link chips, styled as a single visual row grouped by direction with small arrow icons
+        instead of text.
+      </p>
+      <div class="mockup">
+        <div class="mockup-body" style="font-family: system-ui; padding: 14px">
+          <div
+            style="
+              border: 1px solid #d8dde3;
+              border-left: 4px solid #2166ac;
+              border-radius: 8px;
+              padding: 10px 12px;
+              max-width: 420px;
+            "
+          >
+            <div style="font-weight: 800; font-size: 0.85rem; color: #1b1f24; margin-bottom: 8px">
+              Report cockroaches
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px">
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 4px 9px;
+                  border-radius: 999px;
+                  background: #eaf1fb;
+                  color: #2166ac;
+                  font-size: 0.72rem;
+                  font-weight: 700;
+                "
+                >&#8594; Pay a fee</span
+              >
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 4px 9px;
+                  border-radius: 999px;
+                  background: #eaf1fb;
+                  color: #2166ac;
+                  font-size: 0.72rem;
+                  font-weight: 700;
+                "
+                >&#8594; File a complaint</span
+              >
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 4px 9px;
+                  border-radius: 999px;
+                  background: #eaf1fb;
+                  color: #2166ac;
+                  font-size: 0.72rem;
+                  font-weight: 700;
+                "
+                >&#8594; Prevention tips</span
+              >
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 4px 9px;
+                  border-radius: 999px;
+                  background: #f1f2f4;
+                  color: #4b5563;
+                  font-size: 0.72rem;
+                  font-weight: 700;
+                "
+                >&#8592; Topic landing</span
+              >
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 4px 9px;
+                  border-radius: 999px;
+                  background: #f1f2f4;
+                  color: #4b5563;
+                  font-size: 0.72rem;
+                  font-weight: 700;
+                "
+                >&#8592; Inspection rights</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Pros</h4>
+          <ul>
+            <li>One visual language instead of three (badge + sentence + chip)</li>
+            <li>Chips already name the actual page &mdash; no separate count-vs-list redundancy</li>
+            <li>Simplest change: mostly deletion of the badge/annotation markup</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Cons</h4>
+          <ul>
+            <li>
+              Long pages with many links produce a big pill wall &mdash; needs a collapse/"+N more"
+              for outliers
+            </li>
+            <li>Less "wow" than a diagram, more of a cleanup</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top: 16px">
+  Click one to select, or tell me in the terminal if you want a mix (e.g. dots on nodes in the tree
+  + pills in the detail panel).
+</p>

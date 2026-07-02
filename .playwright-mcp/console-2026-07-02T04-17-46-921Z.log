@@ -1,0 +1,6 @@
+[     289ms] [ERROR] Unhandled promise rejection: AbortError: Transition was skipped @ http://127.0.0.1:8080/js/utils.js:85
+[     292ms] Transition was skipped
+[    3209ms] [ERROR] Unhandled promise rejection: AbortError: Transition was skipped @ http://127.0.0.1:8080/js/utils.js:85
+[    3211ms] Transition was skipped
+[   31261ms] [ERROR] Unhandled promise rejection: AbortError: Transition was skipped @ http://127.0.0.1:8080/js/utils.js:85
+[   31263ms] Transition was skipped

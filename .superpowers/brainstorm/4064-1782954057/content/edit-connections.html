@@ -1,0 +1,333 @@
+<h2>Draw your own connections</h2>
+<p class="subtitle">
+  Real interaction, not a mockup: click "Start connecting," then drag from one node to another to
+  create a link. Click a node once (not dragging) to remove its highlight. Everything you draw is
+  logged on the right so you can tell me what to keep.
+</p>
+
+<div class="mockup">
+  <div class="mockup-body" style="padding: 10px">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
+      <button class="mock-button" id="btn-draw">Start connecting</button>
+      <button class="mock-button" id="btn-draw-off" style="background: #eef1f4; color: #1b1f24">
+        Stop connecting
+      </button>
+      <button
+        class="mock-button"
+        id="btn-undo"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Undo last connection
+      </button>
+      <button
+        class="mock-button"
+        id="btn-tree"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Re-layout
+      </button>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 220px; gap: 10px">
+      <div
+        id="cy"
+        style="
+          width: 100%;
+          height: 520px;
+          border: 1px solid #d8dde3;
+          border-radius: 8px;
+          background: #fafbfc;
+        "
+      ></div>
+      <div
+        style="
+          border: 1px solid #d8dde3;
+          border-radius: 8px;
+          padding: 10px;
+          background: #fafbfc;
+          overflow-y: auto;
+          height: 520px;
+        "
+      >
+        <p
+          style="
+            margin: 0 0 6px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #6b7280;
+            text-transform: uppercase;
+          "
+        >
+          Connections you've drawn
+        </p>
+        <ul
+          id="log"
+          style="
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font-size: 0.74rem;
+            color: #1b1f24;
+            line-height: 1.6;
+          "
+        ></ul>
+        <p id="log-empty" style="font-size: 0.74rem; color: #9aa3ad">
+          None yet &mdash; click "Start connecting" and drag from one node to another.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>How to use it</h4>
+    <ul>
+      <li>
+        "Start connecting" turns on drag-to-link mode (from the real
+        <code>cytoscape-edgehandles</code> library, MIT licensed, actively maintained) &mdash; hover
+        a node, a red handle appears, drag it to another node to create a directed link
+      </li>
+      <li>
+        Every connection you draw appears in the log on the right in plain "X &#8594; Y" form
+        &mdash; tell me which ones to make real and I'll wire them into the actual page data
+      </li>
+      <li>
+        This is the same interaction pattern the real tool could offer reviewers: draw the link you
+        think is missing directly on the diagram instead of describing it in words
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Scope note</h4>
+    <ul>
+      <li>
+        This preview only affects this mockup tab, nothing in the actual codebase changes yet
+        &mdash; once you've drawn what you want, I'll translate the log into real
+        <code>target</code> entries in the relevant <code>pages/*.js</code> files
+      </li>
+      <li>
+        Adding this as a permanent feature of the review tool (not just this brainstorm) is a
+        separate scope decision &mdash; happy to build it in if useful beyond today's session
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script
+  src="https://unpkg.com/cytoscape-edgehandles@4.0.1/cytoscape-edgehandles.js"
+  integrity="sha384-ngG8OYN6HHni2WlvaOkG+9oyrGHFKl2YdsFeq+2tCR9kPeq+tk9poeIHr/Gi5LW9"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    cytoscape.use(cytoscapeEdgehandles)
+
+    var nodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic'],
+      ['reportHub', 'Report a problem', 'Hub'],
+      ['preventHub', 'Prevent problems', 'HubAlt'],
+      ['recordsHub', 'Look up building records', 'RecordsHub'],
+      ['ownerHub', 'Property owner responsibilities', 'OwnerHub'],
+      ['tenantRights', 'Tenant rights and responsibilities', 'Information'],
+      ['article11', 'Understanding Article 11', 'Information'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information'],
+      ['afterReport', 'What happens after you report', 'Information'],
+      ['noticeOfViolation', 'Respond to a notice of violation', 'Transaction'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction'],
+      ['ipm', 'Integrated pest management (IPM)', 'Information'],
+      ['findRecords', 'Find complaints & inspection records', 'External'],
+    ]
+
+    var edges = [
+      ['pestsTopic', 'reportHub'],
+      ['pestsTopic', 'preventHub'],
+      ['pestsTopic', 'recordsHub'],
+      ['pestsTopic', 'ownerHub'],
+      ['pestsTopic', 'tenantRights'],
+      ['pestsTopic', 'article11'],
+      ['pestsTopic', 'scopeInfo'],
+      ['pestsTopic', 'afterReport'],
+      ['ownerHub', 'payFee'],
+      ['ownerHub', 'noticeOfViolation'],
+      ['ownerHub', 'ipm'],
+      ['recordsHub', 'findRecords'],
+      ['tenantRights', 'article11'],
+    ]
+
+    var elements = nodes
+      .map(function (n) {
+        return { data: { id: n[0], label: n[1], type: n[2] } }
+      })
+      .concat(
+        edges.map(function (e, i) {
+          return { data: { id: 'e' + i, source: e[0], target: e[1] } }
+        })
+      )
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'font-size': 8,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': 62,
+            width: 46,
+            height: 46,
+            shape: 'ellipse',
+            'background-color': '#ffffff',
+            'border-width': 2.5,
+            'border-color': '#d8dde3',
+            color: '#1b1f24',
+          },
+        },
+        {
+          selector: 'node[type="Topic"]',
+          style: {
+            'background-color': '#2166ac',
+            'border-color': '#2166ac',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 58,
+            height: 58,
+          },
+        },
+        {
+          selector: 'node[type="Hub"]',
+          style: {
+            'background-color': '#7c3aed',
+            'border-color': '#7c3aed',
+            color: '#ffffff',
+            'font-weight': 'bold',
+          },
+        },
+        {
+          selector: 'node[type="HubAlt"]',
+          style: {
+            'background-color': '#0891b2',
+            'border-color': '#0891b2',
+            color: '#ffffff',
+            'font-weight': 'bold',
+          },
+        },
+        {
+          selector: 'node[type="RecordsHub"]',
+          style: {
+            'background-color': '#c2703d',
+            'border-color': '#c2703d',
+            color: '#ffffff',
+            'font-weight': 'bold',
+          },
+        },
+        {
+          selector: 'node[type="OwnerHub"]',
+          style: {
+            'background-color': '#a16207',
+            'border-color': '#a16207',
+            color: '#ffffff',
+            'font-weight': 'bold',
+          },
+        },
+        { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+        { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+        {
+          selector: 'node[type="External"]',
+          style: {
+            'background-color': '#f1f2f4',
+            'border-color': '#8a94a3',
+            'border-style': 'dashed',
+          },
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.4,
+            'line-color': '#c3c9d1',
+            'target-arrow-color': '#c3c9d1',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'arrow-scale': 0.7,
+          },
+        },
+        {
+          selector: 'edge.user-made',
+          style: { 'line-color': '#c0392b', 'target-arrow-color': '#c0392b', width: 2.2 },
+        },
+      ],
+      layout: {
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 16,
+      },
+    })
+
+    var eh = cy.edgehandles({
+      canConnect: function (sourceNode, targetNode) {
+        return !sourceNode.same(targetNode)
+      },
+      edgeParams: function () {
+        return { classes: 'user-made' }
+      },
+      hoverDelay: 100,
+      snap: true,
+    })
+
+    var log = []
+    function renderLog() {
+      var listEl = document.getElementById('log')
+      var emptyEl = document.getElementById('log-empty')
+      listEl.innerHTML = log
+        .map(function (entry, i) {
+          return '<li>' + (i + 1) + '. ' + entry.from + ' &#8594; ' + entry.to + '</li>'
+        })
+        .join('')
+      emptyEl.style.display = log.length ? 'none' : 'block'
+    }
+
+    cy.on('ehcomplete', function (event, sourceNode, targetNode, addedEdge) {
+      log.push({
+        from: sourceNode.data('label'),
+        to: targetNode.data('label'),
+        edgeId: addedEdge.id(),
+      })
+      renderLog()
+    })
+
+    document.getElementById('btn-draw').addEventListener('click', function () {
+      eh.enableDrawMode()
+    })
+    document.getElementById('btn-draw-off').addEventListener('click', function () {
+      eh.disableDrawMode()
+    })
+    document.getElementById('btn-undo').addEventListener('click', function () {
+      var last = log.pop()
+      if (last) {
+        cy.$('#' + last.edgeId).remove()
+        renderLog()
+      }
+    })
+    document.getElementById('btn-tree').addEventListener('click', function () {
+      cy.layout({
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 16,
+      }).run()
+    })
+
+    renderLog()
+  })()
+</script>

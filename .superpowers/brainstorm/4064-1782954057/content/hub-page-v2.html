@@ -1,0 +1,347 @@
+<h2>Two hubs: "Report a problem" + "Prevent problems"</h2>
+<p class="subtitle">
+  Topic now links to 2 hubs + 4 pages that don't fit either bucket (pay fee, and the 3 universal
+  reference pages), instead of 16 things at once. Click the topic node on the right to see the new
+  direct neighborhood.
+</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Before &mdash; 16 direct links</div>
+    <div class="mockup-body" style="padding: 8px">
+      <div
+        id="cy-before"
+        style="
+          width: 100%;
+          height: 460px;
+          border: 1px solid #d8dde3;
+          border-radius: 8px;
+          background: #fafbfc;
+        "
+      ></div>
+      <p style="font-size: 0.74rem; color: #4b5563; margin: 6px 2px 0">
+        Topic page direct links: <strong id="deg-before">-</strong>
+      </p>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">After &mdash; 2 hubs absorb 12 of them</div>
+    <div class="mockup-body" style="padding: 8px">
+      <div
+        id="cy-after"
+        style="
+          width: 100%;
+          height: 460px;
+          border: 1px solid #d8dde3;
+          border-radius: 8px;
+          background: #fafbfc;
+        "
+      ></div>
+      <p style="font-size: 0.74rem; color: #4b5563; margin: 6px 2px 0">
+        Topic page direct links: <strong id="deg-after">-</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div
+  style="
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 0.76rem;
+    color: #4b5563;
+    flex-wrap: wrap;
+  "
+>
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #2166ac;
+        margin-right: 4px;
+      "
+    ></span
+    >Topic</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid #1a7f4f;
+        margin-right: 4px;
+      "
+    ></span
+    >Transaction</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid #b7791f;
+        margin-right: 4px;
+      "
+    ></span
+    >Information</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #7c3aed;
+        margin-right: 4px;
+      "
+    ></span
+    >Report hub</span
+  >
+  <span
+    ><span
+      style="
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #0891b2;
+        margin-right: 4px;
+      "
+    ></span
+    >Prevent hub</span
+  >
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Result</h4>
+    <ul>
+      <li>
+        Topic direct links: 16 &#8594; 6 (report hub, prevent hub, pay fee, inspection scope,
+        after-report, tenant rights)
+      </li>
+      <li>
+        Two clean 3-level trees now match the clusters the tool already infers visually &mdash;
+        "Report or pay" and "Prevent problems" become real pages, not just a grouping heuristic
+      </li>
+      <li>
+        The 3 reference pages (inspection scope, after-report, tenant rights) stay directly
+        reachable from the topic AND keep being linked from every transaction/prevention page
+        &mdash; that cross-link density is unchanged, it's genuinely different content
+        (policy/process info every visitor might need regardless of which pest)
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Still open</h4>
+    <ul>
+      <li>
+        Both hubs need real copy: "Report a problem" / "Prevent problems" landing text, one intro
+        paragraph + a card grid to the 6 pages each
+      </li>
+      <li>
+        Every report/prevent page's own "related pages" section may want a link back up to its hub,
+        not just sideways to the 3 reference pages
+      </li>
+      <li>
+        This is still a what-if for discussion, not applied to the tool's real page data &mdash; say
+        the word when you want it built for real and I'll scope it as an implementation task
+        separate from the diagram work
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var pageNodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic'],
+      ['ratsReport', 'Report rats or mice', 'Transaction'],
+      ['cockroachesReport', 'Report cockroaches', 'Transaction'],
+      ['bedBugsReport', 'Report bed bugs', 'Transaction'],
+      ['mosquitoesReport', 'Report mosquitoes', 'Transaction'],
+      ['vegetationReport', 'Report vegetation or garbage', 'Transaction'],
+      ['moldReport', 'Report mold', 'Transaction'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information'],
+      ['ownerGuidance', 'Integrated pest mgmt', 'Information'],
+      ['afterReport', 'What happens after you report', 'Information'],
+      ['tenantRights', 'Tenant rights and reporting', 'Information'],
+      ['ratsPrevent', 'Keep rats and mice out', 'Information'],
+      ['cockroachesPrevent', 'Prevent cockroaches', 'Information'],
+      ['mosquitoesPrevent', 'Prevent mosquitoes', 'Information'],
+      ['bedBugsInfo', 'Bed bug rules and prevention', 'Information'],
+      ['reduceMoisture', 'Reduce indoor moisture', 'Information'],
+    ]
+
+    var reportKeys = [
+      'ratsReport',
+      'cockroachesReport',
+      'bedBugsReport',
+      'mosquitoesReport',
+      'vegetationReport',
+      'moldReport',
+    ]
+    var preventKeys = [
+      'ratsPrevent',
+      'cockroachesPrevent',
+      'mosquitoesPrevent',
+      'bedBugsInfo',
+      'reduceMoisture',
+      'ownerGuidance',
+    ]
+    var directFromTopic = ['payFee', 'scopeInfo', 'afterReport', 'tenantRights']
+
+    var beforeEdges = reportKeys
+      .concat(preventKeys)
+      .concat(directFromTopic)
+      .map(function (k) {
+        return ['pestsTopic', k]
+      })
+
+    var afterNodes = pageNodes.concat([
+      ['reportHub', 'Report a problem', 'Hub'],
+      ['preventHub', 'Prevent problems', 'HubAlt'],
+    ])
+    var afterEdges = [
+      ['pestsTopic', 'reportHub'],
+      ['pestsTopic', 'preventHub'],
+    ]
+      .concat(
+        reportKeys.map(function (k) {
+          return ['reportHub', k]
+        })
+      )
+      .concat(
+        preventKeys.map(function (k) {
+          return ['preventHub', k]
+        })
+      )
+      .concat(
+        directFromTopic.map(function (k) {
+          return ['pestsTopic', k]
+        })
+      )
+
+    function buildGraph(containerId, nodes, edges, rootId, degEl) {
+      var elements = nodes
+        .map(function (n) {
+          return { data: { id: n[0], label: n[1], type: n[2] } }
+        })
+        .concat(
+          edges.map(function (e, i) {
+            return { data: { id: containerId + '-e' + i, source: e[0], target: e[1] } }
+          })
+        )
+
+      var cy = cytoscape({
+        container: document.getElementById(containerId),
+        elements: elements,
+        style: [
+          {
+            selector: 'node',
+            style: {
+              label: 'data(label)',
+              'font-size': 8,
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'text-wrap': 'wrap',
+              'text-max-width': 58,
+              width: 42,
+              height: 42,
+              shape: 'ellipse',
+              'background-color': '#ffffff',
+              'border-width': 2.5,
+              'border-color': '#d8dde3',
+              color: '#1b1f24',
+            },
+          },
+          {
+            selector: 'node[type="Topic"]',
+            style: {
+              'background-color': '#2166ac',
+              'border-color': '#2166ac',
+              color: '#ffffff',
+              'font-weight': 'bold',
+              width: 54,
+              height: 54,
+            },
+          },
+          {
+            selector: 'node[type="Hub"]',
+            style: {
+              'background-color': '#7c3aed',
+              'border-color': '#7c3aed',
+              color: '#ffffff',
+              'font-weight': 'bold',
+              width: 48,
+              height: 48,
+            },
+          },
+          {
+            selector: 'node[type="HubAlt"]',
+            style: {
+              'background-color': '#0891b2',
+              'border-color': '#0891b2',
+              color: '#ffffff',
+              'font-weight': 'bold',
+              width: 48,
+              height: 48,
+            },
+          },
+          { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+          { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+          {
+            selector: 'edge',
+            style: {
+              width: 1.4,
+              'line-color': '#c3c9d1',
+              'target-arrow-color': '#c3c9d1',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier',
+              'arrow-scale': 0.7,
+            },
+          },
+          { selector: '.faded', style: { opacity: 0.1 } },
+          { selector: '.highlighted', style: { opacity: 1, 'z-index': 999 } },
+        ],
+        layout: {
+          name: 'breadthfirst',
+          roots: '#' + rootId,
+          directed: true,
+          spacingFactor: 1.05,
+          padding: 16,
+        },
+      })
+
+      cy.on('tap', 'node', function (evt) {
+        var node = evt.target
+        cy.elements().addClass('faded')
+        node.closedNeighborhood().removeClass('faded').addClass('highlighted')
+      })
+      cy.on('tap', function (evt) {
+        if (evt.target === cy) cy.elements().removeClass('faded highlighted')
+      })
+
+      document.getElementById(degEl).textContent = cy.$('#' + rootId).outgoers('edge').length
+      return cy
+    }
+
+    buildGraph('cy-before', pageNodes, beforeEdges, 'pestsTopic', 'deg-before')
+    buildGraph('cy-after', afterNodes, afterEdges, 'pestsTopic', 'deg-after')
+  })()
+</script>

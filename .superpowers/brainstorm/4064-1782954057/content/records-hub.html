@@ -1,0 +1,481 @@
+<h2>New hub: building records &amp; inspector lookup</h2>
+<p class="subtitle">
+  Working title &mdash; correct it if you have a better name. Same Resource Collection template as
+  Prevent problems. 3 of the 4 items are address/building lookups; public records request is the odd
+  one out (broader, likely a citywide SF.gov service rather than something HHVC-specific).
+</p>
+
+<div class="mockup">
+  <div class="mockup-header">Preview: Look up building records (Resource collection)</div>
+  <div
+    class="mockup-body"
+    style="padding: 20px 24px; font-family: system-ui; background: #fafbfc; max-width: 640px"
+  >
+    <div
+      style="
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: #c74e2a;
+        text-transform: uppercase;
+        border-left: 3px solid #c74e2a;
+        padding-left: 8px;
+        margin-bottom: 8px;
+      "
+    >
+      Resource collection
+    </div>
+    <h1 style="margin: 0 0 8px; font-size: 1.6rem; color: #1b1f24">Look up building records</h1>
+    <p style="margin: 0 0 8px; font-size: 0.88rem; color: #33383e; line-height: 1.4">
+      Find past inspection reports, search violations, look up your assigned inspector, or request
+      public records for a building.
+    </p>
+    <p style="margin: 0 0 20px; font-size: 0.8rem; color: #4b5563">
+      Part of<br /><a href="#" style="color: #2166ac; font-weight: 700; text-decoration: underline"
+        >Pests and housing problems</a
+      >
+    </p>
+
+    <h2
+      style="
+        margin: 0 0 12px;
+        font-size: 1.15rem;
+        color: #1b1f24;
+        border-top: 1px solid #e5e8eb;
+        padding-top: 16px;
+      "
+    >
+      Resources
+    </h2>
+    <h3 style="margin: 0 0 8px; font-size: 0.92rem; color: #1b1f24">Building lookups</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; margin-bottom: 18px">
+      <div>
+        <a
+          href="#"
+          style="color: #2166ac; font-weight: 700; font-size: 0.85rem; text-decoration: none"
+          >Find complaints and inspection records &#8595;&#8599;</a
+        >
+        <p style="margin: 2px 0 0; font-size: 0.76rem; color: #4b5563">
+          Search by street address, complaint ID, or location ID. Shows 5 years of investigated
+          complaints with inspections &mdash; this is the real HHVC lookup tool (xnet.sfdph.org),
+          one tool covers both past inspections and violations.
+        </p>
+      </div>
+      <div>
+        <a
+          href="#"
+          style="color: #2166ac; font-weight: 700; font-size: 0.85rem; text-decoration: none"
+          >Find your district inspector &#8594;</a
+        >
+        <p style="margin: 2px 0 0; font-size: 0.76rem; color: #4b5563">
+          See which HHVC inspector covers your area.
+        </p>
+      </div>
+      <div>
+        <a
+          href="#"
+          style="color: #2166ac; font-weight: 700; font-size: 0.85rem; text-decoration: none"
+          >Find residential hotel &amp; shelter records &#8595;&#8599;</a
+        >
+        <p style="margin: 2px 0 0; font-size: 0.76rem; color: #4b5563">
+          Separate tool (xnet.sfdph.org) for the Residential Hotel Program &mdash; covers SROs and
+          shelters, which HHVC also inspects. Different dataset than the general complaint search
+          above.
+        </p>
+      </div>
+    </div>
+
+    <h3 style="margin: 0 0 8px; font-size: 0.92rem; color: #1b1f24">
+      Formal requests &amp; payments
+    </h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px">
+      <div>
+        <a
+          href="#"
+          style="color: #2166ac; font-weight: 700; font-size: 0.85rem; text-decoration: none"
+          >Make a public records request &#8595;&#8599;</a
+        >
+        <p style="margin: 2px 0 0; font-size: 0.76rem; color: #4b5563">
+          Likely the citywide public records request service, not an HHVC-specific page &mdash;
+          flagged below.
+        </p>
+      </div>
+      <div>
+        <a
+          href="#"
+          style="color: #2166ac; font-weight: 700; font-size: 0.85rem; text-decoration: none"
+          >Pay your Healthy Housing fee &#8594;</a
+        >
+        <p style="margin: 2px 0 0; font-size: 0.76rem; color: #4b5563">
+          Moved here from the topic page &mdash; it's a service/transaction like the rest of this
+          hub, not a lookup, but belongs in the same "things you do here" group.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top: 14px">
+  <div class="mockup-body" style="padding: 10px">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
+      <button class="mock-button" id="btn-tree">Tree layout</button>
+      <button
+        class="mock-button"
+        id="btn-clear"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Clear highlight
+      </button>
+    </div>
+    <div
+      id="cy"
+      style="
+        width: 100%;
+        height: 520px;
+        border: 1px solid #d8dde3;
+        border-radius: 8px;
+        background: #fafbfc;
+      "
+    ></div>
+    <div
+      style="
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+        font-size: 0.76rem;
+        color: #4b5563;
+        flex-wrap: wrap;
+      "
+    >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2166ac;
+            margin-right: 4px;
+          "
+        ></span
+        >Topic</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #7c3aed;
+            margin-right: 4px;
+          "
+        ></span
+        >Report hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #0891b2;
+            margin-right: 4px;
+          "
+        ></span
+        >Prevent hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c2703d;
+            margin-right: 4px;
+          "
+        ></span
+        >Records hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #e5e8eb;
+            border: 2px dashed #8a94a3;
+            margin-right: 4px;
+          "
+        ></span
+        >Document</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #f1f2f4;
+            border: 2px dashed #c2703d;
+            transform: rotate(45deg);
+            margin-right: 4px;
+          "
+        ></span
+        >External / citywide link</span
+      >
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Effect on the topic page</h4>
+    <ul>
+      <li>
+        Topic direct links now: Report hub, Prevent hub, Records hub, pay fee, inspection scope,
+        after-report, tenant rights &mdash; 7 total, still far below the original 16
+      </li>
+      <li>
+        Grouping 3 building-lookup tools together is a real usability win beyond just diagram
+        tidiness &mdash; someone who wants "did HHVC already inspect my building" now has one
+        obvious place to start instead of hunting across separate pages
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>To confirm</h4>
+    <ul>
+      <li>Hub name &mdash; "Look up building records" is a guess, happy to rename</li>
+      <li>
+        Public records request: I've marked it as a likely citywide/external link (diamond, dashed)
+        rather than new HHVC content &mdash; correct if HHVC actually owns a dedicated version of
+        this
+      </li>
+      <li>
+        Should "Past inspection reports" and "Search violations" be two separate tools, or one
+        combined "building history" lookup that shows both? They query the same thing (an address)
+        for related but different data.
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var nodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic', 'ellipse'],
+      ['ratsReport', 'Report rats or mice', 'Transaction', 'ellipse'],
+      ['cockroachesReport', 'Report cockroaches', 'Transaction', 'ellipse'],
+      ['bedBugsReport', 'Report bed bugs', 'Transaction', 'ellipse'],
+      ['mosquitoesReport', 'Report mosquitoes', 'Transaction', 'ellipse'],
+      ['vegetationReport', 'Report vegetation/garbage', 'Transaction', 'ellipse'],
+      ['moldReport', 'Report mold', 'Transaction', 'ellipse'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction', 'ellipse'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information', 'ellipse'],
+      ['afterReport', 'What happens after you report', 'Information', 'ellipse'],
+      ['tenantRights', 'Tenant rights and reporting', 'Information', 'ellipse'],
+      ['ipm', 'Integrated pest management (IPM)', 'Information', 'ellipse'],
+      ['moistureControl', 'Moisture control', 'Information', 'ellipse'],
+      ['exclusion', 'Exclusion', 'Information', 'ellipse'],
+      ['reportHub', 'Report a problem', 'Hub', 'ellipse'],
+      ['preventHub', 'Prevent problems', 'HubAlt', 'ellipse'],
+      ['docChecklist', 'Prevention checklist (PDF)', 'Doc', 'rectangle'],
+      ['docInfographic', 'Early signs (Infographic)', 'Doc', 'rectangle'],
+      ['docHandout', 'Manager handout (PDF)', 'Doc', 'rectangle'],
+      ['recordsHub', 'Look up building records', 'RecordsHub', 'ellipse'],
+      [
+        'findRecords',
+        'Find complaints & inspection records (xnet.sfdph.org)',
+        'External',
+        'diamond',
+      ],
+      [
+        'findHotelRecords',
+        'Find residential hotel & shelter records (xnet.sfdph.org)',
+        'External',
+        'diamond',
+      ],
+      ['findInspector', 'Find your district inspector', 'Information', 'ellipse'],
+      ['publicRecords', 'Make a public records request', 'External', 'diamond'],
+    ]
+
+    var edges = [
+      ['pestsTopic', 'reportHub'],
+      ['pestsTopic', 'preventHub'],
+      ['pestsTopic', 'recordsHub'],
+      ['pestsTopic', 'payFee'],
+      ['pestsTopic', 'scopeInfo'],
+      ['pestsTopic', 'afterReport'],
+      ['pestsTopic', 'tenantRights'],
+      ['reportHub', 'ratsReport'],
+      ['reportHub', 'cockroachesReport'],
+      ['reportHub', 'bedBugsReport'],
+      ['reportHub', 'mosquitoesReport'],
+      ['reportHub', 'vegetationReport'],
+      ['reportHub', 'moldReport'],
+      ['preventHub', 'ipm'],
+      ['preventHub', 'moistureControl'],
+      ['preventHub', 'exclusion'],
+      ['preventHub', 'docChecklist'],
+      ['preventHub', 'docInfographic'],
+      ['preventHub', 'docHandout'],
+      ['recordsHub', 'findRecords'],
+      ['recordsHub', 'findHotelRecords'],
+      ['recordsHub', 'findInspector'],
+      ['recordsHub', 'publicRecords'],
+    ]
+
+    var elements = nodes
+      .map(function (n) {
+        return { data: { id: n[0], label: n[1], type: n[2], shape: n[3] } }
+      })
+      .concat(
+        edges.map(function (e, i) {
+          return { data: { id: 'e' + i, source: e[0], target: e[1] } }
+        })
+      )
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'font-size': 7.5,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': 58,
+            width: 44,
+            height: 44,
+            shape: 'data(shape)',
+            'background-color': '#ffffff',
+            'border-width': 2.5,
+            'border-color': '#d8dde3',
+            color: '#1b1f24',
+          },
+        },
+        {
+          selector: 'node[type="Topic"]',
+          style: {
+            'background-color': '#2166ac',
+            'border-color': '#2166ac',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 56,
+            height: 56,
+          },
+        },
+        {
+          selector: 'node[type="Hub"]',
+          style: {
+            'background-color': '#7c3aed',
+            'border-color': '#7c3aed',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 48,
+            height: 48,
+          },
+        },
+        {
+          selector: 'node[type="HubAlt"]',
+          style: {
+            'background-color': '#0891b2',
+            'border-color': '#0891b2',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 48,
+            height: 48,
+          },
+        },
+        {
+          selector: 'node[type="RecordsHub"]',
+          style: {
+            'background-color': '#c2703d',
+            'border-color': '#c2703d',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 48,
+            height: 48,
+          },
+        },
+        { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+        { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+        {
+          selector: 'node[type="Doc"]',
+          style: {
+            'background-color': '#e5e8eb',
+            'border-color': '#8a94a3',
+            'border-style': 'dashed',
+            width: 60,
+            height: 36,
+            'font-size': 6.5,
+          },
+        },
+        {
+          selector: 'node[type="External"]',
+          style: {
+            'background-color': '#f1f2f4',
+            'border-color': '#c2703d',
+            'border-style': 'dashed',
+            width: 50,
+            height: 50,
+          },
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.4,
+            'line-color': '#c3c9d1',
+            'target-arrow-color': '#c3c9d1',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'arrow-scale': 0.7,
+          },
+        },
+        { selector: '.faded', style: { opacity: 0.1 } },
+        { selector: '.highlighted', style: { opacity: 1, 'z-index': 999 } },
+      ],
+      layout: {
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 16,
+      },
+    })
+
+    cy.on('tap', 'node', function (evt) {
+      var node = evt.target
+      cy.elements().addClass('faded')
+      node.closedNeighborhood().removeClass('faded').addClass('highlighted')
+    })
+    cy.on('tap', function (evt) {
+      if (evt.target === cy) cy.elements().removeClass('faded highlighted')
+    })
+
+    document.getElementById('btn-tree').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+      cy.layout({
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 16,
+      }).run()
+    })
+    document.getElementById('btn-clear').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+    })
+  })()
+</script>

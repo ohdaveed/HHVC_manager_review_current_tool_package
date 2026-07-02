@@ -1,0 +1,472 @@
+<h2>Current sitemap &mdash; everything designed so far</h2>
+<p class="subtitle">
+  Topic &#8594; 3 hubs (Report, Prevent, Records) + 5 direct reference pages. Click any node to see
+  its neighborhood. This is the cumulative state of the whole session, not a new idea.
+</p>
+
+<div class="mockup">
+  <div class="mockup-body" style="padding: 10px">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
+      <button class="mock-button" id="btn-tree">Tree layout</button>
+      <button class="mock-button" id="btn-force" style="background: #eef1f4; color: #1b1f24">
+        Force layout
+      </button>
+      <button
+        class="mock-button"
+        id="btn-clear"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Clear highlight
+      </button>
+    </div>
+    <div
+      id="cy"
+      style="
+        width: 100%;
+        height: 600px;
+        border: 1px solid #d8dde3;
+        border-radius: 8px;
+        background: #fafbfc;
+      "
+    ></div>
+    <div
+      style="
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+        font-size: 0.74rem;
+        color: #4b5563;
+        flex-wrap: wrap;
+      "
+    >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2166ac;
+            margin-right: 4px;
+          "
+        ></span
+        >Topic</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #1a7f4f;
+            margin-right: 4px;
+          "
+        ></span
+        >Transaction</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #b7791f;
+            margin-right: 4px;
+          "
+        ></span
+        >Information</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #7c3aed;
+            margin-right: 4px;
+          "
+        ></span
+        >Report hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #0891b2;
+            margin-right: 4px;
+          "
+        ></span
+        >Prevent hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c2703d;
+            margin-right: 4px;
+          "
+        ></span
+        >Records hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #a16207;
+            margin-right: 4px;
+          "
+        ></span
+        >Property owner hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #e5e8eb;
+            border: 2px dashed #8a94a3;
+            margin-right: 4px;
+          "
+        ></span
+        >Document</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #f1f2f4;
+            border: 2px dashed #c2703d;
+            transform: rotate(45deg);
+            margin-right: 4px;
+          "
+        ></span
+        >External tool/site</span
+      >
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Where things landed</h4>
+    <ul>
+      <li>
+        Topic direct links: 16 (original) &#8594; 7 (3 hubs + 4 reference pages, one of which is the
+        new Article 11 page)
+      </li>
+      <li>
+        Report hub: 6 pest-specific report pages, still cross-linked to the 3 core reference pages
+        each (unchanged from the real data)
+      </li>
+      <li>
+        Prevent hub (Resource collection): 3 broad technique pages (IPM, Moisture control,
+        Exclusion) + 3 downloadable documents, no longer 6 pest-specific prevent pages
+      </li>
+      <li>
+        Records hub: pay fee moved in here too, alongside 2 real external lookup tools (general
+        complaints, residential hotel/shelter), district inspector finder, and public records
+        request &mdash; it's now a "services" hub (actions you take), not just lookups, worth
+        renaming from "Look up building records"
+      </li>
+      <li>
+        Article 11 page: cross-linked from tenant rights, inspection scope, and pay fee &mdash; the
+        shared legal basis for all three
+      </li>
+      <li>
+        Two audience hubs added: tenant rights expanded to include responsibilities; new "Property
+        owner responsibilities" hub gathers pay fee + IPM (both reused, cross-linked, not
+        duplicated) plus one genuinely new page, "Respond to a notice of violation"
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Still open from this session</h4>
+    <ul>
+      <li>Hub names ("Look up building records" etc.) are working titles</li>
+      <li>
+        Whether "Report a problem" should also become a Resource collection like Prevent problems,
+        instead of an Information page
+      </li>
+      <li>
+        "Respond to a notice of violation" has no real source content yet &mdash; placeholder title
+        only
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var nodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic', 'ellipse'],
+      ['reportHub', 'Report a problem', 'Hub', 'ellipse'],
+      ['ratsReport', 'Report rats or mice', 'Transaction', 'ellipse'],
+      ['cockroachesReport', 'Report cockroaches', 'Transaction', 'ellipse'],
+      ['bedBugsReport', 'Report bed bugs', 'Transaction', 'ellipse'],
+      ['mosquitoesReport', 'Report mosquitoes', 'Transaction', 'ellipse'],
+      ['vegetationReport', 'Report vegetation/garbage', 'Transaction', 'ellipse'],
+      ['moldReport', 'Report mold', 'Transaction', 'ellipse'],
+      ['preventHub', 'Prevent problems', 'HubAlt', 'ellipse'],
+      ['ipm', 'Integrated pest management (IPM)', 'Information', 'ellipse'],
+      ['moistureControl', 'Moisture control', 'Information', 'ellipse'],
+      ['exclusion', 'Exclusion', 'Information', 'ellipse'],
+      ['docChecklist', 'Prevention checklist (PDF)', 'Doc', 'rectangle'],
+      ['docInfographic', 'Early signs (Infographic)', 'Doc', 'rectangle'],
+      ['docHandout', 'Manager handout (PDF)', 'Doc', 'rectangle'],
+      ['recordsHub', 'Look up building records', 'RecordsHub', 'ellipse'],
+      ['findRecords', 'Find complaints & inspection records', 'External', 'diamond'],
+      ['findHotelRecords', 'Find residential hotel & shelter records', 'External', 'diamond'],
+      ['findInspector', 'Find your district inspector', 'Information', 'ellipse'],
+      ['publicRecords', 'Make a public records request', 'External', 'diamond'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction', 'ellipse'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information', 'ellipse'],
+      ['afterReport', 'What happens after you report', 'Information', 'ellipse'],
+      ['tenantRights', 'Tenant rights and responsibilities', 'Information', 'ellipse'],
+      ['article11', 'Understanding Health Code Article 11', 'Information', 'ellipse'],
+      ['ownerHub', 'Property owner responsibilities', 'OwnerHub', 'ellipse'],
+      ['noticeOfViolation', 'Respond to a notice of violation', 'Transaction', 'ellipse'],
+    ]
+
+    var edges = [
+      ['pestsTopic', 'reportHub'],
+      ['pestsTopic', 'preventHub'],
+      ['pestsTopic', 'recordsHub'],
+      ['pestsTopic', 'scopeInfo'],
+      ['pestsTopic', 'afterReport'],
+      ['pestsTopic', 'tenantRights'],
+      ['pestsTopic', 'article11'],
+      ['pestsTopic', 'ownerHub'],
+
+      ['ownerHub', 'payFee'],
+      ['ownerHub', 'noticeOfViolation'],
+      ['ownerHub', 'ipm'],
+
+      ['reportHub', 'ratsReport'],
+      ['reportHub', 'cockroachesReport'],
+      ['reportHub', 'bedBugsReport'],
+      ['reportHub', 'mosquitoesReport'],
+      ['reportHub', 'vegetationReport'],
+      ['reportHub', 'moldReport'],
+      ['ratsReport', 'scopeInfo'],
+      ['ratsReport', 'afterReport'],
+      ['ratsReport', 'tenantRights'],
+      ['cockroachesReport', 'scopeInfo'],
+      ['cockroachesReport', 'afterReport'],
+      ['cockroachesReport', 'tenantRights'],
+      ['bedBugsReport', 'scopeInfo'],
+      ['bedBugsReport', 'afterReport'],
+      ['bedBugsReport', 'tenantRights'],
+      ['mosquitoesReport', 'scopeInfo'],
+      ['mosquitoesReport', 'afterReport'],
+      ['mosquitoesReport', 'tenantRights'],
+      ['vegetationReport', 'scopeInfo'],
+      ['vegetationReport', 'afterReport'],
+      ['vegetationReport', 'tenantRights'],
+      ['moldReport', 'scopeInfo'],
+      ['moldReport', 'afterReport'],
+      ['moldReport', 'tenantRights'],
+
+      ['preventHub', 'ipm'],
+      ['preventHub', 'moistureControl'],
+      ['preventHub', 'exclusion'],
+      ['preventHub', 'docChecklist'],
+      ['preventHub', 'docInfographic'],
+      ['preventHub', 'docHandout'],
+      ['ipm', 'scopeInfo'],
+      ['moistureControl', 'scopeInfo'],
+      ['exclusion', 'scopeInfo'],
+
+      ['recordsHub', 'findRecords'],
+      ['recordsHub', 'findHotelRecords'],
+      ['recordsHub', 'findInspector'],
+      ['recordsHub', 'publicRecords'],
+      ['recordsHub', 'payFee'],
+
+      ['tenantRights', 'article11'],
+      ['scopeInfo', 'article11'],
+      ['payFee', 'article11'],
+    ]
+
+    var elements = nodes
+      .map(function (n) {
+        return { data: { id: n[0], label: n[1], type: n[2], shape: n[3] } }
+      })
+      .concat(
+        edges.map(function (e, i) {
+          return { data: { id: 'e' + i, source: e[0], target: e[1] } }
+        })
+      )
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'font-size': 7.5,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': 60,
+            width: 44,
+            height: 44,
+            shape: 'data(shape)',
+            'background-color': '#ffffff',
+            'border-width': 2.5,
+            'border-color': '#d8dde3',
+            color: '#1b1f24',
+          },
+        },
+        {
+          selector: 'node[type="Topic"]',
+          style: {
+            'background-color': '#2166ac',
+            'border-color': '#2166ac',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 58,
+            height: 58,
+          },
+        },
+        {
+          selector: 'node[type="Hub"]',
+          style: {
+            'background-color': '#7c3aed',
+            'border-color': '#7c3aed',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 50,
+            height: 50,
+          },
+        },
+        {
+          selector: 'node[type="HubAlt"]',
+          style: {
+            'background-color': '#0891b2',
+            'border-color': '#0891b2',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 50,
+            height: 50,
+          },
+        },
+        {
+          selector: 'node[type="RecordsHub"]',
+          style: {
+            'background-color': '#c2703d',
+            'border-color': '#c2703d',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 50,
+            height: 50,
+          },
+        },
+        {
+          selector: 'node[type="OwnerHub"]',
+          style: {
+            'background-color': '#a16207',
+            'border-color': '#a16207',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 50,
+            height: 50,
+          },
+        },
+        { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+        { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+        {
+          selector: 'node[type="Doc"]',
+          style: {
+            'background-color': '#e5e8eb',
+            'border-color': '#8a94a3',
+            'border-style': 'dashed',
+            width: 62,
+            height: 38,
+            'font-size': 6.5,
+          },
+        },
+        {
+          selector: 'node[type="External"]',
+          style: {
+            'background-color': '#f1f2f4',
+            'border-color': '#c2703d',
+            'border-style': 'dashed',
+            width: 54,
+            height: 54,
+            'font-size': 6.5,
+          },
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.2,
+            'line-color': '#c3c9d1',
+            'target-arrow-color': '#c3c9d1',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'arrow-scale': 0.6,
+            opacity: 0.45,
+          },
+        },
+        { selector: '.faded', style: { opacity: 0.06 } },
+        { selector: '.highlighted', style: { opacity: 1, 'z-index': 999 } },
+      ],
+      layout: {
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 0.95,
+        padding: 16,
+      },
+    })
+
+    cy.on('tap', 'node', function (evt) {
+      var node = evt.target
+      cy.elements().addClass('faded')
+      node.closedNeighborhood().removeClass('faded').addClass('highlighted')
+    })
+    cy.on('tap', function (evt) {
+      if (evt.target === cy) cy.elements().removeClass('faded highlighted')
+    })
+
+    document.getElementById('btn-tree').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+      cy.layout({
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 0.95,
+        padding: 16,
+      }).run()
+    })
+    document.getElementById('btn-force').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+      cy.layout({ name: 'cose', animate: true, padding: 16, nodeRepulsion: 9000 }).run()
+    })
+    document.getElementById('btn-clear').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+    })
+  })()
+</script>

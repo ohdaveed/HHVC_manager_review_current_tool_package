@@ -1,0 +1,302 @@
+<h2>Live Cytoscape.js preview</h2>
+<p class="subtitle">
+  This is the real library running (loaded from a CDN just for this preview tab — the actual build
+  would vendor it locally as discussed). Click a page node to highlight its connections; click empty
+  space to clear. Try both layout buttons.
+</p>
+
+<div class="mockup">
+  <div class="mockup-header">HHVC sitemap as a graph</div>
+  <div class="mockup-body" style="padding: 10px">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
+      <button class="mock-button" id="btn-tree">Tree layout (breadthfirst)</button>
+      <button class="mock-button" id="btn-force" style="background: #eef1f4; color: #1b1f24">
+        Force layout (cose)
+      </button>
+      <button
+        class="mock-button"
+        id="btn-clear"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Clear highlight
+      </button>
+    </div>
+    <div
+      id="cy"
+      style="
+        width: 100%;
+        height: 460px;
+        border: 1px solid #d8dde3;
+        border-radius: 8px;
+        background: #fafbfc;
+      "
+    ></div>
+    <div
+      style="
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+        font-size: 0.76rem;
+        color: #4b5563;
+        flex-wrap: wrap;
+      "
+    >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2166ac;
+            margin-right: 4px;
+          "
+        ></span
+        >Topic</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #1a7f4f;
+            margin-right: 4px;
+          "
+        ></span
+        >Transaction page</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #b7791f;
+            margin-right: 4px;
+          "
+        ></span
+        >Information page</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 14px;
+            height: 2px;
+            background: #8a94a3;
+            margin-right: 4px;
+            vertical-align: middle;
+          "
+        ></span
+        >Cluster/nav link</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 14px;
+            height: 2px;
+            background: #2166ac;
+            margin-right: 4px;
+            vertical-align: middle;
+            border-top: 2px dashed #2166ac;
+          "
+        ></span
+        >Cross-link (page&#8594;page)</span
+      >
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>What this demonstrates</h4>
+    <ul>
+      <li>
+        Real hierarchy (topic &#8594; cluster &#8594; page) AND cross-links in one view &mdash; the
+        thing the grid/tree couldn't show at once
+      </li>
+      <li>
+        Click-to-highlight neighbors is built into the library's event model, not custom-coded from
+        scratch
+      </li>
+      <li>
+        Switching layouts (tree vs. force) is a one-line call &mdash; worth deciding which is the
+        default
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Still to decide</h4>
+    <ul>
+      <li>
+        At 16 real pages (not this 11-node sample) does the tree layout stay readable, or does it
+        need the collapsed clusters from Option D combined with this?
+      </li>
+      <li>
+        Replaces or supplements the current node list? (diagram for overview + list for
+        keyboard/search access, or diagram only?)
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var elements = [
+      { data: { id: 'topic', label: 'HHVC topic', type: 'topic' } },
+
+      { data: { id: 'c1', label: 'Report or pay', type: 'cluster' } },
+      { data: { id: 'c2', label: 'Prevent problems', type: 'cluster' } },
+      { data: { id: 'c3', label: 'Inspection & rights', type: 'cluster' } },
+
+      { data: { id: 'p1', label: 'Report cockroaches', type: 'transaction' } },
+      { data: { id: 'p2', label: 'Pay healthy housing fee', type: 'transaction' } },
+      { data: { id: 'p3', label: 'Report rats or mice', type: 'transaction' } },
+
+      { data: { id: 'p4', label: 'Keep rats & mice out', type: 'information' } },
+      { data: { id: 'p5', label: 'Integrated pest mgmt', type: 'information' } },
+      { data: { id: 'p6', label: 'Prevent cockroaches', type: 'information' } },
+
+      { data: { id: 'p7', label: 'Inspection scope', type: 'information' } },
+      { data: { id: 'p8', label: 'Tenant rights', type: 'information' } },
+
+      { data: { id: 'e1', source: 'topic', target: 'c1' } },
+      { data: { id: 'e2', source: 'topic', target: 'c2' } },
+      { data: { id: 'e3', source: 'topic', target: 'c3' } },
+      { data: { id: 'e4', source: 'c1', target: 'p1' } },
+      { data: { id: 'e5', source: 'c1', target: 'p2' } },
+      { data: { id: 'e6', source: 'c1', target: 'p3' } },
+      { data: { id: 'e7', source: 'c2', target: 'p4' } },
+      { data: { id: 'e8', source: 'c2', target: 'p5' } },
+      { data: { id: 'e9', source: 'c2', target: 'p6' } },
+      { data: { id: 'e10', source: 'c3', target: 'p7' } },
+      { data: { id: 'e11', source: 'c3', target: 'p8' } },
+
+      { data: { id: 'x1', source: 'p5', target: 'p2', kind: 'cross' } },
+      { data: { id: 'x2', source: 'p5', target: 'p1', kind: 'cross' } },
+      { data: { id: 'x3', source: 'p7', target: 'p8', kind: 'cross' } },
+    ]
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'font-size': 9,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': 70,
+            width: 78,
+            height: 40,
+            shape: 'round-rectangle',
+            'background-color': '#ffffff',
+            'border-width': 2,
+            'border-color': '#d8dde3',
+            color: '#1b1f24',
+          },
+        },
+        {
+          selector: 'node[type="topic"]',
+          style: {
+            'background-color': '#2166ac',
+            'border-color': '#2166ac',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 100,
+            height: 44,
+          },
+        },
+        {
+          selector: 'node[type="cluster"]',
+          style: {
+            'background-color': '#eef1f4',
+            'border-color': '#8a94a3',
+            'font-weight': 'bold',
+            width: 92,
+          },
+        },
+        {
+          selector: 'node[type="transaction"]',
+          style: { 'border-color': '#1a7f4f', 'border-width': 3 },
+        },
+        {
+          selector: 'node[type="information"]',
+          style: { 'border-color': '#b7791f', 'border-width': 3 },
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.5,
+            'line-color': '#c3c9d1',
+            'target-arrow-color': '#c3c9d1',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+          },
+        },
+        {
+          selector: 'edge[kind="cross"]',
+          style: {
+            'line-color': '#2166ac',
+            'target-arrow-color': '#2166ac',
+            'line-style': 'dashed',
+            'curve-style': 'unbundled-bezier',
+            'control-point-distances': 40,
+          },
+        },
+        { selector: '.faded', style: { opacity: 0.15 } },
+        { selector: '.highlighted', style: { opacity: 1, 'z-index': 999 } },
+      ],
+      layout: {
+        name: 'breadthfirst',
+        roots: '#topic',
+        directed: true,
+        spacingFactor: 1.15,
+        padding: 20,
+      },
+    })
+
+    function clearHighlight() {
+      cy.elements().removeClass('faded highlighted')
+    }
+
+    cy.on('tap', 'node', function (evt) {
+      var node = evt.target
+      var neighborhood = node.closedNeighborhood()
+      cy.elements().addClass('faded')
+      neighborhood.removeClass('faded').addClass('highlighted')
+    })
+
+    cy.on('tap', function (evt) {
+      if (evt.target === cy) clearHighlight()
+    })
+
+    document.getElementById('btn-tree').addEventListener('click', function () {
+      clearHighlight()
+      cy.layout({
+        name: 'breadthfirst',
+        roots: '#topic',
+        directed: true,
+        spacingFactor: 1.15,
+        padding: 20,
+      }).run()
+    })
+    document.getElementById('btn-force').addEventListener('click', function () {
+      clearHighlight()
+      cy.layout({ name: 'cose', animate: true, padding: 20, nodeRepulsion: 8000 }).run()
+    })
+    document.getElementById('btn-clear').addEventListener('click', clearHighlight)
+  })()
+</script>

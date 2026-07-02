@@ -1,0 +1,326 @@
+<h2>Full graph: Resources vs. Documents distinguished</h2>
+<p class="subtitle">
+  Prevent hub now shows 3 broad topic pages (circles, same as everywhere else) and 3 document
+  downloads (squares, dashed border, no outgoing edges &mdash; they're files, not pages). Click any
+  node to see its neighborhood; click the prevent hub to see both types fan out together.
+</p>
+
+<div class="mockup">
+  <div class="mockup-body" style="padding: 10px">
+    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap">
+      <button class="mock-button" id="btn-tree">Tree layout</button>
+      <button
+        class="mock-button"
+        id="btn-clear"
+        style="background: white; color: #4b5563; border: 1px solid #d8dde3"
+      >
+        Clear highlight
+      </button>
+    </div>
+    <div
+      id="cy"
+      style="
+        width: 100%;
+        height: 520px;
+        border: 1px solid #d8dde3;
+        border-radius: 8px;
+        background: #fafbfc;
+      "
+    ></div>
+    <div
+      style="
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+        font-size: 0.76rem;
+        color: #4b5563;
+        flex-wrap: wrap;
+      "
+    >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2166ac;
+            margin-right: 4px;
+          "
+        ></span
+        >Topic</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #1a7f4f;
+            margin-right: 4px;
+          "
+        ></span
+        >Transaction</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #b7791f;
+            margin-right: 4px;
+          "
+        ></span
+        >Information</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #7c3aed;
+            margin-right: 4px;
+          "
+        ></span
+        >Report hub</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #0891b2;
+            margin-right: 4px;
+          "
+        ></span
+        >Prevent hub (Resource collection)</span
+      >
+      <span
+        ><span
+          style="
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #e5e8eb;
+            border: 2px dashed #8a94a3;
+            margin-right: 4px;
+          "
+        ></span
+        >Document (dead-end leaf)</span
+      >
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>What the shape distinction buys you</h4>
+    <ul>
+      <li>
+        At a glance you can tell "this is a page I can keep navigating from" (circle) vs. "this is a
+        terminal file" (square, dashed, no further arrows out) &mdash; matches how the real Resource
+        Collection template actually separates Resources from Documents
+      </li>
+      <li>
+        Documents never grow the graph deeper &mdash; they're always leaves, so however many PDFs
+        get added later, the graph's navigable depth doesn't change
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Confirmed / carried over</h4>
+    <ul>
+      <li>
+        Report hub stays purple, still an Information page (narrative framing before picking a
+        report type)
+      </li>
+      <li>
+        Prevent hub stays teal, now explicitly labeled Resource collection to match the real
+        template
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script
+  src="https://unpkg.com/cytoscape@3.34.0/dist/cytoscape.min.js"
+  integrity="sha384-K+k+ywfDuvV9dwg+bwsVE0WGkrTnqFamaER+ydBgMFQTtlI0jdI9no9AjkQHwh/T"
+  crossorigin="anonymous"
+></script>
+<script>
+  ;(function () {
+    var pageNodes = [
+      ['pestsTopic', 'Pests and housing problems', 'Topic', 'ellipse'],
+      ['ratsReport', 'Report rats or mice', 'Transaction', 'ellipse'],
+      ['cockroachesReport', 'Report cockroaches', 'Transaction', 'ellipse'],
+      ['bedBugsReport', 'Report bed bugs', 'Transaction', 'ellipse'],
+      ['mosquitoesReport', 'Report mosquitoes', 'Transaction', 'ellipse'],
+      ['vegetationReport', 'Report vegetation/garbage', 'Transaction', 'ellipse'],
+      ['moldReport', 'Report mold', 'Transaction', 'ellipse'],
+      ['payFee', 'Pay your Healthy Housing fee', 'Transaction', 'ellipse'],
+      ['scopeInfo', 'Learn what HHVC can inspect', 'Information', 'ellipse'],
+      ['afterReport', 'What happens after you report', 'Information', 'ellipse'],
+      ['tenantRights', 'Tenant rights and reporting', 'Information', 'ellipse'],
+      ['ipm', 'Integrated pest management (IPM)', 'Information', 'ellipse'],
+      ['moistureControl', 'Moisture control', 'Information', 'ellipse'],
+      ['exclusion', 'Exclusion', 'Information', 'ellipse'],
+      ['reportHub', 'Report a problem', 'Hub', 'ellipse'],
+      ['preventHub', 'Prevent problems', 'HubAlt', 'ellipse'],
+      ['docChecklist', 'Pest prevention checklist (PDF)', 'Doc', 'rectangle'],
+      ['docInfographic', 'How to spot early signs (Infographic)', 'Doc', 'rectangle'],
+      ['docHandout', 'Property manager handout (PDF)', 'Doc', 'rectangle'],
+    ]
+
+    var edges = [
+      ['pestsTopic', 'reportHub'],
+      ['pestsTopic', 'preventHub'],
+      ['pestsTopic', 'payFee'],
+      ['pestsTopic', 'scopeInfo'],
+      ['pestsTopic', 'afterReport'],
+      ['pestsTopic', 'tenantRights'],
+      ['reportHub', 'ratsReport'],
+      ['reportHub', 'cockroachesReport'],
+      ['reportHub', 'bedBugsReport'],
+      ['reportHub', 'mosquitoesReport'],
+      ['reportHub', 'vegetationReport'],
+      ['reportHub', 'moldReport'],
+      ['preventHub', 'ipm'],
+      ['preventHub', 'moistureControl'],
+      ['preventHub', 'exclusion'],
+      ['preventHub', 'docChecklist'],
+      ['preventHub', 'docInfographic'],
+      ['preventHub', 'docHandout'],
+    ]
+
+    var elements = pageNodes
+      .map(function (n) {
+        return { data: { id: n[0], label: n[1], type: n[2], shape: n[3] } }
+      })
+      .concat(
+        edges.map(function (e, i) {
+          return { data: { id: 'e' + i, source: e[0], target: e[1] } }
+        })
+      )
+
+    var cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: elements,
+      style: [
+        {
+          selector: 'node',
+          style: {
+            label: 'data(label)',
+            'font-size': 8,
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'text-wrap': 'wrap',
+            'text-max-width': 62,
+            width: 46,
+            height: 46,
+            shape: 'data(shape)',
+            'background-color': '#ffffff',
+            'border-width': 2.5,
+            'border-color': '#d8dde3',
+            color: '#1b1f24',
+          },
+        },
+        {
+          selector: 'node[type="Topic"]',
+          style: {
+            'background-color': '#2166ac',
+            'border-color': '#2166ac',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 58,
+            height: 58,
+          },
+        },
+        {
+          selector: 'node[type="Hub"]',
+          style: {
+            'background-color': '#7c3aed',
+            'border-color': '#7c3aed',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 50,
+            height: 50,
+          },
+        },
+        {
+          selector: 'node[type="HubAlt"]',
+          style: {
+            'background-color': '#0891b2',
+            'border-color': '#0891b2',
+            color: '#ffffff',
+            'font-weight': 'bold',
+            width: 50,
+            height: 50,
+          },
+        },
+        { selector: 'node[type="Transaction"]', style: { 'border-color': '#1a7f4f' } },
+        { selector: 'node[type="Information"]', style: { 'border-color': '#b7791f' } },
+        {
+          selector: 'node[type="Doc"]',
+          style: {
+            'background-color': '#e5e8eb',
+            'border-color': '#8a94a3',
+            'border-style': 'dashed',
+            width: 64,
+            height: 40,
+            'font-size': 7,
+          },
+        },
+        {
+          selector: 'edge',
+          style: {
+            width: 1.4,
+            'line-color': '#c3c9d1',
+            'target-arrow-color': '#c3c9d1',
+            'target-arrow-shape': 'triangle',
+            'curve-style': 'bezier',
+            'arrow-scale': 0.7,
+          },
+        },
+        { selector: '.faded', style: { opacity: 0.1 } },
+        { selector: '.highlighted', style: { opacity: 1, 'z-index': 999 } },
+      ],
+      layout: {
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 16,
+      },
+    })
+
+    cy.on('tap', 'node', function (evt) {
+      var node = evt.target
+      cy.elements().addClass('faded')
+      node.closedNeighborhood().removeClass('faded').addClass('highlighted')
+    })
+    cy.on('tap', function (evt) {
+      if (evt.target === cy) cy.elements().removeClass('faded highlighted')
+    })
+
+    document.getElementById('btn-tree').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+      cy.layout({
+        name: 'breadthfirst',
+        roots: '#pestsTopic',
+        directed: true,
+        spacingFactor: 1.05,
+        padding: 16,
+      }).run()
+    })
+    document.getElementById('btn-clear').addEventListener('click', function () {
+      cy.elements().removeClass('faded highlighted')
+    })
+  })()
+</script>

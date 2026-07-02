@@ -1,0 +1,135 @@
+<h2>Prevent hub as a Resource Collection page</h2>
+<p class="subtitle">
+  "Resource Collection item" is already a recognized Karl placement tag in this tool (see
+  <code>js/page-render.js:35</code>) &mdash; it's the pattern SF.gov uses for a page that's mainly a
+  curated list of links, not narrative body copy. That's a better fit for the prevent hub than a
+  generic Information page.
+</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Report hub &mdash; stays an Information page</div>
+    <div class="mockup-body" style="padding: 14px; font-family: system-ui">
+      <div style="border: 1px solid #d8dde3; border-radius: 8px; padding: 14px">
+        <span
+          style="
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #eaf1fb;
+            color: #2166ac;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+          "
+          >Information page</span
+        >
+        <h3 style="margin: 8px 0 4px; font-size: 1rem">Report a problem</h3>
+        <p style="margin: 0 0 10px; font-size: 0.82rem; color: #4b5563; line-height: 1.4">
+          On the next pages, you can report any pest problem. Pick the one that matches what you're
+          seeing.
+        </p>
+        <p style="margin: 0; font-size: 0.72rem; color: #9aa3ad">
+          Narrative intro + step framing, because it's explaining a process before the user picks a
+          path.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Prevent hub &mdash; Resource Collection</div>
+    <div class="mockup-body" style="padding: 14px; font-family: system-ui">
+      <div style="border: 1px solid #d8dde3; border-radius: 8px; padding: 14px">
+        <span
+          style="
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #e0f2f4;
+            color: #0891b2;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+          "
+          >Resource collection</span
+        >
+        <h3 style="margin: 8px 0 8px; font-size: 1rem">Prevent problems</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+          <div
+            style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+          >
+            <strong style="display: block; color: #1b1f24">Keep rats and mice out</strong>
+            <span style="color: #6b7280">Resource Collection item</span>
+          </div>
+          <div
+            style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+          >
+            <strong style="display: block; color: #1b1f24">Prevent cockroaches</strong>
+            <span style="color: #6b7280">Resource Collection item</span>
+          </div>
+          <div
+            style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+          >
+            <strong style="display: block; color: #1b1f24">Prevent mosquitoes</strong>
+            <span style="color: #6b7280">Resource Collection item</span>
+          </div>
+          <div
+            style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+          >
+            <strong style="display: block; color: #1b1f24">Bed bug prevention</strong>
+            <span style="color: #6b7280">Resource Collection item</span>
+          </div>
+          <div
+            style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+          >
+            <strong style="display: block; color: #1b1f24">Reduce indoor moisture</strong>
+            <span style="color: #6b7280">Resource Collection item</span>
+          </div>
+          <div
+            style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+          >
+            <strong style="display: block; color: #1b1f24">Integrated pest mgmt</strong>
+            <span style="color: #6b7280">Resource Collection item</span>
+          </div>
+        </div>
+        <p style="margin: 10px 0 0; font-size: 0.72rem; color: #9aa3ad">
+          No process to explain &mdash; each card stands alone, so a flat resource grid fits better
+          than a narrative intro.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>Why this fits</h4>
+    <ul>
+      <li>
+        The 6 prevent pages are genuinely parallel and self-contained &mdash; no sequence, no "pick
+        one path" narrative like reporting has. That's exactly what Resource Collection is for.
+      </li>
+      <li>
+        Reuses a content type this tool's own Karl-tagging already recognizes, instead of inventing
+        a new pattern &mdash; less for reviewers to learn, consistent with how other pages already
+        tag their card links.
+      </li>
+      <li>
+        In the sitemap graph this also gives the node a real, distinct visual identity (not just a
+        color I made up) &mdash; it can carry the same "Resource collection" badge the tool already
+        uses elsewhere.
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>To confirm</h4>
+    <ul>
+      <li>
+        Should "Report a problem" also become a Resource Collection instead of an Information page?
+        It's arguably the same "6 parallel options" shape &mdash; the difference I assumed is that
+        reporting needs a bit more framing ("report the one that's actually happening"), worth
+        confirming that's true rather than assumed.
+      </li>
+    </ul>
+  </div>
+</div>

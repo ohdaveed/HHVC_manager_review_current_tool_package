@@ -1,0 +1,174 @@
+<h2>Prevent hub: pages + downloadable files together</h2>
+<p class="subtitle">
+  Same Resource Collection, now mixing 6 page links with standalone downloads (infographic, PDF,
+  handout) that have no page behind them &mdash; just a file.
+</p>
+
+<div class="mockup">
+  <div class="mockup-header">Prevent problems &mdash; Resource collection</div>
+  <div class="mockup-body" style="padding: 14px; font-family: system-ui">
+    <div style="border: 1px solid #d8dde3; border-radius: 8px; padding: 14px; max-width: 640px">
+      <span
+        style="
+          display: inline-block;
+          padding: 2px 8px;
+          border-radius: 999px;
+          background: #e0f2f4;
+          color: #0891b2;
+          font-size: 0.68rem;
+          font-weight: 800;
+          text-transform: uppercase;
+        "
+        >Resource collection</span
+      >
+      <h3 style="margin: 8px 0 10px; font-size: 1rem">Prevent problems</h3>
+
+      <p
+        style="
+          margin: 0 0 6px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        "
+      >
+        Pages
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px">
+        <div
+          style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+        >
+          <strong style="display: block; color: #1b1f24">Keep rats and mice out</strong>
+          <span style="color: #6b7280">Page</span>
+        </div>
+        <div
+          style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+        >
+          <strong style="display: block; color: #1b1f24">Prevent cockroaches</strong>
+          <span style="color: #6b7280">Page</span>
+        </div>
+        <div
+          style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+        >
+          <strong style="display: block; color: #1b1f24">Prevent mosquitoes</strong>
+          <span style="color: #6b7280">Page</span>
+        </div>
+        <div
+          style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+        >
+          <strong style="display: block; color: #1b1f24">Bed bug prevention</strong>
+          <span style="color: #6b7280">Page</span>
+        </div>
+        <div
+          style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+        >
+          <strong style="display: block; color: #1b1f24">Reduce indoor moisture</strong>
+          <span style="color: #6b7280">Page</span>
+        </div>
+        <div
+          style="border: 1px solid #e5e8eb; border-radius: 6px; padding: 8px; font-size: 0.74rem"
+        >
+          <strong style="display: block; color: #1b1f24">Integrated pest mgmt</strong>
+          <span style="color: #6b7280">Page</span>
+        </div>
+      </div>
+
+      <p
+        style="
+          margin: 0 0 6px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        "
+      >
+        Downloads
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px">
+        <div
+          style="
+            border: 1px solid #f3e8d8;
+            background: #fdf9f2;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.74rem;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px">
+            <span style="font-size: 0.9rem">&#128196;</span>
+            <strong style="color: #1b1f24">Pest prevention checklist</strong>
+          </div>
+          <span style="color: #9a6b1f; font-weight: 700">PDF &middot; Download</span>
+        </div>
+        <div
+          style="
+            border: 1px solid #f3e8d8;
+            background: #fdf9f2;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.74rem;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px">
+            <span style="font-size: 0.9rem">&#128202;</span>
+            <strong style="color: #1b1f24">How to spot early signs</strong>
+          </div>
+          <span style="color: #9a6b1f; font-weight: 700">Infographic &middot; View</span>
+        </div>
+        <div
+          style="
+            border: 1px solid #f3e8d8;
+            background: #fdf9f2;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.74rem;
+          "
+        >
+          <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px">
+            <span style="font-size: 0.9rem">&#128196;</span>
+            <strong style="color: #1b1f24">Property manager handout</strong>
+          </div>
+          <span style="color: #9a6b1f; font-weight: 700">PDF &middot; Download</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pros-cons">
+  <div class="pros">
+    <h4>How this fits the existing data shape</h4>
+    <ul>
+      <li>
+        Page cards keep using <code>target: 'ratsPrevent'</code> (opens the mockup page) &mdash;
+        unchanged
+      </li>
+      <li>
+        Download cards need a new card shape: no <code>target</code>, instead something like
+        <code>fileType: 'pdf' | 'infographic'</code> + a label/filename. They render with a file
+        icon and "Download/View" affordance instead of a title+arrow.
+      </li>
+      <li>
+        In the sitemap graph, downloads become dead-end leaf nodes off the prevent hub &mdash; no
+        outgoing edges, since a PDF doesn't link anywhere. Visually they'd want a square/file glyph
+        instead of the circular page node, so the graph doesn't imply they're pages with their own
+        sub-links.
+      </li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Worth confirming</h4>
+    <ul>
+      <li>
+        How many downloads, roughly? 3 shown here as an example &mdash; if it's more like 10+, the
+        "Downloads" section may want its own filter/search rather than a flat grid
+      </li>
+      <li>
+        Do downloads get Karl placement tags too (e.g. "Resource Collection item: file")? Keeping
+        that consistent would matter for the review workflow this tool is built around
+      </li>
+    </ul>
+  </div>
+</div>
