@@ -16,6 +16,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | File | Title | Phase | Role |
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
+| `2026-07-02-program-manager-72-hour-tenant-notice.md` | HHVC Program Manager — 72-hour tenant notice before 311 | Phase 1 | **Operational authority** for Step 2 tenant notice on all report Transaction pages |
 | `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
@@ -177,9 +178,16 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** UC ANR guidance on western blacklegged tick, Lyme disease transmission, and prevention. Not an Article 11/HHVC policy document. No Phase 1 mockup page.
 
+### 2026-07-02-program-manager-72-hour-tenant-notice.md
+
+- **Source title:** Program manager operational guidance — tenant notice before 311 reporting
+- **Authority:** HHVC program manager (stakeholder attestation, 2026-07-02)
+- **Format:** stakeholder intake note
+- **Reviewer:** CA
+- **Note:** Confirms existing mockup Step 2 on all report pages: notify owner/manager; wait 72 hours when possible before 311; do not wait if urgent. Distinct from SFDPH bed bug Director's Rules two-working-day owner investigation deadline.
+
 ## Documents still expected for Phase 1
 
-- Tenant-notice / 72-hour guidance
 - Anti-retaliation / tenant-rights authority
 - Bed bug rules / Director's Rules source (detailed) — **partial:** tenant guidelines ingested; full Director's Rules PDF still recommended
 - Fee / payment authority for Healthy Housing program fees
