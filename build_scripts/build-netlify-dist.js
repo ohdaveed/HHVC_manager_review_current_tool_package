@@ -31,4 +31,13 @@ for (const rel of copies) {
   console.log(`copied ${rel}`)
 }
 
+// The mosquito workshop form is a Vite sub-app whose committed build output
+// (forms/mosquito-workshop-request/dist) is compiled with
+// base '/forms/mosquito-workshop-request/', so publish it at that path.
+const formSrc = path.join(root, 'forms/mosquito-workshop-request/dist')
+const formDest = path.join(dist, 'forms/mosquito-workshop-request')
+fs.mkdirSync(path.dirname(formDest), { recursive: true })
+fs.cpSync(formSrc, formDest, { recursive: true })
+console.log('copied forms/mosquito-workshop-request/dist -> forms/mosquito-workshop-request')
+
 console.log(`dist ready at ${dist}`)
