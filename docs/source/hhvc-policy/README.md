@@ -16,6 +16,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | File | Title | Phase | Role |
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
+| `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
 | `2026-07-02-ipm-pests-house-mouse.pdf` / `.md` | UC IPM Pest Notes 7483: House Mouse | Supplementary | IPM prevention/education for mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
@@ -30,6 +31,17 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-fleas.pdf` / `.md` | UC IPM Pest Notes 7419: Fleas | Supplementary | IPM reference for pet/housing flea control; no Phase 1 mockup page |
 | `2026-07-02-ipm-itching-infestation.pdf` / `.md` | UC IPM Pest Notes 7443: Itching and Infestation | Supplementary | Medical/education reference when pests cannot be confirmed; no Phase 1 page |
 | `2026-07-02-ipm-lyme-disease-california.pdf` / `.md` | UC IPM Pest Notes 7485: Lyme Disease in California | Supplementary | Tick/Lyme education; no Phase 1 mockup page |
+
+### 2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf
+
+- **Original Drive file:** `1xrRtp9CAWifEXzUqKjXVhoPPNvbD4Lwi`
+- **Source title:** Tenant Guidelines For Unit Preparation Prior To Bed Bug Treatment
+- **Authority:** SFDPH Director's Rules and Regulations for Prevention and Control of Bed Bugs
+- **Director's Rules PDF:** http://www.sfdph.org/dph/files/EHSdocs/Vector/BedBug/BedBugRegs_070112.pdf
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** Official SFDPH tenant/owner bed bug requirements. Key rules: PCO investigation within **two working days** of complaint; adjacent-unit inspection; 24-hour entry notice; tenant unit-preparation duties. Confirms `bedBugsReport` pointer to bed bug rules page. Does **not** support general 72-hour tenant notice before 311 reporting on report pages.
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -169,7 +181,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 
 - Tenant-notice / 72-hour guidance
 - Anti-retaliation / tenant-rights authority
-- Bed bug rules / Director's Rules source (detailed)
+- Bed bug rules / Director's Rules source (detailed) — **partial:** tenant guidelines ingested; full Director's Rules PDF still recommended
 - Fee / payment authority for Healthy Housing program fees
 - HHVC inspection / complaint handling policy (operational detail beyond master template)
 

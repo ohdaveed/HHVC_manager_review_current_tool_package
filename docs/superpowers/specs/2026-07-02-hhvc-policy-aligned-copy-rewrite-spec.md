@@ -114,17 +114,24 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Reason: Scope confirmed.
 
 - `sections[1].paragraphs[3]`
-  - Current: If HHVC finds a violation, the City may require the property owner or responsible party to correct it.
-  - Replace with: Violations must be corrected and may require follow-up inspection.
+  - Current: Violations must be corrected and may require follow-up inspection.
+  - Replace with: *(keep current — implemented)*
   - Source: violation-master — Rodents > What Happens Next (template)
   - Reason: Cross-page enforcement parity with master template.
 
+- `sections[2].paragraphs[0]`
+  - Current: For detailed bed bug prevention and control rules, see the bed bug rules and prevention page.
+  - Replace with: *(keep current)*
+  - Source: bed-bug-directors-rules-tenant-guidelines — cites SFDPH Director's Rules; routes to `bedBugsInfo`
+  - Reason: Rules pointer confirmed; bedBugsInfo page hosts Director's Rules reference.
+
 ### Blocked fields
 
-- Target field path: `sections[2].paragraphs[0]`
-  - Current text (exact): For detailed bed bug prevention and control rules, see the bed bug rules and prevention page.
-  - Block reason: missing source
-  - Required source: bed bug Director's Rules source
+- None remaining for this page.
+
+### Previously blocked (now resolved)
+
+- Target field path: `sections[2].paragraphs[0]` — verified against SFDPH bed bug Director's Rules tenant guidelines.
 
 ### Acceptance checks
 
