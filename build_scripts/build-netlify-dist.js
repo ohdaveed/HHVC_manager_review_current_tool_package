@@ -25,10 +25,14 @@ const copies = [
 
 for (const rel of copies) {
   const src = path.join(root, rel)
+  if (!fs.existsSync(src)) {
+    console.error('Error: Source path "' + rel + '" does not exist.' + (rel.startsWith('node_modules') ? ' Did you run "npm install" or "bun install"?' : ''));
+    process.exit(1);
+  }
   const dest = path.join(dist, rel)
   fs.mkdirSync(path.dirname(dest), { recursive: true })
   fs.cpSync(src, dest, { recursive: true })
-  console.log(`copied ${rel}`)
+  console.log('copied ' + rel)
 }
 
 // The mosquito workshop form is a Vite sub-app whose committed build output
