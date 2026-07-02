@@ -38,6 +38,7 @@ for (const f of files) {
 }
 
 const data = ctx.window.HHVC_DATA
+fs.mkdirSync(path.join(root, 'data'), { recursive: true })
 fs.writeFileSync(path.join(root, 'data/page_inventory.json'), JSON.stringify(data, null, 2))
 
 function primaryCta(page) {
