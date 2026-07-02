@@ -102,5 +102,5 @@ window.HHVC_PAGES['tenantRights'] = {
   ],
   seoTitle: 'Tenant rights when reporting housing | SF.gov',
   metaDescription:
-    'Tenant protections and where to get help if you are worried about retaliation after reporting housing conditions.',
+    'Tenant protections and help if you are worried about retaliation after reporting housing conditions.',
 }
