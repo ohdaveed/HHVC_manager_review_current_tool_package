@@ -90,11 +90,7 @@ This sitemap is a review aid only. It does not replace the source page inventory
 
 ## Dashboard guidance copy
 
-<<<<<<< HEAD
-Descriptive review instructions live in the workspace **Help** tab instead of being repeated throughout the sidebar.
-=======
 Descriptive review instructions live in the **Help** tab of the review workspace (below the mockup preview) instead of being repeated throughout the sidebar.
->>>>>>> origin/main
 
 The dashboard guidance panel explains:
 
