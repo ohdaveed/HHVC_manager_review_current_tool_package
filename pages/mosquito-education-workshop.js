@@ -139,5 +139,5 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   seoTitle: 'Free mosquito education workshop | SF.gov',
   metaDescription:
-    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and camps.',
+    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools.',
 }

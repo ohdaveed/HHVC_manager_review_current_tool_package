@@ -125,4 +125,7 @@ window.HHVC_PAGES['afterReport'] = {
       ],
     },
   ],
+  seoTitle: 'What happens after you report | SF.gov',
+  metaDescription:
+    'Learn what may happen after a 311 report about a housing or pest problem is sent to Environmental Health.',
 }

@@ -89,5 +89,5 @@ window.HHVC_PAGES['pigeonInfo'] = {
   ],
   seoTitle: 'Pigeons and housing health | SF.gov',
   metaDescription:
-    'How pigeon roosting and droppings affect housing health and when to report the problem to Environmental Health.',
+    'How pigeon roosting and droppings affect housing health and when to report problems to Environmental Health.',
 }
