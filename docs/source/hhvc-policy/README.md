@@ -20,6 +20,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
 | `2026-07-02-ipm-pests-house-mouse.pdf` / `.md` | UC IPM Pest Notes 7483: House Mouse | Supplementary | IPM prevention/education for mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
 | `2026-07-02-mold-moisture-guidance.md` | The Two Main Causes of Mold (SFDPH) | Phase 1 + 2 | **Mold review threshold** (10 sq ft on walls/ceiling); supports `moldReport` and future `reduceMoisture` |
+| `2026-07-02-vegetation-overgrowth-notice.pdf` / `.md` | Vegetation Overgrowth Notice (SFDPH) | Phase 1 | Sec. 581 overgrowth authority; supports `vegetationReport` scope and pest/vector rationale |
 
 ### 2026-07-02-violation-pages-master-content.md
 
