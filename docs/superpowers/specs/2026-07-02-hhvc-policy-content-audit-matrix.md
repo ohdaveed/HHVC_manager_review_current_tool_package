@@ -66,3 +66,4 @@
 | ipm-bed-bugs-7454 | UC IPM Pest Notes: Bed Bugs | IPM education only; does not satisfy Director's Rules requirement |
 | ipm-cockroaches-7467 | UC IPM Pest Notes: Cockroaches | Supports future `cockroachesPrevent` IPM content |
 | ipm-fleas-7419 | UC IPM Pest Notes: Fleas | Supplementary IPM; not in Phase 1 mockups or violation-master categories |
+| ipm-itching-infestation-7443 | UC IPM Pest Notes: Itching and Infestation | Medical/education reference; not HHVC policy |

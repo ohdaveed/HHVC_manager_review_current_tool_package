@@ -28,6 +28,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-bed-bugs.pdf` / `.md` | UC IPM Pest Notes 7454: Bed Bugs | Supplementary | IPM identification/prevention; **not** SFDPH Director's Rules |
 | `2026-07-02-ipm-pests-cockroaches.pdf` / `.md` | UC IPM Pest Notes 7467: Cockroaches | Supplementary | IPM identification/prevention; supports future `cockroachesPrevent` audits |
 | `2026-07-02-ipm-pests-fleas.pdf` / `.md` | UC IPM Pest Notes 7419: Fleas | Supplementary | IPM reference for pet/housing flea control; no Phase 1 mockup page |
+| `2026-07-02-ipm-itching-infestation.pdf` / `.md` | UC IPM Pest Notes 7443: Itching and Infestation | Supplementary | Medical/education reference when pests cannot be confirmed; no Phase 1 page |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -144,6 +145,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR IPM guidance on cat fleas, life cycle, on-pet and environmental treatment. Not an Article 11 violation category in violation-master. No Phase 1 mockup page; supplementary IPM only.
+
+### 2026-07-02-ipm-itching-infestation.pdf
+
+- **Original Drive file:** `1LpQYtbZE3XnX-Hu3EtdJA_EWHk8M_Xq5`
+- **Source title:** UC IPM Pest Notes 7443: Itching and Infestation — What's Attacking Me? (September 2020)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR guidance on unexplained itching, when to consult a physician, and links to bed bugs/fleas/mosquitoes Pest Notes. Not HHVC policy; no Phase 1 mockup page.
 
 ## Documents still expected for Phase 1
 
