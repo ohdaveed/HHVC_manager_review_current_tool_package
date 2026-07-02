@@ -35,6 +35,8 @@ window.HHVC_PAGES['scopeInfo'] = {
         'Cockroaches',
         'Bed bugs',
         'Mosquitoes or standing water',
+        'Birds, pigeons, or bird-related nuisances tied to unsanitary conditions',
+        'Mite concerns linked to rodents, birds, or other pest sources in housing',
         'Garbage, clutter, or animal waste that may attract pests',
         'Overgrown vegetation that may support pests or vectors',
         'Mold from humidity, condensation, or poor ventilation when the affected area is about 10 square feet or more',
@@ -51,6 +53,8 @@ window.HHVC_PAGES['scopeInfo'] = {
         ['Cockroaches', 'Report cockroaches'],
         ['Bed bugs', 'Report bed bugs'],
         ['Mosquitoes or standing water', 'Report mosquitoes'],
+        ['Bird or pigeon nuisances tied to droppings or unsanitary conditions', 'Pigeons and housing health'],
+        ['Mite concerns linked to pests in housing', 'Mites and housing health'],
         [
           'Garbage, clutter, animal waste, or overgrown plants',
           'Report garbage, clutter, animal waste, or overgrown plants',

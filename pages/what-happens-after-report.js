@@ -105,6 +105,11 @@ window.HHVC_PAGES['afterReport'] = {
       kind: 'placement',
       cards: [
         {
+          title: 'How to respond to a notice of violation',
+          text: 'Learn how inspections can lead to a notice and what tenants and owners each must do.',
+          target: 'noticeOfViolation',
+        },
+        {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether HHVC may review the issue.',
           target: 'scopeInfo',

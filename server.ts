@@ -34,7 +34,13 @@ const server = serve({
       })
     }
 
-    const file = Bun.file(ROOT + url.pathname)
+    const filePath = url.pathname.endsWith('/')
+      ? url.pathname + 'index.html'
+      : url.pathname
+    let file = Bun.file(ROOT + filePath)
+    if (!(await file.exists()) && !url.pathname.endsWith('/')) {
+      file = Bun.file(ROOT + url.pathname + '/index.html')
+    }
     if (await file.exists()) {
       // Let Bun.file infer content-type from the file extension (css/js/svg/etc.)
       // instead of overriding it, since `x-content-type-options: nosniff` makes

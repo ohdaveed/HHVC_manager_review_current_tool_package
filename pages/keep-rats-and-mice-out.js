@@ -67,6 +67,7 @@ window.HHVC_PAGES['ratsPrevent'] = {
       kind: 'body',
       paragraphs: [
         'Prioritize traps over poison to control rodents safely. Rodenticides (poison baits) pose secondary poisoning risks to children, pets, and wildlife.',
+        'If tropical rat mites are present, treat the rat nest for mites and remove nesting material before using rodenticides, or hire a PCO to coordinate both steps. Poison alone can cause surviving mites to leave the nest and bite people.',
       ],
       bullets: [
         'Use snap traps or electrocution traps as first-line control.',
@@ -119,6 +120,11 @@ window.HHVC_PAGES['ratsPrevent'] = {
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
       cards: [
+        {
+          title: 'Mites and housing health',
+          text: 'Learn about tropical rat mites and why nests must be treated before rodenticides.',
+          target: 'miteInfo',
+        },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',

@@ -97,6 +97,16 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
         },
+        {
+          title: 'Mosquito Control Program',
+          text: 'Find program information, surveillance updates, and West Nile virus resources.',
+          target: 'mosquitoControl',
+        },
+        {
+          title: 'Free mosquito education workshop',
+          text: 'Bring hands-on mosquito science to your school, camp, museum, or science fair.',
+          target: 'mosquitoWorkshop',
+        },
       ],
     },
   ],

@@ -85,6 +85,11 @@ window.HHVC_PAGES['tenantRights'] = {
           target: 'afterReport',
         },
         {
+          title: 'How to respond to a notice of violation',
+          text: 'Learn what to do if you or your building receives corrective actions.',
+          target: 'noticeOfViolation',
+        },
+        {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
