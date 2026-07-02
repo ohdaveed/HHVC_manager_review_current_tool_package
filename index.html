@@ -1,141 +1,371 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HHVC review tool</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/ux-improvements.css">
-</head>
-<body>
-  <div id="app" class="full-page-app">
-    <aside class="app-sidebar">
-      <div class="sidebar-header">
-        <h1>HHVC review</h1>
-      </div>
-
-      <fieldset class="control-group page-selector">
-        <label for="pageSelect">Page</label>
-        <select id="pageSelect" aria-label="Select a page to review"></select>
-      </fieldset>
-
-      <fieldset class="control-group page-search">
-        <label for="pageSearch">Search</label>
-        <input type="text" id="pageSearch" placeholder="title, type, or key..." aria-label="Search pages">
-      </fieldset>
-
-      <fieldset class="control-group seo-group">
-        <details open>
-          <summary>SEO fields</summary>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HHVC Manager Review Mockup Tool</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/base.css" />
+    <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/typography.css" />
+    <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/components.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/ux-improvements.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar" aria-label="Mockup controls">
+        <div class="sidebar-header">
+          <button
+            type="button"
+            class="sidebar-toggle"
+            id="sidebarToggle"
+            aria-label="Collapse sidebar"
+          >
+            ◀
+          </button>
+          <div>
+            <div class="eyebrow">SFDS rebuild</div>
+            <h2>HHVC mockup review tool</h2>
+          </div>
+        </div>
+        <p>
+          Use this selector to review rebuilt SF.gov page patterns for Environmental Health and
+          HHVC.
+        </p>
+        <details class="control-group" open>
+          <summary class="eyebrow">Page mockup</summary>
           <div class="details-body">
-            <div class="field-help">
-              <p><strong>Edit SEO fields</strong> for review. Changes stay local and do not save to the page file. You can test wording here.</p>
-            </div>
-            <label for="seoTitle">SEO title (52–60 chars)</label>
-            <input type="text" id="seoTitle" placeholder="Page title for search results and browser tab" aria-label="SEO title" maxlength="255">
-            <span id="seoTitleCount" class="char-count">0/60</span>
-
-            <label for="metaDescription">Meta description (120–160 chars)</label>
-            <textarea id="metaDescription" placeholder="Summary for search results and social media" aria-label="Meta description" rows="3" maxlength="255"></textarea>
-            <span id="metaDescCount" class="char-count">0/160</span>
-
-            <label for="primaryCta">Primary CTA text</label>
-            <input type="text" id="primaryCta" placeholder="Button/link text for main call-to-action" aria-label="Primary CTA">
+            <label for="pageSelect">Choose a page mockup</label>
+            <select id="pageSelect"></select>
+            <label for="urlInput">Preview URL slug</label>
+            <input
+              id="urlInput"
+              type="text"
+              value="sf.gov/topic-pests-and-housing-problems"
+              aria-label="Preview URL slug"
+            />
           </div>
         </details>
-      </fieldset>
-
-      <fieldset class="control-group karl-group">
-        <details open>
-          <summary>Karl placement tags</summary>
+        <details class="control-group">
+          <summary class="eyebrow">Live content editor</summary>
           <div class="details-body">
-            <div class="karl-help-nested">
-              <p><strong>Karl tags</strong> are placement clues for the CMS. The tag text (not the visual box) controls how content maps in the editor.</p>
+            <label for="titleInput">Page title</label>
+            <div class="field-with-reset">
+              <input id="titleInput" type="text" aria-label="Page title" />
+              <button
+                type="button"
+                class="reset-field-btn"
+                id="resetTitleBtn"
+                aria-label="Reset page title to original"
+                title="Reset to original"
+              >
+                ↺
+              </button>
             </div>
-            <label for="karlFilter">Filter tags</label>
-            <input type="text" id="karlFilter" placeholder="e.g., 'intro', 'cta'" aria-label="Filter Karl tags">
-            <div id="karlTagsContainer" style="margin-top: 0.5rem;"></div>
+            <label for="descriptionInput">Short summary / description</label>
+            <div class="field-with-reset">
+              <textarea id="descriptionInput" aria-label="Short summary or description"></textarea>
+              <button
+                type="button"
+                class="reset-field-btn"
+                id="resetDescriptionBtn"
+                aria-label="Reset description to original"
+                title="Reset to original"
+              >
+                ↺
+              </button>
+            </div>
+            <label for="ctaInput">Primary CTA label</label>
+            <div class="field-with-reset">
+              <input id="ctaInput" type="text" aria-label="Primary CTA label" />
+              <button
+                type="button"
+                class="reset-field-btn"
+                id="resetCtaBtn"
+                aria-label="Reset CTA to original"
+                title="Reset to original"
+              >
+                ↺
+              </button>
+            </div>
+            <p class="field-help">
+              Use this to test page title, short summary, and primary CTA wording without editing
+              the source data.
+            </p>
           </div>
         </details>
-      </fieldset>
-
-      <fieldset class="control-group manager-review">
-        <details open>
-          <summary>Manager review</summary>
+        <details class="control-group">
+          <summary class="eyebrow">Search metadata</summary>
           <div class="details-body">
-            <div class="field-help">
-              <p><strong>Review decision</strong> controls the decision chip and your progress count. <strong>Review notes</strong> attach to export files for team collaboration. Both stay local in your browser.</p>
+            <label for="seoTitleInput">SEO Page Title</label>
+            <input id="seoTitleInput" type="text" aria-label="SEO Page Title" />
+            <div class="char-count">
+              <span id="seoTitleCount">0 characters</span
+              ><span id="seoTitleStatus">Target: 60 or fewer</span>
             </div>
+            <label for="metaDescriptionInput">Meta Description</label>
+            <textarea id="metaDescriptionInput" aria-label="Meta Description"></textarea>
+            <div class="char-count">
+              <span id="metaDescriptionCount">0 characters</span
+              ><span id="metaDescriptionStatus">Target: 110 or fewer</span>
+            </div>
+            <div class="search-preview" aria-label="Search result preview">
+              <div id="seoPreviewTitle" class="search-preview-title">Search title preview</div>
+              <div id="seoPreviewUrl" class="search-preview-url">
+                https://sf.gov/topic-pests-and-housing-problems
+              </div>
+              <div id="seoPreviewDescription" class="search-preview-desc">
+                Search description preview
+              </div>
+            </div>
+            <p class="field-help">
+              SEO fields support the content model fields: SEO Title and SEO Description. Keep the
+              meta description short enough for SF.gov review.
+            </p>
+          </div>
+        </details>
+        <details class="control-group">
+          <summary class="eyebrow">Karl CMS tags</summary>
+          <div class="details-body">
+            <div class="karl-tag-toggle">
+              <span>Show placement tags</span
+              ><label class="karl-switch" aria-label="Show Karl CMS placement tags"
+                ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
+              ></label>
+            </div>
+            <p class="field-help">Toggle Karl CMS placement tags on/off in the page mockup.</p>
+            <details class="karl-help-nested">
+              <summary class="field-help" style="cursor: pointer; font-weight: 600">
+                What are Karl tags?
+              </summary>
+              <div class="cms-help">
+                Tags identify where each text block should be entered in Karl CMS: metadata fields,
+                body sections, primary actions, body links, Related section links, Agency page link
+                sections, Resource Collection items, or editor-only notes.
+              </div>
+              <div class="cms-help" style="margin-top: 0.5rem">
+                <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
+                determined by the tag text, not by the visual box shape.
+              </div>
+            </details>
+          </div>
+        </details>
+        <details class="control-group">
+          <summary class="eyebrow">Applied rules</summary>
+          <div class="details-body">
+            <div class="checklist">
+              <div class="check">SF.gov system typography and SFDS-style spacing</div>
+              <div class="check">Action Blue for links and primary action</div>
+              <div class="check">Topic page uses scannable link clusters</div>
+              <div class="check">Article 11 / HHVC scope only</div>
+              <div class="check">72-hour tenant notice where applicable</div>
+              <div class="check">No standard photo requirement</div>
+              <div class="check">Report, prevent, scope, and tenant-help clusters</div>
+              <div class="check">
+                Enforcement pathway included without overloading Transaction pages
+              </div>
+              <div class="check">Tenant rights and anti-retaliation reassurance included</div>
+            </div>
+          </div>
+        </details>
 
+        <details class="control-group manager-review" open>
+          <summary class="eyebrow">Manager review</summary>
+          <div class="details-body">
+            <p class="field-help">
+              Use these fields during review. Exports download to your browser only; they do not
+              change source files or publish pages.
+            </p>
+            <div class="review-page-label" id="reviewPageLabel">
+              Current page: Pests and housing problems
+            </div>
+            <label for="reviewerInput">Reviewer name</label>
+            <input
+              id="reviewerInput"
+              type="text"
+              aria-label="Reviewer name"
+              placeholder="Name or initials"
+            />
+            <label for="reviewDateInput">Review date</label>
+            <input id="reviewDateInput" type="date" aria-label="Review date" />
             <label for="reviewDecision">Decision</label>
-            <select id="reviewDecision" aria-label="Manager review decision">
+            <select id="reviewDecision" aria-label="Review decision">
               <option value="Needs review">Needs review</option>
               <option value="Approved">Approved</option>
-              <option value="Changes requested">Changes requested</option>
-              <option value="On hold">On hold</option>
+              <option value="Approved with edits">Approved with edits</option>
+              <option value="Revise and resubmit">Revise and resubmit</option>
+              <option value="Blocked">Blocked</option>
             </select>
-
-            <label for="reviewNotes">Review notes</label>
-            <textarea id="reviewNotes" placeholder="Comments for team review or export" aria-label="Review notes" rows="3"></textarea>
-
-            <div class="export-controls">
-              <button id="exportDecisionsButton" class="button export-button" type="button">
-                Export decisions (.csv)
+            <label for="reviewNotes">Decision notes</label>
+            <textarea
+              id="reviewNotes"
+              aria-label="Decision notes"
+              placeholder="What needs to change before approval?"
+            ></textarea>
+            <label for="reviewRisks">Risks or blockers</label>
+            <textarea
+              id="reviewRisks"
+              aria-label="Risks or blockers"
+              placeholder="Legal/source review, policy issue, broken link, unclear scope, etc."
+            ></textarea>
+            <label for="reviewOwner">Follow-up owner</label>
+            <input
+              id="reviewOwner"
+              type="text"
+              aria-label="Follow-up owner"
+              placeholder="Name, role, or team"
+            />
+            <div class="review-actions" aria-label="Review export actions">
+              <button type="button" class="tool-btn" id="exportReviewCsv">
+                Export current review CSV
               </button>
-              <button id="downloadDetailsButton" class="button export-button" type="button">
-                Download details
+              <button type="button" class="tool-btn secondary-tool" id="exportReviewJson">
+                Export current review JSON
               </button>
-              <button id="exportSummaryButton" class="button export-button" type="button">
-                Copy summary
+              <button type="button" class="tool-btn secondary-tool" id="exportAllTemplateCsv">
+                Export all-page decision template
               </button>
             </div>
-
-            <div class="session-controls">
-              <button id="clearStateButton" class="button warning-button" type="button">
-                Clear all review state
-              </button>
-            </div>
+            <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
           </div>
         </details>
-      </fieldset>
-    </aside>
+        <details class="control-group">
+          <summary class="eyebrow">Reading targets</summary>
+          <div class="details-body">
+            <p>
+              <strong>Transaction:</strong> Grade 5–6<br /><strong>Prevention:</strong> Grade 6<br /><strong
+                >Inspection/process:</strong
+              >
+              Grade 6–7<br /><strong>Enforcement/NOV:</strong> Grade 7–8
+            </p>
+            <p class="field-help" id="readingCurrent" style="margin-top: 0.65rem; font-weight: 600">
+              Current page target: <span id="readingTargetValue">—</span>
+            </p>
+          </div>
+        </details>
+      </aside>
+      <main class="canvas">
+        <div class="canvas-toolbar">
+          <span id="currentPageBadge" class="page-badge"></span>
+          <div id="reviewStickyBar" class="review-sticky-bar" aria-label="Review status and navigation"></div>
+        </div>
+        <div class="browser-shell">
+          <div class="browser-bar">
+            <span class="dot red"></span><span class="dot yellow"></span
+            ><span class="dot green"></span>
+            <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
+          </div>
+          <div id="mockPage">
+            <div class="page-body">
+              <h1>Loading HHVC mockup…</h1>
+              <p>If this message stays visible, JavaScript did not run.</p>
+            </div>
+          </div>
+        </div>
+        <section id="reviewWorkspace" class="review-workspace" hidden aria-label="Review workspace">
+          <div class="review-workspace-tabs" id="reviewWorkspaceTabs" role="tablist">
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              data-workspace-tab="queue"
+              aria-selected="true"
+              aria-controls="reviewWorkspaceQueue"
+            >
+              Queue
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              data-workspace-tab="checks"
+              aria-selected="false"
+              aria-controls="reviewDashboardCore"
+            >
+              Checks
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              data-workspace-tab="sitemap"
+              aria-selected="false"
+              aria-controls="reviewWorkspaceSitemap"
+            >
+              Sitemap
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              data-workspace-tab="help"
+              aria-selected="false"
+              aria-controls="reviewWorkspaceHelp"
+            >
+              Help
+            </button>
+          </div>
+          <div
+            id="reviewWorkspaceQueue"
+            class="review-workspace-panel"
+            role="tabpanel"
+            data-workspace-panel="queue"
+          ></div>
+          <div
+            id="reviewDashboardCore"
+            class="review-workspace-panel review-dashboard"
+            role="tabpanel"
+            data-workspace-panel="checks"
+            hidden
+          ></div>
+          <div
+            id="reviewWorkspaceSitemap"
+            class="review-workspace-panel"
+            role="tabpanel"
+            data-workspace-panel="sitemap"
+            hidden
+          ></div>
+          <div
+            id="reviewWorkspaceHelp"
+            class="review-workspace-panel"
+            role="tabpanel"
+            data-workspace-panel="help"
+            hidden
+          ></div>
+        </section>
+        <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+      </main>
+    </div>
 
-    <main class="app-main">
-      <article id="pagePreview" class="page-preview"></article>
-    </main>
-  </div>
-
-  <div id="reviewDashboard" class="review-dashboard" style="display: none;" aria-label="Manager review dashboard"></div>
-
-  <!-- Page registry -->
-  <script>window.HHVC_PAGES = {};</script>
-
-  <!-- Utils -->
-  <script src="js/utils.js"></script>
-
-  <!-- Page content files (script tags auto-inserted by build_scripts/build-single-file.js) -->
-  <!-- Pages -->
-  <script src="pages/pests-topic.js"></script>
-  <script src="pages/report-fee-payment.js"></script>
-  <script src="pages/prevention-and-integrated-pest-management.js"></script>
-  <script src="pages/inspections-and-enforcement.js"></script>
-  <script src="pages/landlord-rights-and-responsibilities.js"></script>
-  <script src="pages/tenant-rights-and-responsibilities.js"></script>
-  <script src="pages/report-illegal-subletting.js"></script>
-  <script src="pages/housing-conditions-and-repairs.js"></script>
-  <script src="pages/health-and-safety.js"></script>
-  <script src="pages/vector-control-resources.js"></script>
-
-  <!-- Page data registry -->
-  <script src="js/page-data.js"></script>
-
-  <!-- Core app -->
-  <script src="js/app.js"></script>
-
-  <!-- UX improvements (sticky bar, review dashboard, Karl scorecard) -->
-  <script src="js/ux-improvements.js"></script>
-
-  <!-- Dashboard guidance panel -->
-  <script src="js/dashboard-guidance.js"></script>
-</body>
+    <script src="js/utils.js"></script>
+    <script src="pages/agency-service-grouping.js"></script>
+    <script src="pages/report-rats-or-mice.js"></script>
+    <script src="pages/report-cockroaches.js"></script>
+    <script src="pages/report-bed-bugs.js"></script>
+    <script src="pages/bed-bug-rules-prevention.js"></script>
+    <script src="pages/report-mosquitoes.js"></script>
+    <script src="pages/report-garbage-clutter.js"></script>
+    <script src="pages/report-overgrown-vegetation.js"></script>
+    <script src="pages/report-mold-humidity-condensation.js"></script>
+    <script src="pages/hhvc-inspection-scope.js"></script>
+    <script src="pages/integrated-pest-management-property-managers.js"></script>
+    <script src="pages/what-happens-after-report.js"></script>
+    <script src="pages/tenant-rights-reporting.js"></script>
+    <script src="pages/keep-rats-and-mice-out.js"></script>
+    <script src="pages/prevent-cockroaches.js"></script>
+    <script src="pages/prevent-mosquitoes.js"></script>
+    <script src="pages/pay-healthy-housing-fee.js"></script>
+    <script src="pages/reduce-indoor-moisture.js"></script>
+    <script src="js/page-data.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/ui-controls.js"></script>
+    <script src="js/editor-panel.js"></script>
+    <script src="js/page-render.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/manager-review-export.js"></script>
+    <script src="js/ux-improvements.js"></script>
+    <script src="js/review-queue.js"></script>
+    <script src="js/dashboard-guidance.js"></script>
+    <script src="js/interactive-sitemap.js"></script>
+  </body>
 </html>
