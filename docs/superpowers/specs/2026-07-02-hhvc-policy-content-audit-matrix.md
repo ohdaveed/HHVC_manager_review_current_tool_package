@@ -67,3 +67,4 @@
 | ipm-cockroaches-7467 | UC IPM Pest Notes: Cockroaches | Supports future `cockroachesPrevent` IPM content |
 | ipm-fleas-7419 | UC IPM Pest Notes: Fleas | Supplementary IPM; not in Phase 1 mockups or violation-master categories |
 | ipm-itching-infestation-7443 | UC IPM Pest Notes: Itching and Infestation | Medical/education reference; not HHVC policy |
+| ipm-lyme-disease-7485 | UC IPM Pest Notes: Lyme Disease in California | Tick/Lyme education; not in Phase 1 mockups |

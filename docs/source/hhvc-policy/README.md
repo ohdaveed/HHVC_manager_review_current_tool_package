@@ -29,6 +29,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-cockroaches.pdf` / `.md` | UC IPM Pest Notes 7467: Cockroaches | Supplementary | IPM identification/prevention; supports future `cockroachesPrevent` audits |
 | `2026-07-02-ipm-pests-fleas.pdf` / `.md` | UC IPM Pest Notes 7419: Fleas | Supplementary | IPM reference for pet/housing flea control; no Phase 1 mockup page |
 | `2026-07-02-ipm-itching-infestation.pdf` / `.md` | UC IPM Pest Notes 7443: Itching and Infestation | Supplementary | Medical/education reference when pests cannot be confirmed; no Phase 1 page |
+| `2026-07-02-ipm-lyme-disease-california.pdf` / `.md` | UC IPM Pest Notes 7485: Lyme Disease in California | Supplementary | Tick/Lyme education; no Phase 1 mockup page |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -154,6 +155,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR guidance on unexplained itching, when to consult a physician, and links to bed bugs/fleas/mosquitoes Pest Notes. Not HHVC policy; no Phase 1 mockup page.
+
+### 2026-07-02-ipm-lyme-disease-california.pdf
+
+- **Original Drive file:** `1ccBg6CxW01fyOFB9r6sbdhVnCuTMrUEd`
+- **Source title:** UC IPM Pest Notes 7485: Lyme Disease in California (May 2016)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR guidance on western blacklegged tick, Lyme disease transmission, and prevention. Not an Article 11/HHVC policy document. No Phase 1 mockup page.
 
 ## Documents still expected for Phase 1
 
