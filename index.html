@@ -4,12 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>HHVC Manager Review Mockup Tool</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Roboto+Slab:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="css/theme.css" />
     <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/base.css" />
     <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/typography.css" />
     <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/components.css" />
@@ -159,7 +154,7 @@
           <summary class="eyebrow">Applied rules</summary>
           <div class="details-body">
             <div class="checklist">
-              <div class="check">Roboto/Roboto Slab typography and SFDS-style spacing</div>
+              <div class="check">SF.gov system typography and SFDS-style spacing</div>
               <div class="check">Action Blue for links and primary action</div>
               <div class="check">Topic page uses scannable link clusters</div>
               <div class="check">Article 11 / HHVC scope only</div>
@@ -252,7 +247,7 @@
       <main class="canvas">
         <div class="canvas-toolbar">
           <span id="currentPageBadge" class="page-badge"></span>
-          <div id="reviewStickyBar" class="review-sticky-bar" aria-label="Review navigation"></div>
+          <div id="reviewStickyBar" class="review-sticky-bar" aria-label="Review status and navigation"></div>
         </div>
         <div class="browser-shell">
           <div class="browser-bar">
@@ -267,16 +262,15 @@
             </div>
           </div>
         </div>
-        <section id="reviewWorkspace" class="review-workspace" hidden>
-          <div class="review-workspace-tabs" role="tablist" aria-label="Review workspace">
+        <section id="reviewWorkspace" class="review-workspace" hidden aria-label="Review workspace">
+          <div class="review-workspace-tabs" id="reviewWorkspaceTabs" role="tablist">
             <button
               type="button"
-              class="review-workspace-tab active"
+              class="review-workspace-tab"
               role="tab"
-              id="reviewTabQueue"
+              data-workspace-tab="queue"
               aria-selected="true"
               aria-controls="reviewWorkspaceQueue"
-              data-workspace-tab="queue"
             >
               Queue
             </button>
@@ -284,10 +278,9 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
-              id="reviewTabChecks"
+              data-workspace-tab="checks"
               aria-selected="false"
               aria-controls="reviewDashboardCore"
-              data-workspace-tab="checks"
             >
               Checks
             </button>
@@ -295,10 +288,9 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
-              id="reviewTabSitemap"
+              data-workspace-tab="sitemap"
               aria-selected="false"
               aria-controls="reviewWorkspaceSitemap"
-              data-workspace-tab="sitemap"
             >
               Sitemap
             </button>
@@ -306,43 +298,40 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
-              id="reviewTabHelp"
+              data-workspace-tab="help"
               aria-selected="false"
               aria-controls="reviewWorkspaceHelp"
-              data-workspace-tab="help"
             >
               Help
             </button>
           </div>
-          <div class="review-workspace-panels">
-            <div
-              id="reviewWorkspaceQueue"
-              class="review-workspace-panel"
-              role="tabpanel"
-              aria-labelledby="reviewTabQueue"
-            ></div>
-            <div
-              id="reviewDashboardCore"
-              class="review-workspace-panel"
-              role="tabpanel"
-              aria-labelledby="reviewTabChecks"
-              hidden
-            ></div>
-            <div
-              id="reviewWorkspaceSitemap"
-              class="review-workspace-panel"
-              role="tabpanel"
-              aria-labelledby="reviewTabSitemap"
-              hidden
-            ></div>
-            <div
-              id="reviewWorkspaceHelp"
-              class="review-workspace-panel"
-              role="tabpanel"
-              aria-labelledby="reviewTabHelp"
-              hidden
-            ></div>
-          </div>
+          <div
+            id="reviewWorkspaceQueue"
+            class="review-workspace-panel"
+            role="tabpanel"
+            data-workspace-panel="queue"
+          ></div>
+          <div
+            id="reviewDashboardCore"
+            class="review-workspace-panel review-dashboard"
+            role="tabpanel"
+            data-workspace-panel="checks"
+            hidden
+          ></div>
+          <div
+            id="reviewWorkspaceSitemap"
+            class="review-workspace-panel"
+            role="tabpanel"
+            data-workspace-panel="sitemap"
+            hidden
+          ></div>
+          <div
+            id="reviewWorkspaceHelp"
+            class="review-workspace-panel"
+            role="tabpanel"
+            data-workspace-panel="help"
+            hidden
+          ></div>
         </section>
         <div id="toastContainer" class="toast-container" aria-live="polite"></div>
       </main>

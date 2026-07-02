@@ -6,32 +6,22 @@
   if (!DATA || !DATA.pages || !DATA.order) return
 
   const PANEL_ID = 'interactiveSitemapPanel'
-  const MOUNT_ID = 'reviewWorkspaceSitemap'
   const STYLE_ID = 'interactiveSitemapStyles'
   const state = {
     filter: 'All',
     search: '',
     selectedKey: document.getElementById('pageSelect')?.value || 'pestsTopic',
     showLinksFromSelected: false,
-    hasRendered: false,
   }
 
-  let mountTarget = null
+  let sitemapMounted = false
 
   // js/utils.js loads first (see index.html script order), so the shared
   // helpers are always available.
   const { escapeHtml, getPrimaryCta } = window.utils
 
-  function getMountTarget() {
-    if (!mountTarget) {
-      mountTarget = document.getElementById(MOUNT_ID)
-    }
-    return mountTarget
-  }
-
-  function isSitemapTabActive() {
-    const panel = document.getElementById(MOUNT_ID)
-    return Boolean(panel && !panel.hidden)
+  function getWorkspaceSitemapPanel() {
+    return document.getElementById('reviewWorkspaceSitemap')
   }
 
   function getCurrentKey() {
@@ -700,21 +690,19 @@
     `
   }
 
-  // The panel is created and positioned once (as a fixed sibling after the
-  // guidance panel, or after the dashboard core if guidance hasn't mounted
-  // yet). Later refreshes only update its innerHTML, so it's never removed
-  // and re-inserted, and no MutationObserver is needed to keep it in place.
+  // The panel mounts into the Sitemap workspace tab and renders lazily the first
+  // time that tab is opened, so the 17-node tree is not built while collapsed.
   function mountPanel() {
     if (document.getElementById(PANEL_ID)) return document.getElementById(PANEL_ID)
 
-    const target = getMountTarget()
-    if (!target) return null
+    const host = getWorkspaceSitemapPanel()
+    if (!host) return null
 
     const panel = document.createElement('section')
     panel.id = PANEL_ID
     panel.className = 'interactive-sitemap-panel'
     panel.setAttribute('aria-label', 'Interactive sitemap diagram')
-    target.appendChild(panel)
+    host.appendChild(panel)
     return panel
   }
 
@@ -737,15 +725,6 @@
   }
 
   function rerender() {
-    if (!state.hasRendered && !isSitemapTabActive()) return
-    injectStyles()
-    state.selectedKey = getCurrentKey()
-    renderPanel()
-    state.hasRendered = true
-  }
-
-  function ensureRendered() {
-    state.hasRendered = true
     injectStyles()
     state.selectedKey = getCurrentKey()
     renderPanel()
@@ -873,39 +852,45 @@
       // Under View Transitions, renderPage returns a promise that resolves
       // once #pageSelect reflects the new page; rerendering earlier would
       // highlight the previous page as current.
-      if (result && typeof result.then === 'function') result.then(rerender)
-      else rerender()
+      if (result && typeof result.then === 'function') result.then(() => { if (sitemapMounted) rerender() })
+      else if (sitemapMounted) rerender()
       return result
     }
     window.renderPage.__sitemapWrapped = true
   }
 
-  function init() {
+  function ensureSitemapRendered() {
+    if (sitemapMounted) {
+      rerender()
+      return
+    }
+    sitemapMounted = true
     injectStyles()
+    rerender()
+  }
+
+  function init() {
     document.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeydown)
     document.addEventListener('hhvc:review-data-changed', () => {
-      if (state.hasRendered || isSitemapTabActive()) rerender()
-    })
-    document.addEventListener('hhvc:workspace-tab-changed', (event) => {
-      if (event.detail?.tab === 'sitemap') ensureRendered()
+      if (sitemapMounted) rerender()
     })
     wrapRenderPageForSitemap()
-    if (isSitemapTabActive()) ensureRendered()
+
+    window.__mountInteractiveSitemapOnTabOpen = ensureSitemapRendered
   }
 
   function teardown() {
-    mountTarget = null
-  }
-
-  if (typeof window !== 'undefined') {
-    window.interactiveSitemap = { ensureRendered, rerender }
-    window.__mountInteractiveSitemapTeardown = teardown
+    sitemapMounted = false
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
   } else {
     init()
+  }
+
+  if (typeof window !== 'undefined') {
+    window.__mountInteractiveSitemapTeardown = teardown
   }
 })()

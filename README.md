@@ -24,8 +24,13 @@ The manager-review interface uses a **mockup-first layout**:
 
 Additional review aids:
 
+- A **mockup-first layout** — the page preview stays above the fold; review tools live in a collapsible workspace below
+- A **sticky review bar** with decision status, compliance checks, queue progress, and prev/next navigation
+- A **review queue** showing all pages with filterable decision status and progress across the full inventory
+- A tabbed review workspace (Queue, Checks, Sitemap, Help) collapsed by default
 - A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
-- An interactive sitemap diagram with clickable page nodes, page-type filters, and selected-page details
+- Dashboard guidance in the Help workspace tab
+- An interactive sitemap diagram (lazy-loaded when the Sitemap tab is opened)
 - Fast page search by title, page type, summary, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
@@ -85,7 +90,11 @@ This sitemap is a review aid only. It does not replace the source page inventory
 
 ## Dashboard guidance copy
 
+<<<<<<< HEAD
 Descriptive review instructions live in the workspace **Help** tab instead of being repeated throughout the sidebar.
+=======
+Descriptive review instructions live in the **Help** tab of the review workspace (below the mockup preview) instead of being repeated throughout the sidebar.
+>>>>>>> origin/main
 
 The dashboard guidance panel explains:
 
@@ -109,6 +118,7 @@ The tool saves:
 
 - Last selected page
 - Karl tag visibility preference
+- Review workspace open/closed state and active tab
 - Reviewer name
 - Per-page review date, decision, notes, risks or blockers, and follow-up owner
 - Per-page edited title, summary, CTA, SEO title, meta description, and URL slug
