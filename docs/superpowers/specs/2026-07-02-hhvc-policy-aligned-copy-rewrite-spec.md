@@ -73,7 +73,8 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 - Target field path: `sections[1].callout.text`
   - Current text (exact): Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
   - Block reason: missing source
-  - Required source: anti-retaliation / tenant-rights authority
+  - Required source: anti-retaliation / tenant-rights authority for **reporting housing conditions to the City**
+  - Note: `2026-07-02-sf-gov-housing-discrimination-help.md` reviewed — covers fair-housing discrimination/HRC only; does not satisfy this claim.
 
 ### Acceptance checks
 
@@ -108,7 +109,8 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 - Target field path: `sections[1].callout.text`
   - Current text (exact): Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
   - Block reason: missing source
-  - Required source: anti-retaliation / tenant-rights authority
+  - Required source: anti-retaliation / tenant-rights authority for **reporting housing conditions to the City**
+  - Note: `2026-07-02-sf-gov-housing-discrimination-help.md` reviewed — covers fair-housing discrimination/HRC only; does not satisfy this claim.
 
 ### Acceptance checks
 
@@ -186,7 +188,8 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 - Target field path: `sections[1].callout.text`
   - Current text (exact): Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
   - Block reason: missing source
-  - Required source: anti-retaliation / tenant-rights authority
+  - Required source: anti-retaliation / tenant-rights authority for **reporting housing conditions to the City**
+  - Note: `2026-07-02-sf-gov-housing-discrimination-help.md` reviewed — covers fair-housing discrimination/HRC only; does not satisfy this claim.
 
 ### Acceptance checks
 
@@ -222,6 +225,7 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Current text (exact): Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.
   - Block reason: missing source
   - Required source: anti-retaliation / privacy authority
+  - Note: Discrimination page reviewed — does not cover either claim. Privacy may be supported by https://www.sf.gov/report-health-nuisance-or-hazards (Environmental Health 311 page).
 
 ### Acceptance checks
 

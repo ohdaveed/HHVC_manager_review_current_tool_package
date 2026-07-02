@@ -17,6 +17,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
 | `2026-07-02-program-manager-72-hour-tenant-notice.md` | HHVC Program Manager — 72-hour tenant notice before 311 | Phase 1 | **Operational authority** for Step 2 tenant notice on all report Transaction pages |
+| `2026-07-02-sf-gov-housing-discrimination-help.md` | SF.gov — Get help for discrimination in housing | Supplementary | HRC/fair-housing referral; **does not** verify report-page anti-retaliation callouts |
 | `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
@@ -186,9 +187,20 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Confirms existing mockup Step 2 on all report pages: notify owner/manager; wait 72 hours when possible before 311; do not wait if urgent. Distinct from SFDPH bed bug Director's Rules two-working-day owner investigation deadline.
 
+### 2026-07-02-sf-gov-housing-discrimination-help.md
+
+- **Original URL:** https://www.sf.gov/information--get-help-discrimination-housing
+- **Source title:** Get help for discrimination in housing
+- **Authority:** SF Human Rights Commission referral page
+- **Export date:** 2026-07-02
+- **Format:** md (web extract)
+- **Reviewer:** CA
+- **Note:** Fair-housing / discrimination resource (protected classes, HRC complaints). Does **not** verify report-page anti-retaliation callouts for reporting housing conditions to 311/HHVC, and does not address reporter privacy. May inform Phase 2 `tenantRights` external links.
+
 ## Documents still expected for Phase 1
 
-- Anti-retaliation / tenant-rights authority
+- Anti-retaliation / tenant-rights authority (for reporting housing conditions to the City — e.g. Rent Ordinance Sec. 37.9(d), program manager attestation, or HHVC operational policy)
+- Reporter privacy authority (e.g. https://www.sf.gov/report-health-nuisance-or-hazards — "Your name is usually not shared for complaints about environmental health")
 - Bed bug rules / Director's Rules source (detailed) — **partial:** tenant guidelines ingested; full Director's Rules PDF still recommended
 - Fee / payment authority for Healthy Housing program fees
 - HHVC inspection / complaint handling policy (operational detail beyond master template)
