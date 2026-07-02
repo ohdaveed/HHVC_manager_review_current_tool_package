@@ -46,6 +46,12 @@ window.HHVC_PAGES['ownerHub'] = {
           target: 'ownerGuidance',
           karl: 'Resource collection item cross-link to existing Information page',
         },
+        {
+          title: 'Look up building records',
+          text: 'Find complaints, violations, inspector assignment, and public records for a building.',
+          target: 'recordsHub',
+          karl: 'Resource collection item cross-link to records hub Resource collection page',
+        },
       ],
     },
     {

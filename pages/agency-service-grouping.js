@@ -14,7 +14,7 @@ window.HHVC_PAGES['pestsTopic'] = {
   seoTitle: 'Pests and housing problems',
   metaDescription: 'Report or prevent pests, mold, garbage, and other housing health problems.',
   editorNote:
-    'Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths.',
+    'Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths. In Karl: tag Topics so child pages appear on this Topic; manually link Information pages after publish.',
   sections: [
     {
       heading: 'About this topic',
