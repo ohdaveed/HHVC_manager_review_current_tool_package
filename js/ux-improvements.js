@@ -357,7 +357,7 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function getPortfolioRows(savedPages) {
+  function getPortfolioRows(savedPages = {}) {
     return DATA.order.map(([key, label]) => {
       const page = DATA.pages[key] || {}
       const rules = getRuleResultsFor(page)
