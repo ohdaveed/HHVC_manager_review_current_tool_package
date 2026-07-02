@@ -20,6 +20,7 @@ const files = [
   'pages/report-bed-bugs.js',
   'pages/bed-bug-rules-prevention.js',
   'pages/report-mosquitoes.js',
+  'pages/report-pigeons.js',
   'pages/report-garbage-clutter.js',
   'pages/report-overgrown-vegetation.js',
   'pages/report-mold-humidity-condensation.js',

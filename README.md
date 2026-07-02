@@ -238,6 +238,7 @@ HHVC_manager_review_current_tool_package/
 - Report bed bugs — Transaction
 - Bed bug rules and prevention — Information
 - Report mosquitoes in your home or backyard — Transaction
+- Report pigeons — Transaction
 - Report garbage or clutter — Transaction
 - Report overgrown vegetation — Transaction
 - Report mold from humidity or condensation — Transaction

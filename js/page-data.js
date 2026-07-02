@@ -8,6 +8,7 @@ window.HHVC_DATA = {
     ['bedBugsReport', 'Transaction: Report bed bugs'],
     ['bedBugsInfo', 'Information: Bed bug rules and prevention'],
     ['mosquitoesReport', 'Transaction: Report mosquitoes'],
+    ['pigeonsReport', 'Transaction: Report pigeons'],
     ['garbageReport', 'Transaction: Report garbage or clutter'],
     ['vegetationReport', 'Transaction: Report overgrown vegetation'],
     ['moldReport', 'Transaction: Report mold from humidity or condensation'],
