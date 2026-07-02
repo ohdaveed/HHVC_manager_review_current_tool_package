@@ -1,6 +1,6 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['payFee'] = {
-  slug: 'sf.gov/pay-healthy-housing-fee-buildings-3-or-more-units',
+  slug: 'sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings',
   type: 'Transaction',
   title: 'Pay your annual Healthy Housing fee for apartment buildings',
   summary:
@@ -20,10 +20,10 @@ window.HHVC_PAGES['payFee'] = {
         'Use the payment method listed on your annual invoice when one is provided.',
       ],
       bullets: [
-        'Your notice or account information, if you received one',
+        'Your invoice or account information, if you received one',
         'The property address',
         'The name and contact information for the billing contact',
-        'The payment method allowed on your notice',
+        'The payment method allowed on your invoice',
       ],
     },
     {
@@ -38,7 +38,7 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Pay your fee',
-      karl: 'Body: Pay your fee steps. BLOCKED — buttonTarget/URL pending confirmed SF.gov online payment link; CTA is non-functional until added.',
+      karl: 'Body: Pay your fee steps. buttonTarget/URL pending confirmed SF.gov online payment link; CTA is non-functional until added.',
       kind: 'body',
       paragraphs: [
         'Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.',
@@ -55,11 +55,11 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Questions about your fee',
-      karl: 'Body: Fee questions (added for depth). BLOCKED — do not add fee amounts, due dates, penalties, or payment links. Generic guidance only.',
+      karl: 'Body: Fee questions (added for depth). Do not add fee amounts, due dates, or penalties — amounts vary by building and must come from the invoice.',
       kind: 'body',
       paragraphs: [
-        'If you are not sure whether the fee applies to your building, use the contact or help route listed on your notice or the final SF.gov fee page.',
-        'Keep any notice or account information in case you need to ask a question or confirm a payment.',
+        'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
+        'Keep your invoice or account information in case you need to ask a question or confirm a payment.',
       ],
     },
     {
