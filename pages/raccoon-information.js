@@ -135,16 +135,18 @@ window.HHVC_PAGES['raccoonInfo'] = {
           title: 'Keep rats and mice out',
           text: 'Learn how to reduce food, water, shelter, and entry points.',
           target: 'ratsPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Raccoons and housing health | SF.gov',
   metaDescription:
-    'Learn about raccoon roundworm risks, safe latrine cleanup, and when to report housing-health conditions Environmental Health may review.',
+    'Raccoon roundworm risks, safe latrine cleanup, and when to report housing-health conditions HHVC may review.',
 }

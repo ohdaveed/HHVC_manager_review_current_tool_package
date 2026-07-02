@@ -76,16 +76,18 @@ window.HHVC_PAGES['pigeonInfo'] = {
           title: 'Prevent mosquitoes',
           text: 'Learn about standing water, West Nile virus precautions, and mosquito reporting.',
           target: 'mosquitoesPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Pigeons and housing health | SF.gov',
   metaDescription:
-    'Learn how pigeon roosting and droppings can affect housing health and when to report the problem to Environmental Health.',
+    'How pigeon roosting and droppings affect housing health and when to report the problem to Environmental Health.',
 }

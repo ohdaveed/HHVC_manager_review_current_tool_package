@@ -47,11 +47,13 @@ window.HHVC_PAGES['publicRecords'] = {
           title: 'Find complaints and inspection records',
           text: 'Search public complaint and inspection history online before filing a formal request.',
           target: 'findRecords',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Look up building records',
           text: 'Return to the records hub for all lookup and request options.',
           target: 'recordsHub',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },

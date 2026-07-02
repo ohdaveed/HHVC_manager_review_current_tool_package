@@ -57,21 +57,24 @@ window.HHVC_PAGES['ownerHub'] = {
           title: 'Pests and housing problems',
           text: 'Return to the main Topic page for HHVC pest and housing health issues.',
           target: 'pestsTopic',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Look up residential health code violations',
           text: 'Search violation history for a building address.',
           target: 'findViolations',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how complaints are reviewed and when inspections may occur.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Property owner responsibilities | SF.gov',
   metaDescription:
-    'Property owner and manager responsibilities for pests, vectors, and housing health under San Francisco Health Code Article 11.',
+    'Owner and manager duties for pests, vectors, and housing health under San Francisco Health Code Article 11.',
 }

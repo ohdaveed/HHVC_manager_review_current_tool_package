@@ -47,26 +47,30 @@ window.HHVC_PAGES['findHotelRecords'] = {
           title: 'Find complaints and inspection records',
           text: 'Search general residential complaint and inspection history by address.',
           target: 'findRecords',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Look up building records',
           text: 'Return to the records hub for all lookup options.',
           target: 'recordsHub',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights when reporting housing conditions',
           text: 'Learn about tenant protections when reporting a housing condition.',
           target: 'tenantRights',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report bed bugs',
           text: 'Report an active bed bug problem in rental housing, an SRO, or a residential hotel.',
           target: 'bedBugsReport',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Find residential hotel and shelter records | SF.gov',
   metaDescription:
-    'Look up Environmental Health inspection and program records for San Francisco residential hotels, SROs, and shelters.',
+    'Look up Environmental Health records for San Francisco residential hotels, SROs, and shelters.',
 }

@@ -145,31 +145,36 @@ window.HHVC_PAGES['miteInfo'] = {
           title: 'Keep rats and mice out of your home',
           text: 'Learn trapping, exclusion, safe nest cleanup, and why traps are preferred over poison.',
           target: 'ratsPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report rats or mice',
           text: 'Report rat or mouse activity that may be linked to tropical rat mites.',
           target: 'ratsReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report bed bugs',
           text: 'Report an active bed bug problem in rental housing, an SRO, or a residential hotel.',
           target: 'bedBugsReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Pigeons and housing health',
           text: 'Learn about bird roosting, droppings, and related housing-health concerns.',
           target: 'pigeonInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Mites and housing health | SF.gov',
   metaDescription:
-    'Learn about tropical rat mites, why rat nests should be treated for mites before rodenticides, and when to report rodent or housing-health problems.',
+    'Tropical rat mites, nest treatment before rodenticides, and when to report rodent or housing-health problems.',
 }

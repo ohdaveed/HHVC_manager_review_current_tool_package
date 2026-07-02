@@ -83,21 +83,24 @@ window.HHVC_PAGES['recordsHub'] = {
           title: 'Pests and housing problems',
           text: 'Return to the main Topic page for HHVC pest, vector, and housing health issues.',
           target: 'pestsTopic',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Property owner responsibilities',
           text: 'See owner obligations under Health Code Article 11.',
           target: 'ownerHub',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Look up building records | SF.gov',
   metaDescription:
-    'Find Environmental Health inspection records, violations, district inspectors, and public records for San Francisco buildings.',
+    'Find HHVC inspection records, violations, district inspectors, and public records for San Francisco buildings.',
 }

@@ -114,26 +114,30 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
           title: 'Mosquito Control Program',
           text: 'Learn about mosquito surveillance, catch-basin treatment, and program contacts.',
           target: 'mosquitoControl',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Prevent mosquitoes',
           text: 'Classroom-friendly prevention tips to share after the workshop.',
           target: 'mosquitoesPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report a dead bird',
           text: 'Teach students how community dead bird reports support West Nile virus tracking.',
           target: 'wnvBirdReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Pests and housing problems',
           text: 'Return to the main Topic page for HHVC pest and vector resources.',
           target: 'pestsTopic',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Free mosquito education workshop | SF.gov',
   metaDescription:
-    'Request a free HHVC mosquito education workshop with microscopes, live larvae, and hands-on science stations aligned with California educational standards.',
+    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and camps.',
 }

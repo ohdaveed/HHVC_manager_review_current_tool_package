@@ -75,26 +75,30 @@ window.HHVC_PAGES['wnvBirdReport'] = {
           title: 'Mosquito Control Program',
           text: 'Learn about mosquito surveillance, catch-basin treatment, and West Nile virus resources.',
           target: 'mosquitoControl',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Prevent mosquitoes',
           text: 'Learn how to remove standing water and reduce mosquito breeding around your home.',
           target: 'mosquitoesPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report mosquitoes',
           text: 'Report mosquitoes or standing water around a home, yard, building, or shared area.',
           target: 'mosquitoesReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Pigeons and housing health',
           text: 'Learn about bird-related housing health concerns separate from West Nile surveillance.',
           target: 'pigeonInfo',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Report a dead bird | SF.gov',
   metaDescription:
-    'Report a dead bird for West Nile virus surveillance. HHVC may collect and test the bird to help track virus activity in San Francisco.',
+    'Report a dead bird for West Nile surveillance. HHVC may collect and test birds to track virus activity.',
 }

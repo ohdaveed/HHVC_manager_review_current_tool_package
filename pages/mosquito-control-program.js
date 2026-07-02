@@ -66,26 +66,30 @@ window.HHVC_PAGES['mosquitoControl'] = {
           title: 'Free mosquito education workshop',
           text: 'Request a free workshop with microscopes, live larvae, and science stations for youth groups.',
           target: 'mosquitoWorkshop',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Prevent mosquitoes',
           text: 'Learn how to remove standing water and reduce mosquito breeding around your home.',
           target: 'mosquitoesPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report a dead bird',
           text: 'Report a dead bird for West Nile virus surveillance through CDPH. HHVC may collect and test the bird.',
           target: 'wnvBirdReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report mosquitoes',
           text: 'Report mosquitoes or standing water around a home, yard, building, or shared area.',
           target: 'mosquitoesReport',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Mosquito Control Program | SF.gov',
   metaDescription:
-    'Learn about San Francisco mosquito control, catch-basin treatment, and how to report standing water or unusual mosquito activity.',
+    'San Francisco mosquito control, catch-basin treatment, and how to report standing water or mosquito activity.',
 }
