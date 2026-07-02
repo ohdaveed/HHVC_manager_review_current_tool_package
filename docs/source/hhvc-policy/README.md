@@ -16,9 +16,10 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | File | Title | Phase | Role |
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
-| `2026-07-02-program-manager-reporter-privacy.md` | HHVC Program Manager — reporter privacy | Phase 1 | **Operational authority** for complainant identity not shared with property owner |
+| `2026-07-02-program-manager-reporter-privacy.md` | HHVC Program Manager — reporter privacy | Phase 1 | **Operational authority** — identities shared only with City Attorney's Office; not via public records requests |
 | `2026-07-02-program-manager-tenant-safe-housing-rights.md` | HHVC Program Manager — tenant safe housing rights | Phase 1 | **Operational authority** for safe/habitable housing rights callout (first sentence) |
-| `2026-07-02-sf-gov-housing-discrimination-help.md` | SF.gov — Get help for discrimination in housing | Supplementary | HRC/fair-housing referral; **does not** verify report-page anti-retaliation callouts |
+| `2026-07-02-sf-gov-report-health-nuisance-or-hazards.md` | SF.gov — Report a health nuisance or hazards | Phase 1 | **Supplementary** public-records framing for reporter privacy |
+| `2026-07-02-sf-gov-housing-discrimination-help.md` | SF.gov — Get help for discrimination in housing | Supplementary | HRC/fair-housing referral; does not verify anti-retaliation callouts |
 | `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
@@ -198,13 +199,23 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Fair-housing / discrimination resource (protected classes, HRC complaints). Does **not** verify report-page anti-retaliation callouts for reporting housing conditions to 311/HHVC, and does not address reporter privacy. May inform Phase 2 `tenantRights` external links.
 
+### 2026-07-02-sf-gov-report-health-nuisance-or-hazards.md
+
+- **Original URL:** https://www.sf.gov/report-health-nuisance-or-hazards
+- **Source title:** Report a health nuisance or hazards
+- **Authority:** SF 311 / SFDPH Environmental Health
+- **Export date:** 2026-07-02
+- **Format:** md (web extract)
+- **Reviewer:** CA
+- **Note:** States complaints are public records but reporter name is usually not shared for environmental health complaints. Pairs with program manager attestation on City Attorney's Office sharing limits.
+
 ### 2026-07-02-program-manager-reporter-privacy.md
 
 - **Source title:** Program manager operational guidance — complainant identity not shared with property owner
 - **Authority:** HHVC program manager (stakeholder attestation, 2026-07-02)
 - **Format:** stakeholder intake note
 - **Reviewer:** CA
-- **Note:** Confirms existing mockup privacy sentence on all six Phase 1 report pages. Does not cover anti-retaliation callouts.
+- **Note:** Confirms reporter identities are shared only with the City Attorney's Office and not in response to public records requests. Pairs with SF.gov environmental health 311 page on public records.
 
 ### 2026-07-02-program-manager-tenant-safe-housing-rights.md
 

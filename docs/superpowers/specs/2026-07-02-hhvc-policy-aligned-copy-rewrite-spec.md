@@ -70,9 +70,9 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - `sections[0].steps[2].callout.text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+  - Replace with: Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
 - `sections[1].callout.text` (safe housing)
   - Current: Tenants have rights to safe and habitable housing.
@@ -117,9 +117,9 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - `sections[0].steps[2].callout.text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+  - Replace with: Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
 - `sections[1].callout.text` (safe housing)
   - Current: Tenants have rights to safe and habitable housing.
@@ -170,9 +170,9 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - `sections[0].steps[2].callout.text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+  - Replace with: Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
 - `sections[1].callout.text` (safe housing)
   - Current: Tenants have rights to safe and habitable housing.
@@ -224,9 +224,9 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - `sections[0].steps[2].callout.text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+  - Replace with: Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
 - `sections[1].callout.text` (safe housing)
   - Current: Tenants have rights to safe and habitable housing.
@@ -271,15 +271,15 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - `sections[0].steps[2].callout.text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+  - Replace with: Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
 - `sections[1].cards[3].text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Privacy portion of tenant-rights related card.
+  - Replace with: Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Privacy portion of tenant-rights related card; retaliation intro remains blocked separately.
 
 ### Blocked fields
 
@@ -312,9 +312,9 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - `sections[0].steps[2].callout.text` (privacy)
   - Current: HHVC does not share the reporter’s identity with the property owner or manager.
-  - Replace with: *(keep current)*
-  - Source: program-manager-reporter-privacy — stakeholder attestation
-  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+  - Replace with: Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.
+  - Source: program-manager-reporter-privacy; sf-gov-report-health-nuisance — PM attestation + 311 public-records note
+  - Reason: Program manager confirms sharing limits; SF.gov page confirms public-records context for environmental health complaints.
 
 - `sections[1].callout.text` (safe housing)
   - Current: Tenants have rights to safe and habitable housing.
