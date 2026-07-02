@@ -60,3 +60,5 @@
 | ipm-house-mouse-7483 | UC IPM Pest Notes: House Mouse | Supports future `ratsPrevent` IPM content; not Phase 1 legal/process authority |
 | vegetation-overgrowth-notice | SFDPH Vegetation Overgrowth Notice | Confirms Sec. 581 overgrowth scope and pest/vector shelter rationale for `vegetationReport` |
 | mold-tenants-landlords-guidance | SFDPH Mold Guidance for Tenants and Landlords | Full mold IPM/responsibility guidance; companion to mold-moisture-guidance short form |
+| ipm-mosquitoes-7451 | UC IPM Pest Notes: Mosquitoes | Supports future `mosquitoesPrevent` IPM content; standing water/breeding site rationale |
+| ipm-flies-7457 | UC IPM Pest Notes: Flies | Aligns with violation-master Flies category; no Phase 1 mockup page |
