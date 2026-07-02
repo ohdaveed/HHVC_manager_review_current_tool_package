@@ -143,6 +143,14 @@ for (const [key, p] of Object.entries(parsed.data.pages)) {
         throw new Error(`${key} links to missing target ${c.target}`)
       }
     }
+    if (s.buttonTarget && !keys.has(s.buttonTarget)) {
+      throw new Error(`${key} links to missing target ${s.buttonTarget}`)
+    }
+    for (const step of s.steps || []) {
+      if (step.buttonTarget && !keys.has(step.buttonTarget)) {
+        throw new Error(`${key} links to missing target ${step.buttonTarget}`)
+      }
+    }
   }
 }
 
