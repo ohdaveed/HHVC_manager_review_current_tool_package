@@ -15,7 +15,7 @@ This spec covers only the Topic page and Transaction pages:
 
 Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matrix can produce rewrite instructions. Claims marked `missing_source` stay blocked.
 
-**Sources ingested 2026-07-02:** violation-pages master content; program manager attestations (72-hour notice, reporter privacy, tenant safe housing); SF Rent Ordinance Sec. 37.9(d); SF.gov environmental health 311 page; supplementary IPM PDFs.
+**Sources ingested 2026-07-02:** violation-pages master content; program manager attestations (72-hour notice, reporter privacy, tenant safe housing); SF Rent Ordinance Sec. 37.9(d); SF.gov environmental health 311 page; SF.gov Healthy Housing fee pay page; Health Code Sec. 609; SFDPH EHB fee schedule FY 2024–25; Controller fee certification FY 2025–26; supplementary IPM PDFs.
 
 ## page_key: pestsTopic
 
@@ -33,12 +33,15 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: violation-master — Intro: "Article 11 violation category"
   - Reason: Article 11 / HHVC framing confirmed.
 
+- `sections[3].cards[2].text`
+  - Current: Pay the program fee for residential buildings with 3 or more units.
+  - Replace with: Pay the annual Healthy Housing fee for apartment buildings with 3 or more rental units.
+  - Source: sf-gov-pay-healthy-housing-fee; health-code-609
+  - Reason: SF.gov and Health Code 609 base fee on rental units, not total building units.
+
 ### Blocked fields
 
-- Target field path: `sections[3].cards[2].text`
-  - Current text (exact): Pay the program fee for residential buildings with 3 or more units.
-  - Block reason: missing source
-  - Required source: Healthy Housing fee authority
+- None.
 
 ### Acceptance checks
 
@@ -405,24 +408,67 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 ### Approved field changes
 
-- No approved field changes.
+- `title`
+  - Current: Pay your Healthy Housing fee for buildings with 3 or more units
+  - Replace with: Pay your annual Healthy Housing fee for apartment buildings
+  - Source: sf-gov-pay-healthy-housing-fee
+  - Reason: Matches SF.gov service title and rental-unit scope.
+
+- `summary`
+  - Current: Pay or learn about the Healthy Housing program fee for some San Francisco residential buildings.
+  - Replace with: Pay or learn about the annual Healthy Housing program fee for San Francisco apartment buildings with 3 or more rental units.
+  - Source: sf-gov-pay-healthy-housing-fee
+  - Reason: Aligns summary to SF.gov pay page scope.
+
+- `sections[0].paragraphs[0]`
+  - Current: Have your notice, property address, or account information ready before you start.
+  - Replace with: Have your invoice, property address, or account information ready before you start.
+  - Source: sf-gov-pay-healthy-housing-fee — annual mailed invoice
+  - Reason: SF.gov billing is invoice-based.
+
+- `sections[0].paragraphs[1]`
+  - Current: Use the payment route listed on your notice when one is provided.
+  - Replace with: Use the payment method listed on your annual invoice when one is provided.
+  - Source: sf-gov-pay-healthy-housing-fee — payment methods on invoice
+  - Reason: Matches SF.gov payment guidance.
+
+- `sections[1].paragraphs[0]`
+  - Current: Healthy Housing program fees may apply to residential buildings with 3 or more units.
+  - Replace with: You need to pay this fee if you own an apartment building with 3 or more rental units.
+  - Source: sf-gov-pay-healthy-housing-fee; health-code-609
+  - Reason: Rental-unit applicability confirmed.
+
+- `sections[1].paragraphs[1]`
+  - Current: A building with 3 units is exempt if one unit is occupied by the owner.
+  - Replace with: If fewer than 3 units are rented during the billing year, you do not need to pay the fee.
+  - Source: sf-gov-pay-healthy-housing-fee; health-code-609
+  - Reason: Corrects incorrect owner-occupancy exemption; SF.gov uses rented-unit count.
+
+- `sections[1].paragraphs[2]` *(new)*
+  - Replace with: Check your invoice for the exact amount. The number of rental units determines your fee.
+  - Source: sf-gov-pay-healthy-housing-fee
+  - Reason: SF.gov directs owners to invoice for exact amount; fee tiers vary by Controller adjustment.
+
+- `sections[2].paragraphs[0]`
+  - Current: Use the approved SF.gov payment or billing route to pay your Healthy Housing fee.
+  - Replace with: Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.
+  - Source: sf-gov-pay-healthy-housing-fee — Pay online / in-person / by mail
+  - Reason: Lists confirmed SF.gov payment routes.
+
+- `sections[3].paragraphs[0]`
+  - Current: Use the contact or help route listed on the final SF.gov fee page or payment notice.
+  - Replace with: Use the contact information on your invoice or call Environmental Health at 415-252-3800.
+  - Source: sf-gov-pay-healthy-housing-fee — Contact us
+  - Reason: Confirmed help contact from SF.gov.
+
+- `metaDescription`
+  - Replace with: Pay or learn about the annual Healthy Housing fee for San Francisco apartment buildings with 3 or more rental units.
+  - Source: sf-gov-pay-healthy-housing-fee
+  - Reason: Matches updated page scope.
 
 ### Blocked fields
 
-- Target field path: `summary`
-  - Current text (exact): Pay or learn about the Healthy Housing program fee for some San Francisco residential buildings.
-  - Block reason: missing source
-  - Required source: Healthy Housing fee authority
-
-- Target field path: `sections[0].paragraphs[1]`
-  - Current text (exact): Use the payment route listed on your notice when one is provided.
-  - Block reason: missing source
-  - Required source: payment guidance
-
-- Target field path: `sections[1].paragraphs[1]`
-  - Current text (exact): A building with 3 units is exempt if one unit is occupied by the owner.
-  - Block reason: missing source
-  - Required source: Healthy Housing fee exemption rules
+- `sections[2].button` / `buttonTarget` — SF.gov lists "Pay online" but mockup has no confirmed payment URL yet; button remains non-functional until HHVC supplies link.
 
 ### Acceptance checks
 

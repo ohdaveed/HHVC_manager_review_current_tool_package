@@ -41,4 +41,4 @@
 
 ## Does not cover
 
-- Healthy Housing **fee** amounts, exemptions, or payment process (`payFee`, `pestsTopic` fee card) — still need fee authority.
+- Healthy Housing **fee** payment URL for live `payFee` button — still need confirmed online payment link (`buttonTarget`)

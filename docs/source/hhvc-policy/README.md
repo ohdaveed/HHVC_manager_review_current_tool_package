@@ -235,10 +235,50 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Prohibits landlord retaliation for tenant exercise of legal rights. Supports report-page anti-retaliation callouts and related-card retaliation routing.
 
+### 2026-07-02-sf-gov-pay-healthy-housing-fee.md
+
+- **Original URL:** https://www.sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings
+- **Source title:** Pay your annual healthy housing fee for apartment buildings
+- **Authority:** SF.gov / SFDPH Environmental Health
+- **Export date:** 2026-07-02
+- **Format:** md (web extract)
+- **Reviewer:** CA
+- **Note:** Phase 1 authority for `payFee` copy and `pestsTopic` fee card. Rental-unit basis, exemption, invoice billing, payment routes, late penalties, contact.
+
+### 2026-07-02-health-code-sec-609-healthy-housing-fee.md
+
+- **Original URL:** https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-6586
+- **Source title:** SEC. 609. VECTOR CONTROL AND HEALTHY HOUSING INSPECTION PROGRAM FEE
+- **Authority:** San Francisco Health Code Article 11
+- **Export date:** 2026-07-02
+- **Format:** md (web extract)
+- **Reviewer:** CA
+- **Note:** Statutory rental-unit definition, late penalties, lien authority, base fee schedule, annual Controller adjustment (Sec. 609.2).
+
+### 2026-07-02-dph-ehb-fees-fy24-25.md
+
+- **Original URL:** https://www.sf.gov/sites/default/files/2024-07/Website%20Fees%20FY24-25_0.pdf
+- **Source title:** SFDPH Environmental Health Branch — Website Fees FY 2024–25
+- **Authority:** SFDPH Environmental Health Branch
+- **Export date:** 2026-07-02
+- **Format:** md (PDF extract)
+- **Reviewer:** CA
+- **Note:** Supplementary certified fee tier estimates (e.g., 3 rental units = $97). Mockup copy directs users to invoice for exact amount.
+
+### 2026-07-02-controller-fee-certification-fy25-26.md
+
+- **Original URL:** https://www.sf.gov/documents/42155/Fee_Certification_-_FY_2025-26_8.27.25.pdf
+- **Source title:** Fee Certification — FY 2025–26 (Healthy Housing excerpt)
+- **Authority:** San Francisco Office of the Controller
+- **Export date:** 2026-07-02
+- **Format:** md (PDF extract)
+- **Reviewer:** CA
+- **Note:** Current certified fee tier estimates (e.g., 3 rental units = $100 for FY 2025–26). Use as best-estimate reference only; page copy points to invoice.
+
 ## Documents still expected for Phase 1
 
-- Healthy Housing **fee / payment authority** (`payFee`, `pestsTopic` fee card)
 - HHVC inspection / complaint handling policy (operational detail beyond master template)
+- Confirmed SF.gov online payment URL for `payFee` button (`buttonTarget`)
 
 ## Naming convention
 
