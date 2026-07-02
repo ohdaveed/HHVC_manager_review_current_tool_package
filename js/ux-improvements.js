@@ -33,16 +33,14 @@
     setValue,
     setText,
     buildReviewRecord,
+    getCurrentKey,
+    countRelatedLinks,
   } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
   // 'input' path; 'change' (fires on blur) still refreshes immediately so the
   // dashboard is never stale once the reviewer moves on.
   const REFRESH_DEBOUNCE_MS = 300
-
-  function getCurrentKey() {
-    return document.getElementById('pageSelect')?.value || 'pestsTopic'
-  }
 
   function getCurrentPage() {
     return DATA.pages[getCurrentKey()] || {}
@@ -54,18 +52,6 @@
 
   function getMetaDescription(page) {
     return getValue('metaDescriptionInput') || defaultMetaDescription(page)
-  }
-
-  function countRelatedLinks(page) {
-    let count = 0
-    for (const section of page.sections || []) {
-      count += Array.isArray(section.cards) ? section.cards.length : 0
-      count += section.button ? 1 : 0
-      for (const step of section.steps || []) {
-        count += step.button ? 1 : 0
-      }
-    }
-    return count
   }
 
   // useEditor: true reads live sidebar values (current page only);

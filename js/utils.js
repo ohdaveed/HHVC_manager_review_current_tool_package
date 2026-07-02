@@ -47,6 +47,8 @@ const REVIEW_RECORD_FIELDS = [
     setText,
     buildReviewRecord,
     REVIEW_RECORD_FIELDS,
+    getCurrentKey,
+    countRelatedLinks,
   }
 
   installGlobalErrorHandlers()
@@ -326,6 +328,34 @@ function setValue(id, value) {
 function setText(id, value) {
   const el = document.getElementById(id)
   if (el) el.textContent = value ?? ''
+}
+
+/**
+ * Get the page key currently selected in the sidebar page picker.
+ * @param {string} [fallback] Extra fallback used only when the picker has no
+ *   value yet; falls back further to 'pestsTopic' if omitted or also empty.
+ * @returns {string}
+ */
+function getCurrentKey(fallback) {
+  return document.getElementById('pageSelect')?.value || fallback || 'pestsTopic'
+}
+
+/**
+ * Count outbound "related link" affordances on a page: card links, section
+ * buttons, and step buttons. Used for portfolio-wide link-density checks.
+ * @param {object} page
+ * @returns {number}
+ */
+function countRelatedLinks(page) {
+  let count = 0
+  for (const section of page.sections || []) {
+    count += Array.isArray(section.cards) ? section.cards.length : 0
+    count += section.button ? 1 : 0
+    for (const step of section.steps || []) {
+      count += step.button ? 1 : 0
+    }
+  }
+  return count
 }
 
 /**

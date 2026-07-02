@@ -4,6 +4,10 @@
   const GUIDANCE_ID = 'dashboardGuidancePanel'
   const STYLE_ID = 'dashboardGuidanceStyles'
 
+  // js/utils.js loads first (see index.html script order), so the shared
+  // helper is always available.
+  const { escapeHtml } = window.utils
+
   const guidanceItems = [
     {
       title: 'Review page patterns',
@@ -34,15 +38,6 @@
       text: 'Reviews save to this browser only. Use "Download backup (JSON)" to keep a copy, and "Import backup (JSON)" to restore it on another machine.',
     },
   ]
-
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;')
-  }
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return

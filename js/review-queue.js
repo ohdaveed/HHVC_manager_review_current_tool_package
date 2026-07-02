@@ -14,8 +14,15 @@
     sort: 'priority',
   }
 
-  const { escapeHtml, getPrimaryCta, today, getStatusChipClass, setValue, buildReviewRecord } =
-    window.utils
+  const {
+    escapeHtml,
+    getPrimaryCta,
+    today,
+    getStatusChipClass,
+    setValue,
+    buildReviewRecord,
+    getCurrentKey,
+  } = window.utils
 
   const state = { ...DEFAULT_STATE }
 
@@ -101,10 +108,6 @@
     return String(value || '')
       .trim()
       .toLowerCase()
-  }
-
-  function getCurrentKey() {
-    return document.getElementById('pageSelect')?.value || 'pestsTopic'
   }
 
   function parseIsoDate(value) {
