@@ -54,6 +54,9 @@
         if (card.target) targets.add(card.target)
       }
       if (section.buttonTarget) targets.add(section.buttonTarget)
+      for (const step of section.steps || []) {
+        if (step.buttonTarget) targets.add(step.buttonTarget)
+      }
     }
     return Array.from(targets)
   }
@@ -873,7 +876,10 @@
       // Under View Transitions, renderPage returns a promise that resolves
       // once #pageSelect reflects the new page; rerendering earlier would
       // highlight the previous page as current.
-      if (result && typeof result.then === 'function') result.then(() => { if (sitemapMounted) rerender() })
+      if (result && typeof result.then === 'function')
+        result.then(() => {
+          if (sitemapMounted) rerender()
+        })
       else if (sitemapMounted) rerender()
       return result
     }
