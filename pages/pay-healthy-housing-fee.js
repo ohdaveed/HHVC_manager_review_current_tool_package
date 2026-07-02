@@ -19,6 +19,12 @@ window.HHVC_PAGES['payFee'] = {
         'Have your invoice, property address, or account information ready before you start.',
         'Use the payment method listed on your annual invoice when one is provided.',
       ],
+      bullets: [
+        'Your notice or account information, if you received one',
+        'The property address',
+        'The name and contact information for the billing contact',
+        'The payment method allowed on your notice',
+      ],
     },
     {
       heading: 'Who may need to pay',
@@ -45,6 +51,15 @@ window.HHVC_PAGES['payFee'] = {
       kind: 'body',
       paragraphs: [
         'Use the contact information on your invoice or call Environmental Health at 415-252-3800.',
+      ],
+    },
+    {
+      heading: 'Questions about your fee',
+      karl: 'Body: Fee questions (added for depth). BLOCKED — do not add fee amounts, due dates, penalties, or payment links. Generic guidance only.',
+      kind: 'body',
+      paragraphs: [
+        'If you are not sure whether the fee applies to your building, use the contact or help route listed on your notice or the final SF.gov fee page.',
+        'Keep any notice or account information in case you need to ask a question or confirm a payment.',
       ],
     },
     {

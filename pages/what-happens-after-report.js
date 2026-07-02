@@ -49,6 +49,20 @@ window.HHVC_PAGES['afterReport'] = {
       ],
     },
     {
+      heading: 'How to follow up on your report',
+      karl: 'Body: Follow-up guidance (added for depth). Generic, safe steps only.',
+      kind: 'body',
+      paragraphs: [
+        'You can check on a report you already made. It helps to keep a few details handy.',
+      ],
+      bullets: [
+        'Keep your 311 service request number if you have one.',
+        'Note the date you made the report.',
+        'Contact 311 to ask about the status of your request.',
+        'Tell 311 if the problem gets worse or becomes urgent.',
+      ],
+    },
+    {
       heading: 'Tenant rights and retaliation',
       karl: 'Body: Tenant reassurance section',
       kind: 'body',

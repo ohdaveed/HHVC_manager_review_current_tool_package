@@ -97,6 +97,10 @@ window.HHVC_PAGES['ratsPrevent'] = {
         'Wear disposable coveralls for heavy infestations and eye protection if spraying disinfectant.',
         'Wash hands thoroughly with soap and water after removing gloves.',
       ],
+      callout: {
+        karl: 'Body note: Cleanup safety (added for depth)',
+        text: 'If you are pregnant, have a health condition, or are unsure about cleanup, ask for help. Do not disturb large amounts of droppings or nests yourself.',
+      },
     },
     {
       heading: 'When someone should report',

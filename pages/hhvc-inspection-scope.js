@@ -59,6 +59,15 @@ window.HHVC_PAGES['scopeInfo'] = {
       ],
     },
     {
+      heading: 'If your problem is not listed',
+      karl: 'Body: Out-of-scope guidance (added for depth). Stay within HHVC scope; do not route to specific non-HHVC paths.',
+      kind: 'body',
+      paragraphs: [
+        'Some housing problems are handled by other City programs. If your problem is not on this list, you can still start with 311, which can help send your report to the right place.',
+        'If you are not sure whether HHVC can review your problem, it is still okay to report it. HHVC will review whether it may involve a housing or pest-related public health concern.',
+      ],
+    },
+    {
       heading: 'Related pages',
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',

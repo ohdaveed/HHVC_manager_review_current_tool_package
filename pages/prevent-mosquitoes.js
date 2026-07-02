@@ -30,6 +30,21 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
       ],
     },
     {
+      heading: 'Check your property after rain',
+      karl: 'Body: Post-rain checklist (added for depth). Reinforces standing-water removal.',
+      kind: 'body',
+      paragraphs: [
+        'Standing water can collect quickly after rain. Walk your property and empty water from these common spots each week.',
+      ],
+      bullets: [
+        'Buckets, cans, jars, and other open containers',
+        'Plant saucers, pots, and wheelbarrows',
+        'Clogged gutters and downspouts',
+        'Tarps, trash and recycling bins, and their lids',
+        'Old tires and play equipment',
+      ],
+    },
+    {
       heading: 'Follow West Nile virus precautions',
       karl: 'Body: West Nile virus precautions',
       kind: 'body',

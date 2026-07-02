@@ -12,6 +12,20 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
   reading: 'Grade 6',
   sections: [
     {
+      heading: 'Know the signs of cockroaches',
+      karl: 'Body: Signs of cockroaches (added for depth). Helps residents confirm a problem early.',
+      kind: 'body',
+      paragraphs: [
+        'Finding cockroaches early makes them easier to control. Look for these common signs.',
+      ],
+      bullets: [
+        'Droppings that look like ground pepper, coffee grounds, or small dark smears.',
+        'A musty or oily smell in areas with heavy activity.',
+        'Egg cases, which are small brown capsules, near cracks and hidden corners.',
+        'Seeing cockroaches during the day, which can mean a large infestation.',
+      ],
+    },
+    {
       heading: 'Starve them of food and water',
       karl: 'Body: Starve cockroaches',
       kind: 'body',

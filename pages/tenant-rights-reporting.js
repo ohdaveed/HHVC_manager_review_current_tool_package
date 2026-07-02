@@ -26,6 +26,36 @@ window.HHVC_PAGES['tenantRights'] = {
       },
     },
     {
+      heading: 'What retaliation can look like',
+      karl: 'Body: Retaliation examples (added for depth). General information, not legal advice.',
+      kind: 'body',
+      paragraphs: [
+        'Retaliation is when a property owner or manager punishes you for reporting a condition. It can take different forms.',
+      ],
+      bullets: [
+        'Trying to evict you or threatening eviction',
+        'Raising your rent after you report a problem',
+        'Reducing or removing services you normally have',
+        'Refusing to make repairs because you reported a condition',
+        'Threats, harassment, or pressure to drop a complaint',
+      ],
+    },
+    {
+      heading: 'What you can do',
+      karl: 'Body: Tenant action steps (added for depth). General information, not legal advice.',
+      kind: 'body',
+      paragraphs: [
+        'These steps can help protect you if you are worried about reporting a housing condition.',
+      ],
+      bullets: [
+        'Keep copies of repair requests, messages, and any reports you make.',
+        'Report unsafe conditions to 311 so there is a record.',
+        'Contact the Rent Board or a tenant support organization for help with your situation.',
+        'You can ask 311 for help in your language.',
+        'Ask for help if a disability or medical need makes it hard to report or prepare for an inspection.',
+      ],
+    },
+    {
       heading: 'Where to get tenant help',
       karl: 'Body: External resource links / verify active URLs before publication',
       kind: 'placement',
