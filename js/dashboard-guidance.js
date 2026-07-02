@@ -100,18 +100,15 @@
     document.head.appendChild(style)
   }
 
-  function renderGuidancePanel() {
-    const dashboard = document.getElementById('reviewDashboard')
-    if (!dashboard) return
-
-    let panel = document.getElementById(GUIDANCE_ID)
-    if (!panel) {
-      panel = document.createElement('section')
-      panel.id = GUIDANCE_ID
-      panel.className = 'dashboard-guidance-panel'
-      panel.setAttribute('aria-label', 'Review guidance')
-    }
-
+  // Guidance copy is static (doesn't depend on the current page or review
+  // state), so the panel is built once and mounted at a fixed position as a
+  // permanent sibling of #reviewDashboardCore. It never needs to be found
+  // and reinserted after a dashboard re-render.
+  function buildGuidancePanel() {
+    const panel = document.createElement('section')
+    panel.id = GUIDANCE_ID
+    panel.className = 'dashboard-guidance-panel'
+    panel.setAttribute('aria-label', 'Review guidance')
     panel.innerHTML = `
       <h3>Review guidance</h3>
       <div class="dashboard-guidance-grid">
@@ -127,14 +124,20 @@
           .join('')}
       </div>
     `
+    return panel
+  }
 
-    const compliancePanel = dashboard.querySelector('.compliance-panel')
-    if (compliancePanel) {
-      compliancePanel.insertAdjacentElement('afterend', panel)
-      return
+  function mountGuidancePanel() {
+    const dashboard = document.getElementById('reviewDashboard')
+    if (!dashboard || document.getElementById(GUIDANCE_ID)) return
+
+    const core = document.getElementById('reviewDashboardCore')
+    const panel = buildGuidancePanel()
+    if (core) {
+      core.insertAdjacentElement('afterend', panel)
+    } else {
+      dashboard.appendChild(panel)
     }
-
-    dashboard.appendChild(panel)
   }
 
   function compactSidebarCopy() {
@@ -157,24 +160,16 @@
 
   function refresh() {
     injectStyles()
-    renderGuidancePanel()
+    mountGuidancePanel()
     compactSidebarCopy()
   }
 
-  function observeDashboard() {
-    const dashboard = document.getElementById('reviewDashboard')
-    if (!dashboard || dashboard.dataset.guidanceObserved === 'true') return
-
-    dashboard.dataset.guidanceObserved = 'true'
-    const observer = new MutationObserver(() => {
-      window.requestAnimationFrame(refresh)
-    })
-    observer.observe(dashboard, { childList: true, subtree: false })
-  }
-
+  // Guidance content and the sidebar copy it replaces are both static, so a
+  // couple of delayed retries at startup are enough to catch #reviewDashboard
+  // or the sidebar mounting slightly after this script runs. No
+  // MutationObserver is needed since nothing else ever removes this panel.
   function init() {
     refresh()
-    observeDashboard()
     window.setTimeout(refresh, 0)
     window.setTimeout(refresh, 250)
   }

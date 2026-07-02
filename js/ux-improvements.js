@@ -7,19 +7,21 @@
   const SEO_TITLE_LIMIT = 60
   const META_DESCRIPTION_LIMIT = 110
   const DASHBOARD_ID = 'reviewDashboard'
+  const DASHBOARD_CORE_ID = 'reviewDashboardCore'
   const STORAGE_KEY = 'hhvcManagerReviewState:v1'
   const STORAGE_VERSION = 1
 
   let isRestoringState = false
 
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;')
-  }
+  // js/utils.js loads first (see index.html script order), so the shared
+  // helpers are always available.
+  const { escapeHtml, getPrimaryCta, setPrimaryCta, today, debounce, toCsv, downloadFile } =
+    window.utils
+  // Rebuilding the dashboard grid/scorecard and page-search list on every
+  // keystroke is wasted work while the reviewer is still typing. Debounce the
+  // 'input' path; 'change' (fires on blur) still refreshes immediately so the
+  // dashboard is never stale once the reviewer moves on.
+  const REFRESH_DEBOUNCE_MS = 300
 
   function getValue(id) {
     return document.getElementById(id)?.value || ''
@@ -49,35 +51,6 @@
 
   function defaultMetaDescription(page) {
     return page.metaDescription || page.summary || ''
-  }
-
-  function today() {
-    const now = new Date()
-    const yyyy = now.getFullYear()
-    const mm = String(now.getMonth() + 1).padStart(2, '0')
-    const dd = String(now.getDate()).padStart(2, '0')
-    return `${yyyy}-${mm}-${dd}`
-  }
-
-  function getPrimaryCta(page) {
-    for (const section of page.sections || []) {
-      for (const step of section.steps || []) {
-        if (step.button) return step.button
-      }
-    }
-    return page.primaryCta || ''
-  }
-
-  function setPrimaryCta(page, label) {
-    for (const section of page.sections || []) {
-      for (const step of section.steps || []) {
-        if (step.button) {
-          step.button = label
-          return
-        }
-      }
-    }
-    page.primaryCta = label
   }
 
   function getSeoTitle(page) {
@@ -207,7 +180,16 @@
       pages: state.pages || {},
     }
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
+    } catch (err) {
+      // Storage can throw (quota exceeded, private browsing, disabled storage).
+      // Surface it to the reviewer instead of failing silently mid-review.
+      console.error('Failed to save review state locally:', err)
+      window.utils?.showErrorBanner?.(
+        'Your last change was not saved locally. Local storage may be full or disabled in this browser.'
+      )
+    }
     return nextState
   }
 
@@ -367,7 +349,11 @@
   }
 
   function renderReviewDashboard() {
-    const dashboard = document.getElementById(DASHBOARD_ID)
+    // Render into the dedicated core container, not #reviewDashboard itself,
+    // so the fixed guidance/sitemap panels mounted as its siblings are never
+    // wiped out and don't need a MutationObserver to detect and reinsert
+    // themselves.
+    const dashboard = document.getElementById(DASHBOARD_CORE_ID)
     if (!dashboard) return
 
     const page = getCurrentPage()
@@ -446,6 +432,14 @@
     dashboard.id = DASHBOARD_ID
     dashboard.className = 'review-dashboard'
     dashboard.setAttribute('aria-label', 'Manager review dashboard')
+
+    // Core content (header/metrics/scorecard) lives in its own sub-container
+    // so renderReviewDashboard() can rebuild it via innerHTML without
+    // touching the guidance/sitemap panels mounted alongside it.
+    const core = document.createElement('div')
+    core.id = DASHBOARD_CORE_ID
+    dashboard.appendChild(core)
+
     toolbar.appendChild(dashboard)
   }
 
@@ -563,27 +557,6 @@
     } finally {
       textarea.remove()
     }
-  }
-
-  function csvEscape(value) {
-    const text = String(value ?? '')
-    return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-  }
-
-  function toCsv(rows) {
-    return rows.map((row) => row.map(csvEscape).join(',')).join('\n') + '\n'
-  }
-
-  function downloadFile(filename, content, mimeType) {
-    const blob = new Blob([content], { type: mimeType })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
   }
 
   function exportSavedLocalReviewsCsv() {
@@ -717,6 +690,9 @@
     renderReviewDashboard()
     renderPageQuickList()
     updateLocalStorageStatus()
+    // Let sibling review aids (e.g. the interactive sitemap) refresh against
+    // the edited page data; they no longer observe #reviewDashboard mutations.
+    document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
   }
 
   function persistAndRefresh() {
@@ -740,10 +716,12 @@
       'reviewOwner',
     ]
 
+    const debouncedPersistAndRefresh = debounce(persistAndRefresh, REFRESH_DEBOUNCE_MS)
+
     for (const id of persistedFields) {
       const el = document.getElementById(id)
       if (!el) continue
-      el.addEventListener('input', persistAndRefresh)
+      el.addEventListener('input', debouncedPersistAndRefresh)
       el.addEventListener('change', persistAndRefresh)
     }
 
@@ -754,6 +732,14 @@
         return state
       })
       refreshUx()
+    })
+
+    // Flush keystrokes still sitting in the debounce window when the tab is
+    // reloaded, closed, or backgrounded — otherwise they never reach
+    // localStorage ('change' only fires on blur).
+    window.addEventListener('pagehide', saveCurrentPageToLocalStorage)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') saveCurrentPageToLocalStorage()
     })
   }
 
@@ -767,10 +753,15 @@
         state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
         return state
       })
-      window.setTimeout(() => {
+      const applyAndRefresh = () => {
         applySavedPageState(key)
         refreshUx()
-      }, 0)
+      }
+      // Under View Transitions, renderPage returns a promise that resolves
+      // once the new page content is in the DOM; patching earlier would hit
+      // the outgoing page's elements.
+      if (result && typeof result.then === 'function') result.then(applyAndRefresh)
+      else window.setTimeout(applyAndRefresh, 0)
       return result
     }
     window.renderPage.__uxWrapped = true

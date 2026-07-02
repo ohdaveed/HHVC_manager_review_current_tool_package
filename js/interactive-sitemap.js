@@ -15,17 +15,10 @@
   }
 
   let dashboard = null
-  let observer = null
 
-  function escapeHtml(value) {
-    const text = String(value ?? '')
-    return text
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;')
-  }
+  // js/utils.js loads first (see index.html script order), so the shared
+  // helpers are always available.
+  const { escapeHtml, getPrimaryCta } = window.utils
 
   function getDashboard() {
     if (!dashboard) {
@@ -43,15 +36,6 @@
     if (normalized.includes('topic')) return 'Topic'
     if (normalized.includes('transaction')) return 'Transaction'
     return 'Information'
-  }
-
-  function getPrimaryCta(page) {
-    for (const section of page.sections || []) {
-      for (const step of section.steps || []) {
-        if (step.button) return step.button
-      }
-    }
-    return page.primaryCta || ''
   }
 
   function countRelatedLinks(page) {
@@ -709,17 +693,36 @@
     `
   }
 
-  function renderPanel() {
-    const dashboard = getDashboard()
-    if (!dashboard) return
+  // The panel is created and positioned once (as a fixed sibling after the
+  // guidance panel, or after the dashboard core if guidance hasn't mounted
+  // yet). Later refreshes only update its innerHTML, so it's never removed
+  // and re-inserted, and no MutationObserver is needed to keep it in place.
+  function mountPanel() {
+    if (document.getElementById(PANEL_ID)) return document.getElementById(PANEL_ID)
 
-    let panel = document.getElementById(PANEL_ID)
-    if (!panel) {
-      panel = document.createElement('section')
-      panel.id = PANEL_ID
-      panel.className = 'interactive-sitemap-panel'
-      panel.setAttribute('aria-label', 'Interactive sitemap diagram')
+    const dashboard = getDashboard()
+    if (!dashboard) return null
+
+    const panel = document.createElement('section')
+    panel.id = PANEL_ID
+    panel.className = 'interactive-sitemap-panel'
+    panel.setAttribute('aria-label', 'Interactive sitemap diagram')
+
+    const guidancePanel = document.getElementById('dashboardGuidancePanel')
+    const dashboardCore = document.getElementById('reviewDashboardCore')
+    if (guidancePanel) {
+      guidancePanel.insertAdjacentElement('afterend', panel)
+    } else if (dashboardCore) {
+      dashboardCore.insertAdjacentElement('afterend', panel)
+    } else {
+      dashboard.appendChild(panel)
     }
+    return panel
+  }
+
+  function renderPanel() {
+    const panel = mountPanel()
+    if (!panel) return
 
     panel.innerHTML = `
       <div class="interactive-sitemap-header">
@@ -733,20 +736,6 @@
         ${renderDetail()}
       </div>
     `
-
-    const guidancePanel = document.getElementById('dashboardGuidancePanel')
-    if (guidancePanel) {
-      guidancePanel.insertAdjacentElement('afterend', panel)
-      return
-    }
-
-    const compliancePanel = dashboard.querySelector('.compliance-panel')
-    if (compliancePanel) {
-      compliancePanel.insertAdjacentElement('afterend', panel)
-      return
-    }
-
-    dashboard.appendChild(panel)
   }
 
   function rerender() {
@@ -865,32 +854,39 @@
     }
   }
 
-  function observeDashboard() {
-    const dashboard = getDashboard()
-    if (!dashboard || dashboard.dataset.sitemapObserved === 'true') return
-
-    dashboard.dataset.sitemapObserved = 'true'
-    observer = new MutationObserver(() => {
-      window.requestAnimationFrame(rerender)
-    })
-    observer.observe(dashboard, { childList: true, subtree: false })
+  // Re-render when the mockup page changes, instead of inferring "something
+  // changed" by observing #reviewDashboard mutations. renderPage is defined
+  // by js/page-render.js and may already be wrapped by js/ux-improvements.js;
+  // wrapping preserves whatever wrapper ran before this one.
+  function wrapRenderPageForSitemap() {
+    if (typeof window.renderPage !== 'function' || window.renderPage.__sitemapWrapped) return
+    const originalRenderPage = window.renderPage
+    window.renderPage = function renderPageWithSitemapRefresh(key) {
+      const result = originalRenderPage.call(this, key)
+      // Under View Transitions, renderPage returns a promise that resolves
+      // once #pageSelect reflects the new page; rerendering earlier would
+      // highlight the previous page as current.
+      if (result && typeof result.then === 'function') result.then(rerender)
+      else rerender()
+      return result
+    }
+    window.renderPage.__sitemapWrapped = true
   }
 
   function init() {
     injectStyles()
     document.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeydown)
+    // Editor edits (title/summary/CTA) mutate DATA.pages; js/ux-improvements.js
+    // announces them so node labels and the detail panel stay current.
+    document.addEventListener('hhvc:review-data-changed', rerender)
     rerender()
-    observeDashboard()
+    wrapRenderPageForSitemap()
     window.setTimeout(rerender, 0)
     window.setTimeout(rerender, 250)
   }
 
   function teardown() {
-    if (observer) {
-      observer.disconnect()
-      observer = null
-    }
     dashboard = null
   }
 

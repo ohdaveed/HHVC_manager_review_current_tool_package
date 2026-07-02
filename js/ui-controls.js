@@ -1,0 +1,84 @@
+// General UI chrome: toasts, sidebar collapse/scroll persistence, the page
+// picker dropdown, and the review checklist. Depends on js/state.js
+// (escapeHtml, pageOrder, currentPageKey).
+function showToast(message, type) {
+  const container = document.getElementById('toastContainer')
+  if (!container) return
+  const el = document.createElement('div')
+  el.className = 'toast' + (type ? ' ' + type : '')
+  el.textContent = message
+  const close = document.createElement('button')
+  close.className = 'toast-close'
+  close.textContent = '\u00d7'
+  close.setAttribute('aria-label', 'Dismiss')
+  close.addEventListener('click', () => el.remove())
+  el.appendChild(close)
+  container.appendChild(el)
+  setTimeout(() => {
+    if (el.parentNode) el.remove()
+  }, 4000)
+}
+function toggleSidebar() {
+  const app = document.querySelector('.app')
+  const btn = document.getElementById('sidebarToggle')
+  if (!app || !btn) return
+  app.classList.toggle('sidebar-collapsed')
+  const coll = app.classList.contains('sidebar-collapsed')
+  btn.textContent = coll ? '\u25b6' : '\u25c0'
+  btn.setAttribute('aria-label', coll ? 'Expand sidebar' : 'Collapse sidebar')
+}
+function saveSidebarScroll() {
+  const sb = document.querySelector('.sidebar')
+  if (sb) sessionStorage.setItem('sidebarScroll', String(sb.scrollTop))
+}
+function restoreSidebarScroll() {
+  const saved = sessionStorage.getItem('sidebarScroll')
+  if (saved !== null)
+    requestAnimationFrame(() => {
+      const sb = document.querySelector('.sidebar')
+      if (sb) sb.scrollTop = parseInt(saved, 10)
+    })
+}
+function buildPageSelect() {
+  const select = document.getElementById('pageSelect')
+  if (!select) return
+  const groups = { Topic: [], Transaction: [], Information: [] }
+  pageOrder.forEach(([key, label]) => {
+    const type = label.startsWith('Topic')
+      ? 'Topic'
+      : label.startsWith('Transaction')
+        ? 'Transaction'
+        : 'Information'
+    groups[type].push([key, label.replace(/^(Topic|Transaction|Information):\s*/, '')])
+  })
+  select.innerHTML = Object.entries(groups)
+    .map(
+      ([type, items]) =>
+        '<optgroup label="' +
+        escapeHtml(type) +
+        ' pages">' +
+        items.map(([k, l]) => '<option value="' + k + '">' + escapeHtml(l) + '</option>').join('') +
+        '</optgroup>'
+    )
+    .join('')
+}
+function initChecklist() {
+  document.querySelectorAll('.checklist .check').forEach((el, i) => {
+    el.setAttribute('data-check-index', i)
+    el.addEventListener('click', function () {
+      this.classList.toggle('unchecked')
+      if (currentPageKey)
+        sessionStorage.setItem(
+          'check_' + currentPageKey + '_' + i,
+          this.classList.contains('unchecked') ? '0' : '1'
+        )
+    })
+  })
+}
+function applyChecklistState(key) {
+  document.querySelectorAll('.checklist .check').forEach((el, i) => {
+    const saved = sessionStorage.getItem('check_' + key + '_' + i)
+    if (saved === '0') el.classList.add('unchecked')
+    else el.classList.remove('unchecked')
+  })
+}

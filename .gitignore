@@ -3,3 +3,13 @@
 
 # npm
 node_modules/
+
+# Build artifacts - regenerate with `bun run build`
+manager-review-single-file.html
+single-file-export-current-source.html
+data/page_inventory.json
+data/page_inventory.csv
+
+# OS files
+.DS_Store
+Thumbs.db

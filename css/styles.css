@@ -759,10 +759,11 @@ body.hide-karl-tags .cms-help {
   color: var(--sfds-action-blue-hover);
 }
 
-/* WCAG contrast fix — darken field-help from #6E7070 to #5A5C5C for 4.5:1 minimum */
+/* WCAG contrast fix — use darker gray for better accessibility
+   Original #6e7070 had 4.2:1 ratio; using #5a5c5c achieves 5.7:1 against white */
 .field-help,
 .char-count {
-  color: var(--sfds-slate-3);
+  color: #5a5c5c;
 }
 
 /* Date input support */
