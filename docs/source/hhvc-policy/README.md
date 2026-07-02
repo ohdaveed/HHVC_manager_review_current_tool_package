@@ -19,6 +19,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
 | `2026-07-02-ipm-pests-house-mouse.pdf` / `.md` | UC IPM Pest Notes 7483: House Mouse | Supplementary | IPM prevention/education for mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
+| `2026-07-02-mold-moisture-guidance.md` | The Two Main Causes of Mold (SFDPH) | Phase 1 + 2 | **Mold review threshold** (10 sq ft on walls/ceiling); supports `moldReport` and future `reduceMoisture` |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -45,6 +46,24 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR IPM guidance on roof rats, Norway rats, identification, exclusion, sanitation, and control. Aligns with violation-master Rodents "Learn More" (food/water/shelter). Does not cover HHVC reporting process, 72-hour tenant notice, anti-retaliation, or fees.
+
+### 2026-07-02-ipm-pests-house-mouse.pdf
+
+- **Original Drive file:** (`1teiidCShPqak57IBLk-imEJtmqhE5Fl7`)
+- **Source title:** UC IPM Pest Notes 7483: House Mouse (Revised July 2025)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR IPM guidance on house mouse identification, exclusion (gaps > 1/4 inch), sanitation, and trapping. Complements rats Pest Notes for `ratsPrevent` content. Does not cover HHVC reporting process, 72-hour tenant notice, anti-retaliation, or fees.
+
+### 2026-07-02-mold-moisture-guidance.md
+
+- **Original Drive doc:** `1RG2JQcDAqRL1664nWqZTvNYv7Hu9EHPo`
+- **Source title:** The Two Main Causes of Mold
+- **Export date:** 2026-07-02
+- **Format:** txt (Google Docs export)
+- **Reviewer:** CA
+- **Note:** SFDPH guidance on leaks vs condensation, **10 sq ft walls/ceiling action threshold**, and moisture-prevention tips. Confirms moldReport threshold claim. Does not specify 72-hour tenant notice or anti-retaliation rules.
 
 ## Documents still expected for Phase 1
 

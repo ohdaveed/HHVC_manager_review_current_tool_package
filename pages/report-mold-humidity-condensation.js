@@ -61,7 +61,7 @@ window.HHVC_PAGES['moldReport'] = {
       karl: 'Body: Article 11 mold threshold and HHVC scope',
       kind: 'body',
       paragraphs: [
-        'HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.',
+        'Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet.',
         'For mold smaller than 10 square feet, clean hard surfaces with soap and water. Reduce humidity and condensation so it does not come back.',
       ],
     },

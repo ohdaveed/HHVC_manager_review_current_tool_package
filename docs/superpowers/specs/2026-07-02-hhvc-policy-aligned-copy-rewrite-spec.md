@@ -199,18 +199,25 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: violation-master — Mold Growth (Sec 581(b)(6))
   - Reason: Scope confirmed.
 
+- `sections[1].paragraphs[0]`
+  - Current: HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.
+  - Replace with: Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet.
+  - Source: mold-moisture-guidance — SFDPH action threshold paragraph
+  - Reason: Source confirms 10 sq ft threshold on walls/ceiling; aligns program naming with SFDPH/Environmental Health.
+
 - `sections[2].paragraphs[3]`
-  - Current: If HHVC finds a violation, the City may require the property owner or responsible party to correct it.
-  - Replace with: Violations must be corrected and may require follow-up inspection.
+  - Current: Violations must be corrected and may require follow-up inspection.
+  - Replace with: *(keep current — implemented)*
   - Source: violation-master — Rodents > What Happens Next (template)
   - Reason: Cross-page enforcement parity with master template.
 
 ### Blocked fields
 
-- Target field path: `sections[1].paragraphs[0]`
-  - Current text (exact): HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.
-  - Block reason: conflict — master lists "visible mold" only; no 10 sq ft threshold
-  - Required source: HHVC inspection policy for mold review threshold
+- None remaining for this page.
+
+### Previously blocked (now resolved)
+
+- Target field path: `sections[2].paragraphs[3]` — enforcement wording updated in prior commit.
 
 ### Acceptance checks
 
