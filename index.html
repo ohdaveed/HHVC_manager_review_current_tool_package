@@ -250,7 +250,10 @@
         </details>
       </aside>
       <main class="canvas">
-        <div class="canvas-toolbar"><span id="currentPageBadge" class="page-badge"></span></div>
+        <div class="canvas-toolbar">
+          <span id="currentPageBadge" class="page-badge"></span>
+          <div id="reviewStickyBar" class="review-sticky-bar" aria-label="Review navigation"></div>
+        </div>
         <div class="browser-shell">
           <div class="browser-bar">
             <span class="dot red"></span><span class="dot yellow"></span
@@ -264,6 +267,83 @@
             </div>
           </div>
         </div>
+        <section id="reviewWorkspace" class="review-workspace" hidden>
+          <div class="review-workspace-tabs" role="tablist" aria-label="Review workspace">
+            <button
+              type="button"
+              class="review-workspace-tab active"
+              role="tab"
+              id="reviewTabQueue"
+              aria-selected="true"
+              aria-controls="reviewWorkspaceQueue"
+              data-workspace-tab="queue"
+            >
+              Queue
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              id="reviewTabChecks"
+              aria-selected="false"
+              aria-controls="reviewDashboardCore"
+              data-workspace-tab="checks"
+            >
+              Checks
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              id="reviewTabSitemap"
+              aria-selected="false"
+              aria-controls="reviewWorkspaceSitemap"
+              data-workspace-tab="sitemap"
+            >
+              Sitemap
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
+              id="reviewTabHelp"
+              aria-selected="false"
+              aria-controls="reviewWorkspaceHelp"
+              data-workspace-tab="help"
+            >
+              Help
+            </button>
+          </div>
+          <div class="review-workspace-panels">
+            <div
+              id="reviewWorkspaceQueue"
+              class="review-workspace-panel"
+              role="tabpanel"
+              aria-labelledby="reviewTabQueue"
+            ></div>
+            <div
+              id="reviewDashboardCore"
+              class="review-workspace-panel"
+              role="tabpanel"
+              aria-labelledby="reviewTabChecks"
+              hidden
+            ></div>
+            <div
+              id="reviewWorkspaceSitemap"
+              class="review-workspace-panel"
+              role="tabpanel"
+              aria-labelledby="reviewTabSitemap"
+              hidden
+            ></div>
+            <div
+              id="reviewWorkspaceHelp"
+              class="review-workspace-panel"
+              role="tabpanel"
+              aria-labelledby="reviewTabHelp"
+              hidden
+            ></div>
+          </div>
+        </section>
         <div id="toastContainer" class="toast-container" aria-live="polite"></div>
       </main>
     </div>
@@ -294,6 +374,7 @@
     <script src="js/app.js"></script>
     <script src="js/manager-review-export.js"></script>
     <script src="js/ux-improvements.js"></script>
+    <script src="js/review-queue.js"></script>
     <script src="js/dashboard-guidance.js"></script>
     <script src="js/interactive-sitemap.js"></script>
   </body>

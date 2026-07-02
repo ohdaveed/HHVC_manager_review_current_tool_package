@@ -6,25 +6,32 @@
   if (!DATA || !DATA.pages || !DATA.order) return
 
   const PANEL_ID = 'interactiveSitemapPanel'
+  const MOUNT_ID = 'reviewWorkspaceSitemap'
   const STYLE_ID = 'interactiveSitemapStyles'
   const state = {
     filter: 'All',
     search: '',
     selectedKey: document.getElementById('pageSelect')?.value || 'pestsTopic',
     showLinksFromSelected: false,
+    hasRendered: false,
   }
 
-  let dashboard = null
+  let mountTarget = null
 
   // js/utils.js loads first (see index.html script order), so the shared
   // helpers are always available.
   const { escapeHtml, getPrimaryCta } = window.utils
 
-  function getDashboard() {
-    if (!dashboard) {
-      dashboard = document.getElementById('reviewDashboard')
+  function getMountTarget() {
+    if (!mountTarget) {
+      mountTarget = document.getElementById(MOUNT_ID)
     }
-    return dashboard
+    return mountTarget
+  }
+
+  function isSitemapTabActive() {
+    const panel = document.getElementById(MOUNT_ID)
+    return Boolean(panel && !panel.hidden)
   }
 
   function getCurrentKey() {
@@ -700,23 +707,14 @@
   function mountPanel() {
     if (document.getElementById(PANEL_ID)) return document.getElementById(PANEL_ID)
 
-    const dashboard = getDashboard()
-    if (!dashboard) return null
+    const target = getMountTarget()
+    if (!target) return null
 
     const panel = document.createElement('section')
     panel.id = PANEL_ID
     panel.className = 'interactive-sitemap-panel'
     panel.setAttribute('aria-label', 'Interactive sitemap diagram')
-
-    const guidancePanel = document.getElementById('dashboardGuidancePanel')
-    const dashboardCore = document.getElementById('reviewDashboardCore')
-    if (guidancePanel) {
-      guidancePanel.insertAdjacentElement('afterend', panel)
-    } else if (dashboardCore) {
-      dashboardCore.insertAdjacentElement('afterend', panel)
-    } else {
-      dashboard.appendChild(panel)
-    }
+    target.appendChild(panel)
     return panel
   }
 
@@ -739,6 +737,15 @@
   }
 
   function rerender() {
+    if (!state.hasRendered && !isSitemapTabActive()) return
+    injectStyles()
+    state.selectedKey = getCurrentKey()
+    renderPanel()
+    state.hasRendered = true
+  }
+
+  function ensureRendered() {
+    state.hasRendered = true
     injectStyles()
     state.selectedKey = getCurrentKey()
     renderPanel()
@@ -877,26 +884,27 @@
     injectStyles()
     document.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeydown)
-    // Editor edits (title/summary/CTA) mutate DATA.pages; js/ux-improvements.js
-    // announces them so node labels and the detail panel stay current.
-    document.addEventListener('hhvc:review-data-changed', rerender)
-    rerender()
+    document.addEventListener('hhvc:review-data-changed', () => {
+      if (state.hasRendered || isSitemapTabActive()) rerender()
+    })
+    document.addEventListener('hhvc:workspace-tab-changed', (event) => {
+      if (event.detail?.tab === 'sitemap') ensureRendered()
+    })
     wrapRenderPageForSitemap()
-    window.setTimeout(rerender, 0)
-    window.setTimeout(rerender, 250)
   }
 
   function teardown() {
-    dashboard = null
+    mountTarget = null
+  }
+
+  if (typeof window !== 'undefined') {
+    window.interactiveSitemap = { ensureRendered, rerender }
+    window.__mountInteractiveSitemapTeardown = teardown
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
   } else {
     init()
-  }
-
-  if (typeof window !== 'undefined') {
-    window.__mountInteractiveSitemapTeardown = teardown
   }
 })()

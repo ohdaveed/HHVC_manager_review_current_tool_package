@@ -43,7 +43,6 @@
     style.id = STYLE_ID
     style.textContent = `
       .dashboard-guidance-panel {
-        border-top: 1px solid var(--sfds-border);
         padding: 0.95rem 1rem 1rem;
         background: var(--sfds-white);
       }
@@ -128,16 +127,11 @@
   }
 
   function mountGuidancePanel() {
-    const dashboard = document.getElementById('reviewDashboard')
-    if (!dashboard || document.getElementById(GUIDANCE_ID)) return
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    if (!helpPanel || document.getElementById(GUIDANCE_ID)) return
 
-    const core = document.getElementById('reviewDashboardCore')
     const panel = buildGuidancePanel()
-    if (core) {
-      core.insertAdjacentElement('afterend', panel)
-    } else {
-      dashboard.appendChild(panel)
-    }
+    helpPanel.appendChild(panel)
   }
 
   function compactSidebarCopy() {

@@ -6,8 +6,9 @@
 
   const SEO_TITLE_LIMIT = 60
   const META_DESCRIPTION_LIMIT = 110
-  const DASHBOARD_ID = 'reviewDashboard'
   const DASHBOARD_CORE_ID = 'reviewDashboardCore'
+  const STICKY_BAR_ID = 'reviewStickyBar'
+  const WORKSPACE_ID = 'reviewWorkspace'
   const STORAGE_KEY = 'hhvcManagerReviewState:v1'
   const STORAGE_VERSION = 1
 
@@ -348,6 +349,160 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
+  function getWorkspaceOpen() {
+    const state = readLocalState()
+    return Boolean(state.ui?.workspace_open)
+  }
+
+  function setWorkspaceOpen(isOpen) {
+    updateLocalState((state) => {
+      state.ui.workspace_open = isOpen
+      state.ui.last_page_key = getCurrentKey()
+      return state
+    })
+    applyWorkspaceVisibility(isOpen)
+    if (isOpen) {
+      const tab = readLocalState().ui?.workspace_tab || 'queue'
+      switchWorkspaceTab(tab, { persist: false })
+    }
+  }
+
+  function applyWorkspaceVisibility(isOpen) {
+    const workspace = document.getElementById(WORKSPACE_ID)
+    if (!workspace) return
+    workspace.hidden = !isOpen
+    workspace.classList.toggle('is-open', isOpen)
+    const toggle = document.querySelector('[data-sticky-action="toggle-workspace"]')
+    if (toggle) {
+      toggle.textContent = isOpen ? 'Hide workspace' : 'Show workspace'
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+    }
+  }
+
+  function switchWorkspaceTab(tabId, options = { persist: true }) {
+    const tabs = Array.from(document.querySelectorAll('[data-workspace-tab]'))
+    const panels = {
+      queue: document.getElementById('reviewWorkspaceQueue'),
+      checks: document.getElementById(DASHBOARD_CORE_ID),
+      sitemap: document.getElementById('reviewWorkspaceSitemap'),
+      help: document.getElementById('reviewWorkspaceHelp'),
+    }
+
+    for (const tab of tabs) {
+      const isActive = tab.getAttribute('data-workspace-tab') === tabId
+      tab.classList.toggle('active', isActive)
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false')
+    }
+
+    for (const [id, panel] of Object.entries(panels)) {
+      if (!panel) continue
+      const isActive = id === tabId
+      panel.hidden = !isActive
+    }
+
+    if (tabId === 'sitemap') window.interactiveSitemap?.ensureRendered?.()
+
+    if (options.persist) {
+      updateLocalState((state) => {
+        state.ui.workspace_tab = tabId
+        state.ui.last_page_key = getCurrentKey()
+        return state
+      })
+    }
+
+    document.dispatchEvent(
+      new CustomEvent('hhvc:workspace-tab-changed', { detail: { tab: tabId } })
+    )
+  }
+
+  function toggleWorkspace() {
+    setWorkspaceOpen(!getWorkspaceOpen())
+  }
+
+  function initWorkspaceTabs() {
+    document.querySelectorAll('[data-workspace-tab]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const tabId = tab.getAttribute('data-workspace-tab')
+        if (!tabId) return
+        if (!getWorkspaceOpen()) setWorkspaceOpen(true)
+        switchWorkspaceTab(tabId)
+      })
+    })
+
+    const stickyBar = document.getElementById(STICKY_BAR_ID)
+    stickyBar?.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-sticky-action]')
+      if (!button) return
+
+      const action = button.getAttribute('data-sticky-action')
+      if (action === 'toggle-workspace') {
+        toggleWorkspace()
+        return
+      }
+      if (action === 'prev') {
+        const key = window.reviewQueue?.getAdjacentKey?.('prev', true)
+        if (key) window.renderPage?.(key)
+        return
+      }
+      if (action === 'next') {
+        const key = window.reviewQueue?.getAdjacentKey?.('next', true)
+        if (key) window.renderPage?.(key)
+        return
+      }
+      if (action === 'next-needs-review') {
+        const key = window.reviewQueue?.getNextNeedsReviewKey?.()
+        if (key) window.renderPage?.(key)
+      }
+    })
+  }
+
+  function restoreWorkspacePreferences() {
+    const state = readLocalState()
+    const isOpen = Boolean(state.ui?.workspace_open)
+    applyWorkspaceVisibility(isOpen)
+    if (isOpen) {
+      switchWorkspaceTab(state.ui?.workspace_tab || 'queue', { persist: false })
+    }
+  }
+
+  function renderStickyBar() {
+    const bar = document.getElementById(STICKY_BAR_ID)
+    if (!bar) return
+
+    const page = getCurrentPage()
+    const decision = getValue('reviewDecision') || 'Needs review'
+    const rules = getRuleResults(page)
+    const passed = rules.filter((rule) => rule.pass).length
+    const chipClass = getStatusChipClass(decision)
+    const stats = window.reviewQueue?.getQueueStats?.() || { reviewed: 0, total: DATA.order.length }
+
+    bar.innerHTML = `
+      <div class="review-sticky-bar-inner">
+        <div class="review-sticky-page">
+          <span class="review-sticky-title">${escapeHtml(page.title || 'Current page')}</span>
+          <div class="review-sticky-chips" aria-label="Current page review status">
+            <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
+            <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
+            <span class="status-chip ${stats.reviewed > 0 ? 'pass' : 'warn'}">${stats.reviewed}/${stats.total} reviewed</span>
+          </div>
+        </div>
+        <div class="review-sticky-actions">
+          <button type="button" class="review-sticky-btn" data-sticky-action="prev">Previous</button>
+          <button type="button" class="review-sticky-btn" data-sticky-action="next">Next</button>
+          <button type="button" class="review-sticky-btn" data-sticky-action="next-needs-review">Next needs review</button>
+          <button
+            type="button"
+            class="review-sticky-btn primary"
+            data-sticky-action="toggle-workspace"
+            aria-expanded="${getWorkspaceOpen() ? 'true' : 'false'}"
+          >
+            ${getWorkspaceOpen() ? 'Hide workspace' : 'Show workspace'}
+          </button>
+        </div>
+      </div>
+    `
+  }
+
   function renderReviewDashboard() {
     // Render into the dedicated core container, not #reviewDashboard itself,
     // so the fixed guidance/sitemap panels mounted as its siblings are never
@@ -371,7 +526,7 @@
     dashboard.innerHTML = `
       <div class="review-dashboard-header">
         <div>
-          <p class="review-dashboard-title">Manager review dashboard</p>
+          <p class="review-dashboard-title">Checks and scorecard</p>
           <p class="review-decision-note">Live checks update as you edit title, summary, CTA, and search metadata. Review fields save locally in this browser.</p>
         </div>
         <div class="review-dashboard-meta" aria-label="Current review status">
@@ -422,25 +577,6 @@
 
   function isLong(value) {
     return String(value || '').length > 36
-  }
-
-  function mountDashboard() {
-    const toolbar = document.querySelector('.canvas-toolbar')
-    if (!toolbar || document.getElementById(DASHBOARD_ID)) return
-
-    const dashboard = document.createElement('section')
-    dashboard.id = DASHBOARD_ID
-    dashboard.className = 'review-dashboard'
-    dashboard.setAttribute('aria-label', 'Manager review dashboard')
-
-    // Core content (header/metrics/scorecard) lives in its own sub-container
-    // so renderReviewDashboard() can rebuild it via innerHTML without
-    // touching the guidance/sitemap panels mounted alongside it.
-    const core = document.createElement('div')
-    core.id = DASHBOARD_CORE_ID
-    dashboard.appendChild(core)
-
-    toolbar.appendChild(dashboard)
   }
 
   function pageSearchItems(query) {
@@ -687,11 +823,10 @@
   }
 
   function refreshUx() {
+    renderStickyBar()
     renderReviewDashboard()
     renderPageQuickList()
     updateLocalStorageStatus()
-    // Let sibling review aids (e.g. the interactive sitemap) refresh against
-    // the edited page data; they no longer observe #reviewDashboard mutations.
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
   }
 
@@ -781,10 +916,12 @@
   }
 
   function init() {
-    mountDashboard()
+    initWorkspaceTabs()
+    restoreWorkspacePreferences()
     mountPageSearch()
     mountCopySummaryButton()
     mountLocalStorageControls()
+    document.addEventListener('hhvc:review-queue-ready', renderStickyBar)
     attachRefreshListeners()
     wrapRenderPage()
     applySavedUiPreferences()
