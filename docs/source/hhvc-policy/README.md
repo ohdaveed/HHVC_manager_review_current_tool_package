@@ -22,6 +22,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-mold-moisture-guidance.md` | The Two Main Causes of Mold (SFDPH) | Phase 1 + 2 | **Mold review threshold** (10 sq ft on walls/ceiling); supports `moldReport` and future `reduceMoisture` |
 | `2026-07-02-mold-tenants-landlords-guidance.pdf` / `.md` | Mold Guidance for Tenants and Landlords (SFDPH) | Phase 1 + 2 | Full SFDPH mold guidance; leaks vs condensation; cleanup practices; companion to short-form mold doc |
 | `2026-07-02-vegetation-overgrowth-notice.pdf` / `.md` | Vegetation Overgrowth Notice (SFDPH) | Phase 1 | Sec. 581 overgrowth authority; supports `vegetationReport` scope and pest/vector rationale |
+| `2026-07-02-ipm-pests-mosquitoes.pdf` / `.md` | UC IPM Pest Notes 7451: Mosquitoes | Supplementary | IPM prevention for standing water/breeding sites; supports future `mosquitoesPrevent` audits |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -84,6 +85,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** SFDPH Code Enforcement flyer. Confirms overgrown vegetation is a Health Code Sec. 581 violation and that overgrowth can shelter rats, mice, raccoons, and mosquitoes. Does not cover 72-hour tenant notice or anti-retaliation rules.
+
+### 2026-07-02-ipm-pests-mosquitoes.pdf
+
+- **Original Drive file:** `1pvcsxat7_C4au0cx70oAGk4K_XUCw1L-`
+- **Source title:** UC IPM Pest Notes 7451: Mosquitoes (Revised April 2020)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR IPM guidance on mosquito life cycle, standing water breeding sites, and cultural control (drain containers, gutters, rain barrels). Aligns with violation-master Mosquitoes signs/actions. Does not cover HHVC reporting process, 72-hour tenant notice, anti-retaliation, or fees.
 
 ## Documents still expected for Phase 1
 
