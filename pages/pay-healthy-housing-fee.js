@@ -1,6 +1,6 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['payFee'] = {
-  slug: 'sf.gov/pay-healthy-housing-fee-buildings-3-or-more-units',
+  slug: 'sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings',
   type: 'Transaction',
   title: 'Pay your annual Healthy Housing fee for apartment buildings',
   summary:
