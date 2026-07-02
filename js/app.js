@@ -13,8 +13,7 @@ function init() {
   document.getElementById('titleInput').addEventListener('input', (e) => {
     const page = pageData[currentPageKey]
     page.title = e.target.value
-    const h1 = document.querySelector('#mockPage h1')
-    if (h1) h1.textContent = e.target.value
+    applyFieldToMockup('title', e.target.value)
     if (!page.seoTitleEdited) {
       setField('seoTitleInput', defaultSeoTitle(page))
     }
@@ -24,8 +23,7 @@ function init() {
   document.getElementById('descriptionInput').addEventListener('input', (e) => {
     const page = pageData[currentPageKey]
     page.summary = e.target.value
-    const summary = document.querySelector('#mockPage .summary')
-    if (summary) summary.textContent = e.target.value
+    applyFieldToMockup('summary', e.target.value)
     if (!page.metaDescriptionEdited) {
       setField('metaDescriptionInput', defaultMetaDescription(page))
     }
@@ -35,10 +33,7 @@ function init() {
   document.getElementById('ctaInput').addEventListener('input', (e) => {
     const page = pageData[currentPageKey]
     setPrimaryCta(page, e.target.value)
-    const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
-    if (primaryButton)
-      primaryButton.innerHTML =
-        karlTag('Button label: Primary CTA', 'placement') + escapeHtml(e.target.value)
+    applyFieldToMockup('cta', e.target.value)
     updateDirtyIndicators(currentPageKey)
   })
   document.getElementById('seoTitleInput').addEventListener('input', (e) => {

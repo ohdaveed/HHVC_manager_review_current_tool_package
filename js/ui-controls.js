@@ -64,7 +64,6 @@ function buildPageSelect() {
 }
 function initChecklist() {
   document.querySelectorAll('.checklist .check').forEach((el, i) => {
-    el.setAttribute('data-check-index', i)
     el.addEventListener('click', function () {
       this.classList.toggle('unchecked')
       if (currentPageKey)

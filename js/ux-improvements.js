@@ -262,28 +262,19 @@
     if (saved.edited_title) {
       page.title = saved.edited_title
       setValue('titleInput', saved.edited_title)
-      const h1 = document.querySelector('#mockPage h1')
-      if (h1) h1.textContent = saved.edited_title
+      window.applyFieldToMockup?.('title', saved.edited_title)
     }
 
     if (saved.edited_summary) {
       page.summary = saved.edited_summary
       setValue('descriptionInput', saved.edited_summary)
-      const summary = document.querySelector('#mockPage .summary')
-      if (summary) summary.textContent = saved.edited_summary
+      window.applyFieldToMockup?.('summary', saved.edited_summary)
     }
 
     if (saved.primary_cta) {
       setPrimaryCta(page, saved.primary_cta)
       setValue('ctaInput', saved.primary_cta)
-      const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
-      if (primaryButton) {
-        const tag =
-          typeof window.karlTag === 'function'
-            ? window.karlTag('Button label: Primary CTA', 'placement')
-            : ''
-        primaryButton.innerHTML = tag + escapeHtml(saved.primary_cta)
-      }
+      window.applyFieldToMockup?.('cta', saved.primary_cta)
     }
 
     if (saved.seo_title) {
