@@ -57,3 +57,4 @@
 | --- | --- | --- |
 | ipm-raccoons-74116 | UC IPM Pest Notes: Raccoons | No raccoon page in Phase 1 mockups; IPM education only |
 | ipm-rats-74106 | UC IPM Pest Notes: Rats | Supports future `ratsPrevent` IPM content; not Phase 1 legal/process authority |
+| ipm-house-mouse-7483 | UC IPM Pest Notes: House Mouse | Supports future `ratsPrevent` IPM content; not Phase 1 legal/process authority |

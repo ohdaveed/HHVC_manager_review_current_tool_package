@@ -18,6 +18,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
 | `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
+| `2026-07-02-ipm-pests-house-mouse.pdf` / `.md` | UC IPM Pest Notes 7483: House Mouse | Supplementary | IPM prevention/education for mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
 
 ### 2026-07-02-violation-pages-master-content.md
 
