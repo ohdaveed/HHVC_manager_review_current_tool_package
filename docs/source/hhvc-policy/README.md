@@ -17,6 +17,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
+| `2026-07-02-ipm-pests-rats.pdf` / `.md` | UC IPM Pest Notes 74106: Rats | Supplementary | IPM prevention/education for rats/mice; supports future `ratsPrevent` audits, not Phase 1 legal claims |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -34,6 +35,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR educational material. Useful for future IPM/prevention pages. Does not define HHVC inspection scope, tenant notice timing, fees, or anti-retaliation rules.
+
+### 2026-07-02-ipm-pests-rats.pdf
+
+- **Original Drive file:** (`1pOoRccYClsQhPqxIklPuNjtnTm7tt6NM`)
+- **Source title:** UC IPM Pest Notes 74106: Rats (Revised June 2024)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR IPM guidance on roof rats, Norway rats, identification, exclusion, sanitation, and control. Aligns with violation-master Rodents "Learn More" (food/water/shelter). Does not cover HHVC reporting process, 72-hour tenant notice, anti-retaliation, or fees.
 
 ## Documents still expected for Phase 1
 
