@@ -6,10 +6,13 @@
 
   const SEO_TITLE_LIMIT = 60
   const META_DESCRIPTION_LIMIT = 110
-  const DASHBOARD_ID = 'reviewDashboard'
   const DASHBOARD_CORE_ID = 'reviewDashboardCore'
+  const STICKY_BAR_ID = 'reviewStickyBar'
+  const WORKSPACE_ID = 'reviewWorkspace'
   const STORAGE_KEY = 'hhvcManagerReviewState:v1'
   const STORAGE_VERSION = 1
+
+  const WORKSPACE_TABS = ['queue', 'checks', 'sitemap', 'help']
 
   let isRestoringState = false
 
@@ -349,37 +352,16 @@
   }
 
   function renderReviewDashboard() {
-    // Render into the dedicated core container, not #reviewDashboard itself,
-    // so the fixed guidance/sitemap panels mounted as its siblings are never
-    // wiped out and don't need a MutationObserver to detect and reinsert
-    // themselves.
     const dashboard = document.getElementById(DASHBOARD_CORE_ID)
     if (!dashboard) return
 
     const page = getCurrentPage()
-    const state = readLocalState()
-    const decision = getValue('reviewDecision') || 'Needs review'
     const seoTitle = getSeoTitle(page)
     const metaDescription = getMetaDescription(page)
     const rules = getRuleResults(page)
-    const passed = rules.filter((rule) => rule.pass).length
-    const reviewReady = decision === 'Approved' && passed === rules.length
-    const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision)
     const primaryCta = getValue('ctaInput') || getPrimaryCta(page) || 'None set'
-    const savedCount = Object.keys(state.pages || {}).length
 
     dashboard.innerHTML = `
-      <div class="review-dashboard-header">
-        <div>
-          <p class="review-dashboard-title">Manager review dashboard</p>
-          <p class="review-decision-note">Live checks update as you edit title, summary, CTA, and search metadata. Review fields save locally in this browser.</p>
-        </div>
-        <div class="review-dashboard-meta" aria-label="Current review status">
-          <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
-          <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
-          <span class="status-chip ${savedCount > 0 ? 'pass' : 'warn'}">${savedCount} local saves</span>
-        </div>
-      </div>
       <div class="review-dashboard-grid">
         ${renderMetric('Page type', page.type || 'Missing', 'Karl placement')}
         ${renderMetric('Reading target', page.reading || 'Missing', 'Plain-language target')}
@@ -392,6 +374,7 @@
       </div>
       <div class="compliance-panel">
         <h3>Karl compliance scorecard</h3>
+        <p class="review-decision-note">Live checks update as you edit title, summary, CTA, and search metadata in the sidebar.</p>
         <ul class="compliance-list">
           ${rules
             .map(
@@ -410,6 +393,147 @@
     `
   }
 
+  function renderStickyBar() {
+    const bar = document.getElementById(STICKY_BAR_ID)
+    if (!bar) return
+
+    const page = getCurrentPage()
+    const decision = getValue('reviewDecision') || 'Needs review'
+    const rules = getRuleResults(page)
+    const passed = rules.filter((rule) => rule.pass).length
+    const reviewReady = decision === 'Approved' && passed === rules.length
+    const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision)
+    const stats = window.reviewQueue?.getQueueStats?.() || { reviewed: 0, total: DATA.order.length }
+    const filter = window.reviewQueue?.getFilter?.() || 'All'
+    const prevKey = window.reviewQueue?.getAdjacentKey?.(-1, filter)
+    const nextKey = window.reviewQueue?.getAdjacentKey?.(1, filter)
+    const state = readLocalState()
+    const workspaceOpen = Boolean(state.ui.workspace_open)
+
+    bar.innerHTML = `
+      <div class="review-sticky-bar-main">
+        <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
+        <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
+        <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
+        <span class="status-chip ${stats.reviewed > 0 ? 'pass' : 'warn'}">${stats.reviewed}/${stats.total} reviewed</span>
+      </div>
+      <div class="review-sticky-bar-actions">
+        <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>
+        <button type="button" class="review-sticky-btn" data-sticky-action="next"${nextKey ? '' : ' disabled'}>Next</button>
+        <button type="button" class="review-sticky-btn" data-sticky-action="next-needs-review">Next needs review</button>
+        <button type="button" class="review-sticky-btn primary" data-sticky-action="toggle-workspace" aria-expanded="${workspaceOpen ? 'true' : 'false'}">
+          ${workspaceOpen ? 'Hide workspace' : 'Show workspace'}
+        </button>
+      </div>
+    `
+  }
+
+  function setWorkspaceTab(tabId) {
+    if (!WORKSPACE_TABS.includes(tabId)) tabId = 'queue'
+
+    const tabs = document.querySelectorAll('[data-workspace-tab]')
+    const panels = document.querySelectorAll('[data-workspace-panel]')
+
+    tabs.forEach((tab) => {
+      const isSelected = tab.getAttribute('data-workspace-tab') === tabId
+      tab.setAttribute('aria-selected', isSelected ? 'true' : 'false')
+    })
+
+    panels.forEach((panel) => {
+      const isActive = panel.getAttribute('data-workspace-panel') === tabId
+      panel.hidden = !isActive
+    })
+
+    if (tabId === 'sitemap' && typeof window.__mountInteractiveSitemapOnTabOpen === 'function') {
+      window.__mountInteractiveSitemapOnTabOpen()
+    }
+
+    updateLocalState((state) => {
+      state.ui.workspace_tab = tabId
+      return state
+    })
+  }
+
+  function setWorkspaceOpen(isOpen) {
+    const workspace = document.getElementById(WORKSPACE_ID)
+    if (!workspace) return
+
+    workspace.hidden = !isOpen
+
+    const toggleButton = document.querySelector('[data-sticky-action="toggle-workspace"]')
+    if (toggleButton) {
+      toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+      toggleButton.textContent = isOpen ? 'Hide workspace' : 'Show workspace'
+    }
+
+    updateLocalState((state) => {
+      state.ui.workspace_open = isOpen
+      if (isOpen && !state.ui.workspace_tab) state.ui.workspace_tab = 'queue'
+      return state
+    })
+
+    if (isOpen) {
+      const state = readLocalState()
+      setWorkspaceTab(state.ui.workspace_tab || 'queue')
+    }
+  }
+
+  function toggleWorkspace() {
+    const state = readLocalState()
+    setWorkspaceOpen(!state.ui.workspace_open)
+  }
+
+  function handleStickyBarClick(event) {
+    const button = event.target.closest('[data-sticky-action]')
+    if (!button || button.disabled) return
+
+    const action = button.getAttribute('data-sticky-action')
+    const filter = window.reviewQueue?.getFilter?.() || 'All'
+
+    if (action === 'prev') {
+      const key = window.reviewQueue?.getAdjacentKey?.(-1, filter)
+      if (key) window.renderPage?.(key)
+      return
+    }
+
+    if (action === 'next') {
+      const key = window.reviewQueue?.getAdjacentKey?.(1, filter)
+      if (key) window.renderPage?.(key)
+      return
+    }
+
+    if (action === 'next-needs-review') {
+      const key = window.reviewQueue?.getNextNeedsReviewKey?.()
+      if (key) window.renderPage?.(key)
+      return
+    }
+
+    if (action === 'toggle-workspace') {
+      toggleWorkspace()
+    }
+  }
+
+  function initWorkspaceTabs() {
+    const tablist = document.getElementById('reviewWorkspaceTabs')
+    if (!tablist || tablist.dataset.bound === 'true') return
+    tablist.dataset.bound = 'true'
+
+    tablist.addEventListener('click', (event) => {
+      const tab = event.target.closest('[data-workspace-tab]')
+      if (!tab) return
+      setWorkspaceTab(tab.getAttribute('data-workspace-tab') || 'queue')
+    })
+
+    const stickyBar = document.getElementById(STICKY_BAR_ID)
+    stickyBar?.addEventListener('click', handleStickyBarClick)
+
+    const state = readLocalState()
+    setWorkspaceOpen(Boolean(state.ui.workspace_open))
+    if (state.ui.workspace_open) {
+      setWorkspaceTab(state.ui.workspace_tab || 'queue')
+    }
+  }
+
   function renderMetric(label, value, help) {
     return `
       <div class="metric-card">
@@ -422,25 +546,6 @@
 
   function isLong(value) {
     return String(value || '').length > 36
-  }
-
-  function mountDashboard() {
-    const toolbar = document.querySelector('.canvas-toolbar')
-    if (!toolbar || document.getElementById(DASHBOARD_ID)) return
-
-    const dashboard = document.createElement('section')
-    dashboard.id = DASHBOARD_ID
-    dashboard.className = 'review-dashboard'
-    dashboard.setAttribute('aria-label', 'Manager review dashboard')
-
-    // Core content (header/metrics/scorecard) lives in its own sub-container
-    // so renderReviewDashboard() can rebuild it via innerHTML without
-    // touching the guidance/sitemap panels mounted alongside it.
-    const core = document.createElement('div')
-    core.id = DASHBOARD_CORE_ID
-    dashboard.appendChild(core)
-
-    toolbar.appendChild(dashboard)
   }
 
   function pageSearchItems(query) {
@@ -496,7 +601,7 @@
       const button = event.target.closest('[data-page-key]')
       if (!button) return
       window.renderPage?.(button.getAttribute('data-page-key'))
-      renderReviewDashboard()
+      refreshUx()
     })
     renderPageQuickList()
   }
@@ -687,11 +792,10 @@
   }
 
   function refreshUx() {
+    renderStickyBar()
     renderReviewDashboard()
     renderPageQuickList()
     updateLocalStorageStatus()
-    // Let sibling review aids (e.g. the interactive sitemap) refresh against
-    // the edited page data; they no longer observe #reviewDashboard mutations.
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
   }
 
@@ -781,7 +885,7 @@
   }
 
   function init() {
-    mountDashboard()
+    initWorkspaceTabs()
     mountPageSearch()
     mountCopySummaryButton()
     mountLocalStorageControls()
@@ -790,6 +894,8 @@
     applySavedUiPreferences()
     restoreInitialPage()
     refreshUx()
+    // Defer one refresh so review-queue.js (loaded next) is ready for sticky bar stats.
+    window.setTimeout(refreshUx, 0)
   }
 
   if (document.readyState === 'loading') {

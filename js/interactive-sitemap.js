@@ -14,17 +14,14 @@
     showLinksFromSelected: false,
   }
 
-  let dashboard = null
+  let sitemapMounted = false
 
   // js/utils.js loads first (see index.html script order), so the shared
   // helpers are always available.
   const { escapeHtml, getPrimaryCta } = window.utils
 
-  function getDashboard() {
-    if (!dashboard) {
-      dashboard = document.getElementById('reviewDashboard')
-    }
-    return dashboard
+  function getWorkspaceSitemapPanel() {
+    return document.getElementById('reviewWorkspaceSitemap')
   }
 
   function getCurrentKey() {
@@ -693,30 +690,19 @@
     `
   }
 
-  // The panel is created and positioned once (as a fixed sibling after the
-  // guidance panel, or after the dashboard core if guidance hasn't mounted
-  // yet). Later refreshes only update its innerHTML, so it's never removed
-  // and re-inserted, and no MutationObserver is needed to keep it in place.
+  // The panel mounts into the Sitemap workspace tab and renders lazily the first
+  // time that tab is opened, so the 17-node tree is not built while collapsed.
   function mountPanel() {
     if (document.getElementById(PANEL_ID)) return document.getElementById(PANEL_ID)
 
-    const dashboard = getDashboard()
-    if (!dashboard) return null
+    const host = getWorkspaceSitemapPanel()
+    if (!host) return null
 
     const panel = document.createElement('section')
     panel.id = PANEL_ID
     panel.className = 'interactive-sitemap-panel'
     panel.setAttribute('aria-label', 'Interactive sitemap diagram')
-
-    const guidancePanel = document.getElementById('dashboardGuidancePanel')
-    const dashboardCore = document.getElementById('reviewDashboardCore')
-    if (guidancePanel) {
-      guidancePanel.insertAdjacentElement('afterend', panel)
-    } else if (dashboardCore) {
-      dashboardCore.insertAdjacentElement('afterend', panel)
-    } else {
-      dashboard.appendChild(panel)
-    }
+    host.appendChild(panel)
     return panel
   }
 
@@ -866,28 +852,36 @@
       // Under View Transitions, renderPage returns a promise that resolves
       // once #pageSelect reflects the new page; rerendering earlier would
       // highlight the previous page as current.
-      if (result && typeof result.then === 'function') result.then(rerender)
-      else rerender()
+      if (result && typeof result.then === 'function') result.then(() => { if (sitemapMounted) rerender() })
+      else if (sitemapMounted) rerender()
       return result
     }
     window.renderPage.__sitemapWrapped = true
   }
 
-  function init() {
+  function ensureSitemapRendered() {
+    if (sitemapMounted) {
+      rerender()
+      return
+    }
+    sitemapMounted = true
     injectStyles()
+    rerender()
+  }
+
+  function init() {
     document.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeydown)
-    // Editor edits (title/summary/CTA) mutate DATA.pages; js/ux-improvements.js
-    // announces them so node labels and the detail panel stay current.
-    document.addEventListener('hhvc:review-data-changed', rerender)
-    rerender()
+    document.addEventListener('hhvc:review-data-changed', () => {
+      if (sitemapMounted) rerender()
+    })
     wrapRenderPageForSitemap()
-    window.setTimeout(rerender, 0)
-    window.setTimeout(rerender, 250)
+
+    window.__mountInteractiveSitemapOnTabOpen = ensureSitemapRendered
   }
 
   function teardown() {
-    dashboard = null
+    sitemapMounted = false
   }
 
   if (document.readyState === 'loading') {

@@ -43,7 +43,6 @@
     style.id = STYLE_ID
     style.textContent = `
       .dashboard-guidance-panel {
-        border-top: 1px solid var(--sfds-border);
         padding: 0.95rem 1rem 1rem;
         background: var(--sfds-white);
       }
@@ -100,10 +99,7 @@
     document.head.appendChild(style)
   }
 
-  // Guidance copy is static (doesn't depend on the current page or review
-  // state), so the panel is built once and mounted at a fixed position as a
-  // permanent sibling of #reviewDashboardCore. It never needs to be found
-  // and reinserted after a dashboard re-render.
+  // Guidance copy is static; mount once into the Help workspace tab panel.
   function buildGuidancePanel() {
     const panel = document.createElement('section')
     panel.id = GUIDANCE_ID
@@ -128,16 +124,10 @@
   }
 
   function mountGuidancePanel() {
-    const dashboard = document.getElementById('reviewDashboard')
-    if (!dashboard || document.getElementById(GUIDANCE_ID)) return
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    if (!helpPanel || document.getElementById(GUIDANCE_ID)) return
 
-    const core = document.getElementById('reviewDashboardCore')
-    const panel = buildGuidancePanel()
-    if (core) {
-      core.insertAdjacentElement('afterend', panel)
-    } else {
-      dashboard.appendChild(panel)
-    }
+    helpPanel.appendChild(buildGuidancePanel())
   }
 
   function compactSidebarCopy() {
@@ -165,9 +155,8 @@
   }
 
   // Guidance content and the sidebar copy it replaces are both static, so a
-  // couple of delayed retries at startup are enough to catch #reviewDashboard
-  // or the sidebar mounting slightly after this script runs. No
-  // MutationObserver is needed since nothing else ever removes this panel.
+  // couple of delayed retries at startup are enough to catch #reviewWorkspaceHelp
+  // or the sidebar mounting slightly after this script runs.
   function init() {
     refresh()
     window.setTimeout(refresh, 0)

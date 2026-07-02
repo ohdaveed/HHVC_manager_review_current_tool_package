@@ -40,8 +40,8 @@ in isolation — the script always validates the full list.
   files must load before `js/page-data.js`, which must load before `js/app.js`.
 - **Script load order in `index.html`:** `js/utils.js` → `pages/*.js` (each
   page) → `js/page-data.js` → `js/app.js` → `js/ux-improvements.js` →
-  `js/dashboard-guidance.js` → `js/interactive-sitemap.js`. When adding a new
-  page file, add its `<script>` tag in this same block, before `page-data.js`.
+  `js/review-queue.js` → `js/dashboard-guidance.js` → `js/interactive-sitemap.js`.
+  When adding a new page file, add its `<script>` tag in this same block, before `page-data.js`.
 - **Page object shape** (see `build_scripts/validate.js` for the enforced
   Zod schema): `slug`, `type` (`Topic page` | `Transaction` | `Information`),
   `title`, `summary`, `audience[]`, `reading` (a grade-level string), and
@@ -59,12 +59,13 @@ in isolation — the script always validates the full list.
   directly (bare calls or destructuring from `window.utils`) — add new shared
   utilities there rather than duplicating logic inline.
 - **Review/UX layers are additive and separate from core rendering:**
-  `js/ux-improvements.js` (dashboard, Karl scorecard, review controls) and
-  `js/dashboard-guidance.js` (consolidates sidebar helper copy into the
-  dashboard, hides duplicated sidebar text at runtime without deleting HTML)
+  `js/ux-improvements.js` (sticky bar, workspace tabs, Karl scorecard, review
+  controls), `js/review-queue.js` (cross-page review queue and progress),
+  `js/dashboard-guidance.js` (consolidates sidebar helper copy into the Help
+  workspace tab, hides duplicated sidebar text at runtime without deleting HTML)
   and `js/interactive-sitemap.js` (clickable sitemap reading from
-  `HHVC_DATA`) all layer on top of `js/app.js` and must not mutate page
-  source data — they are review aids only.
+  `HHVC_DATA`, lazy-loaded when the Sitemap tab opens) all layer on top of
+  `js/app.js` and must not mutate page source data — they are review aids only.
 - **Local persistence:** all reviewer state (decisions, notes, edited SEO
   fields, etc.) is saved client-side to `localStorage` under the versioned
   key `hhvcManagerReviewState:v1`. Bump the version suffix if the persisted
@@ -82,7 +83,7 @@ in isolation — the script always validates the full list.
 
 - Edit public page content in `pages/*.js`.
 - Edit render behavior in `js/app.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/dashboard-guidance.js`,
+- Edit UX review helpers in `js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`,
   `js/interactive-sitemap.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css`.
 - Review exports (`review/*.csv`, saved local-review CSV) are for manager
