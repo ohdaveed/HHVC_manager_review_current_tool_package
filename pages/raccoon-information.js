@@ -113,8 +113,20 @@ window.HHVC_PAGES['raccoonInfo'] = {
       ],
       cards: [
         {
-          title: 'Report garbage, clutter, animal waste, or overgrown plants',
-          text: 'Report conditions that may attract pests, vectors, or wildlife.',
+          title: 'Report pigeons',
+          text: 'Report pigeon roosting, nesting, droppings, or feeding around a building or shared area.',
+          target: 'pigeonsReport',
+          karl: 'Body link to related Transaction page',
+        },
+        {
+          title: 'Report garbage or clutter',
+          text: 'Report garbage, clutter, or animal waste that may attract pests, vectors, or wildlife.',
+          target: 'garbageReport',
+          karl: 'Body link to related Transaction page',
+        },
+        {
+          title: 'Report overgrown vegetation',
+          text: 'Report overgrown plants or brush that may shelter pests or vectors.',
           target: 'vegetationReport',
           karl: 'Body link to related Transaction page',
         },

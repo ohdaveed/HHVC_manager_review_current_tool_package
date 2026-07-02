@@ -1,11 +1,11 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['vegetationReport'] = {
-  slug: 'sf.gov/report-overgrown-vegetation-garbage',
+  slug: 'sf.gov/report-overgrown-vegetation',
   type: 'Transaction',
-  title: 'Report overgrown vegetation or garbage',
-  summary: 'Report garbage, clutter, or overgrown plants that may attract pests or vectors.',
+  title: 'Report overgrown vegetation',
+  summary: 'Report overgrown plants, weeds, or brush that may attract or shelter pests or vectors.',
   audience: [
-    'A tenant or resident affected by garbage, clutter, animal waste, or overgrown vegetation',
+    'A tenant or resident affected by overgrown vegetation',
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting conditions in a shared area',
     'An employee reporting a pest or vector concern at work',
@@ -29,7 +29,7 @@ window.HHVC_PAGES['vegetationReport'] = {
         {
           title: 'If you rent, give 72 hours when possible',
           text: [
-            'Tell the property owner or manager about the vegetation, garbage, or pest-attracting condition.',
+            'Tell the property owner or manager about the overgrown vegetation.',
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
           ],
@@ -40,11 +40,11 @@ window.HHVC_PAGES['vegetationReport'] = {
           text: ['Include only the details that apply:'],
           bullets: [
             'The address or location',
-            'Whether the condition is garbage, debris, clutter, storage, overgrown plants, standing water, or animal waste',
-            'Whether it is inside, outside, or in a shared area',
+            'Whether the condition is overgrown plants, weeds, brush, or dead vegetation',
+            'Whether it is in a yard, along the property edge, or in a shared area',
             'How long it has been happening',
             'Whether you told the property owner or manager, if you rent',
-            'Whether you saw pests, mosquitoes, or other vectors nearby',
+            'Whether you saw pests, mosquitoes, standing water, or other vectors nearby',
             'Your contact information, if you want an inspector to contact you',
           ],
           callout: {
@@ -93,19 +93,22 @@ window.HHVC_PAGES['vegetationReport'] = {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+        },
+        {
+          title: 'Report garbage or clutter',
+          text: 'Use this page for garbage, clutter, debris, or animal waste.',
+          target: 'garbageReport',
+          karl: 'Related section link to the sibling single-task report page',
         },
         {
           title: 'Report rats or mice',
           text: 'Use this page for rat or mouse activity.',
           target: 'ratsReport',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights and reporting',

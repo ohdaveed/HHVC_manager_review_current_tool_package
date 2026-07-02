@@ -55,10 +55,9 @@ window.HHVC_PAGES['scopeInfo'] = {
         ['Mosquitoes or standing water', 'Report mosquitoes'],
         ['Bird or pigeon nuisances tied to droppings or unsanitary conditions', 'Pigeons and housing health'],
         ['Mite concerns linked to pests in housing', 'Mites and housing health'],
-        [
-          'Garbage, clutter, animal waste, or overgrown plants',
-          'Report garbage, clutter, animal waste, or overgrown plants',
-        ],
+        ['Garbage, clutter, or animal waste', 'Report garbage or clutter'],
+        ['Overgrown plants or brush', 'Report overgrown vegetation'],
+        ['Active pigeon roosting or feeding problems', 'Report pigeons'],
         ['Mold from humidity or condensation', 'Report mold from humidity or condensation'],
       ],
     },
