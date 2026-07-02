@@ -47,7 +47,9 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       heading: 'If you are a property owner or manager',
       karl: 'Body: Owner and manager corrective actions',
       kind: 'body',
-      paragraphs: ['Read the notice for every condition assigned to the owner, manager, or building.'],
+      paragraphs: [
+        'Read the notice for every condition assigned to the owner, manager, or building.',
+      ],
       bullets: [
         'Start repairs, pest treatment, cleaning, or other building corrections right away',
         'Hire a licensed pest control operator when the notice requires professional treatment',
@@ -63,7 +65,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
-          title: 'Integrated pest management for property managers',
+          title: 'Integrated pest management for property owners and managers',
           text: 'Use prevention, monitoring, and resident outreach to reduce future violations.',
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',

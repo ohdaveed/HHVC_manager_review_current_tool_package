@@ -11,7 +11,7 @@ window.HHVC_PAGES['findInspector'] = {
   ],
   reading: 'Grade 6–7',
   editorNote:
-    'Information page placeholder. BLOCKED — add verified district map, staff directory link, or external lookup URL before publication. Do not publish staff phone numbers until HHVC confirms the public contact route.',
+    'Information page placeholder. A verified district map/staff directory lookup is still BLOCKED pending HHVC confirmation, so the page CTA routes to 311 (the confirmed public contact route) instead of shipping without any working link. Do not publish staff phone numbers until HHVC confirms the public contact route.',
   sections: [
     {
       heading: 'How inspector assignment works',
@@ -28,16 +28,18 @@ window.HHVC_PAGES['findInspector'] = {
     },
     {
       heading: 'Find your inspector',
-      karl: 'Body: Inspector lookup placeholder',
+      karl: 'Body: Inspector lookup placeholder — CTA routes to 311 until a district lookup is confirmed',
       kind: 'body',
       paragraphs: [
-        'Use the district inspector lookup when it is published. Until then, wait for inspector contact after you report, or call 311 if you need status on an open complaint.',
+        'The district inspector lookup is not published yet. Until then, wait for inspector contact after you report, or contact 311 if you need status on an open complaint.',
       ],
       bullets: [
         'Have the property address ready',
         'Use your 311 tracking number if you already filed a report',
         'Do not share another tenant’s personal information when asking for status',
       ],
+      button: 'Contact SF311 for complaint status',
+      buttonUrl: 'https://www.sf311.org/',
     },
     {
       heading: 'Related pages',

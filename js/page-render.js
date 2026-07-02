@@ -27,10 +27,26 @@ document.addEventListener('click', (event) => {
   const key = link.getAttribute('data-render-target')
   if (key) window.renderPage(key)
 })
+// Absolute http(s) URLs leave SF.gov's site chrome (or the mockup tool itself),
+// so they get target=_blank + the external-link mark. Site-relative URLs
+// (e.g. another SF.gov page or form under /forms/...) stay same-tab.
+function isExternalUrl(url) {
+  return /^https?:\/\//i.test(url)
+}
 function button(label, kind = 'primary', target = null, url = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
   if (url) {
-    return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Body link to external tool or resource' : 'Button label: Primary CTA to external tool', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
+    const external = isExternalUrl(url)
+    const attr = external ? ' target="_blank" rel="noopener noreferrer"' : ''
+    const mark = external ? ' <span aria-hidden="true">↗</span>' : ''
+    const karlLabel = external
+      ? kind === 'secondary'
+        ? 'Body link to external tool or resource'
+        : 'Button label: Primary CTA to external tool'
+      : kind === 'secondary'
+        ? 'Body link to related page'
+        : 'Button label: Primary CTA'
+    return `<a class="${cls}" href="${escapeHtml(url)}"${attr}>${karlTag(karlLabel, 'placement')}${escapeHtml(label)}${mark}</a>`
   }
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
   return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
@@ -38,13 +54,16 @@ function button(label, kind = 'primary', target = null, url = null) {
 function renderCards(cards = []) {
   return `<div class="cards">${cards
     .map((c) => {
+      const external = c.url ? isExternalUrl(c.url) : false
       const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
-        ? ' target="_blank" rel="noopener"'
+        ? external
+          ? ' target="_blank" rel="noopener"'
+          : ''
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
-      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
+      const externalMark = external ? ' <span aria-hidden="true">↗</span>' : ''
       return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3><p>${escapeHtml(c.text)}</p></article>`
     })
     .join('')}</div>`
