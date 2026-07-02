@@ -73,7 +73,7 @@ window.HHVC_PAGES['moldReport'] = {
         'Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
         'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
         'If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.',
-        'If HHVC finds a violation, the City may require the property owner or responsible party to correct it.',
+        'Violations must be corrected and may require follow-up inspection.',
       ],
       callout: {
         karl: 'Body note: Tenant rights / anti-retaliation reassurance',

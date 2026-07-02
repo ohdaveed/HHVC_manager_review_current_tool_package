@@ -62,7 +62,7 @@ window.HHVC_PAGES['mosquitoesReport'] = {
       paragraphs: [
         'Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.',
         'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
-        'If HHVC finds a violation, the City may require the property owner or responsible party to correct it.',
+        'Violations must be corrected and may require follow-up inspection.',
       ],
       callout: {
         karl: 'Body note: Tenant rights / anti-retaliation reassurance',
