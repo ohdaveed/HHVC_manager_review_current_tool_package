@@ -15,7 +15,7 @@ This spec covers only the Topic page and Transaction pages:
 
 Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matrix can produce rewrite instructions. Claims marked `missing_source` stay blocked.
 
-**Sources ingested 2026-07-02:** `docs/source/hhvc-policy/2026-07-02-violation-pages-master-content.md`, `docs/source/hhvc-policy/2026-07-02-program-manager-72-hour-tenant-notice.md`, and supplementary IPM PDFs.
+**Sources ingested 2026-07-02:** `docs/source/hhvc-policy/2026-07-02-violation-pages-master-content.md`, `docs/source/hhvc-policy/2026-07-02-program-manager-72-hour-tenant-notice.md`, `docs/source/hhvc-policy/2026-07-02-program-manager-reporter-privacy.md`, and supplementary IPM PDFs.
 
 ## page_key: pestsTopic
 
@@ -68,6 +68,12 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: violation-master — Rodents > What Happens Next
   - Reason: Align enforcement closing sentence to master template; removes unsupported HHVC/City/responsible-party phrasing.
 
+- `sections[0].steps[2].callout.text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+
 ### Blocked fields
 
 - Target field path: `sections[1].callout.text`
@@ -103,6 +109,12 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Replace with: Violations must be corrected and may require follow-up inspection.
   - Source: violation-master — Rodents > What Happens Next (template)
   - Reason: Cross-page enforcement parity with master template.
+
+- `sections[0].steps[2].callout.text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
 ### Blocked fields
 
@@ -146,6 +158,12 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: bed-bug-directors-rules-tenant-guidelines — cites SFDPH Director's Rules; routes to `bedBugsInfo`
   - Reason: Rules pointer confirmed; bedBugsInfo page hosts Director's Rules reference.
 
+- `sections[0].steps[2].callout.text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+
 ### Blocked fields
 
 - None remaining for this page.
@@ -154,6 +172,7 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 - Target field path: `sections[2].paragraphs[0]` — verified against SFDPH bed bug Director's Rules tenant guidelines.
 - Target field path: `sections[0].steps[1]` — verified against program manager 72-hour tenant notice guidance.
+- Target field path: `sections[0].steps[2].callout.text` (privacy) — verified against program manager reporter privacy attestation.
 
 ### Acceptance checks
 
@@ -182,6 +201,12 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Replace with: Violations must be corrected and may require follow-up inspection.
   - Source: violation-master — Rodents > What Happens Next (template)
   - Reason: Cross-page enforcement parity with master template.
+
+- `sections[0].steps[2].callout.text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
 ### Blocked fields
 
@@ -219,13 +244,24 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-72-hour — stakeholder attestation
   - Reason: Program manager confirms 72-hour tenant notice gate before 311.
 
+- `sections[0].steps[2].callout.text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
+
+- `sections[1].cards[3].text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Privacy portion of tenant-rights related card.
+
 ### Blocked fields
 
-- Target field path: `sections[1].cards[3].text`
-  - Current text (exact): Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.
+- Target field path: `sections[1].cards[3].text` (retaliation intro)
+  - Current text (exact): Find help if you are worried about retaliation.
   - Block reason: missing source
-  - Required source: anti-retaliation / privacy authority
-  - Note: Discrimination page reviewed — does not cover either claim. Privacy may be supported by https://www.sf.gov/report-health-nuisance-or-hazards (Environmental Health 311 page).
+  - Required source: anti-retaliation authority for reporting housing conditions to the City
 
 ### Acceptance checks
 
@@ -248,6 +284,12 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Replace with: *(keep current)*
   - Source: program-manager-72-hour — stakeholder attestation
   - Reason: Program manager confirms 72-hour tenant notice gate before 311.
+
+- `sections[0].steps[2].callout.text` (privacy)
+  - Current: HHVC does not share the reporter’s identity with the property owner or manager.
+  - Replace with: *(keep current)*
+  - Source: program-manager-reporter-privacy — stakeholder attestation
+  - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
 - `sections[1].paragraphs[0]`
   - Current: HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.

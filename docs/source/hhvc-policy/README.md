@@ -16,7 +16,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | File | Title | Phase | Role |
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
-| `2026-07-02-program-manager-72-hour-tenant-notice.md` | HHVC Program Manager — 72-hour tenant notice before 311 | Phase 1 | **Operational authority** for Step 2 tenant notice on all report Transaction pages |
+| `2026-07-02-program-manager-reporter-privacy.md` | HHVC Program Manager — reporter privacy | Phase 1 | **Operational authority** for complainant identity not shared with property owner |
 | `2026-07-02-sf-gov-housing-discrimination-help.md` | SF.gov — Get help for discrimination in housing | Supplementary | HRC/fair-housing referral; **does not** verify report-page anti-retaliation callouts |
 | `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
@@ -197,10 +197,17 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Fair-housing / discrimination resource (protected classes, HRC complaints). Does **not** verify report-page anti-retaliation callouts for reporting housing conditions to 311/HHVC, and does not address reporter privacy. May inform Phase 2 `tenantRights` external links.
 
+### 2026-07-02-program-manager-reporter-privacy.md
+
+- **Source title:** Program manager operational guidance — complainant identity not shared with property owner
+- **Authority:** HHVC program manager (stakeholder attestation, 2026-07-02)
+- **Format:** stakeholder intake note
+- **Reviewer:** CA
+- **Note:** Confirms existing mockup privacy sentence on all six Phase 1 report pages. Does not cover anti-retaliation callouts.
+
 ## Documents still expected for Phase 1
 
-- Anti-retaliation / tenant-rights authority (for reporting housing conditions to the City — e.g. Rent Ordinance Sec. 37.9(d), program manager attestation, or HHVC operational policy)
-- Reporter privacy authority (e.g. https://www.sf.gov/report-health-nuisance-or-hazards — "Your name is usually not shared for complaints about environmental health")
+- Anti-retaliation / tenant-rights authority (for reporting housing conditions to the City — e.g. Rent Ordinance Sec. 37.9(d) or program manager attestation)
 - Bed bug rules / Director's Rules source (detailed) — **partial:** tenant guidelines ingested; full Director's Rules PDF still recommended
 - Fee / payment authority for Healthy Housing program fees
 - HHVC inspection / complaint handling policy (operational detail beyond master template)
