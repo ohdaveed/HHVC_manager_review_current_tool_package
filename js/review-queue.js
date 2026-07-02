@@ -189,7 +189,9 @@
   }
 
   function normalize(value) {
-    return String(value || '').trim().toLowerCase()
+    return String(value || '')
+      .trim()
+      .toLowerCase()
   }
 
   function getCurrentKey() {
@@ -420,9 +422,34 @@
     `
   }
 
+  function captureSearchFocus() {
+    const active = document.activeElement
+    if (!active || active.id !== 'reviewQueueSearch') return null
+    return {
+      selectionStart: active.selectionStart,
+      selectionEnd: active.selectionEnd,
+    }
+  }
+
+  function restoreSearchFocus(snapshot) {
+    if (!snapshot) return
+    const input = document.getElementById('reviewQueueSearch')
+    if (!input) return
+    input.focus()
+    try {
+      input.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd)
+    } catch {
+      // Some browsers disallow setSelectionRange on search inputs; focus alone is fine.
+    }
+  }
+
   function renderReviewQueue() {
     const panel = document.getElementById(QUEUE_PANEL_ID)
     if (!panel) return
+
+    // Re-rendering replaces the search input; without this, every keystroke
+    // would drop focus and interrupt typing.
+    const searchFocus = captureSearchFocus()
 
     const stats = getQueueStats()
     const rows = getVisibleRows()
@@ -510,7 +537,8 @@
                 const ageChipClass = row.isStale ? 'fail' : row.ageDays === null ? 'warn' : 'pass'
                 const suggestedOwner = getSidebarReviewerName()
                 const suggestedOwnerNorm = normalize(suggestedOwner)
-                const isOwnerAssigned = normalize(row.followUpOwner) === suggestedOwnerNorm && !!row.followUpOwner
+                const isOwnerAssigned =
+                  normalize(row.followUpOwner) === suggestedOwnerNorm && !!row.followUpOwner
 
                 const canAssignMe = !isOwnerAssigned
                 const canNeedsReview = row.decision !== 'Needs review'
@@ -599,6 +627,8 @@
         }
       </div>
     `
+
+    restoreSearchFocus(searchFocus)
   }
 
   function handleQueueClick(event) {
@@ -632,7 +662,10 @@
 
       let saved
       if (action === 'assign-me') {
-        saved = updateLocalReviewForPage(key, { follow_up_owner: suggestedOwner, review_date: reviewDate })
+        saved = updateLocalReviewForPage(key, {
+          follow_up_owner: suggestedOwner,
+          review_date: reviewDate,
+        })
       } else if (action === 'needs-review') {
         saved = updateLocalReviewForPage(key, {
           decision: 'Needs review',

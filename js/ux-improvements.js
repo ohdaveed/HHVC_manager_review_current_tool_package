@@ -76,10 +76,12 @@
     return count
   }
 
-  function getRuleResults(page) {
-    const seoTitle = getSeoTitle(page)
-    const metaDescription = getMetaDescription(page)
-    const primaryCta = getValue('ctaInput') || getPrimaryCta(page)
+  // useEditor: true reads live sidebar values (current page only);
+  // false evaluates raw page data so any page can be scored for the portfolio view.
+  function getRuleResultsFor(page, { useEditor = false } = {}) {
+    const seoTitle = useEditor ? getSeoTitle(page) : defaultSeoTitle(page)
+    const metaDescription = useEditor ? getMetaDescription(page) : defaultMetaDescription(page)
+    const primaryCta = useEditor ? getValue('ctaInput') || getPrimaryCta(page) : getPrimaryCta(page)
     const relatedLinks = countRelatedLinks(page)
     const normalizedType = String(page.type || '')
       .trim()
@@ -135,6 +137,10 @@
         detail: page.reading || 'Missing reading target',
       },
     ]
+  }
+
+  function getRuleResults(page) {
+    return getRuleResultsFor(page, { useEditor: true })
   }
 
   function getStatusChipClass(value) {
@@ -351,6 +357,108 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
+  function getPortfolioRows() {
+    const savedPages = readLocalState().pages
+    return DATA.order.map(([key, label]) => {
+      const page = DATA.pages[key] || {}
+      const rules = getRuleResultsFor(page)
+      const failing = rules.filter((rule) => !rule.pass)
+      return {
+        key,
+        title: page.title || label,
+        type: page.type || 'Page',
+        passed: rules.length - failing.length,
+        total: rules.length,
+        failingLabels: failing.map((rule) => rule.label),
+        decision: savedPages[key]?.decision || 'Needs review',
+      }
+    })
+  }
+
+  function renderPortfolioOverview() {
+    const rows = getPortfolioRows()
+    const failingOnly = Boolean(readLocalState().ui.checks_failing_only)
+    const allPassCount = rows.filter((row) => row.failingLabels.length === 0).length
+    const visibleRows = failingOnly ? rows.filter((row) => row.failingLabels.length > 0) : rows
+    const sortedRows = visibleRows
+      .slice()
+      .sort((a, b) => a.passed - b.passed || a.title.localeCompare(b.title))
+    const currentKey = getCurrentKey()
+
+    return `
+      <div class="portfolio-panel">
+        <div class="portfolio-header">
+          <h3>All pages check overview</h3>
+          <label class="portfolio-filter-toggle">
+            <input type="checkbox" id="portfolioFailingOnly"${failingOnly ? ' checked' : ''} />
+            Only pages with failing checks
+          </label>
+        </div>
+        <p class="review-decision-note">
+          ${allPassCount}/${rows.length} pages pass all checks. Pages with the most failing checks are listed first; select a page to open it.
+        </p>
+        ${
+          sortedRows.length
+            ? `
+          <ul class="portfolio-list" aria-label="Compliance status for every page">
+            ${sortedRows
+              .map((row) => {
+                const allPass = row.failingLabels.length === 0
+                return `
+              <li>
+                <button
+                  type="button"
+                  class="portfolio-row${row.key === currentKey ? ' is-current' : ''}"
+                  data-portfolio-key="${escapeHtml(row.key)}"
+                >
+                  <span class="portfolio-row-main">
+                    <span class="portfolio-row-title">${escapeHtml(row.title)}</span>
+                    <span class="portfolio-row-meta">${escapeHtml(row.type)} · ${escapeHtml(row.key)}</span>
+                    ${
+                      allPass
+                        ? ''
+                        : `<span class="portfolio-row-failing">Failing: ${escapeHtml(row.failingLabels.join(', '))}</span>`
+                    }
+                  </span>
+                  <span class="portfolio-row-status">
+                    <span class="status-chip ${allPass ? 'pass' : 'warn'}">${row.passed}/${row.total} checks</span>
+                    <span class="status-chip ${getStatusChipClass(row.decision)}">${escapeHtml(row.decision)}</span>
+                  </span>
+                </button>
+              </li>
+            `
+              })
+              .join('')}
+          </ul>
+        `
+            : `
+          <div class="portfolio-empty">
+            <p>Every page passes all checks. Nothing to fix here.</p>
+          </div>
+        `
+        }
+      </div>
+    `
+  }
+
+  function handleDashboardClick(event) {
+    const rowButton = event.target.closest('[data-portfolio-key]')
+    if (!rowButton) return
+    const key = rowButton.getAttribute('data-portfolio-key')
+    if (!key || !DATA.pages[key]) return
+    window.renderPage?.(key)
+  }
+
+  function handleDashboardChange(event) {
+    if (event.target.id !== 'portfolioFailingOnly') return
+    const checked = event.target.checked
+    updateLocalState((state) => {
+      state.ui.checks_failing_only = checked
+      return state
+    })
+    renderReviewDashboard()
+  }
+
   function renderReviewDashboard() {
     const dashboard = document.getElementById(DASHBOARD_CORE_ID)
     if (!dashboard) return
@@ -390,6 +498,7 @@
             .join('')}
         </ul>
       </div>
+      ${renderPortfolioOverview()}
     `
   }
 
@@ -437,6 +546,8 @@
     tabs.forEach((tab) => {
       const isSelected = tab.getAttribute('data-workspace-tab') === tabId
       tab.setAttribute('aria-selected', isSelected ? 'true' : 'false')
+      // Roving tabindex: Tab lands on the active tab, arrows move between tabs.
+      tab.tabIndex = isSelected ? 0 : -1
     })
 
     panels.forEach((panel) => {
@@ -524,6 +635,24 @@
       setWorkspaceTab(tab.getAttribute('data-workspace-tab') || 'queue')
     })
 
+    tablist.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+      const tabs = Array.from(tablist.querySelectorAll('[data-workspace-tab]'))
+      const currentIndex = tabs.indexOf(document.activeElement)
+      if (currentIndex === -1) return
+
+      event.preventDefault()
+      let nextIndex = currentIndex
+      if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
+      if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length
+      if (event.key === 'Home') nextIndex = 0
+      if (event.key === 'End') nextIndex = tabs.length - 1
+
+      const nextTab = tabs[nextIndex]
+      nextTab.focus()
+      setWorkspaceTab(nextTab.getAttribute('data-workspace-tab') || 'queue')
+    })
+
     const stickyBar = document.getElementById(STICKY_BAR_ID)
     stickyBar?.addEventListener('click', handleStickyBarClick)
 
@@ -531,6 +660,42 @@
     setWorkspaceOpen(Boolean(state.ui.workspace_open))
     if (state.ui.workspace_open) {
       setWorkspaceTab(state.ui.workspace_tab || 'queue')
+    }
+  }
+
+  function updateDecisionQuickActions() {
+    const current = getValue('reviewDecision') || 'Needs review'
+    document.querySelectorAll('#decisionQuickActions [data-decision]').forEach((button) => {
+      const isActive = button.getAttribute('data-decision') === current
+      button.setAttribute('aria-pressed', isActive ? 'true' : 'false')
+    })
+  }
+
+  function initDecisionQuickActions() {
+    const group = document.getElementById('decisionQuickActions')
+    if (!group || group.dataset.bound === 'true') return
+    group.dataset.bound = 'true'
+
+    group.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-decision]')
+      if (!button) return
+      applyDecisionToCurrentPage(button.getAttribute('data-decision'))
+    })
+
+    updateDecisionQuickActions()
+  }
+
+  function applyDecisionToCurrentPage(decision) {
+    const select = document.getElementById('reviewDecision')
+    if (!select || !decision) return
+    if (select.value === decision) return
+
+    select.value = decision
+    // Reuse the existing persistence path bound to the select's change event.
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+    if (typeof window.showToast === 'function') {
+      const tone = decision === 'Blocked' || decision === 'Revise and resubmit' ? 'warn' : 'success'
+      window.showToast(`Decision set: ${decision}`, tone)
     }
   }
 
@@ -717,6 +882,106 @@
       window.showToast('Saved local reviews exported', 'success')
   }
 
+  function exportReviewStateBackup() {
+    saveCurrentPageToLocalStorage()
+    const state = readLocalState()
+    downloadFile(
+      `hhvc-review-state-backup-${today()}.json`,
+      JSON.stringify(state, null, 2),
+      'application/json;charset=utf-8'
+    )
+    setText('reviewExportStatus', 'Downloaded review state backup JSON.')
+    if (typeof window.showToast === 'function')
+      window.showToast('Review state backup downloaded', 'success')
+  }
+
+  function importReviewStateBackup(file) {
+    const fail = (message) => {
+      setText('reviewExportStatus', message)
+      if (typeof window.showToast === 'function') window.showToast(message, 'warn')
+    }
+
+    file
+      .text()
+      .then((text) => {
+        let parsed
+        try {
+          parsed = JSON.parse(text)
+        } catch {
+          fail('Import failed: the file is not valid JSON.')
+          return
+        }
+
+        if (
+          !parsed ||
+          parsed.version !== STORAGE_VERSION ||
+          typeof parsed.pages !== 'object' ||
+          !parsed.pages
+        ) {
+          fail('Import failed: not a valid HHVC review state backup.')
+          return
+        }
+
+        const entries = Object.entries(parsed.pages).filter(
+          ([key, value]) => DATA.pages[key] && value && typeof value === 'object'
+        )
+        if (!entries.length) {
+          fail('Import finished: the backup has no reviews matching the current page list.')
+          return
+        }
+
+        updateLocalState((state) => {
+          for (const [key, saved] of entries) {
+            state.pages[key] = { ...state.pages[key], ...saved, page_key: key }
+          }
+          if (parsed.globals?.reviewer && !state.globals.reviewer) {
+            state.globals.reviewer = parsed.globals.reviewer
+          }
+          return state
+        })
+
+        applySavedPageState(getCurrentKey())
+        refreshUx()
+        setText('reviewExportStatus', `Imported ${entries.length} saved page reviews from backup.`)
+        if (typeof window.showToast === 'function')
+          window.showToast(`Imported ${entries.length} page reviews`, 'success')
+      })
+      .catch(() => fail('Import failed: could not read the selected file.'))
+  }
+
+  function mountBackupControls() {
+    const actions = document.querySelector('.review-actions')
+    if (!actions || document.getElementById('exportReviewStateBackup')) return
+
+    const backupButton = document.createElement('button')
+    backupButton.type = 'button'
+    backupButton.className = 'tool-btn secondary-tool'
+    backupButton.id = 'exportReviewStateBackup'
+    backupButton.textContent = 'Download backup (JSON)'
+    actions.appendChild(backupButton)
+    backupButton.addEventListener('click', exportReviewStateBackup)
+
+    const importInput = document.createElement('input')
+    importInput.type = 'file'
+    importInput.accept = 'application/json,.json'
+    importInput.id = 'importReviewStateFile'
+    importInput.hidden = true
+    importInput.addEventListener('change', () => {
+      const file = importInput.files?.[0]
+      if (file) importReviewStateBackup(file)
+      importInput.value = ''
+    })
+
+    const importButton = document.createElement('button')
+    importButton.type = 'button'
+    importButton.className = 'tool-btn secondary-tool'
+    importButton.id = 'importReviewStateBackup'
+    importButton.textContent = 'Import backup (JSON)'
+    actions.appendChild(importButton)
+    actions.appendChild(importInput)
+    importButton.addEventListener('click', () => importInput.click())
+  }
+
   function clearSavedLocalReviews() {
     const confirmed = window.confirm(
       'Clear all locally saved HHVC review data in this browser? This does not change source files or exported CSVs.'
@@ -796,6 +1061,7 @@
     renderReviewDashboard()
     renderPageQuickList()
     updateLocalStorageStatus()
+    updateDecisionQuickActions()
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
   }
 
@@ -884,10 +1150,21 @@
     refreshUx()
   }
 
+  function initDashboardListeners() {
+    const dashboard = document.getElementById(DASHBOARD_CORE_ID)
+    if (!dashboard || dashboard.dataset.bound === 'true') return
+    dashboard.dataset.bound = 'true'
+    dashboard.addEventListener('click', handleDashboardClick)
+    dashboard.addEventListener('change', handleDashboardChange)
+  }
+
   function init() {
     initWorkspaceTabs()
+    initDecisionQuickActions()
+    initDashboardListeners()
     mountPageSearch()
     mountCopySummaryButton()
+    mountBackupControls()
     mountLocalStorageControls()
     attachRefreshListeners()
     wrapRenderPage()

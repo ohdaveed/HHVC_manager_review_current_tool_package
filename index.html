@@ -196,6 +196,36 @@
               <option value="Revise and resubmit">Revise and resubmit</option>
               <option value="Blocked">Blocked</option>
             </select>
+            <div
+              class="decision-quick-actions"
+              id="decisionQuickActions"
+              role="group"
+              aria-label="Quick decision actions"
+            >
+              <button type="button" class="decision-chip approve" data-decision="Approved">
+                Approve
+              </button>
+              <button
+                type="button"
+                class="decision-chip approve"
+                data-decision="Approved with edits"
+              >
+                Approve w/ edits
+              </button>
+              <button
+                type="button"
+                class="decision-chip revise"
+                data-decision="Revise and resubmit"
+              >
+                Revise
+              </button>
+              <button type="button" class="decision-chip block" data-decision="Blocked">
+                Blocked
+              </button>
+              <button type="button" class="decision-chip" data-decision="Needs review">
+                Needs review
+              </button>
+            </div>
             <label for="reviewNotes">Decision notes</label>
             <textarea
               id="reviewNotes"
@@ -247,7 +277,11 @@
       <main class="canvas">
         <div class="canvas-toolbar">
           <span id="currentPageBadge" class="page-badge"></span>
-          <div id="reviewStickyBar" class="review-sticky-bar" aria-label="Review status and navigation"></div>
+          <div
+            id="reviewStickyBar"
+            class="review-sticky-bar"
+            aria-label="Review status and navigation"
+          ></div>
         </div>
         <div class="browser-shell">
           <div class="browser-bar">
@@ -382,5 +416,6 @@
     <script src="js/review-queue.js"></script>
     <script src="js/dashboard-guidance.js"></script>
     <script src="js/interactive-sitemap.js"></script>
+    <script src="js/keyboard-shortcuts.js"></script>
   </body>
 </html>

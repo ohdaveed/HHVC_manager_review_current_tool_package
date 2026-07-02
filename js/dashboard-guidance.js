@@ -25,6 +25,14 @@
       title: 'Reading targets',
       text: 'Transaction pages target grade 5 to 6. Prevention pages target grade 6. Inspection and enforcement pages may use grade 6 to 8.',
     },
+    {
+      title: 'Keyboard shortcuts',
+      text: 'Press ? for the full list. Arrow keys move between pages, N jumps to the next page needing review, and A/E/R/B/U set the decision.',
+    },
+    {
+      title: 'Back up your reviews',
+      text: 'Reviews save to this browser only. Use "Download backup (JSON)" to keep a copy, and "Import backup (JSON)" to restore it on another machine.',
+    },
   ]
 
   function escapeHtml(value) {
@@ -54,7 +62,7 @@
 
       .dashboard-guidance-grid {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
         gap: 0.55rem;
       }
 
