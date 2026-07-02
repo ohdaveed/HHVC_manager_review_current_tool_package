@@ -17,6 +17,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | --- | --- | --- | --- |
 | `2026-07-02-violation-pages-master-content.md` | Violation Pages Master Content | Phase 1 | **Primary authority** for Article 11 violation categories, page template, and enforcement framing |
 | `2026-07-02-program-manager-reporter-privacy.md` | HHVC Program Manager — reporter privacy | Phase 1 | **Operational authority** for complainant identity not shared with property owner |
+| `2026-07-02-program-manager-tenant-safe-housing-rights.md` | HHVC Program Manager — tenant safe housing rights | Phase 1 | **Operational authority** for safe/habitable housing rights callout (first sentence) |
 | `2026-07-02-sf-gov-housing-discrimination-help.md` | SF.gov — Get help for discrimination in housing | Supplementary | HRC/fair-housing referral; **does not** verify report-page anti-retaliation callouts |
 | `2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf` / `.md` | SFDPH Bed Bug Director's Rules — Tenant Guidelines | Phase 1 + Info | **Bed bug rules authority** (derived from Director's Rules); supports `bedBugsReport` rules pointer |
 | `2026-07-02-ipm-pests-raccoons.pdf` / `.md` | UC IPM Pest Notes 74116: Raccoons | Supplementary | IPM prevention reference only; not HHVC legal/process authority |
@@ -205,9 +206,17 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Confirms existing mockup privacy sentence on all six Phase 1 report pages. Does not cover anti-retaliation callouts.
 
+### 2026-07-02-program-manager-tenant-safe-housing-rights.md
+
+- **Source title:** Program manager operational guidance — tenant rights to safe housing
+- **Authority:** HHVC program manager (stakeholder attestation, 2026-07-02)
+- **Format:** stakeholder intake note
+- **Reviewer:** CA
+- **Note:** Confirms first sentence of *What happens next* callout on five report pages (*"Tenants have rights to safe and habitable housing"*). Does **not** cover anti-retaliation sentence in same callout.
+
 ## Documents still expected for Phase 1
 
-- Anti-retaliation / tenant-rights authority (for reporting housing conditions to the City — e.g. Rent Ordinance Sec. 37.9(d) or program manager attestation)
+- Anti-retaliation authority for reporting housing conditions to the City (second sentence of report-page callouts; e.g. Rent Ordinance Sec. 37.9(d) or program manager attestation)
 - Bed bug rules / Director's Rules source (detailed) — **partial:** tenant guidelines ingested; full Director's Rules PDF still recommended
 - Fee / payment authority for Healthy Housing program fees
 - HHVC inspection / complaint handling policy (operational detail beyond master template)

@@ -15,7 +15,7 @@ This spec covers only the Topic page and Transaction pages:
 
 Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matrix can produce rewrite instructions. Claims marked `missing_source` stay blocked.
 
-**Sources ingested 2026-07-02:** `docs/source/hhvc-policy/2026-07-02-violation-pages-master-content.md`, `docs/source/hhvc-policy/2026-07-02-program-manager-72-hour-tenant-notice.md`, `docs/source/hhvc-policy/2026-07-02-program-manager-reporter-privacy.md`, and supplementary IPM PDFs.
+**Sources ingested 2026-07-02:** violation-pages master content, program manager attestations (72-hour notice, reporter privacy, tenant safe housing rights), and supplementary IPM PDFs.
 
 ## page_key: pestsTopic
 
@@ -74,13 +74,18 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-reporter-privacy — stakeholder attestation
   - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
+- `sections[1].callout.text` (safe housing)
+  - Current: Tenants have rights to safe and habitable housing.
+  - Replace with: *(keep current)*
+  - Source: program-manager-tenant-safe-housing — stakeholder attestation
+  - Reason: Program manager confirms tenants have rights to safe housing.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text`
-  - Current text (exact): Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+- Target field path: `sections[1].callout.text` (anti-retaliation)
+  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
   - Block reason: missing source
-  - Required source: anti-retaliation / tenant-rights authority for **reporting housing conditions to the City**
-  - Note: `2026-07-02-sf-gov-housing-discrimination-help.md` reviewed — covers fair-housing discrimination/HRC only; does not satisfy this claim.
+  - Required source: anti-retaliation authority for reporting housing conditions to the City
 
 ### Acceptance checks
 
@@ -116,13 +121,18 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-reporter-privacy — stakeholder attestation
   - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
+- `sections[1].callout.text` (safe housing)
+  - Current: Tenants have rights to safe and habitable housing.
+  - Replace with: *(keep current)*
+  - Source: program-manager-tenant-safe-housing — stakeholder attestation
+  - Reason: Program manager confirms tenants have rights to safe housing.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text`
-  - Current text (exact): Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+- Target field path: `sections[1].callout.text` (anti-retaliation)
+  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
   - Block reason: missing source
-  - Required source: anti-retaliation / tenant-rights authority for **reporting housing conditions to the City**
-  - Note: `2026-07-02-sf-gov-housing-discrimination-help.md` reviewed — covers fair-housing discrimination/HRC only; does not satisfy this claim.
+  - Required source: anti-retaliation authority for reporting housing conditions to the City
 
 ### Acceptance checks
 
@@ -164,15 +174,25 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-reporter-privacy — stakeholder attestation
   - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
+- `sections[1].callout.text` (safe housing)
+  - Current: Tenants have rights to safe and habitable housing.
+  - Replace with: *(keep current)*
+  - Source: program-manager-tenant-safe-housing — stakeholder attestation
+  - Reason: Program manager confirms tenants have rights to safe housing.
+
 ### Blocked fields
 
-- None remaining for this page.
+- Target field path: `sections[1].callout.text` (anti-retaliation)
+  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Block reason: missing source
+  - Required source: anti-retaliation authority for reporting housing conditions to the City
 
 ### Previously blocked (now resolved)
 
 - Target field path: `sections[2].paragraphs[0]` — verified against SFDPH bed bug Director's Rules tenant guidelines.
 - Target field path: `sections[0].steps[1]` — verified against program manager 72-hour tenant notice guidance.
 - Target field path: `sections[0].steps[2].callout.text` (privacy) — verified against program manager reporter privacy attestation.
+- Target field path: `sections[1].callout.text` (safe housing) — verified against program manager tenant safe housing attestation.
 
 ### Acceptance checks
 
@@ -208,13 +228,18 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-reporter-privacy — stakeholder attestation
   - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
+- `sections[1].callout.text` (safe housing)
+  - Current: Tenants have rights to safe and habitable housing.
+  - Replace with: *(keep current)*
+  - Source: program-manager-tenant-safe-housing — stakeholder attestation
+  - Reason: Program manager confirms tenants have rights to safe housing.
+
 ### Blocked fields
 
-- Target field path: `sections[1].callout.text`
-  - Current text (exact): Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+- Target field path: `sections[1].callout.text` (anti-retaliation)
+  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
   - Block reason: missing source
-  - Required source: anti-retaliation / tenant-rights authority for **reporting housing conditions to the City**
-  - Note: `2026-07-02-sf-gov-housing-discrimination-help.md` reviewed — covers fair-housing discrimination/HRC only; does not satisfy this claim.
+  - Required source: anti-retaliation authority for reporting housing conditions to the City
 
 ### Acceptance checks
 
@@ -291,6 +316,12 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
   - Source: program-manager-reporter-privacy — stakeholder attestation
   - Reason: Program manager confirms complainant identity is not shared with property owner or manager.
 
+- `sections[1].callout.text` (safe housing)
+  - Current: Tenants have rights to safe and habitable housing.
+  - Replace with: *(keep current)*
+  - Source: program-manager-tenant-safe-housing — stakeholder attestation
+  - Reason: Program manager confirms tenants have rights to safe housing.
+
 - `sections[1].paragraphs[0]`
   - Current: HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.
   - Replace with: Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet.
@@ -305,11 +336,15 @@ Only claims marked `verified`, `conflict`, or `editorial_only` in the audit matr
 
 ### Blocked fields
 
-- None remaining for this page.
+- Target field path: `sections[1].callout.text` (anti-retaliation)
+  - Current text (exact): A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.
+  - Block reason: missing source
+  - Required source: anti-retaliation authority for reporting housing conditions to the City
 
 ### Previously blocked (now resolved)
 
 - Target field path: `sections[2].paragraphs[3]` — enforcement wording updated in prior commit.
+- Target field path: `sections[1].callout.text` (safe housing) — verified against program manager tenant safe housing attestation.
 
 ### Acceptance checks
 
