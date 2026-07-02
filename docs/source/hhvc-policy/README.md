@@ -26,6 +26,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-flies.pdf` / `.md` | UC IPM Pest Notes 7457: Flies | Supplementary | IPM sanitation reference; aligns with violation-master Flies category; no Phase 1 mockup page |
 | `2026-07-02-ipm-pests-yellowjackets.pdf` / `.md` | UC IPM Pest Notes 7450: Yellowjackets | Supplementary | IPM reference for stinging insects; no Phase 1 mockup page |
 | `2026-07-02-ipm-pests-bed-bugs.pdf` / `.md` | UC IPM Pest Notes 7454: Bed Bugs | Supplementary | IPM identification/prevention; **not** SFDPH Director's Rules |
+| `2026-07-02-ipm-pests-cockroaches.pdf` / `.md` | UC IPM Pest Notes 7467: Cockroaches | Supplementary | IPM identification/prevention; supports future `cockroachesPrevent` audits |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -124,6 +125,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR IPM guidance on bed bug identification, life cycle, inspection, and treatment. Aligns with violation-master Bed Bugs category. **Does not replace** SFDPH Director's Rules needed for `bedBugsReport` rules pointer and `bedBugsInfo` legal requirements (72-hour investigation, PCO licensing, etc.).
+
+### 2026-07-02-ipm-pests-cockroaches.pdf
+
+- **Original Drive file:** `1-qx61AYDVTfPzG4UV69mU17cdHQp_sAe`
+- **Source title:** UC IPM Pest Notes 7467: Cockroaches (Revised December 2019)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR IPM guidance on German, brownbanded, oriental, American, and Turkestan cockroaches; sanitation, exclusion, and baiting. Aligns with violation-master Cockroaches (Sec 581(b)(8)). Does not cover HHVC reporting process, 72-hour tenant notice, anti-retaliation, or fees.
 
 ## Documents still expected for Phase 1
 
