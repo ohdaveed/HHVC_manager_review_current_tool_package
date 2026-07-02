@@ -115,7 +115,7 @@ function getPrimaryCta(page) {
     for (const step of section.steps || []) {
       if (step.button) return step.button
     }
-    if (section.button) return section.button
+    if (section.button && section.buttonStyle !== 'secondary') return section.button
   }
   return page.primaryCta || ''
 }
@@ -133,7 +133,7 @@ function setPrimaryCta(page, label) {
         return
       }
     }
-    if (section.button) {
+    if (section.button && section.buttonStyle !== 'secondary') {
       section.button = label
       return
     }
