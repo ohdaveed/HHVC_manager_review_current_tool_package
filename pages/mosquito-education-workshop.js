@@ -99,7 +99,9 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
       heading: 'Questions before you apply',
       karl: 'Body: Alternate contact route',
       kind: 'body',
-      paragraphs: ['Call or email the Mosquito Control Program if you need help deciding whether the workshop is right for your group.'],
+      paragraphs: [
+        'Call or email the Mosquito Control Program if you need help deciding whether the workshop is right for your group.',
+      ],
       bullets: [
         'Contact the Mosquito Control Program at 415-252-3806',
         'Allow lead time for scheduling, setup, and equipment transport',
@@ -139,5 +141,5 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   seoTitle: 'Free mosquito education workshop | SF.gov',
   metaDescription:
-    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools.',
+    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and camps.',
 }

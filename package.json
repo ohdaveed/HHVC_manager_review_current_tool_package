@@ -13,7 +13,7 @@
     "validate": "bun build_scripts/validate.js",
     "export": "bun build_scripts/extract-pages.js",
     "build": "bun run validate && bun run export && bun run build:workshop-form && bun build_scripts/build-single-file.js",
-    "build:workshop-form": "npm install --prefix forms/mosquito-workshop-request && npm run build --prefix forms/mosquito-workshop-request",
+    "build:workshop-form": "bun install --cwd forms/mosquito-workshop-request && bun run --cwd forms/mosquito-workshop-request build",
     "format": "prettier --write \"**/*.{js,ts,json,md,css,html}\"",
     "format:check": "prettier --check \"**/*.{js,ts,json,md,css,html}\""
   }
