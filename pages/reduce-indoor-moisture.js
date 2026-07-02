@@ -21,6 +21,19 @@ window.HHVC_PAGES['reduceMoisture'] = {
       ],
     },
     {
+      heading: 'Signs of a moisture problem',
+      karl: 'Body: Signs of excess moisture (added for depth). Helps residents act before mold grows.',
+      kind: 'body',
+      paragraphs: ['Catching moisture early helps you prevent mold. Watch for these signs.'],
+      bullets: [
+        'Condensation or fog on windows, walls, or pipes',
+        'A musty or damp smell that does not go away',
+        'Peeling paint, bubbling, or warped materials',
+        'Dark spots or stains on walls or ceilings',
+        'Damp carpet, cabinets, or flooring',
+      ],
+    },
+    {
       heading: 'Keep indoor humidity in a safer range',
       karl: 'Body: Humidity control',
       kind: 'body',
