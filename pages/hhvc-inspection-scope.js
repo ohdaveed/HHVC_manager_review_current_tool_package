@@ -75,7 +75,7 @@ window.HHVC_PAGES['scopeInfo'] = {
         },
         {
           title: 'Tenant rights and reporting',
-          text: 'Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.',
+          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
         },
       ],

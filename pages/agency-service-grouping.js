@@ -133,7 +133,7 @@ window.HHVC_PAGES['pestsTopic'] = {
         },
         {
           title: 'Pay your Healthy Housing fee',
-          text: 'Pay the program fee for residential buildings with 3 or more units.',
+          text: 'Pay the annual Healthy Housing fee for apartment buildings with 3 or more rental units.',
           target: 'payFee',
           karl: 'Topic page resource item',
         },

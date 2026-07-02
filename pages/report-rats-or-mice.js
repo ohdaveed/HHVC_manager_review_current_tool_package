@@ -49,7 +49,7 @@ window.HHVC_PAGES['ratsReport'] = {
           ],
           callout: {
             karl: 'Body note: Photo guidance',
-            text: 'Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager.',
+            text: "Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           },
           karl: 'Body step 3: Report details checklist',
         },
@@ -63,7 +63,7 @@ window.HHVC_PAGES['ratsReport'] = {
         'Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
         'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
         'If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.',
-        'If HHVC finds a violation, the City may require the property owner or responsible party to correct it.',
+        'Violations must be corrected and may require follow-up inspection.',
       ],
       callout: {
         karl: 'Body note: Tenant rights / anti-retaliation reassurance',
@@ -92,7 +92,7 @@ window.HHVC_PAGES['ratsReport'] = {
         },
         {
           title: 'Tenant rights and reporting',
-          text: 'Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.',
+          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
           karl: 'Related section link to tenant support / rights information',
         },

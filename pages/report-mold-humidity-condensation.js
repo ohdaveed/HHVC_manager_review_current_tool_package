@@ -61,7 +61,7 @@ window.HHVC_PAGES['moldReport'] = {
       karl: 'Body: Article 11 mold threshold and HHVC scope',
       kind: 'body',
       paragraphs: [
-        'HHVC may review mold when the affected area is about 10 square feet or more and may be linked to humidity, condensation, or poor ventilation.',
+        'Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet.',
         'For mold smaller than 10 square feet, clean hard surfaces with soap and water. Reduce humidity and condensation so it does not come back.',
       ],
     },
@@ -73,7 +73,7 @@ window.HHVC_PAGES['moldReport'] = {
         'Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
         'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
         'If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.',
-        'If HHVC finds a violation, the City may require the property owner or responsible party to correct it.',
+        'Violations must be corrected and may require follow-up inspection.',
       ],
       callout: {
         karl: 'Body note: Tenant rights / anti-retaliation reassurance',
@@ -97,7 +97,7 @@ window.HHVC_PAGES['moldReport'] = {
         },
         {
           title: 'Tenant rights and reporting',
-          text: 'Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.',
+          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
           karl: 'Related section link to tenant support / rights information',
         },

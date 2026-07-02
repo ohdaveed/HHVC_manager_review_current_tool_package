@@ -53,7 +53,7 @@ window.HHVC_PAGES['afterReport'] = {
       karl: 'Body: Tenant reassurance section',
       kind: 'body',
       paragraphs: [
-        'Tenants have rights when they ask for repairs or report housing conditions to the City. HHVC does not share the reporter’s identity with the property owner or manager.',
+        "Tenants have rights when they ask for repairs or report housing conditions to the City. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
         'A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department.',
       ],
       button: 'Tenant rights and reporting',

@@ -49,7 +49,7 @@ window.HHVC_PAGES['vegetationReport'] = {
           ],
           callout: {
             karl: 'Body note: Photo guidance',
-            text: 'Photos are not required. Describe the location and condition clearly. HHVC does not share the reporter’s identity with the property owner or manager.',
+            text: "Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           },
           karl: 'Body step 3: Report details checklist',
         },
@@ -77,7 +77,7 @@ window.HHVC_PAGES['vegetationReport'] = {
         },
         {
           title: 'Tenant rights and reporting',
-          text: 'Find help if you are worried about retaliation. HHVC does not share the reporter’s identity with the property owner or manager.',
+          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
           karl: 'Related section link to tenant support / rights information',
         },
