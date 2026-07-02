@@ -136,7 +136,7 @@
   }
 
   function getStatusChipClass(value) {
-    if (value === 'Approved') return 'pass'
+    if (value === 'Approved' || value === 'Approved with edits') return 'pass'
     if (value === 'Blocked' || value === 'Revise and resubmit') return 'fail'
     return 'warn'
   }
@@ -356,6 +356,7 @@
 
   function setWorkspaceOpen(isOpen) {
     updateLocalState((state) => {
+      state.ui = state.ui || {}
       state.ui.workspace_open = isOpen
       state.ui.last_page_key = getCurrentKey()
       return state
@@ -404,6 +405,7 @@
 
     if (options.persist) {
       updateLocalState((state) => {
+        state.ui = state.ui || {}
         state.ui.workspace_tab = tabId
         state.ui.last_page_key = getCurrentKey()
         return state

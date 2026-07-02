@@ -32,7 +32,7 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Pay your fee',
-      karl: 'Body: Pay your fee steps',
+      karl: 'Body: Pay your fee steps. BLOCKED — buttonTarget/URL pending confirmed SF.gov online payment link; CTA is non-functional until added.',
       kind: 'body',
       paragraphs: [
         'Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.',

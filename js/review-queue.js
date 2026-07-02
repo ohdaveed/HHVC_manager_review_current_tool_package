@@ -145,7 +145,7 @@
     if (!value) return ''
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return ''
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
   }
 
   function renderProgressBar(stats) {
@@ -278,16 +278,8 @@
     }
   }
 
-  function handleKeydown(event) {
-    const rowButton = event.target.closest('.review-queue-row[data-page-key]')
-    if (!rowButton || event.key !== 'Enter') return
-    const key = rowButton.getAttribute('data-page-key')
-    if (key) window.renderPage?.(key)
-  }
-
   function init() {
     document.addEventListener('click', handleClick)
-    document.addEventListener('keydown', handleKeydown)
     document.addEventListener('hhvc:review-data-changed', renderReviewQueue)
     renderReviewQueue()
     document.dispatchEvent(new CustomEvent('hhvc:review-queue-ready'))

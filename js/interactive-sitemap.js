@@ -891,6 +891,7 @@
       if (event.detail?.tab === 'sitemap') ensureRendered()
     })
     wrapRenderPageForSitemap()
+    if (isSitemapTabActive()) ensureRendered()
   }
 
   function teardown() {
