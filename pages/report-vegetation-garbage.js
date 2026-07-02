@@ -56,6 +56,35 @@ window.HHVC_PAGES['vegetationReport'] = {
       ],
     },
     {
+      heading: 'Get help making your report',
+      karl: 'Body: Help and access section (added for depth) — third-party reporting, language access, privacy.',
+      kind: 'body',
+      paragraphs: [
+        'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
+      ],
+      bullets: [
+        'You can ask 311 for help in your language.',
+        'You do not have to give your name to make a report.',
+        'HHVC does not share the reporter’s identity with the property owner or manager.',
+        'You can ask 311 for a service request number so you can follow up later.',
+      ],
+    },
+    {
+      heading: 'What happens next',
+      karl: 'Body: After-report expectations, weekday processing note, and concise enforcement statement (added for depth to match sibling report pages).',
+      kind: 'body',
+      paragraphs: [
+        'Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
+        'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
+        'If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.',
+        'If HHVC finds a violation, the City may require the property owner or responsible party to correct it.',
+      ],
+      callout: {
+        karl: 'Body note: Tenant rights / anti-retaliation reassurance',
+        text: 'Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
+      },
+    },
+    {
       heading: 'Related pages',
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
