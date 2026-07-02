@@ -88,11 +88,13 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },

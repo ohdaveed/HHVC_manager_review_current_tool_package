@@ -27,8 +27,11 @@ document.addEventListener('click', (event) => {
   const key = link.getAttribute('data-render-target')
   if (key) window.renderPage(key)
 })
-function button(label, kind = 'primary', target = null) {
+function button(label, kind = 'primary', target = null, url = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
+  if (url) {
+    return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Body link to external tool or resource' : 'Button label: Primary CTA to external tool', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
+  }
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
   return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
 }
@@ -41,12 +44,13 @@ function renderCards(cards = []) {
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}</a></h3><p>${escapeHtml(c.text)}</p></article>`
+      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3><p>${escapeHtml(c.text)}</p></article>`
     })
     .join('')}</div>`
 }
 function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary') : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderTable(rows = []) {
   if (!rows.length) return ''
@@ -63,7 +67,12 @@ function renderSection(section) {
   if (section.callout)
     inner += `<div class="callout">${karlTag(section.callout.karl || 'Body callout', 'body')}${escapeHtml(section.callout.text)}</div>`
   if (section.button)
-    inner += button(section.button, section.buttonStyle || 'primary', section.buttonTarget || null)
+    inner += button(
+      section.button,
+      section.buttonStyle || 'primary',
+      section.buttonTarget || null,
+      section.buttonUrl || null
+    )
   if (section.cards) inner += renderCards(section.cards)
   return `<div class="section">${inner}</div>`
 }

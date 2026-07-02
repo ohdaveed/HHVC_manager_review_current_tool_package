@@ -95,6 +95,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
           title: 'Bed bug rules and prevention',
           text: "Learn about bed bug rules, treatment preparation, and prevention, including the official Director's Rules reference.",
           target: 'bedBugsInfo',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
@@ -107,11 +108,13 @@ window.HHVC_PAGES['bedBugsReport'] = {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Bed bug rules and prevention',

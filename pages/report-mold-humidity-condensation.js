@@ -103,11 +103,13 @@ window.HHVC_PAGES['moldReport'] = {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights and reporting',
@@ -119,6 +121,7 @@ window.HHVC_PAGES['moldReport'] = {
           title: 'Integrated pest management for property managers',
           text: 'Use prevention, monitoring, repairs, and resident outreach to reduce pests and housing health problems.',
           target: 'ownerGuidance',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },

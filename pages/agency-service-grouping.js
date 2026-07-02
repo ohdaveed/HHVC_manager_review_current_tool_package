@@ -14,7 +14,7 @@ window.HHVC_PAGES['pestsTopic'] = {
   seoTitle: 'Pests and housing problems',
   metaDescription: 'Report or prevent pests, mold, garbage, and other housing health problems.',
   editorNote:
-    'Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths.',
+    'Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths. In Karl: tag Topics so child pages appear on this Topic; manually link Information pages after publish.',
   sections: [
     {
       heading: 'About this topic',
@@ -68,8 +68,26 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Topic page service item',
         },
         {
-          title: 'Report garbage, clutter, animal waste, or overgrown plants',
-          text: 'Report conditions that may attract pests or vectors.',
+          title: 'Report a dead bird',
+          text: 'Report a dead bird for West Nile virus surveillance. HHVC may collect and test the bird.',
+          target: 'wnvBirdReport',
+          karl: 'Topic page service item linking to dead bird Transaction page',
+        },
+        {
+          title: 'Report pigeons',
+          text: 'Report pigeon roosting, nesting, droppings, or feeding around a home, building, or shared area.',
+          target: 'pigeonsReport',
+          karl: 'Topic page service item',
+        },
+        {
+          title: 'Report garbage or clutter',
+          text: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
+          target: 'garbageReport',
+          karl: 'Topic page service item',
+        },
+        {
+          title: 'Report overgrown vegetation',
+          text: 'Report overgrown plants, weeds, or brush that may attract or shelter pests or vectors.',
           target: 'vegetationReport',
           karl: 'Topic page service item',
         },
@@ -112,8 +130,8 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Topic page resource item',
         },
         {
-          title: 'Integrated pest management for property managers',
-          text: 'Use prevention, monitoring, repairs, and resident outreach to reduce pests in buildings.',
+          title: 'Integrated pest management for property owners and managers',
+          text: 'Use prevention, monitoring, and resident outreach. UC IPM is the primary source for templates and checklists.',
           target: 'ownerGuidance',
           karl: 'Topic page resource item',
         },
@@ -121,6 +139,46 @@ window.HHVC_PAGES['pestsTopic'] = {
           title: 'Reduce indoor moisture, condensation, and humidity',
           text: 'Learn how to reduce moisture and humidity to prevent mold growth.',
           target: 'reduceMoisture',
+          karl: 'Topic page resource item',
+        },
+        {
+          title: 'Mosquito Control Program',
+          text: 'Learn about mosquito surveillance, catch-basin treatment, and West Nile virus resources.',
+          target: 'mosquitoControl',
+          karl: 'Topic page resource item linking to vector program Information page',
+        },
+        {
+          title: 'Free mosquito education workshop',
+          text: 'Request a free hands-on workshop for schools, camps, museums, and science fairs.',
+          target: 'mosquitoWorkshop',
+          karl: 'Topic page resource item linking to outreach campaign page',
+        },
+      ],
+    },
+    {
+      heading: 'Wildlife and other vector concerns',
+      karl: 'Topic page Resources section, subheading: Wildlife and vectors',
+      kind: 'placement',
+      paragraphs: [
+        'Use these pages for birds, wildlife attractants, and mite concerns tied to housing health.',
+      ],
+      cards: [
+        {
+          title: 'Pigeons and housing health',
+          text: 'Learn about roosting, droppings, and when to report unsanitary bird-related conditions.',
+          target: 'pigeonInfo',
+          karl: 'Topic page resource item',
+        },
+        {
+          title: 'Raccoons and housing health',
+          text: 'Learn how raccoon activity can affect housing health and when to report related conditions.',
+          target: 'raccoonInfo',
+          karl: 'Topic page resource item',
+        },
+        {
+          title: 'Mites and housing health',
+          text: 'Learn how mite concerns differ from bed bugs and when to report underlying pest conditions.',
+          target: 'miteInfo',
           karl: 'Topic page resource item',
         },
       ],
@@ -149,6 +207,38 @@ window.HHVC_PAGES['pestsTopic'] = {
           target: 'payFee',
           karl: 'Topic page resource item',
         },
+        {
+          title: 'Look up building records',
+          text: 'Find complaints, violations, inspector assignment, and public records for a building.',
+          target: 'recordsHub',
+          karl: 'Topic page resource item linking to records hub',
+        },
+      ],
+    },
+    {
+      heading: 'Property owner responsibilities',
+      karl: 'Topic page Resources section, subheading: Property owners',
+      kind: 'placement',
+      paragraphs: ['Use these pages if you own or manage a residential building.'],
+      cards: [
+        {
+          title: 'Property owner responsibilities',
+          text: 'See fees, violation response, and pest prevention obligations under Article 11.',
+          target: 'ownerHub',
+          karl: 'Topic page resource item linking to owner hub',
+        },
+        {
+          title: 'Integrated pest management for property owners and managers',
+          text: 'Use prevention, monitoring, and resident outreach. UC IPM is the primary source for templates and checklists.',
+          target: 'ownerGuidance',
+          karl: 'Topic page resource item',
+        },
+        {
+          title: 'How to respond to a notice of violation',
+          text: 'Learn what tenants and owners each need to do when HHVC issues a notice of violation.',
+          target: 'noticeOfViolation',
+          karl: 'Topic page resource item linking to NOV Information page',
+        },
       ],
     },
     {
@@ -162,6 +252,12 @@ window.HHVC_PAGES['pestsTopic'] = {
           text: 'Learn about tenant protections and where to get help.',
           target: 'tenantRights',
           karl: 'Topic page resource item',
+        },
+        {
+          title: 'How to respond to a notice of violation',
+          text: 'Learn what tenants and owners each need to do when corrective actions are required.',
+          target: 'noticeOfViolation',
+          karl: 'Topic page resource item linking to NOV Information page',
         },
         {
           title: 'What happens after you report',

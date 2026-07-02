@@ -1,14 +1,15 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
-window.HHVC_PAGES['mosquitoesReport'] = {
-  slug: 'sf.gov/report-mosquitoes-home-backyard',
+window.HHVC_PAGES['pigeonsReport'] = {
+  slug: 'sf.gov/report-pigeons',
   type: 'Transaction',
-  title: 'Report mosquitoes in your home or backyard',
-  summary: 'Report mosquitoes or standing water in San Francisco.',
+  title: 'Report pigeons',
+  summary:
+    'Report pigeon roosting, nesting, droppings, or feeding that may create a health concern.',
   audience: [
-    'A tenant or resident affected by mosquitoes',
+    'A tenant or resident affected by pigeons, droppings, or nesting',
     'A friend, family member, advocate, or helper reporting for a tenant',
-    'A person reporting standing water around a home, yard, building, or shared area',
-    'An employee reporting mosquitoes or standing water at work',
+    'A person reporting conditions in a shared area',
+    'An employee reporting a pest or vector concern at work',
   ],
   reading: 'Grade 5–6',
   sections: [
@@ -29,22 +30,22 @@ window.HHVC_PAGES['mosquitoesReport'] = {
         {
           title: 'If you rent, give 72 hours when possible',
           text: [
-            'Tell the property owner or manager about the mosquito or standing water problem.',
+            'Tell the property owner or manager about the pigeon problem.',
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
           ],
           karl: 'Body step 2: Conditional 72-hour tenant notice + timeline expectation',
         },
         {
-          title: 'Tell us where mosquitoes or standing water are',
+          title: 'Describe the condition',
           text: ['Include only the details that apply:'],
           bullets: [
             'The address or location',
-            'Where you saw mosquitoes or standing water',
-            'Whether the water is in a yard, drain, basement, container, fountain, pool, or shared area',
-            'How long the water or mosquito activity has been there',
+            'Whether the problem is roosting, nesting, droppings, or someone feeding pigeons',
+            'Where the pigeons gather, such as a roof, ledge, vent, light well, or shared area',
+            'How long it has been happening',
             'Whether you told the property owner or manager, if you rent',
-            'Whether you can safely remove the standing water yourself',
+            'Any food, garbage, or openings that may attract or shelter pigeons',
             'Your contact information, if you want an inspector to contact you',
           ],
           callout: {
@@ -70,14 +71,14 @@ window.HHVC_PAGES['mosquitoesReport'] = {
       ],
     },
     {
-      heading: 'What may happen next',
-      karl: 'Body: After-report expectations, concise enforcement statement, and tenant rights callout — brought to parity with the other 4 report pages.',
+      heading: 'What happens next',
+      karl: 'Body: After-report expectations, weekday processing note, and concise enforcement statement (added for depth to match sibling report pages).',
       kind: 'body',
       paragraphs: [
-        'Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.',
+        'Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
         'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
-        'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
-        'Violations must be corrected and may require follow-up inspection.',
+        'If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.',
+        'If HHVC finds a violation, the City may require the property owner or responsible party to correct it.',
       ],
       callout: {
         karl: 'Body note: Tenant rights / anti-retaliation reassurance',
@@ -90,22 +91,20 @@ window.HHVC_PAGES['mosquitoesReport'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Prevent mosquitoes',
-          text: 'See prevention steps and best practices.',
-          target: 'mosquitoesPrevent',
-          karl: 'Related section: right-panel linked page',
-        },
-        {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+        },
+        {
+          title: 'Report garbage or clutter',
+          text: 'Use this page for garbage, clutter, debris, or animal waste that may attract pigeons or other vectors.',
+          target: 'garbageReport',
+          karl: 'Related section link to the sibling single-task report page',
         },
         {
           title: 'Tenant rights and reporting',

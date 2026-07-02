@@ -105,9 +105,16 @@ window.HHVC_PAGES['afterReport'] = {
       kind: 'placement',
       cards: [
         {
+          title: 'How to respond to a notice of violation',
+          text: 'Learn how inspections can lead to a notice and what tenants and owners each must do.',
+          target: 'noticeOfViolation',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether HHVC may review the issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights and reporting',
@@ -118,4 +125,7 @@ window.HHVC_PAGES['afterReport'] = {
       ],
     },
   ],
+  seoTitle: 'What happens after you report | SF.gov',
+  metaDescription:
+    'Learn what may happen after a 311 report about a housing or pest problem is sent to Environmental Health.',
 }

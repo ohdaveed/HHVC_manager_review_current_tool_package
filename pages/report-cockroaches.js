@@ -93,16 +93,19 @@ window.HHVC_PAGES['cockroachesReport'] = {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Prevent cockroaches',
           text: 'See prevention steps and best practices.',
           target: 'cockroachesPrevent',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights and reporting',
