@@ -37,7 +37,9 @@ function button(label, kind = 'primary', target = null, url = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
   if (url) {
     const external = isExternalUrl(url)
-    const attr = external ? ' target="_blank" rel="noopener noreferrer"' : ''
+    const attr = external
+      ? ` target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)} (opens in a new tab)"`
+      : ''
     const mark = external ? ' <span aria-hidden="true">↗</span>' : ''
     const karlLabel = external
       ? kind === 'secondary'
@@ -58,7 +60,7 @@ function renderCards(cards = []) {
       const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
         ? external
-          ? ' target="_blank" rel="noopener"'
+          ? ` target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(c.title)} (opens in a new tab)"`
           : ''
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
