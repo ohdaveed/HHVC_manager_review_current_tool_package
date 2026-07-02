@@ -56,11 +56,26 @@ window.HHVC_PAGES['mosquitoesReport'] = {
       ],
     },
     {
+      heading: 'Get help making your report',
+      karl: 'Body: Help and access section (added for depth) — third-party reporting, language access, privacy.',
+      kind: 'body',
+      paragraphs: [
+        'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
+      ],
+      bullets: [
+        'You can ask 311 for help in your language.',
+        'You do not have to give your name to make a report.',
+        'HHVC does not share the reporter’s identity with the property owner or manager.',
+        'You can ask 311 for a service request number so you can follow up later.',
+      ],
+    },
+    {
       heading: 'What may happen next',
       karl: 'Body: After-report expectations, concise enforcement statement, and tenant rights callout — brought to parity with the other 4 report pages.',
       kind: 'body',
       paragraphs: [
         'Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.',
+        'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
         'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
         'Violations must be corrected and may require follow-up inspection.',
       ],

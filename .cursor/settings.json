@@ -1,0 +1,10 @@
+{
+  "plugins": {
+    "browse": {
+      "enabled": true
+    },
+    "netlify-skills": {
+      "enabled": true
+    }
+  }
+}

@@ -28,6 +28,21 @@ window.HHVC_PAGES['ownerGuidance'] = {
       ],
     },
     {
+      heading: 'Common building conditions that attract pests',
+      karl: 'Information page body: Attractant conditions (added for depth). Frames the prevention steps that follow.',
+      kind: 'body',
+      paragraphs: [
+        'Most pest problems in buildings start with a few common conditions. Fixing them early prevents infestations.',
+      ],
+      bullets: [
+        'Unsealed gaps, cracks, and utility openings that let pests enter',
+        'Overflowing, uncovered, or poorly serviced garbage areas',
+        'Standing water, leaks, and damp spaces',
+        'Clutter, cardboard storage, and unused materials that offer shelter',
+        'Overgrown landscaping and debris close to walls and foundations',
+      ],
+    },
+    {
       heading: '1. Follow San Francisco owner responsibilities',
       karl: "Information page body section. SFDPH Director's Rules and Regulations requirements.",
       kind: 'body',

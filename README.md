@@ -15,18 +15,65 @@ The Topic page opens first and uses four scannable clusters:
 
 ## UX/UI review improvements
 
-The manager-review interface now includes:
+The manager-review interface uses a **mockup-first layout**:
 
-- A live manager review dashboard above the page preview
+- The page preview loads above the fold; review tools sit in a collapsible workspace below it
+- A sticky review bar shows the current page title, decision chip, check count, queue progress, and navigation shortcuts
+- A **review queue** tracks all 17 pages with filters, progress, and one-click navigation
+- Workspace tabs hold the queue (default), checks/scorecard, interactive sitemap, and help guidance
+
+Additional review aids:
+
+- A **mockup-first layout** — the page preview stays above the fold; review tools live in a collapsible workspace below
+- A **sticky review bar** with decision status, compliance checks, queue progress, and prev/next navigation
+- A **review queue** showing all pages with filterable decision status and progress across the full inventory
+- A tabbed review workspace (Queue, Checks, Sitemap, Help) collapsed by default
 - A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
-- A dashboard guidance panel that consolidates instructional copy from the sidebar
-- An interactive sitemap diagram with clickable page nodes, page-type filters, and selected-page details
+- Dashboard guidance in the Help workspace tab
+- An interactive sitemap diagram (lazy-loaded when the Sitemap tab is opened)
 - Fast page search by title, page type, summary, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
 - Local browser persistence for review state using `localStorage`
 
 These additions are review aids only. They do not publish content, change page source data, or replace legal/source review.
+
+## Mockup-first layout and review queue
+
+On load, the canvas shows:
+
+1. A compact toolbar with the current page badge and sticky review bar
+2. The browser mockup preview
+3. A collapsed workspace panel (open with **Show workspace**)
+
+The sticky bar includes:
+
+- Current page title, decision chip, and `X/9` checks chip
+- Queue progress (`X/17 reviewed`)
+- **Previous**, **Next**, and **Next needs review** navigation
+- **Show workspace** / **Hide workspace** toggle
+
+The workspace tabs are:
+
+| Tab | Purpose |
+| --- | --- |
+| Queue | Progress bar, decision breakdown, filters, and clickable page list |
+| Checks | Metrics grid and Karl compliance scorecard |
+| Sitemap | Interactive HHVC sitemap (lazy-rendered when the tab opens) |
+| Help | Review guidance cards |
+
+Workspace UI preferences persist in `localStorage` under additive keys:
+
+```js
+state.ui = {
+  workspace_open: false,
+  workspace_tab: 'queue',
+  last_page_key: '...',
+  show_karl_tags: true,
+}
+```
+
+Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Interactive sitemap
 
@@ -43,7 +90,7 @@ This sitemap is a review aid only. It does not replace the source page inventory
 
 ## Dashboard guidance copy
 
-Descriptive review instructions now live in the dashboard instead of being repeated throughout the sidebar.
+Descriptive review instructions live in the **Help** tab of the review workspace (below the mockup preview) instead of being repeated throughout the sidebar.
 
 The dashboard guidance panel explains:
 
@@ -67,6 +114,7 @@ The tool saves:
 
 - Last selected page
 - Karl tag visibility preference
+- Review workspace open/closed state and active tab
 - Reviewer name
 - Per-page review date, decision, notes, risks or blockers, and follow-up owner
 - Per-page edited title, summary, CTA, SEO title, meta description, and URL slug
@@ -160,6 +208,7 @@ HHVC_manager_review_current_tool_package/
 ├─ js/page-data.js
 ├─ js/app.js
 ├─ js/ux-improvements.js
+├─ js/review-queue.js
 ├─ js/dashboard-guidance.js
 ├─ js/interactive-sitemap.js
 ├─ pages/*.js
@@ -176,7 +225,7 @@ HHVC_manager_review_current_tool_package/
 
 - Edit public page content in `pages/*.js`.
 - Edit render behavior in `js/app.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/dashboard-guidance.js`, `js/interactive-sitemap.js`, and `css/ux-improvements.css`.
+- Edit UX review helpers in `js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`, `js/interactive-sitemap.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.

@@ -19,6 +19,12 @@ window.HHVC_PAGES['payFee'] = {
         'Have your invoice, property address, or account information ready before you start.',
         'Use the payment method listed on your annual invoice when one is provided.',
       ],
+      bullets: [
+        'Your invoice or account information, if you received one',
+        'The property address',
+        'The name and contact information for the billing contact',
+        'The payment method allowed on your invoice',
+      ],
     },
     {
       heading: 'Who may need to pay',
@@ -32,7 +38,7 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Pay your fee',
-      karl: 'Body: Pay your fee steps',
+      karl: 'Body: Pay your fee steps. buttonTarget/URL pending confirmed SF.gov online payment link; CTA is non-functional until added.',
       kind: 'body',
       paragraphs: [
         'Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.',
@@ -45,6 +51,15 @@ window.HHVC_PAGES['payFee'] = {
       kind: 'body',
       paragraphs: [
         'Use the contact information on your invoice or call Environmental Health at 415-252-3800.',
+      ],
+    },
+    {
+      heading: 'Questions about your fee',
+      karl: 'Body: Fee questions (added for depth). Do not add fee amounts, due dates, or penalties — amounts vary by building and must come from the invoice.',
+      kind: 'body',
+      paragraphs: [
+        'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
+        'Keep your invoice or account information in case you need to ask a question or confirm a payment.',
       ],
     },
     {
