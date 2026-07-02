@@ -23,6 +23,18 @@ window.HHVC_PAGES['pestsTopic'] = {
       paragraphs: [
         'Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11.',
         'This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation.',
+        'You can ask 311 for help in your language when you report a problem.',
+      ],
+    },
+    {
+      heading: 'How to use this page',
+      karl: 'Topic page body: How to use this page (added for depth). Keep the four clusters intact.',
+      kind: 'body',
+      bullets: [
+        'Report a problem if you are dealing with pests, mold, garbage, clutter, or other housing health problems.',
+        'Prevent problems with step-by-step guidance for tenants, owners, and building staff.',
+        'Know what HHVC can inspect if you are not sure where to start.',
+        'Get tenant help if you are worried about reporting a housing condition.',
       ],
     },
     {
