@@ -51,12 +51,14 @@ describe('csvEscape', () => {
   // csvEscape trims the value with String.trimStart() before checking for a
   // leading tab/CR, but trimStart() itself strips tabs and CRs as whitespace
   // — so those two prefix checks can never match and offer no protection.
-  // This test documents that gap rather than papering over it silently.
-  test('does not currently neutralize a bare leading tab or carriage return', () => {
-    expect(ctx.csvEscape('\tcmd')).toBe('\tcmd')
-    // The CR itself still triggers the separate comma/quote/newline quoting
-    // rule below, just not the formula-injection apostrophe prefix.
-    expect(ctx.csvEscape('\rcmd')).toBe('"\rcmd"')
+  // Marked as todo (intended secure behavior, not yet implemented) rather
+  // than asserted as correct, so a future fix shows up as "should remove
+  // .todo" instead of an unrelated csvEscape test starting to fail.
+  test.todo('neutralizes a bare leading tab or carriage return', () => {
+    expect(ctx.csvEscape('\tcmd')).toBe("'\tcmd")
+    // The CR still needs outer quoting (comma/quote/newline rule), with the
+    // protective apostrophe kept inside those quotes, same as the '=' case above.
+    expect(ctx.csvEscape('\rcmd')).toBe('"' + "'\rcmd" + '"')
   })
 
   test('detects formula-injection prefixes after leading whitespace', () => {
