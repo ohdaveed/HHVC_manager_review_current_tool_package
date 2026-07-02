@@ -71,26 +71,30 @@ window.HHVC_PAGES['payFee'] = {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
           text: 'Check whether Environmental Health may review a pest, vector, or housing health condition.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report a housing or pest problem',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Pests and housing problems',
           text: 'Return to the main Topic page for HHVC pest, vector, and housing health issues.',
           target: 'pestsTopic',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Integrated pest management for property managers',
           text: 'Use prevention, monitoring, and resident outreach to reduce pests in buildings.',
           target: 'ownerGuidance',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
   seoTitle: 'Pay your Healthy Housing fee | SF.gov',
   metaDescription:
-    'Pay or learn about the annual Healthy Housing fee for San Francisco apartment buildings with 3 or more rental units.',
+    'Pay or learn about the Healthy Housing fee for San Francisco apartment buildings with 3 or more rental units.',
 }

@@ -86,6 +86,27 @@
     const haystack = `${key} ${title} ${summary}`
 
     if (key === 'pestsTopic') return 'Topic landing page'
+    if (
+      key === 'recordsHub' ||
+      key === 'ownerHub' ||
+      title.includes('look up') ||
+      title.includes('lookup') ||
+      title.includes('find complaints') ||
+      title.includes('find residential hotel') ||
+      title.includes('find your district') ||
+      title.includes('public records') ||
+      title.includes('notice of violation')
+    )
+      return 'Look up records'
+    if (
+      title.includes('pigeon') ||
+      title.includes('raccoon') ||
+      title.includes('mite') ||
+      title.includes('dead bird') ||
+      title.includes('mosquito control') ||
+      title.includes('mosquito education workshop')
+    )
+      return 'Vector and wildlife information'
     if (title.includes('report') || haystack.includes('fee')) return 'Report or pay'
     if (
       title.includes('prevent') ||

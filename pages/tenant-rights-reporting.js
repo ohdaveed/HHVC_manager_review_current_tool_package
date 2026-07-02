@@ -83,13 +83,24 @@ window.HHVC_PAGES['tenantRights'] = {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
+          title: 'How to respond to a notice of violation',
+          text: 'Learn what to do if you or your building receives corrective actions.',
+          target: 'noticeOfViolation',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
   ],
+  seoTitle: 'Tenant rights when reporting housing | SF.gov',
+  metaDescription:
+    'Tenant protections and help if you are worried about retaliation after reporting housing conditions.',
 }

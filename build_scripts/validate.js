@@ -15,11 +15,20 @@ vm.createContext(ctx)
 // excluded because it expects the full DOM and runtime globals.
 const files = [
   'pages/agency-service-grouping.js',
+  'pages/lookup-building-records.js',
+  'pages/lookup-complaints-inspections.js',
+  'pages/lookup-residential-violations.js',
+  'pages/lookup-residential-hotel-records.js',
+  'pages/find-district-inspector.js',
+  'pages/public-records-request.js',
+  'pages/property-owner-responsibilities.js',
+  'pages/respond-to-notice-of-violation.js',
   'pages/report-rats-or-mice.js',
   'pages/report-cockroaches.js',
   'pages/report-bed-bugs.js',
   'pages/bed-bug-rules-prevention.js',
   'pages/report-mosquitoes.js',
+  'pages/report-dead-bird.js',
   'pages/report-pigeons.js',
   'pages/report-garbage-clutter.js',
   'pages/report-overgrown-vegetation.js',
@@ -31,6 +40,11 @@ const files = [
   'pages/keep-rats-and-mice-out.js',
   'pages/prevent-cockroaches.js',
   'pages/prevent-mosquitoes.js',
+  'pages/mosquito-control-program.js',
+  'pages/mosquito-education-workshop.js',
+  'pages/raccoon-information.js',
+  'pages/pigeon-information.js',
+  'pages/mite-information.js',
   'pages/pay-healthy-housing-fee.js',
   'pages/reduce-indoor-moisture.js',
   'js/page-data.js',
@@ -44,6 +58,7 @@ const cardSchema = z.object({
   title: z.string().min(1),
   text: z.string().min(1),
   target: z.string().optional(),
+  url: z.string().optional(),
   karl: z.string().optional(),
 })
 
@@ -51,6 +66,8 @@ const stepSchema = z.object({
   title: z.string().min(1),
   text: z.array(z.string()).optional(),
   button: z.string().optional(),
+  buttonTarget: z.string().optional(),
+  buttonUrl: z.string().optional(),
   karl: z.string().optional(),
   callout: z
     .object({
@@ -71,6 +88,7 @@ const sectionSchema = z.object({
   cards: z.array(cardSchema).optional(),
   button: z.string().optional(),
   buttonTarget: z.string().optional(),
+  buttonUrl: z.string().optional(),
   buttonStyle: z.string().optional(),
   callout: z
     .object({

@@ -12,21 +12,23 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     'Building staff or maintenance staff supporting bed bug prevention',
   ],
   reading: 'Grade 6',
+  editorNote:
+    'Information page. Official Director’s Rules PDF is on sfdph.org (not Google Drive). PDF accessibility: consider an HTML summary on SF.gov if Karl editors require a non-PDF primary source. Tenant guidelines PDF is internal reference in docs/source/hhvc-policy/.',
   sections: [
     {
       heading: 'Use the official bed bug rules',
-      karl: 'Body: External reference link to official bed bug Director’s Rules PDF',
+      karl: 'Body: External reference link to official bed bug Director’s Rules PDF on sfdph.org',
       kind: 'placement',
       paragraphs: [
         'SFDPH has Director’s Rules and Regulations for preventing and controlling bed bugs in San Francisco. Use them as the detailed reference for requirements.',
+        'The PDF opens on the SFDPH website. You will leave SF.gov.',
       ],
       cards: [
         {
-          title:
-            'San Francisco Department of Public Health — Director’s Rules and Regulations for Prevention and Control of Bed Bugs',
-          text: 'Reference the Director’s Rules for bed bug prevention, control, owner responsibilities, and treatment preparation standards.',
-          url: 'https://drive.google.com/file/d/1PPwhA3IeJ-jl5es0TvbmSAB_J8UjK8LP/view',
-          karl: 'Body link or external reference link: official bed bug Director’s Rules PDF',
+          title: 'SFDPH Director’s Rules for bed bug prevention and control',
+          text: 'Open the official PDF for bed bug prevention, control, owner responsibilities, and treatment preparation standards.',
+          url: 'https://www.sfdph.org/dph/files/EHSdocs/Vector/BedBug/BedBugRegs_070112.pdf',
+          karl: 'Body external link: official SFDPH bed bug Director’s Rules PDF (replaces interim Google Drive link)',
         },
       ],
     },
@@ -119,16 +121,19 @@ window.HHVC_PAGES['bedBugsInfo'] = {
           title: 'Report bed bugs',
           text: 'Report an active bed bug problem through 311.',
           target: 'bedBugsReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights and reporting',
           text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
       ],
     },
