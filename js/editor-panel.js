@@ -1,31 +1,17 @@
 // SEO/editor panel: syncing input fields with the current page, dirty-state
 // indicators, the search-result preview, and per-field reset. Depends on
-// js/state.js (pageData, ORIGINAL_DATA, currentPageKey, getPrimaryCta,
-// setPrimaryCta, escapeHtml) and js/page-render.js (karlTag).
-function defaultSeoTitle(page) {
-  return page.seoTitle || `${page.title} | San Francisco`
-}
-function defaultMetaDescription(page) {
-  return page.metaDescription || page.summary || ''
-}
-function setText(id, value) {
-  const el = document.getElementById(id)
-  if (el) el.textContent = value
-}
-function setField(id, value) {
-  const el = document.getElementById(id)
-  if (el) el.value = value || ''
-}
+// js/utils.js (getPrimaryCta, setPrimaryCta, escapeHtml, defaultSeoTitle,
+// defaultMetaDescription, getValue, setValue, setText) and js/state.js
+// (pageData, ORIGINAL_DATA, currentPageKey).
 function statusClass(length, max) {
   return length <= max ? 'ok' : 'warn'
 }
 function updateSearchPreview() {
   const page = pageData[currentPageKey]
   if (!page) return
-  const seoTitle = document.getElementById('seoTitleInput')?.value || defaultSeoTitle(page)
-  const metaDescription =
-    document.getElementById('metaDescriptionInput')?.value || defaultMetaDescription(page)
-  const slug = document.getElementById('urlInput')?.value || page.slug
+  const seoTitle = getValue('seoTitleInput') || defaultSeoTitle(page)
+  const metaDescription = getValue('metaDescriptionInput') || defaultMetaDescription(page)
+  const slug = getValue('urlInput') || page.slug
   setText('seoPreviewTitle', seoTitle)
   setText('seoPreviewUrl', 'https://' + slug)
   setText('seoPreviewDescription', metaDescription)
@@ -44,11 +30,11 @@ function updateSearchPreview() {
   }
 }
 function syncEditorFields(page) {
-  setField('titleInput', page.title)
-  setField('descriptionInput', page.summary)
-  setField('ctaInput', getPrimaryCta(page))
-  setField('seoTitleInput', defaultSeoTitle(page))
-  setField('metaDescriptionInput', defaultMetaDescription(page))
+  setValue('titleInput', page.title)
+  setValue('descriptionInput', page.summary)
+  setValue('ctaInput', getPrimaryCta(page))
+  setValue('seoTitleInput', defaultSeoTitle(page))
+  setValue('metaDescriptionInput', defaultMetaDescription(page))
   updateSearchPreview()
 }
 function updateDirtyIndicators(key) {
@@ -100,7 +86,7 @@ function resetField(fieldKey) {
 
   const value = field.get(orig)
   field.set(page, value)
-  setField(field.inputId, value)
+  setValue(field.inputId, value)
   applyFieldToMockup(fieldKey, value)
 
   updateDirtyIndicators(key)

@@ -1,11 +1,11 @@
 /* Cross-page review queue for manager approval workflow.
-   Reads HHVC_DATA and hhvcManagerReviewState:v1; does not mutate page source data. */
+   Reads HHVC_DATA and hhvcManagerReviewState:v1 via window.reviewState
+   (exposed by js/ux-improvements.js, which must load first); does not
+   mutate page source data. */
 ;(function mountReviewQueue() {
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order) return
 
-  const STORAGE_KEY = 'hhvcManagerReviewState:v1'
-  const STORAGE_VERSION = 1
   const QUEUE_PANEL_ID = 'reviewWorkspaceQueue'
   const STALE_DAYS = 3
   const DEFAULT_STATE = {
@@ -14,64 +14,10 @@
     sort: 'priority',
   }
 
-  const { escapeHtml, getPrimaryCta, today } = window.utils
+  const { escapeHtml, getPrimaryCta, today, getStatusChipClass, setValue, buildReviewRecord } =
+    window.utils
 
   const state = { ...DEFAULT_STATE }
-
-  function readLocalState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return { ui: {}, pages: {} }
-      const parsed = JSON.parse(raw)
-      if (!parsed || parsed.version !== STORAGE_VERSION) return { ui: {}, pages: {} }
-      return {
-        ui: parsed.ui || {},
-        pages: parsed.pages || {},
-      }
-    } catch {
-      return { ui: {}, pages: {} }
-    }
-  }
-
-  function defaultSeoTitle(page) {
-    return page.seoTitle || `${page.title || ''} | San Francisco`
-  }
-
-  function defaultMetaDescription(page) {
-    return page.metaDescription || page.summary || ''
-  }
-
-  function getEmptyLocalState() {
-    return {
-      version: STORAGE_VERSION,
-      updated_at: null,
-      ui: {},
-      globals: {},
-      pages: {},
-    }
-  }
-
-  function readFullLocalState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return getEmptyLocalState()
-      const parsed = JSON.parse(raw)
-      if (!parsed || parsed.version !== STORAGE_VERSION) return getEmptyLocalState()
-      return {
-        ...getEmptyLocalState(),
-        ...parsed,
-        ui: parsed.ui || {},
-        globals: parsed.globals || {},
-        pages: parsed.pages || {},
-      }
-    } catch {
-      return getEmptyLocalState()
-    }
-  }
-
-  function writeFullLocalState(nextState) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
-  }
 
   function getSidebarReviewerName() {
     const v = document.getElementById('reviewerInput')?.value
@@ -86,59 +32,38 @@
   }
 
   function updateLocalReviewForPage(pageKey, patch) {
-    const state = readFullLocalState()
     const page = DATA.pages[pageKey] || {}
-    const existing = state.pages[pageKey] || {}
+    let nextSaved
 
-    const nextSaved = {
-      ...existing,
-      page_key: existing.page_key || pageKey,
-      page_title: existing.page_title || page.title || pageKey,
-      page_type: existing.page_type || page.type || '',
-      url_slug: existing.url_slug || page.slug || '',
-      seo_title: existing.seo_title || defaultSeoTitle(page),
-      meta_description: existing.meta_description || defaultMetaDescription(page),
-      primary_cta: existing.primary_cta || getPrimaryCta(page),
-      reading_target: existing.reading_target || page.reading || '',
-      review_date: existing.review_date || getSidebarReviewDate(),
-      reviewer: existing.reviewer || document.getElementById('reviewerInput')?.value || '',
-      notes: existing.notes || '',
-      risks_or_blockers: existing.risks_or_blockers || '',
-      follow_up_owner: existing.follow_up_owner || '',
-      decision: existing.decision || 'Needs review',
-    }
+    window.reviewState.update((localState) => {
+      const existing = localState.pages[pageKey] || {}
+      const defaults = buildReviewRecord(page, pageKey, {
+        review_date: getSidebarReviewDate(),
+        reviewer: document.getElementById('reviewerInput')?.value || '',
+      })
+      nextSaved = {
+        ...defaults,
+        ...existing,
+        ...patch,
+        updated_at: new Date().toISOString(),
+      }
+      localState.pages[pageKey] = nextSaved
+      return localState
+    })
 
-    Object.assign(nextSaved, patch)
-    nextSaved.updated_at = new Date().toISOString()
-
-    state.pages[pageKey] = nextSaved
-    state.updated_at = nextSaved.updated_at
-
-    try {
-      writeFullLocalState(state)
-    } catch (err) {
-      console.error('Failed to save queue action locally:', err)
-      return existing
-    }
     return nextSaved
-  }
-
-  function setFieldValue(id, value) {
-    const el = document.getElementById(id)
-    if (!el) return
-    el.value = value ?? ''
   }
 
   function syncSidebarForKey(pageKey, saved) {
     if (pageKey !== getCurrentKey()) return
-    setFieldValue('reviewDecision', saved.decision || 'Needs review')
-    setFieldValue('reviewOwner', saved.follow_up_owner || '')
-    setFieldValue('reviewNotes', saved.notes || '')
-    setFieldValue('reviewRisks', saved.risks_or_blockers || '')
-    setFieldValue('reviewDateInput', saved.review_date || getSidebarReviewDate())
+    setValue('reviewDecision', saved.decision || 'Needs review')
+    setValue('reviewOwner', saved.follow_up_owner || '')
+    setValue('reviewNotes', saved.notes || '')
+    setValue('reviewRisks', saved.risks_or_blockers || '')
+    setValue('reviewDateInput', saved.review_date || getSidebarReviewDate())
     // reviewerInput is editable; keep it if the user already typed something different.
     if (!String(document.getElementById('reviewerInput')?.value || '').trim())
-      setFieldValue('reviewerInput', saved.reviewer || '')
+      setValue('reviewerInput', saved.reviewer || '')
   }
 
   function dispatchReviewFieldChange(id) {
@@ -149,28 +74,18 @@
   }
 
   function writeQueueUiState() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || {}
-      const nextState = {
-        ...parsed,
-        version: STORAGE_VERSION,
-        ui: {
-          ...(parsed.ui || {}),
-          review_queue: {
-            filter: state.filter,
-            query: state.query,
-            sort: state.sort,
-          },
-        },
+    window.reviewState.update((localState) => {
+      localState.ui.review_queue = {
+        filter: state.filter,
+        query: state.query,
+        sort: state.sort,
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
-    } catch {
-      // Keep the queue usable even if localStorage is unavailable.
-    }
+      return localState
+    })
   }
 
   function restoreQueueUiState() {
-    const queueUi = readLocalState().ui?.review_queue || {}
+    const queueUi = window.reviewState.read().ui?.review_queue || {}
     state.filter = queueUi.filter || DEFAULT_STATE.filter
     state.query = queueUi.query || DEFAULT_STATE.query
     state.sort = queueUi.sort || DEFAULT_STATE.sort
@@ -180,12 +95,6 @@
     const saved = savedPages[pageKey]
     if (!saved) return 'Needs review'
     return saved.decision || 'Needs review'
-  }
-
-  function getStatusChipClass(decision) {
-    if (decision === 'Approved' || decision === 'Approved with edits') return 'pass'
-    if (decision === 'Blocked' || decision === 'Revise and resubmit') return 'fail'
-    return 'warn'
   }
 
   function normalize(value) {
@@ -229,7 +138,7 @@
   }
 
   function getQueueRows() {
-    const savedPages = readLocalState().pages
+    const savedPages = window.reviewState.read().pages
     return DATA.order.map(([key]) => {
       const page = DATA.pages[key] || {}
       const saved = savedPages[key]
@@ -658,7 +567,7 @@
       const action = actionButton.getAttribute('data-queue-action')
       const suggestedOwner = getSidebarReviewerName()
       const reviewDate = getSidebarReviewDate()
-      const currentSaved = readFullLocalState().pages[key] || {}
+      const currentSaved = window.reviewState.read().pages[key] || {}
 
       let saved
       if (action === 'assign-me') {

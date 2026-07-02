@@ -18,27 +18,27 @@
 
   // js/utils.js loads first (see index.html script order), so the shared
   // helpers are always available.
-  const { escapeHtml, getPrimaryCta, setPrimaryCta, today, debounce, toCsv, downloadFile } =
-    window.utils
+  const {
+    escapeHtml,
+    getPrimaryCta,
+    setPrimaryCta,
+    today,
+    debounce,
+    toCsv,
+    downloadFile,
+    getStatusChipClass,
+    defaultSeoTitle,
+    defaultMetaDescription,
+    getValue,
+    setValue,
+    setText,
+    buildReviewRecord,
+  } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
   // 'input' path; 'change' (fires on blur) still refreshes immediately so the
   // dashboard is never stale once the reviewer moves on.
   const REFRESH_DEBOUNCE_MS = 300
-
-  function getValue(id) {
-    return document.getElementById(id)?.value || ''
-  }
-
-  function setValue(id, value) {
-    const element = document.getElementById(id)
-    if (element) element.value = value ?? ''
-  }
-
-  function setText(id, value) {
-    const element = document.getElementById(id)
-    if (element) element.textContent = value ?? ''
-  }
 
   function getCurrentKey() {
     return document.getElementById('pageSelect')?.value || 'pestsTopic'
@@ -46,14 +46,6 @@
 
   function getCurrentPage() {
     return DATA.pages[getCurrentKey()] || {}
-  }
-
-  function defaultSeoTitle(page) {
-    return page.seoTitle || `${page.title || ''} | San Francisco`
-  }
-
-  function defaultMetaDescription(page) {
-    return page.metaDescription || page.summary || ''
   }
 
   function getSeoTitle(page) {
@@ -143,12 +135,6 @@
     return getRuleResultsFor(page, { useEditor: true })
   }
 
-  function getStatusChipClass(value) {
-    if (value === 'Approved') return 'pass'
-    if (value === 'Blocked' || value === 'Revise and resubmit') return 'fail'
-    return 'warn'
-  }
-
   function getEmptyState() {
     return {
       version: STORAGE_VERSION,
@@ -208,22 +194,27 @@
     return writeLocalState(updated)
   }
 
+  // Explicit dependency for other modules (e.g. js/review-queue.js, which
+  // loads after this file) instead of relying on implicit bare globals.
+  window.reviewState = {
+    read: readLocalState,
+    write: writeLocalState,
+    update: updateLocalState,
+    getEmptyState,
+  }
+
   function collectCurrentPageReviewState() {
     const page = getCurrentPage()
     const pageKey = getCurrentKey()
-    const seoTitle = getSeoTitle(page)
-    const metaDescription = getMetaDescription(page)
 
-    return {
-      page_key: pageKey,
+    return buildReviewRecord(page, pageKey, {
       page_title: getValue('titleInput') || page.title || '',
-      page_type: page.type || '',
       url_slug: getValue('urlInput') || page.slug || '',
       edited_title: getValue('titleInput') || page.title || '',
       edited_summary: getValue('descriptionInput') || page.summary || '',
       primary_cta: getValue('ctaInput') || getPrimaryCta(page) || '',
-      seo_title: seoTitle,
-      meta_description: metaDescription,
+      seo_title: getSeoTitle(page),
+      meta_description: getMetaDescription(page),
       reviewer: getValue('reviewerInput'),
       review_date: getValue('reviewDateInput') || today(),
       decision: getValue('reviewDecision') || 'Needs review',
@@ -232,7 +223,7 @@
       follow_up_owner: getValue('reviewOwner'),
       reading_target: page.reading || '',
       updated_at: new Date().toISOString(),
-    }
+    })
   }
 
   function saveCurrentPageToLocalStorage() {

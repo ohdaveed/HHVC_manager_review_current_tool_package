@@ -15,7 +15,7 @@ function init() {
     page.title = e.target.value
     applyFieldToMockup('title', e.target.value)
     if (!page.seoTitleEdited) {
-      setField('seoTitleInput', defaultSeoTitle(page))
+      setValue('seoTitleInput', defaultSeoTitle(page))
     }
     updateSearchPreview()
     updateDirtyIndicators(currentPageKey)
@@ -25,7 +25,7 @@ function init() {
     page.summary = e.target.value
     applyFieldToMockup('summary', e.target.value)
     if (!page.metaDescriptionEdited) {
-      setField('metaDescriptionInput', defaultMetaDescription(page))
+      setValue('metaDescriptionInput', defaultMetaDescription(page))
     }
     updateSearchPreview()
     updateDirtyIndicators(currentPageKey)

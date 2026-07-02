@@ -2,6 +2,27 @@
    Centralizes common functions to reduce duplication and ensure consistent
    escaping, CTA handling, and date formatting across the codebase. */
 
+/** Canonical field list for a persisted review record (see buildReviewRecord). */
+const REVIEW_RECORD_FIELDS = [
+  'review_date',
+  'reviewer',
+  'page_key',
+  'page_title',
+  'page_type',
+  'url_slug',
+  'decision',
+  'notes',
+  'risks_or_blockers',
+  'follow_up_owner',
+  'seo_title',
+  'meta_description',
+  'primary_cta',
+  'reading_target',
+  'edited_title',
+  'edited_summary',
+  'updated_at',
+]
+
 ;(function initSharedUtils() {
   // Expose utilities to window for backward compatibility
   // during the migration period.
@@ -18,6 +39,14 @@
     debounce,
     throttle,
     showErrorBanner,
+    getStatusChipClass,
+    defaultSeoTitle,
+    defaultMetaDescription,
+    getValue,
+    setValue,
+    setText,
+    buildReviewRecord,
+    REVIEW_RECORD_FIELDS,
   }
 
   installGlobalErrorHandlers()
@@ -237,4 +266,101 @@ function throttle(fn, limit) {
       setTimeout(() => (inThrottle = false), limit)
     }
   }
+}
+
+/**
+ * Map a review decision to its status-chip color class.
+ * 'Approved with edits' counts as passing (green) alongside 'Approved' —
+ * to a reviewer scanning a list, it reads as an approved state.
+ * @param {string} decision
+ * @returns {'pass'|'fail'|'warn'}
+ */
+function getStatusChipClass(decision) {
+  if (decision === 'Approved' || decision === 'Approved with edits') return 'pass'
+  if (decision === 'Blocked' || decision === 'Revise and resubmit') return 'fail'
+  return 'warn'
+}
+
+/**
+ * Default SEO title for a page when none has been set explicitly.
+ * @param {object} page
+ * @returns {string}
+ */
+function defaultSeoTitle(page) {
+  return page.seoTitle || `${page.title || ''} | San Francisco`
+}
+
+/**
+ * Default meta description for a page when none has been set explicitly.
+ * @param {object} page
+ * @returns {string}
+ */
+function defaultMetaDescription(page) {
+  return page.metaDescription || page.summary || ''
+}
+
+/**
+ * Read a form field's current value.
+ * @param {string} id
+ * @returns {string}
+ */
+function getValue(id) {
+  return document.getElementById(id)?.value ?? ''
+}
+
+/**
+ * Set a form field's value, if the element exists.
+ * @param {string} id
+ * @param {string} value
+ */
+function setValue(id, value) {
+  const el = document.getElementById(id)
+  if (el) el.value = value ?? ''
+}
+
+/**
+ * Set an element's text content, if the element exists.
+ * @param {string} id
+ * @param {string} value
+ */
+function setText(id, value) {
+  const el = document.getElementById(id)
+  if (el) el.textContent = value ?? ''
+}
+
+/**
+ * Build a review record for a page with sane defaults, applying overrides
+ * and projecting down to the requested field set. This is the single
+ * source of truth for the "review record" shape persisted to local
+ * storage and exported via CSV/JSON.
+ * @param {object} page
+ * @param {string} pageKey
+ * @param {object} [overrides]
+ * @param {string[]} [fields]
+ * @returns {object}
+ */
+function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD_FIELDS) {
+  const base = {
+    review_date: today(),
+    reviewer: '',
+    page_key: pageKey,
+    page_title: page.title || pageKey,
+    page_type: page.type || '',
+    url_slug: page.slug || '',
+    decision: 'Needs review',
+    notes: '',
+    risks_or_blockers: '',
+    follow_up_owner: '',
+    seo_title: defaultSeoTitle(page),
+    meta_description: defaultMetaDescription(page),
+    primary_cta: getPrimaryCta(page),
+    reading_target: page.reading || '',
+    edited_title: '',
+    edited_summary: '',
+    updated_at: '',
+  }
+  const merged = { ...base, ...overrides }
+  const result = {}
+  for (const key of fields) result[key] = merged[key]
+  return result
 }
