@@ -1,0 +1,34 @@
+// Assemble the static deploy bundle in dist/ for Netlify.
+// Copies only what the browser needs at runtime: index.html, css/, js/,
+// pages/, and the three @sfgov/design-system stylesheets that index.html
+// references via their node_modules paths (kept at the same relative path
+// so index.html works unmodified). Plain Node APIs so it runs under either
+// node or bun.
+const fs = require('fs')
+const path = require('path')
+
+const root = path.resolve(__dirname, '..')
+const dist = path.join(root, 'dist')
+
+fs.rmSync(dist, { recursive: true, force: true })
+fs.mkdirSync(dist, { recursive: true })
+
+const copies = [
+  'index.html',
+  'css',
+  'js',
+  'pages',
+  'node_modules/@sfgov/design-system/dist/css/base.css',
+  'node_modules/@sfgov/design-system/dist/css/typography.css',
+  'node_modules/@sfgov/design-system/dist/css/components.css',
+]
+
+for (const rel of copies) {
+  const src = path.join(root, rel)
+  const dest = path.join(dist, rel)
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  fs.cpSync(src, dest, { recursive: true })
+  console.log(`copied ${rel}`)
+}
+
+console.log(`dist ready at ${dist}`)

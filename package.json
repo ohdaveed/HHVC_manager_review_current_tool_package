@@ -13,6 +13,7 @@
     "validate": "bun build_scripts/validate.js",
     "export": "bun build_scripts/extract-pages.js",
     "build": "bun run validate && bun run export && bun build_scripts/build-single-file.js",
+    "build:netlify": "node build_scripts/validate.js && node build_scripts/build-netlify-dist.js",
     "format": "prettier --write \"**/*.{js,ts,json,md,css,html}\"",
     "format:check": "prettier --check \"**/*.{js,ts,json,md,css,html}\""
   }

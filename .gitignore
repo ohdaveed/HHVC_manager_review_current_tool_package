@@ -10,6 +10,10 @@ single-file-export-current-source.html
 data/page_inventory.json
 data/page_inventory.csv
 
+# Netlify
+dist/
+.netlify
+
 # OS files
 .DS_Store
 Thumbs.db

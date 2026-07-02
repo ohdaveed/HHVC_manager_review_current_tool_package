@@ -1,0 +1,17 @@
+# Netlify config for the HHVC manager-review mockup (static site, no backend).
+# `bun run build:netlify` validates page data and assembles dist/ with only the
+# runtime files (index.html, css/, js/, pages/, and the three @sfgov/design-system
+# stylesheets index.html references).
+[build]
+  command = "npm run build:netlify"
+  publish = "dist"
+
+# Mirror the security headers served by server.ts in local dev.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
