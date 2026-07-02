@@ -81,41 +81,45 @@
   }
 
   function getCluster(key, page) {
-    const title = String(page.title || '').toLowerCase()
-    const summary = String(page.summary || '').toLowerCase()
-    const haystack = `${key} ${title} ${summary}`
+    const lowerTitle = String(page.title || '').toLowerCase()
+    const lowerSummary = String(page.summary || '').toLowerCase()
+    const haystack = `${key} ${lowerTitle} ${lowerSummary}`
 
     if (key === 'pestsTopic') return 'Topic landing page'
     if (
       key === 'recordsHub' ||
       key === 'ownerHub' ||
-      title.includes('look up') ||
-      title.includes('lookup') ||
-      title.includes('find complaints') ||
-      title.includes('find residential hotel') ||
-      title.includes('find your district') ||
-      title.includes('public records') ||
-      title.includes('notice of violation')
+      lowerTitle.includes('look up') ||
+      lowerTitle.includes('lookup') ||
+      lowerTitle.includes('find complaints') ||
+      lowerTitle.includes('find residential hotel') ||
+      lowerTitle.includes('find your district') ||
+      lowerTitle.includes('public records') ||
+      lowerTitle.includes('notice of violation')
     )
       return 'Look up records'
     if (
-      title.includes('pigeon') ||
-      title.includes('raccoon') ||
-      title.includes('mite') ||
-      title.includes('dead bird') ||
-      title.includes('mosquito control') ||
-      title.includes('mosquito education workshop')
+      lowerTitle.includes('pigeon') ||
+      lowerTitle.includes('raccoon') ||
+      lowerTitle.includes('mite') ||
+      lowerTitle.includes('dead bird') ||
+      lowerTitle.includes('mosquito control') ||
+      lowerTitle.includes('mosquito education workshop')
     )
       return 'Vector and wildlife information'
-    if (title.includes('report') || haystack.includes('fee')) return 'Report or pay'
+    if (lowerTitle.includes('report') || haystack.includes('fee')) return 'Report or pay'
     if (
-      title.includes('prevent') ||
-      title.includes('keep') ||
-      title.includes('integrated pest management') ||
-      title.includes('rules')
+      lowerTitle.includes('prevent') ||
+      lowerTitle.includes('keep') ||
+      lowerTitle.includes('integrated pest management') ||
+      lowerTitle.includes('rules')
     )
       return 'Prevent problems'
-    if (title.includes('inspect') || title.includes('after') || title.includes('rights'))
+    if (
+      lowerTitle.includes('inspect') ||
+      lowerTitle.includes('after') ||
+      lowerTitle.includes('rights')
+    )
       return 'Inspection and rights'
     return 'Information and education'
   }
