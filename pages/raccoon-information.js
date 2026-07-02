@@ -12,7 +12,7 @@ window.HHVC_PAGES['raccoonInfo'] = {
   ],
   reading: 'Grade 6–7',
   editorNote:
-    'Information page. Wildlife trapping and animal removal may be outside HHVC scope — verify routing with HHVC and Animal Care & Control before publication. Roundworm and latrine cleanup guidance should be verified against current CDC/DPH protocols before publication.',
+    'Information page. Wildlife trapping is outside HHVC scope — route injured/trapped animals to Animal Care & Control. Latrine cleanup steps follow CDC Baylisascaris guidance; SME must verify against current CDC/DPH protocols before publication. In Karl: add CDC external link in Information section; do not publish until vector program signs off.',
   sections: [
     {
       heading: 'Raccoons and your building',
@@ -91,6 +91,14 @@ window.HHVC_PAGES['raccoonInfo'] = {
         karl: 'Body note: Sandbox and play area warning',
         text: 'If a latrine is in or near a child play area, sandbox, or shared courtyard, keep the area closed until cleanup is complete and consider replacing heavily contaminated material such as sand or mulch.',
       },
+      cards: [
+        {
+          title: 'CDC: Raccoon roundworm (Baylisascaris) prevention',
+          text: 'Read CDC guidance on raccoon latrines, roundworm risks, and safe cleanup before handling droppings.',
+          url: 'https://www.cdc.gov/parasites/baylisascaris/prevention.html',
+          karl: 'Body external link: CDC Baylisascaris prevention reference for SME-verified latrine cleanup',
+        },
+      ],
     },
     {
       heading: 'Reduce raccoon attractants',

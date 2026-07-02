@@ -13,7 +13,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   reading: 'Grade 5–7',
   editorNote:
-    'Campaign / outreach Information page for the HHVC Mosquito Control Program education workshop. Workshop interest form: /forms/mosquito-workshop-request/ (Vite). BLOCKED — confirm form intake backend, capacity, service area, lead time, and California standards alignment documentation before publication.',
+    'Outreach page. Karl content type: use Information if this stays reference + request link; use Campaign if HHVC treats it as an ongoing program with spotlight/top facts. Workshop form: /forms/mosquito-workshop-request/ (mock). BLOCKED — confirm production form URL, intake backend, capacity, service area, lead time, and standards crosswalk before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   sections: [
     {
       heading: 'Bring mosquito science to your students',
