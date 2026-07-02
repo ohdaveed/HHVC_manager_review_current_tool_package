@@ -56,6 +56,20 @@ window.HHVC_PAGES['ratsReport'] = {
       ],
     },
     {
+      heading: 'Get help making your report',
+      karl: 'Body: Help and access section (added for depth) — third-party reporting, language access, privacy.',
+      kind: 'body',
+      paragraphs: [
+        'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
+      ],
+      bullets: [
+        'You can ask 311 for help in your language.',
+        'You do not have to give your name to make a report.',
+        'HHVC does not share the reporter’s identity with the property owner or manager.',
+        'You can ask 311 for a service request number so you can follow up later.',
+      ],
+    },
+    {
       heading: 'What happens next',
       karl: 'Body: After-report expectations, weekday processing note, and concise enforcement statement',
       kind: 'body',
