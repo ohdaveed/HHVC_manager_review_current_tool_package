@@ -27,6 +27,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-yellowjackets.pdf` / `.md` | UC IPM Pest Notes 7450: Yellowjackets | Supplementary | IPM reference for stinging insects; no Phase 1 mockup page |
 | `2026-07-02-ipm-pests-bed-bugs.pdf` / `.md` | UC IPM Pest Notes 7454: Bed Bugs | Supplementary | IPM identification/prevention; **not** SFDPH Director's Rules |
 | `2026-07-02-ipm-pests-cockroaches.pdf` / `.md` | UC IPM Pest Notes 7467: Cockroaches | Supplementary | IPM identification/prevention; supports future `cockroachesPrevent` audits |
+| `2026-07-02-ipm-pests-fleas.pdf` / `.md` | UC IPM Pest Notes 7419: Fleas | Supplementary | IPM reference for pet/housing flea control; no Phase 1 mockup page |
 
 ### 2026-07-02-violation-pages-master-content.md
 
@@ -134,6 +135,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
 - **Note:** UC ANR IPM guidance on German, brownbanded, oriental, American, and Turkestan cockroaches; sanitation, exclusion, and baiting. Aligns with violation-master Cockroaches (Sec 581(b)(8)). Does not cover HHVC reporting process, 72-hour tenant notice, anti-retaliation, or fees.
+
+### 2026-07-02-ipm-pests-fleas.pdf
+
+- **Original Drive file:** `1mEJgAVDrZlGyAn16fW1Gz5aKXrEuGN_b`
+- **Source title:** UC IPM Pest Notes 7419: Fleas (September 2010)
+- **Export date:** 2026-07-02
+- **Format:** pdf (+ extracted `.md`)
+- **Reviewer:** CA
+- **Note:** UC ANR IPM guidance on cat fleas, life cycle, on-pet and environmental treatment. Not an Article 11 violation category in violation-master. No Phase 1 mockup page; supplementary IPM only.
 
 ## Documents still expected for Phase 1
 
