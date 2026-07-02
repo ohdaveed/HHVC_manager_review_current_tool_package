@@ -68,6 +68,12 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Topic page service item',
         },
         {
+          title: 'Report pigeons',
+          text: 'Report pigeon roosting, nesting, droppings, or feeding around a home, building, or shared area.',
+          target: 'pigeonsReport',
+          karl: 'Topic page service item',
+        },
+        {
           title: 'Report garbage or clutter',
           text: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
           target: 'garbageReport',
