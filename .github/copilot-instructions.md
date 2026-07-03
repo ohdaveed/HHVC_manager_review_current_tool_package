@@ -15,6 +15,7 @@ bun run dev           # start dev server with --watch (http://127.0.0.1:8080)
 bun run start          # start dev server without watch
 bun run validate       # Zod-validate pages/*.js and js/page-data.js shapes
 bun run export         # regenerate data/page_inventory.json and .csv from page data
+bun run sync-tracking  # regenerate review/*.csv tracking sheets for Google Sheets import
 bun run build          # validate -> export -> regenerate single-file HTML exports
 bun run format         # prettier --write on **/*.{js,ts,json,md,css,html}
 bun run format:check   # prettier --check (no test suite exists in this repo)

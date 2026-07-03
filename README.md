@@ -174,7 +174,15 @@ bun run format
 
 The `validate` script checks the `pages/*.js` and `js/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
 
-The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data.
+The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data, then refreshes Google Sheets–ready tracking CSVs under `review/`.
+
+The `sync-tracking` script regenerates tracking files only:
+
+- `review/mockup_tracking_sheet.csv` — import or sync to your Google tracking sheet by `page_key`
+- `review/manager_decision_log.csv` — all-page manager decision template
+- `review/page_approval_checklist.csv` — per-page approval checklist rows
+
+Run `bun run sync-tracking` (or `bun run export`) after editing any file under `pages/` so mockup change status, last-changed dates, and policy audit summaries stay current. Import the tracking CSV into Google Sheets, or point a Make.com scenario at a watched Drive folder to update rows by `page_key` or `url_slug`.
 
 The `build` script runs validation, export, the mosquito workshop form build, and the self-contained HTML rebuild.
 
@@ -244,6 +252,7 @@ HHVC_manager_review_current_tool_package/
 ├─ forms/mosquito-workshop-request/
 └─ review/
    ├─ manager_review_packet.md
+   ├─ mockup_tracking_sheet.csv
    ├─ manager_decision_log.csv
    └─ page_approval_checklist.csv
 ```
