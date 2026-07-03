@@ -39,6 +39,7 @@
   function normalizeType(type) {
     const normalized = String(type || '').toLowerCase()
     if (normalized.includes('topic')) return 'Topic'
+    if (normalized.includes('resource collection')) return 'Resource collection'
     if (normalized.includes('transaction')) return 'Transaction'
     return 'Information'
   }
@@ -82,6 +83,8 @@
     const haystack = `${key} ${title} ${summary}`
 
     if (key === 'pestsTopic') return 'Topic landing page'
+    if (key === 'reportHub' || key === 'preventHub')
+      return key === 'reportHub' ? 'Report or pay' : 'Prevent problems'
     if (
       key === 'recordsHub' ||
       key === 'ownerHub' ||
@@ -116,6 +119,69 @@
     return 'Information and education'
   }
 
+  function getInventoryLanes() {
+    const lanes = []
+    let currentLane = null
+    getPageRows().forEach((row, index) => {
+      const laneType = normalizeType(row.page.type || row.label)
+      if (!currentLane || currentLane.type !== laneType) {
+        currentLane = { type: laneType, rows: [] }
+        lanes.push(currentLane)
+      }
+      currentLane.rows.push({ ...row, orderIndex: index })
+    })
+    return lanes
+  }
+
+  function renderInventoryNode(row) {
+    const active = row.key === getCurrentKey()
+    const type = normalizeType(row.page.type || row.label)
+    return `
+      <button type="button" class="sitemap-inventory-node ${active ? 'active' : ''}" data-sitemap-key="${escapeHtml(row.key)}" data-page-type="${escapeHtml(type)}" ${active ? 'aria-current="page"' : ''}>
+        <span class="sitemap-inventory-order" aria-hidden="true">${row.orderIndex + 1}</span>
+        <span class="sitemap-inventory-node-body">
+          <span class="sitemap-inventory-title">${escapeHtml(row.page.title || row.label)}</span>
+          <span class="sitemap-inventory-meta">${escapeHtml(type)} · ${escapeHtml(row.key)}</span>
+        </span>
+      </button>
+    `
+  }
+
+  function renderInventoryDiagram() {
+    const rows = getPageRows()
+    const lanes = getInventoryLanes()
+    const laneMarkup = lanes
+      .map((lane) => {
+        const nodes = lane.rows
+          .map((row, index) => {
+            const arrow =
+              index > 0 ? '<span class="sitemap-inventory-arrow" aria-hidden="true">→</span>' : ''
+            return `<div class="sitemap-inventory-flow-item">${arrow}${renderInventoryNode(row)}</div>`
+          })
+          .join('')
+        return `
+          <section class="sitemap-inventory-lane" data-lane-type="${escapeHtml(lane.type)}" aria-label="${escapeHtml(lane.type)} pages (${lane.rows.length})">
+            <h4 class="sitemap-inventory-lane-title">
+              ${escapeHtml(lane.type)}
+              <span class="sitemap-cluster-count">${lane.rows.length}</span>
+            </h4>
+            <div class="sitemap-inventory-flow" role="list">${nodes}</div>
+          </section>
+        `
+      })
+      .join('')
+
+    return `
+      <section class="sitemap-inventory-diagram" aria-label="Page inventory diagram from HHVC_DATA.order">
+        <div class="sitemap-inventory-header">
+          <h4>Page inventory diagram</h4>
+          <p>${rows.length} pages in <code>js/page-data.js</code> order. Reorder that registry to change this diagram.</p>
+        </div>
+        <div class="sitemap-inventory-lanes">${laneMarkup}</div>
+      </section>
+    `
+  }
+
   function getPageRows() {
     const graph = getLinkGraph()
     return buildPageRows(DATA, (key, label, page) => ({
@@ -126,7 +192,7 @@
       cluster: getCluster(key, page),
       incomingCount: graph[key]?.incoming?.size || 0,
       outgoingCount: graph[key]?.outgoing?.size || 0,
-    }))
+    })).map((row, orderIndex) => ({ ...row, orderIndex }))
   }
 
   function getFilteredRows() {
@@ -287,7 +353,7 @@
 
       .sitemap-branches {
         display: grid;
-        grid-template-columns: repeat(4, minmax(9rem, 1fr));
+        grid-template-columns: repeat(3, minmax(9rem, 1fr));
         gap: 0.75rem;
         min-width: 42rem;
       }
@@ -395,6 +461,152 @@
       }
 
       .sitemap-node-button[data-page-type='Information'] {
+        border-left: 4px solid var(--sfds-warning-border);
+      }
+
+      .sitemap-node-button[data-page-type='Resource collection'] {
+        border-left: 4px solid #7c3aed;
+      }
+
+      .sitemap-inventory-diagram {
+        border: 1px solid var(--sfds-border);
+        border-radius: var(--radius);
+        background: var(--sfds-slate-6, #f8fafc);
+        padding: 0.9rem;
+        margin-bottom: 1rem;
+      }
+
+      .sitemap-inventory-header h4 {
+        margin: 0 0 0.25rem;
+        font-size: 0.92rem;
+      }
+
+      .sitemap-inventory-header p {
+        margin: 0 0 0.75rem;
+        color: var(--sfds-slate-3);
+        font-size: 0.78rem;
+        line-height: 1.35;
+      }
+
+      .sitemap-inventory-header code {
+        font-size: 0.76rem;
+      }
+
+      .sitemap-inventory-lanes {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .sitemap-inventory-lane {
+        border: 1px solid var(--sfds-border);
+        border-radius: var(--radius);
+        background: var(--sfds-white);
+        padding: 0.65rem 0.75rem 0.75rem;
+      }
+
+      .sitemap-inventory-lane-title {
+        margin: 0 0 0.55rem;
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--sfds-slate-3);
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+      }
+
+      .sitemap-inventory-flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.35rem 0.15rem;
+      }
+
+      .sitemap-inventory-flow-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        max-width: 100%;
+      }
+
+      .sitemap-inventory-arrow {
+        color: var(--sfds-slate-3);
+        font-size: 0.85rem;
+        font-weight: 900;
+        padding: 0 0.1rem;
+        user-select: none;
+      }
+
+      .sitemap-inventory-node {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        min-height: 2.4rem;
+        padding: 0.4rem 0.55rem;
+        border: 1px solid var(--sfds-border);
+        border-radius: var(--radius);
+        background: var(--sfds-white);
+        color: var(--sfds-slate-1);
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+        max-width: 14rem;
+      }
+
+      .sitemap-inventory-node:hover,
+      .sitemap-inventory-node:focus-visible,
+      .sitemap-inventory-node.active {
+        border-color: var(--sfds-action-blue);
+        background: var(--sfds-blue-soft-bg);
+        outline: none;
+      }
+
+      .sitemap-inventory-order {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 999px;
+        background: var(--sfds-slate-5);
+        color: var(--sfds-slate-2);
+        font-size: 0.62rem;
+        font-weight: 900;
+        flex: 0 0 auto;
+      }
+
+      .sitemap-inventory-node-body {
+        display: grid;
+        gap: 0.1rem;
+        min-width: 0;
+      }
+
+      .sitemap-inventory-title {
+        font-size: 0.74rem;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+
+      .sitemap-inventory-meta {
+        font-size: 0.62rem;
+        color: var(--sfds-slate-3);
+        line-height: 1.2;
+      }
+
+      .sitemap-inventory-lane[data-lane-type='Topic'] .sitemap-inventory-node {
+        border-left: 4px solid var(--sfds-action-blue);
+      }
+
+      .sitemap-inventory-lane[data-lane-type='Resource collection'] .sitemap-inventory-node {
+        border-left: 4px solid #7c3aed;
+      }
+
+      .sitemap-inventory-lane[data-lane-type='Transaction'] .sitemap-inventory-node {
+        border-left: 4px solid var(--sfds-green);
+      }
+
+      .sitemap-inventory-lane[data-lane-type='Information'] .sitemap-inventory-node {
         border-left: 4px solid var(--sfds-warning-border);
       }
 
@@ -545,7 +757,7 @@
   }
 
   function renderSearchAndFilters() {
-    const filters = ['All', 'Topic', 'Transaction', 'Information']
+    const filters = ['All', 'Topic', 'Resource collection', 'Transaction', 'Information']
     const clearLabel = state.search ? '✕ Clear search' : ''
     const isEmpty = state.search.trim().length > 0 && getFilteredRows().length === 0
     return `
@@ -594,20 +806,13 @@
     const rows = getFilteredRows()
     const root = getPageRows().find((row) => row.key === 'pestsTopic') || getPageRows()[0]
     const clusters = [
-      'Topic landing page',
+      'Look up records',
       'Report or pay',
       'Prevent problems',
+      'Vector and wildlife information',
       'Inspection and rights',
       'Information and education',
     ]
-
-    const clusterTitles = {
-      'Topic landing page': 'Topic landing page',
-      'Report or pay': 'Report or pay',
-      'Prevent problems': 'Prevent problems',
-      'Inspection and rights': 'Inspection and rights',
-      'Information and education': 'Information and education',
-    }
 
     const rootCluster = 'Topic landing page'
 
@@ -728,9 +933,10 @@
       <div class="interactive-sitemap-header">
         <div>
           <h3>Interactive sitemap</h3>
-          <p>Select a node to open that page mockup. Search, filter by page type, or spotlight linked pages to confirm the HHVC topic structure and navigation flow.</p>
+          <p>Select a node to open that page mockup. The inventory diagram follows <code>js/page-data.js</code> order; the cluster map groups pages by navigation role.</p>
         </div>
       </div>
+      ${renderInventoryDiagram()}
       <div class="interactive-sitemap-layout">
         ${renderTree()}
         ${renderDetail()}
@@ -741,6 +947,7 @@
   function rerender() {
     injectStyles()
     state.selectedKey = getCurrentKey()
+    state._linkGraph = null
     renderPanel()
   }
 
@@ -793,6 +1000,7 @@
     if (nodeButton) {
       const key = nodeButton.getAttribute('data-sitemap-key')
       openPageByKey(key)
+      return
     }
   }
 
@@ -808,7 +1016,7 @@
       }
       if (event.key === 'ArrowDown') {
         event.preventDefault()
-        const firstNode = document.querySelector('.sitemap-node-button')
+        const firstNode = document.querySelector('.sitemap-inventory-node, .sitemap-node-button')
         if (firstNode) firstNode.focus()
         return
       }
@@ -821,10 +1029,14 @@
       return
     }
 
-    const focusedNode = document.activeElement?.closest('.sitemap-node-button')
+    const focusedNode = document.activeElement?.closest(
+      '.sitemap-node-button, .sitemap-inventory-node'
+    )
     if (!focusedNode) return
 
-    const nodes = Array.from(document.querySelectorAll('.sitemap-node-button'))
+    const nodes = Array.from(
+      document.querySelectorAll('.sitemap-node-button, .sitemap-inventory-node')
+    )
     const index = nodes.indexOf(focusedNode)
 
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
@@ -866,7 +1078,10 @@
       // Under View Transitions, renderPage returns a promise that resolves
       // once #pageSelect reflects the new page; rerendering earlier would
       // highlight the previous page as current.
-      if (result && typeof result.then === 'function') result.then(() => { if (sitemapMounted) rerender() })
+      if (result && typeof result.then === 'function')
+        result.then(() => {
+          if (sitemapMounted) rerender()
+        })
       else if (sitemapMounted) rerender()
       return result
     }
