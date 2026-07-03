@@ -184,6 +184,8 @@
   // Explicit dependency for other modules (e.g. js/review-queue.js, which
   // loads after this file) instead of relying on implicit bare globals.
   window.reviewState = {
+    STORAGE_KEY,
+    STORAGE_VERSION,
     read: readLocalState,
     write: writeLocalState,
     update: updateLocalState,

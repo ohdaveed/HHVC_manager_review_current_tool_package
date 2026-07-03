@@ -18,5 +18,11 @@
     }
   },
   "matchColumn": "GitHub page_key",
-  "updateColumns": ["Source File", "Status", "Scope / Review Notes", "Source Basis", "Last Repo Sync"]
+  "updateColumns": [
+    "Source File",
+    "Status",
+    "Scope / Review Notes",
+    "Source Basis",
+    "Last Repo Sync"
+  ]
 }

@@ -6,8 +6,8 @@
   --brand-on-primary: var(--sfds-white, #fcfcfc);
 
   /* Typography — SF.gov system stack */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-display: var(--font-sans);
   --font-body: var(--font-sans);
   --font-caption: var(--font-sans);

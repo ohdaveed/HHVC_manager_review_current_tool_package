@@ -126,9 +126,7 @@ function csvEscape(value) {
     trimmed.startsWith('\t') ||
     trimmed.startsWith('\r')
   const protectedText = needsProtection ? `'${text}` : text
-  return /[",\n\r]/.test(protectedText)
-    ? `"${protectedText.replace(/"/g, '""')}"`
-    : protectedText
+  return /[",\n\r]/.test(protectedText) ? `"${protectedText.replace(/"/g, '""')}"` : protectedText
 }
 
 function toCsv(rows) {
@@ -377,7 +375,9 @@ function main() {
   console.log(`wrote ${path.relative(root, decisionPath)}`)
   console.log(`wrote ${path.relative(root, checklistPath)}`)
   if (changedCount) {
-    console.log(`${changedCount} page(s) flagged with mockup changes since main or uncommitted edits`)
+    console.log(
+      `${changedCount} page(s) flagged with mockup changes since main or uncommitted edits`
+    )
   }
 }
 

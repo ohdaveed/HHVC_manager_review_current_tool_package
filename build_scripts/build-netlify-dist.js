@@ -26,8 +26,13 @@ const copies = [
 for (const rel of copies) {
   const src = path.join(root, rel)
   if (!fs.existsSync(src)) {
-    console.error('Error: Source path "' + rel + '" does not exist.' + (rel.startsWith('node_modules') ? ' Did you run "npm install" or "bun install"?' : ''));
-    process.exit(1);
+    console.error(
+      'Error: Source path "' +
+        rel +
+        '" does not exist.' +
+        (rel.startsWith('node_modules') ? ' Did you run "npm install" or "bun install"?' : '')
+    )
+    process.exit(1)
   }
   const dest = path.join(dist, rel)
   fs.mkdirSync(path.dirname(dest), { recursive: true })

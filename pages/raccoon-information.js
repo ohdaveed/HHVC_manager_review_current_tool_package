@@ -51,7 +51,9 @@ window.HHVC_PAGES['raccoonInfo'] = {
       steps: [
         {
           title: 'Protect yourself',
-          text: ['Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.'],
+          text: [
+            'Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.',
+          ],
           bullets: [
             'Wear disposable gloves and shoe covers or boots that can be washed',
             'Wear long sleeves and old clothes you can wash or throw away',
@@ -68,7 +70,9 @@ window.HHVC_PAGES['raccoonInfo'] = {
         },
         {
           title: 'Remove and bag the waste',
-          text: ['Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.'],
+          text: [
+            'Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.',
+          ],
           bullets: [
             'Double-bag the waste and tie the bags closed',
             'Place the bags in an outdoor garbage container with a tight lid',

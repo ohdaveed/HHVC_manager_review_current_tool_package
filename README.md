@@ -63,12 +63,12 @@ The sticky bar includes:
 
 The workspace tabs are:
 
-| Tab | Purpose |
-| --- | --- |
-| Queue | Progress bar, decision breakdown, filters, and clickable page list |
-| Checks | Metrics grid and Karl compliance scorecard |
-| Sitemap | Interactive HHVC sitemap with filtering and linked-page details |
-| Help | Review guidance cards |
+| Tab     | Purpose                                                            |
+| ------- | ------------------------------------------------------------------ |
+| Queue   | Progress bar, decision breakdown, filters, and clickable page list |
+| Checks  | Metrics grid and Karl compliance scorecard                         |
+| Sitemap | Interactive HHVC sitemap with filtering and linked-page details    |
+| Help    | Review guidance cards                                              |
 
 Workspace UI preferences persist in `localStorage` under additive keys:
 
@@ -288,41 +288,41 @@ Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) an
 
 ## Pages included
 
-| # | Page key | Page title | Type |
-| --- | --- | --- | --- |
-| 1 | `pestsTopic` | Pests and housing problems | Topic page |
-| 2 | `recordsHub` | Look up building records | Resource collection |
-| 3 | `findRecords` | Find complaints and inspection records | Transaction |
-| 4 | `findViolations` | Look up residential health code violations | Transaction |
-| 5 | `findHotelRecords` | Find residential hotel and shelter records | Transaction |
-| 6 | `findInspector` | Find your district inspector | Information |
-| 7 | `publicRecords` | Make a public records request | Transaction |
-| 8 | `ownerHub` | Property owner responsibilities | Resource collection |
-| 9 | `noticeOfViolation` | How to respond to a notice of violation | Information |
-| 10 | `ratsReport` | Report rats or mice | Transaction |
-| 11 | `cockroachesReport` | Report cockroaches | Transaction |
-| 12 | `bedBugsReport` | Report bed bugs | Transaction |
-| 13 | `bedBugsInfo` | Bed bug rules and prevention | Information |
-| 14 | `mosquitoesReport` | Report mosquitoes | Transaction |
-| 15 | `wnvBirdReport` | Report a dead bird | Transaction |
-| 16 | `pigeonsReport` | Report pigeons | Transaction |
-| 17 | `garbageReport` | Report garbage or clutter | Transaction |
-| 18 | `vegetationReport` | Report overgrown vegetation | Transaction |
-| 19 | `moldReport` | Report mold from humidity or condensation | Transaction |
-| 20 | `payFee` | Pay your Healthy Housing fee | Transaction |
-| 21 | `scopeInfo` | Learn what HHVC can inspect | Information |
-| 22 | `ownerGuidance` | Integrated pest management for property owners and managers | Information |
-| 23 | `afterReport` | What happens after you report | Information |
-| 24 | `tenantRights` | Tenant rights and reporting | Information |
-| 25 | `ratsPrevent` | Keep rats and mice out | Information |
-| 26 | `cockroachesPrevent` | Prevent cockroaches | Information |
-| 27 | `mosquitoesPrevent` | Prevent mosquitoes | Information |
-| 28 | `mosquitoControl` | Mosquito Control Program | Information |
-| 29 | `mosquitoWorkshop` | Free mosquito education workshop | Information |
-| 30 | `raccoonInfo` | Raccoons and housing health | Information |
-| 31 | `pigeonInfo` | Pigeons and housing health | Information |
-| 32 | `miteInfo` | Mites and housing health | Information |
-| 33 | `reduceMoisture` | Reduce indoor moisture, condensation, and humidity | Information |
+| #   | Page key             | Page title                                                  | Type                |
+| --- | -------------------- | ----------------------------------------------------------- | ------------------- |
+| 1   | `pestsTopic`         | Pests and housing problems                                  | Topic page          |
+| 2   | `recordsHub`         | Look up building records                                    | Resource collection |
+| 3   | `findRecords`        | Find complaints and inspection records                      | Transaction         |
+| 4   | `findViolations`     | Look up residential health code violations                  | Transaction         |
+| 5   | `findHotelRecords`   | Find residential hotel and shelter records                  | Transaction         |
+| 6   | `findInspector`      | Find your district inspector                                | Information         |
+| 7   | `publicRecords`      | Make a public records request                               | Transaction         |
+| 8   | `ownerHub`           | Property owner responsibilities                             | Resource collection |
+| 9   | `noticeOfViolation`  | How to respond to a notice of violation                     | Information         |
+| 10  | `ratsReport`         | Report rats or mice                                         | Transaction         |
+| 11  | `cockroachesReport`  | Report cockroaches                                          | Transaction         |
+| 12  | `bedBugsReport`      | Report bed bugs                                             | Transaction         |
+| 13  | `bedBugsInfo`        | Bed bug rules and prevention                                | Information         |
+| 14  | `mosquitoesReport`   | Report mosquitoes                                           | Transaction         |
+| 15  | `wnvBirdReport`      | Report a dead bird                                          | Transaction         |
+| 16  | `pigeonsReport`      | Report pigeons                                              | Transaction         |
+| 17  | `garbageReport`      | Report garbage or clutter                                   | Transaction         |
+| 18  | `vegetationReport`   | Report overgrown vegetation                                 | Transaction         |
+| 19  | `moldReport`         | Report mold from humidity or condensation                   | Transaction         |
+| 20  | `payFee`             | Pay your Healthy Housing fee                                | Transaction         |
+| 21  | `scopeInfo`          | Learn what HHVC can inspect                                 | Information         |
+| 22  | `ownerGuidance`      | Integrated pest management for property owners and managers | Information         |
+| 23  | `afterReport`        | What happens after you report                               | Information         |
+| 24  | `tenantRights`       | Tenant rights and reporting                                 | Information         |
+| 25  | `ratsPrevent`        | Keep rats and mice out                                      | Information         |
+| 26  | `cockroachesPrevent` | Prevent cockroaches                                         | Information         |
+| 27  | `mosquitoesPrevent`  | Prevent mosquitoes                                          | Information         |
+| 28  | `mosquitoControl`    | Mosquito Control Program                                    | Information         |
+| 29  | `mosquitoWorkshop`   | Free mosquito education workshop                            | Information         |
+| 30  | `raccoonInfo`        | Raccoons and housing health                                 | Information         |
+| 31  | `pigeonInfo`         | Pigeons and housing health                                  | Information         |
+| 32  | `miteInfo`           | Mites and housing health                                    | Information         |
+| 33  | `reduceMoisture`     | Reduce indoor moisture, condensation, and humidity          | Information         |
 
 ## Known content review flags
 

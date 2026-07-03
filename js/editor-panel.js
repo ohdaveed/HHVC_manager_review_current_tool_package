@@ -68,7 +68,11 @@ function updatePageBadge(title) {
   badge._timeout = setTimeout(() => badge.classList.remove('visible'), 5000)
 }
 const RESETTABLE_FIELDS = {
-  title: { get: (page) => page.title, set: (page, value) => (page.title = value), inputId: 'titleInput' },
+  title: {
+    get: (page) => page.title,
+    set: (page, value) => (page.title = value),
+    inputId: 'titleInput',
+  },
   summary: {
     get: (page) => page.summary,
     set: (page, value) => (page.summary = value),
