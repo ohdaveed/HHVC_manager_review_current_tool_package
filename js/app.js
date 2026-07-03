@@ -36,9 +36,13 @@ function init() {
     const page = pageData[currentPageKey]
     setPrimaryCta(page, e.target.value)
     const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
-    if (primaryButton)
+    if (primaryButton) {
       primaryButton.innerHTML =
         karlTag('Button label: Primary CTA', 'placement') + escapeHtml(e.target.value)
+      if (primaryButton.hasAttribute('aria-label')) {
+        primaryButton.setAttribute('aria-label', `${e.target.value} (opens in a new tab)`)
+      }
+    }
     updateDirtyIndicators(currentPageKey)
   })
   document.getElementById('seoTitleInput').addEventListener('input', (e) => {
