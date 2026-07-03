@@ -512,7 +512,12 @@
     const passed = rules.filter((rule) => rule.pass).length
     const reviewReady = decision === 'Approved' && passed === rules.length
     const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision)
-    const stats = window.reviewQueue?.getQueueStats?.() || { reviewed: 0, total: DATA.order.length }
+    const stats = window.reviewQueue?.getQueueStats?.() || {
+      touched: 0,
+      decided: 0,
+      reviewed: 0,
+      total: DATA.order.length,
+    }
     const filter = window.reviewQueue?.getFilter?.() || 'All'
     const prevKey = window.reviewQueue?.getAdjacentKey?.(-1, filter)
     const nextKey = window.reviewQueue?.getAdjacentKey?.(1, filter)
@@ -524,7 +529,7 @@
         <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
         <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
         <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
-        <span class="status-chip ${stats.reviewed > 0 ? 'pass' : 'warn'}">${stats.reviewed}/${stats.total} reviewed</span>
+        <span class="status-chip ${stats.touched > 0 ? 'pass' : 'warn'}">${stats.touched}/${stats.total} touched</span>
       </div>
       <div class="review-sticky-bar-actions">
         <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>

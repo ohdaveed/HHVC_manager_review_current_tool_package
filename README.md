@@ -57,7 +57,7 @@ On load, the canvas shows:
 The sticky bar includes:
 
 - Current page title, decision chip, and `X/9` checks chip
-- Queue progress using the full 33-page inventory
+- Queue progress (`X/33 touched`) — counts pages with any saved localStorage entry; decision chips show decided counts separately
 - **Previous**, **Next**, and **Next needs review** navigation
 - **Show workspace** / **Hide workspace** toggle
 
@@ -81,7 +81,9 @@ state.ui = {
 }
 ```
 
-Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
+Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**.
+
+**Progress semantics:** The sticky bar and queue progress bar count **touched** pages — any page with a saved entry in `localStorage`, even if the decision is still **Needs review** (for example, after saving notes without changing the decision). The decision breakdown chips count **decided** pages where the saved decision is not **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Interactive sitemap
 
@@ -256,6 +258,10 @@ HHVC_manager_review_current_tool_package/
 - Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.
+
+## Pull request scope
+
+Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) and **policy copy changes** (page text, source ingestion under `docs/source/`) in separate pull requests when possible. UX PRs should not bundle unrelated content rewrites, and policy PRs should not include layout refactors. This keeps review focused and avoids merge conflicts between parallel workstreams.
 
 ## Pages included
 

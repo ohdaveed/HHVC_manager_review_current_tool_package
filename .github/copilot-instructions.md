@@ -66,6 +66,9 @@ in isolation — the script always validates the full list.
   and `js/interactive-sitemap.js` (clickable sitemap reading from
   `HHVC_DATA`, lazy-loaded when the Sitemap tab opens) all layer on top of
   `js/app.js` and must not mutate page source data — they are review aids only.
+  Queue progress counts **touched** pages (any saved `localStorage` entry per
+  page); decision chips count **decided** pages (saved decision other than
+  **Needs review**).
 - **Local persistence:** all reviewer state (decisions, notes, edited SEO
   fields, etc.) is saved client-side to `localStorage` under the versioned
   key `hhvcManagerReviewState:v1`. Bump the version suffix if the persisted
@@ -88,6 +91,12 @@ in isolation — the script always validates the full list.
 - Edit styles in `css/styles.css`.
 - Review exports (`review/*.csv`, saved local-review CSV) are for manager
   decisions only — never treat them as automatic publication approval.
+
+## Pull request scope
+
+Keep dashboard UX changes (layout, queue, workspace, review helpers) and policy
+copy changes (page text, `docs/source/` ingestion) in separate PRs when
+possible. This reduces merge conflicts and keeps review focused.
 
 ## Code style
 

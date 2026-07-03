@@ -322,9 +322,6 @@ a:focus {
   font-weight: 700;
   margin-top: 0.2rem;
 }
-.canvas {
-  padding: 2rem;
-}
 .browser-shell {
   max-width: var(--page-max);
   margin: 0 auto;
@@ -846,6 +843,7 @@ input[type='date'] {
   position: relative;
   display: flex;
   flex-direction: column;
+  padding: 1rem 1.25rem;
 }
 .canvas-toolbar {
   display: flex;
