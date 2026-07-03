@@ -18,11 +18,11 @@ window.HHVC_PAGES['ratsPrevent'] = {
       kind: 'body',
       paragraphs: [
         'Look for signs of rodents before starting treatment. Knowing the type of rodent helps you target control efforts.',
+      ],
+      bullets: [
         'Norway Rats are 1 to 1.5 feet long with shorter tails. They prefer basements and burrows.',
         'Roof Rats weigh 0.5 to 0.6 lbs and have tails longer than their bodies. They live in attics and ceilings.',
         'House Mice are 2.5 to 3.5 inches long with tails longer than their bodies. They hide in drawers and cupboards.',
-      ],
-      bullets: [
         'Droppings: Fresh droppings are dark and moist. Old droppings are gray and hard.',
         'Rub marks: Look for dark, oily smears along walls, pipes, and beams.',
         'Gnaw marks: Check baseboards, cords, and packaging for tooth marks.',

@@ -24,6 +24,19 @@ describe('page-render.js escaping', () => {
     assertEscaped(ctx.paragraphList([PAYLOAD]))
   })
 
+  test('renderTextItems uses bullets for three or more items', () => {
+    const html = ctx.renderTextItems(['One', 'Two', 'Three'])
+    expect(html).toContain('<ul>')
+    expect(html).toContain('<li>One</li>')
+    expect(html).not.toContain('<p>One</p>')
+  })
+
+  test('renderTextItems keeps one or two items as paragraphs', () => {
+    const html = ctx.renderTextItems(['One', 'Two'])
+    expect(html).toContain('<p>One</p>')
+    expect(html).not.toContain('<ul>')
+  })
+
   test('renderAudience escapes every audience item', () => {
     assertEscaped(ctx.renderAudience([PAYLOAD]))
   })

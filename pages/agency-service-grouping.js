@@ -21,8 +21,7 @@ window.HHVC_PAGES['pestsTopic'] = {
       karl: 'Topic page body: Introductory text',
       kind: 'body',
       paragraphs: [
-        'Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11.',
-        'This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation.',
+        'Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11. This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation.',
         'You can ask 311 for help in your language when you report a problem.',
       ],
     },

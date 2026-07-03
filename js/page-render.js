@@ -9,6 +9,10 @@ function karlTag(label, kind = 'body') {
 function paragraphList(paragraphs = []) {
   return paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('')
 }
+function renderTextItems(items = []) {
+  if (items.length >= 3) return bulletList(items)
+  return paragraphList(items)
+}
 function renderAudience(audience = []) {
   if (!Array.isArray(audience)) return ''
   return audience.map((item) => `<li>${escapeHtml(item)}</li>`).join('')
@@ -50,7 +54,7 @@ function renderCards(cards = []) {
     .join('')}</div>`
 }
 function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${renderTextItems(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderTable(rows = []) {
   if (!rows.length) return ''
@@ -60,7 +64,7 @@ function renderTable(rows = []) {
 function renderSection(section) {
   const kind = section.kind || 'body'
   let inner = `${karlTag(section.karl || 'Body section', kind)}<h2>${escapeHtml(section.heading)}</h2>`
-  inner += paragraphList(section.paragraphs || [])
+  inner += renderTextItems(section.paragraphs || [])
   inner += section.steps ? renderSteps(section.steps) : ''
   inner += bulletList(section.bullets || [])
   inner += section.table ? renderTable(section.table) : ''
