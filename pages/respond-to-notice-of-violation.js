@@ -64,7 +64,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
-          title: 'Integrated pest management for property managers',
+          title: 'Integrated pest management for property owners and managers',
           text: 'Use prevention, monitoring, and resident outreach to reduce future violations.',
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',
@@ -173,5 +173,5 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   ],
   seoTitle: 'How to respond to a notice of violation | SF.gov',
   metaDescription:
-    'How tenants and owners respond to a health violation notice when both parties have corrective actions.',
+    'How tenants and owners respond to an Environmental Health notice of violation when both may have corrective actions.',
 }

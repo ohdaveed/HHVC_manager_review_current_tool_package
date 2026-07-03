@@ -64,10 +64,10 @@ const seoMetaFixes = {
 
 function addMissingCardKarl(content) {
   return content.replace(
-    /target: '([^']+)',\n(\s+)\},/g,
-    (match, _target, indent) => {
+    /target: '([^']+)',(\r?\n)(\s+)\},/g,
+    (match, _target, newline, indent) => {
       if (match.includes('karl:')) return match
-      return `target: '${_target}',\n${indent}  karl: 'Related section: right-panel linked page',\n${indent}},`
+      return `target: '${_target}',${newline}${indent}  karl: 'Related section: right-panel linked page',${newline}${indent}},`
     }
   )
 }
@@ -90,8 +90,8 @@ for (const file of fs.readdirSync(pagesDir).filter((f) => f.endsWith('.js'))) {
   }
   if (patch?.metaDescription) {
     content = content.replace(
-      /metaDescription:\s*\n\s*'[^']*',/,
-      `metaDescription:\n    '${patch.metaDescription}',`
+      /metaDescription:\s*(\r?\n)\s*'[^']*',/,
+      `metaDescription:$1    '${patch.metaDescription}',`
     )
     seoFiles++
   }

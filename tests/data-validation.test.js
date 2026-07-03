@@ -7,6 +7,7 @@ const { dataSchema } = require('../build_scripts/schema')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
+  findBrokenButtonTargets,
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
@@ -147,6 +148,31 @@ describe('findBrokenCardTargets', () => {
   test('ignores cards with no target (inert/decorative cards)', () => {
     const pages = { a: { sections: [{ cards: [{ title: 'No link' }] }] } }
     expect(findBrokenCardTargets(pages)).toEqual([])
+  })
+})
+
+describe('findBrokenButtonTargets', () => {
+  test('empty when every section/step buttonTarget exists', () => {
+    const pages = {
+      a: { sections: [{ buttonTarget: 'b', steps: [{ buttonTarget: 'b' }] }] },
+      b: {},
+    }
+    expect(findBrokenButtonTargets(pages)).toEqual([])
+  })
+
+  test('reports a section buttonTarget with no matching page', () => {
+    const pages = { a: { sections: [{ buttonTarget: 'ghost' }] } }
+    expect(findBrokenButtonTargets(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
+  })
+
+  test('reports a step buttonTarget with no matching page', () => {
+    const pages = { a: { sections: [{ steps: [{ buttonTarget: 'ghost' }] }] } }
+    expect(findBrokenButtonTargets(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
+  })
+
+  test('ignores sections/steps with no buttonTarget', () => {
+    const pages = { a: { sections: [{ button: 'Go', steps: [{ button: 'Go' }] }] } }
+    expect(findBrokenButtonTargets(pages)).toEqual([])
   })
 })
 

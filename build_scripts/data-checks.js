@@ -36,6 +36,29 @@ function findBrokenCardTargets(pages) {
 }
 
 /**
+ * Find section/step button links that target a page key missing from `pages`.
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string, target: string}>}
+ */
+function findBrokenButtonTargets(pages) {
+  const keys = new Set(Object.keys(pages))
+  const broken = []
+  for (const [pageKey, page] of Object.entries(pages)) {
+    for (const section of page.sections || []) {
+      if (section.buttonTarget && !keys.has(section.buttonTarget)) {
+        broken.push({ pageKey, target: section.buttonTarget })
+      }
+      for (const step of section.steps || []) {
+        if (step.buttonTarget && !keys.has(step.buttonTarget)) {
+          broken.push({ pageKey, target: step.buttonTarget })
+        }
+      }
+    }
+  }
+  return broken
+}
+
+/**
  * @param {Array<[string, string]>} order
  * @returns {boolean}
  */
@@ -90,6 +113,7 @@ function findListFormatViolations(pages) {
 module.exports = {
   findMissingOrderKeys,
   findBrokenCardTargets,
+  findBrokenButtonTargets,
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,

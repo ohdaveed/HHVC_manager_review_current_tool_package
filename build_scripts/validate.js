@@ -8,6 +8,7 @@ const { dataSchema } = require('./schema')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
+  findBrokenButtonTargets,
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
@@ -84,6 +85,12 @@ if (missingOrderKeys.length) throw new Error('order key missing: ' + missingOrde
 const brokenCardTargets = findBrokenCardTargets(parsed.data.pages)
 if (brokenCardTargets.length) {
   const { pageKey, target } = brokenCardTargets[0]
+  throw new Error(`${pageKey} links to missing target ${target}`)
+}
+
+const brokenButtonTargets = findBrokenButtonTargets(parsed.data.pages)
+if (brokenButtonTargets.length) {
+  const { pageKey, target } = brokenButtonTargets[0]
   throw new Error(`${pageKey} links to missing target ${target}`)
 }
 

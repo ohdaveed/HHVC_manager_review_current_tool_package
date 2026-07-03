@@ -118,7 +118,7 @@ window.HHVC_PAGES['moldReport'] = {
           karl: 'Related section link to tenant support / rights information',
         },
         {
-          title: 'Integrated pest management for property managers',
+          title: 'Integrated pest management for property owners and managers',
           text: 'Use prevention, monitoring, repairs, and resident outreach to reduce pests and housing health problems.',
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',

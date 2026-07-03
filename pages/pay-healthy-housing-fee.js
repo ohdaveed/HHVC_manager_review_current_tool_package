@@ -86,8 +86,8 @@ window.HHVC_PAGES['payFee'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
-          title: 'Integrated pest management for property managers',
-          text: 'Use prevention, monitoring, and resident outreach to reduce pests in buildings.',
+          title: 'Integrated pest management for property owners and managers',
+          text: 'Use prevention, monitoring, and resident outreach. UC IPM is the primary source for templates and checklists.',
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',
         },
