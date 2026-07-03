@@ -21,6 +21,8 @@ vm.createContext(ctx)
 // excluded because it expects the full DOM and runtime globals.
 const files = [
   'pages/agency-service-grouping.js',
+  'pages/prevent-problems.js',
+  'pages/report-a-problem.js',
   'pages/lookup-building-records.js',
   'pages/lookup-complaints-inspections.js',
   'pages/lookup-residential-violations.js',
