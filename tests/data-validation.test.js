@@ -7,8 +7,10 @@ const { dataSchema } = require('../build_scripts/schema')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
+  findBrokenButtonTargets,
   isTopicPageFirst,
   findBannedTerms,
+  findListFormatViolations,
 } = require('../build_scripts/data-checks')
 
 function validPage(overrides = {}) {
@@ -149,6 +151,31 @@ describe('findBrokenCardTargets', () => {
   })
 })
 
+describe('findBrokenButtonTargets', () => {
+  test('empty when every section/step buttonTarget exists', () => {
+    const pages = {
+      a: { sections: [{ buttonTarget: 'b', steps: [{ buttonTarget: 'b' }] }] },
+      b: {},
+    }
+    expect(findBrokenButtonTargets(pages)).toEqual([])
+  })
+
+  test('reports a section buttonTarget with no matching page', () => {
+    const pages = { a: { sections: [{ buttonTarget: 'ghost' }] } }
+    expect(findBrokenButtonTargets(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
+  })
+
+  test('reports a step buttonTarget with no matching page', () => {
+    const pages = { a: { sections: [{ steps: [{ buttonTarget: 'ghost' }] }] } }
+    expect(findBrokenButtonTargets(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
+  })
+
+  test('ignores sections/steps with no buttonTarget', () => {
+    const pages = { a: { sections: [{ button: 'Go', steps: [{ button: 'Go' }] }] } }
+    expect(findBrokenButtonTargets(pages)).toEqual([])
+  })
+})
+
 describe('findBannedTerms', () => {
   const bannedTerms = ['plumbing', 'dbi', 'sewer']
 
@@ -164,5 +191,33 @@ describe('findBannedTerms', () => {
   test('finds multiple banned terms', () => {
     const page = { title: 'plumbing and sewer issues' }
     expect(findBannedTerms(page, bannedTerms)).toEqual(['plumbing', 'sewer'])
+  })
+})
+
+describe('findListFormatViolations', () => {
+  test('empty when lists of 3+ use bullets instead of paragraphs or step text', () => {
+    const pages = {
+      a: {
+        sections: [
+          { paragraphs: ['One', 'Two'], bullets: ['A', 'B', 'C'] },
+          { steps: [{ text: ['One', 'Two'], bullets: ['A', 'B', 'C'] }] },
+        ],
+      },
+    }
+    expect(findListFormatViolations(pages)).toEqual([])
+  })
+
+  test('reports section paragraphs with 3 or more items', () => {
+    const pages = { a: { sections: [{ paragraphs: ['One', 'Two', 'Three'] }] } }
+    expect(findListFormatViolations(pages)).toEqual([
+      { pageKey: 'a', path: 'sections[0].paragraphs', count: 3 },
+    ])
+  })
+
+  test('reports step text with 3 or more items', () => {
+    const pages = { a: { sections: [{ steps: [{ text: ['One', 'Two', 'Three'] }] }] } }
+    expect(findListFormatViolations(pages)).toEqual([
+      { pageKey: 'a', path: 'sections[0].steps[0].text', count: 3 },
+    ])
   })
 })

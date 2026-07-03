@@ -30,7 +30,7 @@ window.HHVC_PAGES['payFee'] = {
       heading: 'Who may need to pay',
       karl: 'Body: Who may need to pay',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'You need to pay this fee if you own an apartment building with 3 or more rental units.',
         'If fewer than 3 units are rented during the billing year, you do not need to pay the fee.',
         'Check your invoice for the exact amount. The number of rental units determines your fee.',
@@ -86,8 +86,8 @@ window.HHVC_PAGES['payFee'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
-          title: 'Integrated pest management for property managers',
-          text: 'Use prevention, monitoring, and resident outreach to reduce pests in buildings.',
+          title: 'Integrated pest management for property owners and managers',
+          text: 'Use prevention, monitoring, and resident outreach. UC IPM is the primary source for templates and checklists.',
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',
         },

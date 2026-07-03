@@ -15,6 +15,8 @@ vm.createContext(ctx)
 // and ultimately `window.HHVC_DATA`, which is what the app consumes at runtime.
 const files = [
   'pages/agency-service-grouping.js',
+  'pages/prevent-problems.js',
+  'pages/report-a-problem.js',
   'pages/lookup-building-records.js',
   'pages/lookup-complaints-inspections.js',
   'pages/lookup-residential-violations.js',
@@ -57,11 +59,15 @@ const data = ctx.window.HHVC_DATA
 fs.mkdirSync(path.join(root, 'data'), { recursive: true })
 fs.writeFileSync(path.join(root, 'data/page_inventory.json'), JSON.stringify(data, null, 2))
 
+// Mirrors js/utils.js's getPrimaryCta() (browser-only, not loaded into this
+// script's Node VM), so the exported inventory agrees with the rendered
+// review tool: skip section buttons marked buttonStyle: 'secondary'.
 function primaryCta(page) {
   for (const section of page.sections || []) {
     for (const step of section.steps || []) {
       if (step.button) return step.button
     }
+    if (section.button && section.buttonStyle !== 'secondary') return section.button
   }
   return page.primaryCta || ''
 }

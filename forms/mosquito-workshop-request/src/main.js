@@ -42,7 +42,12 @@ const fields = [
     label: 'Space type',
     type: 'select',
     required: true,
-    options: ['Indoor classroom', 'Indoor multipurpose room', 'Outdoor covered area', 'Outdoor open area'],
+    options: [
+      'Indoor classroom',
+      'Indoor multipurpose room',
+      'Outdoor covered area',
+      'Outdoor open area',
+    ],
   },
   {
     id: 'electricity',
@@ -60,9 +65,7 @@ const fields = [
 ]
 
 function fieldHtml(field) {
-  const required = field.required
-    ? ` <span class="required-mark" aria-hidden="true">*</span>`
-    : ''
+  const required = field.required ? ` <span class="required-mark" aria-hidden="true">*</span>` : ''
   const reqAttr = field.required ? 'required' : ''
 
   if (field.type === 'select') {

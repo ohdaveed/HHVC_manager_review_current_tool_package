@@ -5,7 +5,7 @@
 const { describe, test, expect } = require('bun:test')
 const { loadScripts } = require('./helpers/load-scripts')
 
-const ctx = loadScripts(['js/utils.js', 'js/page-render.js'])
+const ctx = loadScripts(['js/utils.js', 'js/karl-tag-meta.js', 'js/page-render.js'])
 
 const PAYLOAD = `<script>alert('xss')</script>`
 const ESCAPED = `&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;`
@@ -20,8 +20,28 @@ describe('page-render.js escaping', () => {
     assertEscaped(ctx.karlTag(PAYLOAD))
   })
 
+  test('karlTag includes an explicit kind label', () => {
+    const html = ctx.karlTag('Section heading', 'body')
+    expect(html).toContain('class="karl-tag-kind"')
+    expect(html).toContain('>Body</span>')
+    expect(html).toContain('data-kind="body"')
+  })
+
   test('paragraphList escapes every paragraph', () => {
     assertEscaped(ctx.paragraphList([PAYLOAD]))
+  })
+
+  test('renderTextItems uses bullets for three or more items', () => {
+    const html = ctx.renderTextItems(['One', 'Two', 'Three'])
+    expect(html).toContain('<ul>')
+    expect(html).toContain('<li>One</li>')
+    expect(html).not.toContain('<p>One</p>')
+  })
+
+  test('renderTextItems keeps one or two items as paragraphs', () => {
+    const html = ctx.renderTextItems(['One', 'Two'])
+    expect(html).toContain('<p>One</p>')
+    expect(html).not.toContain('<ul>')
   })
 
   test('renderAudience escapes every audience item', () => {

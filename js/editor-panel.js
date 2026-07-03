@@ -1,31 +1,17 @@
 // SEO/editor panel: syncing input fields with the current page, dirty-state
 // indicators, the search-result preview, and per-field reset. Depends on
-// js/state.js (pageData, ORIGINAL_DATA, currentPageKey, getPrimaryCta,
-// setPrimaryCta, escapeHtml) and js/page-render.js (karlTag).
-function defaultSeoTitle(page) {
-  return page.seoTitle || `${page.title} | San Francisco`
-}
-function defaultMetaDescription(page) {
-  return page.metaDescription || page.summary || ''
-}
-function setText(id, value) {
-  const el = document.getElementById(id)
-  if (el) el.textContent = value
-}
-function setField(id, value) {
-  const el = document.getElementById(id)
-  if (el) el.value = value || ''
-}
+// js/utils.js (getPrimaryCta, setPrimaryCta, escapeHtml, defaultSeoTitle,
+// defaultMetaDescription, getValue, setValue, setText) and js/state.js
+// (pageData, ORIGINAL_DATA, currentPageKey).
 function statusClass(length, max) {
   return length <= max ? 'ok' : 'warn'
 }
 function updateSearchPreview() {
   const page = pageData[currentPageKey]
   if (!page) return
-  const seoTitle = document.getElementById('seoTitleInput')?.value || defaultSeoTitle(page)
-  const metaDescription =
-    document.getElementById('metaDescriptionInput')?.value || defaultMetaDescription(page)
-  const slug = document.getElementById('urlInput')?.value || page.slug
+  const seoTitle = getValue('seoTitleInput') || defaultSeoTitle(page)
+  const metaDescription = getValue('metaDescriptionInput') || defaultMetaDescription(page)
+  const slug = getValue('urlInput') || page.slug
   setText('seoPreviewTitle', seoTitle)
   setText('seoPreviewUrl', 'https://' + slug)
   setText('seoPreviewDescription', metaDescription)
@@ -44,23 +30,24 @@ function updateSearchPreview() {
   }
 }
 function syncEditorFields(page) {
-  setField('titleInput', page.title)
-  setField('descriptionInput', page.summary)
-  setField('ctaInput', getPrimaryCta(page))
-  setField('seoTitleInput', defaultSeoTitle(page))
-  setField('metaDescriptionInput', defaultMetaDescription(page))
+  setValue('titleInput', page.title)
+  setValue('descriptionInput', page.summary)
+  setValue('ctaInput', getPrimaryCta(page))
+  setValue('seoTitleInput', defaultSeoTitle(page))
+  setValue('metaDescriptionInput', defaultMetaDescription(page))
   updateSearchPreview()
 }
 function updateDirtyIndicators(key) {
   const page = pageData[key]
   const orig = ORIGINAL_DATA.pages[key]
   if (!page || !orig) return
-  const titleWrap = document.getElementById('titleInput')?.closest('.field-with-reset')
-  if (titleWrap) titleWrap.classList.toggle('modified', page.title !== orig.title)
-  const descWrap = document.getElementById('descriptionInput')?.closest('.field-with-reset')
-  if (descWrap) descWrap.classList.toggle('modified', page.summary !== orig.summary)
-  const ctaWrap = document.getElementById('ctaInput')?.closest('.field-with-reset')
-  if (ctaWrap) ctaWrap.classList.toggle('modified', getPrimaryCta(page) !== getPrimaryCta(orig))
+  ;[
+    ['titleInput', page.title !== orig.title],
+    ['descriptionInput', page.summary !== orig.summary],
+    ['ctaInput', getPrimaryCta(page) !== getPrimaryCta(orig)],
+  ].forEach(([id, dirty]) => {
+    document.getElementById(id)?.closest('.field-with-reset')?.classList.toggle('modified', dirty)
+  })
 }
 function updateReadingTarget(page) {
   const el = document.getElementById('readingTargetValue')
@@ -80,29 +67,28 @@ function updatePageBadge(title) {
   clearTimeout(badge._timeout)
   badge._timeout = setTimeout(() => badge.classList.remove('visible'), 5000)
 }
+const RESETTABLE_FIELDS = {
+  title: { get: (page) => page.title, set: (page, value) => (page.title = value), inputId: 'titleInput' },
+  summary: {
+    get: (page) => page.summary,
+    set: (page, value) => (page.summary = value),
+    inputId: 'descriptionInput',
+  },
+  cta: { get: getPrimaryCta, set: setPrimaryCta, inputId: 'ctaInput' },
+}
+
 function resetField(fieldKey) {
   const key = currentPageKey
   const orig = ORIGINAL_DATA.pages[key]
   const page = pageData[key]
-  if (!orig || !page) return
-  if (fieldKey === 'title') {
-    page.title = orig.title
-    setField('titleInput', orig.title)
-    const h1 = document.querySelector('#mockPage h1')
-    if (h1) h1.textContent = orig.title
-  } else if (fieldKey === 'summary') {
-    page.summary = orig.summary
-    setField('descriptionInput', orig.summary)
-    const s = document.querySelector('#mockPage .summary')
-    if (s) s.textContent = orig.summary
-  } else if (fieldKey === 'cta') {
-    setPrimaryCta(page, getPrimaryCta(orig))
-    setField('ctaInput', getPrimaryCta(orig))
-    const pb = document.querySelector('#mockPage .btn:not(.secondary)')
-    if (pb)
-      pb.innerHTML =
-        karlTag('Button label: Primary CTA', 'placement') + escapeHtml(getPrimaryCta(orig))
-  }
+  const field = RESETTABLE_FIELDS[fieldKey]
+  if (!orig || !page || !field) return
+
+  const value = field.get(orig)
+  field.set(page, value)
+  setValue(field.inputId, value)
+  applyFieldToMockup(fieldKey, value)
+
   updateDirtyIndicators(key)
   showToast(fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1) + ' reset to original.', 'info')
 }

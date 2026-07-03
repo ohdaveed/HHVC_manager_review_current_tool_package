@@ -27,7 +27,7 @@ window.HHVC_PAGES['recordsHub'] = {
     {
       heading: 'Building lookups',
       karl: 'Resource collection: Building lookups subsection',
-      kind: 'placement',
+      kind: 'body',
       cards: [
         {
           title: 'Find complaints and inspection records',
@@ -58,7 +58,7 @@ window.HHVC_PAGES['recordsHub'] = {
     {
       heading: 'Formal requests and payments',
       karl: 'Resource collection: Formal requests subsection',
-      kind: 'placement',
+      kind: 'body',
       cards: [
         {
           title: 'Make a public records request',

@@ -21,8 +21,7 @@ window.HHVC_PAGES['pestsTopic'] = {
       karl: 'Topic page body: Introductory text',
       kind: 'body',
       paragraphs: [
-        'Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11.',
-        'This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation.',
+        'Use this page to report or prevent problems that Healthy Housing and Vector Control may review under Article 11. This page is for pests, vectors, bed bugs, garbage, clutter, animal waste, overgrown plants, and mold from humidity or condensation.',
         'You can ask 311 for help in your language when you report a problem.',
       ],
     },
@@ -40,7 +39,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     {
       heading: 'Report a problem',
       karl: 'Topic page Services section, subheading: Report a problem',
-      kind: 'placement',
+      kind: 'body',
       paragraphs: ['Use these pages if you are affected by a pest or housing health problem.'],
       cards: [
         {
@@ -102,7 +101,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     {
       heading: 'Prevent pests and housing health problems',
       karl: 'Topic page Resources section, subheading: Prevention',
-      kind: 'placement',
+      kind: 'body',
       paragraphs: ['Use these pages to stop problems before they spread.'],
       cards: [
         {
@@ -158,7 +157,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     {
       heading: 'Wildlife and other vector concerns',
       karl: 'Topic page Resources section, subheading: Wildlife and vectors',
-      kind: 'placement',
+      kind: 'body',
       paragraphs: [
         'Use these pages for birds, wildlife attractants, and mite concerns tied to housing health.',
       ],
@@ -186,7 +185,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     {
       heading: 'Know what HHVC can inspect',
       karl: 'Topic page Resources section, subheading: Scope and process',
-      kind: 'placement',
+      kind: 'body',
       paragraphs: ['Use these pages if you are not sure where to start.'],
       cards: [
         {
@@ -218,7 +217,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     {
       heading: 'Property owner responsibilities',
       karl: 'Topic page Resources section, subheading: Property owners',
-      kind: 'placement',
+      kind: 'body',
       paragraphs: ['Use these pages if you own or manage a residential building.'],
       cards: [
         {
@@ -244,7 +243,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     {
       heading: 'Tenant rights and help',
       karl: 'Topic page Resources section, subheading: Tenant support',
-      kind: 'placement',
+      kind: 'body',
       paragraphs: ['Use these pages if you are worried about reporting a housing condition.'],
       cards: [
         {

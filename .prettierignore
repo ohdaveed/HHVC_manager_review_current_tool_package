@@ -6,3 +6,10 @@ build/
 server.ts
 manager-review-single-file.html
 single-file-export-current-source.html
+
+# Reference / planning docs — not app source; avoid reformatting during content work
+docs/source/
+docs/superpowers/
+.playwright-mcp/
+review/
+forms/mosquito-workshop-request/dist/
