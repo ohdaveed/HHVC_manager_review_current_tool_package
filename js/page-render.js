@@ -4,7 +4,8 @@
 // js/ui-controls.js for the post-render side effects triggered by
 // applyPageContent (syncEditorFields, updateDirtyIndicators, etc.).
 function karlTag(label, kind = 'body') {
-  return `<div class="karl-tag" data-kind="${kind}"><strong>Karl:</strong> ${escapeHtml(label)}</div>`
+  const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: kind }
+  return `<div class="karl-tag" data-kind="${kind}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></div>`
 }
 function paragraphList(paragraphs = []) {
   return paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('')

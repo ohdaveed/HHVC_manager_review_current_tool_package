@@ -51,6 +51,7 @@ function init() {
   document.getElementById('tagToggle').addEventListener('change', (e) => {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })
+  mountKarlTagLegend?.()
   document.getElementById('resetTitleBtn')?.addEventListener('click', () => resetField('title'))
   document
     .getElementById('resetDescriptionBtn')

@@ -652,6 +652,18 @@ a:focus {
   font-size: 0.72rem;
   line-height: 1.25;
   font-weight: 700;
+}
+.karl-tag-kind {
+  flex: 0 0 auto;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.karl-tag-text {
   text-transform: uppercase;
   letter-spacing: 0.045em;
 }
@@ -680,8 +692,67 @@ a:focus {
   border-color: var(--sfds-success-border);
 }
 body.hide-karl-tags .karl-tag,
-body.hide-karl-tags .cms-help {
+body.hide-karl-tags .cms-help,
+body.hide-karl-tags .karl-tag-legend {
   display: none !important;
+}
+.karl-tag-legend {
+  margin: 0.65rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--sfds-border);
+  border-radius: var(--radius);
+  background: var(--sfds-white);
+}
+.karl-tag-legend-title {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--sfds-slate-1);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.karl-tag-legend-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.karl-tag-legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.karl-tag-legend-item--compact {
+  display: inline-flex;
+}
+.karl-tag-legend--compact .karl-tag-legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.karl-tag-legend--compact .karl-tag-legend-title {
+  display: inline;
+  margin: 0 0.35rem 0 0;
+}
+.karl-tag-legend--compact {
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid var(--sfds-border);
+  border-bottom: 1px solid var(--sfds-border);
+  border-radius: 0;
+  background: var(--sfds-slate-5);
+}
+.karl-tag-legend-swatch {
+  margin: 0;
+  pointer-events: none;
+}
+.karl-tag-legend-desc {
+  color: var(--sfds-slate-3);
+  font-size: 0.76rem;
+  line-height: 1.35;
 }
 @media (max-width: 980px) {
   .app {
@@ -877,7 +948,8 @@ body.hide-karl-tags .cms-help {
 }
 body.hide-karl-tags .karl-tag,
 body.hide-karl-tags .cms-help,
-body.hide-karl-tags .karl-help-nested {
+body.hide-karl-tags .karl-help-nested,
+body.hide-karl-tags .karl-tag-legend {
   display: none !important;
 }
 
