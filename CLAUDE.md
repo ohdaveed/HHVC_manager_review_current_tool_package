@@ -60,9 +60,12 @@ js/manager-review-export.js → js/ux-improvements.js → js/review-queue.js →
 js/dashboard-guidance.js → js/interactive-sitemap.js → js/keyboard-shortcuts.js
 ```
 
-When adding a new page file, add its `<script>` tag in the `pages/*.js`
-block, before `js/page-data.js`. When adding a new `pages/*.js` file, also
-add it to the `files` array in `build_scripts/validate.js`.
+When adding a new page file: add its `<script>` tag in the `pages/*.js`
+block of `index.html`, before `js/page-data.js`; add a `[pageKey, menuLabel]`
+entry to the `order` array in `js/page-data.js` so it appears in navigation;
+and add the file path to the `files` array in **both**
+`build_scripts/validate.js` and `build_scripts/extract-pages.js` — those two
+scripts each hardcode their own separate copy of that list.
 
 ### Core module split (formerly one `app.js`)
 
@@ -105,11 +108,17 @@ files or publish content**; they are review aids only, not publishing tools.
 ### Page object shape and validation rules
 
 See `build_scripts/validate.js` for the enforced Zod schema: `slug`, `type`
-(`Topic page` | `Transaction` | `Information`), `title`, `summary`,
-`audience[]`, `reading` (grade-level string), and `sections[]`. Sections
-carry `cards[]`, `bullets[]`, and/or `steps[]`; steps can have `text`, `callout`, and
-`button` (the primary CTA). Optional SEO/review fields: `seoTitle`,
-`metaDescription`, `primaryCta`, `editorNote`.
+(a free-form string — only `min(1)` is checked, not an enum; values in use
+across `pages/*.js` include `Topic page`, `Transaction`, `Information`, and
+`Resource collection`), `title`, `summary`, `audience[]`, `reading`
+(grade-level string), and `sections[]`. Sections carry `cards[]`,
+`bullets[]`, `paragraphs[]`, `table[][]`, a `callout`, a
+`button`/`buttonUrl`/`buttonTarget`/`buttonStyle`, and/or `steps[]`; steps
+carry `text[]`, `callout`, and `button`/`buttonTarget`/`buttonUrl` (the
+primary CTA). `js/page-render.js` also renders a `bullets[]` array on
+steps even though `stepSchema` doesn't declare it — that field is rendered
+but unvalidated. Optional SEO/review fields: `seoTitle`, `metaDescription`,
+`primaryCta`, `editorNote`.
 
 Beyond schema shape, `validate.js` enforces business invariants:
 - The `pestsTopic` key must exist and must be first in `order` (this is the
@@ -149,9 +158,14 @@ changes incompatibly. Workspace UI prefs (`workspace_open`, `workspace_tab`,
   by `netlify.toml`) assembles `dist/` with only runtime files: `index.html`,
   `css/`, `js/`, `pages/`, the three `@sfgov/design-system` CSS files
   (referenced by `index.html` via `node_modules` paths, so `npm install`/`bun
-  install` must run first), and the compiled `forms/mosquito-workshop-request/dist`
-  (that Vite sub-app is built with `base: '/forms/mosquito-workshop-request/'`,
-  so its output is copied to that same path under `dist/`).
+  install` must run first), and `forms/mosquito-workshop-request/dist`
+  (copied to that same path under `dist/`, since that Vite sub-app is built
+  with `base: '/forms/mosquito-workshop-request/'`). **`build:netlify` does
+  not run the Vite build** — it only copies whatever is already checked into
+  the committed `forms/mosquito-workshop-request/dist` directory, so after
+  editing `forms/mosquito-workshop-request/src` you must rebuild it first
+  (`bun run build:workshop-form`) or a Netlify deploy will ship stale form
+  assets.
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
 
