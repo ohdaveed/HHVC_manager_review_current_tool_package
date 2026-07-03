@@ -4,7 +4,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
   type: 'Transaction',
   title: 'Report a dead bird',
   summary:
-    'Report a dead bird to help track West Nile virus. HHVC may collect the bird and test it for West Nile virus.',
+    'Report a dead bird to help track West Nile virus. CDPH or HHVC will decide if the bird can be collected for testing.',
   audience: [
     'A resident who found a dead bird on their property or near their building',
     'A property owner or manager who needs guidance on dead bird reporting',
@@ -12,7 +12,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
   ],
   reading: 'Grade 6–7',
   editorNote:
-    'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME BLOCKED — confirm current HHVC collection criteria, priority species list, seasonal call-center hours, and whether SF routes all reports through CDPH before publication.',
+    'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME BLOCKED — confirm current HHVC pickup criteria, priority species list, local seasonal workflow, and whether SF routes all reports through CDPH before publication.',
   sections: [
     {
       heading: 'Why report a dead bird',
@@ -29,17 +29,17 @@ window.HHVC_PAGES['wnvBirdReport'] = {
       kind: 'body',
       paragraphs: [
         'Start your report through the California Department of Public Health (CDPH) dead bird reporting system. You will leave SF.gov.',
-        'From April through October, you can also call the West Nile virus call center at 1-877-WNV-BIRD (1-877-968-2473). Online reporting is available year-round.',
+        'You can report online year-round. From April through October, you can also call the West Nile virus call center at 1-877-WNV-BIRD (1-877-968-2473).',
       ],
       button: 'Report a dead bird to CDPH',
       buttonUrl: 'https://westnile.ca.gov/report',
     },
     {
-      heading: 'Birds HHVC may collect for testing',
-      karl: 'Body: HHVC collection criteria — SME verify against current CDPH/HHVC protocol before publication',
+      heading: 'Birds that may be collected for testing',
+      karl: 'Body: Collection criteria — SME verify against current CDPH/HHVC protocol before publication',
       kind: 'body',
       paragraphs: [
-        'After you report through CDPH, Healthy Housing and Vector Control decides whether to collect the bird for West Nile virus testing. Not every bird is suitable.',
+        'After you report through CDPH, public health staff decide whether the bird can be collected for West Nile virus testing. Not every bird is suitable.',
       ],
       bullets: [
         'Priority species often include crows, jays, magpies, ravens, and birds of prey such as hawks',
@@ -49,16 +49,16 @@ window.HHVC_PAGES['wnvBirdReport'] = {
       ],
       callout: {
         karl: 'Body note: Collection criteria',
-        text: 'HHVC staff or CDPH will tell you whether the bird can be picked up for testing or should be disposed of safely. Do not wait for pickup if you are told to dispose of the bird.',
+        text: 'CDPH, HHVC, or the local mosquito control program will tell you whether the bird can be picked up for testing or should be disposed of safely. Do not wait for pickup if you are told to dispose of the bird.',
       },
     },
     {
-      heading: 'What HHVC does after you report',
-      karl: 'Body: HHVC collection and West Nile testing',
+      heading: 'What happens after you report',
+      karl: 'Body: Local collection and West Nile surveillance',
       kind: 'body',
       paragraphs: [
-        'After you file a report, Healthy Housing and Vector Control may collect the bird if it is suitable for testing.',
-        'HHVC tests collected birds for West Nile virus. Test results help the Mosquito Control Program track virus activity in San Francisco and guide prevention work.',
+        'After you file a report, the bird may be collected if it is suitable for testing and can be safely picked up.',
+        'Dead bird reports and test results help the Mosquito Control Program track West Nile virus activity in San Francisco and guide prevention work.',
       ],
       bullets: [
         'Note the exact location where you found the bird',
@@ -76,7 +76,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
       bullets: [
         'Do not touch the bird with bare hands',
         'If asked to prepare the bird for pickup, use gloves and place it in a plastic bag',
-        'Label the bag “Dead bird” and keep it out of direct sun until HHVC collects it',
+        'Label the bag “Dead bird” and keep it out of direct sun until pickup',
         'If the bird will not be collected, follow CDPH disposal instructions—usually double-bagging and placing it in an outdoor garbage bin',
       ],
     },
@@ -114,5 +114,5 @@ window.HHVC_PAGES['wnvBirdReport'] = {
   ],
   seoTitle: 'Report a dead bird | SF.gov',
   metaDescription:
-    'Report a dead bird for West Nile surveillance. HHVC may collect and test birds to track virus activity.',
+    'Report a dead bird for West Nile surveillance. CDPH or HHVC will decide if the bird can be collected.',
 }

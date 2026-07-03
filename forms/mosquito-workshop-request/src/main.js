@@ -1,5 +1,14 @@
 const app = document.getElementById('app')
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 const fields = [
   { id: 'organization', label: 'Organization or school name', type: 'text', required: true },
   { id: 'contactName', label: 'Contact name', type: 'text', required: true },
@@ -33,7 +42,12 @@ const fields = [
     label: 'Space type',
     type: 'select',
     required: true,
-    options: ['Indoor classroom', 'Indoor multipurpose room', 'Outdoor covered area', 'Outdoor open area'],
+    options: [
+      'Indoor classroom',
+      'Indoor multipurpose room',
+      'Outdoor covered area',
+      'Outdoor open area',
+    ],
   },
   {
     id: 'electricity',
@@ -51,9 +65,7 @@ const fields = [
 ]
 
 function fieldHtml(field) {
-  const required = field.required
-    ? ` <span class="required-mark" aria-hidden="true">*</span>`
-    : ''
+  const required = field.required ? ` <span class="required-mark" aria-hidden="true">*</span>` : ''
   const reqAttr = field.required ? 'required' : ''
 
   if (field.type === 'select') {
@@ -109,8 +121,8 @@ function renderSuccess(data) {
     <div class="form-success" role="status">
       <h2>Thank you — we received your request</h2>
       <p>
-        <strong>${data.organization}</strong> is on the list for follow-up. HHVC will contact
-        ${data.contactName} at ${data.email} about workshop availability.
+        <strong>${escapeHtml(data.organization)}</strong> is on the list for follow-up. HHVC will contact
+        ${escapeHtml(data.contactName)} at ${escapeHtml(data.email)} about workshop availability.
       </p>
       <p style="margin-top:0.75rem">
         <a href="/">Return to the HHVC mockup tool</a>

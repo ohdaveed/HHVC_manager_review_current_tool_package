@@ -26,7 +26,7 @@ window.HHVC_PAGES['ownerHub'] = {
     {
       heading: 'Owner obligations',
       karl: 'Resource collection: Owner obligations subsection',
-      kind: 'placement',
+      kind: 'body',
       cards: [
         {
           title: 'Pay your Healthy Housing fee',

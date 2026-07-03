@@ -119,7 +119,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         'Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance, landscape management, and sanitation are core parts of IPM.',
       ],
       bullets: [
-        'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings using steel wool, hardware cloth, or mortar.',
+        'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant.',
         'Maintain tree and shrub branches at least 3 feet away from walls or roofs to prevent rodents from climbing onto structures.',
         'Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.',
         'Apply gravel around foundations to prevent burrowing, and stack wood piles or lumber at least 6 inches off the ground.',

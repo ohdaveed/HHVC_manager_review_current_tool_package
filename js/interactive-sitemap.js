@@ -1,50 +1,45 @@
 /* Interactive HHVC sitemap diagram.
-   Upgraded: search, link connectivity, keyboard nav, cluster counts, and linked-page spotlight.
-   Uses existing HHVC_DATA and renderPage() so nodes can open page mockups directly. */
+   Single hub-tree layout driven by HHVC_DATA.order and resource-collection
+   card targets. Uses existing HHVC_DATA and renderPage() so nodes open mockups. */
 ;(function mountInteractiveSitemap() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const PANEL_ID = 'interactiveSitemapPanel'
   const STYLE_ID = 'interactiveSitemapStyles'
+  const TOPIC_KEY = 'pestsTopic'
   const state = {
     filter: 'All',
     search: '',
-    selectedKey: document.getElementById('pageSelect')?.value || 'pestsTopic',
+    selectedKey: document.getElementById('pageSelect')?.value || TOPIC_KEY,
     showLinksFromSelected: false,
   }
 
   let sitemapMounted = false
 
-  // js/utils.js loads first (see index.html script order), so the shared
-  // helpers are always available.
-  const { escapeHtml, getPrimaryCta } = window.utils
+  const {
+    escapeHtml,
+    getPrimaryCta,
+    countRelatedLinks,
+    getCurrentKey: getCurrentKeyShared,
+    buildPageRows,
+    debounce,
+  } = window.utils
 
   function getWorkspaceSitemapPanel() {
     return document.getElementById('reviewWorkspaceSitemap')
   }
 
   function getCurrentKey() {
-    return document.getElementById('pageSelect')?.value || state.selectedKey || 'pestsTopic'
+    return getCurrentKeyShared(state.selectedKey)
   }
 
   function normalizeType(type) {
     const normalized = String(type || '').toLowerCase()
     if (normalized.includes('topic')) return 'Topic'
+    if (normalized.includes('resource collection')) return 'Resource collection'
     if (normalized.includes('transaction')) return 'Transaction'
     return 'Information'
-  }
-
-  function countRelatedLinks(page) {
-    let count = 0
-    for (const section of page.sections || []) {
-      count += Array.isArray(section.cards) ? section.cards.length : 0
-      count += section.button ? 1 : 0
-      for (const step of section.steps || []) {
-        count += step.button ? 1 : 0
-      }
-    }
-    return count
   }
 
   function getOutgoingTargets(page) {
@@ -54,6 +49,26 @@
         if (card.target) targets.add(card.target)
       }
       if (section.buttonTarget) targets.add(section.buttonTarget)
+      for (const step of section.steps || []) {
+        if (step.buttonTarget) targets.add(step.buttonTarget)
+      }
+    }
+    return Array.from(targets)
+  }
+
+  function getPlacementTargets(page) {
+    const targets = new Set()
+    for (const section of page.sections || []) {
+      if (section.kind !== 'placement') continue
+      if (
+        String(section.heading || '')
+          .toLowerCase()
+          .includes('related')
+      )
+        continue
+      for (const card of section.cards || []) {
+        if (card.target) targets.add(card.target)
+      }
     }
     return Array.from(targets)
   }
@@ -80,64 +95,59 @@
     return state._linkGraph
   }
 
-  function getCluster(key, page) {
-    const lowerTitle = String(page.title || '').toLowerCase()
-    const lowerSummary = String(page.summary || '').toLowerCase()
-    const haystack = `${key} ${lowerTitle} ${lowerSummary}`
-
-    if (key === 'pestsTopic') return 'Topic landing page'
-    if (
-      key === 'recordsHub' ||
-      key === 'ownerHub' ||
-      lowerTitle.includes('look up') ||
-      lowerTitle.includes('lookup') ||
-      lowerTitle.includes('find complaints') ||
-      lowerTitle.includes('find residential hotel') ||
-      lowerTitle.includes('find your district') ||
-      lowerTitle.includes('public records') ||
-      lowerTitle.includes('notice of violation')
-    )
-      return 'Look up records'
-    if (
-      lowerTitle.includes('pigeon') ||
-      lowerTitle.includes('raccoon') ||
-      lowerTitle.includes('mite') ||
-      lowerTitle.includes('dead bird') ||
-      lowerTitle.includes('mosquito control') ||
-      lowerTitle.includes('mosquito education workshop')
-    )
-      return 'Vector and wildlife information'
-    if (lowerTitle.includes('report') || haystack.includes('fee')) return 'Report or pay'
-    if (
-      lowerTitle.includes('prevent') ||
-      lowerTitle.includes('keep') ||
-      lowerTitle.includes('integrated pest management') ||
-      lowerTitle.includes('rules')
-    )
-      return 'Prevent problems'
-    if (
-      lowerTitle.includes('inspect') ||
-      lowerTitle.includes('after') ||
-      lowerTitle.includes('rights')
-    )
-      return 'Inspection and rights'
-    return 'Information and education'
-  }
-
   function getPageRows() {
     const graph = getLinkGraph()
-    return DATA.order.map(([key, label]) => {
-      const page = DATA.pages[key] || {}
-      return {
-        key,
-        label,
-        page,
-        type: normalizeType(page.type || label),
-        cluster: getCluster(key, page),
-        incomingCount: graph[key]?.incoming?.size || 0,
-        outgoingCount: graph[key]?.outgoing?.size || 0,
+    return buildPageRows(DATA, (key, label, page) => ({
+      key,
+      label,
+      page,
+      type: normalizeType(page.type || label),
+      incomingCount: graph[key]?.incoming?.size || 0,
+      outgoingCount: graph[key]?.outgoing?.size || 0,
+    })).map((row, orderIndex) => ({ ...row, orderIndex }))
+  }
+
+  function getHubKeys() {
+    return getPageRows()
+      .filter((row) => row.type === 'Resource collection')
+      .map((row) => row.key)
+  }
+
+  function buildDiagramGroups() {
+    const rows = getPageRows()
+    const rowByKey = Object.fromEntries(rows.map((row) => [row.key, row]))
+    const hubKeys = getHubKeys()
+    const assigned = new Set([TOPIC_KEY, ...hubKeys])
+    const groups = hubKeys.map((hubKey) => ({
+      hubKey,
+      hub: rowByKey[hubKey],
+      children: [],
+    }))
+    const groupByHub = Object.fromEntries(groups.map((group) => [group.hubKey, group]))
+
+    for (const hubKey of hubKeys) {
+      const hubPage = DATA.pages[hubKey]
+      if (!hubPage) continue
+      for (const target of getPlacementTargets(hubPage)) {
+        if (assigned.has(target) || !rowByKey[target]) continue
+        assigned.add(target)
+        groupByHub[hubKey].children.push(rowByKey[target])
       }
-    })
+    }
+
+    for (const group of groups) {
+      group.children.sort((a, b) => a.orderIndex - b.orderIndex)
+    }
+
+    const crossCutting = rows
+      .filter((row) => !assigned.has(row.key))
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+
+    return {
+      root: rowByKey[TOPIC_KEY] || rows[0],
+      groups,
+      crossCutting,
+    }
   }
 
   function getFilteredRows() {
@@ -154,9 +164,19 @@
     })
   }
 
+  function getFilteredKeySet() {
+    return new Set(getFilteredRows().map((row) => row.key))
+  }
+
   function getSelectedRow() {
     const key = getCurrentKey()
     return getPageRows().find((row) => row.key === key) || getPageRows()[0]
+  }
+
+  function shortTitle(title, max = 34) {
+    const text = String(title || '').trim()
+    if (text.length <= max) return text
+    return `${text.slice(0, max - 1).trimEnd()}…`
   }
 
   function injectStyles() {
@@ -193,6 +213,12 @@
         max-width: 56rem;
       }
 
+      .sitemap-toolbar {
+        display: grid;
+        gap: 0.65rem;
+        margin-bottom: 0.85rem;
+      }
+
       .sitemap-search-bar {
         display: flex;
         gap: 0.5rem;
@@ -216,7 +242,8 @@
         outline-offset: 1px;
       }
 
-      .sitemap-reset-button {
+      .sitemap-reset-button,
+      .sitemap-toggle {
         min-height: 2.1rem;
         padding: 0.35rem 0.8rem;
         border: 1px solid var(--sfds-border);
@@ -229,12 +256,20 @@
       }
 
       .sitemap-reset-button:hover,
-      .sitemap-reset-button:focus-visible {
+      .sitemap-reset-button:focus-visible,
+      .sitemap-toggle:hover,
+      .sitemap-toggle:focus-visible {
         border-color: var(--sfds-action-blue);
         background: var(--sfds-blue-soft-bg);
       }
 
-      .sitemap-filter-bar {
+      .sitemap-toggle[aria-pressed='true'] {
+        background: var(--sfds-blue-soft-bg);
+        border-color: var(--sfds-action-blue);
+      }
+
+      .sitemap-filter-bar,
+      .sitemap-legend {
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
@@ -242,7 +277,7 @@
       }
 
       .sitemap-filter-button,
-      .sitemap-node-button {
+      .sitemap-diagram-node {
         border: 1px solid var(--sfds-border);
         border-radius: var(--radius);
         background: var(--sfds-white);
@@ -260,153 +295,196 @@
 
       .sitemap-filter-button.active,
       .sitemap-filter-button:hover,
-      .sitemap-node-button:hover,
-      .sitemap-node-button.active {
+      .sitemap-diagram-node:hover,
+      .sitemap-diagram-node.active {
         border-color: var(--sfds-action-blue);
         background: var(--sfds-blue-soft-bg);
         color: var(--sfds-action-blue-hover);
       }
 
-      .interactive-sitemap-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(17rem, 0.8fr);
-        gap: 1rem;
+      .sitemap-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.72rem;
+        color: var(--sfds-slate-2);
+        font-weight: 700;
       }
 
-      .sitemap-tree {
+      .sitemap-legend-swatch {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 2px;
+        border: 1px solid var(--sfds-border);
+        flex: none;
+      }
+
+      .interactive-sitemap-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.75fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .sitemap-diagram {
         border: 1px solid var(--sfds-border);
         border-radius: var(--radius);
-        background: var(--sfds-white);
+        background: var(--sfds-slate-6, #f8fafc);
         padding: 0.9rem;
         overflow-x: auto;
       }
 
-      .sitemap-toolbar {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.7rem;
-        flex-wrap: wrap;
-      }
-
-      .sitemap-root {
+      .sitemap-diagram-root-wrap {
         display: grid;
         justify-items: center;
-        margin-bottom: 0.8rem;
+        margin-bottom: 0.55rem;
       }
 
-      .sitemap-branches {
+      .sitemap-diagram-connector {
         display: grid;
-        grid-template-columns: repeat(4, minmax(9rem, 1fr));
-        gap: 0.75rem;
-        min-width: 42rem;
-      }
-
-      .sitemap-cluster {
-        position: relative;
-        border-top: 2px solid var(--sfds-border);
-        padding-top: 0.8rem;
-      }
-
-      .sitemap-cluster-title {
-        margin: 0 0 0.45rem;
+        justify-items: center;
+        margin: 0.15rem 0 0.55rem;
         color: var(--sfds-slate-3);
-        font-size: 0.72rem;
+        font-size: 0.9rem;
+        font-weight: 900;
+        user-select: none;
+      }
+
+      .sitemap-diagram-columns {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(10.5rem, 1fr));
+        gap: 0.65rem;
+        min-width: 44rem;
+      }
+
+      .sitemap-diagram-column {
+        display: grid;
+        gap: 0.45rem;
+        align-content: start;
+      }
+
+      .sitemap-diagram-column-header {
+        margin: 0;
+        font-size: 0.68rem;
         font-weight: 900;
         letter-spacing: 0.05em;
         text-transform: uppercase;
+        color: var(--sfds-slate-3);
         display: flex;
         align-items: center;
-        gap: 0.45rem;
+        gap: 0.35rem;
       }
 
-      .sitemap-cluster-count {
+      .sitemap-diagram-column-count {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 1.2rem;
-        height: 1.2rem;
+        min-width: 1.15rem;
+        height: 1.15rem;
         padding: 0 0.25rem;
         border-radius: 999px;
         background: var(--sfds-slate-5);
         color: var(--sfds-slate-2);
-        font-size: 0.65rem;
-        font-weight: 900;
+        font-size: 0.62rem;
       }
 
-      .sitemap-node-list {
-        display: grid;
-        gap: 0.4rem;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .sitemap-node-button {
+      .sitemap-diagram-node {
         width: 100%;
-        min-height: 2.65rem;
-        padding: 0.5rem 0.6rem;
+        min-height: 2.35rem;
+        padding: 0.4rem 0.5rem;
         text-align: left;
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0.4rem;
+        align-items: start;
       }
 
-      .sitemap-node-title {
-        display: flex;
+      .sitemap-diagram-node:focus-visible {
+        outline: 2px solid var(--sfds-action-blue);
+        outline-offset: 1px;
+      }
+
+      .sitemap-diagram-node.dimmed {
+        opacity: 0.28;
+        pointer-events: none;
+      }
+
+      .sitemap-diagram-node.linked {
+        box-shadow: 0 0 0 2px var(--sfds-action-blue);
+      }
+
+      .sitemap-diagram-order {
+        display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        justify-content: center;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 999px;
+        background: var(--sfds-slate-5);
+        color: var(--sfds-slate-2);
+        font-size: 0.6rem;
+        font-weight: 900;
+        flex: none;
+      }
+
+      .sitemap-diagram-node-body {
+        display: grid;
+        gap: 0.08rem;
+        min-width: 0;
+      }
+
+      .sitemap-diagram-title {
         color: var(--sfds-slate-1);
-        font-size: 0.78rem;
+        font-size: 0.74rem;
         font-weight: 800;
         line-height: 1.25;
       }
 
-      .sitemap-node-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
+      .sitemap-diagram-meta {
         color: var(--sfds-slate-3);
-        font-size: 0.68rem;
-        line-height: 1.25;
-        flex-wrap: wrap;
-      }
-
-      .sitemap-node-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.15rem;
-        padding: 0.08rem 0.3rem;
-        border-radius: 999px;
-        background: var(--sfds-slate-5);
-        color: var(--sfds-slate-2);
         font-size: 0.62rem;
-        font-weight: 900;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        line-height: 1.2;
       }
 
-      .sitemap-node-highlight {
-        box-shadow: 0 0 0 2px var(--sfds-action-blue);
-      }
-
-      .sitemap-node-links-annotation {
-        font-size: 0.65rem;
-        color: var(--sfds-slate-3);
-        margin-top: 0.1rem;
-      }
-
-      .sitemap-node-button[data-page-type='Topic'] {
+      .sitemap-diagram-node[data-page-type='Topic'] {
         border-left: 4px solid var(--sfds-action-blue);
+        max-width: 18rem;
       }
 
-      .sitemap-node-button[data-page-type='Transaction'] {
+      .sitemap-diagram-node[data-page-type='Resource collection'] {
+        border-left: 4px solid #7c3aed;
+      }
+
+      .sitemap-diagram-node[data-page-type='Transaction'] {
         border-left: 4px solid var(--sfds-green);
       }
 
-      .sitemap-node-button[data-page-type='Information'] {
+      .sitemap-diagram-node[data-page-type='Information'] {
         border-left: 4px solid var(--sfds-warning-border);
+      }
+
+      .sitemap-diagram-children {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .sitemap-diagram-crosscut {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed var(--sfds-border);
+      }
+
+      .sitemap-diagram-crosscut-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+        gap: 0.35rem;
+      }
+
+      .sitemap-diagram-footnote {
+        margin: 0.65rem 0 0;
+        color: var(--sfds-slate-3);
+        font-size: 0.72rem;
+        line-height: 1.35;
       }
 
       .sitemap-detail-card {
@@ -416,13 +494,6 @@
         padding: 0.9rem;
         position: sticky;
         top: 0.5rem;
-      }
-
-      .sitemap-detail-header {
-        display: flex;
-        justify-content: space-between;
-        gap: 0.5rem;
-        align-items: flex-start;
       }
 
       .sitemap-detail-card h4 {
@@ -496,56 +567,29 @@
         border-color: var(--sfds-action-blue);
       }
 
-      .sitemap-toggle-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-      }
-
-      .sitemap-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        font: inherit;
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: var(--sfds-action-blue);
-        background: var(--sfds-white);
-        border: 1px solid var(--sfds-border);
-        border-radius: var(--radius);
-        padding: 0.35rem 0.6rem;
-        cursor: pointer;
-      }
-
-      .sitemap-toggle[aria-pressed='true'] {
-        background: var(--sfds-blue-soft-bg);
-        border-color: var(--sfds-action-blue);
+      .sitemap-empty-note {
+        color: var(--sfds-slate-3);
+        font-size: 0.76rem;
+        margin: 0;
+        padding: 0.35rem 0;
       }
 
       @media (max-width: 980px) {
-        .interactive-sitemap-header,
-        .interactive-sitemap-layout,
-        .sitemap-toolbar,
-        .sitemap-search-bar {
+        .interactive-sitemap-layout {
           grid-template-columns: 1fr;
         }
 
-        .interactive-sitemap-header {
-          display: grid;
-        }
-
-        .sitemap-branches {
+        .sitemap-diagram-columns {
           grid-template-columns: repeat(2, minmax(10rem, 1fr));
           min-width: 0;
         }
       }
 
       @media (max-width: 640px) {
-        .sitemap-branches {
+        .sitemap-diagram-columns {
           grid-template-columns: 1fr;
         }
+
         .sitemap-search-input {
           width: 100%;
         }
@@ -555,105 +599,145 @@
     document.head.appendChild(style)
   }
 
+  function renderLegend() {
+    const types = [
+      ['Topic', 'var(--sfds-action-blue)'],
+      ['Resource collection', '#7c3aed'],
+      ['Transaction', 'var(--sfds-green)'],
+      ['Information', 'var(--sfds-warning-border)'],
+    ]
+    return `
+      <div class="sitemap-legend" aria-label="Page type legend">
+        ${types
+          .map(
+            ([label, color]) => `
+          <span class="sitemap-legend-item">
+            <span class="sitemap-legend-swatch" style="background:${color}"></span>
+            ${escapeHtml(label)}
+          </span>
+        `
+          )
+          .join('')}
+      </div>
+    `
+  }
+
   function renderSearchAndFilters() {
-    const filters = ['All', 'Topic', 'Transaction', 'Information']
+    const filters = ['All', 'Topic', 'Resource collection', 'Transaction', 'Information']
     const clearLabel = state.search ? '✕ Clear search' : ''
-    const isEmpty = state.search.trim().length > 0 && getFilteredRows().length === 0
+    const filteredCount = getFilteredRows().length
+    const totalCount = getPageRows().length
+    const isEmpty = state.search.trim().length > 0 && filteredCount === 0
     return `
       <div class="sitemap-search-bar">
         <input type="search" class="sitemap-search-input" value="${escapeHtml(state.search)}" placeholder="Search pages by title, slug, or keyword..." aria-label="Search sitemap pages" autocomplete="off" />
         <button type="button" class="sitemap-reset-button" data-sitemap-action="clear-search" ${clearLabel ? '' : 'hidden'}>${escapeHtml(clearLabel || '')}</button>
         <button type="button" class="sitemap-reset-button" data-sitemap-action="go-to-current">Go to current page</button>
+        <button type="button" class="sitemap-toggle" data-sitemap-action="toggle-links" aria-pressed="${state.showLinksFromSelected ? 'true' : 'false'}">
+          ${state.showLinksFromSelected ? 'Hide link highlights' : 'Highlight links'}
+        </button>
       </div>
       <div class="sitemap-filter-bar" aria-label="Sitemap page type filters">
         ${filters
           .map(
             (filter) => `
           <button type="button" class="sitemap-filter-button ${state.filter === filter ? 'active' : ''}" data-sitemap-filter="${filter}" aria-pressed="${state.filter === filter ? 'true' : 'false'}">
-            ${escapeHtml(filter)} ${filter !== 'All' ? `(${getPageRows().filter((r) => r.type === filter).length})` : `(${getPageRows().length})`}
+            ${escapeHtml(filter)} ${filter !== 'All' ? `(${getPageRows().filter((r) => r.type === filter).length})` : `(${totalCount})`}
           </button>
         `
           )
           .join('')}
       </div>
-      ${isEmpty ? '<p style="color:var(--sfds-slate-3);font-size:0.8rem;margin:0.4rem 0 0;">No pages match your search or filter. Try adjusting your terms.</p>' : ''}
+      ${renderLegend()}
+      <p class="sitemap-diagram-footnote" style="margin:0;">Showing ${filteredCount} of ${totalCount} pages in <code>js/page-data.js</code> order.</p>
+      ${isEmpty ? '<p class="sitemap-empty-note">No pages match your search or filter. Try adjusting your terms.</p>' : ''}
     `
   }
 
-  function renderNode(row, isRoot = false) {
+  function renderDiagramNode(row, options = {}) {
+    const { hub = false, dimmed = false, linked = false } = options
     const active = row.key === getCurrentKey()
-    const graph = getLinkGraph()
-    const isHighlighted =
-      state.showLinksFromSelected && graph[getCurrentKey()]?.outgoing?.has(row.key)
-    const pageref = row.page
+    const title = row.page.title || row.label
     return `
-      <button type="button" class="sitemap-node-button ${active ? 'active' : ''} ${isHighlighted ? 'sitemap-node-highlight' : ''}" data-sitemap-key="${escapeHtml(row.key)}" data-page-type="${escapeHtml(row.type)}" ${active ? 'aria-current="page"' : ''}>
-        <span class="sitemap-node-title">${escapeHtml(pageref.title || row.label)}</span>
-        <span class="sitemap-node-meta">
-          <span class="sitemap-node-badge">${escapeHtml(isRoot ? 'Topic' : row.type)}</span>
-          <span>· ${escapeHtml(row.key)}</span>
-          <span class="sitemap-node-badge" title="${escapeHtml(isRoot ? 'Current topic landing page' : row.type + ' page')}">${escapeHtml(isRoot ? 'Landing' : row.type)}</span>
-          ${!isRoot && row.outgoingCount ? `<span class="sitemap-node-badge" title="Links to ${row.outgoingCount} page(s)">→${row.outgoingCount}</span>` : ''}
-          ${!isRoot && row.incomingCount ? `<span class="sitemap-node-badge" title="Linked from ${row.incomingCount} page(s)">←${row.incomingCount}</span>` : ''}
+      <button
+        type="button"
+        class="sitemap-diagram-node ${active ? 'active' : ''} ${dimmed ? 'dimmed' : ''} ${linked ? 'linked' : ''}"
+        data-sitemap-key="${escapeHtml(row.key)}"
+        data-page-type="${escapeHtml(row.type)}"
+        title="${escapeHtml(title)}"
+        ${active ? 'aria-current="page"' : ''}
+      >
+        <span class="sitemap-diagram-order" aria-hidden="true">${row.orderIndex + 1}</span>
+        <span class="sitemap-diagram-node-body">
+          <span class="sitemap-diagram-title">${escapeHtml(hub ? title : shortTitle(title))}</span>
+          <span class="sitemap-diagram-meta">${escapeHtml(row.type)}${hub ? '' : ` · ${escapeHtml(row.key)}`}</span>
         </span>
-        ${!isRoot && row.outgoingCount ? `<span class="sitemap-node-links-annotation">Links to ${row.outgoingCount} page(s)</span>` : ''}
       </button>
     `
   }
 
-  function renderTree() {
-    const rows = getFilteredRows()
-    const root = getPageRows().find((row) => row.key === 'pestsTopic') || getPageRows()[0]
-    const clusters = [
-      'Topic landing page',
-      'Report or pay',
-      'Prevent problems',
-      'Inspection and rights',
-      'Information and education',
-    ]
+  function renderDiagram() {
+    const { root, groups, crossCutting } = buildDiagramGroups()
+    const visibleKeys = getFilteredKeySet()
+    const selectedKey = getCurrentKey()
+    const graph = getLinkGraph()
+    const outgoing = graph[selectedKey]?.outgoing || new Set()
 
-    const clusterTitles = {
-      'Topic landing page': 'Topic landing page',
-      'Report or pay': 'Report or pay',
-      'Prevent problems': 'Prevent problems',
-      'Inspection and rights': 'Inspection and rights',
-      'Information and education': 'Information and education',
+    function nodeOptions(row) {
+      const visible = visibleKeys.has(row.key)
+      const linked = state.showLinksFromSelected && outgoing.has(row.key)
+      return {
+        hub: row.type === 'Resource collection',
+        dimmed: !visible,
+        linked,
+      }
     }
 
-    const rootCluster = 'Topic landing page'
+    const columns = groups
+      .map((group) => {
+        const visibleChildren = group.children.filter((child) => visibleKeys.has(child.key))
+        const childMarkup = group.children.length
+          ? group.children.map((child) => renderDiagramNode(child, nodeOptions(child))).join('')
+          : '<p class="sitemap-empty-note">No child pages assigned.</p>'
+        const hubVisible = visibleKeys.has(group.hubKey)
+        return `
+          <section class="sitemap-diagram-column" aria-label="${escapeHtml(group.hub?.page.title || group.hubKey)}">
+            <h4 class="sitemap-diagram-column-header">
+              Hub
+              <span class="sitemap-diagram-column-count">${visibleChildren.length}/${group.children.length}</span>
+            </h4>
+            ${group.hub ? renderDiagramNode(group.hub, { ...nodeOptions(group.hub), hub: true }) : ''}
+            <div class="sitemap-diagram-children" role="list" aria-hidden="${hubVisible && visibleChildren.length === 0 ? 'true' : 'false'}">
+              ${childMarkup}
+            </div>
+          </section>
+        `
+      })
+      .join('')
+
+    const crossCuttingMarkup = crossCutting.length
+      ? `
+        <section class="sitemap-diagram-crosscut" aria-label="Topic-linked and cross-cutting pages">
+          <h4 class="sitemap-diagram-column-header">
+            Topic-linked pages
+            <span class="sitemap-diagram-column-count">${crossCutting.filter((row) => visibleKeys.has(row.key)).length}/${crossCutting.length}</span>
+          </h4>
+          <div class="sitemap-diagram-crosscut-grid" role="list">
+            ${crossCutting.map((row) => renderDiagramNode(row, nodeOptions(row))).join('')}
+          </div>
+        </section>
+      `
+      : ''
 
     return `
-      <div class="sitemap-tree" role="group" aria-label="Interactive HHVC sitemap tree">
-        <div class="sitemap-toolbar">
-          <div class="sitemap-toggle-row" style="flex:1 1 auto;">
-            <button type="button" class="sitemap-toggle" data-sitemap-action="toggle-links" aria-pressed="${state.showLinksFromSelected ? 'true' : 'false'}">
-              ${state.showLinksFromSelected ? 'Hide links from selected page' : 'Show links from selected page'}
-            </button>
-          </div>
-          ${renderSearchAndFilters()}
+      <div class="sitemap-diagram" role="group" aria-label="HHVC page inventory diagram">
+        <div class="sitemap-diagram-root-wrap">
+          ${root ? renderDiagramNode(root, { ...nodeOptions(root), hub: true }) : ''}
         </div>
-        <div class="sitemap-root">${root ? renderNode(root, true) : ''}</div>
-        <div class="sitemap-branches">
-          ${clusters
-            .filter((c) => c !== rootCluster)
-            .map((cluster) => {
-              const clusterRows = rows.filter(
-                (row) => row.key !== root?.key && row.cluster === cluster
-              )
-              const totalInCluster = getPageRows().filter(
-                (row) => row.key !== root?.key && row.cluster === cluster
-              ).length
-              return `
-              <section class="sitemap-cluster" aria-label="${escapeHtml(cluster)}">
-                <p class="sitemap-cluster-title">${escapeHtml(cluster)} <span class="sitemap-cluster-count">${clusterRows.length}${totalInCluster !== clusterRows.length ? '/' + totalInCluster : ''}</span></p>
-                <ul class="sitemap-node-list">
-                  ${clusterRows.length ? clusterRows.map((row) => `<li>${renderNode(row)}</li>`).join('') : '<li><span class="sitemap-node-meta">No pages match this filter.</span></li>'}
-                </ul>
-              </section>
-            `
-            })
-            .join('')}
-        </div>
+        <div class="sitemap-diagram-connector" aria-hidden="true">↓</div>
+        <div class="sitemap-diagram-columns">${columns}</div>
+        ${crossCuttingMarkup}
+        <p class="sitemap-diagram-footnote">Columns group child pages under each resource-collection hub using placement card targets. Inventory order is shown on every node.</p>
       </div>
     `
   }
@@ -671,7 +755,7 @@
               const label = page ? escapeHtml(page.title || target) : escapeHtml(target)
               const incoming = graph[target]?.incoming?.size || 0
               const outgoing = graph[target]?.outgoing?.size || 0
-              return `<button type="button" class="sitemap-link-chip" data-sitemap-key="${escapeHtml(target)}" data-sitemap-action="open-link">${label} <span class="sitemap-node-badge" title="Links to ${outgoing}, linked from ${incoming}">→${outgoing} ←${incoming}</span></button>`
+              return `<button type="button" class="sitemap-link-chip" data-sitemap-key="${escapeHtml(target)}" data-sitemap-action="open-link">${label} <span aria-hidden="true">→${outgoing} ←${incoming}</span></button>`
             })
             .join('')}
         </div>
@@ -693,13 +777,10 @@
 
     return `
       <aside class="sitemap-detail-card" aria-label="Selected sitemap page details">
-        <div class="sitemap-detail-header">
-          <div>
-            <h4>${escapeHtml(page.title || row.label)}</h4>
-            <p>${escapeHtml(page.summary || 'No summary available.')}</p>
-          </div>
-        </div>
+        <h4>${escapeHtml(page.title || row.label)}</h4>
+        <p>${escapeHtml(page.summary || 'No summary available.')}</p>
         <ul class="sitemap-detail-list">
+          <li><strong>Inventory #:</strong> ${row.orderIndex + 1} of ${getPageRows().length}</li>
           <li><strong>Page type:</strong> ${escapeHtml(row.type)}</li>
           <li><strong>Reading target:</strong> ${escapeHtml(page.reading || 'Not set')}</li>
           <li><strong>Primary CTA:</strong> ${escapeHtml(primaryCta)}</li>
@@ -715,8 +796,6 @@
     `
   }
 
-  // The panel mounts into the Sitemap workspace tab and renders lazily the first
-  // time that tab is opened, so the 17-node tree is not built while collapsed.
   function mountPanel() {
     if (document.getElementById(PANEL_ID)) return document.getElementById(PANEL_ID)
 
@@ -738,12 +817,13 @@
     panel.innerHTML = `
       <div class="interactive-sitemap-header">
         <div>
-          <h3>Interactive sitemap</h3>
-          <p>Select a node to open that page mockup. Search, filter by page type, or spotlight linked pages to confirm the HHVC topic structure and navigation flow.</p>
+          <h3>Page inventory diagram</h3>
+          <p>One diagram from <code>js/page-data.js</code>: topic page at top, four resource-collection hubs below, child pages grouped by hub placement links. Click any node to open that mockup.</p>
         </div>
       </div>
+      <div class="sitemap-toolbar">${renderSearchAndFilters()}</div>
       <div class="interactive-sitemap-layout">
-        ${renderTree()}
+        ${renderDiagram()}
         ${renderDetail()}
       </div>
     `
@@ -752,6 +832,7 @@
   function rerender() {
     injectStyles()
     state.selectedKey = getCurrentKey()
+    state._linkGraph = null
     renderPanel()
   }
 
@@ -804,6 +885,7 @@
     if (nodeButton) {
       const key = nodeButton.getAttribute('data-sitemap-key')
       openPageByKey(key)
+      return
     }
   }
 
@@ -819,7 +901,7 @@
       }
       if (event.key === 'ArrowDown') {
         event.preventDefault()
-        const firstNode = document.querySelector('.sitemap-node-button')
+        const firstNode = document.querySelector('.sitemap-diagram-node:not(.dimmed)')
         if (firstNode) firstNode.focus()
         return
       }
@@ -832,23 +914,21 @@
       return
     }
 
-    const focusedNode = document.activeElement?.closest('.sitemap-node-button')
-    if (!focusedNode) return
+    const focusedNode = document.activeElement?.closest('.sitemap-diagram-node')
+    if (!focusedNode || focusedNode.classList.contains('dimmed')) return
 
-    const nodes = Array.from(document.querySelectorAll('.sitemap-node-button'))
+    const nodes = Array.from(document.querySelectorAll('.sitemap-diagram-node:not(.dimmed)'))
     const index = nodes.indexOf(focusedNode)
 
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
       event.preventDefault()
-      const next = nodes[index + 1]
-      if (next) next.focus()
+      nodes[index + 1]?.focus()
       return
     }
 
     if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
       event.preventDefault()
-      const prev = nodes[index - 1]
-      if (prev) prev.focus()
+      nodes[index - 1]?.focus()
       return
     }
 
@@ -865,10 +945,19 @@
     }
   }
 
-  // Re-render when the mockup page changes, instead of inferring "something
-  // changed" by observing #reviewDashboard mutations. renderPage is defined
-  // by js/page-render.js and may already be wrapped by js/ux-improvements.js;
-  // wrapping preserves whatever wrapper ran before this one.
+  const handleSearchInput = debounce((event) => {
+    if (!event.target.closest('.sitemap-search-input')) return
+    state.search = event.target.value
+    state.showLinksFromSelected = false
+    rerender()
+    const input = document.querySelector('.sitemap-search-input')
+    if (input) {
+      input.focus()
+      const end = input.value.length
+      input.setSelectionRange(end, end)
+    }
+  }, 180)
+
   function wrapRenderPageForSitemap() {
     if (typeof window.renderPage !== 'function' || window.renderPage.__sitemapWrapped) return
     const originalRenderPage = window.renderPage
@@ -877,7 +966,10 @@
       // Under View Transitions, renderPage returns a promise that resolves
       // once #pageSelect reflects the new page; rerendering earlier would
       // highlight the previous page as current.
-      if (result && typeof result.then === 'function') result.then(() => { if (sitemapMounted) rerender() })
+      if (result && typeof result.then === 'function')
+        result.then(() => {
+          if (sitemapMounted) rerender()
+        })
       else if (sitemapMounted) rerender()
       return result
     }
@@ -897,6 +989,7 @@
   function init() {
     document.addEventListener('click', handleClick)
     document.addEventListener('keydown', handleKeydown)
+    document.addEventListener('input', handleSearchInput)
     document.addEventListener('hhvc:review-data-changed', () => {
       if (sitemapMounted) rerender()
     })

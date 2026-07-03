@@ -4,7 +4,15 @@
 const fs = require('fs')
 const path = require('path')
 const vm = require('vm')
-const { z } = require('zod')
+const { dataSchema } = require('./schema')
+const {
+  findMissingOrderKeys,
+  findBrokenCardTargets,
+  findBrokenButtonTargets,
+  isTopicPageFirst,
+  findBannedTerms,
+  findListFormatViolations,
+} = require('./data-checks')
 
 const root = path.resolve(__dirname, '..')
 const ctx = { window: {} }
@@ -15,6 +23,8 @@ vm.createContext(ctx)
 // excluded because it expects the full DOM and runtime globals.
 const files = [
   'pages/agency-service-grouping.js',
+  'pages/prevent-problems.js',
+  'pages/report-a-problem.js',
   'pages/lookup-building-records.js',
   'pages/lookup-complaints-inspections.js',
   'pages/lookup-residential-violations.js',
@@ -54,69 +64,6 @@ for (const f of files.filter((f) => f !== 'js/app.js')) {
   vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f })
 }
 
-const cardSchema = z.object({
-  title: z.string().min(1),
-  text: z.string().min(1),
-  target: z.string().optional(),
-  url: z.string().optional(),
-  karl: z.string().optional(),
-})
-
-const stepSchema = z.object({
-  title: z.string().min(1),
-  text: z.array(z.string()).optional(),
-  button: z.string().optional(),
-  buttonTarget: z.string().optional(),
-  buttonUrl: z.string().optional(),
-  karl: z.string().optional(),
-  callout: z
-    .object({
-      text: z.string().min(1),
-      karl: z.string().optional(),
-    })
-    .optional(),
-})
-
-const sectionSchema = z.object({
-  heading: z.string().min(1),
-  kind: z.string().optional(),
-  karl: z.string().min(1),
-  paragraphs: z.array(z.string()).optional(),
-  steps: z.array(stepSchema).optional(),
-  bullets: z.array(z.string()).optional(),
-  table: z.array(z.array(z.string())).optional(),
-  cards: z.array(cardSchema).optional(),
-  button: z.string().optional(),
-  buttonTarget: z.string().optional(),
-  buttonUrl: z.string().optional(),
-  buttonStyle: z.string().optional(),
-  callout: z
-    .object({
-      text: z.string().min(1),
-      karl: z.string().optional(),
-    })
-    .optional(),
-})
-
-const pageSchema = z.object({
-  slug: z.string().min(1),
-  type: z.string().min(1),
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  audience: z.array(z.string()).min(1),
-  reading: z.string().min(1),
-  seoTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
-  primaryCta: z.string().optional(),
-  editorNote: z.string().optional(),
-  sections: z.array(sectionSchema).optional(),
-})
-
-const dataSchema = z.object({
-  pages: z.record(pageSchema),
-  order: z.array(z.tuple([z.string(), z.string()])),
-})
-
 const data = ctx.window.HHVC_DATA
 const parsed = dataSchema.safeParse(data)
 if (!parsed.success) {
@@ -130,32 +77,31 @@ if (!parsed.success) {
 const keys = new Set(Object.keys(parsed.data.pages))
 if (!keys.has('pestsTopic')) throw new Error('pestsTopic missing')
 if (keys.has('agency')) throw new Error('old agency key still present')
-if (parsed.data.order[0][0] !== 'pestsTopic') throw new Error('Topic page not first')
+if (!isTopicPageFirst(parsed.data.order)) throw new Error('Topic page not first')
 
-for (const [key] of parsed.data.order) {
-  if (!keys.has(key)) throw new Error('order key missing: ' + key)
+const missingOrderKeys = findMissingOrderKeys(parsed.data.pages, parsed.data.order)
+if (missingOrderKeys.length) throw new Error('order key missing: ' + missingOrderKeys[0])
+
+const brokenCardTargets = findBrokenCardTargets(parsed.data.pages)
+if (brokenCardTargets.length) {
+  const { pageKey, target } = brokenCardTargets[0]
+  throw new Error(`${pageKey} links to missing target ${target}`)
 }
 
-for (const [key, p] of Object.entries(parsed.data.pages)) {
-  for (const s of p.sections || []) {
-    for (const c of s.cards || []) {
-      if (c.target && !keys.has(c.target)) {
-        throw new Error(`${key} links to missing target ${c.target}`)
-      }
-    }
-  }
+const brokenButtonTargets = findBrokenButtonTargets(parsed.data.pages)
+if (brokenButtonTargets.length) {
+  const { pageKey, target } = brokenButtonTargets[0]
+  throw new Error(`${pageKey} links to missing target ${target}`)
 }
 
-const topicText = JSON.stringify(parsed.data.pages.pestsTopic).toLowerCase()
-for (const banned of [
-  'plumbing',
-  'dbi',
-  'roof leak',
-  'sewer',
-  'permit issue',
-  'construction defect',
-]) {
-  if (topicText.includes(banned)) throw new Error('Topic page banned term: ' + banned)
+const bannedTerms = ['plumbing', 'dbi', 'roof leak', 'sewer', 'permit issue', 'construction defect']
+const foundBannedTerms = findBannedTerms(parsed.data.pages.pestsTopic, bannedTerms)
+if (foundBannedTerms.length) throw new Error('Topic page banned term: ' + foundBannedTerms[0])
+
+const listFormatViolations = findListFormatViolations(parsed.data.pages)
+if (listFormatViolations.length) {
+  const { pageKey, path, count } = listFormatViolations[0]
+  throw new Error(`${pageKey} ${path} has ${count} items; use bullets[] for lists of 3 or more`)
 }
 
 console.log('validated', Object.keys(parsed.data.pages).length, 'pages')

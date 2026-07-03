@@ -34,8 +34,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       kind: 'body',
       paragraphs: [
         'It is common for both a property owner or manager and one or more tenants to receive corrective actions on the same notice, or on related notices for the same building.',
-        'Owners are usually responsible for building systems, common areas, and conditions they control. Tenants are usually responsible for conditions inside their unit when those conditions are tied to tenant duties under Article 11, such as keeping the unit reasonably clean and cooperating with inspections and treatment.',
-        'When both parties have corrective actions, progress depends on everyone completing their part before the compliance deadline.',
+        'Owners are usually responsible for building systems, common areas, and conditions they control. Tenants are usually responsible for conditions inside their unit when those conditions are tied to tenant duties under Article 11, such as keeping the unit reasonably clean and cooperating with inspections and treatment. When both parties have corrective actions, progress depends on everyone completing their part before the compliance deadline.',
       ],
       bullets: [
         'Owner or manager actions may include repairs, pest treatment, garbage removal, or fixing shared-area conditions',
@@ -47,7 +46,9 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       heading: 'If you are a property owner or manager',
       karl: 'Body: Owner and manager corrective actions',
       kind: 'body',
-      paragraphs: ['Read the notice for every condition assigned to the owner, manager, or building.'],
+      paragraphs: [
+        'Read the notice for every condition assigned to the owner, manager, or building.',
+      ],
       bullets: [
         'Start repairs, pest treatment, cleaning, or other building corrections right away',
         'Hire a licensed pest control operator when the notice requires professional treatment',
@@ -63,7 +64,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
-          title: 'Integrated pest management for property managers',
+          title: 'Integrated pest management for property owners and managers',
           text: 'Use prevention, monitoring, and resident outreach to reduce future violations.',
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',
@@ -172,5 +173,5 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   ],
   seoTitle: 'How to respond to a notice of violation | SF.gov',
   metaDescription:
-    'How tenants and owners respond to a health violation notice when both parties have corrective actions.',
+    'How tenants and owners respond to an Environmental Health notice of violation when both may have corrective actions.',
 }

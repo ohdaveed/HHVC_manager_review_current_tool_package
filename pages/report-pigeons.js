@@ -29,8 +29,8 @@ window.HHVC_PAGES['pigeonsReport'] = {
         },
         {
           title: 'If you rent, give 72 hours when possible',
-          text: [
-            'Tell the property owner or manager about the pigeon problem.',
+          text: ['Tell the property owner or manager about the pigeon problem.'],
+          bullets: [
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
           ],
@@ -74,7 +74,7 @@ window.HHVC_PAGES['pigeonsReport'] = {
       heading: 'What happens next',
       karl: 'Body: After-report expectations, weekday processing note, and concise enforcement statement (added for depth to match sibling report pages).',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'Environmental Health may review the report. If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
         'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
         'If you did not give contact information, an inspection may still happen without notice, for example if the report describes an urgent health or safety risk.',
@@ -94,11 +94,13 @@ window.HHVC_PAGES['pigeonsReport'] = {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
+          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report garbage or clutter',

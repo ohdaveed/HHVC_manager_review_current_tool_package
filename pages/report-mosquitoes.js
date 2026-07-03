@@ -30,6 +30,8 @@ window.HHVC_PAGES['mosquitoesReport'] = {
           title: 'If you rent, give 72 hours when possible',
           text: [
             'Tell the property owner or manager about the mosquito or standing water problem.',
+          ],
+          bullets: [
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
           ],
@@ -73,7 +75,7 @@ window.HHVC_PAGES['mosquitoesReport'] = {
       heading: 'What may happen next',
       karl: 'Body: After-report expectations, concise enforcement statement, and tenant rights callout — brought to parity with the other 4 report pages.',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'Environmental Health may review the report. A vector inspector may check for standing water, mosquito breeding sources, or nearby catch basins.',
         'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
         'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
