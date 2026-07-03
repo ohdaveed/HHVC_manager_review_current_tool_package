@@ -3,7 +3,7 @@
    Uses existing HHVC_DATA and renderPage() so nodes can open page mockups directly. */
 ;(function mountInteractiveSitemap() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const PANEL_ID = 'interactiveSitemapPanel'
   const STYLE_ID = 'interactiveSitemapStyles'
@@ -18,14 +18,22 @@
 
   // js/utils.js loads first (see index.html script order), so the shared
   // helpers are always available.
-  const { escapeHtml, getPrimaryCta } = window.utils
+  const {
+    escapeHtml,
+    getPrimaryCta,
+    countRelatedLinks,
+    getCurrentKey: getCurrentKeyShared,
+    buildPageRows,
+  } = window.utils
 
   function getWorkspaceSitemapPanel() {
     return document.getElementById('reviewWorkspaceSitemap')
   }
 
+  // Adds this panel's own last-selected-key fallback on top of the shared
+  // pageSelect lookup and 'pestsTopic' default.
   function getCurrentKey() {
-    return document.getElementById('pageSelect')?.value || state.selectedKey || 'pestsTopic'
+    return getCurrentKeyShared(state.selectedKey)
   }
 
   function normalizeType(type) {
@@ -33,18 +41,6 @@
     if (normalized.includes('topic')) return 'Topic'
     if (normalized.includes('transaction')) return 'Transaction'
     return 'Information'
-  }
-
-  function countRelatedLinks(page) {
-    let count = 0
-    for (const section of page.sections || []) {
-      count += Array.isArray(section.cards) ? section.cards.length : 0
-      count += section.button ? 1 : 0
-      for (const step of section.steps || []) {
-        count += step.button ? 1 : 0
-      }
-    }
-    return count
   }
 
   function getOutgoingTargets(page) {
@@ -122,18 +118,15 @@
 
   function getPageRows() {
     const graph = getLinkGraph()
-    return DATA.order.map(([key, label]) => {
-      const page = DATA.pages[key] || {}
-      return {
-        key,
-        label,
-        page,
-        type: normalizeType(page.type || label),
-        cluster: getCluster(key, page),
-        incomingCount: graph[key]?.incoming?.size || 0,
-        outgoingCount: graph[key]?.outgoing?.size || 0,
-      }
-    })
+    return buildPageRows(DATA, (key, label, page) => ({
+      key,
+      label,
+      page,
+      type: normalizeType(page.type || label),
+      cluster: getCluster(key, page),
+      incomingCount: graph[key]?.incoming?.size || 0,
+      outgoingCount: graph[key]?.outgoing?.size || 0,
+    }))
   }
 
   function getFilteredRows() {

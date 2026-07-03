@@ -76,6 +76,25 @@ function renderSection(section) {
   if (section.cards) inner += renderCards(section.cards)
   return `<div class="section">${inner}</div>`
 }
+// Single DOM contract for patching a live-edited field into the rendered
+// mockup — shared by live typing (app.js), per-field reset (editor-panel.js),
+// and restoring saved review state (ux-improvements.js).
+function applyFieldToMockup(fieldKey, value) {
+  const text = value ?? ''
+  if (fieldKey === 'title') {
+    const h1 = document.querySelector('#mockPage h1')
+    if (h1) h1.textContent = text
+  } else if (fieldKey === 'summary') {
+    const summary = document.querySelector('#mockPage .summary')
+    if (summary) summary.textContent = text
+  } else if (fieldKey === 'cta') {
+    const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
+    if (primaryButton) {
+      primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(text)
+    }
+  }
+}
+
 function applyPageContent(key) {
   const page = pageData[key]
   if (!page) return

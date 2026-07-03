@@ -27,6 +27,11 @@ function toggleSidebar() {
   btn.textContent = coll ? '\u25b6' : '\u25c0'
   btn.setAttribute('aria-label', coll ? 'Expand sidebar' : 'Collapse sidebar')
 }
+// Sidebar scroll position and the per-page checklist toggles below are
+// intentionally kept in sessionStorage rather than window.reviewState
+// (js/ux-improvements.js's localStorage-backed review data): they're
+// ephemeral viewport/UI positions scoped to this browser tab, not review
+// content worth persisting across restarts or exporting.
 function saveSidebarScroll() {
   const sb = document.querySelector('.sidebar')
   if (sb) sessionStorage.setItem('sidebarScroll', String(sb.scrollTop))
@@ -44,11 +49,9 @@ function buildPageSelect() {
   if (!select) return
   const groups = { Topic: [], Transaction: [], Information: [] }
   pageOrder.forEach(([key, label]) => {
-    const type = label.startsWith('Topic')
-      ? 'Topic'
-      : label.startsWith('Transaction')
-        ? 'Transaction'
-        : 'Information'
+    const pageType = pageData[key]?.type || ''
+    const type =
+      pageType === 'Topic page' ? 'Topic' : pageType === 'Transaction' ? 'Transaction' : 'Information'
     groups[type].push([key, label.replace(/^(Topic|Transaction|Information):\s*/, '')])
   })
   select.innerHTML = Object.entries(groups)
@@ -64,7 +67,6 @@ function buildPageSelect() {
 }
 function initChecklist() {
   document.querySelectorAll('.checklist .check').forEach((el, i) => {
-    el.setAttribute('data-check-index', i)
     el.addEventListener('click', function () {
       this.classList.toggle('unchecked')
       if (currentPageKey)
