@@ -184,13 +184,16 @@ The `sync-tracking` script regenerates tracking files only:
 
 Run `bun run sync-tracking` (or `bun run export`) after editing any file under `pages/` so mockup change status, last-changed dates, and policy audit summaries stay current.
 
-Push merged status into the [HHVC SF.gov Master Control workbook](https://docs.google.com/spreadsheets/d/1Y480ZykxlmlGv6RECHN37N4F1oQsPwzJWQLCj7uTemk/edit):
+Push merged status into the HHVC Master Control workbook:
+
+- **Editable:** [HHVC_SFgov_Master_Control_v1_Clean](https://docs.google.com/spreadsheets/d/1Y480ZykxlmlGv6RECHN37N4F1oQsPwzJWQLCj7uTemk/edit)
+- **Published (read-only):** [pubhtml view](https://docs.google.com/spreadsheets/d/e/2PACX-1vS3s9MdupOwodS2lNYG7yA71BYQs42Rs-uPHs_2-sPyIvIyaYjG699tNDhGefYE4W2AbD5h9EQ8TABv/pubhtml)
 
 ```bash
 bun run push-tracking
 ```
 
-This reads the live **004 Page Inventory & IA** tab, merges `review/mockup_tracking_sheet.csv`, and writes `review/page_inventory_sheet_update.csv`. If `GOOGLE_SERVICE_ACCOUNT_JSON` is set and the sheet is shared with that service account, updates push automatically; otherwise import the update CSV with **File → Import → Replace current sheet**.
+This reads the live **004 Page Inventory & IA** tab (via the published CSV export when available), merges `review/mockup_tracking_sheet.csv`, and writes `review/page_inventory_sheet_update.csv`. Import that file into the **editable** workbook to refresh the published view. If `GOOGLE_SERVICE_ACCOUNT_JSON` is set and the editable sheet is shared with that service account, updates push automatically.
 
 Import the tracking CSV into Google Sheets, or point a Make.com scenario at a watched Drive folder to update rows by `page_key` or `url_slug`.
 
@@ -263,6 +266,7 @@ HHVC_manager_review_current_tool_package/
 └─ review/
    ├─ manager_review_packet.md
    ├─ mockup_tracking_sheet.csv
+   ├─ page_inventory_sheet_update.csv
    ├─ manager_decision_log.csv
    └─ page_approval_checklist.csv
 ```

@@ -101,11 +101,29 @@ function loadTrackingByKey() {
 }
 
 function fetchSheetInventoryCsv() {
-  const url = `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/export?format=csv&gid=${config.tabs.pageInventory.gid}`
-  return execSync(`curl -sL --max-time 30 ${JSON.stringify(url)}`, {
-    encoding: 'utf8',
-    stdio: ['pipe', 'pipe', 'pipe'],
-  })
+  const gid = config.tabs.pageInventory.gid
+  const urls = []
+  if (config.publishedSpreadsheetId) {
+    urls.push(
+      `https://docs.google.com/spreadsheets/d/e/${config.publishedSpreadsheetId}/pub?gid=${gid}&single=true&output=csv`
+    )
+  }
+  urls.push(
+    `https://docs.google.com/spreadsheets/d/${config.spreadsheetId}/export?format=csv&gid=${gid}`
+  )
+
+  for (const url of urls) {
+    const body = execSync(`curl -sL --max-time 30 ${JSON.stringify(url)}`, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    if (!body.startsWith('<!DOCTYPE html') && body.includes('GitHub page_key')) {
+      console.log(`read live inventory from ${url}`)
+      return body
+    }
+  }
+
+  throw new Error('Could not export the Google Sheet inventory tab. Check sharing/export settings.')
 }
 
 function mapMockupStatus(status) {
@@ -280,9 +298,6 @@ async function main() {
 
   const trackingByKey = loadTrackingByKey()
   const sheetCsv = fetchSheetInventoryCsv()
-  if (sheetCsv.startsWith('<!DOCTYPE html')) {
-    throw new Error('Could not export the Google Sheet inventory tab. Check sharing/export settings.')
-  }
 
   const sheetRows = parseCsv(sheetCsv)
   const { rows, updatedCount, today } = mergeInventoryRows(sheetRows, trackingByKey)
@@ -298,11 +313,14 @@ async function main() {
   }
 
   console.log('')
-  console.log('Google Sheet is view/export only from this environment (edit requires sign-in).')
+  console.log('Published view (read-only):', config.publishedWebUrl || '(not configured)')
+  console.log('Editable workbook:', config.editUrl || config.spreadsheetId)
+  console.log('The pubhtml view updates only after you import into the editable workbook.')
+  console.log('')
   console.log('Next steps:')
-  console.log('  1. Open the workbook → 004 Page Inventory & IA → File → Import → Upload')
+  console.log('  1. Open the editable workbook → 004 Page Inventory & IA → File → Import → Upload')
   console.log(`  2. Select review/page_inventory_sheet_update.csv → Replace current sheet`)
-  console.log('  Or set GOOGLE_SERVICE_ACCOUNT_JSON and share the sheet with that service account email.')
+  console.log('  Or set GOOGLE_SERVICE_ACCOUNT_JSON and share the editable sheet with that service account email.')
 }
 
 main().catch((err) => {
