@@ -57,7 +57,7 @@ On load, the canvas shows:
 The sticky bar includes:
 
 - Current page title, decision chip, and `X/9` checks chip
-- Queue progress using the full 33-page inventory
+- Queue progress (`X/33 touched`) — counts pages with any saved localStorage entry; decision chips show decided counts separately
 - **Previous**, **Next**, and **Next needs review** navigation
 - **Show workspace** / **Hide workspace** toggle
 
@@ -81,7 +81,9 @@ state.ui = {
 }
 ```
 
-Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
+Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**.
+
+**Progress semantics:** The sticky bar and queue progress bar count **touched** pages — any page with a saved entry in `localStorage`, even if the decision is still **Needs review** (for example, after saving notes without changing the decision). The decision breakdown chips count **decided** pages where the saved decision is not **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Interactive sitemap
 
@@ -172,7 +174,28 @@ bun run format
 
 The `validate` script checks the `pages/*.js` and `js/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
 
-The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data.
+The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data, then refreshes Google Sheets–ready tracking CSVs under `review/`.
+
+The `sync-tracking` script regenerates tracking files only:
+
+- `review/mockup_tracking_sheet.csv` — import or sync to your Google tracking sheet by `page_key`
+- `review/manager_decision_log.csv` — all-page manager decision template
+- `review/page_approval_checklist.csv` — per-page approval checklist rows
+
+Run `bun run sync-tracking` (or `bun run export`) after editing any file under `pages/` so mockup change status, last-changed dates, and policy audit summaries stay current.
+
+Push merged status into the HHVC Master Control workbook:
+
+- **Editable:** [HHVC_SFgov_Master_Control_v1_Clean](https://docs.google.com/spreadsheets/d/1Y480ZykxlmlGv6RECHN37N4F1oQsPwzJWQLCj7uTemk/edit)
+- **Published (read-only):** [pubhtml view](https://docs.google.com/spreadsheets/d/e/2PACX-1vS3s9MdupOwodS2lNYG7yA71BYQs42Rs-uPHs_2-sPyIvIyaYjG699tNDhGefYE4W2AbD5h9EQ8TABv/pubhtml)
+
+```bash
+bun run push-tracking
+```
+
+This reads the live **004 Page Inventory & IA** tab (via the published CSV export when available), merges `review/mockup_tracking_sheet.csv`, and writes `review/page_inventory_sheet_update.csv`. Import that file into the **editable** workbook to refresh the published view. If `GOOGLE_SERVICE_ACCOUNT_JSON` is set and the editable sheet is shared with that service account, updates push automatically.
+
+Import the tracking CSV into Google Sheets, or point a Make.com scenario at a watched Drive folder to update rows by `page_key` or `url_slug`.
 
 The `build` script runs validation, export, the mosquito workshop form build, and the self-contained HTML rebuild.
 
@@ -242,6 +265,8 @@ HHVC_manager_review_current_tool_package/
 ├─ forms/mosquito-workshop-request/
 └─ review/
    ├─ manager_review_packet.md
+   ├─ mockup_tracking_sheet.csv
+   ├─ page_inventory_sheet_update.csv
    ├─ manager_decision_log.csv
    └─ page_approval_checklist.csv
 ```
@@ -256,6 +281,10 @@ HHVC_manager_review_current_tool_package/
 - Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.
+
+## Pull request scope
+
+Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) and **policy copy changes** (page text, source ingestion under `docs/source/`) in separate pull requests when possible. UX PRs should not bundle unrelated content rewrites, and policy PRs should not include layout refactors. This keeps review focused and avoids merge conflicts between parallel workstreams.
 
 ## Pages included
 

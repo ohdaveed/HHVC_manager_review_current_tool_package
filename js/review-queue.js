@@ -172,6 +172,7 @@
         type: page.type || '',
         summary: page.summary || '',
         decision,
+        touched: Boolean(saved),
         updatedAt,
         reviewDate: saved?.review_date || '',
         followUpOwner,
@@ -200,14 +201,15 @@
       byDecision[row.decision] = (byDecision[row.decision] || 0) + 1
     }
 
-    const reviewed = rows.filter((row) => row.decision !== 'Needs review').length
+    const touched = rows.filter((row) => row.touched).length
+    const decided = rows.filter((row) => row.decision !== 'Needs review').length
     const stale = rows.filter((row) => row.isStale).length
     const unassigned = rows.filter(isUnassigned).length
     const blocked = rows.filter(
       (row) => row.decision === 'Blocked' || row.decision === 'Revise and resubmit'
     ).length
 
-    return { total, reviewed, stale, unassigned, blocked, byDecision }
+    return { total, touched, decided, reviewed: touched, stale, unassigned, blocked, byDecision }
   }
 
   function matchesFilter(row) {
@@ -303,7 +305,8 @@
   }
 
   function formatAgeLabel(row) {
-    if (row.ageDays === null) return 'Not reviewed yet'
+    if (!row.touched) return 'Not saved yet'
+    if (row.ageDays === null) return 'Saved'
     if (row.ageDays === 0) return 'Updated today'
     if (row.ageDays === 1) return 'Updated 1 day ago'
     return `Updated ${row.ageDays} days ago`
@@ -316,6 +319,10 @@
           <div class="review-queue-kpi">
             <span class="review-queue-kpi-label">Visible</span>
             <strong class="review-queue-kpi-value">${visibleCount}</strong>
+          </div>
+          <div class="review-queue-kpi">
+            <span class="review-queue-kpi-label">Decided</span>
+            <strong class="review-queue-kpi-value">${stats.decided}</strong>
           </div>
           <div class="review-queue-kpi">
             <span class="review-queue-kpi-label">Blocked</span>
@@ -366,7 +373,7 @@
     const stats = getQueueStats()
     const rows = getVisibleRows()
     const currentKey = getCurrentKey()
-    const progressPct = stats.total ? Math.round((stats.reviewed / stats.total) * 100) : 0
+    const progressPct = stats.total ? Math.round((stats.touched / stats.total) * 100) : 0
 
     const filterButtons = [
       { id: 'All', label: `All (${stats.total})` },
@@ -391,7 +398,7 @@
             <div class="review-queue-progress-bar">
               <span class="review-queue-progress-fill" style="width: ${progressPct}%"></span>
             </div>
-            <span class="review-queue-progress-label">${stats.reviewed}/${stats.total} reviewed</span>
+            <span class="review-queue-progress-label">${stats.touched}/${stats.total} touched · ${stats.decided} decided</span>
           </div>
         </div>
         <div class="review-queue-stats" aria-label="Decision breakdown">

@@ -15,6 +15,8 @@ bun run dev           # start dev server with --watch (http://127.0.0.1:8080)
 bun run start          # start dev server without watch
 bun run validate       # Zod-validate pages/*.js and js/page-data.js shapes
 bun run export         # regenerate data/page_inventory.json and .csv from page data
+bun run sync-tracking  # regenerate review/*.csv tracking sheets for Google Sheets import
+bun run push-tracking  # merge tracking into Master Control workbook format / API push
 bun run build          # validate -> export -> regenerate single-file HTML exports
 bun run format         # prettier --write on **/*.{js,ts,json,md,css,html}
 bun run format:check   # prettier --check (no test suite exists in this repo)
@@ -66,6 +68,9 @@ in isolation — the script always validates the full list.
   and `js/interactive-sitemap.js` (clickable sitemap reading from
   `HHVC_DATA`, lazy-loaded when the Sitemap tab opens) all layer on top of
   `js/app.js` and must not mutate page source data — they are review aids only.
+  Queue progress counts **touched** pages (any saved `localStorage` entry per
+  page); decision chips count **decided** pages (saved decision other than
+  **Needs review**).
 - **Local persistence:** all reviewer state (decisions, notes, edited SEO
   fields, etc.) is saved client-side to `localStorage` under the versioned
   key `hhvcManagerReviewState:v1`. Bump the version suffix if the persisted
@@ -88,6 +93,12 @@ in isolation — the script always validates the full list.
 - Edit styles in `css/styles.css`.
 - Review exports (`review/*.csv`, saved local-review CSV) are for manager
   decisions only — never treat them as automatic publication approval.
+
+## Pull request scope
+
+Keep dashboard UX changes (layout, queue, workspace, review helpers) and policy
+copy changes (page text, `docs/source/` ingestion) in separate PRs when
+possible. This reduces merge conflicts and keeps review focused.
 
 ## Code style
 
