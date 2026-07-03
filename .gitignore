@@ -17,3 +17,8 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Google service account keys (never commit)
+*-service-account*.json
+google-service-account.json
+.env.local
