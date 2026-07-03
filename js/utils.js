@@ -334,9 +334,10 @@ function setText(id, value) {
 
 /**
  * Whether HHVC_DATA has the shape every module depends on (a pages map and
- * an order list). Modules load in a fixed order after js/state.js already
- * validates this once; each module still checks defensively in case it's
- * ever loaded standalone or before state.js.
+ * an order list). js/state.js uses this to fail loudly (throw) if
+ * window.HHVC_DATA never loaded; every module that reads DATA after that —
+ * including ones that might load standalone, before state.js runs — uses it
+ * to fail quietly (return early) instead of assuming the shape is valid.
  * @param {object} data
  * @returns {boolean}
  */

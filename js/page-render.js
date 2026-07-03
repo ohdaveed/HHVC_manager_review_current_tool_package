@@ -80,16 +80,17 @@ function renderSection(section) {
 // mockup — shared by live typing (app.js), per-field reset (editor-panel.js),
 // and restoring saved review state (ux-improvements.js).
 function applyFieldToMockup(fieldKey, value) {
+  const text = value ?? ''
   if (fieldKey === 'title') {
     const h1 = document.querySelector('#mockPage h1')
-    if (h1) h1.textContent = value
+    if (h1) h1.textContent = text
   } else if (fieldKey === 'summary') {
     const summary = document.querySelector('#mockPage .summary')
-    if (summary) summary.textContent = value
+    if (summary) summary.textContent = text
   } else if (fieldKey === 'cta') {
     const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
     if (primaryButton) {
-      primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(value)
+      primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(text)
     }
   }
 }
