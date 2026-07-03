@@ -10,6 +10,7 @@ const {
   findBrokenCardTargets,
   isTopicPageFirst,
   findBannedTerms,
+  findListFormatViolations,
 } = require('./data-checks')
 
 const root = path.resolve(__dirname, '..')
@@ -21,6 +22,8 @@ vm.createContext(ctx)
 // excluded because it expects the full DOM and runtime globals.
 const files = [
   'pages/agency-service-grouping.js',
+  'pages/prevent-problems.js',
+  'pages/report-a-problem.js',
   'pages/lookup-building-records.js',
   'pages/lookup-complaints-inspections.js',
   'pages/lookup-residential-violations.js',
@@ -87,5 +90,11 @@ if (brokenCardTargets.length) {
 const bannedTerms = ['plumbing', 'dbi', 'roof leak', 'sewer', 'permit issue', 'construction defect']
 const foundBannedTerms = findBannedTerms(parsed.data.pages.pestsTopic, bannedTerms)
 if (foundBannedTerms.length) throw new Error('Topic page banned term: ' + foundBannedTerms[0])
+
+const listFormatViolations = findListFormatViolations(parsed.data.pages)
+if (listFormatViolations.length) {
+  const { pageKey, path, count } = listFormatViolations[0]
+  throw new Error(`${pageKey} ${path} has ${count} items; use bullets[] for lists of 3 or more`)
+}
 
 console.log('validated', Object.keys(parsed.data.pages).length, 'pages')

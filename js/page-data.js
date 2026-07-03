@@ -3,6 +3,8 @@ window.HHVC_DATA = {
   pages: window.HHVC_PAGES,
   order: [
     ['pestsTopic', 'Topic: Pests and housing problems'],
+    ['reportHub', 'Resource collection: Report a problem'],
+    ['preventHub', 'Resource collection: Prevent problems'],
     ['recordsHub', 'Resource collection: Look up building records'],
     ['findRecords', 'Transaction: Find complaints and inspection records'],
     ['findViolations', 'Transaction: Look up residential health code violations'],

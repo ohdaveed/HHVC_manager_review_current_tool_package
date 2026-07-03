@@ -37,8 +37,8 @@ window.HHVC_PAGES['reduceMoisture'] = {
       heading: 'Keep indoor humidity in a safer range',
       karl: 'Body: Humidity control',
       kind: 'body',
-      paragraphs: [
-        'Use a hygrometer to check indoor humidity.',
+      paragraphs: ['Use a hygrometer to check indoor humidity.'],
+      bullets: [
         'Aim to keep indoor humidity below 55% when possible. A range around 40% to 50% is a good target for many homes.',
         'Use a dehumidifier when humidity stays above 55%.',
       ],
@@ -110,6 +110,8 @@ window.HHVC_PAGES['reduceMoisture'] = {
       kind: 'body',
       paragraphs: [
         'For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.',
+      ],
+      bullets: [
         'Do not paint over mold. Remove the mold first.',
         'HHVC does not recommend using bleach for routine small-area mold cleanup.',
       ],
@@ -127,7 +129,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
       heading: 'Room-by-room prevention checklist',
       karl: 'Body: Room by room guide',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'Bathroom: Run the exhaust fan, wipe or squeegee shower walls, check caulking, and clean small areas with soap and water.',
         'Kitchen: Use the range hood, wipe condensation, check under the sink, and clean refrigerator drip areas.',
         'Basement: Use a dehumidifier if humidity is high, store items off the floor, avoid storing in cardboard, and check walls/joints.',
@@ -139,7 +141,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
       heading: 'Helpful tools',
       karl: 'Body: Helpful tools',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'Hygrometer: Measures indoor humidity. Place one on each floor if possible.',
         'Dehumidifier: Removes excess moisture. Use when indoor humidity stays high.',
         'Fans: Move air and help surfaces dry faster.',
