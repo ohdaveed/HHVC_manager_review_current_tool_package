@@ -37,3 +37,7 @@ Notable, non-obvious points:
   edit sources and re-run `bun run build`.
 - **Reviewer state is browser-only:** all review decisions/notes persist in
   `localStorage` under `hhvcManagerReviewState:v1`; there is no server-side state.
+
+## Karl CMS Configuration
+
+- **Login URL:** The login page for Karl CMS is `https://api.sf.gov/sso/login?next=/admin/`. Use this URL when asked about or required to access/login to Karl CMS.
