@@ -15,6 +15,8 @@ vm.createContext(ctx)
 // and ultimately `window.HHVC_DATA`, which is what the app consumes at runtime.
 const files = [
   'pages/agency-service-grouping.js',
+  'pages/prevent-problems.js',
+  'pages/report-a-problem.js',
   'pages/lookup-building-records.js',
   'pages/lookup-complaints-inspections.js',
   'pages/lookup-residential-violations.js',

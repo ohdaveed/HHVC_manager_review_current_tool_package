@@ -2,7 +2,7 @@
    Runs after js/app.js and does not change source page content or review export schemas. */
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const SEO_TITLE_LIMIT = 60
   const META_DESCRIPTION_LIMIT = 110
@@ -18,42 +18,33 @@
 
   // js/utils.js loads first (see index.html script order), so the shared
   // helpers are always available.
-  const { escapeHtml, getPrimaryCta, setPrimaryCta, today, debounce, toCsv, downloadFile } =
-    window.utils
+  const {
+    escapeHtml,
+    getPrimaryCta,
+    setPrimaryCta,
+    today,
+    debounce,
+    toCsv,
+    downloadFile,
+    getStatusChipClass,
+    defaultSeoTitle,
+    defaultMetaDescription,
+    getValue,
+    setValue,
+    setText,
+    buildReviewRecord,
+    getCurrentKey,
+    countRelatedLinks,
+    buildPageRows,
+  } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
   // 'input' path; 'change' (fires on blur) still refreshes immediately so the
   // dashboard is never stale once the reviewer moves on.
   const REFRESH_DEBOUNCE_MS = 300
 
-  function getValue(id) {
-    return document.getElementById(id)?.value || ''
-  }
-
-  function setValue(id, value) {
-    const element = document.getElementById(id)
-    if (element) element.value = value ?? ''
-  }
-
-  function setText(id, value) {
-    const element = document.getElementById(id)
-    if (element) element.textContent = value ?? ''
-  }
-
-  function getCurrentKey() {
-    return document.getElementById('pageSelect')?.value || 'pestsTopic'
-  }
-
   function getCurrentPage() {
     return DATA.pages[getCurrentKey()] || {}
-  }
-
-  function defaultSeoTitle(page) {
-    return page.seoTitle || `${page.title || ''} | San Francisco`
-  }
-
-  function defaultMetaDescription(page) {
-    return page.metaDescription || page.summary || ''
   }
 
   function getSeoTitle(page) {
@@ -64,24 +55,12 @@
     return getValue('metaDescriptionInput') || defaultMetaDescription(page)
   }
 
-  function countRelatedLinks(page) {
-    let count = 0
-    for (const section of page.sections || []) {
-      count += Array.isArray(section.cards) ? section.cards.length : 0
-      count += section.button ? 1 : 0
-      for (const step of section.steps || []) {
-        count += step.button ? 1 : 0
-      }
-    }
-    return count
-  }
-
   // useEditor: true reads live sidebar values (current page only);
   // false evaluates raw page data so any page can be scored for the portfolio view.
   function getRuleResultsFor(page, { useEditor = false } = {}) {
     const seoTitle = useEditor ? getSeoTitle(page) : defaultSeoTitle(page)
     const metaDescription = useEditor ? getMetaDescription(page) : defaultMetaDescription(page)
-    const primaryCta = useEditor ? getValue('ctaInput') || getPrimaryCta(page) : getPrimaryCta(page)
+    const primaryCta = (useEditor && getValue('ctaInput')) || getPrimaryCta(page)
     const relatedLinks = countRelatedLinks(page)
     const normalizedType = String(page.type || '')
       .trim()
@@ -143,12 +122,6 @@
     return getRuleResultsFor(page, { useEditor: true })
   }
 
-  function getStatusChipClass(value) {
-    if (value === 'Approved') return 'pass'
-    if (value === 'Blocked' || value === 'Revise and resubmit') return 'fail'
-    return 'warn'
-  }
-
   function getEmptyState() {
     return {
       version: STORAGE_VERSION,
@@ -208,22 +181,27 @@
     return writeLocalState(updated)
   }
 
+  // Explicit dependency for other modules (e.g. js/review-queue.js, which
+  // loads after this file) instead of relying on implicit bare globals.
+  window.reviewState = {
+    read: readLocalState,
+    write: writeLocalState,
+    update: updateLocalState,
+    getEmptyState,
+  }
+
   function collectCurrentPageReviewState() {
     const page = getCurrentPage()
     const pageKey = getCurrentKey()
-    const seoTitle = getSeoTitle(page)
-    const metaDescription = getMetaDescription(page)
 
-    return {
-      page_key: pageKey,
+    return buildReviewRecord(page, pageKey, {
       page_title: getValue('titleInput') || page.title || '',
-      page_type: page.type || '',
       url_slug: getValue('urlInput') || page.slug || '',
       edited_title: getValue('titleInput') || page.title || '',
       edited_summary: getValue('descriptionInput') || page.summary || '',
       primary_cta: getValue('ctaInput') || getPrimaryCta(page) || '',
-      seo_title: seoTitle,
-      meta_description: metaDescription,
+      seo_title: getSeoTitle(page),
+      meta_description: getMetaDescription(page),
       reviewer: getValue('reviewerInput'),
       review_date: getValue('reviewDateInput') || today(),
       decision: getValue('reviewDecision') || 'Needs review',
@@ -232,7 +210,7 @@
       follow_up_owner: getValue('reviewOwner'),
       reading_target: page.reading || '',
       updated_at: new Date().toISOString(),
-    }
+    })
   }
 
   function saveCurrentPageToLocalStorage() {
@@ -262,28 +240,19 @@
     if (saved.edited_title) {
       page.title = saved.edited_title
       setValue('titleInput', saved.edited_title)
-      const h1 = document.querySelector('#mockPage h1')
-      if (h1) h1.textContent = saved.edited_title
+      window.applyFieldToMockup?.('title', saved.edited_title)
     }
 
     if (saved.edited_summary) {
       page.summary = saved.edited_summary
       setValue('descriptionInput', saved.edited_summary)
-      const summary = document.querySelector('#mockPage .summary')
-      if (summary) summary.textContent = saved.edited_summary
+      window.applyFieldToMockup?.('summary', saved.edited_summary)
     }
 
     if (saved.primary_cta) {
       setPrimaryCta(page, saved.primary_cta)
       setValue('ctaInput', saved.primary_cta)
-      const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
-      if (primaryButton) {
-        const tag =
-          typeof window.karlTag === 'function'
-            ? window.karlTag('Button label: Primary CTA', 'placement')
-            : ''
-        primaryButton.innerHTML = tag + escapeHtml(saved.primary_cta)
-      }
+      window.applyFieldToMockup?.('cta', saved.primary_cta)
     }
 
     if (saved.seo_title) {
@@ -357,10 +326,8 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function getPortfolioRows() {
-    const savedPages = readLocalState().pages
-    return DATA.order.map(([key, label]) => {
-      const page = DATA.pages[key] || {}
+  function getPortfolioRows(savedPages = {}) {
+    return buildPageRows(DATA, (key, label, page) => {
       const rules = getRuleResultsFor(page)
       const failing = rules.filter((rule) => !rule.pass)
       return {
@@ -376,8 +343,9 @@
   }
 
   function renderPortfolioOverview() {
-    const rows = getPortfolioRows()
-    const failingOnly = Boolean(readLocalState().ui.checks_failing_only)
+    const state = readLocalState()
+    const rows = getPortfolioRows(state.pages)
+    const failingOnly = Boolean(state.ui.checks_failing_only)
     const allPassCount = rows.filter((row) => row.failingLabels.length === 0).length
     const visibleRows = failingOnly ? rows.filter((row) => row.failingLabels.length > 0) : rows
     const sortedRows = visibleRows
@@ -512,7 +480,12 @@
     const passed = rules.filter((rule) => rule.pass).length
     const reviewReady = decision === 'Approved' && passed === rules.length
     const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision)
-    const stats = window.reviewQueue?.getQueueStats?.() || { reviewed: 0, total: DATA.order.length }
+    const stats = window.reviewQueue?.getQueueStats?.() || {
+      touched: 0,
+      decided: 0,
+      reviewed: 0,
+      total: DATA.order.length,
+    }
     const filter = window.reviewQueue?.getFilter?.() || 'All'
     const prevKey = window.reviewQueue?.getAdjacentKey?.(-1, filter)
     const nextKey = window.reviewQueue?.getAdjacentKey?.(1, filter)
@@ -524,7 +497,7 @@
         <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
         <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
         <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
-        <span class="status-chip ${stats.reviewed > 0 ? 'pass' : 'warn'}">${stats.reviewed}/${stats.total} reviewed</span>
+        <span class="status-chip ${stats.touched > 0 ? 'pass' : 'warn'}">${stats.touched}/${stats.total} touched</span>
       </div>
       <div class="review-sticky-bar-actions">
         <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>
@@ -698,6 +671,8 @@
       window.showToast(`Decision set: ${decision}`, tone)
     }
   }
+
+  window.reviewDecisions = { set: applyDecisionToCurrentPage }
 
   function renderMetric(label, value, help) {
     return `

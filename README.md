@@ -1,42 +1,50 @@
-# HHVC Manager Review Mockup Tool — Topic Page Update
+# HHVC Manager Review Mockup Tool — Current Review Package
 
 This package is the manager-review version of the current HHVC/SF.gov mockup tool.
 
-## Primary change
+## Current state
 
-**Pests and housing problems** is now a **Topic page**, not an Agency page section.
+The app currently contains **33 page mockups** in `window.HHVC_DATA.order`:
 
-The Topic page opens first and uses four scannable clusters:
+- 1 Topic page
+- 2 Resource collection pages
+- 14 Transaction pages
+- 16 Information pages
+
+The mockup is a review aid. It does not publish content, change SF.gov, replace source review, or replace legal/SME review.
+
+## Primary page pattern
+
+**Pests and housing problems** is the top-level **Topic page** for the HHVC mockup set.
+
+The Topic page routes users into scannable groups:
 
 1. Report a problem
 2. Prevent pests and housing health problems
-3. Know what HHVC can inspect
-4. Tenant rights and help
+3. Wildlife and other vector concerns
+4. Know what HHVC can inspect
+5. Property owner responsibilities
+6. Tenant rights and help
 
 ## UX/UI review improvements
 
 The manager-review interface uses a **mockup-first layout**:
 
-- The page preview loads above the fold; review tools sit in a collapsible workspace below it
+- The page preview loads above the fold
+- Review tools sit in a collapsible workspace below the preview
 - A sticky review bar shows the current page title, decision chip, check count, queue progress, and navigation shortcuts
-- A **review queue** tracks all 17 pages with filters, progress, and one-click navigation
-- Workspace tabs hold the queue (default), checks/scorecard, interactive sitemap, and help guidance
+- A review queue tracks all 33 pages with filters, progress, and one-click navigation
+- Workspace tabs hold the Queue, Checks, Sitemap, and Help panels
 
 Additional review aids:
 
-- A **mockup-first layout** — the page preview stays above the fold; review tools live in a collapsible workspace below
-- A **sticky review bar** with decision status, compliance checks, queue progress, and prev/next navigation
-- A **review queue** showing all pages with filterable decision status and progress across the full inventory
-- A tabbed review workspace (Queue, Checks, Sitemap, Help) collapsed by default
 - A Karl compliance scorecard for page type, title, summary, audience, CTA, related links, SEO, and reading target
 - Dashboard guidance in the Help workspace tab
-- An interactive sitemap diagram (lazy-loaded when the Sitemap tab is opened)
+- An interactive sitemap diagram that lazy-loads when the Sitemap tab opens
 - Fast page search by title, page type, summary, or page key
 - Review status chips that update when the manager decision changes
 - A copyable review summary for fast pasting into email, chat, tickets, or the master workbook
 - Local browser persistence for review state using `localStorage`
-
-These additions are review aids only. They do not publish content, change page source data, or replace legal/source review.
 
 ## Mockup-first layout and review queue
 
@@ -44,12 +52,12 @@ On load, the canvas shows:
 
 1. A compact toolbar with the current page badge and sticky review bar
 2. The browser mockup preview
-3. A collapsed workspace panel (open with **Show workspace**)
+3. A collapsed workspace panel that opens with **Show workspace**
 
 The sticky bar includes:
 
 - Current page title, decision chip, and `X/9` checks chip
-- Queue progress (`X/17 reviewed`)
+- Queue progress (`X/33 touched`) — counts pages with any saved localStorage entry; decision chips show decided counts separately
 - **Previous**, **Next**, and **Next needs review** navigation
 - **Show workspace** / **Hide workspace** toggle
 
@@ -59,7 +67,7 @@ The workspace tabs are:
 | --- | --- |
 | Queue | Progress bar, decision breakdown, filters, and clickable page list |
 | Checks | Metrics grid and Karl compliance scorecard |
-| Sitemap | Interactive HHVC sitemap (lazy-rendered when the tab opens) |
+| Sitemap | Interactive HHVC sitemap with filtering and linked-page details |
 | Help | Review guidance cards |
 
 Workspace UI preferences persist in `localStorage` under additive keys:
@@ -73,7 +81,9 @@ state.ui = {
 }
 ```
 
-Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
+Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**.
+
+**Progress semantics:** The sticky bar and queue progress bar count **touched** pages — any page with a saved entry in `localStorage`, even if the decision is still **Needs review** (for example, after saving notes without changing the decision). The decision breakdown chips count **decided** pages where the saved decision is not **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Interactive sitemap
 
@@ -83,14 +93,15 @@ The sitemap lets reviewers:
 
 - Select a node to open that page mockup
 - Filter the map by Topic, Transaction, or Information page type
+- Search page title, key, summary, or slug
 - See selected-page details, including reading target, CTA, audience count, linked items, and URL slug
-- Review how pages cluster around report/pay, prevention, inspection/rights, and information/education paths
+- Review link connectivity and how pages cluster around report/pay, prevention, inspection/rights, records, and vector information paths
 
 This sitemap is a review aid only. It does not replace the source page inventory, live SF.gov IA, or publication approval.
 
 ## Dashboard guidance copy
 
-Descriptive review instructions live in the **Help** tab of the review workspace (below the mockup preview) instead of being repeated throughout the sidebar.
+Descriptive review instructions live in the **Help** tab of the review workspace below the mockup preview instead of being repeated throughout the sidebar.
 
 The dashboard guidance panel explains:
 
@@ -139,14 +150,20 @@ bun install
 # Start the Bun dev server
 bun run dev
 
+# Start the TypeScript server directly
+bun run start
+
 # Validate page data structure with Zod
 bun run validate
 
 # Export JSON and CSV page inventory
 bun run export
 
-# Run validation, export, and regenerate single-file HTML in one step
+# Run validation, export, form build, and single-file HTML rebuild
 bun run build
+
+# Build the Netlify distribution
+bun run build:netlify
 
 # Check code formatting
 bun run format:check
@@ -157,9 +174,30 @@ bun run format
 
 The `validate` script checks the `pages/*.js` and `js/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
 
-The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data.
+The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data, then refreshes Google Sheets–ready tracking CSVs under `review/`.
 
-The `build` script runs validation and export, then rebuilds the self-contained HTML exports.
+The `sync-tracking` script regenerates tracking files only:
+
+- `review/mockup_tracking_sheet.csv` — import or sync to your Google tracking sheet by `page_key`
+- `review/manager_decision_log.csv` — all-page manager decision template
+- `review/page_approval_checklist.csv` — per-page approval checklist rows
+
+Run `bun run sync-tracking` (or `bun run export`) after editing any file under `pages/` so mockup change status, last-changed dates, and policy audit summaries stay current.
+
+Push merged status into the HHVC Master Control workbook:
+
+- **Editable:** [HHVC_SFgov_Master_Control_v1_Clean](https://docs.google.com/spreadsheets/d/1Y480ZykxlmlGv6RECHN37N4F1oQsPwzJWQLCj7uTemk/edit)
+- **Published (read-only):** [pubhtml view](https://docs.google.com/spreadsheets/d/e/2PACX-1vS3s9MdupOwodS2lNYG7yA71BYQs42Rs-uPHs_2-sPyIvIyaYjG699tNDhGefYE4W2AbD5h9EQ8TABv/pubhtml)
+
+```bash
+bun run push-tracking
+```
+
+This reads the live **004 Page Inventory & IA** tab (via the published CSV export when available), merges `review/mockup_tracking_sheet.csv`, and writes `review/page_inventory_sheet_update.csv`. Import that file into the **editable** workbook to refresh the published view. If `GOOGLE_SERVICE_ACCOUNT_JSON` is set and the editable sheet is shared with that service account, updates push automatically.
+
+Import the tracking CSV into Google Sheets, or point a Make.com scenario at a watched Drive folder to update rows by `page_key` or `url_slug`.
+
+The `build` script runs validation, export, the mosquito workshop form build, and the self-contained HTML rebuild.
 
 ## Code style
 
@@ -172,6 +210,12 @@ This repo uses Prettier with the following conventions:
 - Trailing commas where valid in ES5
 
 ## Open
+
+Start the dev server:
+
+```bash
+bun run dev
+```
 
 Then open:
 
@@ -203,10 +247,13 @@ HHVC_manager_review_current_tool_package/
 ├─ server.ts
 ├─ .prettierrc.json
 ├─ .prettierignore
+├─ css/theme.css
 ├─ css/styles.css
 ├─ css/ux-improvements.css
 ├─ js/page-data.js
 ├─ js/app.js
+├─ js/state.js
+├─ js/utils.js
 ├─ js/ux-improvements.js
 ├─ js/review-queue.js
 ├─ js/dashboard-guidance.js
@@ -215,8 +262,11 @@ HHVC_manager_review_current_tool_package/
 ├─ data/page_inventory.json
 ├─ data/page_inventory.csv
 ├─ diagrams/hhvc-current-tool-sitemap.svg
+├─ forms/mosquito-workshop-request/
 └─ review/
    ├─ manager_review_packet.md
+   ├─ mockup_tracking_sheet.csv
+   ├─ page_inventory_sheet_update.csv
    ├─ manager_decision_log.csv
    └─ page_approval_checklist.csv
 ```
@@ -225,35 +275,65 @@ HHVC_manager_review_current_tool_package/
 
 - Edit public page content in `pages/*.js`.
 - Edit render behavior in `js/app.js`.
+- Edit shared local-state behavior in `js/state.js`.
+- Edit shared helpers in `js/utils.js`.
 - Edit UX review helpers in `js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`, `js/interactive-sitemap.js`, and `css/ux-improvements.css`.
-- Edit styles in `css/styles.css`.
+- Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.
 
+## Pull request scope
+
+Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) and **policy copy changes** (page text, source ingestion under `docs/source/`) in separate pull requests when possible. UX PRs should not bundle unrelated content rewrites, and policy PRs should not include layout refactors. This keeps review focused and avoids merge conflicts between parallel workstreams.
+
 ## Pages included
 
-- Pests and housing problems — Topic page
-- Report rats or mice — Transaction
-- Report cockroaches — Transaction
-- Report bed bugs — Transaction
-- Bed bug rules and prevention — Information
-- Report mosquitoes in your home or backyard — Transaction
-- Report pigeons — Transaction
-- Report garbage or clutter — Transaction
-- Report overgrown vegetation — Transaction
-- Report mold from humidity or condensation — Transaction
-- Learn what Healthy Housing and Vector Control can inspect — Information
-- Integrated pest management for property managers — Information
-- What happens after you report a housing or pest problem — Information
-- Tenant rights when reporting housing conditions — Information
-- Keep rats and mice out of your home — Information
-- Prevent cockroaches — Information
-- Prevent mosquitoes — Information
+| # | Page key | Page title | Type |
+| --- | --- | --- | --- |
+| 1 | `pestsTopic` | Pests and housing problems | Topic page |
+| 2 | `recordsHub` | Look up building records | Resource collection |
+| 3 | `findRecords` | Find complaints and inspection records | Transaction |
+| 4 | `findViolations` | Look up residential health code violations | Transaction |
+| 5 | `findHotelRecords` | Find residential hotel and shelter records | Transaction |
+| 6 | `findInspector` | Find your district inspector | Information |
+| 7 | `publicRecords` | Make a public records request | Transaction |
+| 8 | `ownerHub` | Property owner responsibilities | Resource collection |
+| 9 | `noticeOfViolation` | How to respond to a notice of violation | Information |
+| 10 | `ratsReport` | Report rats or mice | Transaction |
+| 11 | `cockroachesReport` | Report cockroaches | Transaction |
+| 12 | `bedBugsReport` | Report bed bugs | Transaction |
+| 13 | `bedBugsInfo` | Bed bug rules and prevention | Information |
+| 14 | `mosquitoesReport` | Report mosquitoes | Transaction |
+| 15 | `wnvBirdReport` | Report a dead bird | Transaction |
+| 16 | `pigeonsReport` | Report pigeons | Transaction |
+| 17 | `garbageReport` | Report garbage or clutter | Transaction |
+| 18 | `vegetationReport` | Report overgrown vegetation | Transaction |
+| 19 | `moldReport` | Report mold from humidity or condensation | Transaction |
+| 20 | `payFee` | Pay your Healthy Housing fee | Transaction |
+| 21 | `scopeInfo` | Learn what HHVC can inspect | Information |
+| 22 | `ownerGuidance` | Integrated pest management for property owners and managers | Information |
+| 23 | `afterReport` | What happens after you report | Information |
+| 24 | `tenantRights` | Tenant rights and reporting | Information |
+| 25 | `ratsPrevent` | Keep rats and mice out | Information |
+| 26 | `cockroachesPrevent` | Prevent cockroaches | Information |
+| 27 | `mosquitoesPrevent` | Prevent mosquitoes | Information |
+| 28 | `mosquitoControl` | Mosquito Control Program | Information |
+| 29 | `mosquitoWorkshop` | Free mosquito education workshop | Information |
+| 30 | `raccoonInfo` | Raccoons and housing health | Information |
+| 31 | `pigeonInfo` | Pigeons and housing health | Information |
+| 32 | `miteInfo` | Mites and housing health | Information |
+| 33 | `reduceMoisture` | Reduce indoor moisture, condensation, and humidity | Information |
+
+## Known content review flags
+
+- `wnvBirdReport` must remain SME-blocked until HHVC/CDPH dead bird collection workflow, local pickup criteria, and seasonal operating details are confirmed.
+- `ownerGuidance` should use “rodent-proof materials” as the enforceable concept. Examples may include steel wool backed by sealant, hardware cloth, copper mesh, sheet metal, mortar, concrete, or other durable materials.
+- Legal/source review is required for pages that cite Article 11, fees, notices of violation, enforcement, pesticide notification, or inspection requirements.
 
 ## Automation note
 
 Best workflow: export manager-review CSV files into a watched Drive folder, then use Make.com to update only matching review rows in the master workbook by `page_key` or `url_slug`.
 
-The new copyable review summary can also be used for lightweight manual triage in GitHub issues, Gmail, Teams, or the master workbook before CSV import is automated.
+The copyable review summary can also be used for lightweight manual triage in GitHub issues, Gmail, Teams, or the master workbook before CSV import is automated.
 
 The saved local review CSV is the better automation handoff when reviewing multiple pages in one browser session, because it exports all saved local decisions in one file.

@@ -11,12 +11,14 @@
     "dev": "bash start-dev.sh",
     "start": "bun run server.ts",
     "validate": "bun build_scripts/validate.js",
-    "export": "bun build_scripts/extract-pages.js",
+    "export": "bun build_scripts/extract-pages.js && bun build_scripts/sync-tracking-sheet.js",
+    "sync-tracking": "bun build_scripts/sync-tracking-sheet.js",
+    "push-tracking": "bun build_scripts/push-tracking-sheet.js",
     "build": "bun run validate && bun run export && bun run build:workshop-form && bun build_scripts/build-single-file.js",
     "build:workshop-form": "bun install --cwd forms/mosquito-workshop-request && bun run --cwd forms/mosquito-workshop-request build",
     "build:netlify": "node build_scripts/validate.js && node build_scripts/build-netlify-dist.js",
-    "format": "prettier --write \"**/*.{js,ts,json,md,css,html}\"",
-    "format:check": "prettier --check \"**/*.{js,ts,json,md,css,html}\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "bun test"
   }
 }

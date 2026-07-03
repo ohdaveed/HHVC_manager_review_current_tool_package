@@ -618,7 +618,7 @@
 
 .page-filter-control input[type='search']:focus,
 .review-queue input[type='search']:focus {
-  outline: 3px solid rgba(42, 96, 175, 0.25);
+  outline: 3px solid var(--sfds-focus-ring);
   outline-offset: 2px;
 }
 

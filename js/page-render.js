@@ -4,10 +4,15 @@
 // js/ui-controls.js for the post-render side effects triggered by
 // applyPageContent (syncEditorFields, updateDirtyIndicators, etc.).
 function karlTag(label, kind = 'body') {
-  return `<div class="karl-tag" data-kind="${kind}"><strong>Karl:</strong> ${escapeHtml(label)}</div>`
+  const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: kind }
+  return `<div class="karl-tag" data-kind="${kind}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></div>`
 }
 function paragraphList(paragraphs = []) {
   return paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('')
+}
+function renderTextItems(items = []) {
+  if (items.length >= 3) return bulletList(items)
+  return paragraphList(items)
 }
 function renderAudience(audience = []) {
   if (!Array.isArray(audience)) return ''
@@ -71,7 +76,7 @@ function renderCards(cards = []) {
     .join('')}</div>`
 }
 function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${renderTextItems(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderTable(rows = []) {
   if (!rows.length) return ''
@@ -81,7 +86,7 @@ function renderTable(rows = []) {
 function renderSection(section) {
   const kind = section.kind || 'body'
   let inner = `${karlTag(section.karl || 'Body section', kind)}<h2>${escapeHtml(section.heading)}</h2>`
-  inner += paragraphList(section.paragraphs || [])
+  inner += renderTextItems(section.paragraphs || [])
   inner += section.steps ? renderSteps(section.steps) : ''
   inner += bulletList(section.bullets || [])
   inner += section.table ? renderTable(section.table) : ''
@@ -97,6 +102,28 @@ function renderSection(section) {
   if (section.cards) inner += renderCards(section.cards)
   return `<div class="section">${inner}</div>`
 }
+// Single DOM contract for patching a live-edited field into the rendered
+// mockup — shared by live typing (app.js), per-field reset (editor-panel.js),
+// and restoring saved review state (ux-improvements.js).
+function applyFieldToMockup(fieldKey, value) {
+  const text = value ?? ''
+  if (fieldKey === 'title') {
+    const h1 = document.querySelector('#mockPage h1')
+    if (h1) h1.textContent = text
+  } else if (fieldKey === 'summary') {
+    const summary = document.querySelector('#mockPage .summary')
+    if (summary) summary.textContent = text
+  } else if (fieldKey === 'cta') {
+    const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
+    if (primaryButton) {
+      primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(text)
+      if (primaryButton.hasAttribute('aria-label')) {
+        primaryButton.setAttribute('aria-label', `${text} (opens in a new tab)`)
+      }
+    }
+  }
+}
+
 function applyPageContent(key) {
   const page = pageData[key]
   if (!page) return

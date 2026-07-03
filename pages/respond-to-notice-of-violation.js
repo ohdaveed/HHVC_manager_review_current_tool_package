@@ -34,8 +34,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       kind: 'body',
       paragraphs: [
         'It is common for both a property owner or manager and one or more tenants to receive corrective actions on the same notice, or on related notices for the same building.',
-        'Owners are usually responsible for building systems, common areas, and conditions they control. Tenants are usually responsible for conditions inside their unit when those conditions are tied to tenant duties under Article 11, such as keeping the unit reasonably clean and cooperating with inspections and treatment.',
-        'When both parties have corrective actions, progress depends on everyone completing their part before the compliance deadline.',
+        'Owners are usually responsible for building systems, common areas, and conditions they control. Tenants are usually responsible for conditions inside their unit when those conditions are tied to tenant duties under Article 11, such as keeping the unit reasonably clean and cooperating with inspections and treatment. When both parties have corrective actions, progress depends on everyone completing their part before the compliance deadline.',
       ],
       bullets: [
         'Owner or manager actions may include repairs, pest treatment, garbage removal, or fixing shared-area conditions',
