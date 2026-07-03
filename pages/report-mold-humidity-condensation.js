@@ -75,7 +75,7 @@ window.HHVC_PAGES['moldReport'] = {
       karl: 'Body: Article 11 mold threshold and HHVC scope',
       kind: 'body',
       paragraphs: [
-        'Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet.',
+        'Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet. That is about the size of 10 sheets of paper placed together.',
         'For mold smaller than 10 square feet, clean hard surfaces with soap and water. Reduce humidity and condensation so it does not come back.',
       ],
     },
