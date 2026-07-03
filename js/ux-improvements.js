@@ -2,7 +2,7 @@
    Runs after js/app.js and does not change source page content or review export schemas. */
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const SEO_TITLE_LIMIT = 60
   const META_DESCRIPTION_LIMIT = 110
@@ -35,6 +35,7 @@
     buildReviewRecord,
     getCurrentKey,
     countRelatedLinks,
+    buildPageRows,
   } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
@@ -326,8 +327,7 @@
   }
 
   function getPortfolioRows(savedPages = {}) {
-    return DATA.order.map(([key, label]) => {
-      const page = DATA.pages[key] || {}
+    return buildPageRows(DATA, (key, label, page) => {
       const rules = getRuleResultsFor(page)
       const failing = rules.filter((rule) => !rule.pass)
       return {

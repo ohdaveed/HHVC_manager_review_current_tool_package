@@ -27,6 +27,11 @@ function toggleSidebar() {
   btn.textContent = coll ? '\u25b6' : '\u25c0'
   btn.setAttribute('aria-label', coll ? 'Expand sidebar' : 'Collapse sidebar')
 }
+// Sidebar scroll position and the per-page checklist toggles below are
+// intentionally kept in sessionStorage rather than window.reviewState
+// (js/ux-improvements.js's localStorage-backed review data): they're
+// ephemeral viewport/UI positions scoped to this browser tab, not review
+// content worth persisting across restarts or exporting.
 function saveSidebarScroll() {
   const sb = document.querySelector('.sidebar')
   if (sb) sessionStorage.setItem('sidebarScroll', String(sb.scrollTop))

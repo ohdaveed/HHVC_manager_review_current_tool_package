@@ -3,7 +3,7 @@
    Uses existing HHVC_DATA and renderPage() so nodes can open page mockups directly. */
 ;(function mountInteractiveSitemap() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const PANEL_ID = 'interactiveSitemapPanel'
   const STYLE_ID = 'interactiveSitemapStyles'
@@ -23,6 +23,7 @@
     getPrimaryCta,
     countRelatedLinks,
     getCurrentKey: getCurrentKeyShared,
+    buildPageRows,
   } = window.utils
 
   function getWorkspaceSitemapPanel() {
@@ -117,18 +118,15 @@
 
   function getPageRows() {
     const graph = getLinkGraph()
-    return DATA.order.map(([key, label]) => {
-      const page = DATA.pages[key] || {}
-      return {
-        key,
-        label,
-        page,
-        type: normalizeType(page.type || label),
-        cluster: getCluster(key, page),
-        incomingCount: graph[key]?.incoming?.size || 0,
-        outgoingCount: graph[key]?.outgoing?.size || 0,
-      }
-    })
+    return buildPageRows(DATA, (key, label, page) => ({
+      key,
+      label,
+      page,
+      type: normalizeType(page.type || label),
+      cluster: getCluster(key, page),
+      incomingCount: graph[key]?.incoming?.size || 0,
+      outgoingCount: graph[key]?.outgoing?.size || 0,
+    }))
   }
 
   function getFilteredRows() {

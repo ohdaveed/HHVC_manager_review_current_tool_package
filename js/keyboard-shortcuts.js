@@ -3,7 +3,7 @@
    interfere with review notes or content edits. */
 ;(function initReviewKeyboardShortcuts() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const DIALOG_ID = 'shortcutsHelpDialog'
 

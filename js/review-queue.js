@@ -4,7 +4,7 @@
    mutate page source data. */
 ;(function mountReviewQueue() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order) return
+  if (!hasValidPageData(DATA)) return
 
   const QUEUE_PANEL_ID = 'reviewWorkspaceQueue'
   const STALE_DAYS = 3
@@ -22,6 +22,7 @@
     setValue,
     buildReviewRecord,
     getCurrentKey,
+    buildPageRows,
   } = window.utils
 
   const state = { ...DEFAULT_STATE }
@@ -142,8 +143,7 @@
 
   function getQueueRows() {
     const savedPages = window.reviewState.read().pages
-    return DATA.order.map(([key]) => {
-      const page = DATA.pages[key] || {}
+    return buildPageRows(DATA, (key, label, page) => {
       const saved = savedPages[key]
       const decision = getDecisionForKey(key, savedPages)
       const updatedAt = saved?.updated_at || null

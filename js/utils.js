@@ -49,6 +49,8 @@ const REVIEW_RECORD_FIELDS = [
     REVIEW_RECORD_FIELDS,
     getCurrentKey,
     countRelatedLinks,
+    hasValidPageData,
+    buildPageRows,
   }
 
   installGlobalErrorHandlers()
@@ -328,6 +330,35 @@ function setValue(id, value) {
 function setText(id, value) {
   const el = document.getElementById(id)
   if (el) el.textContent = value ?? ''
+}
+
+/**
+ * Whether HHVC_DATA has the shape every module depends on (a pages map and
+ * an order list). Modules load in a fixed order after js/state.js already
+ * validates this once; each module still checks defensively in case it's
+ * ever loaded standalone or before state.js.
+ * @param {object} data
+ * @returns {boolean}
+ */
+function hasValidPageData(data) {
+  return Boolean(data && data.pages && data.order)
+}
+
+/**
+ * Map HHVC_DATA.order into one row per page, looking up each page object and
+ * delegating the row's actual shape to the caller. Shared scaffolding for
+ * the review queue, portfolio overview, and interactive sitemap, which each
+ * enrich a row very differently (staleness/ownership, compliance checks,
+ * and link-graph/cluster info respectively) but all start from "one row per
+ * page in DATA.order, with that page's data looked up."
+ * @param {object} data HHVC_DATA (must have .order and .pages)
+ * @param {(key: string, label: string, page: object) => object} enrich
+ *   Builds the row for one page; receives the looked-up page object (an
+ *   empty object if missing) and returns the complete row.
+ * @returns {Array<object>}
+ */
+function buildPageRows(data, enrich) {
+  return data.order.map(([key, label]) => enrich(key, label, data.pages[key] || {}))
 }
 
 /**

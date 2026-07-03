@@ -6,7 +6,7 @@
 // scripts loaded afterward). Shared helpers (escapeHtml, getPrimaryCta,
 // setPrimaryCta, ...) come from js/utils.js, which loads first.
 const DATA = window.HHVC_DATA
-if (!DATA || !DATA.pages || !DATA.order) {
+if (!hasValidPageData(DATA)) {
   throw new Error('HHVC mockup page data did not load. Check script order in index.html.')
 }
 const ORIGINAL_DATA = JSON.parse(JSON.stringify(DATA))
