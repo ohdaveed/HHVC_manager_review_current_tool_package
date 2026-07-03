@@ -16,6 +16,7 @@ bun run start          # start dev server without watch
 bun run validate       # Zod-validate pages/*.js and js/page-data.js shapes
 bun run export         # regenerate data/page_inventory.json and .csv from page data
 bun run sync-tracking  # regenerate review/*.csv tracking sheets for Google Sheets import
+bun run push-tracking  # merge tracking into Master Control workbook format / API push
 bun run build          # validate -> export -> regenerate single-file HTML exports
 bun run format         # prettier --write on **/*.{js,ts,json,md,css,html}
 bun run format:check   # prettier --check (no test suite exists in this repo)

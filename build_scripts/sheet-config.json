@@ -1,0 +1,19 @@
+{
+  "spreadsheetId": "1Y480ZykxlmlGv6RECHN37N4F1oQsPwzJWQLCj7uTemk",
+  "tabs": {
+    "pageInventory": {
+      "name": "004 Page Inventory & IA",
+      "gid": "202607023"
+    },
+    "reviewQueue": {
+      "name": "003 Review Queue",
+      "gid": "202607022"
+    },
+    "automationLog": {
+      "name": "008 Automation Log",
+      "gid": "202607027"
+    }
+  },
+  "matchColumn": "GitHub page_key",
+  "updateColumns": ["Source File", "Status", "Scope / Review Notes", "Source Basis", "Last Repo Sync"]
+}
