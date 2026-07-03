@@ -5,7 +5,7 @@
 const { describe, test, expect } = require('bun:test')
 const { loadScripts } = require('./helpers/load-scripts')
 
-const ctx = loadScripts(['js/utils.js', 'js/page-render.js'])
+const ctx = loadScripts(['js/utils.js', 'js/karl-tag-meta.js', 'js/page-render.js'])
 
 const PAYLOAD = `<script>alert('xss')</script>`
 const ESCAPED = `&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;`
@@ -18,6 +18,13 @@ function assertEscaped(html) {
 describe('page-render.js escaping', () => {
   test('karlTag escapes its label', () => {
     assertEscaped(ctx.karlTag(PAYLOAD))
+  })
+
+  test('karlTag includes an explicit kind label', () => {
+    const html = ctx.karlTag('Section heading', 'body')
+    expect(html).toContain('class="karl-tag-kind"')
+    expect(html).toContain('>Body</span>')
+    expect(html).toContain('data-kind="body"')
   })
 
   test('paragraphList escapes every paragraph', () => {

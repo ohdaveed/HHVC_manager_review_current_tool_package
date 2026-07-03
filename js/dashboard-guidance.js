@@ -18,8 +18,8 @@
       text: 'Edit the title, short summary, primary CTA, and search metadata in the sidebar. Changes stay local until you export or clear them.',
     },
     {
-      title: 'Use Karl placement tags',
-      text: 'Karl tags show where text belongs in the CMS. Visual boxes are mockup aids; the tag text controls placement guidance.',
+      title: 'Karl tag colors',
+      text: 'Each tag shows its type (Metadata, Body, Placement, Editor only) and color. Purple = body structure. Yellow = CMS placement for links and cards. Blue = page metadata. Green = editor-only QA.',
     },
     {
       title: 'Export review decisions',

@@ -128,12 +128,13 @@
           <summary class="eyebrow">Karl CMS tags</summary>
           <div class="details-body">
             <div class="karl-tag-toggle">
-              <span>Show placement tags</span
-              ><label class="karl-switch" aria-label="Show Karl CMS placement tags"
+              <span>Show Karl tags</span
+              ><label class="karl-switch" aria-label="Show Karl CMS tags"
                 ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
               ></label>
             </div>
-            <p class="field-help">Toggle Karl CMS placement tags on/off in the page mockup.</p>
+            <div id="karlTagLegendSidebar"></div>
+            <p class="field-help">Toggle Karl tags on/off in the page mockup. Tag colors match the key above.</p>
             <details class="karl-help-nested">
               <summary class="field-help">What are Karl tags?</summary>
               <div class="cms-help">
@@ -287,6 +288,7 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </div>
+          <div id="karlTagLegendCompact"></div>
           <div id="mockPage">
             <div class="page-body">
               <h1>Loading HHVC mockup…</h1>
@@ -370,6 +372,7 @@
     </div>
 
     <script src="js/utils.js"></script>
+    <script src="js/karl-tag-meta.js"></script>
     <script src="pages/agency-service-grouping.js"></script>
     <script src="pages/lookup-building-records.js"></script>
     <script src="pages/lookup-complaints-inspections.js"></script>
