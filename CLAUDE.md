@@ -97,8 +97,10 @@ HTML), `js/interactive-sitemap.js` (clickable sitemap reading from
 `HHVC_DATA`, lazy-rendered when the Sitemap tab opens), and
 `js/keyboard-shortcuts.js` (global shortcuts, ignored while typing in form
 fields) are each self-contained IIFEs that read `window.HHVC_DATA` and
-`localStorage` but **must not mutate page source data** — they are review
-aids only, not publishing tools.
+`localStorage`. Some (e.g. `js/ux-improvements.js`, when restoring saved
+edits) do write edited title/summary/CTA/SEO fields back onto the in-memory
+`pageData` objects — but **must never write back to the `pages/*.js` source
+files or publish content**; they are review aids only, not publishing tools.
 
 ### Page object shape and validation rules
 
@@ -110,8 +112,9 @@ carry `cards[]`, `bullets[]`, and/or `steps[]`; steps can have `text`, `callout`
 `metaDescription`, `primaryCta`, `editorNote`.
 
 Beyond schema shape, `validate.js` enforces business invariants:
-- The `pestsTopic` key must exist and must be first in `order` (it's a Topic
-  page, not the old Agency-page section it replaced).
+- The `pestsTopic` key must exist and must be first in `order` (this is the
+  Topic page that replaced the old Agency-page section — `validate.js` only
+  checks the key and ordering, not its `type` or content).
 - The old `agency` key must **not** be present.
 - Every `card.target` must resolve to a real page key.
 - The Topic page's content must not contain banned out-of-scope terms
