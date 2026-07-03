@@ -216,9 +216,22 @@ function mergeInventoryRows(sheetRows, trackingByKey) {
   return { rows: [header, ...mergedBody], updatedCount, today }
 }
 
+function loadGoogleCredentials() {
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    return JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+  }
+
+  const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+  if (keyPath && fs.existsSync(keyPath)) {
+    return JSON.parse(fs.readFileSync(keyPath, 'utf8'))
+  }
+
+  return null
+}
+
 async function pushWithServiceAccount(rows) {
-  const credsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-  if (!credsJson) return false
+  const credentials = loadGoogleCredentials()
+  if (!credentials) return false
 
   let google
   try {
@@ -229,7 +242,6 @@ async function pushWithServiceAccount(rows) {
     )
   }
 
-  const credentials = JSON.parse(credsJson)
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -248,8 +260,8 @@ async function pushWithServiceAccount(rows) {
 }
 
 async function appendAutomationLog(summary) {
-  const credsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-  if (!credsJson) return
+  const credentials = loadGoogleCredentials()
+  if (!credentials) return
 
   let google
   try {
@@ -258,7 +270,6 @@ async function appendAutomationLog(summary) {
     return
   }
 
-  const credentials = JSON.parse(credsJson)
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -305,7 +316,7 @@ async function main() {
 
   console.log(`wrote ${path.relative(root, updateOutPath)} (${updatedCount} rows merged)`)
 
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+  if (loadGoogleCredentials()) {
     await pushWithServiceAccount(rows)
     await appendAutomationLog(`Updated ${updatedCount} page inventory rows; Last Repo Sync=${today}`)
     console.log('pushed updates to Google Sheet via service account')
@@ -320,7 +331,7 @@ async function main() {
   console.log('Next steps:')
   console.log('  1. Open the editable workbook → 004 Page Inventory & IA → File → Import → Upload')
   console.log(`  2. Select review/page_inventory_sheet_update.csv → Replace current sheet`)
-  console.log('  Or set GOOGLE_SERVICE_ACCOUNT_JSON and share the editable sheet with that service account email.')
+  console.log('  Or set GOOGLE_SERVICE_ACCOUNT_JSON / GOOGLE_APPLICATION_CREDENTIALS and share the editable sheet with that service account email.')
 }
 
 main().catch((err) => {
