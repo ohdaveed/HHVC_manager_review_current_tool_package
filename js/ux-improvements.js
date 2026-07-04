@@ -356,7 +356,7 @@
     const currentKey = getCurrentKey()
 
     return `
-      <div class="portfolio-panel">
+      <section class="portfolio-panel">
         <div class="portfolio-header">
           <h3>All pages check overview</h3>
           <label class="portfolio-filter-toggle">
@@ -402,12 +402,12 @@
           </ul>
         `
             : `
-          <div class="portfolio-empty">
+          <aside class="portfolio-empty">
             <p>Every page passes all checks. Nothing to fix here.</p>
-          </div>
+          </aside>
         `
         }
-      </div>
+      </section>
     `
   }
 
@@ -450,7 +450,7 @@
         ${renderMetric('Audience entries', String(Array.isArray(page.audience) ? page.audience.length : 0), 'This page can help if...')}
         ${renderMetric('Page key', getCurrentKey(), 'Workbook sync field')}
       </div>
-      <div class="compliance-panel">
+      <section class="compliance-panel">
         <h3>Karl compliance scorecard</h3>
         <p class="review-decision-note">Live checks update as you edit title, summary, CTA, and search metadata in the sidebar.</p>
         <ul class="compliance-list">
@@ -467,7 +467,7 @@
             )
             .join('')}
         </ul>
-      </div>
+      </section>
       ${renderPortfolioOverview()}
     `
   }
@@ -501,14 +501,14 @@
         <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
         <span class="status-chip ${stats.touched > 0 ? 'pass' : 'warn'}">${stats.touched}/${stats.total} touched</span>
       </div>
-      <div class="review-sticky-bar-actions">
+      <nav class="review-sticky-bar-actions">
         <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>
         <button type="button" class="review-sticky-btn" data-sticky-action="next"${nextKey ? '' : ' disabled'}>Next</button>
         <button type="button" class="review-sticky-btn" data-sticky-action="next-needs-review">Next needs review</button>
         <button type="button" class="review-sticky-btn primary" data-sticky-action="toggle-workspace" aria-expanded="${workspaceOpen ? 'true' : 'false'}">
           ${workspaceOpen ? 'Hide workspace' : 'Show workspace'}
         </button>
-      </div>
+      </nav>
     `
   }
 
@@ -678,11 +678,11 @@
 
   function renderMetric(label, value, help) {
     return `
-      <div class="metric-card">
+      <article class="metric-card">
         <span class="metric-label">${escapeHtml(label)}</span>
         <span class="metric-value">${escapeHtml(value)}</span>
         <span class="metric-help">${escapeHtml(help)}</span>
-      </div>
+      </article>
     `
   }
 

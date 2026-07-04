@@ -319,6 +319,8 @@ a:focus {
   display: grid;
   gap: 0.65rem;
   margin: 0.75rem 0 0;
+  list-style: none;
+  padding: 0;
 }
 .check {
   display: grid;
