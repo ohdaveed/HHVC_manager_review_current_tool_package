@@ -17,7 +17,7 @@
         <div class="sidebar-header">
           <button
             type="button"
-            class="sidebar-toggle"
+            class="icon-btn sidebar-toggle"
             id="sidebarToggle"
             aria-label="Collapse sidebar"
           >
@@ -54,7 +54,7 @@
               <input id="titleInput" type="text" aria-label="Page title" />
               <button
                 type="button"
-                class="reset-field-btn"
+                class="icon-btn reset-field-btn"
                 id="resetTitleBtn"
                 aria-label="Reset page title to original"
                 title="Reset to original"
@@ -67,7 +67,7 @@
               <textarea id="descriptionInput" aria-label="Short summary or description"></textarea>
               <button
                 type="button"
-                class="reset-field-btn"
+                class="icon-btn reset-field-btn"
                 id="resetDescriptionBtn"
                 aria-label="Reset description to original"
                 title="Reset to original"
@@ -80,7 +80,7 @@
               <input id="ctaInput" type="text" aria-label="Primary CTA label" />
               <button
                 type="button"
-                class="reset-field-btn"
+                class="icon-btn reset-field-btn"
                 id="resetCtaBtn"
                 aria-label="Reset CTA to original"
                 title="Reset to original"
@@ -128,22 +128,23 @@
           <summary class="eyebrow">Karl CMS tags</summary>
           <div class="details-body">
             <div class="karl-tag-toggle">
-              <span>Show placement tags</span
-              ><label class="karl-switch" aria-label="Show Karl CMS placement tags"
+              <span>Show Karl tags</span
+              ><label class="karl-switch" aria-label="Show Karl CMS tags"
                 ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
               ></label>
             </div>
-            <p class="field-help">Toggle Karl CMS placement tags on/off in the page mockup.</p>
+            <div id="karlTagLegendSidebar"></div>
+            <p class="field-help">
+              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
+            </p>
             <details class="karl-help-nested">
-              <summary class="field-help" style="cursor: pointer; font-weight: 600">
-                What are Karl tags?
-              </summary>
+              <summary class="field-help">What are Karl tags?</summary>
               <div class="cms-help">
                 Tags identify where each text block should be entered in Karl CMS: metadata fields,
                 body sections, primary actions, body links, Related section links, Agency page link
                 sections, Resource Collection items, or editor-only notes.
               </div>
-              <div class="cms-help" style="margin-top: 0.5rem">
+              <div class="cms-help">
                 <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
                 determined by the tag text, not by the visual box shape.
               </div>
@@ -196,6 +197,36 @@
               <option value="Revise and resubmit">Revise and resubmit</option>
               <option value="Blocked">Blocked</option>
             </select>
+            <div
+              class="decision-quick-actions"
+              id="decisionQuickActions"
+              role="group"
+              aria-label="Quick decision actions"
+            >
+              <button type="button" class="decision-chip approve" data-decision="Approved">
+                Approve
+              </button>
+              <button
+                type="button"
+                class="decision-chip approve"
+                data-decision="Approved with edits"
+              >
+                Approve w/ edits
+              </button>
+              <button
+                type="button"
+                class="decision-chip revise"
+                data-decision="Revise and resubmit"
+              >
+                Revise
+              </button>
+              <button type="button" class="decision-chip block" data-decision="Blocked">
+                Blocked
+              </button>
+              <button type="button" class="decision-chip" data-decision="Needs review">
+                Needs review
+              </button>
+            </div>
             <label for="reviewNotes">Decision notes</label>
             <textarea
               id="reviewNotes"
@@ -247,7 +278,11 @@
       <main class="canvas">
         <div class="canvas-toolbar">
           <span id="currentPageBadge" class="page-badge"></span>
-          <div id="reviewStickyBar" class="review-sticky-bar" aria-label="Review status and navigation"></div>
+          <div
+            id="reviewStickyBar"
+            class="review-sticky-bar"
+            aria-label="Review status and navigation"
+          ></div>
         </div>
         <div class="browser-shell">
           <div class="browser-bar">
@@ -255,6 +290,7 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </div>
+          <div id="karlTagLegendCompact"></div>
           <div id="mockPage">
             <div class="page-body">
               <h1>Loading HHVC mockup…</h1>
@@ -338,12 +374,24 @@
     </div>
 
     <script src="js/utils.js"></script>
+    <script src="js/karl-tag-meta.js"></script>
     <script src="pages/agency-service-grouping.js"></script>
+    <script src="pages/prevent-problems.js"></script>
+    <script src="pages/report-a-problem.js"></script>
+    <script src="pages/lookup-building-records.js"></script>
+    <script src="pages/lookup-complaints-inspections.js"></script>
+    <script src="pages/lookup-residential-violations.js"></script>
+    <script src="pages/lookup-residential-hotel-records.js"></script>
+    <script src="pages/find-district-inspector.js"></script>
+    <script src="pages/public-records-request.js"></script>
+    <script src="pages/property-owner-responsibilities.js"></script>
+    <script src="pages/respond-to-notice-of-violation.js"></script>
     <script src="pages/report-rats-or-mice.js"></script>
     <script src="pages/report-cockroaches.js"></script>
     <script src="pages/report-bed-bugs.js"></script>
     <script src="pages/bed-bug-rules-prevention.js"></script>
     <script src="pages/report-mosquitoes.js"></script>
+    <script src="pages/report-dead-bird.js"></script>
     <script src="pages/report-pigeons.js"></script>
     <script src="pages/report-garbage-clutter.js"></script>
     <script src="pages/report-overgrown-vegetation.js"></script>
@@ -355,6 +403,11 @@
     <script src="pages/keep-rats-and-mice-out.js"></script>
     <script src="pages/prevent-cockroaches.js"></script>
     <script src="pages/prevent-mosquitoes.js"></script>
+    <script src="pages/mosquito-control-program.js"></script>
+    <script src="pages/mosquito-education-workshop.js"></script>
+    <script src="pages/raccoon-information.js"></script>
+    <script src="pages/pigeon-information.js"></script>
+    <script src="pages/mite-information.js"></script>
     <script src="pages/pay-healthy-housing-fee.js"></script>
     <script src="pages/reduce-indoor-moisture.js"></script>
     <script src="js/page-data.js"></script>
@@ -368,5 +421,6 @@
     <script src="js/review-queue.js"></script>
     <script src="js/dashboard-guidance.js"></script>
     <script src="js/interactive-sitemap.js"></script>
+    <script src="js/keyboard-shortcuts.js"></script>
   </body>
 </html>
