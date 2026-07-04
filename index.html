@@ -134,7 +134,9 @@
               ></label>
             </div>
             <div id="karlTagLegendSidebar"></div>
-            <p class="field-help">Toggle Karl tags on/off in the page mockup. Tag colors match the key above.</p>
+            <p class="field-help">
+              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
+            </p>
             <details class="karl-help-nested">
               <summary class="field-help">What are Karl tags?</summary>
               <div class="cms-help">
@@ -152,19 +154,19 @@
         <details class="control-group">
           <summary class="eyebrow">Applied rules</summary>
           <div class="details-body">
-            <div class="checklist">
-              <div class="check">SF.gov system typography and SFDS-style spacing</div>
-              <div class="check">Action Blue for links and primary action</div>
-              <div class="check">Topic page uses scannable link clusters</div>
-              <div class="check">Article 11 / HHVC scope only</div>
-              <div class="check">72-hour tenant notice where applicable</div>
-              <div class="check">No standard photo requirement</div>
-              <div class="check">Report, prevent, scope, and tenant-help clusters</div>
-              <div class="check">
+            <ul class="checklist">
+              <li class="check">SF.gov system typography and SFDS-style spacing</li>
+              <li class="check">Action Blue for links and primary action</li>
+              <li class="check">Topic page uses scannable link clusters</li>
+              <li class="check">Article 11 / HHVC scope only</li>
+              <li class="check">72-hour tenant notice where applicable</li>
+              <li class="check">No standard photo requirement</li>
+              <li class="check">Report, prevent, scope, and tenant-help clusters</li>
+              <li class="check">
                 Enforcement pathway included without overloading Transaction pages
-              </div>
-              <div class="check">Tenant rights and anti-retaliation reassurance included</div>
-            </div>
+              </li>
+              <li class="check">Tenant rights and anti-retaliation reassurance included</li>
+            </ul>
           </div>
         </details>
 
@@ -274,20 +276,20 @@
         </details>
       </aside>
       <main class="canvas">
-        <div class="canvas-toolbar">
+        <nav class="canvas-toolbar">
           <span id="currentPageBadge" class="page-badge"></span>
           <div
             id="reviewStickyBar"
             class="review-sticky-bar"
             aria-label="Review status and navigation"
           ></div>
-        </div>
-        <div class="browser-shell">
-          <div class="browser-bar">
+        </nav>
+        <figure class="browser-shell">
+          <figcaption class="browser-bar">
             <span class="dot red"></span><span class="dot yellow"></span
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
-          </div>
+          </figcaption>
           <div id="karlTagLegendCompact"></div>
           <div id="mockPage">
             <div class="page-body">
@@ -295,9 +297,9 @@
               <p>If this message stays visible, JavaScript did not run.</p>
             </div>
           </div>
-        </div>
+        </figure>
         <section id="reviewWorkspace" class="review-workspace" hidden aria-label="Review workspace">
-          <div class="review-workspace-tabs" id="reviewWorkspaceTabs" role="tablist">
+          <nav class="review-workspace-tabs" id="reviewWorkspaceTabs" role="tablist">
             <button
               type="button"
               class="review-workspace-tab"
@@ -338,7 +340,7 @@
             >
               Help
             </button>
-          </div>
+          </nav>
           <div
             id="reviewWorkspaceQueue"
             class="review-workspace-panel"

@@ -68,9 +68,7 @@ function csvEscape(value) {
     trimmed.startsWith('\t') ||
     trimmed.startsWith('\r')
   const protectedText = needsProtection ? `'${text}` : text
-  return /[",\n\r]/.test(protectedText)
-    ? `"${protectedText.replace(/"/g, '""')}"`
-    : protectedText
+  return /[",\n\r]/.test(protectedText) ? `"${protectedText.replace(/"/g, '""')}"` : protectedText
 }
 
 function toCsv(rows) {
@@ -79,13 +77,15 @@ function toCsv(rows) {
 
 function rowsToObjects(rows) {
   const [header, ...body] = rows
-  return body.filter((row) => row.some((cell) => String(cell || '').trim())).map((row) => {
-    const obj = {}
-    header.forEach((key, index) => {
-      obj[key] = row[index] ?? ''
+  return body
+    .filter((row) => row.some((cell) => String(cell || '').trim()))
+    .map((row) => {
+      const obj = {}
+      header.forEach((key, index) => {
+        obj[key] = row[index] ?? ''
+      })
+      return obj
     })
-    return obj
-  })
 }
 
 function objectsToRows(objects, header) {
@@ -237,9 +237,7 @@ async function pushWithServiceAccount(rows) {
   try {
     ;({ google } = require('googleapis'))
   } catch {
-    throw new Error(
-      'googleapis is required for API push. Run: npm install --no-save googleapis'
-    )
+    throw new Error('googleapis is required for API push. Run: npm install --no-save googleapis')
   }
 
   const auth = new google.auth.GoogleAuth({
@@ -318,7 +316,9 @@ async function main() {
 
   if (loadGoogleCredentials()) {
     await pushWithServiceAccount(rows)
-    await appendAutomationLog(`Updated ${updatedCount} page inventory rows; Last Repo Sync=${today}`)
+    await appendAutomationLog(
+      `Updated ${updatedCount} page inventory rows; Last Repo Sync=${today}`
+    )
     console.log('pushed updates to Google Sheet via service account')
     return
   }
@@ -331,7 +331,9 @@ async function main() {
   console.log('Next steps:')
   console.log('  1. Open the editable workbook → 004 Page Inventory & IA → File → Import → Upload')
   console.log(`  2. Select review/page_inventory_sheet_update.csv → Replace current sheet`)
-  console.log('  Or set GOOGLE_SERVICE_ACCOUNT_JSON / GOOGLE_APPLICATION_CREDENTIALS and share the editable sheet with that service account email.')
+  console.log(
+    '  Or set GOOGLE_SERVICE_ACCOUNT_JSON / GOOGLE_APPLICATION_CREDENTIALS and share the editable sheet with that service account email.'
+  )
 }
 
 main().catch((err) => {

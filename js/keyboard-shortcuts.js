@@ -12,12 +12,17 @@
     { keys: ['→', 'j'], description: 'Next page (respects the active queue filter)' },
     { keys: ['n'], description: 'Jump to the next page that still needs review' },
     { keys: ['w'], description: 'Show or hide the review workspace' },
-    { keys: ['a'], description: 'Set decision: Approved' },
-    { keys: ['e'], description: 'Set decision: Approved with edits' },
-    { keys: ['r'], description: 'Set decision: Revise and resubmit' },
-    { keys: ['b'], description: 'Set decision: Blocked' },
-    { keys: ['u'], description: 'Set decision: Needs review' },
+    { keys: ['a'], description: 'Approve current page, or all selected pages' },
+    { keys: ['e'], description: 'Approve with edits (current or selected)' },
+    { keys: ['r'], description: 'Revise and resubmit (current or selected)' },
+    { keys: ['b'], description: 'Blocked (current or selected)' },
+    { keys: ['u'], description: 'Needs review (current or selected)' },
+    { keys: ['m'], description: 'Assign to me (current or selected)' },
+    { keys: ['x'], description: 'Toggle selection for the current page' },
+    { keys: ['s'], description: 'Select all visible queue pages' },
+    { keys: ['Escape'], description: 'Clear the queue selection' },
     { keys: ['/'], description: 'Focus the page search box' },
+    { keys: ['q'], description: 'Focus the review queue search box' },
     { keys: ['?'], description: 'Show or hide this shortcut list' },
   ]
 
@@ -49,8 +54,71 @@
     document.querySelector('[data-sticky-action="toggle-workspace"]')?.click()
   }
 
+  const DECISION_TO_ACTION = {
+    Approved: 'approved',
+    'Approved with edits': 'approved-with-edits',
+    'Revise and resubmit': 'revise',
+    Blocked: 'blocked',
+    'Needs review': 'needs-review',
+  }
+
+  function applyQueueAction(action) {
+    if (typeof window.reviewQueue?.applyQueueAction !== 'function') return false
+    const targets = window.reviewQueue.getActionTargets?.(window.utils.getCurrentKey()) ||
+      window.reviewQueue.getSelectedKeys?.() || [window.utils.getCurrentKey()]
+    if (!targets.length) return false
+    window.reviewQueue.applyQueueAction(targets, action)
+    return true
+  }
+
   function setDecision(decision) {
+    const action = DECISION_TO_ACTION[decision]
+    if (action && applyQueueAction(action)) return
     window.reviewDecisions?.set?.(decision)
+  }
+
+  function assignToMe() {
+    if (applyQueueAction('assign-me')) return
+    const ownerField = document.getElementById('reviewOwner')
+    if (!ownerField) return
+    const reviewerName = document.getElementById('reviewerInput')?.value || 'Me'
+    ownerField.value = reviewerName
+    ownerField.dispatchEvent(new Event('change', { bubbles: true }))
+    if (typeof window.showToast === 'function') window.showToast('Assigned to me', 'success')
+  }
+
+  function toggleCurrentSelection() {
+    const key = window.utils.getCurrentKey()
+    if (!key || !DATA.pages[key]) return
+    window.reviewQueue?.toggleSelected?.(key)
+    window.reviewQueue?.syncSelectionUi?.()
+  }
+
+  function selectAllVisible() {
+    const workspace = document.getElementById('reviewWorkspace')
+    const queueTab = document.querySelector('[data-workspace-tab="queue"]')
+    const isQueueVisible =
+      workspace &&
+      !workspace.hidden &&
+      queueTab &&
+      queueTab.getAttribute('aria-selected') === 'true'
+    if (!isQueueVisible) return
+
+    window.reviewQueue?.selectAllVisible?.()
+    window.reviewQueue?.syncSelectionUi?.()
+    const count = window.reviewQueue?.getSelectedKeys?.().length || 0
+    if (typeof window.showToast === 'function') {
+      window.showToast(count ? `Selected ${count} pages` : 'No visible pages to select', 'info')
+    }
+  }
+
+  function clearSelection() {
+    const count = window.reviewQueue?.getSelectedKeys?.().length || 0
+    if (!count) return false
+    window.reviewQueue?.clearSelection?.()
+    window.reviewQueue?.syncSelectionUi?.()
+    if (typeof window.showToast === 'function') window.showToast('Selection cleared', 'info')
+    return true
   }
 
   function focusPageSearch() {
@@ -59,6 +127,14 @@
     if (!input) return
     input.focus()
     if (typeof input.select === 'function') input.select()
+  }
+
+  function focusQueueSearch() {
+    if (typeof window.reviewQueue?.focusQueueSearch === 'function') {
+      window.reviewQueue.focusQueueSearch()
+      return
+    }
+    focusPageSearch()
   }
 
   function buildHelpDialog() {
@@ -71,7 +147,7 @@
         <h2>Keyboard shortcuts</h2>
         <button type="button" class="shortcuts-dialog-close" data-close-shortcuts aria-label="Close shortcut list">×</button>
       </div>
-      <p class="shortcuts-dialog-note">Shortcuts pause automatically while you type in any field.</p>
+      <p class="shortcuts-dialog-note">Shortcuts pause automatically while you type in any field. Decision keys apply to selected queue pages when a selection exists.</p>
       <ul class="shortcuts-list">
         ${SHORTCUTS.map(
           (shortcut) => `
@@ -106,7 +182,13 @@
     if (isTypingContext(event.target)) return
 
     const dialog = document.getElementById(DIALOG_ID)
-    if (dialog?.open && event.key !== '?' && event.key !== 'Escape') return
+    if (dialog?.open) {
+      if (event.key === '?' || event.key === 'Escape') {
+        event.preventDefault()
+        dialog.close()
+      }
+      return
+    }
 
     switch (event.key) {
       case 'ArrowLeft':
@@ -147,9 +229,28 @@
         event.preventDefault()
         setDecision('Needs review')
         break
+      case 'm':
+        event.preventDefault()
+        assignToMe()
+        break
+      case 'x':
+        event.preventDefault()
+        toggleCurrentSelection()
+        break
+      case 's':
+        event.preventDefault()
+        selectAllVisible()
+        break
+      case 'Escape':
+        if (clearSelection()) event.preventDefault()
+        break
       case '/':
         event.preventDefault()
         focusPageSearch()
+        break
+      case 'q':
+        event.preventDefault()
+        focusQueueSearch()
         break
       case '?':
         event.preventDefault()

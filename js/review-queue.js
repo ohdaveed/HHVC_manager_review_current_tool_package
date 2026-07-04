@@ -1,10 +1,8 @@
 /* Cross-page review queue for manager approval workflow.
-   Reads HHVC_DATA and hhvcManagerReviewState:v1 via window.reviewState
-   (exposed by js/ux-improvements.js, which must load first); does not
-   mutate page source data. */
+   Reads HHVC_DATA and hhvcManagerReviewState:v1; does not mutate page source data. */
 ;(function mountReviewQueue() {
   const DATA = window.HHVC_DATA
-  if (!hasValidPageData(DATA)) return
+  if (!DATA || !DATA.pages || !DATA.order || !window.reviewState) return
 
   const QUEUE_PANEL_ID = 'reviewWorkspaceQueue'
   const STALE_DAYS = 3
@@ -14,18 +12,60 @@
     sort: 'priority',
   }
 
-  const {
-    escapeHtml,
-    getPrimaryCta,
-    today,
-    getStatusChipClass,
-    setValue,
-    buildReviewRecord,
-    getCurrentKey,
-    buildPageRows,
-  } = window.utils
+  const { escapeHtml, getPrimaryCta, parseCsv, getStatusChipClass, getCurrentKey } = window.utils
+  const readLocalState = window.reviewState.read
+  const updateLocalState = window.reviewState.update
 
-  const state = { ...DEFAULT_STATE }
+  const VALID_DECISIONS = new Set([
+    'Approved',
+    'Approved with edits',
+    'Revise and resubmit',
+    'Blocked',
+    'Needs review',
+  ])
+
+  const ACTION_LABELS = {
+    'assign-me': 'Assign to me',
+    'needs-review': 'Needs review',
+    revise: 'Revise and resubmit',
+    blocked: 'Blocked',
+    approved: 'Approved',
+    'approved-with-edits': 'Approved with edits',
+  }
+
+  function toast(message, tone = 'success') {
+    if (typeof window.showToast === 'function') {
+      window.showToast(message, tone)
+    }
+  }
+
+  function actionLabel(action) {
+    return ACTION_LABELS[action] || action
+  }
+
+  function actionToastTone(action) {
+    if (action === 'blocked' || action === 'revise') return 'warn'
+    if (action === 'needs-review') return 'info'
+    return 'success'
+  }
+
+  function buildActionPatch(action, suggestedOwner, reviewDate, currentSaved) {
+    if (action === 'assign-me') {
+      if (currentSaved.follow_up_owner === suggestedOwner) return null
+      return { follow_up_owner: suggestedOwner, review_date: reviewDate }
+    }
+
+    const decision = ACTION_LABELS[action]
+    if (!decision || !VALID_DECISIONS.has(decision)) return null
+
+    if (currentSaved.decision === decision) return null
+
+    return {
+      decision,
+      follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
+      review_date: reviewDate,
+    }
+  }
 
   function getSidebarReviewerName() {
     const v = document.getElementById('reviewerInput')?.value
@@ -36,7 +76,7 @@
   function getSidebarReviewDate() {
     const v = document.getElementById('reviewDateInput')?.value
     const trimmed = String(v || '').trim()
-    return trimmed || today()
+    return trimmed || window.utils.today()
   }
 
   function updateLocalReviewForPage(pageKey, patch) {
@@ -45,7 +85,7 @@
 
     window.reviewState.update((localState) => {
       const existing = localState.pages[pageKey] || {}
-      const defaults = buildReviewRecord(page, pageKey, {
+      const defaults = window.utils.buildReviewRecord(page, pageKey, {
         review_date: getSidebarReviewDate(),
         reviewer: document.getElementById('reviewerInput')?.value || '',
       })
@@ -64,14 +104,13 @@
 
   function syncSidebarForKey(pageKey, saved) {
     if (pageKey !== getCurrentKey()) return
-    setValue('reviewDecision', saved.decision || 'Needs review')
-    setValue('reviewOwner', saved.follow_up_owner || '')
-    setValue('reviewNotes', saved.notes || '')
-    setValue('reviewRisks', saved.risks_or_blockers || '')
-    setValue('reviewDateInput', saved.review_date || getSidebarReviewDate())
-    // reviewerInput is editable; keep it if the user already typed something different.
+    window.utils.setValue('reviewDecision', saved.decision || 'Needs review')
+    window.utils.setValue('reviewOwner', saved.follow_up_owner || '')
+    window.utils.setValue('reviewNotes', saved.notes || '')
+    window.utils.setValue('reviewRisks', saved.risks_or_blockers || '')
+    window.utils.setValue('reviewDateInput', saved.review_date || getSidebarReviewDate())
     if (!String(document.getElementById('reviewerInput')?.value || '').trim())
-      setValue('reviewerInput', saved.reviewer || '')
+      window.utils.setValue('reviewerInput', saved.reviewer || '')
   }
 
   function dispatchReviewFieldChange(id) {
@@ -81,8 +120,23 @@
     el.dispatchEvent(new Event('change', { bubbles: true }))
   }
 
+  const state = {
+    ...DEFAULT_STATE,
+    selected: new Set(),
+  }
+
   function writeQueueUiState() {
-    window.reviewState.update((localState) => {
+    try {
+      const raw = localStorage.getItem(window.reviewState.STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (!parsed || parsed.version !== window.reviewState.STORAGE_VERSION) return
+      }
+    } catch {
+      return
+    }
+
+    updateLocalState((localState) => {
       localState.ui.review_queue = {
         filter: state.filter,
         query: state.query,
@@ -93,7 +147,7 @@
   }
 
   function restoreQueueUiState() {
-    const queueUi = window.reviewState.read().ui?.review_queue || {}
+    const queueUi = readLocalState().ui?.review_queue || {}
     state.filter = queueUi.filter || DEFAULT_STATE.filter
     state.query = queueUi.query || DEFAULT_STATE.query
     state.sort = queueUi.sort || DEFAULT_STATE.sort
@@ -142,8 +196,9 @@
   }
 
   function getQueueRows() {
-    const savedPages = window.reviewState.read().pages
-    return buildPageRows(DATA, (key, label, page) => {
+    const savedPages = readLocalState().pages
+    return DATA.order.map(([key]) => {
+      const page = DATA.pages[key] || {}
       const saved = savedPages[key]
       const decision = getDecisionForKey(key, savedPages)
       const updatedAt = saved?.updated_at || null
@@ -172,7 +227,6 @@
         type: page.type || '',
         summary: page.summary || '',
         decision,
-        touched: Boolean(saved),
         updatedAt,
         reviewDate: saved?.review_date || '',
         followUpOwner,
@@ -201,15 +255,14 @@
       byDecision[row.decision] = (byDecision[row.decision] || 0) + 1
     }
 
-    const touched = rows.filter((row) => row.touched).length
-    const decided = rows.filter((row) => row.decision !== 'Needs review').length
+    const reviewed = rows.filter((row) => row.decision !== 'Needs review').length
     const stale = rows.filter((row) => row.isStale).length
     const unassigned = rows.filter(isUnassigned).length
     const blocked = rows.filter(
       (row) => row.decision === 'Blocked' || row.decision === 'Revise and resubmit'
     ).length
 
-    return { total, touched, decided, reviewed: touched, stale, unassigned, blocked, byDecision }
+    return { total, reviewed, stale, unassigned, blocked, byDecision }
   }
 
   function matchesFilter(row) {
@@ -221,9 +274,7 @@
     if (state.filter === 'Blocked') {
       return row.decision === 'Blocked' || row.decision === 'Revise and resubmit'
     }
-    if (state.filter === 'Unassigned') {
-      return isUnassigned(row)
-    }
+    if (state.filter === 'Unassigned') return isUnassigned(row)
     if (state.filter === 'Stale') return row.isStale
     return true
   }
@@ -241,9 +292,7 @@
       return right - left || a.title.localeCompare(b.title)
     }
 
-    if (state.sort === 'title') {
-      return a.title.localeCompare(b.title)
-    }
+    if (state.sort === 'title') return a.title.localeCompare(b.title)
 
     if (state.sort === 'type') {
       return a.type.localeCompare(b.type) || a.title.localeCompare(b.title)
@@ -264,6 +313,80 @@
 
   function getFilteredKeys() {
     return getVisibleRows().map((row) => row.key)
+  }
+
+  function getSelectedKeys() {
+    return [...state.selected].filter((key) => DATA.pages[key])
+  }
+
+  function pruneSelection(visibleKeys) {
+    for (const key of [...state.selected]) {
+      if (!DATA.pages[key]) state.selected.delete(key)
+    }
+  }
+
+  function toggleSelected(key) {
+    if (!DATA.pages[key]) return
+    if (state.selected.has(key)) state.selected.delete(key)
+    else state.selected.add(key)
+  }
+
+  function selectAllVisible() {
+    for (const key of getFilteredKeys()) state.selected.add(key)
+  }
+
+  function clearSelection() {
+    state.selected.clear()
+  }
+
+  function applyQueueAction(keys, action, options = {}) {
+    const keyList = (Array.isArray(keys) ? keys : [keys]).filter((key) => DATA.pages[key])
+    if (!keyList.length) return 0
+
+    const suggestedOwner = getSidebarReviewerName()
+    const reviewDate = getSidebarReviewDate()
+    const fullState = readLocalState()
+    let currentKeySaved = null
+    let updatedCount = 0
+
+    for (const key of keyList) {
+      const currentSaved = fullState.pages[key] || {}
+      const patch = buildActionPatch(action, suggestedOwner, reviewDate, currentSaved)
+      if (!patch) continue
+      const saved = updateLocalReviewForPage(key, patch)
+      if (!saved || saved.updated_at === currentSaved.updated_at) continue
+      updatedCount += 1
+      if (key === getCurrentKey()) currentKeySaved = saved
+    }
+
+    if (currentKeySaved) {
+      syncSidebarForKey(getCurrentKey(), currentKeySaved)
+      if (!options.skipSidebarEvents) {
+        dispatchReviewFieldChange('reviewDecision')
+        dispatchReviewFieldChange('reviewOwner')
+      }
+    }
+
+    document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
+    renderReviewQueue()
+
+    if (!options.silent && updatedCount) {
+      const label = actionLabel(action)
+      toast(
+        updatedCount === 1 ? `${label}` : `${label} · ${updatedCount} pages`,
+        actionToastTone(action)
+      )
+    }
+
+    return updatedCount
+  }
+
+  function getActionTargets(preferredKey) {
+    const selected = getSelectedKeys()
+    if (selected.length) return selected
+    if (preferredKey && DATA.pages[preferredKey]) return [preferredKey]
+    const current = getCurrentKey()
+    return DATA.pages[current] ? [current] : []
   }
 
   function getNextNeedsReviewKey() {
@@ -305,8 +428,7 @@
   }
 
   function formatAgeLabel(row) {
-    if (!row.touched) return 'Not saved yet'
-    if (row.ageDays === null) return 'Saved'
+    if (row.ageDays === null) return 'Not reviewed yet'
     if (row.ageDays === 0) return 'Updated today'
     if (row.ageDays === 1) return 'Updated 1 day ago'
     return `Updated ${row.ageDays} days ago`
@@ -314,15 +436,11 @@
 
   function renderQueueStats(stats, visibleCount) {
     return `
-      <div class="review-queue-overview">
+      <section class="review-queue-overview">
         <div class="review-queue-kpis" aria-label="Queue metrics">
           <div class="review-queue-kpi">
             <span class="review-queue-kpi-label">Visible</span>
             <strong class="review-queue-kpi-value">${visibleCount}</strong>
-          </div>
-          <div class="review-queue-kpi">
-            <span class="review-queue-kpi-label">Decided</span>
-            <strong class="review-queue-kpi-value">${stats.decided}</strong>
           </div>
           <div class="review-queue-kpi">
             <span class="review-queue-kpi-label">Blocked</span>
@@ -337,7 +455,39 @@
             <strong class="review-queue-kpi-value">${stats.stale}</strong>
           </div>
         </div>
-      </div>
+      </section>
+    `
+  }
+
+  function renderBulkBar(selectedCount, visibleCount) {
+    const allVisibleSelected = visibleCount > 0 && selectedCount === visibleCount
+    return `
+      <section class="review-queue-bulk" aria-label="Bulk queue actions">
+        <div class="review-queue-bulk-main">
+          <label class="review-queue-select-all">
+            <input
+              type="checkbox"
+              id="reviewQueueSelectAll"
+              ${allVisibleSelected ? 'checked' : ''}
+              ${visibleCount ? '' : 'disabled'}
+            />
+            <span>Select all visible</span>
+          </label>
+          <span class="review-queue-bulk-count">${selectedCount} selected</span>
+          <button type="button" class="review-queue-action" data-queue-select="clear"${selectedCount ? '' : ' disabled'}>Clear</button>
+        </div>
+        <div class="review-queue-bulk-actions" role="group" aria-label="Apply to selected pages">
+          <button type="button" class="review-queue-action" data-queue-bulk-action="assign-me"${selectedCount ? '' : ' disabled'}>Assign to me</button>
+          <button type="button" class="review-queue-action" data-queue-bulk-action="needs-review"${selectedCount ? '' : ' disabled'}>Needs review</button>
+          <button type="button" class="review-queue-action" data-queue-bulk-action="revise"${selectedCount ? '' : ' disabled'}>Revise</button>
+          <button type="button" class="review-queue-action" data-queue-bulk-action="blocked"${selectedCount ? '' : ' disabled'}>Blocked</button>
+          <button type="button" class="review-queue-action" data-queue-bulk-action="approved"${selectedCount ? '' : ' disabled'}>Approve</button>
+          <button type="button" class="review-queue-action" data-queue-bulk-action="approved-with-edits"${selectedCount ? '' : ' disabled'}>Approve w/ edits</button>
+        </div>
+        <div class="review-queue-import">
+          <button type="button" class="review-queue-action" data-queue-import="csv">Import CSV</button>
+        </div>
+      </section>
     `
   }
 
@@ -362,18 +512,64 @@
     }
   }
 
+  function syncSelectionUi() {
+    const selectedCount = getSelectedKeys().length
+    const visibleRows = getVisibleRows()
+    const visibleKeys = visibleRows.map((row) => row.key)
+    const allVisibleSelected =
+      visibleKeys.length > 0 && visibleKeys.every((key) => state.selected.has(key))
+
+    const selectAllCheckbox = document.getElementById('reviewQueueSelectAll')
+    if (selectAllCheckbox) {
+      selectAllCheckbox.checked = allVisibleSelected
+      if (visibleKeys.length > 0) {
+        selectAllCheckbox.removeAttribute('disabled')
+      } else {
+        selectAllCheckbox.setAttribute('disabled', '')
+      }
+    }
+
+    const bulkCountSpan = document.querySelector('.review-queue-bulk-count')
+    if (bulkCountSpan) {
+      bulkCountSpan.textContent = `${selectedCount} selected`
+    }
+
+    const buttons = document.querySelectorAll(
+      '[data-queue-select="clear"], [data-queue-bulk-action]'
+    )
+    buttons.forEach((btn) => {
+      if (selectedCount === 0) {
+        btn.setAttribute('disabled', '')
+      } else {
+        btn.removeAttribute('disabled')
+      }
+    })
+
+    const rows = document.querySelectorAll('.review-queue-row[data-page-key]')
+    rows.forEach((row) => {
+      const key = row.getAttribute('data-page-key')
+      const isSelected = state.selected.has(key)
+      row.classList.toggle('is-selected', isSelected)
+
+      const checkbox = row.querySelector('[data-queue-select-key]')
+      if (checkbox) {
+        checkbox.checked = isSelected
+      }
+    })
+  }
+
   function renderReviewQueue() {
     const panel = document.getElementById(QUEUE_PANEL_ID)
     if (!panel) return
 
-    // Re-rendering replaces the search input; without this, every keystroke
-    // would drop focus and interrupt typing.
     const searchFocus = captureSearchFocus()
-
     const stats = getQueueStats()
     const rows = getVisibleRows()
+    const visibleKeys = rows.map((row) => row.key)
+    pruneSelection(visibleKeys)
+    const selectedCount = getSelectedKeys().length
     const currentKey = getCurrentKey()
-    const progressPct = stats.total ? Math.round((stats.touched / stats.total) * 100) : 0
+    const progressPct = stats.total ? Math.round((stats.reviewed / stats.total) * 100) : 0
 
     const filterButtons = [
       { id: 'All', label: `All (${stats.total})` },
@@ -388,23 +584,23 @@
     ]
 
     panel.innerHTML = `
-      <div class="review-queue">
-        <div class="review-queue-header">
+      <section class="review-queue">
+        <header class="review-queue-header">
           <div>
             <h3>Review queue</h3>
-            <p class="review-queue-subtitle">Triage pages by decision, ownership, staleness, and saved notes.</p>
+            <p class="review-queue-subtitle">Triage pages by decision, ownership, staleness, and saved notes. Use checkboxes for bulk updates, or press <kbd>?</kbd> for shortcuts.</p>
           </div>
           <div class="review-queue-progress" aria-label="Review progress">
             <div class="review-queue-progress-bar">
               <span class="review-queue-progress-fill" style="width: ${progressPct}%"></span>
             </div>
-            <span class="review-queue-progress-label">${stats.touched}/${stats.total} touched · ${stats.decided} decided</span>
+            <span class="review-queue-progress-label">${stats.reviewed}/${stats.total} reviewed</span>
           </div>
-        </div>
+        </header>
         <div class="review-queue-stats" aria-label="Decision breakdown">
           <span class="status-chip warn">Needs review ${stats.byDecision['Needs review'] || 0}</span>
           <span class="status-chip pass">Approved ${stats.byDecision.Approved || 0}</span>
-          <span class="status-chip pass">Edits ${stats.byDecision['Approved with edits'] || 0}</span>
+          <span class="status-chip warn">Edits ${stats.byDecision['Approved with edits'] || 0}</span>
           <span class="status-chip fail">Revise ${stats.byDecision['Revise and resubmit'] || 0}</span>
           <span class="status-chip fail">Blocked ${stats.byDecision.Blocked || 0}</span>
         </div>
@@ -443,6 +639,7 @@
             )
             .join('')}
         </div>
+        ${renderBulkBar(selectedCount, rows.length)}
         ${
           rows.length
             ? `
@@ -452,29 +649,28 @@
                 const chipClass = getStatusChipClass(row.decision)
                 const ownerLabel = row.followUpOwner || 'No owner'
                 const notesLabel = row.notes ? 'Notes saved' : 'No notes'
-                const blockersLabel = row.blockers ? 'Blockers logged' : 'No blockers'
                 const ageChipClass = row.isStale ? 'fail' : row.ageDays === null ? 'warn' : 'pass'
                 const suggestedOwner = getSidebarReviewerName()
-                const suggestedOwnerNorm = normalize(suggestedOwner)
                 const isOwnerAssigned =
-                  normalize(row.followUpOwner) === suggestedOwnerNorm && !!row.followUpOwner
-
-                const canAssignMe = !isOwnerAssigned
-                const canNeedsReview = row.decision !== 'Needs review'
-                const canMarkBlocked = row.decision !== 'Blocked'
-                const canRevise = row.decision !== 'Revise and resubmit'
-                const canApprove = row.decision !== 'Approved'
-                const canApproveEdits = row.decision !== 'Approved with edits'
+                  normalize(row.followUpOwner) === normalize(suggestedOwner) && !!row.followUpOwner
+                const isSelected = state.selected.has(row.key)
 
                 return `
               <li>
-                <div
-                  class="review-queue-row${row.key === currentKey ? ' is-current' : ''}"
+                <article
+                  class="review-queue-row${row.key === currentKey ? ' is-current' : ''}${isSelected ? ' is-selected' : ''}"
                   role="button"
                   tabindex="0"
                   data-page-key="${escapeHtml(row.key)}"
                 >
-                  <span>
+                  <label class="review-queue-checkbox" aria-label="Select ${escapeHtml(row.title)}">
+                    <input
+                      type="checkbox"
+                      data-queue-select-key="${escapeHtml(row.key)}"
+                      ${isSelected ? 'checked' : ''}
+                    />
+                  </label>
+                  <span class="review-queue-row-body">
                     <span class="review-queue-row-title">${escapeHtml(row.title)}</span>
                     <span class="review-queue-row-meta">${escapeHtml(row.type || 'Page')} · ${escapeHtml(row.key)}</span>
                     <span class="review-queue-row-detail">
@@ -483,42 +679,12 @@
                       <span>${escapeHtml(formatUpdatedAt(row.updatedAt))}</span>
                     </span>
                     <span class="review-queue-actions" aria-label="Queue actions">
-                      <button
-                        type="button"
-                        class="review-queue-action"
-                        data-queue-action="assign-me"
-                        ${canAssignMe ? '' : 'disabled'}
-                      >Assign to me</button>
-                      <button
-                        type="button"
-                        class="review-queue-action"
-                        data-queue-action="needs-review"
-                        ${canNeedsReview ? '' : 'disabled'}
-                      >Needs review</button>
-                      <button
-                        type="button"
-                        class="review-queue-action"
-                        data-queue-action="revise"
-                        ${canRevise ? '' : 'disabled'}
-                      >Revise</button>
-                      <button
-                        type="button"
-                        class="review-queue-action"
-                        data-queue-action="blocked"
-                        ${canMarkBlocked ? '' : 'disabled'}
-                      >Blocked</button>
-                      <button
-                        type="button"
-                        class="review-queue-action"
-                        data-queue-action="approved"
-                        ${canApprove ? '' : 'disabled'}
-                      >Approve</button>
-                      <button
-                        type="button"
-                        class="review-queue-action"
-                        data-queue-action="approved-with-edits"
-                        ${canApproveEdits ? '' : 'disabled'}
-                      >Approve w/ edits</button>
+                      <button type="button" class="review-queue-action" data-queue-action="assign-me"${isOwnerAssigned ? ' disabled' : ''}>Assign to me</button>
+                      <button type="button" class="review-queue-action" data-queue-action="needs-review"${row.decision === 'Needs review' ? ' disabled' : ''}>Needs review</button>
+                      <button type="button" class="review-queue-action" data-queue-action="revise"${row.decision === 'Revise and resubmit' ? ' disabled' : ''}>Revise</button>
+                      <button type="button" class="review-queue-action" data-queue-action="blocked"${row.decision === 'Blocked' ? ' disabled' : ''}>Blocked</button>
+                      <button type="button" class="review-queue-action" data-queue-action="approved"${row.decision === 'Approved' ? ' disabled' : ''}>Approve</button>
+                      <button type="button" class="review-queue-action" data-queue-action="approved-with-edits"${row.decision === 'Approved with edits' ? ' disabled' : ''}>Approve w/ edits</button>
                     </span>
                     <span class="review-queue-row-tags">
                       ${row.notes ? `<span class="status-chip">${escapeHtml(notesLabel)}</span>` : ''}
@@ -530,7 +696,7 @@
                     <span class="status-chip ${ageChipClass}">${escapeHtml(formatAgeLabel(row))}</span>
                     ${row.followUpOwner ? '' : '<span class="status-chip warn">Needs owner</span>'}
                   </span>
-                </div>
+                </article>
               </li>
             `
               })
@@ -538,16 +704,125 @@
           </ul>
         `
             : `
-          <div class="review-queue-empty">
+          <aside class="review-queue-empty">
             <p>No pages match the current filter and search.</p>
             <button type="button" class="review-queue-filter" data-queue-reset="true">Clear queue filters</button>
-          </div>
+          </aside>
         `
         }
-      </div>
+      </section>
     `
 
     restoreSearchFocus(searchFocus)
+  }
+
+  function importReviewsFromCsvText(text) {
+    const rows = parseCsv(text)
+    if (rows.length < 2) {
+      toast('Import failed: CSV has no data rows.', 'warn')
+      return 0
+    }
+
+    const headers = rows[0].map((header) => normalize(header).replaceAll(' ', '_'))
+    const indexOf = (name) => headers.indexOf(name)
+    const pageKeyIndex = indexOf('page_key')
+    if (pageKeyIndex === -1) {
+      toast('Import failed: CSV needs a page_key column.', 'warn')
+      return 0
+    }
+
+    let imported = 0
+    let skipped = 0
+
+    for (const cells of rows.slice(1)) {
+      const pageKey = String(cells[pageKeyIndex] || '').trim()
+      if (!pageKey || !DATA.pages[pageKey]) {
+        skipped += 1
+        continue
+      }
+
+      const get = (name) => {
+        const index = indexOf(name)
+        return index === -1 ? '' : String(cells[index] ?? '').trim()
+      }
+
+      const csvDecision = get('decision')
+      if (csvDecision !== '' && !VALID_DECISIONS.has(csvDecision)) {
+        skipped += 1
+        continue
+      }
+
+      const patch = {}
+      const fields = [
+        'page_title',
+        'page_type',
+        'url_slug',
+        'decision',
+        'notes',
+        'risks_or_blockers',
+        'follow_up_owner',
+        'reviewer',
+        'review_date',
+        'seo_title',
+        'meta_description',
+        'primary_cta',
+        'reading_target',
+      ]
+
+      let hasField = false
+      for (const field of fields) {
+        const val = get(field)
+        if (val !== '') {
+          patch[field] = val
+          hasField = true
+        }
+      }
+
+      if (!hasField) {
+        skipped += 1
+        continue
+      }
+
+      const existing = readLocalState().pages[pageKey] || {}
+      const saved = updateLocalReviewForPage(pageKey, patch)
+      if (saved && saved.updated_at !== existing.updated_at) {
+        imported += 1
+      } else {
+        skipped += 1
+      }
+    }
+
+    if (!imported) {
+      toast(
+        skipped
+          ? 'Import finished: no matching pages were updated.'
+          : 'Import failed: no valid review rows found.',
+        'warn'
+      )
+      return 0
+    }
+
+    const currentKey = getCurrentKey()
+    if (typeof window.renderPage === 'function') {
+      window.renderPage(currentKey)
+    }
+
+    document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
+    renderReviewQueue()
+    toast(
+      skipped
+        ? `Imported ${imported} reviews (${skipped} skipped).`
+        : `Imported ${imported} reviews.`,
+      'success'
+    )
+    return imported
+  }
+
+  function importReviewsFromCsvFile(file) {
+    file
+      .text()
+      .then((text) => importReviewsFromCsvText(text))
+      .catch(() => toast('Import failed: could not read the CSV file.', 'warn'))
   }
 
   function handleQueueClick(event) {
@@ -561,9 +836,40 @@
 
     const resetButton = event.target.closest('[data-queue-reset]')
     if (resetButton) {
-      Object.assign(state, DEFAULT_STATE)
+      Object.assign(state, { ...DEFAULT_STATE })
       writeQueueUiState()
       renderReviewQueue()
+      return
+    }
+
+    // Selection checkboxes update on `change` so label clicks do not double-toggle.
+    if (
+      event.target.closest('#reviewQueueSelectAll, [data-queue-select-key], .review-queue-checkbox')
+    ) {
+      return
+    }
+
+    const selectControl = event.target.closest('[data-queue-select]')
+    if (selectControl) {
+      if (selectControl.getAttribute('data-queue-select') === 'clear') {
+        clearSelection()
+        syncSelectionUi()
+      }
+      return
+    }
+
+    const importButton = event.target.closest('[data-queue-import="csv"]')
+    if (importButton) {
+      document.getElementById('reviewQueueCsvInput')?.click()
+      return
+    }
+
+    const bulkActionButton = event.target.closest('[data-queue-bulk-action]')
+    if (bulkActionButton) {
+      const action = bulkActionButton.getAttribute('data-queue-bulk-action')
+      const keys = getSelectedKeys()
+      if (!action || !keys.length) return
+      applyQueueAction(keys, action)
       return
     }
 
@@ -572,63 +878,13 @@
       const row = actionButton.closest('[data-page-key]')
       if (!row) return
       const key = row.getAttribute('data-page-key')
-      if (!key || !DATA.pages[key]) return
-
       const action = actionButton.getAttribute('data-queue-action')
-      const suggestedOwner = getSidebarReviewerName()
-      const reviewDate = getSidebarReviewDate()
-      const currentSaved = window.reviewState.read().pages[key] || {}
-
-      let saved
-      if (action === 'assign-me') {
-        saved = updateLocalReviewForPage(key, {
-          follow_up_owner: suggestedOwner,
-          review_date: reviewDate,
-        })
-      } else if (action === 'needs-review') {
-        saved = updateLocalReviewForPage(key, {
-          decision: 'Needs review',
-          follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
-          review_date: reviewDate,
-        })
-      } else if (action === 'revise') {
-        saved = updateLocalReviewForPage(key, {
-          decision: 'Revise and resubmit',
-          follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
-          review_date: reviewDate,
-        })
-      } else if (action === 'blocked') {
-        saved = updateLocalReviewForPage(key, {
-          decision: 'Blocked',
-          follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
-          review_date: reviewDate,
-        })
-      } else if (action === 'approved') {
-        saved = updateLocalReviewForPage(key, {
-          decision: 'Approved',
-          follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
-          review_date: reviewDate,
-        })
-      } else if (action === 'approved-with-edits') {
-        saved = updateLocalReviewForPage(key, {
-          decision: 'Approved with edits',
-          follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
-          review_date: reviewDate,
-        })
-      } else {
-        return
-      }
-
-      syncSidebarForKey(key, saved)
-      if (key === getCurrentKey()) {
-        // Triggers the existing persistence + sticky-bar refresh logic in ux-improvements.js.
-        dispatchReviewFieldChange('reviewDecision')
-        dispatchReviewFieldChange('reviewOwner')
-      }
-      document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
-      renderReviewQueue()
+      if (!key || !action) return
+      applyQueueAction([key], action)
       return
     }
+
+    if (event.target.closest('.review-queue-checkbox')) return
 
     const rowButton = event.target.closest('[data-page-key]')
     if (!rowButton) return
@@ -639,7 +895,13 @@
 
   function handleQueueKeyDown(event) {
     if (event.key !== 'Enter' && event.key !== ' ') return
-    if (event.target.closest('[data-queue-action]')) return
+    if (
+      event.target.closest(
+        '[data-queue-action], [data-queue-bulk-action], .review-queue-checkbox, input, select, button'
+      )
+    ) {
+      return
+    }
     const row = event.target.closest('[data-page-key]')
     if (!row) return
 
@@ -664,15 +926,65 @@
     }
   }
 
+  function handleQueueChange(event) {
+    if (event.target.id === 'reviewQueueSelectAll') {
+      if (event.target.checked) selectAllVisible()
+      else clearSelection()
+      syncSelectionUi()
+      return
+    }
+
+    if (event.target.matches('[data-queue-select-key]')) {
+      const key = event.target.getAttribute('data-queue-select-key')
+      if (!key) return
+      if (event.target.checked) state.selected.add(key)
+      else state.selected.delete(key)
+      syncSelectionUi()
+      return
+    }
+
+    handleQueueInput(event)
+  }
+
+  function focusQueueSearch() {
+    const workspace = document.getElementById('reviewWorkspace')
+    if (workspace?.hidden) {
+      document.querySelector('[data-sticky-action="toggle-workspace"]')?.click()
+    }
+    const queueTab = document.querySelector('[data-workspace-tab="queue"]')
+    if (queueTab?.getAttribute('aria-selected') !== 'true') queueTab?.click()
+    const input = document.getElementById('reviewQueueSearch')
+    if (!input) return
+    input.focus()
+    if (typeof input.select === 'function') input.select()
+  }
+
   function init() {
     const panel = document.getElementById(QUEUE_PANEL_ID)
     if (!panel) return
 
     restoreQueueUiState()
+
+    let fileInput = document.getElementById('reviewQueueCsvInput')
+    if (!fileInput) {
+      fileInput = document.createElement('input')
+      fileInput.id = 'reviewQueueCsvInput'
+      fileInput.type = 'file'
+      fileInput.accept = '.csv,text/csv'
+      fileInput.hidden = true
+      document.body.appendChild(fileInput)
+    }
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files?.[0]
+      if (file) importReviewsFromCsvFile(file)
+      event.target.value = ''
+    })
+
     panel.addEventListener('click', handleQueueClick)
     panel.addEventListener('keydown', handleQueueKeyDown)
     panel.addEventListener('input', handleQueueInput)
-    panel.addEventListener('change', handleQueueInput)
+    panel.addEventListener('change', handleQueueChange)
     document.addEventListener('hhvc:review-data-changed', renderReviewQueue)
     renderReviewQueue()
   }
@@ -683,6 +995,15 @@
     getNextNeedsReviewKey,
     getAdjacentKey,
     getFilter: () => state.filter,
+    getSelectedKeys,
+    selectAllVisible,
+    clearSelection,
+    toggleSelected,
+    syncSelectionUi,
+    applyQueueAction,
+    getActionTargets,
+    focusQueueSearch,
+    importReviewsFromCsvText,
     renderReviewQueue,
   }
 

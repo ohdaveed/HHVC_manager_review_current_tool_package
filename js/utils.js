@@ -280,7 +280,8 @@ function throttle(fn, limit) {
  * @returns {'pass'|'fail'|'warn'}
  */
 function getStatusChipClass(decision) {
-  if (decision === 'Approved' || decision === 'Approved with edits') return 'pass'
+  if (decision === 'Approved') return 'pass'
+  if (decision === 'Approved with edits') return 'warn'
   if (decision === 'Blocked' || decision === 'Revise and resubmit') return 'fail'
   return 'warn'
 }

@@ -121,6 +121,7 @@ but unvalidated. Optional SEO/review fields: `seoTitle`, `metaDescription`,
 `primaryCta`, `editorNote`.
 
 Beyond schema shape, `validate.js` enforces business invariants:
+
 - The `pestsTopic` key must exist and must be first in `order` (this is the
   Topic page that replaced the old Agency-page section — `validate.js` only
   checks the key and ordering, not its `type` or content).
@@ -158,7 +159,7 @@ changes incompatibly. Workspace UI prefs (`workspace_open`, `workspace_tab`,
   by `netlify.toml`) assembles `dist/` with only runtime files: `index.html`,
   `css/`, `js/`, `pages/`, the three `@sfgov/design-system` CSS files
   (referenced by `index.html` via `node_modules` paths, so `npm install`/`bun
-  install` must run first), and `forms/mosquito-workshop-request/dist`
+install` must run first), and `forms/mosquito-workshop-request/dist`
   (copied to that same path under `dist/`, since that Vite sub-app is built
   with `base: '/forms/mosquito-workshop-request/'`). **`build:netlify` does
   not run the Vite build** — it only copies whatever is already checked into

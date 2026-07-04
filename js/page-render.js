@@ -4,15 +4,14 @@
 // js/ui-controls.js for the post-render side effects triggered by
 // applyPageContent (syncEditorFields, updateDirtyIndicators, etc.).
 function karlTag(label, kind = 'body') {
-  const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: kind }
-  return `<div class="karl-tag" data-kind="${kind}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></div>`
+  return `<mark class="karl-tag" data-kind="${kind}"><strong>Karl:</strong> ${escapeHtml(label)}</mark>`
+}
+function formatMarkdown(text) {
+  if (typeof text !== 'string') return ''
+  return escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 }
 function paragraphList(paragraphs = []) {
-  return paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('')
-}
-function renderTextItems(items = []) {
-  if (items.length >= 3) return bulletList(items)
-  return paragraphList(items)
+  return paragraphs.map((p) => `<p>${formatMarkdown(p)}</p>`).join('')
 }
 function renderAudience(audience = []) {
   if (!Array.isArray(audience)) return ''
@@ -20,7 +19,7 @@ function renderAudience(audience = []) {
 }
 function bulletList(bullets = []) {
   if (!bullets.length) return ''
-  return `<ul>${bullets.map((b) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`
+  return `<ul>${bullets.map((b) => `<li>${formatMarkdown(b)}</li>`).join('')}</ul>`
 }
 // Mockup-internal navigation for buttons/cards rendered from page data.
 // A delegated listener avoids inline onclick handlers, which would execute
@@ -32,28 +31,10 @@ document.addEventListener('click', (event) => {
   const key = link.getAttribute('data-render-target')
   if (key) window.renderPage(key)
 })
-// Absolute http(s) URLs leave SF.gov's site chrome (or the mockup tool itself),
-// so they get target=_blank + the external-link mark. Site-relative URLs
-// (e.g. another SF.gov page or form under /forms/...) stay same-tab.
-function isExternalUrl(url) {
-  return /^https?:\/\//i.test(url)
-}
 function button(label, kind = 'primary', target = null, url = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
   if (url) {
-    const external = isExternalUrl(url)
-    const attr = external
-      ? ` target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)} (opens in a new tab)"`
-      : ''
-    const mark = external ? ' <span aria-hidden="true">↗</span>' : ''
-    const karlLabel = external
-      ? kind === 'secondary'
-        ? 'Body link to external tool or resource'
-        : 'Button label: Primary CTA to external tool'
-      : kind === 'secondary'
-        ? 'Body link to related page'
-        : 'Button label: Primary CTA'
-    return `<a class="${cls}" href="${escapeHtml(url)}"${attr}>${karlTag(karlLabel, 'placement')}${escapeHtml(label)}${mark}</a>`
+    return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Body link to external tool or resource' : 'Button label: Primary CTA to external tool', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
   }
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
   return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
@@ -61,22 +42,19 @@ function button(label, kind = 'primary', target = null, url = null) {
 function renderCards(cards = []) {
   return `<div class="cards">${cards
     .map((c) => {
-      const external = c.url ? isExternalUrl(c.url) : false
       const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
-        ? external
-          ? ` target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(c.title)} (opens in a new tab)"`
-          : ''
+        ? ' target="_blank" rel="noopener"'
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
-      const externalMark = external ? ' <span aria-hidden="true">↗</span>' : ''
+      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
       return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3><p>${escapeHtml(c.text)}</p></article>`
     })
     .join('')}</div>`
 }
 function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${renderTextItems(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<div class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}<strong>Note:</strong> ${escapeHtml(s.callout.text)}</div>` : ''}</div></li>`).join('')}</ol>`
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderTable(rows = []) {
   if (!rows.length) return ''
@@ -86,12 +64,12 @@ function renderTable(rows = []) {
 function renderSection(section) {
   const kind = section.kind || 'body'
   let inner = `${karlTag(section.karl || 'Body section', kind)}<h2>${escapeHtml(section.heading)}</h2>`
-  inner += renderTextItems(section.paragraphs || [])
+  inner += paragraphList(section.paragraphs || [])
   inner += section.steps ? renderSteps(section.steps) : ''
   inner += bulletList(section.bullets || [])
   inner += section.table ? renderTable(section.table) : ''
   if (section.callout)
-    inner += `<div class="callout">${karlTag(section.callout.karl || 'Body callout', 'body')}${escapeHtml(section.callout.text)}</div>`
+    inner += `<aside class="callout">${karlTag(section.callout.karl || 'Body callout', 'body')}${formatMarkdown(section.callout.text)}</aside>`
   if (section.button)
     inner += button(
       section.button,
@@ -100,30 +78,8 @@ function renderSection(section) {
       section.buttonUrl || null
     )
   if (section.cards) inner += renderCards(section.cards)
-  return `<div class="section">${inner}</div>`
+  return `<section class="section">${inner}</section>`
 }
-// Single DOM contract for patching a live-edited field into the rendered
-// mockup — shared by live typing (app.js), per-field reset (editor-panel.js),
-// and restoring saved review state (ux-improvements.js).
-function applyFieldToMockup(fieldKey, value) {
-  const text = value ?? ''
-  if (fieldKey === 'title') {
-    const h1 = document.querySelector('#mockPage h1')
-    if (h1) h1.textContent = text
-  } else if (fieldKey === 'summary') {
-    const summary = document.querySelector('#mockPage .summary')
-    if (summary) summary.textContent = text
-  } else if (fieldKey === 'cta') {
-    const primaryButton = document.querySelector('#mockPage .btn:not(.secondary)')
-    if (primaryButton) {
-      primaryButton.innerHTML = karlTag('Button label: Primary CTA', 'placement') + escapeHtml(text)
-      if (primaryButton.hasAttribute('aria-label')) {
-        primaryButton.setAttribute('aria-label', `${text} (opens in a new tab)`)
-      }
-    }
-  }
-}
-
 function applyPageContent(key) {
   const page = pageData[key]
   if (!page) return
@@ -135,7 +91,7 @@ function applyPageContent(key) {
   document.getElementById('mockPage').innerHTML = `
         <header class="site-header"><div class="site-header-inner"><a href="#" class="brand"><span class="brand-mark">SF</span><span>SF.gov</span></a><nav class="site-nav" aria-label="Example navigation"><a href="#">Services</a><a href="#">Departments</a><a href="#">Search</a></nav></div></header>
         <section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span></div></div></section>
-        <main class="page-body"><div class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`)}</div><div class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></div>${page.sections.map(renderSection).join('')}</main>
+        <main class="page-body"><aside class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`)}</aside><section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>${page.sections.map(renderSection).join('')}</main>
         <footer class="footer"><div class="footer-inner"><strong>City and County of San Francisco</strong><br>This is a design mockup for HHVC content review, not a live SF.gov page.</div></footer>`
   syncEditorFields(page)
   updateDirtyIndicators(key)
