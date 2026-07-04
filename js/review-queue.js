@@ -436,7 +436,7 @@
 
   function renderQueueStats(stats, visibleCount) {
     return `
-      <div class="review-queue-overview">
+      <section class="review-queue-overview">
         <div class="review-queue-kpis" aria-label="Queue metrics">
           <div class="review-queue-kpi">
             <span class="review-queue-kpi-label">Visible</span>
@@ -455,14 +455,14 @@
             <strong class="review-queue-kpi-value">${stats.stale}</strong>
           </div>
         </div>
-      </div>
+      </section>
     `
   }
 
   function renderBulkBar(selectedCount, visibleCount) {
     const allVisibleSelected = visibleCount > 0 && selectedCount === visibleCount
     return `
-      <div class="review-queue-bulk" aria-label="Bulk queue actions">
+      <section class="review-queue-bulk" aria-label="Bulk queue actions">
         <div class="review-queue-bulk-main">
           <label class="review-queue-select-all">
             <input
@@ -487,7 +487,7 @@
         <div class="review-queue-import">
           <button type="button" class="review-queue-action" data-queue-import="csv">Import CSV</button>
         </div>
-      </div>
+      </section>
     `
   }
 
@@ -584,8 +584,8 @@
     ]
 
     panel.innerHTML = `
-      <div class="review-queue">
-        <div class="review-queue-header">
+      <section class="review-queue">
+        <header class="review-queue-header">
           <div>
             <h3>Review queue</h3>
             <p class="review-queue-subtitle">Triage pages by decision, ownership, staleness, and saved notes. Use checkboxes for bulk updates, or press <kbd>?</kbd> for shortcuts.</p>
@@ -596,7 +596,7 @@
             </div>
             <span class="review-queue-progress-label">${stats.reviewed}/${stats.total} reviewed</span>
           </div>
-        </div>
+        </header>
         <div class="review-queue-stats" aria-label="Decision breakdown">
           <span class="status-chip warn">Needs review ${stats.byDecision['Needs review'] || 0}</span>
           <span class="status-chip pass">Approved ${stats.byDecision.Approved || 0}</span>
@@ -657,7 +657,7 @@
 
                 return `
               <li>
-                <div
+                <article
                   class="review-queue-row${row.key === currentKey ? ' is-current' : ''}${isSelected ? ' is-selected' : ''}"
                   role="button"
                   tabindex="0"
@@ -696,7 +696,7 @@
                     <span class="status-chip ${ageChipClass}">${escapeHtml(formatAgeLabel(row))}</span>
                     ${row.followUpOwner ? '' : '<span class="status-chip warn">Needs owner</span>'}
                   </span>
-                </div>
+                </article>
               </li>
             `
               })
@@ -704,13 +704,13 @@
           </ul>
         `
             : `
-          <div class="review-queue-empty">
+          <aside class="review-queue-empty">
             <p>No pages match the current filter and search.</p>
             <button type="button" class="review-queue-filter" data-queue-reset="true">Clear queue filters</button>
-          </div>
+          </aside>
         `
         }
-      </div>
+      </section>
     `
 
     restoreSearchFocus(searchFocus)

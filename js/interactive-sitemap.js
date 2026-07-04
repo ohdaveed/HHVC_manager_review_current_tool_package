@@ -276,6 +276,12 @@
         align-items: center;
       }
 
+      .sitemap-legend {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
       .sitemap-filter-button,
       .sitemap-diagram-node {
         border: 1px solid var(--sfds-border);
@@ -607,18 +613,18 @@
       ['Information', 'var(--sfds-warning-border)'],
     ]
     return `
-      <div class="sitemap-legend" aria-label="Page type legend">
+      <ul class="sitemap-legend" aria-label="Page type legend">
         ${types
           .map(
             ([label, color]) => `
-          <span class="sitemap-legend-item">
+          <li class="sitemap-legend-item">
             <span class="sitemap-legend-swatch" style="background:${color}"></span>
             ${escapeHtml(label)}
-          </span>
+          </li>
         `
           )
           .join('')}
-      </div>
+      </ul>
     `
   }
 
@@ -730,7 +736,7 @@
       : ''
 
     return `
-      <div class="sitemap-diagram" role="group" aria-label="HHVC page inventory diagram">
+      <figure class="sitemap-diagram" role="group" aria-label="HHVC page inventory diagram">
         <div class="sitemap-diagram-root-wrap">
           ${root ? renderDiagramNode(root, { ...nodeOptions(root), hub: true }) : ''}
         </div>
@@ -738,7 +744,7 @@
         <div class="sitemap-diagram-columns">${columns}</div>
         ${crossCuttingMarkup}
         <p class="sitemap-diagram-footnote">Columns group child pages under each resource-collection hub using placement card targets. Inventory order is shown on every node.</p>
-      </div>
+      </figure>
     `
   }
 
@@ -746,7 +752,7 @@
     if (!targets || !targets.length) return ''
     const graph = getLinkGraph()
     return `
-      <div class="sitemap-link-section">
+      <section class="sitemap-link-section">
         <h5>${escapeHtml(title)}</h5>
         <div class="sitemap-link-chips">
           ${targets
@@ -759,7 +765,7 @@
             })
             .join('')}
         </div>
-      </div>
+      </section>
     `
   }
 
