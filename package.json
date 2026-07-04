@@ -9,17 +9,29 @@
     "prettier": "^3.5.1"
   },
   "scripts": {
+    "// dev": "Runs the local development server in watch mode at http://127.0.0.1:8080 (kills stale listeners first)",
     "dev": "bash start-dev.sh",
+    "// start": "Starts the production-like static server without watch/auto-reload",
     "start": "bun run server.ts",
+    "// validate": "Zod-validates pages/*.js and js/page-data.js for schema shape and business invariants",
     "validate": "bun build_scripts/validate.js",
+    "// export": "Generates data/page_inventory.{json,csv} and syncs the local tracking sheet",
     "export": "bun build_scripts/extract-pages.js && bun build_scripts/sync-tracking-sheet.js",
+    "// sync-tracking": "Re-generates the local mockup tracking CSV sheets",
     "sync-tracking": "bun build_scripts/sync-tracking-sheet.js",
+    "// push-tracking": "Pushes the local page review status to the Google Sheets tracker",
     "push-tracking": "bun build_scripts/push-tracking-sheet.js",
+    "// build": "Executes full build pipeline: validate -> export -> build workshop form -> compile single-file review page",
     "build": "bun run validate && bun run export && bun run build:workshop-form && bun build_scripts/build-single-file.js",
+    "// build:workshop-form": "Installs dependencies and runs Vite production build for the embedded mosquito request sub-form",
     "build:workshop-form": "bun install --cwd forms/mosquito-workshop-request && bun run --cwd forms/mosquito-workshop-request build",
+    "// build:netlify": "Validates pages and assembles the netlify deployment bundle inside the dist/ directory",
     "build:netlify": "node build_scripts/validate.js && node build_scripts/build-netlify-dist.js",
+    "// format": "Runs Prettier to automatically format all files in place",
     "format": "prettier --write .",
+    "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
+    "// test": "Runs the test suite using Bun's test runner",
     "test": "bun test"
   }
 }
