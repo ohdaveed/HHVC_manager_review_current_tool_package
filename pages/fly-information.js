@@ -12,7 +12,7 @@ window.HHVC_PAGES['flyInfo'] = {
   ],
   reading: 'Grade 6',
   editorNote:
-    'New Information page. Content sourced from UC IPM Pest Notes 7457 (docs/source/hhvc-policy/2026-07-02-ipm-pests-flies.md), focused on house flies and blow flies as the species relevant to San Francisco housing. Verify against current SFDPH vector program guidance before publication.',
+    'New Information page. Content sourced from UC IPM Pest Notes 7457 (docs/source/hhvc-policy/2026-07-02-ipm-pests-flies.md), focused on house flies as the species HHVC enforces on in San Francisco housing. Verify against current SFDPH vector program guidance before publication.',
   sections: [
     {
       heading: 'Why it matters',
