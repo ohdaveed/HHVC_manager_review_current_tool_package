@@ -16,7 +16,7 @@ window.HHVC_PAGES['findViolations'] = {
   sections: [
     {
       heading: 'What you can search',
-      karl: 'Body: Violation lookup scope',
+      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the two paragraphs below).',
       kind: 'body',
       paragraphs: [
         'Search by address or record ID to see investigated complaints, inspections, and health code violations tied to a residential property.',
@@ -25,7 +25,7 @@ window.HHVC_PAGES['findViolations'] = {
     },
     {
       heading: 'Open the violation lookup',
-      karl: 'Body: Primary CTA to external xnet violation search',
+      karl: 'what_to_do -> Section. Section title: "Open the violation lookup". Section specifics: Text block (this paragraph) + Button link block (External URL radio, target = the xnet URL).',
       kind: 'body',
       paragraphs: ['You will leave SF.gov to use the Department of Public Health records site.'],
       button: 'Search residential violations',
@@ -33,26 +33,26 @@ window.HHVC_PAGES['findViolations'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Find complaints and inspection records',
           text: 'Same lookup tool with complaint-focused wording and reporting pointers.',
           target: 'findRecords',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'How to respond to a notice of violation',
           text: 'Learn what tenants and property owners each need to do after HHVC issues a notice.',
           target: 'noticeOfViolation',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Look up building records',
           text: 'Return to the records hub for hotel records and public records requests.',
           target: 'recordsHub',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

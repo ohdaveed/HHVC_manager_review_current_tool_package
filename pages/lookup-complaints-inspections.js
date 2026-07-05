@@ -16,7 +16,7 @@ window.HHVC_PAGES['findRecords'] = {
   sections: [
     {
       heading: 'What you can look up',
-      karl: 'Body: What you can look up',
+      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the two paragraphs plus the bulleted list below).',
       kind: 'body',
       paragraphs: [
         'Use the Environmental Health lookup tool to search investigated complaints and inspections tied to a street address, complaint ID, or location ID.',
@@ -31,13 +31,13 @@ window.HHVC_PAGES['findRecords'] = {
     },
     {
       heading: 'Open the lookup tool',
-      karl: 'Body: Primary CTA to external xnet lookup tool',
+      karl: 'what_to_do -> Section. Section title: "Open the lookup tool". Section specifics: Text block (this paragraph) + Button link block (External URL radio, target = the xnet URL) + Callout block below.',
       kind: 'body',
       paragraphs: [
         'The search tool opens on the Department of Public Health external records site. You will leave SF.gov.',
       ],
       callout: {
-        karl: 'Body note: External tool disclaimer',
+        karl: 'Callout block inside the "Open the lookup tool" Section specifics: single rich text field only, no separate title — this mockup callout already has none, so no mismatch.',
         text: 'Complaint records are public records. Environmental Health generally does not share the name of a person who filed a complaint.',
       },
       button: 'Open complaints and inspection lookup',
@@ -45,45 +45,45 @@ window.HHVC_PAGES['findRecords'] = {
     },
     {
       heading: 'If you need to report a new problem',
-      karl: 'Body: Pointer back to reporting flow',
+      karl: 'Maps to the same repeatable `related` field as the "Related pages" section below — Transaction\'s related panel has no observed max and no sub-heading/grouping support, so in real Karl these 3 cards and the 2 below would become one flat list without this section break. Digital Services should decide ordering if the two-heading grouping matters editorially.',
       kind: 'placement',
       cards: [
         {
           title: 'Pests and housing problems',
           text: 'Report a new pest, vector, mold, or housing health problem through the main Topic page.',
           target: 'pestsTopic',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report rats or mice',
           text: 'Report an active rat or mouse problem in San Francisco.',
           target: 'ratsReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how 311 reports are routed to Environmental Health.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has no custom title/text per item, only a page reference — the descriptions on these cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Look up building records',
           text: 'Return to the records hub for hotel records, inspector lookup, and public records.',
           target: 'recordsHub',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Find residential hotel and shelter records',
           text: 'Use the separate lookup for SROs, residential hotels, and shelters.',
           target: 'findHotelRecords',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },
