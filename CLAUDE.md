@@ -109,8 +109,9 @@ files or publish content**; they are review aids only, not publishing tools.
 
 See `build_scripts/validate.js` for the enforced Zod schema: `slug`, `type`
 (a free-form string — only `min(1)` is checked, not an enum; values in use
-across `pages/*.js` include `Topic page`, `Transaction`, `Information`, and
-`Resource collection`), `title`, `summary`, `audience[]`, `reading`
+across `pages/*.js` are `Topic`, `Transaction`, `Information`, and
+`Resource Collection`, matching Karl's real content-type names — see
+`docs/wagtail-content-mapping.md`), `title`, `summary`, `audience[]`, `reading`
 (grade-level string), and `sections[]`. Sections carry `cards[]`,
 `bullets[]`, `paragraphs[]`, `table[][]`, a `callout`, a
 `button`/`buttonUrl`/`buttonTarget`/`buttonStyle`, and/or `steps[]`; steps

@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['pestsTopic'] = {
   slug: 'sf.gov/topic-pests-and-housing-problems',
-  type: 'Topic page',
+  type: 'Topic',
   title: 'Pests and housing problems',
   summary: 'Get help with pests, mold, garbage, and other housing health problems.',
   audience: [

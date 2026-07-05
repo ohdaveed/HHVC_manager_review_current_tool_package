@@ -45,7 +45,8 @@ in isolation — the script always validates the full list.
   `js/review-queue.js` → `js/dashboard-guidance.js` → `js/interactive-sitemap.js`.
   When adding a new page file, add its `<script>` tag in this same block, before `page-data.js`.
 - **Page object shape** (see `build_scripts/validate.js` for the enforced
-  Zod schema): `slug`, `type` (`Topic page` | `Transaction` | `Information`),
+  Zod schema): `slug`, `type` (`Topic` | `Transaction` | `Information` |
+  `Resource Collection`),
   `title`, `summary`, `audience[]`, `reading` (a grade-level string), and
   `sections[]`. Sections contain `cards[]` and/or `steps[]`; steps can have
   `bullets`, `callout`, and `button` (the primary CTA). Optional review/SEO

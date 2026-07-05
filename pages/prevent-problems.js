@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['preventHub'] = {
   slug: 'sf.gov/prevent-problems',
-  type: 'Resource collection',
+  type: 'Resource Collection',
   title: 'Prevent problems',
   summary:
     'Guides and resources to help tenants, owners, and building staff prevent pests and housing health problems before they spread.',

@@ -37,7 +37,7 @@
   function normalizeType(type) {
     const normalized = String(type || '').toLowerCase()
     if (normalized.includes('topic')) return 'Topic'
-    if (normalized.includes('resource collection')) return 'Resource collection'
+    if (normalized.includes('resource collection')) return 'Resource Collection'
     if (normalized.includes('transaction')) return 'Transaction'
     return 'Information'
   }
@@ -109,7 +109,7 @@
 
   function getHubKeys() {
     return getPageRows()
-      .filter((row) => row.type === 'Resource collection')
+      .filter((row) => row.type === 'Resource Collection')
       .map((row) => row.key)
   }
 
@@ -457,7 +457,7 @@
         max-width: 18rem;
       }
 
-      .sitemap-diagram-node[data-page-type='Resource collection'] {
+      .sitemap-diagram-node[data-page-type='Resource Collection'] {
         border-left: 4px solid #7c3aed;
       }
 
@@ -608,7 +608,7 @@
   function renderLegend() {
     const types = [
       ['Topic', 'var(--sfds-action-blue)'],
-      ['Resource collection', '#7c3aed'],
+      ['Resource Collection', '#7c3aed'],
       ['Transaction', 'var(--sfds-green)'],
       ['Information', 'var(--sfds-warning-border)'],
     ]
@@ -629,7 +629,7 @@
   }
 
   function renderSearchAndFilters() {
-    const filters = ['All', 'Topic', 'Resource collection', 'Transaction', 'Information']
+    const filters = ['All', 'Topic', 'Resource Collection', 'Transaction', 'Information']
     const clearLabel = state.search ? '✕ Clear search' : ''
     const filteredCount = getFilteredRows().length
     const totalCount = getPageRows().length
@@ -693,7 +693,7 @@
       const visible = visibleKeys.has(row.key)
       const linked = state.showLinksFromSelected && outgoing.has(row.key)
       return {
-        hub: row.type === 'Resource collection',
+        hub: row.type === 'Resource Collection',
         dimmed: !visible,
         linked,
       }

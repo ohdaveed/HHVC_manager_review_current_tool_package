@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['reportHub'] = {
   slug: 'sf.gov/report-a-problem',
-  type: 'Resource collection',
+  type: 'Resource Collection',
   title: 'Report a problem',
   summary:
     'Choose the right page to report pests, mold, garbage, clutter, or other housing health problems that HHVC may review.',

@@ -86,7 +86,7 @@ Notable content on these pages:
 These pages were never entered into the audit process. Sub-grouping by function:
 
 ### 5.1 Navigation/hub pages (4): `reportHub`, `preventHub`, `recordsHub`, `ownerHub`
-All are "Resource collection" type pages whose content is almost entirely cards linking to other pages, plus 1–2 short introductory paragraphs. Low factual-claim surface area; the main review question for these is navigation/IA correctness, not sourcing.
+All are "Resource Collection" type pages whose content is almost entirely cards linking to other pages, plus 1–2 short introductory paragraphs. Low factual-claim surface area; the main review question for these is navigation/IA correctness, not sourcing.
 
 ### 5.2 Records/lookup transactions (5): `findRecords`, `findViolations`, `findHotelRecords`, `findInspector`, `publicRecords`
 Thin-content "landing pages" whose real function is a primary button to an external tool (`xnet.sfdph.org`, `sfdph.org/dph/EH/ResidentialHotels`, `sanfrancisco.nextrequest.com`). Two of the five self-report as blocked/placeholder:
@@ -138,16 +138,16 @@ Five pages contain the literal strings `BLOCKED` or `SME placeholder`/`SME-block
 
 | Page key | Title | Type | Tier | Notes |
 | --- | --- | --- | --- | --- |
-| pestsTopic | Pests and housing problems | Topic page | 1 | Audited; scope/fee framing verified |
-| reportHub | Report a problem | Resource collection | 3 | Navigation hub only |
-| preventHub | Prevent problems | Resource collection | 3 | Navigation hub only |
-| recordsHub | Look up building records | Resource collection | 3 | Navigation hub only |
+| pestsTopic | Pests and housing problems | Topic | 1 | Audited; scope/fee framing verified |
+| reportHub | Report a problem | Resource Collection | 3 | Navigation hub only |
+| preventHub | Prevent problems | Resource Collection | 3 | Navigation hub only |
+| recordsHub | Look up building records | Resource Collection | 3 | Navigation hub only |
 | findRecords | Find complaints and inspection records | Transaction | 3 | External xnet tool link |
 | findViolations | Look up residential health code violations | Transaction | 3 | Near-duplicate of findRecords |
 | findHotelRecords | Find residential hotel and shelter records | Transaction | 3 | SME placeholder / illustrative link |
 | findInspector | Find your district inspector | Information | 3 | BLOCKED — falls back to real 311 contact |
 | publicRecords | Make a public records request | Transaction | 3 | External NextRequest link |
-| ownerHub | Property owner responsibilities | Resource collection | 3 | Navigation hub only |
+| ownerHub | Property owner responsibilities | Resource Collection | 3 | Navigation hub only |
 | noticeOfViolation | How to respond to a notice of violation | Information | 3 | BLOCKED; illustrative fee sequencing |
 | ratsReport | Report rats or mice | Transaction | 1 | Audited; see §3.2 drift note |
 | cockroachesReport | Report cockroaches | Transaction | 1 | Audited; see §3.2 drift note |

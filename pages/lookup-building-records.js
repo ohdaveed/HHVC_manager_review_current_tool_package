@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['recordsHub'] = {
   slug: 'sf.gov/look-up-building-records',
-  type: 'Resource collection',
+  type: 'Resource Collection',
   title: 'Look up building records',
   summary:
     'Find past inspection reports, search violations, look up your assigned inspector, or request public records for a building.',

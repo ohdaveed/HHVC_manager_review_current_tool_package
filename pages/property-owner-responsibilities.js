@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['ownerHub'] = {
   slug: 'sf.gov/property-owner-responsibilities-hhvc',
-  type: 'Resource collection',
+  type: 'Resource Collection',
   title: 'Property owner responsibilities',
   summary:
     'What property owners and managers must do under Health Code Article 11 for pests, vectors, and housing health conditions.',

@@ -7,7 +7,7 @@ This package is the manager-review version of the current HHVC/SF.gov mockup too
 The app currently contains **33 page mockups** in `window.HHVC_DATA.order`:
 
 - 1 Topic page
-- 2 Resource collection pages
+- 2 Resource Collection pages
 - 14 Transaction pages
 - 16 Information pages
 
@@ -290,14 +290,14 @@ Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) an
 
 | #   | Page key             | Page title                                                  | Type                |
 | --- | -------------------- | ----------------------------------------------------------- | ------------------- |
-| 1   | `pestsTopic`         | Pests and housing problems                                  | Topic page          |
-| 2   | `recordsHub`         | Look up building records                                    | Resource collection |
+| 1   | `pestsTopic`         | Pests and housing problems                                  | Topic               |
+| 2   | `recordsHub`         | Look up building records                                    | Resource Collection |
 | 3   | `findRecords`        | Find complaints and inspection records                      | Transaction         |
 | 4   | `findViolations`     | Look up residential health code violations                  | Transaction         |
 | 5   | `findHotelRecords`   | Find residential hotel and shelter records                  | Transaction         |
 | 6   | `findInspector`      | Find your district inspector                                | Information         |
 | 7   | `publicRecords`      | Make a public records request                               | Transaction         |
-| 8   | `ownerHub`           | Property owner responsibilities                             | Resource collection |
+| 8   | `ownerHub`           | Property owner responsibilities                             | Resource Collection |
 | 9   | `noticeOfViolation`  | How to respond to a notice of violation                     | Information         |
 | 10  | `ratsReport`         | Report rats or mice                                         | Transaction         |
 | 11  | `cockroachesReport`  | Report cockroaches                                          | Transaction         |

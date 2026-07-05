@@ -18,8 +18,8 @@ authoritative for the `Transaction` page type specifically.
 `Agency`, `Campaign`, `Data story`, `Document Collection Search`, `Event`,
 `Form`, `Information`, `Location`, `Meeting`, `News`, `Profile`, `Report`,
 `Resource Collection`, `Step by step`, `Topic`, `Transaction`. The mockup's
-`type` values (`Transaction`, `Topic`, `Information`, `Resource collection`)
-match these exactly (case aside).
+`type` values (`Transaction`, `Topic`, `Information`, `Resource Collection`)
+match these exactly.
 
 **A Transaction page has named, purpose-specific panels — not a generic
 list of sections.** This is the single biggest correction to the earlier
@@ -95,11 +95,73 @@ target input is too broad. Anyone automating this again should scope every
 write to the field's exact `name`/`id` (e.g. `what_to_do-0-value-section_title`),
 never a "closest wrapper, then first input" search.
 
-## Other page types (Topic, Information, Resource Collection, etc.) — unverified
+## Verified against the real Karl "Information" add-page form (2026-07-05)
 
-Everything below this point is the original guesswork, not yet checked
-against a live Karl form the way Transaction was. Confirm with Digital
-Services (or repeat the same live-session verification) before relying on it.
+Like the Transaction section above, everything here was confirmed directly
+in Karl's live "New: Information" form. Treat it as authoritative for the
+`Information` page type specifically. Note the form itself is a single
+"Content" tab — no separate Promote/Settings tabs were shown.
+
+| Karl field                                          | UI label                                      | Block type(s) available                         | Notes                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------- | --------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(title)_                                           | Page title *                                  | plain text                                      | Required                                                                                                                                                                                                                                                                      |
+| _(description)_                                     | Description                                   | plain multi-line textarea                       | No rich text toolbar — unlike Transaction's rich text fields, this one is plain text only                                                                                                                                                                                     |
+| _(primary agency — field name not yet inspected)_   | Primary agency *                              | page chooser, restricted to `Agency` pages      | Required                                                                                                                                                                                                                                                                      |
+| _(field name not yet inspected)_                    | Part of (repeatable)                          | page chooser, restricted to `Transaction` pages | Each item chooses one Transaction page this Information page supports                                                                                                                                                                                                         |
+| _(field name not yet inspected)_                    | Information section (repeatable stream field) | chooser: `Title and text`, `Image`, `Callout`   | `Title and text` = plain "Title" text field + rich text "Text" field. `Image` = a single "Choose an image" chooser (Search/Upload tabs, collection filter, tags). `Callout` = **single rich text field only, no separate title** — same gap as Transaction's `Callout` blocks |
+| _(partner agencies — field name not yet inspected)_ | Partner agencies (repeatable)                 | page chooser restricted to `Agency` pages       | Same restriction as Primary agency                                                                                                                                                                                                                                            |
+| _(topics — field name not yet inspected)_           | Topics (repeatable)                           | page chooser restricted to `Topic` pages        | —                                                                                                                                                                                                                                                                             |
+| _(related — field name not yet inspected)_          | Related (repeatable)                          | generic "Page" field, unrestricted page chooser | Any page type, no warning banner, shows the full page list — same shape as Transaction's `related`: no custom title/text per item, just a page reference                                                                                                                      |
+
+These field-name column entries reuse Transaction's confirmed names
+(`primary_agency`, `partner_agencies`, `topics`, `related`) as a plausible
+guess since the UI labels and restrictions are identical, but that reuse is
+**not independently confirmed** for Information — only the UI labels and
+chooser behavior above were directly observed.
+
+Practical implications for `pages/*.js` → Information pages:
+
+- The mockup's `sections[]` (`paragraphs[]`, `bullets[]`, `callout`) maps to
+  the "Information section" stream field's `Title and text`/`Callout` blocks,
+  not a generic StreamField as previously guessed — confirms the same
+  "named panels, not generic sections" pattern seen on Transaction.
+- A mockup section with an image would need an `Image` block inserted
+  alongside/between `Title and text` blocks; the mockup schema has no
+  first-class image field today, so this is a gap to flag for Digital
+  Services if any Information page mockup adds one.
+- **The rich text toolbar is the same standing spec as Transaction's**: Bold,
+  H3, H4, Bulleted list, Numbered list, Blockquote, Line break, Document
+  link, Link (no H2) — confirmed again here across the "Information
+  section"'s `Text`/`Callout` fields. Treat this toolbar as universal across
+  page types rather than re-verifying per type.
+- **New detail this session, not previously captured for Transaction:** the
+  "/" slash-command menu (not just the toolbar) offers the same formatting
+  options plus a nested "Blocks" group (`Title and text`, `Image`, `Callout`
+  can all be embedded _inside_ rich text, not just as top-level stream
+  items) and an "Actions" section (`Split block`). Worth re-checking whether
+  Transaction's rich text fields have this same nested-block/Actions menu —
+  it wasn't looked for during that verification pass.
+- **New detail this session:** the Link tool (in both toolbar and "/" menu)
+  opens a chooser with four link types — Internal link (page tree),
+  External link, Email link, Phone link. The Document icon opens a separate
+  "Choose a document" modal (Search/Upload tabs, collection filter, document
+  library list) distinct from the Link tool's own internal-link picker.
+  These are presumably shared editor widgets, so likely apply to
+  Transaction's rich text fields too, but that's an inference, not
+  something re-confirmed on the Transaction form.
+- Page action controls (Save draft / Publish split button, Preview button,
+  and an info-icon side panel showing draft/lock state, publish schedule,
+  locale, lock status, and usage/reference count) appear to be generic Karl
+  editor chrome rather than Information-specific — flagging here since it
+  wasn't documented during the Transaction pass, not because it's assumed
+  unique to Information.
+
+## Other page types (Topic, Resource Collection, etc.) — unverified
+
+Everything below this point (aside from the verified Transaction and
+Information sections above) is the original guesswork, not yet checked
+against a live Karl form. Confirm with Digital Services (or repeat the same
+live-session verification) before relying on it.
 
 ### Page-level fields → Wagtail Page model (general guess)
 
@@ -117,9 +179,11 @@ Services (or repeat the same live-session verification) before relying on it.
 
 ### Section-level (`sectionSchema`) → StreamField blocks (general guess)
 
-This may still hold for `Topic`/`Information`/`Resource Collection` page
-types, which — unlike `Transaction` — might genuinely use a generic
-sections StreamField. Not yet confirmed either way.
+This is now known **not** to hold for `Information` — see the verified
+section above; it uses a named "Information section" stream field with
+specific block types (`Title and text`, `Image`, `Callout`), not a generic
+sections StreamField, same pattern as `Transaction`. This guess may still
+hold for `Topic`/`Resource Collection`, which remain unconfirmed.
 
 | Mockup shape                       | Guessed Wagtail block                                                                                                          |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -141,8 +205,9 @@ page-builder ("use X block because Y"), not as prose about the mockup.
 ## What this doc is not
 
 - Not a live Wagtail schema for anything beyond the verified `Transaction`
-  section above — Karl's actual StreamField block names and Page models for
-  other page types live in the Digital Services Wagtail codebase, not here.
+  and `Information` sections above — Karl's actual StreamField block names
+  and Page models for other page types live in the Digital Services Wagtail
+  codebase, not here.
 - Not a migration tool — nothing in this repo reads or writes Wagtail data.
 - The "Other page types" section is a hypothesis to confirm with Digital
   Services, not a guarantee.
