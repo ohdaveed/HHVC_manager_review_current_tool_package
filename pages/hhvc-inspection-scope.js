@@ -17,7 +17,7 @@ window.HHVC_PAGES['scopeInfo'] = {
   sections: [
     {
       heading: 'Use this page before you report',
-      karl: 'Body: Intro / Article 11 scope page purpose',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below (bullets render as a bulleted list inside the same rich text field).',
       kind: 'body',
       paragraphs: [
         'This page helps you understand whether Healthy Housing and Vector Control may review a pest, vector, or housing health issue.',
@@ -30,7 +30,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'Problems HHVC may inspect',
-      karl: 'Body: Scope list / HHVC may inspect',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the bulleted list below (bullets render as a bulleted list inside the rich text field; no paragraphs precede it here).',
       kind: 'body',
       bullets: [
         'Rats or mice',
@@ -49,7 +49,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'How to choose the right page',
-      karl: 'Body: Article 11 issue matching table',
+      karl: 'Real-schema gap: the verified Information form has no observed block type for tabular content — only Title and text, Image, and Callout were confirmed in the "Information section" stream field. This two-column issue-matching table has no confirmed home; flattening it into a bulleted list inside a Title and text block would lose the "Problem → Start here" pairing. Flag for Digital Services rather than assuming a TableBlock exists on this page type.',
       kind: 'body',
       table: [
         ['Problem', 'Start here'],
@@ -72,7 +72,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'If your problem is not listed',
-      karl: 'Body: Out-of-scope guidance (added for depth). Stay within HHVC scope; do not route to specific non-HHVC paths.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the two paragraphs below. Stay within HHVC scope; do not route to specific non-HHVC paths.',
       kind: 'body',
       paragraphs: [
         'Some housing problems are handled by other City programs. If your problem is not on this list, you can still start with 311, which can help send your report to the right place.',
@@ -81,26 +81,26 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Pests and housing problems',
           text: 'Return to the Topic page for HHVC pest, vector, and housing health issues.',
           target: 'pestsTopic',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights and reporting',
           text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

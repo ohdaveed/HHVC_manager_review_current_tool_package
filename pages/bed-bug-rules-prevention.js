@@ -17,20 +17,20 @@ window.HHVC_PAGES['bedBugsInfo'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — bed bug health-harm framing, placed first to motivate prevention. Verify claims against current CDC/SFDPH guidance before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify claims against current CDC/SFDPH guidance before publication.',
       kind: 'body',
       paragraphs: [
         'Bed bug bites cause itching and, for some people, allergic skin reactions; repeated scratching can lead to secondary infections. Beyond the physical bites, living with an active infestation often causes real emotional strain — anxiety, embarrassment, and sleepless nights are common.',
         'Delayed treatment lets bed bugs spread to neighboring units, which is why fast reporting and cooperation with inspections and treatment matter — the longer an infestation goes unaddressed, the more people it affects and the harder it becomes to resolve.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: "Bed bugs aren't known to spread disease, but the physical and emotional toll of an unresolved infestation is real and can affect a tenant's health and wellbeing.",
       },
     },
     {
       heading: 'Use the official bed bug rules',
-      karl: 'Body: External reference link to official bed bug Director’s Rules PDF on sfdph.org',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below. The external PDF link card below can be embedded as a Link-tool "External link" within this same Text field (a confirmed link type in the rich text "/" menu) rather than needing a separate block.',
       kind: 'placement',
       paragraphs: [
         'SFDPH has Director’s Rules and Regulations for preventing and controlling bed bugs in San Francisco. Use them as the detailed reference for requirements.',
@@ -41,13 +41,13 @@ window.HHVC_PAGES['bedBugsInfo'] = {
           title: 'SFDPH Director’s Rules for bed bug prevention and control',
           text: 'Open the official PDF for bed bug prevention, control, owner responsibilities, and treatment preparation standards.',
           url: 'https://www.sfdph.org/dph/files/EHSdocs/Vector/BedBug/BedBugRegs_070112.pdf',
-          karl: 'Body external link: official SFDPH bed bug Director’s Rules PDF (replaces interim Google Drive link)',
+          karl: 'Maps to a Link-tool "External link" inside the Title and text block\'s rich text above (link text = this card\'s title, target = the sfdph.org PDF URL) — External link is a confirmed Link-tool type, not a gap like the page-only Related field.',
         },
       ],
     },
     {
       heading: 'How to spot bed bugs',
-      karl: 'Body: Signs of bed bugs (added for depth). Helps tenants and staff detect early.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Helps tenants and staff detect early.',
       kind: 'body',
       paragraphs: [
         'Bed bugs are small and hide well. Knowing what to look for helps you find a problem before it spreads.',
@@ -61,7 +61,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Owner and manager responsibilities',
-      karl: 'Body: Landlord responsibilities',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'San Francisco Health Code Article 11A and DPH regulations outline clear requirements for property owners and managers to control bed bugs professionally:',
@@ -76,7 +76,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Tenant responsibilities and preparation',
-      karl: 'Body: Tenant responsibilities',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Tenants are required to cooperate with inspections and treatments under San Francisco rules. Failure to cooperate can result in a Notice of Violation.',
@@ -91,7 +91,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Safe disposal of infested items',
-      karl: 'Body: Infested item disposal',
+      karl: 'Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'To prevent sidewalk scavenging and stop the spread of bed bugs, discarded items must be labeled and disposed of correctly.',
@@ -103,7 +103,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Eradication and abatement timeline',
-      karl: 'Body: Abatement monitoring timeline',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Legally, a bed bug infestation is not considered resolved (abated) immediately after treatment.',
@@ -116,7 +116,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + body link to related Transaction page',
+      karl: 'Paragraphs map to an eighth Title and text block (Title = this heading, Text = the paragraph). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report bed bugs" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the bedBugsReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if there is an active bed bug problem and the property owner or manager does not respond. Do not wait 72 hours for urgent health or safety concerns.',
@@ -127,26 +127,26 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Report bed bugs',
           text: 'Report an active bed bug problem through 311.',
           target: 'bedBugsReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights and reporting',
           text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

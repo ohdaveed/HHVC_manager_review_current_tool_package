@@ -14,20 +14,20 @@ window.HHVC_PAGES['reduceMoisture'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — mold health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
       paragraphs: [
         'Breathing in mold spores can trigger allergic reactions, worsen asthma, and cause coughing, wheezing, or throat and eye irritation — even in people who have never had a mold allergy before.',
         'Children, older adults, and people with asthma or a weakened immune system face the highest risk of getting seriously sick from ongoing exposure to mold and damp conditions.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Mold problems tend to get worse the longer moisture goes unaddressed — fixing the moisture source early protects health and prevents costlier repairs later.',
       },
     },
     {
       heading: 'Why moisture control matters',
-      karl: 'Body: Moisture control intro',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the paragraph below.',
       kind: 'body',
       paragraphs: [
         'Mold grows when moisture, warmth, and organic material are present. Many mold problems can be prevented by controlling humidity, improving ventilation, and fixing water problems quickly.',
@@ -35,7 +35,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Signs of a moisture problem',
-      karl: 'Body: Signs of excess moisture (added for depth). Helps residents act before mold grows.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below (bullets render as a bulleted list inside the same rich text field). Added for depth — helps residents act before mold grows.',
       kind: 'body',
       paragraphs: ['Catching moisture early helps you prevent mold. Watch for these signs.'],
       bullets: [
@@ -48,7 +48,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Keep indoor humidity in a safer range',
-      karl: 'Body: Humidity control',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: ['Use a hygrometer to check indoor humidity.'],
       bullets: [
@@ -58,7 +58,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Ventilate when rooms get wet',
-      karl: 'Body: Ventilation recommendations',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Use ventilation when you shower, cook, dry clothes, or see condensation on surfaces.',
@@ -73,7 +73,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Improve airflow',
-      karl: 'Body: Airflow recommendations',
+      karl: 'Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Airflow helps remove damp air, reduce condensation, and dry wet surfaces faster.',
@@ -89,7 +89,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Reduce condensation',
-      karl: 'Body: Condensation recommendations',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Condensation can happen when warm, damp air touches cold windows, walls, or other surfaces.',
@@ -103,7 +103,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Fix leaks and water problems',
-      karl: 'Body: Leaks and water problems',
+      karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Leaks and water intrusion should be addressed quickly. Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem.',
@@ -119,7 +119,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Clean small mold areas safely',
-      karl: 'Body: Cleaning small mold',
+      karl: 'Maps to a ninth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.',
@@ -131,7 +131,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Do not buy third-party mold test kits',
-      karl: 'Body: Third-party testing warning',
+      karl: 'Maps to a tenth Title and text block: Title = this heading, Text = the two paragraphs below (no bullets on this section).',
       kind: 'body',
       paragraphs: [
         'Do not buy third-party mold test kits for an HHVC complaint.',
@@ -140,7 +140,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Room-by-room prevention checklist',
-      karl: 'Body: Room by room guide',
+      karl: 'Maps to an eleventh Title and text block: Title = this heading, Text = the bulleted list below (no paragraphs on this section — Text holds only the bulleted list).',
       kind: 'body',
       bullets: [
         'Bathroom: Run the exhaust fan, wipe or squeegee shower walls, check caulking, and clean small areas with soap and water.',
@@ -152,7 +152,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Helpful tools',
-      karl: 'Body: Helpful tools',
+      karl: 'Maps to a twelfth Title and text block: Title = this heading, Text = the bulleted list below (no paragraphs on this section).',
       kind: 'body',
       bullets: [
         'Hygrometer: Measures indoor humidity. Place one on each floor if possible.',
@@ -163,7 +163,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'When to report instead',
-      karl: 'Body: Reporting mold threshold',
+      karl: 'Paragraph maps to a thirteenth Title and text block (Title = this heading, Text = the paragraph). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report mold, moisture, or condensation problems" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the moldReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'Use the reporting page if visible mold affects walls or ceilings and covers 10 square feet or more, moisture or mold keeps coming back, the property owner does not respond, or it affects a shared SRO area.',
@@ -174,32 +174,32 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 4 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Report mold from humidity or condensation',
           text: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
           target: 'moldReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
           text: 'Check whether Environmental Health may review a pest, vector, or housing health condition.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report a housing or pest problem',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights when reporting housing conditions',
           text: 'Learn about tenant protections and where to get help.',
           target: 'tenantRights',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

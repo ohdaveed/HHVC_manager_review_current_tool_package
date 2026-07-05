@@ -14,7 +14,7 @@ window.HHVC_PAGES['afterReport'] = {
   sections: [
     {
       heading: 'How a report moves through the City',
-      karl: 'Body: Process step list',
+      karl: 'This section\'s steps[] don\'t match a single "Title and text/Image/Callout" block directly — but since the "Information section" stream field is repeatable, each step below maps to its own separate Title and text block (Title = step title, Text = step paragraph(s)), not one combined block. Note: the mockup\'s numbered "you report / HHVC reviews / inspector contacts / inspection happens" sequence and step-by-step visual styling has no confirmed equivalent in the Information page template — Karl\'s Title and text blocks are plain sequential stream items with no built-in step-numbering, so if that visual sequencing matters, flag it as a separate presentation gap for Digital Services.',
       kind: 'body',
       steps: [
         {
@@ -22,7 +22,7 @@ window.HHVC_PAGES['afterReport'] = {
           text: [
             '311 receives the report and sends it to the right City department when possible.',
           ],
-          karl: 'Body step: 311 intake',
+          karl: 'Maps to an "Information section" → Title and text block: Title = this step title, Text = the paragraph below (first of four sequential Title and text blocks for this section — see section-level karl note).',
         },
         {
           title: 'Environmental Health reviews the report',
@@ -30,27 +30,27 @@ window.HHVC_PAGES['afterReport'] = {
             'HHVC may review the complaint if it may involve a housing or pest-related public health concern.',
             'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
           ],
-          karl: 'Body step: HHVC review + weekday processing expectation',
+          karl: 'Maps to a second Title and text block: Title = this step title, Text = the two paragraphs below (weekday processing expectation).',
         },
         {
           title: 'An inspector may contact you',
           text: [
             'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
           ],
-          karl: 'Body step: Inspector contact',
+          karl: 'Maps to a third Title and text block: Title = this step title, Text = the paragraph below.',
         },
         {
           title: 'An inspection may happen',
           text: [
             'If you did not give contact information, an inspection may still happen without notice when areas can be accessed, for example if the report describes an urgent health or safety risk.',
           ],
-          karl: 'Body step: Inspection expectations',
+          karl: 'Maps to a fourth Title and text block: Title = this step title, Text = the paragraph below.',
         },
       ],
     },
     {
       heading: 'How to follow up on your report',
-      karl: 'Body: Follow-up guidance (added for depth). Generic, safe steps only.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Generic, safe steps only.',
       kind: 'body',
       paragraphs: [
         'You can check on a report you already made. It helps to keep a few details handy.',
@@ -64,7 +64,7 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'Tenant rights and retaliation',
-      karl: 'Body: Tenant reassurance section',
+      karl: 'Paragraphs map to a sixth Title and text block (Title = this heading, Text = the two paragraphs). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Tenant rights and reporting" button has no confirmed home. Unlike a report-flow button, its target (tenantRights) is itself an Information page, not a Transaction page, so the "Part of" field (restricted to Transaction pages) does not apply here; the only plausible fit is a Link-tool link inside the Title and text block\'s rich text (Internal link → tenantRights) — flag this gap for Digital Services rather than assuming a dedicated button block exists.',
       kind: 'body',
       paragraphs: [
         "Tenants have rights when they ask for repairs or report housing conditions to the City. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
@@ -76,7 +76,7 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'If a problem is found',
-      karl: 'Body: Compliance and enforcement pathway',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'If an inspection identifies a violation, Environmental Health will issue a Notice of Violation (NOV) to the responsible parties. The NOV will outline required corrections and set a specific compliance deadline based on severity.',
@@ -93,7 +93,7 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'What this page does not promise',
-      karl: 'Body: Limitations / no promises',
+      karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the bulleted list below (no paragraphs precede it here).',
       kind: 'body',
       bullets: [
         'HHVC cannot promise an exact time or date when an inspector will call you or arrive at your building.',
@@ -104,26 +104,26 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'How to respond to a notice of violation',
           text: 'Learn how inspections can lead to a notice and what tenants and owners each must do.',
           target: 'noticeOfViolation',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether HHVC may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights and reporting',
           text: 'Find help if you are worried about retaliation after making a report.',
           target: 'tenantRights',
-          karl: 'Related section link to tenant support / rights information',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

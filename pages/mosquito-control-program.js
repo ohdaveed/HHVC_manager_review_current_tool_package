@@ -16,7 +16,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
   sections: [
     {
       heading: 'What the program does',
-      karl: 'Body: Mosquito Control Program overview',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below.',
       kind: 'body',
       paragraphs: [
         'The San Francisco Mosquito Control Program is part of Healthy Housing and Vector Control. The program monitors mosquito activity, treats catch basins and standing water when appropriate, and responds to reports that may affect public health.',
@@ -25,7 +25,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'Report mosquitoes or standing water',
-      karl: 'Body: Reporting routes',
+      karl: 'Paragraphs and bullets map to a second Title and text block (Title = this heading, Text = the paragraph plus the bulleted list). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report mosquitoes through 311" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the mosquitoesReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'You can report standing water or mosquito concerns through 311 or by contacting the Mosquito Control Program directly.',
@@ -40,51 +40,51 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'More mosquito resources',
-      karl: 'Body: External vector program links',
+      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 2 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
       kind: 'placement',
       cards: [
         {
           title: 'San Francisco Mosquito Control Program (SFMosquito.org)',
           text: 'Find program information, surveillance updates, and West Nile virus resources.',
           url: 'https://www.sfmosquito.org/',
-          karl: 'Body external link: SFMosquito.org program site',
+          karl: 'External-URL card with no clean mapping in the verified Information schema — see section-level karl note above. Do not force this into "Related" (internal pages only) or invent a link block; flag for Digital Services.',
         },
         {
           title: 'West Nile virus information (California)',
           text: 'State guidance on West Nile virus risk, dead bird reporting, and prevention.',
           url: 'https://www.westnile.ca.gov/',
-          karl: 'Body external link: WestNile.ca.gov',
+          karl: 'External-URL card with no clean mapping in the verified Information schema — same gap as the sibling card above; flag for Digital Services rather than forcing a "Related" or Title and text home.',
         },
       ],
     },
     {
       heading: 'Prevent mosquitoes on your property',
-      karl: 'Body: Pointer to prevention Information page',
+      karl: 'This card-only section (no paragraph content, just internal-page cards) maps most cleanly to the Related field: a generic unrestricted "Page" chooser, repeatable, that accepts any page type (Information, Transaction, or Campaign, matching this section\'s mixed targets). Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 4 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Free mosquito education workshop',
           text: 'Request a free workshop with microscopes, live larvae, and science stations for youth groups.',
           target: 'mosquitoWorkshop',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above). Target is a Campaign-type page, which Related accepts fine since it is unrestricted by page type.',
         },
         {
           title: 'Prevent mosquitoes',
           text: 'Learn how to remove standing water and reduce mosquito breeding around your home.',
           target: 'mosquitoesPrevent',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report a dead bird',
           text: 'Report a dead bird for West Nile virus surveillance through CDPH. HHVC may collect and test the bird.',
           target: 'wnvBirdReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report mosquitoes',
           text: 'Report mosquitoes or standing water around a home, yard, building, or shared area.',
           target: 'mosquitoesReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

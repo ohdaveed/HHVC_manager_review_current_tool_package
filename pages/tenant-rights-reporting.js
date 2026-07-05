@@ -14,20 +14,20 @@ window.HHVC_PAGES['tenantRights'] = {
   sections: [
     {
       heading: 'You can ask the City for help',
-      karl: 'Body: Tenant reassurance section',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below.',
       kind: 'body',
       paragraphs: [
         'Tenants have rights when they ask for repairs or report housing conditions to the City.',
         'Retaliation can include trying to evict you, raising rent, reducing services, or threatening you because you reported a condition.',
       ],
       callout: {
-        karl: 'Body note: Rights reassurance / verify before publication',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here. Verify wording before publication.",
         text: 'This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization for help with your situation.',
       },
     },
     {
       heading: 'What retaliation can look like',
-      karl: 'Body: Retaliation examples (added for depth). General information, not legal advice.',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. General information, not legal advice.',
       kind: 'body',
       paragraphs: [
         'Retaliation is when a property owner or manager punishes you for reporting a condition. It can take different forms.',
@@ -42,7 +42,7 @@ window.HHVC_PAGES['tenantRights'] = {
     },
     {
       heading: 'What you can do',
-      karl: 'Body: Tenant action steps (added for depth). General information, not legal advice.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. General information, not legal advice.',
       kind: 'body',
       paragraphs: [
         'These steps can help protect you if you are worried about reporting a housing condition.',
@@ -57,45 +57,45 @@ window.HHVC_PAGES['tenantRights'] = {
     },
     {
       heading: 'Where to get tenant help',
-      karl: 'Body: External resource links / verify active URLs before publication',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two card descriptions below, each written as a Link-tool "External link" (a confirmed link type in the rich text "/" menu) rather than as separate blocks — this section has no paragraphs of its own, only the two link cards. Verify active URLs before publication.',
       kind: 'placement',
       cards: [
         {
           title: 'SF Rent Board',
           text: 'Get information about tenant rights, landlord rules, and rent-related questions.',
           url: 'https://www.sf.gov/departments/rent-board',
-          karl: 'Body link or Related section external resource, if allowed by page configuration',
+          karl: 'Maps to a Link-tool "External link" inside the Title and text block\'s rich text above (link text = this card\'s title, target = the sf.gov/departments/rent-board URL) — External link is a confirmed Link-tool type, not a gap like the page-only Related field.',
         },
         {
           title: 'Get tenant help',
           text: 'Use tenant support resources if you are worried about retaliation or eviction.',
           url: 'https://www.sf.gov/topics/housing',
-          karl: 'Body link to tenant support resource / verify final SF.gov destination',
+          karl: 'Maps to a Link-tool "External link" inside the same Title and text block\'s rich text (link text = this card\'s title, target = the URL below) — External link is a confirmed Link-tool type. Verify the final SF.gov destination before publication.',
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'How to respond to a notice of violation',
           text: 'Learn what to do if you or your building receives corrective actions.',
           target: 'noticeOfViolation',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

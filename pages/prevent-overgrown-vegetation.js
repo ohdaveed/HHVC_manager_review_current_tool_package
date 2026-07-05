@@ -16,20 +16,20 @@ window.HHVC_PAGES['vegetationInfo'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — overgrown vegetation health-harm framing, placed first to motivate prevention.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Pest-harborage and fire-risk framing (not a direct disease claim), placed first to motivate prevention.',
       kind: 'body',
       paragraphs: [
         'Overgrown grass, weeds, and brush give rats and other pests places to hide, nest, and move between buildings without being seen. Dense vegetation can also trap standing water after rain or irrigation, creating breeding sites for mosquitoes.',
         'Vegetation that grows against a building can hide entry points, holes, and cracks that pests use to get inside — and dry, overgrown brush close to structures adds a fire risk that can also block sight lines and safe access to exits.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Vegetation problems rarely stay contained to a yard — overgrown brush against a building often shows up later as a rodent or mosquito problem inside.',
       },
     },
     {
       heading: 'Reduce vegetation problems',
-      karl: 'Body: Prevention and maintenance',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the bulleted list below (no paragraphs on this section — Text holds only the bulleted list).',
       kind: 'body',
       bullets: [
         'Clear brush, grass, and clutter at least 2 feet around building foundations.',
@@ -41,7 +41,7 @@ window.HHVC_PAGES['vegetationInfo'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + body link to related Transaction page',
+      karl: 'Paragraphs map to a third Title and text block (Title = this heading, Text = the two paragraphs). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report overgrown vegetation" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the vegetationReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
@@ -53,26 +53,26 @@ window.HHVC_PAGES['vegetationInfo'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Report overgrown vegetation',
           text: 'Report overgrown plants, weeds, or brush that may attract or shelter pests or vectors.',
           target: 'vegetationReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Keep rats and mice out',
           text: 'Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.',
           target: 'ratsPrevent',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

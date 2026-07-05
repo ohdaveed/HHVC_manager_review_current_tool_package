@@ -16,20 +16,20 @@ window.HHVC_PAGES['waspInfo'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — ground wasp sting health-harm framing, placed first to motivate prevention. Verify injury-risk specifics with SFDPH vector program before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify injury-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
       paragraphs: [
         'Ground-nesting yellowjackets defend their colony aggressively when it is disturbed, and stinging incidents are most common right at the nest site. Reactions to a sting range from short-term pain and swelling to a serious, life-threatening allergic reaction.',
         'Being stung many times in one encounter is a separate, more serious risk: the volume of venom injected can damage red blood cells and other tissue, and in rare cases the breakdown products can overwhelm the kidneys and require emergency medical treatment.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Get medical help right away for trouble breathing, swelling of the face or throat, dizziness, or a large number of stings in one encounter.',
       },
     },
     {
       heading: 'Where ground wasps nest and what attracts them',
-      karl: 'Body: Nesting behavior and attractants, sourced from UC IPM Pest Notes 7450',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below (bullets render as a bulleted list inside the same rich text field). Sourced from UC IPM Pest Notes 7450.',
       kind: 'body',
       paragraphs: [
         'Western yellowjackets — the most common ground-nesting wasp in California — often build their nest in an old rodent burrow. A steady line of wasps flying in and out of a single hole in the ground usually means a nest is nearby.',
@@ -43,7 +43,7 @@ window.HHVC_PAGES['waspInfo'] = {
     },
     {
       heading: 'If you find a wasp nest',
-      karl: 'Body: Safe response steps, sourced from UC IPM Pest Notes 7450',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Sourced from UC IPM Pest Notes 7450.',
       kind: 'body',
       paragraphs: [
         'Do not try to spray or destroy a ground wasp nest yourself. Underground nests can be deep and hard to reach, and disturbed wasps will defend the nest aggressively — including wasps encountered well away from the entrance.',
@@ -56,7 +56,7 @@ window.HHVC_PAGES['waspInfo'] = {
     },
     {
       heading: 'When to report',
-      karl: 'Body: Reporting threshold and dual-track routing. HHVC inspects suspected nests to verify safety hazards and issue referrals or owner-correction orders.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs below (reporting threshold and dual-track routing — city vs. private-property referral). Real-schema gap: this section also embeds a single card that functions as a call-to-action link to the vegetationReport Transaction page, not a "Related pages" list. The verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed), so this card-as-CTA has no confirmed home. It may fit as a Link-tool link inside the Title and text block\'s rich text (Internal link → vegetationReport), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'HHVC inspects suspected ground wasp nests to verify safety hazards. If you are a tenant, notify your landlord or property manager in writing immediately so they can address this safety hazard. If they do not respond or fail to hire a professional, report the nest to 311 to request an HHVC inspection.',
@@ -67,31 +67,32 @@ window.HHVC_PAGES['waspInfo'] = {
           title: 'Report a ground wasp nest',
           text: 'Request an HHVC inspection for a suspected ground wasp nest on public or private residential property.',
           target: 'vegetationReport',
+          karl: "CTA card acting as this section's call-to-action, not a Related-pages item — see the section-level karl note above for the button/CTA schema gap and the two options to flag for Digital Services.",
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
       kind: 'placement',
       cards: [
         {
           title: 'Prevent garbage and clutter problems',
           text: 'Learn how to manage garbage and storage areas so they do not attract pests.',
           target: 'garbageInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Prevent overgrown vegetation',
           text: 'Learn how to keep vegetation trimmed and managed.',
           target: 'vegetationInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },
