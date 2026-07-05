@@ -55,24 +55,18 @@ window.HHVC_PAGES['waspInfo'] = {
       ],
     },
     {
-      heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + links to related Transaction pages. No dedicated wasp Transaction page exists — HHVC does not perform wasp nest removal, so reports route through the conditions that attract wasps.',
+      heading: 'When to report',
+      karl: 'Body: Reporting threshold and dual-track routing. HHVC inspects suspected nests to verify safety hazards and issue referrals or owner-correction orders.',
       kind: 'body',
       paragraphs: [
-        'HHVC does not remove wasp nests. Environmental Health may still review housing-health conditions that attract wasps, such as uncovered garbage or overgrown vegetation near a building.',
+        'HHVC inspects suspected ground wasp nests to verify safety hazards. If you are a tenant, notify your landlord or property manager in writing immediately so they can address this safety hazard. If they do not respond or fail to hire a professional, report the nest to 311 to request an HHVC inspection.',
+        'If an HHVC inspector finds a ground wasp nest on city or public property, we will refer the issue to the appropriate sister agency for safe removal. If the nest is on private residential property, HHVC will require the property owner to contract a licensed Pest Control Operator (PCO) to eliminate the nest.',
       ],
       cards: [
         {
-          title: 'Report garbage or clutter',
-          text: 'Report garbage, clutter, or animal waste that may attract wasps or other pests.',
-          target: 'garbageReport',
-          karl: 'Body link to related Transaction page',
-        },
-        {
-          title: 'Report overgrown vegetation',
-          text: 'Report overgrown plants or brush that may shelter wasps or other pests.',
+          title: 'Report a ground wasp nest',
+          text: 'Request an HHVC inspection for a suspected ground wasp nest on public or private residential property.',
           target: 'vegetationReport',
-          karl: 'Body link to related Transaction page',
         },
       ],
     },

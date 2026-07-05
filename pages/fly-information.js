@@ -43,18 +43,18 @@ window.HHVC_PAGES['flyInfo'] = {
       ],
     },
     {
-      heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + links to related Transaction pages. No dedicated fly Transaction page exists — reports route through the garbage and sanitation conditions that breed flies.',
+      heading: 'When to report',
+      karl: 'Body: Reporting threshold and active enforcement routing. HHVC inspects active infestations and enforces fly control under the San Francisco Health Code.',
       kind: 'body',
       paragraphs: [
-        'HHVC does not treat flies directly. Environmental Health may review housing-health conditions that breed flies, such as uncollected garbage, animal waste, or unsanitary shared areas.',
+        'HHVC inspects active fly infestations and enforces fly control requirements under the San Francisco Health Code. If you rent your home, tell your landlord or property manager about the fly problem in writing first. Give them 72 hours to respond and start fixing the breeding source.',
+        'You should report the issue to 311 if the fly infestation continues, if flies are breeding in shared areas (like communal kitchens, garbage rooms, or courtyards), or if your landlord does not respond.',
       ],
       cards: [
         {
-          title: 'Report garbage or clutter',
-          text: 'Report garbage, clutter, or animal waste that may be breeding flies or attracting other pests.',
+          title: 'Report flies or breeding conditions',
+          text: 'Report active fly infestations or unsanitary conditions breeding flies through 311 for HHVC inspection.',
           target: 'garbageReport',
-          karl: 'Body link to related Transaction page',
         },
       ],
     },

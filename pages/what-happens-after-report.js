@@ -84,6 +84,7 @@ window.HHVC_PAGES['afterReport'] = {
       bullets: [
         'Sewage Backups (48 to 72 hours): Raw sewage backups require immediate correction and do not receive the standard 30-day compliance window.',
         'All Other Violations (30 days): Overgrown vegetation, trash piles, rodent harborages, general sanitation problems, minor gaps/cracks, mold remediation, and other cited conditions must be corrected within 30 days.',
+        'These timelines represent general enforcement standards. Actual correction deadlines are established on the official Notice of Violation based on the severity of the health hazard.',
         'Extensions: HHVC may offer an extension to the compliance deadline if the property owner contacts the inspector before the deadline.',
         'Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.',
         'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).',
@@ -95,9 +96,9 @@ window.HHVC_PAGES['afterReport'] = {
       karl: 'Body: Limitations / no promises',
       kind: 'body',
       bullets: [
-        'It does not promise that every report will lead to an inspection',
-        'It does not promise a specific inspection date',
-        'It does not replace a notice, citation, or legal document',
+        'HHVC cannot promise an exact time or date when an inspector will call you or arrive at your building.',
+        'We cannot promise a specific inspection finding or guarantee that a Notice of Violation will be issued.',
+        'It does not replace a notice, citation, or legal document.',
         'Complaints are not assigned instantly. 311 routing and HHVC inspector assignment can take a few days and are processed on weekdays.',
       ],
     },

@@ -266,12 +266,17 @@ function writeTrackingSheet(data, pageKeyToFile, policyAuditByPage, generatedAt)
     const auditStatuses = policyAuditByPage[key] || []
     const changeStatus = mockupChangeStatus(sourceFile)
     const contentFlag = CONTENT_REVIEW_FLAGS[key] || ''
+    const isBlocked =
+      (page.editorNote &&
+        (page.editorNote.includes('BLOCKED') || page.editorNote.includes('SME'))) ||
+      Boolean(contentFlag)
+
     const mockupStatus =
       changeStatus === 'Current' && summarizePolicyStatus(auditStatuses) === 'verified'
         ? 'Ready for manager review'
         : changeStatus !== 'Current'
           ? 'Mockup updated — refresh manager review'
-          : contentFlag
+          : isBlocked
             ? 'Blocked pending SME/legal review'
             : 'Needs review'
 
