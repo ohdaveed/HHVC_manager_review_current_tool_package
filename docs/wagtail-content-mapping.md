@@ -329,13 +329,117 @@ Practical implications for `pages/*.js` → Campaign pages:
   for Transaction/Information/Resource Collection; that gap doesn't apply
   here.
 
-## Other page types (Topic, etc.) — unverified
+## Verified against the real Karl "Topic" add-page form (2026-07-05)
+
+Like the sections above, everything here was confirmed directly in Karl's
+live "New: Topic" form at api.sf.gov. Treat it as authoritative for the
+`Topic` page type specifically. Field names below are UI labels, not raw
+Wagtail field names — those weren't inspected. This is a single-tab
+("Content") form, same as the other verified page types.
+
+| Karl field           | UI label                                              | Block type(s) available                                                                                                   | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(title)_            | Title *                                               | plain text                                                                                                                | Required                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| _(primary agency)_   | Primary agency *                                      | page chooser, restricted to `Agency` pages                                                                                | Required                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| _(description)_      | Description                                           | plain textarea                                                                                                            | Helper guidance: start with keywords to aid scanning — not a general-purpose intro paragraph field                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| _(set top-level)_    | Set top-level?                                        | checkbox                                                                                                                  | When checked, this Topic can no longer be used as a **child** topic — instead it surfaces on the main Services list page. Mutually exclusive with being nested under a parent.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| _(page content)_     | **Child topics** (StreamField label — see note below) | chooser, repeatable, offers 6 block types: `Child topics`, `Content top`, `Services`, `Spotlight`, `Resources`, `Content` | **Naming trap:** the outer StreamField itself is UI-labeled "Child topics," but one of the six block _choices_ inside it is _also_ literally named "Child topics" — a block type sharing its exact label with its own parent field. Internally this field is called "Page content." Don't assume "Child topics" always means the outer field; check which one a reference is actually pointing at. Editor **pre-populates one each** of `Content top`, `Services`, `Spotlight`, `Resources`, and `Content` on a new page — `Child topics` is not pre-populated. Duplicates of any block type can be added. |
+| _(partner agencies)_ | Partner agencies (repeatable)                         | page chooser restricted to `Agency` pages                                                                                 | Same field/restriction as Transaction/Resource Collection/Campaign's `partner_agencies`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+
+**The six "Page content" block types:**
+
+- `Child topics` — a nested list of child Topic pages (distinct from the
+  parent `Set top-level?` checkbox; this is how a Topic declares its own
+  children rather than declaring itself top-level).
+- `Content top` and `Content` are **the identical block type under two
+  names** — "Content top" is simply the pre-populated instance that
+  appears first; "Content" is the same shape for any additional instance
+  added later. Both are: a plain-text Title + a required, separately
+  nested "Section content" stream. That nested stream offers **its own
+  six block types** — `Button link`, `Phone number`, `Resources`,
+  `Spotlight`, `Timeline`, `Text` — which **partially overlap but are not
+  identical** to the outer "Page content" stream's six types: `Resources`
+  and `Spotlight` are usable at _both_ levels (top-level or nested inside
+  a Content block); `Child topics`/`Services` are outer-level only;
+  `Button link`/`Phone number`/`Timeline`/`Text` are inner-level only.
+  `Timeline` is a block type not seen on any other verified page type in
+  this doc.
+- `Services` — Title + a "Links" list, each link either an `SF.gov page`
+  chooser or an `External link`. Per Karl's Help Center docs (not the
+  live form, but corroborating): Transaction and Step by step pages
+  **auto-populate** under a "More services" heading on the Topic page
+  once tagged with this topic on their own `topics` field — a manually
+  added `Services` entry for the same page removes it from "More
+  services" and pins it wherever the editor placed it instead.
+  Automatically added pages are not visible/editable from the Topic
+  page's own editor.
+- `Spotlight` — Spotlight title, Spotlight description, Spotlight image
+  (chooser, recommends min 1080×350px), Image alignment (`Side by
+side`/`Full width`), Image position (`Right`/`Left`), and an optional
+  Button link. Same shape as Campaign's `Spotlight 1`/`Spotlight 2`
+  blocks, but repeatable here rather than two fixed named slots.
+- `Resources` — identical structure to `Services` (Title + Links list of
+  `SF.gov page`/`External link`). Per Karl's Help Center docs, Resources
+  tiles are supported on 4 other content types too (`About`, `Campaign`,
+  `Resource collection`, `Topic`), suggesting this is a shared reusable
+  block across page types rather than Topic-specific.
+
+**Corroborating (not live-form-verified) context from Karl's Help Center
+documentation:**
+
+- Only Digital Services can create new Topic pages; a topic can be
+  requested and drafted without being published/visible yet.
+- "Top-level" topics (see `Set top-level?` above) are collected onto a
+  single sitewide Services list page — 14 existed as of the docs'
+  last update.
+- A Topic can have "Child topics" to form a hierarchy (see the
+  `Child topics` block above).
+- Only 4 content types can be tagged as Related pages: `Transaction`,
+  `Information`, `Campaign`, `Topic` — `Resource Collection` is
+  conspicuously absent from that list, worth reconciling against this
+  doc's Resource Collection section (which found no `related` field on
+  Resource Collection at all — consistent with this omission, not a
+  contradiction).
+
+Practical implications for `pages/*.js` → Topic pages:
+
+- The mockup's `pestsTopic` (`agency-service-grouping.js`) has 9 body
+  sections, none of which use `steps[]` or `table[][]` — all are
+  `paragraphs[]`/`bullets[]`/`cards[]`, which maps reasonably cleanly:
+  intro/orientation sections with no cards → nested `Text` blocks inside
+  a `Content`/`Content top` block's Section content stream (not the
+  page-level `Description` field, which per its own helper text is a
+  short keyword field, not a prose intro — this mockup's paragraphs are
+  too long for that). Sections with cards linking to Transaction pages
+  → a `Services` block; sections with cards linking to Information/
+  Resource Collection/Campaign pages → `Resources` blocks.
+- **Real-schema gap:** both `Services` and `Resources` blocks are Title +
+  Links only — **no intro-paragraph field**. Every mockup section in
+  `pestsTopic` that has both a `paragraphs[]` intro _and_ `cards[]` (e.g.
+  "Report a problem", "Prevent pests and housing health problems") loses
+  that intro paragraph if mapped directly to a top-level `Services`/
+  `Resources` block. The alternative — nesting a `Text` block plus a
+  `Resources`/`Services` block together inside one `Content`/`Content
+top` block's Section content stream — preserves the paragraph but adds
+  a layer of nesting. Flag this choice for Digital Services rather than
+  assuming either resolves it.
+- The mockup has no equivalent of `Primary agency`, `Set top-level?`,
+  `Child topics`, `Spotlight`, `Timeline`, or `Partner agencies` — real
+  Karl fields/blocks with no corresponding mockup concept today.
+- `pestsTopic`'s `editorNote` already says "tag Topics so child pages
+  appear on this Topic; manually link Information pages after publish" —
+  consistent with the Help Center docs' auto-tag-vs-manual-link
+  distinction confirmed above (Transaction/Step-by-step auto-populate
+  under "More services"; Information pages do not auto-populate anywhere
+  and must be manually added via `Resources`).
+
+## Other page types (Data story, Event, etc.) — unverified
 
 Everything below this point (aside from the verified Transaction,
-Information, Resource Collection, and Campaign sections above) is the
-original guesswork, not yet checked against a live Karl form. Confirm with
-Digital Services (or repeat the same live-session verification) before
-relying on it.
+Information, Resource Collection, Campaign, and Topic sections above) is
+the original guesswork, not yet checked against a live Karl form. Confirm
+with Digital Services (or repeat the same live-session verification)
+before relying on it.
 
 ### Page-level fields → Wagtail Page model (general guess)
 
@@ -354,13 +458,16 @@ relying on it.
 ### Section-level (`sectionSchema`) → StreamField blocks (general guess)
 
 This is now known **not** to hold for `Information`, `Resource
-Collection`, or `Campaign` — see the verified sections above; all three
-use named fields with specific block types (`Information section`'s
-`Title and text`/`Image`/`Callout`; `Resource Collection`'s `Introductory
-text`/`Body`/`Custom section`; `Campaign`'s `Spotlight`/`Top facts`/
-`Additional content`/`About`), not a generic sections StreamField, same
-pattern as `Transaction`. This guess may still hold for `Topic`, which
-remains unconfirmed.
+Collection`, `Campaign`, or `Topic` — see the verified sections above;
+all four use named fields with specific block types (`Information
+section`'s `Title and text`/`Image`/`Callout`; `Resource Collection`'s
+`Introductory text`/`Body`/`Custom section`; `Campaign`'s `Spotlight`/
+`Top facts`/`Additional content`/`About`; `Topic`'s `Page content` stream
+of `Services`/`Resources`/`Content`/`Spotlight`/`Child topics`), not a
+generic sections StreamField, same pattern as `Transaction`. No
+remaining page type in this doc is still open for this guess to apply
+to — everything below is unconfirmed for entirely different reasons
+(never checked at all).
 
 | Mockup shape                       | Guessed Wagtail block                                                                                                          |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -382,9 +489,9 @@ page-builder ("use X block because Y"), not as prose about the mockup.
 ## What this doc is not
 
 - Not a live Wagtail schema for anything beyond the verified `Transaction`,
-  `Information`, `Resource Collection`, and `Campaign` sections above —
-  Karl's actual StreamField block names and Page models for other page
-  types live in the Digital Services Wagtail codebase, not here.
+  `Information`, `Resource Collection`, `Campaign`, and `Topic` sections
+  above — Karl's actual StreamField block names and Page models for other
+  page types live in the Digital Services Wagtail codebase, not here.
 - Not a migration tool — nothing in this repo reads or writes Wagtail data.
 - The "Other page types" section is a hypothesis to confirm with Digital
   Services, not a guarantee.
