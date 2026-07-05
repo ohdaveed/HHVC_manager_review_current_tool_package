@@ -486,6 +486,69 @@ They are not content and are never rendered outside the `karl-tag` `<mark>`
 elements in this mockup. Keep them written as instructions to a Wagtail
 page-builder ("use X block because Y"), not as prose about the mockup.
 
+## Open items for the next Karl verification session
+
+Confirmed gaps and unresolved field names, pulled from the verified sections
+above and from inline `karl` notes across `pages/*.js`. Check these off (or
+correct them) the next time a live Karl session is available, rather than
+re-discovering them from scratch.
+
+### Confirmed schema gaps (recurring, cross-page)
+
+- [ ] **`Related`/page-reference fields carry no custom description**
+      (Transaction `related`, Information `related`, Resource Collection
+      `Body → Resources → SF.gov page`) — bare unrestricted page chooser,
+      no per-item title/text. Affects ~34 cards across ~19 pages (the
+      largest single gap by volume), e.g. `bed-bug-rules-prevention.js`,
+      `agency-service-grouping.js`, `report-a-problem.js`,
+      `prevent-problems.js`, most `lookup-*`/`report-*` pages. **Does not
+      apply to Campaign** — its `Related` is a distinct `Page block` with
+      its own "Link text."
+- [ ] **Information pages have no confirmed button/CTA block type** —
+      verified schema is `Title and text` / `Image` / `Callout` only.
+      Affects 11 Information pages, including `bed-bug-rules-prevention.js`,
+      `what-happens-after-report.js`, `tenant-rights-reporting.js`,
+      `fly-information.js`, `mite-information.js`.
+- [ ] **Information pages have no Section/step container** — unlike
+      Transaction's `what_to_do` → `Section` blocks, there's no wrapper for
+      step-by-step content inside an Information page body.
+- [ ] **No block type for tabular content on Information pages** — a
+      mockup `table[][]` has no home in `Title and text`/`Image`/`Callout`.
+- [ ] **Topic's `Services`/`Resources` blocks have no intro-paragraph
+      field** — Title + Links only. Affects `pestsTopic`
+      (`agency-service-grouping.js`) sections that pair a `paragraphs[]`
+      intro with `cards[]` (e.g. "Report a problem," "Prevent pests and
+      housing health problems").
+- [ ] **Campaign's `Related` is single-item, not repeatable** — only 1 of
+      `mosquito-education-workshop.js`'s 4 related cards fits; the other 3
+      need an `Additional content → Resources` block instead.
+
+### Field names / UI mechanics still unconfirmed
+
+- [ ] Transaction's bottom-of-form "Redirect this page to" field's raw
+      Wagtail field name.
+- [ ] Information's field names (`primary_agency`, `Part of`,
+      `Information section`, `partner_agencies`, `topics`, `related`) — all
+      currently reused from Transaction's confirmed names as a plausible
+      guess, not independently verified.
+- [ ] Resource Collection / Campaign / Topic raw field names — UI labels
+      only, never inspected.
+- [ ] `Address` block's "Hours and days open" repeatable — didn't visibly
+      render inside the nested Address-snippet modal.
+- [ ] Whether Transaction's rich text fields have the same "/" slash-menu
+      nested-`Blocks`/`Actions` group confirmed on Information.
+- [ ] Whether Transaction's rich text fields share Information's 4-type
+      Link tool (Internal/External/Email/Phone) — inferred, not
+      re-confirmed.
+
+### Entirely unverified
+
+- [ ] Everything under "Other page types (Data story, Event, etc.) —
+      unverified" below — original guesswork for any page type besides the
+      5 verified ones, and the generic `section.cards[]`/`callout`/`button`
+      guesses that no longer apply to any page type actually in use in this
+      repo.
+
 ## What this doc is not
 
 - Not a live Wagtail schema for anything beyond the verified `Transaction`,
