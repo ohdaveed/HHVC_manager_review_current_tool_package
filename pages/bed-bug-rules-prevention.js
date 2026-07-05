@@ -16,6 +16,19 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     'Information page. Official Director’s Rules PDF is on sfdph.org (not Google Drive). PDF accessibility: consider an HTML summary on SF.gov if Karl editors require a non-PDF primary source. Tenant guidelines PDF is internal reference in docs/source/hhvc-policy/.',
   sections: [
     {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — bed bug health-harm framing, placed first to motivate prevention. Verify claims against current CDC/SFDPH guidance before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Bed bug bites cause itching and, for some people, allergic skin reactions; repeated scratching can lead to secondary infections. Beyond the physical bites, living with an active infestation often causes real emotional strain — anxiety, embarrassment, and sleepless nights are common.',
+        'Delayed treatment lets bed bugs spread to neighboring units, which is why fast reporting and cooperation with inspections and treatment matter — the longer an infestation goes unaddressed, the more people it affects and the harder it becomes to resolve.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: "Bed bugs aren't known to spread disease, but the physical and emotional toll of an unresolved infestation is real and can affect a tenant's health and wellbeing.",
+      },
+    },
+    {
       heading: 'Use the official bed bug rules',
       karl: 'Body: External reference link to official bed bug Director’s Rules PDF on sfdph.org',
       kind: 'placement',

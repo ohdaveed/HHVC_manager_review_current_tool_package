@@ -11,7 +11,22 @@ window.HHVC_PAGES['ratsPrevent'] = {
     'A building employee or maintenance worker supporting pest prevention',
   ],
   reading: 'Grade 6',
+  editorNote:
+    'Information page. New "Why it matters" health-harm section added — verify Hantavirus, Leptospirosis, and salmonella claims against current CDC/SFDPH guidance before publication.',
   sections: [
+    {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — rodent health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Rats and mice can carry pathogens that make people seriously ill. Hantavirus can become airborne when dried droppings or urine are disturbed, and breathing it in can cause a severe, sometimes fatal lung illness. Rodents can also carry Leptospirosis and salmonella, which spread through contaminated water, food, or surfaces.',
+        'Beyond disease, an unmanaged rodent population creates compounding problems — including tropical rat mites that bite people, and gnawed wiring that can create fire hazards. The longer an infestation goes unaddressed, the more these risks multiply.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'Never dry-sweep or vacuum rodent droppings or nests — this is one of the most common ways people are exposed to Hantavirus. Always wet the area first.',
+      },
+    },
     {
       heading: '1. Inspect and identify signs of activity',
       karl: 'Body: Step 1 Inspect and Identify',

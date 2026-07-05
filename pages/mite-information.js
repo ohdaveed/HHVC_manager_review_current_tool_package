@@ -15,6 +15,19 @@ window.HHVC_PAGES['miteInfo'] = {
     'Information page. Do not provide medical diagnosis. Verify HHVC scope and PCO treatment sequencing guidance before publication. Must stay cross-linked with Keep rats and mice out for tropical rat mite / rodenticide order-of-operations.',
   sections: [
     {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — tropical rat mite health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Tropical rat mite bites cause itching and skin irritation, and repeated scratching can lead to secondary skin infections. When rodenticides kill rats without first treating the nest, surviving mites scatter in search of a new host — which can trigger a sudden spike in bites among residents in the building.',
+        "Because mite outbreaks often follow rodent activity, delaying nest treatment doesn't just risk continued rat problems — it can actively make things worse for tenants living nearby.",
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'If bites appear soon after rodenticide use, treat it as a sign the rat nest was not properly treated for mites.',
+      },
+    },
+    {
       heading: 'Mites in housing settings',
       karl: 'Body: Mite overview for housing context',
       kind: 'body',

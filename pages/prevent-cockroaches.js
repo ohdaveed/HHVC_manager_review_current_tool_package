@@ -10,7 +10,22 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
     'A building employee or maintenance worker supporting pest prevention',
   ],
   reading: 'Grade 6',
+  editorNote:
+    'Information page. New "Why it matters" health-harm section added — verify asthma/allergen and bacteria-transfer claims against current CDC/SFDPH guidance before publication.',
   sections: [
+    {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — cockroach health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Cockroach droppings, shed skin, and saliva contain allergens that can trigger or worsen asthma and allergic reactions — this risk is especially serious for children in homes with heavy infestations.',
+        'Cockroaches can also pick up bacteria such as salmonella and E. coli while moving through drains, garbage, and food waste, then spread it onto kitchen counters and stored food.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'Homes with ongoing cockroach activity often see an increase in asthma symptoms among children — reducing food, water, and shelter sources helps protect respiratory health, not just cleanliness.',
+      },
+    },
     {
       heading: 'Know the signs of cockroaches',
       karl: 'Body: Signs of cockroaches (added for depth). Helps residents confirm a problem early.',

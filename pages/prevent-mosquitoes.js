@@ -10,7 +10,22 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     'A building employee or maintenance worker who can remove standing water',
   ],
   reading: 'Grade 6',
+  editorNote:
+    'Information page. New "Why it matters" health-harm section added — verify West Nile virus claims against current CDC/SFDPH guidance before publication.',
   sections: [
+    {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — mosquito health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        "Mosquitoes can spread West Nile virus to people through a bite after feeding on an infected bird. Most people who are infected don't feel sick, but some develop a fever, and in rare cases the virus can cause serious, long-lasting neurological illness.",
+        'Because mosquitoes can travel between properties, standing water left on one lot can affect the health of an entire block — which is why removing breeding sites is a shared responsibility, not just a personal one.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'Even a small amount of standing water — like an inch in a bottle cap or saucer — is enough for mosquitoes to breed.',
+      },
+    },
     {
       heading: 'Eliminate standing water',
       karl: 'Body: Eliminate standing water',

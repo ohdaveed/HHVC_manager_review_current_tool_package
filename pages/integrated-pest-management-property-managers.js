@@ -16,6 +16,19 @@ window.HHVC_PAGES['ownerGuidance'] = {
     'Information page for property owners and managers. UC ANR IPM guide is the primary external source — verify link stability and whether HHVC wants additional SFDPH Director’s Rules citations before publication.',
   sections: [
     {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — cross-vector health-harm framing for owners/managers, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        "Unmanaged pests don't just damage a building — they put residents' health at risk. Rodents can spread Hantavirus and Leptospirosis, cockroach allergens can trigger asthma, bed bug and mite bites cause skin irritation and stress, and bird droppings can carry fungal spores that affect breathing.",
+        "These risks tend to compound the longer they go unaddressed — a small rodent problem can turn into a mite outbreak, and untreated moisture or clutter can support multiple pests at once. Prevention protects both residents' health and the owner's ability to meet Article 11 requirements.",
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'The residents most at risk from unmanaged pests are often children, older adults, and people with existing health conditions or weakened immune systems.',
+      },
+    },
+    {
       heading: 'Use IPM to prevent pests',
       karl: 'Information page body: Introduction',
       kind: 'body',

@@ -15,6 +15,19 @@ window.HHVC_PAGES['raccoonInfo'] = {
     'Information page. Wildlife trapping is outside HHVC scope — route injured/trapped animals to Animal Care & Control. Latrine cleanup steps follow CDC Baylisascaris guidance; SME must verify against current CDC/DPH protocols before publication. In Karl: add CDC external link in Information section; do not publish until vector program signs off.',
   sections: [
     {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — raccoon roundworm health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Raccoon feces can contain Baylisascaris procyonis, a roundworm that causes a serious illness in people if its eggs are accidentally swallowed. In rare but severe cases, the infection can affect the brain and nervous system, especially in young children who put contaminated soil or objects in their mouths.',
+        'Because raccoons often return to the same latrine site again and again, contamination can build up in play areas, gardens, and building surfaces without anyone realizing it — making early identification and safe cleanup essential to preventing exposure.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: "Treat any suspected raccoon latrine as a health hazard right away — don't wait to clean it up, and keep children and pets away until it's handled safely.",
+      },
+    },
+    {
       heading: 'Raccoons and your building',
       karl: 'Body: Raccoon activity and housing health',
       kind: 'body',

@@ -15,6 +15,19 @@ window.HHVC_PAGES['pigeonInfo'] = {
     'Information page for bird-related vector and nuisance conditions. Verify HHVC scope for bird complaints vs. referrals to other agencies before publication. DPH public complaint scope includes birds as disease vectors.',
   sections: [
     {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — pigeon dropping health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Pigeon droppings that dry out and turn to dust can carry fungal spores and bacteria. Breathing in that dust — especially in enclosed spaces like attics, vents, or storage rooms — can cause respiratory illnesses such as histoplasmosis or psittacosis.',
+        'People with weakened immune systems, older adults, and young children face the highest risk of getting seriously sick from prolonged exposure to accumulated droppings and nesting material.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'Never dry-sweep or vacuum accumulated pigeon droppings — this can release spores into the air. Use wet cleaning methods and protective equipment, or hire a professional.',
+      },
+    },
+    {
       heading: 'Why pigeons can be a housing health concern',
       karl: 'Body: Pigeon roosting and health nuisances',
       kind: 'body',
