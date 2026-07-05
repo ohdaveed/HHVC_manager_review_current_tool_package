@@ -1,0 +1,148 @@
+# Mockup → Karl (Wagtail) content mapping
+
+Karl, SF.gov's CMS, is a custom product built on Wagtail by Digital Services
+engineers. This tool has no Wagtail integration and never will (see
+`CLAUDE.md`: static mockup, no backend) — this doc exists only so the `karl`
+strings already present on every card/step/section/callout in `pages/*.js`
+translate into concrete Wagtail terms when Digital Services builds the real
+pages. It's a naming bridge for that handoff conversation, not a schema spec.
+
+## Verified against the real Karl "Transaction" add-page form (2026-07-05)
+
+Unlike the rest of this doc (which is speculative — see "Other page types"
+below), everything in this section was confirmed directly in Karl's live
+"New: Transaction" form, via a real logged-in session. Treat it as
+authoritative for the `Transaction` page type specifically.
+
+**Real Karl page types** (from the "Create a page" chooser): `About us`,
+`Agency`, `Campaign`, `Data story`, `Document Collection Search`, `Event`,
+`Form`, `Information`, `Location`, `Meeting`, `News`, `Profile`, `Report`,
+`Resource Collection`, `Step by step`, `Topic`, `Transaction`. The mockup's
+`type` values (`Transaction`, `Topic`, `Information`, `Resource collection`)
+match these exactly (case aside).
+
+**A Transaction page has named, purpose-specific panels — not a generic
+list of sections.** This is the single biggest correction to the earlier
+guesswork in this doc: there is no arbitrary `sections[]`-style StreamField
+at the top level. Each panel below is its own named field with its own block
+rules:
+
+| Karl panel (field name)                                           | UI label                                                                                                    | Block type(s) available                                                                                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`, `description`                                            | Page title / Description                                                                                    | plain text / textarea                                                                                                                          | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `primary_agency`                                                  | Primary agency                                                                                              | page chooser, restricted to `Agency` pages                                                                                                     | Required                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `cost`                                                            | Cost                                                                                                        | single struct, **max 1 item**, no chooser (auto-inserted)                                                                                      | Fields: `cost` radio (`Free`, `Flat fee`, `Range`, `Minimum and up`, `None`), `flat_fee`, `range-minimum`/`range-maximum`, then a "Cost description" field — Draftail rich text with the same "/" slash-command block insertion as other rich text fields in this form. Both `cost` and `things_to_know` live together under the parent grouping "What to Know Before You Start".                                                                                                                                                                                                             |
+| `things_to_know`                                                  | Things to Know                                                                                              | single block type `title_and_text`, **repeatable** (no max seen — 3 instances observed in one live draft), no chooser                          | Fields: "Title" (plain text) + "Text" — Draftail rich text (see standard toolbar note below the table). Ships **pre-seeded with 1 example** ("Who this page is for.") on a brand-new page, but editors can add more freely.                                                                                                                                                                                                                                                                                                                                                                   |
+| `what_to_do`                                                      | What to Do                                                                                                  | chooser: **`Callout`** or **`Section`**                                                                                                        | `Callout` here is a **single Draftail rich text field only — no separate title/heading field**, unlike `things_to_know`/`custom_section`/`supporting_information`/`good_for_community` which all pair a plain-text title with their rich text. Standard toolbar (see below the table), placeholder "Write something or type '/' to insert a block". A mockup `steps[]` entry = one `Section` block (see below)                                                                                                                                                                                |
+| _(within a `Section` block)_ `section_title`, `section_specifics` | Section title / Section specifics                                                                           | `section_specifics` chooser: `Address`, `Callout`, `Document`, `Email`, `Button link`, `Phone number`, `Text`                                  | `Text` and `Callout` here are both Draftail rich text, same standard toolbar + "/" placeholder as `what_to_do`'s top-level `Callout`. **`Callout` has no title field here either** — same gap as above. A step's `text`/`bullets` → `Text`; `button`/`buttonUrl`/`buttonTarget` → `Button link`; `callout` → `Callout`. All as siblings inside one `Section`, not fields on the step itself. If a mockup `callout.title` needs to survive the move to Karl, it has no dedicated field — fold it into the Callout's rich text (e.g. as a bolded lead-in) or flag the gap for Digital Services. |
+| `special_cases`                                                   | Label: "Special cases"; helptext: 'If this field is blank, the heading "Special cases" will show on SF.gov' | plain text (blank = default heading shown)                                                                                                     | Not a StreamField itself — a text override for the heading of the two panels below it (`custom_section`, `supporting_information`)                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `custom_section`                                                  | Custom Section                                                                                              | single block type `title_and_text`, no chooser                                                                                                 | Fields: "Custom section heading" (plain text) + "Custom section text" — Draftail rich text (see standard toolbar note below the table).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `supporting_information`                                          | Accordion title and text                                                                                    | single block type `title_and_text` (block instance labeled "Accordion item"), no chooser                                                       | Fields: "Accordion title" (plain text) + "Accordion text" — Draftail rich text, placeholder "Write something or type '/' to insert a block". Ships **pre-seeded with 5 example items** on a new page.                                                                                                                                                                                                                                                                                                                                                                                         |
+| `related`                                                         | Related                                                                                                     | page chooser (any page type), repeatable, no chooser popup (single "kind")                                                                     | Field label: "Page *" (required) with a "Choose a page" button — no type restriction shown. **No custom title/text per item** — just a page reference. Display text is presumably pulled from the target page itself, unlike the mockup's `cards[]` (`title`, `text`, `target`)                                                                                                                                                                                                                                                                                                               |
+| `good_for_community`                                              | "Why is this Transaction Good for the Community?"                                                           | single block type, **repeatable** (2 instances observed), labeled **"Additional info"** — same struct as `get_help`'s "Additional info" option | Fields: "Title" (plain text) + "Text" (Draftail rich text, standard toolbar)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `get_help`                                                        | Contact us                                                                                                  | chooser: `Address`, `Email`, `Phone number`, `Additional info`                                                                                 | `Address` is a **chooser** ("Choose an address" button — references a stored Address record, not inline fields). `Additional info` = Title + Text, same struct as `good_for_community`. `Phone number` fields: "Name" (optional; helptext: name the person/group that owns this phone number, can be left blank), "Phone number", "Extension", "Phone number details" (helptext: e.g. "You must answer automated questions before you talk to a human," can be left blank). `Email` fields: "Title" + "Email".                                                                                |
+| `partner_agencies`                                                | Partner agencies                                                                                            | page chooser restricted to `Agency` pages, repeatable                                                                                          | Panel helptext (approximate — small text in screenshot): something like "Add other partner agencies, divisions, or subcommittees…" — re-confirm exact wording before quoting it elsewhere                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `topics`                                                          | Topics                                                                                                      | page chooser restricted to `Topic` pages, repeatable                                                                                           | Also has a **"Hide on Topic Pages"** checkbox (seen earlier as `hide_on_topic_pages` in the raw form fields). Panel helptext (approximate): something like "This Transaction won't be listed automatically in 'More services' on the Topic page; use for parts of a step-by-step" — re-confirm exact wording before quoting it elsewhere                                                                                                                                                                                                                                                      |
+| _(unnamed field name — not yet inspected)_                        | "Redirect this page to"                                                                                     | plain text/URL field                                                                                                                           | Sits at the very bottom of the form, after `topics`. Not in the mockup schema at all — new field discovered from a live screenshot, not yet clicked into or confirmed as page-chooser vs. URL.                                                                                                                                                                                                                                                                                                                                                                                                |
+
+Practical implications for `pages/*.js` → Transaction pages:
+
+- A step with a button and callout (e.g. `report-rats-or-mice.js` step 1,
+  "Start your report") becomes one `what_to_do` → `Section` block whose
+  `section_specifics` holds a `Text` block, a `Button link` block, and a
+  `Callout` block, in that order.
+- A step that's just bullets (step 2, "Notify your landlord before
+  reporting") becomes a `Section` with a single `Text` block in
+  `section_specifics` (bullets render as a bulleted list inside the Draftail
+  `Text` block, same as any other rich text).
+- The mockup's `cards[]` "Related pages" section maps to `related`, but each
+  card's custom `text` description has **no home** in the real schema —
+  `related` is just a page reference list. `karl` notes on cards that assume
+  a custom description per related item should flag this gap for Digital
+  Services rather than assume it's supported.
+- **Every Draftail rich text field in this form shares the same toolbar:**
+  Bold, H3, H4, Bulleted list, Numbered list, Blockquote, Line break,
+  Document, Link (no H2). Confirmed across `cost` description, `things_to_know`
+  text, `what_to_do`'s `Callout` text, `custom_section` text, and
+  `supporting_information`'s "Accordion text" — all consistent, so treat this
+  as the one standing toolbar spec for any rich text field in a Transaction
+  page rather than re-verifying per field.
+- **This toolbar applies only to the paired "text" fields, not the paired
+  "title" fields.** Every `title`/`heading` counterpart — "Section title"
+  (`what_to_do`'s `Section` block), "Accordion title"
+  (`supporting_information`), "Custom section heading" (`custom_section`),
+  "Title" (`things_to_know`) — is plain text only, no formatting toolbar at
+  all. Don't assume a title field accepts rich text just because its sibling
+  text field does.
+- The mockup has no equivalent of `cost`, `custom_section`,
+  `good_for_community`, `get_help`, `partner_agencies`, or `topics` as
+  distinct concepts — those are real Karl fields with no corresponding
+  mockup field today.
+
+**Editor UI mechanics worth knowing before scripting against this form
+again:** simple-type panels (`cost`, `things_to_know`, `custom_section`,
+`good_for_community`, `related`, `partner_agencies`, `topics`) auto-insert
+their one block type directly on "+" with no chooser popup — a chooser
+(`w-combobox` with `[role="option"]` entries) only appears when a panel
+genuinely offers more than one block type (`what_to_do`, `section_specifics`,
+`get_help`). Programmatic form-filling here is fragile: naive
+`element.value = x` + synthetic `dispatchEvent(new Event('input'))` does not
+persist (Wagtail's Telepath/Stimulus widgets don't treat it as a real
+keystroke), and even genuine `Input.insertText` via the Chrome DevTools
+Protocol can silently land in the wrong node (a hidden Django formset
+management field like `what_to_do-count`) if the DOM scope used to find the
+target input is too broad. Anyone automating this again should scope every
+write to the field's exact `name`/`id` (e.g. `what_to_do-0-value-section_title`),
+never a "closest wrapper, then first input" search.
+
+## Other page types (Topic, Information, Resource Collection, etc.) — unverified
+
+Everything below this point is the original guesswork, not yet checked
+against a live Karl form the way Transaction was. Confirm with Digital
+Services (or repeat the same live-session verification) before relying on it.
+
+### Page-level fields → Wagtail Page model (general guess)
+
+| Mockup field (`build_scripts/schema.js`) | Likely Wagtail equivalent                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `slug`                                   | Page `slug`                                                                                            |
+| `title`                                  | Page `title`                                                                                           |
+| `summary`                                | Page `search_description` / intro `RichTextField`, depending on template                               |
+| `audience`                               | Custom `StreamField`/`ListBlock` ("Who this is for") if Karl has one, otherwise folded into intro copy |
+| `reading`                                | Editorial metadata field, if Karl tracks reading level; otherwise QA-only, not migrated                |
+| `seoTitle`                               | Page `seo_title`                                                                                       |
+| `metaDescription`                        | Page `search_description`                                                                              |
+| `primaryCta`                             | Whatever field/block Karl uses to flag the page's one primary call-to-action                           |
+| `editorNote`                             | **Not migrated.** QA-only; equivalent to a Wagtail workflow comment, not page content                  |
+
+### Section-level (`sectionSchema`) → StreamField blocks (general guess)
+
+This may still hold for `Topic`/`Information`/`Resource Collection` page
+types, which — unlike `Transaction` — might genuinely use a generic
+sections StreamField. Not yet confirmed either way.
+
+| Mockup shape                       | Guessed Wagtail block                                                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `section.paragraphs[]`             | `RichTextBlock`                                                                                                                |
+| `section.bullets[]`                | `RichTextBlock` (bulleted list) or a dedicated `ListBlock`                                                                     |
+| `section.table[][]`                | `TableBlock`                                                                                                                   |
+| `section.cards[]`                  | Related Links block, body link, Resource Collection item block, or an Agency-page link-section block, depending on `card.karl` |
+| `section.callout` / `step.callout` | A callout/aside `StructBlock` (`text`, optional `title`)                                                                       |
+| `section.button` / `step.button`   | A CTA block — internal page chooser vs. external link, `buttonStyle` selecting primary/secondary                               |
+
+## Karl fields themselves
+
+`karl` strings (on cards, steps, sections, callouts) are placement/rationale
+notes for reviewers and — eventually — for whoever builds the Wagtail page.
+They are not content and are never rendered outside the `karl-tag` `<mark>`
+elements in this mockup. Keep them written as instructions to a Wagtail
+page-builder ("use X block because Y"), not as prose about the mockup.
+
+## What this doc is not
+
+- Not a live Wagtail schema for anything beyond the verified `Transaction`
+  section above — Karl's actual StreamField block names and Page models for
+  other page types live in the Digital Services Wagtail codebase, not here.
+- Not a migration tool — nothing in this repo reads or writes Wagtail data.
+- The "Other page types" section is a hypothesis to confirm with Digital
+  Services, not a guarantee.

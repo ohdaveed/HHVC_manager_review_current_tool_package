@@ -14,7 +14,7 @@ window.HHVC_PAGES['ratsReport'] = {
   sections: [
     {
       heading: 'What to do',
-      karl: 'Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.',
+      karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
       kind: 'body',
       steps: [
         {
@@ -24,11 +24,11 @@ window.HHVC_PAGES['ratsReport'] = {
             'If the problem is urgent, report now.',
           ],
           button: 'Report through 311',
-          karl: 'Body step 1 + Primary action button. Keep the 311 action first.',
+          karl: 'what_to_do -> Section. Section title: "Start your report". Section specifics: Text block (these 2 sentences) + Button link block ("Report through 311") + Callout block below. Keep the 311 action first.',
           callout: {
             title: 'Your report is confidential',
             text: 'The City will never share your name or contact information with your landlord or property manager.',
-            karl: 'Body step 1 callout: Privacy and confidentiality reassurance',
+            karl: 'Callout block inside the "Start your report" Section specifics: single rich text field only, no separate title field like this mockup callout has. Fold "Your report is confidential" in as a bolded lead-in within the callout text, or flag for Digital Services if a distinct heading is actually needed.',
           },
         },
         {
@@ -38,7 +38,7 @@ window.HHVC_PAGES['ratsReport'] = {
             '**Give them 72 hours:** If they do not start fixing the problem within 3 days, report it to the City.',
             '**Urgent problems:** If there is a serious danger to health or safety, report it right away without waiting.',
           ],
-          karl: 'Body step 2: Conditional 72-hour tenant notice + timeline expectation',
+          karl: 'what_to_do -> Section. Section title: "Notify your landlord before reporting". Section specifics: one Text block (bulleted list). Conditional 72-hour tenant notice + timeline expectation.',
         },
         {
           title: 'Tell us where the problem is',
@@ -51,17 +51,17 @@ window.HHVC_PAGES['ratsReport'] = {
             '**Your contact info:** Leave your name and phone number or email if you want an inspector to reach out to you.',
           ],
           callout: {
-            karl: 'Body note: Photo guidance',
+            karl: 'Callout block inside the "Tell us where the problem is" Section specifics: single rich text field, no separate title (this mockup callout already uses title: false, so no heading mismatch here). Text: photo guidance note.',
             text: 'Note: You do not need to send photos. Just describe the problem clearly.',
             title: false,
           },
-          karl: 'Body step 3: Report details checklist',
+          karl: 'what_to_do -> Section. Section title: "Tell us where the problem is". Section specifics: Text block (intro sentence + bulleted checklist) + Callout block below. Report details checklist.',
         },
       ],
     },
     {
       heading: 'Get help making your report',
-      karl: 'Body: Help and access section (added for depth) — third-party reporting, language access, privacy.',
+      karl: 'Best real-schema fit: one things_to_know entry (confirmed repeatable, no max). Title: "Get help making your report". Text: the paragraph + bulleted list below (third-party reporting, language access, privacy). Open question for Digital Services: things_to_know renders ABOVE what_to_do on the real form, so this content may need to move earlier on the live page even though it stays here in this mockup draft.',
       kind: 'body',
       paragraphs: [
         'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
@@ -75,7 +75,7 @@ window.HHVC_PAGES['ratsReport'] = {
     },
     {
       heading: 'How your report is processed',
-      karl: 'Body: After-report expectations, weekday processing note, and concise enforcement statement',
+      karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form.',
       kind: 'body',
       bullets: [
         'Review time: It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
@@ -84,38 +84,38 @@ window.HHVC_PAGES['ratsReport'] = {
         'If we find a problem: The City can order the property owner or responsible party to fix the violation.',
       ],
       callout: {
-        karl: 'Body note: Tenant rights / anti-retaliation reassurance',
+        karl: "Schema gap: things_to_know is Title + Text only — no nested callout block. Fold this tenant-rights text into the entry's Text field (e.g. as a bolded closing line), or flag for Digital Services if a distinct callout is needed here.",
         text: 'Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
       },
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has NO custom title/text per item, only a page reference — the descriptions on these cards have no home unless Digital Services adds one. Confirm before publishing. 4 cards below = 4 related "Page" entries.',
       kind: 'placement',
       cards: [
         {
           title: 'Learn what HHVC can inspect',
           text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Keep rats and mice out of your home',
           text: 'Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.',
           target: 'ratsPrevent',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights and reporting',
           text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
-          karl: 'Related section link to tenant support / rights information',
+          karl: 'related panel entry — page chooser only; same schema gap as the other cards above (no custom description field in the real related panel).',
         },
       ],
     },
