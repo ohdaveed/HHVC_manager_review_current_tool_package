@@ -2,7 +2,7 @@ window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_DATA = {
   pages: window.HHVC_PAGES,
   order: [
-    ['pestsTopic', 'Topic: Pests and housing problems'],
+    ['pestsTopic', 'Topic page: Pests and housing problems'],
     ['reportHub', 'Resource collection: Report a problem'],
     ['preventHub', 'Resource collection: Prevent problems'],
     ['recordsHub', 'Resource collection: Look up building records'],
