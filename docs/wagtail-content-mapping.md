@@ -178,12 +178,78 @@ Practical implications for `pages/*.js` → Information pages:
   wasn't documented during the Transaction pass, not because it's assumed
   unique to Information.
 
-## Other page types (Topic, Resource Collection, etc.) — unverified
+## Verified against the real Karl "Resource Collection" add-page form (2026-07-05)
 
-Everything below this point (aside from the verified Transaction and
-Information sections above) is the original guesswork, not yet checked
-against a live Karl form. Confirm with Digital Services (or repeat the same
-live-session verification) before relying on it.
+Like the Transaction and Information sections above, everything here was
+confirmed directly in Karl's live "New: Resource Collection" form (every
+"+" menu explored, nothing saved or published). Treat it as authoritative
+for the `Resource Collection` page type specifically. Field names below are
+UI labels, not raw Wagtail field names — those weren't inspected, following
+the same convention as the Information section above.
+
+| Karl field                    | UI label                        | Block type(s) available                             | Notes                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | -------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _(title)_                     | Page title *                    | plain text                                           | Required                                                                                                                                                                                                                                                                                                                                    |
+| _(description)_               | Description                     | plain text                                           | —                                                                                                                                                                                                                                                                                                                                            |
+| _(primary agency)_            | Primary agency *                | page chooser, restricted to `Agency` pages           | Required                                                                                                                                                                                                                                                                                                                                    |
+| _(data dashboard)_            | Data dashboard (repeatable)     | single block type `Powerbi embed`, no chooser        | Fields: "Desktop embed url" * (URL), "Mobile embed url" * (URL), nested "Aspect ratios" struct (Desktop Width\*/Height\*, Mobile Width\*/Height\*, pre-filled 700/700 and 360/900 defaults respectively), "Alt text" * (screenreader accessibility), "Source data" (URL), "Data notes" (rich text)                                            |
+| _(introductory text)_         | Introductory text (repeatable)  | single block type `Title and text`, no chooser       | Title (plain text) + Text (rich text) — same struct shape as `custom_section` below and Transaction's `custom_section`/`things_to_know`                                                                                                                                                                                                    |
+| _(body)_                      | Body (repeatable stream field)  | chooser: `Documents`, `Data stories`, `Resources`     | See nested breakdown below the table — each of these 3 is itself a repeatable-section-with-nested-stream shape, not a flat block                                                                                                                                                                                                          |
+| _(custom section)_            | Custom section (repeatable)     | single block type `Title and text`, no chooser       | Title (plain text) + Text (rich text) — identical struct to "Introductory text"                                                                                                                                                                                                                                                            |
+| _(topics)_                    | Topics (repeatable)             | page chooser restricted to `Topic` pages             | —                                                                                                                                                                                                                                                                                                                                            |
+| _(partner agencies)_          | Partner agencies (repeatable)   | page chooser restricted to `Agency` pages            | Helptext: "Add other close partner agencies, divisions or subcommittees." — identical wording to Transaction's `partner_agencies`, so likely a shared snippet/helptext across page types rather than coincidence                                                                                                                          |
+
+**`Body`'s three block types, each a nested "section with its own stream"
+rather than a flat block:**
+
+- `Documents` → repeatable "Document section" items, each with a Title
+  field plus a nested "Content" stream offering two block types:
+  `Documents` (a nested repeatable "Document" block, each a "Choose a
+  document" chooser) and `Description` (required rich text).
+- `Data stories` → repeatable "Data story section" items, each with a
+  Title field plus a required "Data stories" stream containing `Page`
+  blocks — a page chooser restricted to `Data story` pages.
+- `Resources` → repeatable "Resource section" items, each with a Title
+  field plus a "Links" stream offering two block types: `SF.gov page`
+  (an unrestricted page chooser — any page type) and `External link`
+  (Title\*, URL\*, and a "Description" rich-text field with helper text
+  encouraging a full sentence including keywords/acronyms for
+  accessibility/SEO).
+
+**Confirmed via full-text page extraction that Partner agencies is the
+last section on this form** — unlike Transaction/Information, there is
+**no `Related`, `Redirect this page to`, or `Contact us`/`get_help`
+section** on Resource Collection.
+
+Practical implications for `pages/*.js` → Resource Collection pages:
+
+- A mockup section with only `paragraphs[]` (e.g.
+  `report-a-problem.js`'s "About this collection") maps to "Introductory
+  text"'s `Title and text` block (heading → Title, paragraphs → Text).
+- A mockup section whose `cards[]` are cross-links to other pages by
+  `target` (e.g. `report-a-problem.js`'s "Report a housing health problem"
+  and "Related pages" sections, which link to Transaction/Information
+  pages via `target` keys) most likely maps to `Body` → `Resources` →
+  `SF.gov page` link blocks. But as with Transaction's `related` and
+  Information's `related`, **`SF.gov page` is just an unrestricted page
+  reference — it has no custom title/text field of its own**, so each
+  card's custom `text` description again has no home in the real schema.
+  This is the same recurring gap as the other two verified page types;
+  `karl` notes on `report-a-problem.js`/`prevent-problems.js`/etc. cards
+  that assume a custom description per linked item should flag this for
+  Digital Services rather than assume it's supported.
+- The mockup has no equivalent of `data dashboard` (Powerbi embed),
+  `Documents`, `Data stories` (as a distinct concept from a generic card),
+  or `partner_agencies`/`topics` — those are real Karl fields/blocks with
+  no corresponding mockup field today.
+
+## Other page types (Topic, etc.) — unverified
+
+Everything below this point (aside from the verified Transaction,
+Information, and Resource Collection sections above) is the original
+guesswork, not yet checked against a live Karl form. Confirm with Digital
+Services (or repeat the same live-session verification) before relying on
+it.
 
 ### Page-level fields → Wagtail Page model (general guess)
 
@@ -201,11 +267,13 @@ live-session verification) before relying on it.
 
 ### Section-level (`sectionSchema`) → StreamField blocks (general guess)
 
-This is now known **not** to hold for `Information` — see the verified
-section above; it uses a named "Information section" stream field with
-specific block types (`Title and text`, `Image`, `Callout`), not a generic
-sections StreamField, same pattern as `Transaction`. This guess may still
-hold for `Topic`/`Resource Collection`, which remain unconfirmed.
+This is now known **not** to hold for `Information` or `Resource
+Collection` — see the verified sections above; both use named fields with
+specific block types (`Information section`'s `Title and text`/`Image`/
+`Callout`; `Resource Collection`'s `Introductory text`/`Body`/`Custom
+section`), not a generic sections StreamField, same pattern as
+`Transaction`. This guess may still hold for `Topic`, which remains
+unconfirmed.
 
 | Mockup shape                       | Guessed Wagtail block                                                                                                          |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -226,10 +294,10 @@ page-builder ("use X block because Y"), not as prose about the mockup.
 
 ## What this doc is not
 
-- Not a live Wagtail schema for anything beyond the verified `Transaction`
-  and `Information` sections above — Karl's actual StreamField block names
-  and Page models for other page types live in the Digital Services Wagtail
-  codebase, not here.
+- Not a live Wagtail schema for anything beyond the verified `Transaction`,
+  `Information`, and `Resource Collection` sections above — Karl's actual
+  StreamField block names and Page models for other page types live in the
+  Digital Services Wagtail codebase, not here.
 - Not a migration tool — nothing in this repo reads or writes Wagtail data.
 - The "Other page types" section is a hypothesis to confirm with Digital
   Services, not a guarantee.
