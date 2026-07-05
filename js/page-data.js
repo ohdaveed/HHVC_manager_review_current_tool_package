@@ -34,7 +34,7 @@ window.HHVC_DATA = {
     ['vegetationInfo', 'Information: Prevent overgrown vegetation'],
     ['garbageInfo', 'Information: Prevent garbage and clutter problems'],
     ['mosquitoControl', 'Information: Mosquito Control Program'],
-    ['mosquitoWorkshop', 'Information: Free mosquito education workshop'],
+    ['mosquitoWorkshop', 'Campaign: Free mosquito education workshop'],
     ['raccoonInfo', 'Information: Raccoons and housing health'],
     ['pigeonInfo', 'Information: Pigeons and housing health'],
     ['miteInfo', 'Information: Mites and housing health'],

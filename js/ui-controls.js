@@ -47,12 +47,20 @@ function restoreSidebarScroll() {
 function buildPageSelect() {
   const select = document.getElementById('pageSelect')
   if (!select) return
-  const groups = { Topic: [], Transaction: [], Information: [] }
+  const groups = {
+    Topic: [],
+    Transaction: [],
+    'Resource Collection': [],
+    Campaign: [],
+    Information: [],
+  }
   pageOrder.forEach(([key, label]) => {
     const pageType = pageData[key]?.type || ''
-    const type =
-      pageType === 'Topic' ? 'Topic' : pageType === 'Transaction' ? 'Transaction' : 'Information'
-    groups[type].push([key, label.replace(/^(Topic|Transaction|Information):\s*/, '')])
+    const type = Object.prototype.hasOwnProperty.call(groups, pageType) ? pageType : 'Information'
+    groups[type].push([
+      key,
+      label.replace(/^(Topic|Transaction|Resource Collection|Campaign|Information):\s*/, ''),
+    ])
   })
   select.innerHTML = Object.entries(groups)
     .map(

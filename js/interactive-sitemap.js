@@ -39,6 +39,7 @@
     if (normalized.includes('topic')) return 'Topic'
     if (normalized.includes('resource collection')) return 'Resource Collection'
     if (normalized.includes('transaction')) return 'Transaction'
+    if (normalized.includes('campaign')) return 'Campaign'
     return 'Information'
   }
 
@@ -469,6 +470,10 @@
         border-left: 4px solid var(--sfds-warning-border);
       }
 
+      .sitemap-diagram-node[data-page-type='Campaign'] {
+        border-left: 4px solid #0891b2;
+      }
+
       .sitemap-diagram-children {
         display: grid;
         gap: 0.35rem;
@@ -611,6 +616,7 @@
       ['Resource Collection', '#7c3aed'],
       ['Transaction', 'var(--sfds-green)'],
       ['Information', 'var(--sfds-warning-border)'],
+      ['Campaign', '#0891b2'],
     ]
     return `
       <ul class="sitemap-legend" aria-label="Page type legend">
@@ -629,7 +635,14 @@
   }
 
   function renderSearchAndFilters() {
-    const filters = ['All', 'Topic', 'Resource Collection', 'Transaction', 'Information']
+    const filters = [
+      'All',
+      'Topic',
+      'Resource Collection',
+      'Transaction',
+      'Information',
+      'Campaign',
+    ]
     const clearLabel = state.search ? '✕ Clear search' : ''
     const filteredCount = getFilteredRows().length
     const totalCount = getPageRows().length
