@@ -107,6 +107,12 @@ window.HHVC_PAGES['vegetationReport'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
+          title: 'Prevent overgrown vegetation',
+          text: 'Learn how to keep vegetation trimmed and managed.',
+          target: 'vegetationInfo',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
           title: 'Report garbage or clutter',
           text: 'Use this page for garbage, clutter, debris, or animal waste.',
           target: 'garbageReport',

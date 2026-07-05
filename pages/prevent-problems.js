@@ -48,6 +48,18 @@ window.HHVC_PAGES['preventHub'] = {
           karl: 'Resource collection item cross-link to existing Information page',
         },
         {
+          title: 'Prevent overgrown vegetation',
+          text: 'Learn how overgrown plants, weeds, and brush shelter pests, and how to keep vegetation trimmed.',
+          target: 'vegetationInfo',
+          karl: 'Resource collection item cross-link to new Information page',
+        },
+        {
+          title: 'Prevent garbage and clutter problems',
+          text: 'Learn how uncovered garbage and clutter attract pests, and how to manage waste areas safely.',
+          target: 'garbageInfo',
+          karl: 'Resource collection item cross-link to new Information page',
+        },
+        {
           title: 'Bed bug rules and prevention',
           text: 'Learn about bed bug rules, treatment preparation, and prevention.',
           target: 'bedBugsInfo',

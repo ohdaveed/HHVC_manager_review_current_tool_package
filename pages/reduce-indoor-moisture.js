@@ -13,6 +13,19 @@ window.HHVC_PAGES['reduceMoisture'] = {
   reading: 'Grade 6',
   sections: [
     {
+      heading: 'Why it matters',
+      karl: 'Body: Why it matters — mold health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Breathing in mold spores can trigger allergic reactions, worsen asthma, and cause coughing, wheezing, or throat and eye irritation — even in people who have never had a mold allergy before.',
+        'Children, older adults, and people with asthma or a weakened immune system face the highest risk of getting seriously sick from ongoing exposure to mold and damp conditions.',
+      ],
+      callout: {
+        karl: 'Body note: Key harm takeaway',
+        text: 'Mold problems tend to get worse the longer moisture goes unaddressed — fixing the moisture source early protects health and prevents costlier repairs later.',
+      },
+    },
+    {
       heading: 'Why moisture control matters',
       karl: 'Body: Moisture control intro',
       kind: 'body',
