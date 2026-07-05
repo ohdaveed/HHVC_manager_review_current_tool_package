@@ -127,4 +127,6 @@ window.HHVC_PAGES['garbageReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report garbage or clutter | SF.gov',
+  metaDescription: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
 }

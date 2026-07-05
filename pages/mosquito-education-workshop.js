@@ -13,7 +13,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   reading: 'Grade 5–7',
   editorNote:
-    'Outreach page. Karl content type: use Information if this stays reference + request link; use Campaign if HHVC treats it as an ongoing program with spotlight/top facts. Workshop form: /forms/mosquito-workshop-request/ (mock). BLOCKED — confirm production form URL, intake backend, capacity, service area, lead time, and standards crosswalk before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
+    'Outreach page. Karl content type: use Information if this stays reference + request link; use Campaign if HHVC treats it as an ongoing program with spotlight/top facts. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   sections: [
     {
       heading: 'Bring mosquito science to your students',
@@ -78,10 +78,10 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Request a workshop',
-      karl: 'Body: Workshop request CTA — BLOCKED until HHVC confirms intake route',
+      karl: 'Body: Workshop request CTA — illustrative intake route for mockup review; confirm production form URL and intake backend with HHVC before publication',
       kind: 'body',
       paragraphs: [
-        'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability.',
+        'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability. Submitted requests currently route to the Mosquito Control Program for scheduling (illustrative — confirm the actual intake backend with HHVC before publication).',
         'You can also contact the Mosquito Control Program directly if you have questions before submitting the form.',
       ],
       button: 'Request a workshop online',
@@ -97,14 +97,16 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Questions before you apply',
-      karl: 'Body: Alternate contact route',
+      karl: 'Body: Alternate contact route — capacity, service area, and lead time below are illustrative example content for mockup review; confirm actual values with HHVC before publication',
       kind: 'body',
       paragraphs: [
         'Call or email the Mosquito Control Program if you need help deciding whether the workshop is right for your group.',
       ],
       bullets: [
         'Contact the Mosquito Control Program at 415-252-3806',
-        'Allow lead time for scheduling, setup, and equipment transport',
+        'Available to schools, camps, museums, and youth groups located within San Francisco',
+        'Fits groups up to about 60 students per session; larger groups can be split into multiple sessions',
+        'Request at least 3 weeks before your event date to allow time for scheduling, setup, and equipment transport',
       ],
     },
     {

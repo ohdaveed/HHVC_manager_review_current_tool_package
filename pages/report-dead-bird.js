@@ -12,7 +12,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
   ],
   reading: 'Grade 6–7',
   editorNote:
-    'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME BLOCKED — confirm current HHVC pickup criteria, priority species list, local seasonal workflow, and whether SF routes all reports through CDPH before publication.',
+    'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME placeholder — pickup criteria, priority species list, seasonal workflow, and CDPH routing below are illustrative example content for mockup review; confirm actual current HHVC protocol with SME before publication.',
   sections: [
     {
       heading: 'Why report a dead bird',
@@ -29,7 +29,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
       kind: 'body',
       paragraphs: [
         'Start your report through the California Department of Public Health (CDPH) dead bird reporting system. You will leave SF.gov.',
-        'You can report online year-round. From April through October, you can also call the West Nile virus call center at 1-877-WNV-BIRD (1-877-968-2473).',
+        'You can report online year-round. From April through October, you can also call the West Nile virus call center at 1-877-WNV-BIRD (1-877-968-2473). San Francisco residents use this same statewide CDPH system — HHVC does not run a separate local intake. HHVC’s Mosquito Control Program receives the surveillance data and follows up locally when a pattern needs attention (illustrative — confirm current routing with HHVC before publication).',
       ],
       button: 'Report a dead bird to CDPH',
       buttonUrl: 'https://westnile.ca.gov/report',

@@ -136,4 +136,6 @@ window.HHVC_PAGES['bedBugsReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report bed bugs | SF.gov',
+  metaDescription: 'Report an active bed bug problem in San Francisco rental housing.',
 }

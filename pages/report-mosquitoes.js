@@ -123,4 +123,6 @@ window.HHVC_PAGES['mosquitoesReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report mosquitoes in your home or backyard | SF.gov',
+  metaDescription: 'Report mosquitoes or standing water in San Francisco.',
 }

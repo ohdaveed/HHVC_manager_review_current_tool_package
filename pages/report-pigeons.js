@@ -122,4 +122,7 @@ window.HHVC_PAGES['pigeonsReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report pigeons | SF.gov',
+  metaDescription:
+    'Report pigeon roosting, nesting, droppings, or feeding that may create a health concern.',
 }

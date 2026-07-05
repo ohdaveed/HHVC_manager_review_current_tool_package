@@ -121,4 +121,6 @@ window.HHVC_PAGES['cockroachesReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report cockroaches | SF.gov',
+  metaDescription: 'Report an active cockroach problem in San Francisco.',
 }

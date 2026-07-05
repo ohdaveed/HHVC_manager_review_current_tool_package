@@ -13,7 +13,7 @@ window.HHVC_PAGES['findHotelRecords'] = {
   ],
   reading: 'Grade 6–7',
   editorNote:
-    'SF.gov landing page for a separate external lookup from the general complaint search. BLOCKED — confirm the final xnet entry point for the Residential Hotel Program before publication. Program context page linked as interim external destination.',
+    'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
   sections: [
     {
       heading: 'What this tool covers',

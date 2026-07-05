@@ -120,4 +120,6 @@ window.HHVC_PAGES['ratsReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report rats or mice | SF.gov',
+  metaDescription: 'Report an active rat or mouse problem in San Francisco.',
 }

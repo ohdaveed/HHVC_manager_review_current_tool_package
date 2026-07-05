@@ -127,4 +127,7 @@ window.HHVC_PAGES['vegetationReport'] = {
       ],
     },
   ],
+  seoTitle: 'Report overgrown vegetation | SF.gov',
+  metaDescription:
+    'Report overgrown plants, weeds, or brush that may attract or shelter pests or vectors.',
 }
