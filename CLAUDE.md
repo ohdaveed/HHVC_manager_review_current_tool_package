@@ -144,6 +144,13 @@ is saved client-side under the versioned `localStorage` key
 changes incompatibly. Workspace UI prefs (`workspace_open`, `workspace_tab`,
 `last_page_key`, `show_karl_tags`) live under `state.ui` in the same blob.
 
+**The CSV/JSON import path in `js/review-queue.js` can destroy existing
+reviews** — a prior regression there replaced the saved state wholesale
+instead of merging. Any change to the import/export round-trip in
+`js/review-queue.js` or `js/manager-review-export.js` must be manually
+verified before being called done: export a snapshot, re-import it, and
+confirm existing decisions/notes are still present rather than wiped.
+
 ### Build outputs
 
 - **`build_scripts/build-single-file.js`** inlines `index.html`'s local
@@ -201,6 +208,28 @@ install` must run first), and `forms/mosquito-workshop-request/dist`
   overrides layered under the `@sfgov/design-system` stylesheets.
 - Review exports (`review/*.csv`, saved local-review CSV/JSON) are for
   manager decisions only — never treat them as automatic publication approval.
+
+## Session pitfalls to avoid
+
+- **State the repo root before guessing paths.** This repo's absolute path
+  is `/home/ohdaveed/HHVC_manager_review_current_tool_package`. Automated
+  review/CI-style invocations in particular have repeatedly started by
+  guessing a wrong path (e.g. `/home/user/...`) and failing a `Read` before
+  self-correcting via `Glob`/`pwd` — check `pwd` or use the path above
+  directly instead of guessing.
+- **Land brainstorming/exploration sessions on a decision.** Open-ended
+  design sessions (e.g. via `superpowers:brainstorming`) have previously
+  ended mid-flow with only disposable prototypes left in
+  `.superpowers/brainstorm/` and no spec, decision, or concluding direction.
+  Before ending this kind of session, either commit to a documented
+  decision/next step or explicitly say what's unresolved so it isn't
+  mistaken for finished work.
+- **Verify and close out delegated work yourself before calling it done.**
+  When using subagent-driven-development or worktrees, a subagent reporting
+  "done" is not sufficient — confirm and merge the result in the parent
+  session. This matters especially near a session usage-limit boundary:
+  don't let the session end assuming a subagent's self-report was the final
+  verification.
 
 ## Code style
 
