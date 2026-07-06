@@ -12,7 +12,7 @@
   const STORAGE_KEY = 'hhvcManagerReviewState:v1'
   const STORAGE_VERSION = 1
 
-  const WORKSPACE_TABS = ['queue', 'checks', 'sitemap', 'help']
+  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'help']
 
   let isRestoringState = false
 
@@ -399,7 +399,7 @@
   }
 
   function setWorkspaceTab(tabId) {
-    if (!WORKSPACE_TABS.includes(tabId)) tabId = 'queue'
+    if (!WORKSPACE_TABS.includes(tabId)) tabId = 'overview'
 
     const tabs = document.querySelectorAll('[data-workspace-tab]')
     const panels = document.querySelectorAll('[data-workspace-panel]')
@@ -440,13 +440,13 @@
 
     updateLocalState((state) => {
       state.ui.workspace_open = isOpen
-      if (isOpen && !state.ui.workspace_tab) state.ui.workspace_tab = 'queue'
+      if (isOpen && !state.ui.workspace_tab) state.ui.workspace_tab = 'overview'
       return state
     })
 
     if (isOpen) {
       const state = readLocalState()
-      setWorkspaceTab(state.ui.workspace_tab || 'queue')
+      setWorkspaceTab(state.ui.workspace_tab || 'overview')
     }
   }
 
@@ -487,7 +487,7 @@
     tablist.addEventListener('click', (event) => {
       const tab = event.target.closest('[data-workspace-tab]')
       if (!tab) return
-      setWorkspaceTab(tab.getAttribute('data-workspace-tab') || 'queue')
+      setWorkspaceTab(tab.getAttribute('data-workspace-tab') || 'overview')
     })
 
     tablist.addEventListener('keydown', (event) => {
@@ -505,7 +505,7 @@
 
       const nextTab = tabs[nextIndex]
       nextTab.focus()
-      setWorkspaceTab(nextTab.getAttribute('data-workspace-tab') || 'queue')
+      setWorkspaceTab(nextTab.getAttribute('data-workspace-tab') || 'overview')
     })
 
     const stickyBar = document.getElementById(STICKY_BAR_ID)
@@ -514,7 +514,7 @@
     const state = readLocalState()
     setWorkspaceOpen(Boolean(state.ui.workspace_open))
     if (state.ui.workspace_open) {
-      setWorkspaceTab(state.ui.workspace_tab || 'queue')
+      setWorkspaceTab(state.ui.workspace_tab || 'overview')
     }
   }
 

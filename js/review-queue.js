@@ -4,7 +4,7 @@
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.reviewState) return
 
-  const QUEUE_PANEL_ID = 'reviewWorkspaceQueue'
+  const QUEUE_PANEL_ID = 'reviewWorkspaceOverview'
   const STALE_DAYS = 3
   const DEFAULT_STATE = {
     filter: 'All',
@@ -951,8 +951,8 @@
     if (workspace?.hidden) {
       document.querySelector('[data-sticky-action="toggle-workspace"]')?.click()
     }
-    const queueTab = document.querySelector('[data-workspace-tab="queue"]')
-    if (queueTab?.getAttribute('aria-selected') !== 'true') queueTab?.click()
+    const overviewTab = document.querySelector('[data-workspace-tab="overview"]')
+    if (overviewTab?.getAttribute('aria-selected') !== 'true') overviewTab?.click()
     const input = document.getElementById('reviewQueueSearch')
     if (!input) return
     input.focus()

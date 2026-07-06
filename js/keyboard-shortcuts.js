@@ -96,13 +96,13 @@
 
   function selectAllVisible() {
     const workspace = document.getElementById('reviewWorkspace')
-    const queueTab = document.querySelector('[data-workspace-tab="queue"]')
-    const isQueueVisible =
+    const overviewTab = document.querySelector('[data-workspace-tab="overview"]')
+    const isOverviewVisible =
       workspace &&
       !workspace.hidden &&
-      queueTab &&
-      queueTab.getAttribute('aria-selected') === 'true'
-    if (!isQueueVisible) return
+      overviewTab &&
+      overviewTab.getAttribute('aria-selected') === 'true'
+    if (!isOverviewVisible) return
 
     window.reviewQueue?.selectAllVisible?.()
     window.reviewQueue?.syncSelectionUi?.()
