@@ -44,7 +44,7 @@ window.HHVC_PAGES['payFee'] = {
         'See the full fee schedule, including reinspection hourly rates, in the property owner resource collection.',
       ],
       paragraphs: [
-        'Reinspections are billed hourly (Sec. 609 cost recovery): $251/hour for an Environmental Health Inspector ($125 per additional half hour) and $229/hour for an Environmental Health Technician ($113 per additional half hour).',
+        'Reinspections are billed hourly (Sec. 609 cost recovery): $256/hour for an Environmental Health Inspector and $234/hour for an Environmental Health Technician. Additional half-hour rates beyond the first hour have not yet been reconfirmed against these updated base rates — check with Environmental Health before publishing a specific add-on figure.',
       ],
     },
     {
