@@ -54,8 +54,7 @@
       "mcp__browser-use__browser_type",
       "Bash(curl -s http://127.0.0.1:8080)",
       "mcp__browser-use__browser_click",
-      "mcp__browser-use__browser_screenshot",
-      "Bash(bunx prettier *)"
+      "mcp__browser-use__browser_screenshot"
     ]
   }
 }
