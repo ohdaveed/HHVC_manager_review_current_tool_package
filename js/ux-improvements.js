@@ -691,64 +691,6 @@
     return String(value || '').length > 36
   }
 
-  function pageSearchItems(query) {
-    const normalizedQuery = query.trim().toLowerCase()
-    if (!normalizedQuery) return DATA.order.slice(0, 5)
-
-    return DATA.order
-      .filter(([key, label]) => {
-        const page = DATA.pages[key] || {}
-        const haystack =
-          `${key} ${label} ${page.title || ''} ${page.type || ''} ${page.summary || ''}`.toLowerCase()
-        return haystack.includes(normalizedQuery)
-      })
-      .slice(0, 6)
-  }
-
-  function renderPageQuickList() {
-    const input = document.getElementById('pageFilterInput')
-    const list = document.getElementById('pageQuickList')
-    if (!input || !list) return
-
-    const items = pageSearchItems(input.value)
-    list.innerHTML = items
-      .map(([key, label]) => {
-        const page = DATA.pages[key] || {}
-        const type = page.type || label.split(':')[0] || 'Page'
-        return `
-        <button type="button" class="page-quick-button" data-page-key="${escapeHtml(key)}">
-          ${escapeHtml(page.title || label)}
-          <span class="page-quick-type">${escapeHtml(type)} · ${escapeHtml(key)}</span>
-        </button>
-      `
-      })
-      .join('')
-  }
-
-  function mountPageSearch() {
-    const select = document.getElementById('pageSelect')
-    const selectLabel = document.querySelector('label[for="pageSelect"]')
-    if (!select || !selectLabel || document.getElementById('pageFilterInput')) return
-
-    const control = document.createElement('div')
-    control.className = 'page-filter-control'
-    control.innerHTML = `
-      <label for="pageFilterInput">Find a page fast</label>
-      <input id="pageFilterInput" type="search" aria-label="Search page mockups" placeholder="Search by page title, type, summary, or page key">
-      <div id="pageQuickList" class="page-quick-list" aria-label="Quick page results"></div>
-    `
-    selectLabel.parentNode.insertBefore(control, selectLabel)
-
-    document.getElementById('pageFilterInput')?.addEventListener('input', renderPageQuickList)
-    document.getElementById('pageQuickList')?.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-page-key]')
-      if (!button) return
-      window.renderPage?.(button.getAttribute('data-page-key'))
-      refreshUx()
-    })
-    renderPageQuickList()
-  }
-
   function getCurrentReviewSummaryLines() {
     const page = getCurrentPage()
     const seoTitle = getSeoTitle(page)
@@ -1037,7 +979,6 @@
   function refreshUx() {
     renderStickyBar()
     renderReviewDashboard()
-    renderPageQuickList()
     updateLocalStorageStatus()
     updateDecisionQuickActions()
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
@@ -1140,7 +1081,6 @@
     initWorkspaceTabs()
     initDecisionQuickActions()
     initDashboardListeners()
-    mountPageSearch()
     mountCopySummaryButton()
     mountBackupControls()
     mountLocalStorageControls()
