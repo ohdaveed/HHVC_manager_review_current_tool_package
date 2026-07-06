@@ -4,7 +4,7 @@
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.reviewState) return
 
-  const QUEUE_PANEL_ID = 'reviewWorkspaceQueue'
+  const QUEUE_PANEL_ID = 'reviewWorkspaceOverview'
   const STALE_DAYS = 3
   const DEFAULT_STATE = {
     filter: 'All',
@@ -137,7 +137,7 @@
     }
 
     updateLocalState((localState) => {
-      localState.ui.review_queue = {
+      localState.ui.overview = {
         filter: state.filter,
         query: state.query,
         sort: state.sort,
@@ -147,10 +147,10 @@
   }
 
   function restoreQueueUiState() {
-    const queueUi = readLocalState().ui?.review_queue || {}
-    state.filter = queueUi.filter || DEFAULT_STATE.filter
-    state.query = queueUi.query || DEFAULT_STATE.query
-    state.sort = queueUi.sort || DEFAULT_STATE.sort
+    const overviewUi = readLocalState().ui?.overview || {}
+    state.filter = overviewUi.filter || DEFAULT_STATE.filter
+    state.query = overviewUi.query || DEFAULT_STATE.query
+    state.sort = overviewUi.sort || DEFAULT_STATE.sort
   }
 
   function getDecisionForKey(pageKey, savedPages) {
@@ -207,6 +207,9 @@
       const blockers = saved?.risks_or_blockers || ''
       const followUpOwner = saved?.follow_up_owner || ''
       const reviewer = saved?.reviewer || ''
+      const rules = window.reviewChecks?.getRuleResultsFor?.(page) || []
+      const checksPassed = rules.filter((rule) => rule.pass).length
+      const checksTotal = rules.length
       const searchText = normalize(
         [
           key,
@@ -235,9 +238,15 @@
         blockers,
         ageDays,
         isStale: ageDays !== null && ageDays >= STALE_DAYS,
+        checksPassed,
+        checksTotal,
         searchText,
       }
     })
+  }
+
+  function isFailingChecks(row) {
+    return row.checksTotal > 0 && row.checksPassed < row.checksTotal
   }
 
   function getQueueStats() {
@@ -261,8 +270,9 @@
     const blocked = rows.filter(
       (row) => row.decision === 'Blocked' || row.decision === 'Revise and resubmit'
     ).length
+    const failingChecks = rows.filter(isFailingChecks).length
 
-    return { total, reviewed, stale, unassigned, blocked, byDecision }
+    return { total, reviewed, stale, unassigned, blocked, failingChecks, byDecision }
   }
 
   function matchesFilter(row) {
@@ -276,6 +286,7 @@
     }
     if (state.filter === 'Unassigned') return isUnassigned(row)
     if (state.filter === 'Stale') return row.isStale
+    if (state.filter === 'Failing checks') return isFailingChecks(row)
     return true
   }
 
@@ -296,6 +307,12 @@
 
     if (state.sort === 'type') {
       return a.type.localeCompare(b.type) || a.title.localeCompare(b.title)
+    }
+
+    if (state.sort === 'checks') {
+      const failingA = a.checksTotal - a.checksPassed
+      const failingB = b.checksTotal - b.checksPassed
+      return failingB - failingA || a.title.localeCompare(b.title)
     }
 
     const priorityDiff = getPriorityRank(b) - getPriorityRank(a)
@@ -420,13 +437,6 @@
     return keys[nextIndex]
   }
 
-  function formatUpdatedAt(value) {
-    if (!value) return 'Not saved yet'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return 'Not saved yet'
-    return `Updated ${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
-  }
-
   function formatAgeLabel(row) {
     if (row.ageDays === null) return 'Not reviewed yet'
     if (row.ageDays === 0) return 'Updated today'
@@ -545,7 +555,7 @@
       }
     })
 
-    const rows = document.querySelectorAll('.review-queue-row[data-page-key]')
+    const rows = document.querySelectorAll('.review-queue-table-row[data-page-key]')
     rows.forEach((row) => {
       const key = row.getAttribute('data-page-key')
       const isSelected = state.selected.has(key)
@@ -581,14 +591,15 @@
       { id: 'Blocked', label: `Blocked (${stats.blocked})` },
       { id: 'Unassigned', label: `Unassigned (${stats.unassigned})` },
       { id: 'Stale', label: `Stale (${stats.stale})` },
+      { id: 'Failing checks', label: `Failing checks (${stats.failingChecks})` },
     ]
 
     panel.innerHTML = `
       <section class="review-queue">
         <header class="review-queue-header">
           <div>
-            <h3>Review queue</h3>
-            <p class="review-queue-subtitle">Triage pages by decision, ownership, staleness, and saved notes. Use checkboxes for bulk updates, or press <kbd>?</kbd> for shortcuts.</p>
+            <h3>Overview</h3>
+            <p class="review-queue-subtitle">Triage pages by decision, checks, ownership, staleness, and saved notes. Use checkboxes for bulk updates, or press <kbd>?</kbd> for shortcuts.</p>
           </div>
           <div class="review-queue-progress" aria-label="Review progress">
             <div class="review-queue-progress-bar">
@@ -603,6 +614,7 @@
           <span class="status-chip warn">Edits ${stats.byDecision['Approved with edits'] || 0}</span>
           <span class="status-chip fail">Revise ${stats.byDecision['Revise and resubmit'] || 0}</span>
           <span class="status-chip fail">Blocked ${stats.byDecision.Blocked || 0}</span>
+          <button type="button" class="review-queue-action" data-queue-next-needs-review="true">Next needs review</button>
         </div>
         ${renderQueueStats(stats, rows.length)}
         <div class="review-queue-toolbar" aria-label="Queue controls">
@@ -619,6 +631,7 @@
             <span class="review-queue-control-label">Sort by</span>
             <select id="reviewQueueSort">
               <option value="priority"${state.sort === 'priority' ? ' selected' : ''}>Risk priority</option>
+              <option value="checks"${state.sort === 'checks' ? ' selected' : ''}>Checks (failing first)</option>
               <option value="updated"${state.sort === 'updated' ? ' selected' : ''}>Last updated</option>
               <option value="title"${state.sort === 'title' ? ' selected' : ''}>Title</option>
               <option value="type"${state.sort === 'type' ? ' selected' : ''}>Page type</option>
@@ -643,65 +656,91 @@
         ${
           rows.length
             ? `
-          <ul class="review-queue-list" aria-label="Pages in review queue">
-            ${rows
-              .map((row) => {
-                const chipClass = getStatusChipClass(row.decision)
-                const ownerLabel = row.followUpOwner || 'No owner'
-                const notesLabel = row.notes ? 'Notes saved' : 'No notes'
-                const ageChipClass = row.isStale ? 'fail' : row.ageDays === null ? 'warn' : 'pass'
-                const suggestedOwner = getSidebarReviewerName()
-                const isOwnerAssigned =
-                  normalize(row.followUpOwner) === normalize(suggestedOwner) && !!row.followUpOwner
-                const isSelected = state.selected.has(row.key)
+          <div class="review-queue-table-wrap">
+            <table class="review-queue-table" aria-label="Pages in review overview">
+              <thead>
+                <tr>
+                  <th scope="col"></th>
+                  <th scope="col">Page</th>
+                  <th scope="col">Checks</th>
+                  <th scope="col">Decision</th>
+                  <th scope="col">Owner</th>
+                  <th scope="col">Updated</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows
+                  .map((row) => {
+                    const chipClass = getStatusChipClass(row.decision)
+                    const ownerLabel = row.followUpOwner || 'No owner'
+                    const notesLabel = row.notes ? 'Notes saved' : 'No notes'
+                    const ageChipClass = row.isStale
+                      ? 'fail'
+                      : row.ageDays === null
+                        ? 'warn'
+                        : 'pass'
+                    const checksChipClass = row.checksPassed === row.checksTotal ? 'pass' : 'warn'
+                    const suggestedOwner = getSidebarReviewerName()
+                    const isOwnerAssigned =
+                      normalize(row.followUpOwner) === normalize(suggestedOwner) &&
+                      !!row.followUpOwner
+                    const isSelected = state.selected.has(row.key)
 
-                return `
-              <li>
-                <article
-                  class="review-queue-row${row.key === currentKey ? ' is-current' : ''}${isSelected ? ' is-selected' : ''}"
-                  role="button"
-                  tabindex="0"
-                  data-page-key="${escapeHtml(row.key)}"
-                >
-                  <label class="review-queue-checkbox" aria-label="Select ${escapeHtml(row.title)}">
-                    <input
-                      type="checkbox"
-                      data-queue-select-key="${escapeHtml(row.key)}"
-                      ${isSelected ? 'checked' : ''}
-                    />
-                  </label>
-                  <span class="review-queue-row-body">
-                    <span class="review-queue-row-title">${escapeHtml(row.title)}</span>
-                    <span class="review-queue-row-meta">${escapeHtml(row.type || 'Page')} · ${escapeHtml(row.key)}</span>
-                    <span class="review-queue-row-detail">
-                      <span>${escapeHtml(ownerLabel)}</span>
-                      <span>${escapeHtml(row.reviewer || 'No reviewer')}</span>
-                      <span>${escapeHtml(formatUpdatedAt(row.updatedAt))}</span>
-                    </span>
-                    <span class="review-queue-actions" aria-label="Queue actions">
-                      <button type="button" class="review-queue-action" data-queue-action="assign-me"${isOwnerAssigned ? ' disabled' : ''}>Assign to me</button>
-                      <button type="button" class="review-queue-action" data-queue-action="needs-review"${row.decision === 'Needs review' ? ' disabled' : ''}>Needs review</button>
-                      <button type="button" class="review-queue-action" data-queue-action="revise"${row.decision === 'Revise and resubmit' ? ' disabled' : ''}>Revise</button>
-                      <button type="button" class="review-queue-action" data-queue-action="blocked"${row.decision === 'Blocked' ? ' disabled' : ''}>Blocked</button>
-                      <button type="button" class="review-queue-action" data-queue-action="approved"${row.decision === 'Approved' ? ' disabled' : ''}>Approve</button>
-                      <button type="button" class="review-queue-action" data-queue-action="approved-with-edits"${row.decision === 'Approved with edits' ? ' disabled' : ''}>Approve w/ edits</button>
-                    </span>
-                    <span class="review-queue-row-tags">
-                      ${row.notes ? `<span class="status-chip">${escapeHtml(notesLabel)}</span>` : ''}
-                      ${row.blockers ? '<span class="status-chip fail">Blockers logged</span>' : ''}
-                    </span>
-                  </span>
-                  <span class="review-queue-row-status">
-                    <span class="status-chip ${chipClass}">${escapeHtml(row.decision)}</span>
-                    <span class="status-chip ${ageChipClass}">${escapeHtml(formatAgeLabel(row))}</span>
-                    ${row.followUpOwner ? '' : '<span class="status-chip warn">Needs owner</span>'}
-                  </span>
-                </article>
-              </li>
-            `
-              })
-              .join('')}
-          </ul>
+                    return `
+                  <tr
+                    class="review-queue-table-row${row.key === currentKey ? ' is-current' : ''}${isSelected ? ' is-selected' : ''}"
+                    data-page-key="${escapeHtml(row.key)}"
+                  >
+                    <td class="review-queue-table-select">
+                      <label class="review-queue-checkbox" aria-label="Select ${escapeHtml(row.title)}">
+                        <input
+                          type="checkbox"
+                          data-queue-select-key="${escapeHtml(row.key)}"
+                          ${isSelected ? 'checked' : ''}
+                        />
+                      </label>
+                    </td>
+                    <td class="review-queue-table-page">
+                      <span class="review-queue-row-title">${escapeHtml(row.title)}</span>
+                      <span class="review-queue-row-meta">${escapeHtml(row.type || 'Page')} · ${escapeHtml(row.key)}</span>
+                      <span class="review-queue-row-detail">
+                        <span>${escapeHtml(row.reviewer || 'No reviewer')}</span>
+                      </span>
+                      <span class="review-queue-row-tags">
+                        ${row.notes ? `<span class="status-chip">${escapeHtml(notesLabel)}</span>` : ''}
+                        ${row.blockers ? '<span class="status-chip fail">Blockers logged</span>' : ''}
+                      </span>
+                    </td>
+                    <td class="review-queue-table-checks">
+                      <span class="status-chip ${checksChipClass}">${row.checksPassed}/${row.checksTotal}</span>
+                    </td>
+                    <td class="review-queue-table-decision">
+                      <span class="status-chip ${chipClass}">${escapeHtml(row.decision)}</span>
+                      ${row.followUpOwner ? '' : '<span class="status-chip warn">Needs owner</span>'}
+                    </td>
+                    <td class="review-queue-table-owner">${escapeHtml(ownerLabel)}</td>
+                    <td class="review-queue-table-updated">
+                      <span class="status-chip ${ageChipClass}">${escapeHtml(formatAgeLabel(row))}</span>
+                    </td>
+                    <td class="review-queue-table-actions">
+                      <span class="review-queue-actions" aria-label="Queue actions">
+                        <button type="button" class="review-queue-action" data-queue-action="assign-me"${isOwnerAssigned ? ' disabled' : ''}>Assign to me</button>
+                        <button type="button" class="review-queue-action" data-queue-action="needs-review"${row.decision === 'Needs review' ? ' disabled' : ''}>Needs review</button>
+                        <button type="button" class="review-queue-action" data-queue-action="revise"${row.decision === 'Revise and resubmit' ? ' disabled' : ''}>Revise</button>
+                        <button type="button" class="review-queue-action" data-queue-action="blocked"${row.decision === 'Blocked' ? ' disabled' : ''}>Blocked</button>
+                        <button type="button" class="review-queue-action" data-queue-action="approved"${row.decision === 'Approved' ? ' disabled' : ''}>Approve</button>
+                        <button type="button" class="review-queue-action" data-queue-action="approved-with-edits"${row.decision === 'Approved with edits' ? ' disabled' : ''}>Approve w/ edits</button>
+                        <button type="button" class="review-queue-action" data-queue-action="open">Open</button>
+                      </span>
+                    </td>
+                  </tr>
+                `
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
         `
             : `
           <aside class="review-queue-empty">
@@ -880,7 +919,19 @@
       const key = row.getAttribute('data-page-key')
       const action = actionButton.getAttribute('data-queue-action')
       if (!key || !action) return
+      if (action === 'open') {
+        window.renderPage?.(key)
+        return
+      }
       applyQueueAction([key], action)
+      return
+    }
+
+    const nextNeedsReviewButton = event.target.closest('[data-queue-next-needs-review]')
+    if (nextNeedsReviewButton) {
+      const key = getNextNeedsReviewKey()
+      if (key) window.renderPage?.(key)
+      else toast('No pages left that need review', 'success')
       return
     }
 
@@ -889,24 +940,6 @@
     const rowButton = event.target.closest('[data-page-key]')
     if (!rowButton) return
     const key = rowButton.getAttribute('data-page-key')
-    if (!key || !DATA.pages[key]) return
-    window.renderPage?.(key)
-  }
-
-  function handleQueueKeyDown(event) {
-    if (event.key !== 'Enter' && event.key !== ' ') return
-    if (
-      event.target.closest(
-        '[data-queue-action], [data-queue-bulk-action], .review-queue-checkbox, input, select, button'
-      )
-    ) {
-      return
-    }
-    const row = event.target.closest('[data-page-key]')
-    if (!row) return
-
-    event.preventDefault()
-    const key = row.getAttribute('data-page-key')
     if (!key || !DATA.pages[key]) return
     window.renderPage?.(key)
   }
@@ -951,8 +984,8 @@
     if (workspace?.hidden) {
       document.querySelector('[data-sticky-action="toggle-workspace"]')?.click()
     }
-    const queueTab = document.querySelector('[data-workspace-tab="queue"]')
-    if (queueTab?.getAttribute('aria-selected') !== 'true') queueTab?.click()
+    const overviewTab = document.querySelector('[data-workspace-tab="overview"]')
+    if (overviewTab?.getAttribute('aria-selected') !== 'true') overviewTab?.click()
     const input = document.getElementById('reviewQueueSearch')
     if (!input) return
     input.focus()
@@ -982,7 +1015,6 @@
     })
 
     panel.addEventListener('click', handleQueueClick)
-    panel.addEventListener('keydown', handleQueueKeyDown)
     panel.addEventListener('input', handleQueueInput)
     panel.addEventListener('change', handleQueueChange)
     document.addEventListener('hhvc:review-data-changed', renderReviewQueue)

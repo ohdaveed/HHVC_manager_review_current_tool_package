@@ -12,7 +12,7 @@
   const STORAGE_KEY = 'hhvcManagerReviewState:v1'
   const STORAGE_VERSION = 1
 
-  const WORKSPACE_TABS = ['queue', 'checks', 'sitemap', 'help']
+  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'help']
 
   let isRestoringState = false
 
@@ -35,7 +35,6 @@
     buildReviewRecord,
     getCurrentKey,
     countRelatedLinks,
-    buildPageRows,
   } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
@@ -121,6 +120,11 @@
   function getRuleResults(page) {
     return getRuleResultsFor(page, { useEditor: true })
   }
+
+  // Exposed for js/review-queue.js's Overview tab (loads after this file), which
+  // needs to compute a checks passed/total count for every page, not just the one
+  // currently open in the editor.
+  window.reviewChecks = { getRuleResultsFor }
 
   function getEmptyState() {
     return {
@@ -223,6 +227,7 @@
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
       state.globals.reviewer = snapshot.reviewer
+      state.globals.owner = snapshot.follow_up_owner
       state.pages[snapshot.page_key] = snapshot
       return state
     })
@@ -230,12 +235,12 @@
     updateLocalStorageStatus()
   }
 
-  function clearReviewFieldsForNewPage() {
+  function clearReviewFieldsForNewPage(state) {
     setValue('reviewDateInput', today())
     setValue('reviewDecision', 'Needs review')
     setValue('reviewNotes', '')
     setValue('reviewRisks', '')
-    setValue('reviewOwner', '')
+    setValue('reviewOwner', state?.globals?.owner || 'David')
   }
 
   function updateMockupTextFromSavedState(page, saved) {
@@ -295,10 +300,10 @@
       setValue('reviewDecision', saved.decision || 'Needs review')
       setValue('reviewNotes', saved.notes || '')
       setValue('reviewRisks', saved.risks_or_blockers || '')
-      setValue('reviewOwner', saved.follow_up_owner || '')
+      setValue('reviewOwner', saved.follow_up_owner || state.globals.owner || 'David')
       updateMockupTextFromSavedState(page, saved)
     } else {
-      clearReviewFieldsForNewPage()
+      clearReviewFieldsForNewPage(state)
     }
 
     isRestoringState = false
@@ -328,131 +333,20 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function getPortfolioRows(savedPages = {}) {
-    return buildPageRows(DATA, (key, label, page) => {
-      const rules = getRuleResultsFor(page)
-      const failing = rules.filter((rule) => !rule.pass)
-      return {
-        key,
-        title: page.title || label,
-        type: page.type || 'Page',
-        passed: rules.length - failing.length,
-        total: rules.length,
-        failingLabels: failing.map((rule) => rule.label),
-        decision: savedPages[key]?.decision || 'Needs review',
-      }
-    })
-  }
-
-  function renderPortfolioOverview() {
-    const state = readLocalState()
-    const rows = getPortfolioRows(state.pages)
-    const failingOnly = Boolean(state.ui.checks_failing_only)
-    const allPassCount = rows.filter((row) => row.failingLabels.length === 0).length
-    const visibleRows = failingOnly ? rows.filter((row) => row.failingLabels.length > 0) : rows
-    const sortedRows = visibleRows
-      .slice()
-      .sort((a, b) => a.passed - b.passed || a.title.localeCompare(b.title))
-    const currentKey = getCurrentKey()
-
-    return `
-      <section class="portfolio-panel">
-        <div class="portfolio-header">
-          <h3>All pages check overview</h3>
-          <label class="portfolio-filter-toggle">
-            <input type="checkbox" id="portfolioFailingOnly"${failingOnly ? ' checked' : ''} />
-            Only pages with failing checks
-          </label>
-        </div>
-        <p class="review-decision-note">
-          ${allPassCount}/${rows.length} pages pass all checks. Pages with the most failing checks are listed first; select a page to open it.
-        </p>
-        ${
-          sortedRows.length
-            ? `
-          <ul class="portfolio-list" aria-label="Compliance status for every page">
-            ${sortedRows
-              .map((row) => {
-                const allPass = row.failingLabels.length === 0
-                return `
-              <li>
-                <button
-                  type="button"
-                  class="portfolio-row${row.key === currentKey ? ' is-current' : ''}"
-                  data-portfolio-key="${escapeHtml(row.key)}"
-                >
-                  <span class="portfolio-row-main">
-                    <span class="portfolio-row-title">${escapeHtml(row.title)}</span>
-                    <span class="portfolio-row-meta">${escapeHtml(row.type)} · ${escapeHtml(row.key)}</span>
-                    ${
-                      allPass
-                        ? ''
-                        : `<span class="portfolio-row-failing">Failing: ${escapeHtml(row.failingLabels.join(', '))}</span>`
-                    }
-                  </span>
-                  <span class="portfolio-row-status">
-                    <span class="status-chip ${allPass ? 'pass' : 'warn'}">${row.passed}/${row.total} checks</span>
-                    <span class="status-chip ${getStatusChipClass(row.decision)}">${escapeHtml(row.decision)}</span>
-                  </span>
-                </button>
-              </li>
-            `
-              })
-              .join('')}
-          </ul>
-        `
-            : `
-          <aside class="portfolio-empty">
-            <p>Every page passes all checks. Nothing to fix here.</p>
-          </aside>
-        `
-        }
-      </section>
-    `
-  }
-
-  function handleDashboardClick(event) {
-    const rowButton = event.target.closest('[data-portfolio-key]')
-    if (!rowButton) return
-    const key = rowButton.getAttribute('data-portfolio-key')
-    if (!key || !DATA.pages[key]) return
-    window.renderPage?.(key)
-  }
-
-  function handleDashboardChange(event) {
-    if (event.target.id !== 'portfolioFailingOnly') return
-    const checked = event.target.checked
-    updateLocalState((state) => {
-      state.ui.checks_failing_only = checked
-      return state
-    })
-    renderReviewDashboard()
-  }
-
   function renderReviewDashboard() {
     const dashboard = document.getElementById(DASHBOARD_CORE_ID)
     if (!dashboard) return
 
     const page = getCurrentPage()
-    const seoTitle = getSeoTitle(page)
-    const metaDescription = getMetaDescription(page)
     const rules = getRuleResults(page)
-    const primaryCta = getValue('ctaInput') || getPrimaryCta(page) || 'None set'
 
     dashboard.innerHTML = `
-      <div class="review-dashboard-grid">
-        ${renderMetric('Page type', page.type || 'Missing', 'Karl placement')}
-        ${renderMetric('Reading target', page.reading || 'Missing', 'Plain-language target')}
-        ${renderMetric('Primary CTA', primaryCta, isLong(primaryCta) ? 'Review label length' : 'Next-step clarity')}
-        ${renderMetric('SEO title', `${seoTitle.length}/${SEO_TITLE_LIMIT}`, seoTitle.length <= SEO_TITLE_LIMIT ? 'Ready' : 'Too long')}
-        ${renderMetric('Meta description', `${metaDescription.length}/${META_DESCRIPTION_LIMIT}`, metaDescription.length <= META_DESCRIPTION_LIMIT ? 'Ready' : 'Too long')}
-        ${renderMetric('Related links', String(countRelatedLinks(page)), 'Dead-end prevention')}
-        ${renderMetric('Audience entries', String(Array.isArray(page.audience) ? page.audience.length : 0), 'This page can help if...')}
-        ${renderMetric('Page key', getCurrentKey(), 'Workbook sync field')}
-      </div>
       <section class="compliance-panel">
-        <h3>Karl compliance scorecard</h3>
-        <p class="review-decision-note">Live checks update as you edit title, summary, CTA, and search metadata in the sidebar.</p>
+        <h3>Karl compliance checklist</h3>
+        <p class="review-decision-note">
+          Page key: ${escapeHtml(getCurrentKey())}. Live checks update as you edit title,
+          summary, CTA, and search metadata in the sidebar.
+        </p>
         <ul class="compliance-list">
           ${rules
             .map(
@@ -468,7 +362,6 @@
             .join('')}
         </ul>
       </section>
-      ${renderPortfolioOverview()}
     `
   }
 
@@ -478,13 +371,8 @@
 
     const page = getCurrentPage()
     const decision = getValue('reviewDecision') || 'Needs review'
-    const rules = getRuleResults(page)
-    const passed = rules.filter((rule) => rule.pass).length
-    const reviewReady = decision === 'Approved' && passed === rules.length
-    const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision)
+    const chipClass = getStatusChipClass(decision)
     const stats = window.reviewQueue?.getQueueStats?.() || {
-      touched: 0,
-      decided: 0,
       reviewed: 0,
       total: DATA.order.length,
     }
@@ -496,15 +384,13 @@
 
     bar.innerHTML = `
       <div class="review-sticky-bar-main">
-        <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
         <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
-        <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
-        <span class="status-chip ${stats.touched > 0 ? 'pass' : 'warn'}">${stats.touched}/${stats.total} touched</span>
+        <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
       </div>
       <nav class="review-sticky-bar-actions">
+        <span class="review-sticky-bar-progress">${stats.reviewed}/${stats.total} reviewed</span>
         <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>
         <button type="button" class="review-sticky-btn" data-sticky-action="next"${nextKey ? '' : ' disabled'}>Next</button>
-        <button type="button" class="review-sticky-btn" data-sticky-action="next-needs-review">Next needs review</button>
         <button type="button" class="review-sticky-btn primary" data-sticky-action="toggle-workspace" aria-expanded="${workspaceOpen ? 'true' : 'false'}">
           ${workspaceOpen ? 'Hide workspace' : 'Show workspace'}
         </button>
@@ -513,7 +399,7 @@
   }
 
   function setWorkspaceTab(tabId) {
-    if (!WORKSPACE_TABS.includes(tabId)) tabId = 'queue'
+    if (!WORKSPACE_TABS.includes(tabId)) tabId = 'overview'
 
     const tabs = document.querySelectorAll('[data-workspace-tab]')
     const panels = document.querySelectorAll('[data-workspace-panel]')
@@ -554,13 +440,13 @@
 
     updateLocalState((state) => {
       state.ui.workspace_open = isOpen
-      if (isOpen && !state.ui.workspace_tab) state.ui.workspace_tab = 'queue'
+      if (isOpen && !state.ui.workspace_tab) state.ui.workspace_tab = 'overview'
       return state
     })
 
     if (isOpen) {
       const state = readLocalState()
-      setWorkspaceTab(state.ui.workspace_tab || 'queue')
+      setWorkspaceTab(state.ui.workspace_tab || 'overview')
     }
   }
 
@@ -588,12 +474,6 @@
       return
     }
 
-    if (action === 'next-needs-review') {
-      const key = window.reviewQueue?.getNextNeedsReviewKey?.()
-      if (key) window.renderPage?.(key)
-      return
-    }
-
     if (action === 'toggle-workspace') {
       toggleWorkspace()
     }
@@ -607,7 +487,7 @@
     tablist.addEventListener('click', (event) => {
       const tab = event.target.closest('[data-workspace-tab]')
       if (!tab) return
-      setWorkspaceTab(tab.getAttribute('data-workspace-tab') || 'queue')
+      setWorkspaceTab(tab.getAttribute('data-workspace-tab') || 'overview')
     })
 
     tablist.addEventListener('keydown', (event) => {
@@ -625,7 +505,7 @@
 
       const nextTab = tabs[nextIndex]
       nextTab.focus()
-      setWorkspaceTab(nextTab.getAttribute('data-workspace-tab') || 'queue')
+      setWorkspaceTab(nextTab.getAttribute('data-workspace-tab') || 'overview')
     })
 
     const stickyBar = document.getElementById(STICKY_BAR_ID)
@@ -634,7 +514,7 @@
     const state = readLocalState()
     setWorkspaceOpen(Boolean(state.ui.workspace_open))
     if (state.ui.workspace_open) {
-      setWorkspaceTab(state.ui.workspace_tab || 'queue')
+      setWorkspaceTab(state.ui.workspace_tab || 'overview')
     }
   }
 
@@ -675,78 +555,6 @@
   }
 
   window.reviewDecisions = { set: applyDecisionToCurrentPage }
-
-  function renderMetric(label, value, help) {
-    return `
-      <article class="metric-card">
-        <span class="metric-label">${escapeHtml(label)}</span>
-        <span class="metric-value">${escapeHtml(value)}</span>
-        <span class="metric-help">${escapeHtml(help)}</span>
-      </article>
-    `
-  }
-
-  function isLong(value) {
-    return String(value || '').length > 36
-  }
-
-  function pageSearchItems(query) {
-    const normalizedQuery = query.trim().toLowerCase()
-    if (!normalizedQuery) return DATA.order.slice(0, 5)
-
-    return DATA.order
-      .filter(([key, label]) => {
-        const page = DATA.pages[key] || {}
-        const haystack =
-          `${key} ${label} ${page.title || ''} ${page.type || ''} ${page.summary || ''}`.toLowerCase()
-        return haystack.includes(normalizedQuery)
-      })
-      .slice(0, 6)
-  }
-
-  function renderPageQuickList() {
-    const input = document.getElementById('pageFilterInput')
-    const list = document.getElementById('pageQuickList')
-    if (!input || !list) return
-
-    const items = pageSearchItems(input.value)
-    list.innerHTML = items
-      .map(([key, label]) => {
-        const page = DATA.pages[key] || {}
-        const type = page.type || label.split(':')[0] || 'Page'
-        return `
-        <button type="button" class="page-quick-button" data-page-key="${escapeHtml(key)}">
-          ${escapeHtml(page.title || label)}
-          <span class="page-quick-type">${escapeHtml(type)} · ${escapeHtml(key)}</span>
-        </button>
-      `
-      })
-      .join('')
-  }
-
-  function mountPageSearch() {
-    const select = document.getElementById('pageSelect')
-    const selectLabel = document.querySelector('label[for="pageSelect"]')
-    if (!select || !selectLabel || document.getElementById('pageFilterInput')) return
-
-    const control = document.createElement('div')
-    control.className = 'page-filter-control'
-    control.innerHTML = `
-      <label for="pageFilterInput">Find a page fast</label>
-      <input id="pageFilterInput" type="search" aria-label="Search page mockups" placeholder="Search by page title, type, summary, or page key">
-      <div id="pageQuickList" class="page-quick-list" aria-label="Quick page results"></div>
-    `
-    selectLabel.parentNode.insertBefore(control, selectLabel)
-
-    document.getElementById('pageFilterInput')?.addEventListener('input', renderPageQuickList)
-    document.getElementById('pageQuickList')?.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-page-key]')
-      if (!button) return
-      window.renderPage?.(button.getAttribute('data-page-key'))
-      refreshUx()
-    })
-    renderPageQuickList()
-  }
 
   function getCurrentReviewSummaryLines() {
     const page = getCurrentPage()
@@ -1036,7 +844,6 @@
   function refreshUx() {
     renderStickyBar()
     renderReviewDashboard()
-    renderPageQuickList()
     updateLocalStorageStatus()
     updateDecisionQuickActions()
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
@@ -1127,19 +934,9 @@
     refreshUx()
   }
 
-  function initDashboardListeners() {
-    const dashboard = document.getElementById(DASHBOARD_CORE_ID)
-    if (!dashboard || dashboard.dataset.bound === 'true') return
-    dashboard.dataset.bound = 'true'
-    dashboard.addEventListener('click', handleDashboardClick)
-    dashboard.addEventListener('change', handleDashboardChange)
-  }
-
   function init() {
     initWorkspaceTabs()
     initDecisionQuickActions()
-    initDashboardListeners()
-    mountPageSearch()
     mountCopySummaryButton()
     mountBackupControls()
     mountLocalStorageControls()
