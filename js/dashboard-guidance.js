@@ -2,6 +2,7 @@
    Keeps descriptive review guidance near the page preview and trims repeated sidebar helper copy at runtime. */
 ;(function migrateDescriptiveTextToDashboard() {
   const GUIDANCE_ID = 'dashboardGuidancePanel'
+  const REFERENCE_ID = 'dashboardReferencePanel'
   const STYLE_ID = 'dashboardGuidanceStyles'
 
   // js/utils.js loads first (see index.html script order), so the shared
@@ -133,6 +134,57 @@
     helpPanel.appendChild(buildGuidancePanel())
   }
 
+  // Static reference content moved out of the sidebar (see
+  // docs/superpowers/specs/2026-07-06-dashboard-redesign-design.md): it never changes
+  // per page, so it belongs with the other Help tab guidance, not among live edit
+  // fields. Mounted once, same as buildGuidancePanel().
+  function buildReferencePanel() {
+    const panel = document.createElement('section')
+    panel.id = REFERENCE_ID
+    panel.className = 'dashboard-guidance-panel'
+    panel.setAttribute('aria-label', 'Applied rules and reading targets')
+    panel.innerHTML = `
+      <h3>Applied rules</h3>
+      <ul class="checklist">
+        <li class="check">SF.gov system typography and SFDS-style spacing</li>
+        <li class="check">Action Blue for links and primary action</li>
+        <li class="check">Topic page uses scannable link clusters</li>
+        <li class="check">Article 11 / HHVC scope only</li>
+        <li class="check">72-hour tenant notice where applicable</li>
+        <li class="check">No standard photo requirement</li>
+        <li class="check">Report, prevent, scope, and tenant-help clusters</li>
+        <li class="check">
+          Enforcement pathway included without overloading Transaction pages
+        </li>
+        <li class="check">Tenant rights and anti-retaliation reassurance included</li>
+      </ul>
+      <h3>Reading targets</h3>
+      <p>
+        <strong>Transaction:</strong> Grade 5–6<br /><strong>Prevention:</strong> Grade 6<br /><strong
+          >Inspection/process:</strong
+        >
+        Grade 6–7<br /><strong>Enforcement/NOV:</strong> Grade 7–8
+      </p>
+      <p class="field-help" id="readingCurrent" style="margin-top: 0.65rem; font-weight: 600">
+        Current page target: <span id="readingTargetValue">—</span>
+      </p>
+    `
+    return panel
+  }
+
+  function mountReferencePanel() {
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    if (!helpPanel || document.getElementById(REFERENCE_ID)) return
+
+    helpPanel.appendChild(buildReferencePanel())
+    // The checklist markup used to be static in index.html, so ui-controls.js's
+    // initChecklist() (bound once at bootstrap, before this script runs) found it
+    // immediately. Mounted dynamically here instead, it needs an explicit (re-)bind
+    // and a state sync for whichever page happens to be open right now.
+    if (typeof initChecklist === 'function') initChecklist()
+    if (typeof applyChecklistState === 'function') applyChecklistState(getCurrentKey())
+  }
+
   function compactSidebarCopy() {
     const selectors = [
       '.sidebar-header + p',
@@ -141,7 +193,6 @@
       '.control-group:nth-of-type(4) > .details-body > .field-help',
       '.karl-help-nested',
       '.manager-review > .details-body > .field-help:first-child',
-      '.control-group:last-of-type .details-body > p:first-child',
     ]
 
     selectors.forEach((selector) => {
@@ -154,6 +205,7 @@
   function refresh() {
     injectStyles()
     mountGuidancePanel()
+    mountReferencePanel()
     compactSidebarCopy()
   }
 
