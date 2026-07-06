@@ -124,33 +124,7 @@
             </p>
           </div>
         </details>
-        <details class="control-group">
-          <summary class="eyebrow">Karl CMS tags</summary>
-          <div class="details-body">
-            <div class="karl-tag-toggle">
-              <span>Show Karl tags</span
-              ><label class="karl-switch" aria-label="Show Karl CMS tags"
-                ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
-              ></label>
-            </div>
-            <div id="karlTagLegendSidebar"></div>
-            <p class="field-help">
-              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
-            </p>
-            <details class="karl-help-nested">
-              <summary class="field-help">What are Karl tags?</summary>
-              <div class="cms-help">
-                Tags identify where each text block should be entered in Karl CMS: metadata fields,
-                body sections, primary actions, body links, Related section links, Agency page link
-                sections, Resource Collection items, or editor-only notes.
-              </div>
-              <div class="cms-help">
-                <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
-                determined by the tag text, not by the visual box shape.
-              </div>
-            </details>
-          </div>
-        </details>
+
         <details class="control-group manager-review" open>
           <summary class="eyebrow">Manager review</summary>
           <div class="details-body">
@@ -257,7 +231,37 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </figcaption>
-          <div id="karlTagLegendCompact"></div>
+          <div
+            class="karl-page-tags-banner"
+            style="
+              padding: 1rem 1rem 0.5rem;
+              border-bottom: 1px solid var(--sfds-border);
+              background: var(--sfds-white);
+            "
+          >
+            <div class="karl-tag-toggle">
+              <span>Show Karl tags</span
+              ><label class="karl-switch" aria-label="Show Karl CMS tags"
+                ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
+              ></label>
+            </div>
+            <div id="karlTagLegendSidebar"></div>
+            <p class="field-help" style="margin-top: 1rem">
+              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
+            </p>
+            <details class="karl-help-nested" style="margin-top: 0.5rem">
+              <summary class="field-help">What are Karl tags?</summary>
+              <div class="cms-help">
+                Tags identify where each text block should be entered in Karl CMS: metadata fields,
+                body sections, primary actions, body links, Related section links, Agency page link
+                sections, Resource Collection items, or editor-only notes.
+              </div>
+              <div class="cms-help">
+                <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
+                determined by the tag text, not by the visual box shape.
+              </div>
+            </details>
+          </div>
           <div id="mockPage">
             <div class="page-body">
               <h1>Loading HHVC mockup…</h1>

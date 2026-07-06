@@ -91,7 +91,6 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
-        'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
       ],
       button: 'Report mosquitoes',
       buttonStyle: 'secondary',

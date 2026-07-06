@@ -20,7 +20,9 @@ function editorQaBlock(page) {
 }
 function formatMarkdown(text) {
   if (typeof text !== 'string') return ''
-  return escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="#" data-render-target="$2">$1</a>')
+  return html
 }
 function paragraphList(paragraphs = []) {
   return paragraphs.map((p) => `<p>${formatMarkdown(p)}</p>`).join('')
@@ -37,6 +39,12 @@ function bulletList(bullets = []) {
 // A delegated listener avoids inline onclick handlers, which would execute
 // page-data strings in a JS context that escapeHtml does not protect.
 document.addEventListener('click', (event) => {
+  const backLink = event.target.closest('.back-link')
+  if (backLink) {
+    event.preventDefault()
+    window.history.back()
+    return
+  }
   const link = event.target.closest('a[data-render-target], a[data-render-inert]')
   if (!link) return
   event.preventDefault()
@@ -71,7 +79,7 @@ function renderSteps(steps = []) {
 function renderTable(rows = []) {
   if (!rows.length) return ''
   const [head, ...body] = rows
-  return `<table class="table"><thead><tr>${head.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+  return `<table class="table"><thead><tr>${head.map((h) => `<th>${formatMarkdown(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${formatMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
 }
 function renderSection(section) {
   const kind = section.kind || 'body'
@@ -113,8 +121,13 @@ function applyPageContent(key) {
   applyChecklistState(key)
   restoreSidebarScroll()
 }
-function renderPage(key) {
+function renderPage(key, skipHistory = false) {
   if (!pageData[key]) return
+  if (!skipHistory) {
+    const url = new URL(window.location)
+    url.searchParams.set('page', key)
+    window.history.pushState({ key }, '', url)
+  }
   if (!document.startViewTransition) {
     applyPageContent(key)
     return

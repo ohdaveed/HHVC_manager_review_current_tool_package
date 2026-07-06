@@ -59,6 +59,23 @@ function init() {
   document.getElementById('resetCtaBtn')?.addEventListener('click', () => resetField('cta'))
   document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar)
   initChecklist()
-  renderPage('pestsTopic')
+
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.key) {
+      renderPage(e.state.key, true)
+    } else {
+      const params = new URLSearchParams(window.location.search)
+      const key = params.get('page')
+      if (key && pageData[key]) {
+        renderPage(key, true)
+      } else {
+        renderPage('pestsTopic', true)
+      }
+    }
+  })
+
+  const params = new URLSearchParams(window.location.search)
+  const initialKey = params.get('page') || 'pestsTopic'
+  renderPage(initialKey, true)
 }
 init()

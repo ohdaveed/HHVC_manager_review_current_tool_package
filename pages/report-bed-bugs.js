@@ -78,10 +78,10 @@ window.HHVC_PAGES['bedBugsReport'] = {
       karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form.',
       kind: 'body',
       bullets: [
-        'Review time: It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
-        'If you gave contact information: An inspector may reach out to ask questions or schedule a visit.',
-        'If you reported anonymously: An inspector may still visit the property without notice—especially if there is an urgent safety or health risk.',
-        'If we find a problem: The City can order the property owner or responsible party to fix the violation.',
+        '**Review time:** It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
+        '**If you gave contact information:** An inspector may reach out to ask questions or schedule a visit.',
+        '**If you reported anonymously:** An inspector may still visit the property without notice—especially if there is an urgent safety or health risk.',
+        '**If we find a problem:** The City can order the property owner or responsible party to fix the violation.',
       ],
       callout: {
         karl: "Schema gap: things_to_know is Title + Text only — no nested callout block. Fold this tenant-rights text into the entry's Text field (e.g. as a bolded closing line), or flag for Digital Services if a distinct callout is needed here.",

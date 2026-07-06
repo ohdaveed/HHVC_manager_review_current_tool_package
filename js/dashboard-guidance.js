@@ -190,8 +190,6 @@
       '.sidebar-header + p',
       '.control-group:nth-of-type(2) .field-help',
       '.control-group:nth-of-type(3) > .details-body > .field-help',
-      '.control-group:nth-of-type(4) > .details-body > .field-help',
-      '.karl-help-nested',
       '.manager-review > .details-body > .field-help:first-child',
     ]
 

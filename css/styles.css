@@ -748,7 +748,8 @@ a:focus {
 }
 body.hide-karl-tags .karl-tag,
 body.hide-karl-tags .cms-help,
-body.hide-karl-tags .karl-tag-legend {
+body.hide-karl-tags .karl-tag-legend,
+body.hide-karl-tags .editor-qa {
   display: none !important;
 }
 .karl-tag-legend {
@@ -1005,7 +1006,8 @@ body.hide-karl-tags .karl-tag-legend {
 body.hide-karl-tags .karl-tag,
 body.hide-karl-tags .cms-help,
 body.hide-karl-tags .karl-help-nested,
-body.hide-karl-tags .karl-tag-legend {
+body.hide-karl-tags .karl-tag-legend,
+body.hide-karl-tags .editor-qa {
   display: none !important;
 }
 
