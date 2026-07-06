@@ -40,12 +40,12 @@ Water problems in San Francisco are split between two City agencies depending on
 
 ### Department of Building Inspection (DBI)
 
-Contact DBI if the moisture is caused by building infrastructure failures or structural water intrusion. This includes:
+Contact DBI if the moisture is caused by building infrastructure failures or structural water intrusion under the San Francisco Housing Code. This includes:
 
-- Roof leaks (water penetrating ceilings or attics)
-- Leaking window frames (failing exterior caulking or flashing)
-- Plumbing leaks (burst pipes, dripping pipes inside walls)
-- Malfunctioning or leaking water heaters
+- Roof leaks (water penetrating ceilings or attics) (Housing Code SEC. 703)
+- Leaking window frames (failing exterior caulking or flashing) (Housing Code SEC. 703)
+- Plumbing leaks (burst pipes, dripping pipes inside walls) (Housing Code SEC. 703)
+- Malfunctioning or leaking water heaters (Housing Code SEC. 703)
 - Broken major appliances provided by the landlord (dishwashers, washing machines)
 
 ### Healthy Housing and Vector Control (HHVC / SFDPH)

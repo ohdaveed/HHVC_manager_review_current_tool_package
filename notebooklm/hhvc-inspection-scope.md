@@ -52,10 +52,10 @@ We inspect for pests that can spread disease, damage property, or cause severe h
 
 We inspect conditions that attract pests or affect indoor health:
 
-- **Garbage and clutter:** Accumulations of trash, rotting food, or cardboard debris inside or outside a building that can attract or breed pests.
+- **Garbage and clutter:** Accumulations of trash, rotting food, or cardboard debris inside or outside a building that can attract or breed pests (Health Code Sec. 581(b)(1)).
 - **Animal waste:** Accumulated dog or cat waste in yards, patios, or common building areas.
-- **Overgrown vegetation:** Thick weeds, vines, or overgrown brush close to walls and foundations that shelter pests or block safe access to building exits.
-- **Indoor moisture and humidity-related mold:** We inspect visible mold growing on walls or ceilings caused by high humidity, poor mechanical ventilation (like broken kitchen or bathroom exhaust fans), or condensation.
+- **Overgrown vegetation:** Thick weeds, vines, or overgrown brush close to walls and foundations that shelter pests or block safe access to building exits (Health Code Sec. 581(b)(2)).
+- **Indoor moisture and humidity-related mold:** We inspect visible mold growing on walls or ceilings caused by high humidity, poor mechanical ventilation (like broken kitchen or bathroom exhaust fans), or condensation. Action is taken under Health Code Sec. 581(b)(6) when visible mold totals at least 10 square feet.
 
 ---
 
@@ -63,14 +63,15 @@ We inspect conditions that attract pests or affect indoor health:
 
 Some housing problems are handled by other City departments. To get help quickly, check who handles your issue before reporting:
 
-### 1. Structural water leaks and building damage (DBI)
+### 1. Structural water leaks, heating, and building damage (DBI)
 
-The Department of Building Inspection (DBI) handles structural building failures. **Do not report structural leaks to HHVC.** Contact DBI for:
+The Department of Building Inspection (DBI) handles structural building failures under the San Francisco Housing Code. **Do not report structural issues to HHVC.** Contact DBI for:
 
-- Leaking roof frames or water coming through the ceiling
-- Plumbing pipe breaks, sewage backups, or dripping pipes inside walls
-- Broken or leaking window frames and window glass
-- Malfunctioning water heaters or lack of heat and hot water
+- Leaking roof frames, window seals, or water coming through the ceiling (Housing Code SEC. 703)
+- Plumbing pipe breaks, sewage backups, or dripping pipes inside walls (Housing Code SEC. 703)
+- Broken or leaking water heaters (Housing Code SEC. 703)
+- Malfunctioning heating systems or lack of heat (Housing Code SEC. 701)
+- Elevator breakdowns (Housing Code SEC. 713 & 808) and obstructed fire escapes or exits (Housing Code SEC. 810 & 803)
 
 ### 2. Personal property and belongings
 
@@ -131,5 +132,5 @@ If you rent your home or apartment, you must take these steps before requesting 
 
 - **Content Owner:** HHVC Web Content Management Team
 - **Review Cycle:** Annual (Next review due: July 5, 2027)
-- **Source Basis:** San Francisco Health Code Article 11, Article 11A, UC IPM Pest Notes (7457, 7450), and SFDPH Director’s Rules and Regulations.
+- **Source Basis:** San Francisco Health Code Article 11, Article 11A, San Francisco Housing Code (2025), UC IPM Pest Notes (7457, 7450), and SFDPH Director’s Rules and Regulations.
 - **SME Review Triggers:** Any changes to the 10-square-foot mold threshold, the wasp dual-track referral policy, or the 72-hour tenant notification window require program director and DPH legal counsel approval. Do not insert internal Standard Operating Procedures (SOPs) or inspector names into public-facing copy.
