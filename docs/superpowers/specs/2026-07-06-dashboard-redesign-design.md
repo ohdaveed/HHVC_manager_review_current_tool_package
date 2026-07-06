@@ -108,12 +108,18 @@ the three above — opening a page from an Overview row is still possible via it
 ### Overview (new — replaces Queue tab + Checks tab's portfolio grid)
 
 A single dense table, one row per page, replacing both the old Queue list and the old
-Checks-tab portfolio grid (previously two separate full-site page lists). Columns: Page,
-Type, Checks (x/9), Decision, Owner, Actions. A sort/filter toolbar sits above the table
-(sort by decision or by checks-failing-first; filter to failing-only). Each row supports
-inline bulk actions (Approve / Revise / Blocked) without opening the page, plus an
-"Open" action that navigates to it in the mockup canvas. This tab is the one place to
-triage the whole site.
+Checks-tab portfolio grid (previously two separate full-site page lists). This keeps the
+Queue tab's existing information richness and controls — the stats/KPI bar (visible,
+blocked, unassigned, stale counts), the search box, the sort dropdown, the decision
+filter buttons, and the select-all + bulk-action bar — just reformatted as table rows
+instead of cards. Columns: **Page** (title + type + page key), **Checks** (x/9 — new,
+merged in from the old portfolio grid), **Decision**, **Owner** (defaults to "David" —
+see Owner auto-fill below), **Last updated** (staleness-flagged, from the old Queue
+list), **Actions** (inline Approve / Revise / Blocked / Needs review / Approve w/ edits
+buttons, same as today's per-row Queue actions, plus "Open" to navigate to the page in
+the mockup canvas). Row-level detail that doesn't fit a column (reviewer name, notes
+present, blockers logged) stays as a compact secondary line under the page title, as it
+does in the Queue tab today. This tab is the one place to triage the whole site.
 
 ### Checks (per-page only now)
 
@@ -138,20 +144,32 @@ sidebar: the Applied rules content-standards list and the Reading targets table.
 
 ## State / persistence changes
 
+**The localStorage key stays `hhvcManagerReviewState:v1` — no version bump.** An earlier
+draft of this spec proposed bumping to `v2`, which would have made every reviewer's
+saved decisions and notes invisible on first load (`readLocalState` treats any version
+mismatch as empty state — see `js/ux-improvements.js:135-152`), silently wiping
+in-progress review work the moment they touched a field. That's exactly the class of
+regression the CLAUDE.md import/export warning exists to prevent, so it's ruled out.
+None of the changes below need a version bump — each is already absorbed by existing
+fallback logic without any migration code:
+
 - `state.ui.workspace_tab` enum renames `queue` → `overview` (valid values become
-  `overview | checks | sitemap | help`)
+  `overview | checks | sitemap | help`). An old persisted value of `"queue"` is not in
+  the new `WORKSPACE_TABS` list, so `setWorkspaceTab`'s existing
+  `if (!WORKSPACE_TABS.includes(tabId)) tabId = 'overview'` guard coerces it
+  automatically — no dedicated migration needed.
 - `state.ui.review_queue` (`{filter, query, sort}`) and `state.ui.checks_failing_only`
-  merge into one `state.ui.overview` bucket (`{filter, query, sort}`) driving the new
-  Overview table
+  are superseded by a new `state.ui.overview` bucket (`{filter, query, sort}`) driving
+  the Overview table. The old keys are simply never read again by the new code —
+  harmless unused entries in the persisted JSON, not migrated or deleted.
 - `state.globals.owner` — new field, auto-fills `"David"` the same way
-  `state.globals.reviewer` already auto-fills across pages
-- No persisted state remains for the removed sidebar quick-search filter
-- Because the persisted shape changes incompatibly (a tab enum value is renamed, two
-  state buckets merge into one), the localStorage key bumps from
-  `hhvcManagerReviewState:v1` to `v2`. Old `v1` data is left in place, not migrated —
-  this is browser-only per-reviewer review state, not shared or authoritative data, so
-  letting it age out is acceptable rather than writing one-time migration code for a
-  local mockup tool.
+  `state.globals.reviewer` already auto-fills across pages, via the existing
+  `state.globals || {}` fallback in `readLocalState` (an unset `owner` key is simply
+  `undefined`, which the auto-fill logic treats as "use the default").
+- No persisted state remains for the removed sidebar quick-search filter — it was never
+  persisted (its filtering was in-memory only), so there's nothing to clean up.
+- `state.pages` (every reviewer's saved per-page decisions, notes, edited copy) and
+  `state.globals.reviewer` are completely unchanged in shape and are preserved as-is.
 
 ## Non-goals (explicitly out of scope)
 
@@ -170,9 +188,11 @@ sidebar: the Applied rules content-standards list and the Reading targets table.
 
 - `bun run validate` must still pass (schema + business-invariant checks are unaffected
   by this UI-only change, but re-run to confirm)
-- Manual browser check per the CLAUDE.md import/export warning: since
-  `state.ui`/`state.globals` shape changes, export a review snapshot, re-import it, and
-  confirm decisions/notes survive the round-trip after the `v1` → `v2` key bump
+- Manual browser check per the CLAUDE.md import/export warning: with an existing saved
+  review already in localStorage (pre-redesign shape), load the redesigned tool and
+  confirm that review's decision/notes still appear — this is the regression check for
+  *not* bumping the storage key. Then export a snapshot, reload, re-import it, and
+  confirm the round-trip still preserves decisions/notes
 - Manual check: sidebar shows only the 5 sections listed above; Applied rules and
   Reading targets appear in Help instead
 - Manual check: sticky bar matches the single-row decision-first layout; no
