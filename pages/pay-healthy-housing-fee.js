@@ -66,9 +66,9 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Questions about your fee and late payments',
-      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the paragraphs below). Updated per Master Guidelines Chapter 8.3 to include penalties.',
+      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the bulleted list below). Updated per Master Guidelines Chapter 8.3 to include penalties.',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
         'Keep your invoice or account information in case you need to ask a question or confirm a payment.',
         'Invoice payments are due within 30 days. Late payments trigger a standard penalty progression: a $10 late penalty applies for payments up to 30 days overdue, and a $30 late penalty applies for payments up to 60 days overdue.',

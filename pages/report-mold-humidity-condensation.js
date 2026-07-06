@@ -77,9 +77,9 @@ window.HHVC_PAGES['moldReport'] = {
     },
     {
       heading: 'When HHVC may review mold',
-      karl: 'Best real-schema fit: a second things_to_know entry. Title: "When HHVC may review mold". Text: the paragraphs below (Article 11 10-square-foot threshold, self-clean guidance, DBI routing).',
+      karl: 'Best real-schema fit: a second things_to_know entry. Title: "When HHVC may review mold". Text: the bulleted list below (Article 11 10-square-foot threshold, self-clean guidance, DBI routing).',
       kind: 'body',
-      paragraphs: [
+      bullets: [
         'Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet. That is about the size of 10 sheets of paper placed together.',
         'For mold smaller than 10 square feet, clean hard surfaces with soap and water. Reduce humidity and condensation so it does not come back.',
         'If your complaint involves structural water intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), this will be routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025). HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.',
