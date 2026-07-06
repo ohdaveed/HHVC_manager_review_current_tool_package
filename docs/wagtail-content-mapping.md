@@ -515,6 +515,13 @@ above and from inline `karl` notes across `pages/*.js`. Check these off (or
 correct them) the next time a live Karl session is available, rather than
 re-discovering them from scratch.
 
+**Remaining `[ ]` items are tracked as numbered follow-up tasks** (see the
+project task list, tasks #1–#8) rather than carried as full inline
+write-ups here — each bullet below just names the gap and points at its
+task. Method precedence for those tasks: try Karl MCP
+(`searchDocumentation`/`getPage` against the Help Center) first with fresh
+query phrasings before falling back to a live logged-in admin session.
+
 **2026-07-06 pass against the public Karl Editor Help Center**
 (`sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`): items marked
 `[x] doc-confirmed` below were corroborated by editor documentation — a
@@ -580,52 +587,26 @@ Everything still `[ ]` needs the logged-in admin form.
       content type that supports tables."* That's an affirmative
       exclusivity claim, not just silence on other page types — no page
       type other than Report has a table block, Information included.
-- [ ] **Topic's `Services`/`Resources` blocks have no intro-paragraph
-      field** — Title + Links only. Partially corroborated: the Help
-      Center's Topic page mentions organizing services/resources "by
-      subheading" and drag-ordering, with no mention of intro text — but
-      it isn't a field-level list, so keep this open for the live form.
-      Affects `pestsTopic`
-      (`agency-service-grouping.js`) sections that pair a `paragraphs[]`
-      intro with `cards[]` (e.g. "Report a problem," "Prevent pests and
-      housing health problems").
-- [ ] **Campaign's `Related` is single-item, not repeatable** — only 1 of
-      `mosquito-education-workshop.js`'s 4 related cards fits; the other 3
-      need an `Additional content → Resources` block instead. (2026-07-06
-      doc check: no dedicated "Related on a Campaign page" subpage exists
-      in the Help Center to confirm repeatability or content-type
-      restrictions either way — this detail came from the live 2026-07-05
-      admin-form session, not docs, and still needs the live form to
-      re-confirm.)
+- [ ] Topic's `Services`/`Resources` blocks intro-paragraph field — tracked
+      as follow-up task #1 ("Verify Topic's Services/Resources
+      intro-paragraph field in live Karl admin").
+- [ ] Campaign's `Related` single-item/content-type restrictions — tracked
+      as follow-up task #2 ("Confirm Campaign's Related field
+      repeatability and content-type restrictions").
 
 ### Field names / UI mechanics still unconfirmed
 
-- [ ] Transaction's bottom-of-form "Redirect this page to" field's raw
-      Wagtail field name. (2026-07-06 doc check, full detail in
-      `docs/karl-help-center-research-2026-07-06.md`: found a dedicated
-      "Redirect this page to" component page, but it states the component
-      "has been disabled in the CMS." No raw field name surfaced — worth
-      flagging to reviewers that this field/component may currently be
-      disabled entirely, pending live-admin confirmation.)
-- [ ] Information's field names (`primary_agency`, `Part of`,
-      `Information section`, `partner_agencies`, `topics`, `related`) — all
-      currently reused from Transaction's confirmed names as a plausible
-      guess, not independently verified. (2026-07-06 doc check: UI labels
-      only, no snake_case/raw names anywhere in the Help Center, including
-      CSV/export docs. Still needs live admin or API access.)
-- [ ] Resource Collection / Campaign / Topic raw field names — UI labels
-      only, never inspected. (2026-07-06 doc check: same result — the
-      "How a Resource Collection page works," "How a Campaign page
-      works," and Topic pages give UI labels only, no raw names anywhere.
-      Still needs live admin.)
-- [ ] `Address` block's "Hours and days open" repeatable — didn't visibly
-      render inside the nested Address-snippet modal. (2026-07-06 doc
-      check: the Address component page lists it as a single line item
-      alongside ordinary single fields, no language distinguishing it as
-      repeatable. A 2025 release note about Agency pages "showing 7 days a
-      week of open hours regardless of how many days the department is
-      open" implies day-by-day front-end rendering but doesn't confirm
-      back-end repeatability. Still needs live admin.)
+- [ ] Transaction's "Redirect this page to" raw Wagtail field name —
+      tracked as follow-up task #3 (component may be disabled in the CMS
+      entirely per Help Center; see
+      `docs/karl-help-center-research-2026-07-06.md` item 5).
+- [ ] Information's raw field names (`primary_agency`, `Part of`,
+      `Information section`, `partner_agencies`, `topics`, `related`) —
+      tracked as follow-up task #4.
+- [ ] Resource Collection / Campaign / Topic raw field names — tracked as
+      follow-up task #5.
+- [ ] `Address` block's "Hours and days open" repeatable — tracked as
+      follow-up task #6.
 - [x] **live-admin-confirmed: Transaction's rich text fields have the same
       "/" slash-menu** as Information — confirmed directly on a
       Transaction page in the live Karl admin (2026-07-06). (2026-07-06
@@ -633,14 +614,10 @@ Everything still `[ ]` needs the logged-in admin form.
       menu for any content type, so this was previously unresolvable from
       docs alone — resolved instead by direct live-admin observation.)
 - [ ] Whether Transaction's rich text fields share Information's 4-type
-      Link tool (Internal/External/Email/Phone) — inferred, not
-      re-confirmed. (2026-07-06 doc check: the generic rich-text Link
-      docs describe only **2** types — Internal link and External link —
-      with Email/Phone documented only as separate standalone
-      section-specific components, not rich-text Link-tool options. Mild
-      discrepancy with the 4-type claim from the 2026-07-05 live session
-      — flag for re-check rather than treating as confirmed either way.
-      Full detail in `docs/karl-help-center-research-2026-07-06.md`.)
+      Link tool (Internal/External/Email/Phone) — tracked as follow-up
+      task #7. Public docs describe only 2 types generically, a mild
+      discrepancy with the 4-type live-session claim (see
+      `docs/karl-help-center-research-2026-07-06.md` item 10).
 
 ### Entirely unverified
 
@@ -649,12 +626,10 @@ Everything still `[ ]` needs the logged-in admin form.
       types" below; both now have a real field/block inventory sourced
       from the Help Center rather than guesswork. Full research log:
       `docs/karl-help-center-research-2026-07-06.md`.
-- [ ] Remaining page types under "Other page types (Data story, Event,
-      etc.) — unverified" below (Agency, About, Location, Meeting, News,
-      Profile, Report, Step by step) — still original guesswork, not yet
-      checked against docs or a live Karl form. The generic
-      `section.cards[]`/`callout`/`button` guesses in that section no
-      longer apply to any page type actually in use in this repo.
+- [ ] Remaining page types under "Other page types" (Agency, About,
+      Location, Meeting, News, Profile, Report, Step by step) — tracked as
+      follow-up task #8. Lower priority: none of these types are used by
+      any `pages/*.js` file in this repo.
 
 ## Accuracy check: "HHVC Karl CMS Governance and Technical Design Manual" (2026-07-06)
 
