@@ -29,16 +29,19 @@ window.HHVC_PAGES['pigeonInfo'] = {
     },
     {
       heading: 'Why pigeons can be a housing health concern',
-      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below.',
+      karl: "Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below (second paragraph now ends with the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). New: a secondary Button link block ('View Health Code Article 11') citing the municipal code per Ch. 8.7.2 — flag for Digital Services to confirm this is the SF.gov-preferred municode URL before publication.",
       kind: 'body',
       paragraphs: [
         'Pigeons can roost on ledges, roofs, balconies, fire escapes, and other building surfaces. Accumulated droppings, feathers, and nesting material can create odor, attract insects, and contribute to unsanitary conditions in shared or exterior areas.',
-        'Environmental Health may review bird-related nuisances when they contribute to a housing health problem covered by Article 11, especially when droppings or nesting material affect shared spaces, ventilation areas, or building cleanliness.',
+        'Environmental Health may review bird-related nuisances when they contribute to a housing health problem covered by Article 11, especially when droppings or nesting material affect shared spaces, ventilation areas, or building cleanliness. Under San Francisco Health Code Article 11, property owners are legally required to keep their buildings clean, watertight, and completely free of rodent and insect infestations.',
       ],
       callout: {
         karl: 'Maps to its own Callout stream item (sibling of the Title and text item above, not nested inside it). Single rich text field, no title — this callout has no title already, so no mismatch.',
         text: 'Birds can be involved in disease vectors such as West Nile virus in the broader mosquito surveillance context. Report unusual dead bird activity through West Nile virus resources linked from the Mosquito Control Program page.',
       },
+      button: 'View Health Code Article 11',
+      buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
+      buttonStyle: 'secondary',
     },
     {
       heading: 'Reduce pigeon problems',
