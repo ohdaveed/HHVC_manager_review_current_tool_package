@@ -479,13 +479,8 @@
 
     const page = getCurrentPage()
     const decision = getValue('reviewDecision') || 'Needs review'
-    const rules = getRuleResults(page)
-    const passed = rules.filter((rule) => rule.pass).length
-    const reviewReady = decision === 'Approved' && passed === rules.length
-    const chipClass = reviewReady ? 'pass' : getStatusChipClass(decision)
+    const chipClass = getStatusChipClass(decision)
     const stats = window.reviewQueue?.getQueueStats?.() || {
-      touched: 0,
-      decided: 0,
       reviewed: 0,
       total: DATA.order.length,
     }
@@ -497,15 +492,13 @@
 
     bar.innerHTML = `
       <div class="review-sticky-bar-main">
-        <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
         <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
-        <span class="status-chip ${passed === rules.length ? 'pass' : 'warn'}">${passed}/${rules.length} checks</span>
-        <span class="status-chip ${stats.touched > 0 ? 'pass' : 'warn'}">${stats.touched}/${stats.total} touched</span>
+        <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
       </div>
       <nav class="review-sticky-bar-actions">
+        <span class="review-sticky-bar-progress">${stats.reviewed}/${stats.total} reviewed</span>
         <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>
         <button type="button" class="review-sticky-btn" data-sticky-action="next"${nextKey ? '' : ' disabled'}>Next</button>
-        <button type="button" class="review-sticky-btn" data-sticky-action="next-needs-review">Next needs review</button>
         <button type="button" class="review-sticky-btn primary" data-sticky-action="toggle-workspace" aria-expanded="${workspaceOpen ? 'true' : 'false'}">
           ${workspaceOpen ? 'Hide workspace' : 'Show workspace'}
         </button>
@@ -585,12 +578,6 @@
 
     if (action === 'next') {
       const key = window.reviewQueue?.getAdjacentKey?.(1, filter)
-      if (key) window.renderPage?.(key)
-      return
-    }
-
-    if (action === 'next-needs-review') {
-      const key = window.reviewQueue?.getNextNeedsReviewKey?.()
       if (key) window.renderPage?.(key)
       return
     }

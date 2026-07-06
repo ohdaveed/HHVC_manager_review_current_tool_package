@@ -52,6 +52,13 @@
   white-space: nowrap;
 }
 
+.review-sticky-bar-progress {
+  color: var(--sfds-slate-3);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .review-sticky-bar-actions {
   display: flex;
   flex-wrap: wrap;
