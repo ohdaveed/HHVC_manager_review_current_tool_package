@@ -14,6 +14,7 @@ window.HHVC_PAGES['findHotelRecords'] = {
   reading: 'Grade 6–7',
   editorNote:
     'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
+  editorStatus: 'placeholder',
   sections: [
     {
       heading: 'What this tool covers',

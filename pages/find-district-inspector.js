@@ -12,6 +12,7 @@ window.HHVC_PAGES['findInspector'] = {
   reading: 'Grade 6–7',
   editorNote:
     'Information page placeholder. A verified district map/staff directory lookup is still BLOCKED pending HHVC confirmation, so the page CTA routes to 311 (the confirmed public contact route) instead of shipping without any working link. Do not publish staff phone numbers until HHVC confirms the public contact route.',
+  editorStatus: 'blocked',
   sections: [
     {
       heading: 'How inspector assignment works',

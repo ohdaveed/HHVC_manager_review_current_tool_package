@@ -14,6 +14,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   reading: 'Grade 6–7',
   editorNote:
     'Information page for tenants and property owners/managers. BLOCKED — confirm NOV templates, tenant-specific orders, appeal windows, and contact routes before publication. The initial notice itself carries no fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free; a fee applies only starting with the third visit (the second reinspection), per reviewer-supplied sequencing — confirm this sequencing plus current certified fee amounts (sourced as illustrative FY24-25 estimates from docs/source/hhvc-policy/2026-07-02-dph-ehb-fees-fy24-25.md) with HHVC before publication. Verify that examples of split responsibilities match current HHVC enforcement practice.',
+  editorStatus: 'blocked',
   sections: [
     {
       heading: 'What a notice of violation means',

@@ -14,6 +14,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   reading: 'Grade 5–7',
   editorNote:
     'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md) using this mockup\'s existing sections[]/cards[]/bullets[] shape — this tool has no Spotlight/Top facts/Logo/Color theme widgets, so the karl notes below describe the intended real-Karl block for each section rather than a literally rendered equivalent. Campaign page-level fields with no mockup equivalent at all: Primary agency, Logo, Background header image, Color theme, Partner agencies. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
+  editorStatus: 'placeholder',
   sections: [
     {
       heading: 'Bring mosquito science to your students',

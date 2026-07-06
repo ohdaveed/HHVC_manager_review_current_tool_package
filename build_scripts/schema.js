@@ -59,6 +59,7 @@ const pageSchema = z.object({
   metaDescription: z.string().optional(),
   primaryCta: z.string().optional(),
   editorNote: z.string().optional(),
+  editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
   sections: z.array(sectionSchema).optional(),
 })
 

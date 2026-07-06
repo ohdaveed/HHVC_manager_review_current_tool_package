@@ -13,6 +13,7 @@ window.HHVC_PAGES['raccoonInfo'] = {
   reading: 'Grade 6–7',
   editorNote:
     'Information page. Wildlife trapping is outside HHVC scope — route injured/trapped animals to Animal Care & Control. Latrine cleanup steps follow CDC Baylisascaris guidance; SME must verify against current CDC/DPH protocols before publication. In Karl: add CDC external link in Information section; do not publish until vector program signs off.',
+  editorStatus: 'blocked',
   sections: [
     {
       heading: 'Why it matters',

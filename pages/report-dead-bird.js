@@ -13,6 +13,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
   reading: 'Grade 6–7',
   editorNote:
     'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME placeholder — pickup criteria, priority species list, seasonal workflow, and CDPH routing below are illustrative example content for mockup review; confirm actual current HHVC protocol with SME before publication.',
+  editorStatus: 'placeholder',
   sections: [
     {
       heading: 'Why report a dead bird',
