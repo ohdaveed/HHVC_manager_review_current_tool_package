@@ -35,7 +35,6 @@
     buildReviewRecord,
     getCurrentKey,
     countRelatedLinks,
-    buildPageRows,
   } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
@@ -121,6 +120,11 @@
   function getRuleResults(page) {
     return getRuleResultsFor(page, { useEditor: true })
   }
+
+  // Exposed for js/review-queue.js's Overview tab (loads after this file), which
+  // needs to compute a checks passed/total count for every page, not just the one
+  // currently open in the editor.
+  window.reviewChecks = { getRuleResultsFor }
 
   function getEmptyState() {
     return {
@@ -329,131 +333,20 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function getPortfolioRows(savedPages = {}) {
-    return buildPageRows(DATA, (key, label, page) => {
-      const rules = getRuleResultsFor(page)
-      const failing = rules.filter((rule) => !rule.pass)
-      return {
-        key,
-        title: page.title || label,
-        type: page.type || 'Page',
-        passed: rules.length - failing.length,
-        total: rules.length,
-        failingLabels: failing.map((rule) => rule.label),
-        decision: savedPages[key]?.decision || 'Needs review',
-      }
-    })
-  }
-
-  function renderPortfolioOverview() {
-    const state = readLocalState()
-    const rows = getPortfolioRows(state.pages)
-    const failingOnly = Boolean(state.ui.checks_failing_only)
-    const allPassCount = rows.filter((row) => row.failingLabels.length === 0).length
-    const visibleRows = failingOnly ? rows.filter((row) => row.failingLabels.length > 0) : rows
-    const sortedRows = visibleRows
-      .slice()
-      .sort((a, b) => a.passed - b.passed || a.title.localeCompare(b.title))
-    const currentKey = getCurrentKey()
-
-    return `
-      <section class="portfolio-panel">
-        <div class="portfolio-header">
-          <h3>All pages check overview</h3>
-          <label class="portfolio-filter-toggle">
-            <input type="checkbox" id="portfolioFailingOnly"${failingOnly ? ' checked' : ''} />
-            Only pages with failing checks
-          </label>
-        </div>
-        <p class="review-decision-note">
-          ${allPassCount}/${rows.length} pages pass all checks. Pages with the most failing checks are listed first; select a page to open it.
-        </p>
-        ${
-          sortedRows.length
-            ? `
-          <ul class="portfolio-list" aria-label="Compliance status for every page">
-            ${sortedRows
-              .map((row) => {
-                const allPass = row.failingLabels.length === 0
-                return `
-              <li>
-                <button
-                  type="button"
-                  class="portfolio-row${row.key === currentKey ? ' is-current' : ''}"
-                  data-portfolio-key="${escapeHtml(row.key)}"
-                >
-                  <span class="portfolio-row-main">
-                    <span class="portfolio-row-title">${escapeHtml(row.title)}</span>
-                    <span class="portfolio-row-meta">${escapeHtml(row.type)} · ${escapeHtml(row.key)}</span>
-                    ${
-                      allPass
-                        ? ''
-                        : `<span class="portfolio-row-failing">Failing: ${escapeHtml(row.failingLabels.join(', '))}</span>`
-                    }
-                  </span>
-                  <span class="portfolio-row-status">
-                    <span class="status-chip ${allPass ? 'pass' : 'warn'}">${row.passed}/${row.total} checks</span>
-                    <span class="status-chip ${getStatusChipClass(row.decision)}">${escapeHtml(row.decision)}</span>
-                  </span>
-                </button>
-              </li>
-            `
-              })
-              .join('')}
-          </ul>
-        `
-            : `
-          <aside class="portfolio-empty">
-            <p>Every page passes all checks. Nothing to fix here.</p>
-          </aside>
-        `
-        }
-      </section>
-    `
-  }
-
-  function handleDashboardClick(event) {
-    const rowButton = event.target.closest('[data-portfolio-key]')
-    if (!rowButton) return
-    const key = rowButton.getAttribute('data-portfolio-key')
-    if (!key || !DATA.pages[key]) return
-    window.renderPage?.(key)
-  }
-
-  function handleDashboardChange(event) {
-    if (event.target.id !== 'portfolioFailingOnly') return
-    const checked = event.target.checked
-    updateLocalState((state) => {
-      state.ui.checks_failing_only = checked
-      return state
-    })
-    renderReviewDashboard()
-  }
-
   function renderReviewDashboard() {
     const dashboard = document.getElementById(DASHBOARD_CORE_ID)
     if (!dashboard) return
 
     const page = getCurrentPage()
-    const seoTitle = getSeoTitle(page)
-    const metaDescription = getMetaDescription(page)
     const rules = getRuleResults(page)
-    const primaryCta = getValue('ctaInput') || getPrimaryCta(page) || 'None set'
 
     dashboard.innerHTML = `
-      <div class="review-dashboard-grid">
-        ${renderMetric('Page type', page.type || 'Missing', 'Karl placement')}
-        ${renderMetric('Reading target', page.reading || 'Missing', 'Plain-language target')}
-        ${renderMetric('Primary CTA', primaryCta, isLong(primaryCta) ? 'Review label length' : 'Next-step clarity')}
-        ${renderMetric('SEO title', `${seoTitle.length}/${SEO_TITLE_LIMIT}`, seoTitle.length <= SEO_TITLE_LIMIT ? 'Ready' : 'Too long')}
-        ${renderMetric('Meta description', `${metaDescription.length}/${META_DESCRIPTION_LIMIT}`, metaDescription.length <= META_DESCRIPTION_LIMIT ? 'Ready' : 'Too long')}
-        ${renderMetric('Related links', String(countRelatedLinks(page)), 'Dead-end prevention')}
-        ${renderMetric('Audience entries', String(Array.isArray(page.audience) ? page.audience.length : 0), 'This page can help if...')}
-        ${renderMetric('Page key', getCurrentKey(), 'Workbook sync field')}
-      </div>
       <section class="compliance-panel">
-        <h3>Karl compliance scorecard</h3>
-        <p class="review-decision-note">Live checks update as you edit title, summary, CTA, and search metadata in the sidebar.</p>
+        <h3>Karl compliance checklist</h3>
+        <p class="review-decision-note">
+          Page key: ${escapeHtml(getCurrentKey())}. Live checks update as you edit title,
+          summary, CTA, and search metadata in the sidebar.
+        </p>
         <ul class="compliance-list">
           ${rules
             .map(
@@ -469,7 +362,6 @@
             .join('')}
         </ul>
       </section>
-      ${renderPortfolioOverview()}
     `
   }
 
@@ -663,20 +555,6 @@
   }
 
   window.reviewDecisions = { set: applyDecisionToCurrentPage }
-
-  function renderMetric(label, value, help) {
-    return `
-      <article class="metric-card">
-        <span class="metric-label">${escapeHtml(label)}</span>
-        <span class="metric-value">${escapeHtml(value)}</span>
-        <span class="metric-help">${escapeHtml(help)}</span>
-      </article>
-    `
-  }
-
-  function isLong(value) {
-    return String(value || '').length > 36
-  }
 
   function getCurrentReviewSummaryLines() {
     const page = getCurrentPage()
@@ -1056,18 +934,9 @@
     refreshUx()
   }
 
-  function initDashboardListeners() {
-    const dashboard = document.getElementById(DASHBOARD_CORE_ID)
-    if (!dashboard || dashboard.dataset.bound === 'true') return
-    dashboard.dataset.bound = 'true'
-    dashboard.addEventListener('click', handleDashboardClick)
-    dashboard.addEventListener('change', handleDashboardChange)
-  }
-
   function init() {
     initWorkspaceTabs()
     initDecisionQuickActions()
-    initDashboardListeners()
     mountCopySummaryButton()
     mountBackupControls()
     mountLocalStorageControls()

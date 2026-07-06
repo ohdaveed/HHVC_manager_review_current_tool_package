@@ -574,49 +574,6 @@
   color: var(--sfds-danger-text);
 }
 
-.review-dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
-}
-
-.metric-card {
-  padding: 0.9rem 1rem;
-  border-right: 1px solid var(--sfds-border);
-  border-bottom: 1px solid var(--sfds-border);
-  cursor: help;
-}
-
-.metric-card:nth-child(4n) {
-  border-right: 0;
-}
-
-.metric-label {
-  display: block;
-  margin-bottom: 0.22rem;
-  color: var(--sfds-slate-3);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.metric-value {
-  display: block;
-  color: var(--sfds-slate-1);
-  font-size: 0.95rem;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.metric-help {
-  display: block;
-  margin-top: 0.22rem;
-  color: var(--sfds-slate-3);
-  font-size: 0.78rem;
-  line-height: 1.3;
-}
-
 .compliance-panel {
   padding: 0.9rem 1rem 1rem;
 }
@@ -999,16 +956,6 @@
   line-height: 1.35;
 }
 
-@media (max-width: 1180px) {
-  .review-dashboard-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .metric-card:nth-child(2n) {
-    border-right: 0;
-  }
-}
-
 @media (max-width: 720px) {
   .review-sticky-bar {
     flex-direction: column;
@@ -1033,7 +980,6 @@
     justify-content: flex-start;
   }
 
-  .review-dashboard-grid,
   .review-queue-kpis,
   .compliance-list {
     grid-template-columns: 1fr;
@@ -1041,10 +987,6 @@
 
   .review-queue-toolbar {
     grid-template-columns: 1fr;
-  }
-
-  .metric-card {
-    border-right: 0;
   }
 
   .portfolio-row {
