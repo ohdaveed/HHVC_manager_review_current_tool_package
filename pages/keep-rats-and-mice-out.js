@@ -71,7 +71,7 @@ window.HHVC_PAGES['ratsPrevent'] = {
       bullets: [
         'Store all food in sealed pest-proof containers made of metal, glass, or hard plastic.',
         'Secure garbage in covered bins and keep trash areas clean.',
-        'Fix leaking pipes and dripping faucets to remove water sources.',
+        'Fix leaking pipes and dripping faucets to remove water sources. Structural plumbing leaks are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
         'Remove indoor and outdoor clutter, wood piles, and debris where rodents can nest.',
         'IPM Action Threshold: Any confirmed rodent activity in a home meets the threshold. Act immediately instead of waiting for multiple signs.',
       ],

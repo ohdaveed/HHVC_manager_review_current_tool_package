@@ -72,10 +72,11 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'If your problem is not listed',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the two paragraphs below. Stay within HHVC scope; do not route to specific non-HHVC paths.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the three paragraphs below.',
       kind: 'body',
       paragraphs: [
-        'Some housing problems are handled by other City programs. If your problem is not on this list, you can still start with 311, which can help send your report to the right place.',
+        'Some housing problems are handled by other City programs. For example, structural water intrusion, leaks, and major heating or utility failures are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
+        'If your problem is not on this list, you can still start with 311, which can help send your report to the right place.',
         'If you are not sure whether HHVC can review your problem, it is still okay to report it. HHVC will review whether it may involve a housing or pest-related public health concern.',
       ],
     },

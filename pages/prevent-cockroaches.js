@@ -50,7 +50,7 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
       bullets: [
         'Clean grease and crumbs daily from countertops, stoves, sinks, and under kitchen appliances.',
         'Store all food in sealed plastic, glass, or metal containers.',
-        'Keep kitchen sinks dry and fix any plumbing leaks immediately. Cockroaches need daily access to water.',
+        'Keep kitchen sinks dry and fix any plumbing leaks immediately. For structural plumbing leaks, the issue should be routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025). Cockroaches need daily access to water.',
         'Keep trash bins clean and covered, and empty garbage containers every night.',
         'Do not leave pet food or water bowls out overnight.',
       ],

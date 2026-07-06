@@ -33,6 +33,14 @@ window.HHVC_PAGES['afterReport'] = {
           karl: 'Maps to a second Title and text block: Title = this step title, Text = the two paragraphs below (weekday processing expectation).',
         },
         {
+          title: 'Agency Hand-off (If applicable)',
+          text: [
+            'If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
+            'HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.'
+          ],
+          karl: 'Maps to a Title and text block: Explains routing for structural issues to DBI.',
+        },
+        {
           title: 'An inspector may contact you',
           text: [
             'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
@@ -87,8 +95,8 @@ window.HHVC_PAGES['afterReport'] = {
         'These timelines represent general enforcement standards. Actual correction deadlines are established on the official Notice of Violation based on the severity of the health hazard.',
         'Extensions: HHVC may offer an extension to the compliance deadline if the property owner contacts the inspector before the deadline.',
         'Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.',
-        'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).',
-        "Persistent violations can result in citations, administrative fines of up to $1,000 per day, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
+        'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees ($256/hour for inspectors and $234/hour for technicians). Invoices must be paid within 30 days. Unpaid bills will incur $10 or $30 late penalties and 1.5% compounded monthly interest.',
+        "Persistent violations can result in citations, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
       ],
     },
     {

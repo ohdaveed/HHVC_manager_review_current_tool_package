@@ -40,7 +40,7 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
         'Pools and Spas: Keep them chlorinated and covered tightly when not in use. Drain water off the covers.',
         'Backyard Ponds: Stock fishponds with mosquito fish, remove excess weeds, and maintain proper water flow.',
         'Bird Baths: Change the water at least once a week.',
-        'Basements and Crawls: Keep areas under houses dry. Repair leaking pipes, dripping faucets, and condensation lines.',
+        'Basements and Crawls: Keep areas under houses dry. Repair leaking pipes, dripping faucets, and condensation lines. Major structural plumbing leaks are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
         'Tires: Store tires indoors, cover them, or dispose of them properly so they do not collect water.',
       ],
     },

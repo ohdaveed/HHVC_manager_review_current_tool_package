@@ -102,19 +102,16 @@ window.HHVC_PAGES['reduceMoisture'] = {
       ],
     },
     {
-      heading: 'Fix leaks and water problems',
+      heading: 'Understand responsibilities for leaks vs. condensation',
       karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
-        'Leaks and water intrusion should be addressed quickly. Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem.',
+        'Leaks and structural water intrusion are the landlord\'s responsibility under the San Francisco Housing Code (2025) and are routed to the Department of Building Inspection (DBI). Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem.',
+        'If you are a property owner or manager, it is your responsibility to repair dripping pipes, roof leaks, broken window frames, and water heater leaks to prevent conditions that allow mold to grow. Note: Structural water intrusion, roof leaks, broken window frames, and water heater leaks are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
       ],
       bullets: [
-        'Dripping pipes',
-        'Roof leaks',
-        'Window leaks',
-        'Water heater leaks',
-        'Wet cabinets or flooring',
-        'Recurring water stains',
+        'Landlords must repair dripping pipes, roof leaks, broken window frames, and water heater leaks (report to the Department of Building Inspection (DBI)).',
+        'Tenants must manage general humidity and condensation caused by daily living using proper ventilation.',
       ],
     },
     {
