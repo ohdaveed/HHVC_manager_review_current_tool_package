@@ -3,7 +3,7 @@
 ## Disease-Risk Reference Sheet for Web Content Claim Verification
 
 **Document Classification:** Internal Content Governance Standard & SME Review Guide  
-**Aligned Manual Chapters:** Chapter 6 (Writing/Plain Language) and Chapter 8 (Public-Facing Service Standards)  
+**Aligned Manual Chapters:** Master Guidelines (Consolidated 8-Chapter Master Reference & Quality Standards), San Francisco Housing Code (2025) 
 **Quality Control Gate:** Appendix H Publication Readiness Checklist (Check 13: Public Health and Safety Wording)  
 **Current Date:** July 5, 2026
 

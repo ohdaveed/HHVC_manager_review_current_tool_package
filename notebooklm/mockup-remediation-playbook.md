@@ -27,7 +27,7 @@ To demonstrate the power of the design system, present this end-to-end water-int
 - **Active Edits Required**:
   - **The 72-Hour Rule**: Tenants must notify property owners in writing first and wait at least 72 hours for a response before requesting an inspection.
   - **HHVC vs. DBI Routing**:
-    - _Department of Building Inspection (DBI)_: Routes structural water leaks (leaking roofs, window frame failures, broken water heaters, dripping plumbing pipes).
+    - _Department of Building Inspection (DBI)_: Routes structural water leaks (leaking roofs, window frame failures, broken water heaters, dripping plumbing pipes) under the San Francisco Housing Code (2025).
     - _HHVC_: Routes condensation, humidity-related mold, and mechanical ventilation failures (broken exhaust fans).
   - **Inspection Threshold**: Visible mold must be actively growing on structural surfaces (walls or ceilings) and total at least 10 square feet to trigger enforcement.
   - **Jurisdiction Cap**: DPH does not have jurisdiction over personal property (clothing, furniture, or household items).

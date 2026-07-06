@@ -16,7 +16,7 @@ When you report a housing or pest problem, your report follows a standard public
 
 1. **Intake and Routing**: Your report is submitted through San Francisco 311 and is automatically routed to the Healthy Housing and Vector Control (HHVC) program.
 2. **Public Health Review**: HHVC reviews the complaint to see if it involves a housing, sanitation, or pest-related public health concern under San Francisco Health Code Article 11.
-3. **Agency Hand-off (If applicable)**: If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI). HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.
+3. **Agency Hand-off (If applicable)**: If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025). HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.
 
 ---
 
@@ -80,7 +80,8 @@ To set realistic public expectations, please note that HHVC cannot guarantee the
 
 - **Content Owner**: Healthy Housing and Vector Control Program Manager
 - **Source Basis**:
-  - HHVC Web Governance and Content Standards Manual v2 (§5.7 After-Report Pattern, §6.5 Step Lists)
+  - Master Guidelines (Consolidated 8-Chapter Master Reference & Quality Standards)
+  - San Francisco Housing Code (2025)
   - San Francisco Health Code Article 11 and Article 11A (Bed Bug Rules)
   - SFDPH Director's Rules and Regulations
 - **Reading Level**: Targeted at **Grade 6** for high public accessibility.

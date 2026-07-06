@@ -80,7 +80,7 @@ If your mold problem is caused by a structural defect or if your landlord has no
 
 ### Understanding Responsibilities
 
-- **Leaks are the Landlord's Responsibility:** This includes dripping pipes (under sinks or inside walls), water heater leaks, roof leaks, foundation seepage, and broken window frames [77, 79]. Landlords must repair these structural or systemic failures [77, 79].
+- **Leaks are the Landlord's Responsibility:** This includes dripping pipes (under sinks or inside walls), water heater leaks, roof leaks, foundation seepage, and broken window frames [77, 79]. Landlords must repair these structural or systemic failures under the San Francisco Housing Code (2025) [77, 79].
 - **Condensation is the Tenant's Responsibility:** General humidity and surface "sweat" caused by daily living must be managed by the resident using proper ventilation practices [77, 79].
 
 ### What renters should do first
@@ -112,6 +112,7 @@ Please note the strict guidelines for city inspection and enforcement:
 - **GitHub page_key:** reduceMoisture [72]
 - **Karl Content Type:** Information page [72]
 - **Primary Agency:** Environmental Health / Healthy Housing and Vector Control (HHVC) [92]
+- **Source Basis:** Master Guidelines (Consolidated 8-Chapter Master Reference & Quality Standards) and San Francisco Housing Code (2025)
 - **Content Owner:** David Arrizon [68]
 - **Target Reading Level:** Grade 6 (Standard Information Pattern target) [60]
 - **Last Reviewed Date:** July 5, 2026
