@@ -441,6 +441,28 @@ the original guesswork, not yet checked against a live Karl form. Confirm
 with Digital Services (or repeat the same live-session verification)
 before relying on it.
 
+### Data story and Event — doc-confirmed field lists (2026-07-06)
+
+Unlike the rest of this section (guesswork), these two page types were
+checked against the Help Center on 2026-07-06 and have a real field/block
+inventory. Still UI labels only — no raw Wagtail names, and not the live
+admin form — but no longer "entirely unverified." Full research log:
+`docs/karl-help-center-research-2026-07-06.md`.
+
+**Data story**: goals/audience/URL/access-permission table, plus content
+built from repeatable **Data story content sections**, each with an
+optional Section title and Text, Callout, Images, and a PowerBI embed. The
+Callout component page confirms Data story is 1 of only 3 content types
+that support callouts (Transaction, Information, Data story).
+
+**Event**: "How an Event page works" gives the full field list — Title,
+Description, Primary Agency, Call to action, Date time, Cost, Location,
+Image, Main body text, Partner agencies, Contact us, Topics. Supporting
+subpages: **Call to action on Event** (title/description/SF.gov-or-
+external link/link text/screenreader label) and **Location on Event
+page** (an online checkbox plus call-to-action signup link, supporting
+in-person/virtual/hybrid).
+
 ### Page-level fields → Wagtail Page model (general guess)
 
 | Mockup field (`build_scripts/schema.js`) | Likely Wagtail equivalent                                                                              |
@@ -517,16 +539,23 @@ Everything still `[ ]` needs the logged-in admin form.
       page, but note **External link entries in Resources DO carry their
       own Title, URL, and description** — only internal SF.gov page links
       lose the custom card text.
-- [ ] **NEW (doc-sourced, needs admin-form confirmation): `Related` only
-      accepts 4 content types** — Transaction, Information, Campaign, and
-      Topic, per the "Related" component page. If accurate, a Related item
-      cannot target a Resource Collection page — which affects any mockup
-      card in a `related`-mapped section whose `target` is one of the
-      Resource Collection hubs (`report-a-problem`, `prevent-problems`).
-      Those cards would need a different placement (e.g. an in-body link)
-      or the target page's type reconsidered. Verify against the live
-      chooser, since the Transaction session (2026-07-05) observed "no type
-      restriction shown" on the picker UI.
+- [x] **doc-confirmed: `Related` only accepts 4 content types** —
+      Transaction, Information, Campaign, and Topic. The Help Center's
+      "Related" component page states verbatim: *"Only a few content
+      types can be tagged as Related pages: Transaction, Information,
+      Campaign, Topic."* The Transaction content-type page repeats the
+      identical list; Resource Collection is never included. This affects
+      any mockup card in a `related`-mapped section whose `target` is one
+      of the Resource Collection hubs (`report-a-problem`,
+      `prevent-problems`) — those cards need a different placement (e.g.
+      an in-body link) or the target page's type reconsidered. Note: a
+      stale 2022 release note ("Campaigns, data stories, resource
+      collections can now be added in the related resource section...")
+      contradicts this and should be treated as historical, not current,
+      behavior. Still worth a quick live-chooser spot check given the
+      Transaction session (2026-07-05) observed "no type restriction
+      shown" on the picker UI, but the documented rule is now strong
+      enough to stop treating this as an open question.
 - [x] **doc-confirmed: Information pages have no button/CTA block type** —
       the "Button" component page enumerates exactly where buttons exist
       (Transaction call-to-action; Event/Meeting signup links;
@@ -544,11 +573,13 @@ Everything still `[ ]` needs the logged-in admin form.
       Description, Primary Agency, Part of, Information section [Title and
       text / Image / Callout], Partner agencies, Topics, Related) has no
       `what_to_do`-style Section wrapper for step-by-step content.
-- [ ] **No block type for tabular content on Information pages** — a
-      mockup `table[][]` has no home in `Title and text`/`Image`/`Callout`.
-      (Help Center docs corroborate the 3-block list but never mention
-      tables anywhere; still worth one look at the rich-text "/" menu in
-      the live form.)
+- [x] **doc-confirmed: no block type for tabular content on Information
+      pages** — a mockup `table[][]` has no home in `Title and
+      text`/`Image`/`Callout`. The Help Center's "How a Report page works"
+      page states: *"You can add a table to Reports. It is the only
+      content type that supports tables."* That's an affirmative
+      exclusivity claim, not just silence on other page types — no page
+      type other than Report has a table block, Information included.
 - [ ] **Topic's `Services`/`Resources` blocks have no intro-paragraph
       field** — Title + Links only. Partially corroborated: the Help
       Center's Topic page mentions organizing services/resources "by
@@ -560,33 +591,70 @@ Everything still `[ ]` needs the logged-in admin form.
       housing health problems").
 - [ ] **Campaign's `Related` is single-item, not repeatable** — only 1 of
       `mosquito-education-workshop.js`'s 4 related cards fits; the other 3
-      need an `Additional content → Resources` block instead.
+      need an `Additional content → Resources` block instead. (2026-07-06
+      doc check: no dedicated "Related on a Campaign page" subpage exists
+      in the Help Center to confirm repeatability or content-type
+      restrictions either way — this detail came from the live 2026-07-05
+      admin-form session, not docs, and still needs the live form to
+      re-confirm.)
 
 ### Field names / UI mechanics still unconfirmed
 
 - [ ] Transaction's bottom-of-form "Redirect this page to" field's raw
-      Wagtail field name.
+      Wagtail field name. (2026-07-06 doc check, full detail in
+      `docs/karl-help-center-research-2026-07-06.md`: found a dedicated
+      "Redirect this page to" component page, but it states the component
+      "has been disabled in the CMS." No raw field name surfaced — worth
+      flagging to reviewers that this field/component may currently be
+      disabled entirely, pending live-admin confirmation.)
 - [ ] Information's field names (`primary_agency`, `Part of`,
       `Information section`, `partner_agencies`, `topics`, `related`) — all
       currently reused from Transaction's confirmed names as a plausible
-      guess, not independently verified.
+      guess, not independently verified. (2026-07-06 doc check: UI labels
+      only, no snake_case/raw names anywhere in the Help Center, including
+      CSV/export docs. Still needs live admin or API access.)
 - [ ] Resource Collection / Campaign / Topic raw field names — UI labels
-      only, never inspected.
+      only, never inspected. (2026-07-06 doc check: same result — the
+      "How a Resource Collection page works," "How a Campaign page
+      works," and Topic pages give UI labels only, no raw names anywhere.
+      Still needs live admin.)
 - [ ] `Address` block's "Hours and days open" repeatable — didn't visibly
-      render inside the nested Address-snippet modal.
-- [ ] Whether Transaction's rich text fields have the same "/" slash-menu
-      nested-`Blocks`/`Actions` group confirmed on Information.
+      render inside the nested Address-snippet modal. (2026-07-06 doc
+      check: the Address component page lists it as a single line item
+      alongside ordinary single fields, no language distinguishing it as
+      repeatable. A 2025 release note about Agency pages "showing 7 days a
+      week of open hours regardless of how many days the department is
+      open" implies day-by-day front-end rendering but doesn't confirm
+      back-end repeatability. Still needs live admin.)
+- [x] **live-admin-confirmed: Transaction's rich text fields have the same
+      "/" slash-menu** as Information — confirmed directly on a
+      Transaction page in the live Karl admin (2026-07-06). (2026-07-06
+      doc check found no public doc page mentioning a "/" slash-command
+      menu for any content type, so this was previously unresolvable from
+      docs alone — resolved instead by direct live-admin observation.)
 - [ ] Whether Transaction's rich text fields share Information's 4-type
       Link tool (Internal/External/Email/Phone) — inferred, not
-      re-confirmed.
+      re-confirmed. (2026-07-06 doc check: the generic rich-text Link
+      docs describe only **2** types — Internal link and External link —
+      with Email/Phone documented only as separate standalone
+      section-specific components, not rich-text Link-tool options. Mild
+      discrepancy with the 4-type claim from the 2026-07-05 live session
+      — flag for re-check rather than treating as confirmed either way.
+      Full detail in `docs/karl-help-center-research-2026-07-06.md`.)
 
 ### Entirely unverified
 
-- [ ] Everything under "Other page types (Data story, Event, etc.) —
-      unverified" below — original guesswork for any page type besides the
-      5 verified ones, and the generic `section.cards[]`/`callout`/`button`
-      guesses that no longer apply to any page type actually in use in this
-      repo.
+- [x] **doc-confirmed (partial): Data story and Event page types** — see
+      the "Data story and Event" subsection added under "Other page
+      types" below; both now have a real field/block inventory sourced
+      from the Help Center rather than guesswork. Full research log:
+      `docs/karl-help-center-research-2026-07-06.md`.
+- [ ] Remaining page types under "Other page types (Data story, Event,
+      etc.) — unverified" below (Agency, About, Location, Meeting, News,
+      Profile, Report, Step by step) — still original guesswork, not yet
+      checked against docs or a live Karl form. The generic
+      `section.cards[]`/`callout`/`button` guesses in that section no
+      longer apply to any page type actually in use in this repo.
 
 ## Accuracy check: "HHVC Karl CMS Governance and Technical Design Manual" (2026-07-06)
 
