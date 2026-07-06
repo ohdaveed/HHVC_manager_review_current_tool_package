@@ -588,6 +588,59 @@ Everything still `[ ]` needs the logged-in admin form.
       guesses that no longer apply to any page type actually in use in this
       repo.
 
+## Accuracy check: "HHVC Karl CMS Governance and Technical Design Manual" (2026-07-06)
+
+A separate Google Doc ("HHVC Karl CMS Governance and Technical Design
+Manual") was checked against the public Karl Editor Help Center
+(`sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`) via the
+Karl MCP tools. That doc lives outside this repo and isn't edited here —
+this section only records where its claims disagree with Karl's actual
+documented behavior, so future editors don't inherit its errors.
+
+**Corrected — the source doc's claim is wrong or overstated:**
+
+- **Alerts:** the doc claims alerts are "allowed only on Topic/Location"
+  and forbidden on Transaction/Information. Karl's Alert page states only
+  **2 content types support alerts: Agency and Location** — not Topic.
+- **Reading level:** the doc lists "Grade 5–6 for service pages" as a
+  "Critical Fail Point" (publish-blocking). Karl's Readability page states
+  the opposite: *"5th grade reading level is not required on SF.gov, but
+  it's a helpful guideline."* It is not a publication gate.
+- **Grade 8 legal/fee pages:** the doc states "Grade 8 maximum" as a hard
+  ceiling. Karl's specialist-writing guidance says to "aim for" 8th grade
+  but to "prioritize clarity and findability over a grade level" — a
+  suggestion, not a maximum enforced at publish.
+- **Tables:** the doc implies tables are a general component (with a
+  3-column limit) available across page types. Karl's Report page docs
+  state **Report is the only content type that supports tables at all**
+  ("It is the only content type that supports tables"). The 3-column
+  guidance is real but the doc omits that no other page type has tables.
+- **"Code Interpretation Template":** the doc names this as one of "4
+  required design system templates" with 7 mandatory fields. No such
+  content type exists in Karl. The real 14 Karl content types are Agency,
+  About, Campaign, Data story, Event, Information, Location, Meeting,
+  News, Profile, Report, Resource collection, Topic, Transaction, and
+  Step by step — there is no Code Interpretation type or its 7 fields
+  anywhere in the Help Center.
+- **Card layouts:** the doc claims cards are "system-automated; editors
+  cannot override." No Karl Help Center page makes this claim in either
+  direction — cards are covered per-content-type (e.g. Topic's `Services`/
+  `Resources` blocks, Resource Collection's `Body` blocks) with ordinary
+  editor-filled Title/Links fields, not an automated layout. Treat this
+  claim as unconfirmed/likely wrong rather than a real constraint.
+
+**Left alone — HHVC-specific policy, not a Karl CMS platform claim, so
+Karl's Help Center has no bearing on it either way:**
+
+- 72-hour owner notice before reporting
+- Mandatory "SRO or residential hotel" phrasing
+- 311 as the primary/required route, no independent intake path
+- "rats or mice" instead of "rodents" in titles
+
+These are HHVC program/content decisions, not Karl platform rules — Karl's
+documentation doesn't confirm or contradict them, and they're out of scope
+for this doc's Karl-CMS-mapping purpose.
+
 ## What this doc is not
 
 - Not a live Wagtail schema for anything beyond the verified `Transaction`,
