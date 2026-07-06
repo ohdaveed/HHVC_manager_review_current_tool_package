@@ -1111,3 +1111,58 @@ body.hide-karl-tags .karl-tag-legend {
 .tool-btn:active {
   transform: scale(0.98);
 }
+
+.page-breadcrumbs {
+  background: var(--sfds-white);
+  padding: 0.85rem 2rem;
+  border-bottom: 1px solid var(--sfds-border);
+}
+.page-breadcrumbs-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.back-link {
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.back-link::before {
+  content: '‹';
+  font-size: 1.5rem;
+  line-height: 1;
+  margin-top: -0.15rem;
+}
+.page-breadcrumbs ol {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+}
+.page-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+}
+.page-breadcrumbs li:not(:last-child)::after {
+  content: '/';
+  color: var(--sfds-slate-4);
+}
+.page-breadcrumbs a {
+  color: var(--sfds-action-blue);
+  text-decoration: none;
+}
+.page-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+.page-breadcrumbs span {
+  color: var(--sfds-slate-3);
+}
