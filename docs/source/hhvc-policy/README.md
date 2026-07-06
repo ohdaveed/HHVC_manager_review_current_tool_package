@@ -275,6 +275,16 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Reviewer:** CA
 - **Note:** Current certified fee tier estimates (e.g., 3 rental units = $100 for FY 2025–26). Use as best-estimate reference only; page copy points to invoice.
 
+### 2026-07-06-dph-ehb-fee-schedule-fy25-26.md
+
+- **Original URL:** https://media.api.sf.gov/documents/Website_Fees_FY25-26_1M8m5aT.pdf
+- **Source title:** Department of Public Health - Environmental Health Branch — Fee Schedule, Application, License, and Other Fees
+- **Authority:** SFDPH Environmental Health Branch (Controller-adjusted fees under Health Code Sec. 609.2)
+- **Export date:** 2026-07-06
+- **Format:** md (PDF extract)
+- **Reviewer:** CA
+- **Note:** Final rounded FY 2025–26 fee sheet (revised 7/3/2025), effective through 6/30/26 — supersedes the FY24-25 estimate and the Aug 2025 Controller pre-round for `payFee`/`noticeOfViolation` amounts (3 rental units = $101; reinspection $251/hr inspector, $229/hr technician). No FY 2026–27 schedule was found published as of export; corrects a previously-published, unsourced "FY27" table that didn't match any certified schedule.
+
 ## Documents still expected for Phase 1
 
 - HHVC inspection / complaint handling policy (operational detail beyond master template)

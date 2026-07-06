@@ -28,17 +28,28 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Who may need to pay',
-      karl: 'Best real-schema fit: a second things_to_know entry (Title = this heading, Text = the bulleted list below).',
+      karl: 'Best real-schema fit: a second things_to_know entry (Title = this heading, Text = the bulleted list below). Table removed — Transaction pages do not support a table block in Karl (only Report does; see docs/karl-help-center-research-2026-07-06.md item 2), so the fee tiers are listed as bullets instead. Amounts verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/25-6/30/26," revised 7/3/2025 (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy25-26.md) — the most recent certified schedule published as of this edit. Re-verify against a newer certification before publishing if one has since been issued.',
       kind: 'body',
       bullets: [
         'You need to pay this fee if you own an apartment building with 3 or more rental units.',
         'If fewer than 3 units are rented during the billing year, you do not need to pay the fee.',
-        'Check your invoice for the exact amount. The number of rental units determines your fee.',
+        'The number of rental units determines your fee. Current certified rates (effective through June 30, 2026):',
+        '3 units: $101',
+        '4-6 units: $127',
+        '7-10 units: $171',
+        '11-15 units: $343',
+        '16-20 units: $475',
+        '21-30 units: $673',
+        'Over 30 units: $791',
+        'See the full fee schedule, including reinspection hourly rates, in the property owner resource collection.',
+      ],
+      paragraphs: [
+        'Reinspections are billed hourly (Sec. 609 cost recovery): $251/hour for an Environmental Health Inspector ($125 per additional half hour) and $229/hour for an Environmental Health Technician ($113 per additional half hour).',
       ],
     },
     {
       heading: 'Pay your fee',
-      karl: 'what_to_do -> Section. Section title: "Pay your fee". Section specifics: Text block (this paragraph) + Button link block — target still pending a confirmed SF.gov online payment URL, so the CTA is non-functional until added. Separately: this page\'s actual fee amount is a strong candidate for the dedicated `cost` panel (radio Free/Flat fee/Range/Minimum and up/None + a 120-char-capped Cost description) rather than being described in this Section\'s prose — but the cost radio has no "varies, see invoice" option, and this mockup deliberately omits real fee amounts (see the next section\'s karl note). Flag for Digital Services which radio option (likely Range or Minimum and up) best represents "fee varies by unit count, see invoice."',
+      karl: 'what_to_do -> Section. Section title: "Pay your fee". Section specifics: Text block (this paragraph) + Button link block — target still pending a confirmed SF.gov online payment URL, so the CTA is non-functional until added. Separately: this page\'s fee tiers are listed in the "Who may need to pay" section above rather than the dedicated `cost` panel (radio Free/Flat fee/Range/Minimum and up/None + a 120-char-capped Cost description), since the cost radio has no "varies by unit count, see the fee schedule" option. Flag for Digital Services which radio option (likely Range or Minimum and up) best represents that.',
       kind: 'body',
       paragraphs: [
         'Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.',
@@ -54,12 +65,14 @@ window.HHVC_PAGES['payFee'] = {
       ],
     },
     {
-      heading: 'Questions about your fee',
-      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the two paragraphs below), same struct as good_for_community. The phone number restated here is the same one already captured in the "If you need help" Phone number block above, not a separate contact. Do not add fee amounts, due dates, or penalties — amounts vary by building and must come from the invoice.',
+      heading: 'Questions about your fee and late payments',
+      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the paragraphs below). Updated per Master Guidelines Chapter 8.3 to include penalties.',
       kind: 'body',
       paragraphs: [
         'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
         'Keep your invoice or account information in case you need to ask a question or confirm a payment.',
+        'Invoice payments are due within 30 days. Late payments trigger a standard penalty progression: a $10 late penalty applies for payments up to 30 days overdue, and a $30 late penalty applies for payments up to 60 days overdue.',
+        'For continued non-payment, a special assessment property lien is recorded, and interest accrues at a rate of 1.5% per month (compounded monthly) until the balance is paid in full.',
       ],
     },
     {
@@ -90,6 +103,12 @@ window.HHVC_PAGES['payFee'] = {
           text: 'Use prevention, monitoring, and resident outreach. UC IPM is the primary source for templates and checklists.',
           target: 'ownerGuidance',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
+        },
+        {
+          title: 'Property owner responsibilities',
+          text: 'Find the full fee schedule PDF, reinspection rates, and other owner resources.',
+          target: 'ownerHub',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above). Links to the Resource Collection page hosting the fee schedule document.',
         },
       ],
     },

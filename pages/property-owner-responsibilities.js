@@ -55,6 +55,19 @@ window.HHVC_PAGES['ownerHub'] = {
       ],
     },
     {
+      heading: 'Fee schedule',
+      karl: 'Maps to Body → Documents → one "Document section" item (Title = "Fee schedule"), the block type distinct from the "Resources" (SF.gov page link) sections above — Documents is for downloadable PDF files via the Document Picker (docs/wagtail-content-mapping.md item 5), not a page reference. In the real CMS this card would be uploaded through the Document Picker rather than linked by raw URL (see CLAUDE.md 7.5 / Chapter 4 Rule 3 on file linking); the external `url` here is a mockup stand-in for that upload.',
+      kind: 'body',
+      cards: [
+        {
+          title: 'SFDPH Environmental Health Branch fee schedule (current)',
+          text: 'Official fee schedule, including the Healthy Housing apartment-building fee tiers and hourly reinspection rates. Rates effective 7/1/25-6/30/26, revised 7/3/2025 — check for a newer schedule before relying on it for a specific billing year.',
+          url: 'https://media.api.sf.gov/documents/Website_Fees_FY25-26_1M8m5aT.pdf',
+          karl: 'Document Picker upload in the real CMS (see section-level karl note); sourced in docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy25-26.md.',
+        },
+      ],
+    },
+    {
       heading: 'Related pages',
       karl: 'Resource Collection has no dedicated Related field (confirmed live) — maps to a second Body → Resources → "Resource section" item (Title = "Related pages"), using the same SF.gov page link blocks as the section above rather than a separate right-panel field.',
       kind: 'placement',
