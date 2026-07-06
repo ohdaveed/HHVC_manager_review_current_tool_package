@@ -265,7 +265,7 @@ existing `pages/*.js` file to cross-check this against yet.
 | _(additional content)_      | Additional content (repeatable stream)      | chooser: `Image with text`, `Video`, `Accordion section`, `Embed`, `Resources` | See nested breakdown below the table — each offers its own sub-fields, several deeply nested                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | _(about)_                   | About                                       | "About campaign" — single rich text field                                      | —                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | _(partner agencies)_        | Partner agencies (repeatable)               | page chooser restricted to `Agency` pages                                      | Same field/restriction as Transaction/Resource Collection's `partner_agencies`                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| _(related)_                 | Related                                     | single block type `Page block`, no chooser                                     | Helper: "Link to news on another City website (no external news). Choose a SF.gov page, or enter an external URL." Fields: "Link to" radio (`SF.gov page`/`External URL`/`None`), "Page" \* chooser (unrestricted) or URL field depending on the radio, "Link text" \*. **Unlike Transaction/Information/Resource Collection's `related`** (a bare unrestricted page reference with no link-type choice), Campaign's `Related` can point to an external URL and carries its own "Link text" — a materially different shape, not the same field reused. |
+| _(related)_                 | Related (raw name `related_links`, a repeatable StreamField — **confirmed via live admin, 2026-07-06**) | one block type (`Page block`) per entry, but **repeatable** — the "no chooser" in the original 2026-07-05 note meant no *block-type* picker (every entry is a Page block, there's no alternative block type to choose), **not** that only one entry is allowed. That distinction was missed on first pass and propagated into the checklist and `mosquito-education-workshop.js`'s `karl` notes as "single-item, not repeatable" — corrected below. | Helper: "Link to news on another City website (no external news). Choose a SF.gov page, or enter an external URL." Fields: "Link to" radio (`SF.gov page`/`External URL`/`None`), "Page" \* chooser or URL field depending on the radio, "Link text" \*. **Unlike Transaction/Information/Resource Collection's `related`** (a bare unrestricted page reference with no link-type choice), Campaign's `Related` can point to an external URL and carries its own "Link text" — a materially different shape, not the same field reused. **Content-type restriction contradiction (2026-07-06 live check):** the Help Center's "Related" page states only Transaction/Information/Campaign/Topic can be tagged as Related — but live-testing Campaign's own Related picker, searching "resource" surfaced Resource Collection pages as selectable results, and one was successfully chosen as a target. Either the restriction doesn't apply to Campaign's `related_links` specifically, or the Help Center claim is stale/inaccurate — flag for re-check on Transaction/Information/Topic's Related pickers too, since only Campaign's was live-tested. |
 | _(contact us)_              | Contact us (repeatable stream)              | default `Contact` block, 4 nested sub-streams                                  | See nested breakdown below the table                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 **`Additional content`'s five block types:**
@@ -328,6 +328,13 @@ Practical implications for `pages/*.js` → Campaign pages:
   assume the "just a bare page reference, no custom text" gap documented
   for Transaction/Information/Resource Collection; that gap doesn't apply
   here.
+- **Correction (2026-07-06 live-admin check):** Campaign's `Related` is
+  repeatable, not single-item — `mosquito-education-workshop.js`'s karl
+  notes previously claimed only 1 of its 4 related cards could occupy
+  Related and the other 3 needed an `Additional content → Resources`
+  block instead. That was wrong; all 4 cards can map directly to
+  repeatable `related_links` entries. The page's `karl` notes have been
+  corrected accordingly.
 
 ## Verified against the real Karl "Topic" add-page form (2026-07-05)
 
@@ -463,6 +470,49 @@ external link/link text/screenreader label) and **Location on Event
 page** (an online checkbox plus call-to-action signup link, supporting
 in-person/virtual/hybrid).
 
+### Agency, About us, Location, Meeting, News, Profile, Report, and Step by step — live-admin-confirmed field lists (2026-07-06)
+
+Live-admin-confirmed (stronger tier than doc-confirmed) top-level field
+lists, from opening each "New: <Type>" form directly in Karl. Only
+top-level fields were captured, not full nested-block detail, and raw
+Wagtail field names weren't inspected for these 8 types. Full research
+log: `docs/karl-live-admin-verification-2026-07-06.md`.
+
+- **Agency**: Title, Description, Logo, Main image, Alert, Quick links,
+  Meeting information, Section title 1 + Subsection, Spotlight 1/2 +
+  Highlights, Section title 2 + Subsection, About, Call to action,
+  Divisions or subcommittees, Partner agencies, People, Public records,
+  Archive information, Meeting archive information, Contact us,
+  **Redirect this page to**, Topics.
+- **About us**: Title, Primary agency, Information, Resources.
+- **Location**: Title, Primary agency, Description, Alert, Essential
+  information, Image, Body (Getting here/Parking/Accessibility/Public
+  transportation/Accordions/Services), About, Partner agencies, At this
+  location, People, Related locations, Contact us.
+- **Meeting**: Title, Primary agency, agency-listing selector, Meeting
+  information (cancelled flag, Date/time, Location, Overview, Agenda,
+  Meeting resources, Videos, Related documents), Regulations and notices,
+  Notices, Partner agencies.
+- **News**: Headline, Primary agency, Date, Image, **Redirect this page
+  to** (positioned mid-form here, not at the bottom), Abstract, Body,
+  Type (News/Press Release dropdown), Topics, Partner agencies.
+- **Profile**: Name, Pronouns, Profile photo, Primary job title (+ line
+  2), Primary agency, Additional roles, Biography, Direct contact (phone/
+  email/social), Optional content, Spotlight, Quick links, Contact us,
+  **Redirect this page to**.
+- **Report**: Title, Date, Primary agency, Spotlight, Content, Print
+  version (document chooser), Partner agencies.
+- **Step by step**: Title, Primary agency, Description, Intro, Steps,
+  Topics, Partner agencies.
+
+**Cross-reference for Transaction's "Redirect this page to" (task #3):**
+Agency, News, and Profile all show this field on their *new/unsaved* live
+forms — so the field itself isn't Transaction-specific or disabled in the
+CMS entirely. This is consistent with the theory that it only activates
+(renders input elements) once a page has been saved once, rather than
+being disabled outright.
+in-person/virtual/hybrid).
+
 ### Page-level fields → Wagtail Page model (general guess)
 
 | Mockup field (`build_scripts/schema.js`) | Likely Wagtail equivalent                                                                              |
@@ -546,23 +596,18 @@ Everything still `[ ]` needs the logged-in admin form.
       page, but note **External link entries in Resources DO carry their
       own Title, URL, and description** — only internal SF.gov page links
       lose the custom card text.
-- [x] **doc-confirmed: `Related` only accepts 4 content types** —
-      Transaction, Information, Campaign, and Topic. The Help Center's
-      "Related" component page states verbatim: *"Only a few content
+- [ ] **Contradicted, needs re-check: `Related`'s content-type
+      restriction.** Doc claim was Transaction/Information/Campaign/Topic
+      only, per the Help Center's "Related" page (*"Only a few content
       types can be tagged as Related pages: Transaction, Information,
-      Campaign, Topic."* The Transaction content-type page repeats the
-      identical list; Resource Collection is never included. This affects
-      any mockup card in a `related`-mapped section whose `target` is one
-      of the Resource Collection hubs (`report-a-problem`,
-      `prevent-problems`) — those cards need a different placement (e.g.
-      an in-body link) or the target page's type reconsidered. Note: a
-      stale 2022 release note ("Campaigns, data stories, resource
-      collections can now be added in the related resource section...")
-      contradicts this and should be treated as historical, not current,
-      behavior. Still worth a quick live-chooser spot check given the
-      Transaction session (2026-07-05) observed "no type restriction
-      shown" on the picker UI, but the documented rule is now strong
-      enough to stop treating this as an open question.
+      Campaign, Topic"*). **2026-07-06 live-admin check on Campaign's
+      Related picker contradicts this**: searching "resource" surfaced
+      Resource Collection pages as selectable results, and one was
+      successfully chosen as a target. Either the restriction doesn't
+      apply to Campaign's `related_links` specifically, or the Help
+      Center claim is stale — Transaction/Information/Topic's Related
+      pickers haven't been live-tested yet, only Campaign's. Downgraded
+      from doc-confirmed pending that re-check.
 - [x] **doc-confirmed: Information pages have no button/CTA block type** —
       the "Button" component page enumerates exactly where buttons exist
       (Transaction call-to-action; Event/Meeting signup links;
@@ -587,37 +632,58 @@ Everything still `[ ]` needs the logged-in admin form.
       content type that supports tables."* That's an affirmative
       exclusivity claim, not just silence on other page types — no page
       type other than Report has a table block, Information included.
-- [ ] Topic's `Services`/`Resources` blocks intro-paragraph field — tracked
-      as follow-up task #1 ("Verify Topic's Services/Resources
-      intro-paragraph field in live Karl admin").
-- [ ] Campaign's `Related` single-item/content-type restrictions — tracked
-      as follow-up task #2 ("Confirm Campaign's Related field
-      repeatability and content-type restrictions").
+- [x] **live-admin-confirmed (2026-07-06): Topic's `Services`/`Resources`
+      blocks have no intro-paragraph field** — both blocks are Title
+      (single-line) + Links (repeatable, each an `SF.gov page` or
+      `External link`); no free-text/description field above the link
+      list on either block type.
+- [x] **live-admin-confirmed (2026-07-06): Campaign's `Related` is
+      repeatable** (raw name `related_links`, a StreamField — confirmed
+      by adding two separate Page entries) **and its picker is not
+      restricted to Transaction/Information/Campaign/Topic** — see the
+      new contradiction item above and the corrected Campaign table row.
 
 ### Field names / UI mechanics still unconfirmed
 
 - [ ] Transaction's "Redirect this page to" raw Wagtail field name —
-      tracked as follow-up task #3 (component may be disabled in the CMS
-      entirely per Help Center; see
-      `docs/karl-help-center-research-2026-07-06.md` item 5).
-- [ ] Information's raw field names (`primary_agency`, `Part of`,
-      `Information section`, `partner_agencies`, `topics`, `related`) —
-      tracked as follow-up task #4.
-- [ ] Resource Collection / Campaign / Topic raw field names — tracked as
-      follow-up task #5.
-- [ ] `Address` block's "Hours and days open" repeatable — tracked as
-      follow-up task #6.
+      **partially resolved (2026-07-06 live check):** the field label is
+      present at the bottom of the Transaction form but is inert on a new/
+      unsaved page — DOM inspection found zero `<input>`/`<select>`
+      elements with "redirect" in their name/id anywhere on the page. It's
+      likely disabled until the page has been saved once, rather than
+      disabled in the CMS entirely as the Help Center doc suggested (see
+      `docs/karl-help-center-research-2026-07-06.md` item 5). Raw field
+      name still needs checking on an already-saved Transaction page —
+      remains open as follow-up task #3.
+- [x] **live-admin-confirmed (2026-07-06): Information's raw field
+      names** — Primary Agency → `primary_agency`; "Part of" → `part_of`;
+      Information section → `information_section`; Partner agencies →
+      `partner_agencies`; Topics → `topics`; Related → `related`.
+- [x] **live-admin-confirmed (2026-07-06): Resource Collection / Campaign
+      / Topic raw field names** — see the new "Live-admin-confirmed raw
+      field names (2026-07-06)" note in
+      `docs/karl-live-admin-verification-2026-07-06.md` for the full list;
+      Campaign's is also folded into its table above.
+- [x] **live-admin-confirmed (2026-07-06): `Address` block's "Hours and
+      days open" is a repeatable StreamField of "Office hours" entries.**
+      Each entry has a Days radio: "Monday to Friday" (one row, Open-from/
+      to time pickers + "Add break") or "Custom" (expands to one
+      independent row per day, Monday–Sunday, each with its own time
+      pickers and "Add break"). Note: this field only rendered/functioned
+      on the full snippet admin form (`/admin/snippets/cms/address/add/`)
+      — inside the page-chooser's inline "Create" tab, the same field's JS
+      widget failed to initialize.
 - [x] **live-admin-confirmed: Transaction's rich text fields have the same
       "/" slash-menu** as Information — confirmed directly on a
       Transaction page in the live Karl admin (2026-07-06). (2026-07-06
       doc check found no public doc page mentioning a "/" slash-command
       menu for any content type, so this was previously unresolvable from
       docs alone — resolved instead by direct live-admin observation.)
-- [ ] Whether Transaction's rich text fields share Information's 4-type
-      Link tool (Internal/External/Email/Phone) — tracked as follow-up
-      task #7. Public docs describe only 2 types generically, a mild
-      discrepancy with the 4-type live-session claim (see
-      `docs/karl-help-center-research-2026-07-06.md` item 10).
+- [x] **live-admin-confirmed (2026-07-06): Transaction's rich text Link
+      tool has 4 types** — Internal link, External link, Email link, Phone
+      link. Resolves the discrepancy noted in
+      `docs/karl-help-center-research-2026-07-06.md` (item 10) in favor of
+      the 4-type claim; the public docs' 2-type description is incomplete.
 
 ### Entirely unverified
 
@@ -626,10 +692,16 @@ Everything still `[ ]` needs the logged-in admin form.
       types" below; both now have a real field/block inventory sourced
       from the Help Center rather than guesswork. Full research log:
       `docs/karl-help-center-research-2026-07-06.md`.
-- [ ] Remaining page types under "Other page types" (Agency, About,
-      Location, Meeting, News, Profile, Report, Step by step) — tracked as
-      follow-up task #8. Lower priority: none of these types are used by
-      any `pages/*.js` file in this repo.
+- [x] **live-admin-confirmed (2026-07-06): Agency, About us, Location,
+      Meeting, News, Profile, Report, and Step by step** — see the new
+      "Agency, About us, Location, Meeting, News, Profile, Report, and
+      Step by step" subsection under "Other page types" below for
+      top-level field lists sourced directly from the live admin forms.
+      Only top-level fields were captured (not full nested-block detail),
+      and raw Wagtail field names weren't inspected for these 8 types —
+      still open if ever needed, but out of scope for now since none of
+      these types are used by any `pages/*.js` file in this repo. Full
+      detail in `docs/karl-live-admin-verification-2026-07-06.md`.
 
 ## Accuracy check: "HHVC Karl CMS Governance and Technical Design Manual" (2026-07-06)
 

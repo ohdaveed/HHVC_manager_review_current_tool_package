@@ -112,32 +112,32 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Real-schema gap: Campaign\'s Related field is a single Page block (Link to radio SF.gov page/External URL/None, one Page chooser, one Link text) — not repeatable, unlike Transaction/Information/Resource Collection\'s `related`. Only one of the 4 cards below can occupy it. Recommend the other 3 move into an Additional content → Resources block instead (its "Resource sections" → "Links" stream does support repeatable SF.gov page links) rather than assuming Related can hold all 4.',
+      karl: "Maps to Campaign's Related field (raw name `related_links`, a repeatable StreamField — confirmed via live admin, 2026-07-06; each entry is a Page block: Link to radio SF.gov page/External URL/None, Page chooser, Link text). Corrected from an earlier assumption that this field was single-item — it isn't. All 4 cards below can map directly to separate related_links entries (Link to = SF.gov page, Page = target, Link text = title).",
       kind: 'placement',
       cards: [
         {
           title: 'Mosquito Control Program',
           text: 'Learn about mosquito surveillance, catch-basin treatment, and program contacts.',
           target: 'mosquitoControl',
-          karl: "Best candidate for the single real Related field (Link to = SF.gov page, Page = this target, Link text = this title) since it's the most directly relevant related page; the other 3 cards below would need to move to an Additional content → Resources block instead (see section-level karl note).",
+          karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {
           title: 'Prevent mosquitoes',
           text: 'Classroom-friendly prevention tips to share after the workshop.',
           target: 'mosquitoesPrevent',
-          karl: "No home in Campaign's single-item Related field (see section-level karl note) — would need to move to an Additional content → Resources block's repeatable SF.gov page links instead.",
+          karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {
           title: 'Report a dead bird',
           text: 'Teach students how community dead bird reports support West Nile virus tracking.',
           target: 'wnvBirdReport',
-          karl: "No home in Campaign's single-item Related field (see section-level karl note) — would need to move to an Additional content → Resources block's repeatable SF.gov page links instead.",
+          karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {
           title: 'Pests and housing problems',
           text: 'Return to the main Topic page for HHVC pest and vector resources.',
           target: 'pestsTopic',
-          karl: "No home in Campaign's single-item Related field (see section-level karl note) — would need to move to an Additional content → Resources block's repeatable SF.gov page links instead.",
+          karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
       ],
     },
