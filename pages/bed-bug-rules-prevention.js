@@ -68,7 +68,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       ],
       bullets: [
         'Hire licensed professionals: Owners cannot use uncertified building staff to treat bed bugs. They must hire a licensed Pest Control Operator (PCO).',
-        'Investigate early: Investigate any tenant reports of suspected bed bugs within 72 hours.',
+        'Investigate early: Investigate any tenant reports of suspected bed bugs within two working days.',
         'Inspect adjacent units: Upon confirming bed bug activity, owners must direct a PCO to inspect all adjacent units (above, below, and on both sides of the infested unit).',
         'Pre-tenancy disclosure: Before a new tenant moves in, the landlord must provide a written history of any bed bug infestations and treatments in the unit over the last 24 months.',
         'Provide mattress encasements: Furnished units must be supplied with breathable, bed bug-proof encasements for all mattresses and box springs at move-in.',

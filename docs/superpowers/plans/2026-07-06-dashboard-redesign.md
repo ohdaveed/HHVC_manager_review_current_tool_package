@@ -61,7 +61,7 @@ This is the first task because it's fully self-contained: it doesn't touch any o
 workspace tab, the sticky bar, or the Queue/Overview rename, so it can land and be
 verified independently of everything else in this plan.
 
-- [ ] **Step 1: Note the current (pre-change) behavior to protect**
+- [x] **Step 1: Note the current (pre-change) behavior to protect**
 
 The "Applied rules" checklist in the sidebar (`<ul class="checklist">` in
 `index.html:157-169`) is interactive: `js/ui-controls.js`'s `initChecklist()` binds a
@@ -75,7 +75,7 @@ after the checklist markup moves into the Help tab (it renders once, in one plac
 regardless of which tab you're viewing — `initChecklist()`/`applyChecklistState()` query
 `.checklist .check` globally, not scoped to the sidebar).
 
-- [ ] **Step 2: Delete the "Applied rules" block from `index.html`**
+- [x] **Step 2: Delete the "Applied rules" block from `index.html`**
 
 Remove this entire block (currently `index.html:154-171`, immediately before the
 "Manager review" `<details>`):
@@ -104,7 +104,7 @@ Remove this entire block (currently `index.html:154-171`, immediately before the
 
 Leave the surrounding "Karl CMS tags" and "Manager review" `<details>` blocks untouched.
 
-- [ ] **Step 3: Delete the "Reading targets" block from `index.html`**
+- [x] **Step 3: Delete the "Reading targets" block from `index.html`**
 
 Remove this entire block (currently `index.html:263-276`, the last child of `<aside
 class="sidebar">` before `</aside>`):
@@ -129,7 +129,7 @@ class="sidebar">` before `</aside>`):
 `<aside class="sidebar">` now ends with the "Manager review" block, followed directly by
 `</aside>`.
 
-- [ ] **Step 4: Add the moved content and the checklist re-bind fix to `js/dashboard-guidance.js`**
+- [x] **Step 4: Add the moved content and the checklist re-bind fix to `js/dashboard-guidance.js`**
 
 Add a new `REFERENCE_ID` constant near the existing `GUIDANCE_ID`/`STYLE_ID` constants
 (`js/dashboard-guidance.js:5`):
@@ -212,7 +212,7 @@ Call it from `refresh()` (`js/dashboard-guidance.js:154-158`):
   }
 ```
 
-- [ ] **Step 5: Remove the now-dead sidebar-copy selector**
+- [x] **Step 5: Remove the now-dead sidebar-copy selector**
 
 In `compactSidebarCopy()`'s `selectors` array (`js/dashboard-guidance.js:137-145`),
 remove this line:
@@ -231,13 +231,13 @@ metadata, and Karl CMS tags sections by `:nth-of-type`/class, none of which shif
 position from removing items 5 and 7 (Applied rules and Reading targets, at either end
 of that ordering).
 
-- [ ] **Step 6: Run `bun run validate`**
+- [x] **Step 6: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes with no errors (this task doesn't touch `pages/*.js` or
 `js/page-data.js`, so the schema/business-invariant checks are unaffected).
 
-- [ ] **Step 7: Manual browser verification**
+- [x] **Step 7: Manual browser verification**
 
 Run: `bun run dev`, open `http://127.0.0.1:8080` in a browser.
 
@@ -252,7 +252,7 @@ Run: `bun run dev`, open `http://127.0.0.1:8080` in a browser.
 - Confirm no leftover "Applied rules" or "Reading targets" section remains in the
   sidebar.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add index.html js/dashboard-guidance.js
@@ -287,7 +287,7 @@ EOF
 This task is self-contained: it only touches the review-field persistence functions in
 `js/ux-improvements.js`, none of which are touched by any other task in this plan.
 
-- [ ] **Step 1: Add the owner default alongside the existing reviewer auto-fill in `saveCurrentPageToLocalStorage`**
+- [x] **Step 1: Add the owner default alongside the existing reviewer auto-fill in `saveCurrentPageToLocalStorage`**
 
 Current code (`js/ux-improvements.js:218-231`):
 
@@ -331,7 +331,7 @@ Replace with:
 (`snapshot.follow_up_owner` already exists — `collectCurrentPageReviewState()` sets it
 from `getValue('reviewOwner')` via `buildReviewRecord`, unchanged by this task.)
 
-- [ ] **Step 2: Default the owner field to "David" in `applySavedPageState`**
+- [x] **Step 2: Default the owner field to "David" in `applySavedPageState`**
 
 Current code (`js/ux-improvements.js:280-306`):
 
@@ -402,7 +402,7 @@ explicit owner saved (including one a reviewer previously overrode away from "Da
 keeps that value. Only a genuinely never-reviewed page falls through to the "David"
 default.
 
-- [ ] **Step 3: Thread the default into `clearReviewFieldsForNewPage`**
+- [x] **Step 3: Thread the default into `clearReviewFieldsForNewPage`**
 
 Current code (`js/ux-improvements.js:233-239`):
 
@@ -435,12 +435,12 @@ argument): `state` will be `undefined`, so `state?.globals?.owner` short-circuit
 `undefined`, and the `|| 'David'` fallback still applies — the owner field still
 correctly resets to "David" after a full local-data clear.
 
-- [ ] **Step 4: Run `bun run validate`**
+- [x] **Step 4: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes (no schema/page-data changes).
 
-- [ ] **Step 5: Manual browser verification**
+- [x] **Step 5: Manual browser verification**
 
 Run: `bun run dev`, open the tool in a browser with a clean localStorage (use a private/
 incognito window, or run `localStorage.clear()` in devtools first).
@@ -452,7 +452,7 @@ incognito window, or run `localStorage.clear()` in devtools first).
 - Click "Clear local saved reviews" (with confirmation) and confirm the owner field
   resets to "David" again afterward.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add js/ux-improvements.js
@@ -487,7 +487,7 @@ EOF
 This task is self-contained: quick-search is a standalone feature bolted onto the
 sidebar with no dependents elsewhere in the codebase.
 
-- [ ] **Step 1: Remove the quick-search functions from `js/ux-improvements.js`**
+- [x] **Step 1: Remove the quick-search functions from `js/ux-improvements.js`**
 
 Delete `pageSearchItems` (`js/ux-improvements.js:693-705`):
 
@@ -559,7 +559,7 @@ Delete `mountPageSearch` (`js/ux-improvements.js:727-749`):
   }
 ```
 
-- [ ] **Step 2: Remove the two remaining call sites**
+- [x] **Step 2: Remove the two remaining call sites**
 
 Current `refreshUx()` (`js/ux-improvements.js:1036-1043`):
 
@@ -628,7 +628,7 @@ in place here — Task 5 removes it separately):
   }
 ```
 
-- [ ] **Step 3: Remove the now-dead CSS**
+- [x] **Step 3: Remove the now-dead CSS**
 
 In `css/ux-improvements.css`, delete the `.page-filter-control` rule
 (lines 676-678):
@@ -732,12 +732,12 @@ Replace with:
 }
 ```
 
-- [ ] **Step 4: Run `bun run validate`**
+- [x] **Step 4: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes.
 
-- [ ] **Step 5: Manual browser verification**
+- [x] **Step 5: Manual browser verification**
 
 Run: `bun run dev`, open the tool.
 
@@ -750,7 +750,7 @@ Run: `bun run dev`, open the tool.
 - Open devtools console, confirm no errors reference `pageFilterInput` or
   `pageQuickList`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add js/ux-improvements.js css/ux-improvements.css
@@ -783,7 +783,7 @@ children with `justify-content: space-between`, which is exactly the "grouped
 left/right, single row" layout being kept; removing child elements doesn't require new
 rules.
 
-- [ ] **Step 1: Rewrite `renderStickyBar`**
+- [x] **Step 1: Rewrite `renderStickyBar`**
 
 Current code (`js/ux-improvements.js:475-513`):
 
@@ -881,7 +881,7 @@ Add a small inline-safe style for the new `.review-sticky-bar-progress` span to
 }
 ```
 
-- [ ] **Step 2: Remove the "next-needs-review" case from `handleStickyBarClick`**
+- [x] **Step 2: Remove the "next-needs-review" case from `handleStickyBarClick`**
 
 Current code (`js/ux-improvements.js:572-600`):
 
@@ -950,12 +950,12 @@ untouched by this task — it calls `window.reviewQueue.getNextNeedsReviewKey()`
 directly, not through the sticky bar's click handler, so removing the button here
 doesn't affect it.
 
-- [ ] **Step 3: Run `bun run validate`**
+- [x] **Step 3: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes.
 
-- [ ] **Step 4: Manual browser verification**
+- [x] **Step 4: Manual browser verification**
 
 Run: `bun run dev`, open the tool.
 
@@ -968,7 +968,7 @@ Run: `bun run dev`, open the tool.
 - Press `n` — confirm the keyboard shortcut still jumps to the next page needing review
   (this exercises the code path the removed button used to trigger).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/ux-improvements.js css/ux-improvements.css
@@ -1003,7 +1003,7 @@ EOF
   `js/review-queue.js` in `index.html`'s script order, so `window.reviewChecks` is
   guaranteed to exist by the time Task 7's code runs — no timing workaround needed.
 
-- [ ] **Step 1: Export `getRuleResultsFor` for Task 7 to consume later**
+- [x] **Step 1: Export `getRuleResultsFor` for Task 7 to consume later**
 
 Right after the `getRuleResults` function (`js/ux-improvements.js:121-123`), add:
 
@@ -1018,7 +1018,7 @@ Right after the `getRuleResults` function (`js/ux-improvements.js:121-123`), add
   window.reviewChecks = { getRuleResultsFor }
 ```
 
-- [ ] **Step 2: Rewrite `renderReviewDashboard` into one merged checklist**
+- [x] **Step 2: Rewrite `renderReviewDashboard` into one merged checklist**
 
 Current code (`js/ux-improvements.js:432-473`):
 
@@ -1109,7 +1109,7 @@ text, per `getRuleResultsFor`) and the portfolio grid (moving to the Overview ta
 Task 7). "Page key" — the one metric with no corresponding pass/fail rule — is kept as
 a plain line in the intro paragraph rather than dropped, per the spec.
 
-- [ ] **Step 3: Delete the now-unused functions**
+- [x] **Step 3: Delete the now-unused functions**
 
 Delete `getPortfolioRows` (`js/ux-improvements.js:331-345`):
 
@@ -1290,7 +1290,7 @@ Replace with:
   } = window.utils
 ```
 
-- [ ] **Step 4: Remove the dead CSS**
+- [x] **Step 4: Remove the dead CSS**
 
 Delete `.review-dashboard-grid` and the `.metric-card*` rules
 (`css/ux-improvements.css:570-611`):
@@ -1385,12 +1385,12 @@ And delete the `.metric-card { border-right: 0; }` rule (around lines 1082-1084)
   }
 ```
 
-- [ ] **Step 5: Run `bun run validate`**
+- [x] **Step 5: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes.
 
-- [ ] **Step 6: Manual browser verification**
+- [x] **Step 6: Manual browser verification**
 
 Run: `bun run dev`, open the tool, open the workspace, click the Checks tab.
 
@@ -1406,7 +1406,7 @@ Run: `bun run dev`, open the tool, open the workspace, click the Checks tab.
 - Open devtools console — confirm no errors reference `renderMetric`, `isLong`,
   `getPortfolioRows`, `handleDashboardClick`, or `handleDashboardChange`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add js/ux-improvements.js css/ux-improvements.css
@@ -1444,7 +1444,7 @@ some of them leaves the workspace tabs broken (e.g. `index.html` sends `"overvie
 `js/ux-improvements.js` still expects `"queue"` as its default, so the tab never
 activates correctly). Do not split this task's steps across separate commits.
 
-- [ ] **Step 1: Rename the tab markup in `index.html`**
+- [x] **Step 1: Rename the tab markup in `index.html`**
 
 Current code (`index.html:301-349`):
 
@@ -1557,7 +1557,7 @@ Replace with:
 The `checks`/`sitemap`/`help` tabs and their panel ids (`reviewDashboardCore`,
 `reviewWorkspaceSitemap`, `reviewWorkspaceHelp`) are unchanged.
 
-- [ ] **Step 2: Rename the fallback literals in `js/ux-improvements.js`**
+- [x] **Step 2: Rename the fallback literals in `js/ux-improvements.js`**
 
 Change the `WORKSPACE_TABS` constant (`js/ux-improvements.js:15`):
 
@@ -1638,7 +1638,7 @@ to:
 Also in `setWorkspaceTab`, the sitemap-mount check is unaffected (still compares against
 `'sitemap'`, not `'queue'`), so no change needed there.
 
-- [ ] **Step 3: Rename in `js/review-queue.js`**
+- [x] **Step 3: Rename in `js/review-queue.js`**
 
 Change `QUEUE_PANEL_ID` (`js/review-queue.js:7`):
 
@@ -1686,7 +1686,7 @@ to:
   }
 ```
 
-- [ ] **Step 4: Rename in `js/keyboard-shortcuts.js`**
+- [x] **Step 4: Rename in `js/keyboard-shortcuts.js`**
 
 In `selectAllVisible` (`js/keyboard-shortcuts.js:97-113`):
 
@@ -1732,12 +1732,12 @@ to:
   }
 ```
 
-- [ ] **Step 5: Run `bun run validate`**
+- [x] **Step 5: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes.
 
-- [ ] **Step 6: Manual browser verification**
+- [x] **Step 6: Manual browser verification**
 
 Run: `bun run dev`, open the tool, open the workspace.
 
@@ -1757,7 +1757,7 @@ Run: `bun run dev`, open the tool, open the workspace.
 - Press `q` — confirm it still switches to the Overview tab and focuses its search box
   (exercises the renamed selector in `js/review-queue.js`).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add index.html js/ux-improvements.js js/review-queue.js js/keyboard-shortcuts.js
@@ -1806,7 +1806,7 @@ semantics well, and a real button is a clearer affordance anyway. This means
 `handleQueueKeyDown` (which only existed to handle Enter/Space on a focused row) is
 removed entirely, since there's no more focusable row to handle that for.
 
-- [ ] **Step 1: Add a "Checks" count to every row in `getQueueRows`**
+- [x] **Step 1: Add a "Checks" count to every row in `getQueueRows`**
 
 Current code (`js/review-queue.js:198-241`):
 
@@ -1911,7 +1911,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 2: Add a "Failing checks" count to `getQueueStats`**
+- [x] **Step 2: Add a "Failing checks" count to `getQueueStats`**
 
 Current code (`js/review-queue.js:243-266`):
 
@@ -1976,7 +1976,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 3: Add the "Failing checks" filter to `matchesFilter`**
+- [x] **Step 3: Add the "Failing checks" filter to `matchesFilter`**
 
 Current code (`js/review-queue.js:268-280`):
 
@@ -2015,7 +2015,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 4: Add the "checks" sort option to `compareRows`**
+- [x] **Step 4: Add the "checks" sort option to `compareRows`**
 
 Current code (`js/review-queue.js:288-308`):
 
@@ -2075,7 +2075,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 5: Rename the persisted UI state bucket from `review_queue` to `overview`**
+- [x] **Step 5: Rename the persisted UI state bucket from `review_queue` to `overview`**
 
 Current `writeQueueUiState` and `restoreQueueUiState` (`js/review-queue.js:128-154`):
 
@@ -2145,7 +2145,7 @@ An old persisted `ui.review_queue` bucket (and the `ui.checks_failing_only` bool
 Task 5 stopped writing) are simply never read by this new code — per the spec's storage
 section, no migration is needed; they're just unused entries left in the JSON blob.
 
-- [ ] **Step 6: Rewrite `renderReviewQueue`'s markup as a table**
+- [x] **Step 6: Rewrite `renderReviewQueue`'s markup as a table**
 
 Current code (`js/review-queue.js:561-717`):
 
@@ -2495,7 +2495,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 7: Update `handleQueueClick` for the "Open" action and the "Next needs review" button**
+- [x] **Step 7: Update `handleQueueClick` for the "Open" action and the "Next needs review" button**
 
 Current code (`js/review-queue.js:828-894`), focusing on the parts that change. The
 `filterButton`, `resetButton`, checkbox-guard, `selectControl`, and `importButton`
@@ -2568,7 +2568,7 @@ Replace with:
 directly callable here without a `window.` prefix, same as every other in-file helper
 this function already calls.)
 
-- [ ] **Step 8: Remove `handleQueueKeyDown` and its listener**
+- [x] **Step 8: Remove `handleQueueKeyDown` and its listener**
 
 Delete the function (`js/review-queue.js:896-912`):
 
@@ -2609,7 +2609,7 @@ to:
     panel.addEventListener('change', handleQueueChange)
 ```
 
-- [ ] **Step 9: Rewrite the CSS — remove the old card/portfolio rules, add table rules**
+- [x] **Step 9: Rewrite the CSS — remove the old card/portfolio rules, add table rules**
 
 Delete `.review-queue-list` (`css/ux-improvements.css:305-311`):
 
@@ -2895,12 +2895,12 @@ overflow-x: auto }` already makes the table scroll horizontally on any viewport 
 narrow for it, which is the standard responsive pattern for data tables (as opposed to
 reflowing columns, which the old card layout did).
 
-- [ ] **Step 10: Run `bun run validate`**
+- [x] **Step 10: Run `bun run validate`**
 
 Run: `bun run validate`
 Expected: passes.
 
-- [ ] **Step 11: Manual browser verification**
+- [x] **Step 11: Manual browser verification**
 
 Run: `bun run dev`, open the tool, open the workspace, click the Overview tab.
 
@@ -2926,7 +2926,7 @@ Run: `bun run dev`, open the tool, open the workspace, click the Overview tab.
 - Confirm the Checks tab (from Task 5) still shows only the currently open page's own
   compliance checklist — no portfolio grid duplicated there anymore.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add js/review-queue.js css/ux-improvements.css
