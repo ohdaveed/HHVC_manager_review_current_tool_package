@@ -223,6 +223,7 @@
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
       state.globals.reviewer = snapshot.reviewer
+      state.globals.owner = snapshot.follow_up_owner
       state.pages[snapshot.page_key] = snapshot
       return state
     })
@@ -230,12 +231,12 @@
     updateLocalStorageStatus()
   }
 
-  function clearReviewFieldsForNewPage() {
+  function clearReviewFieldsForNewPage(state) {
     setValue('reviewDateInput', today())
     setValue('reviewDecision', 'Needs review')
     setValue('reviewNotes', '')
     setValue('reviewRisks', '')
-    setValue('reviewOwner', '')
+    setValue('reviewOwner', state?.globals?.owner || 'David')
   }
 
   function updateMockupTextFromSavedState(page, saved) {
@@ -295,10 +296,10 @@
       setValue('reviewDecision', saved.decision || 'Needs review')
       setValue('reviewNotes', saved.notes || '')
       setValue('reviewRisks', saved.risks_or_blockers || '')
-      setValue('reviewOwner', saved.follow_up_owner || '')
+      setValue('reviewOwner', saved.follow_up_owner || state.globals.owner || 'David')
       updateMockupTextFromSavedState(page, saved)
     } else {
-      clearReviewFieldsForNewPage()
+      clearReviewFieldsForNewPage(state)
     }
 
     isRestoringState = false
