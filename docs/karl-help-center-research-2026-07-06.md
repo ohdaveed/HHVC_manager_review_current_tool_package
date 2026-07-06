@@ -21,9 +21,9 @@ status.
 
 **1. Related field's 4 content-type restriction (no Resource Collection)**
 Found and directly confirmed. The **Related** component page
-(`.../using-karl-the-cms/components/related`) states verbatim: *"Only a
+(`.../using-karl-the-cms/components/related`) states verbatim: _"Only a
 few content types can be tagged as Related pages: Transaction,
-Information, Campaign, Topic."* The Transaction content-type page repeats
+Information, Campaign, Topic."_ The Transaction content-type page repeats
 the identical list. Resource Collection is never listed. **Doc-confirmed**
 — resolvable. Note: a 2022 release note ("Campaigns, data stories,
 resource collections can now be added in the related resource section...")
@@ -34,17 +34,17 @@ current behavior.
 No table block anywhere in the 3-block "Information section" chooser
 (`Title and text`/`Image`/`Callout`), and no rich-text-editor table
 mention generally. Direct corroboration found: **How a Report page
-works** states *"You can add a table to Reports. It is the only content
-type that supports tables."* This is stronger than the doc's earlier
+works** states _"You can add a table to Reports. It is the only content
+type that supports tables."_ This is stronger than the doc's earlier
 "corroborates but never mentions tables" framing — it's an affirmative
 exclusivity claim. **Doc-confirmed**: Information (and every other type)
 has no table block.
 
 **3. Topic's Services/Resources intro-paragraph field**
-The Topic content-type page says only: *"You can organize things in the
+The Topic content-type page says only: _"You can organize things in the
 services and resources sections by subheading, as in Agency pages. You
 can also move services and resources within subsections by dragging into
-the order you want."* No intro-text field is mentioned for these blocks,
+the order you want."_ No intro-text field is mentioned for these blocks,
 but the page is prose, not a field-by-field list (unlike the
 Information/Transaction/Campaign "How a ___ page works" pages).
 **Partially addressed, still needs live admin** — consistent with the
@@ -54,7 +54,7 @@ doc's existing framing; no new resolution.
 No dedicated "Related on a Campaign page" subpage exists. "How a Campaign
 page works" lists "Related" as one section name only, with no elaboration
 on repeatability or its own restriction list. The Campaign overview page
-only describes Campaign as a *target* of Related (from Info/Transaction
+only describes Campaign as a _target_ of Related (from Info/Transaction
 pages), not its own outbound field's mechanics. Found no doc evidence for
 the "distinct Page block with its own Link text" claim already in the
 file (likely from the 2026-07-05 live-admin session, not docs). **Not
@@ -62,8 +62,8 @@ resolvable from docs — still needs live admin.**
 
 **5. Transaction's "Redirect this page to" raw field name**
 Found a dedicated **Redirect this page to** component page, but it
-states: *"This component has been disabled in the CMS. Contact Digital
-Services for help redirecting pages."* This is new information (the
+states: _"This component has been disabled in the CMS. Contact Digital
+Services for help redirecting pages."_ This is new information (the
 component may be currently disabled) but gives no raw Wagtail field
 name — only the UI label, and 2023 release notes reference the same UI
 label "Redirect this page to:" as a rename of a "redirecting department
@@ -72,9 +72,9 @@ though worth noting to reviewers that the component may be disabled
 entirely now.
 
 **6. Information page raw field names**
-"How an Information page works" gives only UI labels: *Title,
+"How an Information page works" gives only UI labels: _Title,
 Description, Primary Agency, Part of, Information section, Partner
-agencies, Topics, Related.* No snake_case/Wagtail internal names appear
+agencies, Topics, Related._ No snake_case/Wagtail internal names appear
 anywhere (no code samples, no CSV/API docs). CSV export docs (2022
 release notes) only list exported column labels (title, content type,
 department, author, status, modification state, updated), not field
@@ -90,12 +90,12 @@ resolvable from docs — still needs live admin.**
 
 **8. Address snippet's repeatable "Hours and days open"**
 The **Address** component page lists it as one line item in the field
-list (*"Hours and days open"*), same as all the other single fields
+list (_"Hours and days open"_), same as all the other single fields
 (Line 1, City, State, Zip, etc.) — no language distinguishing it as
 repeatable/multi-entry, no separate sub-fields per day shown. One "known
-issue" 2025 release note is suggestive but unrelated to schema: *"Agency
+issue" 2025 release note is suggestive but unrelated to schema: _"Agency
 pages are showing 7 days a week of open hours, regardless of how many
-days the department is open."* That implies the front end does render
+days the department is open."_ That implies the front end does render
 day-by-day hours, but doesn't confirm the back-end field's repeatability.
 **Not resolvable from docs — still needs live admin** (the doc's original
 framing stands).
@@ -114,13 +114,13 @@ itself came from the 2026-07-05 live session, not from these public docs.
 **10. Transaction rich text Link tool's 4 types (Internal/External/Email/Phone)**
 Same search area as #9. The public generic Link docs (**Body, Main body,
 Text and title**; **Edit a component**) only describe **2** link types in
-the rich text Link tool — *"Choose Internal link if the page you are
+the rich text Link tool — _"Choose Internal link if the page you are
 linking to is on SF.gov / Choose External link if you're linking to a
-page on another website"* — no mention of Email or Phone links inside the
+page on another website"_ — no mention of Email or Phone links inside the
 rich-text Link tool anywhere (Email/Phone appear only as separate
 standalone components, e.g. in Transaction's "What to do"
-section-specifics menu: *Address, Callout, Document, Email, Button link,
-Phone number, Text*). This is actually a mild **contradiction risk**: the
+section-specifics menu: _Address, Callout, Document, Email, Button link,
+Phone number, Text_). This is actually a mild **contradiction risk**: the
 public docs describe only 2 rich-text link types generically, not the
 4-type version noted from the live Information session. **Not resolvable
 from docs — still needs live admin**, and flag the 2-vs-4 discrepancy for
@@ -135,9 +135,9 @@ Both are now documented from scratch:
   `.../data-story/data-story-content-section`). The **Callout** component
   page confirms Data story is 1 of only 3 content types supporting
   callouts (Transaction, Information, Data story).
-- **Event**: "How an Event page works" gives the full field list: *Title,
+- **Event**: "How an Event page works" gives the full field list: _Title,
   Description, Primary Agency, Call to action, Date time, Cost, Location,
-  Image, Main body text, Partner agencies, Contact us, Topics.* Supporting
+  Image, Main body text, Partner agencies, Contact us, Topics._ Supporting
   subpages found: **Call to action on Event** (title/description/SF.gov-
   or-external link/link text/screenreader label) and **Location on Event
   page** (online checkbox + call-to-action signup link, in-person/

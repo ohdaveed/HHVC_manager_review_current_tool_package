@@ -55,7 +55,7 @@ window.HHVC_PAGES['flyInfo'] = {
           title: 'Report flies or breeding conditions',
           text: 'Report active fly infestations or unsanitary conditions breeding flies through 311 for HHVC inspection.',
           target: 'garbageReport',
-          karl: 'This card links to an internal page (garbageReport, a Transaction page) inline, mid-body — not in the final Related section. Two unconfirmed options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
+          karl: 'This card links to an internal page (garbageReport, a Transaction page) inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
       ],
     },
