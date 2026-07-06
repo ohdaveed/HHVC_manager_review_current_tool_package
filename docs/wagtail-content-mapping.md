@@ -505,12 +505,16 @@ log: `docs/karl-live-admin-verification-2026-07-06.md`.
 - **Step by step**: Title, Primary agency, Description, Intro, Steps,
   Topics, Partner agencies.
 
-**Cross-reference for Transaction's "Redirect this page to" (task #3):**
-Agency, News, and Profile all show this field on their _new/unsaved_ live
-forms — so the field itself isn't Transaction-specific or disabled in the
-CMS entirely. This is consistent with the theory that it only activates
-(renders input elements) once a page has been saved once, rather than
-being disabled outright.
+**Cross-reference for Transaction's "Redirect this page to" (task #3) —
+resolved 2026-07-06 via Karl MCP:** Agency, News, and Profile all show this
+field on their _new/unsaved_ live forms, which had suggested it only
+activates once a page has been saved once. The Help Center's own
+"Redirect this page to" component page overrides that theory: **"This
+component has been disabled in the CMS. Contact Digital Services for help
+redirecting pages."** It isn't a save-state timing quirk — the field is
+inert everywhere, permanently, by design. Raw Wagtail field name remains
+unconfirmed, but that's now moot for `pages/*.js` purposes (no mockup page
+uses this field regardless). Task #3 closed.
 in-person/virtual/hybrid).
 
 ### Page-level fields → Wagtail Page model (general guess)
@@ -607,7 +611,16 @@ Everything still `[ ]` needs the logged-in admin form.
       apply to Campaign's `related_links` specifically, or the Help
       Center claim is stale — Transaction/Information/Topic's Related
       pickers haven't been live-tested yet, only Campaign's. Downgraded
-      from doc-confirmed pending that re-check.
+      from doc-confirmed pending that re-check. **Re-queried via Karl MCP
+      2026-07-06:** `searchDocumentation`/`getPage` return the identical
+      "Transaction, Information, Campaign, Topic" restriction text,
+      unchanged — so this isn't a stale-docs situation, the Help Center
+      genuinely still states the 4-type restriction while Campaign's live
+      picker demonstrably allows a 5th (Resource Collection). Still
+      unresolved: this is a live picker-behavior-vs-documented-policy
+      conflict that only an already-saved page or a Digital Services
+      conversation can settle, not something Karl MCP's documentation
+      corpus can arbitrate. Remains open.
 - [x] **doc-confirmed: Information pages have no button/CTA block type** —
       the "Button" component page enumerates exactly where buttons exist
       (Transaction call-to-action; Event/Meeting signup links;
@@ -645,16 +658,16 @@ Everything still `[ ]` needs the logged-in admin form.
 
 ### Field names / UI mechanics still unconfirmed
 
-- [ ] Transaction's "Redirect this page to" raw Wagtail field name —
-      **partially resolved (2026-07-06 live check):** the field label is
-      present at the bottom of the Transaction form but is inert on a new/
-      unsaved page — DOM inspection found zero `<input>`/`<select>`
-      elements with "redirect" in their name/id anywhere on the page. It's
-      likely disabled until the page has been saved once, rather than
-      disabled in the CMS entirely as the Help Center doc suggested (see
-      `docs/karl-help-center-research-2026-07-06.md` item 5). Raw field
-      name still needs checking on an already-saved Transaction page —
-      remains open as follow-up task #3.
+- [x] **resolved (2026-07-06, Karl MCP re-check):** Transaction's
+      "Redirect this page to" raw Wagtail field name. The live-admin pass
+      found the field inert on a new/unsaved page and guessed it activates
+      once a page is saved. Re-querying Karl MCP's `searchDocumentation`/
+      `getPage` against the Help Center's own "Redirect this page to"
+      component page overrides that guess: *"This component has been
+      disabled in the CMS. Contact Digital Services for help redirecting
+      pages."* It's disabled everywhere, not save-state-dependent — so the
+      raw field name is moot to keep chasing. No `pages/*.js` file uses
+      this field, so there's no mockup impact either way.
 - [x] **live-admin-confirmed (2026-07-06): Information's raw field
       names** — Primary Agency → `primary_agency`; "Part of" → `part_of`;
       Information section → `information_section`; Partner agencies →

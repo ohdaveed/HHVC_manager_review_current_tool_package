@@ -91,7 +91,7 @@ window.HHVC_PAGES['miteInfo'] = {
           ],
           button: 'Keep rats and mice out of your home',
           buttonTarget: 'ratsPrevent',
-          karl: 'Maps to a sixth Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the two text items below. Real-schema gap: this step\'s button has no confirmed home (only Title and text/Image/Callout are confirmed Information blocks). Because buttonTarget (ratsPrevent) is an Information page, not a Transaction, the "Part of" field does NOT apply here (Part of is restricted to Transaction pages only) — the only option to flag for Digital Services is folding this in as a Link-tool Internal link within this block\'s own rich text.',
+          karl: 'Maps to a sixth Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the two text items below. Real-schema gap: this step\'s button has no confirmed home (only Title and text/Image/Callout are confirmed Information blocks). Because buttonTarget (ratsPrevent) is an Information page, not a Transaction, the "Part of" field does NOT apply here (Part of is restricted to Transaction pages only) — the only option to flag for Digital Services is folding this in as a Link-tool Internal link within this block\'s own rich text. Also flag editorially: Karl\'s Button component doc states "no more than one button per page" — this mockup has 2 (this one and the "Bed bug rules and prevention" button on the "Check whether the problem may be bed bugs" step below), so beyond the missing-block-type gap, one of the two would need to be dropped or converted to an inline Link-tool link to satisfy that rule regardless of which block type ends up hosting it.',
         },
         {
           title: 'Control rodents without worsening mite bites',
@@ -130,7 +130,7 @@ window.HHVC_PAGES['miteInfo'] = {
           ],
           button: 'Bed bug rules and prevention',
           buttonTarget: 'bedBugsInfo',
-          karl: 'Maps to a ninth Title and text block (sibling step block, same no-Section gap noted above): Title = this step title, Text = the two text items below. Real-schema gap: this step\'s button has no confirmed home. Because buttonTarget (bedBugsInfo) is an Information page, not a Transaction, the "Part of" field does NOT apply here (Part of is restricted to Transaction pages only) — the only option to flag for Digital Services is folding this in as a Link-tool Internal link within this block\'s own rich text.',
+          karl: 'Maps to a ninth Title and text block (sibling step block, same no-Section gap noted above): Title = this step title, Text = the two text items below. Real-schema gap: this step\'s button has no confirmed home. Because buttonTarget (bedBugsInfo) is an Information page, not a Transaction, the "Part of" field does NOT apply here (Part of is restricted to Transaction pages only) — the only option to flag for Digital Services is folding this in as a Link-tool Internal link within this block\'s own rich text. Also flag editorially: Karl\'s Button component doc states "no more than one button per page" — this mockup has 2 (this one and the "Keep rats and mice out of your home" button on the "Remove nesting material safely" step above), so beyond the missing-block-type gap, one of the two would need to be dropped or converted to an inline Link-tool link to satisfy that rule regardless of which block type ends up hosting it.',
         },
         {
           title: 'Remove pest sources',

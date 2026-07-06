@@ -49,7 +49,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'How to choose the right page',
-      karl: 'Real-schema gap: the verified Information form has no observed block type for tabular content — only Title and text, Image, and Callout were confirmed in the "Information section" stream field. This two-column issue-matching table has no confirmed home; flattening it into a bulleted list inside a Title and text block would lose the "Problem → Start here" pairing. Flag for Digital Services rather than assuming a TableBlock exists on this page type.',
+      karl: 'Real-schema gap, doc-confirmed: the Information form has no block type for tabular content — only Title and text, Image, and Callout were confirmed in the "Information section" stream field, and Karl\'s "How a Report page works" Help Center page states "It is the only content type that supports tables," an affirmative exclusivity claim (not just silence on Information). This two-column issue-matching table has no home on this page type at all; flattening it into a bulleted list inside a Title and text block would lose the "Problem → Start here" pairing. Flag for Digital Services — the only real-schema options are reshaping this page as a Report (where the table is supported) or dropping the tabular format.',
       kind: 'body',
       table: [
         ['Problem', 'Start here'],
