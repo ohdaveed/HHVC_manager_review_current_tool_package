@@ -18,6 +18,12 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Superpowers brainstorming scratch (mockups, session state)
+.superpowers/
+
+# Superpowers git worktrees (isolated workspaces for plan execution)
+.worktrees/
+
 # Google service account keys (never commit)
 *-service-account*.json
 google-service-account.json
