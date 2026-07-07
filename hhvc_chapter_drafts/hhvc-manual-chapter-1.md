@@ -59,6 +59,8 @@ This manual serves as a program-specific supplement to the official SF.gov and K
 
 While program-specific guidance may add technical detail, it is never permitted to weaken or bypass broader SF.gov or Karl CMS standards.
 
+**HHVC field-level supplement:** For per-content-type Karl editor field order, SF.gov screenshot mapping, and mockup schema alignment, see [`docs/source/hhvc-policy/karl-content-type-field-reference.md`](../docs/source/hhvc-policy/karl-content-type-field-reference.md). This reference sits between the Karl GitBook Help Center and the program-specific chapter guidance in this manual.
+
 ---
 
 ### 1.4 Scope

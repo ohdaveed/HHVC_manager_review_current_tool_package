@@ -85,7 +85,7 @@ To maintain public credibility and legal compliance, all financial references mu
 
 #### **8.5.1 Annual Apartment and SRO Program Fees**
 
-The annual healthy housing fee is billed progressively based on the total unit count of the residential structure. Karl Transaction pages do not support a table block (only Report does; see Chapter 4 &sect;4.2), so these tiers belong on a linked Resource Collection document, not a hardcoded table on a Transaction page:
+The annual healthy housing fee is billed progressively based on the total unit count of the residential structure. Karl Transaction and Information pages do not support a table block — **Report** is the only content type with native tables (see Chapter 4 §4.2). Fee tiers belong on a linked **Resource Collection** or **Report** document, not a hardcoded table on a Transaction page. For a live SF.gov visual example of where tables belong, see the Rent Board **Current Rates** page pattern in [`karl-content-type-field-reference.md`](../docs/source/hhvc-policy/karl-content-type-field-reference.md) (Report screenshot appendix).
 
 | Number of Rental Units                             | Annual Program Fee |
 | :------------------------------------------------- | :----------------: |
