@@ -14,6 +14,12 @@ window.HHVC_PAGES['ownerGuidance'] = {
   reading: 'Grade 7',
   editorNote:
     'Information page for property owners and managers. UC ANR IPM guide is the primary external source — verify link stability and whether HHVC wants additional SFDPH Director’s Rules citations before publication.',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)', '415-252-3805'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'Why it matters',
@@ -25,6 +31,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
       ],
       callout: {
         karl: 'Body note: Key harm takeaway',
+        variant: 'warning',
         text: 'The residents most at risk from unmanaged pests are often children, older adults, and people with existing health conditions or weakened immune systems.',
       },
     },
@@ -45,6 +52,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: 'Primary source: UC IPM guide for property managers',
+      component: 'resources',
       karl: 'Body: External source hub — UC ANR IPM guide',
       kind: 'placement',
       paragraphs: [
@@ -212,6 +220,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Information page Related section: right-panel linked pages',
       kind: 'placement',
       cards: [

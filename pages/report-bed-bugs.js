@@ -10,6 +10,20 @@ window.HHVC_PAGES['bedBugsReport'] = {
     'A person reporting bed bugs in rental housing, an SRO, or a residential hotel',
   ],
   reading: 'Grade 6',
+  primaryCta: 'Report through 311',
+  topicTag: 'Topic: Pests and housing problems',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'You can ask 311 for help in your language.',
+      'It can take a few weekdays for 311 to assign an inspector after you report.',
+    ],
+  },
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'What to do',
@@ -106,6 +120,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
       cards: [

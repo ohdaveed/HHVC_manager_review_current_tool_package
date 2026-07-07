@@ -15,6 +15,20 @@ window.HHVC_PAGES['pestsTopic'] = {
   metaDescription: 'Report or prevent pests, mold, garbage, and other housing health problems.',
   editorNote:
     'Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths. In Karl: tag Topics so child pages appear on this Topic; manually link Information pages after publish.',
+  spotlight: {
+    title: 'Report a housing health problem',
+    paragraphs: [
+      'Use 311 to report pests, mold, garbage, and other Article 11 conditions in San Francisco.',
+    ],
+    image: {
+      src: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+      alt: 'Residential apartment building exterior in San Francisco',
+      karl: 'Topic page Spotlight: image',
+    },
+    button: 'Report through 311',
+    buttonTarget: 'reportHub',
+    karl: 'Topic page Spotlight 1',
+  },
   sections: [
     {
       heading: 'About this topic',
@@ -38,6 +52,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     },
     {
       heading: 'Report a problem',
+      component: 'services',
       karl: 'Topic page Services section, subheading: Report a problem',
       kind: 'body',
       paragraphs: ['Use these pages if you are affected by a pest or housing health problem.'],
@@ -100,6 +115,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     },
     {
       heading: 'Prevent pests and housing health problems',
+      component: 'resources',
       karl: 'Topic page Resources section, subheading: Prevention',
       kind: 'body',
       paragraphs: ['Use these pages to stop problems before they spread.'],

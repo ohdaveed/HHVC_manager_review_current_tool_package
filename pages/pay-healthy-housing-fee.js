@@ -10,6 +10,13 @@ window.HHVC_PAGES['payFee'] = {
     'Property managers and billing contacts helping an owner pay or understand the fee',
   ],
   reading: 'Grade 7',
+  whatToKnow: {
+    cost: 'Fee applies to apartment buildings with 3 or more rental units',
+    thingsToKnow: [
+      'Check your invoice for the exact amount and due date.',
+      'Have your invoice or property address ready before you start.',
+    ],
+  },
   sections: [
     {
       heading: 'Before you pay',
