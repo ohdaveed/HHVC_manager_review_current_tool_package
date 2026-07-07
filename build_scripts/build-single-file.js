@@ -1,26 +1,30 @@
 // Regenerate the self-contained single-file exports from index.html.
-// Inlines css/styles.css and every <script src="..."> referenced by index.html,
-// so the exports always reflect the current pages/*.js, js/*.js, and css.
+// Uses cheerio to inline local CSS/JS reliably while leaving external URLs alone.
 const fs = require('fs')
 const path = require('path')
-const root = path.resolve(__dirname, '..')
+const cheerio = require('cheerio')
 
+const root = path.resolve(__dirname, '..')
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8')
 
 let html = read('index.html')
+const $ = cheerio.load(html, { decodeEntities: false })
 
-// Inline every local stylesheet link, preserving order. Absolute
-// http(s) links (e.g. Google Fonts) are left as external links.
-html = html.replace(/[ \t]*<link rel="stylesheet" href="([^"]+)"[^>]*>\s*/g, (match, href) => {
-  if (/^https?:\/\//.test(href)) return match
-  return `  <style>\n${read(href)}\n  </style>\n`
+$('link[rel="stylesheet"]').each((_i, el) => {
+  const href = $(el).attr('href')
+  if (!href || /^https?:\/\//.test(href)) return
+  const style = $('<style></style>').text(read(href))
+  $(el).replaceWith(style)
 })
 
-// Inline each external script in place, preserving order.
-html = html.replace(
-  /[ \t]*<script src="([^"]+)"><\/script>/g,
-  (_match, src) => `  <script>\n${read(src)}\n  </script>`
-)
+$('script[src]').each((_i, el) => {
+  const src = $(el).attr('src')
+  if (!src || /^https?:\/\//.test(src)) return
+  const script = $('<script></script>').text(read(src))
+  $(el).replaceWith(script)
+})
+
+html = $.html()
 
 const outputs = ['manager-review-single-file.html', 'single-file-export-current-source.html']
 for (const out of outputs) {

@@ -70,7 +70,7 @@
       .toLowerCase()
     const isTransaction = normalizedType === 'transaction' || normalizedType === 'transaction page'
 
-    return [
+    const rules = [
       {
         label: 'Page type',
         pass: Boolean(page.type),
@@ -119,6 +119,17 @@
         detail: page.reading || 'Missing reading target',
       },
     ]
+
+    const readingAnalysis = window.readingLevel?.analyzeReadingLevel?.(page)
+    if (readingAnalysis && readingAnalysis.computed != null) {
+      rules.push({
+        label: 'Computed reading level',
+        pass: readingAnalysis.withinTarget !== false,
+        detail: readingAnalysis.detail,
+      })
+    }
+
+    return rules
   }
 
   function getRuleResults(page) {
@@ -145,6 +156,18 @@
       const raw = localStorage.getItem(STORAGE_KEY)
       if (!raw) return getEmptyState()
       const parsed = JSON.parse(raw)
+      const validator = window.reviewStateValidation?.validateReviewState
+      if (typeof validator === 'function') {
+        const result = validator(parsed)
+        if (!result.ok) return getEmptyState()
+        return {
+          ...getEmptyState(),
+          ...result.data,
+          ui: result.data.ui || {},
+          globals: result.data.globals || {},
+          pages: result.data.pages || {},
+        }
+      }
       if (!parsed || parsed.version !== STORAGE_VERSION) return getEmptyState()
 
       return {
@@ -460,6 +483,9 @@
     if (isOpen) {
       const state = readLocalState()
       setWorkspaceTab(state.ui.workspace_tab || 'overview')
+      setTimeout(() => {
+        workspace.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
     }
   }
 
@@ -610,7 +636,15 @@
     select.dispatchEvent(new Event('change', { bubbles: true }))
     if (typeof window.showToast === 'function') {
       const tone = decision === 'Blocked' || decision === 'Revise and resubmit' ? 'warn' : 'success'
-      window.showToast(`Decision set: ${decision}`, tone)
+      const nextKey = window.reviewQueue?.getNextNeedsReviewKey?.()
+      let toastAction = null
+      if (nextKey && typeof window.renderPage === 'function') {
+        toastAction = {
+          label: 'Next Actionable Page',
+          callback: () => window.renderPage(nextKey),
+        }
+      }
+      window.showToast(`Decision set: ${decision}`, tone, toastAction)
     }
   }
 
@@ -767,7 +801,15 @@
           return
         }
 
-        const entries = Object.entries(parsed.pages).filter(
+        const validator = window.reviewStateValidation?.validateReviewState
+        const validated =
+          typeof validator === 'function' ? validator(parsed) : { ok: true, data: parsed }
+        if (!validated.ok) {
+          fail(`Import failed: ${validated.error}`)
+          return
+        }
+
+        const entries = Object.entries(validated.data.pages).filter(
           ([key, value]) => DATA.pages[key] && value && typeof value === 'object'
         )
         if (!entries.length) {
@@ -775,14 +817,28 @@
           return
         }
 
+        const merge = typeof window.defu === 'function' ? window.defu : null
         updateLocalState((state) => {
+          const nextPages = { ...state.pages }
           for (const [key, saved] of entries) {
-            state.pages[key] = { ...state.pages[key], ...saved, page_key: key }
+            nextPages[key] = { ...(state.pages[key] || {}), ...saved, page_key: key }
           }
-          if (parsed.globals?.reviewer && !state.globals.reviewer) {
-            state.globals.reviewer = parsed.globals.reviewer
+          return {
+            ...state,
+            ui: merge
+              ? merge({}, state.ui, validated.data.ui || {})
+              : { ...state.ui, ...(validated.data.ui || {}) },
+            globals: {
+              ...state.globals,
+              ...(validated.data.globals?.reviewer && !state.globals.reviewer
+                ? { reviewer: validated.data.globals.reviewer }
+                : {}),
+              ...(validated.data.globals?.owner && !state.globals.owner
+                ? { owner: validated.data.globals.owner }
+                : {}),
+            },
+            pages: nextPages,
           }
-          return state
         })
 
         applySavedPageState(getCurrentKey())

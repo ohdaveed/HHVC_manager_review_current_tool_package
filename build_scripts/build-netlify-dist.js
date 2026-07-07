@@ -18,6 +18,7 @@ const copies = [
   'css',
   'js',
   'pages',
+  'node_modules/papaparse/papaparse.min.js',
   'node_modules/@sfgov/design-system/dist/css/base.css',
   'node_modules/@sfgov/design-system/dist/css/typography.css',
   'node_modules/@sfgov/design-system/dist/css/components.css',
