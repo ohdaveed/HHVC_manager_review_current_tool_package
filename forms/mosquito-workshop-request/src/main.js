@@ -101,9 +101,13 @@ function renderForm() {
   const bottom = fields.slice(8)
 
   app.innerHTML = `
-    <form class="form-card" id="workshopForm" novalidate>
+    <form class="form-card" id="workshopForm" name="mosquito-workshop-request" method="POST" data-netlify="true" novalidate>
+      <input type="hidden" name="form-name" value="mosquito-workshop-request" />
+      <p class="form-note" aria-hidden="true" style="display:none">
+        <label>Don't fill this out: <input name="bot-field" /></label>
+      </p>
       <p class="form-note">
-        This form collects interest for HHVC’s free mosquito education workshop campaign. Submitting
+        This form collects interest for HHVC's free mosquito education workshop campaign. Submitting
         does not guarantee a scheduled date.
       </p>
       <div class="form-grid two-col">${top.map(fieldHtml).join('')}</div>
@@ -136,9 +140,19 @@ function getFormData(form) {
 
 renderForm()
 
-document.getElementById('workshopForm').addEventListener('submit', (event) => {
+document.getElementById('workshopForm').addEventListener('submit', async (event) => {
   event.preventDefault()
   const form = event.currentTarget
   if (!form.reportValidity()) return
-  renderSuccess(getFormData(form))
+  const data = getFormData(form)
+
+  try {
+    const body = new FormData(form)
+    body.append('form-name', 'mosquito-workshop-request')
+    await fetch('/', { method: 'POST', body })
+  } catch {
+    // Local preview has no Netlify form handler; still show the success state.
+  }
+
+  renderSuccess(data)
 })

@@ -14,6 +14,10 @@ data/page_inventory.csv
 dist/
 .netlify
 
+# Playwright
+test-results/
+playwright-report/
+
 # OS files
 .DS_Store
 Thumbs.db

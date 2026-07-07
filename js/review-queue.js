@@ -293,12 +293,6 @@
     return true
   }
 
-  function matchesQuery(row) {
-    const query = normalize(state.query)
-    if (!query) return true
-    return row.searchText.includes(query)
-  }
-
   function compareRows(a, b) {
     if (state.sort === 'updated') {
       const left = parseIsoDate(a.updatedAt)?.getTime() || 0
@@ -328,7 +322,32 @@
   }
 
   function getVisibleRows() {
-    return getQueueRows().filter(matchesFilter).filter(matchesQuery).sort(compareRows)
+    const filtered = getQueueRows().filter(matchesFilter)
+    const query = state.query.trim()
+    if (!query) return filtered.sort(compareRows)
+    if (typeof Fuse === 'undefined') {
+      const normalized = normalize(query)
+      return filtered.filter((row) => row.searchText.includes(normalized)).sort(compareRows)
+    }
+    const fuse = new Fuse(filtered, {
+      keys: [
+        'key',
+        'title',
+        'type',
+        'summary',
+        'decision',
+        'followUpOwner',
+        'reviewer',
+        'notes',
+        'blockers',
+      ],
+      threshold: 0.4,
+      ignoreLocation: true,
+    })
+    return fuse
+      .search(query)
+      .map((result) => result.item)
+      .sort(compareRows)
   }
 
   function getFilteredKeys() {

@@ -4,76 +4,13 @@
 const fs = require('fs')
 const path = require('path')
 const { execSync } = require('child_process')
+const { parseCsv, toCsv } = require('./csv')
+const { loadPageData } = require('./load-pages')
 
 const root = path.resolve(__dirname, '..')
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'sheet-config.json'), 'utf8'))
 const trackingPath = path.join(root, 'review/mockup_tracking_sheet.csv')
 const updateOutPath = path.join(root, 'review/page_inventory_sheet_update.csv')
-
-function parseCsv(text) {
-  const rows = []
-  let row = []
-  let field = ''
-  let inQuotes = false
-
-  for (let i = 0; i < text.length; i += 1) {
-    const ch = text.charAt(i)
-    const next = text.charAt(i + 1)
-
-    if (inQuotes) {
-      if (ch === '"' && next === '"') {
-        field += '"'
-        i += 1
-      } else if (ch === '"') {
-        inQuotes = false
-      } else {
-        field += ch
-      }
-      continue
-    }
-
-    if (ch === '"') {
-      inQuotes = true
-    } else if (ch === ',') {
-      row.push(field)
-      field = ''
-    } else if (ch === '\n') {
-      row.push(field)
-      rows.push(row)
-      row = []
-      field = ''
-    } else if (ch === '\r') {
-      // ignore
-    } else {
-      field += ch
-    }
-  }
-
-  if (field.length || row.length) {
-    row.push(field)
-    rows.push(row)
-  }
-
-  return rows
-}
-
-function csvEscape(value) {
-  const text = String(value ?? '')
-  const trimmed = text.trimStart()
-  const needsProtection =
-    trimmed.startsWith('=') ||
-    trimmed.startsWith('+') ||
-    trimmed.startsWith('-') ||
-    trimmed.startsWith('@') ||
-    trimmed.startsWith('\t') ||
-    trimmed.startsWith('\r')
-  const protectedText = needsProtection ? `'${text}` : text
-  return /[",\n\r]/.test(protectedText) ? `"${protectedText.replace(/"/g, '""')}"` : protectedText
-}
-
-function toCsv(rows) {
-  return rows.map((row) => row.map(csvEscape).join(',')).join('\n') + '\n'
-}
 
 function rowsToObjects(rows) {
   const [header, ...body] = rows

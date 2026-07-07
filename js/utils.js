@@ -226,11 +226,28 @@ function toCsv(rows) {
 
 /**
  * Parse CSV text into rows of cell values, inverse of toCsv/csvEscape.
- * Handles quoted fields, doubled-quote escaping, and CRLF/LF line endings.
+ * Uses Papa Parse when loaded in the browser; falls back to a hand-rolled parser in tests.
  * @param {string} text
  * @returns {Array<Array<string>>}
  */
 function parseCsv(text) {
+  if (typeof Papa !== 'undefined' && Papa.parse) {
+    const result = Papa.parse(text, {
+      delimiter: ',',
+      skipEmptyLines: false,
+      transform: (value) => (value == null ? '' : String(value)),
+    })
+    if (result.errors.length) {
+      const first = result.errors[0]
+      throw new Error(`CSV parse error at row ${first.row}: ${first.message}`)
+    }
+    const rows = result.data
+    if (rows.length && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '') {
+      rows.pop()
+    }
+    return rows
+  }
+
   const rows = []
   let row = []
   let field = ''

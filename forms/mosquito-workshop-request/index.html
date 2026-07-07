@@ -18,6 +18,27 @@
           Vector Control will follow up about availability.
         </p>
       </header>
+      <!-- Netlify Forms detection (fields mirrored in src/main.js) -->
+      <form
+        name="mosquito-workshop-request"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+        hidden
+      >
+        <input name="organization" />
+        <input name="contactName" />
+        <input name="email" />
+        <input name="phone" />
+        <input name="organizationType" />
+        <input name="audienceAge" />
+        <input name="groupSize" />
+        <input name="preferredDates" />
+        <input name="eventLocation" />
+        <input name="spaceType" />
+        <input name="electricity" />
+        <textarea name="notes"></textarea>
+        <input name="bot-field" />
+      </form>
       <main id="app"></main>
     </div>
     <script type="module" src="./src/main.js"></script>
