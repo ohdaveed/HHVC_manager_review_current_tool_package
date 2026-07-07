@@ -394,7 +394,8 @@ a:focus {
   border: 1px solid var(--sfds-border);
   border-radius: 999px;
   background: var(--sfds-white);
-  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.86rem;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
