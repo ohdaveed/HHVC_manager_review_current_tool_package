@@ -40,4 +40,8 @@ This document has rates effective through June 30, 2026, and was the most recent
 
 ## Corrects
 
-- `notebooklm/hhvc-standards-manual.md` Chapter 8.2 and `pages/pay-healthy-housing-fee.js` previously published an unsourced "FY27" table ($103/$129/$174/$350/$485/$688/$808 and $256/$234 hourly rates) that does not match this or any other certified schedule found. Corrected 2026-07-06.
+- `notebooklm/hhvc-standards-manual.md` Chapter 8.2 and `pages/pay-healthy-housing-fee.js` previously published a table ($103/$129/$174/$350/$485/$688/$808 apartment-building tiers and $256/$234 hourly rates) that this document's export (2026-07-06) flagged as "unsourced" because no FY 2026-27 schedule had been found published at that time.
+
+## Superseded (2026-07-06, same day)
+
+**That "unsourced FY27" flag was wrong — the figures were not fabricated.** The actual FY 2026-27 SFDPH EHB fee schedule was obtained directly the same day (see `2026-07-06-dph-ehb-fee-schedule-fy26-27.md`) and confirms $103/$129/$174/$350/$485/$688/$808 and $256/$234/hour as the real, currently-effective (7/1/26-6/30/27) rates. Since FY 2026-27 is the current fiscal year, mockup pages should use the FY26-27 document as the active source, not this FY25-26 document — this file remains accurate as a historical record of the prior fiscal year's rates, not as current guidance.

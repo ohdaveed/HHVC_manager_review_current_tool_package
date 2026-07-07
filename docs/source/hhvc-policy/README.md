@@ -41,7 +41,8 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-health-code-sec-609-healthy-housing-fee.md` | SEC. 609. Vector Control and Healthy Housing Inspection Program Fee | Phase 1 | **Legal authority** — rental-unit definition, late penalties, lien authority, Controller adjustment (Sec. 609.2) |
 | `2026-07-02-dph-ehb-fees-fy24-25.md` | SFDPH Environmental Health Branch — Website Fees FY 2024–25 | Phase 1 supplementary | Superseded fee-tier estimate; kept for historical comparison only |
 | `2026-07-02-controller-fee-certification-fy25-26.md` | Fee Certification — FY 2025–26 (Healthy Housing excerpt) | Phase 1 supplementary | Superseded pre-round FY 2025–26 estimate; see `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` for the final rounded figures |
-| `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/25–6/30/26) | Phase 1 | **Current fee authority** for `payFee`/`noticeOfViolation`; supersedes the FY24-25 estimate and the Controller pre-round; corrects a previously-published, unsourced "FY27" table |
+| `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/25–6/30/26) | Phase 1 supplementary | Superseded — kept for historical comparison; see `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` for the fee figures now in effect |
+| `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/26–6/30/27) | Phase 1 | **Current fee authority** for `payFee`/`noticeOfViolation`/`afterReport`; confirms the apartment-building tiers and $256/$234 hourly reinspection rates that a same-day FY25-26 export had incorrectly flagged as an "unsourced FY27 table" |
 
 ### 2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf
 
