@@ -96,7 +96,7 @@ window.HHVC_PAGES['miteInfo'] = {
     },
     {
       heading: 'What to do',
-      karl: "Resolved schema gap: unstructured steps converted to numbered paragraphs. Also resolved schema gap: converted button to inline link.",
+      karl: 'Resolved schema gap: unstructured steps converted to numbered paragraphs. Also resolved schema gap: converted button to inline link.',
       kind: 'body',
       bullets: [
         '**1. Check whether the problem may be bed bugs:** Look for bed bug signs such as live insects, shed skins, dark spots on bedding, or bites in rows. Use the bed bug pages if bed bugs are present or suspected: [Bed bug rules and prevention](bedBugsInfo)',

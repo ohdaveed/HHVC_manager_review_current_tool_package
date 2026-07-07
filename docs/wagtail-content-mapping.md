@@ -640,7 +640,7 @@ Everything still `[ ]` needs the logged-in admin form.
       `what_to_do`-style Section wrapper for step-by-step content.
 - [x] **doc-confirmed: no block type for tabular content on Information
       pages** — a mockup `table[][]` has no home in `Title and
-    text`/`Image`/`Callout`. The Help Center's "How a Report page works"
+  text`/`Image`/`Callout`. The Help Center's "How a Report page works"
       page states: _"You can add a table to Reports. It is the only
       content type that supports tables."_ That's an affirmative
       exclusivity claim, not just silence on other page types — no page
@@ -663,9 +663,9 @@ Everything still `[ ]` needs the logged-in admin form.
       found the field inert on a new/unsaved page and guessed it activates
       once a page is saved. Re-querying Karl MCP's `searchDocumentation`/
       `getPage` against the Help Center's own "Redirect this page to"
-      component page overrides that guess: *"This component has been
+      component page overrides that guess: _"This component has been
       disabled in the CMS. Contact Digital Services for help redirecting
-      pages."* It's disabled everywhere, not save-state-dependent — so the
+      pages."_ It's disabled everywhere, not save-state-dependent — so the
       raw field name is moot to keep chasing. No `pages/*.js` file uses
       this field, so there's no mockup impact either way.
 - [x] **live-admin-confirmed (2026-07-06): Information's raw field

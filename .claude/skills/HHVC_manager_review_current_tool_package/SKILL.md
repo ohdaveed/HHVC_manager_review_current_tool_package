@@ -1,29 +1,33 @@
-```markdown
+````markdown
 # HHVC_manager_review_current_tool_package Development Patterns
 
 > Auto-generated skill from repository analysis
 
 ## Overview
+
 This skill teaches you the core development patterns, coding conventions, and key workflows used in the `HHVC_manager_review_current_tool_package` TypeScript repository. You'll learn how to structure files, write imports/exports, update design specs, and follow the project's testing patterns.
 
 ## Coding Conventions
 
 ### File Naming
+
 - Use **kebab-case** for all file names.
-  - Example:  
+  - Example:
     ```
     user-profile-manager.ts
     hhvc-config.test.ts
     ```
 
 ### Import Style
+
 - Use **relative imports** for all modules.
   - Example:
     ```typescript
-    import { calculateScore } from './utils/calculate-score';
+    import { calculateScore } from './utils/calculate-score'
     ```
 
 ### Export Style
+
 - Use **named exports** instead of default exports.
   - Example:
     ```typescript
@@ -38,6 +42,7 @@ This skill teaches you the core development patterns, coding conventions, and ke
 ## Workflows
 
 ### Update or Correct Design Spec
+
 **Trigger:** When you need to clarify, fix, or update a design specification after its initial creation (e.g., after review or new findings).  
 **Command:** `/update-spec`
 
@@ -64,7 +69,7 @@ This skill teaches you the core development patterns, coding conventions, and ke
 
 ## Commands
 
-| Command      | Purpose                                                         |
-|--------------|-----------------------------------------------------------------|
+| Command      | Purpose                                                          |
+| ------------ | ---------------------------------------------------------------- |
 | /update-spec | Update or correct an existing design specification markdown file |
-```
+````

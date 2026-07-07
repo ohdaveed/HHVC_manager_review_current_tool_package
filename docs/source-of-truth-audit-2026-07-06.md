@@ -58,6 +58,7 @@ working number in body copy.
 
 `pages/integrated-pest-management-property-managers.js` frames a
 bed-bug-only rule set as a general "vector" policy:
+
 - Line 90: "Investigate any tenant reports of pest activity within 72
   hours" — the real tier-1 rule is **two working days**, and it's
   bed-bug-specific (PCO investigation), not a general 72-hour rule for any
@@ -70,16 +71,18 @@ bed-bug-only rule set as a general "vector" policy:
 ### 4. Tree/branch clearance distance — three different numbers, none matching source
 
 Tier-1 (`2026-07-02-ipm-pests-rats.md`) says overhanging limbs should be
-removed **within 6 feet** of roofs. Pages disagree with the source *and*
+removed **within 6 feet** of roofs. Pages disagree with the source _and_
 each other:
+
 - `pages/integrated-pest-management-property-managers.js` line 136: "3 feet"
 - `pages/keep-rats-and-mice-out.js` line 61 / `pages/prevent-overgrown-
-  vegetation.js` line 36: "4 feet"
+vegetation.js` line 36: "4 feet"
 - Source: 6 feet
 
 ## Page-specific findings
 
 ### `pages/bed-bug-rules-prevention.js`
+
 - Line 67: cites "Health Code **Article 11A**" — the master violation-
   category doc places bed bugs under **Article 11**, not 11A. (High)
 - Line 85: "tenants must report... within two working days" — source
@@ -96,22 +99,25 @@ each other:
   a prospective tenant." (Medium)
 
 ### `pages/ground-wasp-information.js`
+
 - Lines 62–72: dual-track referral procedure (city property → sister
   agency; private property → licensed PCO) traces only to
   `notebooklm/hhvc-ipm-reference-materials.md`, which itself cites an
   apparently-fabricated "Article 11, Section 581" for wasps. `docs/source/
-  hhvc-policy/README.md` explicitly says yellowjacket/wasp guidance is
+hhvc-policy/README.md` explicitly says yellowjacket/wasp guidance is
   "Not an Article 11 violation category." Page's own `editorNote` flags
   this as unverified, but body text/cards state it as settled fact. (High)
 
 ### `pages/mite-information.js`
+
 - The entire "tropical rat mite scatter after rodenticide → bite spike"
   narrative (paragraphs, callout, all 3 steps) traces only to
   `notebooklm/disease-risk-reference-sheet.md` and `notebooklm/hhvc-ipm-
-  reference-materials.md` — which itself hedges ("verify the order-of-
+reference-materials.md` — which itself hedges ("verify the order-of-
   operations warning"). Presented as settled fact on the page. (High)
 
 ### `pages/pigeon-information.js`
+
 - Line ~22: "histoplasmosis or psittacosis" from pigeon dust — zero tier-1
   hits; source is tier-3, and that tier-3 doc itself flags the claim as
   needing verification. (High)
@@ -122,21 +128,23 @@ each other:
   claim gap above.
 
 ### `pages/keep-rats-and-mice-out.js`
+
 - Line 93: "Space rat traps 15 to 30 feet apart" — tier-1 says **10 to 20
   feet** (source line 610). (Medium)
 - Line 74: DBI/Housing Code citation — see cross-cutting #1.
 - Line 61: 4-foot clearance — see cross-cutting #4.
 
 ### `pages/what-happens-after-report.js`
+
 - Line 93: "Sewage Backups (48 to 72 hours)" special window — no tier-1
   doc mentions sewage or this window; traces only to `hhvc_chapter_drafts/
-  hhvc-manual-chapter-8 (1).md` and `notebooklm/mockup-remediation-
-  playbook.md`. (High)
+hhvc-manual-chapter-8 (1).md` and `notebooklm/mockup-remediation-
+playbook.md`. (High)
 - Line 94: "All Other Violations (30 days)" generic correction window — no
   tier-1 doc establishes this; the only tier-1 "30 days" figures govern the
   **fee late-payment deadline**, a different thing. Traces to
   `notebooklm/master-guidelines.md` and `notebooklm/compliance-
-  standards.csv` (which itself cites "SF Building Code Sec. 102A.4," not
+standards.csv` (which itself cites "SF Building Code Sec. 102A.4," not
   Health Code Article 11). (Medium-high)
 - Line 99: "citations, civil liabilities, or a Director's Hearing to
   recover attorneys' fees and administrative abatement costs" — no tier-1
@@ -148,11 +156,13 @@ each other:
 - Line 38: DBI/Housing Code citation — see cross-cutting #1.
 
 ### `pages/respond-to-notice-of-violation.js`
+
 - Line 29: "citations, administrative fines, or a Director's Hearing" —
   same unsupported enforcement-mechanism claim as above, distinct from the
   already-tracked fee-rate issue in the same sentence. (High)
 
 ### `pages/reduce-indoor-moisture.js`
+
 - Lines ~130–136: "HHVC does not accept third-party mold test kit
   results... cannot be independently verified" presented as settled
   policy. The only source, `notebooklm/reduce-indoor-moisture.md`, says the
@@ -163,12 +173,14 @@ each other:
 - Lines 108–115: DBI/Housing Code citation — see cross-cutting #1.
 
 ### `pages/report-mold-humidity-condensation.js`
+
 - Line 58: "HHVC does not accept or use third-party mold kits for review"
   — same unconfirmed-operational-claim issue as `reduce-indoor-
-  moisture.js` above. (Low — plausible but unverified)
+moisture.js` above. (Low — plausible but unverified)
 - Line 85: DBI/Housing Code citation — see cross-cutting #1.
 
 ### `pages/report-garbage-clutter.js` / `pages/report-pigeons.js`
+
 - Both reuse the 72-hour-tenant-notice sentence and reporter-privacy
   language, but `2026-07-02-program-manager-72-hour-tenant-notice.md`
   explicitly scopes that rule to six named pages (rats, cockroaches, bed
@@ -178,6 +190,7 @@ each other:
   updated to cover them explicitly before publication. (Low)
 
 ### Minor / low-confidence (optional cleanup)
+
 - `pages/prevent-cockroaches.js` line 22: "salmonella and E. coli" slightly
   conflates two cockroach species' distinct source findings (Salmonella +
   Shigella for American; coliform bacteria for German). Not a fabrication.
@@ -205,6 +218,6 @@ records.js`, `pages/lookup-residential-violations.js`,
 ## Not covered by this audit
 
 `pages/property-owner-responsibilities.js` and `pages/pay-healthy-housing-
-fee.js` were re-checked only for issues *outside* the already-tracked
+fee.js` were re-checked only for issues _outside_ the already-tracked
 fee-rate/citation fixes pending merge from `worktree-schema-gaps-safe`; no
 new issues found beyond what's already tracked there.
