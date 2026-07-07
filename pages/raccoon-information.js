@@ -56,54 +56,26 @@ window.HHVC_PAGES['raccoonInfo'] = {
     },
     {
       heading: 'How to clean up a raccoon latrine safely',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs below. Real-schema gap: the 4 steps that follow have no Section/step container to live in — unlike Transaction, the verified Information schema has only Title and text/Image/Callout as top-level blocks, with no Section-style step wrapper. Each step below becomes its own separate sibling Title and text block instead; the step grouping/numbering itself has no native home in Information. Verify latrine cleanup content against CDC/DPH guidance before publication.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraphs below. Resolved schema gap: unstructured steps converted to numbered paragraphs. Verify latrine cleanup content against CDC/DPH guidance before publication.',
       kind: 'body',
       paragraphs: [
         'Do not sweep or vacuum dry raccoon droppings. Dry dust can spread roundworm eggs into the air.',
         'If you are not trained or equipped to clean a latrine safely, hire a licensed pest control operator or other qualified professional.',
       ],
-      steps: [
-        {
-          title: 'Protect yourself',
-          text: [
-            'Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.',
-          ],
-          bullets: [
-            'Wear disposable gloves and shoe covers or boots that can be washed',
-            'Wear long sleeves and old clothes you can wash or throw away',
-            'Consider a dust mask if you cannot avoid creating dust',
-          ],
-          karl: 'Maps to a fifth Title and text block (a sibling of the "How to clean up..." block above, not nested inside it — see the section-level karl note on the no-Section gap): Title = this step title, Text = the text item plus the bulleted list below (bullets render as a bulleted list inside the same rich text field).',
-        },
-        {
-          title: 'Lightly wet the droppings',
-          text: [
-            'Lightly spray the latrine with water or a mild soap-and-water mix. This helps keep eggs from becoming airborne while you clean.',
-          ],
-          karl: 'Maps to a sixth Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the text item below.',
-        },
-        {
-          title: 'Remove and bag the waste',
-          text: [
-            'Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.',
-          ],
-          bullets: [
-            'Double-bag the waste and tie the bags closed',
-            'Place the bags in an outdoor garbage container with a tight lid',
-            'Do not put raccoon waste in compost',
-          ],
-          karl: 'Maps to a seventh Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the text item plus the bulleted list below.',
-        },
-        {
-          title: 'Clean the area and your hands',
-          text: ['After removal, clean the surface and wash up thoroughly.'],
-          bullets: [
-            'Scrub the area with hot water and soap, or use boiling water on hard surfaces when safe to do so',
-            'Wash gloves, tools, clothes, and boots after use',
-            'Wash your hands with soap and water for at least 20 seconds, even if you wore gloves',
-          ],
-          karl: 'Maps to an eighth Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the text item plus the bulleted list below.',
-        },
+      bullets: [
+        '**1. Protect yourself:** Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.',
+        '* Wear disposable gloves and shoe covers or boots that can be washed',
+        '* Wear long sleeves and old clothes you can wash or throw away',
+        '* Consider a dust mask if you cannot avoid creating dust',
+        '**2. Lightly wet the droppings:** Lightly spray the latrine with water or a mild soap-and-water mix. This helps keep eggs from becoming airborne while you clean.',
+        '**3. Remove and bag the waste:** Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.',
+        '* Double-bag the waste and tie the bags closed',
+        '* Place the bags in an outdoor garbage container with a tight lid',
+        '* Do not put raccoon waste in compost',
+        '**4. Clean the area and your hands:** After removal, clean the surface and wash up thoroughly.',
+        '* Scrub the area with hot water and soap, or use boiling water on hard surfaces when safe to do so',
+        '* Wash gloves, tools, clothes, and boots after use',
+        '* Wash your hands with soap and water for at least 20 seconds, even if you wore gloves',
       ],
       callout: {
         karl: 'Maps to its own Callout stream item (a fourth Callout sibling on this page, sitting after the 4 step Title and text blocks above — not nested inside any of them). No title field; this callout has none, so no mismatch.',
@@ -166,20 +138,16 @@ window.HHVC_PAGES['raccoonInfo'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 2 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Keep rats and mice out',
-          text: 'Learn how to reduce food, water, shelter, and entry points.',
           target: 'ratsPrevent',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

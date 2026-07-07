@@ -116,37 +116,29 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Paragraphs map to an eighth Title and text block (Title = this heading, Text = the paragraph). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report bed bugs" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the bedBugsReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Paragraphs map to an eighth Title and text block (Title = this heading, Text = the paragraph). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the bedBugsReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if there is an active bed bug problem and the property owner or manager does not respond. Do not wait 72 hours for urgent health or safety concerns.',
+        '[Report bed bugs](bedBugsReport)',
       ],
-      button: 'Report bed bugs',
-      buttonStyle: 'secondary',
-      buttonTarget: 'bedBugsReport',
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Report bed bugs',
-          text: 'Report an active bed bug problem through 311.',
           target: 'bedBugsReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights and reporting',
-          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

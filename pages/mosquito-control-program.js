@@ -25,18 +25,16 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'Report mosquitoes or standing water',
-      karl: 'Paragraphs and bullets map to a second Title and text block (Title = this heading, Text = the paragraph plus the bulleted list). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report mosquitoes through 311" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the mosquitoesReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Paragraphs and bullets map to a second Title and text block (Title = this heading, Text = the paragraph plus the bulleted list). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the mosquitoesReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'You can report standing water or mosquito concerns through 311 or by contacting the Mosquito Control Program directly.',
+        '[Report mosquitoes through 311](mosquitoesReport)',
       ],
       bullets: [
         'Call 311 within San Francisco or (415) 701-2311 from outside the city',
         'Contact the Mosquito Control Program at 415-252-3806 for unusual mosquito activity',
       ],
-      button: 'Report mosquitoes through 311',
-      buttonStyle: 'secondary',
-      buttonTarget: 'mosquitoesReport',
     },
     {
       heading: 'More mosquito resources',
@@ -59,32 +57,24 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'Prevent mosquitoes on your property',
-      karl: 'This card-only section (no paragraph content, just internal-page cards) maps most cleanly to the Related field: a generic unrestricted "Page" chooser, repeatable, that accepts any page type (Information, Transaction, or Campaign, matching this section\'s mixed targets). Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 4 cards have no home unless Digital Services adds one.',
+      karl: 'This card-only section (no paragraph content, just internal-page cards) maps most cleanly to the Related field: a generic unrestricted "Page" chooser, repeatable, that accepts any page type (Information, Transaction, or Campaign, matching this section\'s mixed targets). Resolved schema gap: Related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Free mosquito education workshop',
-          text: 'Request a free workshop with microscopes, live larvae, and science stations for youth groups.',
           target: 'mosquitoWorkshop',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above). Target is a Campaign-type page, which Related accepts fine since it is unrestricted by page type.',
         },
         {
           title: 'Prevent mosquitoes',
-          text: 'Learn how to remove standing water and reduce mosquito breeding around your home.',
           target: 'mosquitoesPrevent',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report a dead bird',
-          text: 'Report a dead bird for West Nile virus surveillance through CDPH. HHVC may collect and test the bird.',
           target: 'wnvBirdReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report mosquitoes',
-          text: 'Report mosquitoes or standing water around a home, yard, building, or shared area.',
           target: 'mosquitoesReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

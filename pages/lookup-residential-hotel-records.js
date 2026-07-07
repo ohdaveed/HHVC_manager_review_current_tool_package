@@ -18,16 +18,15 @@ window.HHVC_PAGES['findHotelRecords'] = {
   sections: [
     {
       heading: 'What this tool covers',
-      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the two paragraphs). Schema gap: things_to_know is Title + Text only, no nested callout — fold the audience-guidance callout below into the Text field (e.g. as a bolded closing line), or flag for Digital Services if a distinct callout is needed.',
+      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the paragraphs). Resolved schema gap: things_to_know is Title + Text only, no nested callout — folded the audience-guidance callout below into the Text field.',
       kind: 'body',
       paragraphs: [
         'Environmental Health inspects residential hotels, SROs, shelters, and related housing programs under separate datasets from the general residential complaint search.',
         'Use this page when you need records for a residential hotel, SRO, or shelter rather than a standard apartment or mixed-use building.',
       ],
-      callout: {
-        karl: 'See the schema gap noted at the section level above — things_to_know has no nested callout field for this text.',
-        text: 'If you are staying at a regular tourist hotel, you may still use the general complaints and inspection lookup. Residential hotel and shelter records use a different program dataset.',
-      },
+      bullets: [
+        '**Note:** If you are staying at a regular tourist hotel, you may still use the general complaints and inspection lookup. Residential hotel and shelter records use a different program dataset.',
+      ],
     },
     {
       heading: 'Open the lookup tool',
@@ -41,30 +40,26 @@ window.HHVC_PAGES['findHotelRecords'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has no custom title/text per item, only a page reference — the descriptions on these 4 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Find complaints and inspection records',
-          text: 'Search general residential complaint and inspection history by address.',
           target: 'findRecords',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Look up building records',
-          text: 'Return to the records hub for all lookup options.',
           target: 'recordsHub',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights when reporting housing conditions',
-          text: 'Learn about tenant protections when reporting a housing condition.',
           target: 'tenantRights',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report bed bugs',
-          text: 'Report an active bed bug problem in rental housing, an SRO, or a residential hotel.',
           target: 'bedBugsReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },

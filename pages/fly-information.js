@@ -61,20 +61,16 @@ window.HHVC_PAGES['flyInfo'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 2 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Prevent garbage and clutter problems',
-          text: 'Learn how to manage garbage and storage areas so they do not breed flies or attract other pests.',
           target: 'garbageInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

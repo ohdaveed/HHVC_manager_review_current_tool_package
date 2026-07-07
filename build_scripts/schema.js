@@ -5,7 +5,7 @@ const { z } = require('zod')
 
 const cardSchema = z.object({
   title: z.string().min(1),
-  text: z.string().min(1),
+  text: z.string().min(1).optional(),
   target: z.string().optional(),
   url: z.string().optional(),
   karl: z.string().optional(),

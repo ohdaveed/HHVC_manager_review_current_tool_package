@@ -106,7 +106,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
       karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
-        'Leaks and structural water intrusion are the landlord\'s responsibility under the San Francisco Housing Code (2025) and are routed to the Department of Building Inspection (DBI). Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem.',
+        "Leaks and structural water intrusion are the landlord's responsibility under the San Francisco Housing Code (2025) and are routed to the Department of Building Inspection (DBI). Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem.",
         'If you are a property owner or manager, it is your responsibility to repair dripping pipes, roof leaks, broken window frames, and water heater leaks to prevent conditions that allow mold to grow. Note: Structural water intrusion, roof leaks, broken window frames, and water heater leaks are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
       ],
       bullets: [
@@ -160,43 +160,33 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'When to report instead',
-      karl: 'Paragraph maps to a thirteenth Title and text block (Title = this heading, Text = the paragraph). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Report mold, moisture, or condensation problems" button has no confirmed home. It may fit inside the Title and text block\'s rich text as a Link-tool link (Internal link → the moldReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Paragraph maps to a thirteenth Title and text block (Title = this heading, Text = the paragraph). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the moldReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'Use the reporting page if visible mold affects walls or ceilings and covers 10 square feet or more, moisture or mold keeps coming back, the property owner does not respond, or it affects a shared SRO area.',
+        '[Report mold, moisture, or condensation problems](moldReport)',
       ],
-      button: 'Report mold, moisture, or condensation problems',
-      buttonStyle: 'secondary',
-      buttonTarget: 'moldReport',
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 4 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Report mold from humidity or condensation',
-          text: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
           target: 'moldReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
-          text: 'Check whether Environmental Health may review a pest, vector, or housing health condition.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report a housing or pest problem',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights when reporting housing conditions',
-          text: 'Learn about tenant protections and where to get help.',
           target: 'tenantRights',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

@@ -29,16 +29,19 @@ window.HHVC_PAGES['pigeonInfo'] = {
     },
     {
       heading: 'Why pigeons can be a housing health concern',
-      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below.',
+      karl: "Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below (second paragraph now ends with the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). New: a secondary Button link block ('View Health Code Article 11') citing the municipal code per Ch. 8.7.2 — flag for Digital Services to confirm this is the SF.gov-preferred municode URL before publication.",
       kind: 'body',
       paragraphs: [
         'Pigeons can roost on ledges, roofs, balconies, fire escapes, and other building surfaces. Accumulated droppings, feathers, and nesting material can create odor, attract insects, and contribute to unsanitary conditions in shared or exterior areas.',
-        'Environmental Health may review bird-related nuisances when they contribute to a housing health problem covered by Article 11, especially when droppings or nesting material affect shared spaces, ventilation areas, or building cleanliness.',
+        'Environmental Health may review bird-related nuisances when they contribute to a housing health problem covered by Article 11, especially when droppings or nesting material affect shared spaces, ventilation areas, or building cleanliness. Under San Francisco Health Code Article 11, property owners are legally required to keep their buildings clean, watertight, and completely free of rodent and insect infestations.',
       ],
       callout: {
         karl: 'Maps to its own Callout stream item (sibling of the Title and text item above, not nested inside it). Single rich text field, no title — this callout has no title already, so no mismatch.',
         text: 'Birds can be involved in disease vectors such as West Nile virus in the broader mosquito surveillance context. Report unusual dead bird activity through West Nile virus resources linked from the Mosquito Control Program page.',
       },
+      button: 'View Health Code Article 11',
+      buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
+      buttonStyle: 'secondary',
     },
     {
       heading: 'Reduce pigeon problems',
@@ -54,54 +57,30 @@ window.HHVC_PAGES['pigeonInfo'] = {
     },
     {
       heading: 'When to report',
-      karl: 'Paragraph maps to a fourth Title and text block (Title = this heading, Text = the paragraph). Unresolved schema gap: the 4 linked cards embedded in this section have no confirmed home — the verified Information schema only exposes page links via the page-level Related field (unrestricted "Page" chooser, repeatable, no per-item title/text, and it lives once, typically at the end of the page, rather than inline mid-section). There is no observed block type for an inline linked-card list within a body section. Flag for Digital Services: options might include moving these links into the Related field (losing the per-item description) or embedding them as Link-tool links inside this block\'s rich text (losing the card visual treatment) — neither is confirmed.',
+      karl: 'Paragraph maps to a fourth Title and text block (Title = this heading, Text = the paragraph). Resolved schema gap: converted inline linked cards to paragraph links.',
       kind: 'body',
       paragraphs: [
         'Report through 311 when pigeon activity is tied to ongoing unsanitary conditions, accumulated waste, or other housing-health nuisances HHVC may review.',
       ],
-      cards: [
-        {
-          title: 'Report pigeons',
-          text: 'Report pigeon roosting, nesting, droppings, or feeding around a building or shared area.',
-          target: 'pigeonsReport',
-          karl: 'Embedded inline link card — no confirmed block type in the Information schema for a card with title/text/target at this position (see section-level karl note above); closest analog is the page-level Related field, which does not support per-item title/text or mid-page placement.',
-        },
-        {
-          title: 'Report garbage or clutter',
-          text: 'Report unsanitary exterior conditions that may involve bird droppings or nesting material.',
-          target: 'garbageReport',
-          karl: 'Embedded inline link card — no confirmed block type in the Information schema for a card with title/text/target at this position (see section-level karl note above); closest analog is the page-level Related field, which does not support per-item title/text or mid-page placement.',
-        },
-        {
-          title: 'Mosquito Control Program',
-          text: 'Find West Nile virus resources and dead bird reporting information.',
-          target: 'mosquitoControl',
-          karl: 'Embedded inline link card — no confirmed block type in the Information schema for a card with title/text/target at this position (see section-level karl note above); closest analog is the page-level Related field, which does not support per-item title/text or mid-page placement.',
-        },
-        {
-          title: 'Report a dead bird',
-          text: 'Help track West Nile virus. HHVC may collect the bird and test it.',
-          target: 'wnvBirdReport',
-          karl: 'Embedded inline link card — no confirmed block type in the Information schema for a card with title/text/target at this position (see section-level karl note above); closest analog is the page-level Related field, which does not support per-item title/text or mid-page placement.',
-        },
+      bullets: [
+        '[Report pigeons](pigeonsReport)',
+        '[Report garbage or clutter](garbageReport)',
+        '[Mosquito Control Program](mosquitoControl)',
+        '[Report a dead bird](deadBirdReport)',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 2 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Prevent mosquitoes',
-          text: 'Learn about standing water, West Nile virus precautions, and mosquito reporting.',
           target: 'mosquitoesPrevent',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

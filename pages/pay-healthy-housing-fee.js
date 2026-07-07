@@ -77,36 +77,31 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has no custom title/text per item, only a page reference — the descriptions on these 4 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
-          text: 'Check whether Environmental Health may review a pest, vector, or housing health condition.',
           target: 'scopeInfo',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report a housing or pest problem',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Pests and housing problems',
-          text: 'Return to the main Topic page for HHVC pest, vector, and housing health issues.',
           target: 'pestsTopic',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Integrated pest management for property owners and managers',
-          text: 'Use prevention, monitoring, and resident outreach. UC IPM is the primary source for templates and checklists.',
           target: 'ownerGuidance',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Property owner responsibilities',
-          text: 'Find the full fee schedule PDF, reinspection rates, and other owner resources.',
           target: 'ownerHub',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above). Links to the Resource Collection page hosting the fee schedule document.',
         },
