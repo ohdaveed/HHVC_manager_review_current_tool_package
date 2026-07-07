@@ -461,7 +461,7 @@ a:focus {
   cursor: pointer;
 }
 .hero {
-  background: var(--sfds-slate-5);
+  background: var(--sfds-white);
   border-bottom: 1px solid var(--sfds-border);
   padding: 3.25rem 2rem 2.75rem;
   max-width: var(--content-max);
