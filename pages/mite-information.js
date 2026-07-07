@@ -11,6 +11,12 @@ window.HHVC_PAGES['miteInfo'] = {
     'A resident after bird or rodent activity in or near the building',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'Information page. Do not provide medical diagnosis. Verify HHVC scope and PCO treatment sequencing guidance before publication. Must stay cross-linked with Keep rats and mice out for tropical rat mite / rodenticide order-of-operations.',
   sections: [
@@ -18,11 +24,17 @@ window.HHVC_PAGES['miteInfo'] = {
       heading: 'Why it matters',
       karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below (tropical rat mite health-harm framing, placed first to motivate prevention). Verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
+      image: {
+        src: 'https://images.unsplash.com/photo-1574263867127-a8b4d81ece92?auto=format&fit=crop&w=800&q=80',
+        alt: 'Magnified view of small mites on a surface',
+        karl: 'Information section: Image — pest identification aid',
+      },
       paragraphs: [
         'Tropical rat mite bites cause itching and skin irritation, and repeated scratching can lead to secondary skin infections. When rodenticides kill rats without first treating the nest, surviving mites scatter in search of a new host — which can trigger a sudden spike in bites among residents in the building.',
         "Because mite outbreaks often follow rodent activity, delaying nest treatment doesn't just risk continued rat problems — it can actively make things worse for tenants living nearby.",
       ],
       callout: {
+        variant: 'note',
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'If bites appear soon after rodenticide use, treat it as a sign the rat nest was not properly treated for mites.',
       },
@@ -106,6 +118,7 @@ window.HHVC_PAGES['miteInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

@@ -12,6 +12,12 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     'Building staff or maintenance staff supporting bed bug prevention',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'Information page. Official Director’s Rules PDF is on sfdph.org (not Google Drive). PDF accessibility: consider an HTML summary on SF.gov if Karl editors require a non-PDF primary source. Tenant guidelines PDF is internal reference in docs/source/hhvc-policy/.',
   sections: [
@@ -19,6 +25,11 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       heading: 'Why it matters',
       karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify claims against current CDC/SFDPH guidance before publication.',
       kind: 'body',
+      image: {
+        src: 'https://images.unsplash.com/photo-1598300042247-d088c8e791bc?auto=format&fit=crop&w=800&q=80',
+        alt: 'Close-up of bed bugs on mattress seam stitching',
+        karl: 'Information section: Image — pest identification aid',
+      },
       paragraphs: [
         'Bed bug bites cause itching and, for some people, allergic skin reactions; repeated scratching can lead to secondary infections. Beyond the physical bites, living with an active infestation often causes real emotional strain — anxiety, embarrassment, and sleepless nights are common.',
         'Delayed treatment lets bed bugs spread to neighboring units, which is why fast reporting and cooperation with inspections and treatment matter — the longer an infestation goes unaddressed, the more people it affects and the harder it becomes to resolve.',
@@ -125,6 +136,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

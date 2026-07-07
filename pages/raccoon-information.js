@@ -11,6 +11,12 @@ window.HHVC_PAGES['raccoonInfo'] = {
     'A neighbor reporting garbage, animal waste, or entry points caused by raccoon activity',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'Information page. Wildlife trapping is outside HHVC scope — route injured/trapped animals to Animal Care & Control. Latrine cleanup steps follow CDC Baylisascaris guidance; SME must verify against current CDC/DPH protocols before publication. In Karl: add CDC external link in Information section; do not publish until vector program signs off.',
   editorStatus: 'blocked',
@@ -19,11 +25,17 @@ window.HHVC_PAGES['raccoonInfo'] = {
       heading: 'Why it matters',
       karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below (raccoon roundworm health-harm framing, placed first to motivate prevention). Verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
+      image: {
+        src: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
+        alt: 'Raccoon near residential trash bins at night',
+        karl: 'Information section: Image — wildlife identification aid',
+      },
       paragraphs: [
         'Raccoon feces can contain Baylisascaris procyonis, a roundworm that causes a serious illness in people if its eggs are accidentally swallowed. In rare but severe cases, the infection can affect the brain and nervous system, especially in young children who put contaminated soil or objects in their mouths.',
         'Because raccoons often return to the same latrine site again and again, contamination can build up in play areas, gardens, and building surfaces without anyone realizing it — making early identification and safe cleanup essential to preventing exposure.',
       ],
       callout: {
+        variant: 'note',
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: "Treat any suspected raccoon latrine as a health hazard right away — don't wait to clean it up, and keep children and pets away until it's handled safely.",
       },
@@ -138,6 +150,7 @@ window.HHVC_PAGES['raccoonInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

@@ -12,6 +12,12 @@ window.HHVC_PAGES['scopeInfo'] = {
     'A property owner, property manager, or building staff member looking for prevention guidance or best practices',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   seoTitle: 'Learn what HHVC can inspect',
   metaDescription: 'Check whether HHVC may review a pest, vector, or housing health condition.',
   sections: [
@@ -78,6 +84,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

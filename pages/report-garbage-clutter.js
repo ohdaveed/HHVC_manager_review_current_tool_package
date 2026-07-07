@@ -11,6 +11,11 @@ window.HHVC_PAGES['garbageReport'] = {
     'An employee reporting a pest or vector concern at work',
   ],
   reading: 'Grade 6',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   primaryCta: 'Report through 311',
   topicTag: 'Topic: Pests and housing problems',
   sections: [

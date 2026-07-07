@@ -11,6 +11,13 @@ window.HHVC_PAGES['findRecords'] = {
     'A neighbor or advocate researching a building address',
   ],
   reading: 'Grade 7',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
+  topicTag: 'Topic: Pests and housing problems',
+  primaryCta: 'Start lookup',
   editorNote:
     'SF.gov landing page for an external lookup tool. Primary CTA opens xnet.sfdph.org (Residential Health Code Violations). Verify the external URL before publication.',
   sections: [
@@ -67,6 +74,7 @@ window.HHVC_PAGES['findRecords'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [

@@ -15,6 +15,26 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   editorNote:
     'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md) using this mockup\'s existing sections[]/cards[]/bullets[] shape — this tool has no Spotlight/Top facts/Logo/Color theme widgets, so the karl notes below describe the intended real-Karl block for each section rather than a literally rendered equivalent. Campaign page-level fields with no mockup equivalent at all: Primary agency, Logo, Background header image, Color theme, Partner agencies. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   editorStatus: 'placeholder',
+  spotlight: {
+    title: 'Bring mosquito science to your students',
+    paragraphs: [
+      'Healthy Housing and Vector Control offers a free mosquito education workshop for youth audiences in San Francisco.',
+      'Our team sets up interactive science stations where students can explore mosquito biology, breeding habitats, and disease prevention through hands-on learning.',
+    ],
+    image: {
+      src: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=800&q=80',
+      alt: 'Students at a science education workshop with microscopes',
+      karl: 'Campaign Spotlight: image',
+    },
+    button: 'Request a workshop',
+    buttonUrl: '/forms/mosquito-workshop-request/',
+    karl: 'Campaign Spotlight 1',
+  },
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'Bring mosquito science to your students',
@@ -31,6 +51,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Who can request a workshop',
+      component: 'supporting',
       karl: "Maps to an Additional content → Accordion section block: Title = this heading, Accordion sidebar (rich text) = the paragraph below, and each bullet below becomes one Accordion item (Title = audience type, Body = elaboration — this mockup's bullets are single-line, so item bodies would need light rewriting to fit the Title+Body shape).",
       kind: 'body',
       bullets: [
@@ -45,6 +66,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'What students experience',
+      component: 'supporting',
       karl: 'Maps to a second Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet below becomes one Accordion item (station name as Title, elaboration as Body).',
       kind: 'body',
       paragraphs: [
@@ -60,6 +82,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Aligned with California education standards',
+      component: 'supporting',
       karl: 'Maps to a third Additional content → Accordion section block: Title = this heading, Accordion sidebar = the two paragraphs below, each bullet becomes one Accordion item.',
       kind: 'body',
       paragraphs: [
@@ -110,6 +133,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: "Maps to Campaign's Related field (raw name `related_links`, a repeatable StreamField — confirmed via live admin, 2026-07-06; each entry is a Page block: Link to radio SF.gov page/External URL/None, Page chooser, Link text). Corrected from an earlier assumption that this field was single-item — it isn't. All 4 cards below can map directly to separate related_links entries (Link to = SF.gov page, Page = target, Link text = title).",
       kind: 'placement',
       cards: [

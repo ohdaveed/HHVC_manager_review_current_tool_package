@@ -11,6 +11,13 @@ window.HHVC_PAGES['findViolations'] = {
     'A housing advocate checking enforcement history for an address',
   ],
   reading: 'Grade 7',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
+  topicTag: 'Topic: Pests and housing problems',
+  primaryCta: 'Start lookup',
   editorNote:
     'Alias-style lookup page focused on violations language. Primary CTA uses the same verified xnet Residential Health Code Violations tool as findRecords. Consider merging with findRecords if editors prefer one combined lookup page.',
   sections: [
@@ -33,6 +40,7 @@ window.HHVC_PAGES['findViolations'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [

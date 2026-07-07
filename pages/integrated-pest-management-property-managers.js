@@ -124,6 +124,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: '2. Set policies, plans, and lease expectations',
+      component: 'supporting',
       karl: 'Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'placement',
       paragraphs: [
@@ -139,6 +140,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: '3. Prevent pests and seal entry points',
+      component: 'supporting',
       karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'placement',
       paragraphs: [
@@ -156,6 +158,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: '4. Track pest activity and coordinate treatments',
+      component: 'supporting',
       karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'placement',
       paragraphs: [
@@ -172,6 +175,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: '5. Share clear instructions and support residents',
+      component: 'supporting',
       karl: 'Maps to a ninth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'placement',
       paragraphs: [

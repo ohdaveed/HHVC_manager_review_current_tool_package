@@ -11,6 +11,12 @@ window.HHVC_PAGES['garbageInfo'] = {
     'A building employee or maintenance worker who services garbage areas',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'New Information page — pairs with the existing report-garbage-clutter.js Transaction page. Illustrative mockup content for manager review; verify against current HHVC/DPH sanitation guidance before publication.',
   sections: [
@@ -50,6 +56,7 @@ window.HHVC_PAGES['garbageInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

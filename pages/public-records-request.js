@@ -11,6 +11,7 @@ window.HHVC_PAGES['publicRecords'] = {
     'A journalist or researcher requesting public records',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
   editorNote:
     'SF.gov landing page for the citywide public records service (NextRequest). Primary CTA is external. Verify whether HHVC needs a program-specific intro or routes entirely to the citywide portal.',
   sections: [
@@ -40,6 +41,7 @@ window.HHVC_PAGES['publicRecords'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [

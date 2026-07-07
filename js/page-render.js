@@ -74,7 +74,15 @@ function inferSectionRole(section, pageType) {
     return 'supporting'
   }
   if (pageType === 'information') {
-    if (k.includes('external') && section.cards) return 'resources'
+    if (section.component === 'resources' || (section.cards && section.cards.some((c) => c.url)))
+      return 'resources'
+    if (section.component === 'supporting' || k.includes('accordion')) return 'supporting'
+    return 'body'
+  }
+  if (pageType === 'campaign') {
+    if (section.component === 'supporting' || k.includes('accordion')) return 'supporting'
+    if (section.component === 'resources' || (section.cards && section.cards.some((c) => c.url)))
+      return 'resources'
     return 'body'
   }
   return 'body'
@@ -145,13 +153,21 @@ function button(label, kind = 'primary', target = null, url = null) {
 function renderCallout(callout, extraClass = '') {
   if (!callout) return ''
   const variant = callout.variant || 'info'
+  const icon = variant === 'warning' ? '⚠' : variant === 'note' ? '◆' : 'ⓘ'
   const title =
     callout.title === false
       ? ''
       : callout.title
         ? `<strong>${escapeHtml(callout.title)}:</strong> `
         : ''
-  return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body')}${title}${formatMarkdown(callout.text)}</aside>`
+  return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body')}<span class="callout-icon" aria-hidden="true">${icon}</span><div class="callout-content">${title}${formatMarkdown(callout.text)}</div></aside>`
+}
+function renderAlertPreview(alert) {
+  if (!alert) return ''
+  const variant = alert.variant === 'critical' ? 'critical' : 'info'
+  const label =
+    alert.editorLabel || 'Mockup preview: Agency/Location alert (not native on this page type)'
+  return `<div class="alert-preview alert-preview--${variant}" role="note">${karlTag(alert.karl || label, 'editor')}<div class="alert-preview-inner"><strong>${escapeHtml(alert.title)}</strong><p>${formatMarkdown(alert.text)}</p></div></div>`
 }
 function renderImage(image) {
   if (!image?.src) return ''
@@ -245,14 +261,17 @@ function renderSteps(steps = []) {
     )
     .join('')}</ol>`
 }
-function renderTable(rows = [], pageType = 'generic') {
+function renderTable(rows = [], pageType = 'generic', caption = '') {
   if (!rows.length) return ''
   const [head, ...body] = rows
   const previewNote =
     pageType === 'information'
       ? `<p class="mockup-only-note">${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
       : ''
-  return `${previewNote}<table class="table"><thead><tr>${head.map((h) => `<th>${formatMarkdown(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${formatMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+  const captionHtml = caption
+    ? `<caption class="table-caption">${escapeHtml(caption)}</caption>`
+    : ''
+  return `${previewNote}<table class="table">${captionHtml}<thead><tr>${head.map((h) => `<th>${formatMarkdown(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${formatMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
 }
 function resolveWhatToKnow(page) {
   if (page.whatToKnow) return page.whatToKnow
@@ -327,7 +346,7 @@ function renderSectionInner(section, pageType = 'generic') {
   inner += section.steps ? renderSteps(section.steps) : ''
   inner += bulletList(section.bullets || [])
   inner += section.image ? renderImage(section.image) : ''
-  inner += section.table ? renderTable(section.table, pageType) : ''
+  inner += section.table ? renderTable(section.table, pageType, section.tableCaption) : ''
   if (section.callout) inner += renderCallout(section.callout)
   if (section.button)
     inner += button(
@@ -420,6 +439,7 @@ function renderPageMain(page) {
   const { pageType, intro, services, resources, related, whatToDo, supporting, body } = parts
   const heroCta = resolveHeroCta(page, whatToDo)
   let html = renderHero(page, heroCta)
+  if (page.alertPreview) html += renderAlertPreview(page.alertPreview)
   html += `<main class="page-body page-body--${pageType}">`
   html += editorQaBlock(page)
   html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
@@ -443,17 +463,38 @@ function renderPageMain(page) {
     html += `</div>${renderRelatedRail(related)}</div>`
     html += renderContactSection(page.contact, page)
   } else if (pageType === 'information') {
-    const infoBody = [
-      ...body,
-      ...supporting.filter((s) => inferSectionRole(s, pageType) === 'body'),
-    ]
-    html += renderOnThisPage(infoBody)
-    infoBody.forEach((s) => {
+    html += renderOnThisPage(body)
+    body.forEach((s) => {
       html += renderSection(s, pageType)
     })
     resources.forEach((s) => {
       html += renderSection({ ...s, component: 'resources' }, pageType)
     })
+    if (supporting.length) {
+      html += `<div class="supporting-info supporting-info--information">${karlTag('Supporting information: Accordions for supplemental detail', 'body')}<h2 class="visually-hidden">More detail</h2>`
+      supporting.forEach((s) => {
+        html += renderAccordionSection(s, pageType)
+      })
+      html += `</div>`
+    }
+  } else if (pageType === 'campaign') {
+    intro.forEach((s) => {
+      html += renderSection(s, pageType)
+    })
+    body.forEach((s) => {
+      html += renderSection(s, pageType)
+    })
+    if (supporting.length) {
+      html += `<div class="supporting-info supporting-info--campaign">${karlTag('Campaign: Accordion sections for workshop detail', 'body')}<h2 class="visually-hidden">Workshop details</h2>`
+      supporting.forEach((s) => {
+        html += renderAccordionSection(s, pageType)
+      })
+      html += `</div>`
+    }
+    resources.forEach((s) => {
+      html += renderSection({ ...s, component: 'resources' }, pageType)
+    })
+    html += renderContactSection(page.contact, page)
   } else if (pageType === 'topic') {
     intro.forEach((s) => {
       html += renderSection(s, pageType)
@@ -478,7 +519,7 @@ function renderPageMain(page) {
     })
     html += renderContactSection(page.contact, page)
   }
-  if (pageType === 'topic' || pageType === 'resource-collection') {
+  if (pageType === 'topic' || pageType === 'resource-collection' || pageType === 'campaign') {
     related.forEach((s) => {
       html += renderRelatedList(s.cards || [], s.heading || 'Related')
     })

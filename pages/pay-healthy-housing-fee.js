@@ -10,6 +10,13 @@ window.HHVC_PAGES['payFee'] = {
     'Property managers and billing contacts helping an owner pay or understand the fee',
   ],
   reading: 'Grade 7',
+  primaryCta: 'Pay your fee',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   whatToKnow: {
     cost: 'Fee applies to apartment buildings with 3 or more rental units',
     thingsToKnow: [
@@ -84,6 +91,7 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [

@@ -12,6 +12,13 @@ window.HHVC_PAGES['findHotelRecords'] = {
     'A tenant representative researching program inspection history',
   ],
   reading: 'Grade 7',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
+  topicTag: 'Topic: Pests and housing problems',
+  primaryCta: 'Start lookup',
   editorNote:
     'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
   editorStatus: 'placeholder',
@@ -40,6 +47,7 @@ window.HHVC_PAGES['findHotelRecords'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [

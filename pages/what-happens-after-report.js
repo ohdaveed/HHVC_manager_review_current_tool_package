@@ -11,6 +11,12 @@ window.HHVC_PAGES['afterReport'] = {
     'A property owner or manager responding to a reported condition',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'How a report moves through the City',
@@ -99,6 +105,7 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'What this page does not promise',
+      component: 'supporting',
       karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the bulleted list below (no paragraphs precede it here).',
       kind: 'body',
       bullets: [
@@ -110,6 +117,7 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

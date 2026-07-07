@@ -65,6 +65,7 @@ const sectionSchema = z.object({
   buttonUrl: z.string().optional(),
   buttonStyle: z.string().optional(),
   callout: calloutSchema.optional(),
+  tableCaption: z.string().optional(),
 })
 
 const whatToKnowSchema = z.object({
@@ -95,6 +96,14 @@ const spotlightSchema = z.object({
   karl: z.string().optional(),
 })
 
+const alertPreviewSchema = z.object({
+  title: z.string().min(1),
+  text: z.string().min(1),
+  variant: z.enum(['info', 'critical']).optional(),
+  karl: z.string().optional(),
+  editorLabel: z.string().optional(),
+})
+
 const pageSchema = z.object({
   slug: z.string().min(1),
   type: z.string().min(1),
@@ -110,6 +119,7 @@ const pageSchema = z.object({
   whatToKnow: whatToKnowSchema.optional(),
   contact: contactSchema.optional(),
   spotlight: spotlightSchema.optional(),
+  alertPreview: alertPreviewSchema.optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
   sections: z.array(sectionSchema).optional(),
 })
@@ -130,4 +140,5 @@ module.exports = {
   whatToKnowSchema,
   contactSchema,
   spotlightSchema,
+  alertPreviewSchema,
 }

@@ -69,6 +69,7 @@ window.HHVC_PAGES['ownerHub'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Resource Collection has no dedicated Related field (confirmed live) — maps to a second Body → Resources → "Resource section" item (Title = "Related pages"), using the same SF.gov page link blocks as the section above rather than a separate right-panel field.',
       kind: 'placement',
       cards: [

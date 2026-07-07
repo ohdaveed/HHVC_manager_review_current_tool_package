@@ -11,6 +11,12 @@ window.HHVC_PAGES['flyInfo'] = {
     'A building employee or maintenance worker supporting pest prevention',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'New Information page. Content sourced from UC IPM Pest Notes 7457 (docs/source/hhvc-policy/2026-07-02-ipm-pests-flies.md), focused on house flies as the species HHVC enforces on in San Francisco housing. Verify against current SFDPH vector program guidance before publication.',
   sections: [
@@ -18,11 +24,17 @@ window.HHVC_PAGES['flyInfo'] = {
       heading: 'Why it matters',
       karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below (fly disease-transmission health-harm framing, placed first to motivate prevention). Verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
+      image: {
+        src: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80',
+        alt: 'House fly on a surface near food waste',
+        karl: 'Information section: Image — pest identification aid',
+      },
       paragraphs: [
         'House flies breed in garbage, animal waste, and other decaying organic material. While feeding on this waste, they can pick up bacteria and viruses and later deposit them on human food or kitchen surfaces — flies are known to carry organisms linked to diarrhea, food poisoning, dysentery, and eye infections.',
         'Fly populations can grow quickly: under warm conditions a fly can develop from egg to adult in about a week, and each female can lay several batches of 100 or more eggs. A garbage or sanitation problem left unaddressed for even a short time can turn into a much larger fly problem.',
       ],
       callout: {
+        variant: 'note',
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Seeing flies indoors almost always means there is a breeding source nearby — usually uncollected garbage, animal waste, or decaying food — not just an isolated nuisance.',
       },
@@ -61,6 +73,7 @@ window.HHVC_PAGES['flyInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

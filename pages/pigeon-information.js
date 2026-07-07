@@ -11,6 +11,12 @@ window.HHVC_PAGES['pigeonInfo'] = {
     'A building worker cleaning shared exterior areas with bird activity',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'Information page for bird-related vector and nuisance conditions. Verify HHVC scope for bird complaints vs. referrals to other agencies before publication. DPH public complaint scope includes birds as disease vectors.',
   sections: [
@@ -18,11 +24,17 @@ window.HHVC_PAGES['pigeonInfo'] = {
       heading: 'Why it matters',
       karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
+      image: {
+        src: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=800&q=80',
+        alt: 'Pigeons roosting on a building ledge',
+        karl: 'Information section: Image — pest identification aid',
+      },
       paragraphs: [
         'Pigeon droppings that dry out and turn to dust can carry fungal spores and bacteria. Breathing in that dust — especially in enclosed spaces like attics, vents, or storage rooms — can cause respiratory illnesses such as histoplasmosis or psittacosis.',
         'People with weakened immune systems, older adults, and young children face the highest risk of getting seriously sick from prolonged exposure to accumulated droppings and nesting material.',
       ],
       callout: {
+        variant: 'note',
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Never dry-sweep or vacuum accumulated pigeon droppings — this can release spores into the air. Use wet cleaning methods and protective equipment, or hire a professional.',
       },
@@ -71,6 +83,7 @@ window.HHVC_PAGES['pigeonInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

@@ -11,6 +11,12 @@ window.HHVC_PAGES['tenantRights'] = {
     'A person living in an SRO or residential hotel who is worried about retaliation',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'You can ask the City for help',
@@ -21,6 +27,7 @@ window.HHVC_PAGES['tenantRights'] = {
         'Retaliation can include trying to evict you, raising rent, reducing services, or threatening you because you reported a condition.',
       ],
       callout: {
+        variant: 'warning',
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here. Verify wording before publication.",
         text: 'This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization for help with your situation.',
       },
@@ -76,6 +83,7 @@ window.HHVC_PAGES['tenantRights'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

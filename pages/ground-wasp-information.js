@@ -11,6 +11,12 @@ window.HHVC_PAGES['waspInfo'] = {
     'A building worker or maintenance staff working outdoors where wasps may nest',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'New Information page. Content sourced from UC IPM Pest Notes 7450 (docs/source/hhvc-policy/2026-07-02-ipm-pests-yellowjackets.md). Verify HHVC scope for stinging-insect complaints vs. referral to a PCO or local mosquito and vector control district before publication.',
   sections: [
@@ -18,11 +24,17 @@ window.HHVC_PAGES['waspInfo'] = {
       heading: 'Why it matters',
       karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify injury-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
+      image: {
+        src: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80',
+        alt: 'Ground wasp on soil near a building foundation',
+        karl: 'Information section: Image — pest identification aid',
+      },
       paragraphs: [
         'Ground-nesting yellowjackets defend their colony aggressively when it is disturbed, and stinging incidents are most common right at the nest site. Reactions to a sting range from short-term pain and swelling to a serious, life-threatening allergic reaction.',
         'Being stung many times in one encounter is a separate, more serious risk: the volume of venom injected can damage red blood cells and other tissue, and in rare cases the breakdown products can overwhelm the kidneys and require emergency medical treatment.',
       ],
       callout: {
+        variant: 'note',
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Get medical help right away for trouble breathing, swelling of the face or throat, dizziness, or a large number of stings in one encounter.',
       },
@@ -65,6 +77,7 @@ window.HHVC_PAGES['waspInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

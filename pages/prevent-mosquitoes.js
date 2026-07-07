@@ -10,6 +10,12 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     'A building employee or maintenance worker who can remove standing water',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'Information page. New "Why it matters" health-harm section added — verify West Nile virus claims against current CDC/SFDPH guidance before publication.',
   sections: [
@@ -96,6 +102,7 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

@@ -12,6 +12,12 @@ window.HHVC_PAGES['noticeOfViolation'] = {
     'A tenant representative helping someone understand their responsibilities',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'Information page for tenants and property owners/managers. BLOCKED — confirm NOV templates, tenant-specific orders, appeal windows, and contact routes before publication. The initial notice itself carries no fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free; a fee applies only starting with the third visit (the second reinspection), per reviewer-supplied sequencing — confirm this sequencing with HHVC before publication (still open). Fee amounts below are verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md) — the current fiscal year\'s certified schedule; re-check for a newer certification before publishing. Verify that examples of split responsibilities match current HHVC enforcement practice.',
   editorStatus: 'blocked',
@@ -25,6 +31,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
         'The notice lists the cited problems, required corrections, responsible parties when known, and a compliance deadline based on the severity of the violation.',
       ],
       callout: {
+        variant: 'warning',
         karl: 'Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section\'s three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here. Enforcement escalation — reinspection fee figures verified against the SFDPH EHB Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule; free-visit sequencing (initial inspection + first reinspection free, fee starts at the third visit) supplied by reviewer — confirm the sequencing with HHVC before publication (fee amounts are now confirmed; sequencing is still open).',
         text: 'The initial notice does not charge a fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free. If a second reinspection is needed because the violation still is not corrected, a per-hour fee can apply starting with that third visit (SFDPH bills $256/hour for an inspector and $234/hour for a technician, plus a per-half-hour rate beyond the first hour). Payments are due within 30 days, with $10 or $30 late penalties and 1.5% interest added for late payments. Persistent violations can also lead to citations, administrative fines, or a Director’s Hearing. Meet the deadline listed on your notice unless HHVC approves another plan.',
       },
@@ -45,6 +52,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
     },
     {
       heading: 'If you are a property owner or manager',
+      component: 'supporting',
       karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Resolved schema gap: converted inline linked cards to paragraph links.',
       kind: 'body',
       paragraphs: [
@@ -62,6 +70,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
     },
     {
       heading: 'If you are a tenant',
+      component: 'supporting',
       karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text (Internal link → the tenantRights page); flag for Digital Services rather than assuming it.',
       kind: 'body',
       paragraphs: [
@@ -97,6 +106,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

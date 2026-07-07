@@ -11,6 +11,11 @@ window.HHVC_PAGES['wnvBirdReport'] = {
     'A neighbor or worker who sees a dead crow, jay, raven, sparrow, finch, or hawk',
   ],
   reading: 'Grade 6',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   primaryCta: 'Report dead bird',
   topicTag: 'Topic: Mosquito and vector control',
   editorNote:

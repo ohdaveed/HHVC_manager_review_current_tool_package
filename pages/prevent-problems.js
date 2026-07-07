@@ -25,6 +25,7 @@ window.HHVC_PAGES['preventHub'] = {
     },
     {
       heading: 'Prevention guides',
+      component: 'resources',
       karl: 'Maps to Body → Resources → one "Resource section" item (Title = "Prevention guides"). Each card below becomes an SF.gov page block in that section\'s Links stream.',
       kind: 'placement',
       cards: [
@@ -92,6 +93,7 @@ window.HHVC_PAGES['preventHub'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Resource Collection has no dedicated Related field (confirmed live) — maps to a second Body → Resources → "Resource section" item (Title = "Related pages"), using the same SF.gov page link blocks as the section above rather than a separate right-panel field.',
       kind: 'placement',
       cards: [

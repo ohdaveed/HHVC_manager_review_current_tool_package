@@ -11,6 +11,12 @@ window.HHVC_PAGES['vegetationInfo'] = {
     'A building employee or maintenance worker who trims vegetation or clears yards',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   editorNote:
     'New Information page — pairs with the existing report-overgrown-vegetation.js Transaction page. Illustrative mockup content for manager review; verify against current HHVC/DPH vegetation guidance before publication.',
   sections: [
@@ -50,6 +56,7 @@ window.HHVC_PAGES['vegetationInfo'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

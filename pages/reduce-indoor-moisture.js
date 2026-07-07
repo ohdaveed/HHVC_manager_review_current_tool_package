@@ -11,6 +11,12 @@ window.HHVC_PAGES['reduceMoisture'] = {
     'Building staff or maintenance staff who help prevent indoor moisture problems',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'Why it matters',
@@ -169,6 +175,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

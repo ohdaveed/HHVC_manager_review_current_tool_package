@@ -11,6 +11,19 @@ window.HHVC_PAGES['mosquitoControl'] = {
     'A building worker who can remove standing water around a property',
   ],
   reading: 'Grade 7',
+  alertPreview: {
+    title: 'Dead bird reporting season',
+    text: 'Report dead crows, jays, ravens, and other priority species to help track West Nile virus. This mockup banner previews an Agency/Location alert — not native on Information pages.',
+    variant: 'info',
+    karl: 'Mockup preview: Agency/Location alert (not native on Information page type)',
+    editorLabel: 'Mockup preview: Agency/Location alert',
+  },
+  topicTag: 'Topic: Mosquito and vector control',
+  contact: {
+    phone: ['415-252-3806', '311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Mosquito Control Program'],
+  },
   editorNote:
     'SF.gov landing page for Vector Control / Mosquito Control Program resources. Primary CTA opens SFMosquito.org. Verify phone numbers and external URLs before publication.',
   sections: [
