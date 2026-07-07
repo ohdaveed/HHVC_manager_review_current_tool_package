@@ -6,14 +6,41 @@ sessions don't duplicate each other's work. Update this file (and commit on
 committed version (`git show main:docs/AGENT_COORDINATION.md`) before
 starting new work if your own worktree's copy looks stale.
 
+## RESOLVED: reinspection fee rate is $256/inspector, $234/technician
+
+Multiple sessions went back and forth on whether $251/$229 (FY25-26) or
+$256/$234 (FY27) was the "correct, non-fabricated" reinspection rate. This
+is now settled: **$256/$234 is correct** for the current fiscal year. The
+program owner directly confirmed it, and a real SFDPH EHB fee schedule PDF
+for FY 2026-27 (rates effective 7/1/26-6/30/27) was obtained and ingested
+at `docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md`
+(+ matching `.pdf`). That document also confirms the apartment-building
+fee tiers ($103/$129/$174/$350/$485/$688/$808) and half-hour add-on rates
+($128 inspector / $115 technician). The earlier "unsourced FY27 table"
+correction note (in `2026-07-06-dph-ehb-fee-schedule-fy25-26.md`) was
+itself mistaken — those figures were real future data, not a NotebookLM
+fabrication. **If you see $251/$229 anywhere in `pages/*.js`, it's stale
+FY25-26 data and should be updated to $256/$234 with a citation to the
+fy26-27 doc — do not "fix" $256/$234 back to $251/$229.**
+
+Pages already updated to FY26-27 in `worktree-schema-gaps-safe` (commits
+`03ac22d`, `a18ef11`, `700b4a7`, `cb7d3b6`, `ebf7211`, `c0bf810`):
+`pay-healthy-housing-fee.js`, `respond-to-notice-of-violation.js`,
+`what-happens-after-report.js`, `property-owner-responsibilities.js`.
+Also fixed in that batch: a karl note miscrediting an AI-drafted "Master
+Guidelines Chapter 8.3" instead of Health Code Sec. 609(d)-(e); a stray
+citation to a nonexistent "CLAUDE.md 7.5" section; an unverified "45-day
+DPH re-inspection" claim in `bed-bug-rules-prevention.js` (flagged, not
+removed — no source found either way).
+
 ## Worktrees (as of 2026-07-06)
 
 | Path | Branch | Owner task | Status |
 |---|---|---|---|
 | `/home/ohdaveed/HHVC_manager_review_current_tool_package` | `main` | Coordination home | Clean |
 | `/home/ohdaveed/HHVC_manager_review_current_tool_package_2` | `schema-gaps-refactor-2` | Schema-gap fixes across `pages/*.js` | **In progress, uncommitted** — 34 modified `pages/*.js` files + `build_scripts/schema.js`, produced via `fix_all.js`, `fix_buttons.js`, `fix_commas.js`, `fix_inline_cards.js`, `fix_lists.js`, `strip_cards.js` (untracked helper scripts in that worktree) |
-| `.claude/worktrees/hhvc-citation-fix` | `worktree-hhvc-citation-fix` | Citation fix | No substantive changes yet (only `.claude/settings.local.json` diff) |
-| `.claude/worktrees/schema-gaps-safe` | `worktree-schema-gaps-safe` | SFDPH-policy/citation accuracy audit: verifying `pages/*.js` and `docs/` claims trace to real agency source docs (`docs/source/hhvc-policy/`), not to the AI-generated `notebooklm/*.md` / `hhvc_chapter_drafts/*.md` content | **In progress** — 1 commit so far (`b7a88e1`: payFee reinspection rate corrected to program-staff-confirmed $256/$234, superseding a stale $251/$229 figure). Remaining known findings not yet committed: `pages/pay-healthy-housing-fee.js` still has a karl note miscrediting "Master Guidelines Chapter 8.3" (nonexistent section) instead of Health Code Sec. 609(d)-(e); `pages/respond-to-notice-of-violation.js` still has the old $251/$229 rate; `pages/bed-bug-rules-prevention.js` has an unverified "45-day DPH re-inspection" claim not supported by the real bed bug Director's Rules doc; `pages/property-owner-responsibilities.js` has a stray citation to a nonexistent "CLAUDE.md 7.5" section. **Possible overlap with `hhvc-citation-fix`** — that worktree's stated task ("Citation fix") sounds like the same scope as this one. Whoever picks up either worktree next should check both before duplicating work. |
+| `.claude/worktrees/hhvc-citation-fix` | `worktree-hhvc-citation-fix` | Citation fix | No substantive changes yet (only `.claude/settings.local.json` diff) — check the "RESOLVED" section above and this worktree's own progress before doing more fee-citation work; likely overlaps with `schema-gaps-safe`'s completed work |
+| `.claude/worktrees/schema-gaps-safe` | `worktree-schema-gaps-safe` | SFDPH-policy/citation accuracy audit | **Done** — 6 commits (see above), branch pushed to origin. All known findings from this task resolved. |
 
 ## Rules to avoid duplicate work
 
@@ -26,11 +53,12 @@ starting new work if your own worktree's copy looks stale.
   after use.
 - Before starting new schema/page-content work, check this table for an
   existing owner.
-- **Note (2026-07-06, schema-gaps-safe session):** file edits in this
-  worktree were observed to silently revert between tool calls at least
-  once this session (an Edit-tool-reported success did not persist to
-  disk/git). Cause unconfirmed — possibly related to concurrent access.
-  If you see an edit you made disappear, re-verify with `git status`/`grep`
-  before assuming it's a mistake on your end, and consider committing
-  small batches immediately rather than making many edits before a single
-  commit.
+- **Note (2026-07-06, schema-gaps-safe session):** file edits were
+  observed to silently revert between tool calls multiple times this
+  session (Edit-tool-reported successes that did not persist to disk/git
+  on the first attempt). Confirmed as a cross-session phenomenon — another
+  worktree independently logged the same symptom around the same time.
+  Cause unconfirmed, possibly related to concurrent access across the
+  several active worktrees on this repo. Mitigation that worked: verify
+  every edit with a plain `grep`/`git diff` immediately after, and commit
+  in small batches rather than making many edits before one commit.
