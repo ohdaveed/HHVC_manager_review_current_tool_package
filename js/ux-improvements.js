@@ -6,7 +6,7 @@
 
   const SEO_TITLE_LIMIT = 60
   const META_DESCRIPTION_LIMIT = 110
-  const DASHBOARD_CORE_ID = 'reviewDashboardCore'
+  const CHECKS_PANEL_ID = 'reviewChecksPanel'
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
   const STORAGE_KEY = 'hhvcManagerReviewState:v1'
@@ -57,6 +57,10 @@
   // useEditor: true reads live sidebar values (current page only);
   // false evaluates raw page data so any page can be scored for the portfolio view.
   function getRuleResultsFor(page, { useEditor = false } = {}) {
+    const titleInputEl = useEditor ? document.getElementById('titleInput') : null
+    const title = titleInputEl ? titleInputEl.value : page.title || ''
+    const summaryInputEl = useEditor ? document.getElementById('descriptionInput') : null
+    const summary = summaryInputEl ? summaryInputEl.value : page.summary || ''
     const seoTitle = useEditor ? getSeoTitle(page) : defaultSeoTitle(page)
     const metaDescription = useEditor ? getMetaDescription(page) : defaultMetaDescription(page)
     const primaryCta = (useEditor && getValue('ctaInput')) || getPrimaryCta(page)
@@ -74,13 +78,13 @@
       },
       {
         label: 'Title',
-        pass: Boolean(page.title) && page.title.length <= 80,
-        detail: page.title ? `${page.title.length} characters` : 'Missing title',
+        pass: Boolean(title) && title.length <= 80,
+        detail: title ? `${title.length} characters` : 'Missing title',
       },
       {
         label: 'Summary',
-        pass: Boolean(page.summary) && page.summary.length <= 180,
-        detail: page.summary ? `${page.summary.length} characters` : 'Missing summary',
+        pass: Boolean(summary) && summary.length <= 180,
+        detail: summary ? `${summary.length} characters` : 'Missing summary',
       },
       {
         label: 'Audience',
@@ -333,18 +337,19 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function renderReviewDashboard() {
-    const dashboard = document.getElementById(DASHBOARD_CORE_ID)
-    if (!dashboard) return
+  function renderPageChecksPanel() {
+    const panel = document.getElementById(CHECKS_PANEL_ID)
+    if (!panel) return
 
     const page = getCurrentPage()
     const rules = getRuleResults(page)
 
-    dashboard.innerHTML = `
+    panel.innerHTML = `
       <section class="compliance-panel">
-        <h3>Karl compliance checklist</h3>
+        <h3>Current page checks</h3>
         <p class="review-decision-note">
-          Page key: ${escapeHtml(getCurrentKey())}. Live checks update as you edit title,
+          Scores only the page open in the mockup (${escapeHtml(getCurrentKey())}). For all pages at
+          once, use the <strong>Overview</strong> tab. Live values update as you edit title,
           summary, CTA, and search metadata in the sidebar.
         </p>
         <ul class="compliance-list">
@@ -377,20 +382,24 @@
       total: DATA.order.length,
     }
     const filter = window.reviewQueue?.getFilter?.() || 'All'
+    const filterLabel = filter !== 'All' ? filter : ''
     const prevKey = window.reviewQueue?.getAdjacentKey?.(-1, filter)
     const nextKey = window.reviewQueue?.getAdjacentKey?.(1, filter)
     const state = readLocalState()
     const workspaceOpen = Boolean(state.ui.workspace_open)
+    const prevNavLabel = filterLabel ? `Previous page (${filterLabel} filter)` : 'Previous page'
+    const nextNavLabel = filterLabel ? `Next page (${filterLabel} filter)` : 'Next page'
 
     bar.innerHTML = `
       <div class="review-sticky-bar-main">
         <span class="status-chip ${chipClass}">${escapeHtml(decision)}</span>
         <p class="review-sticky-bar-title">${escapeHtml(page.title || getCurrentKey())}</p>
+        ${filterLabel ? `<span class="review-sticky-bar-filter">Filter: ${escapeHtml(filterLabel)}</span>` : ''}
       </div>
       <nav class="review-sticky-bar-actions">
         <span class="review-sticky-bar-progress">${stats.reviewed}/${stats.total} reviewed</span>
-        <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'}>Previous</button>
-        <button type="button" class="review-sticky-btn" data-sticky-action="next"${nextKey ? '' : ' disabled'}>Next</button>
+        <button type="button" class="review-sticky-btn" data-sticky-action="prev"${prevKey ? '' : ' disabled'} aria-label="${escapeHtml(prevNavLabel)}">Previous</button>
+        <button type="button" class="review-sticky-btn" data-sticky-action="next"${nextKey ? '' : ' disabled'} aria-label="${escapeHtml(nextNavLabel)}">Next</button>
         <button type="button" class="review-sticky-btn primary" data-sticky-action="toggle-workspace" aria-expanded="${workspaceOpen ? 'true' : 'false'}">
           ${workspaceOpen ? 'Hide workspace' : 'Show workspace'}
         </button>
@@ -453,6 +462,53 @@
   function toggleWorkspace() {
     const state = readLocalState()
     setWorkspaceOpen(!state.ui.workspace_open)
+  }
+
+  function maybeShowWorkspaceOnboarding() {
+    const state = readLocalState()
+    if (state.ui.workspace_onboarding_seen) return
+
+    const hasExistingUsage =
+      Object.keys(state.pages || {}).length > 0 || Boolean(state.ui.workspace_tab)
+
+    if (hasExistingUsage) {
+      updateLocalState((nextState) => {
+        nextState.ui.workspace_onboarding_seen = true
+        return nextState
+      })
+      return
+    }
+
+    updateLocalState((nextState) => {
+      nextState.ui.workspace_onboarding_seen = true
+      nextState.ui.workspace_open = true
+      nextState.ui.workspace_tab = 'overview'
+      return nextState
+    })
+
+    const workspace = document.getElementById(WORKSPACE_ID)
+    if (workspace) workspace.hidden = false
+
+    const toggleButton = document.querySelector('[data-sticky-action="toggle-workspace"]')
+    if (toggleButton) {
+      toggleButton.setAttribute('aria-expanded', 'true')
+      toggleButton.textContent = 'Hide workspace'
+    }
+
+    setWorkspaceTab('overview')
+    if (typeof window.showToast === 'function') {
+      window.showToast(
+        'Review workspace opened — use Overview for site-wide triage or Page checks for the open page.',
+        'info'
+      )
+    }
+  }
+
+  window.reviewWorkspace = {
+    setTab: setWorkspaceTab,
+    setOpen: setWorkspaceOpen,
+    toggle: toggleWorkspace,
+    WORKSPACE_TABS,
   }
 
   function handleStickyBarClick(event) {
@@ -843,7 +899,7 @@
 
   function refreshUx() {
     renderStickyBar()
-    renderReviewDashboard()
+    renderPageChecksPanel()
     updateLocalStorageStatus()
     updateDecisionQuickActions()
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
@@ -945,6 +1001,7 @@
     applySavedUiPreferences()
     restoreInitialPage()
     refreshUx()
+    maybeShowWorkspaceOnboarding()
     // Defer one refresh so review-queue.js (loaded next) is ready for sticky bar stats.
     window.setTimeout(refreshUx, 0)
   }

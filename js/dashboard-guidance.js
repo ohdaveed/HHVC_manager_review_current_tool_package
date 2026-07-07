@@ -3,6 +3,7 @@
 ;(function migrateDescriptiveTextToDashboard() {
   const GUIDANCE_ID = 'dashboardGuidancePanel'
   const REFERENCE_ID = 'dashboardReferencePanel'
+  const SHORTCUTS_ID = 'dashboardShortcutsPanel'
   const STYLE_ID = 'dashboardGuidanceStyles'
 
   // js/utils.js loads first (see index.html script order), so the shared
@@ -12,7 +13,11 @@
   const guidanceItems = [
     {
       title: 'Review page patterns',
-      text: 'Use the page selector or quick search to review rebuilt SF.gov page patterns for Environmental Health and HHVC.',
+      text: 'Use the page dropdown in the sidebar, sticky-bar Previous/Next, or the Sitemap tab to move between mockups.',
+    },
+    {
+      title: 'Overview vs Page checks',
+      text: 'Overview scores every page in one table (the open page uses live sidebar edits). Page checks shows the same 9 rules for only the page in the mockup.',
     },
     {
       title: 'Test wording safely',
@@ -25,14 +30,6 @@
     {
       title: 'Export review decisions',
       text: 'Review exports download to your browser only. They do not publish pages or change source files.',
-    },
-    {
-      title: 'Reading targets',
-      text: 'Transaction pages target grade 5 to 6. Prevention pages target grade 6. Inspection and enforcement pages may use grade 6 to 8.',
-    },
-    {
-      title: 'Keyboard shortcuts',
-      text: 'Press ? for the full list. Arrow keys move between pages, N jumps to the next page needing review, and A/E/R/B/U set the decision.',
     },
     {
       title: 'Back up your reviews',
@@ -84,6 +81,41 @@
         line-height: 1.35;
       }
 
+      .dashboard-shortcuts-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .dashboard-shortcuts-item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.35rem 0.75rem;
+        font-size: 0.78rem;
+        color: var(--sfds-slate-2);
+      }
+
+      .dashboard-shortcuts-keys {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.2rem;
+      }
+
+      .dashboard-shortcuts-keys kbd {
+        border: 1px solid var(--sfds-border);
+        border-radius: 4px;
+        background: var(--sfds-slate-5);
+        padding: 0.1rem 0.35rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      [data-sidebar-copy-migrate='true'],
       [data-migrated-dashboard-copy='true'] {
         display: none !important;
       }
@@ -127,11 +159,52 @@
     return panel
   }
 
+  function buildShortcutsPanel() {
+    const shortcuts = window.reviewKeyboardShortcuts?.list || []
+    const panel = document.createElement('section')
+    panel.id = SHORTCUTS_ID
+    panel.className = 'dashboard-guidance-panel'
+    panel.setAttribute('aria-label', 'Keyboard shortcuts')
+    panel.innerHTML = `
+      <h3>Keyboard shortcuts</h3>
+      <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
+        Shortcuts pause while you type in a field. Press <kbd>?</kbd> anywhere to open the full
+        shortcut dialog.
+      </p>
+      <ul class="dashboard-shortcuts-list">
+        ${shortcuts
+          .map(
+            (shortcut) => `
+          <li class="dashboard-shortcuts-item">
+            <span class="dashboard-shortcuts-keys">${shortcut.keys
+              .map((key) => `<kbd>${escapeHtml(key)}</kbd>`)
+              .join(' ')}</span>
+            <span>${escapeHtml(shortcut.description)}</span>
+          </li>
+        `
+          )
+          .join('')}
+      </ul>
+    `
+    return panel
+  }
+
   function mountGuidancePanel() {
     const helpPanel = document.getElementById('reviewWorkspaceHelp')
     if (!helpPanel || document.getElementById(GUIDANCE_ID)) return
 
     helpPanel.appendChild(buildGuidancePanel())
+  }
+
+  function mountShortcutsPanel() {
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    if (!helpPanel || document.getElementById(SHORTCUTS_ID)) return
+    if (!window.reviewKeyboardShortcuts?.list?.length) {
+      document.addEventListener('hhvc:shortcuts-ready', mountShortcutsPanel, { once: true })
+      return
+    }
+
+    helpPanel.appendChild(buildShortcutsPanel())
   }
 
   // Static reference content moved out of the sidebar (see
@@ -144,7 +217,11 @@
     panel.className = 'dashboard-guidance-panel'
     panel.setAttribute('aria-label', 'Applied rules and reading targets')
     panel.innerHTML = `
-      <h3>Applied rules</h3>
+      <h3>Review reminders</h3>
+      <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
+        Personal per-page checklist for this browser tab only — click items to mark them off while
+        you review. This is not an automated compliance score.
+      </p>
       <ul class="checklist">
         <li class="check">SF.gov system typography and SFDS-style spacing</li>
         <li class="check">Action Blue for links and primary action</li>
@@ -186,23 +263,15 @@
   }
 
   function compactSidebarCopy() {
-    const selectors = [
-      '.sidebar-header + p',
-      '.control-group:nth-of-type(2) .field-help',
-      '.control-group:nth-of-type(3) > .details-body > .field-help',
-      '.manager-review > .details-body > .field-help:first-child',
-    ]
-
-    selectors.forEach((selector) => {
-      document.querySelectorAll(selector).forEach((element) => {
-        element.setAttribute('data-migrated-dashboard-copy', 'true')
-      })
+    document.querySelectorAll('[data-sidebar-copy-migrate="true"]').forEach((element) => {
+      element.setAttribute('data-migrated-dashboard-copy', 'true')
     })
   }
 
   function refresh() {
     injectStyles()
     mountGuidancePanel()
+    mountShortcutsPanel()
     mountReferencePanel()
     compactSidebarCopy()
   }

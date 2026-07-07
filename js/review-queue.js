@@ -207,7 +207,9 @@
       const blockers = saved?.risks_or_blockers || ''
       const followUpOwner = saved?.follow_up_owner || ''
       const reviewer = saved?.reviewer || ''
-      const rules = window.reviewChecks?.getRuleResultsFor?.(page) || []
+      const isCurrentPage = key === getCurrentKey()
+      const rules =
+        window.reviewChecks?.getRuleResultsFor?.(page, { useEditor: isCurrentPage }) || []
       const checksPassed = rules.filter((rule) => rule.pass).length
       const checksTotal = rules.length
       const searchText = normalize(
@@ -240,6 +242,7 @@
         isStale: ageDays !== null && ageDays >= STALE_DAYS,
         checksPassed,
         checksTotal,
+        isCurrentPage,
         searchText,
       }
     })
@@ -599,7 +602,7 @@
         <header class="review-queue-header">
           <div>
             <h3>Overview</h3>
-            <p class="review-queue-subtitle">Triage pages by decision, checks, ownership, staleness, and saved notes. Use checkboxes for bulk updates, or press <kbd>?</kbd> for shortcuts.</p>
+            <p class="review-queue-subtitle">Triage every page by decision, checks, ownership, and staleness. Use <strong>Open</strong> to switch pages (rows no longer navigate on click). Press <kbd>1</kbd> for this tab or <kbd>?</kbd> for all shortcuts.</p>
           </div>
           <div class="review-queue-progress" aria-label="Review progress">
             <div class="review-queue-progress-bar">
@@ -681,6 +684,9 @@
                         ? 'warn'
                         : 'pass'
                     const checksChipClass = row.checksPassed === row.checksTotal ? 'pass' : 'warn'
+                    const checksLabel = row.isCurrentPage
+                      ? `${row.checksPassed}/${row.checksTotal} live`
+                      : `${row.checksPassed}/${row.checksTotal}`
                     const suggestedOwner = getSidebarReviewerName()
                     const isOwnerAssigned =
                       normalize(row.followUpOwner) === normalize(suggestedOwner) &&
@@ -713,7 +719,7 @@
                       </span>
                     </td>
                     <td class="review-queue-table-checks">
-                      <span class="status-chip ${checksChipClass}">${row.checksPassed}/${row.checksTotal}</span>
+                      <span class="status-chip ${checksChipClass}">${escapeHtml(checksLabel)}</span>
                     </td>
                     <td class="review-queue-table-decision">
                       <span class="status-chip ${chipClass}">${escapeHtml(row.decision)}</span>
@@ -936,12 +942,7 @@
     }
 
     if (event.target.closest('.review-queue-checkbox')) return
-
-    const rowButton = event.target.closest('[data-page-key]')
-    if (!rowButton) return
-    const key = rowButton.getAttribute('data-page-key')
-    if (!key || !DATA.pages[key]) return
-    window.renderPage?.(key)
+    if (event.target.closest('.review-queue-table-row')) return
   }
 
   function handleQueueInput(event) {

@@ -28,7 +28,7 @@
             <h2>HHVC mockup review tool</h2>
           </div>
         </div>
-        <p>
+        <p data-sidebar-copy-migrate="true">
           Use this selector to review rebuilt SF.gov page patterns for Environmental Health and
           HHVC.
         </p>
@@ -88,7 +88,7 @@
                 ↺
               </button>
             </div>
-            <p class="field-help">
+            <p class="field-help" data-sidebar-copy-migrate="true">
               Use this to test page title, short summary, and primary CTA wording without editing
               the source data.
             </p>
@@ -118,7 +118,7 @@
                 Search description preview
               </div>
             </div>
-            <p class="field-help">
+            <p class="field-help" data-sidebar-copy-migrate="true">
               SEO fields support the content model fields: SEO Title and SEO Description. Keep the
               meta description short enough for SF.gov review.
             </p>
@@ -128,7 +128,7 @@
         <details class="control-group manager-review" open>
           <summary class="eyebrow">Manager review</summary>
           <div class="details-body">
-            <p class="field-help">
+            <p class="field-help" data-sidebar-copy-migrate="true">
               Use these fields during review. Exports download to your browser only; they do not
               change source files or publish pages.
             </p>
@@ -275,6 +275,7 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabOverview"
               data-workspace-tab="overview"
               aria-selected="true"
               aria-controls="reviewWorkspaceOverview"
@@ -285,16 +286,18 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabChecks"
               data-workspace-tab="checks"
               aria-selected="false"
-              aria-controls="reviewDashboardCore"
+              aria-controls="reviewChecksPanel"
             >
-              Checks
+              Page checks
             </button>
             <button
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabSitemap"
               data-workspace-tab="sitemap"
               aria-selected="false"
               aria-controls="reviewWorkspaceSitemap"
@@ -305,6 +308,7 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabHelp"
               data-workspace-tab="help"
               aria-selected="false"
               aria-controls="reviewWorkspaceHelp"
@@ -316,12 +320,14 @@
             id="reviewWorkspaceOverview"
             class="review-workspace-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabOverview"
             data-workspace-panel="overview"
           ></div>
           <div
-            id="reviewDashboardCore"
-            class="review-workspace-panel review-dashboard"
+            id="reviewChecksPanel"
+            class="review-workspace-panel review-checks-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabChecks"
             data-workspace-panel="checks"
             hidden
           ></div>
@@ -329,6 +335,7 @@
             id="reviewWorkspaceSitemap"
             class="review-workspace-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabSitemap"
             data-workspace-panel="sitemap"
             hidden
           ></div>
@@ -336,6 +343,7 @@
             id="reviewWorkspaceHelp"
             class="review-workspace-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabHelp"
             data-workspace-panel="help"
             hidden
           ></div>

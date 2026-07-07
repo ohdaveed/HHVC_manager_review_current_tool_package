@@ -46,7 +46,7 @@ Same three zones as today (sidebar / sticky bar / mockup canvas / workspace pane
   duplicated across Queue/Checks: **Overview** (new) is the single site-wide table;
   **Checks** becomes purely about the currently open page.
 
-## Sidebar (5 sections, down from 7)
+## Sidebar (4 accordion sections + Karl tags in mockup chrome)
 
 In this order, using the existing `<details>` accordion pattern (no change to that
 mechanism — see `docs/superpowers/specs/2026-07-01-sidebar-accordion-design.md`):
@@ -55,10 +55,13 @@ mechanism — see `docs/superpowers/specs/2026-07-01-sidebar-accordion-design.md
 2. **Live content editor** _(collapsed)_ — title / summary / CTA fields (unchanged)
 3. **Search metadata** _(collapsed)_ — SEO title / meta description + search preview
    (unchanged)
-4. **Karl CMS tags** _(collapsed)_ — placement tag toggle + legend (unchanged)
-5. **Manager review** _(open by default)_ — reviewer name, review date, decision select,
+4. **Manager review** _(open by default)_ — reviewer name, review date, decision select,
    notes, risks/blockers, **owner** (see below), quick-action decision chips, and the
    existing export/import/backup buttons
+
+**Karl CMS tags** remain in the **mockup browser chrome** (above `#mockPage`), not in a
+sidebar accordion. The toggle, legend, and help copy sit in `karl-page-tags-banner` so
+tags stay visually tied to the page preview.
 
 Removed from the sidebar entirely:
 
@@ -121,7 +124,7 @@ the mockup canvas). Row-level detail that doesn't fit a column (reviewer name, n
 present, blockers logged) stays as a compact secondary line under the page title, as it
 does in the Queue tab today. This tab is the one place to triage the whole site.
 
-### Checks (per-page only now)
+### Page checks (per-page only; tab label "Page checks")
 
 Shows only the currently open page's own compliance state. The previous 8 metric cards
 (page type, reading level, CTA, SEO character counts, related-links count, etc.) and the
