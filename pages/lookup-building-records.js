@@ -54,6 +54,32 @@ window.HHVC_PAGES['recordsHub'] = {
           karl: 'Resource collection item linking to internal Information page',
         },
       ],
+      resources: [
+        {
+          title: 'Find complaints and inspection records',
+          text: 'Search by street address, complaint ID, or location ID. Shows investigated complaints and inspections from the last five years.',
+          target: 'findRecords',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Look up residential health code violations',
+          text: 'Search violation and inspection history for residential buildings.',
+          target: 'findViolations',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Find residential hotel and shelter records',
+          text: 'Look up inspection and program records for SROs, residential hotels, and shelters.',
+          target: 'findHotelRecords',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Find your district inspector',
+          text: 'See which HHVC inspector covers your area.',
+          target: 'findInspector',
+          karl: 'Resource collection body: Resources',
+        },
+      ],
     },
     {
       heading: 'Formal requests and payments',
@@ -71,6 +97,20 @@ window.HHVC_PAGES['recordsHub'] = {
           text: 'Pay the program fee for residential buildings with 3 or more units.',
           target: 'payFee',
           karl: 'Resource collection item cross-link to existing Transaction page',
+        },
+      ],
+      resources: [
+        {
+          title: 'Make a public records request',
+          text: 'Request copies of City records through the citywide public records service.',
+          target: 'publicRecords',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Pay your Healthy Housing fee',
+          text: 'Pay the program fee for residential buildings with 3 or more units.',
+          target: 'payFee',
+          karl: 'Resource collection body: Resources',
         },
       ],
     },

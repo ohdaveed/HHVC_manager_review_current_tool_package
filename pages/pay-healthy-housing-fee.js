@@ -42,7 +42,7 @@ window.HHVC_PAGES['payFee'] = {
       karl: 'Body: If you need help',
       kind: 'body',
       paragraphs: [
-        'Use the contact information on your invoice or call Environmental Health at 415-252-3800.',
+        'Use the contact information on your invoice or see the Environmental Health contact section at the bottom of this page.',
       ],
     },
     {
@@ -50,7 +50,7 @@ window.HHVC_PAGES['payFee'] = {
       karl: 'Body: Fee questions (added for depth). Do not add fee amounts, due dates, or penalties — amounts vary by building and must come from the invoice.',
       kind: 'body',
       paragraphs: [
-        'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
+        'If you are not sure whether the fee applies to your building, use the contact information on your invoice or the Environmental Health contact section below.',
         'Keep your invoice or account information in case you need to ask a question or confirm a payment.',
       ],
     },
@@ -92,6 +92,11 @@ window.HHVC_PAGES['payFee'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Pay your Healthy Housing fee | SF.gov',
   metaDescription:
     'Pay or learn about the Healthy Housing fee for San Francisco apartment buildings with 3 or more rental units.',

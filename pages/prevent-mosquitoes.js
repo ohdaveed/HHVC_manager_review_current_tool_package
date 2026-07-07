@@ -134,4 +134,9 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
 }

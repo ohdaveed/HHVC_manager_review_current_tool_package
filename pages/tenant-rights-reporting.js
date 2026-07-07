@@ -100,6 +100,11 @@ window.HHVC_PAGES['tenantRights'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Tenant rights when reporting housing conditions | SF.gov',
   metaDescription:
     'Tenant protections and help if you are worried about retaliation after reporting housing conditions.',

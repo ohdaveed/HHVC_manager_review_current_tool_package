@@ -95,6 +95,11 @@ window.HHVC_PAGES['findRecords'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Find complaints and inspection records | SF.gov',
   metaDescription:
     'Search Environmental Health complaint and inspection records for a San Francisco building address.',

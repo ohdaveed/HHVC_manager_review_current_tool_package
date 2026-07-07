@@ -82,6 +82,11 @@ window.HHVC_PAGES['vegetationInfo'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Prevent overgrown vegetation | SF.gov',
   metaDescription:
     'How overgrown plants shelter pests and how to keep vegetation trimmed near buildings.',

@@ -106,6 +106,11 @@ window.HHVC_PAGES['pigeonInfo'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Pigeons and housing health | SF.gov',
   metaDescription:
     'How pigeon roosting and droppings affect housing health and when to report the problem to SFDPH.',

@@ -82,6 +82,11 @@ window.HHVC_PAGES['garbageInfo'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Prevent garbage and clutter problems | SF.gov',
   metaDescription:
     'How uncovered garbage, debris, and clutter attract pests, and how to manage waste and storage areas safely.',

@@ -17,6 +17,11 @@ window.HHVC_PAGES['moldReport'] = {
       'If you rent, notify your landlord about the problem and allow 72 hours for them to start fixing it unless the problem is urgent.',
     ],
   },
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Report mold from humidity or condensation',
   metaDescription: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
   sections: [
@@ -69,19 +74,26 @@ window.HHVC_PAGES['moldReport'] = {
       ],
     },
     {
-      heading: 'Get help making your report',
-      karl: 'Body: Help and access section (added for depth) — third-party reporting, language access, privacy.',
+      heading: 'Supporting information',
+      karl: 'Supporting information: Transaction FAQs via accordions',
       kind: 'body',
-      paragraphs: [
-        'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
-      ],
-      bullets: [
-        'You can ask 311 for help in your language.',
-        'You do not have to give your name to make a report.',
-        'HHVC does not share the reporter’s identity with the property owner or manager.',
-        'You can ask 311 for a service request number so you can follow up later.',
+      accordions: [
+        {
+          title: 'Language access and privacy',
+          karl: 'Supporting information: Accordion — language, privacy, third-party reporting',
+          text: [
+            'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
+          ],
+          bullets: [
+            'You can ask 311 for help in your language.',
+            'You do not have to give your name to make a report.',
+            'HHVC does not share the reporter’s identity with the property owner or manager.',
+            'You can ask 311 for a service request number so you can follow up later.',
+          ],
+        },
       ],
     },
+
     {
       heading: 'When HHVC may review mold',
       karl: 'Body: Article 11 mold threshold and HHVC scope',

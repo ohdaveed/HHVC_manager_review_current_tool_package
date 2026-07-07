@@ -12,6 +12,11 @@ window.HHVC_PAGES['scopeInfo'] = {
     'A property owner, property manager, or building staff member looking for prevention guidance or best practices',
   ],
   reading: 'Grade 7',
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Learn what HHVC can inspect',
   metaDescription: 'Check whether HHVC may review a pest, vector, or housing health condition.',
   sections: [

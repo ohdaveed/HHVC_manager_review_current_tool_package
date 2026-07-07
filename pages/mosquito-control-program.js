@@ -94,6 +94,11 @@ window.HHVC_PAGES['mosquitoControl'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Mosquito Control Program | SF.gov',
   metaDescription:
     'San Francisco mosquito control, catch-basin treatment, and how to report standing water or mosquito activity.',

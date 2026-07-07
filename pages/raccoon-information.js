@@ -148,6 +148,11 @@ window.HHVC_PAGES['raccoonInfo'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Raccoons and housing health | SF.gov',
   metaDescription:
     'Raccoon roundworm risks, safe latrine cleanup, and when to report housing-health conditions HHVC may review.',

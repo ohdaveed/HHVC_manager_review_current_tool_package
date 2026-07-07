@@ -119,6 +119,11 @@ window.HHVC_PAGES['wnvBirdReport'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Report a dead bird | SF.gov',
   metaDescription:
     'Report a dead bird for West Nile surveillance. CDPH or HHVC will decide if the bird can be collected.',

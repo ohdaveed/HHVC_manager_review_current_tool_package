@@ -64,6 +64,11 @@ window.HHVC_PAGES['publicRecords'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Make a public records request | SF.gov',
   metaDescription:
     'Request Environmental Health public records through the citywide San Francisco public records portal.',

@@ -78,6 +78,11 @@ window.HHVC_PAGES['flyInfo'] = {
       ],
     },
   ],
+  contactSection: {
+    phone: 'Environmental Health: 415-252-3800',
+    email: 'eh@sf.gov',
+    karl: 'Contact section: Environmental Health (standardized footer)',
+  },
   seoTitle: 'Flies and housing health | SF.gov',
   metaDescription:
     'How house flies breed in garbage and waste, the disease risk they carry, and how to reduce fly problems',
