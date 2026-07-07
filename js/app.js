@@ -6,10 +6,6 @@ function init() {
   buildPageSelect()
   const select = document.getElementById('pageSelect')
   select.addEventListener('change', (e) => renderPage(e.target.value))
-  document.getElementById('urlInput').addEventListener('input', (e) => {
-    document.getElementById('browserUrl').textContent = 'https://' + e.target.value
-    updateSearchPreview()
-  })
   document.getElementById('titleInput').addEventListener('input', (e) => {
     const page = pageData[currentPageKey]
     page.title = e.target.value
