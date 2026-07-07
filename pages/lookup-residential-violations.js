@@ -33,24 +33,21 @@ window.HHVC_PAGES['findViolations'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Find complaints and inspection records',
-          text: 'Same lookup tool with complaint-focused wording and reporting pointers.',
           target: 'findRecords',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'How to respond to a notice of violation',
-          text: 'Learn what tenants and property owners each need to do after HHVC issues a notice.',
           target: 'noticeOfViolation',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Look up building records',
-          text: 'Return to the records hub for hotel records and public records requests.',
           target: 'recordsHub',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },

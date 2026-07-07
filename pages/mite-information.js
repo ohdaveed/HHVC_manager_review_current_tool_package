@@ -69,38 +69,15 @@ window.HHVC_PAGES['miteInfo'] = {
     },
     {
       heading: 'Treat nests for mites before rodenticides',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph below. Real-schema gap: the 3 steps that follow have no Section/step container to live in — unlike Transaction, the verified Information schema has only Title and text/Image/Callout as top-level blocks, with no Section-style step wrapper. Each step below becomes its own separate sibling Title and text block instead; the step grouping/numbering itself has no native home in Information.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraphs below. Resolved schema gap: unstructured steps converted to numbered paragraphs. Also resolved schema gap: converted button to inline link to satisfy block type limits.',
       kind: 'body',
       paragraphs: [
         'Rodent control should not start with poison alone when a rat nest may be feeding tropical rat mites. Property owners and PCOs should address the nest, mites, and rodents together.',
       ],
-      steps: [
-        {
-          title: 'Find and treat the nest site',
-          text: [
-            'Look for nests in attics, crawl spaces, wall voids, basements, storage areas, and cluttered zones where droppings or rub marks are present.',
-            'A PCO can treat the nest area for mites using methods appropriate to the site.',
-          ],
-          karl: 'Maps to a fifth Title and text block (a sibling of the "Treat nests..." block above, not nested inside it — see the section-level karl note on the no-Section gap): Title = this step title, Text = the two text items below.',
-        },
-        {
-          title: 'Remove nesting material safely',
-          text: [
-            'After mite treatment, remove nesting material using wet cleanup methods. Do not dry-sweep or vacuum rodent nests.',
-            'Follow safe rodent cleanup steps on the rats and mice prevention page.',
-          ],
-          button: 'Keep rats and mice out of your home',
-          buttonTarget: 'ratsPrevent',
-          karl: 'Maps to a sixth Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the two text items below. Real-schema gap: this step\'s button has no confirmed home (only Title and text/Image/Callout are confirmed Information blocks). Because buttonTarget (ratsPrevent) is an Information page, not a Transaction, the "Part of" field does NOT apply here (Part of is restricted to Transaction pages only) — the only option to flag for Digital Services is folding this in as a Link-tool Internal link within this block\'s own rich text. Also flag editorially: Karl\'s Button component doc states "no more than one button per page" — this mockup has 2 (this one and the "Bed bug rules and prevention" button on the "Check whether the problem may be bed bugs" step below), so beyond the missing-block-type gap, one of the two would need to be dropped or converted to an inline Link-tool link to satisfy that rule regardless of which block type ends up hosting it.',
-        },
-        {
-          title: 'Control rodents without worsening mite bites',
-          text: [
-            'Use traps and exclusion first when possible.',
-            'If rodenticides are used, do not skip mite treatment at the nest. A PCO should coordinate both steps so mites do not scatter after rats die.',
-          ],
-          karl: 'Maps to a seventh Title and text block (sibling step block, same no-Section gap as above): Title = this step title, Text = the two text items below.',
-        },
+      bullets: [
+        '**1. Find and treat the nest site:** Look for nests in attics, crawl spaces, wall voids, basements, storage areas, and cluttered zones where droppings or rub marks are present. A PCO can treat the nest area for mites using methods appropriate to the site.',
+        '**2. Remove nesting material safely:** After mite treatment, remove nesting material using wet cleanup methods. Do not dry-sweep or vacuum rodent nests. Follow safe rodent cleanup steps on the rats and mice prevention page: [Keep rats and mice out of your home](ratsPrevent)',
+        '**3. Control rodents without worsening mite bites:** Use traps and exclusion first when possible. If rodenticides are used, do not skip mite treatment at the nest. A PCO should coordinate both steps so mites do not scatter after rats die.',
       ],
     },
     {
@@ -119,70 +96,38 @@ window.HHVC_PAGES['miteInfo'] = {
     },
     {
       heading: 'What to do',
-      karl: "This heading has no accompanying paragraph text of its own — its content lives entirely in the 3 steps below. Real-schema gap: the verified Information schema has no Section/step container (unlike Transaction), so there is no single block to anchor this heading to; each step below becomes its own separate Title and text block instead, and this heading itself has no confirmed home unless folded into the first step's Title.",
+      karl: "Resolved schema gap: unstructured steps converted to numbered paragraphs. Also resolved schema gap: converted button to inline link.",
       kind: 'body',
-      steps: [
-        {
-          title: 'Check whether the problem may be bed bugs',
-          text: [
-            'Look for bed bug signs such as live insects, shed skins, dark spots on bedding, or bites in rows.',
-            'Use the bed bug pages if bed bugs are present or suspected.',
-          ],
-          button: 'Bed bug rules and prevention',
-          buttonTarget: 'bedBugsInfo',
-          karl: 'Maps to a ninth Title and text block (sibling step block, same no-Section gap noted above): Title = this step title, Text = the two text items below. Real-schema gap: this step\'s button has no confirmed home. Because buttonTarget (bedBugsInfo) is an Information page, not a Transaction, the "Part of" field does NOT apply here (Part of is restricted to Transaction pages only) — the only option to flag for Digital Services is folding this in as a Link-tool Internal link within this block\'s own rich text. Also flag editorially: Karl\'s Button component doc states "no more than one button per page" — this mockup has 2 (this one and the "Keep rats and mice out of your home" button on the "Remove nesting material safely" step above), so beyond the missing-block-type gap, one of the two would need to be dropped or converted to an inline Link-tool link to satisfy that rule regardless of which block type ends up hosting it.',
-        },
-        {
-          title: 'Remove pest sources',
-          text: [
-            'Address rodent nests, bird droppings, or sanitation conditions that may be supporting mites.',
-            'Do not use rodenticides alone when tropical rat mites may be present — treat the nest first or hire a PCO.',
-          ],
-          karl: 'Maps to a tenth Title and text block (sibling step block, same no-Section gap noted above): Title = this step title, Text = the two text items below.',
-        },
-        {
-          title: 'Report active pest or housing-health conditions',
-          text: [
-            'If the problem continues, report the underlying pest or housing-health condition through 311.',
-          ],
-          karl: 'Maps to an eleventh Title and text block (sibling step block, same no-Section gap noted above): Title = this step title, Text = the one text item below.',
-        },
+      bullets: [
+        '**1. Check whether the problem may be bed bugs:** Look for bed bug signs such as live insects, shed skins, dark spots on bedding, or bites in rows. Use the bed bug pages if bed bugs are present or suspected: [Bed bug rules and prevention](bedBugsInfo)',
+        '**2. Remove pest sources:** Address rodent nests, bird droppings, or sanitation conditions that may be supporting mites. Do not use rodenticides alone when tropical rat mites may be present — treat the nest first or hire a PCO.',
+        '**3. Report active pest or housing-health conditions:** If the problem continues, report the underlying pest or housing-health condition through 311.',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 5 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Keep rats and mice out of your home',
-          text: 'Learn trapping, exclusion, safe nest cleanup, and why traps are preferred over poison.',
           target: 'ratsPrevent',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report rats or mice',
-          text: 'Report rat or mouse activity that may be linked to tropical rat mites.',
           target: 'ratsReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report bed bugs',
-          text: 'Report an active bed bug problem in rental housing, an SRO, or a residential hotel.',
           target: 'bedBugsReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Pigeons and housing health',
-          text: 'Learn about bird roosting, droppings, and related housing-health concerns.',
           target: 'pigeonInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

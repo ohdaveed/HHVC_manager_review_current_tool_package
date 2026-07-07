@@ -72,15 +72,13 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'Tenant rights and retaliation',
-      karl: 'Paragraphs map to a sixth Title and text block (Title = this heading, Text = the two paragraphs). Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — this "Tenant rights and reporting" button has no confirmed home. Unlike a report-flow button, its target (tenantRights) is itself an Information page, not a Transaction page, so the "Part of" field (restricted to Transaction pages) does not apply here; the only plausible fit is a Link-tool link inside the Title and text block\'s rich text (Internal link → tenantRights) — flag this gap for Digital Services rather than assuming a dedicated button block exists.',
+      karl: 'Paragraphs map to a sixth Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text (Internal link → tenantRights) — flag this gap for Digital Services rather than assuming a dedicated button block exists.',
       kind: 'body',
       paragraphs: [
         "Tenants have rights when they ask for repairs or report housing conditions to the City. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
         'A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department.',
       ],
-      button: 'Tenant rights and reporting',
-      buttonStyle: 'secondary',
-      buttonTarget: 'tenantRights',
+      bullets: ['[Tenant rights and reporting](tenantRights)'],
     },
     {
       heading: 'If a problem is found',
@@ -112,26 +110,20 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'How to respond to a notice of violation',
-          text: 'Learn how inspections can lead to a notice and what tenants and owners each must do.',
           target: 'noticeOfViolation',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether HHVC may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights and reporting',
-          text: 'Find help if you are worried about retaliation after making a report.',
           target: 'tenantRights',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

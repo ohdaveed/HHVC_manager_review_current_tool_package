@@ -108,20 +108,13 @@ window.HHVC_PAGES['ownerGuidance'] = {
       kind: 'placement',
       paragraphs: [
         'Put pest prevention expectations in building policies, written plans, staff procedures, and lease materials. Clear expectations help residents, managers, maintenance staff, and pest control contractors respond consistently.',
+        '[UC IPM: Policies, plans, and templates](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/policies-plans-and-templates/)',
       ],
       bullets: [
         'Set a clear way for residents to report pest activity',
         'Explain how residents should prepare for inspections or treatment',
         'Define staff roles for sanitation, repairs, monitoring, and follow-up',
         'Keep pest prevention language consistent across leases, notices, and house rules',
-      ],
-      cards: [
-        {
-          title: 'UC IPM: Policies, plans, and templates',
-          text: 'Use UC ANR policy, IPM plan, and pest-related lease language resources.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/policies-plans-and-templates/',
-          karl: 'External-URL card — same real-schema gap as the UC IPM card above: doesn\'t fit the internal-only "Related" field; best option is folding this in as a Link-tool External link within this block\'s Title and text rich text, flagged for Digital Services.',
-        },
       ],
     },
     {
@@ -132,25 +125,13 @@ window.HHVC_PAGES['ownerGuidance'] = {
         'Prevent pest problems by fixing the conditions that let pests enter, hide, feed, or breed. Maintenance, landscape management, and sanitation are core parts of IPM.',
       ],
       bullets: [
+        '[UC IPM: Pest prevention](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-prevention/)',
+        '[SF Environment: Pest Prevention by Design](https://sfenvironment.org/download/pest-prevention-by-design-guidelines)',
         'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant.',
         'Maintain tree and shrub branches at least 3 feet away from walls or roofs to prevent rodents from climbing onto structures.',
         'Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.',
         'Apply gravel around foundations to prevent burrowing, and stack wood piles or lumber at least 6 inches off the ground.',
         'Build pest-proofing into repair, remodeling, and construction work.',
-      ],
-      cards: [
-        {
-          title: 'UC IPM: Pest prevention',
-          text: 'Use UC ANR prevention tips and pest prevention checklists for multi-unit housing.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-prevention/',
-          karl: "External-URL card — same real-schema gap: no dedicated block for a card-style external link; fold in as a Link-tool External link within this block's Title and text rich text, flagged for Digital Services.",
-        },
-        {
-          title: 'SF Environment: Pest Prevention by Design',
-          text: 'Use SF Environment guidance for pest-proofing design, construction, and renovation work.',
-          url: 'https://sfenvironment.org/download/pest-prevention-by-design-guidelines',
-          karl: "External-URL card — same real-schema gap as the sibling card above; fold in as a Link-tool External link within this block's Title and text rich text, flagged for Digital Services.",
-        },
       ],
     },
     {
@@ -159,6 +140,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
       kind: 'placement',
       paragraphs: [
         'Track pest activity so you can see patterns and respond before problems spread. Coordinated pest control services are required to handle infestations effectively.',
+        '[UC IPM: Pest monitoring and recordkeeping](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-monitoring-and-recordkeeping/)',
       ],
       bullets: [
         'Use one system to log complaints, repairs, sanitation work, and contractor visits.',
@@ -167,14 +149,6 @@ window.HHVC_PAGES['ownerGuidance'] = {
         'Use least-toxic methods: Prioritize non-chemical methods (vacuuming, heat, steam, freezing) and gel baits over chemical sprays.',
         'Review records regularly to find repeated or building-wide problems.',
       ],
-      cards: [
-        {
-          title: 'UC IPM: Pest monitoring and recordkeeping',
-          text: 'Use UC ANR monitoring guidance, sample logs, reports, and recordkeeping tools.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-monitoring-and-recordkeeping/',
-          karl: "External-URL card — same real-schema gap as prior external-link cards on this page; fold in as a Link-tool External link within this block's Title and text rich text, flagged for Digital Services.",
-        },
-      ],
     },
     {
       heading: '5. Share clear instructions and support residents',
@@ -182,6 +156,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
       kind: 'placement',
       paragraphs: [
         'Tenant cooperation is important, but pest prevention cannot depend on tenants alone. Give residents clear instructions, advance notification, and help those who need it.',
+        '[UC IPM: Outreach to residents](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/outreach-to-residents/)',
       ],
       bullets: [
         'Explain how residents should report pest activity in writing.',
@@ -189,49 +164,31 @@ window.HHVC_PAGES['ownerGuidance'] = {
         'Provide assistance to tenants who cannot safely prepare their unit for treatment due to a disability or medical need by contacting support services.',
         'Use translated materials to share simple food storage, garbage, and clutter prevention steps.',
       ],
-      cards: [
-        {
-          title: 'UC IPM: Outreach to residents',
-          text: 'Find UC ANR resident handouts, notices, and pest information resources, including materials in multiple languages.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/outreach-to-residents/',
-          karl: "External-URL card — same real-schema gap as prior external-link cards on this page; fold in as a Link-tool External link within this block's Title and text rich text, flagged for Digital Services.",
-        },
-      ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 5 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Property owner responsibilities',
-          text: 'See fees, violation response, and prevention obligations under Article 11.',
           target: 'ownerHub',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'How to respond to a notice of violation',
-          text: 'Learn what owners and tenants each need to do when HHVC issues corrective actions.',
           target: 'noticeOfViolation',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Keep rats and mice out of your home',
-          text: 'Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.',
           target: 'ratsPrevent',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Mites and housing health',
-          text: 'Learn why rat nests should be treated for mites before using rodenticides.',
           target: 'miteInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check when Environmental Health may review a housing or pest condition.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

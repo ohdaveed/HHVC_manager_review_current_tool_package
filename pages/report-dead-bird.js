@@ -37,7 +37,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
     },
     {
       heading: 'Birds that may be collected for testing',
-      karl: 'Best real-schema fit: a second things_to_know entry. Title: "Birds that may be collected for testing". Text: the intro paragraph + bulleted collection-criteria list below. SME verify content against current CDPH/HHVC protocol before publication.',
+      karl: 'Best real-schema fit: a second things_to_know entry. Title: "Birds that may be collected for testing". Text: the intro paragraph + bulleted collection-criteria list below (pickup/disposal guidance folded into bullets). SME verify content against current CDPH/HHVC protocol before publication.',
       kind: 'body',
       paragraphs: [
         'After you report through CDPH, public health staff decide whether the bird can be collected for West Nile virus testing. Not every bird is suitable.',
@@ -47,11 +47,8 @@ window.HHVC_PAGES['wnvBirdReport'] = {
         'The bird is usually more likely to be tested if it died recently and the body is intact',
         'Birds that are heavily decomposed, damaged, buried, or unsafe to reach may not be collected',
         'Sparrows and finches may be reported for surveillance, but collection depends on program needs',
+        '**Note:** CDPH, HHVC, or the local mosquito control program will tell you whether the bird can be picked up for testing or should be disposed of safely. Do not wait for pickup if you are told to dispose of the bird.',
       ],
-      callout: {
-        karl: "Schema gap: things_to_know is Title + Text only — no nested callout block (same gap as report-rats-or-mice.js). Fold this pickup/disposal guidance into the entry's Text field (e.g. as a bolded closing line), or flag for Digital Services if a distinct callout is needed here. This mockup callout has no title key, so no heading-fold issue on that front.",
-        text: 'CDPH, HHVC, or the local mosquito control program will tell you whether the bird can be picked up for testing or should be disposed of safely. Do not wait for pickup if you are told to dispose of the bird.',
-      },
     },
     {
       heading: 'What happens after you report',
@@ -83,32 +80,24 @@ window.HHVC_PAGES['wnvBirdReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has NO custom title/text per item, only a page reference — the descriptions on these cards have no home unless Digital Services adds one. Confirm before publishing. 4 cards below = 4 related "Page" entries.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries.',
       kind: 'placement',
       cards: [
         {
           title: 'Mosquito Control Program',
-          text: 'Learn about mosquito surveillance, catch-basin treatment, and West Nile virus resources.',
           target: 'mosquitoControl',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Prevent mosquitoes',
-          text: 'Learn how to remove standing water and reduce mosquito breeding around your home.',
           target: 'mosquitoesPrevent',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report mosquitoes',
-          text: 'Report mosquitoes or standing water around a home, yard, building, or shared area.',
           target: 'mosquitoesReport',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Pigeons and housing health',
-          text: 'Learn about bird-related housing health concerns separate from West Nile surveillance.',
           target: 'pigeonInfo',
-          karl: 'related panel entry — page chooser only; same schema gap as the other cards above (no custom description field in the real related panel).',
         },
       ],
     },

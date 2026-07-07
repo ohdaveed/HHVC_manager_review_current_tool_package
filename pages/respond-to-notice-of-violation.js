@@ -45,7 +45,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
     },
     {
       heading: 'If you are a property owner or manager',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Unresolved schema gap: the 2 linked cards embedded in this section have no confirmed home — the verified Information schema only exposes page links via the page-level Related field (unrestricted "Page" chooser, repeatable, no per-item title/text, and it lives once, typically at the end of the page, rather than inline mid-section). There is no observed block type for an inline linked-card list within a body section. Flag for Digital Services: options might include moving these links into the Related field (losing the per-item description) or embedding them as Link-tool links inside this block\'s rich text (losing the card visual treatment) — neither is confirmed.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Resolved schema gap: converted inline linked cards to paragraph links.',
       kind: 'body',
       paragraphs: [
         'Read the notice for every condition assigned to the owner, manager, or building.',
@@ -56,31 +56,20 @@ window.HHVC_PAGES['noticeOfViolation'] = {
         'Communicate access needs and treatment dates to affected tenants',
         'Document completed work in case Environmental Health requests proof of correction',
         'Contact HHVC using the information on the notice if you need clarification about deadlines or scope',
-      ],
-      cards: [
-        {
-          title: 'Property owner responsibilities',
-          text: 'See fees, violation response, and prevention obligations under Article 11.',
-          target: 'ownerHub',
-          karl: 'Embedded inline link card — no confirmed block type in the Information schema for a card with title/text/target at this position (see section-level karl note above); closest analog is the page-level Related field, which does not support per-item title/text or mid-page placement.',
-        },
-        {
-          title: 'Integrated pest management for property owners and managers',
-          text: 'Use prevention, monitoring, and resident outreach to reduce future violations.',
-          target: 'ownerGuidance',
-          karl: 'Embedded inline link card — no confirmed block type in the Information schema for a card with title/text/target at this position (see section-level karl note above); closest analog is the page-level Related field, which does not support per-item title/text or mid-page placement.',
-        },
+        '[Property owner responsibilities](ownerHub)',
+        '[Integrated pest management for property owners and managers](ownerGuidance)',
       ],
     },
     {
       heading: 'If you are a tenant',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. Real-schema gap: the verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed) — the "Tenant rights when reporting housing conditions" button has no confirmed home. Note the button target (tenantRights) is itself an Information page, not a Transaction, so the "Part of" field (restricted to Transaction pages) does not apply here — the only plausible fit is a Link-tool link inside this Title and text block\'s rich text (Internal link → the tenantRights page); flag for Digital Services rather than assuming it.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text (Internal link → the tenantRights page); flag for Digital Services rather than assuming it.',
       kind: 'body',
       paragraphs: [
         'Tenants have rights to safe and habitable housing. A notice of violation does not mean you lose those rights.',
-        'If the notice lists tenant corrective actions, you are responsible for completing the parts assigned to your unit unless HHVC or the owner tells you otherwise.',
       ],
       bullets: [
+        'If the notice lists tenant corrective actions, you are responsible for completing the parts assigned to your unit unless HHVC or the owner tells you otherwise.',
+        '[Tenant rights when reporting housing conditions](tenantRights)',
         'Keep your unit reasonably clean and orderly to help prevent pests from spreading',
         'Prepare for bed bug or pest treatment when required, including laundering, bagging items, or clearing access paths as instructed',
         'Allow scheduled inspections and treatment access when HHVC or the owner gives proper notice',
@@ -91,83 +80,45 @@ window.HHVC_PAGES['noticeOfViolation'] = {
         karl: 'Maps to its own Callout stream item (sibling of the Title and text item above, not nested inside it). Single rich text field, no title — this callout has no title already, so no mismatch.',
         text: 'This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization if you need help with your situation.',
       },
-      button: 'Tenant rights when reporting housing conditions',
-      buttonStyle: 'secondary',
-      buttonTarget: 'tenantRights',
     },
     {
-      heading: 'Steps everyone should follow',
-      karl: "Unresolved schema gap — the verified Information form offers only Title and text / Image / Callout block types; there is no observed sequential/numbered-steps block analogous to Transaction's \"What to do\" Section blocks. This mockup's steps[] shape (4 numbered steps, each with its own title and text) has no confirmed home in Information's schema. Flag for Digital Services: either restructure as a single Title and text block using a numbered list in the rich text (losing the separate step titles as a visual affordance), or confirm whether Information has an unobserved steps/Section-equivalent block type before publication.",
+      heading: 'How to work together to fix the violation',
+      karl: 'Resolved schema gap: unstructured steps converted to a numbered bulleted list (Title and text block: Title = this heading, Text = the intro paragraph plus the numbered bullets below).',
       kind: 'body',
-      steps: [
-        {
-          title: 'Read the full notice',
-          text: [
-            'Check which conditions apply to the building, common areas, and individual units.',
-            'Note the compliance deadline and any reinspection date.',
-          ],
-          karl: "No confirmed block type for a discrete numbered step in the Information schema (see section-level karl note above) — this step's title and text would have to be flattened into the parent Title and text block's rich text as a numbered list item.",
-        },
-        {
-          title: 'Confirm who is responsible for each item',
-          text: [
-            'Owners and tenants should compare the notice with the actual conditions in the unit and building.',
-            'If responsibility is unclear, contact Environmental Health using the information on the notice.',
-          ],
-          karl: "No confirmed block type for a discrete numbered step in the Information schema (see section-level karl note above) — this step's title and text would have to be flattened into the parent Title and text block's rich text as a numbered list item.",
-        },
-        {
-          title: 'Complete your corrective actions on time',
-          text: [
-            'Owners should not wait for tenant actions before starting building repairs they control.',
-            'Tenants should complete unit-level actions needed for treatment or reinspection to succeed.',
-          ],
-          karl: "No confirmed block type for a discrete numbered step in the Information schema (see section-level karl note above) — this step's title and text would have to be flattened into the parent Title and text block's rich text as a numbered list item.",
-        },
-        {
-          title: 'Keep records and prepare for reinspection',
-          text: [
-            'Save photos, receipts, treatment reports, or other proof of completed work when possible.',
-            'Be ready for HHVC to verify that all cited conditions were corrected.',
-          ],
-          karl: "No confirmed block type for a discrete numbered step in the Information schema (see section-level karl note above) — this step's title and text would have to be flattened into the parent Title and text block's rich text as a numbered list item.",
-        },
+      paragraphs: [
+        'Often, a notice of violation requires cooperation between the owner and the tenant to resolve.',
+      ],
+      bullets: [
+        '1. **Read the full notice**: Check which conditions apply to the building, common areas, and individual units. Note the compliance deadline and any reinspection date.',
+        '2. **Confirm who is responsible for each item**: Owners and tenants should compare the notice with the actual conditions in the unit and building. If responsibility is unclear, contact Environmental Health using the information on the notice.',
+        '3. **Complete your corrective actions on time**: Owners should not wait for tenant actions before starting building repairs they control. Tenants should complete unit-level actions needed for treatment or reinspection to succeed.',
+        '4. **Keep records and prepare for reinspection**: Save photos, receipts, treatment reports, or other proof of completed work when possible. Be ready for HHVC to verify that all cited conditions were corrected.',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 5 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'What happens after you report',
-          text: 'Learn how inspections can lead to a notice of violation and compliance deadlines.',
           target: 'afterReport',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Look up residential health code violations',
-          text: 'Search violation and inspection history for a building.',
           target: 'findViolations',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights when reporting housing conditions',
-          text: 'Learn about tenant protections and where to get help.',
           target: 'tenantRights',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Property owner responsibilities',
-          text: 'Return to the owner hub for fees, IPM, and other obligations.',
           target: 'ownerHub',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Bed bug rules and prevention',
-          text: 'Learn tenant cooperation and treatment preparation rules for bed bugs.',
           target: 'bedBugsInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

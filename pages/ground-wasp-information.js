@@ -56,43 +56,29 @@ window.HHVC_PAGES['waspInfo'] = {
     },
     {
       heading: 'When to report',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs below (reporting threshold and dual-track routing — city vs. private-property referral). Real-schema gap: this section also embeds a single card that functions as a call-to-action link to the vegetationReport Transaction page, not a "Related pages" list. The verified Information form has no confirmed button/CTA block type (only Title and text/Image/Callout were observed), so this card-as-CTA has no confirmed home. It may fit as a Link-tool link inside the Title and text block\'s rich text (Internal link → vegetationReport), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs below (reporting threshold and dual-track routing — city vs. private-property referral). Resolved schema gap: converted card-as-CTA to an inline link folded into this block\'s rich text (Internal link → vegetationReport), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'HHVC inspects suspected ground wasp nests to verify safety hazards. If you are a tenant, notify your landlord or property manager in writing immediately so they can address this safety hazard. If they do not respond or fail to hire a professional, report the nest to 311 to request an HHVC inspection.',
-        'If an HHVC inspector finds a ground wasp nest on city or public property, we will refer the issue to the appropriate sister agency for safe removal. If the nest is on private residential property, HHVC will require the property owner to contract a licensed Pest Control Operator (PCO) to eliminate the nest.',
-      ],
-      cards: [
-        {
-          title: 'Report a ground wasp nest',
-          text: 'Request an HHVC inspection for a suspected ground wasp nest on public or private residential property.',
-          target: 'vegetationReport',
-          karl: "CTA card acting as this section's call-to-action, not a Related-pages item — see the section-level karl note above for the button/CTA schema gap and the two options to flag for Digital Services.",
-        },
+        'If an HHVC inspector finds a ground wasp nest on city or public property, we will refer the issue to the appropriate sister agency for safe removal. If the nest is on private residential property, HHVC will require the property owner to contract a licensed Pest Control Operator (PCO) to eliminate the nest. [Report a ground wasp nest](vegetationReport)',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable. Real-schema gap: Related has no custom title/text per item, only a page reference — the descriptions on these 3 cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Prevent garbage and clutter problems',
-          text: 'Learn how to manage garbage and storage areas so they do not attract pests.',
           target: 'garbageInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Prevent overgrown vegetation',
-          text: 'Learn how to keep vegetation trimmed and managed.',
           target: 'vegetationInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related field entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

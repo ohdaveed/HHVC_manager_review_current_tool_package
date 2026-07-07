@@ -75,7 +75,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
     },
     {
       heading: 'How your report is processed',
-      karl: "Best real-schema fit: a second things_to_know entry. Title: \"How your report is processed\". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, and the Health Code Article 11A bed-bug-abatement obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. New: a secondary Button link block ('View Health Code Article 11A') citing the municipal code per Ch. 8.7.2 — flag for Digital Services to confirm this is the SF.gov-preferred municode URL before publication. Correction: the obligation summary now says 'two working days' per the DPH Director's Rules PDF (docs/source/hhvc-policy/2026-07-02-bed-bug-directors-rules-tenant-guidelines.md, Owner 2.4-2.6), which specifies the owner must contract a licensed PCO to investigate AND the PCO must inspect all adjacent units within that same two-working-day window — not the '72 hours / 5 business days' figures Ch. 8.7.1 states, which don't appear anywhere in the primary source and conflict with the correction already applied to bed-bug-rules-prevention.js. Flag Ch. 8.7.1 itself for correction.",
+      karl: "Best real-schema fit: a second things_to_know entry. Title: \"How your report is processed\". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11A bed-bug-abatement obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. New: a secondary Button link block ('View Health Code Article 11A') citing the municipal code per Ch. 8.7.2 — flag for Digital Services to confirm this is the SF.gov-preferred municode URL before publication. Correction: the obligation summary says 'two working days' per the DPH Director's Rules PDF (docs/source/hhvc-policy/2026-07-02-bed-bug-directors-rules-tenant-guidelines.md, Owner 2.4-2.6), which specifies the owner must contract a licensed PCO to investigate AND the PCO must inspect all adjacent units within that same two-working-day window — not the '72 hours / 5 business days' figures Ch. 8.7.1 states, which don't appear anywhere in the primary source and conflict with the correction already applied to bed-bug-rules-prevention.js. Flag Ch. 8.7.1 itself for correction. Schema gap resolved: things_to_know is Title + Text only, no nested callout block, so the tenant-rights note is folded into this Text field as a bolded closing line instead of a separate callout.",
       kind: 'body',
       bullets: [
         '**Review time:** It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
@@ -83,11 +83,8 @@ window.HHVC_PAGES['bedBugsReport'] = {
         '**If you reported anonymously:** An inspector may still visit the property without notice—especially if there is an urgent safety or health risk.',
         '**If we find a problem:** The City can order the property owner or responsible party to fix the violation.',
         'Under San Francisco Health Code Article 11A, landlords must hire a licensed pest control operator to investigate any reported bed bug concern and inspect all adjacent units within two working days, then treat confirmed infestations.',
+        '**Note:** Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
       ],
-      callout: {
-        karl: "Schema gap: things_to_know is Title + Text only — no nested callout block. Fold this tenant-rights text into the entry's Text field (e.g. as a bolded closing line), or flag for Digital Services if a distinct callout is needed here.",
-        text: 'Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
-      },
       button: 'View Health Code Article 11A',
       buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-6773',
       buttonStyle: 'secondary',
@@ -102,28 +99,22 @@ window.HHVC_PAGES['bedBugsReport'] = {
       cards: [
         {
           title: 'Bed bug rules and prevention',
-          text: "Learn about bed bug rules, treatment preparation, and prevention, including the official Director's Rules reference.",
           target: 'bedBugsInfo',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has NO custom title/text per item, only a page reference — the descriptions on these cards have no home unless Digital Services adds one. Confirm before publishing. 4 cards below = 4 related "Page" entries (note: the bedBugsInfo target also appears in the "Bed bug rules" section above — likely a duplicate related entry to reconcile).',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries (note: the bedBugsInfo target also appears in the "Bed bug rules" section above — likely a duplicate related entry to reconcile).',
       kind: 'placement',
       cards: [
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Bed bug rules and prevention',
@@ -133,9 +124,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
         },
         {
           title: 'Tenant rights and reporting',
-          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
-          karl: 'related panel entry — page chooser only; same schema gap as the other cards above (no custom description field in the real related panel).',
         },
       ],
     },

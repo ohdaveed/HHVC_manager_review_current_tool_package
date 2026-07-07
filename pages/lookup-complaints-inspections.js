@@ -50,19 +50,16 @@ window.HHVC_PAGES['findRecords'] = {
       cards: [
         {
           title: 'Pests and housing problems',
-          text: 'Report a new pest, vector, mold, or housing health problem through the main Topic page.',
           target: 'pestsTopic',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report rats or mice',
-          text: 'Report an active rat or mouse problem in San Francisco.',
           target: 'ratsReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how 311 reports are routed to Environmental Health.',
           target: 'afterReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
@@ -70,18 +67,16 @@ window.HHVC_PAGES['findRecords'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Real-schema gap: related has no custom title/text per item, only a page reference — the descriptions on these cards have no home unless Digital Services adds one.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Look up building records',
-          text: 'Return to the records hub for hotel records, inspector lookup, and public records.',
           target: 'recordsHub',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Find residential hotel and shelter records',
-          text: 'Use the separate lookup for SROs, residential hotels, and shelters.',
           target: 'findHotelRecords',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
