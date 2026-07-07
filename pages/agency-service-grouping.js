@@ -10,11 +10,25 @@ window.HHVC_PAGES['pestsTopic'] = {
     'A property owner or manager trying to prevent pests',
     'A building worker who handles pest or housing health issues',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   seoTitle: 'Pests and housing problems',
   metaDescription: 'Report or prevent pests, mold, garbage, and other housing health problems.',
   editorNote:
     'Topic page. Article 11 / HHVC scope only. Use four Hick’s Law clusters: report, prevent, inspect, tenant help. Public content must not route users to non-HHVC issue paths. In Karl: tag Topics so child pages appear on this Topic; manually link Information pages after publish.',
+  spotlight: {
+    title: 'Report a housing health problem',
+    paragraphs: [
+      'Use 311 to report pests, mold, garbage, and other Article 11 conditions in San Francisco.',
+    ],
+    image: {
+      src: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+      alt: 'Residential apartment building exterior in San Francisco',
+      karl: 'Topic page Spotlight: image',
+    },
+    button: 'Report through 311',
+    buttonTarget: 'reportHub',
+    karl: 'Topic page Spotlight 1',
+  },
   sections: [
     {
       heading: 'About this topic',
@@ -38,6 +52,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     },
     {
       heading: 'Report a problem',
+      component: 'services',
       karl: 'Maps to a top-level `Services` block (Title = this heading, Links = one "SF.gov page" entry per card below). Real-schema gap: Services is Title + Links only — no intro-paragraph field — so this section\'s lead-in paragraph has no home unless nested instead inside a Content block\'s Section content stream alongside a Text block and a nested Resources/Services sub-block. Also note: since all 9 targets are Transaction pages, they may already auto-populate under "More services" on the real Topic page once tagged — this manual Services placement is what gives them this custom heading/grouping/ordering instead of the automatic one.',
       kind: 'body',
       paragraphs: ['Use these pages if you are affected by a pest or housing health problem.'],
@@ -100,6 +115,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     },
     {
       heading: 'Prevent pests and housing health problems',
+      component: 'resources',
       karl: 'Maps to a top-level `Resources` block (Title = this heading, Links = one "SF.gov page" entry per card below — Resources is the same Title+Links shape as Services, used here since most targets are Information pages rather than Transactions). Same real-schema gap as the "Report a problem" section above: no intro-paragraph field on Resources, so this lead-in paragraph has no home unless nested inside a Content block instead.',
       kind: 'body',
       paragraphs: ['Use these pages to stop problems before they spread.'],

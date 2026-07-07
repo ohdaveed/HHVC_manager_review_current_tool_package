@@ -48,7 +48,9 @@ in isolation — the script always validates the full list.
   Zod schema): `slug`, `type` (`Topic` | `Transaction` | `Information` |
   `Resource Collection`),
   `title`, `summary`, `audience[]`, `reading` (a grade-level string), and
-  `sections[]`. Sections contain `cards[]` and/or `steps[]`; steps can have
+  `sections[]`. For Karl editor field mapping by content type, see
+  `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
+  Sections contain `cards[]` and/or `steps[]`; steps can have
   `bullets`, `callout`, and `button` (the primary CTA). Optional review/SEO
   fields include `seoTitle`, `metaDescription`, `primaryCta`.
 - **`karl` fields are first-class content**, not comments — every card,

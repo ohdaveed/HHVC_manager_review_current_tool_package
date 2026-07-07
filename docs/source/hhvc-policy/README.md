@@ -2,6 +2,12 @@
 
 Use this folder for exported Google Drive source/legal/policy documents that govern mockup copy.
 
+## Karl CMS field reference
+
+| File | Title | Role |
+| --- | --- | --- |
+| `karl-content-type-field-reference.md` | Karl CMS content-type field reference | **Karl CMS field map** — per-type editor fields, SF.gov screenshot mapping, mockup schema alignment. Not legal authority. |
+
 ## Required metadata per document
 
 - Source title

@@ -4,13 +4,13 @@ window.HHVC_PAGES['waspInfo'] = {
   type: 'Information',
   title: 'Ground wasps and housing health',
   summary:
-    'Learn about ground-nesting yellowjackets, sting risks, and how to reduce the food and shelter conditions that attract wasps around a building.',
+    'Learn about ground-nesting wasps, sting risks, and how to reduce food and shelter that attract them.',
   audience: [
     'A tenant or resident dealing with wasp activity or stings near a building',
     'A property owner or manager maintaining yards, garbage areas, or shared outdoor space',
     'A building worker or maintenance staff working outdoors where wasps may nest',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'New Information page. Content sourced from UC IPM Pest Notes 7450 (docs/source/hhvc-policy/2026-07-02-ipm-pests-yellowjackets.md). Verify HHVC scope for stinging-insect complaints vs. referral to a PCO or local mosquito and vector control district before publication.',
   sections: [
@@ -85,5 +85,5 @@ window.HHVC_PAGES['waspInfo'] = {
   ],
   seoTitle: 'Ground wasps and housing health | SF.gov',
   metaDescription:
-    'Ground-nesting yellowjacket sting risks, nest identification, and how to reduce conditions that attract wasps around a building.',
+    'Ground-nesting yellowjacket sting risks, nest identification, and how to reduce conditions that attract wasps',
 }

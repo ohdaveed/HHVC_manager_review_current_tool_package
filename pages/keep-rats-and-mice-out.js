@@ -10,7 +10,7 @@ window.HHVC_PAGES['ratsPrevent'] = {
     'A property owner or manager looking for best practices',
     'A building employee or maintenance worker supporting pest prevention',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'Information page. New "Why it matters" health-harm section added — verify Hantavirus, Leptospirosis, and salmonella claims against current CDC/SFDPH guidance before publication.',
   sections: [

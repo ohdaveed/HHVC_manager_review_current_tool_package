@@ -10,7 +10,7 @@ window.HHVC_PAGES['vegetationReport'] = {
     'A person reporting conditions in a shared area',
     'An employee reporting a pest or vector concern at work',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   sections: [
     {
       heading: 'What to do',

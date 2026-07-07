@@ -10,7 +10,7 @@ window.HHVC_PAGES['afterReport'] = {
     'An employee who reported a pest or vector concern',
     'A property owner or manager responding to a reported condition',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   sections: [
     {
       heading: 'How a report moves through the City',

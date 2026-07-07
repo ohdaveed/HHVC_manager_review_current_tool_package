@@ -4,16 +4,22 @@ window.HHVC_PAGES['ownerGuidance'] = {
   type: 'Information',
   title: 'Integrated pest management for property owners and managers',
   summary:
-    'Use prevention, monitoring, and resident outreach to reduce pests in buildings. UC IPM is the primary source for templates and checklists.',
+    'IPM for SF property owners and managers. UC ANR templates for prevention, monitoring, and outreach.',
   audience: [
     'A property owner responsible for a residential building',
     'A property manager or building operator',
     'Building maintenance staff or janitorial staff',
     'A housing provider looking for pest prevention best practices',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Information page for property owners and managers. UC ANR IPM guide is the primary external source — verify link stability and whether HHVC wants additional SFDPH Director’s Rules citations before publication.',
+  topicTag: 'Topic: Pests and housing problems',
+  contact: {
+    phone: ['311 (call or text)', '415-252-3805'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'Why it matters',
@@ -25,6 +31,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
       ],
       callout: {
         karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
+        variant: 'warning',
         text: 'The residents most at risk from unmanaged pests are often children, older adults, and people with existing health conditions or weakened immune systems.',
       },
     },
@@ -45,6 +52,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: 'Primary source: UC IPM guide for property managers',
+      component: 'resources',
       karl: 'Maps to a third Title and text block: Title = this heading, Text = the two paragraphs below.',
       kind: 'placement',
       paragraphs: [
@@ -57,6 +65,18 @@ window.HHVC_PAGES['ownerGuidance'] = {
           text: 'Start here for the full UC ANR integrated pest management guide for multi-unit housing, including policies, prevention, monitoring, and resident outreach.',
           url: 'https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/',
           karl: 'This card links to an external URL, not an internal page — it does not fit the verified "Related" field (an unrestricted but internal-only Page chooser; no external-URL support observed). No block type in the verified Information schema holds a card-style external link with its own title/description. Best option: fold this in as a Link-tool External link within this block\'s own Title and text rich text — flag for Digital Services rather than assuming a dedicated field.',
+        },
+        {
+          title: 'UC IPM: More multi-unit housing resources',
+          text: 'Browse additional UC ANR trainings, Pest Notes, and prevention publications for housing managers.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/resources-for-multi-unit-housing-managers/',
+          karl: 'Body external link: UC IPM multi-unit housing resources index',
+        },
+        {
+          title: 'SF Environment: Pestec IPM guidelines for multifamily housing',
+          text: 'SF-local operations manual for multi-unit buildings — turnover proofing, resident toolkit gap sizes, and sample IPM plans.',
+          url: 'https://sfenvironment.org/article/integrated-pest-management-ipm-guidelines-for-multifamily-housing',
+          karl: 'Body external link: SF Environment Pestec multifamily IPM guidelines (supplemental)',
         },
       ],
       callout: {
@@ -87,7 +107,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         "The San Francisco Department of Public Health (SFDPH) Director's Rules and Regulations set specific legal requirements for rental property owners and managers to prevent and control rodents and other vectors.",
       ],
       bullets: [
-        'Investigate reports: Investigate any tenant reports of pest activity within 72 hours.',
+        "Investigate reports: Investigate any tenant reports of pest activity within 72 hours (Director's Rules §V.2).",
         'Recordkeeping: Keep accurate records of pest complaints, inspections, and pest control services for at least 2 years. Make these records available to DPH on request.',
         'Hire licensed professionals: Hire only licensed Pest Control Operators (PCOs) to apply pesticides or conduct rat trapping.',
         'Garbage management: Provide enough rigid plastic or metal containers with tight-fitting lids. Ensure the garbage area is clean and serviced regularly to prevent overflow.',
@@ -128,7 +148,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         '[UC IPM: Pest prevention](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-prevention/)',
         '[SF Environment: Pest Prevention by Design](https://sfenvironment.org/download/pest-prevention-by-design-guidelines)',
         'Seal gaps larger than 1/4 inch around doors, windows, pipes, vents, and utility openings with rodent-proof materials. Examples include hardware cloth, copper mesh, sheet metal, concrete, mortar, or steel wool backed by sealant.',
-        'Maintain tree and shrub branches at least 3 feet away from walls or roofs to prevent rodents from climbing onto structures.',
+        "Maintain tree and shrub branches at least 6 feet away from walls or roofs to prevent rodents from climbing onto structures (Pest Prevention by Design). Director's Rules require at least 3 feet for enforcement inspections.",
         'Keep a 24-inch clear space along fences and exterior walls to reduce rodent movement and allow visibility.',
         'Apply gravel around foundations to prevent burrowing, and stack wood piles or lumber at least 6 inches off the ground.',
         'Build pest-proofing into repair, remodeling, and construction work.',
@@ -145,7 +165,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
       bullets: [
         'Use one system to log complaints, repairs, sanitation work, and contractor visits.',
         'Ensure the PCO conducts a complete inspection and identifies the type and level of infestation.',
-        'Inspect adjacent units: When an infestation is reported, the PCO must inspect all adjacent units (and treat them if necessary).',
+        "Inspect adjacent units: When an infestation is reported, the PCO must inspect all adjacent units and treat them if necessary (Director's Rules §VI.6).",
         'Use least-toxic methods: Prioritize non-chemical methods (vacuuming, heat, steam, freezing) and gel baits over chemical sprays.',
         'Review records regularly to find repeated or building-wide problems.',
       ],
@@ -167,6 +187,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [

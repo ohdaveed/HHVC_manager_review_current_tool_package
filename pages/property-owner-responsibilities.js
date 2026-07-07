@@ -4,13 +4,13 @@ window.HHVC_PAGES['ownerHub'] = {
   type: 'Resource Collection',
   title: 'Property owner responsibilities',
   summary:
-    'What property owners and managers must do under Health Code Article 11 for pests, vectors, and housing health conditions.',
+    'What owners and managers must do under Health Code Article 11 for pests and housing health.',
   audience: [
     'A property owner responsible for a residential building',
     'A property manager handling pest prevention and violation response',
     'A building operator for an SRO or residential hotel',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Resource collection hub for property owners. Reuses existing Transaction and Information pages instead of duplicating content.',
   sections: [

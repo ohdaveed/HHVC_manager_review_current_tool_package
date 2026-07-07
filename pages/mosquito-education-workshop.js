@@ -4,14 +4,14 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   type: 'Campaign',
   title: 'Free mosquito education workshop',
   summary:
-    'Request a free interactive mosquito science workshop for schools, summer camps, museums, and science fairs in San Francisco.',
+    'Request a free mosquito science workshop for schools, camps, museums, and science fairs.',
   audience: [
     'A teacher or school administrator planning a classroom or campus science activity',
     'A summer camp director or youth program coordinator',
     'A museum educator or science fair organizer',
     'A parent or community group leader hosting a youth science event in San Francisco',
   ],
-  reading: 'Grade 5–7',
+  reading: 'Grade 7',
   editorNote:
     'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md) using this mockup\'s existing sections[]/cards[]/bullets[] shape — this tool has no Spotlight/Top facts/Logo/Color theme widgets, so the karl notes below describe the intended real-Karl block for each section rather than a literally rendered equivalent. Campaign page-level fields with no mockup equivalent at all: Primary agency, Logo, Background header image, Color theme, Partner agencies. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   editorStatus: 'placeholder',
@@ -85,11 +85,9 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
         'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability. Submitted requests currently route to the Mosquito Control Program for scheduling (illustrative — confirm the actual intake backend with HHVC before publication).',
         'You can also contact the Mosquito Control Program directly if you have questions before submitting the form.',
       ],
-      button: 'Request a workshop online',
-      buttonUrl: '/forms/mosquito-workshop-request/',
       cards: [
         {
-          title: 'Workshop request form',
+          title: 'Request a workshop online',
           text: 'Submit organization details, audience size, preferred dates, and space needs.',
           url: '/forms/mosquito-workshop-request/',
           karl: 'This card duplicates the section-level CTA above; Spotlight has no nested card/list field, so this restatement has no separate home in the real schema — likely mockup-only scaffolding, not a distinct Campaign block.',
@@ -144,5 +142,5 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   seoTitle: 'Free mosquito education workshop | SF.gov',
   metaDescription:
-    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and camps.',
+    'Request a free HHVC mosquito science workshop with microscopes and live larvae for San Francisco schools.',
 }

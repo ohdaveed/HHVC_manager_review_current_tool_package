@@ -9,7 +9,7 @@ window.HHVC_PAGES['findInspector'] = {
     'A property owner or manager coordinating with Environmental Health',
     'A building worker who needs the assigned inspector contact',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Information page placeholder. A verified district map/staff directory lookup is still BLOCKED pending HHVC confirmation, so the page CTA routes to 311 (the confirmed public contact route) instead of shipping without any working link. Do not publish staff phone numbers until HHVC confirms the public contact route.',
   editorStatus: 'blocked',

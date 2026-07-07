@@ -11,7 +11,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     'A property owner or manager looking for bed bug prevention and control requirements',
     'Building staff or maintenance staff supporting bed bug prevention',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'Information page. Official Director’s Rules PDF is on sfdph.org (not Google Drive). PDF accessibility: consider an HTML summary on SF.gov if Karl editors require a non-PDF primary source. Tenant guidelines PDF is internal reference in docs/source/hhvc-policy/.',
   sections: [

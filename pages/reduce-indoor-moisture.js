@@ -10,7 +10,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     'People who own or manage a residential building in San Francisco',
     'Building staff or maintenance staff who help prevent indoor moisture problems',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   sections: [
     {
       heading: 'Why it matters',
@@ -119,7 +119,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
       karl: 'Maps to a ninth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
-        'For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.',
+        'For tenant-scale mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so. HHVC may inspect when mold on a wall or ceiling covers 10 square feet or more.',
       ],
       bullets: [
         'Do not paint over mold. Remove the mold first.',
