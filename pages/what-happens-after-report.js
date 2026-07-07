@@ -36,7 +36,7 @@ window.HHVC_PAGES['afterReport'] = {
           title: 'Agency Hand-off (If applicable)',
           text: [
             'If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
-            'HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.'
+            'HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.',
           ],
           karl: 'Maps to a Title and text block: Explains routing for structural issues to DBI.',
         },

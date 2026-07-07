@@ -63,7 +63,7 @@ window.HHVC_PAGES['ownerHub'] = {
           title: 'SFDPH Environmental Health Branch fee schedule (current)',
           text: 'Official fee schedule, including the Healthy Housing apartment-building fee tiers and hourly reinspection rates. Rates effective 7/1/26-6/30/27 — check for a newer schedule before relying on it for a specific billing year.',
           url: 'https://media.api.sf.gov/documents/Website_Fees_FY25-26_1M8m5aT.pdf',
-          karl: 'Document Picker upload in the real CMS (see section-level karl note); content now sourced from docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md (current fiscal year). NOTE: the `url` above still points to the FY25-26 PDF\'s live SF.gov location — the FY26-27 PDF was obtained directly and has no confirmed public URL yet; do not publish this card until a live FY26-27 URL is confirmed.',
+          karl: "Document Picker upload in the real CMS (see section-level karl note); content now sourced from docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md (current fiscal year). NOTE: the `url` above still points to the FY25-26 PDF's live SF.gov location — the FY26-27 PDF was obtained directly and has no confirmed public URL yet; do not publish this card until a live FY26-27 URL is confirmed.",
         },
       ],
     },
