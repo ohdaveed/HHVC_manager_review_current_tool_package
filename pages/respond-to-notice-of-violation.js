@@ -178,5 +178,5 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   ],
   seoTitle: 'How to respond to a notice of violation | SF.gov',
   metaDescription:
-    'How tenants and owners respond to an Environmental Health notice of violation when both may have corrective',
+    'How tenants and owners respond to an Environmental Health notice of violation and take corrective action.',
 }

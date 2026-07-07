@@ -49,7 +49,7 @@ window.HHVC_PAGES['vegetationInfo'] = {
       ],
       cards: [
         {
-          title: 'Report overgrown vegetati',
+          title: 'Report overgrown vegetation',
           text: 'Open the related HHVC service page.',
           target: 'vegetationReport',
           karl: 'Links: Related Transaction page',
@@ -84,5 +84,5 @@ window.HHVC_PAGES['vegetationInfo'] = {
   ],
   seoTitle: 'Prevent overgrown vegetation | SF.gov',
   metaDescription:
-    'How overgrown plants, weeds, and brush shelter pests and vectors, and how to keep vegetation trimmed and',
+    'How overgrown plants shelter pests and how to keep vegetation trimmed near buildings.',
 }

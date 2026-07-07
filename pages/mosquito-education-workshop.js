@@ -87,17 +87,9 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
       cards: [
         {
           title: 'Request a workshop online',
-          text: 'Open the external service form.',
-          url: '/forms/mosquito-workshop-request/',
-          karl: 'Links: Body external resource',
-        },
-      ],
-      cards: [
-        {
-          title: 'Workshop request form',
           text: 'Submit organization details, audience size, preferred dates, and space needs.',
           url: '/forms/mosquito-workshop-request/',
-          karl: 'Body link to Vite workshop interest form',
+          karl: 'Links: Body external resource',
         },
       ],
     },
@@ -149,5 +141,5 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   seoTitle: 'Free mosquito education workshop | SF.gov',
   metaDescription:
-    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and',
+    'Request a free HHVC mosquito science workshop with microscopes and live larvae for San Francisco schools.',
 }

@@ -91,10 +91,10 @@ window.HHVC_PAGES['miteInfo'] = {
           ],
           cards: [
             {
-              title: 'Keep rats out',
-              text: 'Open the related HHVC service page.',
+              title: 'Keep rats and mice out',
+              text: 'Learn safe rodent cleanup and exclusion before using poison baits.',
               target: 'ratsPrevent',
-              karl: 'Links: Related Transaction page',
+              karl: 'Links: Related Information page',
             },
           ],
           karl: 'Body step 2 with link to rodent cleanup guidance',
@@ -136,10 +136,10 @@ window.HHVC_PAGES['miteInfo'] = {
           ],
           cards: [
             {
-              title: 'Bed bug rules',
-              text: 'Open the related HHVC service page.',
+              title: 'Bed bug rules and prevention',
+              text: 'Read bed bug prevention, treatment prep, and rental housing rules.',
               target: 'bedBugsInfo',
-              karl: 'Links: Related Transaction page',
+              karl: 'Links: Related Information page',
             },
           ],
           karl: 'Body step with secondary link to bed bug Information page',
