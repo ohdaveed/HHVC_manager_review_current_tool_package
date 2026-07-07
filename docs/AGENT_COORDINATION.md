@@ -35,12 +35,12 @@ removed — no source found either way).
 
 ## Worktrees (as of 2026-07-06)
 
-| Path | Branch | Owner task | Status |
-|---|---|---|---|
-| `/home/ohdaveed/HHVC_manager_review_current_tool_package` | `main` | Coordination home + full source-of-truth audit (see below) | Clean — the `schema-gaps-refactor` duplicate fixes were discarded and this checkout switched back to `main` |
-| `/home/ohdaveed/HHVC_manager_review_current_tool_package_2` | `schema-gaps-refactor-2` | Schema-gap fixes across `pages/*.js` | **In progress, uncommitted** — 34 modified `pages/*.js` files + `build_scripts/schema.js`, produced via `fix_all.js`, `fix_buttons.js`, `fix_commas.js`, `fix_inline_cards.js`, `fix_lists.js`, `strip_cards.js` (untracked helper scripts in that worktree) |
-| `.claude/worktrees/hhvc-citation-fix` | `worktree-hhvc-citation-fix` | Citation fix | **Done and merged into `main`** — Article 11/11A statutory citations added to pigeon report/info pages + 6 sibling report pages, `cardSchema.text` made optional + `renderCards()` fixed to match, and a bed-bug abatement timeline correction (72h/5-day → two working days, matching the primary source). Merged clean, `bun run validate` passes on `main`. |
-| `.claude/worktrees/schema-gaps-safe` | `worktree-schema-gaps-safe` | SFDPH-policy/citation accuracy audit | **Done and merged into `main`** (verified: `main` now contains the FY26-27 fee schedule doc and $256/$234 rates directly). All known findings from this task resolved. |
+| Path                                                        | Branch                       | Owner task                                                 | Status                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------- | ---------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/home/ohdaveed/HHVC_manager_review_current_tool_package`   | `main`                       | Coordination home + full source-of-truth audit (see below) | Clean — the `schema-gaps-refactor` duplicate fixes were discarded and this checkout switched back to `main`                                                                                                                                                                                                                                                    |
+| `/home/ohdaveed/HHVC_manager_review_current_tool_package_2` | `schema-gaps-refactor-2`     | Schema-gap fixes across `pages/*.js`                       | **Done and merged into `main`** — converted `steps[]` sequences and per-page buttons (no confirmed home in the real Information-page schema) into numbered `bullets[]` and inline markdown links, across ~34 pages. Committed on the branch first (throwaway `fix_*.js` scripts + a stray PDF deleted, not committed), then merged into `main`. Conflicted with `hhvc-citation-fix`'s content in 8 `report-*.js` files — 7 were pure restructuring (no factual difference, took the restructured side); `report-bed-bugs.js` needed a hand merge to keep the corrected "two working days" timeline (not the older 72h/5-day figure this branch still had) while applying the restructuring. `bun run validate` passes and 3 pages spot-checked live in-browser (mite-information, report-bed-bugs, respond-to-notice-of-violation) render correctly post-merge. |
+| `.claude/worktrees/hhvc-citation-fix`                       | `worktree-hhvc-citation-fix` | Citation fix                                               | **Done and merged into `main`** — Article 11/11A statutory citations added to pigeon report/info pages + 6 sibling report pages, `cardSchema.text` made optional + `renderCards()` fixed to match, and a bed-bug abatement timeline correction (72h/5-day → two working days, matching the primary source). Merged clean, `bun run validate` passes on `main`. |
+| `.claude/worktrees/schema-gaps-safe`                        | `worktree-schema-gaps-safe`  | SFDPH-policy/citation accuracy audit                       | **Done and merged into `main`** (verified: `main` now contains the FY26-27 fee schedule doc and $256/$234 rates directly). All known findings from this task resolved.                                                                                                                                                                                         |
 
 ## NEW: full source-of-truth audit — `docs/source-of-truth-audit-2026-07-06.md`
 
@@ -54,10 +54,10 @@ the doc):
   (2025)" routing claim with zero support in any tier-1 source doc:
   `hhvc-inspection-scope.js`, `keep-rats-and-mice-out.js`,
   `prevent-cockroaches.js`, `prevent-mosquitoes.js`, `reduce-indoor-
-  moisture.js`, `report-mold-humidity-condensation.js`,
+moisture.js`, `report-mold-humidity-condensation.js`,
   `what-happens-after-report.js`.
 - **3 pages** (`mosquito-control-program.js`, `mosquito-education-
-  workshop.js`, `prevent-mosquitoes.js`) cite phone number
+workshop.js`, `prevent-mosquitoes.js`) cite phone number
   `415-252-3806`, which doesn't exist in any source doc — the real DPH
   number is `415-252-3800`.
 - `integrated-pest-management-property-managers.js` generalizes bed-bug-
