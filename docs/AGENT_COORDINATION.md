@@ -37,25 +37,46 @@ removed — no source found either way).
 
 | Path | Branch | Owner task | Status |
 |---|---|---|---|
-| `/home/ohdaveed/HHVC_manager_review_current_tool_package` | `schema-gaps-refactor` | Manual/UI sync work, karl-note cleanup | See note below — has uncommitted changes that duplicate `schema-gaps-safe`'s already-committed fixes |
+| `/home/ohdaveed/HHVC_manager_review_current_tool_package` | `main` | Coordination home + full source-of-truth audit (see below) | Clean — the `schema-gaps-refactor` duplicate fixes were discarded and this checkout switched back to `main` |
 | `/home/ohdaveed/HHVC_manager_review_current_tool_package_2` | `schema-gaps-refactor-2` | Schema-gap fixes across `pages/*.js` | **In progress, uncommitted** — 34 modified `pages/*.js` files + `build_scripts/schema.js`, produced via `fix_all.js`, `fix_buttons.js`, `fix_commas.js`, `fix_inline_cards.js`, `fix_lists.js`, `strip_cards.js` (untracked helper scripts in that worktree) |
 | `.claude/worktrees/hhvc-citation-fix` | `worktree-hhvc-citation-fix` | Citation fix | **Done, committed** — Article 11/11A statutory citations added to pigeon report/info pages + 6 sibling report pages, `cardSchema.text` made optional + `renderCards()` fixed to match, and a bed-bug abatement timeline correction (72h/5-day → two working days, matching the primary source). Not merged to main yet. Check the "RESOLVED" section above before doing more fee-citation work in this worktree — it likely overlaps with `schema-gaps-safe`'s completed work. |
 | `.claude/worktrees/schema-gaps-safe` | `worktree-schema-gaps-safe` | SFDPH-policy/citation accuracy audit | **Done** — 6 commits (see "RESOLVED" section above), branch pushed to origin. All known findings from this task resolved. |
 
-## KNOWN DUPLICATE: `schema-gaps-refactor` has redundant uncommitted fixes
+## NEW: full source-of-truth audit — `docs/source-of-truth-audit-2026-07-06.md`
 
-The main checkout (`/home/ohdaveed/HHVC_manager_review_current_tool_package`,
-branch `schema-gaps-refactor`) independently made the same four fixes
-`schema-gaps-safe` already committed (see "RESOLVED" section above) —
-$251/$229 → $256/$234 in `pay-healthy-housing-fee.js` and
-`respond-to-notice-of-violation.js`, the Master Guidelines Chapter 8.3
-mis-citation fix, and the bed-bug 45-day-reinspection unverified flag —
-plus a near-identical edit to
-`docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy25-26.md`. As of
-this note these 5 files are uncommitted and not yet reconciled; whoever
-picks up that checkout next should diff against `schema-gaps-safe`'s
-commits and drop the redundant hunks rather than committing a second copy
-of the same fix.
+All 39 `pages/*.js` files have now been read in full and cross-referenced
+against every doc in `docs/source/hhvc-policy/` (extends `schema-gaps-
+safe`'s ~5-page citation audit to full coverage). **Do not re-run this
+audit** — read the doc instead. Highlights (full detail + line numbers in
+the doc):
+
+- **8 pages** carry an uncited "DBI under the San Francisco Housing Code
+  (2025)" routing claim with zero support in any tier-1 source doc:
+  `hhvc-inspection-scope.js`, `keep-rats-and-mice-out.js`,
+  `prevent-cockroaches.js`, `prevent-mosquitoes.js`, `reduce-indoor-
+  moisture.js`, `report-mold-humidity-condensation.js`,
+  `what-happens-after-report.js`.
+- **3 pages** (`mosquito-control-program.js`, `mosquito-education-
+  workshop.js`, `prevent-mosquitoes.js`) cite phone number
+  `415-252-3806`, which doesn't exist in any source doc — the real DPH
+  number is `415-252-3800`.
+- `integrated-pest-management-property-managers.js` generalizes bed-bug-
+  only Director's Rules (72hr/two-working-day window, 2-year
+  recordkeeping, adjacent-unit inspection) into a blanket "any pest"
+  policy.
+- Tree/branch clearance distance disagrees with the source (6 ft) and with
+  itself across pages (3 ft / 4 ft / 4 ft in three different files).
+- `bed-bug-rules-prevention.js` has a wrong statute (Article 11A vs. the
+  correct 11), a fabricated 12-inch furniture-clearance rule, and an
+  invented verbatim trilingual warning-label quote.
+- `what-happens-after-report.js` asserts an unsourced 48–72hr sewage
+  window, an unsourced 30-day "all other violations" window (conflated
+  with the unrelated fee late-payment deadline), and an unsourced
+  Director's Hearing/attorneys'-fees enforcement mechanism.
+
+This audit is find-only — no `pages/*.js` edits were made. Whoever picks
+up fixing any of these should check the doc for the full finding first
+(confidence level + exact source citation) rather than re-deriving it.
 
 ## Rules to avoid duplicate work
 
