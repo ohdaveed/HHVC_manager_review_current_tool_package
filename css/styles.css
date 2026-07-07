@@ -1192,6 +1192,22 @@ body.hide-karl-tags .editor-qa {
 .toast .toast-close:hover {
   color: var(--sfds-white);
 }
+.toast .toast-action {
+  margin-left: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--sfds-white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.toast .toast-action:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+}
 @keyframes toastIn {
   from {
     opacity: 0;
