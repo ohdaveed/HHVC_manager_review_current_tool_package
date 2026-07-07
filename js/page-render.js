@@ -2,7 +2,7 @@
 // in #mockPage, including Karl placement/rationale tags. Depends on
 // js/state.js (escapeHtml, pageData) and js/editor-panel.js /
 // js/ui-controls.js for the post-render side effects triggered by
-// applyPageContent (syncEditorFields, updateDirtyIndicators, etc.).
+// applyPageContent (syncEditorFields, etc.).
 function karlTag(label, kind = 'body') {
   return `<mark class="karl-tag" data-kind="${kind}"><strong>Karl:</strong> ${escapeHtml(label)}</mark>`
 }
@@ -172,7 +172,6 @@ function applyPageContent(key) {
           <div class="footer-watermark" aria-hidden="true"></div>
         </footer>`
   syncEditorFields(page)
-  updateDirtyIndicators(key)
   updateReadingTarget(page)
   updatePageBadge(page.title)
   applyChecklistState(key)

@@ -54,16 +54,14 @@
     return getValue('metaDescriptionInput') || defaultMetaDescription(page)
   }
 
-  // useEditor: true reads live sidebar values (current page only);
+  // useEditor: true reads live SEO sidebar values (current page only);
   // false evaluates raw page data so any page can be scored for the portfolio view.
   function getRuleResultsFor(page, { useEditor = false } = {}) {
-    const titleInputEl = useEditor ? document.getElementById('titleInput') : null
-    const title = titleInputEl ? titleInputEl.value : page.title || ''
-    const summaryInputEl = useEditor ? document.getElementById('descriptionInput') : null
-    const summary = summaryInputEl ? summaryInputEl.value : page.summary || ''
+    const title = page.title || ''
+    const summary = page.summary || ''
     const seoTitle = useEditor ? getSeoTitle(page) : defaultSeoTitle(page)
     const metaDescription = useEditor ? getMetaDescription(page) : defaultMetaDescription(page)
-    const primaryCta = (useEditor && getValue('ctaInput')) || getPrimaryCta(page)
+    const primaryCta = getPrimaryCta(page)
     const relatedLinks = countRelatedLinks(page)
     const normalizedType = String(page.type || '')
       .trim()
@@ -228,11 +226,11 @@
     const pageKey = getCurrentKey()
 
     return buildReviewRecord(page, pageKey, {
-      page_title: getValue('titleInput') || page.title || '',
+      page_title: page.title || '',
       url_slug: getValue('urlInput') || page.slug || '',
-      edited_title: getValue('titleInput') || page.title || '',
-      edited_summary: getValue('descriptionInput') || page.summary || '',
-      primary_cta: getValue('ctaInput') || getPrimaryCta(page) || '',
+      edited_title: page.title || '',
+      edited_summary: page.summary || '',
+      primary_cta: getPrimaryCta(page) || '',
       seo_title: getSeoTitle(page),
       meta_description: getMetaDescription(page),
       reviewer: getValue('reviewerInput'),
@@ -273,20 +271,18 @@
   function updateMockupTextFromSavedState(page, saved) {
     if (saved.edited_title) {
       page.title = saved.edited_title
-      setValue('titleInput', saved.edited_title)
-      window.applyFieldToMockup?.('title', saved.edited_title)
+      const h1 = document.querySelector('#mockPage .hero h1')
+      if (h1) h1.textContent = saved.edited_title
     }
 
     if (saved.edited_summary) {
       page.summary = saved.edited_summary
-      setValue('descriptionInput', saved.edited_summary)
-      window.applyFieldToMockup?.('summary', saved.edited_summary)
+      const summary = document.querySelector('#mockPage .hero .summary')
+      if (summary) summary.textContent = saved.edited_summary
     }
 
     if (saved.primary_cta) {
       setPrimaryCta(page, saved.primary_cta)
-      setValue('ctaInput', saved.primary_cta)
-      window.applyFieldToMockup?.('cta', saved.primary_cta)
     }
 
     if (saved.seo_title) {
@@ -372,8 +368,8 @@
         <h3>Current page checks</h3>
         <p class="review-decision-note">
           Scores only the page open in the mockup (${escapeHtml(getCurrentKey())}). For all pages at
-          once, use the <strong>Overview</strong> tab. Live values update as you edit title,
-          summary, CTA, and search metadata in the sidebar.
+          once, use the <strong>Overview</strong> tab. Search metadata values update as you edit
+          them in the sidebar.
         </p>
         <ul class="compliance-list">
           ${rules
@@ -668,7 +664,7 @@
       `SEO title: ${seoTitle} (${seoTitle.length}/${SEO_TITLE_LIMIT})`,
       `Meta description: ${metaDescription} (${metaDescription.length}/${META_DESCRIPTION_LIMIT})`,
       `Reading target: ${page.reading || ''}`,
-      `Primary CTA: ${getValue('ctaInput') || getPrimaryCta(page) || ''}`,
+      `Primary CTA: ${getPrimaryCta(page) || ''}`,
       `Reviewer: ${getValue('reviewerInput')}`,
       `Review date: ${getValue('reviewDateInput')}`,
       `Notes: ${getValue('reviewNotes')}`,
@@ -973,9 +969,6 @@
   function attachRefreshListeners() {
     const persistedFields = [
       'urlInput',
-      'titleInput',
-      'descriptionInput',
-      'ctaInput',
       'seoTitleInput',
       'metaDescriptionInput',
       'reviewDecision',

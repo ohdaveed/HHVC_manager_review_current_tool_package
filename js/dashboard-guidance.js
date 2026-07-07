@@ -18,11 +18,11 @@
     },
     {
       title: 'Overview vs Page checks',
-      text: 'Overview scores every page in one table (the open page uses live sidebar edits). Page checks shows the same 9 rules for only the page in the mockup.',
+      text: 'Overview scores every page in one table. Page checks shows the same 9 rules for only the page in the mockup.',
     },
     {
-      title: 'Test wording safely',
-      text: 'Edit the title, short summary, primary CTA, and search metadata in the sidebar. Changes stay local until you export or clear them.',
+      title: 'Search metadata',
+      text: 'Edit SEO title and meta description in the sidebar to test search-result wording. Changes stay local until you export or clear them.',
     },
     {
       title: 'Karl tag colors',
@@ -180,9 +180,8 @@
     panel.innerHTML = `
       <h3>Karl compliance rules (9)</h3>
       <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
-        Overview scores every page against these rules. Other rows use saved page data; the open
-        page row is marked <strong>live</strong> and reflects sidebar edits immediately. Page
-        checks shows the same rules with live values for only the mockup page.
+        Overview scores every page against these rules. Page checks shows the same rules for only
+        the mockup page. Search metadata edits in the sidebar update checks for the open page.
       </p>
       <ol class="dashboard-compliance-rules">
         <li><strong>Page type</strong> — content type must be set</li>
