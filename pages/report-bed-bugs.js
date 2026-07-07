@@ -9,7 +9,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting bed bugs in rental housing, an SRO, or a residential hotel',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   sections: [
     {
       heading: 'What to do',

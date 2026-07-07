@@ -11,7 +11,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     'A person unsure whether HHVC may review a pest or housing health problem',
     'A property owner, property manager, or building staff member looking for prevention guidance or best practices',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   seoTitle: 'Learn what HHVC can inspect',
   metaDescription: 'Check whether HHVC may review a pest, vector, or housing health condition.',
   sections: [

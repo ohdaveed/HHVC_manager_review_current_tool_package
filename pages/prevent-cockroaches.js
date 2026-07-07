@@ -9,7 +9,7 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
     'A property owner or manager looking for best practices',
     'A building employee or maintenance worker supporting pest prevention',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'Information page. New "Why it matters" health-harm section added — verify asthma/allergen and bacteria-transfer claims against current CDC/SFDPH guidance before publication.',
   sections: [
@@ -50,7 +50,7 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
       bullets: [
         'Clean grease and crumbs daily from countertops, stoves, sinks, and under kitchen appliances.',
         'Store all food in sealed plastic, glass, or metal containers.',
-        'Keep kitchen sinks dry and fix any plumbing leaks immediately. Cockroaches need daily access to water.',
+        'Keep kitchen sinks dry and fix minor plumbing leaks immediately. Cockroaches need daily access to water. For major plumbing failures, report to the Department of Building Inspection (DBI).',
         'Keep trash bins clean and covered, and empty garbage containers every night.',
         'Do not leave pet food or water bowls out overnight.',
       ],
@@ -90,9 +90,14 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
         'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
       ],
-      button: 'Report cockroaches',
-      buttonStyle: 'secondary',
-      buttonTarget: 'cockroachesReport',
+      cards: [
+        {
+          title: 'Report cockroaches',
+          text: 'Open the related HHVC service page.',
+          target: 'cockroachesReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Related pages',

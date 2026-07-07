@@ -4,13 +4,13 @@ window.HHVC_PAGES['flyInfo'] = {
   type: 'Information',
   title: 'Flies and housing health',
   summary:
-    'Learn how house flies and other nuisance flies breed in garbage and waste, the disease risk they carry, and how to reduce fly problems.',
+    'Learn how flies breed in garbage and waste, disease risks, and steps to reduce fly problems.',
   audience: [
     'A tenant or resident dealing with flies in or around a building',
     'A property owner or manager responsible for garbage and waste areas',
     'A building employee or maintenance worker supporting pest prevention',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'New Information page. Content sourced from UC IPM Pest Notes 7457 (docs/source/hhvc-policy/2026-07-02-ipm-pests-flies.md), focused on house flies and blow flies as the species relevant to San Francisco housing. Verify against current SFDPH vector program guidance before publication.',
   sections: [
@@ -80,5 +80,5 @@ window.HHVC_PAGES['flyInfo'] = {
   ],
   seoTitle: 'Flies and housing health | SF.gov',
   metaDescription:
-    'How house flies breed in garbage and waste, the disease risk they carry, and how to reduce fly problems around a building.',
+    'How house flies breed in garbage and waste, the disease risk they carry, and how to reduce fly problems',
 }

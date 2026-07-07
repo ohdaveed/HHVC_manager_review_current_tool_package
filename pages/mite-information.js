@@ -4,13 +4,13 @@ window.HHVC_PAGES['miteInfo'] = {
   type: 'Information',
   title: 'Mites and housing health',
   summary:
-    'Learn about tropical rat mites, why rodent nests must be treated before rodenticides, and how mite concerns differ from bed bugs.',
+    'Learn about rat mites, why rodent nests need treatment before rodenticides, and when to report.',
   audience: [
     'A tenant with bites, itching, or small insects they think may be mites',
     'A property owner or manager planning rodent control or responding to bites after rodent activity',
     'A resident after bird or rodent activity in or near the building',
   ],
-  reading: 'Grade 6–8',
+  reading: 'Grade 7',
   editorNote:
     'Information page. Do not provide medical diagnosis. Verify HHVC scope and PCO treatment sequencing guidance before publication. Must stay cross-linked with Keep rats and mice out for tropical rat mite / rodenticide order-of-operations.',
   sections: [
@@ -89,8 +89,14 @@ window.HHVC_PAGES['miteInfo'] = {
             'After mite treatment, remove nesting material using wet cleanup methods. Do not dry-sweep or vacuum rodent nests.',
             'Follow safe rodent cleanup steps on the rats and mice prevention page.',
           ],
-          button: 'Keep rats and mice out of your home',
-          buttonTarget: 'ratsPrevent',
+          cards: [
+            {
+              title: 'Keep rats and mice out',
+              text: 'Learn safe rodent cleanup and exclusion before using poison baits.',
+              target: 'ratsPrevent',
+              karl: 'Links: Related Information page',
+            },
+          ],
           karl: 'Body step 2 with link to rodent cleanup guidance',
         },
         {
@@ -128,8 +134,14 @@ window.HHVC_PAGES['miteInfo'] = {
             'Look for bed bug signs such as live insects, shed skins, dark spots on bedding, or bites in rows.',
             'Use the bed bug pages if bed bugs are present or suspected.',
           ],
-          button: 'Bed bug rules and prevention',
-          buttonTarget: 'bedBugsInfo',
+          cards: [
+            {
+              title: 'Bed bug rules and prevention',
+              text: 'Read bed bug prevention, treatment prep, and rental housing rules.',
+              target: 'bedBugsInfo',
+              karl: 'Links: Related Information page',
+            },
+          ],
           karl: 'Body step with secondary link to bed bug Information page',
         },
         {

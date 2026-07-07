@@ -10,7 +10,7 @@ window.HHVC_PAGES['findRecords'] = {
     'A property owner or manager reviewing violation history',
     'A neighbor or advocate researching a building address',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for an external lookup tool. Primary CTA opens xnet.sfdph.org (Residential Health Code Violations). Verify the external URL before publication.',
   sections: [
@@ -40,7 +40,7 @@ window.HHVC_PAGES['findRecords'] = {
         karl: 'Body note: External tool disclaimer',
         text: 'Complaint records are public records. Environmental Health generally does not share the name of a person who filed a complaint.',
       },
-      button: 'Open complaints and inspection lookup',
+      button: 'Open lookup tool',
       buttonUrl: 'https://xnet.sfdph.org:8443/ords/eeop/f?p=119:1',
     },
     {

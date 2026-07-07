@@ -9,7 +9,7 @@ window.HHVC_PAGES['findInspector'] = {
     'A property owner or manager coordinating with Environmental Health',
     'A building worker who needs the assigned inspector contact',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Information page placeholder. A verified district map/staff directory lookup is still BLOCKED pending HHVC confirmation, so the page CTA routes to 311 (the confirmed public contact route) instead of shipping without any working link. Do not publish staff phone numbers until HHVC confirms the public contact route.',
   sections: [
@@ -38,8 +38,14 @@ window.HHVC_PAGES['findInspector'] = {
         'Use your 311 tracking number if you already filed a report',
         'Do not share another tenant’s personal information when asking for status',
       ],
-      button: 'Contact SF311 for complaint status',
-      buttonUrl: 'https://www.sf311.org/',
+      cards: [
+        {
+          title: 'Contact 311',
+          text: 'Open the external service form.',
+          url: 'https://www.sf311.org/',
+          karl: 'Links: Body external resource',
+        },
+      ],
     },
     {
       heading: 'Related pages',

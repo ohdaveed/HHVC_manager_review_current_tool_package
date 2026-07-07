@@ -10,7 +10,7 @@ window.HHVC_PAGES['ratsReport'] = {
     'A person reporting rats or mice in a shared area',
     'An employee reporting rats or mice at work',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   sections: [
     {
       heading: 'What to do',

@@ -11,7 +11,7 @@ window.HHVC_PAGES['findHotelRecords'] = {
     'A property owner or operator of a residential hotel or shelter',
     'A tenant representative researching program inspection history',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
   sections: [
@@ -35,7 +35,7 @@ window.HHVC_PAGES['findHotelRecords'] = {
       paragraphs: [
         'The lookup opens on the Department of Public Health external site. You will leave SF.gov.',
       ],
-      button: 'Open residential hotel and shelter lookup',
+      button: 'Open hotel lookup',
       buttonUrl: 'https://sfdph.org/dph/EH/ResidentialHotels/default.asp',
     },
     {

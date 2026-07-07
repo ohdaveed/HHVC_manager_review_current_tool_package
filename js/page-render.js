@@ -34,10 +34,10 @@ document.addEventListener('click', (event) => {
 function button(label, kind = 'primary', target = null, url = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
   if (url) {
-    return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Body link to external tool or resource' : 'Button label: Primary CTA to external tool', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
+    return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Links: Body external resource' : 'Button: Primary CTA (external)', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
   }
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
-  return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Body link to related Transaction page' : 'Button label: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
+  return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Links: Related Transaction page' : 'Button: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
 }
 function renderCards(cards = []) {
   return `<div class="cards">${cards
@@ -49,12 +49,12 @@ function renderCards(cards = []) {
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3><p>${escapeHtml(c.text)}</p></article>`
+      return `<article class="card">${karlTag(c.karl || 'Related: linked page card', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3><p>${escapeHtml(c.text)}</p></article>`
     })
     .join('')}</div>`
 }
 function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.cards ? renderCards(s.cards) : ''}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout">${karlTag(s.callout.karl || 'Callout: step note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderTable(rows = []) {
   if (!rows.length) return ''

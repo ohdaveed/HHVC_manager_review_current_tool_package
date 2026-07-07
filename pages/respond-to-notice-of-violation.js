@@ -4,14 +4,14 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   type: 'Information',
   title: 'How to respond to a notice of violation',
   summary:
-    'Learn what a notice of violation means and what tenants and property owners or managers each need to do to correct cited conditions.',
+    'Learn what a notice of violation means and what tenants and owners each need to do to comply.',
   audience: [
     'A tenant who received or is affected by a notice of violation',
     'A property owner or manager responsible for building-wide corrections',
     'A building operator coordinating repairs, pest treatment, or cleanup',
     'A tenant representative helping someone understand their responsibilities',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Information page for tenants and property owners/managers. BLOCKED — confirm NOV templates, tenant-specific orders, appeal windows, and contact routes before publication. The initial notice itself carries no fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free; a fee applies only starting with the third visit (the second reinspection), per reviewer-supplied sequencing — confirm this sequencing plus current certified fee amounts (sourced as illustrative FY24-25 estimates from docs/source/hhvc-policy/2026-07-02-dph-ehb-fees-fy24-25.md) with HHVC before publication. Verify that examples of split responsibilities match current HHVC enforcement practice.',
   sections: [
@@ -90,9 +90,14 @@ window.HHVC_PAGES['noticeOfViolation'] = {
         karl: 'Body note: Tenant rights / not legal advice',
         text: 'This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization if you need help with your situation.',
       },
-      button: 'Tenant rights when reporting housing conditions',
-      buttonStyle: 'secondary',
-      buttonTarget: 'tenantRights',
+      cards: [
+        {
+          title: 'Tenant rights',
+          text: 'Open the related HHVC service page.',
+          target: 'tenantRights',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Steps everyone should follow',
@@ -173,5 +178,5 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   ],
   seoTitle: 'How to respond to a notice of violation | SF.gov',
   metaDescription:
-    'How tenants and owners respond to an Environmental Health notice of violation when both may have corrective actions.',
+    'How tenants and owners respond to an Environmental Health notice of violation and take corrective action.',
 }

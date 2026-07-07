@@ -3,15 +3,14 @@ window.HHVC_PAGES['preventHub'] = {
   slug: 'sf.gov/prevent-problems',
   type: 'Resource collection',
   title: 'Prevent problems',
-  summary:
-    'Guides and resources to help tenants, owners, and building staff prevent pests and housing health problems before they spread.',
+  summary: 'Guides to help tenants, owners, and staff prevent pests and housing health problems.',
   audience: [
     'A tenant trying to prevent pests or moisture problems',
     'A property owner or manager responsible for building maintenance',
     'A building worker who handles pest or housing health issues',
     'A resident in an SRO, residential hotel, or shelter',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   editorNote:
     'Resource collection hub for prevention Information pages. Reuses existing Information pages instead of duplicating content.',
   sections: [
@@ -119,5 +118,5 @@ window.HHVC_PAGES['preventHub'] = {
   ],
   seoTitle: 'Prevent problems | SF.gov',
   metaDescription:
-    'Prevent pests, mold, and housing health problems with HHVC guidance for tenants, owners, and building staff in San Francisco.',
+    'Prevent pests, mold, and housing health problems with HHVC guidance for tenants, owners, and building staff',
 }
