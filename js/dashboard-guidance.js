@@ -3,6 +3,7 @@
 ;(function migrateDescriptiveTextToDashboard() {
   const GUIDANCE_ID = 'dashboardGuidancePanel'
   const REFERENCE_ID = 'dashboardReferencePanel'
+  const COMPLIANCE_RULES_ID = 'dashboardComplianceRulesPanel'
   const SHORTCUTS_ID = 'dashboardShortcutsPanel'
   const STYLE_ID = 'dashboardGuidanceStyles'
 
@@ -115,6 +116,18 @@
         font-weight: 700;
       }
 
+      .dashboard-compliance-rules {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: var(--sfds-slate-2);
+        font-size: 0.78rem;
+        line-height: 1.45;
+      }
+
+      .dashboard-compliance-rules li + li {
+        margin-top: 0.35rem;
+      }
+
       [data-sidebar-copy-migrate='true'],
       [data-migrated-dashboard-copy='true'] {
         display: none !important;
@@ -157,6 +170,40 @@
       </div>
     `
     return panel
+  }
+
+  function buildComplianceRulesPanel() {
+    const panel = document.createElement('section')
+    panel.id = COMPLIANCE_RULES_ID
+    panel.className = 'dashboard-guidance-panel'
+    panel.setAttribute('aria-label', 'Karl compliance rules')
+    panel.innerHTML = `
+      <h3>Karl compliance rules (9)</h3>
+      <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
+        Overview scores every page against these rules. Other rows use saved page data; the open
+        page row is marked <strong>live</strong> and reflects sidebar edits immediately. Page
+        checks shows the same rules with live values for only the mockup page.
+      </p>
+      <ol class="dashboard-compliance-rules">
+        <li><strong>Page type</strong> — content type must be set</li>
+        <li><strong>Title</strong> — present and 80 characters or fewer</li>
+        <li><strong>Summary</strong> — present and 180 characters or fewer</li>
+        <li><strong>Audience</strong> — at least one audience entry</li>
+        <li><strong>Primary CTA</strong> — required for Transaction pages only</li>
+        <li><strong>Related links</strong> — at least 3 linked cards or action links</li>
+        <li><strong>SEO title</strong> — 60 characters or fewer</li>
+        <li><strong>Meta description</strong> — 110 characters or fewer</li>
+        <li><strong>Reading target</strong> — grade-level target must be set on the page</li>
+      </ol>
+    `
+    return panel
+  }
+
+  function mountComplianceRulesPanel() {
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    if (!helpPanel || document.getElementById(COMPLIANCE_RULES_ID)) return
+
+    helpPanel.appendChild(buildComplianceRulesPanel())
   }
 
   function buildShortcutsPanel() {
@@ -271,18 +318,16 @@
   function refresh() {
     injectStyles()
     mountGuidancePanel()
+    mountComplianceRulesPanel()
     mountShortcutsPanel()
     mountReferencePanel()
     compactSidebarCopy()
   }
 
-  // Guidance content and the sidebar copy it replaces are both static, so a
-  // couple of delayed retries at startup are enough to catch #reviewWorkspaceHelp
-  // or the sidebar mounting slightly after this script runs.
+  window.refreshDashboardGuidance = refresh
+
   function init() {
     refresh()
-    window.setTimeout(refresh, 0)
-    window.setTimeout(refresh, 250)
   }
 
   if (document.readyState === 'loading') {

@@ -429,6 +429,10 @@
       window.__mountInteractiveSitemapOnTabOpen()
     }
 
+    if (tabId === 'help') {
+      window.refreshDashboardGuidance?.()
+    }
+
     updateLocalState((state) => {
       state.ui.workspace_tab = tabId
       return state

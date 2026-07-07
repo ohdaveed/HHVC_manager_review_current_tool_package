@@ -308,6 +308,7 @@
   function init() {
     document.addEventListener('keydown', handleKeyDown)
     mountShortcutHint()
+    window.refreshDashboardGuidance?.()
   }
 
   if (document.readyState === 'loading') {
