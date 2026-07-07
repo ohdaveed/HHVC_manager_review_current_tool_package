@@ -14,7 +14,7 @@ window.HHVC_PAGES['article11Guide'] = {
   reading: 'Grade 7',
   seoTitle: 'Health Code Article 11 in plain language',
   metaDescription:
-    'Read Health Code Article 11 nuisance rules with plain-language translations for mold, rodents, wasps, and more.',
+    'Read Health Code Article 11 nuisance rules with plain-language translations for mold, rodents, animal limits, wasps, and more.',
   editorNote:
     'Reference Information page. Side-by-side tables are mockup-only on Information pages in Karl — flag for Digital Services before publication. Content sourced from compliance-standards.csv Sec. 581 rows and violation-pages-master-content.md. Verify municode URL and wasp routing nuance before publish.',
   sections: [
@@ -24,7 +24,7 @@ window.HHVC_PAGES['article11Guide'] = {
       kind: 'body',
       paragraphs: [
         'Healthy Housing and Vector Control (HHVC) enforces **Health Code Article 11** — the City rules about public health nuisances in housing and on property. Each section below shows a short excerpt from the law next to a plain-language explanation.',
-        'Use the links at the top of the page to jump to a topic like mold, rodents, or wasps. This page covers the nuisance rules HHVC inspects (Section 581). For what happens after a violation is found, see the summary at the end or visit our process pages.',
+        'Use the links at the top of the page to jump to a topic like mold, rodents, animal limits, or wasps. This page covers the nuisance rules HHVC inspects (Section 581). For what happens after a violation is found, see the summary at the end or visit our process pages.',
       ],
       button: 'View Health Code Article 11',
       buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
@@ -82,14 +82,74 @@ window.HHVC_PAGES['article11Guide'] = {
       ],
     },
     {
-      heading: 'Rodents',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(13) references Article 2 Sec. 92.',
+      heading: 'Rodents and exclusion',
+      karl: "Maps to a Title and text block with table. Sec. 581(b)(13) incorporates Article 2 Sec. 92. The 1/4-inch exclusion standard comes from HHVC Director's Rules / compliance standards, not verbatim in Sec. 92 — label clearly for legal review.",
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(13):** Any violation of Section 92 of this Code [Article 2 — Rodent Control].',
-          'Buildings and yards must stay clean and free of rats and mice. Owners must seal openings larger than 1/4 inch and keep walls in repair so rodents cannot get in. [Report rats or mice](ratsReport) · [Keep rats and mice out](ratsPrevent)',
+          'Article 11 treats rodent-control violations as a public health nuisance. If a building breaks Section 92, it can be cited under Article 11. [Report rats or mice](ratsReport) · [Keep rats and mice out](ratsPrevent)',
+        ],
+        [
+          '**Sec. 92(b):** All buildings, places and premises in the City and County shall immediately and continuously be kept in a clean and sanitary condition, and free from rodents by the owner and/or the occupant.',
+          'Owners and occupants must keep buildings and yards clean and free of rats and mice at all times — not just after a complaint.',
+        ],
+        [
+          '**Sec. 92(c):** All building and basement walls … shall be so constructed or repaired as to prevent rodents from being harbored … and all food products … shall be so protected … as to prevent rodents from gaining access.',
+          'Walls, basements, and food storage areas must be built or repaired so rodents cannot live inside them or reach food. Seal gaps and protect stored goods.',
+        ],
+        [
+          '**Sec. 92(g)(3):** No rubbish, waste or manure shall be placed … so that the same shall or may afford food or a harboring or breeding place for rodents.',
+          'You must not let trash, waste, or stored materials pile up in ways that feed rodents or give them places to nest and breed.',
+        ],
+        [
+          "**Director's Rules (vector exclusion):** Seal structural openings larger than **1/4 inch** (0.25 inches) using metal, hardware cloth, or concrete — not caulk or foam alone.",
+          'Close holes and gaps around pipes, doors, and walls that are bigger than a quarter. Use rodent-proof materials. Repair gaps around exterior doors and windows, and screen attic or crawl-space openings.',
+        ],
+      ],
+    },
+    {
+      heading: 'Number of animals',
+      karl: 'Maps to a Title and text block with table. Sec. 581(b)(12) incorporates Article 1 Sec. 37 animal limits. Verify current Sec. 37(a) text against municode before publication.',
+      kind: 'body',
+      table: [
+        ['Health code', 'In plain language'],
+        [
+          '**Sec. 581(b)(12):** Any violation of Section 37 of this Code [Article 1 — Animals].',
+          'Keeping too many animals, or keeping them in unapproved enclosures, can be a public health nuisance under Article 11.',
+        ],
+        [
+          '**Sec. 37(a) — dogs:** It shall be unlawful … to keep … more than **three dogs** of age six months or older … without obtaining a proper permit and license to operate a dog kennel.',
+          'In residential areas, you may keep up to **three dogs** age 6 months or older without a kennel permit. More than three requires a licensed kennel.',
+        ],
+        [
+          '**Sec. 37(a) — combined limit:** … more than a total of **four** of the following in any combination: dogs of age six months or older (unless part of a kennel), hares, rabbits, guinea pigs, rats, mice, gerbils, chickens, turkeys, geese, ducks, doves, pigeons, game birds, or cats.',
+          'You may keep no more than **four** total among dogs (non-kennel), cats, rabbits, pigeons, chickens, and the other small animals listed — in any mix. Example: two dogs and two cats is the maximum; a fifth animal requires a permit.',
+        ],
+        [
+          '**Sec. 37(b):** Animals listed in Sec. 37(a) must be kept in coops or enclosures approved by the Director. Outdoor coops must be at least **20 feet** from any door or window of a home.',
+          'Approved enclosures are required. Outdoor animal housing must sit at least 20 feet from doors or windows of any residence.',
+        ],
+      ],
+    },
+    {
+      heading: 'Excessive materials and pest harborage',
+      karl: "Maps to a Title and text block with table. Sec. 581(b)(18) is the statutory catch-all; excessive-clutter framing from violation-master and Director's Rules storage section. Link to garbage/clutter report page.",
+      kind: 'body',
+      table: [
+        ['Health code', 'In plain language'],
+        [
+          '**Sec. 581(b)(18):** Anything else that the Director deems to be a threat to public health and safety.',
+          'The Director can treat other dangerous conditions as nuisances. Excessive stored materials that block inspection or shelter pests can qualify.',
+        ],
+        [
+          '**Sec. 92(g)(3):** No rubbish, waste or manure shall … afford food or a harboring or breeding place for rodents.',
+          'Stored clutter — cardboard, furniture, lumber, tires, or scrap — must not pile up where rodents can nest or find food.',
+        ],
+        [
+          "**Director's Rules (storage):** Items such as crates, pallets, lumber, tires, firewood, or scrap metal must be stored to allow pest monitoring and prevent harborage. Stored items must be stacked neatly, elevated at least **6 inches** off the ground, with **6 inches** of clearance from exterior walls.",
+          'Store materials off the ground and away from walls so inspectors and pest control can see activity. Remove unneeded items. Do not let storage block pathways or hide infestations. [Report garbage or clutter](garbageReport) · [Prevent garbage problems](garbageInfo)',
         ],
       ],
     },
