@@ -11,6 +11,8 @@ window.HHVC_PAGES['wnvBirdReport'] = {
     'A neighbor or worker who sees a dead crow, jay, raven, sparrow, finch, or hawk',
   ],
   reading: 'Grade 6',
+  primaryCta: 'Report dead bird',
+  topicTag: 'Topic: Mosquito and vector control',
   editorNote:
     'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME placeholder — pickup criteria, priority species list, seasonal workflow, and CDPH routing below are illustrative example content for mockup review; confirm actual current HHVC protocol with SME before publication.',
   editorStatus: 'placeholder',
@@ -80,6 +82,7 @@ window.HHVC_PAGES['wnvBirdReport'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries.',
       kind: 'placement',
       cards: [

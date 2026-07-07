@@ -20,6 +20,8 @@ _HHVC Web Governance and Content Standards Manual_
 
 This chapter establishes the approved, platform-validated use of all **26 Karl CMS design components** on Healthy Housing and Vector Control (HHVC) web pages [283]. It provides binding design rules, supported content types, layout restrictions, and character limits to ensure 100% compliance with SF.gov’s unified look and feel and federal ADA Title II accessibility mandates [1, 195, 283].
 
+For **which page types expose which fields** (Information, Transaction, Resource Collection, Campaign), see [`docs/source/hhvc-policy/karl-content-type-field-reference.md`](../docs/source/hhvc-policy/karl-content-type-field-reference.md). This chapter remains authoritative for _how_ to use each component; the field reference is authoritative for _where_ each component appears in Karl page templates.
+
 ---
 
 ### **6.2 Master Component Catalog and Mapping**

@@ -10,6 +10,8 @@ window.HHVC_PAGES['moldReport'] = {
     'A person reporting mold in an SRO, residential hotel, or shared residential area',
   ],
   reading: 'Grade 6',
+  primaryCta: 'Report through 311',
+  topicTag: 'Topic: Pests and housing problems',
   seoTitle: 'Report mold from humidity or condensation',
   metaDescription: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
   sections: [
@@ -103,6 +105,7 @@ window.HHVC_PAGES['moldReport'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries.',
       kind: 'placement',
       cards: [

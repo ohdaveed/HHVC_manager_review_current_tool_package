@@ -39,10 +39,12 @@
     "format": "prettier --write .",
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
-    "// test": "Runs the test suite using Bun's test runner",
-    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/index-html-checks.test.js",
+    "// test": "Runs the unit test suite (Playwright e2e specs live in e2e/ — use test:e2e)",
+    "test": "bun test",
     "// test:e2e": "Playwright end-to-end tests (starts static server on :8080)",
     "test:e2e": "playwright test",
+    "// prepare:e2e": "Install Chromium for Playwright (run once per environment)",
+    "prepare:e2e": "playwright install chromium",
     "// vendor:browser": "Rebuild IIFE bundles for Fuse.js and defu used by index.html",
     "vendor:browser": "bun build node_modules/fuse.js/dist/fuse.basic.mjs --outfile=js/vendor/fuse.js --format=iife --global-name=Fuse && bun build node_modules/defu/dist/defu.mjs --outfile=js/vendor/defu.js --format=iife --global-name=defu"
   }

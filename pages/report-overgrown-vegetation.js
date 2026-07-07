@@ -11,6 +11,8 @@ window.HHVC_PAGES['vegetationReport'] = {
     'An employee reporting a pest or vector concern at work',
   ],
   reading: 'Grade 6',
+  primaryCta: 'Report through 311',
+  topicTag: 'Topic: Pests and housing problems',
   sections: [
     {
       heading: 'What to do',
@@ -92,6 +94,7 @@ window.HHVC_PAGES['vegetationReport'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 6 cards below = 6 related "Page" entries.',
       kind: 'placement',
       cards: [
