@@ -35,6 +35,7 @@ const REVIEW_RECORD_FIELDS = [
     today,
     csvEscape,
     toCsv,
+    parseCsv,
     downloadFile,
     debounce,
     throttle,
@@ -221,6 +222,59 @@ function csvEscape(value) {
  */
 function toCsv(rows) {
   return rows.map((row) => row.map(csvEscape).join(',')).join('\n') + '\n'
+}
+
+/**
+ * Parse CSV text into rows of cell values, inverse of toCsv/csvEscape.
+ * Handles quoted fields, doubled-quote escaping, and CRLF/LF line endings.
+ * @param {string} text
+ * @returns {Array<Array<string>>}
+ */
+function parseCsv(text) {
+  const rows = []
+  let row = []
+  let field = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text.charAt(i)
+    const next = text.charAt(i + 1)
+
+    if (inQuotes) {
+      if (ch === '"' && next === '"') {
+        field += '"'
+        i += 1
+      } else if (ch === '"') {
+        inQuotes = false
+      } else {
+        field += ch
+      }
+      continue
+    }
+
+    if (ch === '"') {
+      inQuotes = true
+    } else if (ch === ',') {
+      row.push(field)
+      field = ''
+    } else if (ch === '\n') {
+      row.push(field)
+      rows.push(row)
+      row = []
+      field = ''
+    } else if (ch === '\r') {
+      // ignore; \r\n handled via the \n branch above
+    } else {
+      field += ch
+    }
+  }
+
+  if (field.length || row.length) {
+    row.push(field)
+    rows.push(row)
+  }
+
+  return rows
 }
 
 /**
