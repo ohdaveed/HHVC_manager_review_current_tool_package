@@ -10,6 +10,13 @@ window.HHVC_PAGES['bedBugsReport'] = {
     'A person reporting bed bugs in rental housing, an SRO, or a residential hotel',
   ],
   reading: 'Grade 6',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'The City will not share your name or contact information with your landlord or property manager.',
+      'If you rent, notify your landlord about the problem and allow 72 hours for them to start fixing it unless the problem is urgent.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

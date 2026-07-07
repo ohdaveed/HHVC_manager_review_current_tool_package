@@ -10,22 +10,14 @@ window.HHVC_PAGES['payFee'] = {
     'Property managers and billing contacts helping an owner pay or understand the fee',
   ],
   reading: 'Grade 7',
+  whatToKnow: {
+    thingsToKnow: [
+      'Have your invoice, property address, or account information ready before you start.',
+      'Use the payment method listed on your annual invoice when one is provided.',
+      'Fee amounts vary by building — check your invoice for the exact amount.',
+    ],
+  },
   sections: [
-    {
-      heading: 'Before you pay',
-      karl: 'Body: Before you pay',
-      kind: 'body',
-      paragraphs: [
-        'Have your invoice, property address, or account information ready before you start.',
-        'Use the payment method listed on your annual invoice when one is provided.',
-      ],
-      bullets: [
-        'Your invoice or account information, if you received one',
-        'The property address',
-        'The name and contact information for the billing contact',
-        'The payment method allowed on your invoice',
-      ],
-    },
     {
       heading: 'Who may need to pay',
       karl: 'Body: Who may need to pay',

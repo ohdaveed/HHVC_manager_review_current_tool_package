@@ -136,6 +136,12 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       kind: 'placement',
       cards: [
         {
+          title: 'Bed bug forms and guides',
+          text: 'Download Director’s Rules, tenant preparation checklists, and owner response guides.',
+          target: 'bedBugForms',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
           title: 'Report bed bugs',
           text: 'Report an active bed bug problem through 311.',
           target: 'bedBugsReport',

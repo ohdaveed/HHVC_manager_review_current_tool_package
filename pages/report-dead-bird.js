@@ -11,6 +11,13 @@ window.HHVC_PAGES['wnvBirdReport'] = {
     'A neighbor or worker who sees a dead crow, jay, raven, sparrow, finch, or hawk',
   ],
   reading: 'Grade 6',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'Do not touch the bird with bare hands.',
+      'CDPH may arrange pickup for West Nile virus testing depending on species and condition.',
+    ],
+  },
   editorNote:
     'Transaction page for West Nile dead bird surveillance. Primary CTA: CDPH westnile.ca.gov (external). In Karl: set Button screenreader label to “Go to California dead bird report form.” SME placeholder — pickup criteria, priority species list, seasonal workflow, and CDPH routing below are illustrative example content for mockup review; confirm actual current HHVC protocol with SME before publication.',
   sections: [

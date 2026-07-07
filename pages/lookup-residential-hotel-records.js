@@ -12,6 +12,13 @@ window.HHVC_PAGES['findHotelRecords'] = {
     'A tenant representative researching program inspection history',
   ],
   reading: 'Grade 7',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'Look up inspection and program records for SROs, residential hotels, and emergency shelters.',
+      'The lookup tool may open on an external DPH site — you will leave SF.gov.',
+    ],
+  },
   editorNote:
     'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
   sections: [

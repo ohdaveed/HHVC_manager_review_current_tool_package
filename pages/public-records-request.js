@@ -11,6 +11,12 @@ window.HHVC_PAGES['publicRecords'] = {
     'A journalist or researcher requesting public records',
   ],
   reading: 'Grade 7',
+  whatToKnow: {
+    thingsToKnow: [
+      'Many complaint and inspection records are already available through the online lookup tools.',
+      'Have the property address, complaint number, or date range ready for your request.',
+    ],
+  },
   editorNote:
     'SF.gov landing page for the citywide public records service (NextRequest). Primary CTA is external. Verify whether HHVC needs a program-specific intro or routes entirely to the citywide portal.',
   sections: [

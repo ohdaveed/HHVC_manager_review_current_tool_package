@@ -33,6 +33,11 @@ RULES = [
         'message': 'Button label exceeds 25 characters',
     },
     {
+        'name': 'table_on_information',
+        'pattern': r"type: 'Information'[\s\S]*?table:",
+        'message': 'Information page has a table — Tables are Report-only in Karl',
+    },
+    {
         'name': 'table_width',
         'pattern': r"table:\s*\[[\s\S]*?\]",
         'message': 'Table may exceed 3 columns — inspect manually',

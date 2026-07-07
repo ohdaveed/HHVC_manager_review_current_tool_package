@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['mosquitoWorkshop'] = {
   slug: 'sf.gov/mosquito-education-workshop',
-  type: 'Information',
+  type: 'Campaign',
   title: 'Free mosquito education workshop',
   summary:
     'Request a free mosquito science workshop for schools, camps, museums, and science fairs.',
@@ -13,15 +13,24 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Outreach page. Karl content type: use Information if this stays reference + request link; use Campaign if HHVC treats it as an ongoing program with spotlight/top facts. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
+    'Campaign page for ongoing HHVC mosquito education outreach. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
+  spotlight: {
+    title: 'Bring mosquito science to your students',
+    text: 'Healthy Housing and Vector Control offers a free mosquito education workshop with interactive science stations where students explore mosquito biology, breeding habitats, and disease prevention.',
+    imageAlt: 'Students at a hands-on mosquito science workshop station',
+  },
+  topFacts: [
+    '**Free City service** for eligible schools, summer camps, museums, and science fairs in San Francisco.',
+    'Designed for **elementary and middle school** audiences with microscopes, larvae displays, and prevention activities.',
+    'Activities align with **California classroom science standards** in life science and public health.',
+  ],
   sections: [
     {
-      heading: 'Bring mosquito science to your students',
-      karl: 'Body: Campaign overview',
+      heading: 'Program overview',
+      karl: 'Body: Campaign additional content',
       kind: 'body',
       paragraphs: [
-        'Healthy Housing and Vector Control offers a free mosquito education workshop for youth audiences in San Francisco.',
-        'Our team sets up interactive science stations where students can explore mosquito biology, breeding habitats, and disease prevention through hands-on learning.',
+        'Our team sets up mobile science stations that let students observe mosquitoes up close and learn how small changes at home can prevent breeding.',
       ],
       callout: {
         karl: 'Body note: Free program highlight',

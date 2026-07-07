@@ -10,6 +10,13 @@ window.HHVC_PAGES['moldReport'] = {
     'A person reporting mold in an SRO, residential hotel, or shared residential area',
   ],
   reading: 'Grade 6',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'The City will not share your name or contact information with your landlord or property manager.',
+      'If you rent, notify your landlord about the problem and allow 72 hours for them to start fixing it unless the problem is urgent.',
+    ],
+  },
   seoTitle: 'Report mold from humidity or condensation',
   metaDescription: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
   sections: [

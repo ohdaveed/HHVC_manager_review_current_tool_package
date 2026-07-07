@@ -105,4 +105,24 @@ describe('page-render.js escaping', () => {
     const html = ctx.renderSection({ heading: 'Heading', button: PAYLOAD, karl: 'Body section' })
     assertEscaped(html)
   })
+
+  test('renderWhatToKnow escapes cost and thingsToKnow', () => {
+    const html = ctx.renderWhatToKnow({
+      cost: PAYLOAD,
+      thingsToKnow: [PAYLOAD],
+    })
+    assertEscaped(html)
+  })
+
+  test('renderDocuments escapes document fields', () => {
+    const html = ctx.renderDocuments([
+      {
+        title: PAYLOAD,
+        description: PAYLOAD,
+        date: PAYLOAD,
+        url: `https://example.com/${PAYLOAD}`,
+      },
+    ])
+    assertEscaped(html)
+  })
 })

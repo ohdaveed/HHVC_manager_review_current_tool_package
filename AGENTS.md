@@ -41,3 +41,4 @@ Notable, non-obvious points:
 ## Karl CMS Configuration
 
 - **Login URL:** The login page for Karl CMS is `https://api.sf.gov/sso/login?next=/admin/`. Use this URL when asked about or required to access/login to Karl CMS.
+- **Content-type field reference:** [`docs/source/hhvc-policy/karl-content-type-field-reference.md`](docs/source/hhvc-policy/karl-content-type-field-reference.md) maps Information, Transaction, Resource Collection, and Campaign fields to mockup `pages/*.js` shapes. Run `python3 audit_karl_components.py` for component-rule checks (title/description length, no buttons on Information pages, no tables on Information pages).

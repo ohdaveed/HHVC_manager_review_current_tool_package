@@ -12,6 +12,7 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  findInformationTableViolations,
 } = require('./data-checks')
 
 const root = path.resolve(__dirname, '..')
@@ -37,6 +38,7 @@ const files = [
   'pages/report-cockroaches.js',
   'pages/report-bed-bugs.js',
   'pages/bed-bug-rules-prevention.js',
+  'pages/bed-bug-forms-and-guides.js',
   'pages/report-mosquitoes.js',
   'pages/report-dead-bird.js',
   'pages/report-pigeons.js',
@@ -106,6 +108,11 @@ const listFormatViolations = findListFormatViolations(parsed.data.pages)
 if (listFormatViolations.length) {
   const { pageKey, path, count } = listFormatViolations[0]
   throw new Error(`${pageKey} ${path} has ${count} items; use bullets[] for lists of 3 or more`)
+}
+
+const informationTableViolations = findInformationTableViolations(parsed.data.pages)
+if (informationTableViolations.length) {
+  throw new Error(`${informationTableViolations[0].pageKey} has a table on an Information page`)
 }
 
 console.log('validated', Object.keys(parsed.data.pages).length, 'pages')

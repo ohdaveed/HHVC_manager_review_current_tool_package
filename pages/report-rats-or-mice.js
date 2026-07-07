@@ -11,6 +11,13 @@ window.HHVC_PAGES['ratsReport'] = {
     'An employee reporting rats or mice at work',
   ],
   reading: 'Grade 6',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'The City will not share your name or contact information with your landlord or property manager.',
+      'If you rent, notify your landlord about the problem and allow 72 hours for them to start fixing it unless the problem is urgent.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

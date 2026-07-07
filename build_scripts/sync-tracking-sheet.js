@@ -26,6 +26,7 @@ const PAGE_FILES = [
   'pages/report-cockroaches.js',
   'pages/report-bed-bugs.js',
   'pages/bed-bug-rules-prevention.js',
+  'pages/bed-bug-forms-and-guides.js',
   'pages/report-mosquitoes.js',
   'pages/report-dead-bird.js',
   'pages/report-pigeons.js',

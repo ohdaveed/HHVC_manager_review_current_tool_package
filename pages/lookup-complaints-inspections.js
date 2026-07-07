@@ -11,6 +11,13 @@ window.HHVC_PAGES['findRecords'] = {
     'A neighbor or advocate researching a building address',
   ],
   reading: 'Grade 7',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'Search investigated complaints and inspections by street address, complaint ID, or location ID.',
+      'The lookup tool opens on an external DPH site — you will leave SF.gov.',
+    ],
+  },
   editorNote:
     'SF.gov landing page for an external lookup tool. Primary CTA opens xnet.sfdph.org (Residential Health Code Violations). Verify the external URL before publication.',
   sections: [

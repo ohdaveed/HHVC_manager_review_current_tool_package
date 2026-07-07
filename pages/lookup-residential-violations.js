@@ -11,6 +11,13 @@ window.HHVC_PAGES['findViolations'] = {
     'A housing advocate checking enforcement history for an address',
   ],
   reading: 'Grade 7',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'Search violation and inspection history for residential buildings under the SF Health Code.',
+      'The lookup tool opens on an external DPH site — you will leave SF.gov.',
+    ],
+  },
   editorNote:
     'Alias-style lookup page focused on violations language. Primary CTA uses the same verified xnet Residential Health Code Violations tool as findRecords. Consider merging with findRecords if editors prefer one combined lookup page.',
   sections: [

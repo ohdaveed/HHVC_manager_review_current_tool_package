@@ -1,9 +1,15 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['afterReport'] = {
-  slug: 'sf.gov/information/what-happens-after-you-report-housing-pest-problem',
-  type: 'Information',
+  slug: 'sf.gov/what-happens-after-you-report-housing-pest-problem',
+  type: 'Step-by-step',
   title: 'What happens after you report a housing or pest problem',
   summary: 'Learn what may happen after a 311 report is sent to Environmental Health.',
+  intro:
+    'This guide walks through how a 311 housing or pest report may move from intake to Environmental Health review, inspector contact, and a possible inspection.',
+  partOf: {
+    title: 'Report a problem',
+    target: 'reportHub',
+  },
   audience: [
     'A person who filed a 311 report',
     'A tenant or tenant representative waiting for follow-up',

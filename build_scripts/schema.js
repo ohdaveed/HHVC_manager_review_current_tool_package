@@ -11,6 +11,30 @@ const cardSchema = z.object({
   karl: z.string().optional(),
 })
 
+const documentSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  date: z.string().optional(),
+  url: z.string().min(1),
+  karl: z.string().optional(),
+})
+
+const whatToKnowSchema = z.object({
+  cost: z.string().optional(),
+  thingsToKnow: z.array(z.string()).optional(),
+})
+
+const spotlightSchema = z.object({
+  title: z.string().min(1),
+  text: z.string().min(1),
+  imageAlt: z.string().optional(),
+})
+
+const partOfSchema = z.object({
+  title: z.string().min(1),
+  target: z.string().min(1),
+})
+
 const stepSchema = z.object({
   title: z.string().min(1),
   text: z.array(z.string()).optional(),
@@ -46,6 +70,7 @@ const sectionSchema = z.object({
       karl: z.string().optional(),
     })
     .optional(),
+  documents: z.array(documentSchema).optional(),
 })
 
 const pageSchema = z.object({
@@ -59,6 +84,11 @@ const pageSchema = z.object({
   metaDescription: z.string().optional(),
   primaryCta: z.string().optional(),
   editorNote: z.string().optional(),
+  whatToKnow: whatToKnowSchema.optional(),
+  topFacts: z.array(z.string()).optional(),
+  spotlight: spotlightSchema.optional(),
+  intro: z.string().optional(),
+  partOf: partOfSchema.optional(),
   sections: z.array(sectionSchema).optional(),
 })
 
@@ -67,4 +97,14 @@ const dataSchema = z.object({
   order: z.array(z.tuple([z.string(), z.string()])),
 })
 
-module.exports = { cardSchema, stepSchema, sectionSchema, pageSchema, dataSchema }
+module.exports = {
+  cardSchema,
+  documentSchema,
+  stepSchema,
+  sectionSchema,
+  pageSchema,
+  dataSchema,
+  whatToKnowSchema,
+  spotlightSchema,
+  partOfSchema,
+}

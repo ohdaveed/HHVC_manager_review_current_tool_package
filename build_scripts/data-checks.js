@@ -110,6 +110,25 @@ function findListFormatViolations(pages) {
   return violations
 }
 
+/**
+ * Find Information pages that include a section table (invalid in Karl).
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string}>}
+ */
+function findInformationTableViolations(pages) {
+  const violations = []
+  for (const [pageKey, page] of Object.entries(pages)) {
+    if (page.type !== 'Information') continue
+    for (const section of page.sections || []) {
+      if (section.table && section.table.length) {
+        violations.push({ pageKey })
+        break
+      }
+    }
+  }
+  return violations
+}
+
 module.exports = {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -117,4 +136,5 @@ module.exports = {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  findInformationTableViolations,
 }
