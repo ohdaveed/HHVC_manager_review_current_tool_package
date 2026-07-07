@@ -4,12 +4,12 @@ window.HHVC_PAGES['payFee'] = {
   type: 'Transaction',
   title: 'Pay your annual Healthy Housing fee for apartment buildings',
   summary:
-    'Pay or learn about the annual Healthy Housing program fee for San Francisco apartment buildings with 3 or more rental units.',
+    'Pay or learn about the annual Healthy Housing fee for apartment buildings with 3 or more units.',
   audience: [
     'People who own a residential building in San Francisco',
     'Property managers and billing contacts helping an owner pay or understand the fee',
   ],
-  reading: 'Grade 6 to 8',
+  reading: 'Grade 7',
   sections: [
     {
       heading: 'Before you pay',
@@ -43,7 +43,7 @@ window.HHVC_PAGES['payFee'] = {
       paragraphs: [
         'Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.',
       ],
-      button: 'Pay your Healthy Housing fee',
+      button: 'Pay program fee',
     },
     {
       heading: 'If you need help',

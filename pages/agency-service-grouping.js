@@ -10,7 +10,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     'A property owner or manager trying to prevent pests',
     'A building worker who handles pest or housing health issues',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   seoTitle: 'Pests and housing problems',
   metaDescription: 'Report or prevent pests, mold, garbage, and other housing health problems.',
   editorNote:

@@ -4,13 +4,13 @@ window.HHVC_PAGES['vegetationInfo'] = {
   type: 'Information',
   title: 'Prevent overgrown vegetation',
   summary:
-    'Learn how overgrown plants, weeds, and brush can shelter pests and vectors, and how to keep vegetation trimmed and managed.',
+    'Learn how overgrown plants shelter pests and how to keep vegetation trimmed near buildings.',
   audience: [
     'A tenant or resident concerned about overgrown plants, weeds, or brush',
     'A property owner or manager responsible for landscaping and grounds',
     'A building employee or maintenance worker who trims vegetation or clears yards',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'New Information page — pairs with the existing report-overgrown-vegetation.js Transaction page. Illustrative mockup content for manager review; verify against current HHVC/DPH vegetation guidance before publication.',
   sections: [
@@ -47,9 +47,14 @@ window.HHVC_PAGES['vegetationInfo'] = {
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
         'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
       ],
-      button: 'Report overgrown vegetation',
-      buttonStyle: 'secondary',
-      buttonTarget: 'vegetationReport',
+      cards: [
+        {
+          title: 'Report overgrown vegetati',
+          text: 'Open the related HHVC service page.',
+          target: 'vegetationReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Related pages',
@@ -79,5 +84,5 @@ window.HHVC_PAGES['vegetationInfo'] = {
   ],
   seoTitle: 'Prevent overgrown vegetation | SF.gov',
   metaDescription:
-    'How overgrown plants, weeds, and brush shelter pests and vectors, and how to keep vegetation trimmed and managed.',
+    'How overgrown plants, weeds, and brush shelter pests and vectors, and how to keep vegetation trimmed and',
 }

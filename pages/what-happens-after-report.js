@@ -10,7 +10,7 @@ window.HHVC_PAGES['afterReport'] = {
     'An employee who reported a pest or vector concern',
     'A property owner or manager responding to a reported condition',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   sections: [
     {
       heading: 'How a report moves through the City',
@@ -70,9 +70,14 @@ window.HHVC_PAGES['afterReport'] = {
         "Tenants have rights when they ask for repairs or report housing conditions to the City. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
         'A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department.',
       ],
-      button: 'Tenant rights and reporting',
-      buttonStyle: 'secondary',
-      buttonTarget: 'tenantRights',
+      cards: [
+        {
+          title: 'Tenant rights',
+          text: 'Open the related HHVC service page.',
+          target: 'tenantRights',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'If a problem is found',
@@ -87,7 +92,7 @@ window.HHVC_PAGES['afterReport'] = {
         'Standard Repairs and Mold (30 days): General sanitation problems, minor gaps/cracks, and mold remediation must be completed within 30 days.',
         'Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.',
         'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).',
-        "Persistent violations can result in citations, administrative fines of up to $1,000 per day, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
+        "Persistent violations can result in citations, administrative fines under Health Code Section 600, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
       ],
     },
     {

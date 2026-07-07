@@ -4,14 +4,14 @@ window.HHVC_PAGES['recordsHub'] = {
   type: 'Resource collection',
   title: 'Look up building records',
   summary:
-    'Find past inspection reports, search violations, look up your assigned inspector, or request public records for a building.',
+    'Find inspection reports, violations, your district inspector, or request public records.',
   audience: [
     'A tenant checking complaint or inspection history for a building',
     'A property owner or manager reviewing past violations or inspections',
     'A resident of an SRO, residential hotel, or shelter',
     'A neighbor or advocate researching building health records',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Resource collection hub. Groups building lookup tools and formal requests. Three child pages link to external tools on xnet.sfdph.org or citywide services.',
   sections: [

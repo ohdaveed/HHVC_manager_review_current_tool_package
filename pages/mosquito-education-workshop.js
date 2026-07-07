@@ -4,14 +4,14 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   type: 'Information',
   title: 'Free mosquito education workshop',
   summary:
-    'Request a free interactive mosquito science workshop for schools, summer camps, museums, and science fairs in San Francisco.',
+    'Request a free mosquito science workshop for schools, camps, museums, and science fairs.',
   audience: [
     'A teacher or school administrator planning a classroom or campus science activity',
     'A summer camp director or youth program coordinator',
     'A museum educator or science fair organizer',
     'A parent or community group leader hosting a youth science event in San Francisco',
   ],
-  reading: 'Grade 5–7',
+  reading: 'Grade 7',
   editorNote:
     'Outreach page. Karl content type: use Information if this stays reference + request link; use Campaign if HHVC treats it as an ongoing program with spotlight/top facts. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   sections: [
@@ -84,8 +84,14 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
         'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability. Submitted requests currently route to the Mosquito Control Program for scheduling (illustrative — confirm the actual intake backend with HHVC before publication).',
         'You can also contact the Mosquito Control Program directly if you have questions before submitting the form.',
       ],
-      button: 'Request a workshop online',
-      buttonUrl: '/forms/mosquito-workshop-request/',
+      cards: [
+        {
+          title: 'Request a workshop online',
+          text: 'Open the external service form.',
+          url: '/forms/mosquito-workshop-request/',
+          karl: 'Links: Body external resource',
+        },
+      ],
       cards: [
         {
           title: 'Workshop request form',
@@ -143,5 +149,5 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   seoTitle: 'Free mosquito education workshop | SF.gov',
   metaDescription:
-    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and camps.',
+    'Request a free HHVC mosquito workshop with microscopes, live larvae, and hands-on science for schools and',
 }

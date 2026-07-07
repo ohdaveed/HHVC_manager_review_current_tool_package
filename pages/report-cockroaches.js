@@ -10,7 +10,7 @@ window.HHVC_PAGES['cockroachesReport'] = {
     'A person reporting cockroaches in an SRO kitchen, bathroom, or shared area',
     'An employee reporting cockroaches at work',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   sections: [
     {
       heading: 'What to do',

@@ -4,13 +4,13 @@ window.HHVC_PAGES['garbageInfo'] = {
   type: 'Information',
   title: 'Prevent garbage and clutter problems',
   summary:
-    'Learn how uncovered garbage, debris, and clutter attract pests, and how to manage waste and storage areas safely.',
+    'Learn how garbage, debris, and clutter attract pests and how to manage waste and storage areas.',
   audience: [
     'A tenant or resident concerned about garbage, debris, or clutter',
     'A property owner or manager responsible for waste and storage areas',
     'A building employee or maintenance worker who services garbage areas',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'New Information page — pairs with the existing report-garbage-clutter.js Transaction page. Illustrative mockup content for manager review; verify against current HHVC/DPH sanitation guidance before publication.',
   sections: [
@@ -47,9 +47,14 @@ window.HHVC_PAGES['garbageInfo'] = {
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
         'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
       ],
-      button: 'Report garbage or clutter',
-      buttonStyle: 'secondary',
-      buttonTarget: 'garbageReport',
+      cards: [
+        {
+          title: 'Report garbage or clutter',
+          text: 'Open the related HHVC service page.',
+          target: 'garbageReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Related pages',

@@ -4,13 +4,13 @@ window.HHVC_PAGES['pigeonInfo'] = {
   type: 'Information',
   title: 'Pigeons and housing health',
   summary:
-    'Learn how pigeon roosting and droppings can affect housing health and when Environmental Health may review the problem.',
+    'Learn how pigeon roosting and droppings affect housing health and when to report to HHVC.',
   audience: [
     'A tenant affected by pigeon roosting, droppings, or odor',
     'A property owner or manager maintaining roofs, balconies, or courtyards',
     'A building worker cleaning shared exterior areas with bird activity',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Information page for bird-related vector and nuisance conditions. Verify HHVC scope for bird complaints vs. referrals to other agencies before publication. DPH public complaint scope includes birds as disease vectors.',
   sections: [
@@ -108,5 +108,5 @@ window.HHVC_PAGES['pigeonInfo'] = {
   ],
   seoTitle: 'Pigeons and housing health | SF.gov',
   metaDescription:
-    'How pigeon roosting and droppings affect housing health and when to report the problem to Environmental Health.',
+    'How pigeon roosting and droppings affect housing health and when to report the problem to Environmental',
 }

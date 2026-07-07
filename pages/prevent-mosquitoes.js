@@ -9,7 +9,7 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     'A property owner or manager looking for best practices',
     'A building employee or maintenance worker who can remove standing water',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'Information page. New "Why it matters" health-harm section added — verify West Nile virus claims against current CDC/SFDPH guidance before publication.',
   sections: [
@@ -93,9 +93,14 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
         'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
       ],
-      button: 'Report mosquitoes',
-      buttonStyle: 'secondary',
-      buttonTarget: 'mosquitoesReport',
+      cards: [
+        {
+          title: 'Report mosquitoes',
+          text: 'Open the related HHVC service page.',
+          target: 'mosquitoesReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Related pages',

@@ -10,7 +10,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
     'People who own or manage a residential building in San Francisco',
     'Building staff or maintenance staff who help prevent indoor moisture problems',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   sections: [
     {
       heading: 'Why it matters',
@@ -109,20 +109,20 @@ window.HHVC_PAGES['reduceMoisture'] = {
         'Leaks and water intrusion should be addressed quickly. Tell your property owner or manager in writing if you rent and you see a leak, water stain, or recurring moisture problem.',
       ],
       bullets: [
-        'Dripping pipes',
-        'Roof leaks',
-        'Window leaks',
+        'Dripping pipes (minor leaks — report major plumbing failures to DBI)',
+        'Roof leaks (report structural roof leaks to the Department of Building Inspection (DBI))',
+        'Window leaks (report broken windows or structural leaks to DBI)',
         'Water heater leaks',
         'Wet cabinets or flooring',
         'Recurring water stains',
       ],
     },
     {
-      heading: 'Clean small mold areas safely',
-      karl: 'Body: Cleaning small mold',
+      heading: 'Clean minor mold patches safely (under 10 sq ft)',
+      karl: 'Body: Tenant-scale mold cleanup under enforcement threshold',
       kind: 'body',
       paragraphs: [
-        'For small mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so.',
+        'For tenant-scale mold areas under 10 square feet, clean non-porous surfaces with soap and water when it is safe to do so. HHVC may inspect when mold on a wall or ceiling covers 10 square feet or more.',
       ],
       bullets: [
         'Do not paint over mold. Remove the mold first.',
@@ -168,9 +168,14 @@ window.HHVC_PAGES['reduceMoisture'] = {
       paragraphs: [
         'Use the reporting page if visible mold affects walls or ceilings and covers 10 square feet or more, moisture or mold keeps coming back, the property owner does not respond, or it affects a shared SRO area.',
       ],
-      button: 'Report mold, moisture, or condensation problems',
-      buttonStyle: 'secondary',
-      buttonTarget: 'moldReport',
+      cards: [
+        {
+          title: 'Report mold',
+          text: 'Open the related HHVC service page.',
+          target: 'moldReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Related pages',

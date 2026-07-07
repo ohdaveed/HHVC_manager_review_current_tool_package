@@ -4,13 +4,13 @@ window.HHVC_PAGES['findViolations'] = {
   type: 'Transaction',
   title: 'Look up residential health code violations',
   summary:
-    'Search violation and inspection history for residential buildings enforced under the San Francisco Health Code.',
+    'Search violation and inspection history for residential buildings under the SF Health Code.',
   audience: [
     'A tenant researching prior violations at a building',
     'A property owner reviewing open or past notices of violation',
     'A housing advocate checking enforcement history for an address',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Alias-style lookup page focused on violations language. Primary CTA uses the same verified xnet Residential Health Code Violations tool as findRecords. Consider merging with findRecords if editors prefer one combined lookup page.',
   sections: [
@@ -28,7 +28,7 @@ window.HHVC_PAGES['findViolations'] = {
       karl: 'Body: Primary CTA to external xnet violation search',
       kind: 'body',
       paragraphs: ['You will leave SF.gov to use the Department of Public Health records site.'],
-      button: 'Search residential violations',
+      button: 'Search violations',
       buttonUrl: 'https://xnet.sfdph.org:8443/ords/eeop/f?p=119:1',
     },
     {

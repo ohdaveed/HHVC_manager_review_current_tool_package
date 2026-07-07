@@ -4,13 +4,13 @@ window.HHVC_PAGES['mosquitoControl'] = {
   type: 'Information',
   title: 'Mosquito Control Program',
   summary:
-    'Learn about San Francisco mosquito surveillance, catch-basin treatment, and how to report standing water or unusual mosquito activity.',
+    'Learn about mosquito surveillance, catch-basin treatment, and how to report standing water.',
   audience: [
     'A resident reporting standing water or unusual mosquito activity',
     'A property owner or manager maintaining yards, gutters, or catch basins',
     'A building worker who can remove standing water around a property',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for Vector Control / Mosquito Control Program resources. Primary CTA opens SFMosquito.org. Verify phone numbers and external URLs before publication.',
   sections: [
@@ -34,9 +34,14 @@ window.HHVC_PAGES['mosquitoControl'] = {
         'Call 311 within San Francisco or (415) 701-2311 from outside the city',
         'Contact the Mosquito Control Program at 415-252-3806 for unusual mosquito activity',
       ],
-      button: 'Report mosquitoes through 311',
-      buttonStyle: 'secondary',
-      buttonTarget: 'mosquitoesReport',
+      cards: [
+        {
+          title: 'Report mosquitoes',
+          text: 'Open the related HHVC service page.',
+          target: 'mosquitoesReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'More mosquito resources',

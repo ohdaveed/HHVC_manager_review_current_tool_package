@@ -11,7 +11,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     'A property owner or manager looking for bed bug prevention and control requirements',
     'Building staff or maintenance staff supporting bed bug prevention',
   ],
-  reading: 'Grade 6',
+  reading: 'Grade 7',
   editorNote:
     'Information page. Official Director’s Rules PDF is on sfdph.org (not Google Drive). PDF accessibility: consider an HTML summary on SF.gov if Karl editors require a non-PDF primary source. Tenant guidelines PDF is internal reference in docs/source/hhvc-policy/.',
   sections: [
@@ -121,9 +121,14 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if there is an active bed bug problem and the property owner or manager does not respond. Do not wait 72 hours for urgent health or safety concerns.',
       ],
-      button: 'Report bed bugs',
-      buttonStyle: 'secondary',
-      buttonTarget: 'bedBugsReport',
+      cards: [
+        {
+          title: 'Report bed bugs',
+          text: 'Open the related HHVC service page.',
+          target: 'bedBugsReport',
+          karl: 'Links: Related Transaction page',
+        },
+      ],
     },
     {
       heading: 'Related pages',

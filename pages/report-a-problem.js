@@ -4,14 +4,14 @@ window.HHVC_PAGES['reportHub'] = {
   type: 'Resource collection',
   title: 'Report a problem',
   summary:
-    'Choose the right page to report pests, mold, garbage, clutter, or other housing health problems that HHVC may review.',
+    'Choose the right page to report pests, mold, garbage, clutter, or other HHVC housing problems.',
   audience: [
     'A tenant with a pest or housing health problem',
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A neighbor reporting a housing health nuisance',
     'A building worker who handles pest or housing health issues',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   editorNote:
     'Resource collection hub for report Transaction pages. Reuses existing Transaction pages instead of duplicating content.',
   sections: [
@@ -119,5 +119,5 @@ window.HHVC_PAGES['reportHub'] = {
   ],
   seoTitle: 'Report a problem | SF.gov',
   metaDescription:
-    'Report pests, mold, garbage, clutter, and other housing health problems to Healthy Housing and Vector Control in San Francisco.',
+    'Report pests, mold, garbage, clutter, and other housing health problems to Healthy Housing and Vector Control',
 }
