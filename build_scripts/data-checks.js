@@ -23,13 +23,20 @@ function findMissingOrderKeys(pages, order) {
 function findBrokenCardTargets(pages) {
   const keys = new Set(Object.keys(pages))
   const broken = []
+
+  function checkTarget(pageKey, target) {
+    if (target && !keys.has(target)) broken.push({ pageKey, target })
+  }
+
   for (const [pageKey, page] of Object.entries(pages)) {
+    if (page.partOf?.target) checkTarget(pageKey, page.partOf.target)
     for (const section of page.sections || []) {
-      for (const card of section.cards || []) {
-        if (card.target && !keys.has(card.target)) {
-          broken.push({ pageKey, target: card.target })
-        }
+      for (const card of section.cards || []) checkTarget(pageKey, card.target)
+      for (const resource of section.resources || []) checkTarget(pageKey, resource.target)
+      for (const group of section.resourceGroups || []) {
+        for (const item of group.items || []) checkTarget(pageKey, item.target)
       }
+      for (const story of section.dataStories || []) checkTarget(pageKey, story.target)
     }
   }
   return broken
@@ -129,6 +136,66 @@ function findInformationTableViolations(pages) {
   return violations
 }
 
+/**
+ * Find Resource collection pages with no body assets (documents, resources, or cards).
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string}>}
+ */
+function findResourceCollectionBodyGaps(pages) {
+  const violations = []
+  for (const [pageKey, page] of Object.entries(pages)) {
+    if (page.type !== 'Resource collection') continue
+    let hasBodyAsset = false
+    for (const section of page.sections || []) {
+      if (section.documents?.length || section.resources?.length || section.cards?.length) {
+        hasBodyAsset = true
+        break
+      }
+      if (section.resourceGroups?.some((group) => group.items?.length)) {
+        hasBodyAsset = true
+        break
+      }
+    }
+    if (!hasBodyAsset) violations.push({ pageKey })
+  }
+  return violations
+}
+
+/**
+ * Find accordion groups exceeding Karl guidance (max 5 per section).
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string, count: number}>}
+ */
+function findAccordionViolations(pages) {
+  const violations = []
+  for (const [pageKey, page] of Object.entries(pages)) {
+    for (const section of page.sections || []) {
+      if ((section.accordions || []).length > 5) {
+        violations.push({ pageKey, count: section.accordions.length })
+      }
+    }
+  }
+  return violations
+}
+
+/**
+ * Find Step-by-step pages with more than 15 steps (Karl limit).
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string, count: number}>}
+ */
+function findStepByStepLimitViolations(pages) {
+  const violations = []
+  for (const [pageKey, page] of Object.entries(pages)) {
+    if (page.type !== 'Step-by-step') continue
+    let count = 0
+    for (const section of page.sections || []) {
+      count += (section.steps || []).length
+    }
+    if (count > 15) violations.push({ pageKey, count })
+  }
+  return violations
+}
+
 module.exports = {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -137,4 +204,7 @@ module.exports = {
   findBannedTerms,
   findListFormatViolations,
   findInformationTableViolations,
+  findResourceCollectionBodyGaps,
+  findAccordionViolations,
+  findStepByStepLimitViolations,
 }

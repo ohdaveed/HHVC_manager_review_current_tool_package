@@ -13,6 +13,9 @@ const {
   findBannedTerms,
   findListFormatViolations,
   findInformationTableViolations,
+  findResourceCollectionBodyGaps,
+  findAccordionViolations,
+  findStepByStepLimitViolations,
 } = require('./data-checks')
 
 const root = path.resolve(__dirname, '..')
@@ -39,6 +42,12 @@ const files = [
   'pages/report-bed-bugs.js',
   'pages/bed-bug-rules-prevention.js',
   'pages/bed-bug-forms-and-guides.js',
+  'pages/healthy-housing-fee-schedule.js',
+  'pages/healthy-housing-fee-schedule-report.js',
+  'pages/owner-forms-and-templates.js',
+  'pages/directors-rules-vector-control.js',
+  'pages/raccoon-latrine-cleanup.js',
+  'pages/mite-treatment-steps.js',
   'pages/report-mosquitoes.js',
   'pages/report-dead-bird.js',
   'pages/report-pigeons.js',
@@ -113,6 +122,23 @@ if (listFormatViolations.length) {
 const informationTableViolations = findInformationTableViolations(parsed.data.pages)
 if (informationTableViolations.length) {
   throw new Error(`${informationTableViolations[0].pageKey} has a table on an Information page`)
+}
+
+const resourceCollectionGaps = findResourceCollectionBodyGaps(parsed.data.pages)
+if (resourceCollectionGaps.length) {
+  throw new Error(`${resourceCollectionGaps[0].pageKey} Resource collection has no body assets`)
+}
+
+const accordionViolations = findAccordionViolations(parsed.data.pages)
+if (accordionViolations.length) {
+  const { pageKey, count } = accordionViolations[0]
+  throw new Error(`${pageKey} has ${count} accordions in a section (max 5)`)
+}
+
+const stepByStepLimitViolations = findStepByStepLimitViolations(parsed.data.pages)
+if (stepByStepLimitViolations.length) {
+  const { pageKey, count } = stepByStepLimitViolations[0]
+  throw new Error(`${pageKey} has ${count} steps (max 15 for Step-by-step)`)
 }
 
 console.log('validated', Object.keys(parsed.data.pages).length, 'pages')

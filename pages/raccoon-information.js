@@ -55,60 +55,19 @@ window.HHVC_PAGES['raccoonInfo'] = {
     },
     {
       heading: 'How to clean up a raccoon latrine safely',
-      karl: 'Body: Latrine cleanup steps — verify against CDC/DPH guidance before publication',
+      karl: 'Body: Link to Step-by-step cleanup guide',
       kind: 'body',
       paragraphs: [
         'Do not sweep or vacuum dry raccoon droppings. Dry dust can spread roundworm eggs into the air.',
         'If you are not trained or equipped to clean a latrine safely, hire a licensed pest control operator or other qualified professional.',
       ],
-      steps: [
-        {
-          title: 'Protect yourself',
-          text: [
-            'Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.',
-          ],
-          bullets: [
-            'Wear disposable gloves and shoe covers or boots that can be washed',
-            'Wear long sleeves and old clothes you can wash or throw away',
-            'Consider a dust mask if you cannot avoid creating dust',
-          ],
-          karl: 'Body step 1: Personal protective equipment',
-        },
-        {
-          title: 'Lightly wet the droppings',
-          text: [
-            'Lightly spray the latrine with water or a mild soap-and-water mix. This helps keep eggs from becoming airborne while you clean.',
-          ],
-          karl: 'Body step 2: Wet down before removal',
-        },
-        {
-          title: 'Remove and bag the waste',
-          text: [
-            'Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.',
-          ],
-          bullets: [
-            'Double-bag the waste and tie the bags closed',
-            'Place the bags in an outdoor garbage container with a tight lid',
-            'Do not put raccoon waste in compost',
-          ],
-          karl: 'Body step 3: Removal and disposal',
-        },
-        {
-          title: 'Clean the area and your hands',
-          text: ['After removal, clean the surface and wash up thoroughly.'],
-          bullets: [
-            'Scrub the area with hot water and soap, or use boiling water on hard surfaces when safe to do so',
-            'Wash gloves, tools, clothes, and boots after use',
-            'Wash your hands with soap and water for at least 20 seconds, even if you wore gloves',
-          ],
-          karl: 'Body step 4: Area cleaning and handwashing',
-        },
-      ],
-      callout: {
-        karl: 'Body note: Sandbox and play area warning',
-        text: 'If a latrine is in or near a child play area, sandbox, or shared courtyard, keep the area closed until cleanup is complete and consider replacing heavily contaminated material such as sand or mulch.',
-      },
       cards: [
+        {
+          title: 'Clean up a raccoon latrine safely',
+          text: 'Follow the step-by-step guide for PPE, wet cleanup, disposal, and handwashing.',
+          target: 'raccoonLatrineCleanup',
+          karl: 'Links: Related Step-by-step page',
+        },
         {
           title: 'CDC: Raccoon roundworm (Baylisascaris) prevention',
           text: 'Read CDC guidance on raccoon latrines, roundworm risks, and safe cleanup before handling droppings.',
@@ -168,6 +127,12 @@ window.HHVC_PAGES['raccoonInfo'] = {
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
       cards: [
+        {
+          title: 'Clean up a raccoon latrine safely',
+          text: 'Follow the step-by-step cleanup guide.',
+          target: 'raccoonLatrineCleanup',
+          karl: 'Related section: right-panel linked page',
+        },
         {
           title: 'Keep rats and mice out',
           text: 'Learn how to reduce food, water, shelter, and entry points.',

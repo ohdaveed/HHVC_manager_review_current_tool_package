@@ -87,10 +87,10 @@ function renderIntro(intro) {
   if (!intro) return ''
   return `<div class="page-intro">${karlTag('Introductory text', 'body')}<p>${formatMarkdown(intro)}</p></div>`
 }
-function renderSpotlight(spotlight) {
+function renderSpotlight(spotlight, label = 'Spotlight 1') {
   if (!spotlight) return ''
   const alt = spotlight.imageAlt ? escapeHtml(spotlight.imageAlt) : ''
-  return `<section class="campaign-spotlight" aria-label="Spotlight">${karlTag('Spotlight 1', 'body')}<div class="campaign-spotlight-inner"><div class="campaign-spotlight-copy"><h2>${escapeHtml(spotlight.title)}</h2><p>${formatMarkdown(spotlight.text)}</p></div>${alt ? `<div class="campaign-spotlight-media" role="img" aria-label="${alt}"></div>` : ''}</div></section>`
+  return `<section class="campaign-spotlight" aria-label="${escapeHtml(label)}">${karlTag(label, 'body')}<div class="campaign-spotlight-inner"><div class="campaign-spotlight-copy"><h2>${escapeHtml(spotlight.title)}</h2><p>${formatMarkdown(spotlight.text)}</p>${spotlight.button && spotlight.url ? button(spotlight.button, 'primary', null, spotlight.url) : ''}</div>${alt ? `<div class="campaign-spotlight-media" role="img" aria-label="${alt}"></div>` : ''}</div></section>`
 }
 function renderTopFacts(topFacts = []) {
   if (!topFacts.length) return ''
@@ -104,6 +104,101 @@ function renderDocuments(documents = []) {
       return `<li class="document-item">${karlTag(doc.karl || 'Body: Documents', 'body')}<a class="document-link" href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer"><span class="document-icon" aria-hidden="true">PDF</span><span class="document-copy"><strong>${escapeHtml(doc.title)}</strong>${meta ? `<span class="document-meta">${escapeHtml(meta)}</span>` : ''}</span><span class="document-external" aria-hidden="true">↗</span></a></li>`
     })
     .join('')}</ul>`
+}
+function renderResourceItem(item) {
+  const href = item.url ? escapeHtml(item.url) : '#'
+  const attr = item.url
+    ? ' target="_blank" rel="noopener noreferrer"'
+    : item.target
+      ? ` data-render-target="${escapeHtml(item.target)}"`
+      : ' data-render-inert=""'
+  const externalMark = item.url ? ' <span aria-hidden="true">↗</span>' : ''
+  return `<li class="resource-item">${karlTag(item.karl || 'Body: Resources', 'body')}<a href="${href}"${attr}><strong>${escapeHtml(item.title)}</strong><span class="resource-text">${escapeHtml(item.text)}</span>${externalMark}</a></li>`
+}
+function renderResources(resources = []) {
+  if (!resources.length) return ''
+  return `<ul class="resource-list">${resources.map(renderResourceItem).join('')}</ul>`
+}
+function renderResourceGroups(groups = []) {
+  if (!groups.length) return ''
+  return groups
+    .map((group) => {
+      const heading = group.subheader
+        ? `<h3 class="resource-subheader">${escapeHtml(group.subheader)}</h3>`
+        : ''
+      return `<div class="resource-group">${heading}<ul class="resource-list">${(group.items || []).map(renderResourceItem).join('')}</ul></div>`
+    })
+    .join('')
+}
+function renderDataStories(stories = []) {
+  if (!stories.length) return ''
+  return `<ul class="data-story-list">${stories
+    .map((story) => {
+      const href = story.url ? escapeHtml(story.url) : '#'
+      const attr = story.url
+        ? ' target="_blank" rel="noopener noreferrer"'
+        : story.target
+          ? ` data-render-target="${escapeHtml(story.target)}"`
+          : ' data-render-inert=""'
+      return `<li class="data-story-item">${karlTag(story.karl || 'Body: Data stories', 'body')}<a href="${href}"${attr}><strong>${escapeHtml(story.title)}</strong><span>${escapeHtml(story.text)}</span></a></li>`
+    })
+    .join('')}</ul>`
+}
+function renderAccordions(accordions = []) {
+  if (!accordions.length) return ''
+  return `<div class="accordion-list">${accordions
+    .map(
+      (item) =>
+        `<details class="accordion-item">${karlTag(item.karl || 'Supporting information: Accordion', 'body')}<summary>${escapeHtml(item.title)}</summary><div class="accordion-body">${paragraphList(item.text || [])}${bulletList(item.bullets || [])}</div></details>`
+    )
+    .join('')}</div>`
+}
+function renderSectionImage(image) {
+  if (!image) return ''
+  const caption = image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ''
+  return `<figure class="section-image">${karlTag(image.karl || 'Body: Image', 'body')}<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" />${caption}</figure>`
+}
+function renderCustomSection(text) {
+  if (!text) return ''
+  return `<section class="section custom-section">${karlTag('Resource collection body: Custom section', 'body')}<p>${formatMarkdown(text)}</p></section>`
+}
+function renderContactSection(contact) {
+  if (!contact) return ''
+  const lines = [contact.address, contact.phone, contact.email].filter(Boolean)
+  if (!lines.length) return ''
+  return `<section class="contact-section">${karlTag(contact.karl || 'Contact section', 'body')}<h2>Contact us</h2><ul class="contact-list">${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul></section>`
+}
+function renderPartnerAgencies(agencies = []) {
+  if (!agencies.length) return ''
+  return `<section class="partner-agencies">${karlTag('Partner agencies', 'body')}<h2>Partner agencies</h2><ul>${agencies
+    .map((agency) => {
+      if (agency.url) {
+        return `<li><a href="${escapeHtml(agency.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(agency.name)} <span aria-hidden="true">↗</span></a></li>`
+      }
+      return `<li>${escapeHtml(agency.name)}</li>`
+    })
+    .join('')}</ul></section>`
+}
+function renderCampaignLogo(logo) {
+  if (!logo) return ''
+  return `<div class="campaign-logo">${karlTag('Campaign logo', 'meta')}<img src="${escapeHtml(logo.src)}" alt="${escapeHtml(logo.alt)}" width="100" height="100" /></div>`
+}
+function renderCampaignAbout(about) {
+  if (!about) return ''
+  return `<section class="campaign-about">${karlTag('Campaign About section', 'body')}<h2>About</h2><p>${formatMarkdown(about)}</p></section>`
+}
+function renderOnThisPage(sections = []) {
+  const headings = (sections || []).map((s) => s.heading).filter(Boolean)
+  if (!headings.length) return ''
+  return `<nav class="on-this-page" aria-label="On this page">${karlTag('Report: On this page TOC', 'meta')}<h2 class="on-this-page-heading">On this page</h2><ul>${headings.map((h) => `<li><a href="#">${escapeHtml(h)}</a></li>`).join('')}</ul></nav>`
+}
+function renderPrintVersion(url) {
+  if (!url) return ''
+  return `<p class="print-version">${karlTag('Report: Print version', 'meta')}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
+}
+function renderTopicTag(topicTag) {
+  if (!topicTag) return ''
+  return `<span class="pill pill-topic">${karlTag('Topics tag', 'meta')}${escapeHtml(topicTag)}</span>`
 }
 function renderSection(section) {
   const kind = section.kind || 'body'
@@ -122,13 +217,29 @@ function renderSection(section) {
       section.buttonUrl || null
     )
   if (section.cards) inner += renderCards(section.cards)
+  if (section.resources) inner += renderResources(section.resources)
+  if (section.resourceGroups) inner += renderResourceGroups(section.resourceGroups)
+  if (section.dataStories) inner += renderDataStories(section.dataStories)
+  if (section.accordions) inner += renderAccordions(section.accordions)
+  if (section.image) inner += renderSectionImage(section.image)
   if (section.documents) inner += renderDocuments(section.documents)
   return `<section class="section">${inner}</section>`
+}
+function countStepByStepSteps(page) {
+  let count = 0
+  for (const section of page.sections || []) {
+    count += (section.steps || []).length
+  }
+  return count
 }
 function renderPageExtras(page) {
   let extras = ''
   if (page.type === 'Transaction') extras += renderWhatToKnow(page.whatToKnow)
   if (page.type === 'Campaign') {
+    if (page.colorTheme) {
+      extras += `<div class="campaign-theme" data-theme="${escapeHtml(page.colorTheme)}">${karlTag('Campaign color theme', 'meta')}</div>`
+    }
+    extras += renderCampaignLogo(page.logo)
     extras += renderSpotlight(page.spotlight)
     extras += renderTopFacts(page.topFacts)
   }
@@ -136,7 +247,22 @@ function renderPageExtras(page) {
     extras += renderPartOf(page.partOf)
     extras += renderIntro(page.intro)
   }
+  if (page.type === 'Report') {
+    extras += renderOnThisPage(page.sections)
+    extras += renderPrintVersion(page.printVersionUrl)
+  }
   return extras
+}
+function renderPageFooter(page) {
+  let footer = ''
+  if (page.type === 'Campaign') {
+    footer += renderSpotlight(page.spotlight2, 'Spotlight 2')
+    footer += renderCampaignAbout(page.about)
+  }
+  footer += renderCustomSection(page.customSection)
+  footer += renderContactSection(page.contactSection)
+  footer += renderPartnerAgencies(page.partnerAgencies)
+  return footer
 }
 function applyPageContent(key) {
   const page = pageData[key]
@@ -146,10 +272,14 @@ function applyPageContent(key) {
   document.getElementById('browserUrl').textContent = 'https://' + page.slug
   document.getElementById('urlInput').value = page.slug
   document.getElementById('pageSelect').value = key
+  const themeClass =
+    page.type === 'Campaign' && page.colorTheme
+      ? ` campaign-theme-${escapeHtml(page.colorTheme)}`
+      : ''
   document.getElementById('mockPage').innerHTML = `
         <header class="site-header"><div class="site-header-inner"><a href="#" class="brand"><span class="brand-mark">SF</span><span>SF.gov</span></a><nav class="site-nav" aria-label="Example navigation"><a href="#">Services</a><a href="#">Departments</a><a href="#">Search</a></nav></div></header>
-        <section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span></div></div></section>
-        <main class="page-body">${renderPageExtras(page)}<aside class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`)}</aside><section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>${page.sections.map(renderSection).join('')}</main>
+        <section class="hero${themeClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span>${renderTopicTag(page.topicTag)}<span class="pill">${escapeHtml(page.reading)}</span></div></div></section>
+        <main class="page-body">${renderPageExtras(page)}<aside class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`)}</aside><section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>${(page.sections || []).map(renderSection).join('')}${renderPageFooter(page)}</main>
         <footer class="footer"><div class="footer-inner"><strong>City and County of San Francisco</strong><br>This is a design mockup for HHVC content review, not a live SF.gov page.</div></footer>`
   syncEditorFields(page)
   updateDirtyIndicators(key)

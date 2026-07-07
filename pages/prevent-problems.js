@@ -12,7 +12,7 @@ window.HHVC_PAGES['preventHub'] = {
   ],
   reading: 'Grade 6',
   editorNote:
-    'Resource collection hub for prevention Information pages. Reuses existing Information pages instead of duplicating content.',
+    'Review navigation mockup — production PDF libraries use separate document RC pages. Hub reuses existing Information pages via cross-link cards; ownerForms library linked from prevention hub for IPM templates.',
   sections: [
     {
       heading: 'About this collection',
@@ -25,7 +25,7 @@ window.HHVC_PAGES['preventHub'] = {
     },
     {
       heading: 'Prevention guides',
-      karl: 'Resource collection: Prevention guides subsection',
+      karl: 'Resource collection body: Resources',
       kind: 'placement',
       cards: [
         {
@@ -105,6 +105,12 @@ window.HHVC_PAGES['preventHub'] = {
           title: 'Report a problem',
           text: 'Choose the right page to report an active pest or housing health problem.',
           target: 'reportHub',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
+          title: 'Owner forms and IPM templates',
+          text: 'Download IPM plans and resident notice checklists for property managers.',
+          target: 'ownerForms',
           karl: 'Related section: right-panel linked page',
         },
         {

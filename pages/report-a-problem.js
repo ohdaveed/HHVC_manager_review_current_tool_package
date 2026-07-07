@@ -13,7 +13,7 @@ window.HHVC_PAGES['reportHub'] = {
   ],
   reading: 'Grade 6',
   editorNote:
-    'Resource collection hub for report Transaction pages. Reuses existing Transaction pages instead of duplicating content.',
+    'Review navigation mockup — production PDF libraries use separate document RC pages. Hub reuses existing Transaction pages via cross-link cards and mirrored Resources lists.',
   sections: [
     {
       heading: 'About this collection',
@@ -26,7 +26,7 @@ window.HHVC_PAGES['reportHub'] = {
     },
     {
       heading: 'Report a housing health problem',
-      karl: 'Resource collection: Report transactions subsection',
+      karl: 'Resource collection body: Resources',
       kind: 'placement',
       cards: [
         {
@@ -82,6 +82,62 @@ window.HHVC_PAGES['reportHub'] = {
           text: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
           target: 'moldReport',
           karl: 'Resource collection item cross-link to existing Transaction page',
+        },
+      ],
+      resources: [
+        {
+          title: 'Report rats or mice',
+          text: 'Report rat or mouse activity in a home, building, yard, or shared area.',
+          target: 'ratsReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report cockroaches',
+          text: 'Report cockroaches in a unit, shared area, SRO, hotel, or workplace.',
+          target: 'cockroachesReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report bed bugs',
+          text: 'Report an active bed bug problem in rental housing, an SRO, or a residential hotel.',
+          target: 'bedBugsReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report mosquitoes',
+          text: 'Report mosquitoes or standing water around a home, yard, building, or shared area.',
+          target: 'mosquitoesReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report a dead bird',
+          text: 'Report a dead bird for West Nile virus surveillance.',
+          target: 'wnvBirdReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report pigeons',
+          text: 'Report pigeon roosting, nesting, droppings, or feeding.',
+          target: 'pigeonsReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report garbage or clutter',
+          text: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
+          target: 'garbageReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report overgrown vegetation',
+          text: 'Report overgrown plants, weeds, or brush that may shelter pests.',
+          target: 'vegetationReport',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Report mold from humidity or condensation',
+          text: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
+          target: 'moldReport',
+          karl: 'Resource collection body: Resources',
         },
       ],
     },

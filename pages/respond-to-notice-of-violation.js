@@ -1,10 +1,16 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['noticeOfViolation'] = {
-  slug: 'sf.gov/information/how-to-respond-to-notice-of-violation',
-  type: 'Information',
-  title: 'How to respond to a notice of violation',
+  slug: 'sf.gov/respond-to-notice-of-violation',
+  type: 'Step-by-step',
+  title: 'Respond to a notice of violation',
   summary:
     'Learn what a notice of violation means and what tenants and owners each need to do to comply.',
+  intro:
+    'This guide walks tenants and owners through reading a notice of violation (NOV), confirming responsibilities, completing corrections, and preparing for reinspection.',
+  partOf: {
+    title: 'Property owner responsibilities',
+    target: 'ownerHub',
+  },
   audience: [
     'A tenant who received or is affected by a notice of violation',
     'A property owner or manager responsible for building-wide corrections',
@@ -13,8 +19,47 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Information page for tenants and property owners/managers. BLOCKED — confirm NOV templates, tenant-specific orders, appeal windows, and contact routes before publication. The initial notice itself carries no fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free; a fee applies only starting with the third visit (the second reinspection), per reviewer-supplied sequencing — confirm this sequencing plus current certified fee amounts (sourced as illustrative FY24-25 estimates from docs/source/hhvc-policy/2026-07-02-dph-ehb-fees-fy24-25.md) with HHVC before publication. Verify that examples of split responsibilities match current HHVC enforcement practice.',
+    'Step-by-step page for tenants and property owners/managers. BLOCKED — confirm NOV templates, tenant-specific orders, appeal windows, and contact routes before publication. Reinspection fee amounts belong on feeSchedule Resource Collection — not inline on this page.',
   sections: [
+    {
+      heading: 'Steps everyone should follow',
+      karl: 'Body: Shared response steps',
+      kind: 'body',
+      steps: [
+        {
+          title: 'Read the full notice',
+          text: [
+            'Check which conditions apply to the building, common areas, and individual units.',
+            'Note the compliance deadline and any reinspection date.',
+          ],
+          karl: 'Body step 1: Read the NOV',
+        },
+        {
+          title: 'Confirm who is responsible for each item',
+          text: [
+            'Owners and tenants should compare the notice with the actual conditions in the unit and building.',
+            'If responsibility is unclear, contact Environmental Health using the information on the notice.',
+          ],
+          karl: 'Body step 2: Match conditions to responsible parties',
+        },
+        {
+          title: 'Complete your corrective actions on time',
+          text: [
+            'Owners should not wait for tenant actions before starting building repairs they control.',
+            'Tenants should complete unit-level actions needed for treatment or reinspection to succeed.',
+          ],
+          karl: 'Body step 3: Parallel compliance',
+        },
+        {
+          title: 'Keep records and prepare for reinspection',
+          text: [
+            'Save photos, receipts, treatment reports, or other proof of completed work when possible.',
+            'Be ready for HHVC to verify that all cited conditions were corrected.',
+          ],
+          karl: 'Body step 4: Documentation and reinspection',
+        },
+      ],
+    },
     {
       heading: 'What a notice of violation means',
       karl: 'Body: NOV overview',
@@ -24,9 +69,17 @@ window.HHVC_PAGES['noticeOfViolation'] = {
         'The notice lists the cited problems, required corrections, responsible parties when known, and a compliance deadline based on the severity of the violation.',
       ],
       callout: {
-        karl: 'Body note: Enforcement escalation — reinspection fee figures sourced from SFDPH EHB FY24-25 fee schedule (docs/source/hhvc-policy/2026-07-02-dph-ehb-fees-fy24-25.md); free-visit sequencing (initial inspection + first reinspection free, fee starts at the third visit) supplied by reviewer — confirm both the sequencing and current certified amounts with HHVC before publication.',
-        text: 'The initial notice does not charge a fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free. If a second reinspection is needed because the violation still is not corrected, a per-hour fee can apply starting with that third visit (in FY 2024–25, SFDPH billed $244/hour for an inspector and $223/hour for a technician, plus a per-half-hour rate beyond the first hour) — check your notice or invoice for the exact current amount. Persistent violations can also lead to citations, administrative fines, or a Director’s Hearing. Meet the deadline listed on your notice unless HHVC approves another plan.',
+        karl: 'Body note: Reinspection fees — link to fee schedule RC',
+        text: 'The initial notice does not charge a fee. The first reinspection is also free. Per-hour reinspection fees can apply starting with the third visit if violations remain — see the Healthy Housing fee schedule for current certified amounts.',
       },
+      cards: [
+        {
+          title: 'Healthy Housing fee schedule FY27',
+          text: 'Download reinspection hourly rates and penalty information.',
+          target: 'feeSchedule',
+          karl: 'Links: Related Resource Collection',
+        },
+      ],
     },
     {
       heading: 'Both tenants and owners may need to take action',
@@ -69,6 +122,12 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           target: 'ownerGuidance',
           karl: 'Related section: right-panel linked page',
         },
+        {
+          title: 'Owner forms and IPM templates',
+          text: 'Download IPM plans and resident notice checklists.',
+          target: 'ownerForms',
+          karl: 'Related section: right-panel linked page',
+        },
       ],
     },
     {
@@ -100,45 +159,6 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       ],
     },
     {
-      heading: 'Steps everyone should follow',
-      karl: 'Body: Shared response steps',
-      kind: 'body',
-      steps: [
-        {
-          title: 'Read the full notice',
-          text: [
-            'Check which conditions apply to the building, common areas, and individual units.',
-            'Note the compliance deadline and any reinspection date.',
-          ],
-          karl: 'Body step 1: Read the NOV',
-        },
-        {
-          title: 'Confirm who is responsible for each item',
-          text: [
-            'Owners and tenants should compare the notice with the actual conditions in the unit and building.',
-            'If responsibility is unclear, contact Environmental Health using the information on the notice.',
-          ],
-          karl: 'Body step 2: Match conditions to responsible parties',
-        },
-        {
-          title: 'Complete your corrective actions on time',
-          text: [
-            'Owners should not wait for tenant actions before starting building repairs they control.',
-            'Tenants should complete unit-level actions needed for treatment or reinspection to succeed.',
-          ],
-          karl: 'Body step 3: Parallel compliance',
-        },
-        {
-          title: 'Keep records and prepare for reinspection',
-          text: [
-            'Save photos, receipts, treatment reports, or other proof of completed work when possible.',
-            'Be ready for HHVC to verify that all cited conditions were corrected.',
-          ],
-          karl: 'Body step 4: Documentation and reinspection',
-        },
-      ],
-    },
-    {
       heading: 'Related pages',
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
@@ -162,12 +182,6 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           karl: 'Related section: right-panel linked page',
         },
         {
-          title: 'Property owner responsibilities',
-          text: 'Return to the owner hub for fees, IPM, and other obligations.',
-          target: 'ownerHub',
-          karl: 'Related section: right-panel linked page',
-        },
-        {
           title: 'Bed bug rules and prevention',
           text: 'Learn tenant cooperation and treatment preparation rules for bed bugs.',
           target: 'bedBugsInfo',
@@ -176,7 +190,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
       ],
     },
   ],
-  seoTitle: 'How to respond to a notice of violation | SF.gov',
+  seoTitle: 'Respond to a notice of violation | SF.gov',
   metaDescription:
     'How tenants and owners respond to an Environmental Health notice of violation and take corrective action.',
 }

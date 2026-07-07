@@ -127,6 +127,12 @@ window.HHVC_PAGES['scopeInfo'] = {
       kind: 'placement',
       cards: [
         {
+          title: 'Director’s Rules for Vector Control',
+          text: 'Download official HHVC standards and bed bug regulations.',
+          target: 'vectorRules',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
           title: 'Pests and housing problems',
           text: 'Return to the Topic page for HHVC pest, vector, and housing health issues.',
           target: 'pestsTopic',

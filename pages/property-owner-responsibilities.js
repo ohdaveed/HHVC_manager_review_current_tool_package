@@ -12,7 +12,8 @@ window.HHVC_PAGES['ownerHub'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Resource collection hub for property owners. Reuses existing Transaction and Information pages instead of duplicating content.',
+    'Review navigation mockup — production PDF libraries use separate document RC pages (feeSchedule, ownerForms). Hub reuses existing Transaction and Information pages via cross-link cards and mirrored Resources lists.',
+  topicTag: 'Topic: Pests and housing problems',
   sections: [
     {
       heading: 'About this collection',
@@ -25,7 +26,7 @@ window.HHVC_PAGES['ownerHub'] = {
     },
     {
       heading: 'Owner obligations',
-      karl: 'Resource collection: Owner obligations subsection',
+      karl: 'Resource collection body: Resources',
       kind: 'body',
       cards: [
         {
@@ -51,6 +52,56 @@ window.HHVC_PAGES['ownerHub'] = {
           text: 'Find complaints, violations, inspector assignment, and public records for a building.',
           target: 'recordsHub',
           karl: 'Resource collection item cross-link to records hub Resource collection page',
+        },
+        {
+          title: 'Healthy Housing fee schedule FY27',
+          text: 'Download certified apartment, hotel, and reinspection fee documents.',
+          target: 'feeSchedule',
+          karl: 'Resource collection item cross-link to fee document library',
+        },
+        {
+          title: 'Owner forms and IPM templates',
+          text: 'Download IPM plans, checklists, and owner reference forms.',
+          target: 'ownerForms',
+          karl: 'Resource collection item cross-link to owner forms library',
+        },
+      ],
+      resources: [
+        {
+          title: 'Pay your Healthy Housing fee',
+          text: 'Pay the program fee for residential buildings with 3 or more units.',
+          target: 'payFee',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Respond to a notice of violation',
+          text: 'Learn what tenants and owners each need to do when HHVC issues a notice of violation.',
+          target: 'noticeOfViolation',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Integrated pest management for property owners and managers',
+          text: 'Use UC IPM templates for prevention, monitoring, and resident outreach.',
+          target: 'ownerGuidance',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Look up building records',
+          text: 'Find complaints, violations, inspector assignment, and public records for a building.',
+          target: 'recordsHub',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Healthy Housing fee schedule FY27',
+          text: 'Download certified fee schedule PDFs.',
+          target: 'feeSchedule',
+          karl: 'Resource collection body: Resources',
+        },
+        {
+          title: 'Owner forms and IPM templates',
+          text: 'Download IPM plans and resident notice checklists.',
+          target: 'ownerForms',
+          karl: 'Resource collection body: Resources',
         },
       ],
     },

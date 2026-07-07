@@ -216,6 +216,12 @@ window.HHVC_PAGES['ownerGuidance'] = {
       kind: 'placement',
       cards: [
         {
+          title: 'Owner forms and IPM templates',
+          text: 'Download IPM plans, checklists, and owner reference forms.',
+          target: 'ownerForms',
+          karl: 'Related section: right-panel linked page',
+        },
+        {
           title: 'Property owner responsibilities',
           text: 'See fees, violation response, and prevention obligations under Article 11.',
           target: 'ownerHub',

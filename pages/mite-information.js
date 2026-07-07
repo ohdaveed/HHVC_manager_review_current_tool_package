@@ -69,45 +69,23 @@ window.HHVC_PAGES['miteInfo'] = {
     },
     {
       heading: 'Treat nests for mites before rodenticides',
-      karl: 'Body: Mite treatment before rodenticide use',
+      karl: 'Body: Link to Step-by-step mite and rodent control guide',
       kind: 'body',
       paragraphs: [
         'Rodent control should not start with poison alone when a rat nest may be feeding tropical rat mites. Property owners and PCOs should address the nest, mites, and rodents together.',
       ],
-      steps: [
+      cards: [
         {
-          title: 'Find and treat the nest site',
-          text: [
-            'Look for nests in attics, crawl spaces, wall voids, basements, storage areas, and cluttered zones where droppings or rub marks are present.',
-            'A PCO can treat the nest area for mites using methods appropriate to the site.',
-          ],
-          karl: 'Body step 1: Nest identification and mite treatment',
-        },
-        {
-          title: 'Remove nesting material safely',
-          text: [
-            'After mite treatment, remove nesting material using wet cleanup methods. Do not dry-sweep or vacuum rodent nests.',
-            'Follow safe rodent cleanup steps on the rats and mice prevention page.',
-          ],
-          cards: [
-            {
-              title: 'Keep rats and mice out',
-              text: 'Learn safe rodent cleanup and exclusion before using poison baits.',
-              target: 'ratsPrevent',
-              karl: 'Links: Related Information page',
-            },
-          ],
-          karl: 'Body step 2 with link to rodent cleanup guidance',
-        },
-        {
-          title: 'Control rodents without worsening mite bites',
-          text: [
-            'Use traps and exclusion first when possible.',
-            'If rodenticides are used, do not skip mite treatment at the nest. A PCO should coordinate both steps so mites do not scatter after rats die.',
-          ],
-          karl: 'Body step 3: Integrated rodent and mite control',
+          title: 'Treat mite sources before rodenticides',
+          text: 'Follow the step-by-step guide for nest treatment, cleanup, and coordinated rodent control.',
+          target: 'miteTreatmentSteps',
+          karl: 'Links: Related Step-by-step page',
         },
       ],
+      callout: {
+        karl: 'Body note: Rodenticide sequencing warning',
+        text: 'Treat rat nests for mites and remove nesting material before relying on rodenticides, or use a licensed pest control operator (PCO) who will handle mites and rodents in the right order.',
+      },
     },
     {
       heading: 'Signs that may suggest mites',
@@ -124,40 +102,18 @@ window.HHVC_PAGES['miteInfo'] = {
       ],
     },
     {
-      heading: 'What to do',
-      karl: 'Body: Action steps',
+      heading: 'What to do next',
+      karl: 'Body: Link to Step-by-step follow-up actions',
       kind: 'body',
-      steps: [
+      paragraphs: [
+        'If bites continue, rule out bed bugs and report active pest or housing-health conditions through 311 when needed.',
+      ],
+      cards: [
         {
-          title: 'Check whether the problem may be bed bugs',
-          text: [
-            'Look for bed bug signs such as live insects, shed skins, dark spots on bedding, or bites in rows.',
-            'Use the bed bug pages if bed bugs are present or suspected.',
-          ],
-          cards: [
-            {
-              title: 'Bed bug rules and prevention',
-              text: 'Read bed bug prevention, treatment prep, and rental housing rules.',
-              target: 'bedBugsInfo',
-              karl: 'Links: Related Information page',
-            },
-          ],
-          karl: 'Body step with secondary link to bed bug Information page',
-        },
-        {
-          title: 'Remove pest sources',
-          text: [
-            'Address rodent nests, bird droppings, or sanitation conditions that may be supporting mites.',
-            'Do not use rodenticides alone when tropical rat mites may be present — treat the nest first or hire a PCO.',
-          ],
-          karl: 'Body step: Remove underlying sources and avoid rodenticide-only response',
-        },
-        {
-          title: 'Report active pest or housing-health conditions',
-          text: [
-            'If the problem continues, report the underlying pest or housing-health condition through 311.',
-          ],
-          karl: 'Body step: Reporting threshold',
+          title: 'Treat mite sources before rodenticides',
+          text: 'Open the step-by-step guide for nest treatment, bed bug cross-check, and reporting.',
+          target: 'miteTreatmentSteps',
+          karl: 'Links: Related Step-by-step page',
         },
       ],
     },
@@ -166,6 +122,12 @@ window.HHVC_PAGES['miteInfo'] = {
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
       cards: [
+        {
+          title: 'Treat mite sources before rodenticides',
+          text: 'Follow the step-by-step guide for nest treatment and rodent control.',
+          target: 'miteTreatmentSteps',
+          karl: 'Related section: right-panel linked page',
+        },
         {
           title: 'Keep rats and mice out of your home',
           text: 'Learn trapping, exclusion, safe nest cleanup, and why traps are preferred over poison.',

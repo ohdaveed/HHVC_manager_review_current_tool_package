@@ -13,7 +13,7 @@ window.HHVC_PAGES['recordsHub'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Resource collection hub. Groups building lookup tools and formal requests. Three child pages link to external tools on xnet.sfdph.org or citywide services.',
+    'Review navigation mockup — production PDF libraries use separate document RC pages (feeSchedule). Hub groups lookup Transactions and formal requests.',
   sections: [
     {
       heading: 'About this collection',
@@ -26,7 +26,7 @@ window.HHVC_PAGES['recordsHub'] = {
     },
     {
       heading: 'Building lookups',
-      karl: 'Resource collection: Building lookups subsection',
+      karl: 'Resource collection body: Resources',
       kind: 'body',
       cards: [
         {

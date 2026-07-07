@@ -657,6 +657,112 @@ a:focus {
     grid-template-columns: 1fr;
   }
 }
+.resource-list,
+.data-story-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.resource-item a,
+.data-story-item a {
+  display: block;
+  border: 1px solid var(--sfds-border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  background: var(--sfds-white);
+}
+.resource-text {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--sfds-slate-2);
+  font-size: 0.92rem;
+}
+.resource-subheader {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+}
+.accordion-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.accordion-item {
+  border: 1px solid var(--sfds-border);
+  border-radius: var(--radius);
+  background: var(--sfds-white);
+  padding: 0.65rem 0.9rem;
+}
+.accordion-item summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.accordion-body {
+  margin-top: 0.65rem;
+}
+.section-image {
+  margin: 1rem 0;
+}
+.section-image img {
+  width: 100%;
+  max-width: 42rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--sfds-border);
+}
+.custom-section {
+  border-top: 1px solid var(--sfds-border);
+}
+.contact-section,
+.partner-agencies {
+  border-top: 1px solid var(--sfds-border);
+  padding-top: 1.25rem;
+}
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+.campaign-logo img {
+  border-radius: 0.35rem;
+  margin-bottom: 1rem;
+}
+.campaign-theme-eh {
+  --campaign-accent: var(--sfds-action-blue);
+}
+.hero.campaign-theme-eh {
+  background: linear-gradient(135deg, var(--sfds-accent-light), var(--sfds-slate-5));
+}
+.on-this-page {
+  border: 1px solid var(--sfds-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+  background: var(--sfds-white);
+}
+.on-this-page-heading {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+.on-this-page ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.print-version {
+  margin-bottom: 1rem;
+}
+.print-version a {
+  font-weight: 700;
+}
+.pill-topic {
+  background: var(--sfds-slate-5);
+}
+.campaign-about {
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--sfds-border);
+}
 .cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

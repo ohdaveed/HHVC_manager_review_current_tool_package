@@ -11,11 +11,59 @@ const cardSchema = z.object({
   karl: z.string().optional(),
 })
 
+const resourceSchema = z.object({
+  title: z.string().min(1),
+  text: z.string().min(1),
+  target: z.string().optional(),
+  url: z.string().optional(),
+  karl: z.string().optional(),
+})
+
+const resourceGroupSchema = z.object({
+  subheader: z.string().optional(),
+  items: z.array(resourceSchema).min(1),
+})
+
+const dataStorySchema = z.object({
+  title: z.string().min(1),
+  text: z.string().min(1),
+  target: z.string().optional(),
+  url: z.string().optional(),
+  karl: z.string().optional(),
+})
+
 const documentSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   date: z.string().optional(),
   url: z.string().min(1),
+  karl: z.string().optional(),
+})
+
+const accordionSchema = z.object({
+  title: z.string().min(1),
+  text: z.array(z.string()).optional(),
+  bullets: z.array(z.string()).optional(),
+  karl: z.string().optional(),
+})
+
+const imageSchema = z.object({
+  src: z.string().min(1),
+  alt: z.string().min(1),
+  caption: z.string().optional(),
+  karl: z.string().optional(),
+})
+
+const contactSectionSchema = z.object({
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  address: z.string().optional(),
+  karl: z.string().optional(),
+})
+
+const partnerAgencySchema = z.object({
+  name: z.string().min(1),
+  url: z.string().optional(),
   karl: z.string().optional(),
 })
 
@@ -28,6 +76,13 @@ const spotlightSchema = z.object({
   title: z.string().min(1),
   text: z.string().min(1),
   imageAlt: z.string().optional(),
+  url: z.string().optional(),
+  button: z.string().optional(),
+})
+
+const logoSchema = z.object({
+  src: z.string().min(1),
+  alt: z.string().min(1),
 })
 
 const partOfSchema = z.object({
@@ -60,6 +115,11 @@ const sectionSchema = z.object({
   bullets: z.array(z.string()).optional(),
   table: z.array(z.array(z.string())).optional(),
   cards: z.array(cardSchema).optional(),
+  resources: z.array(resourceSchema).optional(),
+  resourceGroups: z.array(resourceGroupSchema).optional(),
+  dataStories: z.array(dataStorySchema).optional(),
+  accordions: z.array(accordionSchema).optional(),
+  image: imageSchema.optional(),
   button: z.string().optional(),
   buttonTarget: z.string().optional(),
   buttonUrl: z.string().optional(),
@@ -87,8 +147,17 @@ const pageSchema = z.object({
   whatToKnow: whatToKnowSchema.optional(),
   topFacts: z.array(z.string()).optional(),
   spotlight: spotlightSchema.optional(),
+  spotlight2: spotlightSchema.optional(),
+  logo: logoSchema.optional(),
+  colorTheme: z.string().optional(),
+  about: z.string().optional(),
   intro: z.string().optional(),
   partOf: partOfSchema.optional(),
+  topicTag: z.string().optional(),
+  customSection: z.string().optional(),
+  contactSection: contactSectionSchema.optional(),
+  partnerAgencies: z.array(partnerAgencySchema).optional(),
+  printVersionUrl: z.string().optional(),
   sections: z.array(sectionSchema).optional(),
 })
 
@@ -99,12 +168,20 @@ const dataSchema = z.object({
 
 module.exports = {
   cardSchema,
+  resourceSchema,
+  resourceGroupSchema,
+  dataStorySchema,
   documentSchema,
+  accordionSchema,
+  imageSchema,
+  contactSectionSchema,
+  partnerAgencySchema,
   stepSchema,
   sectionSchema,
   pageSchema,
   dataSchema,
   whatToKnowSchema,
   spotlightSchema,
+  logoSchema,
   partOfSchema,
 }

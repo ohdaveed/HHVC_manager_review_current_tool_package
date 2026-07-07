@@ -14,7 +14,7 @@ window.HHVC_PAGES['payFee'] = {
     thingsToKnow: [
       'Have your invoice, property address, or account information ready before you start.',
       'Use the payment method listed on your annual invoice when one is provided.',
-      'Fee amounts vary by building — check your invoice for the exact amount.',
+      'Fee amounts vary by building — see the Healthy Housing fee schedule for certified tier amounts.',
     ],
   },
   sections: [
@@ -59,6 +59,12 @@ window.HHVC_PAGES['payFee'] = {
       karl: 'Related section: right-panel linked pages',
       kind: 'placement',
       cards: [
+        {
+          title: 'Healthy Housing fee schedule FY27',
+          text: 'Download certified apartment and reinspection fee documents.',
+          target: 'feeSchedule',
+          karl: 'Related section: right-panel linked page',
+        },
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
           text: 'Check whether Environmental Health may review a pest, vector, or housing health condition.',

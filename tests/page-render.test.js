@@ -125,4 +125,14 @@ describe('page-render.js escaping', () => {
     ])
     assertEscaped(html)
   })
+
+  test('renderResources escapes resource fields', () => {
+    const html = ctx.renderResources([{ title: PAYLOAD, text: PAYLOAD, target: 'ratsReport' }])
+    assertEscaped(html)
+  })
+
+  test('renderAccordions escapes accordion content', () => {
+    const html = ctx.renderAccordions([{ title: PAYLOAD, text: [PAYLOAD] }])
+    assertEscaped(html)
+  })
 })

@@ -12,6 +12,27 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     'A parent or community group leader hosting a youth science event in San Francisco',
   ],
   reading: 'Grade 7',
+  topicTag: 'Topic: Pests and housing problems',
+  colorTheme: 'eh',
+  logo: {
+    src: 'https://www.sfdph.org/dph/files/EHSdocs/EHLogo.png',
+    alt: 'Environmental Health logo',
+  },
+  spotlight2: {
+    title: 'Request a workshop for your group',
+    text: 'Submit organization details, audience size, preferred dates, and space needs through the online request form.',
+    imageAlt: 'Teacher helping students at a science station',
+    url: '/forms/mosquito-workshop-request/',
+    button: 'Request workshop',
+  },
+  about:
+    'The Mosquito Control Program offers free youth education to help San Francisco students understand mosquito biology, breeding prevention, and West Nile virus surveillance.',
+  contactSection: {
+    phone: 'Mosquito Control Program: 415-252-3806',
+    email: 'mosquito@sf.gov',
+    karl: 'Contact section: Mosquito Control Program',
+  },
+  partnerAgencies: [{ name: 'San Francisco Department of Public Health — Environmental Health' }],
   editorNote:
     'Campaign page for ongoing HHVC mosquito education outreach. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   spotlight: {

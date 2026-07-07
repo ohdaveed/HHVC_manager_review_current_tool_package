@@ -20,10 +20,12 @@ Karl CMS uses **14 content types**. This reference covers the four types most re
 
 | Content type | Resident goal | URL pattern | HHVC mockup pages |
 | --- | --- | --- | --- |
-| **Information** | Learn reference material | `sf.gov/information/[slug]` | 21 pages (e.g. `bedBugsInfo`) |
+| **Information** | Learn reference material | `sf.gov/information/[slug]` | 19 pages (e.g. `bedBugsInfo`) |
 | **Transaction** | Complete one action | `sf.gov/[verb-slug]` | 14 pages (e.g. `ratsReport`) |
-| **Resource Collection** | Browse documents and links | `sf.gov/resource/[year]/[title]` | 4 hub pages (e.g. `reportHub`) |
-| **Campaign** | Outreach with branded hero | `sf.gov/[campaign-slug]` | 0 pages (candidate: `mosquitoWorkshop`) |
+| **Resource Collection** | Browse documents and links | `sf.gov/resource/[year]/[title]` | 8 pages (4 hubs + 4 document libraries) |
+| **Campaign** | Outreach with branded hero | `sf.gov/[campaign-slug]` | 1 page (`mosquitoWorkshop`) |
+| **Step-by-step** | Multi-stage process overview | `sf.gov/[slug]` | 4 pages (e.g. `afterReport`) |
+| **Report** | Long-form reference with tables | `sf.gov/[slug]` | 1 page (`feeReport`) |
 
 **Important distinction from screenshots:** The Rent Board **Current Rates** page is a **Report** content type, not Information. Report is the only Karl type with native **tables**, auto **On this page** table of contents, and **Print version** PDF. Do not use that page as an Information-page template for HHVC.
 
@@ -264,7 +266,7 @@ Example: [`pages/report-rats-or-mice.js`](../../../pages/report-rats-or-mice.js)
 | `sections[].cards` with `target` | Related panel links |
 | `primaryCta` | Mockup SEO panel (maps to primary Button label intent) |
 
-**Gap:** Mockup does not render the gray **What to know before you start** box (Cost / Things to know). Editors must add that in Karl separately from `summary`.
+**Gap:** Mockup now renders the gray **What to know before you start** box via `whatToKnow` on Transaction pages.
 
 ---
 
@@ -465,12 +467,12 @@ Rendered by `karlTag()` in [`js/page-render.js`](../../../js/page-render.js); vi
 
 | Gap | Current state | Recommendation |
 | --- | --- | --- |
-| **Campaign** not modeled | `mosquitoWorkshop` is Information | Promote to Campaign if HHVC treats workshops as ongoing outreach |
-| **Resource Collection** shape | Hubs use `cards[]` cross-links | Production PDF libraries should use Body → Documents |
-| **What to know** box | Not rendered in mockup | Add gray-box section to Transaction template if reviewers need it |
-| **Tables on Information** | Mockup can render `table[][]` | Do not publish tables on Information; use Report or linked Resource Collection |
-| **Report** type | Not in mockup | Not needed for HHVC scope unless publishing Director's Rules as citable Report pages |
-| **Step-by-step** type | Process pages use Information + `steps[]` | Consider `afterReport` as Step-by-step if Karl breadcrumb "Part of" is required |
+| **Campaign** branding fields | `mosquitoWorkshop` has spotlight, top facts, logo, about | Add Spotlight 2 and color theme in Karl when publishing |
+| **Resource Collection** shape | Hubs use `cards[]` + mirrored `resources[]`; libraries use `documents[]` | Production PDF libraries should use Body → Documents |
+| **What to know** box | Rendered on Transaction pages via `whatToKnow` | Populate on every Transaction before publication |
+| **Tables on Information** | Validated — no Information pages use `table[][]` | Use Report or linked Resource Collection for tabular data |
+| **Report** type | `feeReport` previews FY27 fee tables | Link from `feeSchedule` Resource Collection PDF |
+| **Step-by-step** type | `afterReport`, `noticeOfViolation`, raccoon/mite child pages | Use `partOf` for child Transaction/Information links |
 
 ---
 
@@ -479,9 +481,12 @@ Rendered by `karlTag()` in [`js/page-render.js`](../../../js/page-render.js); vi
 | Type | Page key | File | Karl alignment |
 | --- | --- | --- | --- |
 | Information | `bedBugsInfo` | `pages/bed-bug-rules-prevention.js` | Title, Description, Information section blocks, Callouts, external Links via cards — no Button |
-| Transaction | `ratsReport` | `pages/report-rats-or-mice.js` | What to do steps, primary Button, step Callouts — missing What to know box in mockup |
-| Resource collection | `preventHub` | `pages/prevent-problems.js` | Title, Description, intro text, Resources-style card links — not Documents body |
-| Campaign | _(none)_ | `pages/mosquito-education-workshop.js` (Information) | Candidate for Campaign promotion per `editorNote` |
+| Transaction | `ratsReport` | `pages/report-rats-or-mice.js` | What to do steps, primary Button, `whatToKnow` gray box |
+| Resource collection | `feeSchedule` | `pages/healthy-housing-fee-schedule.js` | Introductory text, Body → Documents, Resources link to Report preview |
+| Resource collection (hub) | `reportHub` | `pages/report-a-problem.js` | Intro + `cards[]` / `resources[]` cross-links (review navigation mockup) |
+| Campaign | `mosquitoWorkshop` | `pages/mosquito-education-workshop.js` | Spotlight, top facts, logo, about, contact section |
+| Step-by-step | `afterReport` | `pages/what-happens-after-report.js` | Intro, `partOf`, step list |
+| Report | `feeReport` | `pages/healthy-housing-fee-schedule-report.js` | Fee tier tables, On this page TOC, print version link |
 
 ---
 
