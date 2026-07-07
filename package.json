@@ -40,7 +40,7 @@
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
     "// test": "Runs the test suite using Bun's test runner",
-    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js",
+    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/index-html-checks.test.js",
     "// test:e2e": "Playwright end-to-end tests (starts static server on :8080)",
     "test:e2e": "playwright test",
     "// vendor:browser": "Rebuild IIFE bundles for Fuse.js and defu used by index.html",

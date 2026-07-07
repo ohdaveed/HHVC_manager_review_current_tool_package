@@ -1,8 +1,10 @@
 // Validate the HHVC page data model before inventory exports or single-file builds.
 // This loads the browser-style page modules in a Node VM context, then enforces
 // required fields and shape constraints with Zod so bad page data fails fast.
+const fs = require('fs')
+const path = require('path')
 const { dataSchema } = require('./schema')
-const { loadPageData } = require('./load-pages')
+const { loadPageData, getPageScriptPaths, root } = require('./load-pages')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -11,6 +13,23 @@ const {
   findBannedTerms,
   findListFormatViolations,
 } = require('./data-checks')
+const { findPageScriptTags, findScriptTagDrift } = require('./index-html-checks')
+
+const pageFilesOnDisk = getPageScriptPaths().filter((file) => file !== 'js/page-data.js')
+const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
+const scriptDrift = findScriptTagDrift(pageFilesOnDisk, findPageScriptTags(indexHtml))
+if (scriptDrift.missingFromHtml.length) {
+  throw new Error(
+    'pages/*.js file(s) missing a <script> tag in index.html: ' +
+      scriptDrift.missingFromHtml.join(', ')
+  )
+}
+if (scriptDrift.missingFromDisk.length) {
+  throw new Error(
+    'index.html references pages/*.js file(s) that no longer exist: ' +
+      scriptDrift.missingFromDisk.join(', ')
+  )
+}
 
 const data = loadPageData()
 const parsed = dataSchema.safeParse(data)

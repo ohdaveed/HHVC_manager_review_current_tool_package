@@ -28,17 +28,22 @@ bun run build:workshop-form  # npm install + vite build inside forms/mosquito-wo
 bun run build:netlify        # validate.js -> build-netlify-dist.js (assembles dist/ for Netlify)
 bun run format               # prettier --write on **/*.{js,ts,json,md,css,html}
 bun run format:check         # prettier --check (this is the lint step; no ESLint/tsc)
+bun run test                  # bun test over tests/*.test.js (utils, data-validation, page-render,
+                              # csv, review-state-schema, reading-level)
+bun run test:e2e              # playwright test
 ```
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
 
-**There is no unit-test suite.** `bun run validate` (`build_scripts/validate.js`)
-is the de-facto test: it loads every `pages/*.js` file plus `js/page-data.js`
-into a Node VM context and Zod-validates required fields/shapes, plus a few
-hardcoded invariants (see below). It always validates the full page set —
-there's no way to validate a single page file in isolation. Run it after
-editing anything under `pages/` or `js/page-data.js`.
+`tests/` holds a real unit-test suite (6 files, run via `bun run test`) plus
+an `e2e/` subfolder driven by `bun run test:e2e`. Beyond that, `bun run
+validate` (`build_scripts/validate.js`) is a second, complementary check:
+it loads every `pages/*.js` file plus `js/page-data.js` into a Node VM
+context and Zod-validates required fields/shapes, plus a few hardcoded
+invariants (see below). It always validates the full page set — there's no
+way to validate a single page file in isolation. Run both after editing
+anything under `pages/` or `js/page-data.js`.
 
 ## Architecture
 
@@ -62,10 +67,21 @@ js/dashboard-guidance.js → js/interactive-sitemap.js → js/keyboard-shortcuts
 
 When adding a new page file: add its `<script>` tag in the `pages/*.js`
 block of `index.html`, before `js/page-data.js`; add a `[pageKey, menuLabel]`
-entry to the `order` array in `js/page-data.js` so it appears in navigation;
-and add the file path to the `files` array in **both**
-`build_scripts/validate.js` and `build_scripts/extract-pages.js` — those two
-scripts each hardcode their own separate copy of that list.
+entry to the `order` array in `js/page-data.js` so it appears in navigation.
+Node-side scripts (`build_scripts/validate.js`, `build_scripts/extract-pages.js`,
+and `tests/`) no longer hardcode their own page-file lists — they all
+discover `pages/*.js` dynamically via `build_scripts/load-pages.js` (glob +
+sort, with `js/page-data.js` always loaded last). Only `index.html`'s
+`<script>` tags still need a manual entry per new page; there's no
+independent list left to fall out of sync in the build scripts themselves.
+If you do forget the `<script>` tag (or leave a stale one after deleting a
+page file), `bun run validate` now catches it: it diffs `pages/*.js` on disk
+against the `<script src="pages/...">` tags in `index.html`
+(`build_scripts/index-html-checks.js`) and fails loudly on either direction
+of drift, since the browser has no way to glob its own script tags at
+runtime the way the Node build scripts can. Tag *order* isn't checked —
+page modules are independent (each only writes into `window.HHVC_PAGES`),
+so only set membership matters.
 
 ### Core module split (formerly one `app.js`)
 
