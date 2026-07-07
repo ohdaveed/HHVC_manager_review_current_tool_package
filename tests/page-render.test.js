@@ -66,6 +66,18 @@ describe('page-render.js escaping', () => {
     assertEscaped(html)
   })
 
+  test('renderRelatedList uses the cards grid layout', () => {
+    const html = ctx.renderRelatedList(
+      [{ title: 'Report mold', target: 'moldReport' }],
+      'Related pages'
+    )
+    expect(html).toContain('class="section section--related"')
+    expect(html).toContain('class="cards"')
+    expect(html).toContain('class="card"')
+    expect(html).toContain('data-render-target="moldReport"')
+    expect(html).not.toContain('class="related-list"')
+  })
+
   test('renderTable escapes header and body cells', () => {
     const html = ctx.renderTable([
       [PAYLOAD, 'Header 2'],
