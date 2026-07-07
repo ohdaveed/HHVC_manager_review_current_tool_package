@@ -34,13 +34,13 @@ bun run format:check         # prettier --check (this is the lint step; no ESLin
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There is no unit-test suite.** `bun run validate` (`build_scripts/validate.js`)
-is the de-facto test: it loads every page module listed in `build_scripts/validate.js`
+is the de-facto test: it loads page modules from `build_scripts/page-files.js`
 plus `js/page-data.js` into a Node VM context and Zod-validates required
 fields/shapes (46 pages as of July 2026), plus a few hardcoded invariants (see
-below). It always validates the full page set — there's no way to validate a
-single page file in isolation. When adding a page, update `validate.js`,
-`extract-pages.js`, `sync-tracking-sheet.js`, `index.html`, and `js/page-data.js`
-together. Run validate after editing anything under `pages/` or `js/page-data.js`.
+below). It also asserts `index.html` page `<script>` tags match `page-files.js`.
+When adding a page, update `build_scripts/page-files.js`, `js/page-data.js`, and
+`index.html` script tags. Run validate after editing anything under `pages/` or
+`js/page-data.js`.
 
 ## Architecture
 
@@ -62,12 +62,10 @@ js/manager-review-export.js → js/ux-improvements.js → js/review-queue.js →
 js/dashboard-guidance.js → js/interactive-sitemap.js → js/keyboard-shortcuts.js
 ```
 
-When adding a new page file: add its `<script>` tag in the `pages/*.js`
-block of `index.html`, before `js/page-data.js`; add a `[pageKey, menuLabel]`
+When adding a new page file: add its path to `build_scripts/page-files.js`, add its `<script>` tag in the `pages/*.js`
+block of `index.html` (same order as `page-files.js`), add a `[pageKey, menuLabel]`
 entry to the `order` array in `js/page-data.js` so it appears in navigation;
-and add the file path to the `files` array in **both**
-`build_scripts/validate.js` and `build_scripts/extract-pages.js` — those two
-scripts each hardcode their own separate copy of that list.
+`bun run validate` checks `index.html` and `page-files.js` stay aligned.
 
 ### Core module split (formerly one `app.js`)
 

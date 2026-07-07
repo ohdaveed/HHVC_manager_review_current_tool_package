@@ -221,3 +221,30 @@ describe('findListFormatViolations', () => {
     ])
   })
 })
+
+describe('page-files.js registry', () => {
+  const fs = require('fs')
+  const path = require('path')
+  const vm = require('vm')
+  const {
+    PAGE_MODULE_FILES,
+    VM_DATA_FILES,
+    assertIndexHtmlScriptSync,
+  } = require('../build_scripts/page-files')
+
+  test('index.html page scripts match PAGE_MODULE_FILES order', () => {
+    const root = path.resolve(__dirname, '..')
+    expect(() => assertIndexHtmlScriptSync(root, fs, path)).not.toThrow()
+  })
+
+  test('PAGE_MODULE_FILES count matches js/page-data.js order length', () => {
+    const root = path.resolve(__dirname, '..')
+    const ctx = { window: { HHVC_PAGES: {} } }
+    vm.createContext(ctx)
+    for (const f of VM_DATA_FILES) {
+      vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f })
+    }
+    expect(ctx.window.HHVC_DATA.order.length).toBe(PAGE_MODULE_FILES.length)
+    expect(Object.keys(ctx.window.HHVC_PAGES).length).toBe(PAGE_MODULE_FILES.length)
+  })
+})

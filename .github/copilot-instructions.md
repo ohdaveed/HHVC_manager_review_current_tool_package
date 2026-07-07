@@ -23,11 +23,11 @@ bun run format:check   # prettier --check (no test suite exists in this repo)
 ```
 
 There are no unit tests. `bun run validate` (`build_scripts/validate.js`) is
-the closest thing to a test: it loads every file in `pages/*.js` plus
-`js/page-data.js` into a Node VM context and enforces required fields/shapes
-with Zod, so bad page data fails fast. Run it after editing anything under
-`pages/` or `js/page-data.js`. There's no way to validate a single page file
-in isolation — the script always validates the full list.
+the closest thing to a test: it loads page modules from `build_scripts/page-files.js`
+plus `js/page-data.js` into a Node VM context, asserts `index.html` script tags
+match `page-files.js`, and enforces required fields/shapes with Zod. Run it after
+editing anything under `pages/` or `js/page-data.js`. When adding a page, update
+`build_scripts/page-files.js`, `js/page-data.js`, and `index.html` in the same order.
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 
@@ -43,7 +43,7 @@ in isolation — the script always validates the full list.
 - **Script load order in `index.html`:** `js/utils.js` → `pages/*.js` (each
   page) → `js/page-data.js` → `js/app.js` → `js/ux-improvements.js` →
   `js/review-queue.js` → `js/dashboard-guidance.js` → `js/interactive-sitemap.js`.
-  When adding a new page file, add its `<script>` tag in this same block, before `page-data.js`.
+  When adding a new page file, add its path to `build_scripts/page-files.js` and its `<script>` tag in this same block, before `page-data.js` (same order).
 - **Page object shape** (see `build_scripts/validate.js` for the enforced
   Zod schema): `slug`, `type` (`Topic page` | `Transaction` | `Information` |
   `Resource collection`; `Campaign` appears in editorial notes but is not yet

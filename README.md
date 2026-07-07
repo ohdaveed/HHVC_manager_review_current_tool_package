@@ -342,7 +342,7 @@ Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) an
 | 45  | `flyInfo`               | Flies and housing health                                    | Information         |
 | 46  | `reduceMoisture`        | Reduce indoor moisture, condensation, and humidity          | Information         |
 
-Regenerate this table after page additions: `node build_scripts/print-page-inventory-table.js`
+Regenerate this table after page additions: `node build_scripts/print-page-inventory-table.js` (reads `build_scripts/page-files.js`).
 
 ## Known content review flags
 

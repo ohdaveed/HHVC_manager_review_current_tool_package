@@ -5,64 +5,14 @@ const fs = require('fs')
 const vm = require('vm')
 const path = require('path')
 const { createObjectCsvWriter } = require('csv-writer')
+const { VM_DATA_FILES } = require('./page-files')
 
 const root = path.resolve(__dirname, '..')
 const ctx = { window: {} }
 ctx.window.HHVC_PAGES = {}
 vm.createContext(ctx)
 
-// Source page modules to evaluate. The VM context populates `window.HHVC_PAGES`
-// and ultimately `window.HHVC_DATA`, which is what the app consumes at runtime.
-const files = [
-  'pages/agency-service-grouping.js',
-  'pages/prevent-problems.js',
-  'pages/report-a-problem.js',
-  'pages/lookup-building-records.js',
-  'pages/lookup-complaints-inspections.js',
-  'pages/lookup-residential-violations.js',
-  'pages/lookup-residential-hotel-records.js',
-  'pages/find-district-inspector.js',
-  'pages/public-records-request.js',
-  'pages/property-owner-responsibilities.js',
-  'pages/respond-to-notice-of-violation.js',
-  'pages/report-rats-or-mice.js',
-  'pages/report-cockroaches.js',
-  'pages/report-bed-bugs.js',
-  'pages/bed-bug-rules-prevention.js',
-  'pages/bed-bug-forms-and-guides.js',
-  'pages/healthy-housing-fee-schedule.js',
-  'pages/healthy-housing-fee-schedule-report.js',
-  'pages/owner-forms-and-templates.js',
-  'pages/directors-rules-vector-control.js',
-  'pages/raccoon-latrine-cleanup.js',
-  'pages/mite-treatment-steps.js',
-  'pages/report-mosquitoes.js',
-  'pages/report-dead-bird.js',
-  'pages/report-pigeons.js',
-  'pages/report-garbage-clutter.js',
-  'pages/report-overgrown-vegetation.js',
-  'pages/report-mold-humidity-condensation.js',
-  'pages/hhvc-inspection-scope.js',
-  'pages/integrated-pest-management-property-managers.js',
-  'pages/what-happens-after-report.js',
-  'pages/tenant-rights-reporting.js',
-  'pages/keep-rats-and-mice-out.js',
-  'pages/prevent-cockroaches.js',
-  'pages/prevent-mosquitoes.js',
-  'pages/prevent-overgrown-vegetation.js',
-  'pages/prevent-garbage-clutter.js',
-  'pages/mosquito-control-program.js',
-  'pages/mosquito-education-workshop.js',
-  'pages/raccoon-information.js',
-  'pages/pigeon-information.js',
-  'pages/mite-information.js',
-  'pages/ground-wasp-information.js',
-  'pages/fly-information.js',
-  'pages/pay-healthy-housing-fee.js',
-  'pages/reduce-indoor-moisture.js',
-  'js/page-data.js',
-]
-for (const f of files) {
+for (const f of VM_DATA_FILES) {
   vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f })
 }
 
