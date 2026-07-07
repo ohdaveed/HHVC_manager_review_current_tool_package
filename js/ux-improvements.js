@@ -57,10 +57,10 @@
   // useEditor: true reads live sidebar values (current page only);
   // false evaluates raw page data so any page can be scored for the portfolio view.
   function getRuleResultsFor(page, { useEditor = false } = {}) {
-    const title = useEditor ? getValue('titleInput') || page.title || '' : page.title || ''
-    const summary = useEditor
-      ? getValue('descriptionInput') || page.summary || ''
-      : page.summary || ''
+    const titleInputEl = useEditor ? document.getElementById('titleInput') : null
+    const title = titleInputEl ? titleInputEl.value : page.title || ''
+    const summaryInputEl = useEditor ? document.getElementById('descriptionInput') : null
+    const summary = summaryInputEl ? summaryInputEl.value : page.summary || ''
     const seoTitle = useEditor ? getSeoTitle(page) : defaultSeoTitle(page)
     const metaDescription = useEditor ? getMetaDescription(page) : defaultMetaDescription(page)
     const primaryCta = (useEditor && getValue('ctaInput')) || getPrimaryCta(page)
@@ -469,9 +469,7 @@
     if (state.ui.workspace_onboarding_seen) return
 
     const hasExistingUsage =
-      Object.keys(state.pages || {}).length > 0 ||
-      typeof state.ui.workspace_open === 'boolean' ||
-      Boolean(state.ui.workspace_tab)
+      Object.keys(state.pages || {}).length > 0 || Boolean(state.ui.workspace_tab)
 
     if (hasExistingUsage) {
       updateLocalState((nextState) => {
@@ -483,12 +481,20 @@
 
     updateLocalState((nextState) => {
       nextState.ui.workspace_onboarding_seen = true
-      if (!nextState.ui.workspace_open) nextState.ui.workspace_open = true
-      if (!nextState.ui.workspace_tab) nextState.ui.workspace_tab = 'overview'
+      nextState.ui.workspace_open = true
+      nextState.ui.workspace_tab = 'overview'
       return nextState
     })
 
-    setWorkspaceOpen(true)
+    const workspace = document.getElementById(WORKSPACE_ID)
+    if (workspace) workspace.hidden = false
+
+    const toggleButton = document.querySelector('[data-sticky-action="toggle-workspace"]')
+    if (toggleButton) {
+      toggleButton.setAttribute('aria-expanded', 'true')
+      toggleButton.textContent = 'Hide workspace'
+    }
+
     setWorkspaceTab('overview')
     if (typeof window.showToast === 'function') {
       window.showToast(

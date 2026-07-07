@@ -182,6 +182,7 @@
   }
 
   window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog }
+  document.dispatchEvent(new CustomEvent('hhvc:shortcuts-ready'))
 
   function openWorkspaceTab(tabId) {
     const workspace = document.getElementById('reviewWorkspace')

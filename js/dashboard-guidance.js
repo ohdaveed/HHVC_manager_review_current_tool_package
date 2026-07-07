@@ -199,7 +199,10 @@
   function mountShortcutsPanel() {
     const helpPanel = document.getElementById('reviewWorkspaceHelp')
     if (!helpPanel || document.getElementById(SHORTCUTS_ID)) return
-    if (!window.reviewKeyboardShortcuts?.list?.length) return
+    if (!window.reviewKeyboardShortcuts?.list?.length) {
+      document.addEventListener('hhvc:shortcuts-ready', mountShortcutsPanel, { once: true })
+      return
+    }
 
     helpPanel.appendChild(buildShortcutsPanel())
   }
