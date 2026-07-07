@@ -1,0 +1,322 @@
+# Instincts generated from https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+# Generated: 2026-07-06T14:05:12.340Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: HHVC_manager_review_current_tool_package-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# HHVC_manager_review_current_tool_package Commit Length
+
+## Action
+
+Write moderate-length commit messages (~51 characters)
+
+## Evidence
+
+- Average commit message length: 51 chars
+- Based on 4 commits
+
+---
+id: HHVC_manager_review_current_tool_package-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# HHVC_manager_review_current_tool_package Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: HHVC_manager_review_current_tool_package-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# HHVC_manager_review_current_tool_package Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: HHVC_manager_review_current_tool_package-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# HHVC_manager_review_current_tool_package Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: HHVC_manager_review_current_tool_package-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# HHVC_manager_review_current_tool_package Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: HHVC_manager_review_current_tool_package-workflow-update-or-correct-design-spec
+trigger: "when doing update or correct design spec"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# HHVC_manager_review_current_tool_package Workflow Update Or Correct Design Spec
+
+## Action
+
+Follow the update-or-correct-design-spec workflow:
+1. Identify the need for an update or correction in an existing spec (e.g., after review or new findings).
+2. Edit the relevant markdown file in docs/superpowers/specs/ to reflect the changes.
+3. Commit the changes with a message referencing the correction or update.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: docs/superpowers/specs/*.md
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-file-naming
+trigger: "When creating or renaming a file in the codebase"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct File Naming
+
+## Action
+
+Name the file using kebab-case (e.g., my-component.ts)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-function-naming
+trigger: "When defining a function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Function Naming
+
+## Action
+
+Name the function using camelCase (e.g., fetchData)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-class-naming
+trigger: "When defining a class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase (e.g., UserManager)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE (e.g., MAX_SIZE)
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Import Style
+
+## Action
+
+Use relative import paths (e.g., import X from './x')
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Export Style
+
+## Action
+
+Use named exports (e.g., export { MyFunction })
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Test Location
+
+## Action
+
+Place test files in a separate directory from source files
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.8
+domain: git
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Commit Format
+
+## Action
+
+Write a concise, descriptive message without a prefix (e.g., 'Fix data-loss regression in dashboard redesign spec')
+
+## Evidence
+
+- Pattern in commits.prefixes (none)
+- Seen in commit examples
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Commit Length
+
+## Action
+
+Keep the commit message around 50 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: hhvc_manager_review_current_tool_package-instinct-update-design-spec
+trigger: "When someone needs to clarify, fix, or update a design spec after its initial creation"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: ohdaveed/HHVC_manager_review_current_tool_package
+---
+
+# Hhvc_manager_review_current_tool_package Instinct Update Design Spec
+
+## Action
+
+Edit the relevant markdown file in docs/superpowers/specs/ and commit the changes with a message referencing the correction or update
+
+## Evidence
+
+- Workflow: update-or-correct-design-spec
+- Seen in commit: 'Fix data-loss regression in dashboard redesign spec'
+
