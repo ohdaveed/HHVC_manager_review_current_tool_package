@@ -3,14 +3,13 @@ import re
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 ch8_path = os.path.join(base_dir, "hhvc_chapter_drafts", "hhvc-manual-chapter-8.md")
-manual_path = os.path.join(base_dir, "notebooklm", "hhvc-standards-manual.md")
+manual_path = os.environ.get(
+    "HHVC_STANDARDS_MANUAL_PATH",
+    os.path.join(base_dir, "hhvc-standards-manual.md"),
+)
 
 if not os.path.exists(ch8_path):
     print(f"Chapter 8 file not found at {ch8_path}.")
-    raise SystemExit(1)
-
-if not os.path.exists(manual_path):
-    print(f"Master manual not found at {manual_path}. Skipping merge.")
     raise SystemExit(1)
 
 with open(ch8_path, "r", encoding="utf-8") as f:
@@ -23,8 +22,10 @@ chapter8_cleaned = re.sub(
     flags=re.MULTILINE,
 )
 
-with open(manual_path, "r", encoding="utf-8") as f:
-    master = f.read()
+master = ""
+if os.path.exists(manual_path):
+    with open(manual_path, "r", encoding="utf-8") as f:
+        master = f.read()
 
 ch8_match = re.search(r"(<p><strong>Chapter 8:.*?)$", master, re.DOTALL)
 

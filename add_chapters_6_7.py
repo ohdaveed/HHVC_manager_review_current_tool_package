@@ -4,7 +4,10 @@ import re
 base_dir = os.path.dirname(os.path.abspath(__file__))
 ch6_path = os.path.join(base_dir, "hhvc_chapter_drafts", "hhvc-manual-chapter-6-v2.md")
 ch7_path = os.path.join(base_dir, "hhvc_chapter_drafts", "hhvc-manual-chapter-7.md")
-master_path = os.path.join(base_dir, "notebooklm", "hhvc-standards-manual.md")
+master_path = os.environ.get(
+    "HHVC_STANDARDS_MANUAL_PATH",
+    os.path.join(base_dir, "hhvc-standards-manual.md"),
+)
 
 with open(ch6_path, "r", encoding="utf-8") as f:
     chapter6 = f.read()
@@ -25,12 +28,10 @@ chapter7_cleaned = re.sub(
     flags=re.MULTILINE,
 )
 
-if not os.path.exists(master_path):
-    print(f"Master manual not found at {master_path}. Skipping merge.")
-    raise SystemExit(1)
-
-with open(master_path, "r", encoding="utf-8") as f:
-    master = f.read()
+master = ""
+if os.path.exists(master_path):
+    with open(master_path, "r", encoding="utf-8") as f:
+        master = f.read()
 
 ch6_match = re.search(
     r"(<p><strong>Chapter 6:.*?)(?=<p><strong>Chapter 8:|$)",
