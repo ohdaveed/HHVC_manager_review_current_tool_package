@@ -28,23 +28,23 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Who may need to pay',
-      karl: 'Best real-schema fit: a second things_to_know entry (Title = this heading, Text = the bulleted list below). Table removed — Transaction pages do not support a table block in Karl (only Report does; see docs/karl-help-center-research-2026-07-06.md item 2), so the fee tiers are listed as bullets instead. Amounts verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/25-6/30/26," revised 7/3/2025 (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy25-26.md) — the most recent certified schedule published as of this edit. Re-verify against a newer certification before publishing if one has since been issued.',
+      karl: 'Best real-schema fit: a second things_to_know entry (Title = this heading, Text = the bulleted list below). Table removed — Transaction pages do not support a table block in Karl (only Report does; see docs/karl-help-center-research-2026-07-06.md item 2), so the fee tiers are listed as bullets instead. Amounts verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md) — the current fiscal year\'s certified schedule. Re-verify against a newer certification before publishing if one has since been issued.',
       kind: 'body',
       bullets: [
         'You need to pay this fee if you own an apartment building with 3 or more rental units.',
         'If fewer than 3 units are rented during the billing year, you do not need to pay the fee.',
-        'The number of rental units determines your fee. Current certified rates (effective through June 30, 2026):',
-        '3 units: $101',
-        '4-6 units: $127',
-        '7-10 units: $171',
-        '11-15 units: $343',
-        '16-20 units: $475',
-        '21-30 units: $673',
-        'Over 30 units: $791',
+        'The number of rental units determines your fee. Current certified rates (effective 7/1/26-6/30/27):',
+        '3 units: $103',
+        '4-6 units: $129',
+        '7-10 units: $174',
+        '11-15 units: $350',
+        '16-20 units: $485',
+        '21-30 units: $688',
+        'Over 30 units: $808',
         'See the full fee schedule, including reinspection hourly rates, in the property owner resource collection.',
       ],
       paragraphs: [
-        'Reinspections are billed hourly (Sec. 609 cost recovery): $256/hour for an Environmental Health Inspector and $234/hour for an Environmental Health Technician. Additional half-hour rates beyond the first hour have not yet been reconfirmed against these updated base rates — check with Environmental Health before publishing a specific add-on figure.',
+        'Reinspections are billed hourly (Sec. 609 cost recovery): $256/hour for an Environmental Health Inspector ($128 per additional half hour) and $234/hour for an Environmental Health Technician ($115 per additional half hour).',
       ],
     },
     {
@@ -66,7 +66,7 @@ window.HHVC_PAGES['payFee'] = {
     },
     {
       heading: 'Questions about your fee and late payments',
-      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the bulleted list below). Updated per Master Guidelines Chapter 8.3 to include penalties.',
+      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the bulleted list below). Late-payment penalty and lien-interest figures verified against San Francisco Health Code Sec. 609(d)-(e) (docs/source/hhvc-policy/2026-07-02-health-code-sec-609-healthy-housing-fee.md) -- corrected from a prior karl note that miscited an AI-drafted "Master Guidelines Chapter 8.3," which does not exist as a numbered section in either notebooklm source doc and does not cover fee penalties in the latter.',
       kind: 'body',
       bullets: [
         'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
