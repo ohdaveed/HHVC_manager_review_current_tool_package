@@ -53,14 +53,11 @@ Service pages are the highest priority on SF.gov and are designed to help people
 
 #### **Category B: Outreach Pages (3 Types)**
 
-Outreach pages inform the public about active City initiatives, scheduled meetings, or time-sensitive announcements.
+Outreach pages inform the public about active City initiatives, scheduled meetings, or time-sensitive announcements. 5. **`Campaign` (Focused Outreach Banners)**
 
-5. **`Campaign` (Focused Outreach Banners)**
-
-- **Platform Purpose**: Visually distinct, structured templates used for temporary public outreach and educational campaigns. Supports branded hero, Spotlight, Top facts, and color theme options.
+- **Platform Purpose**: Visually distinct, structured templates used for temporary public outreach and educational campaigns. Supports top-of-page alert components.
 - **HHVC Application**: Used for seasonal public health messaging, such as the summer West Nile Virus awareness campaign or promotional sign-ups for free mosquito workshops.
 - **URL Structure**: `sf.gov/[slug]`.
-- **Do not confuse with Resource Collection**: Document-heavy outreach (for example, an RFP with a Documents list and revision dates) belongs on a **Resource Collection** page, not a Campaign. Campaigns are for message-focused, branded outreach — not PDF libraries. See [Karl content-type field reference](../docs/source/hhvc-policy/karl-content-type-field-reference.md).
 
 6. **`News` (Press and Announcements)**
    - **Platform Purpose**: A template for time-sensitive announcements, program updates, or media releases.
@@ -97,7 +94,6 @@ Department support pages describe the internal structure, meetings, data assets,
     - **URL Structure**: `sf.gov/[slug]`.
 13. **`Report` (Structured Long-form Documents)**
     - **Platform Purpose**: Used to publish long-form reference texts, formal policies, and regulations. **Crucially, in Karl CMS, "Report" is the only content type that natively supports tables.**
-    - **Live SF.gov example**: Rent Board **Current Rates** pages — multi-table reference data, auto "On this page" table of contents, and a print-version PDF. **Do not** model this pattern as an Information page.
     - **HHVC Application**: Used to publish the citable, text-based versions of active housing standards, such as the _Director's Rules for Vector Control_ or the _San Francisco Housing Code_.
     - **URL Structure**: `sf.gov/[slug]`.
 14. **`Resource Collection` (Document Libraries)**
@@ -111,17 +107,16 @@ Department support pages describe the internal structure, meetings, data assets,
 
 To ensure that all pages are consistently organized around user tasks, editors must use the following **Content Type Selection Matrix**. To maintain search engine findability and prevent layout errors, never guess a page type; map the primary resident goal directly to its approved Karl content type:
 
-| **Resident Goal or Action**                              |            **Karl Content Type**             | **HHVC Program Example**                   |
-| :------------------------------------------------------- | :------------------------------------------: | :----------------------------------------- |
-| File a cockroach, mold, or bed bug report online         |               **Transaction**                | _Report cockroaches_                       |
-| Pay an annual apartment program fee or late fee          |               **Transaction**                | _Pay your Healthy Housing fee_             |
-| Learn how to seal cracks to keep mice out of a kitchen   |               **Information**                | _Keep rats and mice out_                   |
-| Understand what steps to take after filing a complaint   |               **Step-by-step**               | _What happens after you report_            |
-| Prepare a unit for an upcoming SRO hygiene inspection    |               **Step-by-step**               | _Get ready for an SRO inspection_          |
-| Review legal requirements of a Notice of Violation (NOV) |               **Information**                | _Understand a notice of violation_         |
-| Find and download the landlord Bed Bug Disclosure form   |           **Resource Collection**            | _Vermin prevention guides and forms_       |
-| Publish fee tiers or rate tables                         | **Report** or linked **Resource Collection** | _Healthy Housing fee schedule document_    |
-| View the program mission, office hours, and district map |                  **About**                   | _About Healthy Housing and Vector Control_ |
+| **Resident Goal or Action**                              |  **Karl Content Type**  | **HHVC Program Example**                   |
+| :------------------------------------------------------- | :---------------------: | :----------------------------------------- |
+| File a cockroach, mold, or bed bug report online         |     **Transaction**     | _Report cockroaches_                       |
+| Pay an annual apartment program fee or late fee          |     **Transaction**     | _Pay your Healthy Housing fee_             |
+| Learn how to seal cracks to keep mice out of a kitchen   |     **Information**     | _Keep rats and mice out_                   |
+| Understand what steps to take after filing a complaint   |    **Step-by-step**     | _What happens after you report_            |
+| Prepare a unit for an upcoming SRO hygiene inspection    |    **Step-by-step**     | _Get ready for an SRO inspection_          |
+| Review legal requirements of a Notice of Violation (NOV) |     **Information**     | _Understand a notice of violation_         |
+| Find and download the landlord Bed Bug Disclosure form   | **Resource Collection** | _Vermin prevention guides and forms_       |
+| View the program mission, office hours, and district map |        **About**        | _About Healthy Housing and Vector Control_ |
 
 ---
 
@@ -164,4 +159,3 @@ Editors must work strictly within the design boundaries of Karl CMS templates.
 - [📒 SF.gov and Karl Editor Help Center: Step-by-step pages](https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/using-karl-the-cms/content-types/building-a-page-by-content-type/step-by-step)
 - [📒 SF.gov and Karl Editor Help Center: Information pages](https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/using-karl-the-cms/content-types/building-a-page-by-content-type/information)
 - [📒 SF.gov and Karl Editor Help Center: Resource Collections](https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/using-karl-the-cms/content-types/building-a-page-by-content-type/resource-collection)
-- [📋 Karl CMS content-type field reference](../docs/source/hhvc-policy/karl-content-type-field-reference.md) — HHVC field map supplement with SF.gov screenshot mapping

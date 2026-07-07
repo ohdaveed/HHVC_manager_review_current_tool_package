@@ -5,10 +5,11 @@ const { z } = require('zod')
 
 const cardSchema = z.object({
   title: z.string().min(1),
-  text: z.string().min(1),
+  text: z.string().min(1).optional(),
   target: z.string().optional(),
   url: z.string().optional(),
   karl: z.string().optional(),
+  fileType: z.string().optional(),
 })
 
 const resourceSchema = z.object({
@@ -73,11 +74,16 @@ const whatToKnowSchema = z.object({
 })
 
 const spotlightSchema = z.object({
-  title: z.string().min(1),
-  text: z.string().min(1),
+  title: z.string().optional(),
+  text: z.string().min(1).optional(),
+  paragraphs: z.array(z.string()).optional(),
+  image: imageSchema.optional(),
   imageAlt: z.string().optional(),
   url: z.string().optional(),
   button: z.string().optional(),
+  buttonTarget: z.string().optional(),
+  buttonUrl: z.string().optional(),
+  karl: z.string().optional(),
 })
 
 const logoSchema = z.object({
@@ -94,6 +100,7 @@ const stepSchema = z.object({
   title: z.string().min(1),
   text: z.array(z.string()).optional(),
   bullets: z.array(z.string()).optional(),
+  cards: z.array(cardSchema).optional(),
   button: z.string().optional(),
   buttonTarget: z.string().optional(),
   buttonUrl: z.string().optional(),

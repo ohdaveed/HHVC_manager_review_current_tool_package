@@ -6,36 +6,13 @@ function init() {
   buildPageSelect()
   const select = document.getElementById('pageSelect')
   select.addEventListener('change', (e) => renderPage(e.target.value))
-  document.getElementById('urlInput').addEventListener('input', (e) => {
-    document.getElementById('browserUrl').textContent = 'https://' + e.target.value
-    updateSearchPreview()
-  })
-  document.getElementById('titleInput').addEventListener('input', (e) => {
-    const page = pageData[currentPageKey]
-    page.title = e.target.value
-    applyFieldToMockup('title', e.target.value)
-    if (!page.seoTitleEdited) {
-      setValue('seoTitleInput', defaultSeoTitle(page))
-    }
-    updateSearchPreview()
-    updateDirtyIndicators(currentPageKey)
-  })
-  document.getElementById('descriptionInput').addEventListener('input', (e) => {
-    const page = pageData[currentPageKey]
-    page.summary = e.target.value
-    applyFieldToMockup('summary', e.target.value)
-    if (!page.metaDescriptionEdited) {
-      setValue('metaDescriptionInput', defaultMetaDescription(page))
-    }
-    updateSearchPreview()
-    updateDirtyIndicators(currentPageKey)
-  })
-  document.getElementById('ctaInput').addEventListener('input', (e) => {
-    const page = pageData[currentPageKey]
-    setPrimaryCta(page, e.target.value)
-    applyFieldToMockup('cta', e.target.value)
-    updateDirtyIndicators(currentPageKey)
-  })
+  const urlInput = document.getElementById('urlInput')
+  if (urlInput) {
+    urlInput.addEventListener('input', (e) => {
+      document.getElementById('browserUrl').textContent = 'https://' + e.target.value
+      updateSearchPreview()
+    })
+  }
   document.getElementById('seoTitleInput').addEventListener('input', (e) => {
     const page = pageData[currentPageKey]
     page.seoTitle = e.target.value
@@ -52,13 +29,24 @@ function init() {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })
   mountKarlTagLegend?.()
-  document.getElementById('resetTitleBtn')?.addEventListener('click', () => resetField('title'))
-  document
-    .getElementById('resetDescriptionBtn')
-    ?.addEventListener('click', () => resetField('summary'))
-  document.getElementById('resetCtaBtn')?.addEventListener('click', () => resetField('cta'))
-  document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar)
   initChecklist()
-  renderPage('pestsTopic')
+
+  window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.key) {
+      renderPage(e.state.key, true)
+    } else {
+      const params = new URLSearchParams(window.location.search)
+      const key = params.get('page')
+      if (key && pageData[key]) {
+        renderPage(key, true)
+      } else {
+        renderPage('pestsTopic', true)
+      }
+    }
+  })
+
+  const params = new URLSearchParams(window.location.search)
+  const initialKey = params.get('page') || 'pestsTopic'
+  renderPage(initialKey, true)
 }
 init()

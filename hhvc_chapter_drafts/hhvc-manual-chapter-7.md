@@ -42,7 +42,6 @@ Readability grade levels must be calibrated to the specific task and page catego
 
 #### **7.2.2 Sentence and Paragraph Length Constraints**
 
-- **HHVC reading-level tiers (approved July 2026):** Grade **6** for report Transaction pages; Grade **7** for technical Information pages and code-enforcement flows. Karl's default 5th-grade Hemingway target is a floor, not a ceiling for legal-adjacent copy.
 - **Sentence Length:** Keep sentences short and direct, averaging **15 to 20 words or fewer** [280, 411]. Focus strictly on **one idea per sentence** [280]. Break long sentences at connectors (such as "and", "but", "or") to create separate statements [123, 126].
 - **Paragraph Length:** Restrict paragraphs to **3 sentences or less** to avoid intimidating "walls of text" [37, 39, 43, 236, 411]. Provide a subheading or a visual bulleted list after approximately every 3 paragraphs [43, 236].
 - **Bulleted Lists:** Convert any sentence listing more than 3 items into a clean, bulleted list to introduce white space [37, 39, 43, 236].

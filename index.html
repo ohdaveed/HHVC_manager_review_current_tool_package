@@ -13,22 +13,23 @@
   </head>
   <body>
     <div class="app">
+      <button
+        type="button"
+        class="icon-btn sidebar-toggle"
+        id="sidebarToggle"
+        aria-label="Collapse sidebar"
+        onclick="window.toggleSidebar?.()"
+      >
+        ◀
+      </button>
       <aside class="sidebar" aria-label="Mockup controls">
         <div class="sidebar-header">
-          <button
-            type="button"
-            class="icon-btn sidebar-toggle"
-            id="sidebarToggle"
-            aria-label="Collapse sidebar"
-          >
-            ◀
-          </button>
           <div>
             <div class="eyebrow">SFDS rebuild</div>
             <h2>HHVC mockup review tool</h2>
           </div>
         </div>
-        <p>
+        <p data-sidebar-copy-migrate="true">
           Use this selector to review rebuilt SF.gov page patterns for Environmental Health and
           HHVC.
         </p>
@@ -37,61 +38,6 @@
           <div class="details-body">
             <label for="pageSelect">Choose a page mockup</label>
             <select id="pageSelect"></select>
-            <label for="urlInput">Preview URL slug</label>
-            <input
-              id="urlInput"
-              type="text"
-              value="sf.gov/topic-pests-and-housing-problems"
-              aria-label="Preview URL slug"
-            />
-          </div>
-        </details>
-        <details class="control-group">
-          <summary class="eyebrow">Live content editor</summary>
-          <div class="details-body">
-            <label for="titleInput">Page title</label>
-            <div class="field-with-reset">
-              <input id="titleInput" type="text" aria-label="Page title" />
-              <button
-                type="button"
-                class="icon-btn reset-field-btn"
-                id="resetTitleBtn"
-                aria-label="Reset page title to original"
-                title="Reset to original"
-              >
-                ↺
-              </button>
-            </div>
-            <label for="descriptionInput">Short summary / description</label>
-            <div class="field-with-reset">
-              <textarea id="descriptionInput" aria-label="Short summary or description"></textarea>
-              <button
-                type="button"
-                class="icon-btn reset-field-btn"
-                id="resetDescriptionBtn"
-                aria-label="Reset description to original"
-                title="Reset to original"
-              >
-                ↺
-              </button>
-            </div>
-            <label for="ctaInput">Primary CTA label</label>
-            <div class="field-with-reset">
-              <input id="ctaInput" type="text" aria-label="Primary CTA label" />
-              <button
-                type="button"
-                class="icon-btn reset-field-btn"
-                id="resetCtaBtn"
-                aria-label="Reset CTA to original"
-                title="Reset to original"
-              >
-                ↺
-              </button>
-            </div>
-            <p class="field-help">
-              Use this to test page title, short summary, and primary CTA wording without editing
-              the source data.
-            </p>
           </div>
         </details>
         <details class="control-group">
@@ -118,62 +64,17 @@
                 Search description preview
               </div>
             </div>
-            <p class="field-help">
+            <p class="field-help" data-sidebar-copy-migrate="true">
               SEO fields support the content model fields: SEO Title and SEO Description. Keep the
               meta description short enough for SF.gov review.
             </p>
-          </div>
-        </details>
-        <details class="control-group">
-          <summary class="eyebrow">Karl CMS tags</summary>
-          <div class="details-body">
-            <div class="karl-tag-toggle">
-              <span>Show Karl tags</span
-              ><label class="karl-switch" aria-label="Show Karl CMS tags"
-                ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
-              ></label>
-            </div>
-            <div id="karlTagLegendSidebar"></div>
-            <p class="field-help">
-              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
-            </p>
-            <details class="karl-help-nested">
-              <summary class="field-help">What are Karl tags?</summary>
-              <div class="cms-help">
-                Tags identify where each text block should be entered in Karl CMS: metadata fields,
-                body sections, primary actions, body links, Related section links, Agency page link
-                sections, Resource Collection items, or editor-only notes.
-              </div>
-              <div class="cms-help">
-                <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
-                determined by the tag text, not by the visual box shape.
-              </div>
-            </details>
-          </div>
-        </details>
-        <details class="control-group">
-          <summary class="eyebrow">Applied rules</summary>
-          <div class="details-body">
-            <ul class="checklist">
-              <li class="check">SF.gov system typography and SFDS-style spacing</li>
-              <li class="check">Action Blue for links and primary action</li>
-              <li class="check">Topic page uses scannable link clusters</li>
-              <li class="check">Article 11 / HHVC scope only</li>
-              <li class="check">72-hour tenant notice where applicable</li>
-              <li class="check">No standard photo requirement</li>
-              <li class="check">Report, prevent, scope, and tenant-help clusters</li>
-              <li class="check">
-                Enforcement pathway included without overloading Transaction pages
-              </li>
-              <li class="check">Tenant rights and anti-retaliation reassurance included</li>
-            </ul>
           </div>
         </details>
 
         <details class="control-group manager-review" open>
           <summary class="eyebrow">Manager review</summary>
           <div class="details-body">
-            <p class="field-help">
+            <p class="field-help" data-sidebar-copy-migrate="true">
               Use these fields during review. Exports download to your browser only; they do not
               change source files or publish pages.
             </p>
@@ -260,20 +161,6 @@
             <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
           </div>
         </details>
-        <details class="control-group">
-          <summary class="eyebrow">Reading targets</summary>
-          <div class="details-body">
-            <p>
-              <strong>Transaction:</strong> Grade 5–6<br /><strong>Prevention:</strong> Grade 6<br /><strong
-                >Inspection/process:</strong
-              >
-              Grade 6–7<br /><strong>Enforcement/NOV:</strong> Grade 7–8
-            </p>
-            <p class="field-help" id="readingCurrent" style="margin-top: 0.65rem; font-weight: 600">
-              Current page target: <span id="readingTargetValue">—</span>
-            </p>
-          </div>
-        </details>
       </aside>
       <main class="canvas">
         <nav class="canvas-toolbar">
@@ -290,7 +177,37 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </figcaption>
-          <div id="karlTagLegendCompact"></div>
+          <div
+            class="karl-page-tags-banner"
+            style="
+              padding: 1rem 1rem 0.5rem;
+              border-bottom: 1px solid var(--sfds-border);
+              background: var(--sfds-blue-soft-bg);
+            "
+          >
+            <div class="karl-tag-toggle">
+              <span>Show Karl tags</span
+              ><label class="karl-switch" aria-label="Show Karl CMS tags"
+                ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
+              ></label>
+            </div>
+            <div id="karlTagLegendSidebar"></div>
+            <p class="field-help" style="margin-top: 1rem">
+              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
+            </p>
+            <details class="karl-help-nested" style="margin-top: 0.5rem">
+              <summary class="field-help">What are Karl tags?</summary>
+              <div class="cms-help">
+                Tags identify where each text block should be entered in Karl CMS: metadata fields,
+                body sections, primary actions, body links, Related section links, Agency page link
+                sections, Resource Collection items, or editor-only notes.
+              </div>
+              <div class="cms-help">
+                <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
+                determined by the tag text, not by the visual box shape.
+              </div>
+            </details>
+          </div>
           <div id="mockPage">
             <div class="page-body">
               <h1>Loading HHVC mockup…</h1>
@@ -304,26 +221,29 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
-              data-workspace-tab="queue"
+              id="reviewWorkspaceTabOverview"
+              data-workspace-tab="overview"
               aria-selected="true"
-              aria-controls="reviewWorkspaceQueue"
+              aria-controls="reviewWorkspaceOverview"
             >
-              Queue
+              Overview
             </button>
             <button
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabChecks"
               data-workspace-tab="checks"
               aria-selected="false"
-              aria-controls="reviewDashboardCore"
+              aria-controls="reviewChecksPanel"
             >
-              Checks
+              Page checks
             </button>
             <button
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabSitemap"
               data-workspace-tab="sitemap"
               aria-selected="false"
               aria-controls="reviewWorkspaceSitemap"
@@ -334,6 +254,7 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabHelp"
               data-workspace-tab="help"
               aria-selected="false"
               aria-controls="reviewWorkspaceHelp"
@@ -342,15 +263,17 @@
             </button>
           </nav>
           <div
-            id="reviewWorkspaceQueue"
+            id="reviewWorkspaceOverview"
             class="review-workspace-panel"
             role="tabpanel"
-            data-workspace-panel="queue"
+            aria-labelledby="reviewWorkspaceTabOverview"
+            data-workspace-panel="overview"
           ></div>
           <div
-            id="reviewDashboardCore"
-            class="review-workspace-panel review-dashboard"
+            id="reviewChecksPanel"
+            class="review-workspace-panel review-checks-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabChecks"
             data-workspace-panel="checks"
             hidden
           ></div>
@@ -358,6 +281,7 @@
             id="reviewWorkspaceSitemap"
             class="review-workspace-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabSitemap"
             data-workspace-panel="sitemap"
             hidden
           ></div>
@@ -365,6 +289,7 @@
             id="reviewWorkspaceHelp"
             class="review-workspace-panel"
             role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabHelp"
             data-workspace-panel="help"
             hidden
           ></div>
@@ -373,6 +298,8 @@
       </main>
     </div>
 
+    <script src="node_modules/papaparse/papaparse.min.js"></script>
+    <script src="js/vendor/defu.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/hhvc-page-defaults.js"></script>
     <script src="js/karl-tag-meta.js"></script>
@@ -429,7 +356,10 @@
     <script src="js/page-render.js"></script>
     <script src="js/app.js"></script>
     <script src="js/manager-review-export.js"></script>
+    <script src="js/review-state-validation.js"></script>
+    <script src="js/reading-level.js"></script>
     <script src="js/ux-improvements.js"></script>
+    <script src="js/vendor/fuse.js"></script>
     <script src="js/review-queue.js"></script>
     <script src="js/dashboard-guidance.js"></script>
     <script src="js/interactive-sitemap.js"></script>

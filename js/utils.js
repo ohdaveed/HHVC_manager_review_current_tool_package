@@ -35,6 +35,7 @@ const REVIEW_RECORD_FIELDS = [
     today,
     csvEscape,
     toCsv,
+    parseCsv,
     downloadFile,
     debounce,
     throttle,
@@ -221,6 +222,76 @@ function csvEscape(value) {
  */
 function toCsv(rows) {
   return rows.map((row) => row.map(csvEscape).join(',')).join('\n') + '\n'
+}
+
+/**
+ * Parse CSV text into rows of cell values, inverse of toCsv/csvEscape.
+ * Uses Papa Parse when loaded in the browser; falls back to a hand-rolled parser in tests.
+ * @param {string} text
+ * @returns {Array<Array<string>>}
+ */
+function parseCsv(text) {
+  if (typeof Papa !== 'undefined' && Papa.parse) {
+    const result = Papa.parse(text, {
+      delimiter: ',',
+      skipEmptyLines: false,
+      transform: (value) => (value == null ? '' : String(value)),
+    })
+    if (result.errors.length) {
+      const first = result.errors[0]
+      throw new Error(`CSV parse error at row ${first.row}: ${first.message}`)
+    }
+    const rows = result.data
+    if (rows.length && rows[rows.length - 1].length === 1 && rows[rows.length - 1][0] === '') {
+      rows.pop()
+    }
+    return rows
+  }
+
+  const rows = []
+  let row = []
+  let field = ''
+  let inQuotes = false
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text.charAt(i)
+    const next = text.charAt(i + 1)
+
+    if (inQuotes) {
+      if (ch === '"' && next === '"') {
+        field += '"'
+        i += 1
+      } else if (ch === '"') {
+        inQuotes = false
+      } else {
+        field += ch
+      }
+      continue
+    }
+
+    if (ch === '"') {
+      inQuotes = true
+    } else if (ch === ',') {
+      row.push(field)
+      field = ''
+    } else if (ch === '\n') {
+      row.push(field)
+      rows.push(row)
+      row = []
+      field = ''
+    } else if (ch === '\r') {
+      // ignore; \r\n handled via the \n branch above
+    } else {
+      field += ch
+    }
+  }
+
+  if (field.length || row.length) {
+    row.push(field)
+    rows.push(row)
+  }
+
+  return rows
 }
 
 /**

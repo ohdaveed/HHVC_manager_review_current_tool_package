@@ -12,6 +12,10 @@
     { keys: ['→', 'j'], description: 'Next page (respects the active queue filter)' },
     { keys: ['n'], description: 'Jump to the next page that still needs review' },
     { keys: ['w'], description: 'Show or hide the review workspace' },
+    { keys: ['1'], description: 'Open Overview workspace tab' },
+    { keys: ['2'], description: 'Open Page checks workspace tab' },
+    { keys: ['3'], description: 'Open Sitemap workspace tab' },
+    { keys: ['4'], description: 'Open Help workspace tab' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
     { keys: ['r'], description: 'Revise and resubmit (current or selected)' },
@@ -96,13 +100,13 @@
 
   function selectAllVisible() {
     const workspace = document.getElementById('reviewWorkspace')
-    const queueTab = document.querySelector('[data-workspace-tab="queue"]')
-    const isQueueVisible =
+    const overviewTab = document.querySelector('[data-workspace-tab="overview"]')
+    const isOverviewVisible =
       workspace &&
       !workspace.hidden &&
-      queueTab &&
-      queueTab.getAttribute('aria-selected') === 'true'
-    if (!isQueueVisible) return
+      overviewTab &&
+      overviewTab.getAttribute('aria-selected') === 'true'
+    if (!isOverviewVisible) return
 
     window.reviewQueue?.selectAllVisible?.()
     window.reviewQueue?.syncSelectionUi?.()
@@ -177,6 +181,17 @@
     else dialog.showModal()
   }
 
+  window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog }
+  document.dispatchEvent(new CustomEvent('hhvc:shortcuts-ready'))
+
+  function openWorkspaceTab(tabId) {
+    const workspace = document.getElementById('reviewWorkspace')
+    if (workspace?.hidden) {
+      window.reviewWorkspace?.setOpen?.(true)
+    }
+    window.reviewWorkspace?.setTab?.(tabId)
+  }
+
   function handleKeyDown(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return
     if (isTypingContext(event.target)) return
@@ -208,6 +223,22 @@
       case 'w':
         event.preventDefault()
         toggleWorkspace()
+        break
+      case '1':
+        event.preventDefault()
+        openWorkspaceTab('overview')
+        break
+      case '2':
+        event.preventDefault()
+        openWorkspaceTab('checks')
+        break
+      case '3':
+        event.preventDefault()
+        openWorkspaceTab('sitemap')
+        break
+      case '4':
+        event.preventDefault()
+        openWorkspaceTab('help')
         break
       case 'a':
         event.preventDefault()
@@ -277,6 +308,7 @@
   function init() {
     document.addEventListener('keydown', handleKeyDown)
     mountShortcutHint()
+    window.refreshDashboardGuidance?.()
   }
 
   if (document.readyState === 'loading') {
