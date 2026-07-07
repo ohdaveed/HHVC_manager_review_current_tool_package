@@ -4,13 +4,13 @@ window.HHVC_PAGES['miteInfo'] = {
   type: 'Information',
   title: 'Mites and housing health',
   summary:
-    'Learn about tropical rat mites, why rodent nests must be treated before rodenticides, and how mite concerns differ from bed bugs.',
+    'Learn about rat mites, why rodent nests need treatment before rodenticides, and when to report.',
   audience: [
     'A tenant with bites, itching, or small insects they think may be mites',
     'A property owner or manager planning rodent control or responding to bites after rodent activity',
     'A resident after bird or rodent activity in or near the building',
   ],
-  reading: 'Grade 6–8',
+  reading: 'Grade 7',
   editorNote:
     'Information page. Do not provide medical diagnosis. Verify HHVC scope and PCO treatment sequencing guidance before publication. Must stay cross-linked with Keep rats and mice out for tropical rat mite / rodenticide order-of-operations.',
   sections: [

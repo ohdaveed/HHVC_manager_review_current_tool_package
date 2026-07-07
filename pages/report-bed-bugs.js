@@ -9,7 +9,21 @@ window.HHVC_PAGES['bedBugsReport'] = {
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting bed bugs in rental housing, an SRO, or a residential hotel',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
+  primaryCta: 'Report through 311',
+  topicTag: 'Topic: Pests and housing problems',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'You can ask 311 for help in your language.',
+      'It can take a few weekdays for 311 to assign an inspector after you report.',
+    ],
+  },
+  contact: {
+    phone: ['311 (call or text)'],
+    email: ['ehb@sfdph.org'],
+    other: ['Environmental Health — Healthy Housing and Vector Control'],
+  },
   sections: [
     {
       heading: 'What to do',
@@ -105,6 +119,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
     },
     {
       heading: 'Related pages',
+      component: 'related',
       karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries (note: the bedBugsInfo target also appears in the "Bed bug rules" section above — likely a duplicate related entry to reconcile).',
       kind: 'placement',
       cards: [

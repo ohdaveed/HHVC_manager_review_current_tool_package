@@ -10,7 +10,7 @@ window.HHVC_PAGES['publicRecords'] = {
     'A property owner requesting records for a building they manage',
     'A journalist or researcher requesting public records',
   ],
-  reading: 'Grade 7–8',
+  reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for the citywide public records service (NextRequest). Primary CTA is external. Verify whether HHVC needs a program-specific intro or routes entirely to the citywide portal.',
   sections: [
@@ -35,7 +35,7 @@ window.HHVC_PAGES['publicRecords'] = {
       paragraphs: [
         'Public records requests are handled through the citywide San Francisco NextRequest portal. You will leave SF.gov.',
       ],
-      button: 'Make a public records request',
+      button: 'Request records',
       buttonUrl: 'https://sanfrancisco.nextrequest.com/requests/new',
     },
     {

@@ -9,7 +9,7 @@ window.HHVC_PAGES['moldReport'] = {
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting mold in an SRO, residential hotel, or shared residential area',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   seoTitle: 'Report mold from humidity or condensation',
   metaDescription: 'Report mold or moisture caused by humidity, condensation, or poor ventilation.',
   sections: [

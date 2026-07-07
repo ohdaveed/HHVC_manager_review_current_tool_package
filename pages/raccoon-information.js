@@ -4,13 +4,13 @@ window.HHVC_PAGES['raccoonInfo'] = {
   type: 'Information',
   title: 'Raccoons and housing health',
   summary:
-    'Learn about raccoon roundworm risks, how to clean up raccoon latrines safely, and when to report housing-health conditions.',
+    'Learn about raccoon roundworm risks, safe latrine cleanup, and when to report housing concerns.',
   audience: [
     'A tenant or resident dealing with raccoons near a building',
     'A property owner or manager trying to reduce wildlife attractants',
     'A neighbor reporting garbage, animal waste, or entry points caused by raccoon activity',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   editorNote:
     'Information page. Wildlife trapping is outside HHVC scope — route injured/trapped animals to Animal Care & Control. Latrine cleanup steps follow CDC Baylisascaris guidance; SME must verify against current CDC/DPH protocols before publication. In Karl: add CDC external link in Information section; do not publish until vector program signs off.',
   editorStatus: 'blocked',

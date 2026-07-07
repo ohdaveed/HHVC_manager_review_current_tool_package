@@ -10,7 +10,7 @@ window.HHVC_PAGES['tenantRights'] = {
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person living in an SRO or residential hotel who is worried about retaliation',
   ],
-  reading: 'Grade 6–7',
+  reading: 'Grade 7',
   sections: [
     {
       heading: 'You can ask the City for help',

@@ -10,7 +10,7 @@ window.HHVC_PAGES['mosquitoesReport'] = {
     'A person reporting standing water around a home, yard, building, or shared area',
     'An employee reporting mosquitoes or standing water at work',
   ],
-  reading: 'Grade 5–6',
+  reading: 'Grade 6',
   sections: [
     {
       heading: 'What to do',
