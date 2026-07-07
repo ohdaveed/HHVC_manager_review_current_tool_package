@@ -6,10 +6,13 @@ function init() {
   buildPageSelect()
   const select = document.getElementById('pageSelect')
   select.addEventListener('change', (e) => renderPage(e.target.value))
-  document.getElementById('urlInput').addEventListener('input', (e) => {
-    document.getElementById('browserUrl').textContent = 'https://' + e.target.value
-    updateSearchPreview()
-  })
+  const urlInput = document.getElementById('urlInput')
+  if (urlInput) {
+    urlInput.addEventListener('input', (e) => {
+      document.getElementById('browserUrl').textContent = 'https://' + e.target.value
+      updateSearchPreview()
+    })
+  }
   document.getElementById('seoTitleInput').addEventListener('input', (e) => {
     const page = pageData[currentPageKey]
     page.seoTitle = e.target.value
