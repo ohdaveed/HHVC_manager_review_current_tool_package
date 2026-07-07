@@ -25,6 +25,7 @@ window.HHVC_DATA = {
     ['moldReport', 'Transaction: Report mold from humidity or condensation'],
     ['payFee', 'Transaction: Pay your Healthy Housing fee'],
     ['scopeInfo', 'Information: Learn what HHVC can inspect'],
+    ['article11Guide', 'Information: Health Code Article 11 in plain language'],
     ['ownerGuidance', 'Information: Integrated pest management for property owners and managers'],
     ['afterReport', 'Information: What happens after you report'],
     ['tenantRights', 'Information: Tenant rights and reporting'],

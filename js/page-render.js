@@ -245,14 +245,35 @@ function renderSteps(steps = []) {
     )
     .join('')}</ol>`
 }
-function renderTable(rows = [], pageType = 'generic') {
+function isCodeTranslationTable(head = []) {
+  return head.length === 2 && head[0] === 'Health code' && head[1] === 'In plain language'
+}
+function renderTable(rows = [], pageType = 'generic', caption = '') {
   if (!rows.length) return ''
   const [head, ...body] = rows
+  const codeTranslation = isCodeTranslationTable(head)
   const previewNote =
     pageType === 'information'
       ? `<p class="mockup-only-note">${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
       : ''
-  return `${previewNote}<table class="table"><thead><tr>${head.map((h) => `<th>${formatMarkdown(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${formatMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+  const tableClass = codeTranslation ? 'table table--code-translation' : 'table'
+  const table = `<table class="${tableClass}"><thead><tr>${head
+    .map((h) => `<th scope="col">${formatMarkdown(h)}</th>`)
+    .join('')}</tr></thead><tbody>${body
+    .map(
+      (r) =>
+        `<tr>${r
+          .map((c, i) => {
+            const scope = codeTranslation && i === 0 ? ' scope="row"' : ''
+            return `<td${scope}>${formatMarkdown(c)}</td>`
+          })
+          .join('')}</tr>`
+    )
+    .join('')}</tbody></table>`
+  if (codeTranslation && caption) {
+    return `${previewNote}<figure class="code-translation-figure"><figcaption class="visually-hidden">${escapeHtml(caption)}</figcaption>${table}</figure>`
+  }
+  return `${previewNote}${table}`
 }
 function resolveWhatToKnow(page) {
   if (page.whatToKnow) return page.whatToKnow
@@ -327,7 +348,7 @@ function renderSectionInner(section, pageType = 'generic') {
   inner += section.steps ? renderSteps(section.steps) : ''
   inner += bulletList(section.bullets || [])
   inner += section.image ? renderImage(section.image) : ''
-  inner += section.table ? renderTable(section.table, pageType) : ''
+  inner += section.table ? renderTable(section.table, pageType, section.heading || '') : ''
   if (section.callout) inner += renderCallout(section.callout)
   if (section.button)
     inner += button(

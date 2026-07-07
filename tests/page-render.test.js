@@ -78,6 +78,22 @@ describe('page-render.js escaping', () => {
     expect(ctx.renderTable([])).toBe('')
   })
 
+  test('renderTable emits code-translation variant for health code headers', () => {
+    const html = ctx.renderTable(
+      [
+        ['Health code', 'In plain language'],
+        ['**Sec. 581(a):** No nuisance.', 'You must not allow a public health nuisance.'],
+      ],
+      'information',
+      'Mold and mildew'
+    )
+    expect(html).toContain('table--code-translation')
+    expect(html).toContain('scope="col"')
+    expect(html).toContain('scope="row"')
+    expect(html).toContain('code-translation-figure')
+    expect(html).toContain('Mold and mildew')
+  })
+
   test('renderSteps escapes step title, text, bullets, and callout text', () => {
     const html = ctx.renderSteps([
       {

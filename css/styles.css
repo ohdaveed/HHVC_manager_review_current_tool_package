@@ -645,6 +645,81 @@ a:focus {
   background: var(--sfds-slate-5);
   font-weight: 700;
 }
+.code-translation-figure {
+  margin: 1.5rem 0 2.5rem;
+}
+.table--code-translation {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+.table--code-translation th,
+.table--code-translation td {
+  padding: 1.25rem 1.5rem;
+  width: 50%;
+}
+.table--code-translation td:first-child {
+  color: var(--sfds-slate-2);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.table--code-translation td:last-child {
+  line-height: 1.6;
+}
+.table--code-translation a:focus-visible {
+  outline: 2px solid var(--sfds-action-blue);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .table--code-translation thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .table--code-translation tbody tr {
+    display: block;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--sfds-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--sfds-white);
+  }
+  .table--code-translation tbody td {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--sfds-border);
+    padding: 1rem 1.15rem;
+  }
+  .table--code-translation tbody td:last-child {
+    border-bottom: 0;
+  }
+  .table--code-translation tbody td:first-child::before {
+    content: 'Health code';
+    display: block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sfds-slate-2);
+    margin-bottom: 0.45rem;
+  }
+  .table--code-translation tbody td:last-child::before {
+    content: 'In plain language';
+    display: block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--sfds-slate-2);
+    margin-bottom: 0.45rem;
+  }
+}
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -752,9 +827,34 @@ a:focus {
   margin: 0 0 0.5rem;
 }
 .on-this-page ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
   margin: 0;
-  padding-left: 1.1rem;
+  padding: 0;
+  list-style: none;
   font-size: 0.92rem;
+}
+.on-this-page li {
+  margin: 0;
+}
+.on-this-page a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--sfds-border);
+  border-radius: 999px;
+  background: var(--sfds-white);
+  color: var(--sfds-action-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+.on-this-page a:hover,
+.on-this-page a:focus-visible {
+  background: var(--sfds-slate-5);
+  outline: 2px solid var(--sfds-action-blue);
+  outline-offset: 2px;
 }
 .services-region,
 .resources-region {
