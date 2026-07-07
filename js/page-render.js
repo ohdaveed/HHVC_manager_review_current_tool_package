@@ -106,7 +106,8 @@ function applyPageContent(key) {
   saveSidebarScroll()
   currentPageKey = key
   document.getElementById('browserUrl').textContent = 'https://' + page.slug
-  document.getElementById('urlInput').value = page.slug
+  const urlInput = document.getElementById('urlInput')
+  if (urlInput) urlInput.value = page.slug
   document.getElementById('pageSelect').value = key
   document.getElementById('mockPage').innerHTML = `
         <header class="site-header">
