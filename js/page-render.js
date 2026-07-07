@@ -74,7 +74,7 @@ function renderCards(cards = []) {
     .join('')}</div>`
 }
 function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout">${karlTag(s.callout.karl || 'Body note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout callout--step">${karlTag(s.callout.karl || 'Body note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderTable(rows = []) {
   if (!rows.length) return ''
@@ -89,7 +89,7 @@ function renderSection(section) {
   inner += bulletList(section.bullets || [])
   inner += section.table ? renderTable(section.table) : ''
   if (section.callout)
-    inner += `<aside class="callout">${karlTag(section.callout.karl || 'Body callout', 'body')}${formatMarkdown(section.callout.text)}</aside>`
+    inner += `<aside class="callout callout--panel">${karlTag(section.callout.karl || 'Body callout', 'body')}<div class="callout-header"><span class="callout-icon" aria-hidden="true">ⓘ</span><h3>What to know</h3></div>${formatMarkdown(section.callout.text)}</aside>`
   if (section.button)
     inner += button(
       section.button,
@@ -109,11 +109,67 @@ function applyPageContent(key) {
   document.getElementById('urlInput').value = page.slug
   document.getElementById('pageSelect').value = key
   document.getElementById('mockPage').innerHTML = `
-        <header class="site-header"><div class="site-header-inner"><a href="#" class="brand"><span class="brand-mark">SF</span><span>SF.gov</span></a><nav class="site-nav" aria-label="Example navigation"><a href="#">Services</a><a href="#">Departments</a><a href="#">Search</a></nav></div></header>
+        <header class="site-header">
+          <div class="site-header-inner">
+            <a href="#" class="brand">
+              <span class="brand-mark">SF</span>
+              <span>SF.gov</span>
+            </a>
+            <nav class="site-nav" aria-label="Example navigation">
+              <a href="#">Services <span aria-hidden="true">▼</span></a>
+              <a href="#">Departments <span aria-hidden="true">▼</span></a>
+              <a href="#">Jobs</a>
+              <a href="#">Contact <span aria-hidden="true">▼</span></a>
+              <a href="#">🌐 English <span aria-hidden="true">▼</span></a>
+              <div class="site-search">
+                <input type="text" placeholder="Search">
+                <button type="button" aria-label="Search">🔍</button>
+              </div>
+            </nav>
+          </div>
+        </header>
         <nav class="page-breadcrumbs" aria-label="Breadcrumbs"><div class="page-breadcrumbs-inner"><a href="#" class="back-link">Back</a><ol><li><a href="#">Home</a></li><li><a href="#">Services</a></li><li><span aria-current="page">${escapeHtml(page.title)}</span></li></ol></div></nav>
         <section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span></div></div></section>
         <main class="page-body">${editorQaBlock(page)}<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>${page.sections.map(renderSection).join('')}</main>
-        <footer class="footer"><div class="footer-inner"><strong>City and County of San Francisco</strong><br>This is a design mockup for HHVC content review, not a live SF.gov page.</div></footer>`
+        <div class="mockup-banner">This is a design mockup for HHVC content review, not a live SF.gov page.</div>
+        <footer class="footer">
+          <div class="footer-inner">
+            <div class="footer-brand">
+               <div class="footer-brand-row">
+                 <span class="footer-brand-mark" aria-hidden="true"></span>
+                 <strong class="footer-brand-name">City and County of<br>SAN FRANCISCO</strong>
+               </div>
+            </div>
+            <div class="footer-columns">
+               <div>
+                 <h4>Our City</h4>
+                 <ul>
+                   <li><a href="#">Services</a></li>
+                   <li><a href="#">Departments</a></li>
+                   <li><a href="#">Jobs</a></li>
+                   <li><a href="#">City Hall</a></li>
+                 </ul>
+               </div>
+               <div>
+                 <h4>Policy</h4>
+                 <ul>
+                   <li><a href="#">Privacy policy</a></li>
+                   <li><a href="#">Disclaimer</a></li>
+                 </ul>
+               </div>
+               <div>
+                 <h4>Get help</h4>
+                 <ul>
+                   <li><a href="#">Contact the City</a></li>
+                   <li><a href="#">Report a problem</a></li>
+                   <li><a href="#">Contact 311</a></li>
+                   <li><a href="#">Accessibility</a></li>
+                 </ul>
+               </div>
+            </div>
+          </div>
+          <div class="footer-watermark" aria-hidden="true"></div>
+        </footer>`
   syncEditorFields(page)
   updateDirtyIndicators(key)
   updateReadingTarget(page)
