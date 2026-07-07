@@ -89,14 +89,14 @@ GitBook: [Contact section](https://sfdigitalservices.gitbook.io/karl-sf.gov-edit
 
 ### Task 3A-1: Standard HHVC contact block
 
-**Files:** All 14 Transaction `pages/report-*.js`, `pages/lookup-*.js`, `pages/public-records-request.js`, `pages/pay-healthy-housing-fee.js`; all 19 Information `pages/*-information.js`, `pages/bed-bug-rules-prevention.js`, etc.
+**Files:** All 14 Transaction `pages/report-*.js`, `pages/lookup-*.js`, `pages/public-records-request.js`, `pages/pay-healthy-housing-fee.js`; all 17 Information pages (see `js/page-data.js`).
 
 - [ ] Define a shared contact constant in `js/utils.js` or duplicate minimally per page (match existing convention — pages are self-contained modules):
 
 ```js
 contactSection: {
   phone: 'Environmental Health: 415-252-3800',
-  email: 'healthyhousing@sf.gov', // confirm with HHVC before publication
+  email: 'healthyhousing@sf.gov', // general EH/HHVC — mosquito program uses mosquito@sf.gov
   karl: 'Contact section: Environmental Health (standardized footer)',
 }
 ```
@@ -336,7 +336,7 @@ Stack PR on Phase 2 branch until merged, then retarget to `main`.
 
 ## Risk notes
 
-- **Contact email `healthyhousing@sf.gov`** — confirm with HHVC; use `editorNote` if uncertain.
+- **Contact email `healthyhousing@sf.gov`** — confirmed for general EH/HHVC footers; mosquito program uses `mosquito@sf.gov`.
 - **Accordion migration** — do not hide mandatory compliance steps in accordions (chapter 4 Rule 3).
 - **Location hours** — use generic “By appointment / check 311” if exact hours are unverified.
 - **News/Event dates** — use clearly labeled illustrative dates in `editorNote`.

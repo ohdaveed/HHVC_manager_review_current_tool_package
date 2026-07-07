@@ -20,7 +20,7 @@ Karl CMS uses **14 content types**. This reference covers the four types most re
 
 | Content type | Resident goal | URL pattern | HHVC mockup pages |
 | --- | --- | --- | --- |
-| **Information** | Learn reference material | `sf.gov/information/[slug]` | 19 pages (e.g. `bedBugsInfo`) |
+| **Information** | Learn reference material | `sf.gov/information/[slug]` | 17 pages (e.g. `bedBugsInfo`) |
 | **Transaction** | Complete one action | `sf.gov/[verb-slug]` | 14 pages (e.g. `ratsReport`) |
 | **Resource Collection** | Browse documents and links | `sf.gov/resource/[year]/[title]` | 8 pages (4 hubs + 4 document libraries) |
 | **Campaign** | Outreach with branded hero | `sf.gov/[campaign-slug]` | 1 page (`mosquitoWorkshop`) |
@@ -28,6 +28,8 @@ Karl CMS uses **14 content types**. This reference covers the four types most re
 | **Report** | Long-form reference with tables | `sf.gov/[slug]` | 1 page (`feeReport`) |
 
 **Important distinction from screenshots:** The Rent Board **Current Rates** page is a **Report** content type, not Information. Report is the only Karl type with native **tables**, auto **On this page** table of contents, and **Print version** PDF. Do not use that page as an Information-page template for HHVC.
+
+**Mockup inventory (July 2026):** 46 pages total — see `js/page-data.js` and `README.md` for the canonical table. Type counts: 1 Topic, 8 Resource collection, 14 Transaction, 17 Information, 4 Step-by-step, 1 Campaign, 1 Report.
 
 ---
 
@@ -472,7 +474,7 @@ Rendered by `karlTag()` in [`js/page-render.js`](../../../js/page-render.js); vi
 | **What to know** box | Rendered on Transaction pages via `whatToKnow` | Populate on every Transaction before publication |
 | **Tables on Information** | Validated — no Information pages use `table[][]` | Use Report or linked Resource Collection for tabular data |
 | **Report** type | `feeReport` previews FY27 fee tables | Link from `feeSchedule` Resource Collection PDF |
-| **Step-by-step** type | `afterReport`, `noticeOfViolation`, raccoon/mite child pages | Use `partOf` for child Transaction/Information links |
+| **Contact section** | Standardized EH footer on Tx + Info pages | `healthyhousing@sf.gov`, `415-252-3800` via `contactSection`; mosquito program uses `mosquito@sf.gov` / `3806` |
 
 ---
 

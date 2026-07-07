@@ -172,7 +172,7 @@ Campaign pages support message-focused, often ephemeral outreach with more brand
 
 **Discovery rules:** Campaigns are **not** auto-linked from other content types. Surface them via manual Related links, or Spotlight/Resources on Topic or Agency pages. Pair with a **News** item when announcing a new campaign.
 
-**HHVC candidate:** `mosquitoWorkshop` is typed Information in the mockup today. Promote to Campaign if HHVC treats mosquito education as ongoing outreach with branded hero and top facts.
+**HHVC candidate:** `mosquitoWorkshop` is typed **Campaign** in the mockup (`pages/mosquito-education-workshop.js`).
 
 | Scenario                                                   | Use             |
 | :--------------------------------------------------------- | :-------------- |

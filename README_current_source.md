@@ -4,7 +4,7 @@ This file preserves an older source snapshot of the HHVC Manager Review Mockup T
 
 It is **not the current source of truth** for the app inventory or review workflow.
 
-Use `README.md` for the current 33-page manager-review package, current UX/UI structure, and current automation handoff notes.
+Use `README.md` for the current **46-page** manager-review package, current UX/UI structure, and current automation handoff notes.
 
 ## Historical context
 

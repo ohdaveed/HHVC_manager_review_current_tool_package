@@ -8,6 +8,15 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | --- | --- | --- |
 | `karl-content-type-field-reference.md` | Karl CMS content-type field reference | **Karl CMS field map** — per-type editor fields, SF.gov screenshot mapping, mockup schema alignment. Not legal authority. |
 
+## Mockup contact defaults (not legal authority)
+
+| Audience | Phone | Email | Where defined |
+| --- | --- | --- | --- |
+| General EH / HHVC | 415-252-3800 | `healthyhousing@sf.gov` | `js/hhvc-page-defaults.js` → `contactSection` on Transaction + Information pages |
+| Mosquito Control Program | 415-252-3806 | `mosquito@sf.gov` | `mosquitoControl`, `mosquitoesPrevent`, `mosquitoWorkshop` |
+
+Legacy policy exports may cite `415-252-3805` or `healthyhousing@sfdph.org` — the mockup uses the values above unless an SME updates them.
+
 ## Required metadata per document
 
 - Source title

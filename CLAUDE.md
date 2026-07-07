@@ -34,11 +34,13 @@ bun run format:check         # prettier --check (this is the lint step; no ESLin
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There is no unit-test suite.** `bun run validate` (`build_scripts/validate.js`)
-is the de-facto test: it loads every `pages/*.js` file plus `js/page-data.js`
-into a Node VM context and Zod-validates required fields/shapes, plus a few
-hardcoded invariants (see below). It always validates the full page set —
-there's no way to validate a single page file in isolation. Run it after
-editing anything under `pages/` or `js/page-data.js`.
+is the de-facto test: it loads every page module listed in `build_scripts/validate.js`
+plus `js/page-data.js` into a Node VM context and Zod-validates required
+fields/shapes (46 pages as of July 2026), plus a few hardcoded invariants (see
+below). It always validates the full page set — there's no way to validate a
+single page file in isolation. When adding a page, update `validate.js`,
+`extract-pages.js`, `sync-tracking-sheet.js`, `index.html`, and `js/page-data.js`
+together. Run validate after editing anything under `pages/` or `js/page-data.js`.
 
 ## Architecture
 
