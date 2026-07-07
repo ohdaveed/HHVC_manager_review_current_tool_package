@@ -488,7 +488,10 @@ Rendered by `karlTag()` in [`js/page-render.js`](../../../js/page-render.js); vi
 ## Related documentation
 
 - [Karl CMS component documentation (28 components)](./2026-07-07-karl-cms-component-documentation.md)
+- [HHVC Manual Chapter 1: Introduction and scope](../../../hhvc_chapter_drafts/hhvc-manual-chapter-1.md) — order of authority and field reference pointer
+- [HHVC Manual Chapter 3: Information Architecture Standards](../../../hhvc_chapter_drafts/hhvc-manual-chapter-3.md) — URL patterns and navigation rules
 - [HHVC Manual Chapter 4: Karl Content Type Standards](../../../hhvc_chapter_drafts/hhvc-manual-chapter-4.md)
-- [HHVC Manual Chapter 5: Required Page Patterns](../../../hhvc_chapter_drafts/hhvc-manual-chapter-5.md)
+- [HHVC Manual Chapter 5: Required Page Patterns](../../../hhvc_chapter_drafts/hhvc-manual-chapter-5.md) — includes Campaign page pattern (§5.8)
 - [HHVC Manual Chapter 6: Karl Component Standards](../../../hhvc_chapter_drafts/hhvc-manual-chapter-6-v2.md)
+- [HHVC Manual Chapter 8: Service Content Standards](../../../hhvc_chapter_drafts/hhvc-manual-chapter-8.md) — fee tier / Report table guidance
 - [Karl Editor Help Center — Choosing a content type](https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/using-karl-the-cms/content-types/choosing-a-content-type)

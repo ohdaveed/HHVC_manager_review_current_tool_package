@@ -2,6 +2,8 @@
 
 Source: `2026-07-07-karl-cms-component-documentation.xlsx`
 
+For per-content-type Karl editor field order, SF.gov screenshot mapping, and HHVC mockup schema alignment, see [karl-content-type-field-reference.md](./karl-content-type-field-reference.md). This component extract describes _what each component does_; the field reference describes _which page types expose which fields_.
+
 ## 1. Accordions
 
 **Description:** Component that allows users to show and hide sections of related content on a page.

@@ -84,12 +84,15 @@ flowchart TD
 
 ### **3.5 URL and Slug Conventions**
 
-| Page type           | Pattern                     | Example                                                                          |
-| :------------------ | :-------------------------- | :------------------------------------------------------------------------------- |
-| Topic               | `sf.gov/topic-[slug]`       | `sf.gov/topic-pests-and-housing-problems`                                        |
-| Transaction         | `sf.gov/[verb-slug]`        | `sf.gov/report-rats-or-mice`                                                     |
-| Information         | `sf.gov/information/[slug]` | `sf.gov/information/integrated-pest-management-for-property-owners-and-managers` |
-| Resource Collection | `sf.gov/[slug]`             | `sf.gov/report-a-problem`                                                        |
+| Page type                                          | Pattern                          | Example                                                                          |
+| :------------------------------------------------- | :------------------------------- | :------------------------------------------------------------------------------- |
+| Topic                                              | `sf.gov/topic-[slug]`            | `sf.gov/topic-pests-and-housing-problems`                                        |
+| Transaction                                        | `sf.gov/[verb-slug]`             | `sf.gov/report-rats-or-mice`                                                     |
+| Information                                        | `sf.gov/information/[slug]`      | `sf.gov/information/integrated-pest-management-for-property-owners-and-managers` |
+| Resource Collection (document library)             | `sf.gov/resource/[year]/[title]` | `sf.gov/resource/2024/fog-sustainability-request-proposals-rfp`                  |
+| Resource Collection (HHVC navigation hub — mockup) | `sf.gov/[slug]`                  | `sf.gov/report-a-problem`, `sf.gov/prevent-problems`                             |
+
+**Resource Collection URL note:** Canonical Karl document libraries use the `/resource/[year]/[title]` pattern for PDF packets, fee schedules, and RFP document lists. HHVC hub pages in the mockup (`reportHub`, `preventHub`) are typed as Resource collection but route residents to existing Transaction and Information pages via cross-link cards — they are not PDF libraries. See [Karl content-type field reference](../docs/source/hhvc-policy/karl-content-type-field-reference.md).
 
 Rules:
 
@@ -101,12 +104,15 @@ Rules:
 
 ### **3.6 Navigation and Related Content**
 
-| Component      | IA role                                                                        |
-| :------------- | :----------------------------------------------------------------------------- |
-| **Related**    | Next logical task on Transaction and Information pages (right panel or bottom) |
-| **Resources**  | PDF and external links on Topic and Resource Collection pages                  |
-| **Topics tag** | Publishes child pages to the Topic hub automatically                           |
-| **Body links** | Descriptive text; no "click here"; prefer SF.gov pages over PDFs               |
+| Component                       | IA role                                                                                                                                                                            |
+| :------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Related**                     | Next logical task on Transaction and Information pages (right panel or bottom). Eligible Related targets: Transaction, Information, Campaign, and Topic — not Resource Collection. |
+| **Resources**                   | PDF and external links on Topic, Campaign, and Resource Collection pages                                                                                                           |
+| **Topics tag**                  | Auto-surfaces tagged Transaction and Step-by-step pages on the parent Topic hub "More services" grid. Information pages still need manual Related links.                           |
+| **Body links**                  | Descriptive text; no "click here"; prefer SF.gov pages over PDFs                                                                                                                   |
+| **Resource Collection linking** | Resource Collections are not auto-linked from other pages. Add them manually via Related or Resources on Topic, Agency, or service pages.                                          |
+
+For full Karl field inventories by content type, see [Karl content-type field reference](../docs/source/hhvc-policy/karl-content-type-field-reference.md).
 
 Every Transaction page must answer within five seconds:
 
@@ -132,3 +138,4 @@ Every Transaction page must answer within five seconds:
 - [📒 Karl GitBook: URLs](https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/using-karl-the-cms/components/urls)
 - [📋 Karl CMS Component Documentation xlsx](docs/source/hhvc-policy/2026-07-07-karl-cms-component-documentation.xlsx) — sources 86, 93
 - [📋 HHVC Chapter 4: Karl Content Type Standards](hhvc-manual-chapter-4.md)
+- [📋 Karl CMS content-type field reference](../docs/source/hhvc-policy/karl-content-type-field-reference.md)
