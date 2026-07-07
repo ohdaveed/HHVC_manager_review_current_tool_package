@@ -15,20 +15,20 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — cockroach health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
       paragraphs: [
         'Cockroach droppings, shed skin, and saliva contain allergens that can trigger or worsen asthma and allergic reactions — this risk is especially serious for children in homes with heavy infestations.',
         'Cockroaches can also pick up bacteria such as salmonella and E. coli while moving through drains, garbage, and food waste, then spread it onto kitchen counters and stored food.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Homes with ongoing cockroach activity often see an increase in asthma symptoms among children — reducing food, water, and shelter sources helps protect respiratory health, not just cleanliness.',
       },
     },
     {
       heading: 'Know the signs of cockroaches',
-      karl: 'Body: Signs of cockroaches (added for depth). Helps residents confirm a problem early.',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below (bullets render as a bulleted list inside the same rich text field). Added for depth — helps residents confirm a problem early.',
       kind: 'body',
       paragraphs: [
         'Finding cockroaches early makes them easier to control. Look for these common signs.',
@@ -42,7 +42,7 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
     },
     {
       heading: 'Starve them of food and water',
-      karl: 'Body: Starve cockroaches',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Cockroaches need food, water, and shelter to survive. Removing their food and moisture is the most effective way to prevent cockroaches from nesting in your home.',
@@ -50,14 +50,14 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
       bullets: [
         'Clean grease and crumbs daily from countertops, stoves, sinks, and under kitchen appliances.',
         'Store all food in sealed plastic, glass, or metal containers.',
-        'Keep kitchen sinks dry and fix minor plumbing leaks immediately. Cockroaches need daily access to water. For major plumbing failures, report to the Department of Building Inspection (DBI).',
+        'Keep kitchen sinks dry and fix any plumbing leaks immediately. For structural plumbing leaks, the issue should be routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025). Cockroaches need daily access to water.',
         'Keep trash bins clean and covered, and empty garbage containers every night.',
         'Do not leave pet food or water bowls out overnight.',
       ],
     },
     {
       heading: 'Eliminate cockroach hiding spots',
-      karl: 'Body: Eliminate cockroach shelter',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Cockroaches hide in dark, tight spaces during the day. Reducing clutter and sealing openings prevents them from establishing nests.',
@@ -70,7 +70,7 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
     },
     {
       heading: 'Use safe treatment methods',
-      karl: 'Body: Safe cockroach treatment',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Prioritize non-chemical or low-toxic treatments. Standard chemical sprays often scatter cockroaches to other units instead of eliminating them.',
@@ -84,37 +84,25 @@ window.HHVC_PAGES['cockroachesPrevent'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + body link to related Transaction page',
+      karl: 'Paragraphs map to a sixth Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the cockroachesReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
-        'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
-      ],
-      cards: [
-        {
-          title: 'Report cockroaches',
-          text: 'Open the related HHVC service page.',
-          target: 'cockroachesReport',
-          karl: 'Links: Related Transaction page',
-        },
+        '[Report cockroaches](cockroachesReport)',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
         },
       ],
     },

@@ -1,9 +1,10 @@
 // Regenerate Google Sheets–ready tracking CSVs from current mockup page data.
 // Run after page mockup edits: bun run sync-tracking
 const fs = require('fs')
-const vm = require('vm')
 const path = require('path')
 const { execSync } = require('child_process')
+const { toCsv } = require('./csv')
+const { loadPageData, getPageScriptPaths } = require('./load-pages')
 
 const root = path.resolve(__dirname, '..')
 const reviewDir = path.join(root, 'review')
@@ -11,43 +12,6 @@ const auditMatrixPath = path.join(
   root,
   'docs/superpowers/specs/2026-07-02-hhvc-policy-content-audit-matrix.md'
 )
-
-const PAGE_FILES = [
-  'pages/agency-service-grouping.js',
-  'pages/lookup-building-records.js',
-  'pages/lookup-complaints-inspections.js',
-  'pages/lookup-residential-violations.js',
-  'pages/lookup-residential-hotel-records.js',
-  'pages/find-district-inspector.js',
-  'pages/public-records-request.js',
-  'pages/property-owner-responsibilities.js',
-  'pages/respond-to-notice-of-violation.js',
-  'pages/report-rats-or-mice.js',
-  'pages/report-cockroaches.js',
-  'pages/report-bed-bugs.js',
-  'pages/bed-bug-rules-prevention.js',
-  'pages/report-mosquitoes.js',
-  'pages/report-dead-bird.js',
-  'pages/report-pigeons.js',
-  'pages/report-garbage-clutter.js',
-  'pages/report-overgrown-vegetation.js',
-  'pages/report-mold-humidity-condensation.js',
-  'pages/hhvc-inspection-scope.js',
-  'pages/integrated-pest-management-property-managers.js',
-  'pages/what-happens-after-report.js',
-  'pages/tenant-rights-reporting.js',
-  'pages/keep-rats-and-mice-out.js',
-  'pages/prevent-cockroaches.js',
-  'pages/prevent-mosquitoes.js',
-  'pages/mosquito-control-program.js',
-  'pages/mosquito-education-workshop.js',
-  'pages/raccoon-information.js',
-  'pages/pigeon-information.js',
-  'pages/mite-information.js',
-  'pages/pay-healthy-housing-fee.js',
-  'pages/reduce-indoor-moisture.js',
-  'js/page-data.js',
-]
 
 const TOPIC_CHECKS = [
   'Topic page uses Report / Prevent / Inspect / Tenant help clusters',
@@ -94,43 +58,15 @@ const POLICY_PHASE_2 = new Set([
   'bedBugsInfo',
 ])
 
-function loadPageData() {
-  const ctx = { window: {} }
-  ctx.window.HHVC_PAGES = {}
-  vm.createContext(ctx)
-  for (const file of PAGE_FILES) {
-    vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), ctx, { filename: file })
-  }
-  return ctx.window.HHVC_DATA
-}
-
 function buildPageKeyToSourceFile() {
   const map = {}
-  for (const file of PAGE_FILES) {
+  for (const file of getPageScriptPaths()) {
     if (!file.startsWith('pages/')) continue
     const content = fs.readFileSync(path.join(root, file), 'utf8')
     const match = content.match(/window\.HHVC_PAGES\['([^']+)'\]/)
     if (match) map[match[1]] = file
   }
   return map
-}
-
-function csvEscape(value) {
-  const text = String(value ?? '')
-  const trimmed = text.trimStart()
-  const needsProtection =
-    trimmed.startsWith('=') ||
-    trimmed.startsWith('+') ||
-    trimmed.startsWith('-') ||
-    trimmed.startsWith('@') ||
-    trimmed.startsWith('\t') ||
-    trimmed.startsWith('\r')
-  const protectedText = needsProtection ? `'${text}` : text
-  return /[",\n\r]/.test(protectedText) ? `"${protectedText.replace(/"/g, '""')}"` : protectedText
-}
-
-function toCsv(rows) {
-  return rows.map((row) => row.map(csvEscape).join(',')).join('\n') + '\n'
 }
 
 function primaryCta(page) {
@@ -260,12 +196,17 @@ function writeTrackingSheet(data, pageKeyToFile, policyAuditByPage, generatedAt)
     const auditStatuses = policyAuditByPage[key] || []
     const changeStatus = mockupChangeStatus(sourceFile)
     const contentFlag = CONTENT_REVIEW_FLAGS[key] || ''
+    const isBlocked =
+      (page.editorNote &&
+        (page.editorNote.includes('BLOCKED') || page.editorNote.includes('SME'))) ||
+      Boolean(contentFlag)
+
     const mockupStatus =
       changeStatus === 'Current' && summarizePolicyStatus(auditStatuses) === 'verified'
         ? 'Ready for manager review'
         : changeStatus !== 'Current'
           ? 'Mockup updated — refresh manager review'
-          : contentFlag
+          : isBlocked
             ? 'Blocked pending SME/legal review'
             : 'Needs review'
 

@@ -15,7 +15,7 @@ window.HHVC_PAGES['pigeonsReport'] = {
   sections: [
     {
       heading: 'What to do',
-      karl: 'Body: Ordered step list / What to do. Primary 311 action appears first; report details are consolidated in Step 3.',
+      karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
       kind: 'body',
       steps: [
         {
@@ -25,11 +25,11 @@ window.HHVC_PAGES['pigeonsReport'] = {
             'If the problem is urgent, report now.',
           ],
           button: 'Report through 311',
-          karl: 'Body step 1 + Primary action button. Keep the 311 action first.',
+          karl: 'what_to_do -> Section. Section title: "Start your report". Section specifics: Text block (these 2 sentences) + Button link block ("Report through 311") + Callout block below. Keep the 311 action first.',
           callout: {
             title: 'Your report is confidential',
             text: 'The City will never share your name or contact information with your landlord or property manager.',
-            karl: 'Body step 1 callout: Privacy and confidentiality reassurance',
+            karl: 'Callout block inside the "Start your report" Section specifics: single rich text field only, no separate title field like this mockup callout has. Fold "Your report is confidential" in as a bolded lead-in within the callout text, or flag for Digital Services if a distinct heading is actually needed.',
           },
         },
         {
@@ -39,7 +39,7 @@ window.HHVC_PAGES['pigeonsReport'] = {
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
           ],
-          karl: 'Body step 2: Conditional 72-hour tenant notice + timeline expectation',
+          karl: 'what_to_do -> Section. Section title: "If you rent, give 72 hours when possible". Section specifics: one Text block containing the intro sentence plus the bulleted list below (bullets render as a bulleted list inside the same Draftail Text field, same as any other rich text). Conditional 72-hour tenant notice + timeline expectation.',
         },
         {
           title: 'Describe the condition',
@@ -54,16 +54,16 @@ window.HHVC_PAGES['pigeonsReport'] = {
             'Your contact information, if you want an inspector to contact you',
           ],
           callout: {
-            karl: 'Body note: Photo guidance',
+            karl: 'Callout block inside the "Describe the condition" Section specifics: single rich text field, no separate title field — this mockup callout has no title key either, so there is no heading to reconcile. Text: photo guidance plus the reporter-identity disclosure note.',
             text: "Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           },
-          karl: 'Body step 3: Report details checklist',
+          karl: 'what_to_do -> Section. Section title: "Describe the condition". Section specifics: Text block (intro sentence + bulleted checklist) + Callout block below. Report details checklist.',
         },
       ],
     },
     {
       heading: 'Get help making your report',
-      karl: 'Body: Help and access section (added for depth) — third-party reporting, language access, privacy.',
+      karl: 'Best real-schema fit: one things_to_know entry (confirmed repeatable, no max). Title: "Get help making your report". Text: the paragraph + bulleted list below (third-party reporting, language access, privacy). Open question for Digital Services: things_to_know renders ABOVE what_to_do on the real form, so this content may need to move earlier on the live page even though it stays here in this mockup draft.',
       kind: 'body',
       paragraphs: [
         'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
@@ -77,47 +77,40 @@ window.HHVC_PAGES['pigeonsReport'] = {
     },
     {
       heading: 'How your report is processed',
-      karl: 'Body: After-report expectations, weekday processing note, and concise enforcement statement (added for depth to match sibling report pages).',
+      karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. New: a secondary Button link block (\'View Health Code Article 11\') citing the municipal code per Ch. 8.7.2 — flag for Digital Services to confirm this is the SF.gov-preferred municode URL before publication.',
       kind: 'body',
       bullets: [
-        'Review time: It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
-        'If you gave contact information: An inspector may reach out to ask questions or schedule a visit.',
-        'If you reported anonymously: An inspector may still visit the property without notice—especially if there is an urgent safety or health risk.',
-        'If we find a problem: The City can order the property owner or responsible party to fix the violation.',
+        '**Review time:** It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
+        '**If you gave contact information:** An inspector may reach out to ask questions or schedule a visit.',
+        '**If you reported anonymously:** An inspector may still visit the property without notice—especially if there is an urgent safety or health risk.',
+        '**If we find a problem:** The City can order the property owner or responsible party to fix the violation.',
+        'Under San Francisco Health Code Article 11, property owners are legally required to keep their buildings clean, watertight, and completely free of rodent and insect infestations.',
+        '**Note:** Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
       ],
-      callout: {
-        karl: 'Body note: Tenant rights / anti-retaliation reassurance',
-        text: 'Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
-      },
+      button: 'View Health Code Article 11',
+      buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
+      buttonStyle: 'secondary',
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries.',
       kind: 'placement',
       cards: [
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review this type of issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Report garbage or clutter',
-          text: 'Use this page for garbage, clutter, debris, or animal waste that may attract pigeons or other vectors.',
           target: 'garbageReport',
-          karl: 'Related section link to the sibling single-task report page',
         },
         {
           title: 'Tenant rights and reporting',
-          text: "Find help if you are worried about retaliation. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           target: 'tenantRights',
-          karl: 'Related section link to tenant support / rights information',
         },
       ],
     },

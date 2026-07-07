@@ -14,9 +14,19 @@ data/page_inventory.csv
 dist/
 .netlify
 
+# Playwright
+test-results/
+playwright-report/
+
 # OS files
 .DS_Store
 Thumbs.db
+
+# Superpowers brainstorming scratch (mockups, session state)
+.superpowers/
+
+# Superpowers git worktrees (isolated workspaces for plan execution)
+.worktrees/
 
 # Google service account keys (never commit)
 *-service-account*.json

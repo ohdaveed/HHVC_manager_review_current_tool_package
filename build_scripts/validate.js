@@ -3,8 +3,8 @@
 // required fields and shape constraints with Zod so bad page data fails fast.
 const fs = require('fs')
 const path = require('path')
-const vm = require('vm')
 const { dataSchema } = require('./schema')
+const { loadPageData, getPageScriptPaths, root } = require('./load-pages')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -13,62 +13,25 @@ const {
   findBannedTerms,
   findListFormatViolations,
 } = require('./data-checks')
+const { findPageScriptTags, findScriptTagDrift } = require('./index-html-checks')
 
-const root = path.resolve(__dirname, '..')
-const ctx = { window: {} }
-ctx.window.HHVC_PAGES = {}
-vm.createContext(ctx)
-
-// Page modules to execute in the shared VM context. `js/app.js` is intentionally
-// excluded because it expects the full DOM and runtime globals.
-const files = [
-  'pages/agency-service-grouping.js',
-  'pages/prevent-problems.js',
-  'pages/report-a-problem.js',
-  'pages/lookup-building-records.js',
-  'pages/lookup-complaints-inspections.js',
-  'pages/lookup-residential-violations.js',
-  'pages/lookup-residential-hotel-records.js',
-  'pages/find-district-inspector.js',
-  'pages/public-records-request.js',
-  'pages/property-owner-responsibilities.js',
-  'pages/respond-to-notice-of-violation.js',
-  'pages/report-rats-or-mice.js',
-  'pages/report-cockroaches.js',
-  'pages/report-bed-bugs.js',
-  'pages/bed-bug-rules-prevention.js',
-  'pages/report-mosquitoes.js',
-  'pages/report-dead-bird.js',
-  'pages/report-pigeons.js',
-  'pages/report-garbage-clutter.js',
-  'pages/report-overgrown-vegetation.js',
-  'pages/report-mold-humidity-condensation.js',
-  'pages/hhvc-inspection-scope.js',
-  'pages/integrated-pest-management-property-managers.js',
-  'pages/what-happens-after-report.js',
-  'pages/tenant-rights-reporting.js',
-  'pages/keep-rats-and-mice-out.js',
-  'pages/prevent-cockroaches.js',
-  'pages/prevent-mosquitoes.js',
-  'pages/prevent-overgrown-vegetation.js',
-  'pages/prevent-garbage-clutter.js',
-  'pages/mosquito-control-program.js',
-  'pages/mosquito-education-workshop.js',
-  'pages/raccoon-information.js',
-  'pages/pigeon-information.js',
-  'pages/mite-information.js',
-  'pages/ground-wasp-information.js',
-  'pages/fly-information.js',
-  'pages/pay-healthy-housing-fee.js',
-  'pages/reduce-indoor-moisture.js',
-  'js/page-data.js',
-  'js/app.js',
-]
-for (const f of files.filter((f) => f !== 'js/app.js')) {
-  vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f })
+const pageFilesOnDisk = getPageScriptPaths().filter((file) => file !== 'js/page-data.js')
+const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
+const scriptDrift = findScriptTagDrift(pageFilesOnDisk, findPageScriptTags(indexHtml))
+if (scriptDrift.missingFromHtml.length) {
+  throw new Error(
+    'pages/*.js file(s) missing a <script> tag in index.html: ' +
+      scriptDrift.missingFromHtml.join(', ')
+  )
+}
+if (scriptDrift.missingFromDisk.length) {
+  throw new Error(
+    'index.html references pages/*.js file(s) that no longer exist: ' +
+      scriptDrift.missingFromDisk.join(', ')
+  )
 }
 
-const data = ctx.window.HHVC_DATA
+const data = loadPageData()
 const parsed = dataSchema.safeParse(data)
 if (!parsed.success) {
   console.error('Validation errors:')

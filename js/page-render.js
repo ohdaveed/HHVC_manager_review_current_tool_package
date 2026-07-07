@@ -2,14 +2,28 @@
 // in #mockPage, including Karl placement/rationale tags. Depends on
 // js/state.js (escapeHtml, pageData) and js/editor-panel.js /
 // js/ui-controls.js for the post-render side effects triggered by
-// applyPageContent (syncEditorFields, updateDirtyIndicators, etc.).
+// applyPageContent (syncEditorFields, etc.).
 function karlTag(label, kind = 'body') {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
   return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
 }
+const EDITOR_QA_STATUS = {
+  'needs-review': { icon: '⚠', label: 'Needs review' },
+  blocked: { icon: '⛔', label: 'Blocked' },
+  placeholder: { icon: '◆', label: 'Placeholder content' },
+}
+function editorQaBlock(page) {
+  const status = EDITOR_QA_STATUS[page.editorStatus] || EDITOR_QA_STATUS['needs-review']
+  const note =
+    page.editorNote ||
+    `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`
+  return `<aside class="editor-qa qa-${page.editorStatus || 'needs-review'}"><div class="editor-qa-head">${karlTag('Editor-only QA note / Do not publish', 'editor')}<span class="editor-qa-status"><span aria-hidden="true">${status.icon}</span>${escapeHtml(status.label)}</span></div><strong>Editor QA:</strong> ${escapeHtml(note)}</aside>`
+}
 function formatMarkdown(text) {
   if (typeof text !== 'string') return ''
-  return escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="#" data-render-target="$2">$1</a>')
+  return html
 }
 function paragraphList(paragraphs = []) {
   return paragraphs.map((p) => `<p>${formatMarkdown(p)}</p>`).join('')
@@ -97,6 +111,12 @@ function sectionAnchorId(heading) {
 }
 // Mockup-internal navigation for buttons/cards rendered from page data.
 document.addEventListener('click', (event) => {
+  const backLink = event.target.closest('.back-link')
+  if (backLink) {
+    event.preventDefault()
+    window.history.back()
+    return
+  }
   const link = event.target.closest(
     'a[data-render-target], a[data-render-inert], button[data-accordion-toggle]'
   )
@@ -147,7 +167,7 @@ function renderCards(cards = []) {
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      return `<article class="card">${karlTag(c.karl || 'Related: linked page card', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3><p>${escapeHtml(c.text)}</p></article>`
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
@@ -164,6 +184,9 @@ function renderServiceTiles(cards = []) {
       return `<a class="service-tile" href="${href}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
     })
     .join('')}</div>`
+}
+function renderSteps(steps = []) {
+  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout callout--step">${karlTag(s.callout.karl || 'Body note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderResourcesList(cards = [], heading = 'Resources') {
   if (!cards.length) return ''
@@ -229,7 +252,7 @@ function renderTable(rows = [], pageType = 'generic') {
     pageType === 'information'
       ? `<p class="mockup-only-note">${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
       : ''
-  return `${previewNote}<table class="table"><thead><tr>${head.map((h) => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+  return `${previewNote}<table class="table"><thead><tr>${head.map((h) => `<th>${formatMarkdown(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${formatMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
 }
 function resolveWhatToKnow(page) {
   if (page.whatToKnow) return page.whatToKnow
@@ -398,7 +421,7 @@ function renderPageMain(page) {
   const heroCta = resolveHeroCta(page, whatToDo)
   let html = renderHero(page, heroCta)
   html += `<main class="page-body page-body--${pageType}">`
-  html += `<aside class="editor-note">${karlTag('Editor-only QA note / Do not publish', 'editor')}<strong>Editor QA:</strong> ${escapeHtml(page.editorNote || `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Visual regions in this mockup follow Karl field order where possible.`)}</aside>`
+  html += editorQaBlock(page)
   html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
   if (page.spotlight) html += renderSpotlight(page.spotlight)
   if (pageType === 'transaction') {
@@ -469,22 +492,84 @@ function applyPageContent(key) {
   saveSidebarScroll()
   currentPageKey = key
   document.getElementById('browserUrl').textContent = 'https://' + page.slug
-  document.getElementById('urlInput').value = page.slug
+  const urlInput = document.getElementById('urlInput')
+  if (urlInput) urlInput.value = page.slug
   document.getElementById('pageSelect').value = key
   const pageHtml = renderPageMain(page)
   document.getElementById('mockPage').innerHTML = `
-        <header class="site-header"><div class="site-header-inner"><a href="#" class="brand"><span class="brand-mark">SF</span><span>SF.gov</span></a><nav class="site-nav" aria-label="Example navigation"><a href="#">Services</a><a href="#">Departments</a><a href="#">Search</a></nav></div></header>
+        <header class="site-header">
+          <div class="site-header-inner">
+            <a href="#" class="brand">
+              <span class="brand-mark">SF</span>
+              <span>SF.gov</span>
+            </a>
+            <nav class="site-nav" aria-label="Example navigation">
+              <a href="#">Services <span aria-hidden="true">▼</span></a>
+              <a href="#">Departments <span aria-hidden="true">▼</span></a>
+              <a href="#">Jobs</a>
+              <a href="#">Contact <span aria-hidden="true">▼</span></a>
+              <a href="#">🌐 English <span aria-hidden="true">▼</span></a>
+              <div class="site-search">
+                <input type="text" placeholder="Search">
+                <button type="button" aria-label="Search">🔍</button>
+              </div>
+            </nav>
+          </div>
+        </header>
+        <nav class="page-breadcrumbs" aria-label="Breadcrumbs"><div class="page-breadcrumbs-inner"><a href="#" class="back-link">Back</a><ol><li><a href="#">Home</a></li><li><a href="#">Services</a></li><li><span aria-current="page">${escapeHtml(page.title)}</span></li></ol></div></nav>
         ${pageHtml}
-        <footer class="footer"><div class="footer-inner"><strong>City and County of San Francisco</strong><br>This is a design mockup for HHVC content review, not a live SF.gov page.</div></footer>`
+        <div class="mockup-banner">This is a design mockup for HHVC content review, not a live SF.gov page.</div>
+        <footer class="footer">
+          <div class="footer-inner">
+            <div class="footer-brand">
+               <div class="footer-brand-row">
+                 <span class="footer-brand-mark" aria-hidden="true"></span>
+                 <strong class="footer-brand-name">City and County of<br>SAN FRANCISCO</strong>
+               </div>
+            </div>
+            <div class="footer-columns">
+               <div>
+                 <h4>Our City</h4>
+                 <ul>
+                   <li><a href="#">Services</a></li>
+                   <li><a href="#">Departments</a></li>
+                   <li><a href="#">Jobs</a></li>
+                   <li><a href="#">City Hall</a></li>
+                 </ul>
+               </div>
+               <div>
+                 <h4>Policy</h4>
+                 <ul>
+                   <li><a href="#">Privacy policy</a></li>
+                   <li><a href="#">Disclaimer</a></li>
+                 </ul>
+               </div>
+               <div>
+                 <h4>Get help</h4>
+                 <ul>
+                   <li><a href="#">Contact the City</a></li>
+                   <li><a href="#">Report a problem</a></li>
+                   <li><a href="#">Contact 311</a></li>
+                   <li><a href="#">Accessibility</a></li>
+                 </ul>
+               </div>
+            </div>
+          </div>
+          <div class="footer-watermark" aria-hidden="true"></div>
+        </footer>`
   syncEditorFields(page)
-  updateDirtyIndicators(key)
   updateReadingTarget(page)
   updatePageBadge(page.title)
   applyChecklistState(key)
   restoreSidebarScroll()
 }
-function renderPage(key) {
+function renderPage(key, skipHistory = false) {
   if (!pageData[key]) return
+  if (!skipHistory) {
+    const url = new URL(window.location)
+    url.searchParams.set('page', key)
+    window.history.pushState({ key }, '', url)
+  }
   if (!document.startViewTransition) {
     applyPageContent(key)
     return

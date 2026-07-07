@@ -16,7 +16,7 @@ window.HHVC_PAGES['publicRecords'] = {
   sections: [
     {
       heading: 'Before you request records',
-      karl: 'Body: Before you request records',
+      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the two paragraphs plus the bulleted list below).',
       kind: 'body',
       paragraphs: [
         'Many complaint and inspection records are already available through the online lookup tools.',
@@ -30,7 +30,7 @@ window.HHVC_PAGES['publicRecords'] = {
     },
     {
       heading: 'Submit your request',
-      karl: 'Body: Primary CTA to external NextRequest portal',
+      karl: 'what_to_do -> Section. Section title: "Submit your request". Section specifics: Text block (this paragraph) + Button link block (External URL radio, target = the NextRequest URL).',
       kind: 'body',
       paragraphs: [
         'Public records requests are handled through the citywide San Francisco NextRequest portal. You will leave SF.gov.',
@@ -40,20 +40,18 @@ window.HHVC_PAGES['publicRecords'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Find complaints and inspection records',
-          text: 'Search public complaint and inspection history online before filing a formal request.',
           target: 'findRecords',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Look up building records',
-          text: 'Return to the records hub for all lookup and request options.',
           target: 'recordsHub',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

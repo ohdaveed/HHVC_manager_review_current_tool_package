@@ -16,20 +16,20 @@ window.HHVC_PAGES['garbageInfo'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — garbage and clutter health-harm framing, placed first to motivate prevention.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below (garbage and clutter health-harm framing, placed first to motivate prevention).',
       kind: 'body',
       paragraphs: [
         'Uncovered or overflowing garbage gives rats, mice, cockroaches, and other pests an easy food source. Once pests find a reliable food supply, they multiply quickly and spread from garbage areas into nearby units and shared spaces.',
         'Heavy clutter — stacked boxes, unused furniture, or stored materials — creates hiding places that are hard to inspect or treat, and animal waste or rotting food left in shared areas can spread bacteria and attract flies as well as rodents.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'A single uncovered garbage can left out overnight is often enough to draw rats into a building that otherwise has no rodent problem.',
       },
     },
     {
       heading: 'Reduce garbage and clutter problems',
-      karl: 'Body: Prevention and sanitation',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the bulleted list below (bullets render as a bulleted list inside the same rich text field; this section has no paragraphs, only bullets).',
       kind: 'body',
       bullets: [
         'Use rigid, lidded garbage and compost containers, and keep the lids closed at all times.',
@@ -41,43 +41,29 @@ window.HHVC_PAGES['garbageInfo'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + body link to related Transaction page',
+      karl: 'Paragraphs map to a Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the garbageReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
-        'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
-      ],
-      cards: [
-        {
-          title: 'Report garbage or clutter',
-          text: 'Open the related HHVC service page.',
-          target: 'garbageReport',
-          karl: 'Links: Related Transaction page',
-        },
+        '[Report garbage or clutter](garbageReport)',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Report garbage or clutter',
-          text: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
           target: 'garbageReport',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Keep rats and mice out',
-          text: 'Learn how to reduce food, water, shelter, and entry points that can attract rats or mice.',
           target: 'ratsPrevent',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
       ],
     },

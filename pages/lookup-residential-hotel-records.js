@@ -14,23 +14,23 @@ window.HHVC_PAGES['findHotelRecords'] = {
   reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
+  editorStatus: 'placeholder',
   sections: [
     {
       heading: 'What this tool covers',
-      karl: 'Body: Scope for hotel and shelter records',
+      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the paragraphs). Resolved schema gap: things_to_know is Title + Text only, no nested callout — folded the audience-guidance callout below into the Text field.',
       kind: 'body',
       paragraphs: [
         'Environmental Health inspects residential hotels, SROs, shelters, and related housing programs under separate datasets from the general residential complaint search.',
         'Use this page when you need records for a residential hotel, SRO, or shelter rather than a standard apartment or mixed-use building.',
       ],
-      callout: {
-        karl: 'Body note: Audience guidance for SRO vs. regular hotel',
-        text: 'If you are staying at a regular tourist hotel, you may still use the general complaints and inspection lookup. Residential hotel and shelter records use a different program dataset.',
-      },
+      bullets: [
+        '**Note:** If you are staying at a regular tourist hotel, you may still use the general complaints and inspection lookup. Residential hotel and shelter records use a different program dataset.',
+      ],
     },
     {
       heading: 'Open the lookup tool',
-      karl: 'Body: Primary CTA to external hotel-program lookup',
+      karl: 'what_to_do -> Section. Section title: "Open the lookup tool". Section specifics: Text block (this paragraph) + Button link block (External URL radio, target = the sfdph.org URL). No callout in this section.',
       kind: 'body',
       paragraphs: [
         'The lookup opens on the Department of Public Health external site. You will leave SF.gov.',
@@ -40,32 +40,28 @@ window.HHVC_PAGES['findHotelRecords'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
       kind: 'placement',
       cards: [
         {
           title: 'Find complaints and inspection records',
-          text: 'Search general residential complaint and inspection history by address.',
           target: 'findRecords',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Look up building records',
-          text: 'Return to the records hub for all lookup options.',
           target: 'recordsHub',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Tenant rights when reporting housing conditions',
-          text: 'Learn about tenant protections when reporting a housing condition.',
           target: 'tenantRights',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
           title: 'Report bed bugs',
-          text: 'Report an active bed bug problem in rental housing, an SRO, or a residential hotel.',
           target: 'bedBugsReport',
-          karl: 'Related section: right-panel linked page',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
     },

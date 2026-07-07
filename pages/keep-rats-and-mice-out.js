@@ -16,20 +16,20 @@ window.HHVC_PAGES['ratsPrevent'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — rodent health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
       paragraphs: [
         'Rats and mice can carry pathogens that make people seriously ill. Hantavirus can become airborne when dried droppings or urine are disturbed, and breathing it in can cause a severe, sometimes fatal lung illness. Rodents can also carry Leptospirosis and salmonella, which spread through contaminated water, food, or surfaces.',
         'Beyond disease, an unmanaged rodent population creates compounding problems — including tropical rat mites that bite people, and gnawed wiring that can create fire hazards. The longer an infestation goes unaddressed, the more these risks multiply.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Never dry-sweep or vacuum rodent droppings or nests — this is one of the most common ways people are exposed to Hantavirus. Always wet the area first.',
       },
     },
     {
       heading: '1. Inspect and identify signs of activity',
-      karl: 'Body: Step 1 Inspect and Identify',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below (bullets render as a bulleted list inside the same rich text field).',
       kind: 'body',
       paragraphs: [
         'Look for signs of rodents before starting treatment. Knowing the type of rodent helps you target control efforts.',
@@ -47,7 +47,7 @@ window.HHVC_PAGES['ratsPrevent'] = {
     },
     {
       heading: '2. Seal entry points (Exclusion)',
-      karl: 'Body: Step 2 Exclusion',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Keep rodents out by sealing gaps and building physical barriers. Rodents can chew through wood, plastic, and plaster to find food.',
@@ -63,7 +63,7 @@ window.HHVC_PAGES['ratsPrevent'] = {
     },
     {
       heading: '3. Sanitation and prevention',
-      karl: 'Body: Step 3 Sanitation and Prevention',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Starve rodents out by removing their food, water, and nesting places. Rodents need access to water and food daily.',
@@ -71,14 +71,14 @@ window.HHVC_PAGES['ratsPrevent'] = {
       bullets: [
         'Store all food in sealed pest-proof containers made of metal, glass, or hard plastic.',
         'Secure garbage in covered bins and keep trash areas clean.',
-        'Fix leaking pipes and dripping faucets to remove water sources.',
+        'Fix leaking pipes and dripping faucets to remove water sources. Structural plumbing leaks are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
         'Remove indoor and outdoor clutter, wood piles, and debris where rodents can nest.',
         'IPM Action Threshold: Any confirmed rodent activity in a home meets the threshold. Act immediately instead of waiting for multiple signs.',
       ],
     },
     {
       heading: '4. Use traps for active control',
-      karl: 'Body: Step 4 Active Management and Control',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Prioritize traps over poison to control rodents safely. Rodenticides (poison baits) pose secondary poisoning risks to children, pets, and wildlife.',
@@ -98,7 +98,7 @@ window.HHVC_PAGES['ratsPrevent'] = {
     },
     {
       heading: '5. Safe cleanup and disinfection',
-      karl: 'Body: Step 5 Safe Cleanup and Disinfection',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'Clean up rodent areas carefully to avoid spreading diseases like Hantavirus. Never sweep or vacuum dry droppings or nests.',
@@ -114,49 +114,35 @@ window.HHVC_PAGES['ratsPrevent'] = {
         'Wash hands thoroughly with soap and water after removing gloves.',
       ],
       callout: {
-        karl: 'Body note: Cleanup safety (added for depth)',
+        karl: 'Maps to its own Callout stream item (sibling of the Title and text item above, not nested inside it). Single rich text field, no title — this callout has no title already, so no mismatch.',
         text: 'If you are pregnant, have a health condition, or are unsure about cleanup, ask for help. Do not disturb large amounts of droppings or nests yourself.',
       },
     },
     {
       heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + body link to related Transaction page',
+      karl: 'Paragraphs map to a Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the ratsReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
-        'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
-      ],
-      cards: [
-        {
-          title: 'Report rats or mice',
-          text: 'Open the related HHVC service page.',
-          target: 'ratsReport',
-          karl: 'Links: Related Transaction page',
-        },
+        '[Report rats or mice](ratsReport)',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Mites and housing health',
-          text: 'Learn about tropical rat mites and why nests must be treated before rodenticides.',
           target: 'miteInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
         },
       ],
     },

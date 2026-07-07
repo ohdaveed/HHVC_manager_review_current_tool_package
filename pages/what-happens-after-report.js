@@ -14,7 +14,7 @@ window.HHVC_PAGES['afterReport'] = {
   sections: [
     {
       heading: 'How a report moves through the City',
-      karl: 'Body: Process step list',
+      karl: 'This section\'s steps[] don\'t match a single "Title and text/Image/Callout" block directly — but since the "Information section" stream field is repeatable, each step below maps to its own separate Title and text block (Title = step title, Text = step paragraph(s)), not one combined block. Note: the mockup\'s numbered "you report / HHVC reviews / inspector contacts / inspection happens" sequence and step-by-step visual styling has no confirmed equivalent in the Information page template — Karl\'s Title and text blocks are plain sequential stream items with no built-in step-numbering, so if that visual sequencing matters, flag it as a separate presentation gap for Digital Services.',
       kind: 'body',
       steps: [
         {
@@ -22,7 +22,7 @@ window.HHVC_PAGES['afterReport'] = {
           text: [
             '311 receives the report and sends it to the right City department when possible.',
           ],
-          karl: 'Body step: 311 intake',
+          karl: 'Maps to an "Information section" → Title and text block: Title = this step title, Text = the paragraph below (first of four sequential Title and text blocks for this section — see section-level karl note).',
         },
         {
           title: 'Environmental Health reviews the report',
@@ -30,27 +30,35 @@ window.HHVC_PAGES['afterReport'] = {
             'HHVC may review the complaint if it may involve a housing or pest-related public health concern.',
             'It can take a few days for 311 to route the complaint to Environmental Health and for HHVC to assign it to an inspector. Complaints are processed on weekdays.',
           ],
-          karl: 'Body step: HHVC review + weekday processing expectation',
+          karl: 'Maps to a second Title and text block: Title = this step title, Text = the two paragraphs below (weekday processing expectation).',
+        },
+        {
+          title: 'Agency Hand-off (If applicable)',
+          text: [
+            'If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
+            'HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.',
+          ],
+          karl: 'Maps to a Title and text block: Explains routing for structural issues to DBI.',
         },
         {
           title: 'An inspector may contact you',
           text: [
             'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
           ],
-          karl: 'Body step: Inspector contact',
+          karl: 'Maps to a third Title and text block: Title = this step title, Text = the paragraph below.',
         },
         {
           title: 'An inspection may happen',
           text: [
             'If you did not give contact information, an inspection may still happen without notice when areas can be accessed, for example if the report describes an urgent health or safety risk.',
           ],
-          karl: 'Body step: Inspection expectations',
+          karl: 'Maps to a fourth Title and text block: Title = this step title, Text = the paragraph below.',
         },
       ],
     },
     {
       heading: 'How to follow up on your report',
-      karl: 'Body: Follow-up guidance (added for depth). Generic, safe steps only.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Generic, safe steps only.',
       kind: 'body',
       paragraphs: [
         'You can check on a report you already made. It helps to keep a few details handy.',
@@ -64,70 +72,58 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'Tenant rights and retaliation',
-      karl: 'Body: Tenant reassurance section',
+      karl: 'Paragraphs map to a sixth Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text (Internal link → tenantRights) — flag this gap for Digital Services rather than assuming a dedicated button block exists.',
       kind: 'body',
       paragraphs: [
         "Tenants have rights when they ask for repairs or report housing conditions to the City. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
         'A property owner or manager cannot retaliate because a tenant reports a housing condition to 311 or a health department.',
       ],
-      cards: [
-        {
-          title: 'Tenant rights',
-          text: 'Open the related HHVC service page.',
-          target: 'tenantRights',
-          karl: 'Links: Related Transaction page',
-        },
-      ],
+      bullets: ['[Tenant rights and reporting](tenantRights)'],
     },
     {
       heading: 'If a problem is found',
-      karl: 'Body: Compliance and enforcement pathway',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Reinspection rate bullet ($256/hour inspector, $234/hour technician) verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule -- these are the correct current rates, not a fabricated NotebookLM figure (an earlier same-day FY25-26 export had mistakenly flagged them as unsourced before the FY26-27 schedule was obtained).',
       kind: 'body',
       paragraphs: [
         'If an inspection identifies a violation, Environmental Health will issue a Notice of Violation (NOV) to the responsible parties. The NOV will outline required corrections and set a specific compliance deadline based on severity.',
       ],
       bullets: [
-        'Imminent Hazards (48 to 72 hours): Urgent issues like raw sewage backups or severe biohazard contamination require immediate correction.',
-        'Vector Control and Vegetation (14 days): Overgrown vegetation, trash piles, or other rodent harborages must be resolved within 14 days.',
-        'Standard Repairs and Mold (30 days): General sanitation problems, minor gaps/cracks, and mold remediation must be completed within 30 days.',
+        'Sewage Backups (48 to 72 hours): Raw sewage backups require immediate correction and do not receive the standard 30-day compliance window.',
+        'All Other Violations (30 days): Overgrown vegetation, trash piles, rodent harborages, general sanitation problems, minor gaps/cracks, mold remediation, and other cited conditions must be corrected within 30 days.',
+        'These timelines represent general enforcement standards. Actual correction deadlines are established on the official Notice of Violation based on the severity of the health hazard.',
+        'Extensions: HHVC may offer an extension to the compliance deadline if the property owner contacts the inspector before the deadline.',
         'Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.',
-        'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees (starting with the third inspection visit for buildings with 3 or more units).',
-        "Persistent violations can result in citations, administrative fines under Health Code Section 600, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
+        'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees ($256/hour for inspectors and $234/hour for technicians). Invoices must be paid within 30 days. Unpaid bills will incur $10 or $30 late penalties and 1.5% compounded monthly interest.',
+        "Persistent violations can result in citations, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
       ],
     },
     {
       heading: 'What this page does not promise',
-      karl: 'Body: Limitations / no promises',
+      karl: 'Maps to an eighth Title and text block: Title = this heading, Text = the bulleted list below (no paragraphs precede it here).',
       kind: 'body',
       bullets: [
-        'It does not promise that every report will lead to an inspection',
-        'It does not promise a specific inspection date',
-        'It does not replace a notice, citation, or legal document',
+        'HHVC cannot promise an exact time or date when an inspector will call you or arrive at your building.',
+        'We cannot promise a specific inspection finding or guarantee that a Notice of Violation will be issued.',
+        'It does not replace a notice, citation, or legal document.',
         'Complaints are not assigned instantly. 311 routing and HHVC inspector assignment can take a few days and are processed on weekdays.',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'How to respond to a notice of violation',
-          text: 'Learn how inspections can lead to a notice and what tenants and owners each must do.',
           target: 'noticeOfViolation',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether HHVC may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Tenant rights and reporting',
-          text: 'Find help if you are worried about retaliation after making a report.',
           target: 'tenantRights',
-          karl: 'Related section link to tenant support / rights information',
         },
       ],
     },

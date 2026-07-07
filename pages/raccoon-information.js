@@ -13,99 +13,72 @@ window.HHVC_PAGES['raccoonInfo'] = {
   reading: 'Grade 7',
   editorNote:
     'Information page. Wildlife trapping is outside HHVC scope — route injured/trapped animals to Animal Care & Control. Latrine cleanup steps follow CDC Baylisascaris guidance; SME must verify against current CDC/DPH protocols before publication. In Karl: add CDC external link in Information section; do not publish until vector program signs off.',
+  editorStatus: 'blocked',
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — raccoon roundworm health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below (raccoon roundworm health-harm framing, placed first to motivate prevention). Verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
       paragraphs: [
         'Raccoon feces can contain Baylisascaris procyonis, a roundworm that causes a serious illness in people if its eggs are accidentally swallowed. In rare but severe cases, the infection can affect the brain and nervous system, especially in young children who put contaminated soil or objects in their mouths.',
         'Because raccoons often return to the same latrine site again and again, contamination can build up in play areas, gardens, and building surfaces without anyone realizing it — making early identification and safe cleanup essential to preventing exposure.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: "Treat any suspected raccoon latrine as a health hazard right away — don't wait to clean it up, and keep children and pets away until it's handled safely.",
       },
     },
     {
       heading: 'Raccoons and your building',
-      karl: 'Body: Raccoon activity and housing health',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below.',
       kind: 'body',
       paragraphs: [
         'Raccoons are common in San Francisco. They are attracted to food, water, shelter, and easy access to garbage or compost.',
         'Healthy Housing and Vector Control does not trap or remove wildlife. HHVC may review housing-health conditions that attract raccoons or that raccoons worsen, such as exposed garbage, animal waste, or openings that let pests enter a building.',
       ],
       callout: {
-        karl: 'Body note: Scope boundary for wildlife vs. housing conditions',
+        karl: 'Maps to its own Callout stream item (a second Callout sibling, alongside the "Why it matters" Callout above — not nested inside any Title and text block). No title field; this callout has none, so no mismatch.',
         text: 'For injured, sick, or trapped wildlife, contact San Francisco Animal Care & Control. For active housing-health nuisances tied to garbage, waste, or pest entry, use the reporting pages on this topic.',
       },
     },
     {
       heading: 'Raccoon roundworm and latrines',
-      karl: 'Body: Raccoon roundworm health risk and latrine identification',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the two paragraphs below.',
       kind: 'body',
       paragraphs: [
         'Raccoons can carry a roundworm called Baylisascaris procyonis. The worm’s eggs are passed in raccoon feces and can make people sick if swallowed. Young children are at higher risk because they may put contaminated soil, wood chips, or objects in their mouths.',
         'Raccoons often leave feces in the same spot again and again. These repeated piles are sometimes called latrines. Latrines may be found on roofs, decks, patios, attics, crawl spaces, sandboxes, woodpiles, or raised surfaces near a building.',
       ],
       callout: {
-        karl: 'Body note: Serious health risk warning',
+        karl: 'Maps to its own Callout stream item (a third Callout sibling on this page — not nested inside any Title and text block). No title field; this callout has none, so no mismatch.',
         text: 'Treat raccoon feces and latrine sites as a health hazard. Keep children and pets away from latrines until the area is cleaned or professionally handled.',
       },
     },
     {
       heading: 'How to clean up a raccoon latrine safely',
-      karl: 'Body: Latrine cleanup steps — verify against CDC/DPH guidance before publication',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraphs below. Resolved schema gap: unstructured steps converted to numbered paragraphs. Verify latrine cleanup content against CDC/DPH guidance before publication.',
       kind: 'body',
       paragraphs: [
         'Do not sweep or vacuum dry raccoon droppings. Dry dust can spread roundworm eggs into the air.',
         'If you are not trained or equipped to clean a latrine safely, hire a licensed pest control operator or other qualified professional.',
       ],
-      steps: [
-        {
-          title: 'Protect yourself',
-          text: [
-            'Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.',
-          ],
-          bullets: [
-            'Wear disposable gloves and shoe covers or boots that can be washed',
-            'Wear long sleeves and old clothes you can wash or throw away',
-            'Consider a dust mask if you cannot avoid creating dust',
-          ],
-          karl: 'Body step 1: Personal protective equipment',
-        },
-        {
-          title: 'Lightly wet the droppings',
-          text: [
-            'Lightly spray the latrine with water or a mild soap-and-water mix. This helps keep eggs from becoming airborne while you clean.',
-          ],
-          karl: 'Body step 2: Wet down before removal',
-        },
-        {
-          title: 'Remove and bag the waste',
-          text: [
-            'Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.',
-          ],
-          bullets: [
-            'Double-bag the waste and tie the bags closed',
-            'Place the bags in an outdoor garbage container with a tight lid',
-            'Do not put raccoon waste in compost',
-          ],
-          karl: 'Body step 3: Removal and disposal',
-        },
-        {
-          title: 'Clean the area and your hands',
-          text: ['After removal, clean the surface and wash up thoroughly.'],
-          bullets: [
-            'Scrub the area with hot water and soap, or use boiling water on hard surfaces when safe to do so',
-            'Wash gloves, tools, clothes, and boots after use',
-            'Wash your hands with soap and water for at least 20 seconds, even if you wore gloves',
-          ],
-          karl: 'Body step 4: Area cleaning and handwashing',
-        },
+      bullets: [
+        '**1. Protect yourself:** Before you start, put on disposable gloves, protective clothing, and shoes or boots you can clean afterward.',
+        '* Wear disposable gloves and shoe covers or boots that can be washed',
+        '* Wear long sleeves and old clothes you can wash or throw away',
+        '* Consider a dust mask if you cannot avoid creating dust',
+        '**2. Lightly wet the droppings:** Lightly spray the latrine with water or a mild soap-and-water mix. This helps keep eggs from becoming airborne while you clean.',
+        '**3. Remove and bag the waste:** Use a shovel or disposable tools to place droppings and nearby contaminated material into heavy plastic bags.',
+        '* Double-bag the waste and tie the bags closed',
+        '* Place the bags in an outdoor garbage container with a tight lid',
+        '* Do not put raccoon waste in compost',
+        '**4. Clean the area and your hands:** After removal, clean the surface and wash up thoroughly.',
+        '* Scrub the area with hot water and soap, or use boiling water on hard surfaces when safe to do so',
+        '* Wash gloves, tools, clothes, and boots after use',
+        '* Wash your hands with soap and water for at least 20 seconds, even if you wore gloves',
       ],
       callout: {
-        karl: 'Body note: Sandbox and play area warning',
+        karl: 'Maps to its own Callout stream item (a fourth Callout sibling on this page, sitting after the 4 step Title and text blocks above — not nested inside any of them). No title field; this callout has none, so no mismatch.',
         text: 'If a latrine is in or near a child play area, sandbox, or shared courtyard, keep the area closed until cleanup is complete and consider replacing heavily contaminated material such as sand or mulch.',
       },
       cards: [
@@ -113,13 +86,13 @@ window.HHVC_PAGES['raccoonInfo'] = {
           title: 'CDC: Raccoon roundworm (Baylisascaris) prevention',
           text: 'Read CDC guidance on raccoon latrines, roundworm risks, and safe cleanup before handling droppings.',
           url: 'https://www.cdc.gov/parasites/baylisascaris/prevention.html',
-          karl: 'Body external link: CDC Baylisascaris prevention reference for SME-verified latrine cleanup',
+          karl: 'This card links to an external URL, not an internal page — it does not fit the verified "Related" field (an unrestricted but internal-only Page chooser; no external-URL support observed). No block type in the verified Information schema holds a card-style external link with its own title/description. Best option: fold this in as a Link-tool External link within one of this section\'s own Title and text rich text blocks (e.g. the intro block or a step block) — flag for Digital Services rather than assuming a dedicated field. SME-verified latrine cleanup source.',
         },
       ],
     },
     {
       heading: 'Reduce raccoon attractants',
-      karl: 'Body: Prevention steps',
+      karl: 'Maps to a ninth Title and text block: Title = this heading, Text = the bulleted list below (bullets render as a bulleted list inside the same rich text field; this section has no paragraphs, only bullets).',
       kind: 'body',
       bullets: [
         'Store garbage and compost in secure, animal-resistant containers with tight lids.',
@@ -131,7 +104,7 @@ window.HHVC_PAGES['raccoonInfo'] = {
     },
     {
       heading: 'When to report to the City',
-      karl: 'Body: Reporting guidance',
+      karl: 'Maps to a tenth Title and text block: Title = this heading, Text = the paragraph below.',
       kind: 'body',
       paragraphs: [
         'Report through 311 when raccoon activity is tied to a housing-health condition HHVC may inspect, such as persistent garbage, animal waste, or overgrown vegetation that supports pests or vectors.',
@@ -141,44 +114,40 @@ window.HHVC_PAGES['raccoonInfo'] = {
           title: 'Report pigeons',
           text: 'Report pigeon roosting, nesting, droppings, or feeding around a building or shared area.',
           target: 'pigeonsReport',
-          karl: 'Body link to related Transaction page',
+          karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
         {
           title: 'Report garbage or clutter',
           text: 'Report garbage, clutter, or animal waste that may attract pests, vectors, or wildlife.',
           target: 'garbageReport',
-          karl: 'Body link to related Transaction page',
+          karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
         {
           title: 'Report overgrown vegetation',
           text: 'Report overgrown plants or brush that may shelter pests or vectors.',
           target: 'vegetationReport',
-          karl: 'Body link to related Transaction page',
+          karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
         {
           title: 'Report rats or mice',
           text: 'Report rat or mouse activity if raccoons have damaged entry points or waste has attracted rodents.',
           target: 'ratsReport',
-          karl: 'Body link to related Transaction page',
+          karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Keep rats and mice out',
-          text: 'Learn how to reduce food, water, shelter, and entry points.',
           target: 'ratsPrevent',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
       ],
     },

@@ -15,20 +15,20 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
   sections: [
     {
       heading: 'Why it matters',
-      karl: 'Body: Why it matters — mosquito health-harm framing, placed first to motivate prevention. Verify disease-risk specifics with SFDPH vector program before publication.',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify disease-risk specifics with SFDPH vector program before publication.',
       kind: 'body',
       paragraphs: [
         "Mosquitoes can spread West Nile virus to people through a bite after feeding on an infected bird. Most people who are infected don't feel sick, but some develop a fever, and in rare cases the virus can cause serious, long-lasting neurological illness.",
         'Because mosquitoes can travel between properties, standing water left on one lot can affect the health of an entire block — which is why removing breeding sites is a shared responsibility, not just a personal one.',
       ],
       callout: {
-        karl: 'Body note: Key harm takeaway',
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
         text: 'Even a small amount of standing water — like an inch in a bottle cap or saucer — is enough for mosquitoes to breed.',
       },
     },
     {
       heading: 'Eliminate standing water',
-      karl: 'Body: Eliminate standing water',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below (bullets render as a bulleted list inside the same rich text field).',
       kind: 'body',
       paragraphs: [
         'Mosquitoes must have standing water to develop and breed. Mosquito eggs hatch into active, wiggling larvae that live at the water surface. Eliminating standing water helps prevent mosquitoes and reduce pests around your property.',
@@ -40,13 +40,13 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
         'Pools and Spas: Keep them chlorinated and covered tightly when not in use. Drain water off the covers.',
         'Backyard Ponds: Stock fishponds with mosquito fish, remove excess weeds, and maintain proper water flow.',
         'Bird Baths: Change the water at least once a week.',
-        'Basements and Crawls: Keep areas under houses dry. Repair leaking pipes, dripping faucets, and condensation lines.',
+        'Basements and Crawls: Keep areas under houses dry. Repair leaking pipes, dripping faucets, and condensation lines. Major structural plumbing leaks are routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
         'Tires: Store tires indoors, cover them, or dispose of them properly so they do not collect water.',
       ],
     },
     {
       heading: 'Check your property after rain',
-      karl: 'Body: Post-rain checklist (added for depth). Reinforces standing-water removal.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Added for depth — reinforces standing-water removal.',
       kind: 'body',
       paragraphs: [
         'Standing water can collect quickly after rain. Walk your property and empty water from these common spots each week.',
@@ -61,7 +61,7 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     },
     {
       heading: 'Follow West Nile virus precautions',
-      karl: 'Body: West Nile virus precautions',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'West Nile virus is spread to humans through the bite of an infected mosquito. Mosquitoes become infected when they feed on infected birds. Protect yourself and your property with these simple steps:',
@@ -75,7 +75,7 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     },
     {
       heading: 'Report standing water and mosquitoes',
-      karl: 'Body: Mosquito reporting',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
       kind: 'body',
       paragraphs: [
         'You can report standing water or mosquito concerns to the City. DPH will investigate complaints and can treat catch basins and standing water to prevent breeding.',
@@ -87,49 +87,33 @@ window.HHVC_PAGES['mosquitoesPrevent'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Body: Reporting threshold + body link to related Transaction page',
+      karl: 'Paragraphs map to a sixth Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the mosquitoesReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
-        'Property owners and managers can use this page for prevention best practices or to prepare questions before asking for guidance.',
-      ],
-      cards: [
-        {
-          title: 'Report mosquitoes',
-          text: 'Open the related HHVC service page.',
-          target: 'mosquitoesReport',
-          karl: 'Links: Related Transaction page',
-        },
+        '[Report mosquitoes](mosquitoesReport)',
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Related section: right-panel linked pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
       kind: 'placement',
       cards: [
         {
           title: 'Learn what HHVC can inspect',
-          text: 'Check whether Environmental Health may review the issue.',
           target: 'scopeInfo',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'What happens after you report',
-          text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Mosquito Control Program',
-          text: 'Find program information, surveillance updates, and West Nile virus resources.',
           target: 'mosquitoControl',
-          karl: 'Related section: right-panel linked page',
         },
         {
           title: 'Free mosquito education workshop',
-          text: 'Bring hands-on mosquito science to your school, camp, museum, or science fair.',
           target: 'mosquitoWorkshop',
-          karl: 'Related section: right-panel linked page',
         },
       ],
     },

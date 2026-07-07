@@ -28,17 +28,22 @@ bun run build:workshop-form  # npm install + vite build inside forms/mosquito-wo
 bun run build:netlify        # validate.js -> build-netlify-dist.js (assembles dist/ for Netlify)
 bun run format               # prettier --write on **/*.{js,ts,json,md,css,html}
 bun run format:check         # prettier --check (this is the lint step; no ESLint/tsc)
+bun run test                  # bun test over tests/*.test.js (utils, data-validation, page-render,
+                              # csv, review-state-schema, reading-level)
+bun run test:e2e              # playwright test
 ```
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
 
-**There is no unit-test suite.** `bun run validate` (`build_scripts/validate.js`)
-is the de-facto test: it loads every `pages/*.js` file plus `js/page-data.js`
-into a Node VM context and Zod-validates required fields/shapes, plus a few
-hardcoded invariants (see below). It always validates the full page set —
-there's no way to validate a single page file in isolation. Run it after
-editing anything under `pages/` or `js/page-data.js`.
+`tests/` holds a real unit-test suite (6 files, run via `bun run test`) plus
+an `e2e/` subfolder driven by `bun run test:e2e`. Beyond that, `bun run
+validate` (`build_scripts/validate.js`) is a second, complementary check:
+it loads every `pages/*.js` file plus `js/page-data.js` into a Node VM
+context and Zod-validates required fields/shapes, plus a few hardcoded
+invariants (see below). It always validates the full page set — there's no
+way to validate a single page file in isolation. Run both after editing
+anything under `pages/` or `js/page-data.js`.
 
 ## Architecture
 
@@ -62,10 +67,21 @@ js/dashboard-guidance.js → js/interactive-sitemap.js → js/keyboard-shortcuts
 
 When adding a new page file: add its `<script>` tag in the `pages/*.js`
 block of `index.html`, before `js/page-data.js`; add a `[pageKey, menuLabel]`
-entry to the `order` array in `js/page-data.js` so it appears in navigation;
-and add the file path to the `files` array in **both**
-`build_scripts/validate.js` and `build_scripts/extract-pages.js` — those two
-scripts each hardcode their own separate copy of that list.
+entry to the `order` array in `js/page-data.js` so it appears in navigation.
+Node-side scripts (`build_scripts/validate.js`, `build_scripts/extract-pages.js`,
+and `tests/`) no longer hardcode their own page-file lists — they all
+discover `pages/*.js` dynamically via `build_scripts/load-pages.js` (glob +
+sort, with `js/page-data.js` always loaded last). Only `index.html`'s
+`<script>` tags still need a manual entry per new page; there's no
+independent list left to fall out of sync in the build scripts themselves.
+If you do forget the `<script>` tag (or leave a stale one after deleting a
+page file), `bun run validate` now catches it: it diffs `pages/*.js` on disk
+against the `<script src="pages/...">` tags in `index.html`
+(`build_scripts/index-html-checks.js`) and fails loudly on either direction
+of drift, since the browser has no way to glob its own script tags at
+runtime the way the Node build scripts can. Tag *order* isn't checked —
+page modules are independent (each only writes into `window.HHVC_PAGES`),
+so only set membership matters.
 
 ### Core module split (formerly one `app.js`)
 
@@ -109,12 +125,12 @@ files or publish content**; they are review aids only, not publishing tools.
 
 See `build_scripts/validate.js` for the enforced Zod schema: `slug`, `type`
 (a free-form string — only `min(1)` is checked, not an enum; values in use
-across `pages/*.js` include `Topic page`, `Transaction`, `Information`,
-`Resource collection`, and `Campaign` (the latter is referenced in editorial
-notes but not yet used as a `type` value in live page data)), `title`,
-`summary`, `audience[]`, `reading` (grade-level string), and `sections[]`.
-For Karl editor field mapping by content type, see
-`docs/source/hhvc-policy/karl-content-type-field-reference.md`. Sections carry `cards[]`,
+across `pages/*.js` are `Topic`, `Transaction`, `Information`, and
+`Resource Collection`, matching Karl's real content-type names — see
+`docs/wagtail-content-mapping.md`). `title`, `summary`, `audience[]`, `reading`
+(grade-level string), and `sections[]`. For Karl editor field mapping by
+content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
+Sections carry `cards[]`,
 `bullets[]`, `paragraphs[]`, `table[][]`, a `callout`, a
 `button`/`buttonUrl`/`buttonTarget`/`buttonStyle`, and/or `steps[]`; steps
 carry `text[]`, `callout`, and `button`/`buttonTarget`/`buttonUrl` (the
@@ -146,6 +162,13 @@ is saved client-side under the versioned `localStorage` key
 `hhvcManagerReviewState:v1`. Bump the version suffix if the persisted shape
 changes incompatibly. Workspace UI prefs (`workspace_open`, `workspace_tab`,
 `last_page_key`, `show_karl_tags`) live under `state.ui` in the same blob.
+
+**The CSV/JSON import path in `js/review-queue.js` can destroy existing
+reviews** — a prior regression there replaced the saved state wholesale
+instead of merging. Any change to the import/export round-trip in
+`js/review-queue.js` or `js/manager-review-export.js` must be manually
+verified before being called done: export a snapshot, re-import it, and
+confirm existing decisions/notes are still present rather than wiped.
 
 ### Build outputs
 
@@ -204,6 +227,28 @@ install` must run first), and `forms/mosquito-workshop-request/dist`
   overrides layered under the `@sfgov/design-system` stylesheets.
 - Review exports (`review/*.csv`, saved local-review CSV/JSON) are for
   manager decisions only — never treat them as automatic publication approval.
+
+## Session pitfalls to avoid
+
+- **State the repo root before guessing paths.** This repo's absolute path
+  is `/home/ohdaveed/HHVC_manager_review_current_tool_package`. Automated
+  review/CI-style invocations in particular have repeatedly started by
+  guessing a wrong path (e.g. `/home/user/...`) and failing a `Read` before
+  self-correcting via `Glob`/`pwd` — check `pwd` or use the path above
+  directly instead of guessing.
+- **Land brainstorming/exploration sessions on a decision.** Open-ended
+  design sessions (e.g. via `superpowers:brainstorming`) have previously
+  ended mid-flow with only disposable prototypes left in
+  `.superpowers/brainstorm/` and no spec, decision, or concluding direction.
+  Before ending this kind of session, either commit to a documented
+  decision/next step or explicitly say what's unresolved so it isn't
+  mistaken for finished work.
+- **Verify and close out delegated work yourself before calling it done.**
+  When using subagent-driven-development or worktrees, a subagent reporting
+  "done" is not sufficient — confirm and merge the result in the parent
+  session. This matters especially near a session usage-limit boundary:
+  don't let the session end assuming a subagent's self-report was the final
+  verification.
 
 ## Code style
 

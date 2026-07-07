@@ -41,6 +41,14 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-ipm-pests-fleas.pdf` / `.md` | UC IPM Pest Notes 7419: Fleas | Supplementary | IPM reference for pet/housing flea control; no Phase 1 mockup page |
 | `2026-07-02-ipm-itching-infestation.pdf` / `.md` | UC IPM Pest Notes 7443: Itching and Infestation | Supplementary | Medical/education reference when pests cannot be confirmed; no Phase 1 page |
 | `2026-07-02-ipm-lyme-disease-california.pdf` / `.md` | UC IPM Pest Notes 7485: Lyme Disease in California | Supplementary | Tick/Lyme education; no Phase 1 mockup page |
+| `2026-07-02-program-manager-72-hour-tenant-notice.md` | Program manager operational guidance — tenant notice before 311 reporting | Phase 1 | **Operational authority** for the 72-hour landlord-notice step on report pages; distinct from the bed bug Director's Rules two-working-day owner investigation deadline |
+| `2026-07-02-sf-gov-housing-discrimination-help.md` | Get help for discrimination in housing | Supplementary | Fair-housing/HRC referral resource; does not cover reporting anti-retaliation or reporter privacy; may inform Phase 2 `tenantRights` links |
+| `2026-07-02-sf-gov-pay-healthy-housing-fee.md` | Pay your annual healthy housing fee for apartment buildings | Phase 1 | **Primary authority** for `payFee` copy and `pestsTopic` fee card |
+| `2026-07-02-health-code-sec-609-healthy-housing-fee.md` | SEC. 609. Vector Control and Healthy Housing Inspection Program Fee | Phase 1 | **Legal authority** — rental-unit definition, late penalties, lien authority, Controller adjustment (Sec. 609.2) |
+| `2026-07-02-dph-ehb-fees-fy24-25.md` | SFDPH Environmental Health Branch — Website Fees FY 2024–25 | Phase 1 supplementary | Superseded fee-tier estimate; kept for historical comparison only |
+| `2026-07-02-controller-fee-certification-fy25-26.md` | Fee Certification — FY 2025–26 (Healthy Housing excerpt) | Phase 1 supplementary | Superseded pre-round FY 2025–26 estimate; see `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` for the final rounded figures |
+| `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/25–6/30/26) | Phase 1 supplementary | Superseded — kept for historical comparison; see `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` for the fee figures now in effect |
+| `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/26–6/30/27) | Phase 1 | **Current fee authority** for `payFee`/`noticeOfViolation`/`afterReport`; confirms the apartment-building tiers and $256/$234 hourly reinspection rates that a same-day FY25-26 export had incorrectly flagged as an "unsourced FY27 table" |
 
 ### 2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf
 
@@ -149,7 +157,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Export date:** 2026-07-02
 - **Format:** pdf (+ extracted `.md`)
 - **Reviewer:** CA
-- **Note:** UC ANR IPM guidance on bed bug identification, life cycle, inspection, and treatment. Aligns with violation-master Bed Bugs category. **Does not replace** SFDPH Director's Rules needed for `bedBugsReport` rules pointer and `bedBugsInfo` legal requirements (72-hour investigation, PCO licensing, etc.).
+- **Note:** UC ANR IPM guidance on bed bug identification, life cycle, inspection, and treatment. Aligns with violation-master Bed Bugs category. **Does not replace** SFDPH Director's Rules needed for `bedBugsReport` rules pointer and `bedBugsInfo` legal requirements (two-working-day PCO investigation, PCO licensing, etc.) — see `2026-07-02-bed-bug-directors-rules-tenant-guidelines.md` for the correct figure; do not confuse with the unrelated 72-hour tenant-notice-to-landlord window.
 
 ### 2026-07-02-ipm-pests-cockroaches.pdf
 
@@ -280,6 +288,16 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** md (PDF extract)
 - **Reviewer:** CA
 - **Note:** Current certified fee tier estimates (e.g., 3 rental units = $100 for FY 2025–26). Use as best-estimate reference only; page copy points to invoice.
+
+### 2026-07-06-dph-ehb-fee-schedule-fy25-26.md
+
+- **Original URL:** https://media.api.sf.gov/documents/Website_Fees_FY25-26_1M8m5aT.pdf
+- **Source title:** Department of Public Health - Environmental Health Branch — Fee Schedule, Application, License, and Other Fees
+- **Authority:** SFDPH Environmental Health Branch (Controller-adjusted fees under Health Code Sec. 609.2)
+- **Export date:** 2026-07-06
+- **Format:** md (PDF extract)
+- **Reviewer:** CA
+- **Note:** Final rounded FY 2025–26 fee sheet (revised 7/3/2025), effective through 6/30/26 — supersedes the FY24-25 estimate and the Aug 2025 Controller pre-round for `payFee`/`noticeOfViolation` amounts (3 rental units = $101; reinspection $251/hr inspector, $229/hr technician). No FY 2026–27 schedule was found published as of export; corrects a previously-published, unsourced "FY27" table that didn't match any certified schedule.
 
 ## Documents still expected for Phase 1
 

@@ -12,7 +12,7 @@ const imageSchema = z.object({
 
 const cardSchema = z.object({
   title: z.string().min(1),
-  text: z.string().min(1),
+  text: z.string().min(1).optional(),
   target: z.string().optional(),
   url: z.string().optional(),
   karl: z.string().optional(),
@@ -110,6 +110,7 @@ const pageSchema = z.object({
   whatToKnow: whatToKnowSchema.optional(),
   contact: contactSchema.optional(),
   spotlight: spotlightSchema.optional(),
+  editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
   sections: z.array(sectionSchema).optional(),
 })
 

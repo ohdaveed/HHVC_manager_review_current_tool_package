@@ -18,46 +18,42 @@ _HHVC Web Governance and Content Standards Manual_
 
 ### **6.1 Purpose**
 
-This chapter establishes the approved, platform-validated use of all **28 Karl CMS design components** on Healthy Housing and Vector Control (HHVC) web pages [283]. It provides binding design rules, supported content types, layout restrictions, and character limits to ensure 100% compliance with SF.gov’s unified look and feel and federal ADA Title II accessibility mandates [1, 195, 283]. The master index aligns with `docs/source/hhvc-policy/2026-07-07-karl-cms-component-documentation.xlsx`.
-
-For **which page types expose which fields** (Information, Transaction, Resource Collection, Campaign), see [`docs/source/hhvc-policy/karl-content-type-field-reference.md`](../docs/source/hhvc-policy/karl-content-type-field-reference.md). This chapter remains authoritative for _how_ to use each component; the field reference is authoritative for _where_ each component appears in Karl page templates.
+This chapter establishes the approved, platform-validated use of all **26 Karl CMS design components** on Healthy Housing and Vector Control (HHVC) web pages [283]. It provides binding design rules, supported content types, layout restrictions, and character limits to ensure 100% compliance with SF.gov’s unified look and feel and federal ADA Title II accessibility mandates [1, 195, 283].
 
 ---
 
 ### **6.2 Master Component Catalog and Mapping**
 
-To prevent page clutter, editors must select the minimum number of components required to support the resident's primary task [283]. Below is the master validation index of all 28 components configurable within the Karl editor [7]:
+To prevent page clutter, editors must select the minimum number of components required to support the resident's primary task [283]. Below is the master validation index of all 26 components configurable within the Karl editor [7]:
 
-| **Component Name**                |   **Snippet/Asset Class**    | **Supported Content Types**                               | **Primary HHVC Governance Role**                                                                                           |
-| :-------------------------------- | :--------------------------: | :-------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| **1. Accordions**                 |      Non-Reusable [284]      | Campaign, Location, Meeting, Transaction [6, 123, 284]    | Frequently Asked Questions and minor details [284]                                                                         |
-| **2. Address**                    |  Reusable Snippet [14, 49]   | All content types [14, 49]                                | Reusable physical facility or service sites [14, 49]                                                                       |
-| **3. Alert**                      |      Non-Reusable [50]       | Agency, Location only [16, 123]                           | Top-of-page urgent emergency/service banners [16, 123]                                                                     |
-| **4. Body Text**                  |      Non-Reusable [50]       | All content types [31]                                    | Standard paragraph formatting and in-page markup [31]                                                                      |
-| **5. Button**                     |      Non-Reusable [50]       | Call to Action pages (Transaction, etc.) [40]             | Single primary action trigger (e.g., 'Start report') [40, 119]                                                             |
-| **6. Callout**                    |      Non-Reusable [50]       | Transaction, Information, Data story [43, 123]            | Blue informational boxes highlighting citable rules [43, 123]                                                              |
-| **7. Contact section**            |    Reusable Snippet [49]     | Transaction, Information, etc. [58, 61]                   | Standardized footer contact directory block [58, 61]                                                                       |
-| **8. Cost**                       |      Non-Reusable [50]       | Transaction (What to know block) [115, 377]               | Optional program fee listing and description [70, 377]                                                                     |
-| **9. Data**                       |    PowerBI Asset [83, 84]    | Data story, Resource Collection, Agency [84, 141]         | Dashboard embeds and analytics visualization [84, 141]                                                                     |
-| **10. Description**               |      Non-Reusable [50]       | All content types [95]                                    | Front-loaded 110-character SEO sub-summaries [95]                                                                          |
-| **11. Heading**                   |      Non-Reusable [50]       | All content types [73]                                    | Semantic H3/H4 structural order for screen readers [73]                                                                    |
-| **12. Highlights**                |      Non-Reusable [50]       | Agency only [136]                                         | Top-of-page optional image-based spotlight grid [136]                                                                      |
-| **13. Images**                    |     Reusable Asset [49]      | 9 content types (Campaign, Info, Report, etc.) [11]       | Real photography, alt-text, logos, and header images [11, 182]                                                             |
-| **14. Links**                     | Relational / Hyperlink [179] | All content types [179]                                   | Navigation pathways and context-rich external links [23, 179]                                                              |
-| **15. Partner agency**            |    Reusable Relationship     | All content types [141, 145, 150, 152]                    | Optional secondary departmental attribution [214]                                                                          |
-| **16. People section**            |    Reusable Relationship     | Agency, Location only [218]                               | Collecting and rendering biographical profile grids [218]                                                                  |
-| **17. Primary agency**            |    Reusable Relationship     | All content types (Required starting Nov 2025) [237]      | Mandatory citable department link and dashboard filter [237]                                                               |
-| **18. Redirects**                 |  CMS Core (Disabled) [245]   | Disabled (Digital Services only) [245]                    | Programmatic 301 forward links (No editor control) [245]                                                                   |
-| **19. Related**                   |   Relational Snippet [254]   | Transaction, Information, Campaign, Topic [255, 361]      | Right-panel or bottom-pane cross-service linking [254, 361]                                                                |
-| **20. Resources**                 |    Reusable Snippet [49]     | About, Campaign, Resource Collection, Topic [269]         | Reusable styled blocks linking to PDFs or external links [270]                                                             |
-| **21. Spotlight**                 |      Non-Reusable [50]       | All content types [313] (Wait: see 313)                   | Visually prominent banners drawing single-task focus [313]                                                                 |
-| **22. Tables**                    |      Non-Reusable [50]       | Report only [328]                                         | Highly structured, 2-to-3 column untranslated data [328]                                                                   |
-| **23. Title**                     |      Non-Reusable [50]       | All content types (Required) [340]                        | Sentence-case page identifier under 65 characters [340]                                                                    |
-| **24. Topics**                    |    Reusable Relationship     | Transaction, Step-by-step, Campaign, etc. [347, 350, 352] | Categorizing child pages under parent Topic hubs [358, 387]                                                                |
-| **25. URLs**                      |      Non-Reusable [50]       | All content types [364]                                   | Lowercase, hyphenated, verb-first direct web addresses [309, 336]                                                          |
-| **26. Videos**                    |     Reusable Asset [49]      | All text-supporting content types [372, 373]              | Third-party embeds requiring complete transcripts [110, 372]                                                               |
-| **27. Documents, including PDFs** |     Reusable Asset [49]      | All content types linking files                           | Downloadable PDFs and documents with title, description, format, and size labels [95]                                      |
-| **28. Step List**                 |    In-page pattern (HHVC)    | Transaction pages (What to do)                            | Sequential steps with one primary action each; use Step-by-step content type for multi-stage journeys [10, 20, 23, 24, 34] |
+| **Component Name**     |   **Snippet/Asset Class**    | **Supported Content Types**                               | **Primary HHVC Governance Role**                                  |
+| :--------------------- | :--------------------------: | :-------------------------------------------------------- | :---------------------------------------------------------------- |
+| **1. Accordions**      |      Non-Reusable [284]      | Campaign, Location, Meeting, Transaction [6, 123, 284]    | Frequently Asked Questions and minor details [284]                |
+| **2. Address**         |  Reusable Snippet [14, 49]   | All content types [14, 49]                                | Reusable physical facility or service sites [14, 49]              |
+| **3. Alert**           |      Non-Reusable [50]       | Agency, Location only [16, 123]                           | Top-of-page urgent emergency/service banners [16, 123]            |
+| **4. Body Text**       |      Non-Reusable [50]       | All content types [31]                                    | Standard paragraph formatting and in-page markup [31]             |
+| **5. Button**          |      Non-Reusable [50]       | Call to Action pages (Transaction, etc.) [40]             | Single primary action trigger (e.g., 'Start report') [40, 119]    |
+| **6. Callout**         |      Non-Reusable [50]       | Transaction, Information, Data story [43, 123]            | Blue informational boxes highlighting citable rules [43, 123]     |
+| **7. Contact section** |    Reusable Snippet [49]     | Transaction, Information, etc. [58, 61]                   | Standardized footer contact directory block [58, 61]              |
+| **8. Cost**            |      Non-Reusable [50]       | Transaction (What to know block) [115, 377]               | Optional program fee listing and description [70, 377]            |
+| **9. Data**            |    PowerBI Asset [83, 84]    | Data story, Resource Collection, Agency [84, 141]         | Dashboard embeds and analytics visualization [84, 141]            |
+| **10. Description**    |      Non-Reusable [50]       | All content types [95]                                    | Front-loaded 110-character SEO sub-summaries [95]                 |
+| **11. Heading**        |      Non-Reusable [50]       | All content types [73]                                    | Semantic H3/H4 structural order for screen readers [73]           |
+| **12. Highlights**     |      Non-Reusable [50]       | Agency only [136]                                         | Top-of-page optional image-based spotlight grid [136]             |
+| **13. Images**         |     Reusable Asset [49]      | 9 content types (Campaign, Info, Report, etc.) [11]       | Real photography, alt-text, logos, and header images [11, 182]    |
+| **14. Links**          | Relational / Hyperlink [179] | All content types [179]                                   | Navigation pathways and context-rich external links [23, 179]     |
+| **15. Partner agency** |    Reusable Relationship     | All content types [141, 145, 150, 152]                    | Optional secondary departmental attribution [214]                 |
+| **16. People section** |    Reusable Relationship     | Agency, Location only [218]                               | Collecting and rendering biographical profile grids [218]         |
+| **17. Primary agency** |    Reusable Relationship     | All content types (Required starting Nov 2025) [237]      | Mandatory citable department link and dashboard filter [237]      |
+| **18. Redirects**      |  CMS Core (Disabled) [245]   | Disabled (Digital Services only) [245]                    | Programmatic 301 forward links (No editor control) [245]          |
+| **19. Related**        |   Relational Snippet [254]   | Transaction, Information, Campaign, Topic [255, 361]      | Right-panel or bottom-pane cross-service linking [254, 361]       |
+| **20. Resources**      |    Reusable Snippet [49]     | About, Campaign, Resource Collection, Topic [269]         | Reusable styled blocks linking to PDFs or external links [270]    |
+| **21. Spotlight**      |      Non-Reusable [50]       | All content types [313] (Wait: see 313)                   | Visually prominent banners drawing single-task focus [313]        |
+| **22. Tables**         |      Non-Reusable [50]       | Report only [328]                                         | Highly structured, 2-to-3 column untranslated data [328]          |
+| **23. Title**          |      Non-Reusable [50]       | All content types (Required) [340]                        | Sentence-case page identifier under 65 characters [340]           |
+| **24. Topics**         |    Reusable Relationship     | Transaction, Step-by-step, Campaign, etc. [347, 350, 352] | Categorizing child pages under parent Topic hubs [358, 387]       |
+| **25. URLs**           |      Non-Reusable [50]       | All content types [364]                                   | Lowercase, hyphenated, verb-first direct web addresses [309, 336] |
+| **26. Videos**         |     Reusable Asset [49]      | All text-supporting content types [372, 373]              | Third-party embeds requiring complete transcripts [110, 372]      |
 
 ---
 
@@ -226,20 +222,6 @@ ightarrow$ `Addresses`) [14, 49].
 - **Platform Definition**: Embedded third-party media players (such as YouTube or Granicus players) [372, 373].
 - **Direct Hosting Ban**: Video files **cannot be hosted directly on SF.gov** [372]. Videos must be uploaded to third-party platforms and embedded [372].
 - **Mandatory Transcript Requirement**: All video embeds must have a **complete written transcript** hosted directly on the page or linked via a descriptive hyperlink to maintain strict WCAG Level AA conformance [110, 372].
-
-#### **27. Documents, including PDFs**
-
-- **Platform Definition**: Uploadable file assets (PDF, DOCX, etc.) attached to pages or linked from Resource Collection items [95].
-- **Labeling Rules**: Every document link must include a title, short description, and explicit format and file size in brackets (e.g., `Bed bug complaint log (PDF, 185 KB)`).
-- **Accessibility**: Provide an HTML equivalent or summary on SF.gov when residents must complete a task using the document; do not rely on PDF alone for mandatory instructions.
-- **Overlap with Resources**: Resource Collection cards may link to PDFs; use the Documents component rules whenever a file is the primary deliverable.
-
-#### **28. Step List**
-
-- **Platform Definition**: In-page ordered steps on Transaction pages (the "What to do" section), rendered as a numbered list with optional Callout and Button per step.
-- **HHVC Scope**: Approved HHVC pattern for report pages (see Page Blueprint — Report Cockroaches). Karl's native Step-by-step **content type** remains the choice for journeys longer than a single transaction.
-- **Rules**: One primary action per step; use plain language; keep mandatory notices (72-hour tenant notice, privacy reassurance) in visible **Callout** blocks, never in Accordions.
-- **Button Placement**: Only the primary 311 or payment CTA should use the Button component; supporting steps use body links or bullets.
 
 ---
 
