@@ -9,6 +9,7 @@
   --ux-warning-border: var(--sfds-warning-border);
   --ux-danger-bg: var(--sfds-danger-bg);
   --ux-danger-border: var(--sfds-danger-border);
+  --content-max: 65ch;
 }
 
 .canvas-toolbar {
@@ -844,4 +845,37 @@
   .shortcuts-item {
     grid-template-columns: 6rem minmax(0, 1fr);
   }
+}
+
+/* ==========================================================================
+   Editorial Reading Column & Visual Hierarchy Updates
+   ========================================================================== */
+
+/* Vertical Rhythm */
+.section {
+  margin-bottom: 3rem !important;
+  padding: 1.5rem 0 !important;
+}
+
+/* Digestible Data (Gestalt Principles) */
+ul li,
+ol li {
+  margin-bottom: 0.75rem !important;
+}
+
+/* Tame the CMS Tags */
+.karl-tag,
+.karl-tag[data-kind='meta'],
+.karl-tag[data-kind='body'],
+.karl-tag[data-kind='placement'],
+.karl-tag[data-kind='editor'] {
+  background: var(--sfds-blue-soft-bg) !important;
+  border: none !important;
+  border-left: 4px solid var(--sfds-purple-border) !important;
+  color: var(--sfds-slate-3) !important;
+  font-size: 0.85rem !important;
+  padding: 0.2rem 0.5rem !important;
+  display: inline-block;
+  margin: 0.2rem 0;
+  border-radius: 0 4px 4px 0 !important;
 }
