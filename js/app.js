@@ -29,7 +29,6 @@ function init() {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })
   mountKarlTagLegend?.()
-  document.getElementById('sidebarToggle')?.addEventListener('click', toggleSidebar)
   initChecklist()
 
   window.addEventListener('popstate', (e) => {
