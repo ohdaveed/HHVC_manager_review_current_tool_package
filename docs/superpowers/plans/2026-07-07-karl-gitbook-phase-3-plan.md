@@ -96,7 +96,7 @@ GitBook: [Contact section](https://sfdigitalservices.gitbook.io/karl-sf.gov-edit
 ```js
 contactSection: {
   phone: 'Environmental Health: 415-252-3800',
-  email: 'eh@sf.gov', // confirm with HHVC before publication
+  email: 'healthyhousing@sf.gov', // confirm with HHVC before publication
   karl: 'Contact section: Environmental Health (standardized footer)',
 }
 ```
@@ -336,7 +336,7 @@ Stack PR on Phase 2 branch until merged, then retarget to `main`.
 
 ## Risk notes
 
-- **Contact email `eh@sf.gov`** — confirm with HHVC; use `editorNote` if uncertain.
+- **Contact email `healthyhousing@sf.gov`** — confirm with HHVC; use `editorNote` if uncertain.
 - **Accordion migration** — do not hide mandatory compliance steps in accordions (chapter 4 Rule 3).
 - **Location hours** — use generic “By appointment / check 311” if exact hours are unverified.
 - **News/Event dates** — use clearly labeled illustrative dates in `editorNote`.

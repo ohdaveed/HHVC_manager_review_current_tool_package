@@ -11,7 +11,7 @@ const pagesDir = path.join(root, 'pages')
 
 const CONTACT_BLOCK = `  contactSection: {
     phone: 'Environmental Health: 415-252-3800',
-    email: 'eh@sf.gov',
+    email: 'healthyhousing@sf.gov',
     karl: 'Contact section: Environmental Health (standardized footer)',
   },
 `

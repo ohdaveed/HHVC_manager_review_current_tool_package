@@ -80,7 +80,7 @@ window.HHVC_PAGES['flyInfo'] = {
   ],
   contactSection: {
     phone: 'Environmental Health: 415-252-3800',
-    email: 'eh@sf.gov',
+    email: 'healthyhousing@sf.gov',
     karl: 'Contact section: Environmental Health (standardized footer)',
   },
   seoTitle: 'Flies and housing health | SF.gov',

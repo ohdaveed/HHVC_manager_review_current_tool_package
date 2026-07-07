@@ -139,7 +139,7 @@ window.HHVC_PAGES['mosquitoesReport'] = {
   ],
   contactSection: {
     phone: 'Environmental Health: 415-252-3800',
-    email: 'eh@sf.gov',
+    email: 'healthyhousing@sf.gov',
     karl: 'Contact section: Environmental Health (standardized footer)',
   },
   seoTitle: 'Report mosquitoes in your home or backyard | SF.gov',

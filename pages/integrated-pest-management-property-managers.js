@@ -256,7 +256,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
   ],
   contactSection: {
     phone: 'Environmental Health: 415-252-3800',
-    email: 'eh@sf.gov',
+    email: 'healthyhousing@sf.gov',
     karl: 'Contact section: Environmental Health (standardized footer)',
   },
   seoTitle: 'IPM for property owners and managers | SF.gov',

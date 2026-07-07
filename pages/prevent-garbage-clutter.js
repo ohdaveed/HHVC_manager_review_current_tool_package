@@ -84,7 +84,7 @@ window.HHVC_PAGES['garbageInfo'] = {
   ],
   contactSection: {
     phone: 'Environmental Health: 415-252-3800',
-    email: 'eh@sf.gov',
+    email: 'healthyhousing@sf.gov',
     karl: 'Contact section: Environmental Health (standardized footer)',
   },
   seoTitle: 'Prevent garbage and clutter problems | SF.gov',
