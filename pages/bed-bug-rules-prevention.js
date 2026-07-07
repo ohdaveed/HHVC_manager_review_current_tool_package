@@ -103,7 +103,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Eradication and abatement timeline',
-      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The 4-week/28-day monitoring-period and Abatement Notice bullets are confirmed against the SFDPH bed bug Director\'s Rules (docs/source/hhvc-policy/2026-07-02-bed-bug-directors-rules-tenant-guidelines.md). The "DPH Re-inspection: ...within 45 days..." bullet is NOT supported by that source document (no 45-day final-re-inspection provision found there) and does not match any other source in this repo -- flag as unverified and confirm with HHVC/DPH before publication rather than treating it as an established rule.',
       kind: 'body',
       paragraphs: [
         'Legally, a bed bug infestation is not considered resolved (abated) immediately after treatment.',
@@ -111,7 +111,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       bullets: [
         '4-Week Monitoring Period: Abatement is achieved only after a 28-day period of zero bed bug activity, verified by a PCO using monitoring devices (interceptors).',
         "Abatement Notice: Landlords must provide a written 'Abatement Achieved' notice to the tenant after the 28-day clear period.",
-        'DPH Re-inspection: DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation.',
+        'DPH Re-inspection (unverified -- confirm before publication): DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation.',
       ],
     },
     {
