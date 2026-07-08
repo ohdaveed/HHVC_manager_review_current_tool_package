@@ -48,6 +48,7 @@ function normalizePageType(type = '') {
   if (t.includes('topic')) return 'topic'
   if (t.includes('resource collection')) return 'resource-collection'
   if (t.includes('campaign')) return 'campaign'
+  if (t.includes('report')) return 'report'
   return 'generic'
 }
 function inferSectionRole(section, pageType) {
@@ -73,7 +74,7 @@ function inferSectionRole(section, pageType) {
     if (section.kind === 'placement' && section.cards) return 'supporting'
     return 'supporting'
   }
-  if (pageType === 'information') {
+  if (pageType === 'information' || pageType === 'report') {
     if (k.includes('external') && section.cards) return 'resources'
     return 'body'
   }
@@ -208,19 +209,7 @@ function renderResourcesList(cards = [], heading = 'Resources') {
 }
 function renderRelatedList(cards = [], heading = 'Related') {
   if (!cards.length) return ''
-  const items = cards
-    .map((c) => {
-      const href = c.url ? escapeHtml(c.url) : '#'
-      const attr = c.url
-        ? ' target="_blank" rel="noopener noreferrer"'
-        : c.target
-          ? ` data-render-target="${escapeHtml(c.target)}"`
-          : ' data-render-inert=""'
-      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      return `<li>${karlTag(c.karl || 'Related section: right-panel linked page', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a><p>${escapeHtml(c.text)}</p></li>`
-    })
-    .join('')
-  return `<aside class="related-list"><h2>${escapeHtml(heading)}</h2><ul>${items}</ul></aside>`
+  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2>${renderCards(cards)}</section>`
 }
 function renderRelatedRail(sections = []) {
   const cards = sections.flatMap((s) => s.cards || [])
@@ -245,14 +234,35 @@ function renderSteps(steps = []) {
     )
     .join('')}</ol>`
 }
-function renderTable(rows = [], pageType = 'generic') {
+function isCodeTranslationTable(head = []) {
+  return head.length === 2 && head[0] === 'Health code' && head[1] === 'In plain language'
+}
+function renderTable(rows = [], pageType = 'generic', caption = '') {
   if (!rows.length) return ''
   const [head, ...body] = rows
+  const codeTranslation = isCodeTranslationTable(head)
   const previewNote =
     pageType === 'information'
       ? `<p class="mockup-only-note">${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
       : ''
-  return `${previewNote}<table class="table"><thead><tr>${head.map((h) => `<th>${formatMarkdown(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${formatMarkdown(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+  const tableClass = codeTranslation ? 'table table--code-translation' : 'table'
+  const table = `<table class="${tableClass}"><thead><tr>${head
+    .map((h) => `<th scope="col">${formatMarkdown(h)}</th>`)
+    .join('')}</tr></thead><tbody>${body
+    .map(
+      (r) =>
+        `<tr>${r
+          .map((c, i) => {
+            const scope = codeTranslation && i === 0 ? ' scope="row"' : ''
+            return `<td${scope}>${formatMarkdown(c)}</td>`
+          })
+          .join('')}</tr>`
+    )
+    .join('')}</tbody></table>`
+  if (codeTranslation && caption) {
+    return `${previewNote}<figure class="code-translation-figure"><figcaption class="visually-hidden">${escapeHtml(caption)}</figcaption>${table}</figure>`
+  }
+  return `${previewNote}${table}`
 }
 function resolveWhatToKnow(page) {
   if (page.whatToKnow) return page.whatToKnow
@@ -327,7 +337,7 @@ function renderSectionInner(section, pageType = 'generic') {
   inner += section.steps ? renderSteps(section.steps) : ''
   inner += bulletList(section.bullets || [])
   inner += section.image ? renderImage(section.image) : ''
-  inner += section.table ? renderTable(section.table, pageType) : ''
+  inner += section.table ? renderTable(section.table, pageType, section.heading || '') : ''
   if (section.callout) inner += renderCallout(section.callout)
   if (section.button)
     inner += button(
@@ -413,7 +423,15 @@ function renderHero(page, heroCta) {
   const topicChip = page.topicTag
     ? `<span class="pill pill--topic">${escapeHtml(page.topicTag)}</span>`
     : ''
-  return `<section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${topicChip}</div></div></section>`
+  const reportDatePill =
+    normalizePageType(page.type) === 'report' && page.reportDate
+      ? `<span class="pill">Updated ${escapeHtml(page.reportDate)}</span>`
+      : ''
+  return `<section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${reportDatePill}${topicChip}</div></div></section>`
+}
+function renderPrintVersion(url) {
+  if (!url) return ''
+  return `<p class="print-version-link">${karlTag('Report Print version field', 'placement')}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
 }
 function renderPageMain(page) {
   const parts = partitionSections(page)
@@ -422,8 +440,13 @@ function renderPageMain(page) {
   let html = renderHero(page, heroCta)
   html += `<main class="page-body page-body--${pageType}">`
   html += editorQaBlock(page)
+  if (page.spotlight && normalizePageType(page.type) === 'report') {
+    html += renderSpotlight(page.spotlight)
+  }
   html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
-  if (page.spotlight) html += renderSpotlight(page.spotlight)
+  if (page.spotlight && normalizePageType(page.type) !== 'report') {
+    html += renderSpotlight(page.spotlight)
+  }
   if (pageType === 'transaction') {
     html += renderWhatToKnow(page.whatToKnow, page)
     html += `<div class="page-layout page-layout--transaction"><div class="page-layout-main">`
@@ -442,7 +465,7 @@ function renderPageMain(page) {
     })
     html += `</div>${renderRelatedRail(related)}</div>`
     html += renderContactSection(page.contact, page)
-  } else if (pageType === 'information') {
+  } else if (pageType === 'information' || pageType === 'report') {
     const infoBody = [
       ...body,
       ...supporting.filter((s) => inferSectionRole(s, pageType) === 'body'),
@@ -451,9 +474,14 @@ function renderPageMain(page) {
     infoBody.forEach((s) => {
       html += renderSection(s, pageType)
     })
-    resources.forEach((s) => {
-      html += renderSection({ ...s, component: 'resources' }, pageType)
-    })
+    if (pageType === 'information') {
+      resources.forEach((s) => {
+        html += renderSection({ ...s, component: 'resources' }, pageType)
+      })
+    }
+    if (pageType === 'report') {
+      html += renderPrintVersion(page.printVersionUrl)
+    }
   } else if (pageType === 'topic') {
     intro.forEach((s) => {
       html += renderSection(s, pageType)

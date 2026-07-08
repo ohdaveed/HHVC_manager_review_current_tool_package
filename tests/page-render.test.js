@@ -66,6 +66,18 @@ describe('page-render.js escaping', () => {
     assertEscaped(html)
   })
 
+  test('renderRelatedList uses the cards grid layout', () => {
+    const html = ctx.renderRelatedList(
+      [{ title: 'Report mold', target: 'moldReport' }],
+      'Related pages'
+    )
+    expect(html).toContain('class="section section--related"')
+    expect(html).toContain('class="cards"')
+    expect(html).toContain('class="card"')
+    expect(html).toContain('data-render-target="moldReport"')
+    expect(html).not.toContain('class="related-list"')
+  })
+
   test('renderTable escapes header and body cells', () => {
     const html = ctx.renderTable([
       [PAYLOAD, 'Header 2'],
@@ -76,6 +88,36 @@ describe('page-render.js escaping', () => {
 
   test('renderTable returns empty string for no rows', () => {
     expect(ctx.renderTable([])).toBe('')
+  })
+
+  test('renderTable emits code-translation variant for health code headers', () => {
+    const html = ctx.renderTable(
+      [
+        ['Health code', 'In plain language'],
+        ['**Sec. 581(a):** No nuisance.', 'You must not allow a public health nuisance.'],
+      ],
+      'information',
+      'Mold and mildew'
+    )
+    expect(html).toContain('table--code-translation')
+    expect(html).toContain('scope="col"')
+    expect(html).toContain('scope="row"')
+    expect(html).toContain('code-translation-figure')
+    expect(html).toContain('Mold and mildew')
+    expect(html).toContain('mockup-only-note')
+  })
+
+  test('renderTable on Report pages omits Information-only table warning', () => {
+    const html = ctx.renderTable(
+      [
+        ['Health code', 'In plain language'],
+        ['**Sec. 581(a):** No nuisance.', 'You must not allow a public health nuisance.'],
+      ],
+      'report',
+      'About this guide'
+    )
+    expect(html).toContain('table--code-translation')
+    expect(html).not.toContain('mockup-only-note')
   })
 
   test('renderSteps escapes step title, text, bullets, and callout text', () => {

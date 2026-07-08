@@ -211,6 +211,12 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Resources block entry — an "SF.gov page" link only; this card\'s `text` description has no home in the real schema (see section-level karl note above).',
         },
         {
+          title: 'Health Code Article 11 in plain language',
+          text: 'Read nuisance rules with plain-language translations for mold, rodents, wasps, and more.',
+          target: 'article11Guide',
+          karl: 'Resources block entry — an "SF.gov page" link only; this card\'s `text` description has no home in the real schema (see section-level karl note above).',
+        },
+        {
           title: 'What happens after you report',
           text: 'Learn how reports are reviewed, assigned on weekdays, and when an inspector may contact you.',
           target: 'afterReport',

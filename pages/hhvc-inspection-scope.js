@@ -64,6 +64,7 @@ window.HHVC_PAGES['scopeInfo'] = {
         '**House flies breeding in garbage or organic waste:** [Flies and housing health](flyInfo)',
         '**Ground wasp nests:** [Ground wasps and housing health](waspInfo)',
         '**Mold from humidity or condensation:** [Report mold from humidity or condensation](moldReport)',
+        '**Health Code Article 11:** [Read Article 11 in plain language](article11Guide)',
       ],
     },
     {
