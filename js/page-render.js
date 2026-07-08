@@ -208,19 +208,7 @@ function renderResourcesList(cards = [], heading = 'Resources') {
 }
 function renderRelatedList(cards = [], heading = 'Related') {
   if (!cards.length) return ''
-  const items = cards
-    .map((c) => {
-      const href = c.url ? escapeHtml(c.url) : '#'
-      const attr = c.url
-        ? ' target="_blank" rel="noopener noreferrer"'
-        : c.target
-          ? ` data-render-target="${escapeHtml(c.target)}"`
-          : ' data-render-inert=""'
-      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      return `<li>${karlTag(c.karl || 'Related section: right-panel linked page', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a><p>${escapeHtml(c.text)}</p></li>`
-    })
-    .join('')
-  return `<aside class="related-list"><h2>${escapeHtml(heading)}</h2><ul>${items}</ul></aside>`
+  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2>${renderCards(cards)}</section>`
 }
 function renderRelatedRail(sections = []) {
   const cards = sections.flatMap((s) => s.cards || [])

@@ -715,29 +715,12 @@ a:focus {
   font-size: 0.88rem;
   color: var(--sfds-slate-2);
 }
-.related-list {
-  max-width: var(--content-max);
-  margin: 1.5rem auto 0;
-  padding-top: 1rem;
+.section--related {
   border-top: 1px solid var(--sfds-border);
+  padding-top: 1rem;
 }
-.related-list ul {
-  list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0;
-}
-.related-list li {
-  margin: 0 0 0.85rem;
-}
-.related-list a {
-  font-weight: 700;
-  color: var(--sfds-action-blue);
-  text-decoration: none;
-}
-.related-list p {
-  margin: 0.2rem 0 0;
-  font-size: 0.9rem;
-  color: var(--sfds-slate-2);
+.section--related .cards {
+  margin-top: 0.75rem;
 }
 .on-this-page {
   max-width: var(--content-max);
