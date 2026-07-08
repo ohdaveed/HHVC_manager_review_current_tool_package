@@ -6,15 +6,6 @@
 
   const PANEL_ID = 'interactiveSitemapPanel'
   const state = window.InteractiveSitemap.state
-  const {
-    getCurrentKey,
-    getPageRows,
-    getFilteredRows,
-    getFilteredKeySet,
-    getLinkGraph,
-    buildDiagramGroups,
-    getOutgoingTargets,
-  } = window.InteractiveSitemap.data
 
   const { escapeHtml, getPrimaryCta, countRelatedLinks } = window.utils
 
@@ -62,8 +53,8 @@
       'Campaign',
     ]
     const clearLabel = state.search ? '✕ Clear search' : ''
-    const filteredCount = getFilteredRows().length
-    const totalCount = getPageRows().length
+    const filteredCount = window.InteractiveSitemap.data.getFilteredRows().length
+    const totalCount = window.InteractiveSitemap.data.getPageRows().length
     const isEmpty = state.search.trim().length > 0 && filteredCount === 0
     return `
       <div class="sitemap-search-bar">
@@ -79,7 +70,7 @@
           .map(
             (filter) => `
           <button type="button" class="sitemap-filter-button ${state.filter === filter ? 'active' : ''}" data-sitemap-filter="${filter}" aria-pressed="${state.filter === filter ? 'true' : 'false'}">
-            ${escapeHtml(filter)} ${filter !== 'All' ? `(${getPageRows().filter((r) => r.type === filter).length})` : `(${totalCount})`}
+            ${escapeHtml(filter)} ${filter !== 'All' ? `(${window.InteractiveSitemap.data.getPageRows().filter((r) => r.type === filter).length})` : `(${totalCount})`}
           </button>
         `
           )
@@ -93,7 +84,7 @@
 
   function renderDiagramNode(row, options = {}) {
     const { hub = false, dimmed = false, linked = false } = options
-    const active = row.key === getCurrentKey()
+    const active = row.key === window.InteractiveSitemap.data.getCurrentKey()
     const title = row.page.title || row.label
     return `
       <button
@@ -114,10 +105,10 @@
   }
 
   function renderDiagram() {
-    const { root, groups, crossCutting } = buildDiagramGroups()
-    const visibleKeys = getFilteredKeySet()
-    const selectedKey = getCurrentKey()
-    const graph = getLinkGraph()
+    const { root, groups, crossCutting } = window.InteractiveSitemap.data.buildDiagramGroups()
+    const visibleKeys = window.InteractiveSitemap.data.getFilteredKeySet()
+    const selectedKey = window.InteractiveSitemap.data.getCurrentKey()
+    const graph = window.InteractiveSitemap.data.getLinkGraph()
     const outgoing = graph[selectedKey]?.outgoing || new Set()
 
     function nodeOptions(row) {
@@ -181,7 +172,7 @@
 
   function renderLinkChips(title, targets) {
     if (!targets || !targets.length) return ''
-    const graph = getLinkGraph()
+    const graph = window.InteractiveSitemap.data.getLinkGraph()
     return `
       <section class="sitemap-link-section">
         <h5>${escapeHtml(title)}</h5>
@@ -208,8 +199,8 @@
     const primaryCta = getPrimaryCta(page) || 'None set'
     const audienceCount = Array.isArray(page.audience) ? page.audience.length : 0
     const relatedCount = countRelatedLinks(page)
-    const graph = getLinkGraph()
-    const outgoingTargets = getOutgoingTargets(page)
+    const graph = window.InteractiveSitemap.data.getLinkGraph()
+    const outgoingTargets = window.InteractiveSitemap.data.getOutgoingTargets(page)
     const incomingTargets = Array.from(graph[row.key]?.incoming || [])
 
     return `
@@ -217,7 +208,7 @@
         <h4>${escapeHtml(page.title || row.label)}</h4>
         <p>${escapeHtml(page.summary || 'No summary available.')}</p>
         <ul class="sitemap-detail-list">
-          <li><strong>Inventory #:</strong> ${row.orderIndex + 1} of ${getPageRows().length}</li>
+          <li><strong>Inventory #:</strong> ${row.orderIndex + 1} of ${window.InteractiveSitemap.data.getPageRows().length}</li>
           <li><strong>Page type:</strong> ${escapeHtml(row.type)}</li>
           <li><strong>Reading target:</strong> ${escapeHtml(page.reading || 'Not set')}</li>
           <li><strong>Primary CTA:</strong> ${escapeHtml(primaryCta)}</li>
@@ -267,7 +258,7 @@
   }
 
   function rerender() {
-    state.selectedKey = getCurrentKey()
+    state.selectedKey = window.InteractiveSitemap.data.getCurrentKey()
     state._linkGraph = null
     renderPanel()
   }

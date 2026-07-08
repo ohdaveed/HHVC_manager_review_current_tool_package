@@ -10,14 +10,12 @@
 
   const { debounce } = window.utils
   const state = window.InteractiveSitemap.state
-  const { getCurrentKey } = window.InteractiveSitemap.data
-  const { rerender } = window.InteractiveSitemap.render
 
   function openPageByKey(key) {
     if (!key || !DATA.pages[key]) return
     state.selectedKey = key
     window.renderPage?.(key)
-    window.setTimeout(rerender, 0)
+    window.setTimeout(window.InteractiveSitemap.render.rerender, 0)
     window.setTimeout(() => {
       const node = document.querySelector(`[data-sitemap-key="${CSS.escape(key)}"]`)
       if (node) node.focus()
@@ -30,16 +28,16 @@
       const action = actionButton.getAttribute('data-sitemap-action')
       if (action === 'clear-search') {
         state.search = ''
-        rerender()
+        window.InteractiveSitemap.render.rerender()
         return
       }
       if (action === 'go-to-current') {
-        openPageByKey(getCurrentKey())
+        openPageByKey(window.InteractiveSitemap.data.getCurrentKey())
         return
       }
       if (action === 'toggle-links') {
         state.showLinksFromSelected = !state.showLinksFromSelected
-        rerender()
+        window.InteractiveSitemap.render.rerender()
         return
       }
       if (action === 'open-link') {
@@ -54,7 +52,7 @@
     if (filterButton) {
       state.filter = filterButton.getAttribute('data-sitemap-filter') || 'All'
       state.showLinksFromSelected = false
-      rerender()
+      window.InteractiveSitemap.render.rerender()
       return
     }
 
@@ -72,7 +70,7 @@
       if (event.key === 'Escape') {
         state.search = ''
         searchInput.value = ''
-        rerender()
+        window.InteractiveSitemap.render.rerender()
         searchInput.focus()
         return
       }
@@ -87,7 +85,7 @@
     if (event.key === 'Escape') {
       state.showLinksFromSelected = false
       state.filter = 'All'
-      rerender()
+      window.InteractiveSitemap.render.rerender()
       return
     }
 
@@ -126,7 +124,7 @@
     if (!event.target.closest('.sitemap-search-input')) return
     state.search = event.target.value
     state.showLinksFromSelected = false
-    rerender()
+    window.InteractiveSitemap.render.rerender()
     const input = document.querySelector('.sitemap-search-input')
     if (input) {
       input.focus()
@@ -145,9 +143,9 @@
       // highlight the previous page as current.
       if (result && typeof result.then === 'function')
         result.then(() => {
-          if (sitemapMounted) rerender()
+          if (sitemapMounted) window.InteractiveSitemap.render.rerender()
         })
-      else if (sitemapMounted) rerender()
+      else if (sitemapMounted) window.InteractiveSitemap.render.rerender()
       return result
     }
     window.renderPage.__sitemapWrapped = true
@@ -155,11 +153,11 @@
 
   function ensureSitemapRendered() {
     if (sitemapMounted) {
-      rerender()
+      window.InteractiveSitemap.render.rerender()
       return
     }
     sitemapMounted = true
-    rerender()
+    window.InteractiveSitemap.render.rerender()
   }
 
   function init() {
@@ -167,7 +165,7 @@
     document.addEventListener('keydown', handleKeydown)
     document.addEventListener('input', handleSearchInput)
     document.addEventListener('hhvc:review-data-changed', () => {
-      if (sitemapMounted) rerender()
+      if (sitemapMounted) window.InteractiveSitemap.render.rerender()
     })
     wrapRenderPageForSitemap()
 
