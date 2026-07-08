@@ -1,5 +1,8 @@
-/* Manager review UX/UI enhancements.
-   Runs after js/app.js and does not change source page content or review export schemas. */
+/* Manager review UX/UI enhancements: orchestrator.
+   Runs after js/app.js and does not change source page content or review
+   export schemas. Composes window.ReviewUx.stateSync/.workspace/.exportImport
+   (each in their own file, loaded before this one) into init()/refresh
+   wiring. */
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
   if (
@@ -10,26 +13,7 @@
   )
     return
 
-  // js/utils.js loads first (see index.html script order), so the shared
-  // helpers are always available.
-  const {
-    escapeHtml,
-    getPrimaryCta,
-    setPrimaryCta,
-    today,
-    debounce,
-    toCsv,
-    downloadFile,
-    getStatusChipClass,
-    defaultSeoTitle,
-    defaultMetaDescription,
-    getValue,
-    setValue,
-    setText,
-    buildReviewRecord,
-    getCurrentKey,
-    countRelatedLinks,
-  } = window.utils
+  const { debounce, getCurrentKey } = window.utils
   // Rebuilding the dashboard grid/scorecard and page-search list on every
   // keystroke is wasted work while the reviewer is still typing. Debounce the
   // 'input' path; 'change' (fires on blur) still refreshes immediately so the
@@ -142,6 +126,8 @@
     // Defer one refresh so review-queue.js (loaded next) is ready for sticky bar stats.
     window.setTimeout(refreshUx, 0)
   }
+
+  window.ReviewUx.refreshUx = refreshUx
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
