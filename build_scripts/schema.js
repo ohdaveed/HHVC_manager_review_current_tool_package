@@ -17,6 +17,8 @@ const cardSchema = z.object({
   url: z.string().optional(),
   karl: z.string().optional(),
   fileType: z.string().optional(),
+  unverified: z.boolean().optional(),
+  unverifiedReason: z.string().optional(),
 })
 
 const calloutSchema = z.object({
@@ -26,10 +28,16 @@ const calloutSchema = z.object({
   variant: z.enum(['info', 'warning', 'note']).optional(),
 })
 
+const unverifiedItemSchema = z.object({
+  text: z.string().min(1),
+  unverified: z.boolean().optional(),
+  unverifiedReason: z.string().optional(),
+})
+
 const stepSchema = z.object({
   title: z.string().min(1),
-  text: z.array(z.string()).optional(),
-  bullets: z.array(z.string()).optional(),
+  text: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
+  bullets: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
   button: z.string().optional(),
   buttonTarget: z.string().optional(),
   buttonUrl: z.string().optional(),
@@ -54,9 +62,9 @@ const sectionSchema = z.object({
   kind: z.string().optional(),
   component: sectionComponentSchema.optional(),
   karl: z.string().min(1),
-  paragraphs: z.array(z.string()).optional(),
+  paragraphs: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
   steps: z.array(stepSchema).optional(),
-  bullets: z.array(z.string()).optional(),
+  bullets: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
   table: z.array(z.array(z.string())).optional(),
   cards: z.array(cardSchema).optional(),
   image: imageSchema.optional(),

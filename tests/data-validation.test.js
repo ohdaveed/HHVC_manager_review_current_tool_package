@@ -221,3 +221,86 @@ describe('findListFormatViolations', () => {
     ])
   })
 })
+
+describe('content-confidence fields', () => {
+  test('accepts a card with unverified and unverifiedReason', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          cards: [
+            {
+              title: 'Card',
+              text: 'Text',
+              unverified: true,
+              unverifiedReason: 'SME placeholder',
+            },
+          ],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('accepts a mix of plain strings and unverified objects in bullets', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          bullets: [
+            'Plain bullet',
+            { text: 'Flagged bullet', unverified: true, unverifiedReason: 'Confirm with SME' },
+          ],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('accepts a mix of plain strings and unverified objects in paragraphs', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          paragraphs: ['Plain paragraph', { text: 'Flagged paragraph', unverified: true }],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('accepts unverified objects in step text and bullets', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          steps: [
+            {
+              title: 'Step',
+              text: [{ text: 'Flagged step text', unverified: true }],
+              bullets: [{ text: 'Flagged step bullet', unverified: true }],
+            },
+          ],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('rejects an unverified item with empty text', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          bullets: [{ text: '', unverified: true }],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(false)
+  })
+})
