@@ -72,11 +72,8 @@ function showErrorBanner(message) {
     if (!banner) {
       banner = document.createElement('div')
       banner.id = ERROR_BANNER_ID
+      banner.className = 'error-banner'
       banner.setAttribute('role', 'alert')
-      banner.style.cssText =
-        'position:fixed;top:0;left:0;right:0;z-index:9999;background:#b31412;color:#fff;' +
-        'padding:10px 16px;font:14px/1.4 sans-serif;display:flex;justify-content:space-between;' +
-        'align-items:center;gap:12px;box-shadow:0 2px 6px rgba(0,0,0,.3);'
 
       const text = document.createElement('span')
       text.id = ERROR_BANNER_ID + 'Text'
@@ -84,10 +81,8 @@ function showErrorBanner(message) {
 
       const dismiss = document.createElement('button')
       dismiss.type = 'button'
+      dismiss.className = 'error-banner-dismiss'
       dismiss.textContent = 'Dismiss'
-      dismiss.style.cssText =
-        'background:transparent;color:#fff;border:1px solid #fff;border-radius:4px;' +
-        'padding:4px 10px;cursor:pointer;flex:none;'
       dismiss.addEventListener('click', () => banner.remove())
       banner.appendChild(dismiss)
 

@@ -116,6 +116,16 @@
         font-weight: 700;
       }
 
+      .dashboard-help-intro {
+        margin-top: 0;
+        margin-bottom: 0.65rem;
+      }
+
+      .dashboard-reading-target {
+        margin-top: 0.65rem;
+        font-weight: 600;
+      }
+
       .dashboard-compliance-rules {
         margin: 0;
         padding-left: 1.1rem;
@@ -179,7 +189,7 @@
     panel.setAttribute('aria-label', 'Karl compliance rules')
     panel.innerHTML = `
       <h3>Karl compliance rules (9)</h3>
-      <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
+      <p class="field-help dashboard-help-intro">
         Overview scores every page against these rules. Page checks shows the same rules for only
         the mockup page. Search metadata edits in the sidebar update checks for the open page.
       </p>
@@ -213,7 +223,7 @@
     panel.setAttribute('aria-label', 'Keyboard shortcuts')
     panel.innerHTML = `
       <h3>Keyboard shortcuts</h3>
-      <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
+      <p class="field-help dashboard-help-intro">
         Shortcuts pause while you type in a field. Press <kbd>?</kbd> anywhere to open the full
         shortcut dialog.
       </p>
@@ -264,22 +274,20 @@
     panel.setAttribute('aria-label', 'Applied rules and reading targets')
     panel.innerHTML = `
       <h3>Review reminders</h3>
-      <p class="field-help" style="margin-top: 0; margin-bottom: 0.65rem">
+      <p class="field-help dashboard-help-intro">
         Personal per-page checklist for this browser tab only — click items to mark them off while
         you review. This is not an automated compliance score.
       </p>
       <ul class="checklist">
-        <li class="check">SF.gov system typography and SFDS-style spacing</li>
-        <li class="check">Action Blue for links and primary action</li>
-        <li class="check">Topic page uses scannable link clusters</li>
-        <li class="check">Article 11 / HHVC scope only</li>
-        <li class="check">72-hour tenant notice where applicable</li>
-        <li class="check">No standard photo requirement</li>
-        <li class="check">Report, prevent, scope, and tenant-help clusters</li>
-        <li class="check">
-          Enforcement pathway included without overloading Transaction pages
-        </li>
-        <li class="check">Tenant rights and anti-retaliation reassurance included</li>
+        <li><button type="button" class="check">SF.gov system typography and SFDS-style spacing</button></li>
+        <li><button type="button" class="check">Action Blue for links and primary action</button></li>
+        <li><button type="button" class="check">Topic page uses scannable link clusters</button></li>
+        <li><button type="button" class="check">Article 11 / HHVC scope only</button></li>
+        <li><button type="button" class="check">72-hour tenant notice where applicable</button></li>
+        <li><button type="button" class="check">No standard photo requirement</button></li>
+        <li><button type="button" class="check">Report, prevent, scope, and tenant-help clusters</button></li>
+        <li><button type="button" class="check">Enforcement pathway included without overloading Transaction pages</button></li>
+        <li><button type="button" class="check">Tenant rights and anti-retaliation reassurance included</button></li>
       </ul>
       <h3>Reading targets</h3>
       <p>
@@ -288,7 +296,7 @@
         >
         Grade 6–7<br /><strong>Enforcement/NOV:</strong> Grade 7–8
       </p>
-      <p class="field-help" id="readingCurrent" style="margin-top: 0.65rem; font-weight: 600">
+      <p class="field-help dashboard-reading-target" id="readingCurrent">
         Current page target: <span id="readingTargetValue">—</span>
       </p>
     `

@@ -76,8 +76,21 @@
 
   function captureSearchFocus() {
     const active = document.activeElement
-    if (!active || active.id !== 'reviewQueueSearch') return null
+    if (!active || !active.closest('#' + QUEUE_PANEL_ID)) return null
+    const selector = active.id
+      ? `#${active.id}`
+      : active.getAttribute('data-queue-filter')
+        ? `[data-queue-filter="${active.getAttribute('data-queue-filter')}"]`
+        : active.getAttribute('data-queue-bulk-action')
+          ? `[data-queue-bulk-action="${active.getAttribute('data-queue-bulk-action')}"]`
+          : active.getAttribute('data-queue-action')
+            ? `[data-queue-action="${active.getAttribute('data-queue-action')}"]`
+            : active.getAttribute('data-queue-select-key')
+              ? `[data-queue-select-key="${active.getAttribute('data-queue-select-key')}"]`
+              : null
+    if (!selector) return null
     return {
+      selector,
       selectionStart: active.selectionStart,
       selectionEnd: active.selectionEnd,
     }
@@ -85,11 +98,12 @@
 
   function restoreSearchFocus(snapshot) {
     if (!snapshot) return
-    const input = document.getElementById('reviewQueueSearch')
-    if (!input) return
-    input.focus()
+    const target = document.querySelector(snapshot.selector)
+    if (!target) return
+    target.focus()
     try {
-      input.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd)
+      if (typeof target.setSelectionRange === 'function')
+        target.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd)
     } catch {
       // Some browsers disallow setSelectionRange on search inputs; focus alone is fine.
     }

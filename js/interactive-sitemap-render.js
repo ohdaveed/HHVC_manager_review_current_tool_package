@@ -21,11 +21,11 @@
 
   function renderLegend() {
     const types = [
-      ['Topic', 'var(--sfds-action-blue)'],
-      ['Resource Collection', '#7c3aed'],
-      ['Transaction', 'var(--sfds-green)'],
-      ['Information', 'var(--sfds-warning-border)'],
-      ['Campaign', '#0891b2'],
+      ['Topic', 'topic'],
+      ['Resource Collection', 'resource-collection'],
+      ['Transaction', 'transaction'],
+      ['Information', 'information'],
+      ['Campaign', 'campaign'],
     ]
     return `
       <ul class="sitemap-legend" aria-label="Page type legend">
@@ -33,7 +33,7 @@
           .map(
             ([label, color]) => `
           <li class="sitemap-legend-item">
-            <span class="sitemap-legend-swatch" style="background:${color}"></span>
+            <span class="sitemap-legend-swatch" data-page-type="${color}"></span>
             ${escapeHtml(label)}
           </li>
         `
@@ -77,7 +77,7 @@
           .join('')}
       </div>
       ${renderLegend()}
-      <p class="sitemap-diagram-footnote" style="margin:0;">Showing ${filteredCount} of ${totalCount} pages in <code>js/page-data.js</code> order.</p>
+      <p class="sitemap-diagram-footnote sitemap-diagram-footnote-compact">Showing ${filteredCount} of ${totalCount} pages in <code>js/page-data.js</code> order.</p>
       ${isEmpty ? '<p class="sitemap-empty-note">No pages match your search or filter. Try adjusting your terms.</p>' : ''}
     `
   }
@@ -94,6 +94,7 @@
         data-page-type="${escapeHtml(row.type)}"
         title="${escapeHtml(title)}"
         ${active ? 'aria-current="page"' : ''}
+        ${dimmed ? 'aria-hidden="true" tabindex="-1"' : ''}
       >
         <span class="sitemap-diagram-order" aria-hidden="true">${row.orderIndex + 1}</span>
         <span class="sitemap-diagram-node-body">

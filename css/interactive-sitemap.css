@@ -44,7 +44,7 @@
 }
 
 .sitemap-search-input {
-  min-height: 2.1rem;
+  min-height: 2.75rem;
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
@@ -61,7 +61,7 @@
 
 .sitemap-reset-button,
 .sitemap-toggle {
-  min-height: 2.1rem;
+  min-height: 2.75rem;
   padding: 0.35rem 0.8rem;
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
@@ -110,7 +110,7 @@
 }
 
 .sitemap-filter-button {
-  min-height: 2rem;
+  min-height: 2.75rem;
   padding: 0.35rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 800;
@@ -129,7 +129,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--sfds-slate-2);
   font-weight: 700;
 }
@@ -152,7 +152,7 @@
 .sitemap-diagram {
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
-  background: var(--sfds-slate-6, #f8fafc);
+  background: var(--sfds-slate-6);
   padding: 0.9rem;
   overflow-x: auto;
 }
@@ -177,7 +177,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(10.5rem, 1fr));
   gap: 0.65rem;
-  min-width: 44rem;
+  min-width: 38rem;
 }
 
 .sitemap-diagram-column {
@@ -188,7 +188,7 @@
 
 .sitemap-diagram-column-header {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 900;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -208,7 +208,7 @@
   border-radius: 999px;
   background: var(--sfds-slate-5);
   color: var(--sfds-slate-2);
-  font-size: 0.62rem;
+  font-size: 0.72rem;
 }
 
 .sitemap-diagram-node {
@@ -265,7 +265,7 @@
 
 .sitemap-diagram-meta {
   color: var(--sfds-slate-3);
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   line-height: 1.2;
 }
 
@@ -275,7 +275,7 @@
 }
 
 .sitemap-diagram-node[data-page-type='Resource Collection'] {
-  border-left: 4px solid #7c3aed;
+  border-left: 4px solid var(--sfds-purple-border);
 }
 
 .sitemap-diagram-node[data-page-type='Transaction'] {
@@ -287,7 +287,7 @@
 }
 
 .sitemap-diagram-node[data-page-type='Campaign'] {
-  border-left: 4px solid #0891b2;
+  border-left: 4px solid var(--sfds-info-dark);
 }
 
 .sitemap-diagram-children {
@@ -310,8 +310,12 @@
 .sitemap-diagram-footnote {
   margin: 0.65rem 0 0;
   color: var(--sfds-slate-3);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   line-height: 1.35;
+}
+
+.sitemap-diagram-footnote-compact {
+  margin: 0;
 }
 
 .sitemap-detail-card {
@@ -348,7 +352,7 @@
   margin: 0;
   padding-top: 0.45rem;
   color: var(--sfds-slate-2);
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   line-height: 1.35;
 }
 
@@ -363,7 +367,7 @@
 
 .sitemap-link-section h5 {
   margin: 0 0 0.4rem;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   color: var(--sfds-slate-2);
 }
 
@@ -382,7 +386,7 @@
   border-radius: 999px;
   background: var(--sfds-white);
   color: var(--sfds-action-blue);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
@@ -396,9 +400,29 @@
 
 .sitemap-empty-note {
   color: var(--sfds-slate-3);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   margin: 0;
   padding: 0.35rem 0;
+}
+
+.sitemap-legend-swatch[data-page-type='topic'] {
+  background: var(--sfds-action-blue);
+}
+
+.sitemap-legend-swatch[data-page-type='resource-collection'] {
+  background: var(--sfds-purple-border);
+}
+
+.sitemap-legend-swatch[data-page-type='transaction'] {
+  background: var(--sfds-green);
+}
+
+.sitemap-legend-swatch[data-page-type='information'] {
+  background: var(--sfds-warning-border);
+}
+
+.sitemap-legend-swatch[data-page-type='campaign'] {
+  background: var(--sfds-info-dark);
 }
 
 @media (max-width: 980px) {
@@ -415,6 +439,7 @@
 @media (max-width: 640px) {
   .sitemap-diagram-columns {
     grid-template-columns: 1fr;
+    min-width: 0;
   }
 
   .sitemap-search-input {

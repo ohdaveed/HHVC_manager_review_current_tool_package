@@ -22,7 +22,10 @@ function editorQaBlock(page) {
 function formatMarkdown(text) {
   if (typeof text !== 'string') return ''
   let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="#" data-render-target="$2">$1</a>')
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<button type="button" class="inline-link" data-render-target="$2">$1</button>'
+  )
   return html
 }
 function paragraphList(paragraphs = []) {
@@ -118,8 +121,12 @@ document.addEventListener('click', (event) => {
     window.history.back()
     return
   }
+  const inertAnchor = event.target.closest('a[href="#"]')
+  if (inertAnchor) {
+    event.preventDefault()
+  }
   const link = event.target.closest(
-    'a[data-render-target], a[data-render-inert], button[data-accordion-toggle]'
+    'button[data-render-target], button[data-render-inert], button[data-accordion-toggle]'
   )
   if (!link) return
   if (link.matches('button[data-accordion-toggle]')) {
@@ -141,7 +148,7 @@ function button(label, kind = 'primary', target = null, url = null) {
     return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Links: Body external resource' : 'Button: Primary CTA (external)', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
   }
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
-  return `<a class="${cls}" href="#"${attr}>${karlTag(kind === 'secondary' ? 'Links: Related Transaction page' : 'Button: Primary CTA', 'placement')}${escapeHtml(label)}</a>`
+  return `<button type="button" class="${cls}"${attr}>${karlTag(kind === 'secondary' ? 'Links: Related Transaction page' : 'Button: Primary CTA', 'placement')}${escapeHtml(label)}</button>`
 }
 function renderCallout(callout, extraClass = '') {
   if (!callout) return ''
@@ -161,39 +168,39 @@ function renderImage(image) {
 function renderCards(cards = []) {
   return `<div class="cards">${cards
     .map((c) => {
-      const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
         ? ' target="_blank" rel="noopener"'
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
+      const action = c.url
+        ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
+        : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
 function renderServiceTiles(cards = []) {
   return `<div class="service-tiles">${cards
     .map((c) => {
-      const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
         ? ' target="_blank" rel="noopener"'
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      return `<a class="service-tile" href="${href}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
+      if (c.url) {
+        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
+      }
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></button>`
     })
     .join('')}</div>`
-}
-function renderSteps(steps = []) {
-  return `<ol class="step-list">${steps.map((s) => `<li class="step"><div>${karlTag(s.karl || 'Body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.button ? button(s.button, 'primary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? `<aside class="callout callout--step">${karlTag(s.callout.karl || 'Body note', 'body')}${s.callout.title === false ? '' : `<strong>${escapeHtml(s.callout.title || 'Note')}:</strong> `}${formatMarkdown(s.callout.text)}</aside>` : ''}</div></li>`).join('')}</ol>`
 }
 function renderResourcesList(cards = [], heading = 'Resources') {
   if (!cards.length) return ''
   return `<div class="resources-list">${karlTag('Body: Resources links', 'placement')}<h3 class="resources-list-heading">${escapeHtml(heading)}</h3><ul>${cards
     .map((c) => {
-      const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
         ? ' target="_blank" rel="noopener noreferrer"'
         : c.target
@@ -203,7 +210,10 @@ function renderResourcesList(cards = [], heading = 'Resources') {
       const fileBadge = c.fileType
         ? `<span class="file-badge">${escapeHtml(c.fileType)}</span>`
         : ''
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a>${fileBadge}<p>${escapeHtml(c.text)}</p></li>`
+      const action = c.url
+        ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
+        : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
+      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}</p></li>`
     })
     .join('')}</ul></div>`
 }
@@ -216,13 +226,15 @@ function renderRelatedRail(sections = []) {
   if (!cards.length) return ''
   return `<aside class="related-rail" aria-label="Related pages">${karlTag('Related section: right-panel linked pages', 'placement')}<h2 class="related-rail-title">Related</h2><ul class="related-rail-list">${cards
     .map((c) => {
-      const href = c.url ? escapeHtml(c.url) : '#'
       const attr = c.url
         ? ' target="_blank" rel="noopener noreferrer"'
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
-      return `<li><a href="${href}"${attr}>${escapeHtml(c.title)}</a><p>${escapeHtml(c.text)}</p></li>`
+      const action = c.url
+        ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}</a>`
+        : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
+      return `<li>${action}<p>${escapeHtml(c.text)}</p></li>`
     })
     .join('')}</ul></aside>`
 }
@@ -598,15 +610,19 @@ function renderPage(key, skipHistory = false) {
     url.searchParams.set('page', key)
     window.history.pushState({ key }, '', url)
   }
+  function focusRenderedPageHeading() {
+    document.querySelector('#mockPage h1')?.focus()
+  }
   if (!document.startViewTransition) {
     applyPageContent(key)
+    focusRenderedPageHeading()
     return
   }
   const transition = document.startViewTransition(() => applyPageContent(key))
   transition.ready.catch(() => {})
   transition.finished
     .then(() => {
-      document.querySelector('#mockPage h1')?.focus()
+      focusRenderedPageHeading()
     })
     .catch((err) => {
       if (err?.name !== 'AbortError') throw err
