@@ -111,7 +111,12 @@ window.HHVC_PAGES['bedBugsInfo'] = {
       bullets: [
         '4-Week Monitoring Period: Abatement is achieved only after a 28-day period of zero bed bug activity, verified by a PCO using monitoring devices (interceptors).',
         "Abatement Notice: Landlords must provide a written 'Abatement Achieved' notice to the tenant after the 28-day clear period.",
-        'DPH Re-inspection (unverified -- confirm before publication): DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation.',
+        {
+          text: 'DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation.',
+          unverified: true,
+          unverifiedReason:
+            "No 45-day final-re-inspection provision found in the SFDPH bed bug Director's Rules source doc or any other source in this repo.",
+        },
       ],
     },
     {

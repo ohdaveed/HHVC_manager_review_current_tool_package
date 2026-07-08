@@ -19,6 +19,17 @@ function editorQaBlock(page) {
     `Primary agency: Environmental Health. Parent department: Department of Public Health. Program: Healthy Housing and Vector Control. Reading level target: ${page.reading}. Transaction pages use one primary CTA and avoid about-style program background. Visual link boxes in this mockup are preview aids.`
   return `<aside class="editor-qa qa-${page.editorStatus || 'needs-review'}"><div class="editor-qa-head">${karlTag('Editor-only QA note / Do not publish', 'editor')}<span class="editor-qa-status"><span aria-hidden="true">${status.icon}</span>${escapeHtml(status.label)}</span></div><strong>Editor QA:</strong> ${escapeHtml(note)}</aside>`
 }
+function normalizeTextItem(item) {
+  if (typeof item === 'string') return { text: item, unverified: false, unverifiedReason: '' }
+  return {
+    text: item.text,
+    unverified: Boolean(item.unverified),
+    unverifiedReason: item.unverifiedReason || '',
+  }
+}
+function unverifiedPill(reason) {
+  return `<span class="unverified-pill"${reason ? ` title="${escapeHtml(reason)}"` : ''}><span aria-hidden="true">⚠</span> Unverified</span>`
+}
 function formatMarkdown(text) {
   if (typeof text !== 'string') return ''
   let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -29,7 +40,12 @@ function formatMarkdown(text) {
   return html
 }
 function paragraphList(paragraphs = []) {
-  return paragraphs.map((p) => `<p>${formatMarkdown(p)}</p>`).join('')
+  return paragraphs
+    .map((p) => {
+      const item = normalizeTextItem(p)
+      return `<p>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</p>`
+    })
+    .join('')
 }
 function renderTextItems(items = []) {
   if (!items.length) return ''
@@ -42,7 +58,12 @@ function renderAudience(audience = []) {
 }
 function bulletList(bullets = []) {
   if (!bullets.length) return ''
-  return `<ul>${bullets.map((b) => `<li>${formatMarkdown(b)}</li>`).join('')}</ul>`
+  return `<ul>${bullets
+    .map((b) => {
+      const item = normalizeTextItem(b)
+      return `<li>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</li>`
+    })
+    .join('')}</ul>`
 }
 function normalizePageType(type = '') {
   const t = String(type).toLowerCase()
@@ -177,7 +198,7 @@ function renderCards(cards = []) {
       const action = c.url
         ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
@@ -191,9 +212,9 @@ function renderServiceTiles(cards = []) {
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
       if (c.url) {
-        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
+        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
       }
-      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></button>`
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></button>`
     })
     .join('')}</div>`
 }
@@ -213,7 +234,7 @@ function renderResourcesList(cards = [], heading = 'Resources') {
       const action = c.url
         ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}</p></li>`
+      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
     })
     .join('')}</ul></div>`
 }
@@ -234,7 +255,7 @@ function renderRelatedRail(sections = []) {
       const action = c.url
         ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<li>${action}<p>${escapeHtml(c.text)}</p></li>`
+      return `<li>${action}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
     })
     .join('')}</ul></aside>`
 }

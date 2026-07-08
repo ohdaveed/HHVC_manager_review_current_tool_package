@@ -11,6 +11,7 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 
 function validPage(overrides = {}) {
@@ -219,5 +220,121 @@ describe('findListFormatViolations', () => {
     expect(findListFormatViolations(pages)).toEqual([
       { pageKey: 'a', path: 'sections[0].steps[0].text', count: 3 },
     ])
+  })
+})
+
+describe('content-confidence fields', () => {
+  test('accepts a card with unverified and unverifiedReason', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          cards: [
+            {
+              title: 'Card',
+              text: 'Text',
+              unverified: true,
+              unverifiedReason: 'SME placeholder',
+            },
+          ],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('accepts a mix of plain strings and unverified objects in bullets', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          bullets: [
+            'Plain bullet',
+            { text: 'Flagged bullet', unverified: true, unverifiedReason: 'Confirm with SME' },
+          ],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('accepts a mix of plain strings and unverified objects in paragraphs', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          paragraphs: ['Plain paragraph', { text: 'Flagged paragraph', unverified: true }],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('accepts unverified objects in step text and bullets', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          steps: [
+            {
+              title: 'Step',
+              text: [{ text: 'Flagged step text', unverified: true }],
+              bullets: [{ text: 'Flagged step bullet', unverified: true }],
+            },
+          ],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('rejects an unverified item with empty text', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Intro',
+          karl: 'Body section',
+          bullets: [{ text: '', unverified: true }],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(false)
+  })
+})
+
+describe('countUnverifiedClaims', () => {
+  test('zero when nothing is flagged', () => {
+    const pages = { a: { sections: [{ bullets: ['Plain'], paragraphs: ['Plain'] }] } }
+    expect(countUnverifiedClaims(pages)).toBe(0)
+  })
+
+  test('counts flagged bullets, paragraphs, step text/bullets, and cards', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            bullets: ['Plain', { text: 'Flagged', unverified: true }],
+            paragraphs: [{ text: 'Flagged', unverified: true }],
+            cards: [{ title: 'Card', unverified: true }, { title: 'Card 2' }],
+            steps: [
+              {
+                text: [{ text: 'Flagged', unverified: true }],
+                bullets: [{ text: 'Flagged', unverified: true }],
+              },
+            ],
+          },
+        ],
+      },
+    }
+    expect(countUnverifiedClaims(pages)).toBe(5)
+  })
+
+  test('does not count an object item with unverified: false', () => {
+    const pages = { a: { sections: [{ bullets: [{ text: 'Not flagged', unverified: false }] }] } }
+    expect(countUnverifiedClaims(pages)).toBe(0)
   })
 })

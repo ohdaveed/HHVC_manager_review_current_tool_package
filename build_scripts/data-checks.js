@@ -110,6 +110,33 @@ function findListFormatViolations(pages) {
   return violations
 }
 
+/**
+ * Count bullets, paragraphs, step text/bullets, and cards flagged
+ * `unverified: true` across every page. Used for the validate.js summary line.
+ * @param {Record<string, object>} pages
+ * @returns {number}
+ */
+function countUnverifiedClaims(pages) {
+  function countFlagged(items) {
+    return (items || []).filter((item) => item && typeof item === 'object' && item.unverified)
+      .length
+  }
+
+  let count = 0
+  for (const page of Object.values(pages)) {
+    for (const section of page.sections || []) {
+      count += countFlagged(section.paragraphs)
+      count += countFlagged(section.bullets)
+      count += (section.cards || []).filter((card) => card.unverified).length
+      for (const step of section.steps || []) {
+        count += countFlagged(step.text)
+        count += countFlagged(step.bullets)
+      }
+    }
+  }
+  return count
+}
+
 module.exports = {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -117,4 +144,5 @@ module.exports = {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  countUnverifiedClaims,
 }

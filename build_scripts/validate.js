@@ -12,6 +12,7 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  countUnverifiedClaims,
 } = require('./data-checks')
 const { findPageScriptTags, findJsScriptTags, findScriptTagDrift } = require('./index-html-checks')
 
@@ -86,4 +87,11 @@ if (listFormatViolations.length) {
   throw new Error(`${pageKey} ${path} has ${count} items; use bullets[] for lists of 3 or more`)
 }
 
-console.log('validated', Object.keys(parsed.data.pages).length, 'pages')
+const unverifiedCount = countUnverifiedClaims(parsed.data.pages)
+console.log(
+  'validated',
+  Object.keys(parsed.data.pages).length,
+  'pages,',
+  unverifiedCount,
+  'unverified claims flagged'
+)

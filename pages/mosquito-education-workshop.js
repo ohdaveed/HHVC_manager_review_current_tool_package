@@ -104,8 +104,18 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
       bullets: [
         'Contact the Mosquito Control Program at 415-252-3806',
         'Available to schools, camps, museums, and youth groups located within San Francisco',
-        'Fits groups up to about 60 students per session; larger groups can be split into multiple sessions',
-        'Request at least 3 weeks before your event date to allow time for scheduling, setup, and equipment transport',
+        {
+          text: 'Fits groups up to about 60 students per session; larger groups can be split into multiple sessions',
+          unverified: true,
+          unverifiedReason:
+            'SME placeholder — capacity is illustrative example content for mockup review; confirm actual value with HHVC before publication (see page editorNote).',
+        },
+        {
+          text: 'Request at least 3 weeks before your event date to allow time for scheduling, setup, and equipment transport',
+          unverified: true,
+          unverifiedReason:
+            'SME placeholder — lead time is illustrative example content for mockup review; confirm actual value with HHVC before publication (see page editorNote).',
+        },
       ],
     },
     {
