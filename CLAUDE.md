@@ -61,8 +61,14 @@ declared in an earlier file are visible to files loaded after it:
 ```
 js/utils.js → pages/*.js (each page) → js/page-data.js → js/state.js →
 js/ui-controls.js → js/editor-panel.js → js/page-render.js → js/app.js →
-js/manager-review-export.js → js/ux-improvements.js → js/review-queue.js →
-js/dashboard-guidance.js → js/interactive-sitemap.js → js/keyboard-shortcuts.js
+js/manager-review-export.js → js/review-state-store.js →
+js/ux-improvements-state-sync.js → js/ux-improvements-workspace.js →
+js/ux-improvements-export.js → js/ux-improvements.js →
+js/review-queue-state.js → js/review-queue-rows.js →
+js/review-queue-render.js → js/review-queue-import.js → js/review-queue.js →
+js/dashboard-guidance.js → js/interactive-sitemap-data.js →
+js/interactive-sitemap-render.js → js/interactive-sitemap.js →
+js/keyboard-shortcuts.js
 ```
 
 When adding a new page file: add its `<script>` tag in the `pages/*.js`
@@ -79,7 +85,7 @@ page file), `bun run validate` now catches it: it diffs `pages/*.js` on disk
 against the `<script src="pages/...">` tags in `index.html`
 (`build_scripts/index-html-checks.js`) and fails loudly on either direction
 of drift, since the browser has no way to glob its own script tags at
-runtime the way the Node build scripts can. Tag *order* isn't checked —
+runtime the way the Node build scripts can. Tag _order_ isn't checked —
 page modules are independent (each only writes into `window.HHVC_PAGES`),
 so only set membership matters.
 
@@ -120,6 +126,32 @@ fields) are each self-contained IIFEs that read `window.HHVC_DATA` and
 edits) do write edited title/summary/CTA/SEO fields back onto the in-memory
 `pageData` objects — but **must never write back to the `pages/*.js` source
 files or publish content**; they are review aids only, not publishing tools.
+
+`js/ux-improvements.js`, `js/review-queue.js`, and `js/interactive-sitemap.js`
+are now thin orchestrators (event wiring + `init()` + public API assembly)
+over sibling files that do the actual work, mirroring the existing
+`window.utils`/`window.reviewState` pattern — each sibling attaches its
+functions to an internal `window.<Namespace>` object (implementation detail,
+never referenced from `pages/*.js` or outside its own module's files):
+
+- `window.ReviewUx` (`js/ux-improvements.js`'s orchestrator) —
+  `js/review-state-store.js` (shared `window.reviewState` read/write/update,
+  also consumed directly by `js/review-queue*.js`), `js/ux-improvements-state-sync.js`
+  (per-page field sync/dirty-state), `js/ux-improvements-workspace.js`
+  (sticky bar, workspace tabs, Karl scorecard), and
+  `js/ux-improvements-export.js` (review summary copy, CSV/JSON backup
+  export/import, clear-local-reviews).
+- `window.ReviewQueueInternal` (`js/review-queue.js`'s orchestrator) —
+  `js/review-queue-state.js` (shared state + UI-persistence helpers),
+  `js/review-queue-rows.js` (row building, filter/sort/selection, bulk
+  actions), `js/review-queue-render.js` (table/stats/bulk-bar rendering),
+  and `js/review-queue-import.js` (CSV import — kept isolated as the
+  highest-regression-risk area; see "Local persistence" below).
+- `window.InteractiveSitemap` (`js/interactive-sitemap.js`'s orchestrator) —
+  `js/interactive-sitemap-data.js` (graph/data building from `HHVC_DATA`)
+  and `js/interactive-sitemap-render.js` (SVG/DOM rendering, search/filter
+  UI). Its injected styles now live in `css/interactive-sitemap.css`
+  instead of a runtime `injectStyles()` call.
 
 ### Page object shape and validation rules
 
