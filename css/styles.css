@@ -1297,10 +1297,25 @@ a:focus {
   color: var(--sfds-success-text);
   border-color: var(--sfds-success-border);
 }
+.unverified-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--sfds-warning-bg);
+  color: var(--sfds-warning-text);
+  border: 1px solid var(--sfds-warning-border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
 body.hide-karl-tags .karl-tag,
 body.hide-karl-tags .cms-help,
 body.hide-karl-tags .karl-tag-legend,
-body.hide-karl-tags .editor-qa {
+body.hide-karl-tags .editor-qa,
+body.hide-karl-tags .unverified-pill {
   display: none !important;
 }
 .karl-tag-legend {
@@ -1594,7 +1609,8 @@ body.hide-karl-tags .karl-tag,
 body.hide-karl-tags .cms-help,
 body.hide-karl-tags .karl-help-nested,
 body.hide-karl-tags .karl-tag-legend,
-body.hide-karl-tags .editor-qa {
+body.hide-karl-tags .editor-qa,
+body.hide-karl-tags .unverified-pill {
   display: none !important;
 }
 
