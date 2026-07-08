@@ -20,6 +20,16 @@ function getPageScriptPaths() {
 }
 
 /**
+ * Return repo-relative paths for all js/*.js modules (excluding
+ * js/vendor/*.js third-party files, which fast-glob's single-star pattern
+ * naturally skips since it doesn't recurse into subdirectories).
+ * @returns {string[]}
+ */
+function getJsScriptPaths() {
+  return fg.sync('js/*.js', { cwd: root, onlyFiles: true }).sort((a, b) => a.localeCompare(b))
+}
+
+/**
  * Create a VM context with window.HHVC_PAGES ready for page modules.
  * @returns {vm.Context}
  */
@@ -62,6 +72,7 @@ function loadPageData(options = {}) {
 module.exports = {
   root,
   getPageScriptPaths,
+  getJsScriptPaths,
   createPageContext,
   runPageScripts,
   loadPageData,

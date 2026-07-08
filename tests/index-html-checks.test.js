@@ -1,7 +1,11 @@
 // Coverage for the pages/*.js <-> index.html <script> tag drift check used
 // by build_scripts/validate.js.
 const { describe, test, expect } = require('bun:test')
-const { findPageScriptTags, findScriptTagDrift } = require('../build_scripts/index-html-checks')
+const {
+  findPageScriptTags,
+  findJsScriptTags,
+  findScriptTagDrift,
+} = require('../build_scripts/index-html-checks')
 
 describe('findPageScriptTags', () => {
   test('extracts page script src paths in document order', () => {
@@ -16,6 +20,22 @@ describe('findPageScriptTags', () => {
 
   test('returns an empty array when there are no page script tags', () => {
     expect(findPageScriptTags('<script src="js/utils.js"></script>')).toEqual([])
+  })
+})
+
+describe('findJsScriptTags', () => {
+  test('extracts js/*.js script src paths, excluding nested paths like js/vendor/*.js', () => {
+    const html = `
+      <script src="js/utils.js"></script>
+      <script src="js/vendor/fuse.js"></script>
+      <script src="pages/foo.js"></script>
+      <script src="js/state.js"></script>
+    `
+    expect(findJsScriptTags(html)).toEqual(['js/utils.js', 'js/state.js'])
+  })
+
+  test('returns an empty array when there are no js/*.js script tags', () => {
+    expect(findJsScriptTags('<script src="pages/foo.js"></script>')).toEqual([])
   })
 })
 

@@ -4,7 +4,7 @@
 const fs = require('fs')
 const path = require('path')
 const { dataSchema } = require('./schema')
-const { loadPageData, getPageScriptPaths, root } = require('./load-pages')
+const { loadPageData, getPageScriptPaths, getJsScriptPaths, root } = require('./load-pages')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -13,7 +13,7 @@ const {
   findBannedTerms,
   findListFormatViolations,
 } = require('./data-checks')
-const { findPageScriptTags, findScriptTagDrift } = require('./index-html-checks')
+const { findPageScriptTags, findJsScriptTags, findScriptTagDrift } = require('./index-html-checks')
 
 const pageFilesOnDisk = getPageScriptPaths().filter((file) => file !== 'js/page-data.js')
 const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
@@ -28,6 +28,21 @@ if (scriptDrift.missingFromDisk.length) {
   throw new Error(
     'index.html references pages/*.js file(s) that no longer exist: ' +
       scriptDrift.missingFromDisk.join(', ')
+  )
+}
+
+const jsFilesOnDisk = getJsScriptPaths()
+const jsScriptDrift = findScriptTagDrift(jsFilesOnDisk, findJsScriptTags(indexHtml))
+if (jsScriptDrift.missingFromHtml.length) {
+  throw new Error(
+    'js/*.js file(s) missing a <script> tag in index.html: ' +
+      jsScriptDrift.missingFromHtml.join(', ')
+  )
+}
+if (jsScriptDrift.missingFromDisk.length) {
+  throw new Error(
+    'index.html references js/*.js file(s) that no longer exist: ' +
+      jsScriptDrift.missingFromDisk.join(', ')
   )
 }
 
