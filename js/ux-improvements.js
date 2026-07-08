@@ -9,8 +9,6 @@
   const CHECKS_PANEL_ID = 'reviewChecksPanel'
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
-  const STORAGE_KEY = 'hhvcManagerReviewState:v1'
-  const STORAGE_VERSION = 1
 
   const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'help']
 
@@ -139,88 +137,6 @@
   // currently open in the editor.
   window.reviewChecks = { getRuleResultsFor }
 
-  function getEmptyState() {
-    return {
-      version: STORAGE_VERSION,
-      updated_at: null,
-      ui: {},
-      globals: {},
-      pages: {},
-    }
-  }
-
-  function readLocalState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return getEmptyState()
-      const parsed = JSON.parse(raw)
-      const validator = window.reviewStateValidation?.validateReviewState
-      if (typeof validator === 'function') {
-        const result = validator(parsed)
-        if (!result.ok) return getEmptyState()
-        return {
-          ...getEmptyState(),
-          ...result.data,
-          ui: result.data.ui || {},
-          globals: result.data.globals || {},
-          pages: result.data.pages || {},
-        }
-      }
-      if (!parsed || parsed.version !== STORAGE_VERSION) return getEmptyState()
-
-      return {
-        ...getEmptyState(),
-        ...parsed,
-        ui: parsed.ui || {},
-        globals: parsed.globals || {},
-        pages: parsed.pages || {},
-      }
-    } catch {
-      return getEmptyState()
-    }
-  }
-
-  function writeLocalState(state) {
-    const nextState = {
-      ...getEmptyState(),
-      ...state,
-      version: STORAGE_VERSION,
-      updated_at: new Date().toISOString(),
-      ui: state.ui || {},
-      globals: state.globals || {},
-      pages: state.pages || {},
-    }
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
-    } catch (err) {
-      // Storage can throw (quota exceeded, private browsing, disabled storage).
-      // Surface it to the reviewer instead of failing silently mid-review.
-      console.error('Failed to save review state locally:', err)
-      window.utils?.showErrorBanner?.(
-        'Your last change was not saved locally. Local storage may be full or disabled in this browser.'
-      )
-    }
-    return nextState
-  }
-
-  function updateLocalState(updater) {
-    const state = readLocalState()
-    const updated = updater(state) || state
-    return writeLocalState(updated)
-  }
-
-  // Explicit dependency for other modules (e.g. js/review-queue.js, which
-  // loads after this file) instead of relying on implicit bare globals.
-  window.reviewState = {
-    STORAGE_KEY,
-    STORAGE_VERSION,
-    read: readLocalState,
-    write: writeLocalState,
-    update: updateLocalState,
-    getEmptyState,
-  }
-
   function collectCurrentPageReviewState() {
     const page = getCurrentPage()
     const pageKey = getCurrentKey()
@@ -248,7 +164,7 @@
     if (isRestoringState) return
 
     const snapshot = collectCurrentPageReviewState()
-    updateLocalState((state) => {
+    window.reviewState.update((state) => {
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
       state.globals.reviewer = snapshot.reviewer
@@ -306,7 +222,7 @@
   }
 
   function applySavedPageState(pageKey) {
-    const state = readLocalState()
+    const state = window.reviewState.read()
     const page = DATA.pages[pageKey]
     if (!page) return
 
@@ -334,7 +250,7 @@
   }
 
   function applySavedUiPreferences() {
-    const state = readLocalState()
+    const state = window.reviewState.read()
     const tagToggle = document.getElementById('tagToggle')
     if (tagToggle && typeof state.ui.show_karl_tags === 'boolean') {
       tagToggle.checked = state.ui.show_karl_tags
@@ -346,7 +262,7 @@
     const status = document.getElementById('localStorageStatus')
     if (!status) return
 
-    const state = readLocalState()
+    const state = window.reviewState.read()
     const savedCount = Object.keys(state.pages || {}).length
     const updatedAt = state.updated_at ? new Date(state.updated_at) : null
     const updatedLabel = updatedAt
@@ -404,7 +320,7 @@
     const filterLabel = filter !== 'All' ? filter : ''
     const prevKey = window.reviewQueue?.getAdjacentKey?.(-1, filter)
     const nextKey = window.reviewQueue?.getAdjacentKey?.(1, filter)
-    const state = readLocalState()
+    const state = window.reviewState.read()
     const workspaceOpen = Boolean(state.ui.workspace_open)
     const prevNavLabel = filterLabel ? `Previous page (${filterLabel} filter)` : 'Previous page'
     const nextNavLabel = filterLabel ? `Next page (${filterLabel} filter)` : 'Next page'
@@ -452,7 +368,7 @@
       window.refreshDashboardGuidance?.()
     }
 
-    updateLocalState((state) => {
+    window.reviewState.update((state) => {
       state.ui.workspace_tab = tabId
       return state
     })
@@ -470,14 +386,14 @@
       toggleButton.textContent = isOpen ? 'Hide workspace' : 'Show workspace'
     }
 
-    updateLocalState((state) => {
+    window.reviewState.update((state) => {
       state.ui.workspace_open = isOpen
       if (isOpen && !state.ui.workspace_tab) state.ui.workspace_tab = 'overview'
       return state
     })
 
     if (isOpen) {
-      const state = readLocalState()
+      const state = window.reviewState.read()
       setWorkspaceTab(state.ui.workspace_tab || 'overview')
       setTimeout(() => {
         workspace.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -486,26 +402,26 @@
   }
 
   function toggleWorkspace() {
-    const state = readLocalState()
+    const state = window.reviewState.read()
     setWorkspaceOpen(!state.ui.workspace_open)
   }
 
   function maybeShowWorkspaceOnboarding() {
-    const state = readLocalState()
+    const state = window.reviewState.read()
     if (state.ui.workspace_onboarding_seen) return
 
     const hasExistingUsage =
       Object.keys(state.pages || {}).length > 0 || Boolean(state.ui.workspace_tab)
 
     if (hasExistingUsage) {
-      updateLocalState((nextState) => {
+      window.reviewState.update((nextState) => {
         nextState.ui.workspace_onboarding_seen = true
         return nextState
       })
       return
     }
 
-    updateLocalState((nextState) => {
+    window.reviewState.update((nextState) => {
       nextState.ui.workspace_onboarding_seen = true
       nextState.ui.workspace_open = true
       nextState.ui.workspace_tab = 'overview'
@@ -593,7 +509,7 @@
     const stickyBar = document.getElementById(STICKY_BAR_ID)
     stickyBar?.addEventListener('click', handleStickyBarClick)
 
-    const state = readLocalState()
+    const state = window.reviewState.read()
     setWorkspaceOpen(Boolean(state.ui.workspace_open))
     if (state.ui.workspace_open) {
       setWorkspaceTab(state.ui.workspace_tab || 'overview')
@@ -707,7 +623,7 @@
   function exportSavedLocalReviewsCsv() {
     saveCurrentPageToLocalStorage()
 
-    const state = readLocalState()
+    const state = window.reviewState.read()
     const headers = [
       'review_date',
       'reviewer',
@@ -759,7 +675,7 @@
 
   function exportReviewStateBackup() {
     saveCurrentPageToLocalStorage()
-    const state = readLocalState()
+    const state = window.reviewState.read()
     downloadFile(
       `hhvc-review-state-backup-${today()}.json`,
       JSON.stringify(state, null, 2),
@@ -789,7 +705,7 @@
 
         if (
           !parsed ||
-          parsed.version !== STORAGE_VERSION ||
+          parsed.version !== window.reviewState.STORAGE_VERSION ||
           typeof parsed.pages !== 'object' ||
           !parsed.pages
         ) {
@@ -814,7 +730,7 @@
         }
 
         const merge = typeof window.defu === 'function' ? window.defu : null
-        updateLocalState((state) => {
+        window.reviewState.update((state) => {
           const nextPages = { ...state.pages }
           for (const [key, saved] of entries) {
             nextPages[key] = { ...(state.pages[key] || {}), ...saved, page_key: key }
@@ -885,7 +801,7 @@
     )
     if (!confirmed) return
 
-    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(window.reviewState.STORAGE_KEY)
     clearReviewFieldsForNewPage()
     setValue('reviewerInput', '')
     updateLocalStorageStatus()
@@ -989,7 +905,7 @@
     }
 
     document.getElementById('tagToggle')?.addEventListener('change', () => {
-      updateLocalState((state) => {
+      window.reviewState.update((state) => {
         state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
         state.ui.last_page_key = getCurrentKey()
         return state
@@ -1011,7 +927,7 @@
     const originalRenderPage = window.renderPage
     window.renderPage = function renderPageWithUxRefresh(key) {
       const result = originalRenderPage.call(this, key)
-      updateLocalState((state) => {
+      window.reviewState.update((state) => {
         state.ui.last_page_key = key
         state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
         return state
@@ -1031,7 +947,7 @@
   }
 
   function restoreInitialPage() {
-    const state = readLocalState()
+    const state = window.reviewState.read()
     const savedKey = state.ui.last_page_key
 
     if (savedKey && DATA.pages[savedKey] && typeof window.renderPage === 'function') {
