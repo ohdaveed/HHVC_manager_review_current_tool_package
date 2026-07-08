@@ -61,7 +61,8 @@ declared in an earlier file are visible to files loaded after it:
 ```
 js/utils.js → pages/*.js (each page) → js/page-data.js → js/state.js →
 js/ui-controls.js → js/editor-panel.js → js/page-render.js → js/app.js →
-js/manager-review-export.js → js/review-state-store.js →
+js/manager-review-export.js → js/review-state-validation.js →
+js/reading-level.js → js/review-state-store.js →
 js/ux-improvements-state-sync.js → js/ux-improvements-workspace.js →
 js/ux-improvements-export.js → js/ux-improvements.js →
 js/review-queue-state.js → js/review-queue-rows.js →
@@ -149,7 +150,7 @@ never referenced from `pages/*.js` or outside its own module's files):
   highest-regression-risk area; see "Local persistence" below).
 - `window.InteractiveSitemap` (`js/interactive-sitemap.js`'s orchestrator) —
   `js/interactive-sitemap-data.js` (graph/data building from `HHVC_DATA`)
-  and `js/interactive-sitemap-render.js` (SVG/DOM rendering, search/filter
+  and `js/interactive-sitemap-render.js` (DOM rendering, search/filter
   UI). Its injected styles now live in `css/interactive-sitemap.css`
   instead of a runtime `injectStyles()` call.
 
