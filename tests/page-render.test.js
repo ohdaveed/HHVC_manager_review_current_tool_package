@@ -31,6 +31,42 @@ describe('page-render.js escaping', () => {
     assertEscaped(ctx.paragraphList([PAYLOAD]))
   })
 
+  test('paragraphList renders an unverified pill after a flagged paragraph', () => {
+    const html = ctx.paragraphList([
+      { text: 'Flagged claim', unverified: true, unverifiedReason: 'Confirm with SME' },
+    ])
+    expect(html).toBe(
+      '<p>Flagged claim<span class="unverified-pill" title="Confirm with SME"><span aria-hidden="true">⚠</span> Unverified</span></p>'
+    )
+  })
+
+  test('paragraphList leaves a plain string paragraph unchanged', () => {
+    expect(ctx.paragraphList(['Plain claim'])).toBe('<p>Plain claim</p>')
+  })
+
+  test('bulletList renders an unverified pill after a flagged bullet', () => {
+    const html = ctx.bulletList([{ text: 'Flagged claim', unverified: true }])
+    expect(html).toContain('<li>Flagged claim<span class="unverified-pill">')
+  })
+
+  test('bulletList omits the title attribute when there is no unverifiedReason', () => {
+    const html = ctx.bulletList([{ text: 'Flagged claim', unverified: true }])
+    expect(html).not.toContain('title=')
+  })
+
+  test('bulletList escapes the unverifiedReason tooltip', () => {
+    const html = ctx.bulletList([
+      { text: 'Flagged claim', unverified: true, unverifiedReason: PAYLOAD },
+    ])
+    assertEscaped(html)
+  })
+
+  test('bulletList handles a mix of plain strings and unverified objects', () => {
+    const html = ctx.bulletList(['Plain', { text: 'Flagged', unverified: true }])
+    expect(html).toContain('<li>Plain</li>')
+    expect(html).toContain('<li>Flagged<span class="unverified-pill">')
+  })
+
   test('renderTextItems uses bullets for three or more items', () => {
     const html = ctx.renderTextItems(['One', 'Two', 'Three'])
     expect(html).toContain('<ul>')
