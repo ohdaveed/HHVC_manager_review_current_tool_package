@@ -1,7 +1,7 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['article11Guide'] = {
-  slug: 'sf.gov/information/health-code-article-11-plain-language',
-  type: 'Information',
+  slug: 'sf.gov/report/health-code-article-11-plain-language',
+  type: 'Report',
   title: 'Health Code Article 11 in plain language',
   summary:
     'See what San Francisco Health Code Article 11 requires and what it means in everyday language.',
@@ -12,23 +12,30 @@ window.HHVC_PAGES['article11Guide'] = {
     'Anyone who wants the legal text and a plain-language explanation side by side',
   ],
   reading: 'Grade 7',
+  reportDate: 'July 8, 2026',
   seoTitle: 'Health Code Article 11 in plain language',
   metaDescription:
-    'Read Health Code Article 11 nuisance rules with plain-language translations for mold, rodents, animal limits, wasps, and more.',
+    'Article 11 nuisance rules with plain-language translations for mold, rodents, animal limits, and more.',
   editorNote:
-    'Reference Information page. Side-by-side tables are mockup-only on Information pages in Karl — flag for Digital Services before publication. Content sourced from compliance-standards.csv Sec. 581 rows and violation-pages-master-content.md. Verify municode URL and wasp routing nuance before publish.',
+    "Report content type. Side-by-side tables map to Karl Report Content → Tables (2 columns). Spotlight button links to municode Article 11. Verify municode URL, wasp routing nuance, and Director's Rules citations before publish.",
+  spotlight: {
+    title: 'View the full municipal code',
+    paragraphs: [
+      'This report summarizes key Article 11 provisions. Open the municipal code for the complete legal text.',
+    ],
+    button: 'View Health Code Article 11',
+    buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
+    karl: 'Maps to Report Spotlight → Button link (external URL). Report is the Karl content type that supports tables and Spotlight buttons.',
+  },
   sections: [
     {
       heading: 'About this guide',
-      karl: 'Maps to an "Information section" → Title and text block for the intro, plus a Button link block for the municode citation. Tables below are mockup-only on Information pages.',
+      karl: 'Maps to Report Content → Title and text block for intro paragraphs, then a Table block for the 581(a) row.',
       kind: 'body',
       paragraphs: [
         'Healthy Housing and Vector Control (HHVC) enforces **Health Code Article 11** — the City rules about public health nuisances in housing and on property. Each section below shows a short excerpt from the law next to a plain-language explanation.',
-        'Use the links at the top of the page to jump to a topic like mold, rodents, animal limits, or wasps. This page covers the nuisance rules HHVC inspects (Section 581). For what happens after a violation is found, see the summary at the end or visit our process pages.',
+        'Use the links at the top of the page to jump to a topic like mold, rodents, animal limits, or wasps. This report covers the nuisance rules HHVC inspects (Section 581). For what happens after a violation is found, see the summary at the end.',
       ],
-      button: 'View Health Code Article 11',
-      buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
-      buttonStyle: 'secondary',
       table: [
         ['Health code', 'In plain language'],
         [
@@ -39,7 +46,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Garbage, filth, and waste',
-      karl: 'Maps to a Title and text block with an embedded table (mockup-only on Information). Sec. 581(b)(1), (3), (5).',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(1), (3), (5).',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -59,7 +66,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Overgrown vegetation',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(2).',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(2).',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -71,7 +78,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Mold and mildew',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(6). Include 10 sq ft threshold per SFDPH mold guidance.',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(6). Include 10 sq ft threshold per SFDPH mold guidance.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -83,7 +90,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Rodents and exclusion',
-      karl: "Maps to a Title and text block with table. Sec. 581(b)(13) incorporates Article 2 Sec. 92. The 1/4-inch exclusion standard comes from HHVC Director's Rules / compliance standards, not verbatim in Sec. 92 — label clearly for legal review.",
+      karl: "Maps to Report Content → Table block. Sec. 581(b)(13) and Article 2 Sec. 92. The 1/4-inch exclusion row cites Director's Rules — label for legal review.",
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -111,7 +118,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Number of animals',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(12) incorporates Article 1 Sec. 37 animal limits. Verify current Sec. 37(a) text against municode before publication.',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(12) and Article 1 Sec. 37. Verify Sec. 37(a) against municode before publication.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -135,7 +142,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Excessive materials and pest harborage',
-      karl: "Maps to a Title and text block with table. Sec. 581(b)(18) is the statutory catch-all; excessive-clutter framing from violation-master and Director's Rules storage section. Link to garbage/clutter report page.",
+      karl: "Maps to Report Content → Table block. Sec. 581(b)(18), Sec. 92(g)(3), and Director's Rules storage guidance.",
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -155,7 +162,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Cockroaches and bed bugs',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(8). Bed bugs also governed by Article 11A — note citation tension for legal review.',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(8) and Article 11A — note 11 vs 11A citation for legal review.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -171,7 +178,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Flies, mosquitoes, and wasps',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(8). Note wasp routing nuance per policy README.',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(8). Note wasp routing nuance per policy README.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -187,7 +194,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Pigeons and pest harborage',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(7).',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(7).',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -199,7 +206,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Poison oak and ivy',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(11) and Sec. 605.',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(11) and Sec. 605.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -215,7 +222,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Lead hazards',
-      karl: 'Maps to a Title and text block with table. Sec. 581(b)(10). No dedicated HHVC mockup page — informational only.',
+      karl: 'Maps to Report Content → Table block. Sec. 581(b)(10).',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
@@ -227,7 +234,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'What happens if there is a violation',
-      karl: 'Maps to a Title and text block with table and bullets. Sec. 596 and 600 summarized — not full legal text. Link to existing process pages.',
+      karl: 'Maps to Report Content → Title and text, Table, and bulleted links. Sec. 596 and 600 summarized. Report has no Related field — use inline links.',
       kind: 'body',
       paragraphs: [
         'If HHVC finds a nuisance, the City follows an administrative process. Penalties can apply if the problem is not fixed on time.',
@@ -249,26 +256,14 @@ window.HHVC_PAGES['article11Guide'] = {
       ],
     },
     {
-      heading: 'Related pages',
-      karl: 'Maps to the Related field: generic unrestricted "Page" chooser, repeatable.',
-      kind: 'placement',
-      cards: [
-        {
-          title: 'Pests and housing problems',
-          target: 'pestsTopic',
-        },
-        {
-          title: 'Learn what HHVC can inspect',
-          target: 'scopeInfo',
-        },
-        {
-          title: 'What happens after you report',
-          target: 'afterReport',
-        },
-        {
-          title: 'Tenant rights and reporting',
-          target: 'tenantRights',
-        },
+      heading: 'More help',
+      karl: 'Maps to Report Content → Title and text with inline page links. Report has no Related panel — link out manually from body content.',
+      kind: 'body',
+      bullets: [
+        '[Pests and housing problems](pestsTopic)',
+        '[Learn what HHVC can inspect](scopeInfo)',
+        '[What happens after you report](afterReport)',
+        '[Tenant rights and reporting](tenantRights)',
       ],
     },
   ],

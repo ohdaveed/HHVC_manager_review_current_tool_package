@@ -856,6 +856,20 @@ a:focus {
   outline: 2px solid var(--sfds-action-blue);
   outline-offset: 2px;
 }
+.print-version-link {
+  max-width: var(--content-max);
+  margin: 2rem auto 0;
+  font-size: 0.95rem;
+}
+.print-version-link a {
+  font-weight: 700;
+  color: var(--sfds-action-blue);
+  text-decoration: none;
+}
+.page-body--report .spotlight {
+  max-width: var(--content-max);
+  margin: 0 auto 1.5rem;
+}
 .services-region,
 .resources-region {
   max-width: var(--content-max);

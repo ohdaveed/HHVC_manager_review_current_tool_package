@@ -92,6 +92,20 @@ describe('page-render.js escaping', () => {
     expect(html).toContain('scope="row"')
     expect(html).toContain('code-translation-figure')
     expect(html).toContain('Mold and mildew')
+    expect(html).toContain('mockup-only-note')
+  })
+
+  test('renderTable on Report pages omits Information-only table warning', () => {
+    const html = ctx.renderTable(
+      [
+        ['Health code', 'In plain language'],
+        ['**Sec. 581(a):** No nuisance.', 'You must not allow a public health nuisance.'],
+      ],
+      'report',
+      'About this guide'
+    )
+    expect(html).toContain('table--code-translation')
+    expect(html).not.toContain('mockup-only-note')
   })
 
   test('renderSteps escapes step title, text, bullets, and callout text', () => {

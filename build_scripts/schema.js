@@ -110,6 +110,8 @@ const pageSchema = z.object({
   whatToKnow: whatToKnowSchema.optional(),
   contact: contactSchema.optional(),
   spotlight: spotlightSchema.optional(),
+  reportDate: z.string().optional(),
+  printVersionUrl: z.string().optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
   sections: z.array(sectionSchema).optional(),
 })
