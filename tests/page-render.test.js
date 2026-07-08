@@ -102,6 +102,45 @@ describe('page-render.js escaping', () => {
     assertEscaped(html)
   })
 
+  test('renderCards appends an unverified pill when card.unverified is true', () => {
+    const html = ctx.renderCards([{ title: 'Card', text: 'Claim', unverified: true }])
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
+  })
+
+  test('renderCards omits the pill when card.unverified is not set', () => {
+    const html = ctx.renderCards([{ title: 'Card', text: 'Claim' }])
+    expect(html).not.toContain('unverified-pill')
+  })
+
+  test('renderRelatedList passes the unverified pill through from renderCards', () => {
+    const html = ctx.renderRelatedList([{ title: 'Related', text: 'Claim', unverified: true }])
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
+  })
+
+  test('renderServiceTiles appends an unverified pill when card.unverified is true (button branch, no url)', () => {
+    const html = ctx.renderServiceTiles([{ title: 'Tile', text: 'Claim', unverified: true }])
+    expect(html).toContain('<span class="service-tile-text">Claim<span class="unverified-pill">')
+  })
+
+  test('renderServiceTiles appends an unverified pill when card.unverified is true (anchor branch, with url)', () => {
+    const html = ctx.renderServiceTiles([
+      { title: 'Tile', text: 'Claim', url: 'https://example.com', unverified: true },
+    ])
+    expect(html).toContain('<span class="service-tile-text">Claim<span class="unverified-pill">')
+  })
+
+  test('renderResourcesList appends an unverified pill when card.unverified is true', () => {
+    const html = ctx.renderResourcesList([{ title: 'Resource', text: 'Claim', unverified: true }])
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
+  })
+
+  test('renderRelatedRail appends an unverified pill when card.unverified is true', () => {
+    const html = ctx.renderRelatedRail([
+      { cards: [{ title: 'Related', text: 'Claim', unverified: true }] },
+    ])
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
+  })
+
   test('renderRelatedList uses the cards grid layout', () => {
     const html = ctx.renderRelatedList(
       [{ title: 'Report mold', target: 'moldReport' }],

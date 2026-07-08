@@ -198,7 +198,7 @@ function renderCards(cards = []) {
       const action = c.url
         ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
@@ -212,9 +212,9 @@ function renderServiceTiles(cards = []) {
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
       if (c.url) {
-        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
+        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
       }
-      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></button>`
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></button>`
     })
     .join('')}</div>`
 }
@@ -234,7 +234,7 @@ function renderResourcesList(cards = [], heading = 'Resources') {
       const action = c.url
         ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}</p></li>`
+      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
     })
     .join('')}</ul></div>`
 }
@@ -255,7 +255,7 @@ function renderRelatedRail(sections = []) {
       const action = c.url
         ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<li>${action}<p>${escapeHtml(c.text)}</p></li>`
+      return `<li>${action}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
     })
     .join('')}</ul></aside>`
 }
