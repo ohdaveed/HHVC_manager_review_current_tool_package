@@ -82,12 +82,13 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'If a problem is found',
-      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Reinspection rate bullet ($256/hour inspector, $234/hour technician) verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule -- these are the correct current rates, not a fabricated NotebookLM figure (an earlier same-day FY25-26 export had mistakenly flagged them as unsourced before the FY26-27 schedule was obtained).',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Reinspection rate bullet ($256/hour inspector, $234/hour technician) verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule -- these are the correct current rates, not a fabricated NotebookLM figure (an earlier same-day FY25-26 export had mistakenly flagged them as unsourced before the FY26-27 schedule was obtained). Enforcement workflow updated from the Article 11 Interpretation Guide v1.0.',
       kind: 'body',
       paragraphs: [
         'If an inspection identifies a violation, Environmental Health will issue a Notice of Violation (NOV) to the responsible parties. The NOV will outline required corrections and set a specific compliance deadline based on severity.',
       ],
       bullets: [
+        '**Complaint → Inspection → Notice of Violation → Compliance period → Follow-up inspection → Reinspection fee → Citation or Director\'s Hearing if unresolved.**',
         'Sewage Backups (48 to 72 hours): Raw sewage backups require immediate correction and do not receive the standard 30-day compliance window.',
         'All Other Violations (30 days): Overgrown vegetation, trash piles, rodent harborages, general sanitation problems, minor gaps/cracks, mold remediation, and other cited conditions must be corrected within 30 days.',
         'These timelines represent general enforcement standards. Actual correction deadlines are established on the official Notice of Violation based on the severity of the health hazard.',

@@ -45,6 +45,9 @@ window.HHVC_PAGES['scopeInfo'] = {
         'Ground wasp nests on or near residential property',
         'Mold from humidity, condensation, or poor ventilation when the affected area is about 10 square feet or more',
         'Shared SRO kitchens, bathrooms, garbage areas, or other shared spaces',
+        'Pest harborage or infestation conditions including burrows, nesting materials, and wildlife activity that may create a public health nuisance',
+        'Rodent-borne disease prevention conditions under Article 2, Section 92 — including rodent access, droppings, gnaw marks, or failure to maintain rodent-free conditions',
+        'Other conditions the Director determines to be a threat to public health or safety',
       ],
     },
     {
