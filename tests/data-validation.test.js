@@ -11,6 +11,7 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 
 function validPage(overrides = {}) {
@@ -302,5 +303,38 @@ describe('content-confidence fields', () => {
       ],
     })
     expect(dataSchema.safeParse(data).success).toBe(false)
+  })
+})
+
+describe('countUnverifiedClaims', () => {
+  test('zero when nothing is flagged', () => {
+    const pages = { a: { sections: [{ bullets: ['Plain'], paragraphs: ['Plain'] }] } }
+    expect(countUnverifiedClaims(pages)).toBe(0)
+  })
+
+  test('counts flagged bullets, paragraphs, step text/bullets, and cards', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            bullets: ['Plain', { text: 'Flagged', unverified: true }],
+            paragraphs: [{ text: 'Flagged', unverified: true }],
+            cards: [{ title: 'Card', unverified: true }, { title: 'Card 2' }],
+            steps: [
+              {
+                text: [{ text: 'Flagged', unverified: true }],
+                bullets: [{ text: 'Flagged', unverified: true }],
+              },
+            ],
+          },
+        ],
+      },
+    }
+    expect(countUnverifiedClaims(pages)).toBe(5)
+  })
+
+  test('does not count an object item with unverified: false', () => {
+    const pages = { a: { sections: [{ bullets: [{ text: 'Not flagged', unverified: false }] }] } }
+    expect(countUnverifiedClaims(pages)).toBe(0)
   })
 })
