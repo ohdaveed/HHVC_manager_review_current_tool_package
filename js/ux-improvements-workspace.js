@@ -7,6 +7,7 @@
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
   const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'help']
+  let workspaceTriggerButton = null
 
   const { getValue, getStatusChipClass, escapeHtml } = window.utils
 
@@ -64,6 +65,8 @@
     panels.forEach((panel) => {
       const isActive = panel.getAttribute('data-workspace-panel') === tabId
       panel.hidden = !isActive
+      if (isActive) panel.setAttribute('tabindex', '-1')
+      else panel.removeAttribute('tabindex')
     })
 
     if (tabId === 'sitemap' && typeof window.__mountInteractiveSitemapOnTabOpen === 'function') {
@@ -101,9 +104,17 @@
     if (isOpen) {
       const state = window.reviewState.read()
       setWorkspaceTab(state.ui.workspace_tab || 'overview')
+      const selectedTab = document.querySelector('[data-workspace-tab][aria-selected="true"]')
+      selectedTab?.focus()
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       setTimeout(() => {
-        workspace.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        workspace.scrollIntoView({
+          behavior: prefersReducedMotion ? 'auto' : 'smooth',
+          block: 'start',
+        })
       }, 50)
+    } else if (workspaceTriggerButton && document.contains(workspaceTriggerButton)) {
+      workspaceTriggerButton.focus()
     }
   }
 
@@ -179,6 +190,7 @@
     }
 
     if (action === 'toggle-workspace') {
+      workspaceTriggerButton = button
       toggleWorkspace()
     }
   }

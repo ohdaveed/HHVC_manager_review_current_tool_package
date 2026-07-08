@@ -39,6 +39,15 @@
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
   }
 
+  function isShortcutContext(target) {
+    const scopeNode = target instanceof Element ? target : document.activeElement
+    if (!scopeNode) return false
+    if (scopeNode.closest('#reviewWorkspace')) return true
+    if (scopeNode.closest('.canvas-toolbar')) return true
+    if (scopeNode.closest('#mockPage')) return true
+    return false
+  }
+
   function goToAdjacentPage(direction) {
     const filter = window.reviewQueue?.getFilter?.() || 'All'
     const key = window.reviewQueue?.getAdjacentKey?.(direction, filter)
@@ -195,17 +204,19 @@
   function handleKeyDown(event) {
     if (event.ctrlKey || event.metaKey || event.altKey) return
     if (isTypingContext(event.target)) return
+    if (!isShortcutContext(event.target)) return
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
 
     const dialog = document.getElementById(DIALOG_ID)
     if (dialog?.open) {
-      if (event.key === '?' || event.key === 'Escape') {
+      if (key === '?' || key === 'Escape') {
         event.preventDefault()
         dialog.close()
       }
       return
     }
 
-    switch (event.key) {
+    switch (key) {
       case 'ArrowLeft':
       case 'k':
         event.preventDefault()

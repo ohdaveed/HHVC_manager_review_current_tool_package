@@ -26,6 +26,26 @@ window.HHVC_PAGES['tenantRights'] = {
       },
     },
     {
+      heading: 'Tenant responsibilities',
+      karl: 'Added from the Article 11 Interpretation Guide v1.0. Maps to a Title and text block with bulleted list.',
+      kind: 'body',
+      paragraphs: [
+        'Tenants also have responsibilities under Article 11 and the Director\'s Rules for keeping their home free of pests.',
+      ],
+      bullets: [
+        '**Keep your home clean:** Regular cleaning, taking out trash, and not letting food or garbage build up helps prevent pests.',
+        '**Report pest signs early:** Tell your landlord in writing as soon as you see droppings, gnaw marks, live pests, or damage.',
+        '**Cooperate with inspections and treatments:** Allow reasonable access for pest control professionals, inspectors, and maintenance workers when scheduled.',
+        '**Prepare for treatment:** Follow preparation instructions from the pest control operator before treatment — move furniture, cover food, and clear access areas.',
+        '**Reduce clutter:** Clutter gives pests places to hide and makes inspections and treatments less effective.',
+      ],
+      callout: {
+        title: '72-hour reporting pattern',
+        text: 'Notify your property owner or manager first. Allow at least 72 hours for them to begin addressing the issue. If the problem continues or the owner does not respond, report the issue through 311. Do not delay reporting immediate health or safety hazards.',
+        karl: 'Callout block: standard 72-hour tenant notification and reporting pattern for tenant-facing pages.',
+      },
+    },
+    {
       heading: 'What retaliation can look like',
       karl: 'Maps to a second Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. General information, not legal advice.',
       kind: 'body',

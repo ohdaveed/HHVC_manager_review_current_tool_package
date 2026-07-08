@@ -33,7 +33,7 @@
 
 This runs first, before any file is split, so every subsequent task's new `<script>` tag is checked by this from the moment it's added.
 
-- [ ] **Step 1: Write the failing test for `findJsScriptTags`**
+- [x] **Step 1: Write the failing test for `findJsScriptTags`**
 
 Add to `tests/index-html-checks.test.js` (after the existing `findPageScriptTags` describe block):
 
@@ -61,12 +61,12 @@ Update the require at the top of the file:
 const { findPageScriptTags, findJsScriptTags, findScriptTagDrift } = require('../build_scripts/index-html-checks')
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `bun test tests/index-html-checks.test.js`
 Expected: FAIL — `findJsScriptTags is not defined` / `TypeError: findJsScriptTags is not a function`
 
-- [ ] **Step 3: Implement `findJsScriptTags` and generalize the regex helper**
+- [x] **Step 3: Implement `findJsScriptTags` and generalize the regex helper**
 
 Replace the full contents of `build_scripts/index-html-checks.js`:
 
@@ -130,12 +130,12 @@ function findScriptTagDrift(filesOnDisk, scriptTagsInHtml) {
 module.exports = { findPageScriptTags, findJsScriptTags, findScriptTagDrift }
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
+- [x] **Step 4: Run the test to verify it passes**
 
 Run: `bun test tests/index-html-checks.test.js`
 Expected: PASS (all tests, including the pre-existing `findPageScriptTags`/`findScriptTagDrift` ones)
 
-- [ ] **Step 5: Add `getJsScriptPaths` to `build_scripts/load-pages.js`**
+- [x] **Step 5: Add `getJsScriptPaths` to `build_scripts/load-pages.js`**
 
 In `build_scripts/load-pages.js`, add this function after `getPageScriptPaths`:
 
@@ -164,7 +164,7 @@ module.exports = {
 }
 ```
 
-- [ ] **Step 6: Wire the new js/*.js drift check into `build_scripts/validate.js`**
+- [x] **Step 6: Wire the new js/*.js drift check into `build_scripts/validate.js`**
 
 In `build_scripts/validate.js`, change the two top requires:
 
@@ -194,12 +194,12 @@ if (jsScriptDrift.missingFromDisk.length) {
 }
 ```
 
-- [ ] **Step 7: Run the full validate script to confirm no drift on the current, unmodified tree**
+- [x] **Step 7: Run the full validate script to confirm no drift on the current, unmodified tree**
 
 Run: `bun run validate`
 Expected: PASS — at this point every `js/*.js` file already has a matching `<script>` tag, so this only proves the new check doesn't false-positive before any files are split.
 
-- [ ] **Step 8: Format and commit**
+- [x] **Step 8: Format and commit**
 
 ```bash
 bun run format
@@ -226,7 +226,7 @@ EOF
 **Interfaces:**
 - Produces: nothing new for other files to consume — this is a pure extraction with no behavior change, verified visually.
 
-- [ ] **Step 1: Create `css/interactive-sitemap.css`**
+- [x] **Step 1: Create `css/interactive-sitemap.css`**
 
 Content is the CSS that was inside the `injectStyles()` template string (`js/interactive-sitemap.js:189-607`), dedented from the template literal's 6-space indent to normal 2-space top-level CSS, with a header comment:
 
@@ -656,7 +656,7 @@ Content is the CSS that was inside the `injectStyles()` template string (`js/int
 }
 ```
 
-- [ ] **Step 2: Link the new stylesheet in `index.html`**
+- [x] **Step 2: Link the new stylesheet in `index.html`**
 
 Find this line (around `index.html:12`):
 
@@ -670,7 +670,7 @@ Add immediately after it:
     <link rel="stylesheet" href="css/interactive-sitemap.css" />
 ```
 
-- [ ] **Step 3: Remove `injectStyles()` and its call sites from `js/interactive-sitemap.js`**
+- [x] **Step 3: Remove `injectStyles()` and its call sites from `js/interactive-sitemap.js`**
 
 Delete the `STYLE_ID` constant (`js/interactive-sitemap.js:9`):
 
@@ -703,16 +703,16 @@ In `ensureSitemapRendered()`, remove the `injectStyles()` call:
   }
 ```
 
-- [ ] **Step 4: Verify with the test suite and format/validate**
+- [x] **Step 4: Verify with the test suite and format/validate**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS.
 
-- [ ] **Step 5: Manual visual check**
+- [x] **Step 5: Manual visual check**
 
 Run: `bun run dev`, open `http://127.0.0.1:8080`, open the Sitemap workspace tab, and confirm the diagram renders with identical styling (legend colors, node borders, hover states, responsive layout at narrow width) to before the change. Check the browser console is clean (no errors about a missing `injectStyles`).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add css/interactive-sitemap.css index.html js/interactive-sitemap.js
@@ -738,7 +738,7 @@ EOF
 - Produces: `window.InteractiveSitemap.state` (shared mutable object: `filter`, `search`, `selectedKey`, `showLinksFromSelected`, `_linkGraph`) and `window.InteractiveSitemap.data = { getCurrentKey, normalizeType, getOutgoingTargets, getPlacementTargets, buildLinkGraph, getLinkGraph, getPageRows, getHubKeys, buildDiagramGroups, getFilteredRows, getFilteredKeySet, getSelectedRow }`.
 - Consumes: `window.HHVC_DATA`, `window.utils.{getCurrentKey, buildPageRows}`.
 
-- [ ] **Step 1: Create `js/interactive-sitemap-data.js`**
+- [x] **Step 1: Create `js/interactive-sitemap-data.js`**
 
 ```js
 /* Interactive HHVC sitemap: graph-building and page-row query layer.
@@ -922,7 +922,7 @@ EOF
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find (around `index.html:356`):
 
@@ -939,7 +939,7 @@ Replace with:
 
 (`js/interactive-sitemap-render.js` is inserted between these two in Task 4.)
 
-- [ ] **Step 3: Remove the moved declarations from `js/interactive-sitemap.js`**
+- [x] **Step 3: Remove the moved declarations from `js/interactive-sitemap.js`**
 
 Delete the `TOPIC_KEY` constant and `state` object declaration (`js/interactive-sitemap.js:10-16`):
 
@@ -963,7 +963,7 @@ Delete the functions `getCurrentKey`, `normalizeType`, `getOutgoingTargets`, `ge
 
 Every remaining reference to `state`, `getCurrentKey()`, `getPageRows()`, `getFilteredRows()`, `getFilteredKeySet()`, `getLinkGraph()`, `getOutgoingTargets()`, `buildDiagramGroups()` inside the functions that stay in this file (rendering, interaction, lifecycle — moved out fully in Task 4/5) must become `window.InteractiveSitemap.state`, `window.InteractiveSitemap.data.getCurrentKey()`, etc. This rewiring is completed across Tasks 4 and 5 as those functions move to their own files or stay in the orchestrator — no intermediate broken state is committed; Steps 2-3 of this task are combined with Task 4 in the same working session before running verification, since `js/interactive-sitemap.js` alone won't parse correctly with dangling references until Task 4 also lands. (See Task 4 Step 4 for the combined verification.)
 
-- [ ] **Step 4: Combined verification happens at the end of Task 4** — do not run `bun run test`/`bun run validate` yet if you stopped here; the file is mid-edit. Continue directly into Task 4 before verifying.
+- [x] **Step 4: Combined verification happens at the end of Task 4** — do not run `bun run test`/`bun run validate` yet if you stopped here; the file is mid-edit. Continue directly into Task 4 before verifying.
 
 ---
 
@@ -978,7 +978,7 @@ Every remaining reference to `state`, `getCurrentKey()`, `getPageRows()`, `getFi
 - Consumes: `window.InteractiveSitemap.state`, `window.InteractiveSitemap.data.*` (from Task 3), `window.utils.{escapeHtml, getPrimaryCta, countRelatedLinks}`.
 - Produces: `window.InteractiveSitemap.render = { renderLegend, renderSearchAndFilters, renderDiagramNode, renderDiagram, renderLinkChips, renderDetail, mountPanel, renderPanel, rerender }`.
 
-- [ ] **Step 1: Create `js/interactive-sitemap-render.js`**
+- [x] **Step 1: Create `js/interactive-sitemap-render.js`**
 
 ```js
 /* Interactive HHVC sitemap: rendering layer.
@@ -1271,7 +1271,7 @@ Every remaining reference to `state`, `getCurrentKey()`, `getPageRows()`, `getFi
 
 Note: `state.selectedKey = getCurrentKey()` inside `rerender` reassigns `selectedKey` using the *old* value of `state.selectedKey` (via `getCurrentKeyShared`) — this is copied verbatim from the original and is unchanged behavior, just now operating on the shared `window.InteractiveSitemap.state` object instead of a local closure variable.
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -1288,7 +1288,7 @@ Replace with:
     <script src="js/interactive-sitemap.js"></script>
 ```
 
-- [ ] **Step 3: Finish trimming `js/interactive-sitemap.js`**
+- [x] **Step 3: Finish trimming `js/interactive-sitemap.js`**
 
 After Task 3's Step 3 and this task, `js/interactive-sitemap.js` should contain only: the top guard, `PANEL_ID`... — no, `PANEL_ID` moved to render file. Remove `PANEL_ID` from this file too if it's still there from Task 3 (it was originally declared at `js/interactive-sitemap.js:8`, alongside `STYLE_ID` which Task 2 already removed). Delete:
 
@@ -1493,14 +1493,14 @@ The remaining `js/interactive-sitemap.js` (verify it now looks like this in full
 })()
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS.
 
 Run: `bun run dev`, open the app, open the Sitemap tab, and manually confirm: search filters nodes, clicking a filter button works, clicking a diagram node navigates and opens that page, arrow-key navigation between nodes works, Escape resets filters, "Highlight links" toggle works, "Go to current page" works. Check console is clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add index.html js/interactive-sitemap.js js/interactive-sitemap-data.js js/interactive-sitemap-render.js
@@ -1520,7 +1520,7 @@ EOF
 
 **Files:** none (verification-only task)
 
-- [ ] **Step 1: Run the complete verification suite**
+- [x] **Step 1: Run the complete verification suite**
 
 ```bash
 bun run format:check
@@ -1531,7 +1531,7 @@ bun run test:e2e
 
 Expected: all PASS.
 
-- [ ] **Step 2: Confirm line counts moved as expected**
+- [x] **Step 2: Confirm line counts moved as expected**
 
 ```bash
 wc -l js/interactive-sitemap.js js/interactive-sitemap-data.js js/interactive-sitemap-render.js css/interactive-sitemap.css
@@ -1539,7 +1539,7 @@ wc -l js/interactive-sitemap.js js/interactive-sitemap-data.js js/interactive-si
 
 Expected: `js/interactive-sitemap.js` ~230-260 lines, `js/interactive-sitemap-data.js` ~150-180 lines, `js/interactive-sitemap-render.js` ~260-300 lines, `css/interactive-sitemap.css` ~400-430 lines.
 
-- [ ] **Step 3: No commit needed** — this task is a checkpoint before moving on to `ux-improvements.js`. If any check fails, fix forward with a new commit before proceeding to Task 6.
+- [x] **Step 3: No commit needed** — this task is a checkpoint before moving on to `ux-improvements.js`. If any check fails, fix forward with a new commit before proceeding to Task 6.
 
 ---
 
@@ -1553,7 +1553,7 @@ Expected: `js/interactive-sitemap.js` ~230-260 lines, `js/interactive-sitemap-da
 **Interfaces:**
 - Produces: `window.reviewState = { STORAGE_KEY, STORAGE_VERSION, read, write, update, getEmptyState }` — this is an **existing public contract** (already consumed by `js/review-queue.js`); its shape does not change, only its file location.
 
-- [ ] **Step 1: Create `js/review-state-store.js`**
+- [x] **Step 1: Create `js/review-state-store.js`**
 
 ```js
 /* Shared review-state localStorage store.
@@ -1650,7 +1650,7 @@ Expected: `js/interactive-sitemap.js` ~230-260 lines, `js/interactive-sitemap-da
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find (around `index.html:350-352`):
 
@@ -1669,7 +1669,7 @@ Replace with:
     <script src="js/ux-improvements.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved constants and functions from `js/ux-improvements.js`**
+- [x] **Step 3: Delete the moved constants and functions from `js/ux-improvements.js`**
 
 Delete lines 12-13:
 
@@ -1680,7 +1680,7 @@ Delete lines 12-13:
 
 Delete lines 142-222 in their entirety — from `function getEmptyState() {` through the closing `}` of the `window.reviewState = {...}` assignment (this is the comment `// Explicit dependency for other modules...` plus `getEmptyState`, `readLocalState`, `writeLocalState`, `updateLocalState`, and the `window.reviewState = {...}` block).
 
-- [ ] **Step 4: Rewire the remaining bare references in `js/ux-improvements.js` to the public `window.reviewState` API**
+- [x] **Step 4: Rewire the remaining bare references in `js/ux-improvements.js` to the public `window.reviewState` API**
 
 Run:
 
@@ -1697,14 +1697,14 @@ sed -i \
 
 This is safe as a whole-file rename: after Step 3's deletion, none of these six identifiers exist as declarations anywhere else in the file, only as call sites/reads (in `applySavedPageState`, `applySavedUiPreferences`, `updateLocalStorageStatus`, `saveCurrentPageToLocalStorage`, `setWorkspaceTab`, `setWorkspaceOpen`, `toggleWorkspace`, `maybeShowWorkspaceOnboarding`, `initWorkspaceTabs`, `exportReviewStateBackup`, `importReviewStateBackup`, `clearSavedLocalReviews`, `wrapRenderPage`, `restoreInitialPage`, and the `tagToggle` change listener inside `attachRefreshListeners`).
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS — `js/ux-improvements.js` still has all its other functions intact, just reading/writing through `window.reviewState.*` instead of local closures.
 
 Run: `bun run dev`, open the app, edit a review field (e.g. reviewer name), reload the page, confirm the value persisted. Check console is clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add index.html js/ux-improvements.js js/review-state-store.js
@@ -1730,7 +1730,7 @@ EOF
 - Consumes: `window.reviewState`, `window.utils.{escapeHtml, getPrimaryCta, setPrimaryCta, today, getValue, setValue, setText, buildReviewRecord, getCurrentKey, countRelatedLinks, defaultSeoTitle, defaultMetaDescription}`, `window.readingLevel?.analyzeReadingLevel`.
 - Produces: `window.reviewChecks = { getRuleResultsFor }` (existing public contract, unchanged shape) and `window.ReviewUx.stateSync = { getCurrentPage, getSeoTitle, getMetaDescription, getRuleResultsFor, getRuleResults, renderPageChecksPanel, collectCurrentPageReviewState, saveCurrentPageToLocalStorage, clearReviewFieldsForNewPage, updateMockupTextFromSavedState, applySavedPageState, applySavedUiPreferences, updateLocalStorageStatus, SEO_TITLE_LIMIT, META_DESCRIPTION_LIMIT }`.
 
-- [ ] **Step 1: Create `js/ux-improvements-state-sync.js`**
+- [x] **Step 1: Create `js/ux-improvements-state-sync.js`**
 
 ```js
 /* Manager review: page state sync between the SEO/editor sidebar and
@@ -2046,7 +2046,7 @@ EOF
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -2063,7 +2063,7 @@ Replace with:
     <script src="js/ux-improvements.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved constants and functions from `js/ux-improvements.js`**
+- [x] **Step 3: Delete the moved constants and functions from `js/ux-improvements.js`**
 
 Delete the constants `SEO_TITLE_LIMIT`, `META_DESCRIPTION_LIMIT`, `CHECKS_PANEL_ID` and the `let isRestoringState = false` declaration (these all moved into the new file).
 
@@ -2071,7 +2071,7 @@ Delete the functions in their entirety: `getCurrentPage`, `getSeoTitle`, `getMet
 
 From the top-of-file destructure of `window.utils`, remove `escapeHtml, getPrimaryCta, setPrimaryCta, today, getValue, setValue, setText, buildReviewRecord, countRelatedLinks, defaultSeoTitle, defaultMetaDescription` if the remaining code in `js/ux-improvements.js` no longer uses them directly (some, like `getValue` and `escapeHtml`, are still used by functions that move out in Tasks 8-9 — leave the destructure as-is for now and let Task 10's final cleanup trim it once the true remaining set is known).
 
-- [ ] **Step 4: Rewire remaining bare references**
+- [x] **Step 4: Rewire remaining bare references**
 
 Run:
 
@@ -2097,7 +2097,7 @@ sed -i \
 
 This affects the remaining `renderStickyBar` (needs `getCurrentPage`) and `getCurrentReviewSummaryLines` (needs `getCurrentPage`, `getSeoTitle`, `getMetaDescription`, `getRuleResults`, both `*_LIMIT` constants) call sites, which still live in `js/ux-improvements.js` at this point (they move out in Tasks 8-9).
 
-- [ ] **Step 5: Also add the guard dependency check**
+- [x] **Step 5: Also add the guard dependency check**
 
 `js/ux-improvements.js`'s top guard (`if (!hasValidPageData(DATA)) return`) should now also check the new namespace it depends on, matching the defensive-check convention already used in `js/review-queue.js:5`. Change:
 
@@ -2111,14 +2111,14 @@ to:
   if (!hasValidPageData(DATA) || !window.ReviewUx?.stateSync) return
 ```
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS.
 
 Run: `bun run dev`, confirm the sticky bar still shows the current page title/decision and the Checks tab still renders the nine compliance rules.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add index.html js/ux-improvements.js js/ux-improvements-state-sync.js
@@ -2145,7 +2145,7 @@ EOF
 - Consumes: `window.ReviewUx.stateSync.getCurrentPage`, `window.reviewState`, `window.reviewQueue` (existing public API, may be `undefined` until `js/review-queue.js` loads — already guarded with `?.` in the original code), `window.utils.{getValue, getStatusChipClass, escapeHtml}`.
 - Produces: `window.reviewWorkspace = { setTab, setOpen, toggle, WORKSPACE_TABS }` and `window.reviewDecisions = { set: applyDecisionToCurrentPage }` (both **existing public contracts**, unchanged shape — consumed by `js/keyboard-shortcuts.js`), plus internal `window.ReviewUx.workspace = { renderStickyBar, setWorkspaceTab, setWorkspaceOpen, toggleWorkspace, maybeShowWorkspaceOnboarding, handleStickyBarClick, initWorkspaceTabs, updateDecisionQuickActions, initDecisionQuickActions, applyDecisionToCurrentPage }`.
 
-- [ ] **Step 1: Create `js/ux-improvements-workspace.js`**
+- [x] **Step 1: Create `js/ux-improvements-workspace.js`**
 
 ```js
 /* Manager review: sticky bar, workspace tabs, and decision quick actions.
@@ -2436,7 +2436,7 @@ EOF
 
 Note: `renderStickyBar` originally used the file-level destructured `getCurrentKey()` (bare) for the `page.title || getCurrentKey()` fallback; here it's `window.utils.getCurrentKey()` since this file doesn't otherwise need a standalone `getCurrentKey` destructure — this is the one behavior-preserving adaptation needed because the original bare `getCurrentKey` came from `ux-improvements.js`'s single shared `window.utils` destructure block, which this new file doesn't inherit.
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -2453,13 +2453,13 @@ Replace with:
     <script src="js/ux-improvements.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved constants and functions from `js/ux-improvements.js`**
+- [x] **Step 3: Delete the moved constants and functions from `js/ux-improvements.js`**
 
 Delete the constants `STICKY_BAR_ID`, `WORKSPACE_ID`, `WORKSPACE_TABS`.
 
 Delete the functions in their entirety: `renderStickyBar`, `setWorkspaceTab`, `setWorkspaceOpen`, `toggleWorkspace`, `maybeShowWorkspaceOnboarding`, the `window.reviewWorkspace = {...}` block, `handleStickyBarClick`, `initWorkspaceTabs`, `updateDecisionQuickActions`, `initDecisionQuickActions`, `applyDecisionToCurrentPage`, the `window.reviewDecisions = {...}` line.
 
-- [ ] **Step 4: Rewire remaining bare references**
+- [x] **Step 4: Rewire remaining bare references**
 
 Run:
 
@@ -2475,7 +2475,7 @@ sed -i \
 
 These five are the only workspace-file functions still called from the remaining `js/ux-improvements.js` (inside `refreshUx` and `init`).
 
-- [ ] **Step 5: Update the top guard**
+- [x] **Step 5: Update the top guard**
 
 ```js
   if (!hasValidPageData(DATA) || !window.ReviewUx?.stateSync) return
@@ -2487,14 +2487,14 @@ becomes:
   if (!hasValidPageData(DATA) || !window.ReviewUx?.stateSync || !window.ReviewUx?.workspace) return
 ```
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS.
 
 Run: `bun run dev`, confirm: the workspace toggle button opens/closes the workspace, tab switching (Overview/Checks/Sitemap/Help) works with arrow-key navigation, decision quick-action buttons update the decision select. Test `js/keyboard-shortcuts.js`'s shortcuts that touch `window.reviewWorkspace`/`window.reviewDecisions` (e.g. press a decision-shortcut key) still work.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add index.html js/ux-improvements.js js/ux-improvements-workspace.js
@@ -2520,7 +2520,7 @@ EOF
 - Consumes: `window.ReviewUx.stateSync.{getCurrentPage, getSeoTitle, getMetaDescription, getRuleResults, SEO_TITLE_LIMIT, META_DESCRIPTION_LIMIT, saveCurrentPageToLocalStorage, applySavedPageState, clearReviewFieldsForNewPage, updateLocalStorageStatus}`, `window.reviewState`, `window.ReviewUx.refreshUx` (set by the orchestrator in Task 10 — referenced lazily at call time, safe regardless of load order since it's only invoked from click/file-read callbacks, never at file-parse time), `window.utils.{getValue, getPrimaryCta, getCurrentKey, today, toCsv, downloadFile, setText, defaultSeoTitle, defaultMetaDescription}`.
 - Produces: `window.ReviewUx.exportImport = { getCurrentReviewSummaryLines, buildReviewSummary, copyText, mountCopySummaryButton, exportSavedLocalReviewsCsv, exportReviewStateBackup, importReviewStateBackup, mountBackupControls, clearSavedLocalReviews, mountLocalStorageControls }`.
 
-- [ ] **Step 1: Create `js/ux-improvements-export.js`**
+- [x] **Step 1: Create `js/ux-improvements-export.js`**
 
 ```js
 /* Manager review: review summary, CSV export, and JSON backup/restore.
@@ -2857,7 +2857,7 @@ EOF
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -2874,11 +2874,11 @@ Replace with:
     <script src="js/ux-improvements.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved functions from `js/ux-improvements.js`**
+- [x] **Step 3: Delete the moved functions from `js/ux-improvements.js`**
 
 Delete in their entirety: `getCurrentReviewSummaryLines`, `buildReviewSummary`, `copyText`, `exportSavedLocalReviewsCsv`, `exportReviewStateBackup`, `importReviewStateBackup`, `mountBackupControls`, `clearSavedLocalReviews`, `mountLocalStorageControls`, `mountCopySummaryButton`.
 
-- [ ] **Step 4: Rewire remaining bare references and update `init()`**
+- [x] **Step 4: Rewire remaining bare references and update `init()`**
 
 The only remaining `js/ux-improvements.js` callers of these are inside `init()` (`mountCopySummaryButton()`, `mountBackupControls()`, `mountLocalStorageControls()`). Run:
 
@@ -2890,7 +2890,7 @@ sed -i \
   js/ux-improvements.js
 ```
 
-- [ ] **Step 5: Update the top guard**
+- [x] **Step 5: Update the top guard**
 
 ```js
   if (!hasValidPageData(DATA) || !window.ReviewUx?.stateSync || !window.ReviewUx?.workspace) return
@@ -2908,14 +2908,14 @@ becomes:
     return
 ```
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS.
 
 Run: `bun run dev`, confirm: "Copy review summary" copies to clipboard, "Export saved local reviews CSV" downloads a CSV, "Download backup (JSON)" downloads JSON, "Clear local saved reviews" clears storage and refreshes the UI.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add index.html js/ux-improvements.js js/ux-improvements-export.js
@@ -2938,7 +2938,7 @@ EOF
 **Interfaces:**
 - Produces: `window.ReviewUx.refreshUx` (a plain function reference, consumed by `js/ux-improvements-export.js`'s `importReviewStateBackup` and `clearSavedLocalReviews`, which is why it must be assigned before `init()` runs — but since both consumers only call it from event-handler callbacks, not at parse time, assigning it anywhere in this file's top-level execution is safe).
 
-- [ ] **Step 1: Replace the full contents of `js/ux-improvements.js`**
+- [x] **Step 1: Replace the full contents of `js/ux-improvements.js`**
 
 At this point the file should contain only `refreshUx`, `persistAndRefresh`, `attachRefreshListeners`, `wrapRenderPage`, `restoreInitialPage`, `init`, and the DOMContentLoaded wiring. Verify it now reads exactly as follows (adjust only if your accumulated edits from Tasks 6-9 left it in a different but equivalent state — this is the target, not a diff):
 
@@ -3082,7 +3082,7 @@ At this point the file should contain only `refreshUx`, `persistAndRefresh`, `at
 })()
 ```
 
-- [ ] **Step 2: Full verification**
+- [x] **Step 2: Full verification**
 
 ```bash
 bun run format:check
@@ -3093,7 +3093,7 @@ bun run test:e2e
 
 Expected: all PASS.
 
-- [ ] **Step 3: Confirm line counts**
+- [x] **Step 3: Confirm line counts**
 
 ```bash
 wc -l js/ux-improvements.js js/ux-improvements-state-sync.js js/ux-improvements-workspace.js js/ux-improvements-export.js js/review-state-store.js
@@ -3101,11 +3101,11 @@ wc -l js/ux-improvements.js js/ux-improvements-state-sync.js js/ux-improvements-
 
 Expected: `js/ux-improvements.js` ~110-140 lines, `js/ux-improvements-state-sync.js` ~280-310 lines, `js/ux-improvements-workspace.js` ~230-260 lines, `js/ux-improvements-export.js` ~300-330 lines, `js/review-state-store.js` ~90-110 lines.
 
-- [ ] **Step 4: Manual full-flow check**
+- [x] **Step 4: Manual full-flow check**
 
 Run: `bun run dev`, and walk the entire review flow end to end: open a page, edit SEO fields, set a decision, open the workspace, switch tabs, copy the summary, export CSV, export/import JSON backup, clear local reviews, reload and confirm the last-viewed page and its saved fields restore correctly. Console must stay clean throughout.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/ux-improvements.js
@@ -3133,7 +3133,7 @@ EOF
 
 This is `window.ReviewQueueInternal` — deliberately capital-`Q` and distinct from the existing public, lowercase-`q` `window.reviewQueue` (assembled by the orchestrator in Task 15) to avoid any case-only naming collision.
 
-- [ ] **Step 1: Create `js/review-queue-state.js`**
+- [x] **Step 1: Create `js/review-queue-state.js`**
 
 ```js
 /* Cross-page review queue: shared mutable state, action helpers, sidebar
@@ -3343,7 +3343,7 @@ This is `window.ReviewQueueInternal` — deliberately capital-`Q` and distinct f
 })()
 ```
 
-- [ ] **Step 2: Replace the old single `<script>` tag in `index.html`**
+- [x] **Step 2: Replace the old single `<script>` tag in `index.html`**
 
 Find:
 
@@ -3364,7 +3364,7 @@ Replace with:
 
 (`js/review-queue-rows.js`, `js/review-queue-render.js`, `js/review-queue-import.js` are inserted between `js/review-queue-state.js` and `js/review-queue.js` in Tasks 12-14.)
 
-- [ ] **Step 3: Delete the moved declarations from `js/review-queue.js`**
+- [x] **Step 3: Delete the moved declarations from `js/review-queue.js`**
 
 Delete: the `QUEUE_PANEL_ID`, `STALE_DAYS`, `DEFAULT_STATE` constants; the `window.utils` destructure line's `parseCsv` remains needed later (Task 14) but `getCurrentKey` and the rest move — leave the destructure alone for now, Task 15 does the final cleanup; the `readLocalState`/`updateLocalState` local aliases; `VALID_DECISIONS`, `ACTION_LABELS`; the functions `toast`, `actionLabel`, `actionToastTone`, `buildActionPatch`, `getSidebarReviewerName`, `getSidebarReviewDate`, `updateLocalReviewForPage`, `syncSidebarForKey`, `dispatchReviewFieldChange`; the `state` object declaration; `writeQueueUiState`, `restoreQueueUiState`, `getDecisionForKey`, `normalize`, `parseIsoDate`, `getAgeInDays`.
 
@@ -3384,7 +3384,7 @@ At this intermediate point, `js/review-queue.js` will have dangling references t
 - Produces: `window.ReviewQueueInternal.rows = { getPriorityRank, isUnassigned, getQueueRows, isFailingChecks, getQueueStats, matchesFilter, compareRows, getVisibleRows, getFilteredKeys, getSelectedKeys, pruneSelection, toggleSelected, selectAllVisible, clearSelection, applyQueueAction, getActionTargets, getNextNeedsReviewKey, getAdjacentKey }`.
 - **Intentional circular reference:** `applyQueueAction` calls `window.ReviewQueueInternal.render.renderReviewQueue()`, which doesn't exist yet when this file loads (`js/review-queue-render.js` loads after it, in Task 13). This is safe because the reference is inside a function body, evaluated only when a user actually triggers a queue action — by which time `js/review-queue-render.js` has already loaded and populated `.render`. Never destructure this reference into a top-of-file const; always call it fully-qualified at the call site.
 
-- [ ] **Step 1: Create `js/review-queue-rows.js`**
+- [x] **Step 1: Create `js/review-queue-rows.js`**
 
 ```js
 /* Cross-page review queue: row computation, filtering/sorting, selection,
@@ -3721,7 +3721,7 @@ At this intermediate point, `js/review-queue.js` will have dangling references t
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -3738,7 +3738,7 @@ Replace with:
     <script src="js/review-queue.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved functions from `js/review-queue.js`**
+- [x] **Step 3: Delete the moved functions from `js/review-queue.js`**
 
 Delete in their entirety: `getPriorityRank`, `isUnassigned`, `getQueueRows`, `isFailingChecks`, `getQueueStats`, `matchesFilter`, `compareRows`, `getVisibleRows`, `getFilteredKeys`, `getSelectedKeys`, `pruneSelection`, `toggleSelected`, `selectAllVisible`, `clearSelection`, `applyQueueAction`, `getActionTargets`, `getNextNeedsReviewKey`, `getAdjacentKey`.
 
@@ -3757,7 +3757,7 @@ This completes Task 11's deferred cleanup — `js/review-queue.js` no longer has
 - Consumes: `window.ReviewQueueInternal.state`, `window.ReviewQueueInternal.helpers.{QUEUE_PANEL_ID, STALE_DAYS, getSidebarReviewerName, normalize}`, `window.ReviewQueueInternal.rows.{getQueueStats, getVisibleRows, getSelectedKeys, pruneSelection}`, `window.utils.{escapeHtml, getStatusChipClass, getCurrentKey}`.
 - Produces: `window.ReviewQueueInternal.render = { formatAgeLabel, renderQueueStats, renderBulkBar, captureSearchFocus, restoreSearchFocus, syncSelectionUi, renderReviewQueue }`.
 
-- [ ] **Step 1: Create `js/review-queue-render.js`**
+- [x] **Step 1: Create `js/review-queue-render.js`**
 
 ```js
 /* Cross-page review queue: rendering. Loads after js/review-queue-rows.js. */
@@ -4105,7 +4105,7 @@ This completes Task 11's deferred cleanup — `js/review-queue.js` no longer has
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -4124,7 +4124,7 @@ Replace with:
     <script src="js/review-queue.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved functions from `js/review-queue.js`**
+- [x] **Step 3: Delete the moved functions from `js/review-queue.js`**
 
 Delete in their entirety: `formatAgeLabel`, `renderQueueStats`, `renderBulkBar`, `captureSearchFocus`, `restoreSearchFocus`, `syncSelectionUi`, `renderReviewQueue`.
 
@@ -4145,7 +4145,7 @@ Do not run verification yet — `importReviewsFromCsvText`/`importReviewsFromCsv
 
 This is the file CLAUDE.md specifically flags as regression-prone (a prior bug here replaced saved review state wholesale instead of merging). Keeping it isolated as its own ~110-line file, unchanged in logic from the original, is the point of this task — no logic changes, pure relocation.
 
-- [ ] **Step 1: Create `js/review-queue-import.js`**
+- [x] **Step 1: Create `js/review-queue-import.js`**
 
 ```js
 /* Cross-page review queue: CSV import.
@@ -4278,7 +4278,7 @@ This is the file CLAUDE.md specifically flags as regression-prone (a prior bug h
 })()
 ```
 
-- [ ] **Step 2: Add the `<script>` tag in `index.html`**
+- [x] **Step 2: Add the `<script>` tag in `index.html`**
 
 Find:
 
@@ -4295,7 +4295,7 @@ Replace with:
     <script src="js/review-queue.js"></script>
 ```
 
-- [ ] **Step 3: Delete the moved functions from `js/review-queue.js`**
+- [x] **Step 3: Delete the moved functions from `js/review-queue.js`**
 
 Delete in their entirety: `importReviewsFromCsvText`, `importReviewsFromCsvFile`.
 
@@ -4311,7 +4311,7 @@ Do not run verification yet — the event handlers and `window.reviewQueue` asse
 **Interfaces:**
 - Produces: `window.reviewQueue = { getQueueRows, getQueueStats, getNextNeedsReviewKey, getAdjacentKey, getFilter, getSelectedKeys, selectAllVisible, clearSelection, toggleSelected, syncSelectionUi, applyQueueAction, getActionTargets, focusQueueSearch, importReviewsFromCsvText, renderReviewQueue }` — this is the **existing public contract** (consumed by `js/ux-improvements-workspace.js` and `js/keyboard-shortcuts.js`); its shape is unchanged, only assembled from the new namespaces instead of local closures.
 
-- [ ] **Step 1: Replace the full contents of `js/review-queue.js`**
+- [x] **Step 1: Replace the full contents of `js/review-queue.js`**
 
 ```js
 /* Cross-page review queue for manager approval workflow: orchestrator.
@@ -4529,12 +4529,12 @@ Do not run verification yet — the event handlers and `window.reviewQueue` asse
 })()
 ```
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Run: `bun run format && bun run validate && bun run test`
 Expected: all PASS.
 
-- [ ] **Step 3: Manual CSV import round-trip check (required by CLAUDE.md)**
+- [x] **Step 3: Manual CSV import round-trip check (required by CLAUDE.md)**
 
 Run: `bun run dev`, open the app, open the Overview workspace tab:
 1. Set a decision and notes on 2-3 pages via the queue UI.
@@ -4544,11 +4544,11 @@ Run: `bun run dev`, open the app, open the Overview workspace tab:
 5. Reload the page and confirm all previously-saved decisions/notes/owners (both the untouched ones and the just-imported one) are still present — nothing was wiped.
 6. Also test "Download backup (JSON)" → "Import backup (JSON)" round-trip the same way (export, reload, re-import, confirm nothing lost).
 
-- [ ] **Step 4: Manual full-flow check for the rest of the queue**
+- [x] **Step 4: Manual full-flow check for the rest of the queue**
 
 Confirm: filter buttons, search, sort dropdown, select-all/individual checkboxes, bulk actions (assign/approve/block/etc.), single-row actions, "Next needs review" button, and `js/keyboard-shortcuts.js`'s queue-related shortcuts (bulk-select, assign-to-me, next-needs-review) all still work. Console stays clean throughout.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/review-queue.js
@@ -4568,7 +4568,7 @@ EOF
 
 **Files:** none (verification-only task)
 
-- [ ] **Step 1: Run the complete verification suite**
+- [x] **Step 1: Run the complete verification suite**
 
 ```bash
 bun run format:check
@@ -4579,7 +4579,7 @@ bun run test:e2e
 
 Expected: all PASS.
 
-- [ ] **Step 2: Confirm final line counts across every touched file**
+- [x] **Step 2: Confirm final line counts across every touched file**
 
 ```bash
 wc -l js/ux-improvements.js js/ux-improvements-state-sync.js js/ux-improvements-workspace.js \
@@ -4590,15 +4590,15 @@ wc -l js/ux-improvements.js js/ux-improvements-state-sync.js js/ux-improvements-
 
 Expected: every file lands well under 400 lines (see the "File breakdown" table in `docs/superpowers/specs/2026-07-07-review-ux-files-modular-split-design.md` for the per-file target ranges).
 
-- [ ] **Step 3: Full manual walkthrough**
+- [x] **Step 3: Full manual walkthrough**
 
 Run: `bun run dev`, and exercise every feature touched across all 16 tasks in one continuous session: page navigation, SEO/editor sidebar edits, sticky bar, workspace tabs (Overview/Checks/Sitemap/Help), decision quick actions, review summary copy, CSV export, JSON backup export/import, CSV import, queue filtering/search/sort/selection/bulk actions, interactive sitemap search/filter/navigation, and keyboard shortcuts. Confirm the browser console stays clean throughout and `localStorage`'s `hhvcManagerReviewState:v1` key round-trips correctly across a page reload.
 
-- [ ] **Step 4: Update `CLAUDE.md`'s "Core module split" section**
+- [x] **Step 4: Update `CLAUDE.md`'s "Core module split" section**
 
 `CLAUDE.md`'s "Core module split (formerly one `app.js`)" section and "Script load order in `index.html` matters" code block describe the pre-split file layout. Update both to reflect the new files: add `js/review-state-store.js`, `js/ux-improvements-state-sync.js`, `js/ux-improvements-workspace.js`, `js/ux-improvements-export.js`, `js/review-queue-state.js`, `js/review-queue-rows.js`, `js/review-queue-render.js`, `js/review-queue-import.js`, `js/interactive-sitemap-data.js`, `js/interactive-sitemap-render.js`, and `css/interactive-sitemap.css` to the relevant lists, and note that `js/ux-improvements.js`, `js/review-queue.js`, and `js/interactive-sitemap.js` are now thin orchestrators over `window.ReviewUx`/`window.ReviewQueueInternal`/`window.InteractiveSitemap` respectively (mirroring the existing `window.utils`/`window.reviewState` pattern already documented there).
 
-- [ ] **Step 5: Commit the CLAUDE.md update**
+- [x] **Step 5: Commit the CLAUDE.md update**
 
 ```bash
 git add CLAUDE.md

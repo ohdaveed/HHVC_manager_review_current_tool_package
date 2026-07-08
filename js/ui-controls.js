@@ -75,13 +75,24 @@ function buildPageSelect() {
 }
 function initChecklist() {
   document.querySelectorAll('.checklist .check').forEach((el, i) => {
-    el.addEventListener('click', function () {
-      this.classList.toggle('unchecked')
+    if (el.dataset.bound === 'true') return
+    el.dataset.bound = 'true'
+    el.setAttribute('role', 'checkbox')
+    el.setAttribute('aria-checked', el.classList.contains('unchecked') ? 'false' : 'true')
+
+    function toggleCheck() {
+      el.classList.toggle('unchecked')
+      const checked = !el.classList.contains('unchecked')
+      el.setAttribute('aria-checked', checked ? 'true' : 'false')
       if (currentPageKey)
-        sessionStorage.setItem(
-          'check_' + currentPageKey + '_' + i,
-          this.classList.contains('unchecked') ? '0' : '1'
-        )
+        sessionStorage.setItem('check_' + currentPageKey + '_' + i, checked ? '1' : '0')
+    }
+
+    el.addEventListener('click', toggleCheck)
+    el.addEventListener('keydown', (event) => {
+      if (event.key !== ' ' && event.key !== 'Enter') return
+      event.preventDefault()
+      toggleCheck()
     })
   })
 }
@@ -90,5 +101,6 @@ function applyChecklistState(key) {
     const saved = sessionStorage.getItem('check_' + key + '_' + i)
     if (saved === '0') el.classList.add('unchecked')
     else el.classList.remove('unchecked')
+    el.setAttribute('aria-checked', el.classList.contains('unchecked') ? 'false' : 'true')
   })
 }

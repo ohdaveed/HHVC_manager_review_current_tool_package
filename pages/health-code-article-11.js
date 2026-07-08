@@ -17,7 +17,7 @@ window.HHVC_PAGES['article11Guide'] = {
   metaDescription:
     'Article 11 nuisance rules with plain-language translations for mold, rodents, animal limits, and more.',
   editorNote:
-    "Report content type. Side-by-side tables map to Karl Report Content → Tables (2 columns). Spotlight button links to municode Article 11. Verify municode URL, wasp routing nuance, and Director's Rules citations before publish.",
+    "Report content type. Side-by-side tables map to Karl Report Content → Tables (2 columns). Spotlight button links to municode Article 11. Verify municode URL, wasp routing nuance, and Director's Rules citations before publish. Sections updated from the Article 11 Interpretation Guide v1.0 (2026-07-08) with tenant/owner/PCO responsibilities, content standards by topic, and reusable content blocks.",
   spotlight: {
     title: 'View the full municipal code',
     paragraphs: [
@@ -254,6 +254,265 @@ window.HHVC_PAGES['article11Guide'] = {
         '**Respond to a notice:** [How to respond to a notice of violation](noticeOfViolation)',
         '**Annual program fee:** [Pay your Healthy Housing fee](payFee) for buildings with 3 or more rental units',
       ],
+    },
+    {
+      heading: 'Vector prevention standards',
+      karl: 'Maps to Report Content → Table block. Prevention topic from the Interpretation Guide content standards. Added from the Article 11 Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Prevention is the most effective approach to pest and vector management. These standards apply across all properties.',
+      ],
+      table: [
+        ['Standard', 'In plain language'],
+        [
+          'Sanitation, storage, landscape management, eliminating standing water, routine inspections, monitoring, and recordkeeping.',
+          'Prevent pest problems by removing food, water, shelter, and entry points. Regular inspections help catch problems early.',
+        ],
+      ],
+    },
+    {
+      heading: 'Sanitation and storage standards',
+      karl: 'Maps to Report Content → Table block. Sanitation topic from the Interpretation Guide.',
+      kind: 'body',
+      paragraphs: [
+        'Proper sanitation and storage are the foundation of pest prevention.',
+      ],
+      table: [
+        ['Standard', 'In plain language'],
+        [
+          'Garbage must be stored in sanitary containers. Stored materials must be organized to allow monitoring and prevent harborage.',
+          'Store garbage and materials so pests cannot feed, hide, or breed. Keep storage areas organized and accessible for inspection.',
+        ],
+      ],
+    },
+    {
+      heading: 'Landscape management standards',
+      karl: 'Maps to Report Content → Table block. Landscape management topic from the Interpretation Guide.',
+      kind: 'body',
+      paragraphs: [
+        'Vegetation management is critical for reducing rodent and vector harborage.',
+      ],
+      table: [
+        ['Standard', 'In plain language'],
+        [
+          'When rodent activity is identified, vegetation should be managed to reduce climbing, nesting, burrowing, and harborage.',
+          'Trim vegetation and remove groundcover conditions that hide rodent activity. Keep plants away from building foundations.',
+        ],
+      ],
+    },
+    {
+      heading: 'Standing water and mosquito prevention',
+      karl: 'Maps to Report Content → Table block. Mosquito prevention topic from the Interpretation Guide.',
+      kind: 'body',
+      paragraphs: [
+        'Mosquitoes need standing water to develop. Removing standing water is the most effective prevention step.',
+      ],
+      table: [
+        ['Standard', 'In plain language'],
+        [
+          'Owners and managers must eliminate standing water that supports mosquitoes. Standing water also attracts wildlife and other pests.',
+          'Mosquitoes need standing water. Empty, drain, cover, or maintain items that can collect water. [Report mosquitoes](mosquitoesReport) · [Prevent mosquitoes](mosquitoesPrevent)',
+        ],
+      ],
+    },
+    {
+      heading: 'Vector exclusion standards',
+      karl: 'Maps to Report Content → Table block. Exclusion topic from the Interpretation Guide.',
+      kind: 'body',
+      paragraphs: [
+        'Buildings must be maintained to prevent pests from entering.',
+      ],
+      table: [
+        ['Standard', 'In plain language'],
+        [
+          'Buildings must be maintained to prevent pests from entering, including sealing gaps, screening openings, clearing brush, and maintaining screens.',
+          'Seal openings and maintain buildings so pests cannot enter or nest. [Keep rats and mice out](ratsPrevent)',
+        ],
+      ],
+    },
+    {
+      heading: 'Rodent activity signs',
+      karl: 'Maps to Report Content → Table block. Rodent signs topic from the Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Look for indirect signs of rodent activity — not just live sightings.',
+      ],
+      table: [
+        ['Sign', 'In plain language'],
+        [
+          'Droppings, damaged containers, rub marks, gnaw marks, burrows, footprints, damaged fruit, night noises, and pet behavior.',
+          'Look for droppings, gnawed packages, rub marks along walls, burrows in soil, footprints in dusty areas, or pets acting interested in walls or cabinets.',
+        ],
+      ],
+    },
+    {
+      heading: 'Pigeon roosting and waste',
+      karl: 'Maps to Report Content → Table block. Pigeon topic from the Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Pigeon droppings, feathers, and nesting materials can create public health concerns.',
+      ],
+      table: [
+        ['Standard', 'In plain language'],
+        [
+          'Pigeon droppings, feathers, and nesting materials can contain mites, lice, allergens, bacteria, and fungal spores. Accumulated waste is a nuisance.',
+          'Pigeon waste and nesting can create public health concerns where people may contact droppings or feathers. [Report pigeons](pigeonsReport) · [Pigeons and housing health](pigeonInfo)',
+        ],
+      ],
+    },
+    {
+      heading: 'Safe cleanup guidelines',
+      karl: 'Maps to Report Content → Table block. Safe cleanup topic from the Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Follow these safe cleanup steps when dealing with rodent droppings or contaminated materials.',
+      ],
+      table: [
+        ['Guideline', 'In plain language'],
+        [
+          'Disinfect droppings before removal. Do not vacuum or sweep until disinfected. Use gloves and dispose of contaminated materials in covered outdoor garbage.',
+          'Wet contaminated material with disinfectant before removing it. Do not dry sweep or vacuum rodent droppings — this can spread dust and disease.',
+        ],
+      ],
+    },
+    {
+      heading: 'Approved reusable content blocks',
+      karl: 'Maps to Report Content → Title and text block for each reusable content item. Standardized blocks for use across SF.gov pages. Added from the Article 11 Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'The following content blocks are approved for reuse across HHVC pages on SF.gov. Each block is designed to be used as-is for consistent messaging.',
+      ],
+      bullets: [
+        '**Tenant notification:** If you rent your home, notify your property owner or property manager about the problem first. Allow at least 72 hours for them to begin addressing the issue. If the problem continues or the owner does not respond, report the issue through 311.',
+        '**311 reporting:** Use 311 to report housing and pest concerns. 311 sends your report to the appropriate City department for review. You can submit a report online, through the 311 mobile app, or by calling 311.',
+        '**Owner response:** Property owners and managers should investigate tenant reports of pest activity within 72 hours and keep records of complaints, inspections, and pest control services.',
+        '**Rodent cleanup:** Do not sweep or vacuum rodent droppings until the area has been disinfected. Wear disposable gloves, wet droppings with disinfectant, and dispose of contaminated material in a covered outdoor garbage container.',
+        '**Mosquito prevention:** Mosquitoes need standing water to develop. Empty, drain, cover, or maintain items that can collect water.',
+        '**Pigeon concern:** Pigeon droppings, feathers, and nesting materials can create public health concerns when they accumulate where people may come into contact with them.',
+        '**Enforcement transparency:** If violations are found, the Department may issue a Notice of Violation and require correction. If violations are not corrected, additional enforcement may follow.',
+      ],
+    },
+    {
+      heading: 'Rental property owner and manager responsibilities',
+      karl: 'Maps to Report Content → Table block. Owner/manager duties from the Director\'s Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Property owners and managers have specific duties under Article 11 and the Director\'s Rules for preventing and addressing pest problems.',
+      ],
+      table: [
+        ['Responsibility', 'In plain language'],
+        [
+          'Train staff on pest prevention and reporting.',
+          'Make sure building staff know how to spot pest signs and how to respond to tenant reports.',
+        ],
+        [
+          'Investigate tenant reports within 72 hours.',
+          'When a tenant reports a pest problem, the owner or manager must begin investigating within 72 hours.',
+        ],
+        [
+          'Keep records for at least two years.',
+          'Maintain records of complaints, inspections, pest control services, and tenant notifications for at least two years.',
+        ],
+        [
+          'Hire licensed pest control operators (PCOs).',
+          'When treatment is needed, hire a licensed structural pest control operator — do not use unlicensed staff or over-the-counter pesticides for significant infestations.',
+        ],
+        [
+          'Maintain garbage service.',
+          'Provide adequate, sanitary garbage storage and regular collection service for the building.',
+        ],
+        [
+          'Ensure complete pest inspections.',
+          'When a unit has a pest problem, inspect adjacent and connected units to find and treat the full extent of the infestation.',
+        ],
+        [
+          'Provide pesticide notification.',
+          'Notify tenants before pesticide applications as required by law, including the product name, date, and safety information.',
+        ],
+        [
+          'Complete training for repeat violations.',
+          'If violations are repeated, the Director may require the owner or manager to complete pest management training.',
+        ],
+      ],
+    },
+    {
+      heading: 'Licensed pest control operator requirements',
+      karl: 'Maps to Report Content → Table block. PCO requirements from the Director\'s Rules. Added from the Article 11 Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Only licensed structural pest control operators may apply pesticides in regulated settings.',
+      ],
+      table: [
+        ['Requirement', 'In plain language'],
+        [
+          'Only licensed PCOs may apply pesticides.',
+          'Pesticide application must be done by a licensed structural pest control operator — not by unlicensed building staff or tenants.',
+        ],
+        [
+          'Inspect thoroughly before treatment.',
+          'The PCO must inspect the affected area and adjacent units to understand the full scope of the problem before starting treatment.',
+        ],
+        [
+          'Provide advance notice.',
+          'Tenants and occupants must receive advance notice of treatment dates, times, and preparation steps.',
+        ],
+        [
+          'Give preparation instructions.',
+          'The PCO must tell tenants how to prepare their unit — move furniture, cover or store food, clear access.',
+        ],
+        [
+          'Use least-toxic methods when possible.',
+          'When effective, the PCO should use the least-toxic treatment methods available for the pest and situation.',
+        ],
+        [
+          'Inspect adjacent units when necessary.',
+          'For infestations like bed bugs or cockroaches, the PCO must inspect and, if needed, treat adjacent and connected units.',
+        ],
+        [
+          'Follow pesticide laws.',
+          'All pesticide use must follow state and local laws, including labeling, application, and disposal requirements.',
+        ],
+        [
+          'Provide disposal instructions for infested materials.',
+          'If infested furniture or materials must be discarded, the PCO must provide instructions for safe disposal.',
+        ],
+      ],
+    },
+    {
+      heading: 'Tenant responsibilities',
+      karl: 'Maps to Report Content → Table block. Tenant duties interpreted from the Director\'s Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.',
+      kind: 'body',
+      paragraphs: [
+        'Tenants also have responsibilities under Article 11 and the Director\'s Rules for keeping their home free of pests.',
+      ],
+      table: [
+        ['Responsibility', 'In plain language'],
+        [
+          'Keep your home reasonably clean.',
+          'Regular cleaning, taking out trash, and not letting food or garbage build up helps prevent pests.',
+        ],
+        [
+          'Report pest signs to your landlord early.',
+          'Tell the property owner or manager in writing as soon as you see signs of pests — droppings, gnaw marks, live pests, or damage.',
+        ],
+        [
+          'Cooperate with inspections and treatments.',
+          'Allow reasonable access for pest control professionals, inspectors, and maintenance workers when scheduled.',
+        ],
+        [
+          'Prepare your unit for treatment.',
+          'Follow preparation instructions from the pest control operator before treatment — move furniture, cover food, and clear access areas.',
+        ],
+        [
+          'Reduce clutter.',
+          'Clutter gives pests places to hide and makes inspections and treatments less effective.',
+        ],
+      ],
+      callout: {
+        title: '72-hour reporting pattern',
+        text: 'Tenants should notify the owner or manager first, allow at least 72 hours for them to begin addressing the issue, and then report through 311 if unresolved. Do not delay reporting immediate health or safety hazards, severe conditions, sewage exposure, or urgent hotel/SRO health hazards.',
+        karl: 'Callout block: standard 72-hour tenant notification and reporting pattern across all tenant-facing pages.',
+      },
     },
     {
       heading: 'More help',

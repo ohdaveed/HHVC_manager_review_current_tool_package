@@ -65,6 +65,15 @@
   }
 
   function handleKeydown(event) {
+    const workspace = document.getElementById('reviewWorkspace')
+    const sitemapTab = document.querySelector('[data-workspace-tab="sitemap"]')
+    const sitemapVisible =
+      workspace &&
+      !workspace.hidden &&
+      sitemapTab &&
+      sitemapTab.getAttribute('aria-selected') === 'true'
+    if (!sitemapVisible) return
+
     const searchInput = event.target.closest('.sitemap-search-input')
     if (searchInput) {
       if (event.key === 'Escape') {
@@ -82,7 +91,7 @@
       }
     }
 
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && event.target.closest('#reviewWorkspaceSitemap')) {
       state.showLinksFromSelected = false
       state.filter = 'All'
       window.InteractiveSitemap.render.rerender()
