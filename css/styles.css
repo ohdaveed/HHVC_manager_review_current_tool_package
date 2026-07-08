@@ -1683,6 +1683,15 @@ body.hide-karl-tags .editor-qa {
   cursor: pointer;
   flex: none;
 }
+
+.error-banner-dismiss:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.error-banner-dismiss:focus-visible {
+  outline: 3px solid var(--sfds-focus-ring);
+  outline-offset: 2px;
+}
 @keyframes toastIn {
   from {
     opacity: 0;
