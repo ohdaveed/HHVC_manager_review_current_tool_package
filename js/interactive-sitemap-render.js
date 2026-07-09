@@ -7,7 +7,7 @@
   const PANEL_ID = 'interactiveSitemapPanel'
   const state = window.InteractiveSitemap.state
 
-  const { escapeHtml, getPrimaryCta, countRelatedLinks } = window.utils
+  const { escapeHtml } = window.utils
 
   function getWorkspaceSitemapPanel() {
     return document.getElementById('reviewWorkspaceSitemap')
@@ -171,60 +171,6 @@
     `
   }
 
-  function renderLinkChips(title, targets) {
-    if (!targets || !targets.length) return ''
-    const graph = window.InteractiveSitemap.data.getLinkGraph()
-    return `
-      <section class="sitemap-link-section">
-        <h5>${escapeHtml(title)}</h5>
-        <div class="sitemap-link-chips">
-          ${targets
-            .map((target) => {
-              const page = DATA.pages[target]
-              const label = page ? escapeHtml(page.title || target) : escapeHtml(target)
-              const incoming = graph[target]?.incoming?.size || 0
-              const outgoing = graph[target]?.outgoing?.size || 0
-              return `<button type="button" class="sitemap-link-chip" data-sitemap-key="${escapeHtml(target)}" data-sitemap-action="open-link">${label} <span aria-hidden="true">→${outgoing} ←${incoming}</span></button>`
-            })
-            .join('')}
-        </div>
-      </section>
-    `
-  }
-
-  function renderDetail() {
-    const row = window.InteractiveSitemap.data.getSelectedRow()
-    if (!row) return ''
-
-    const page = row.page
-    const primaryCta = getPrimaryCta(page) || 'None set'
-    const audienceCount = Array.isArray(page.audience) ? page.audience.length : 0
-    const relatedCount = countRelatedLinks(page)
-    const graph = window.InteractiveSitemap.data.getLinkGraph()
-    const outgoingTargets = window.InteractiveSitemap.data.getOutgoingTargets(page)
-    const incomingTargets = Array.from(graph[row.key]?.incoming || [])
-
-    return `
-      <aside class="sitemap-detail-card" aria-label="Selected sitemap page details">
-        <h4>${escapeHtml(page.title || row.label)}</h4>
-        <p>${escapeHtml(page.summary || 'No summary available.')}</p>
-        <ul class="sitemap-detail-list">
-          <li><strong>Inventory #:</strong> ${row.orderIndex + 1} of ${window.InteractiveSitemap.data.getPageRows().length}</li>
-          <li><strong>Page type:</strong> ${escapeHtml(row.type)}</li>
-          <li><strong>Reading target:</strong> ${escapeHtml(page.reading || 'Not set')}</li>
-          <li><strong>Primary CTA:</strong> ${escapeHtml(primaryCta)}</li>
-          <li><strong>Audience entries:</strong> ${audienceCount}</li>
-          <li><strong>Linked items:</strong> ${relatedCount}</li>
-          <li><strong>URL slug:</strong> ${escapeHtml(page.slug || 'Not set')}</li>
-          <li><strong>Links to:</strong> ${outgoingTargets.length} page(s)</li>
-          <li><strong>Linked from:</strong> ${incomingTargets.length} page(s)</li>
-        </ul>
-        ${renderLinkChips('Outgoing links', outgoingTargets)}
-        ${renderLinkChips('Incoming links', incomingTargets)}
-      </aside>
-    `
-  }
-
   function mountPanel() {
     if (document.getElementById(PANEL_ID)) return document.getElementById(PANEL_ID)
 
@@ -251,9 +197,8 @@
         </div>
       </div>
       <div class="sitemap-toolbar">${renderSearchAndFilters()}</div>
-      <div class="interactive-sitemap-layout">
+      <div class="interactive-sitemap-diagram-wrap">
         ${renderDiagram()}
-        ${renderDetail()}
       </div>
     `
   }
@@ -269,8 +214,6 @@
     renderSearchAndFilters,
     renderDiagramNode,
     renderDiagram,
-    renderLinkChips,
-    renderDetail,
     mountPanel,
     renderPanel,
     rerender,
