@@ -873,7 +873,9 @@ ol li {
   background: var(--sfds-blue-soft-bg) !important;
   border: none !important;
   border-left: 4px solid var(--sfds-purple-border) !important;
-  color: var(--sfds-slate-3) !important;
+  /* WCAG 2.1 AA fix: slate-3 (#6e7070) was 3.78:1 on the .karl-tag-kind pill
+     (rgba(0,0,0,.08) over #f1f4ff = #dee0eb). slate-2 (#383939) = 8.81:1. */
+  color: var(--sfds-slate-2) !important;
   font-size: 0.85rem !important;
   padding: 0.2rem 0.5rem !important;
   display: inline-block;

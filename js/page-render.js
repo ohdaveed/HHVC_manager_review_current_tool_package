@@ -420,7 +420,7 @@ function renderResourcesRegion(sections, pageType) {
 function renderSpotlight(spotlight) {
   if (!spotlight) return ''
   const img = spotlight.image
-    ? `<div class="spotlight-media"><img src="${escapeHtml(spotlight.image.src)}" alt="${escapeHtml(spotlight.image.alt || '')}" loading="lazy" /></div>`
+    ? `<div class="spotlight-media"><img src="${escapeHtml(spotlight.image.src)}" alt="${escapeHtml(spotlight.image.alt || '')}" width="${Number(spotlight.image.width) || 800}" height="${Number(spotlight.image.height) || 533}" fetchpriority="high" decoding="async" /></div>`
     : ''
   const cta = spotlight.button
     ? button(
