@@ -21,8 +21,10 @@ window.HHVC_PAGES['pestsTopic'] = {
       'Use 311 to report pests, mold, garbage, and other Article 11 conditions in San Francisco.',
     ],
     image: {
-      src: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80',
+      src: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&h=533&q=80',
       alt: 'Residential apartment building exterior in San Francisco',
+      width: 800,
+      height: 533,
       karl: 'Topic page Spotlight: image',
     },
     button: 'Report through 311',

@@ -994,6 +994,8 @@ a:focus {
 }
 .spotlight-media img {
   width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
   border-radius: var(--radius);
   object-fit: cover;
   min-height: 160px;
