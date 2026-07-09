@@ -314,6 +314,11 @@
     // and a state sync for whichever page happens to be open right now.
     if (typeof initChecklist === 'function') initChecklist()
     if (typeof applyChecklistState === 'function') applyChecklistState(getCurrentKey())
+    // #readingTargetValue is only written on page render (editor-panel.js); the
+    // panel mounts lazily on first Help open, so sync it for the current page.
+    if (typeof updateReadingTarget === 'function') {
+      updateReadingTarget(window.HHVC_DATA?.pages?.[getCurrentKey()])
+    }
   }
 
   function compactSidebarCopy() {
@@ -334,7 +339,11 @@
   window.refreshDashboardGuidance = refresh
 
   function init() {
-    refresh()
+    // Only sidebar-visible effects run at load; the Help panels (~90 elements)
+    // mount lazily via window.refreshDashboardGuidance when the Help tab opens
+    // (setWorkspaceTab in js/ux-improvements-workspace.js).
+    injectStyles()
+    compactSidebarCopy()
   }
 
   if (document.readyState === 'loading') {

@@ -31,7 +31,8 @@
     getQueueRows,
     getQueueStats,
   } = window.ReviewQueueInternal.rows
-  const { renderReviewQueue, syncSelectionUi } = window.ReviewQueueInternal.render
+  const { renderReviewQueue, syncSelectionUi, mountReviewQueueOnTabOpen } =
+    window.ReviewQueueInternal.render
   const { importReviewsFromCsvText, importReviewsFromCsvFile } =
     window.ReviewQueueInternal.importCsv
 
@@ -184,7 +185,13 @@
     panel.addEventListener('input', handleQueueInput)
     panel.addEventListener('change', handleQueueChange)
     document.addEventListener('hhvc:review-data-changed', renderReviewQueue)
-    renderReviewQueue()
+    // The table mounts lazily on first Overview tab open (setWorkspaceTab in
+    // js/ux-improvements-workspace.js). If the workspace was already opened on
+    // Overview before this init ran, mount now.
+    const workspace = document.getElementById('reviewWorkspace')
+    if (workspace && !workspace.hidden && !panel.hidden) {
+      mountReviewQueueOnTabOpen()
+    }
   }
 
   window.reviewQueue = {
@@ -203,6 +210,7 @@
     focusQueueSearch,
     importReviewsFromCsvText,
     renderReviewQueue,
+    mountQueueOnTabOpen: mountReviewQueueOnTabOpen,
   }
 
   if (document.readyState === 'loading') {
