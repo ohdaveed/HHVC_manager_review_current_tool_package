@@ -460,7 +460,9 @@ function renderHero(page, heroCta) {
     normalizePageType(page.type) === 'report' && page.reportDate
       ? `<span class="pill">Updated ${escapeHtml(page.reportDate)}</span>`
       : ''
-  return `<section class="hero"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${reportDatePill}${topicChip}</div></div></section>`
+  const heroClass =
+    normalizePageType(page.type) === 'transaction' ? 'hero hero--transaction' : 'hero'
+  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${reportDatePill}${topicChip}</div></div></section>`
 }
 function renderPrintVersion(url) {
   if (!url) return ''
