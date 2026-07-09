@@ -197,9 +197,7 @@
         </div>
       </div>
       <div class="sitemap-toolbar">${renderSearchAndFilters()}</div>
-      <div class="interactive-sitemap-diagram-wrap">
-        ${renderDiagram()}
-      </div>
+      ${renderDiagram()}
     `
   }
 
