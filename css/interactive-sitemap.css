@@ -142,13 +142,6 @@
   flex: none;
 }
 
-.interactive-sitemap-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.75fr);
-  gap: 1rem;
-  align-items: start;
-}
-
 .sitemap-diagram {
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
@@ -318,86 +311,6 @@
   margin: 0;
 }
 
-.sitemap-detail-card {
-  border: 1px solid var(--sfds-border);
-  border-radius: var(--radius);
-  background: var(--sfds-white);
-  padding: 0.9rem;
-  position: sticky;
-  top: 0.5rem;
-}
-
-.sitemap-detail-card h4 {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
-}
-
-.sitemap-detail-card p {
-  margin: 0 0 0.65rem;
-  color: var(--sfds-slate-2);
-  font-size: 0.86rem;
-  line-height: 1.4;
-}
-
-.sitemap-detail-list {
-  display: grid;
-  gap: 0.45rem;
-  margin: 0 0 0.8rem;
-  padding: 0;
-  list-style: none;
-}
-
-.sitemap-detail-list li {
-  border-top: 1px solid var(--sfds-border);
-  margin: 0;
-  padding-top: 0.45rem;
-  color: var(--sfds-slate-2);
-  font-size: 0.84rem;
-  line-height: 1.35;
-}
-
-.sitemap-detail-list strong {
-  color: var(--sfds-slate-1);
-}
-
-.sitemap-link-section {
-  border-top: 1px solid var(--sfds-border);
-  padding-top: 0.6rem;
-}
-
-.sitemap-link-section h5 {
-  margin: 0 0 0.4rem;
-  font-size: 0.84rem;
-  color: var(--sfds-slate-2);
-}
-
-.sitemap-link-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.sitemap-link-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid var(--sfds-border);
-  border-radius: 999px;
-  background: var(--sfds-white);
-  color: var(--sfds-action-blue);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.sitemap-link-chip:hover,
-.sitemap-link-chip:focus-visible {
-  background: var(--sfds-blue-soft-bg);
-  border-color: var(--sfds-action-blue);
-}
-
 .sitemap-empty-note {
   color: var(--sfds-slate-3);
   font-size: 0.82rem;
@@ -426,10 +339,6 @@
 }
 
 @media (max-width: 980px) {
-  .interactive-sitemap-layout {
-    grid-template-columns: 1fr;
-  }
-
   .sitemap-diagram-columns {
     grid-template-columns: repeat(2, minmax(10rem, 1fr));
     min-width: 0;
