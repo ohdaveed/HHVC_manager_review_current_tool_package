@@ -1040,6 +1040,9 @@ a:focus {
   border: 1px solid var(--sfds-purple-border);
 }
 @media (max-width: 900px) {
+  .page-body--transaction {
+    max-width: var(--content-max);
+  }
   .page-layout--transaction {
     grid-template-columns: 1fr;
   }
