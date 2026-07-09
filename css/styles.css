@@ -769,6 +769,11 @@ a:focus {
 .what-to-know-things {
   font-size: 0.95rem;
 }
+/* Transaction pages carry a right-hand related rail, so their body must be
+   wider than the base reading column or the rail squeezes the main column. */
+.page-body--transaction {
+  max-width: calc(var(--content-max) + 300px);
+}
 .page-layout--transaction {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);

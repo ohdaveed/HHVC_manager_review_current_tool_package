@@ -9,7 +9,6 @@
   --ux-warning-border: var(--sfds-warning-border);
   --ux-danger-bg: var(--sfds-danger-bg);
   --ux-danger-border: var(--sfds-danger-border);
-  --content-max: 65ch;
 }
 
 .canvas-toolbar {
