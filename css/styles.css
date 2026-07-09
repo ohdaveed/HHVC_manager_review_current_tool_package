@@ -770,9 +770,25 @@ a:focus {
   font-size: 0.95rem;
 }
 /* Transaction pages carry a right-hand related rail, so their body must be
-   wider than the base reading column or the rail squeezes the main column. */
+   wider than the base reading column or the rail squeezes the main column.
+   The hero widens to match, and the body's own blocks stay capped at the
+   reading measure and left-aligned, so the title, audience list, and What to
+   do all share one left edge with the rail hanging to the right. */
 .page-body--transaction {
   max-width: calc(var(--content-max) + 300px);
+}
+/* 4rem offsets .page-body's side padding, which .hero-inner doesn't have,
+   so both content edges land on the same x position. */
+.hero--transaction .hero-inner {
+  max-width: calc(var(--content-max) + 300px - 4rem);
+}
+.page-body--transaction .editor-qa,
+.page-body--transaction .what-to-know,
+.page-body--transaction .contact-section {
+  margin-left: 0;
+}
+.page-body--transaction .audience-section {
+  max-width: var(--content-max);
 }
 .page-layout--transaction {
   display: grid;
@@ -1042,6 +1058,9 @@ a:focus {
 @media (max-width: 900px) {
   .page-body--transaction {
     max-width: var(--content-max);
+  }
+  .hero--transaction .hero-inner {
+    max-width: calc(var(--content-max) - 4rem);
   }
   .page-layout--transaction {
     grid-template-columns: 1fr;
