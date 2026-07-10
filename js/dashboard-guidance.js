@@ -344,6 +344,14 @@
     // (setWorkspaceTab in js/ux-improvements-workspace.js).
     injectStyles()
     compactSidebarCopy()
+
+    // If the workspace is already open on the Help tab when this init runs,
+    // mount now — same belt-and-braces guard as the Overview queue's init.
+    const workspace = document.getElementById('reviewWorkspace')
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    if (workspace && !workspace.hidden && helpPanel && !helpPanel.hidden) {
+      refresh()
+    }
   }
 
   if (document.readyState === 'loading') {
