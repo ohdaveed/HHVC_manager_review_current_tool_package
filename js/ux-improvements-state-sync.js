@@ -261,6 +261,11 @@
     const panel = document.getElementById(CHECKS_PANEL_ID)
     if (!panel) return
 
+    // Skip rebuilds while the panel can't be seen; the Checks tab re-renders on
+    // activation (setWorkspaceTab in js/ux-improvements-workspace.js).
+    const workspace = document.getElementById('reviewWorkspace')
+    if (workspace?.hidden || panel.hidden) return
+
     const page = getCurrentPage()
     const rules = getRuleResults(page)
 

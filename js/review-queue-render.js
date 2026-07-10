@@ -5,8 +5,14 @@
 
   const { escapeHtml, getStatusChipClass, getCurrentKey } = window.utils
   const state = window.ReviewQueueInternal.state
-  const { QUEUE_PANEL_ID, STALE_DAYS, getSidebarReviewerName, normalize } =
+  const { QUEUE_PANEL_ID, STALE_DAYS, getSidebarReviewerName, normalize, restoreQueueUiState } =
     window.ReviewQueueInternal.helpers
+
+  // The Overview table (~1,150 elements for 40 pages) is not built until the
+  // workspace's Overview tab first opens; renders requested before then no-op.
+  // Every render is a full rebuild from review state, so the first mounted
+  // render is always current — no dirty tracking needed.
+  let queueMounted = false
   const { getQueueStats, getVisibleRows, getSelectedKeys, pruneSelection } =
     window.ReviewQueueInternal.rows
 
@@ -155,7 +161,18 @@
     })
   }
 
+  function mountReviewQueueOnTabOpen() {
+    if (queueMounted) return
+    queueMounted = true
+    // The workspace can open (persisted workspace_open / onboarding) before
+    // review-queue.js's init() has restored filter/sort/query; restoring here
+    // is idempotent and keeps the first paint consistent with saved UI state.
+    restoreQueueUiState()
+    renderReviewQueue()
+  }
+
   function renderReviewQueue() {
+    if (!queueMounted) return
     const panel = document.getElementById(QUEUE_PANEL_ID)
     if (!panel) return
 
@@ -353,5 +370,6 @@
     restoreSearchFocus,
     syncSelectionUi,
     renderReviewQueue,
+    mountReviewQueueOnTabOpen,
   }
 })()

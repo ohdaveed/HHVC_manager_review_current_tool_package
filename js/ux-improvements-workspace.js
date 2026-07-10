@@ -69,6 +69,14 @@
       else panel.removeAttribute('tabindex')
     })
 
+    if (tabId === 'overview') {
+      window.reviewQueue?.mountQueueOnTabOpen?.()
+    }
+
+    if (tabId === 'checks') {
+      window.ReviewUx?.stateSync?.renderPageChecksPanel?.()
+    }
+
     if (tabId === 'sitemap' && typeof window.__mountInteractiveSitemapOnTabOpen === 'function') {
       window.__mountInteractiveSitemapOnTabOpen()
     }
