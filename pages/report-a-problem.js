@@ -25,16 +25,10 @@ window.HHVC_PAGES['reportHub'] = {
       ],
     },
     {
-      heading: 'Report a housing health problem',
-      karl: 'Maps to Body → Resources → one "Resource section" item (Title = "Report a housing health problem"). Each card below becomes an SF.gov page block in that section\'s Links stream.',
+      heading: 'Bugs and insects',
+      karl: 'Maps to Body → Resources → one "Resource section" item (Title = "Bugs and insects"). Each card below becomes an SF.gov page block in that section\'s Links stream.',
       kind: 'placement',
       cards: [
-        {
-          title: 'Report rats or mice',
-          text: 'Report rat or mouse activity in a home, building, yard, or shared area.',
-          target: 'ratsReport',
-          karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
-        },
         {
           title: 'Report cockroaches',
           text: 'Report cockroaches in a unit, shared area, SRO, hotel, or workplace.',
@@ -53,10 +47,17 @@ window.HHVC_PAGES['reportHub'] = {
           target: 'mosquitoesReport',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
+      ],
+    },
+    {
+      heading: 'Rodents, birds, and other animals',
+      karl: 'Maps to Body → Resources → one "Resource section" item (Title = "Rodents, birds, and other animals"). Each card below becomes an SF.gov page block in that section\'s Links stream.',
+      kind: 'placement',
+      cards: [
         {
-          title: 'Report a dead bird',
-          text: 'Report a dead bird for West Nile virus surveillance. HHVC may collect and test the bird.',
-          target: 'wnvBirdReport',
+          title: 'Report rats or mice',
+          text: 'Report rat or mouse activity in a home, building, yard, or shared area.',
+          target: 'ratsReport',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
@@ -65,6 +66,19 @@ window.HHVC_PAGES['reportHub'] = {
           target: 'pigeonsReport',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
+        {
+          title: 'Report a dead bird',
+          text: 'Report a dead bird for West Nile virus surveillance. HHVC may collect and test the bird.',
+          target: 'wnvBirdReport',
+          karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
+        },
+      ],
+    },
+    {
+      heading: 'Housing and property conditions',
+      karl: 'Maps to Body → Resources → one "Resource section" item (Title = "Housing and property conditions"). Each card below becomes an SF.gov page block in that section\'s Links stream.',
+      kind: 'placement',
+      cards: [
         {
           title: 'Report garbage or clutter',
           text: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
