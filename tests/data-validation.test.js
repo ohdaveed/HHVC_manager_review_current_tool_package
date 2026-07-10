@@ -225,6 +225,25 @@ describe('findBrokenInlineLinks', () => {
     }
     expect(findBrokenInlineLinks(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
   })
+
+  test('reports broken links inside table cells', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            table: [
+              ['[one](ghost1)', 'normal text'],
+              ['normal text', '[two](ghost2)'],
+            ],
+          },
+        ],
+      },
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([
+      { pageKey: 'a', target: 'ghost1' },
+      { pageKey: 'a', target: 'ghost2' },
+    ])
+  })
 })
 
 describe('findBannedTerms', () => {

@@ -70,8 +70,9 @@ function isTopicPageFirst(order) {
 }
 
 /**
- * Find inline markdown links `[label](target)` in paragraphs, bullets, and
- * step text whose target is neither an existing page key nor an http(s) URL.
+ * Find inline markdown links `[label](target)` in paragraphs, bullets, table
+ * cells, and step text whose target is neither an existing page key nor an
+ * http(s) URL.
  * These render as in-mockup nav buttons (see formatMarkdown in
  * js/page-render.js), so a dangling key silently no-ops on click — the
  * card/button target checks above never see them.
@@ -100,6 +101,9 @@ function findBrokenInlineLinks(pages) {
     for (const section of page.sections || []) {
       checkItems(pageKey, section.paragraphs)
       checkItems(pageKey, section.bullets)
+      for (const row of section.table || []) {
+        checkItems(pageKey, row)
+      }
       for (const step of section.steps || []) {
         checkItems(pageKey, step.text)
         checkItems(pageKey, step.bullets)
