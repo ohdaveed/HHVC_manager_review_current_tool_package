@@ -179,11 +179,14 @@ version suffix if the persisted shape changes incompatibly. Workspace UI prefs
 (`workspace_open`, `workspace_tab`, `last_page_key`, `show_karl_tags`) live under
 `state.ui` in the same blob.
 
-**The CSV/JSON import path in `js/review-queue.js` can destroy existing reviews** —
-a prior regression there replaced saved state wholesale instead of merging. Any
-change to the import/export round-trip in `js/review-queue.js` or
-`js/manager-review-export.js` must be **manually verified**: export a snapshot,
-re-import it, and confirm existing decisions/notes survive rather than being wiped.
+**The review import/export round-trip can destroy existing reviews** — a prior
+regression replaced saved state wholesale instead of merging. The actual
+round-trip logic lives in `js/review-queue-import.js` (CSV import) and
+`js/ux-improvements-export.js` (saved-state JSON backup/restore); `js/review-queue.js`
+wires the handlers and `js/manager-review-export.js` exports current-page
+snapshots. **Any change to any of these review import/export modules must be
+manually verified**: export a snapshot, re-import it, and confirm existing
+decisions/notes survive rather than being wiped.
 `tests/e2e/review-import-export.spec.js` covers this round-trip.
 
 ### Build outputs
