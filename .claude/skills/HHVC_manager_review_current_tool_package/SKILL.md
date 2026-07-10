@@ -23,8 +23,10 @@ scripts, and tests.
 - **Formatting (CI gate):** Prettier only (`.prettierrc.json`) — no semicolons,
   single quotes, 2-space indent, 100-char width, ES5 trailing commas. Code must be
   ASI-safe. Run `bun run format` before committing.
-- **File naming:** existing files are `kebab-case.js` (e.g. `review-queue-state.js`,
-  `page-render.js`) — follow the sibling files in whatever directory you're in.
+- **File naming:** lowercase filenames — single words for the core modules
+  (`app.js`, `state.js`, `utils.js`) and hyphenated for multi-word ones
+  (`review-queue-state.js`, `page-render.js`); never camelCase. Match the sibling
+  files in whatever directory you're in.
 - **No imports/exports.** Modules are either (1) bare top-level `const`/`function`
   sharing one global lexical scope via ordered `<script>` tags, or (2) **named
   IIFEs with a leading semicolon** — `;(function mountX(){…})()` — exposing an API

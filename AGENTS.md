@@ -230,8 +230,12 @@ ASI-safe and semicolon-free. Run `bun run format` before committing;
 
 - **This is plain browser JS — not TypeScript, no build step, no ES modules or
   `import`/`export` in `js/*.js`.** (Auto-generated skill files that call this a
-  "TypeScript repo" or prescribe kebab-case/named-exports are wrong — ignore
-  them.)
+  "TypeScript repo" or prescribe relative imports / named ES-module exports are
+  wrong — ignore them.)
+- **File naming:** lowercase — single words for the core modules (`app.js`,
+  `state.js`, `utils.js`), hyphenated for multi-word ones
+  (`review-queue-state.js`, `page-render.js`); never camelCase. Match sibling
+  files.
 - **Two deliberate module patterns:** (1) bare `const`/`function` at file top for
   the core scripts that share one global lexical scope via ordered `<script>`
   tags; (2) **named IIFEs with a leading semicolon** — `;(function mountX(){…})()`
