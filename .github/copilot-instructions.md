@@ -1,111 +1,75 @@
 # Copilot instructions for this repository
 
+**The canonical, complete guide is [`AGENTS.md`](../AGENTS.md).** Read it first —
+it covers architecture, the page-object schema, validation invariants,
+local-persistence hazards, JS/CSS idioms, comment voice, test conventions, and
+commit/PR preferences. This file is a short orientation that defers to it; if the
+two ever disagree, `AGENTS.md` wins.
+
 ## What this is
 
-A static, no-framework mockup tool for reviewing a redesigned HHVC (Healthy
-Housing and Vector Control) section of SF.gov. There is no build step for
-development — `index.html` loads plain `<script>` tags directly. Bun is used
-only for the dev server and the CLI scripts (validate/export/build).
+A static, no-framework mockup tool for manager review of a redesigned HHVC
+(Healthy Housing and Vector Control) section of SF.gov. There is no backend and no
+build step for development — `index.html` loads plain classic `<script>` tags
+directly (not ES modules). **Bun** powers the dev server, the CLI scripts, and the
+test runner. This is **plain browser JavaScript, not TypeScript.**
 
 ## Commands
 
 ```bash
-bun install          # install deps
-bun run dev           # start dev server with --watch (http://127.0.0.1:8080)
-bun run start          # start dev server without watch
-bun run validate       # Zod-validate pages/*.js and js/page-data.js shapes
-bun run export         # regenerate data/page_inventory.json and .csv from page data
-bun run sync-tracking  # regenerate review/*.csv tracking sheets for Google Sheets import
-bun run push-tracking  # merge tracking into Master Control workbook format / API push
-bun run build          # validate -> export -> regenerate single-file HTML exports
-bun run format         # prettier --write on **/*.{js,ts,json,md,css,html}
-bun run format:check   # prettier --check (no test suite exists in this repo)
+bun install          # install deps (required before first `dev`)
+bun run dev           # dev server with --watch at http://127.0.0.1:8080
+bun run start         # dev server without watch
+bun run validate      # Zod-validate pages/*.js and js/page-data.js (schema + invariants)
+bun run test          # Bun test runner over the 7 unit-test files in tests/
+bun run test:e2e      # Playwright end-to-end tests
+bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
+bun run build         # validate -> export -> build:workshop-form -> single-file HTML
+bun run format        # prettier --write on everything
+bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```
 
-There are no unit tests. `bun run validate` (`build_scripts/validate.js`) is
-the closest thing to a test: it loads every file in `pages/*.js` plus
-`js/page-data.js` into a Node VM context and enforces required fields/shapes
-with Zod, so bad page data fails fast. Run it after editing anything under
-`pages/` or `js/page-data.js`. There's no way to validate a single page file
-in isolation — the script always validates the full list.
+**There is a real test suite.** `bun run test` runs seven Bun unit-test files
+(`utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
+`reading-level`, `index-html-checks`) plus Playwright e2e. `bun run validate` is a
+complementary check that Zod-validates the full `pages/*.js` set — you can't
+validate one page in isolation. Run both after editing anything under `pages/` or
+`js/page-data.js`.
 
-`HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
+## Architecture (essentials — full detail in `AGENTS.md`)
 
-## Architecture
-
-- **Data-driven rendering, no framework.** Each file in `pages/*.js` assigns
-  a page object onto the global `window.HHVC_PAGES['<pageKey>']`. `js/page-data.js`
-  then builds `window.HHVC_DATA = { pages, order }`, where `order` is the
-  array of `[pageKey, menuLabel]` pairs that drives navigation/menu order.
-  `js/app.js` reads `window.HHVC_DATA` and throws immediately if it's missing
-  — this means **script load order in `index.html` matters**: all `pages/*.js`
-  files must load before `js/page-data.js`, which must load before `js/app.js`.
-- **Script load order in `index.html`:** `js/utils.js` → `pages/*.js` (each
-  page) → `js/page-data.js` → `js/app.js` → `js/ux-improvements.js` →
-  `js/review-queue.js` → `js/dashboard-guidance.js` → `js/interactive-sitemap.js`.
-  When adding a new page file, add its `<script>` tag in this same block, before `page-data.js`.
-- **Page object shape** (see `build_scripts/validate.js` for the enforced
-  Zod schema): `slug`, `type` (`Topic` | `Transaction` | `Information` |
-  `Resource Collection`),
-  `title`, `summary`, `audience[]`, `reading` (a grade-level string), and
-  `sections[]`. For Karl editor field mapping by content type, see
-  `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
-  Sections contain `cards[]` and/or `steps[]`; steps can have
-  `bullets`, `callout`, and `button` (the primary CTA). Optional review/SEO
-  fields include `seoTitle`, `metaDescription`, `primaryCta`.
-- **`karl` fields are first-class content**, not comments — every card,
-  step, section, and callout can carry a `karl` string that's a placement/rationale
-  note surfaced to reviewers via `karlTag()` in `js/app.js`. Keep or update
-  these when editing page copy so the manager-review UI stays accurate.
-- **Shared helpers live in `js/utils.js`** (`escapeHtml`, `getPrimaryCta`,
-  `setPrimaryCta`, `today`, `csvEscape`, `toCsv`, `downloadFile`, `debounce`,
-  `throttle`), exposed as `window.utils` and as top-level function
-  declarations. `js/utils.js` always loads first, so modules use these
-  directly (bare calls or destructuring from `window.utils`) — add new shared
-  utilities there rather than duplicating logic inline.
-- **Review/UX layers are additive and separate from core rendering:**
-  `js/ux-improvements.js` (sticky bar, workspace tabs, Karl scorecard, review
-  controls), `js/review-queue.js` (cross-page review queue and progress),
-  `js/dashboard-guidance.js` (consolidates sidebar helper copy into the Help
-  workspace tab, hides duplicated sidebar text at runtime without deleting HTML)
-  and `js/interactive-sitemap.js` (clickable sitemap reading from
-  `HHVC_DATA`, lazy-loaded when the Sitemap tab opens) all layer on top of
-  `js/app.js` and must not mutate page source data — they are review aids only.
-  Queue progress counts **touched** pages (any saved `localStorage` entry per
-  page); decision chips count **decided** pages (saved decision other than
-  **Needs review**).
-- **Local persistence:** all reviewer state (decisions, notes, edited SEO
-  fields, etc.) is saved client-side to `localStorage` under the versioned
-  key `hhvcManagerReviewState:v1`. Bump the version suffix if the persisted
-  shape changes incompatibly.
-- **Single-file exports:** `build_scripts/build-single-file.js` inlines
-  `index.html`'s local stylesheets and scripts (in document order) into
-  `manager-review-single-file.html` and `single-file-export-current-source.html`.
-  Never hand-edit those two generated HTML files — edit the source files and
-  re-run `bun run build`.
-- **`data/page_inventory.{json,csv}`** are generated output from
-  `build_scripts/extract-pages.js` — do not hand-edit; regenerate with
-  `bun run export`.
-
-## Editing rules (from README)
-
-- Edit public page content in `pages/*.js`.
-- Edit render behavior in `js/app.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`,
-  `js/interactive-sitemap.js`, and `css/ux-improvements.css`.
-- Edit styles in `css/styles.css`.
-- Review exports (`review/*.csv`, saved local-review CSV) are for manager
-  decisions only — never treat them as automatic publication approval.
-
-## Pull request scope
-
-Keep dashboard UX changes (layout, queue, workspace, review helpers) and policy
-copy changes (page text, `docs/source/` ingestion) in separate PRs when
-possible. This reduces merge conflicts and keeps review focused.
+- **Data-driven, no framework.** Each `pages/*.js` file assigns onto
+  `window.HHVC_PAGES['<pageKey>']`; `js/page-data.js` builds
+  `window.HHVC_DATA = { pages, order }`. **Script load order in `index.html`
+  matters** — classic `<script>` tags share one global lexical scope, and
+  `js/state.js` throws if `HHVC_DATA` is missing.
+- **Core is split into focused modules** (formerly one `app.js`): `js/utils.js`
+  (shared helpers, loads first), `js/state.js`, `js/ui-controls.js`,
+  `js/editor-panel.js`, `js/page-render.js` (holds `karlTag()`), `js/app.js`.
+  Don't re-monolith them.
+- **Review/UX layers are additive** self-contained IIFEs on top of the core
+  (`js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`,
+  `js/interactive-sitemap.js`, `js/keyboard-shortcuts.js`) that read `HHVC_DATA`
+  and `localStorage`. They may edit the **in-memory** page data but must never
+  write back to `pages/*.js` or publish content.
+- **`karl` fields are first-class content**, not comments — placement/rationale
+  notes mapping mockup content to Karl CMS StreamField blocks, surfaced via
+  `karlTag()`. Keep them accurate when editing copy.
+- **Local persistence** is browser-only under `localStorage` key
+  `hhvcManagerReviewState:v1`. The CSV/JSON import path in `js/review-queue.js` has
+  regressed before by overwriting instead of merging — manually verify any change
+  to the import/export round-trip.
 
 ## Code style
 
-Enforced by Prettier (`.prettierrc.json`): no semicolons, single quotes,
-2-space indentation, 100-character print width, ES5 trailing commas. Run
-`bun run format` before committing; `.prettierignore` excludes `data/`,
-`server.ts`, and the generated single-file HTML exports from formatting.
+Prettier is the only linter (`.prettierrc.json`): no semicolons, single quotes,
+2-space indent, 100-char width, ES5 trailing commas. `camelCase` JS identifiers,
+`UPPER_SNAKE_CASE` constants, `snake_case` data fields. Write detailed,
+explanatory comments that justify the _why_. Run `bun run format` before
+committing. See `AGENTS.md` for the full idiom and commit/PR conventions.
+
+## Pull request scope
+
+Keep dashboard-UX changes (layout, queue, workspace, review helpers) and
+policy-copy changes (page text, `docs/source/` ingestion) in **separate PRs** when
+possible.

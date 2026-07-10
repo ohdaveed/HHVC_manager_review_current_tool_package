@@ -1,0 +1,36 @@
+---
+description: Repository context and coding conventions for the HHVC manager-review mockup tool. Always applies.
+globs:
+alwaysApply: true
+---
+
+# Repository context
+
+The canonical, complete guide for working in this repo is **`AGENTS.md`** at the
+repo root — read it before writing or editing code. Key facts:
+
+- Static, **no-framework** mockup tool for manager review of a redesigned HHVC
+  section of SF.gov. `index.html` loads plain classic `<script>` tags directly.
+  **Plain browser JavaScript, not TypeScript** — no bundler, no ES
+  modules/`import`/`export` in `js/*.js`. **Bun** runs the dev server, CLI
+  scripts, and tests.
+- **Prettier is the only linter** (`.prettierrc.json`): no semicolons, single
+  quotes, 2-space indent, 100-char width, ES5 trailing commas. Code must be
+  ASI-safe. Run `bun run format` before committing. `bun run format:check` is the
+  lint step.
+- **Data-driven rendering:** `pages/*.js` assign onto `window.HHVC_PAGES`;
+  `js/page-data.js` builds `window.HHVC_DATA`. **Script load order in
+  `index.html` matters** (classic `<script>` tags share one global scope).
+- **`karl` fields are first-class content**, not comments. Never hand-edit
+  generated files (single-file HTML exports, `data/page_inventory.*`).
+- **Tests exist:** `bun run test` (7 Bun unit files) + `bun run test:e2e`
+  (Playwright); `bun run validate` Zod-validates all pages. Run validate + test
+  after editing `pages/*.js` or `js/page-data.js`.
+- **Commits:** imperative mood, Conventional-Commits prefixes for code; keep
+  dashboard-UX and policy-copy changes in separate PRs.
+- Write **detailed, explanatory** comments that justify the _why_.
+
+See `AGENTS.md` for the full architecture, page-object schema, validation
+invariants, JS/CSS idioms, and commit/PR conventions. The `design.mdc` rule in
+this directory is a separate, design-only workflow that applies **only** when you
+are asked to do UI/visual design.
