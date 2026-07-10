@@ -243,8 +243,8 @@ ASI-safe and semicolon-free. Run `bun run format` before committing;
   camelCase-code / snake_case-data boundary is firm.
 - **Defensive by default:** run every value that reaches `innerHTML` through
   `escapeHtml`; use optional chaining + `?? ''` coercion and guard-clause early
-  returns; guard test/SSR contexts with `if (typeof window === 'undefined')
-return`; `csvEscape` includes spreadsheet formula-injection protection. Prefer
+  returns; guard test/SSR contexts with a `typeof window === 'undefined'` early
+  return; `csvEscape` includes spreadsheet formula-injection protection. Prefer
   reusing `js/utils.js` helpers over inlining new logic.
 - **State:** in-memory module singletons + versioned `localStorage` updated via
   functional updater callbacks (`updateLocalState((s) => { …; return s })`) +
