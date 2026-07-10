@@ -281,11 +281,11 @@
       <ul class="checklist">
         <li><button type="button" class="check">SF.gov system typography and SFDS-style spacing</button></li>
         <li><button type="button" class="check">Action Blue for links and primary action</button></li>
-        <li><button type="button" class="check">Topic page uses scannable link clusters</button></li>
+        <li><button type="button" class="check">Agency page uses scannable service and resource groups</button></li>
         <li><button type="button" class="check">Article 11 / HHVC scope only</button></li>
         <li><button type="button" class="check">72-hour tenant notice where applicable</button></li>
         <li><button type="button" class="check">No standard photo requirement</button></li>
-        <li><button type="button" class="check">Report, prevent, scope, and tenant-help clusters</button></li>
+        <li><button type="button" class="check">Reporting routes through the 3 consolidated report pages</button></li>
         <li><button type="button" class="check">Enforcement pathway included without overloading Transaction pages</button></li>
         <li><button type="button" class="check">Tenant rights and anti-retaliation reassurance included</button></li>
       </ul>

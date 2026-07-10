@@ -19,7 +19,7 @@ window.HHVC_PAGES['ownerHub'] = {
       karl: 'Maps to the top-level "Introductory text" field (Title + rich-text Text) — a repeatable field separate from the Body stream. Heading → Title, paragraphs → Text.',
       kind: 'body',
       paragraphs: [
-        'Property owners and managers are responsible for keeping buildings free of pests, vectors, garbage, and other housing health nuisances covered by Article 11. Under the Director\'s Rules and the Article 11 Interpretation Guide, owners and managers must respond quickly to pest reports, document actions, use qualified professionals when needed, keep garbage areas clean, and prevent conditions that support pests.',
+        "Property owners and managers are responsible for keeping buildings free of pests, vectors, garbage, and other housing health nuisances covered by Article 11. Under the Director's Rules and the Article 11 Interpretation Guide, owners and managers must respond quickly to pest reports, document actions, use qualified professionals when needed, keep garbage areas clean, and prevent conditions that support pests.",
         'Use these pages to meet program requirements, respond to enforcement, and prevent problems before they spread.',
       ],
     },
@@ -73,7 +73,7 @@ window.HHVC_PAGES['ownerHub'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Pests and housing problems',
+          title: 'Healthy Housing and Vector Control',
           text: 'Return to the main Topic page for HHVC pest and housing health issues.',
           target: 'pestsTopic',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',

@@ -30,7 +30,7 @@ window.HHVC_PAGES['tenantRights'] = {
       karl: 'Added from the Article 11 Interpretation Guide v1.0. Maps to a Title and text block with bulleted list.',
       kind: 'body',
       paragraphs: [
-        'Tenants also have responsibilities under Article 11 and the Director\'s Rules for keeping their home free of pests.',
+        "Tenants also have responsibilities under Article 11 and the Director's Rules for keeping their home free of pests.",
       ],
       bullets: [
         '**Keep your home clean:** Regular cleaning, taking out trash, and not letting food or garbage build up helps prevent pests.',

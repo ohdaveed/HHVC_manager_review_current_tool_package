@@ -158,8 +158,9 @@ never referenced from `pages/*.js` or outside its own module's files):
 
 See `build_scripts/validate.js` for the enforced Zod schema: `slug`, `type`
 (a free-form string — only `min(1)` is checked, not an enum; values in use
-across `pages/*.js` are `Topic`, `Transaction`, `Information`, and
-`Resource Collection`, matching Karl's real content-type names — see
+across `pages/*.js` are `Agency`, `Transaction`, `Information`,
+`Resource Collection`, `Campaign`, and `Report`, matching Karl's real
+content-type names — see
 `docs/wagtail-content-mapping.md`). `title`, `summary`, `audience[]`, `reading`
 (grade-level string), and `sections[]`. For Karl editor field mapping by
 content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
@@ -174,12 +175,18 @@ but unvalidated. Optional SEO/review fields: `seoTitle`, `metaDescription`,
 
 Beyond schema shape, `validate.js` enforces business invariants:
 
-- The `pestsTopic` key must exist and must be first in `order` (this is the
-  Topic page that replaced the old Agency-page section — `validate.js` only
-  checks the key and ordering, not its `type` or content).
-- The old `agency` key must **not** be present.
-- Every `card.target` must resolve to a real page key.
-- The Topic page's content must not contain banned out-of-scope terms
+- The `pestsTopic` key must exist and must be first in `order`. This is now
+  the HHVC **Agency page** ("Healthy Housing and Vector Control") — the key
+  name is retained from the Topic-page era for invariant/test/review-state
+  stability (`validate.js` only checks the key and ordering, not its `type`
+  or content).
+- The bare `agency` key must **not** be present (nobody should "fix" the key
+  name and break that stability).
+- Every `card.target` must resolve to a real page key, and every inline
+  markdown link `[label](pageKey)` in paragraphs/bullets/step text must
+  resolve to a real page key, an `http(s)` URL, or the inert `#` sentinel
+  (`findBrokenInlineLinks` in `build_scripts/data-checks.js`).
+- The Agency page's content must not contain banned out-of-scope terms
   (`plumbing`, `dbi`, `roof leak`, `sewer`, `permit issue`,
   `construction defect`) — HHVC scope is Article 11 only.
 

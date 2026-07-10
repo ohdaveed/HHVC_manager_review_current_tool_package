@@ -23,6 +23,7 @@
   function normalizeType(type) {
     const normalized = String(type || '').toLowerCase()
     if (normalized.includes('topic')) return 'Topic'
+    if (normalized.includes('agency')) return 'Agency'
     if (normalized.includes('resource collection')) return 'Resource Collection'
     if (normalized.includes('transaction')) return 'Transaction'
     if (normalized.includes('campaign')) return 'Campaign'

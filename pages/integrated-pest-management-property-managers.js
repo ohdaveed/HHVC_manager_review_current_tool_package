@@ -14,7 +14,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
   reading: 'Grade 7',
   editorNote:
     'Information page for property owners and managers. UC ANR IPM guide is the primary external source — verify link stability and whether HHVC wants additional SFDPH Director’s Rules citations before publication.',
-  topicTag: 'Topic: Pests and housing problems',
+  topicTag: 'Agency: Healthy Housing and Vector Control',
   contact: {
     phone: ['311 (call or text)', '415-252-3805'],
     email: ['ehb@sfdph.org'],
@@ -200,12 +200,8 @@ window.HHVC_PAGES['ownerGuidance'] = {
           target: 'noticeOfViolation',
         },
         {
-          title: 'Keep rats and mice out of your home',
-          target: 'ratsPrevent',
-        },
-        {
-          title: 'Mites and housing health',
-          target: 'miteInfo',
+          title: 'Report rats, mice, and other four-legged problems',
+          target: 'rodentsReport',
         },
         {
           title: 'Learn what HHVC can inspect',

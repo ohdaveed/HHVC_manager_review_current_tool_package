@@ -52,7 +52,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(1):** Any accumulation of filth, garbage, decayed or spoiled food, unsanitary debris or waste material, or decaying animal or vegetable matter unless set out for collection.',
-          'You must not let trash, rotting food, or filth build up inside or outside a building — unless it is properly set out for City collection. Example: bags piled in a shared hallway or rotting food in a bin. [Report garbage or clutter](garbageReport) · [Prevent garbage problems](garbageInfo)',
+          'You must not let trash, rotting food, or filth build up inside or outside a building — unless it is properly set out for City collection. Example: bags piled in a shared hallway or rotting food in a bin. [Report garbage, filth, and overgrown vegetation](filthReport)',
         ],
         [
           '**Sec. 581(b)(3):** Any accumulation of waste paper, litter, or combustible trash unless such materials are set out for collection.',
@@ -72,7 +72,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(2):** Any accumulation of hay, grass, straw, weeds, or vegetation overgrowth.',
-          'You must keep grass, weeds, and plants from overgrowing in a way that can shelter pests or create a health hazard. [Report overgrown vegetation](vegetationReport)',
+          'You must keep grass, weeds, and plants from overgrowing in a way that can shelter pests or create a health hazard. [Report garbage, filth, and overgrown vegetation](filthReport)',
         ],
       ],
     },
@@ -84,7 +84,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(6):** Any visible or otherwise demonstrable mold or mildew in the interiors of any buildings or facilities.',
-          'You must fix visible mold or mildew inside a building. HHVC may inspect when mold from humidity or condensation covers about **10 square feet** or more. [Report mold](moldReport) · [Reduce indoor moisture](reduceMoisture)',
+          'You must fix visible mold or mildew inside a building. HHVC may inspect when mold from humidity or condensation covers about **10 square feet** or more. [Report garbage, filth, and overgrown vegetation](filthReport) · [EPA: Mold cleanup in your home](https://www.epa.gov/mold)',
         ],
       ],
     },
@@ -96,7 +96,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(13):** Any violation of Section 92 of this Code [Article 2 — Rodent Control].',
-          'Article 11 treats rodent-control violations as a public health nuisance. If a building breaks Section 92, it can be cited under Article 11. [Report rats or mice](ratsReport) · [Keep rats and mice out](ratsPrevent)',
+          'Article 11 treats rodent-control violations as a public health nuisance. If a building breaks Section 92, it can be cited under Article 11. [Report rats, mice, and other four-legged problems](rodentsReport) · [UC IPM Pest Notes: Rats](https://ipm.ucanr.edu/home-and-landscape/rats/pest-notes/)',
         ],
         [
           '**Sec. 92(b):** All buildings, places and premises in the City and County shall immediately and continuously be kept in a clean and sanitary condition, and free from rodents by the owner and/or the occupant.',
@@ -156,7 +156,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ],
         [
           "**Director's Rules (storage):** Items such as crates, pallets, lumber, tires, firewood, or scrap metal must be stored to allow pest monitoring and prevent harborage. Stored items must be stacked neatly, elevated at least **6 inches** off the ground, with **6 inches** of clearance from exterior walls.",
-          'Store materials off the ground and away from walls so inspectors and pest control can see activity. Remove unneeded items. Do not let storage block pathways or hide infestations. [Report garbage or clutter](garbageReport) · [Prevent garbage problems](garbageInfo)',
+          'Store materials off the ground and away from walls so inspectors and pest control can see activity. Remove unneeded items. Do not let storage block pathways or hide infestations. [Report garbage, filth, and overgrown vegetation](filthReport)',
         ],
       ],
     },
@@ -168,7 +168,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(8):** Any noxious insect harborage or infestation including cockroaches, bed bugs, fleas, scabies, lice, spiders, houseflies, wasps, and mosquitoes.',
-          'You must eliminate insect infestations such as cockroaches and bed bugs. Property owners must investigate bed bug complaints promptly and coordinate treatment. [Report cockroaches](cockroachesReport) · [Report bed bugs](bedBugsReport) · [Bed bug rules and prevention](bedBugsInfo)',
+          'You must eliminate insect infestations such as cockroaches and bed bugs. Property owners must investigate bed bug complaints promptly and coordinate treatment. [Report cockroaches, mosquitoes, and other insects](insectsReport) · [UC IPM Pest Notes: Bed bugs](https://ipm.ucanr.edu/home-and-landscape/bed-bugs/pest-notes/)',
         ],
         [
           '**Article 11A (bed bugs):** Owners must investigate complaints within two working days and provide infestation history to prospective tenants.',
@@ -184,11 +184,11 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(8):** …houseflies, wasps, and mosquitoes.',
-          'You must eliminate places where flies and mosquitoes breed — such as garbage, standing water, or organic waste. [Flies and housing health](flyInfo) · [Report mosquitoes](mosquitoesReport)',
+          'You must eliminate places where flies and mosquitoes breed — such as garbage, standing water, or organic waste. [Report cockroaches, mosquitoes, and other insects](insectsReport)',
         ],
         [
           '**Sec. 581(b)(8) — wasps:** Listed among noxious insects when they create a harborage or infestation.',
-          'Ground-nesting wasps near housing may be a health concern when nests are disturbed. HHVC may review some cases; others may be referred to vector control or a licensed pest control operator. [Ground wasps and housing health](waspInfo)',
+          'Ground-nesting wasps near housing may be a health concern when nests are disturbed. HHVC may review some cases; others may be referred to vector control or a licensed pest control operator. [Report cockroaches, mosquitoes, and other insects](insectsReport)',
         ],
       ],
     },
@@ -200,7 +200,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(7):** Any pest harborage or infestation including but not limited to pigeons, skunks, raccoons, opossums, and snakes, except lawful pigeon harborages.',
-          'You must prevent animals from living or nesting on property in ways that create a health hazard. Example: pigeon droppings accumulating on a roof or balcony. [Report pigeons](pigeonsReport) · [Pigeons and housing health](pigeonInfo)',
+          'You must prevent animals from living or nesting on property in ways that create a health hazard. Example: pigeon droppings accumulating on a roof or balcony. [Report garbage, filth, and overgrown vegetation](filthReport) · [UC IPM Pest Notes: Pigeons](https://ipm.ucanr.edu/home-and-landscape/pigeons/pest-notes/)',
         ],
       ],
     },
@@ -274,9 +274,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Sanitation and storage standards',
       karl: 'Maps to Report Content → Table block. Sanitation topic from the Interpretation Guide.',
       kind: 'body',
-      paragraphs: [
-        'Proper sanitation and storage are the foundation of pest prevention.',
-      ],
+      paragraphs: ['Proper sanitation and storage are the foundation of pest prevention.'],
       table: [
         ['Standard', 'In plain language'],
         [
@@ -289,9 +287,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Landscape management standards',
       karl: 'Maps to Report Content → Table block. Landscape management topic from the Interpretation Guide.',
       kind: 'body',
-      paragraphs: [
-        'Vegetation management is critical for reducing rodent and vector harborage.',
-      ],
+      paragraphs: ['Vegetation management is critical for reducing rodent and vector harborage.'],
       table: [
         ['Standard', 'In plain language'],
         [
@@ -311,7 +307,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Standard', 'In plain language'],
         [
           'Owners and managers must eliminate standing water that supports mosquitoes. Standing water also attracts wildlife and other pests.',
-          'Mosquitoes need standing water. Empty, drain, cover, or maintain items that can collect water. [Report mosquitoes](mosquitoesReport) · [Prevent mosquitoes](mosquitoesPrevent)',
+          'Mosquitoes need standing water. Empty, drain, cover, or maintain items that can collect water. [Report cockroaches, mosquitoes, and other insects](insectsReport) · [CDC: Preventing mosquito bites](https://www.cdc.gov/mosquitoes/prevention/index.html)',
         ],
       ],
     },
@@ -319,14 +315,12 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Vector exclusion standards',
       karl: 'Maps to Report Content → Table block. Exclusion topic from the Interpretation Guide.',
       kind: 'body',
-      paragraphs: [
-        'Buildings must be maintained to prevent pests from entering.',
-      ],
+      paragraphs: ['Buildings must be maintained to prevent pests from entering.'],
       table: [
         ['Standard', 'In plain language'],
         [
           'Buildings must be maintained to prevent pests from entering, including sealing gaps, screening openings, clearing brush, and maintaining screens.',
-          'Seal openings and maintain buildings so pests cannot enter or nest. [Keep rats and mice out](ratsPrevent)',
+          'Seal openings and maintain buildings so pests cannot enter or nest. [CDC: Preventing rodent infestations](https://www.cdc.gov/rodents/prevention/index.html)',
         ],
       ],
     },
@@ -334,9 +328,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Rodent activity signs',
       karl: 'Maps to Report Content → Table block. Rodent signs topic from the Interpretation Guide v1.0.',
       kind: 'body',
-      paragraphs: [
-        'Look for indirect signs of rodent activity — not just live sightings.',
-      ],
+      paragraphs: ['Look for indirect signs of rodent activity — not just live sightings.'],
       table: [
         ['Sign', 'In plain language'],
         [
@@ -356,7 +348,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Standard', 'In plain language'],
         [
           'Pigeon droppings, feathers, and nesting materials can contain mites, lice, allergens, bacteria, and fungal spores. Accumulated waste is a nuisance.',
-          'Pigeon waste and nesting can create public health concerns where people may contact droppings or feathers. [Report pigeons](pigeonsReport) · [Pigeons and housing health](pigeonInfo)',
+          'Pigeon waste and nesting can create public health concerns where people may contact droppings or feathers. [Report garbage, filth, and overgrown vegetation](filthReport) · [UC IPM Pest Notes: Pigeons](https://ipm.ucanr.edu/home-and-landscape/pigeons/pest-notes/)',
         ],
       ],
     },
@@ -394,10 +386,10 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Rental property owner and manager responsibilities',
-      karl: 'Maps to Report Content → Table block. Owner/manager duties from the Director\'s Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.',
+      karl: "Maps to Report Content → Table block. Owner/manager duties from the Director's Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.",
       kind: 'body',
       paragraphs: [
-        'Property owners and managers have specific duties under Article 11 and the Director\'s Rules for preventing and addressing pest problems.',
+        "Property owners and managers have specific duties under Article 11 and the Director's Rules for preventing and addressing pest problems.",
       ],
       table: [
         ['Responsibility', 'In plain language'],
@@ -437,7 +429,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Licensed pest control operator requirements',
-      karl: 'Maps to Report Content → Table block. PCO requirements from the Director\'s Rules. Added from the Article 11 Interpretation Guide v1.0.',
+      karl: "Maps to Report Content → Table block. PCO requirements from the Director's Rules. Added from the Article 11 Interpretation Guide v1.0.",
       kind: 'body',
       paragraphs: [
         'Only licensed structural pest control operators may apply pesticides in regulated settings.',
@@ -480,10 +472,10 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Tenant responsibilities',
-      karl: 'Maps to Report Content → Table block. Tenant duties interpreted from the Director\'s Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.',
+      karl: "Maps to Report Content → Table block. Tenant duties interpreted from the Director's Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.",
       kind: 'body',
       paragraphs: [
-        'Tenants also have responsibilities under Article 11 and the Director\'s Rules for keeping their home free of pests.',
+        "Tenants also have responsibilities under Article 11 and the Director's Rules for keeping their home free of pests.",
       ],
       table: [
         ['Responsibility', 'In plain language'],

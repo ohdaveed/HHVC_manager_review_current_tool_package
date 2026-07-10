@@ -13,10 +13,10 @@ const auditMatrixPath = path.join(
   'docs/superpowers/specs/2026-07-02-hhvc-policy-content-audit-matrix.md'
 )
 
-const TOPIC_CHECKS = [
-  'Topic page uses Report / Prevent / Inspect / Tenant help clusters',
-  'Topic page does not use a standalone primary CTA',
-  'Topic page does not route users to non-HHVC issue paths',
+const AGENCY_CHECKS = [
+  'Agency page routes reporting through the 3 consolidated report Transactions',
+  'Agency page links to external CDC / UC IPM / NEHA sources instead of duplicating species content',
+  'Agency page does not route users to non-HHVC issue paths',
 ]
 
 const COMMON_CHECKS = [
@@ -29,34 +29,21 @@ const COMMON_CHECKS = [
 ]
 
 const CONTENT_REVIEW_FLAGS = {
-  wnvBirdReport:
-    'SME-blocked: confirm HHVC/CDPH dead bird collection workflow and seasonal operating details',
+  insectsReport:
+    'SME-blocked: confirm the dead-bird external routing to the State West Nile virus program matches the current HHVC/CDPH collection workflow',
   ownerGuidance:
     'Use rodent-proof materials as enforceable concept; examples may include steel wool with sealant, hardware cloth, copper mesh, sheet metal, mortar, or concrete',
 }
 
 const POLICY_PHASE_1 = new Set([
   'pestsTopic',
-  'ratsReport',
-  'cockroachesReport',
-  'bedBugsReport',
-  'mosquitoesReport',
-  'vegetationReport',
-  'moldReport',
+  'rodentsReport',
+  'filthReport',
+  'insectsReport',
   'payFee',
 ])
 
-const POLICY_PHASE_2 = new Set([
-  'scopeInfo',
-  'ownerGuidance',
-  'afterReport',
-  'tenantRights',
-  'ratsPrevent',
-  'cockroachesPrevent',
-  'mosquitoesPrevent',
-  'reduceMoisture',
-  'bedBugsInfo',
-])
+const POLICY_PHASE_2 = new Set(['scopeInfo', 'ownerGuidance', 'afterReport', 'tenantRights'])
 
 function buildPageKeyToSourceFile() {
   const map = {}
@@ -165,7 +152,7 @@ function mockupChangeStatus(sourceFile) {
 }
 
 function checklistItemsForPage(pageKey, pageType) {
-  if (pageKey === 'pestsTopic') return [...TOPIC_CHECKS, ...COMMON_CHECKS]
+  if (pageKey === 'pestsTopic') return [...AGENCY_CHECKS, ...COMMON_CHECKS]
   return COMMON_CHECKS
 }
 

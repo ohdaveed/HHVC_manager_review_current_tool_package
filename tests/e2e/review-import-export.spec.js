@@ -2,9 +2,9 @@ const { test, expect } = require('@playwright/test')
 const AxeBuilder = require('@axe-core/playwright').default
 
 test.describe('HHVC manager review tool', () => {
-  test('loads the pests topic page', async ({ page }) => {
+  test('loads the HHVC agency page', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('#mockPage h1')).toContainText(/pest/i)
+    await expect(page.locator('#mockPage h1')).toContainText(/healthy housing and vector control/i)
     await expect(page.locator('#pageSelect')).toBeVisible()
   })
 

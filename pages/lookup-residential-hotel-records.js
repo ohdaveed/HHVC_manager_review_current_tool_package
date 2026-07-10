@@ -59,8 +59,8 @@ window.HHVC_PAGES['findHotelRecords'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
-          title: 'Report bed bugs',
-          target: 'bedBugsReport',
+          title: 'Report cockroaches, mosquitoes, and other insects',
+          target: 'insectsReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],

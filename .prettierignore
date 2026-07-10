@@ -13,3 +13,6 @@ docs/superpowers/
 .playwright-mcp/
 review/
 forms/mosquito-workshop-request/dist/
+
+# Generated agent-instinct bundles — mixed markdown/YAML that prettier cannot parse
+.claude/homunculus/

@@ -3,8 +3,7 @@ window.HHVC_PAGES['recordsHub'] = {
   slug: 'sf.gov/look-up-building-records',
   type: 'Resource Collection',
   title: 'Look up building records',
-  summary:
-    'Find inspection reports, violations, your district inspector, or request public records.',
+  summary: 'Find inspection reports and violations for a building, or request public records.',
   audience: [
     'A tenant checking complaint or inspection history for a building',
     'A property owner or manager reviewing past violations or inspections',
@@ -47,12 +46,6 @@ window.HHVC_PAGES['recordsHub'] = {
           target: 'findHotelRecords',
           karl: "SF.gov page link block, links to an existing Transaction page (an SF.gov landing page that itself CTAs out to an external hotel-program lookup). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
-        {
-          title: 'Find your district inspector',
-          text: 'See which HHVC inspector covers your area.',
-          target: 'findInspector',
-          karl: "SF.gov page link block, links to an existing Information page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
-        },
       ],
     },
     {
@@ -80,8 +73,8 @@ window.HHVC_PAGES['recordsHub'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Pests and housing problems',
-          text: 'Return to the main Topic page for HHVC pest, vector, and housing health issues.',
+          title: 'Healthy Housing and Vector Control',
+          text: 'Return to the HHVC agency page for pest, vector, and housing health issues.',
           target: 'pestsTopic',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },
@@ -102,5 +95,5 @@ window.HHVC_PAGES['recordsHub'] = {
   ],
   seoTitle: 'Look up building records | SF.gov',
   metaDescription:
-    'Find HHVC inspection records, violations, district inspectors, and public records for San Francisco buildings.',
+    'Find HHVC inspection records, violations, and public records for San Francisco buildings.',
 }

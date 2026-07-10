@@ -139,9 +139,10 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 ### Page object shape and validation rules
 
 See `build_scripts/validate.js` for the enforced Zod schema. A page has `slug`,
-`type` (a free-form string, only `min(1)` checked — values in use are `Topic`,
-`Transaction`, `Information`, `Resource Collection`, matching Karl content-type
-names; see `docs/wagtail-content-mapping.md`), `title`, `summary`, `audience[]`,
+`type` (a free-form string, only `min(1)` checked — values in use are `Agency`,
+`Transaction`, `Information`, `Resource Collection`, `Campaign`, and `Report`,
+matching Karl content-type names; see `docs/wagtail-content-mapping.md`), `title`,
+`summary`, `audience[]`,
 `reading` (grade-level string), and `sections[]`. For Karl editor field mapping by
 content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
 Sections carry `cards[]`, `bullets[]`, `paragraphs[]`, `table[][]`, a `callout`, a
@@ -155,13 +156,17 @@ confirmation, rendered as an "Unverified" pill.
 
 Beyond schema shape, `validate.js` enforces business invariants:
 
-- The `pestsTopic` key must exist and be **first** in `order` (the Topic page that
-  replaced the old Agency-page section).
-- The old `agency` key must **not** be present.
-- Every `card.target` must resolve to a real page key.
-- The Topic page's content must not contain banned out-of-scope terms (`plumbing`,
-  `dbi`, `roof leak`, `sewer`, `permit issue`, `construction defect`) — HHVC scope
-  is Article 11 only.
+- The `pestsTopic` key must exist and be **first** in `order`. This is now the
+  HHVC **Agency page** ("Healthy Housing and Vector Control") — the key name is
+  retained from the Topic-page era for invariant/test/review-state stability.
+- The bare `agency` key must **not** be present (nobody should "fix" the key name
+  and break that stability).
+- Every `card.target` must resolve to a real page key, and every inline markdown
+  link `[label](pageKey)` in paragraphs/bullets/step text must resolve to a real
+  page key, an `http(s)` URL, or the inert `#` sentinel.
+- The Agency page's content must not contain banned out-of-scope terms
+  (`plumbing`, `dbi`, `roof leak`, `sewer`, `permit issue`, `construction
+defect`) — HHVC scope is Article 11 only.
 
 **`karl` fields are first-class content, not comments.** Every card, step,
 section, and callout can carry a `karl` string — a precise, CMS-technical

@@ -33,9 +33,13 @@ function unverifiedPill(reason) {
 function formatMarkdown(text) {
   if (typeof text !== 'string') return ''
   let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<button type="button" class="inline-link" data-render-target="$2">$1</button>'
+  // [label](pageKey) becomes an in-mockup nav button; [label](https://...)
+  // becomes a real external link — page copy that points at third-party
+  // references (CDC, UC IPM, the municipal code) uses the same inline syntax.
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, target) =>
+    /^https?:\/\//.test(target)
+      ? `<a class="inline-link" href="${target}" target="_blank" rel="noopener noreferrer">${label} <span aria-hidden="true">↗</span></a>`
+      : `<button type="button" class="inline-link" data-render-target="${target}">${label}</button>`
   )
   return html
 }
@@ -70,6 +74,7 @@ function normalizePageType(type = '') {
   if (t.includes('transaction')) return 'transaction'
   if (t.includes('information')) return 'information'
   if (t.includes('topic')) return 'topic'
+  if (t.includes('agency')) return 'agency'
   if (t.includes('resource collection')) return 'resource-collection'
   if (t.includes('campaign')) return 'campaign'
   if (t.includes('report')) return 'report'
@@ -86,6 +91,15 @@ function inferSectionRole(section, pageType) {
   if (pageType === 'topic') {
     if (k.includes('services section') || k.includes('service item')) return 'services'
     if (k.includes('resources section') || k.includes('resource item')) return 'resources'
+    return 'intro'
+  }
+  if (pageType === 'agency') {
+    // Agency page data sets `component:` explicitly on every section (checked
+    // first, above); this karl-string fallback mirrors the topic branch so a
+    // section with a real-Karl field note still lands in the right region.
+    if (k.includes('section title 1') || k.includes('services')) return 'services'
+    if (k.includes('section title 2') || k.includes('resources')) return 'resources'
+    if (k.includes('about')) return 'body'
     return 'intro'
   }
   if (pageType === 'resource-collection') {
@@ -362,7 +376,11 @@ function renderOnThisPage(sections = []) {
 }
 function renderAccordionSection(section, pageType) {
   const panelId = sectionAnchorId(section.heading)
-  return `<div class="accordion-item"><button type="button" class="accordion-trigger" data-accordion-toggle aria-expanded="false" aria-controls="${panelId}">${escapeHtml(section.heading)}</button><div class="accordion-panel" id="${panelId}" hidden>${renderSectionInner(section, pageType)}</div></div>`
+  // `open: true` renders the accordion expanded on load — used for content the
+  // reviewer must see without a click (e.g. the report pages' "While you wait"
+  // IPM tips); the toggle still works normally afterwards.
+  const expanded = section.open === true
+  return `<div class="accordion-item"><button type="button" class="accordion-trigger" data-accordion-toggle aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${panelId}">${escapeHtml(section.heading)}</button><div class="accordion-panel" id="${panelId}"${expanded ? '' : ' hidden'}>${renderSectionInner(section, pageType)}</div></div>`
 }
 function renderSectionInner(section, pageType = 'generic') {
   let inner = ''
@@ -409,13 +427,13 @@ function renderSection(section, pageType = 'generic', options = {}) {
             : 'section'
   return `<section class="${cls}">${inner}</section>`
 }
-function renderServicesRegion(sections, pageType) {
+function renderServicesRegion(sections, pageType, karlLabel = 'Topic page Services section') {
   if (!sections.length) return ''
-  return `<div class="services-region">${karlTag('Topic page Services section', 'placement')}<h2 class="region-title">Services</h2>${sections.map((s) => renderSection(s, pageType)).join('')}</div>`
+  return `<div class="services-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Services</h2>${sections.map((s) => renderSection(s, pageType)).join('')}</div>`
 }
-function renderResourcesRegion(sections, pageType) {
+function renderResourcesRegion(sections, pageType, karlLabel = 'Topic page Resources section') {
   if (!sections.length) return ''
-  return `<div class="resources-region">${karlTag('Topic page Resources section', 'placement')}<h2 class="region-title">Resources</h2>${sections.map((s) => renderSection(s, pageType)).join('')}</div>`
+  return `<div class="resources-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Resources</h2>${sections.map((s) => renderSection(s, pageType)).join('')}</div>`
 }
 function renderSpotlight(spotlight) {
   if (!spotlight) return ''
@@ -479,7 +497,9 @@ function renderPageMain(page) {
     html += renderSpotlight(page.spotlight)
   }
   html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
-  if (page.spotlight && normalizePageType(page.type) !== 'report') {
+  // Agency pages render their spotlight mid-page (between Section title 1 and
+  // 2, matching the real Karl field order), so skip the early placement here.
+  if (page.spotlight && !['report', 'agency'].includes(normalizePageType(page.type))) {
     html += renderSpotlight(page.spotlight)
   }
   if (pageType === 'transaction') {
@@ -523,6 +543,28 @@ function renderPageMain(page) {
     })
     html += renderServicesRegion(services, pageType)
     html += renderResourcesRegion(resources, pageType)
+  } else if (pageType === 'agency') {
+    // Mirrors the real Karl Agency field order: Description/Quick links intro,
+    // Section title 1 (Services), Spotlight 1, Section title 2 (Resources),
+    // then About and other body sections. Contact us renders in the shared
+    // tail below, alongside the related list.
+    intro.forEach((s) => {
+      html += renderSection(s, pageType)
+    })
+    html += renderServicesRegion(
+      services,
+      pageType,
+      'Agency page Section title 1: Services + Subsection links'
+    )
+    html += renderSpotlight(page.spotlight)
+    html += renderResourcesRegion(
+      resources,
+      pageType,
+      'Agency page Section title 2: Resources + Subsection links'
+    )
+    body.forEach((s) => {
+      html += renderSection(s, pageType)
+    })
   } else if (pageType === 'resource-collection') {
     intro.forEach((s) => {
       html += renderSection(s, pageType)
@@ -541,10 +583,13 @@ function renderPageMain(page) {
     })
     html += renderContactSection(page.contact, page)
   }
-  if (pageType === 'topic' || pageType === 'resource-collection') {
+  if (pageType === 'topic' || pageType === 'agency' || pageType === 'resource-collection') {
     related.forEach((s) => {
       html += renderRelatedList(s.cards || [], s.heading || 'Related')
     })
+  }
+  if (pageType === 'agency') {
+    html += renderContactSection(page.contact, page)
   }
   html += `</main>`
   return html

@@ -21,6 +21,7 @@
 
   function renderLegend() {
     const types = [
+      ['Agency', 'agency'],
       ['Topic', 'topic'],
       ['Resource Collection', 'resource-collection'],
       ['Transaction', 'transaction'],
@@ -46,6 +47,7 @@
   function renderSearchAndFilters() {
     const filters = [
       'All',
+      'Agency',
       'Topic',
       'Resource Collection',
       'Transaction',
