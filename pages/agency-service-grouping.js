@@ -27,8 +27,6 @@ window.HHVC_PAGES['pestsTopic'] = {
       height: 533,
       karl: 'Topic page Spotlight: image',
     },
-    button: 'Report through 311',
-    buttonTarget: 'reportHub',
     karl: 'Topic page Spotlight 1',
   },
   sections: [
