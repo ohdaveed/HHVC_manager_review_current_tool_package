@@ -49,6 +49,10 @@
     `
   }
 
+  /**
+   * Selects a workspace tab and displays its associated panel.
+   * @param {string} tabId - The workspace tab to select; invalid values select the overview tab.
+   */
   function setWorkspaceTab(tabId) {
     if (!WORKSPACE_TABS.includes(tabId)) tabId = 'overview'
 

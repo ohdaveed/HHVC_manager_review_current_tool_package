@@ -303,6 +303,9 @@
     return panel
   }
 
+  /**
+   * Mounts the reference panel in the Help workspace and synchronizes its checklist and reading target.
+   */
   function mountReferencePanel() {
     const helpPanel = document.getElementById('reviewWorkspaceHelp')
     if (!helpPanel || document.getElementById(REFERENCE_ID)) return
@@ -321,6 +324,9 @@
     }
   }
 
+  /**
+   * Marks sidebar copy for runtime hiding after it has been migrated.
+   */
   function compactSidebarCopy() {
     document.querySelectorAll('[data-sidebar-copy-migrate="true"]').forEach((element) => {
       element.setAttribute('data-migrated-dashboard-copy', 'true')
@@ -338,6 +344,9 @@
 
   window.refreshDashboardGuidance = refresh
 
+  /**
+   * Applies dashboard guidance styles and hides migrated sidebar copy at page load.
+   */
   function init() {
     // Only sidebar-visible effects run at load; the Help panels (~90 elements)
     // mount lazily via window.refreshDashboardGuidance when the Help tab opens

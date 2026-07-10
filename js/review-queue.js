@@ -159,6 +159,9 @@
     if (typeof input.select === 'function') input.select()
   }
 
+  /**
+   * Initialize the review queue UI and its event handlers.
+   */
   function init() {
     const panel = document.getElementById(QUEUE_PANEL_ID)
     if (!panel) return

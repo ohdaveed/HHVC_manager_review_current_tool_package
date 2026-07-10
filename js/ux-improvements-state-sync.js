@@ -257,6 +257,9 @@
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
+  /**
+   * Render compliance checks for the currently open page.
+   */
   function renderPageChecksPanel() {
     const panel = document.getElementById(CHECKS_PANEL_ID)
     if (!panel) return

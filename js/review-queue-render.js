@@ -115,6 +115,9 @@
     }
   }
 
+  /**
+   * Synchronizes the queue selection controls and row states with the current selection.
+   */
   function syncSelectionUi() {
     const selectedCount = getSelectedKeys().length
     const visibleRows = getVisibleRows()
@@ -161,6 +164,10 @@
     })
   }
 
+  /**
+   * Mounts the review queue when its workspace tab is opened.
+   * Restores saved queue UI state before the initial render and ignores subsequent mount requests.
+   */
   function mountReviewQueueOnTabOpen() {
     if (queueMounted) return
     queueMounted = true
@@ -171,6 +178,11 @@
     renderReviewQueue()
   }
 
+  /**
+   * Renders the review queue overview using the current queue state and visible rows.
+   *
+   * Rebuilds the queue panel and restores focus to the previously active control.
+   */
   function renderReviewQueue() {
     if (!queueMounted) return
     const panel = document.getElementById(QUEUE_PANEL_ID)
