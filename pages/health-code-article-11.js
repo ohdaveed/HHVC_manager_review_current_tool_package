@@ -72,7 +72,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(2):** Any accumulation of hay, grass, straw, weeds, or vegetation overgrowth.',
-          'You must keep grass, weeds, and plants from overgrowing in a way that can shelter pests or create a health hazard. [Report overgrown vegetation](vegetationReport)',
+          'You must keep grass, weeds, and plants from overgrowing in a way that can shelter pests or create a health hazard. [Report overgrown vegetation](garbageReport)',
         ],
       ],
     },
@@ -84,7 +84,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ['Health code', 'In plain language'],
         [
           '**Sec. 581(b)(6):** Any visible or otherwise demonstrable mold or mildew in the interiors of any buildings or facilities.',
-          'You must fix visible mold or mildew inside a building. HHVC may inspect when mold from humidity or condensation covers about **10 square feet** or more. [Report mold](moldReport) · [Reduce indoor moisture](reduceMoisture)',
+          'You must fix visible mold or mildew inside a building. HHVC may inspect when mold from humidity or condensation covers about **10 square feet** or more. [Report mold](garbageReport) · [Reduce indoor moisture](reduceMoisture)',
         ],
       ],
     },
@@ -274,9 +274,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Sanitation and storage standards',
       karl: 'Maps to Report Content → Table block. Sanitation topic from the Interpretation Guide.',
       kind: 'body',
-      paragraphs: [
-        'Proper sanitation and storage are the foundation of pest prevention.',
-      ],
+      paragraphs: ['Proper sanitation and storage are the foundation of pest prevention.'],
       table: [
         ['Standard', 'In plain language'],
         [
@@ -289,9 +287,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Landscape management standards',
       karl: 'Maps to Report Content → Table block. Landscape management topic from the Interpretation Guide.',
       kind: 'body',
-      paragraphs: [
-        'Vegetation management is critical for reducing rodent and vector harborage.',
-      ],
+      paragraphs: ['Vegetation management is critical for reducing rodent and vector harborage.'],
       table: [
         ['Standard', 'In plain language'],
         [
@@ -319,9 +315,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Vector exclusion standards',
       karl: 'Maps to Report Content → Table block. Exclusion topic from the Interpretation Guide.',
       kind: 'body',
-      paragraphs: [
-        'Buildings must be maintained to prevent pests from entering.',
-      ],
+      paragraphs: ['Buildings must be maintained to prevent pests from entering.'],
       table: [
         ['Standard', 'In plain language'],
         [
@@ -334,9 +328,7 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Rodent activity signs',
       karl: 'Maps to Report Content → Table block. Rodent signs topic from the Interpretation Guide v1.0.',
       kind: 'body',
-      paragraphs: [
-        'Look for indirect signs of rodent activity — not just live sightings.',
-      ],
+      paragraphs: ['Look for indirect signs of rodent activity — not just live sightings.'],
       table: [
         ['Sign', 'In plain language'],
         [
@@ -394,10 +386,10 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Rental property owner and manager responsibilities',
-      karl: 'Maps to Report Content → Table block. Owner/manager duties from the Director\'s Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.',
+      karl: "Maps to Report Content → Table block. Owner/manager duties from the Director's Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.",
       kind: 'body',
       paragraphs: [
-        'Property owners and managers have specific duties under Article 11 and the Director\'s Rules for preventing and addressing pest problems.',
+        "Property owners and managers have specific duties under Article 11 and the Director's Rules for preventing and addressing pest problems.",
       ],
       table: [
         ['Responsibility', 'In plain language'],
@@ -437,7 +429,7 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Licensed pest control operator requirements',
-      karl: 'Maps to Report Content → Table block. PCO requirements from the Director\'s Rules. Added from the Article 11 Interpretation Guide v1.0.',
+      karl: "Maps to Report Content → Table block. PCO requirements from the Director's Rules. Added from the Article 11 Interpretation Guide v1.0.",
       kind: 'body',
       paragraphs: [
         'Only licensed structural pest control operators may apply pesticides in regulated settings.',
@@ -480,10 +472,10 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Tenant responsibilities',
-      karl: 'Maps to Report Content → Table block. Tenant duties interpreted from the Director\'s Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.',
+      karl: "Maps to Report Content → Table block. Tenant duties interpreted from the Director's Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.",
       kind: 'body',
       paragraphs: [
-        'Tenants also have responsibilities under Article 11 and the Director\'s Rules for keeping their home free of pests.',
+        "Tenants also have responsibilities under Article 11 and the Director's Rules for keeping their home free of pests.",
       ],
       table: [
         ['Responsibility', 'In plain language'],

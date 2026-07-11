@@ -56,11 +56,11 @@ window.HHVC_PAGES['waspInfo'] = {
     },
     {
       heading: 'When to report',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs below (reporting threshold and dual-track routing — city vs. private-property referral). Resolved schema gap: converted card-as-CTA to an inline link folded into this block\'s rich text (Internal link → vegetationReport), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs below (reporting threshold and dual-track routing — city vs. private-property referral). Resolved schema gap: converted card-as-CTA to an inline link folded into this block\'s rich text (Internal link → garbageReport), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'HHVC inspects suspected ground wasp nests to verify safety hazards. If you are a tenant, notify your landlord or property manager in writing immediately so they can address this safety hazard. If they do not respond or fail to hire a professional, report the nest to 311 to request an HHVC inspection.',
-        'If an HHVC inspector finds a ground wasp nest on city or public property, we will refer the issue to the appropriate sister agency for safe removal. If the nest is on private residential property, HHVC will require the property owner to contract a licensed Pest Control Operator (PCO) to eliminate the nest. [Report a ground wasp nest](vegetationReport)',
+        'If an HHVC inspector finds a ground wasp nest on city or public property, we will refer the issue to the appropriate sister agency for safe removal. If the nest is on private residential property, HHVC will require the property owner to contract a licensed Pest Control Operator (PCO) to eliminate the nest. [Report a ground wasp nest](garbageReport)',
       ],
     },
     {

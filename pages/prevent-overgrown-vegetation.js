@@ -41,11 +41,11 @@ window.HHVC_PAGES['vegetationInfo'] = {
     },
     {
       heading: 'When someone should report',
-      karl: 'Paragraphs map to a third Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the vegetationReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Paragraphs map to a third Title and text block (Title = this heading, Text = the two paragraphs). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the garbageReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'A tenant, tenant helper, affected resident, or employee can report through 311 if the problem continues after 72 hours, affects a shared area, or the property owner or manager does not respond.',
-        '[Report overgrown vegetation](vegetationReport)',
+        '[Report overgrown vegetation](garbageReport)',
       ],
     },
     {
@@ -55,7 +55,7 @@ window.HHVC_PAGES['vegetationInfo'] = {
       cards: [
         {
           title: 'Report overgrown vegetation',
-          target: 'vegetationReport',
+          target: 'garbageReport',
         },
         {
           title: 'Keep rats and mice out',

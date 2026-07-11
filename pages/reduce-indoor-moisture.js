@@ -160,11 +160,11 @@ window.HHVC_PAGES['reduceMoisture'] = {
     },
     {
       heading: 'When to report instead',
-      karl: 'Paragraph maps to a thirteenth Title and text block (Title = this heading, Text = the paragraph). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the moldReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Paragraph maps to a thirteenth Title and text block (Title = this heading, Text = the paragraph). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the garbageReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'Use the reporting page if visible mold affects walls or ceilings and covers 10 square feet or more, moisture or mold keeps coming back, the property owner does not respond, or it affects a shared SRO area.',
-        '[Report mold, moisture, or condensation problems](moldReport)',
+        '[Report mold, moisture, or condensation problems](garbageReport)',
       ],
     },
     {
@@ -174,7 +174,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
       cards: [
         {
           title: 'Report mold from humidity or condensation',
-          target: 'moldReport',
+          target: 'garbageReport',
         },
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',

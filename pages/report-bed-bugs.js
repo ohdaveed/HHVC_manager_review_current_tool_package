@@ -1,9 +1,10 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['bedBugsReport'] = {
-  slug: 'sf.gov/report-bed-bugs',
+  slug: 'sf.gov/report-bed-bugs-fleas-or-biting-pests',
   type: 'Transaction',
-  title: 'Report bed bugs',
-  summary: 'Report an active bed bug problem in San Francisco rental housing.',
+  title: 'Report bed bugs, fleas, or other biting pests',
+  summary:
+    'Report bed bugs, fleas, mites, ticks, or body lice in a home, SRO, or residential hotel.',
   audience: [
     'A tenant affected by bed bugs',
     'A friend, family member, advocate, or helper reporting for a tenant',
@@ -25,6 +26,13 @@ window.HHVC_PAGES['bedBugsReport'] = {
     other: ['Environmental Health — Healthy Housing and Vector Control'],
   },
   sections: [
+    {
+      heading: 'What to report here',
+      kind: 'body',
+      karl: 'Best real-schema fit: a things_to_know entry listing the biting/skin pests this report covers (bed bugs, fleas, mites, ticks, body lice), mapping those internal Vector Survey rows onto one public page. Bed bugs keeps its existing SF-specific guidance below.',
+      paragraphs: ['Use this page to report any of these to Healthy Housing and Vector Control:'],
+      bullets: ['Bed bugs', 'Fleas', 'Mites', 'Ticks', 'Body lice'],
+    },
     {
       heading: 'What to do',
       karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
@@ -57,6 +65,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
           title: 'Tell us where the problem is',
           text: ['Include only the details that apply:'],
           bullets: [
+            'Which biting pest you have, if you know (for example, bed bugs, fleas, mites, ticks, or body lice)',
             'The address or location',
             'Where bed bugs were seen or where bites happened',
             'Whether the problem is in a unit, room, or shared residential area',
@@ -144,6 +153,7 @@ window.HHVC_PAGES['bedBugsReport'] = {
       ],
     },
   ],
-  seoTitle: 'Report bed bugs | SF.gov',
-  metaDescription: 'Report an active bed bug problem in San Francisco rental housing.',
+  seoTitle: 'Report bed bugs, fleas, or other biting pests | SF.gov',
+  metaDescription:
+    'Report bed bugs, fleas, mites, ticks, or body lice to Healthy Housing and Vector Control.',
 }
