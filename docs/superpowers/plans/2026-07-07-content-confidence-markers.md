@@ -195,7 +195,7 @@ Expected: PASS, all tests including the 5 new ones.
 - [ ] **Step 5: Full validate + format check**
 
 Run: `bun run validate`
-Expected: `validated 39 pages` (still the old message — Task 5 changes this) with no errors, since existing `pages/*.js` content is all plain strings and still matches the union's `z.string()` branch.
+Expected: `validated 40 pages` (still the old message — Task 5 changes this) with no errors, since existing `pages/*.js` content is all plain strings and still matches the union's `z.string()` branch.
 
 Run: `bun run format:check`
 Expected: clean (no output, exit 0). If it reports `build_scripts/schema.js`, run `bun run format` and re-check.
@@ -219,7 +219,7 @@ git commit -m "feat: add unverified/unverifiedReason fields to card, bullet, and
 - Consumes: nothing new (uses `escapeHtml` from `js/utils.js`, already loaded before `js/page-render.js`).
 - Produces: `normalizeTextItem(item) -> {text: string, unverified: boolean, unverifiedReason: string}` and `unverifiedPill(reason) -> string` (HTML). Task 3's card renderers consume `unverifiedPill` directly.
 
-Note: the source spec assumed every bullet/paragraph render site needed its own change. In the current `main` codebase, `section.bullets`/`.paragraphs` (`js/page-render.js:326,328`) and `step.text`/`.bullets` (`js/page-render.js:189,244`) all already route through the single shared `paragraphList()`/`bulletList()` functions, so changing those two functions covers every text-list render site in one place — no other call site needs touching.
+Note: the source spec assumed every bullet/paragraph render site needed its own change. In the current `main` codebase, `section.bullets`/`.paragraphs` (`js/page-render.js:348,350`) and `step.text`/`.bullets` (`js/page-render.js:245`, inside the single `renderSteps`) all already route through the single shared `paragraphList()`/`bulletList()` functions, so changing those two functions covers every text-list render site in one place — no other call site needs touching.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -286,7 +286,7 @@ function unverifiedPill(reason) {
 }
 ```
 
-Replace `function paragraphList(paragraphs = []) {` through its closing `}` (currently lines 28-30):
+Replace `function paragraphList(paragraphs = []) {` through its closing `}` (currently lines 31-33):
 
 ```js
 function paragraphList(paragraphs = []) {
@@ -299,7 +299,7 @@ function paragraphList(paragraphs = []) {
 }
 ```
 
-Replace `function bulletList(bullets = []) {` through its closing `}` (currently lines 40-43):
+Replace `function bulletList(bullets = []) {` through its closing `}` (currently lines 43-46):
 
 ```js
 function bulletList(bullets = []) {
@@ -344,7 +344,13 @@ git commit -m "feat: render unverified pill inline via normalizeTextItem in para
 **Interfaces:**
 - Consumes: `unverifiedPill(reason) -> string` from Task 2.
 
-Note: the source spec described "card rendering" as one place. `main` currently has **four** card-list renderers that each independently render `card.text`: `renderCards`, `renderServiceTiles`, `renderResourcesList`, and `renderRelatedList`. Since `cardSchema` (shared by all four) now allows `unverified`/`unverifiedReason` on any card regardless of which list it renders in, all four need the same treatment — otherwise a flagged card in, say, a resources list would validate but silently render with no pill.
+Note: the source spec described "card rendering" as one place, and an earlier draft of this plan (written against an older `main`) assumed four renderers — `renderCards`, `renderServiceTiles`, `renderResourcesList`, `renderRelatedList` — each independently rendering `card.text`. A merged accessibility refactor (converting internal `<a href="#">` card links to `<button>` elements) has since changed this shape:
+- `renderCards` (`js/page-render.js:168-183`) and `renderResourcesList` (`js/page-render.js:200-219`) still render `card.text` directly, just via a new `action` variable instead of separate `href`/`attr` interpolation.
+- `renderServiceTiles` (`js/page-render.js:184-199`) now has **two** separate `return` statements (one for the `<a>` branch when `c.url` is set, one for the `<button>` branch otherwise), each rendering `card.text` — both need the same one-line change.
+- `renderRelatedList` (`js/page-render.js:220-223`) no longer renders card markup itself — it now delegates entirely to `renderCards(cards)`. It needs no direct edit; fixing `renderCards` covers it automatically.
+- A new renderer not in the original spec, `renderRelatedRail` (`js/page-render.js:224-240`, the transaction-page right-panel "Related" list), also renders `card.text` directly and needs the same treatment as `renderCards`/`renderResourcesList`.
+
+So the actual edit surface is: `renderCards`, both branches of `renderServiceTiles`, `renderResourcesList`, and `renderRelatedRail` — four edit sites across three functions, plus `renderRelatedList` verified (not edited) to confirm it inherits the fix.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -361,8 +367,20 @@ Add these tests to `tests/page-render.test.js`, after the existing `'renderCards
     expect(html).not.toContain('unverified-pill')
   })
 
-  test('renderServiceTiles appends an unverified pill when card.unverified is true', () => {
+  test('renderRelatedList passes the unverified pill through from renderCards', () => {
+    const html = ctx.renderRelatedList([{ title: 'Related', text: 'Claim', unverified: true }])
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
+  })
+
+  test('renderServiceTiles appends an unverified pill when card.unverified is true (button branch, no url)', () => {
     const html = ctx.renderServiceTiles([{ title: 'Tile', text: 'Claim', unverified: true }])
+    expect(html).toContain('<span class="service-tile-text">Claim<span class="unverified-pill">')
+  })
+
+  test('renderServiceTiles appends an unverified pill when card.unverified is true (anchor branch, with url)', () => {
+    const html = ctx.renderServiceTiles([
+      { title: 'Tile', text: 'Claim', url: 'https://example.com', unverified: true },
+    ])
     expect(html).toContain('<span class="service-tile-text">Claim<span class="unverified-pill">')
   })
 
@@ -371,8 +389,10 @@ Add these tests to `tests/page-render.test.js`, after the existing `'renderCards
     expect(html).toContain('<p>Claim<span class="unverified-pill">')
   })
 
-  test('renderRelatedList appends an unverified pill when card.unverified is true', () => {
-    const html = ctx.renderRelatedList([{ title: 'Related', text: 'Claim', unverified: true }])
+  test('renderRelatedRail appends an unverified pill when card.unverified is true', () => {
+    const html = ctx.renderRelatedRail([
+      { cards: [{ title: 'Related', text: 'Claim', unverified: true }] },
+    ])
     expect(html).toContain('<p>Claim<span class="unverified-pill">')
   })
 ```
@@ -380,62 +400,80 @@ Add these tests to `tests/page-render.test.js`, after the existing `'renderCards
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `bun test tests/page-render.test.js`
-Expected: the 4 new "appends an unverified pill" tests FAIL (no pill in current output); the "omits the pill" test passes already.
+Expected: the "appends an unverified pill" tests FAIL (no pill in current output) for `renderCards`, both `renderServiceTiles` cases, `renderResourcesList`, and `renderRelatedRail`; the "omits the pill" test and the `renderRelatedList` pass-through test both pass already (the latter passes vacuously today since neither side has a pill yet — it will keep passing once `renderCards` is fixed in Step 3).
 
-- [ ] **Step 3: Wire the pill into all four card renderers**
+- [ ] **Step 3: Wire the pill into `renderCards`, `renderServiceTiles` (both branches), `renderResourcesList`, and `renderRelatedRail`**
 
-In `js/page-render.js`, inside `renderCards`, change the return line's card-text fragment. Find:
+In `js/page-render.js`, inside `renderCards`, find:
 
 ```js
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}</p>` : ''}</article>`
 ```
 
 Replace with:
 
 ```js
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3><a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a></h3>${c.text ? `<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
 ```
 
-Inside `renderServiceTiles`, find:
+Inside `renderServiceTiles`, find the `<a>`-branch return:
 
 ```js
-      return `<a class="service-tile" href="${href}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
+      if (c.url) {
+        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></a>`
+      }
 ```
 
 Replace with:
 
 ```js
-      return `<a class="service-tile" href="${href}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
+      if (c.url) {
+        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
+      }
+```
+
+Then, still inside `renderServiceTiles`, find the `<button>`-branch return immediately after it:
+
+```js
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}</span></button>`
+```
+
+Replace with:
+
+```js
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></button>`
 ```
 
 Inside `renderResourcesList`, find:
 
 ```js
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a>${fileBadge}<p>${escapeHtml(c.text)}</p></li>`
+      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}</p></li>`
 ```
 
 Replace with:
 
 ```js
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a>${fileBadge}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
+      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
 ```
 
-Inside `renderRelatedList`, find:
+Inside `renderRelatedRail`, find:
 
 ```js
-      return `<li>${karlTag(c.karl || 'Related section: right-panel linked page', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a><p>${escapeHtml(c.text)}</p></li>`
+      return `<li>${action}<p>${escapeHtml(c.text)}</p></li>`
 ```
 
 Replace with:
 
 ```js
-      return `<li>${karlTag(c.karl || 'Related section: right-panel linked page', 'placement')}<a href="${href}"${attr}>${escapeHtml(c.title)}${externalMark}</a><p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
+      return `<li>${action}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
 ```
+
+Do **not** edit `renderRelatedList` — it takes no direct action; it already delegates to `renderCards(cards)` (`js/page-render.js:220-223`), so it inherits the fix from the first edit above.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `bun test tests/page-render.test.js`
-Expected: PASS, all tests including the 5 new ones.
+Expected: PASS, all tests including the 7 new ones.
 
 - [ ] **Step 5: Full test suite + format check**
 
@@ -449,7 +487,7 @@ Expected: clean.
 
 ```bash
 git add js/page-render.js tests/page-render.test.js
-git commit -m "feat: append unverified pill to all four card renderers"
+git commit -m "feat: append unverified pill to renderCards, renderServiceTiles, renderResourcesList, and renderRelatedRail"
 ```
 
 ---
@@ -461,13 +499,13 @@ git commit -m "feat: append unverified pill to all four card renderers"
 
 **Interfaces:**
 - Consumes: the `class="unverified-pill"` markup produced by Task 2/3's `unverifiedPill()` helper.
-- Consumes: existing tokens `--sfds-warning-bg`, `--sfds-warning-text`, `--sfds-warning-border` (already defined at `css/styles.css:20-22` and used by `.callout--warning` at line 840-842 — no new tokens needed).
+- Consumes: existing tokens `--sfds-warning-bg`, `--sfds-warning-text`, `--sfds-warning-border` (already defined at `css/styles.css:21-23` and used by `.callout--warning` around line 961-962 — no new tokens needed).
 
-Note: the source spec described "two existing `body.hide-karl-tags` hidden-selector lists." Confirmed on `main`: they are at `css/styles.css:1180-1183` and `css/styles.css:1437-1441`. Both need the new selector.
+Note: the source spec described "two existing `body.hide-karl-tags` hidden-selector lists." Confirmed on the current worktree base: they are at `css/styles.css:1300-1304` and `css/styles.css:1593-1598`. Both need the new selector. (These exact line numbers may drift further if other work lands first — match by the surrounding code shown below, not by line number.)
 
 - [ ] **Step 1: Add the `.unverified-pill` rule**
 
-In `css/styles.css`, find this block (currently around line 1175-1179):
+In `css/styles.css`, find this block (currently around line 1295-1299):
 
 ```css
 .karl-tag[data-kind='editor'] {
@@ -498,7 +536,7 @@ Insert this new rule immediately after it, before the `body.hide-karl-tags` bloc
 
 - [ ] **Step 2: Add `.unverified-pill` to both `hide-karl-tags` selector lists**
 
-Find (currently `css/styles.css:1180-1183`):
+Find (currently `css/styles.css:1300-1304`):
 
 ```css
 body.hide-karl-tags .karl-tag,
@@ -521,7 +559,7 @@ body.hide-karl-tags .unverified-pill {
 }
 ```
 
-Find the second occurrence (currently `css/styles.css:1437-1441`):
+Find the second occurrence (currently `css/styles.css:1593-1598`):
 
 ```css
 body.hide-karl-tags .karl-tag,
@@ -721,7 +759,7 @@ console.log(
 - [ ] **Step 6: Run validate to confirm the new output**
 
 Run: `bun run validate`
-Expected: `validated 39 pages, 0 unverified claims flagged` (0, since Task 6's migration hasn't landed yet).
+Expected: `validated 40 pages, 0 unverified claims flagged` (0, since Task 6's migration hasn't landed yet).
 
 - [ ] **Step 7: Format check**
 
@@ -794,7 +832,7 @@ Replace with:
 - [ ] **Step 3: Validate**
 
 Run: `bun run validate`
-Expected: `validated 39 pages, 3 unverified claims flagged` (0 → 3: one from `bed-bug-rules-prevention.js`, two from `mosquito-education-workshop.js`).
+Expected: `validated 40 pages, 3 unverified claims flagged` (0 → 3: one from `bed-bug-rules-prevention.js`, two from `mosquito-education-workshop.js`).
 
 - [ ] **Step 4: Format check**
 
@@ -822,7 +860,7 @@ Run: `bun run format:check`
 Expected: clean.
 
 Run: `bun run validate`
-Expected: `validated 39 pages, 3 unverified claims flagged`.
+Expected: `validated 40 pages, 3 unverified claims flagged`.
 
 Run: `bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/index-html-checks.test.js`
 Expected: PASS, 0 fail.
