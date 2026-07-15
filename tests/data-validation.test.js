@@ -244,6 +244,23 @@ describe('findBrokenInlineLinks', () => {
       { pageKey: 'a', target: 'ghost2' },
     ])
   })
+
+  test('reports broken links inside section and step callouts', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            callout: { text: '[one](ghost1)' },
+            steps: [{ callout: { text: '[two](ghost2)' } }],
+          },
+        ],
+      },
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([
+      { pageKey: 'a', target: 'ghost1' },
+      { pageKey: 'a', target: 'ghost2' },
+    ])
+  })
 })
 
 describe('findBannedTerms', () => {

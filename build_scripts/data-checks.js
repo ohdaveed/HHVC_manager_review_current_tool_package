@@ -104,9 +104,11 @@ function findBrokenInlineLinks(pages) {
       for (const row of section.table || []) {
         checkItems(pageKey, row)
       }
+      if (section.callout) checkItems(pageKey, [section.callout.text])
       for (const step of section.steps || []) {
         checkItems(pageKey, step.text)
         checkItems(pageKey, step.bullets)
+        if (step.callout) checkItems(pageKey, [step.callout.text])
       }
     }
   }
