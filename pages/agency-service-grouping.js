@@ -30,8 +30,8 @@ window.HHVC_PAGES['pestsTopic'] = {
       karl: 'Agency Spotlight 1: image',
     },
     button: 'Report through 311',
-    buttonTarget: 'filthReport',
-    karl: 'Agency Spotlight 1 (renders between Section title 1 and Section title 2 on the real Agency form). The button doubles as the page Call to action — Karl\'s About-level "Call to action" field is folded in here so the page keeps a single strong action.',
+    buttonUrl: 'https://www.sf311.org/',
+    karl: 'Agency Spotlight 1 (renders between Section title 1 and Section title 2 on the real Agency form). The button doubles as the page Call to action — Karl\'s About-level "Call to action" field is folded in here so the page keeps a single strong action. Links to 311 directly (not one of the three consolidated report Transactions) because the copy and CTA cover all Article 11 conditions generically, and the report hub that used to route a neutral CTA no longer exists after this consolidation.',
   },
   contact: {
     phone: ['311 (call or text)', '415-252-3805'],
