@@ -1,5 +1,5 @@
 page_key,page_title,page_type,check_item,status,notes
-pestsTopic,Healthy Housing and Vector Control,Agency,Agency page routes reporting through the 3 consolidated report Transactions,,
+pestsTopic,Healthy Housing and Vector Control,Agency,Agency page Quick links route to the 3 consolidated report Transactions (the separate Spotlight CTA intentionally routes to 311 directly instead — see its karl note),,
 pestsTopic,Healthy Housing and Vector Control,Agency,Agency page links to external CDC / UC IPM / NEHA sources instead of duplicating species content,,
 pestsTopic,Healthy Housing and Vector Control,Agency,Agency page does not route users to non-HHVC issue paths,,
 pestsTopic,Healthy Housing and Vector Control,Agency,Page type and Karl tags match the intended page role,,
