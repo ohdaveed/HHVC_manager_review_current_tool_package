@@ -61,6 +61,9 @@ const sectionSchema = z.object({
   heading: z.string().min(1),
   kind: z.string().optional(),
   component: sectionComponentSchema.optional(),
+  // Transaction supporting sections render as accordions; `open: true` makes
+  // one render expanded on load (e.g. the report pages' "While you wait" tips).
+  open: z.boolean().optional(),
   karl: z.string().min(1),
   paragraphs: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
   steps: z.array(stepSchema).optional(),

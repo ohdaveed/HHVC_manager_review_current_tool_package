@@ -25,11 +25,11 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'Report mosquitoes or standing water',
-      karl: 'Paragraphs and bullets map to a second Title and text block (Title = this heading, Text = the paragraph plus the bulleted list). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the mosquitoesReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      karl: 'Paragraphs and bullets map to a second Title and text block (Title = this heading, Text = the paragraph plus the bulleted list). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the insectsReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
       kind: 'body',
       paragraphs: [
         'You can report standing water or mosquito concerns through 311 or by contacting the Mosquito Control Program directly.',
-        '[Report mosquitoes through 311](mosquitoesReport)',
+        '[Report cockroaches, mosquitoes, and other insects through 311](insectsReport)',
       ],
       bullets: [
         'Call 311 within San Francisco or (415) 701-2311 from outside the city',
@@ -38,7 +38,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'More mosquito resources',
-      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 2 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
+      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 3 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
       kind: 'placement',
       cards: [
         {
@@ -53,6 +53,12 @@ window.HHVC_PAGES['mosquitoControl'] = {
           url: 'https://www.westnile.ca.gov/',
           karl: 'External-URL card with no clean mapping in the verified Information schema — same gap as the sibling card above; flag for Digital Services rather than forcing a "Related" or Title and text home.',
         },
+        {
+          title: 'Report a dead bird to the State',
+          text: 'Dead birds help track West Nile virus. Report them to the State West Nile virus program.',
+          url: 'https://westnile.ca.gov/report',
+          karl: 'External-URL card, same mapping gap as the siblings above. Replaces the retired City dead-bird transaction page — the State runs this reporting line (manager decision at plan review).',
+        },
       ],
     },
     {
@@ -65,12 +71,8 @@ window.HHVC_PAGES['mosquitoControl'] = {
           target: 'mosquitoWorkshop',
         },
         {
-          title: 'Prevent mosquitoes',
-          target: 'mosquitoesPrevent',
-        },
-        {
-          title: 'Report mosquitoes or a dead bird',
-          target: 'mosquitoesReport',
+          title: 'Report cockroaches, mosquitoes, and other insects',
+          target: 'insectsReport',
         },
       ],
     },

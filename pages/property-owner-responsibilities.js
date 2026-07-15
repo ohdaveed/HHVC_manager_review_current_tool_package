@@ -73,7 +73,7 @@ window.HHVC_PAGES['ownerHub'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Pests and housing problems',
+          title: 'Healthy Housing and Vector Control',
           text: 'Return to the main Topic page for HHVC pest and housing health issues.',
           target: 'pestsTopic',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',

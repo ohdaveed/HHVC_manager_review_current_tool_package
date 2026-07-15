@@ -55,18 +55,10 @@ window.HHVC_PAGES['scopeInfo'] = {
       karl: 'Resolved schema gap: unstructured tabular content converted to bulleted list.',
       kind: 'body',
       bullets: [
-        '**Rats or mice:** [Report rats or mice](ratsReport)',
-        '**Cockroaches:** [Report cockroaches](cockroachesReport)',
-        '**Bed bugs:** [Report bed bugs](bedBugsReport)',
-        '**Mosquitoes or standing water:** [Report mosquitoes](mosquitoesReport)',
-        '**Bird or pigeon nuisances tied to droppings or unsanitary conditions:** [Pigeons and housing health](pigeonInfo)',
-        '**Mite concerns linked to pests in housing:** [Mites and housing health](miteInfo)',
-        '**Garbage, clutter, or animal waste:** [Report garbage or clutter](garbageReport)',
-        '**Overgrown plants or brush:** [Report overgrown vegetation](garbageReport)',
-        '**Active pigeon roosting or feeding problems:** [Report pigeons](pigeonsReport)',
-        '**House flies breeding in garbage or organic waste:** [Flies and housing health](flyInfo)',
-        '**Ground wasp nests:** [Ground wasps and housing health](waspInfo)',
-        '**Mold from humidity or condensation:** [Report mold from humidity or condensation](garbageReport)',
+        '**Rats, mice, raccoons, or other four-legged pests:** [Report rats, mice, and other four-legged problems](rodentsReport)',
+        '**Cockroaches, bed bugs, mosquitoes, flies, wasps, or mites:** [Report cockroaches, mosquitoes, and other insects](insectsReport)',
+        '**Garbage, clutter, animal waste, pigeon droppings or roosting, overgrown plants, or mold from humidity:** [Report garbage, filth, and overgrown vegetation](filthReport)',
+        '**Dead birds:** [Report a dead bird to the State West Nile virus program](https://westnile.ca.gov/report)',
         '**Health Code Article 11:** [Read Article 11 in plain language](article11Guide)',
       ],
     },
@@ -86,7 +78,7 @@ window.HHVC_PAGES['scopeInfo'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Pests and housing problems',
+          title: 'Healthy Housing and Vector Control',
           target: 'pestsTopic',
         },
         {

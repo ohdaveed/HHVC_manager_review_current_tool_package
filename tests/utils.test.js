@@ -121,6 +121,15 @@ describe('getPrimaryCta / setPrimaryCta', () => {
     expect(ctx.getPrimaryCta(page)).toBe('Fallback CTA')
   })
 
+  test('falls back to spotlight.button before page.primaryCta', () => {
+    const page = {
+      sections: [{ heading: 'Intro' }],
+      spotlight: { button: 'Report through 311' },
+      primaryCta: 'Fallback CTA',
+    }
+    expect(ctx.getPrimaryCta(page)).toBe('Report through 311')
+  })
+
   test('returns empty string when nothing is set', () => {
     expect(ctx.getPrimaryCta({ sections: [] })).toBe('')
     expect(ctx.getPrimaryCta({})).toBe('')
@@ -137,6 +146,18 @@ describe('getPrimaryCta / setPrimaryCta', () => {
     const page = { sections: [{ heading: 'Intro' }], primaryCta: 'Old' }
     ctx.setPrimaryCta(page, 'New label')
     expect(page.primaryCta).toBe('New label')
+  })
+
+  test('setPrimaryCta writes spotlight.button, and getPrimaryCta round-trips it', () => {
+    const page = {
+      sections: [{ heading: 'Intro' }],
+      spotlight: { button: 'Report through 311' },
+      primaryCta: 'Old',
+    }
+    ctx.setPrimaryCta(page, 'New label')
+    expect(page.spotlight.button).toBe('New label')
+    expect(page.primaryCta).toBe('Old')
+    expect(ctx.getPrimaryCta(page)).toBe('New label')
   })
 })
 

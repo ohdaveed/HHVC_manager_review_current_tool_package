@@ -98,7 +98,7 @@ window.HHVC_PAGES['payFee'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
-          title: 'Pests and housing problems',
+          title: 'Healthy Housing and Vector Control',
           target: 'pestsTopic',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },

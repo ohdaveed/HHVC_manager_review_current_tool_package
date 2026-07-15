@@ -117,8 +117,8 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           target: 'ownerHub',
         },
         {
-          title: 'Bed bug rules and prevention',
-          target: 'bedBugsInfo',
+          title: 'Integrated pest management for property owners and managers',
+          target: 'ownerGuidance',
         },
       ],
     },

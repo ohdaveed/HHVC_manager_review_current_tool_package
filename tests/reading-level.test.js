@@ -5,7 +5,7 @@ const { fleschKincaidGrade, extractPageBodyText } = require('../build_scripts/re
 describe('load-pages', () => {
   test('discovers all page modules and loads HHVC_DATA', () => {
     const data = loadPageData()
-    expect(data.order.length).toBeGreaterThan(30)
+    expect(data.order.length).toBe(19)
     expect(data.pages.pestsTopic).toBeTruthy()
     expect(data.order[0][0]).toBe('pestsTopic')
   })

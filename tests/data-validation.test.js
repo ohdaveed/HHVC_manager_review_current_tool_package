@@ -8,6 +8,7 @@ const {
   findMissingOrderKeys,
   findBrokenCardTargets,
   findBrokenButtonTargets,
+  findBrokenInlineLinks,
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
@@ -174,6 +175,91 @@ describe('findBrokenButtonTargets', () => {
   test('ignores sections/steps with no buttonTarget', () => {
     const pages = { a: { sections: [{ button: 'Go', steps: [{ button: 'Go' }] }] } }
     expect(findBrokenButtonTargets(pages)).toEqual([])
+  })
+})
+
+describe('findBrokenInlineLinks', () => {
+  test('empty when inline links point at existing pages, URLs, or the inert sentinel', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            paragraphs: ['See [page b](b) or [the CDC](https://www.cdc.gov/rodents/).'],
+            bullets: ['Inert placeholder: [DBI](#)'],
+          },
+        ],
+      },
+      b: {},
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([])
+  })
+
+  test('reports a paragraph link to a missing page key', () => {
+    const pages = { a: { sections: [{ paragraphs: ['Go to [ghost page](ghost).'] }] } }
+    expect(findBrokenInlineLinks(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
+  })
+
+  test('reports broken links inside bullets, step text, and step bullets', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            bullets: ['[one](ghost1)'],
+            steps: [{ text: ['[two](ghost2)'], bullets: ['[three](ghost3)'] }],
+          },
+        ],
+      },
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([
+      { pageKey: 'a', target: 'ghost1' },
+      { pageKey: 'a', target: 'ghost2' },
+      { pageKey: 'a', target: 'ghost3' },
+    ])
+  })
+
+  test('checks unverified-item objects the same as plain strings', () => {
+    const pages = {
+      a: {
+        sections: [{ bullets: [{ text: '[gone](ghost)', unverified: true }] }],
+      },
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
+  })
+
+  test('reports broken links inside table cells', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            table: [
+              ['[one](ghost1)', 'normal text'],
+              ['normal text', '[two](ghost2)'],
+            ],
+          },
+        ],
+      },
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([
+      { pageKey: 'a', target: 'ghost1' },
+      { pageKey: 'a', target: 'ghost2' },
+    ])
+  })
+
+  test('reports broken links inside section and step callouts', () => {
+    const pages = {
+      a: {
+        sections: [
+          {
+            callout: { text: '[one](ghost1)' },
+            steps: [{ callout: { text: '[two](ghost2)' } }],
+          },
+        ],
+      },
+    }
+    expect(findBrokenInlineLinks(pages)).toEqual([
+      { pageKey: 'a', target: 'ghost1' },
+      { pageKey: 'a', target: 'ghost2' },
+    ])
   })
 })
 

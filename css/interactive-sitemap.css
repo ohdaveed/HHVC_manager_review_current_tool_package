@@ -262,6 +262,13 @@
   line-height: 1.2;
 }
 
+.sitemap-diagram-node[data-page-type='Agency'] {
+  /* Darkest slate marks the department landing page, distinct from the
+     action-blue kept for Topic pages. */
+  border-left: 4px solid var(--sfds-slate-6);
+  max-width: 18rem;
+}
+
 .sitemap-diagram-node[data-page-type='Topic'] {
   border-left: 4px solid var(--sfds-action-blue);
   max-width: 18rem;
@@ -316,6 +323,10 @@
   font-size: 0.82rem;
   margin: 0;
   padding: 0.35rem 0;
+}
+
+.sitemap-legend-swatch[data-page-type='agency'] {
+  background: var(--sfds-slate-6);
 }
 
 .sitemap-legend-swatch[data-page-type='topic'] {

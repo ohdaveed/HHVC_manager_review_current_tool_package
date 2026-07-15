@@ -639,8 +639,8 @@ Everything still `[ ]` needs the logged-in admin form.
       text / Image / Callout], Partner agencies, Topics, Related) has no
       `what_to_do`-style Section wrapper for step-by-step content.
 - [x] **doc-confirmed: no block type for tabular content on Information
-      pages** — a mockup `table[][]` has no home in `Title and
-  text`/`Image`/`Callout`. The Help Center's "How a Report page works"
+      pages** — a mockup `table[][]` has no home in `Title and text`/`Image`/
+      `Callout`. The Help Center's "How a Report page works"
       page states: _"You can add a table to Reports. It is the only
       content type that supports tables."_ That's an affirmative
       exclusivity claim, not just silence on other page types — no page

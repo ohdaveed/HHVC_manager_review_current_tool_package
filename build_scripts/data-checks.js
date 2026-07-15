@@ -59,11 +59,60 @@ function findBrokenButtonTargets(pages) {
 }
 
 /**
+ * The main HHVC Agency page must lead the menu order. Its key stays
+ * `pestsTopic` (from when this slot held the Topic page) so downstream
+ * invariants, tests, and saved review state keep a stable identifier.
  * @param {Array<[string, string]>} order
  * @returns {boolean}
  */
 function isTopicPageFirst(order) {
   return order.length > 0 && order[0][0] === 'pestsTopic'
+}
+
+/**
+ * Find inline markdown links `[label](target)` in paragraphs, bullets, table
+ * cells, and step text whose target is neither an existing page key nor an
+ * http(s) URL.
+ * These render as in-mockup nav buttons (see formatMarkdown in
+ * js/page-render.js), so a dangling key silently no-ops on click — the
+ * card/button target checks above never see them.
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string, target: string}>}
+ */
+function findBrokenInlineLinks(pages) {
+  const keys = new Set(Object.keys(pages))
+  const broken = []
+
+  function checkItems(pageKey, items) {
+    for (const item of items || []) {
+      const text = typeof item === 'string' ? item : item?.text || ''
+      for (const match of text.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+        const target = match[1]
+        // `#` is the deliberate inert-link sentinel (kept un-navigable by the
+        // mockup's click handler), so only real keys and URLs are checked.
+        if (target !== '#' && !keys.has(target) && !/^https?:\/\//.test(target)) {
+          broken.push({ pageKey, target })
+        }
+      }
+    }
+  }
+
+  for (const [pageKey, page] of Object.entries(pages)) {
+    for (const section of page.sections || []) {
+      checkItems(pageKey, section.paragraphs)
+      checkItems(pageKey, section.bullets)
+      for (const row of section.table || []) {
+        checkItems(pageKey, row)
+      }
+      if (section.callout) checkItems(pageKey, [section.callout.text])
+      for (const step of section.steps || []) {
+        checkItems(pageKey, step.text)
+        checkItems(pageKey, step.bullets)
+        if (step.callout) checkItems(pageKey, [step.callout.text])
+      }
+    }
+  }
+  return broken
 }
 
 /**
@@ -141,6 +190,7 @@ module.exports = {
   findMissingOrderKeys,
   findBrokenCardTargets,
   findBrokenButtonTargets,
+  findBrokenInlineLinks,
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,

@@ -9,6 +9,7 @@ const {
   findMissingOrderKeys,
   findBrokenCardTargets,
   findBrokenButtonTargets,
+  findBrokenInlineLinks,
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
@@ -57,10 +58,14 @@ if (!parsed.success) {
   process.exit(1)
 }
 
+// The main HHVC Agency page keeps the key `pestsTopic` (held over from the
+// Topic-page era) so invariants, tests, and saved review state stay stable.
+// The bare `agency` key stays banned so nobody "fixes" the key name and
+// breaks that stability.
 const keys = new Set(Object.keys(parsed.data.pages))
 if (!keys.has('pestsTopic')) throw new Error('pestsTopic missing')
 if (keys.has('agency')) throw new Error('old agency key still present')
-if (!isTopicPageFirst(parsed.data.order)) throw new Error('Topic page not first')
+if (!isTopicPageFirst(parsed.data.order)) throw new Error('Agency page (pestsTopic) not first')
 
 const missingOrderKeys = findMissingOrderKeys(parsed.data.pages, parsed.data.order)
 if (missingOrderKeys.length) throw new Error('order key missing: ' + missingOrderKeys[0])
@@ -77,9 +82,15 @@ if (brokenButtonTargets.length) {
   throw new Error(`${pageKey} links to missing target ${target}`)
 }
 
+const brokenInlineLinks = findBrokenInlineLinks(parsed.data.pages)
+if (brokenInlineLinks.length) {
+  const { pageKey, target } = brokenInlineLinks[0]
+  throw new Error(`${pageKey} has an inline markdown link to missing target ${target}`)
+}
+
 const bannedTerms = ['plumbing', 'dbi', 'roof leak', 'sewer', 'permit issue', 'construction defect']
 const foundBannedTerms = findBannedTerms(parsed.data.pages.pestsTopic, bannedTerms)
-if (foundBannedTerms.length) throw new Error('Topic page banned term: ' + foundBannedTerms[0])
+if (foundBannedTerms.length) throw new Error('Agency page banned term: ' + foundBannedTerms[0])
 
 const listFormatViolations = findListFormatViolations(parsed.data.pages)
 if (listFormatViolations.length) {

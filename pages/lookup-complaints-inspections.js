@@ -49,13 +49,13 @@ window.HHVC_PAGES['findRecords'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Pests and housing problems',
+          title: 'Healthy Housing and Vector Control',
           target: 'pestsTopic',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
-          title: 'Report rats or mice',
-          target: 'ratsReport',
+          title: 'Report rats, mice, and other four-legged problems',
+          target: 'rodentsReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
