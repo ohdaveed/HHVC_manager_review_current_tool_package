@@ -1,0 +1,151 @@
+window.HHVC_PAGES = window.HHVC_PAGES || {}
+window.HHVC_PAGES['bedBugsInfo'] = {
+  slug: 'sf.gov/information/bed-bug-rules-and-prevention',
+  type: 'Information',
+  title: 'Bed bug rules and prevention',
+  summary:
+    'Learn about bed bug prevention, treatment preparation, and rules for San Francisco rental housing.',
+  audience: [
+    'A tenant preparing for bed bug treatment',
+    'A friend, family member, advocate, or helper supporting a tenant',
+    'A property owner or manager looking for bed bug prevention and control requirements',
+    'Building staff or maintenance staff supporting bed bug prevention',
+  ],
+  reading: 'Grade 7',
+  editorNote:
+    'Information page. Official Director’s Rules PDF is on sfdph.org (not Google Drive). PDF accessibility: consider an HTML summary on SF.gov if Karl editors require a non-PDF primary source. Tenant guidelines PDF is internal reference in docs/source/hhvc-policy/.',
+  sections: [
+    {
+      heading: 'Why it matters',
+      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below. Health-harm framing, placed first to motivate prevention — verify claims against current CDC/SFDPH guidance before publication.',
+      kind: 'body',
+      paragraphs: [
+        'Bed bug bites cause itching and, for some people, allergic skin reactions; repeated scratching can lead to secondary infections. Beyond the physical bites, living with an active infestation often causes real emotional strain — anxiety, embarrassment, and sleepless nights are common.',
+        'Delayed treatment lets bed bugs spread to neighboring units, which is why fast reporting and cooperation with inspections and treatment matter — the longer an infestation goes unaddressed, the more people it affects and the harder it becomes to resolve.',
+      ],
+      callout: {
+        karl: "Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section's three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here.",
+        text: "Bed bugs aren't known to spread disease, but the physical and emotional toll of an unresolved infestation is real and can affect a tenant's health and wellbeing.",
+      },
+    },
+    {
+      heading: 'Use the official bed bug rules',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs below. The external PDF link card below can be embedded as a Link-tool "External link" within this same Text field (a confirmed link type in the rich text "/" menu) rather than needing a separate block.',
+      kind: 'placement',
+      paragraphs: [
+        'SFDPH has Director’s Rules and Regulations for preventing and controlling bed bugs in San Francisco. Use them as the detailed reference for requirements.',
+        'The PDF opens on the SFDPH website. You will leave SF.gov.',
+      ],
+      cards: [
+        {
+          title: 'SFDPH Director’s Rules for bed bug prevention and control',
+          text: 'Open the official PDF for bed bug prevention, control, owner responsibilities, and treatment preparation standards.',
+          url: 'https://www.sfdph.org/dph/files/EHSdocs/Vector/BedBug/BedBugRegs_070112.pdf',
+          karl: 'Maps to a Link-tool "External link" inside the Title and text block\'s rich text above (link text = this card\'s title, target = the sfdph.org PDF URL) — External link is a confirmed Link-tool type, not a gap like the page-only Related field.',
+        },
+      ],
+    },
+    {
+      heading: 'How to spot bed bugs',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Helps tenants and staff detect early.',
+      kind: 'body',
+      paragraphs: [
+        'Bed bugs are small and hide well. Knowing what to look for helps you find a problem before it spreads.',
+      ],
+      bullets: [
+        'Small reddish-brown insects about the size of an apple seed.',
+        'Itchy bites, often in a line or small cluster.',
+        'Small blood spots or dark specks on sheets, mattress seams, and box springs.',
+        'Shed skins or tiny eggs near seams, cracks, and headboards.',
+      ],
+    },
+    {
+      heading: 'Owner and manager responsibilities',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      kind: 'body',
+      paragraphs: [
+        'San Francisco Health Code Article 11A and DPH regulations outline clear requirements for property owners and managers to control bed bugs professionally:',
+      ],
+      bullets: [
+        'Hire licensed professionals: Owners cannot use uncertified building staff to treat bed bugs. They must hire a licensed Pest Control Operator (PCO).',
+        'Investigate early: Investigate any tenant reports of suspected bed bugs within two working days.',
+        'Inspect adjacent units: Upon confirming bed bug activity, owners must direct a PCO to inspect all adjacent units (above, below, and on both sides of the infested unit).',
+        'Pre-tenancy disclosure: Before a new tenant moves in, the landlord must provide a written history of any bed bug infestations and treatments in the unit over the last 24 months.',
+        'Provide mattress encasements: Furnished units must be supplied with breathable, bed bug-proof encasements for all mattresses and box springs at move-in.',
+      ],
+    },
+    {
+      heading: 'Tenant responsibilities and preparation',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      kind: 'body',
+      paragraphs: [
+        'Tenants are required to cooperate with inspections and treatments under San Francisco rules. Failure to cooperate can result in a Notice of Violation.',
+      ],
+      bullets: [
+        'Report quickly: Report any signs of suspected bed bugs to the owner or manager in writing within two working days of detecting them.',
+        'Grant access: Allow reasonable access for inspections and PCO treatment visits.',
+        'Wash and dry clothing: Launder all clothes, bedding, and fabrics in hot water, and dry them on the hottest setting for at least 30 minutes.',
+        'Store in sealed bags: Keep laundered items in durable, sealed plastic bags outside the unit or in a designated area until the PCO clears the unit.',
+        'Clear furniture space: Move all furniture at least 12 inches away from walls to give the PCO access to baseboards.',
+      ],
+    },
+    {
+      heading: 'Safe disposal of infested items',
+      karl: 'Maps to a sixth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      kind: 'body',
+      paragraphs: [
+        'To prevent sidewalk scavenging and stop the spread of bed bugs, discarded items must be labeled and disposed of correctly.',
+      ],
+      bullets: [
+        'Items must be treated by the PCO, double-bagged in durable plastic, and sealed.',
+        "Label bags in English, Spanish, and Chinese: 'INFESTED MATERIAL - DO NOT TAKE' | 'CHINCHES DE CAMA' | '床 蝨'.",
+      ],
+    },
+    {
+      heading: 'Eradication and abatement timeline',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The 4-week/28-day monitoring-period and Abatement Notice bullets are confirmed against the SFDPH bed bug Director\'s Rules (docs/source/hhvc-policy/2026-07-02-bed-bug-directors-rules-tenant-guidelines.md). The "DPH Re-inspection: ...within 45 days..." bullet is NOT supported by that source document (no 45-day final-re-inspection provision found there) and does not match any other source in this repo -- flag as unverified and confirm with HHVC/DPH before publication rather than treating it as an established rule.',
+      kind: 'body',
+      paragraphs: [
+        'Legally, a bed bug infestation is not considered resolved (abated) immediately after treatment.',
+      ],
+      bullets: [
+        '4-Week Monitoring Period: Abatement is achieved only after a 28-day period of zero bed bug activity, verified by a PCO using monitoring devices (interceptors).',
+        "Abatement Notice: Landlords must provide a written 'Abatement Achieved' notice to the tenant after the 28-day clear period.",
+        {
+          text: 'DPH will conduct a final re-inspection within 45 days of the last treatment to verify the closure of a Notice of Violation.',
+          unverified: true,
+          unverifiedReason:
+            "No 45-day final-re-inspection provision found in the SFDPH bed bug Director's Rules source doc or any other source in this repo.",
+        },
+      ],
+    },
+    {
+      heading: 'When someone should report',
+      karl: 'Paragraphs map to an eighth Title and text block (Title = this heading, Text = the paragraph). Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text as a Link-tool link (Internal link → the bedBugsReport Transaction page), or via the "Part of" repeatable field (a page chooser restricted to Transaction pages) if this Information page is marked as supporting that Transaction — flag both options for Digital Services rather than assuming either.',
+      kind: 'body',
+      paragraphs: [
+        'A tenant, tenant helper, affected resident, or employee can report through 311 if there is an active bed bug problem and the property owner or manager does not respond. Do not wait 72 hours for urgent health or safety concerns.',
+        '[Report bed bugs](bedBugsReport)',
+      ],
+    },
+    {
+      heading: 'Related pages',
+      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
+      kind: 'placement',
+      cards: [
+        {
+          title: 'Report bed bugs',
+          target: 'bedBugsReport',
+        },
+        {
+          title: 'Tenant rights and reporting',
+          target: 'tenantRights',
+        },
+        {
+          title: 'What happens after you report',
+          target: 'afterReport',
+        },
+      ],
+    },
+  ],
+}
