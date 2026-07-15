@@ -29,14 +29,14 @@ bun run build:netlify        # validate.js -> build-netlify-dist.js (assembles d
 bun run format               # prettier --write on **/*.{js,ts,json,md,css,html}
 bun run format:check         # prettier --check (this is the lint step; no ESLint/tsc)
 bun run test                  # bun test over tests/*.test.js (utils, data-validation, page-render,
-                              # csv, review-state-schema, reading-level)
+                              # csv, review-state-schema, reading-level, index-html-checks)
 bun run test:e2e              # playwright test
 ```
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
 
-`tests/` holds a real unit-test suite (6 files, run via `bun run test`) plus
+`tests/` holds a real unit-test suite (7 files, run via `bun run test`) plus
 an `e2e/` subfolder driven by `bun run test:e2e`. Beyond that, `bun run
 validate` (`build_scripts/validate.js`) is a second, complementary check:
 it loads every `pages/*.js` file plus `js/page-data.js` into a Node VM
