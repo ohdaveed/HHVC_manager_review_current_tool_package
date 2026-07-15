@@ -38,7 +38,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
     },
     {
       heading: 'More mosquito resources',
-      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 2 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
+      karl: 'FLAG — unconfirmed, no clean mapping: this section has no paragraph/rich-text content of its own, only 3 external-URL cards. It doesn\'t fit "Related" (an internal-page-only chooser, no external URLs), and unlike other external-link cards on other pages there\'s no accompanying Title and text block whose rich text these could be folded into as Link-tool External links, since this section has nothing but a heading and cards. Raise this shape with Digital Services rather than assuming either a Title and text block (with no paragraph content to justify one) or a Related-field entry (wrong link type) applies.',
       kind: 'placement',
       cards: [
         {

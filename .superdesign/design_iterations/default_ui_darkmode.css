@@ -57,11 +57,11 @@
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-family);
-  line-height: 1.6;
-  min-height: 100vh;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  font-family: var(--font-family) !important;
+  line-height: 1.6 !important;
+  min-height: 100vh !important;
 }
 
 html.dark {
