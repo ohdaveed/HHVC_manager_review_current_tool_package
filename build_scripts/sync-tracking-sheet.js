@@ -62,6 +62,7 @@ function primaryCta(page) {
       if (step.button) return step.button
     }
   }
+  if (page.spotlight && page.spotlight.button) return page.spotlight.button
   return page.primaryCta || ''
 }
 

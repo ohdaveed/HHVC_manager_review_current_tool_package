@@ -22,6 +22,7 @@ function primaryCta(page) {
     }
     if (section.button && section.buttonStyle !== 'secondary') return section.button
   }
+  if (page.spotlight && page.spotlight.button) return page.spotlight.button
   return page.primaryCta || ''
 }
 

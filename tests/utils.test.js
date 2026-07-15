@@ -121,6 +121,15 @@ describe('getPrimaryCta / setPrimaryCta', () => {
     expect(ctx.getPrimaryCta(page)).toBe('Fallback CTA')
   })
 
+  test('falls back to spotlight.button before page.primaryCta', () => {
+    const page = {
+      sections: [{ heading: 'Intro' }],
+      spotlight: { button: 'Report through 311' },
+      primaryCta: 'Fallback CTA',
+    }
+    expect(ctx.getPrimaryCta(page)).toBe('Report through 311')
+  })
+
   test('returns empty string when nothing is set', () => {
     expect(ctx.getPrimaryCta({ sections: [] })).toBe('')
     expect(ctx.getPrimaryCta({})).toBe('')
