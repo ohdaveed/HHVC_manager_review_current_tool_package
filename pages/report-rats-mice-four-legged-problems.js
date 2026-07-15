@@ -4,16 +4,16 @@ window.HHVC_PAGES['rodentsReport'] = {
   type: 'Transaction',
   title: 'Report rats, mice, and other four-legged problems',
   summary:
-    'Report rats, mice, raccoons, or other four-legged pest problems in a home, building, yard, or shared area.',
+    'Report rats, mice, raccoons, bats, or other four-legged pest problems in a home, building, yard, or shared area.',
   audience: [
-    'A tenant affected by rats, mice, or other four-legged pests',
+    'A tenant affected by rats, mice, bats, or other four-legged pests',
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting a problem in a shared area',
     'An employee reporting a four-legged pest problem at work',
   ],
   reading: 'Grade 6',
   editorNote:
-    'Consolidated Transaction page. Replaces the separate "Report rats or mice" page and absorbs the raccoon reporting path from the deleted raccoon Information page. One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager: set expectations on response time, then give simple IPM tips so people can start addressing the problem themselves.',
+    'Consolidated Transaction page. Replaces the separate "Report rats or mice" page and absorbs the raccoon reporting path from the deleted raccoon Information page. Bats are in scope too — Article 11 policy source groups bats with raccoons/skunks/squirrels under "Wildlife (Public Health Importance)" and applies the same exclusion/prevention rules (docs/source/hhvc-policy/2026-07-07-directors-rules-ai-export-DRAFT-NOT-FOR-PUBLICATION.md). One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager: set expectations on response time, then give simple IPM tips so people can start addressing the problem themselves.',
   sections: [
     {
       heading: 'What to do',
@@ -47,7 +47,7 @@ window.HHVC_PAGES['rodentsReport'] = {
           title: 'Tell us where the problem is',
           text: ['Only share the details that apply to your situation:'],
           bullets: [
-            '**What you saw:** Rats, mice, raccoons, or another four-legged animal causing a problem.',
+            '**What you saw:** Rats, mice, raccoons, bats, or another four-legged animal causing a problem.',
             '**Where it is:** The address or location, and where you saw the animals (inside, outside, or in a shared area).',
             '**When it started:** How long this has been happening.',
             '**Landlord notice:** If you rent, tell us if you already notified the property owner or manager.',
@@ -168,5 +168,5 @@ window.HHVC_PAGES['rodentsReport'] = {
   ],
   seoTitle: 'Report rats, mice, and other four-legged problems | SF.gov',
   metaDescription:
-    'Report rats, mice, raccoons, or other four-legged pest problems in San Francisco.',
+    'Report rats, mice, raccoons, bats, or other four-legged pest problems in San Francisco.',
 }

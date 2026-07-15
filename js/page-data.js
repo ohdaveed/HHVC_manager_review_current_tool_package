@@ -23,3 +23,37 @@ window.HHVC_DATA = {
     ['mosquitoWorkshop', 'Campaign: Free mosquito education workshop'],
   ],
 }
+
+// Old page keys retired by content consolidations, mapped to the current
+// page that covers the same scope, so a saved/shared ?page=<oldKey> link
+// redirects instead of leaving the viewer stuck on the loading placeholder
+// (renderPage() no-ops on an unknown key). See js/app.js's init() and
+// popstate handler for where this is consulted.
+window.HHVC_DELETED_PAGE_ALIASES = {
+  // Retired pre-2026-07-15 (report-transaction-only consolidation, #62)
+  reportHub: 'pestsTopic',
+  wnvBirdReport: 'insectsReport',
+  moldReport: 'filthReport',
+  vegetationReport: 'filthReport',
+  // Retired 2026-07-15 (40-to-19-page consolidation, #60)
+  ratsReport: 'rodentsReport',
+  garbageReport: 'filthReport',
+  bedBugsReport: 'insectsReport',
+  cockroachesReport: 'insectsReport',
+  mosquitoesReport: 'insectsReport',
+  pigeonsReport: 'filthReport',
+  bedBugsInfo: 'insectsReport',
+  flyInfo: 'insectsReport',
+  waspInfo: 'insectsReport',
+  miteInfo: 'insectsReport',
+  raccoonInfo: 'rodentsReport',
+  pigeonInfo: 'filthReport',
+  garbageInfo: 'filthReport',
+  vegetationInfo: 'filthReport',
+  reduceMoisture: 'filthReport',
+  ratsPrevent: 'rodentsReport',
+  cockroachesPrevent: 'insectsReport',
+  mosquitoesPrevent: 'mosquitoControl',
+  preventHub: 'pestsTopic',
+  findInspector: 'scopeInfo',
+}

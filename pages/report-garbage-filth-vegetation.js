@@ -4,9 +4,9 @@ window.HHVC_PAGES['filthReport'] = {
   type: 'Transaction',
   title: 'Report garbage, filth, and overgrown vegetation',
   summary:
-    'Report garbage, clutter, animal waste, pigeon droppings, or overgrown plants that may attract pests or vectors.',
+    'Report garbage, clutter, mold, animal waste, pigeon droppings, or overgrown plants that may attract pests or vectors.',
   audience: [
-    'A tenant or resident affected by garbage, clutter, filth, or overgrown plants',
+    'A tenant or resident affected by garbage, clutter, mold, filth, or overgrown plants',
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting conditions in a shared area',
     'An employee reporting a pest or vector concern at work',
@@ -168,5 +168,5 @@ window.HHVC_PAGES['filthReport'] = {
   ],
   seoTitle: 'Report garbage, filth, and overgrown vegetation | SF.gov',
   metaDescription:
-    'Report garbage, clutter, animal waste, pigeon problems, or overgrown vegetation in San Francisco.',
+    'Report garbage, clutter, mold, animal waste, pigeon problems, or overgrown vegetation in San Francisco.',
 }

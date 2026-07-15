@@ -14,7 +14,7 @@ const auditMatrixPath = path.join(
 )
 
 const AGENCY_CHECKS = [
-  'Agency page routes reporting through the 3 consolidated report Transactions',
+  'Agency page Quick links route to the 3 consolidated report Transactions (the separate Spotlight CTA intentionally routes to 311 directly instead — see its karl note)',
   'Agency page links to external CDC / UC IPM / NEHA sources instead of duplicating species content',
   'Agency page does not route users to non-HHVC issue paths',
 ]
@@ -30,6 +30,10 @@ const COMMON_CHECKS = [
 
 const CONTENT_REVIEW_FLAGS = {
   insectsReport:
+    'SME-blocked: confirm the dead-bird external routing to the State West Nile virus program matches the current HHVC/CDPH collection workflow',
+  mosquitoControl:
+    'SME-blocked: confirm the dead-bird external routing to the State West Nile virus program matches the current HHVC/CDPH collection workflow',
+  mosquitoWorkshop:
     'SME-blocked: confirm the dead-bird external routing to the State West Nile virus program matches the current HHVC/CDPH collection workflow',
   ownerGuidance:
     'Use rodent-proof materials as enforceable concept; examples may include steel wool with sealant, hardware cloth, copper mesh, sheet metal, mortar, or concrete',
