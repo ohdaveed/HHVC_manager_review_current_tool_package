@@ -1,17 +1,33 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['garbageReport'] = {
-  slug: 'sf.gov/report-garbage-or-clutter',
+  slug: 'sf.gov/report-garbage-clutter-mold-or-unsanitary-conditions',
   type: 'Transaction',
-  title: 'Report garbage or clutter',
-  summary: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
+  title: 'Report garbage, clutter, mold, or unsanitary conditions',
+  summary:
+    'Report garbage, clutter, animal or human waste, overgrown vegetation, mold, or other unsanitary housing conditions.',
   audience: [
-    'A tenant or resident affected by garbage, clutter, debris, or animal waste',
+    'A tenant or resident affected by garbage, clutter, waste, vegetation, mold, or unsanitary conditions',
     'A friend, family member, advocate, or helper reporting for a tenant',
     'A person reporting conditions in a shared area',
-    'An employee reporting a pest or vector concern at work',
+    'An employee reporting a pest, vector, or sanitation concern at work',
   ],
   reading: 'Grade 6',
   sections: [
+    {
+      heading: 'What to report here',
+      karl: 'Best real-schema fit: a things_to_know entry listing the sanitation and garbage-area conditions this one report covers, so 311/HHVC can route each to the right reviewer. Maps the internal Sanitation rows (Garbage/Refuse/Waste/Debris, Human/Animal Waste, Overgrown Vegetation, Unsanitary Bathroom/Kitchen/Hallways/Floors-Walls-Ceiling, Accumulation of Paper Materials, Mold Growth, Excessive Materials) and Garbage Area rows (Inadequate Garbage Containers/Lids, Uncontainerized Garbage) onto one public page. Poison oak folds in with overgrown vegetation.',
+      kind: 'body',
+      paragraphs: ['Use this page to report any of these to Healthy Housing and Vector Control:'],
+      bullets: [
+        'Garbage, refuse, waste, or debris',
+        'Uncontainerized garbage, or inadequate garbage containers or lids',
+        'Human or animal waste',
+        'Overgrown plants, weeds, brush, or poison oak',
+        'Mold from humidity, condensation, or poor ventilation',
+        'Unsanitary bathrooms, kitchens, hallways, floors, walls, or ceilings',
+        'Excessive stored materials or clutter, including accumulated paper (hoarding)',
+      ],
+    },
     {
       heading: 'What to do',
       karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
@@ -33,7 +49,7 @@ window.HHVC_PAGES['garbageReport'] = {
         },
         {
           title: 'If you rent, give 72 hours when possible',
-          text: ['Tell the property owner or manager about the garbage, clutter, or animal waste.'],
+          text: ['Tell the property owner or manager about the condition.'],
           bullets: [
             'If they do not respond or start fixing it within 72 hours, submit your report right away so it can be assigned for review.',
             'Do not wait 72 hours if there is an urgent health or safety concern.',
@@ -45,7 +61,7 @@ window.HHVC_PAGES['garbageReport'] = {
           text: ['Include only the details that apply:'],
           bullets: [
             'The address or location',
-            'Whether the condition is garbage, debris, clutter, stored items, or animal waste',
+            'What the condition is — garbage or debris, uncontainerized garbage or bad containers, human or animal waste, overgrown vegetation or poison oak, mold, an unsanitary room, or excessive clutter or stored materials',
             'Whether it is inside, outside, or in a shared area',
             'How long it has been happening',
             'Whether you told the property owner or manager, if you rent',
@@ -75,6 +91,20 @@ window.HHVC_PAGES['garbageReport'] = {
       ],
     },
     {
+      heading: 'When HHVC may review mold',
+      karl: 'Best real-schema fit: a things_to_know entry specific to mold, carried over from the retired standalone mold report. Title: "When HHVC may review mold". Text: the bulleted list below (Article 11 10-square-foot threshold, self-clean guidance, DBI routing) plus the mold-test-kit callout. SME: confirm thresholds against current protocol before publication.',
+      kind: 'body',
+      bullets: [
+        'Environmental Health may act when mold is growing on walls or ceilings and the affected area totals at least 10 square feet. That is about the size of 10 sheets of paper placed together.',
+        'For mold smaller than 10 square feet, clean hard surfaces with soap and water. Reduce humidity and condensation so it does not come back.',
+        'If your complaint involves structural water intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), this will be routed to the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025). HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.',
+      ],
+      callout: {
+        karl: 'Callout block inside the "When HHVC may review mold" Section specifics: single rich text field. Text: mold-test-kit guidance note, carried over from the retired mold report.',
+        text: 'Do not buy a mold test kit. HHVC does not accept or use third-party mold kits for review.',
+      },
+    },
+    {
       heading: 'How your report is processed',
       karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. New: a secondary Button link block (\'View Health Code Article 11\') citing the municipal code per Ch. 8.7.2 — flag for Digital Services to confirm this is the SF.gov-preferred municode URL before publication.',
       kind: 'body',
@@ -92,7 +122,7 @@ window.HHVC_PAGES['garbageReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 6 cards below = 6 related "Page" entries.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Each card below = one related "Page" entry.',
       kind: 'placement',
       cards: [
         {
@@ -108,8 +138,12 @@ window.HHVC_PAGES['garbageReport'] = {
           target: 'garbageInfo',
         },
         {
-          title: 'Report overgrown vegetation',
-          target: 'vegetationReport',
+          title: 'Prevent overgrown vegetation',
+          target: 'vegetationInfo',
+        },
+        {
+          title: 'Reduce indoor moisture, condensation, and humidity',
+          target: 'reduceMoisture',
         },
         {
           title: 'Report rats or mice',
@@ -122,6 +156,7 @@ window.HHVC_PAGES['garbageReport'] = {
       ],
     },
   ],
-  seoTitle: 'Report garbage or clutter | SF.gov',
-  metaDescription: 'Report garbage, clutter, or animal waste that may attract pests or vectors.',
+  seoTitle: 'Report garbage, clutter, mold, or unsanitary conditions | SF.gov',
+  metaDescription:
+    'Report garbage, clutter, waste, overgrown vegetation, mold, or unsanitary conditions to Healthy Housing and Vector Control.',
 }

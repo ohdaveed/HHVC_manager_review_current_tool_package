@@ -1,9 +1,10 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['ratsReport'] = {
-  slug: 'sf.gov/report-rats-or-mice',
+  slug: 'sf.gov/report-rats-mice-or-other-animals',
   type: 'Transaction',
-  title: 'Report rats or mice',
-  summary: 'Report an active rat or mouse problem in San Francisco.',
+  title: 'Report rats, mice, or other animals',
+  summary:
+    'Report rats, mice, raccoons, skunks, opossums, bats, or other animals in or around a home, building, or yard.',
   audience: [
     'A tenant affected by rats or mice',
     'A friend, family member, advocate, or helper reporting for a tenant',
@@ -12,6 +13,18 @@ window.HHVC_PAGES['ratsReport'] = {
   ],
   reading: 'Grade 6',
   sections: [
+    {
+      heading: 'What to report here',
+      kind: 'body',
+      karl: 'Best real-schema fit: a things_to_know entry listing the animal types this report covers, so 311/HHVC can route rodents, small mammals, and bats to the right vector-control workflow. Maps the internal Vector Survey rows (Rodents; Small Animals — Raccoons, Skunks, Opossums; Bats) onto one public page.',
+      paragraphs: ['Use this page to report any of these to Healthy Housing and Vector Control:'],
+      bullets: [
+        'Rats or mice',
+        'Raccoons, skunks, or opossums',
+        'Bats',
+        'Other wild or four-legged animals in or around a building',
+      ],
+    },
     {
       heading: 'What to do',
       karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
@@ -49,6 +62,7 @@ window.HHVC_PAGES['ratsReport'] = {
             '**Landlord notice:** If you rent, tell us if you already notified the property owner or manager.',
             '**Other issues:** Any garbage, clutter, holes, or overgrown plants nearby.',
             '**Your contact info:** Leave your name and phone number or email if you want an inspector to reach out to you.',
+            'Which animal you saw, if you know',
           ],
           callout: {
             karl: 'Callout block inside the "Tell us where the problem is" Section specifics: single rich text field, no separate title (this mockup callout already uses title: false, so no heading mismatch here). Text: photo guidance note.',
@@ -110,9 +124,14 @@ window.HHVC_PAGES['ratsReport'] = {
           title: 'Tenant rights and reporting',
           target: 'tenantRights',
         },
+        {
+          title: 'Raccoons and housing health',
+          target: 'raccoonInfo',
+        },
       ],
     },
   ],
-  seoTitle: 'Report rats or mice | SF.gov',
-  metaDescription: 'Report an active rat or mouse problem in San Francisco.',
+  seoTitle: 'Report rats, mice, or other animals | SF.gov',
+  metaDescription:
+    'Report rats, mice, raccoons, skunks, opossums, bats, or other animals to Healthy Housing and Vector Control.',
 }

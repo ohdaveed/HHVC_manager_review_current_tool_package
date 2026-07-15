@@ -102,12 +102,6 @@ window.HHVC_PAGES['preventHub'] = {
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },
         {
-          title: 'Report a problem',
-          text: 'Choose the right page to report an active pest or housing health problem.',
-          target: 'reportHub',
-          karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
-        },
-        {
           title: 'Property owner responsibilities',
           text: 'See fees, violation response, and pest prevention obligations under Article 11.',
           target: 'ownerHub',

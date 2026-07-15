@@ -117,15 +117,9 @@ window.HHVC_PAGES['raccoonInfo'] = {
           karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
         {
-          title: 'Report garbage or clutter',
-          text: 'Report garbage, clutter, or animal waste that may attract pests, vectors, or wildlife.',
+          title: 'Report garbage, clutter, mold, or unsanitary conditions',
+          text: 'Report garbage, clutter, animal waste, overgrown vegetation, or other unsanitary conditions that may attract pests, vectors, or wildlife.',
           target: 'garbageReport',
-          karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
-        },
-        {
-          title: 'Report overgrown vegetation',
-          text: 'Report overgrown plants or brush that may shelter pests or vectors.',
-          target: 'vegetationReport',
           karl: 'This card links to an internal Transaction page inline, mid-body — not in the final Related section. Two options for Digital Services: fold it in as an internal Link-tool link within this block\'s own Title and text rich text (preserves its inline placement), or move it to the page-level "Related" field (an unrestricted page chooser) — but Related has no custom title/text per item, so this card\'s description would have no home there either way.',
         },
         {

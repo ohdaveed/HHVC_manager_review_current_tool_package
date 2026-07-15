@@ -69,11 +69,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
           target: 'mosquitoesPrevent',
         },
         {
-          title: 'Report a dead bird',
-          target: 'wnvBirdReport',
-        },
-        {
-          title: 'Report mosquitoes',
+          title: 'Report mosquitoes or a dead bird',
           target: 'mosquitoesReport',
         },
       ],

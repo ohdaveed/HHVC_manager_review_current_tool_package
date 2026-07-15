@@ -1,9 +1,9 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['cockroachesReport'] = {
-  slug: 'sf.gov/report-cockroaches',
+  slug: 'sf.gov/report-cockroaches-or-flies',
   type: 'Transaction',
-  title: 'Report cockroaches',
-  summary: 'Report an active cockroach problem in San Francisco.',
+  title: 'Report cockroaches or flies',
+  summary: 'Report cockroaches or flies in a home, shared area, SRO, hotel, or workplace.',
   audience: [
     'A tenant affected by cockroaches',
     'A friend, family member, advocate, or helper reporting for a tenant',
@@ -12,6 +12,13 @@ window.HHVC_PAGES['cockroachesReport'] = {
   ],
   reading: 'Grade 6',
   sections: [
+    {
+      heading: 'What to report here',
+      kind: 'body',
+      karl: 'Best real-schema fit: a things_to_know entry noting this report covers both cockroaches and flies (two internal Vector Survey rows on one public page).',
+      paragraphs: ['Use this page to report any of these to Healthy Housing and Vector Control:'],
+      bullets: ['Cockroaches', 'Flies'],
+    },
     {
       heading: 'What to do',
       karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
@@ -45,6 +52,7 @@ window.HHVC_PAGES['cockroachesReport'] = {
           text: ['Include only the details that apply:'],
           bullets: [
             'The address or location',
+            'Whether you saw cockroaches or flies',
             'Where you saw cockroaches',
             'Whether it is inside a unit or in a shared area',
             'How long it has been happening',
@@ -111,9 +119,13 @@ window.HHVC_PAGES['cockroachesReport'] = {
           title: 'Tenant rights and reporting',
           target: 'tenantRights',
         },
+        {
+          title: 'Flies and housing health',
+          target: 'flyInfo',
+        },
       ],
     },
   ],
-  seoTitle: 'Report cockroaches | SF.gov',
-  metaDescription: 'Report an active cockroach problem in San Francisco.',
+  seoTitle: 'Report cockroaches or flies | SF.gov',
+  metaDescription: 'Report cockroaches or flies to Healthy Housing and Vector Control.',
 }

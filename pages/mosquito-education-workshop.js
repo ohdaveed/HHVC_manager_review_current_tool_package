@@ -138,7 +138,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
         {
           title: 'Report a dead bird',
           text: 'Teach students how community dead bird reports support West Nile virus tracking.',
-          target: 'wnvBirdReport',
+          target: 'mosquitoesReport',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {

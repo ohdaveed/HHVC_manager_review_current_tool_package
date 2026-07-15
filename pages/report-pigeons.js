@@ -14,6 +14,17 @@ window.HHVC_PAGES['pigeonsReport'] = {
   reading: 'Grade 6',
   sections: [
     {
+      heading: 'What to report here',
+      kind: 'body',
+      karl: 'Best real-schema fit: a things_to_know entry summarizing what a pigeon report covers (roosting, nesting, droppings, feeding), mapping the internal Vector Survey "Pigeons" row.',
+      paragraphs: ['Use this page to report any of these to Healthy Housing and Vector Control:'],
+      bullets: [
+        'Pigeon roosting or nesting',
+        'Pigeon droppings',
+        'Pigeon feeding that attracts birds',
+      ],
+    },
+    {
       heading: 'What to do',
       karl: 'Karl: what_to_do StreamField. Each step below = one Section block (section_title + section_specifics). Primary 311 action appears first; report details are consolidated in Step 3.',
       kind: 'body',
