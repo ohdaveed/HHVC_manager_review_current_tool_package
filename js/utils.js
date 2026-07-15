@@ -32,6 +32,7 @@ const REVIEW_RECORD_FIELDS = [
     escapeHtml,
     getPrimaryCta,
     setPrimaryCta,
+    resolvePageKey,
     today,
     csvEscape,
     toCsv,
@@ -148,6 +149,24 @@ function getPrimaryCta(page) {
   }
   if (page.spotlight && page.spotlight.button) return page.spotlight.button
   return page.primaryCta || ''
+}
+
+/**
+ * Resolves a possibly-stale ?page= key to a real page key. Pure function
+ * (no DOM/globals) so js/app.js's resolveInitialPageKey can layer toast
+ * side effects on top while this stays independently testable.
+ * @param {string|null|undefined} key
+ * @param {object} pageData
+ * @param {object} [aliases] old-key -> current-key map for retired pages
+ * @param {string} [defaultKey]
+ * @returns {{key: string, status: 'ok'|'aliased'|'unknown', from: string|null}}
+ */
+function resolvePageKey(key, pageData, aliases, defaultKey = 'pestsTopic') {
+  if (!key) return { key: defaultKey, status: 'ok', from: null }
+  if (pageData[key]) return { key, status: 'ok', from: null }
+  const alias = aliases && aliases[key]
+  if (alias && pageData[alias]) return { key: alias, status: 'aliased', from: key }
+  return { key: defaultKey, status: 'unknown', from: key }
 }
 
 /**

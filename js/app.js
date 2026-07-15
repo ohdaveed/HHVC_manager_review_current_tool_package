@@ -7,25 +7,25 @@
 // consolidation alias map for retired keys and falling back to the
 // default page. Without this, renderPage() silently no-ops on an unknown
 // key (e.g. an old saved/shared link), leaving the viewer stuck on the
-// static "Loading…" placeholder in index.html forever.
+// static "Loading…" placeholder in index.html forever. Pure resolution
+// logic lives in resolvePageKey() (js/utils.js) so it's independently
+// testable; this wrapper only adds the toast side effect.
 function resolveInitialPageKey(key) {
-  if (!key) return 'pestsTopic'
-  if (pageData[key]) return key
-  const aliases = window.HHVC_DELETED_PAGE_ALIASES || {}
-  const alias = aliases[key]
-  if (alias && pageData[alias]) {
-    if (typeof showToast === 'function') {
+  const result = resolvePageKey(key, pageData, window.HHVC_DELETED_PAGE_ALIASES, 'pestsTopic')
+  if (typeof showToast === 'function') {
+    if (result.status === 'aliased') {
       showToast(
-        `That page has been consolidated. Showing "${pageData[alias].title}" instead.`,
+        `That page has been consolidated. Showing "${pageData[result.key].title}" instead.`,
+        'info'
+      )
+    } else if (result.status === 'unknown') {
+      showToast(
+        `"${result.from}" is not a page in this mockup. Showing the default page instead.`,
         'info'
       )
     }
-    return alias
   }
-  if (typeof showToast === 'function') {
-    showToast(`"${key}" is not a page in this mockup. Showing the default page instead.`, 'info')
-  }
-  return 'pestsTopic'
+  return result.key
 }
 
 function init() {

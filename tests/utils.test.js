@@ -161,6 +161,68 @@ describe('getPrimaryCta / setPrimaryCta', () => {
   })
 })
 
+describe('resolvePageKey', () => {
+  const pageData = { pestsTopic: {}, filthReport: {}, rodentsReport: {} }
+  const aliases = {
+    raccoonInfo: 'rodentsReport',
+    garbageReport: 'filthReport',
+    deadEnd: 'noSuchPage',
+  }
+
+  test('returns the key unchanged when it already exists', () => {
+    expect(ctx.resolvePageKey('filthReport', pageData, aliases)).toEqual({
+      key: 'filthReport',
+      status: 'ok',
+      from: null,
+    })
+  })
+
+  test('falls back to the default key when no key is given', () => {
+    expect(ctx.resolvePageKey(null, pageData, aliases, 'pestsTopic')).toEqual({
+      key: 'pestsTopic',
+      status: 'ok',
+      from: null,
+    })
+    expect(ctx.resolvePageKey(undefined, pageData, aliases, 'pestsTopic')).toEqual({
+      key: 'pestsTopic',
+      status: 'ok',
+      from: null,
+    })
+  })
+
+  test('follows the alias map for a retired key', () => {
+    expect(ctx.resolvePageKey('raccoonInfo', pageData, aliases, 'pestsTopic')).toEqual({
+      key: 'rodentsReport',
+      status: 'aliased',
+      from: 'raccoonInfo',
+    })
+  })
+
+  test('falls back to the default key when the alias target does not exist', () => {
+    expect(ctx.resolvePageKey('deadEnd', pageData, aliases, 'pestsTopic')).toEqual({
+      key: 'pestsTopic',
+      status: 'unknown',
+      from: 'deadEnd',
+    })
+  })
+
+  test('falls back to the default key for a completely unknown key', () => {
+    expect(ctx.resolvePageKey('neverExisted', pageData, aliases, 'pestsTopic')).toEqual({
+      key: 'pestsTopic',
+      status: 'unknown',
+      from: 'neverExisted',
+    })
+  })
+
+  test('works with no aliases map at all', () => {
+    expect(ctx.resolvePageKey('raccoonInfo', pageData, undefined, 'pestsTopic')).toEqual({
+      key: 'pestsTopic',
+      status: 'unknown',
+      from: 'raccoonInfo',
+    })
+  })
+})
+
 describe('today', () => {
   test('returns an ISO-style YYYY-MM-DD date string', () => {
     expect(ctx.today()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
