@@ -147,6 +147,18 @@ describe('getPrimaryCta / setPrimaryCta', () => {
     ctx.setPrimaryCta(page, 'New label')
     expect(page.primaryCta).toBe('New label')
   })
+
+  test('setPrimaryCta writes spotlight.button, and getPrimaryCta round-trips it', () => {
+    const page = {
+      sections: [{ heading: 'Intro' }],
+      spotlight: { button: 'Report through 311' },
+      primaryCta: 'Old',
+    }
+    ctx.setPrimaryCta(page, 'New label')
+    expect(page.spotlight.button).toBe('New label')
+    expect(page.primaryCta).toBe('Old')
+    expect(ctx.getPrimaryCta(page)).toBe('New label')
+  })
 })
 
 describe('today', () => {

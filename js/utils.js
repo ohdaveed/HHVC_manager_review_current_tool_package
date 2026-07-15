@@ -168,6 +168,10 @@ function setPrimaryCta(page, label) {
       return
     }
   }
+  if (page.spotlight && page.spotlight.button) {
+    page.spotlight.button = label
+    return
+  }
   page.primaryCta = label
 }
 
