@@ -10,15 +10,13 @@ const DECISIONS = {
   blocked: 'Blocked',
 }
 
-// Load the app with no saved reviewer state: navigate, wipe both storages,
-// then reload so every module boots from the empty state.
+// Load the app with no saved reviewer state. Each Playwright test gets a
+// fresh browser context, so storage is already empty on first navigation —
+// deliberately no clear+reload here: the app flushes current field values to
+// localStorage on pagehide, so a clear-then-reload would boot the app with a
+// freshly recreated (non-virgin) state blob.
 async function gotoFresh(page, path = '/') {
   await page.goto(path)
-  await page.evaluate(() => {
-    localStorage.clear()
-    sessionStorage.clear()
-  })
-  await page.reload()
   await page.waitForSelector('#mockPage h1')
 }
 
@@ -91,12 +89,15 @@ async function settleDebounce(page) {
 }
 
 // Switch pages via the sidebar picker and wait for the render to land.
-// renderPage() pushes ?page=<key> and may resolve through a View Transition,
-// so wait on the URL param rather than a fixed timeout.
+// renderPage() pushes ?page=<key> immediately but applies content inside a
+// View Transition, so wait for #browserUrl to show the target page's slug —
+// that's set by applyPageContent, i.e. only once the new page is in the DOM.
 async function selectPage(page, key) {
   await page.selectOption('#pageSelect', key)
   await page.waitForFunction(
-    (expected) => new URLSearchParams(location.search).get('page') === expected,
+    (expected) =>
+      document.getElementById('browserUrl')?.textContent ===
+      'https://' + window.HHVC_PAGES[expected].slug,
     key
   )
   await page.waitForSelector('#mockPage h1')

@@ -82,8 +82,10 @@
   function wrapRenderPageForManagerExport() {
     if (typeof window.renderPage !== 'function' || window.renderPage.__managerExportWrapped) return
     const originalRenderPage = window.renderPage
-    window.renderPage = function renderPageWithManagerExportRefresh(key) {
-      const result = originalRenderPage.call(this, key)
+    // Forward skipHistory so wrapped popstate renders don't push history
+    // entries (which would clear the browser's forward stack).
+    window.renderPage = function renderPageWithManagerExportRefresh(key, skipHistory) {
+      const result = originalRenderPage.call(this, key, skipHistory)
       // Under View Transitions, renderPage returns a promise that resolves once
       // applyPageContent has updated currentPageKey; refreshing earlier would
       // label the previous page.

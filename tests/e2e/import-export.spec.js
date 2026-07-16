@@ -54,9 +54,7 @@ test.describe('review import/export through the UI', () => {
   test('all-page template CSV export has one row per page', async ({ page }) => {
     await gotoFresh(page)
 
-    const { download, text } = await downloadToText(page, () =>
-      page.click('#exportAllTemplateCsv')
-    )
+    const { download, text } = await downloadToText(page, () => page.click('#exportAllTemplateCsv'))
 
     expect(download.suggestedFilename()).toBe('hhvc-all-page-manager-review-template.csv')
     const lines = text.trim().split('\n')

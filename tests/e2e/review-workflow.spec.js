@@ -44,11 +44,16 @@ test.describe('manager review workflow', () => {
     expect(state.pages.pestsTopic?.decision).toBe('Blocked')
   })
 
-  test('sticky bar next/prev navigate through the page order', async ({ page }) => {
+  test('sticky bar next/prev navigate through the review queue order', async ({ page }) => {
     await gotoFresh(page)
 
+    // Next/prev walk the queue's current sort order (not the menu order), so
+    // read the app's computed target instead of hardcoding a page key.
+    const expectedNext = await page.evaluate(() => window.reviewQueue.getAdjacentKey(1, 'All'))
+    expect(expectedNext).toBeTruthy()
+
     await page.click('[data-sticky-action="next"]')
-    await expect(page.locator('#pageSelect')).toHaveValue('rodentsReport')
+    await expect(page.locator('#pageSelect')).toHaveValue(expectedNext)
 
     await page.click('[data-sticky-action="prev"]')
     await expect(page.locator('#pageSelect')).toHaveValue('pestsTopic')

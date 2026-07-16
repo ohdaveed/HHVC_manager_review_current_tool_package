@@ -9,12 +9,17 @@ async function focusMockPage(page) {
 }
 
 test.describe('keyboard shortcuts', () => {
-  test('j and k navigate to the next and previous page', async ({ page }) => {
+  test('j and k navigate to the next and previous queue page', async ({ page }) => {
     await gotoFresh(page)
     await focusMockPage(page)
 
+    // j/k walk the queue's current sort order (not the menu order), so read
+    // the app's computed target instead of hardcoding a page key.
+    const expectedNext = await page.evaluate(() => window.reviewQueue.getAdjacentKey(1, 'All'))
+    expect(expectedNext).toBeTruthy()
+
     await page.keyboard.press('j')
-    await expect(page.locator('#pageSelect')).toHaveValue('rodentsReport')
+    await expect(page.locator('#pageSelect')).toHaveValue(expectedNext)
 
     await focusMockPage(page)
     await page.keyboard.press('k')
@@ -30,10 +35,7 @@ test.describe('keyboard shortcuts', () => {
     await expect(workspace).toBeVisible()
 
     await page.keyboard.press('2')
-    await expect(page.locator('#reviewWorkspaceTabChecks')).toHaveAttribute(
-      'aria-selected',
-      'true'
-    )
+    await expect(page.locator('#reviewWorkspaceTabChecks')).toHaveAttribute('aria-selected', 'true')
 
     await page.keyboard.press('4')
     await expect(page.locator('#reviewWorkspaceTabHelp')).toHaveAttribute('aria-selected', 'true')
@@ -88,10 +90,12 @@ test.describe('keyboard shortcuts', () => {
     await page.waitForSelector('#mockPage h1')
     await focusMockPage(page)
 
+    const expected = await page.evaluate(() => window.reviewQueue.getNextNeedsReviewKey())
+    expect(expected).toBeTruthy()
+    expect(expected).not.toBe('rodentsReport')
+
     await page.keyboard.press('n')
 
-    const value = await page.inputValue('#pageSelect')
-    expect(value).not.toBe('rodentsReport')
-    expect(value).not.toBe('pestsTopic')
+    await expect(page.locator('#pageSelect')).toHaveValue(expected)
   })
 })

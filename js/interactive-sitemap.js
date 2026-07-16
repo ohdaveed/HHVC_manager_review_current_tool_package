@@ -145,8 +145,10 @@
   function wrapRenderPageForSitemap() {
     if (typeof window.renderPage !== 'function' || window.renderPage.__sitemapWrapped) return
     const originalRenderPage = window.renderPage
-    window.renderPage = function renderPageWithSitemapRefresh(key) {
-      const result = originalRenderPage.call(this, key)
+    // Forward skipHistory so wrapped popstate renders don't push history
+    // entries (which would clear the browser's forward stack).
+    window.renderPage = function renderPageWithSitemapRefresh(key, skipHistory) {
+      const result = originalRenderPage.call(this, key, skipHistory)
       // Under View Transitions, renderPage returns a promise that resolves
       // once #pageSelect reflects the new page; rerendering earlier would
       // highlight the previous page as current.

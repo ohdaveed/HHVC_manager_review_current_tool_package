@@ -20,18 +20,20 @@ test.describe('interactive sitemap and workspace panels', () => {
     await expect(page.locator('#pageSelect')).toHaveValue('payFee')
   })
 
-  test('sitemap search filters visible nodes', async ({ page }) => {
+  test('sitemap search dims non-matching nodes', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'sitemap')
 
     await page.fill('.sitemap-search-input', 'mosquito')
 
-    // Wait for a known non-matching node to be filtered out before counting
-    // (count() doesn't auto-wait on the search re-render).
-    await expect(page.locator('.sitemap-diagram-node[data-sitemap-key="payFee"]')).toBeHidden()
-    const visible = await page.locator('.sitemap-diagram-node[data-sitemap-key]:visible').count()
-    expect(visible).toBeGreaterThan(0)
-    expect(visible).toBeLessThan(19)
+    // The sitemap search dims non-matching nodes (class "dimmed") rather than
+    // removing them, so assert on the class, not on visibility.
+    await expect(page.locator('.sitemap-diagram-node[data-sitemap-key="payFee"]')).toHaveClass(
+      /dimmed/
+    )
+    await expect(
+      page.locator('.sitemap-diagram-node[data-sitemap-key="mosquitoControl"]')
+    ).not.toHaveClass(/dimmed/)
   })
 
   test('help tab renders guidance panels and the review checklist', async ({ page }) => {

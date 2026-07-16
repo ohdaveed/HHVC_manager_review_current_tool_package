@@ -66,20 +66,22 @@ test.describe('page navigation', () => {
 
   test('deleted-page alias redirects to the consolidated page with a toast', async ({ page }) => {
     await page.goto('/?page=ratsReport')
-    await page.waitForSelector('#mockPage h1')
-    await expect(page.locator('#pageSelect')).toHaveValue('rodentsReport')
+    // Assert the toast before waiting on the page render: toasts auto-dismiss
+    // after 4s, and the first render can be slow under parallel-worker load.
     await expect(
       page.locator('#toastContainer .toast').filter({ hasText: /consolidated/i })
-    ).toHaveCount(1)
+    ).toBeVisible()
+    await page.waitForSelector('#mockPage h1')
+    await expect(page.locator('#pageSelect')).toHaveValue('rodentsReport')
   })
 
   test('unknown page key falls back to the agency page with a toast', async ({ page }) => {
     await page.goto('/?page=notARealPage')
-    await page.waitForSelector('#mockPage h1')
-    await expect(page.locator('#pageSelect')).toHaveValue('pestsTopic')
     await expect(
       page.locator('#toastContainer .toast').filter({ hasText: /not a page/i })
-    ).toHaveCount(1)
+    ).toBeVisible()
+    await page.waitForSelector('#mockPage h1')
+    await expect(page.locator('#pageSelect')).toHaveValue('pestsTopic')
   })
 
   test('browser back and forward restore previous pages', async ({ page }) => {

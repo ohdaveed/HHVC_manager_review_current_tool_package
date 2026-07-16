@@ -24,8 +24,11 @@ test.describe('review queue (Overview tab)', () => {
 
   test('decision filters narrow the visible rows', async ({ page }) => {
     await gotoFresh(page)
+    // Seed pages other than the currently open one: the app flushes the
+    // current page's live field values to localStorage on pagehide, which
+    // would overwrite a seeded record for the open page during the reload.
     await seedState(page, {
-      pestsTopic: makeReviewRecord('pestsTopic', { decision: DECISIONS.approved }),
+      rodentsReport: makeReviewRecord('rodentsReport', { decision: DECISIONS.approved }),
       payFee: makeReviewRecord('payFee', { decision: DECISIONS.blocked }),
     })
     await reloadAndOpenQueue(page)
@@ -34,7 +37,7 @@ test.describe('review queue (Overview tab)', () => {
     await expect(page.locator('.review-queue-table-row')).toHaveCount(1)
     await expect(page.locator('.review-queue-table-row').first()).toHaveAttribute(
       'data-page-key',
-      'pestsTopic'
+      'rodentsReport'
     )
 
     await page.click('.review-queue-filter[data-queue-filter="Blocked"]')
@@ -60,9 +63,9 @@ test.describe('review queue (Overview tab)', () => {
     const visible = await page.locator('.review-queue-table-row').count()
     expect(visible).toBeGreaterThan(0)
     expect(visible).toBeLessThan(19)
-    await expect(page.locator('.review-queue-table-row[data-page-key="mosquitoControl"]')).toHaveCount(
-      1
-    )
+    await expect(
+      page.locator('.review-queue-table-row[data-page-key="mosquitoControl"]')
+    ).toHaveCount(1)
 
     await page.fill('#reviewQueueSearch', '')
     await expect(page.locator('.review-queue-table-row')).toHaveCount(19)

@@ -1,5 +1,11 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, readState, selectPage, settleDebounce, openSearchMetadata } = require('./helpers')
+const {
+  gotoFresh,
+  readState,
+  selectPage,
+  settleDebounce,
+  openSearchMetadata,
+} = require('./helpers')
 
 test.describe('editor panel (search metadata)', () => {
   test('typing an SEO title updates the preview and character count', async ({ page }) => {
