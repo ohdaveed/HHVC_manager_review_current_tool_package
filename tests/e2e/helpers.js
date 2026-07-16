@@ -37,7 +37,9 @@ async function recordToasts(page) {
           }
         }
       }
-    }).observe(document.documentElement, { childList: true, subtree: true })
+      // Observe the Document node itself: at init-script time the eventual
+      // <html> element doesn't exist yet (the parser replaces the initial one).
+    }).observe(document, { childList: true, subtree: true })
   })
 }
 
