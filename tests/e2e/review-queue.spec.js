@@ -54,6 +54,9 @@ test.describe('review queue (Overview tab)', () => {
     await page.waitForSelector('.review-queue-table-row')
 
     await page.fill('#reviewQueueSearch', 'mosquito')
+    // The queue rebuilds its table on each keystroke; wait for a known
+    // non-matching row to drop out before counting (count() doesn't auto-wait).
+    await expect(page.locator('.review-queue-table-row[data-page-key="payFee"]')).toBeHidden()
     const visible = await page.locator('.review-queue-table-row').count()
     expect(visible).toBeGreaterThan(0)
     expect(visible).toBeLessThan(19)
@@ -71,11 +74,18 @@ test.describe('review queue (Overview tab)', () => {
     await page.waitForSelector('.review-queue-table-row')
 
     await page.selectOption('#reviewQueueSort', 'title')
-    await page.waitForSelector('.review-queue-table-row')
 
-    const titles = await page.locator('.review-queue-row-title').allTextContents()
-    const sorted = [...titles].sort((a, b) => a.localeCompare(b))
-    expect(titles).toEqual(sorted)
+    // The sort re-renders asynchronously; poll until the row order is
+    // alphabetical instead of reading the DOM once and racing the rebuild.
+    await expect
+      .poll(async () => {
+        const titles = await page.locator('.review-queue-row-title').allTextContents()
+        return (
+          titles.length === 19 &&
+          titles.every((title, i) => i === 0 || titles[i - 1].localeCompare(title) <= 0)
+        )
+      })
+      .toBe(true)
   })
 
   test('row action updates that page decision in saved state', async ({ page }) => {

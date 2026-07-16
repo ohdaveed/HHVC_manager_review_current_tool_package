@@ -17,11 +17,22 @@ async function downloadToText(page, trigger) {
   return { download, text: fs.readFileSync(filePath, 'utf8') }
 }
 
+const tempDirs = []
+
 function writeTempFile(name, content) {
-  const filePath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-e2e-')), name)
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-e2e-'))
+  tempDirs.push(dir)
+  const filePath = path.join(dir, name)
   fs.writeFileSync(filePath, content)
   return filePath
 }
+
+test.afterEach(() => {
+  for (const dir of tempDirs) {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+  tempDirs.length = 0
+})
 
 test.describe('review import/export through the UI', () => {
   test('single-page CSV export contains the current review', async ({ page }) => {

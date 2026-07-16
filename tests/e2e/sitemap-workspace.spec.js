@@ -26,6 +26,9 @@ test.describe('interactive sitemap and workspace panels', () => {
 
     await page.fill('.sitemap-search-input', 'mosquito')
 
+    // Wait for a known non-matching node to be filtered out before counting
+    // (count() doesn't auto-wait on the search re-render).
+    await expect(page.locator('.sitemap-diagram-node[data-sitemap-key="payFee"]')).toBeHidden()
     const visible = await page.locator('.sitemap-diagram-node[data-sitemap-key]:visible').count()
     expect(visible).toBeGreaterThan(0)
     expect(visible).toBeLessThan(19)

@@ -18,21 +18,27 @@ async function expectNoSeriousViolations(page) {
     .withTags(['wcag2a', 'wcag2aa'])
     .disableRules(['color-contrast'])
     .analyze()
-  expect(
-    results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')
-  ).toEqual([])
+  // Map to a compact summary so a failure prints the offending rules and
+  // nodes instead of dumping full Axe violation objects.
+  const serious = results.violations
+    .filter((v) => v.impact === 'critical' || v.impact === 'serious')
+    .map((v) => ({
+      id: v.id,
+      impact: v.impact,
+      description: v.description,
+      nodes: v.nodes.map((n) => n.html),
+    }))
+  expect(serious).toEqual([])
 }
 
 test.describe('accessibility', () => {
-  test('representative pages of each content type have no serious violations', async ({
-    page,
-  }) => {
-    await gotoFresh(page)
-    for (const key of REPRESENTATIVE_PAGES) {
+  for (const key of REPRESENTATIVE_PAGES) {
+    test(`page "${key}" has no serious violations`, async ({ page }) => {
+      await gotoFresh(page)
       if (key !== 'pestsTopic') await selectPage(page, key)
       await expectNoSeriousViolations(page)
-    }
-  })
+    })
+  }
 
   test('open workspace with the review queue has no serious violations', async ({ page }) => {
     await gotoFresh(page)
