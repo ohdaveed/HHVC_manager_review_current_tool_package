@@ -18,6 +18,31 @@ const DECISIONS = {
 async function gotoFresh(page, path = '/') {
   await page.goto(path)
   await page.waitForSelector('#mockPage h1')
+  // The sticky review bar mounts a beat after the first render; most flows
+  // (workspace toggling, w shortcut) need it, so wait for full app init.
+  await page.waitForSelector('[data-sticky-action="toggle-workspace"]')
+}
+
+// Record every toast that appears into window.__toasts. Toasts auto-dismiss
+// after 4s, so under parallel-worker load a boot-time toast can be gone before
+// page.goto() even resolves — call this BEFORE goto and assert on the record.
+async function recordToasts(page) {
+  await page.addInitScript(() => {
+    window.__toasts = []
+    new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === 1 && node.classList?.contains('toast')) {
+            window.__toasts.push(node.textContent || '')
+          }
+        }
+      }
+    }).observe(document.documentElement, { childList: true, subtree: true })
+  })
+}
+
+async function readRecordedToasts(page) {
+  return page.evaluate(() => (window.__toasts || []).join('\n'))
 }
 
 async function clearState(page) {
@@ -107,6 +132,8 @@ module.exports = {
   STORAGE_KEY,
   DECISIONS,
   gotoFresh,
+  recordToasts,
+  readRecordedToasts,
   clearState,
   readState,
   seedState,

@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, selectPage } = require('./helpers')
+const { gotoFresh, selectPage, recordToasts, readRecordedToasts } = require('./helpers')
 
 const PAGE_KEYS = [
   'pestsTopic',
@@ -65,23 +65,21 @@ test.describe('page navigation', () => {
   })
 
   test('deleted-page alias redirects to the consolidated page with a toast', async ({ page }) => {
+    // Boot-time toasts auto-dismiss after 4s and can be gone before goto()
+    // resolves under parallel-worker load, so assert on the recorded history.
+    await recordToasts(page)
     await page.goto('/?page=ratsReport')
-    // Assert the toast before waiting on the page render: toasts auto-dismiss
-    // after 4s, and the first render can be slow under parallel-worker load.
-    await expect(
-      page.locator('#toastContainer .toast').filter({ hasText: /consolidated/i })
-    ).toBeVisible()
     await page.waitForSelector('#mockPage h1')
     await expect(page.locator('#pageSelect')).toHaveValue('rodentsReport')
+    expect(await readRecordedToasts(page)).toMatch(/consolidated/i)
   })
 
   test('unknown page key falls back to the agency page with a toast', async ({ page }) => {
+    await recordToasts(page)
     await page.goto('/?page=notARealPage')
-    await expect(
-      page.locator('#toastContainer .toast').filter({ hasText: /not a page/i })
-    ).toBeVisible()
     await page.waitForSelector('#mockPage h1')
     await expect(page.locator('#pageSelect')).toHaveValue('pestsTopic')
+    expect(await readRecordedToasts(page)).toMatch(/not a page/i)
   })
 
   test('browser back and forward restore previous pages', async ({ page }) => {

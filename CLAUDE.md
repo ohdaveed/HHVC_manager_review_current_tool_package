@@ -37,10 +37,10 @@ bun run test:e2e              # playwright test
 `start-dev.sh` kills any stale listener on the port before starting.
 
 `tests/` holds a real unit-test suite (7 files, run via `bun run test`) plus
-an `e2e/` subfolder driven by `bun run test:e2e` — nine UI-driven Playwright
-spec files (navigation, editor panel, review workflow, review queue,
-import/export, keyboard shortcuts, sitemap/workspace, accessibility, and the
-original API-level `review-import-export` round-trip) sharing plain helper
+an `e2e/` subfolder driven by `bun run test:e2e` — nine Playwright spec files
+(eight UI-driven: navigation, editor panel, review workflow, review queue,
+import/export, keyboard shortcuts, sitemap/workspace, and accessibility, plus
+the original API-level `review-import-export` round-trip) sharing plain helper
 functions in `tests/e2e/helpers.js`. In a sandbox with a pre-installed
 Chromium, run
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e`

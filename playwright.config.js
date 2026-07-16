@@ -16,7 +16,9 @@ module.exports = defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:8080',
     trace: 'on-first-retry',
-    ...(chromiumExecutablePath ? { launchOptions: { executablePath: chromiumExecutablePath } } : {}),
+    ...(chromiumExecutablePath
+      ? { launchOptions: { executablePath: chromiumExecutablePath } }
+      : {}),
   },
   webServer: {
     command: 'bun run start',

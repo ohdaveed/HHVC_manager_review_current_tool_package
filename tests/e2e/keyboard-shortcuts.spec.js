@@ -28,9 +28,17 @@ test.describe('keyboard shortcuts', () => {
 
   test('w toggles the workspace and number keys switch tabs', async ({ page }) => {
     await gotoFresh(page)
-    await focusMockPage(page)
 
+    // First-run onboarding may auto-open the workspace; normalize to closed
+    // so the first "w" below deterministically opens it.
     const workspace = page.locator('#reviewWorkspace')
+    if (await workspace.isVisible()) {
+      await focusMockPage(page)
+      await page.keyboard.press('w')
+      await expect(workspace).toBeHidden()
+    }
+
+    await focusMockPage(page)
     await page.keyboard.press('w')
     await expect(workspace).toBeVisible()
 

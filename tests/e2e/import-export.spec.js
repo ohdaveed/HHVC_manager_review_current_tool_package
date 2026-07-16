@@ -1,6 +1,4 @@
 const fs = require('fs')
-const os = require('os')
-const path = require('path')
 const { test, expect } = require('@playwright/test')
 const {
   gotoFresh,
@@ -17,22 +15,13 @@ async function downloadToText(page, trigger) {
   return { download, text: fs.readFileSync(filePath, 'utf8') }
 }
 
-const tempDirs = []
-
+// Write fixture files into the current test's own output directory —
+// per-test isolation under parallel workers, cleaned up by Playwright.
 function writeTempFile(name, content) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-e2e-'))
-  tempDirs.push(dir)
-  const filePath = path.join(dir, name)
+  const filePath = test.info().outputPath(name)
   fs.writeFileSync(filePath, content)
   return filePath
 }
-
-test.afterEach(() => {
-  for (const dir of tempDirs) {
-    fs.rmSync(dir, { recursive: true, force: true })
-  }
-  tempDirs.length = 0
-})
 
 test.describe('review import/export through the UI', () => {
   test('single-page CSV export contains the current review', async ({ page }) => {

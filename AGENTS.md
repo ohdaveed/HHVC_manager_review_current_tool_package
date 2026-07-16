@@ -53,10 +53,11 @@ bun run vendor:browser        # rebuild js/vendor/{fuse,defu}.js IIFE bundles fr
 isn't). `bun run test` runs seven Bun unit-test files under `tests/` — `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 and `index-html-checks` — plus `bun run test:e2e` (Playwright, in `tests/e2e/`:
-nine UI-driven spec files — navigation, editor panel, review workflow, review
-queue, import/export, keyboard shortcuts, sitemap/workspace, accessibility, and
-the original `review-import-export` API-level round-trip — sharing plain helper
-functions in `tests/e2e/helpers.js`, no fixture framework). In a sandbox with a
+nine spec files — eight UI-driven ones covering navigation, editor panel,
+review workflow, review queue, import/export, keyboard shortcuts,
+sitemap/workspace, and accessibility, plus the original `review-import-export`
+API-level round-trip — sharing plain helper functions in
+`tests/e2e/helpers.js`, no fixture framework). In a sandbox with a
 pre-installed Chromium, point Playwright at it instead of downloading:
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e`.
 `bun run validate` is a **complementary, not redundant** check: it loads every
