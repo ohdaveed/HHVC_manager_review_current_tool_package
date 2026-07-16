@@ -106,7 +106,7 @@
     // requested page moments after it renders (issue #68).
     const params = new URLSearchParams(window.location.search)
     if (params.has('page')) {
-      window.ReviewUx.stateSync.applySavedPageState(getCurrentKey())
+      window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
       refreshUx()
       return
     }
