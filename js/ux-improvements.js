@@ -99,6 +99,18 @@
   }
 
   function restoreInitialPage() {
+    // An explicit ?page= URL param (a deep link, bookmark, or shared/review-
+    // queue link) already drove js/app.js's initial render before this ran.
+    // That takes priority over "reopen the page I was last viewing" — without
+    // this guard, restoring last_page_key here silently overrides the
+    // requested page moments after it renders (issue #68).
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('page')) {
+      window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
+      refreshUx()
+      return
+    }
+
     const state = window.reviewState.read()
     const savedKey = state.ui.last_page_key
 
