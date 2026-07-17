@@ -68,6 +68,7 @@
     // reloaded, closed, or backgrounded — otherwise they never reach
     // localStorage ('change' only fires on blur).
     window.addEventListener('pagehide', window.ReviewUx.stateSync.saveCurrentPageToLocalStorage)
+    window.addEventListener('beforeunload', window.ReviewUx.stateSync.saveCurrentPageToLocalStorage)
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden')
         window.ReviewUx.stateSync.saveCurrentPageToLocalStorage()
@@ -80,14 +81,27 @@
     // Forward skipHistory so wrapped popstate renders don't push history
     // entries (which would clear the browser's forward stack).
     window.renderPage = function renderPageWithUxRefresh(key, skipHistory) {
+      // Flush any in-progress sidebar edits before the page switch. The
+      // debounced input handler can still be pending; without this flush,
+      // applyPageContent overwrites the form and the pending save can write
+      // the *new* page's values under the wrong key — or drop the previous
+      // page's unsaved keystrokes entirely (critique P3).
+      const currentKey = typeof getCurrentKey === 'function' ? getCurrentKey() : null
+      if (key && key !== currentKey) {
+        window.ReviewUx.stateSync.saveCurrentPageToLocalStorage()
+      }
       const result = originalRenderPage.call(this, key, skipHistory)
-      window.reviewState.update((state) => {
-        state.ui.last_page_key = key
-        state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
-        return state
-      })
       const applyAndRefresh = () => {
-        window.ReviewUx.stateSync.applySavedPageState(key)
+        // Read after applyPageContent so aliases/unknown keys resolve to the
+        // page that actually rendered (View Transitions set currentPageKey
+        // inside the transition callback, not before renderPage returns).
+        const resolvedKey = typeof getCurrentKey === 'function' ? getCurrentKey() : key
+        window.reviewState.update((state) => {
+          state.ui.last_page_key = resolvedKey
+          state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
+          return state
+        })
+        window.ReviewUx.stateSync.applySavedPageState(resolvedKey)
         refreshUx()
       }
       // Under View Transitions, renderPage returns a promise that resolves

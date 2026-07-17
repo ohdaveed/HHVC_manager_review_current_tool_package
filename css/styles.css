@@ -208,7 +208,9 @@ h3 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sfds-slate-3);
+  /* WCAG AA: --sfds-slate-2 (#383939) on white is ~11.4:1.
+     Previous --sfds-slate-3 (#6e7070) was ~4.2:1 and sat under the 4.5:1 floor. */
+  color: var(--sfds-slate-2);
   margin-bottom: 0.75rem;
 }
 .control-group {
@@ -278,6 +280,16 @@ textarea {
 textarea {
   min-height: 5.5rem;
   resize: vertical;
+}
+/* Placeholder text is required-reading guidance for reviewers.
+   Browser defaults are light greys (~2:1). Force token ink that clears AA.
+   --sfds-slate-2 (#383939) on --sfds-white (#fcfcfc) is ~11.4:1. */
+select::placeholder,
+input[type='text']::placeholder,
+input[type='date']::placeholder,
+textarea::placeholder {
+  color: var(--sfds-slate-2);
+  opacity: 1;
 }
 select:focus,
 input[type='text']:focus,
@@ -1146,18 +1158,15 @@ a:focus {
   text-decoration: underline;
 }
 .footer-watermark {
+  /* Flat brand edge only — no decorative stripe texture.
+     DESIGN.md bans repeating-linear-gradient stripe backgrounds;
+     a thin solid band keeps the footer grounded without decoration. */
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 100px;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0.06),
-    rgba(255, 255, 255, 0.06) 12px,
-    transparent 12px,
-    transparent 24px
-  );
+  height: 4px;
+  background: rgba(255, 255, 255, 0.14);
   pointer-events: none;
 }
 .editor-qa {

@@ -672,7 +672,37 @@ function applyPageContent(key) {
   restoreSidebarScroll()
 }
 function renderPage(key, skipHistory = false) {
-  if (!pageData[key]) return
+  // Resolve unknown/retired keys instead of silently no-op'ing and leaving
+  // the static "Loading…" placeholder on screen. resolveInitialPageKey()
+  // already covers the first URL load; this path covers every later caller
+  // (page picker, inline mockup links, review queue, keyboard shortcuts).
+  if (!pageData[key]) {
+    const result =
+      typeof resolvePageKey === 'function'
+        ? resolvePageKey(key, pageData, window.HHVC_DELETED_PAGE_ALIASES, 'pestsTopic')
+        : { key: 'pestsTopic', status: 'unknown', from: key }
+    if (typeof showToast === 'function') {
+      if (result.status === 'aliased' && pageData[result.key]) {
+        showToast(
+          `That page has been consolidated. Showing "${pageData[result.key].title}" instead.`,
+          'info'
+        )
+      } else if (result.status === 'unknown') {
+        const requested = result.from || key || 'unknown'
+        showToast(
+          `"${requested}" is not a page in this mockup. Showing the default page instead.`,
+          'info'
+        )
+        if (typeof showErrorBanner === 'function') {
+          showErrorBanner(
+            `Unknown page key "${requested}". Opened the default page instead so you can keep reviewing.`
+          )
+        }
+      }
+    }
+    if (!pageData[result.key]) return
+    key = result.key
+  }
   if (!skipHistory) {
     const url = new URL(window.location)
     url.searchParams.set('page', key)
