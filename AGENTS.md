@@ -52,7 +52,14 @@ bun run vendor:browser        # rebuild js/vendor/{fuse,defu}.js IIFE bundles fr
 **There IS a real test suite** (a common stale claim in older docs is that there
 isn't). `bun run test` runs seven Bun unit-test files under `tests/` — `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
-and `index-html-checks` — plus `bun run test:e2e` (Playwright, in `tests/e2e/`).
+and `index-html-checks` — plus `bun run test:e2e` (Playwright, in `tests/e2e/`:
+nine spec files — eight UI-driven ones covering navigation, editor panel,
+review workflow, review queue, import/export, keyboard shortcuts,
+sitemap/workspace, and accessibility, plus the original `review-import-export`
+API-level round-trip — sharing plain helper functions in
+`tests/e2e/helpers.js`, no fixture framework). In a sandbox with a
+pre-installed Chromium, point Playwright at it instead of downloading:
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e`.
 `bun run validate` is a **complementary, not redundant** check: it loads every
 `pages/*.js` plus `js/page-data.js` into a Node VM and Zod-validates
 fields/shapes, plus a few business invariants (below). It always validates the
@@ -192,7 +199,9 @@ wires the handlers and `js/manager-review-export.js` exports current-page
 snapshots. **Any change to any of these review import/export modules must be
 manually verified**: export a snapshot, re-import it, and confirm existing
 decisions/notes survive rather than being wiped.
-`tests/e2e/review-import-export.spec.js` covers this round-trip.
+`tests/e2e/review-import-export.spec.js` covers this round-trip at the API
+level, and `tests/e2e/import-export.spec.js` covers it through the real UI
+(export button clicks + file-input imports asserting merge-not-wipe).
 
 ### Build outputs
 

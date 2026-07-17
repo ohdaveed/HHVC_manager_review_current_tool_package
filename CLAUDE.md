@@ -37,7 +37,14 @@ bun run test:e2e              # playwright test
 `start-dev.sh` kills any stale listener on the port before starting.
 
 `tests/` holds a real unit-test suite (7 files, run via `bun run test`) plus
-an `e2e/` subfolder driven by `bun run test:e2e`. Beyond that, `bun run
+an `e2e/` subfolder driven by `bun run test:e2e` — nine Playwright spec files
+(eight UI-driven: navigation, editor panel, review workflow, review queue,
+import/export, keyboard shortcuts, sitemap/workspace, and accessibility, plus
+the original API-level `review-import-export` round-trip) sharing plain helper
+functions in `tests/e2e/helpers.js`. In a sandbox with a pre-installed
+Chromium, run
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e`
+instead of downloading browsers. Beyond that, `bun run
 validate` (`build_scripts/validate.js`) is a second, complementary check:
 it loads every `pages/*.js` file plus `js/page-data.js` into a Node VM
 context and Zod-validates required fields/shapes, plus a few hardcoded

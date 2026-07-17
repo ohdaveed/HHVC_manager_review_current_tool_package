@@ -77,8 +77,10 @@
   function wrapRenderPage() {
     if (typeof window.renderPage !== 'function' || window.renderPage.__uxWrapped) return
     const originalRenderPage = window.renderPage
-    window.renderPage = function renderPageWithUxRefresh(key) {
-      const result = originalRenderPage.call(this, key)
+    // Forward skipHistory so wrapped popstate renders don't push history
+    // entries (which would clear the browser's forward stack).
+    window.renderPage = function renderPageWithUxRefresh(key, skipHistory) {
+      const result = originalRenderPage.call(this, key, skipHistory)
       window.reviewState.update((state) => {
         state.ui.last_page_key = key
         state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
