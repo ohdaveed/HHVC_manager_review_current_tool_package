@@ -202,6 +202,15 @@
     const savedKey = state.ui.last_page_key
 
     if (savedKey && DATA.pages[savedKey] && typeof window.renderPage === 'function') {
+      // Claim the key BEFORE the render settles: the wrapped renderPage only
+      // assigns reviewFormPageKey inside its deferred applyAndRefresh
+      // (setTimeout(0) or a View Transition promise), leaving it null in the
+      // meantime. In that gap a page-picker navigation would fall back to
+      // getCurrentKey() — already the DESTINATION key — so the pre-navigation
+      // flush would be skipped and pending debounced edits dropped or misfiled
+      // under the incoming page. The deep-link and default branches below
+      // assign reviewFormPageKey for the same reason.
+      reviewFormPageKey = savedKey
       window.renderPage(savedKey)
       return
     }
