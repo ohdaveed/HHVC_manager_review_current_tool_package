@@ -1,11 +1,22 @@
 // Push mockup tracking status into the Google Master Control workbook.
 // Reads the live sheet via public CSV export, merges review/mockup_tracking_sheet.csv,
 // writes review/page_inventory_sheet_update.csv, and optionally pushes via Sheets API.
+//
+// The merge is three-way so the sheet converges on the repo's current page set
+// instead of drifting after content consolidations:
+//   1. rows whose GitHub page_key matches a live tracking row get the standard
+//      status/notes/source columns refreshed in place;
+//   2. tracking keys missing from the sheet (pages added by a consolidation)
+//      get a new appended row built from the page registry + tracking data;
+//   3. sheet keys that no longer exist in the repo but appear in
+//      HHVC_DELETED_PAGE_ALIASES (pages retired by a consolidation) get their
+//      Status rewritten to point at the replacement page, so old rows read as
+//      history instead of looking like live pages nobody is updating.
 const fs = require('fs')
 const path = require('path')
 const { execSync } = require('child_process')
 const { parseCsv, toCsv } = require('./csv')
-const { loadPageData } = require('./load-pages')
+const { createPageContext, runPageScripts, getPageScriptPaths } = require('./load-pages')
 
 const root = path.resolve(__dirname, '..')
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'sheet-config.json'), 'utf8'))
@@ -121,36 +132,125 @@ function resolveStatus(existing, tracking) {
   return current || next
 }
 
-function mergeInventoryRows(sheetRows, trackingByKey) {
+/**
+ * Load the live page registry (pages, menu order, and retired-key aliases)
+ * from the same VM harness the other build scripts use, so this script never
+ * maintains its own page list that could drift from pages/*.js.
+ * @returns {{ pages: object, order: Array<[string, string]>, aliases: object }}
+ */
+function loadPageRegistry() {
+  const ctx = createPageContext()
+  runPageScripts(ctx, getPageScriptPaths())
+  return {
+    pages: ctx.window.HHVC_DATA?.pages || {},
+    order: ctx.window.HHVC_DATA?.order || [],
+    aliases: ctx.window.HHVC_DELETED_PAGE_ALIASES || {},
+  }
+}
+
+function mergeInventoryRows(sheetRows, trackingByKey, registry) {
   const [header, ...body] = sheetRows
   const keyIndex = header.indexOf(config.matchColumn)
   if (keyIndex < 0) throw new Error(`Missing match column: ${config.matchColumn}`)
 
   const today = new Date().toISOString().slice(0, 10)
   let updatedCount = 0
+  let retiredCount = 0
+
+  const col = (name) => header.indexOf(name)
+  const sheetKeys = new Set(body.map((row) => row[keyIndex]).filter(Boolean))
 
   const mergedBody = body.map((row) => {
     const next = [...row]
     const pageKey = next[keyIndex]
-    const tracking = trackingByKey.get(pageKey)
-    if (!tracking) return next
-
-    const col = (name) => header.indexOf(name)
     const set = (name, value) => {
       const index = col(name)
       if (index >= 0) next[index] = value
     }
 
-    set('Source File', tracking.mockup_source_file || next[col('Source File')] || '')
-    set('Status', resolveStatus(next[col('Status')], tracking))
-    set('Scope / Review Notes', buildScopeNotes(next[col('Scope / Review Notes')], tracking))
-    set('Source Basis', buildSourceBasis(next[col('Source Basis')], tracking))
-    set('Last Repo Sync', today)
-    updatedCount += 1
+    const tracking = trackingByKey.get(pageKey)
+    if (tracking) {
+      set('Source File', tracking.mockup_source_file || next[col('Source File')] || '')
+      set('Status', resolveStatus(next[col('Status')], tracking))
+      set('Scope / Review Notes', buildScopeNotes(next[col('Scope / Review Notes')], tracking))
+      set('Source Basis', buildSourceBasis(next[col('Source Basis')], tracking))
+      set('Last Repo Sync', today)
+      updatedCount += 1
+      return next
+    }
+
+    // Sheet rows whose key was retired by a content consolidation: rewrite
+    // Status to point at the replacement page so the row reads as history
+    // rather than a live page that mysteriously stopped syncing.
+    const replacement = registry.aliases[pageKey]
+    if (replacement) {
+      const retiredStatus = `Retired — folded into ${replacement}`
+      if (next[col('Status')] !== retiredStatus) {
+        set('Status', retiredStatus)
+        set(
+          'Scope / Review Notes',
+          buildScopeNotes(
+            next[col('Scope / Review Notes')],
+            // Synthesize a minimal tracking-like object so the note explains
+            // the retirement in the same "Mockup sync (date): ..." format.
+            { mockup_change_status: `retired, see ${replacement}` }
+          )
+        )
+        set('Last Repo Sync', today)
+        retiredCount += 1
+      }
+      return next
+    }
+
     return next
   })
 
-  return { rows: [header, ...mergedBody], updatedCount, today }
+  // Tracking keys missing from the sheet entirely (pages introduced by a
+  // consolidation): append a new row seeded from the page registry so the
+  // sheet gains the current 19-page set instead of silently omitting the
+  // consolidated report pages. Columns the repo can't know (Section,
+  // Priority, IA Notes, Primary Task) stay blank for humans to fill in.
+  const menuLabelByKey = new Map(registry.order)
+  const maxPageId = body.reduce((max, row) => {
+    const match = /^GH-(\d+)$/.exec(String(row[col('Page ID')] ?? ''))
+    return match ? Math.max(max, Number(match[1])) : max
+  }, 0)
+  let nextPageIdNumber = maxPageId
+  const appendedRows = []
+
+  for (const [pageKey, tracking] of trackingByKey) {
+    if (sheetKeys.has(pageKey)) continue
+    const page = registry.pages[pageKey] || {}
+    nextPageIdNumber += 1
+    const next = header.map(() => '')
+    const set = (name, value) => {
+      const index = col(name)
+      if (index >= 0) next[index] = value
+    }
+    set('Page ID', `GH-${String(nextPageIdNumber).padStart(3, '0')}`)
+    set(config.matchColumn, pageKey)
+    set('Page Title', tracking.page_title || page.title || '')
+    set('Karl Content Type', tracking.page_type || page.type || '')
+    set('Repo Label', menuLabelByKey.get(pageKey) || '')
+    set('URL Slug / Path', tracking.url_slug || page.slug || '')
+    set('Source File', tracking.mockup_source_file || '')
+    set('Summary', page.summary || '')
+    set('Primary Audience', Array.isArray(page.audience) ? page.audience.join(', ') : '')
+    set('Primary CTA', page.primaryCta || '')
+    set('Status', mapMockupStatus(tracking.mockup_status))
+    set('Scope / Review Notes', buildScopeNotes('', tracking))
+    set('Source Basis', buildSourceBasis('', tracking))
+    set('Last Repo Sync', today)
+    appendedRows.push(next)
+  }
+
+  return {
+    rows: [header, ...mergedBody, ...appendedRows],
+    updatedCount,
+    retiredCount,
+    appendedCount: appendedRows.length,
+    today,
+  }
 }
 
 function loadGoogleCredentials() {
@@ -243,18 +343,26 @@ async function main() {
   }
 
   const trackingByKey = loadTrackingByKey()
+  const registry = loadPageRegistry()
   const sheetCsv = fetchSheetInventoryCsv()
 
   const sheetRows = parseCsv(sheetCsv)
-  const { rows, updatedCount, today } = mergeInventoryRows(sheetRows, trackingByKey)
+  const { rows, updatedCount, retiredCount, appendedCount, today } = mergeInventoryRows(
+    sheetRows,
+    trackingByKey,
+    registry
+  )
   fs.writeFileSync(updateOutPath, toCsv(rows))
 
-  console.log(`wrote ${path.relative(root, updateOutPath)} (${updatedCount} rows merged)`)
+  console.log(
+    `wrote ${path.relative(root, updateOutPath)} ` +
+      `(${updatedCount} rows merged, ${appendedCount} appended, ${retiredCount} marked retired)`
+  )
 
   if (loadGoogleCredentials()) {
     await pushWithServiceAccount(rows)
     await appendAutomationLog(
-      `Updated ${updatedCount} page inventory rows; Last Repo Sync=${today}`
+      `Updated ${updatedCount} rows, appended ${appendedCount}, marked ${retiredCount} retired; Last Repo Sync=${today}`
     )
     console.log('pushed updates to Google Sheet via service account')
     return
