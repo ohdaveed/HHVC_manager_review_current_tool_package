@@ -33,7 +33,12 @@ window.HHVC_PAGES['mosquitoControl'] = {
       ],
       bullets: [
         'Call 311 within San Francisco or (415) 701-2311 from outside the city',
-        'Contact the Mosquito Control Program at 415-252-3806 for unusual mosquito activity',
+        {
+          text: 'Contact the Mosquito Control Program at 415-252-3806 for unusual mosquito activity',
+          unverified: true,
+          unverifiedReason:
+            'Phone number 415-252-3806 appears in no tier-1/2/3 source doc (source-of-truth audit 2026-07-06, cross-cutting finding #2). The tier-1-confirmed DPH number is 415-252-3800 — this reads as a digit swap. Confirm the real program line with HHVC before publication.',
+        },
       ],
     },
     {

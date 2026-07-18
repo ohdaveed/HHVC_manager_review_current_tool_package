@@ -96,13 +96,18 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Questions before you apply',
-      karl: 'Best real-schema fit: Top facts. Facts title = this heading (or a shorter variant like "Workshop essentials"), and each bullet below becomes one Fact item (Fact title = a short label like "Contact"/"Service area"/"Group size"/"Lead time", Fact text = the full bullet). The phone number could alternatively live in the dedicated Contact us panel\'s Phone block (Owner = "Mosquito Control Program", Phone number = 415-252-3806) instead — Top facts is the closer fit for the other three logistics bullets, so Contact us isn\'t used here to avoid splitting this content across two panels.',
+      karl: 'Best real-schema fit: Top facts. Facts title = this heading (or a shorter variant like "Workshop essentials"), and each bullet below becomes one Fact item (Fact title = a short label like "Contact"/"Service area"/"Group size"/"Lead time", Fact text = the full bullet). The phone number could alternatively live in the dedicated Contact us panel\'s Phone block (Owner = "Mosquito Control Program", Phone number = the confirmed program line) instead — Top facts is the closer fit for the other three logistics bullets, so Contact us isn\'t used here to avoid splitting this content across two panels. FLAG: the 415-252-3806 number shown in the bullet is unverified (no tier-1/2/3 source; tier-1 cites 415-252-3800) — confirm with HHVC before entering it in any Karl phone field.',
       kind: 'body',
       paragraphs: [
         'Call or email the Mosquito Control Program if you need help deciding whether the workshop is right for your group.',
       ],
       bullets: [
-        'Contact the Mosquito Control Program at 415-252-3806',
+        {
+          text: 'Contact the Mosquito Control Program at 415-252-3806',
+          unverified: true,
+          unverifiedReason:
+            'Phone number 415-252-3806 appears in no tier-1/2/3 source doc (source-of-truth audit 2026-07-06, cross-cutting finding #2). The tier-1-confirmed DPH number is 415-252-3800 — this reads as a digit swap. Confirm the real program line with HHVC before publication.',
+        },
         'Available to schools, camps, museums, and youth groups located within San Francisco',
         {
           text: 'Fits groups up to about 60 students per session; larger groups can be split into multiple sessions',

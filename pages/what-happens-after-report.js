@@ -35,10 +35,15 @@ window.HHVC_PAGES['afterReport'] = {
         {
           title: 'Agency Hand-off (If applicable)',
           text: [
-            'If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
+            {
+              text: 'If your complaint involves structural water-intrusion (such as leaking roof frames, structural plumbing leaks, or broken water heaters), HHVC will route your concern to our sister agency, the Department of Building Inspection (DBI) under the San Francisco Housing Code (2025).',
+              unverified: true,
+              unverifiedReason:
+                'The "San Francisco Housing Code (2025)" citation has zero tier-1 support (source-of-truth audit 2026-07-06, cross-cutting finding #1) — the DBI routing split looks intentional, but the statutory citation and "(2025)" edition tag trace only to tier-3 NotebookLM material. Source a real Housing Code citation or soften to "may be routed to DBI" before publication.',
+            },
             'HHVC focuses strictly on condensation, humidity, and ventilation-related moisture issues.',
           ],
-          karl: 'Maps to a Title and text block: Explains routing for structural issues to DBI.',
+          karl: 'Maps to a Title and text block: Explains routing for structural issues to DBI. FLAG: the Housing Code (2025) citation in the first paragraph is unverified — see the Unverified pill and source-of-truth audit finding #1.',
         },
         {
           title: 'An inspector may contact you',
@@ -82,20 +87,40 @@ window.HHVC_PAGES['afterReport'] = {
     },
     {
       heading: 'If a problem is found',
-      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Reinspection rate bullet ($256/hour inspector, $234/hour technician) verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule -- these are the correct current rates, not a fabricated NotebookLM figure (an earlier same-day FY25-26 export had mistakenly flagged them as unsourced before the FY26-27 schedule was obtained). Enforcement workflow updated from the Article 11 Interpretation Guide v1.0.',
+      karl: 'Maps to a seventh Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Reinspection rate bullet ($256/hour inspector, $234/hour technician) verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule -- these are the correct current rates, not a fabricated NotebookLM figure (an earlier same-day FY25-26 export had mistakenly flagged them as unsourced before the FY26-27 schedule was obtained). Enforcement workflow updated from the Article 11 Interpretation Guide v1.0. FLAG: four bullets in this section carry Unverified pills per the 2026-07-06 source-of-truth audit — the sewage 48-72h window, the generic 30-day correction window, the "compounded monthly" interest wording, and the Director\'s Hearing / attorneys\'-fees enforcement chain all lack tier-1 support and need SME/legal confirmation before any of this section is entered into Karl.',
       kind: 'body',
       paragraphs: [
         'If an inspection identifies a violation, Environmental Health will issue a Notice of Violation (NOV) to the responsible parties. The NOV will outline required corrections and set a specific compliance deadline based on severity.',
       ],
       bullets: [
         "**Complaint → Inspection → Notice of Violation → Compliance period → Follow-up inspection → Reinspection fee → Citation or Director's Hearing if unresolved.**",
-        'Sewage Backups (48 to 72 hours): Raw sewage backups require immediate correction and do not receive the standard 30-day compliance window.',
-        'All Other Violations (30 days): Overgrown vegetation, trash piles, rodent harborages, general sanitation problems, minor gaps/cracks, mold remediation, and other cited conditions must be corrected within 30 days.',
+        {
+          text: 'Sewage Backups (48 to 72 hours): Raw sewage backups require immediate correction and do not receive the standard 30-day compliance window.',
+          unverified: true,
+          unverifiedReason:
+            'No tier-1 doc mentions sewage backups or a 48-to-72-hour window (source-of-truth audit 2026-07-06 — High). Traces only to tier-3 chapter drafts and NotebookLM material. Confirm with HHVC/legal before publication.',
+        },
+        {
+          text: 'All Other Violations (30 days): Overgrown vegetation, trash piles, rodent harborages, general sanitation problems, minor gaps/cracks, mold remediation, and other cited conditions must be corrected within 30 days.',
+          unverified: true,
+          unverifiedReason:
+            'No tier-1 doc establishes a generic 30-day correction window (source-of-truth audit 2026-07-06 — Medium-high); the only tier-1 "30 days" figures govern the fee late-payment deadline, a different thing. Traces to tier-3 material that itself cites SF Building Code, not Health Code Article 11. Confirm with HHVC/legal before publication.',
+        },
         'These timelines represent general enforcement standards. Actual correction deadlines are established on the official Notice of Violation based on the severity of the health hazard.',
         'Extensions: HHVC may offer an extension to the compliance deadline if the property owner contacts the inspector before the deadline.',
         'Bed Bug Treatment: A property owner or manager must initiate professional treatment within 2 working days of confirmation.',
-        'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees ($256/hour for inspectors and $234/hour for technicians). Invoices must be paid within 30 days. Unpaid bills will incur $10 or $30 late penalties and 1.5% compounded monthly interest.',
-        "Persistent violations can result in citations, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
+        {
+          text: 'If a property owner does not correct the problem by the deadline, HHVC may charge reinspection fees ($256/hour for inspectors and $234/hour for technicians). Invoices must be paid within 30 days. Unpaid bills will incur $10 or $30 late penalties and 1.5% compounded monthly interest.',
+          unverified: true,
+          unverifiedReason:
+            'The fee rates themselves are verified against the FY26-27 EHB fee schedule, but "1.5% compounded monthly interest" is not: tier-1 says interest "accrues at 1.5% per month," not compounded, and the parallel sentence on the notice-of-violation page says "1.5% interest" with no compounding (source-of-truth audit 2026-07-06 — Medium). Align the interest wording with the source before publication.',
+        },
+        {
+          text: "Persistent violations can result in citations, civil liabilities, or a Director's Hearing to recover attorneys' fees and administrative abatement costs.",
+          unverified: true,
+          unverifiedReason:
+            "No tier-1 corroboration for this enforcement mechanism — the Director's Hearing / attorneys' fees / administrative abatement chain traces only to tier-3 material (source-of-truth audit 2026-07-06 — High). Confirm with HHVC/legal before publication.",
+        },
       ],
     },
     {
