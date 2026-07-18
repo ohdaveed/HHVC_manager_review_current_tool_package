@@ -1,32 +1,57 @@
-# HHVC Manager Review Packet — Topic Page Update
+# HHVC Manager Review Packet — 19-Page Agency IA
 
 ## Update summary
 
-This package converts **Pests and housing problems** from an Agency page section / service grouping into a **Topic page**.
+This package presents the consolidated **19-page** HHVC mockup set, led by a
+**Healthy Housing and Vector Control Agency page** (PR #60). The earlier
+33/40-page set — one Topic page plus many single-pest report and prevention
+pages — was folded into a smaller, lower-choice information architecture:
 
-The Topic page is now organized into four low-choice clusters:
+- 1 Agency page (`pestsTopic` — key name retained from the Topic-page era for
+  review-state and validation stability)
+- 3 consolidated report Transactions: `rodentsReport`, `filthReport`,
+  `insectsReport`
+- Records lookup: `recordsHub`, `findRecords`, `findViolations`,
+  `findHotelRecords`, `publicRecords`
+- Owner-facing: `ownerHub`, `noticeOfViolation`, `payFee`, `ownerGuidance`
+- Rights and process: `scopeInfo`, `article11Guide`, `afterReport`,
+  `tenantRights`
+- Mosquito programs: `mosquitoControl`, `mosquitoWorkshop`
 
-1. Report a problem
-2. Prevent pests and housing health problems
-3. Know what HHVC can inspect
-4. Tenant rights and help
+Retired page keys redirect to their replacement pages via
+`HHVC_DELETED_PAGE_ALIASES` in `js/page-data.js`, so old shared links still
+resolve.
 
 ## Manager review focus
 
-Review the Topic page first. Confirm that it:
+Review the Agency page first. Confirm that it:
 
-- Uses the Karl page type: **Topic**
-- Opens at `sf.gov/topic-pests-and-housing-problems`
+- Uses the Karl page type: **Agency**
+- Opens at `sf.gov/agency-healthy-housing-and-vector-control`
 - Uses short, plain-language text for a 5th to 6th-grade reading target
 - Keeps the public page limited to Article 11 / HHVC issues
-- Does not add non-HHVC routing paths to the Topic page
-- Uses scannable clusters instead of one long mixed link list
+- Does not add non-HHVC routing paths (no plumbing, DBI, roof leak, sewer,
+  permit, or construction-defect content — `bun run validate` enforces this)
+- Uses scannable service groups instead of one long mixed link list
 
-## Pages affected by this update
+Then work through the queue. The three consolidated report Transactions are
+the highest-traffic pattern; confirm the "choose the closest problem" framing
+holds up for each pest cluster.
 
-- `pestsTopic` — converted Topic page
-- `moldReport` — new transaction page for mold from humidity or condensation
-- `scopeInfo` — revised to keep scope content focused on HHVC pest, vector, and housing health conditions
+## Pages with open SME/legal flags
+
+These pages carry explicit `editorStatus` flags in `pages/*.js` and should not
+be approved for publication until the flagged items are resolved (they can
+still receive structural/content-direction decisions):
+
+| Page                | Flag          | Open items                                                          |
+| ------------------- | ------------- | ------------------------------------------------------------------- |
+| `noticeOfViolation` | `blocked`     | NOV templates, appeal windows, contact routes, free-visit sequencing |
+| `findHotelRecords`  | `placeholder` | Interim sfdph.org URL — confirm the real lookup entry point          |
+| `mosquitoWorkshop`  | `placeholder` | Capacity, lead time, and intake backend are illustrative             |
+
+Also outstanding: the real SF.gov payment URL for `payFee` (its CTA is inert
+until confirmed) and the FY26–27 fee schedule PDF URL for `ownerHub`.
 
 ## Decision options
 
@@ -39,4 +64,7 @@ Review the Topic page first. Confirm that it:
 
 ## Suggested automation handoff
 
-Have managers export the all-page decision template CSV or current-page review CSV from the sidebar. A Make.com scenario can watch the Drive folder where exports are placed and update only manager-review columns in the master workbook by `page_key` or `url_slug`.
+Have managers export the all-page decision template CSV or current-page review
+CSV from the review workspace. A Make.com scenario can watch the Drive folder
+where exports are placed and update only manager-review columns in the master
+workbook by `page_key` or `url_slug`.
