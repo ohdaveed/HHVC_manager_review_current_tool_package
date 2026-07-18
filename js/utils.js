@@ -215,15 +215,20 @@ function today() {
 function csvEscape(value) {
   const text = String(value ?? '')
 
-  // Check for formula injection characters
+  // Check for formula injection characters. The =/+/-/@ checks run against
+  // the trimStart()ed value so a formula hidden behind ordinary spaces is
+  // still caught, but the tab/CR checks must run against the RAW text:
+  // trimStart() treats \t and \r as whitespace and strips them, so checking
+  // the trimmed value for a leading tab/CR could never match (a real bug —
+  // previously documented by a test.todo in tests/utils.test.js).
   const trimmed = text.trimStart()
   const needsProtection =
     trimmed.startsWith('=') ||
     trimmed.startsWith('+') ||
     trimmed.startsWith('-') ||
     trimmed.startsWith('@') ||
-    trimmed.startsWith('\t') ||
-    trimmed.startsWith('\r')
+    text.startsWith('\t') ||
+    text.startsWith('\r')
 
   // The protective apostrophe must be applied before quoting so it stays
   // inside the quoted field when the value also contains commas/quotes/newlines.
