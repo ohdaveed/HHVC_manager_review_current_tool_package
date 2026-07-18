@@ -59,6 +59,40 @@ test.describe('manager review workflow', () => {
     await expect(page.locator('#pageSelect')).toHaveValue('pestsTopic')
   })
 
+  // Regression (fba9ef5): the pre-navigation flush used to save
+  // unconditionally, so merely LOOKING at a page created a review record —
+  // marking it "touched" in the queue, reordering the priority sort
+  // mid-navigation, and skewing progress counts.
+  test('plain navigation does not create saved review records', async ({ page }) => {
+    await gotoFresh(page)
+
+    await page.click('[data-sticky-action="next"]')
+    await settleDebounce(page)
+
+    const state = await readState(page)
+    expect(Object.keys(state.pages || {})).toEqual([])
+  })
+
+  // Companion regression: the flush must still rescue keystrokes sitting in
+  // the debounce window when the reviewer switches pages — and file them
+  // under the OUTGOING page's key. (The page picker's <select> already holds
+  // the destination key when its change handler runs, so a flush keyed off
+  // #pageSelect.value would misfile the note under the new page.)
+  test('pending edits flush under the outgoing page key on page switch', async ({ page }) => {
+    await gotoFresh(page)
+
+    // fill() fires 'input' (arming the 300ms debounce) but not 'change', so
+    // the save is still pending when the page switch happens.
+    await page.fill('#reviewNotes', 'Flushed before switch')
+    await page.selectOption('#pageSelect', 'payFee')
+    await settleDebounce(page)
+
+    const state = await readState(page)
+    expect(state.pages.pestsTopic?.notes).toBe('Flushed before switch')
+    // The destination page was only opened, never edited — no record for it.
+    expect(state.pages.payFee).toBeUndefined()
+  })
+
   test('sticky bar toggle opens and closes the review workspace', async ({ page }) => {
     await gotoFresh(page)
     const workspace = page.locator('#reviewWorkspace')

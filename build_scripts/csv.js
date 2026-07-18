@@ -9,14 +9,18 @@ const Papa = require('papaparse')
  */
 function neutralizeFormulaInjection(value) {
   const text = String(value ?? '')
+  // =/+/-/@ are checked on the trimStart()ed value so formulas hidden behind
+  // spaces are caught; tab/CR must be checked on the RAW text because
+  // trimStart() strips them as whitespace, which made the old trimmed-value
+  // checks unreachable (same fix as csvEscape in js/utils.js — keep in sync).
   const trimmed = text.trimStart()
   const needsProtection =
     trimmed.startsWith('=') ||
     trimmed.startsWith('+') ||
     trimmed.startsWith('-') ||
     trimmed.startsWith('@') ||
-    trimmed.startsWith('\t') ||
-    trimmed.startsWith('\r')
+    text.startsWith('\t') ||
+    text.startsWith('\r')
   return needsProtection ? "'" + text : text
 }
 

@@ -5,15 +5,15 @@
   "editUrl": "https://docs.google.com/spreadsheets/d/1Y480ZykxlmlGv6RECHN37N4F1oQsPwzJWQLCj7uTemk/edit",
   "tabs": {
     "pageInventory": {
-      "name": "004 Page Inventory & IA",
+      "name": "04 Page Inventory & IA",
       "gid": "202607023"
     },
     "reviewQueue": {
-      "name": "003 Review Queue",
+      "name": "03 Review Queue",
       "gid": "202607022"
     },
     "automationLog": {
-      "name": "008 Automation Log",
+      "name": "08 Automation Log",
       "gid": "202607027"
     }
   },

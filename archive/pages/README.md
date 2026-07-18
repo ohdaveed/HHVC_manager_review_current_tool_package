@@ -20,20 +20,21 @@ set today.
 Content is extracted verbatim from the commit immediately before each
 file's deletion (`git show <commit>^:pages/<file>`).
 
-## Proposed only — still live on `main` today
+## Retired by the 19-page consolidation (merged as PR #60, `7f2f24f`)
 
-`origin/claude/mockup-page-consolidation-j2d1jl` (commit `b83dc90`)
-proposes cutting the page set to 19 pages and converting the main page
-into an "Agency" page, deleting 22 `pages/*.js` files in the process. That
-branch was **never merged** and conflicts with a documented invariant on
-`main` (`validate.js` requires the `agency` key to be absent — it was
-replaced by `pestsTopic`), so it looks like an abandoned design direction
-rather than shipped consolidation history.
+The consolidation originally proposed on
+`origin/claude/mockup-page-consolidation-j2d1jl` (commit `b83dc90`) —
+cutting the page set to 19 pages and converting the main page into an
+"Agency" page — **has since been merged into `main`** as PR #60
+(`7f2f24f`, "Consolidate mockup to 19 pages and convert main page to an
+HHVC Agency page"). The merged version kept the `pestsTopic` key for the
+Agency page (rather than introducing a bare `agency` key), preserving the
+`validate.js` invariant and existing review-state stability.
 
-**The 18 pages below (all except the 4 already listed above, which that
-branch also deletes) are still live in `pages/` on `main` right now.**
-They're archived here only because that branch proposes removing them —
-not because they've actually been retired.
+**The 18 pages below are genuinely retired from `main` today.** Their
+old page keys are mapped to replacement pages in
+`window.HHVC_DELETED_PAGE_ALIASES` (`js/page-data.js`) so saved
+`?page=<oldKey>` links redirect instead of dead-ending.
 
 | File                              | Page key             |
 | --------------------------------- | -------------------- |
@@ -56,6 +57,6 @@ not because they've actually been retired.
 | `report-mosquitoes.js`            | `mosquitoesReport`   |
 | `report-pigeons.js`               | `pigeonsReport`      |
 
-Content is extracted from `feb11fe` (that branch's base commit, the last
-point before it diverged from `main`), which is identical to the current
-`main` copy unless noted otherwise.
+Content is extracted from `feb11fe` (the consolidation branch's base
+commit) — the last state of each file before the consolidation removed
+it from the live page set.
