@@ -122,9 +122,20 @@
   // open in the editor.
   window.reviewChecks = { getRuleResultsFor }
 
-  function collectCurrentPageReviewState() {
-    const page = getCurrentPage()
-    const pageKey = getCurrentKey()
+  /**
+   * Snapshot the review form into a persistable record.
+   *
+   * @param {string} [pageKeyOverride] Save under this page key instead of
+   *   getCurrentKey(). Needed by the pre-navigation flush in
+   *   js/ux-improvements.js: getCurrentKey() reads #pageSelect.value, which is
+   *   ALREADY the destination page when navigation comes from the page picker
+   *   (the <select>'s change event fires with the new value before renderPage
+   *   runs), so a flush that trusted it would file the outgoing page's
+   *   unsaved edits under the incoming page's key.
+   */
+  function collectCurrentPageReviewState(pageKeyOverride) {
+    const pageKey = typeof pageKeyOverride === 'string' ? pageKeyOverride : getCurrentKey()
+    const page = DATA.pages[pageKey] || {}
 
     return buildReviewRecord(page, pageKey, {
       page_title: page.title || '',
@@ -145,10 +156,15 @@
     })
   }
 
-  function saveCurrentPageToLocalStorage() {
+  /**
+   * Persist the current review form to localStorage.
+   * @param {string} [pageKeyOverride] See collectCurrentPageReviewState —
+   *   used by the pre-navigation flush to save under the OUTGOING page key.
+   */
+  function saveCurrentPageToLocalStorage(pageKeyOverride) {
     if (isRestoringState) return
 
-    const snapshot = collectCurrentPageReviewState()
+    const snapshot = collectCurrentPageReviewState(pageKeyOverride)
     window.reviewState.update((state) => {
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
