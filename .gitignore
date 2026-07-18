@@ -43,9 +43,15 @@ repomix-output.xml
 *-service-account*.json
 google-service-account.json
 .env.local
-.playwright-mcp/page-2026-07-08T05-47-01-698Z.yml
-.poolside/settings.local.yaml
-C:/Users/david/AppData/Local/lighthouse.57563909/Default/Code Cache/wasm/index
-C:/Users/david/AppData/Local/lighthouse.57563909/Default/databases/Databases.db
-.playwright-mcp/page-2026-07-08T05-43-50-420Z.yml
-.gitignore
+
+# Playwright MCP scratch console logs/snapshots (not part of source, see CLAUDE.md)
+.playwright-mcp/
+
+# Local tool settings/credentials
+.poolside/
+
+# Stray Windows-absolute-path artifacts written into the repo root by a
+# Lighthouse MCP tool bug (e.g. "C:\Users\<name>\AppData\...\lighthouse.*"
+# created verbatim as a literal directory name since WSL doesn't parse
+# backslashes as path separators). Not real repo content if it recurs.
+/C:*
