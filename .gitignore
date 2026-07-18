@@ -26,6 +26,13 @@ playwright-report/
 .DS_Store
 Thumbs.db
 
+# Local scratch / one-off migration scripts and repo-dump artifacts. Root
+# scratch files (scratch.js, fix_*.py, etc.) and repomix output were once
+# committed by accident; keep them out of the tree — real tooling belongs
+# in build_scripts/.
+scratch*.js
+repomix-output.xml
+
 # Superpowers brainstorming scratch (mockups, session state)
 .superpowers/
 
