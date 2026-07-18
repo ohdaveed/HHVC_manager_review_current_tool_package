@@ -46,6 +46,41 @@ for (const rel of copies) {
 // base '/forms/mosquito-workshop-request/', so publish it at that path.
 const formSrc = path.join(root, 'forms/mosquito-workshop-request/dist')
 const formDest = path.join(dist, 'forms/mosquito-workshop-request')
+
+// Guard against shipping a broken form. This step copies whatever is checked
+// in under the sub-app's dist/ — it does NOT run Vite — so if the committed
+// index.html references a hashed asset that was never committed (a real
+// regression: an unanchored "dist/" gitignore rule once swallowed the rebuilt
+// JS bundle, deploying a form shell that loaded CSS but never hydrated), the
+// deploy would silently ship a dead form. Parse the asset references out of
+// the HTML and fail loudly when any are missing so the fix ("bun run
+// build:workshop-form", then commit dist/) happens before deploy, not after.
+const formHtmlPath = path.join(formSrc, 'index.html')
+if (!fs.existsSync(formHtmlPath)) {
+  console.error(
+    'Error: forms/mosquito-workshop-request/dist/index.html is missing. ' +
+      'Run "bun run build:workshop-form" and commit the dist/ output.'
+  )
+  process.exit(1)
+}
+const formHtml = fs.readFileSync(formHtmlPath, 'utf8')
+// Vite emits absolute URLs under the sub-app's base path, e.g.
+// src="/forms/mosquito-workshop-request/assets/index-<hash>.js". Each one must
+// resolve to a real file inside the committed dist/ directory.
+const assetRefs = [...formHtml.matchAll(/\/forms\/mosquito-workshop-request\/(assets\/[^"']+)/g)]
+const missingAssets = assetRefs
+  .map((match) => match[1])
+  .filter((relAsset) => !fs.existsSync(path.join(formSrc, relAsset)))
+if (missingAssets.length > 0) {
+  console.error(
+    'Error: forms/mosquito-workshop-request/dist/index.html references assets that are not on disk:\n' +
+      missingAssets.map((asset) => '  - ' + asset).join('\n') +
+      '\nThe committed form build is incomplete (the deployed form would never hydrate). ' +
+      'Run "bun run build:workshop-form" and commit everything under forms/mosquito-workshop-request/dist/.'
+  )
+  process.exit(1)
+}
+
 fs.mkdirSync(path.dirname(formDest), { recursive: true })
 fs.cpSync(formSrc, formDest, { recursive: true })
 console.log('copied forms/mosquito-workshop-request/dist -> forms/mosquito-workshop-request')

@@ -10,8 +10,12 @@ single-file-export-current-source.html
 data/page_inventory.json
 data/page_inventory.csv
 
-# Netlify
-dist/
+# Netlify deploy bundle (root only). Anchored with a leading slash on purpose:
+# a bare "dist/" would also match forms/mosquito-workshop-request/dist/, whose
+# built output IS committed (build:netlify copies it verbatim instead of
+# running Vite). An unanchored pattern previously swallowed that sub-app's
+# rebuilt hashed JS asset and shipped a form shell that never hydrated.
+/dist/
 .netlify
 
 # Playwright
