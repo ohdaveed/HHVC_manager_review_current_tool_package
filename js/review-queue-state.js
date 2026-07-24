@@ -3,7 +3,7 @@
    files, right where js/review-queue.js used to sit in index.html. */
 ;(function mountReviewQueueState() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order || !window.reviewState) return
+  if (!DATA || !DATA.pages || !DATA.order || !window.reviewState || !window.reviewMerge) return
 
   const QUEUE_PANEL_ID = 'reviewWorkspaceOverview'
   const STALE_DAYS = 3
@@ -80,22 +80,41 @@
     return trimmed || window.utils.today()
   }
 
-  function updateLocalReviewForPage(pageKey, patch) {
+  /**
+   * @param {string} pageKey
+   * @param {object} patch
+   * @param {string} [updatedBy] History-entry provenance tag. Defaults to
+   *   'action' (a queue button/keyboard shortcut, this function's usual
+   *   caller in js/review-queue-rows.js). js/review-queue-import.js's CSV
+   *   import path passes 'import' explicitly — without that override every
+   *   CSV-imported row would be indistinguishable from a manual action in
+   *   the history audit trail, unlike JSON backup import which already
+   *   correctly tags its entries 'import' (js/ux-improvements-export.js).
+   */
+  function updateLocalReviewForPage(pageKey, patch, updatedBy = 'action') {
     const page = DATA.pages[pageKey] || {}
+    const actingReviewer = getSidebarReviewerName()
     let nextSaved
 
     window.reviewState.update((localState) => {
       const existing = localState.pages[pageKey] || {}
       const defaults = window.utils.buildReviewRecord(page, pageKey, {
         review_date: getSidebarReviewDate(),
-        reviewer: document.getElementById('reviewerInput')?.value || '',
+        reviewer: actingReviewer,
       })
-      nextSaved = {
-        ...defaults,
-        ...existing,
-        ...patch,
-        updated_at: new Date().toISOString(),
-      }
+      // defaults < existing: existing (if any) wins over freshly-computed
+      // defaults so mergeReviewRecord sees the real prior record, including
+      // its history array, as `existing` — EXCEPT reviewer, which must not
+      // follow that precedence: queue action patches never include
+      // `reviewer`, so letting a stale existing.reviewer win would
+      // attribute this action's new history entry to whoever last saved
+      // the record, not whoever is acting right now (e.g. Bob bulk-
+      // approving pages Alice previously reviewed would misattribute the
+      // approval to Alice).
+      const base = { ...defaults, ...existing, reviewer: actingReviewer }
+      nextSaved = window.reviewMerge.mergeReviewRecord(base, patch, {
+        updatedBy,
+      })
       localState.pages[pageKey] = nextSaved
       return localState
     })

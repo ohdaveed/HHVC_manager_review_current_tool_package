@@ -12,12 +12,16 @@ confidently.
 ## What this is
 
 A static, no-framework mockup tool for **manager review** of a redesigned HHVC
-(Healthy Housing and Vector Control) section of SF.gov. There is no backend,
-database, or external service: `index.html` loads plain `<script>` tags directly,
-and a single static server (`server.ts`) is the entire runtime. **Bun** powers the
+(Healthy Housing and Vector Control) section of SF.gov. `index.html` loads plain
+`<script>` tags directly, and `server.ts` serves the mockup. **Bun** powers the
 dev server, the CLI scripts (validate/export/build), and the test runner — not a
-bundler or framework. Reviewer state lives entirely in the browser's
-`localStorage`; nothing is persisted server-side.
+bundler or framework. Reviewer state lives in the browser's `localStorage` by
+default, and the tool works fully offline with **no backend/database/external
+service required.** `server.ts` also hosts an **optional** Bun + SQLite
+review-state sync backend (see [Review-state sync backend](#review-state-sync-backend-optional))
+that reviewers can opt into per-browser to sync decisions across
+machines/reviewers — it's off unless deployed and configured, and every other
+part of the tool works identically whether or not it's ever used.
 
 A separate **Vite** sub-app lives at `forms/mosquito-workshop-request/` (a real
 build step, built independently — see [Build outputs](#build-outputs)).
@@ -33,7 +37,7 @@ bun install                 # install deps (required before first `dev`)
 bun run dev                  # dev server with --watch at http://127.0.0.1:8080
 bun run start                # dev server without --watch
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 7 unit-test files in tests/
+bun run test                  # Bun test runner over the 9 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -50,9 +54,11 @@ bun run vendor:browser        # rebuild js/vendor/{fuse,defu}.js IIFE bundles fr
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs seven Bun unit-test files under `tests/` — `utils`,
+isn't). `bun run test` runs nine Bun unit-test files under `tests/` — `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
-and `index-html-checks` — plus `bun run test:e2e` (Playwright, in `tests/e2e/`:
+`index-html-checks`, `review-merge`, and `review-api-server` (the last spawns
+`server.ts` as a subprocess against a temp SQLite DB) — plus `bun run test:e2e`
+(Playwright, in `tests/e2e/`:
 nine spec files — eight UI-driven ones covering navigation, editor panel,
 review workflow, review queue, import/export, keyboard shortcuts,
 sitemap/workspace, and accessibility, plus the original `review-import-export`
@@ -135,6 +141,11 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 - **`window.ReviewUx`** ← `js/review-state-store.js` (shared `window.reviewState`
   read/write/update), `js/ux-improvements-state-sync.js`,
   `js/ux-improvements-workspace.js`, `js/ux-improvements-export.js`.
+  `js/review-merge.js` (`window.reviewMerge`) and `js/review-state-sync.js`
+  (`window.reviewStateSync`) sit alongside these as their own small globals —
+  not under `window.ReviewUx` — since `js/review-merge.js` is also imported
+  directly by `server.ts` (no DOM dependency) and needs no browser-only
+  namespace.
 - **`window.ReviewQueueInternal`** ← `js/review-queue-state.js`,
   `js/review-queue-rows.js`, `js/review-queue-render.js`, and
   `js/review-queue-import.js` (CSV import — kept isolated as the
@@ -189,19 +200,86 @@ All reviewer state (decisions, notes, edited SEO fields, workspace UI prefs) is
 saved client-side under the versioned key `hhvcManagerReviewState:v1`. Bump the
 version suffix if the persisted shape changes incompatibly. Workspace UI prefs
 (`workspace_open`, `workspace_tab`, `last_page_key`, `show_karl_tags`) live under
-`state.ui` in the same blob.
+`state.ui` in the same blob. This localStorage layer — synchronous
+`window.reviewState.read()/write()/update()` — is the tool's always-available
+core and is unaffected by whether the optional sync backend below is ever used.
+
+Each page's review record also carries an append-only `history[]` array:
+`{ timestamp, reviewer, decision, notes, risks_or_blockers, updated_by }`
+entries recording each review round. **`mergeReviewRecord()` in
+`js/review-merge.js` is the only place a history entry gets constructed**, and
+only at discrete round-boundary events — queue actions/keyboard shortcuts
+(`updateLocalReviewForPage`), CSV/JSON import (`importReviewStateBackup`), and
+server sync (`server.ts`'s `putReviewPage`). The continuous per-keystroke/blur
+autosave (`saveCurrentPageToLocalStorage`) deliberately skips
+`mergeReviewRecord` — it just refreshes the working snapshot, carrying
+`history` forward untouched — otherwise every debounced keystroke would append
+an entry.
 
 **The review import/export round-trip can destroy existing reviews** — a prior
 regression replaced saved state wholesale instead of merging. The actual
 round-trip logic lives in `js/review-queue-import.js` (CSV import) and
-`js/ux-improvements-export.js` (saved-state JSON backup/restore); `js/review-queue.js`
-wires the handlers and `js/manager-review-export.js` exports current-page
-snapshots. **Any change to any of these review import/export modules must be
-manually verified**: export a snapshot, re-import it, and confirm existing
+`js/ux-improvements-export.js` (saved-state JSON backup/restore), both merging
+through the same `mergeReviewRecord` per-page-key path the sync backend uses;
+`js/review-queue.js` wires the handlers and `js/manager-review-export.js`
+exports current-page snapshots. **Any change to any of these review
+import/export modules, or to `js/review-merge.js`, must be manually
+verified**: export a snapshot, re-import it, and confirm existing
 decisions/notes survive rather than being wiped.
 `tests/e2e/review-import-export.spec.js` covers this round-trip at the API
 level, and `tests/e2e/import-export.spec.js` covers it through the real UI
 (export button clicks + file-input imports asserting merge-not-wipe).
+
+### Review-state sync backend (optional)
+
+`server.ts` optionally serves a small sync API alongside its static file
+serving, backed by SQLite (`bun:sqlite`, no extra dependency) — entirely
+additive, off by default, and fails closed (501) rather than open if
+unconfigured.
+
+- **Routes**: `GET /api/review-state` (full state, same shape as
+  `window.reviewState.read()`); `PUT /api/review-state/pages/:pageKey` (merges
+  a patch via the shared `mergeReviewRecord()` — `server.ts` imports
+  `js/review-merge.js` directly, the same file a `<script>` tag loads
+  client-side — and returns the merged record). Every write is scoped to one
+  `page_key`; the server never wholesale-replaces the table.
+- **Auth**: `Authorization: Bearer <REVIEW_API_TOKEN>` required on every
+  `/api/*` request; missing/wrong → 401; `REVIEW_API_TOKEN` unset → 501 (not
+  open access).
+- **Storage**: SQLite table `review_pages (page_key TEXT PRIMARY KEY, record
+TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
+  `.data/review-state.local.db` for local dev; point at a mounted volume in
+  production).
+- **Client**: `js/review-state-sync.js`, a no-op unless configured. Its
+  settings live under their own `hhvcReviewSyncConfig` localStorage key,
+  separate from `hhvcManagerReviewState:v1` on purpose — the token must never
+  round-trip through the shareable CSV/JSON export/import/backup files. Sync
+  is manual-trigger only (Pull from server / Push all pages), not a
+  background timer, keeping sync-triggered history entries bounded to
+  explicit actions.
+- **Push vs. pull differ on purpose**: push sends one page's full record and
+  accepts the server's merged response as authoritative for that page; pull
+  is last-write-wins **per page** by `updated_at` comparison, never a
+  field-level re-merge client-side (the server's `history` is already
+  merged — re-merging it would duplicate entries, and treating a full local
+  snapshot as a "patch" onto the server's record would let stale local
+  copies of fields another reviewer changed silently overwrite them). A page
+  whose local copy looks newer but whose `synced_at` predates the server's
+  `updated_at` — real local edits _and_ a server revision this browser has
+  never seen — is a genuine conflict `pullFromServer` can't safely
+  auto-resolve: it's left untouched (no content change, no `synced_at`
+  bump) and reported in the result's `conflicts` array for manual
+  resolution. Switching the sync server URL (`writeConfig`) clears every
+  local page's `synced_at`, since a baseline only means something relative
+  to the deployment that issued it.
+- **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
+  mounted, `DATA_DB_PATH` pointed at it, and `REVIEW_API_TOKEN` set to a
+  generated secret (never committed). Local dev and Netlify's static-only
+  deploy (`build:netlify`, no server runtime for these routes) are unaffected
+  either way.
+- **Tests**: `tests/review-merge.test.js` (unit) and
+  `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
+  DB, exercises auth/merge/isolation over real HTTP).
 
 ### Build outputs
 
@@ -331,6 +409,10 @@ known-but-unfixed bug rather than asserting wrong behavior.
   `js/dashboard-guidance.js`, `js/interactive-sitemap.js`,
   `js/keyboard-shortcuts.js`, `js/manager-review-export.js`,
   `css/ux-improvements.css`.
+- Shared merge/history logic → `js/review-merge.js` (the only place a
+  `history` entry should be constructed; loaded both as a browser `<script>`
+  and imported directly by `server.ts`). Optional sync backend → `server.ts`
+  (API routes) and `js/review-state-sync.js` (client pull/push + settings UI).
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

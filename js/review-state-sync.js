@@ -1,0 +1,437 @@
+/* Optional network sync layer on top of window.reviewState (localStorage).
+   Talks to the /api/review-state routes added to server.ts (see
+   CLAUDE.md's "Review-state sync backend" section). Entirely additive: the
+   synchronous core window.reviewState API is untouched, and every function
+   here is a no-op whenever no sync URL/token is configured, so the app
+   keeps working fully offline exactly as it did before this file existed.
+   Loads after js/review-merge.js and js/review-state-store.js. */
+;(function mountReviewStateSync() {
+  if (typeof window === 'undefined' || !window.reviewState || !window.reviewMerge) return
+
+  const CONFIG_KEY = 'hhvcReviewSyncConfig'
+  const API_TIMEOUT_MS = 15000
+
+  /**
+   * Sync settings (server URL + bearer token) live in their own localStorage
+   * key, deliberately separate from hhvcManagerReviewState:v1 — that blob
+   * round-trips through the CSV/JSON export/import/backup paths, which are
+   * meant to be shareable files, so a token must never be able to leak
+   * through them.
+   */
+  function readConfig() {
+    try {
+      const raw = localStorage.getItem(CONFIG_KEY)
+      if (!raw) return { apiUrl: '', apiToken: '' }
+      const parsed = JSON.parse(raw)
+      return {
+        apiUrl: typeof parsed.apiUrl === 'string' ? parsed.apiUrl : '',
+        apiToken: typeof parsed.apiToken === 'string' ? parsed.apiToken : '',
+      }
+    } catch {
+      return { apiUrl: '', apiToken: '' }
+    }
+  }
+
+  function writeConfig(config) {
+    const previous = readConfig()
+    const nextApiUrl = (config.apiUrl || '').trim()
+    try {
+      localStorage.setItem(
+        CONFIG_KEY,
+        JSON.stringify({
+          apiUrl: nextApiUrl,
+          apiToken: (config.apiToken || '').trim(),
+        })
+      )
+    } catch {
+      window.utils?.showErrorBanner?.('Could not save sync settings in this browser.')
+      return
+    }
+
+    // A synced_at baseline only means "the state this browser last observed
+    // from THIS server" — server.ts's staleness check just compares
+    // timestamps, with no notion of which deployment issued them. Pointing
+    // sync at a different server (a fresh Railway deployment, a teammate's
+    // local server, etc.) without clearing these would let an old
+    // deployment's synced_at values pass the new target's staleness check
+    // by pure timestamp coincidence, silently overwriting real content on a
+    // server this browser has never actually synced against.
+    if (previous.apiUrl && nextApiUrl && previous.apiUrl !== nextApiUrl) {
+      window.reviewState.update((state) => {
+        const nextPages = {}
+        for (const [key, record] of Object.entries(state.pages || {})) {
+          nextPages[key] = { ...record, synced_at: '' }
+        }
+        return { ...state, pages: nextPages }
+      })
+    }
+  }
+
+  function isConfigured() {
+    const config = readConfig()
+    return Boolean(config.apiUrl && config.apiToken)
+  }
+
+  /**
+   * A hung sync server would otherwise leave the UI stuck on "Pulling…"/
+   * "Pushing…" forever, since fetch() has no default timeout. Aborts after
+   * API_TIMEOUT_MS, or immediately if a caller-supplied signal aborts first.
+   */
+  function apiFetch(path, options = {}) {
+    const config = readConfig()
+    if (!config.apiUrl || !config.apiToken) {
+      return Promise.reject(new Error('Sync is not configured.'))
+    }
+    const base = config.apiUrl.replace(/\/+$/, '')
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+    if (options.signal) {
+      if (options.signal.aborted) controller.abort()
+      else options.signal.addEventListener('abort', () => controller.abort(), { once: true })
+    }
+
+    return fetch(base + path, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...(options.headers || {}),
+        authorization: `Bearer ${config.apiToken}`,
+        'content-type': 'application/json',
+      },
+    }).finally(() => clearTimeout(timeoutId))
+  }
+
+  /**
+   * Pull the server's review state and merge it into local state, PER PAGE.
+   *
+   * When the server's content is strictly newer than local (or local
+   * doesn't exist yet), it's applied wholesale — no local edits to lose.
+   *
+   * When local looks newer by `updated_at`, there are two different
+   * situations that must NOT be treated the same way:
+   *  - Already reconciled: this browser's `synced_at` for the page is
+   *    already at or past the server's `updated_at` — it has already seen
+   *    (and, per its own newer `updated_at`, edited on top of) this exact
+   *    server revision. Genuinely nothing to do.
+   *  - Diverged: `synced_at` is behind the server's `updated_at` — this
+   *    browser's local copy and the server's copy have real, independently
+   *    edited content neither side has seen from the other (e.g. another
+   *    reviewer pushed after this browser's last sync, and this browser
+   *    then edited locally without ever pulling that push).
+   *
+   *    There is no safe way to auto-resolve a divergence: the local record
+   *    is a full snapshot, not a field-level diff, so treating it as a
+   *    "patch" onto the server's record (an earlier version of this
+   *    function did exactly that) lets this browser's stale copies of
+   *    fields ANOTHER reviewer changed silently overwrite them on the next
+   *    push — the same risk the "never a field-level merge on pull" rule
+   *    documented in CLAUDE.md exists to prevent, just reintroduced through
+   *    this recovery path. Guessing which side should win per field isn't
+   *    something this function can safely do without a stored 3-way base.
+   *
+   *    So a diverged page is left untouched (same as "already reconciled")
+   *    and its key is reported in the returned `conflicts` array instead,
+   *    so the caller can tell the reviewer to resolve it by hand (compare
+   *    notes with whoever pushed, then either intentionally re-push to
+   *    overwrite or discard local edits and pull again). `synced_at` is
+   *    deliberately NOT advanced for a conflicted page either: advancing it
+   *    would make the next push's staleness check in server.ts pass despite
+   *    this browser never having actually incorporated the server's
+   *    content — the exact bug an earlier version of this function had.
+   */
+  function pullFromServer() {
+    if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
+
+    return apiFetch('/api/review-state', { method: 'GET' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Server responded ${res.status}`)
+        return res.json()
+      })
+      .then((serverState) => {
+        const validator = window.reviewStateValidation?.validateReviewState
+        const validated =
+          typeof validator === 'function' ? validator(serverState) : { ok: true, data: serverState }
+        if (!validated.ok) throw new Error(validated.error || 'Invalid server response.')
+
+        let pulledCount = 0
+        const conflicts = []
+        window.reviewState.update((state) => {
+          const nextPages = { ...state.pages }
+          for (const [key, serverRecord] of Object.entries(validated.data.pages || {})) {
+            if (!window.HHVC_DATA?.pages?.[key]) continue
+            const localRecord = state.pages[key]
+            const serverIsNewer =
+              !localRecord?.updated_at ||
+              (serverRecord.updated_at && serverRecord.updated_at > localRecord.updated_at)
+
+            if (serverIsNewer) {
+              nextPages[key] = {
+                ...serverRecord,
+                page_key: key,
+                synced_at: serverRecord.updated_at,
+              }
+              pulledCount += 1
+              continue
+            }
+
+            const hasReconciled =
+              localRecord?.synced_at &&
+              serverRecord.updated_at &&
+              localRecord.synced_at >= serverRecord.updated_at
+            if (hasReconciled) continue
+
+            conflicts.push(key)
+          }
+          return { ...state, pages: nextPages }
+        })
+
+        return { ok: true, pulledCount, conflicts }
+      })
+      .catch((error) => ({ ok: false, error: error.message || String(error) }))
+  }
+
+  /**
+   * Push the current locally-saved record for one page. The server merges
+   * it (field-level, appending one history entry) and returns the merged
+   * record, which becomes the new local record for that page verbatim —
+   * there is exactly one place a "sync" history entry gets constructed
+   * (server-side, in server.ts's putReviewPage), so the client must not
+   * re-derive or duplicate it.
+   */
+  function pushPage(pageKey) {
+    if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
+
+    const record = window.reviewState.read().pages[pageKey]
+    if (!record)
+      return Promise.resolve({ ok: false, error: 'Nothing saved locally for this page yet.' })
+
+    return apiFetch(`/api/review-state/pages/${encodeURIComponent(pageKey)}`, {
+      method: 'PUT',
+      body: JSON.stringify(record),
+    })
+      .then((res) => {
+        if (res.status === 409) {
+          throw new Error(
+            'Someone else pushed a newer version of this page — pull from server first, then push again. ' +
+              'If pulling reports this page as a conflict, it needs manual resolution (see the pull status message).'
+          )
+        }
+        if (!res.ok) throw new Error(`Server responded ${res.status}`)
+        return res.json()
+      })
+      .then((merged) => {
+        window.reviewState.update((state) => {
+          // If an autosave landed on this page between reading `record`
+          // above and this response arriving (a real possibility — a push
+          // is a network round-trip, easily longer than the debounce
+          // window), the current local record is now NEWER than the
+          // snapshot this push was based on. Overwriting it with the
+          // response unconditionally would silently drop that later edit.
+          // Keep the newer local content in that case and only advance
+          // synced_at with what the server confirmed.
+          const currentRecord = state.pages[pageKey]
+          const localChangedDuringPush =
+            currentRecord?.updated_at && currentRecord.updated_at > record.updated_at
+
+          state.pages[pageKey] = localChangedDuringPush
+            ? {
+                ...currentRecord,
+                // `merged.history` includes the "sync" round entry the
+                // server just appended for THIS push. Dropping it here
+                // would lose that round from the local audit trail
+                // permanently: synced_at is about to advance to the
+                // server's updated_at, so a future pull would treat this
+                // page as "already reconciled" and never fetch it again.
+                // combineHistory's content-based dedup makes this a safe
+                // additive union, not a re-merge of content fields.
+                history: window.reviewMerge.combineHistory(currentRecord.history, merged.history),
+                synced_at: merged.updated_at,
+              }
+            : // synced_at = the server's returned updated_at: this push just
+              // told us exactly what the server now has for this page, so
+              // that's the new known-server baseline for the next push's
+              // conflict check — must be set here (not left to
+              // merged.synced_at, whatever the server happened to echo
+              // back) since the server has no reason to know or persist
+              // this client-side-only field.
+              { ...merged, synced_at: merged.updated_at }
+          return state
+        })
+        return { ok: true, record: merged }
+      })
+      .catch((error) => ({ ok: false, error: error.message || String(error) }))
+  }
+
+  /**
+   * Push every locally-saved page, one PUT at a time. Sequential rather
+   * than concurrent: this is a small (a few dozen pages at most), manual,
+   * infrequent action, and sequential requests are simpler to reason about
+   * than partial-failure handling across a concurrent batch.
+   */
+  function pushAllPages() {
+    if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
+
+    const keys = Object.keys(window.reviewState.read().pages || {})
+    if (!keys.length) return Promise.resolve({ ok: true, pushedCount: 0, error: null })
+
+    let pushedCount = 0
+    let firstError = null
+    return keys
+      .reduce(
+        (chain, key) =>
+          chain.then(() =>
+            pushPage(key).then((result) => {
+              if (result.ok) pushedCount += 1
+              else firstError = firstError || result.error
+            })
+          ),
+        Promise.resolve()
+      )
+      .then(() => ({ ok: !firstError, pushedCount, error: firstError }))
+  }
+
+  function setSyncStatus(message) {
+    const el = document.getElementById('reviewSyncStatus')
+    if (el) el.textContent = message
+  }
+
+  function mountSyncControls() {
+    const actions = document.querySelector('.review-actions')
+    if (!actions || document.getElementById('reviewSyncApiUrl')) return
+
+    const config = readConfig()
+
+    // Placeholder text isn't a reliable accessible name (it disappears once
+    // typed, and screen readers don't treat it as a persistent label), so
+    // each input gets a real <label for="..."> alongside its placeholder.
+    const urlLabel = document.createElement('label')
+    urlLabel.htmlFor = 'reviewSyncApiUrl'
+    urlLabel.className = 'field-help sync-config-label'
+    urlLabel.textContent = 'Sync server URL'
+    actions.appendChild(urlLabel)
+
+    const urlInput = document.createElement('input')
+    urlInput.type = 'text'
+    urlInput.id = 'reviewSyncApiUrl'
+    urlInput.placeholder = 'https://your-app.up.railway.app'
+    urlInput.value = config.apiUrl
+    urlInput.className = 'sync-config-input'
+    actions.appendChild(urlInput)
+
+    const tokenLabel = document.createElement('label')
+    tokenLabel.htmlFor = 'reviewSyncApiToken'
+    tokenLabel.className = 'field-help sync-config-label'
+    tokenLabel.textContent = 'Sync token'
+    actions.appendChild(tokenLabel)
+
+    const tokenInput = document.createElement('input')
+    tokenInput.type = 'password'
+    tokenInput.id = 'reviewSyncApiToken'
+    tokenInput.placeholder = 'Bearer token'
+    tokenInput.value = config.apiToken
+    tokenInput.className = 'sync-config-input'
+    actions.appendChild(tokenInput)
+
+    const saveButton = document.createElement('button')
+    saveButton.type = 'button'
+    saveButton.className = 'tool-btn secondary-tool'
+    saveButton.id = 'saveSyncSettings'
+    saveButton.textContent = 'Save sync settings'
+    actions.appendChild(saveButton)
+    saveButton.addEventListener('click', () => {
+      writeConfig({ apiUrl: urlInput.value, apiToken: tokenInput.value })
+      setSyncStatus(isConfigured() ? 'Sync settings saved.' : 'Sync settings cleared.')
+    })
+
+    const pullButton = document.createElement('button')
+    pullButton.type = 'button'
+    pullButton.className = 'tool-btn secondary-tool'
+    pullButton.id = 'pullReviewState'
+    pullButton.textContent = 'Pull from server'
+    actions.appendChild(pullButton)
+    pullButton.addEventListener('click', () => {
+      setSyncStatus('Pulling from server…')
+      pullFromServer().then((result) => {
+        if (result.ok) {
+          const conflictCount = result.conflicts?.length || 0
+          let message = `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
+          if (conflictCount) {
+            message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes: ${result.conflicts.join(', ')}. Resolve by hand (compare with whoever pushed) before pushing ${conflictCount === 1 ? 'it' : 'them'} again.`
+          }
+          setSyncStatus(message)
+          window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
+          window.ReviewUx?.refreshUx?.()
+          if (typeof window.showToast === 'function')
+            window.showToast(
+              conflictCount
+                ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need manual conflict resolution`
+                : 'Pulled review state from server',
+              conflictCount ? 'warn' : 'success'
+            )
+        } else {
+          setSyncStatus(`Pull failed: ${result.error}`)
+          if (typeof window.showToast === 'function')
+            window.showToast(`Sync pull failed: ${result.error}`, 'warn')
+        }
+      })
+    })
+
+    const pushButton = document.createElement('button')
+    pushButton.type = 'button'
+    pushButton.className = 'tool-btn secondary-tool'
+    pushButton.id = 'pushAllReviewState'
+    pushButton.textContent = 'Push all pages'
+    actions.appendChild(pushButton)
+    pushButton.addEventListener('click', () => {
+      window.ReviewUx?.stateSync?.saveCurrentPageToLocalStorage()
+      setSyncStatus('Pushing to server…')
+      pushAllPages().then((result) => {
+        setSyncStatus(
+          result.ok
+            ? `Pushed ${result.pushedCount} page review${result.pushedCount === 1 ? '' : 's'} to server.`
+            : `Push failed after ${result.pushedCount} page${result.pushedCount === 1 ? '' : 's'}: ${result.error}`
+        )
+        if (typeof window.showToast === 'function') {
+          window.showToast(
+            result.ok ? 'Pushed review state to server' : `Sync push failed: ${result.error}`,
+            result.ok ? 'success' : 'warn'
+          )
+        }
+      })
+    })
+
+    const status = document.createElement('p')
+    status.id = 'reviewSyncStatus'
+    status.className = 'field-help'
+    status.textContent = isConfigured()
+      ? 'Sync configured.'
+      : 'Sync not configured — enter a server URL and token above, then Save sync settings.'
+    actions.insertAdjacentElement('afterend', status)
+  }
+
+  window.reviewStateSync = {
+    CONFIG_KEY,
+    readConfig,
+    writeConfig,
+    isConfigured,
+    pullFromServer,
+    pushPage,
+    pushAllPages,
+    mountSyncControls,
+  }
+
+  // Node/Bun-side export for unit testing the pull/push conflict-resolution
+  // logic without a real browser — same dual-export pattern js/review-merge.js
+  // uses. No behavior change in the browser; module is undefined there.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      pullFromServer,
+      pushPage,
+      pushAllPages,
+      isConfigured,
+      readConfig,
+      writeConfig,
+    }
+  }
+})()

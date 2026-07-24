@@ -1,6 +1,9 @@
 {
   "name": "hhvc-manager-review-mockup-tool",
   "private": true,
+  "dependencies": {
+    "zod": "^3.24.1"
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
@@ -13,8 +16,7 @@
     "googleapis": "^144.0.0",
     "papaparse": "^5.5.4",
     "prettier": "^3.5.1",
-    "text-readability": "^1.1.1",
-    "zod": "^3.24.1"
+    "text-readability": "^1.1.1"
   },
   "scripts": {
     "// dev": "Runs the local development server in watch mode at http://127.0.0.1:8080 (kills stale listeners first)",
@@ -40,7 +42,7 @@
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
     "// test": "Runs the test suite using Bun's test runner",
-    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/index-html-checks.test.js",
+    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/index-html-checks.test.js tests/review-merge.test.js tests/review-api-server.test.js tests/review-state-sync.test.js",
     "// test:e2e": "Playwright end-to-end tests (starts static server on :8080)",
     "test:e2e": "playwright test",
     "// vendor:browser": "Rebuild IIFE bundles for Fuse.js and defu used by index.html",
