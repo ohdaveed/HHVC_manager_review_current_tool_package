@@ -10,6 +10,10 @@ single-file-export-current-source.html
 data/page_inventory.json
 data/page_inventory.csv
 
+# Local dev SQLite DB for the optional /api/review-state sync backend
+# (server.ts). Production points DATA_DB_PATH at a Railway volume instead.
+/.data/
+
 # Netlify deploy bundle (root only). Anchored with a leading slash on purpose:
 # a bare "dist/" would also match forms/mosquito-workshop-request/dist/, whose
 # built output IS committed (build:netlify copies it verbatim instead of

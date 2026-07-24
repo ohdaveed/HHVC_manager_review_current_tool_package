@@ -166,6 +166,16 @@
 
     const snapshot = collectCurrentPageReviewState(pageKeyOverride)
     window.reviewState.update((state) => {
+      // This is the continuous per-keystroke/blur autosave path, not a
+      // discrete review "round" — it must NOT append a history entry (that
+      // would flood history on every debounced save). It must also not
+      // reset history to [] via the fresh buildReviewRecord() snapshot, so
+      // carry the existing array forward untouched. Round-boundary events
+      // (queue actions, imports, sync) go through mergeReviewRecord
+      // instead, in js/review-merge.js.
+      const existingHistory = state.pages[snapshot.page_key]?.history
+      snapshot.history = Array.isArray(existingHistory) ? existingHistory : []
+
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
       state.globals.reviewer = snapshot.reviewer

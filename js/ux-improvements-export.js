@@ -2,7 +2,13 @@
    Loads after js/ux-improvements-state-sync.js. */
 ;(function mountUxImprovementsExport() {
   const DATA = window.HHVC_DATA
-  if (!hasValidPageData(DATA) || !window.reviewState || !window.ReviewUx?.stateSync) return
+  if (
+    !hasValidPageData(DATA) ||
+    !window.reviewState ||
+    !window.reviewMerge ||
+    !window.ReviewUx?.stateSync
+  )
+    return
 
   const {
     getValue,
@@ -189,7 +195,11 @@
         window.reviewState.update((state) => {
           const nextPages = { ...state.pages }
           for (const [key, saved] of entries) {
-            nextPages[key] = { ...(state.pages[key] || {}), ...saved, page_key: key }
+            nextPages[key] = window.reviewMerge.mergeReviewRecord(
+              { ...(state.pages[key] || {}), page_key: key },
+              saved,
+              { updatedBy: 'import' }
+            )
           }
           return {
             ...state,

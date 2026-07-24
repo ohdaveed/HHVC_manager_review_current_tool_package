@@ -630,6 +630,23 @@
   outline-offset: 2px;
 }
 
+.sync-config-input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--sfds-border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  color: var(--sfds-slate-1);
+  background: var(--sfds-white);
+  box-sizing: border-box;
+}
+
+.sync-config-input:focus {
+  outline: 3px solid rgba(42, 96, 175, 0.25);
+  outline-offset: 2px;
+}
+
 .tool-btn.copy-summary {
   background: var(--sfds-slate-1);
   border-color: var(--sfds-slate-1);

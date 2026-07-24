@@ -3,7 +3,7 @@
    files, right where js/review-queue.js used to sit in index.html. */
 ;(function mountReviewQueueState() {
   const DATA = window.HHVC_DATA
-  if (!DATA || !DATA.pages || !DATA.order || !window.reviewState) return
+  if (!DATA || !DATA.pages || !DATA.order || !window.reviewState || !window.reviewMerge) return
 
   const QUEUE_PANEL_ID = 'reviewWorkspaceOverview'
   const STALE_DAYS = 3
@@ -90,12 +90,12 @@
         review_date: getSidebarReviewDate(),
         reviewer: document.getElementById('reviewerInput')?.value || '',
       })
-      nextSaved = {
-        ...defaults,
-        ...existing,
-        ...patch,
-        updated_at: new Date().toISOString(),
-      }
+      // defaults < existing: existing (if any) wins over freshly-computed
+      // defaults so mergeReviewRecord sees the real prior record, including
+      // its history array, as `existing`.
+      nextSaved = window.reviewMerge.mergeReviewRecord({ ...defaults, ...existing }, patch, {
+        updatedBy: 'action',
+      })
       localState.pages[pageKey] = nextSaved
       return localState
     })

@@ -12,6 +12,17 @@ const VALID_DECISIONS = [
   'Needs review',
 ]
 
+const historyEntrySchema = z
+  .object({
+    timestamp: z.string().optional(),
+    reviewer: z.string().optional(),
+    decision: z.enum(VALID_DECISIONS).optional(),
+    notes: z.string().optional(),
+    risks_or_blockers: z.string().optional(),
+    updated_by: z.string().optional(),
+  })
+  .passthrough()
+
 const reviewRecordSchema = z
   .object({
     review_date: z.string().optional(),
@@ -31,6 +42,9 @@ const reviewRecordSchema = z
     edited_title: z.string().optional(),
     edited_summary: z.string().optional(),
     updated_at: z.string().optional(),
+    // Append-only round history. Constructed exclusively by
+    // mergeReviewRecord (js/review-merge.js) — never hand-written.
+    history: z.array(historyEntrySchema).optional(),
   })
   .passthrough()
 
@@ -67,6 +81,7 @@ function validateReviewRecord(input) {
 module.exports = {
   STORAGE_VERSION,
   VALID_DECISIONS,
+  historyEntrySchema,
   reviewRecordSchema,
   reviewStateSchema,
   validateReviewState,

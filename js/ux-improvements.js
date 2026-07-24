@@ -235,6 +235,7 @@
     window.ReviewUx.exportImport.mountCopySummaryButton()
     window.ReviewUx.exportImport.mountBackupControls()
     window.ReviewUx.exportImport.mountLocalStorageControls()
+    window.reviewStateSync?.mountSyncControls()
     attachRefreshListeners()
     wrapRenderPage()
     window.ReviewUx.stateSync.applySavedUiPreferences()

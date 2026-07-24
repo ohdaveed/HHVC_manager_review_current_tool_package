@@ -21,6 +21,7 @@ const REVIEW_RECORD_FIELDS = [
   'edited_title',
   'edited_summary',
   'updated_at',
+  'history',
 ]
 
 ;(function initSharedUtils() {
@@ -516,6 +517,7 @@ function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD
     edited_title: '',
     edited_summary: '',
     updated_at: '',
+    history: [],
   }
   const merged = { ...base, ...overrides }
   const result = {}

@@ -33,14 +33,51 @@
     'updated_at',
   ])
 
+  const HISTORY_ENTRY_FIELDS = new Set([
+    'timestamp',
+    'reviewer',
+    'decision',
+    'notes',
+    'risks_or_blockers',
+    'updated_by',
+  ])
+
   function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+  }
+
+  function sanitizeHistoryEntry(entry) {
+    if (!isPlainObject(entry)) return null
+    const clean = {}
+    for (const [key, value] of Object.entries(entry)) {
+      if (!HISTORY_ENTRY_FIELDS.has(key)) continue
+      if (
+        key === 'decision' &&
+        value !== '' &&
+        value != null &&
+        !VALID_DECISIONS.has(String(value))
+      ) {
+        continue
+      }
+      if (value == null) continue
+      clean[key] = String(value)
+    }
+    return clean
   }
 
   function sanitizeReviewRecord(record) {
     if (!isPlainObject(record)) return null
     const clean = {}
     for (const [key, value] of Object.entries(record)) {
+      // history is an array of entries, not a flat string field like the
+      // rest of REVIEW_RECORD_FIELDS, so it can't go through the generic
+      // stringify-everything path below without corrupting it.
+      if (key === 'history') {
+        if (Array.isArray(value)) {
+          clean.history = value.map(sanitizeHistoryEntry).filter(Boolean)
+        }
+        continue
+      }
       if (!REVIEW_RECORD_FIELDS.has(key) && key !== 'page_key') continue
       if (
         key === 'decision' &&
