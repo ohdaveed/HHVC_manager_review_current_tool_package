@@ -82,18 +82,26 @@
 
   function updateLocalReviewForPage(pageKey, patch) {
     const page = DATA.pages[pageKey] || {}
+    const actingReviewer = getSidebarReviewerName()
     let nextSaved
 
     window.reviewState.update((localState) => {
       const existing = localState.pages[pageKey] || {}
       const defaults = window.utils.buildReviewRecord(page, pageKey, {
         review_date: getSidebarReviewDate(),
-        reviewer: document.getElementById('reviewerInput')?.value || '',
+        reviewer: actingReviewer,
       })
       // defaults < existing: existing (if any) wins over freshly-computed
       // defaults so mergeReviewRecord sees the real prior record, including
-      // its history array, as `existing`.
-      nextSaved = window.reviewMerge.mergeReviewRecord({ ...defaults, ...existing }, patch, {
+      // its history array, as `existing` — EXCEPT reviewer, which must not
+      // follow that precedence: queue action patches never include
+      // `reviewer`, so letting a stale existing.reviewer win would
+      // attribute this action's new history entry to whoever last saved
+      // the record, not whoever is acting right now (e.g. Bob bulk-
+      // approving pages Alice previously reviewed would misattribute the
+      // approval to Alice).
+      const base = { ...defaults, ...existing, reviewer: actingReviewer }
+      nextSaved = window.reviewMerge.mergeReviewRecord(base, patch, {
         updatedBy: 'action',
       })
       localState.pages[pageKey] = nextSaved

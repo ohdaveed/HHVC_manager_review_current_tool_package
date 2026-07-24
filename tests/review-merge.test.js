@@ -65,4 +65,81 @@ describe('mergeReviewRecord', () => {
     expect(pageB.page_key).toBe('ratsReport')
     expect(pageB.decision).toBe('Blocked')
   })
+
+  test('preserves history carried by the patch itself when merging into an empty/no-history record', () => {
+    // This is the exact shape of a JSON backup import, or a client's first
+    // push to an empty sync server: `patch` is a full saved record with its
+    // own multi-round history, and `existing` is empty (nothing local yet).
+    const patchWithHistory = {
+      page_key: 'pestsTopic',
+      decision: 'Revise and resubmit',
+      notes: 'round 3 notes',
+      history: [
+        { timestamp: '2026-01-01T00:00:00.000Z', decision: 'Needs review', reviewer: 'Alice' },
+        { timestamp: '2026-01-02T00:00:00.000Z', decision: 'Approved with edits', reviewer: 'Bob' },
+        {
+          timestamp: '2026-01-03T00:00:00.000Z',
+          decision: 'Revise and resubmit',
+          reviewer: 'Alice',
+        },
+      ],
+    }
+
+    const merged = mergeReviewRecord(null, patchWithHistory, {
+      updatedBy: 'import',
+      timestamp: '2026-01-04T00:00:00.000Z',
+    })
+
+    // All 3 prior rounds survive, plus the new boundary entry for this merge.
+    expect(merged.history).toHaveLength(4)
+    expect(merged.history[0]).toMatchObject({ reviewer: 'Alice', decision: 'Needs review' })
+    expect(merged.history[1]).toMatchObject({ reviewer: 'Bob', decision: 'Approved with edits' })
+    expect(merged.history[2]).toMatchObject({ reviewer: 'Alice', decision: 'Revise and resubmit' })
+    expect(merged.history[3]).toMatchObject({
+      updated_by: 'import',
+      timestamp: '2026-01-04T00:00:00.000Z',
+    })
+  })
+
+  test('combines existing history and patch history without duplicating either', () => {
+    const existing = mergeReviewRecord(
+      null,
+      { decision: 'Needs review' },
+      { timestamp: '2026-01-01T00:00:00.000Z' }
+    )
+    const patchWithHistory = {
+      decision: 'Approved',
+      history: [
+        { timestamp: '2026-01-02T00:00:00.000Z', decision: 'Approved with edits', reviewer: 'Bob' },
+      ],
+    }
+
+    const merged = mergeReviewRecord(existing, patchWithHistory, {
+      timestamp: '2026-01-03T00:00:00.000Z',
+    })
+
+    expect(merged.history).toHaveLength(3)
+    expect(merged.history.map((entry) => entry.timestamp)).toEqual([
+      '2026-01-01T00:00:00.000Z',
+      '2026-01-02T00:00:00.000Z',
+      '2026-01-03T00:00:00.000Z',
+    ])
+  })
+
+  test('re-merging the same history entries does not duplicate them (idempotent dedupe)', () => {
+    const first = mergeReviewRecord(
+      null,
+      { decision: 'Needs review' },
+      { timestamp: '2026-01-01T00:00:00.000Z' }
+    )
+    // Re-import the exact same record (same history) onto itself.
+    const merged = mergeReviewRecord(first, { ...first }, { timestamp: '2026-01-01T00:00:00.000Z' })
+
+    expect(merged.history).toHaveLength(1)
+  })
+
+  test('omits the decision key on a history entry instead of writing an empty string', () => {
+    const merged = mergeReviewRecord(null, { notes: 'no decision yet' })
+    expect(merged.history[0]).not.toHaveProperty('decision')
+  })
 })

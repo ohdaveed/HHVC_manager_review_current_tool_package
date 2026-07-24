@@ -2,9 +2,12 @@ import { serve } from "bun"
 import { Database } from "bun:sqlite"
 import { mkdirSync } from "node:fs"
 import { dirname } from "node:path"
+import { timingSafeEqual } from "node:crypto"
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
 import { mergeReviewRecord } from "./js/review-merge.js"
+// @ts-ignore - plain JS module (CJS via Zod), no .d.ts; same interop as above.
+import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
@@ -79,7 +82,15 @@ function jsonResponse(data: unknown, status: number): Response {
 
 function isAuthorized(req: Request): boolean {
   if (!REVIEW_API_TOKEN) return false
-  return req.headers.get("authorization") === `Bearer ${REVIEW_API_TOKEN}`
+  const header = req.headers.get("authorization") ?? ""
+  const expected = `Bearer ${REVIEW_API_TOKEN}`
+  // Constant-time comparison: a raw `===` on the token leaks timing info an
+  // attacker could use to guess it one byte at a time. timingSafeEqual
+  // throws on a length mismatch, so that has to be checked first — which is
+  // itself timing-safe since header length isn't secret.
+  const headerBuf = Buffer.from(header)
+  const expectedBuf = Buffer.from(expected)
+  return headerBuf.length === expectedBuf.length && timingSafeEqual(headerBuf, expectedBuf)
 }
 
 /** Reassemble the flattened { version, updated_at, ui, globals, pages } shape
@@ -107,15 +118,25 @@ function getFullReviewState(): object {
 }
 
 async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
-  let patch: unknown
+  let body: unknown
   try {
-    patch = await req.json()
+    body = await req.json()
   } catch {
     return jsonResponse({ error: "Request body must be valid JSON." }, 400)
   }
-  if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return jsonResponse({ error: "Request body must be a JSON object." }, 400)
   }
+
+  // Validate against the same schema the browser validates GET responses
+  // against (js/review-state-validation.js / build_scripts/review-state-schema.js)
+  // — without this, a malformed or malicious PUT body would merge and
+  // persist as-is, unlike every other entry point into review state.
+  const parsed = reviewRecordSchema.safeParse(body)
+  if (!parsed.success) {
+    return jsonResponse({ error: "Invalid review record.", issues: parsed.error.issues }, 400)
+  }
+  const patch = parsed.data as { updated_at?: string; [key: string]: unknown }
 
   const database = getDb()
   const existingRow = database
@@ -123,11 +144,28 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
     .get(pageKey) as { record: string } | null
   const existing = existingRow ? JSON.parse(existingRow.record) : null
 
+  // Reject a stale full-record push instead of silently overwriting a
+  // newer server record with it: pushPage sends the client's entire local
+  // snapshot (not a field-level diff), so if reviewer B already pushed a
+  // newer version of this page since reviewer A last pulled, A's push
+  // would otherwise carry A's stale copy of every field A didn't touch —
+  // including reverting whatever B just changed. patch.updated_at is
+  // already on every full record the client sends, so this reuses data
+  // already on the wire rather than requiring a new field/wire format.
+  if (existing && typeof existing.updated_at === "string" && typeof patch.updated_at === "string") {
+    if (existing.updated_at > patch.updated_at) {
+      return jsonResponse(
+        { error: "Server has a newer version of this page. Pull before pushing again.", current: existing },
+        409
+      )
+    }
+  }
+
   // The one place server-side merges happen: always merge onto the single
   // page_key being written, never touch the rest of the table. This is the
   // server-side half of the "merge, never wipe" invariant the client side
   // already relies on (js/review-queue-import.js, js/ux-improvements-export.js).
-  const merged = mergeReviewRecord(existing, { ...(patch as object), page_key: pageKey }, {
+  const merged = mergeReviewRecord(existing, { ...patch, page_key: pageKey }, {
     updatedBy: "sync",
   })
 
@@ -175,6 +213,16 @@ const server = serve({
 
     if (url.pathname === "/api/review-state" || url.pathname.startsWith("/api/review-state/")) {
       return handleReviewStateApi(req, url)
+    }
+
+    // Never let the static handler below serve a dotfile/dotdir path (e.g.
+    // /.data/review-state.local.db, /.git/..., /.env.local). The static
+    // branch has no denylist otherwise — it serves any existing path under
+    // ROOT — and DATA_DB_PATH's local-dev default lives under ROOT/.data/,
+    // so without this guard the SQLite file holding every reviewer's
+    // decisions/notes would be downloadable with no auth once synced.
+    if (/(^|\/)\.[^/]+/.test(url.pathname)) {
+      return new Response("Not Found", { status: 404, headers: HTML_HEADERS })
     }
 
     if (url.pathname === "/" || url.pathname === "/index.html") {

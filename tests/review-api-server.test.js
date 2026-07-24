@@ -121,6 +121,76 @@ describe('review-state API (server.ts)', () => {
     expect(res.status).toBe(400)
   })
 
+  test('rejects a body that fails schema validation (invalid decision enum value)', async () => {
+    const res = await fetch(`${base}/api/review-state/pages/pestsTopic`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ decision: 'Maybe later' }),
+    })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error).toMatch(/invalid/i)
+
+    // The invalid PUT must not have been merged/persisted.
+    const check = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    })
+    const state = await check.json()
+    expect(state.pages.pestsTopic?.decision).not.toBe('Maybe later')
+  })
+
+  test('rejects a stale push whose updated_at is older than the server has, without overwriting it', async () => {
+    // Establish a current record.
+    const current = await fetch(`${base}/api/review-state/pages/ratsReport`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ decision: 'Approved', notes: 'current' }),
+    }).then((r) => r.json())
+    expect(current.decision).toBe('Approved')
+
+    // A push carrying an updated_at from before that write should be rejected.
+    const stale = await fetch(`${base}/api/review-state/pages/ratsReport`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        decision: 'Blocked',
+        notes: 'stale',
+        updated_at: '2000-01-01T00:00:00.000Z',
+      }),
+    })
+    expect(stale.status).toBe(409)
+
+    // The server's data must be unchanged by the rejected push.
+    const stateRes = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    })
+    const state = await stateRes.json()
+    expect(state.pages.ratsReport.decision).toBe('Approved')
+    expect(state.pages.ratsReport.notes).toBe('current')
+  })
+
+  test('a push whose updated_at is newer than (or absent, unlike) the server record is accepted', async () => {
+    const res = await fetch(`${base}/api/review-state/pages/ratsReport`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ decision: 'Blocked', notes: 'genuinely newer' }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.decision).toBe('Blocked')
+  })
+
+  test('blocks dotfile paths from static serving instead of exposing the SQLite DB', async () => {
+    const dbRes = await fetch(`${base}/.data/review-state.db`)
+    expect(dbRes.status).toBe(404)
+
+    const envRes = await fetch(`${base}/.env.local`)
+    expect(envRes.status).toBe(404)
+
+    const gitRes = await fetch(`${base}/.git/config`)
+    expect(gitRes.status).toBe(404)
+  })
+
   test('CORS preflight succeeds without requiring auth', async () => {
     const res = await fetch(`${base}/api/review-state`, { method: 'OPTIONS' })
     expect(res.status).toBe(204)

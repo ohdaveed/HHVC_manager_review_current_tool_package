@@ -9,6 +9,7 @@
   if (typeof window === 'undefined' || !window.reviewState || !window.reviewMerge) return
 
   const CONFIG_KEY = 'hhvcReviewSyncConfig'
+  const API_TIMEOUT_MS = 15000
 
   /**
    * Sync settings (server URL + bearer token) live in their own localStorage
@@ -50,20 +51,34 @@
     return Boolean(config.apiUrl && config.apiToken)
   }
 
+  /**
+   * A hung sync server would otherwise leave the UI stuck on "Pulling…"/
+   * "Pushing…" forever, since fetch() has no default timeout. Aborts after
+   * API_TIMEOUT_MS, or immediately if a caller-supplied signal aborts first.
+   */
   function apiFetch(path, options = {}) {
     const config = readConfig()
     if (!config.apiUrl || !config.apiToken) {
       return Promise.reject(new Error('Sync is not configured.'))
     }
     const base = config.apiUrl.replace(/\/+$/, '')
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+    if (options.signal) {
+      if (options.signal.aborted) controller.abort()
+      else options.signal.addEventListener('abort', () => controller.abort(), { once: true })
+    }
+
     return fetch(base + path, {
       ...options,
+      signal: controller.signal,
       headers: {
         ...(options.headers || {}),
         authorization: `Bearer ${config.apiToken}`,
         'content-type': 'application/json',
       },
-    })
+    }).finally(() => clearTimeout(timeoutId))
   }
 
   /**
@@ -131,6 +146,11 @@
       body: JSON.stringify(record),
     })
       .then((res) => {
+        if (res.status === 409) {
+          throw new Error(
+            'Someone else pushed a newer version of this page — pull from server first, then push again.'
+          )
+        }
         if (!res.ok) throw new Error(`Server responded ${res.status}`)
         return res.json()
       })
@@ -183,18 +203,33 @@
 
     const config = readConfig()
 
+    // Placeholder text isn't a reliable accessible name (it disappears once
+    // typed, and screen readers don't treat it as a persistent label), so
+    // each input gets a real <label for="..."> alongside its placeholder.
+    const urlLabel = document.createElement('label')
+    urlLabel.htmlFor = 'reviewSyncApiUrl'
+    urlLabel.className = 'field-help sync-config-label'
+    urlLabel.textContent = 'Sync server URL'
+    actions.appendChild(urlLabel)
+
     const urlInput = document.createElement('input')
     urlInput.type = 'text'
     urlInput.id = 'reviewSyncApiUrl'
-    urlInput.placeholder = 'Sync server URL'
+    urlInput.placeholder = 'https://your-app.up.railway.app'
     urlInput.value = config.apiUrl
     urlInput.className = 'sync-config-input'
     actions.appendChild(urlInput)
 
+    const tokenLabel = document.createElement('label')
+    tokenLabel.htmlFor = 'reviewSyncApiToken'
+    tokenLabel.className = 'field-help sync-config-label'
+    tokenLabel.textContent = 'Sync token'
+    actions.appendChild(tokenLabel)
+
     const tokenInput = document.createElement('input')
     tokenInput.type = 'password'
     tokenInput.id = 'reviewSyncApiToken'
-    tokenInput.placeholder = 'Sync token'
+    tokenInput.placeholder = 'Bearer token'
     tokenInput.value = config.apiToken
     tokenInput.className = 'sync-config-input'
     actions.appendChild(tokenInput)
@@ -223,7 +258,7 @@
           setSyncStatus(
             `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
           )
-          window.ReviewUx?.stateSync?.applySavedPageState(window.utils.getCurrentKey())
+          window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
           window.ReviewUx?.refreshUx?.()
           if (typeof window.showToast === 'function')
             window.showToast('Pulled review state from server', 'success')

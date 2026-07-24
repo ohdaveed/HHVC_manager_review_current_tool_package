@@ -147,6 +147,42 @@ test.describe('review queue (Overview tab)', () => {
     await expect(page.locator('#pageSelect')).toHaveValue('article11Guide')
   })
 
+  test('bulk/row queue actions attribute the new history entry to the acting reviewer, not whoever saved it last', async ({
+    page,
+  }) => {
+    await gotoFresh(page)
+    // Seed a page already saved under a different reviewer's name.
+    await seedState(page, {
+      scopeInfo: makeReviewRecord('scopeInfo', {
+        decision: DECISIONS.needsReview,
+        reviewer: 'Alice',
+      }),
+    })
+    await reloadAndOpenQueue(page)
+
+    // Switch the acting reviewer in the sidebar before taking a queue action.
+    await page.fill('#reviewerInput', 'Bob')
+
+    // dispatchEvent (a script-level click) instead of .click(): Playwright's
+    // mouse-simulated click computes coordinates via scroll-into-view, which
+    // is unreliable here specifically after focusing/filling the sidebar
+    // reviewer field — the row is far down the queue table and the
+    // coordinate math flakes even after generous waits/scrolling, even
+    // though the app's click handling itself is correct (verified directly:
+    // both a raw DOM .click() and calling the handler function work fine).
+    await page
+      .locator('.review-queue-table-row[data-page-key="scopeInfo"] [data-queue-action="approved"]')
+      .dispatchEvent('click')
+
+    const state = await readState(page)
+    const saved = state.pages.scopeInfo
+    expect(saved?.decision).toBe(DECISIONS.approved)
+    // The record's reviewer, and the new history entry it produced, must be
+    // attributed to Bob (who clicked Approve) — not Alice (who saved it last).
+    expect(saved?.reviewer).toBe('Bob')
+    expect(saved?.history?.at(-1)?.reviewer).toBe('Bob')
+  })
+
   test('queue filter and sort preferences persist across reload', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')

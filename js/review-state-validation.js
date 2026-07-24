@@ -51,11 +51,12 @@
     const clean = {}
     for (const [key, value] of Object.entries(entry)) {
       if (!HISTORY_ENTRY_FIELDS.has(key)) continue
+      // decision is optional on a history entry, not empty-string-valid
+      // (matches historyEntrySchema in build_scripts/review-state-schema.js)
+      // — drop a blank/invalid decision instead of keeping ''.
       if (
         key === 'decision' &&
-        value !== '' &&
-        value != null &&
-        !VALID_DECISIONS.has(String(value))
+        (value === '' || value == null || !VALID_DECISIONS.has(String(value)))
       ) {
         continue
       }
