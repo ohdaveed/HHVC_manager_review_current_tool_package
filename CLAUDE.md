@@ -287,7 +287,19 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   last-write-wins **per page**, comparing `updated_at`, and only overwrites
   a local page when the server is strictly newer — never a field-level
   merge on the client side, since the server's `history` array is already
-  merged and re-merging it client-side would duplicate entries.
+  merged and re-merging it client-side would duplicate entries, and since
+  treating a full local snapshot as a "patch" onto the server's record would
+  let this browser's stale copies of fields another reviewer changed
+  silently overwrite them. A page whose local copy looks newer than the
+  server's but whose `synced_at` predates the server's `updated_at` (this
+  browser has real local edits _and_ has never seen the server's newer
+  revision) is a genuine, unresolvable-by-guessing conflict: `pullFromServer`
+  leaves it untouched, does not advance its `synced_at`, and reports its
+  page key in the result's `conflicts` array so the UI can tell the reviewer
+  to resolve it by hand instead of silently picking a side. Switching the
+  configured sync server URL (`writeConfig`) clears every local page's
+  `synced_at`, since a baseline is only meaningful relative to the specific
+  deployment that issued it.
 - **Deployment (e.g. Railway)**: run `server.ts` (`bun run start`) with a
   persistent volume mounted, `DATA_DB_PATH` pointed at that volume, and
   `REVIEW_API_TOKEN` set to a generated secret — none of this is committed.

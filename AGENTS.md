@@ -261,7 +261,17 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   accepts the server's merged response as authoritative for that page; pull
   is last-write-wins **per page** by `updated_at` comparison, never a
   field-level re-merge client-side (the server's `history` is already
-  merged — re-merging it would duplicate entries).
+  merged — re-merging it would duplicate entries, and treating a full local
+  snapshot as a "patch" onto the server's record would let stale local
+  copies of fields another reviewer changed silently overwrite them). A page
+  whose local copy looks newer but whose `synced_at` predates the server's
+  `updated_at` — real local edits _and_ a server revision this browser has
+  never seen — is a genuine conflict `pullFromServer` can't safely
+  auto-resolve: it's left untouched (no content change, no `synced_at`
+  bump) and reported in the result's `conflicts` array for manual
+  resolution. Switching the sync server URL (`writeConfig`) clears every
+  local page's `synced_at`, since a baseline only means something relative
+  to the deployment that issued it.
 - **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
   mounted, `DATA_DB_PATH` pointed at it, and `REVIEW_API_TOKEN` set to a
   generated secret (never committed). Local dev and Netlify's static-only

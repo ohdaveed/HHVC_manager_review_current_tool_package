@@ -99,8 +99,8 @@ function mergeReviewRecord(existing, patch, options = {}) {
 }
 
 if (typeof window !== 'undefined') {
-  window.reviewMerge = { mergeReviewRecord }
+  window.reviewMerge = { mergeReviewRecord, combineHistory }
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { mergeReviewRecord }
+  module.exports = { mergeReviewRecord, combineHistory }
 }
