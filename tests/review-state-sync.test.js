@@ -6,11 +6,38 @@
 // with no top-level exports) except for a dual module.exports tail mirroring
 // js/review-merge.js's pattern, added specifically to make this logic
 // testable here without a real browser/DOM.
-const { describe, test, expect } = require('bun:test')
+//
+// bun:test runs every test file in one shared process, and other files
+// (tests/review-api-server.test.js) make real fetch() calls against a
+// spawned server. Stubbing global.fetch/window/localStorage here without
+// restoring them afterward permanently overwrites those globals for the
+// REST of the process, silently corrupting any real fetch() call that
+// happens to run later — exactly what broke review-api-server.test.js in
+// CI (every request appeared to return this file's last mock response).
+// beforeEach/afterEach save and restore the originals around every test so
+// the stubbing window is scoped to this file's own tests only.
+const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const { mergeReviewRecord } = require('../js/review-merge.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/review-state-sync.js')
+
+let originalFetch
+let originalWindow
+let originalLocalStorage
+
+beforeEach(() => {
+  originalFetch = global.fetch
+  originalWindow = global.window
+  originalLocalStorage = global.localStorage
+})
+
+afterEach(() => {
+  global.fetch = originalFetch
+  global.window = originalWindow
+  global.localStorage = originalLocalStorage
+  delete require.cache[MODULE_PATH]
+})
 
 function loadReviewStateSync({ localPages = {} } = {}) {
   let state = { version: 1, updated_at: '', ui: {}, globals: {}, pages: { ...localPages } }
