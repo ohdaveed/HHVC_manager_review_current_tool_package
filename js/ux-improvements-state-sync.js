@@ -235,7 +235,13 @@
   function isDecisionRound(existing, snapshot) {
     if (!snapshot.decision) return false
     if (!existing) return snapshot.decision !== 'Needs review'
-    return snapshot.decision !== existing.decision
+    // `decision` is optional on a stored record (an imported or
+    // server-provided one may omit it), and applySavedPageState shows
+    // 'Needs review' for exactly that case. Comparing against a raw
+    // `undefined` would then read the sidebar's unchanged default as a
+    // transition and record a decision round for someone who only edited
+    // a note. Compare against what the reviewer is actually looking at.
+    return snapshot.decision !== (existing.decision || 'Needs review')
   }
 
   function clearReviewFieldsForNewPage(state) {

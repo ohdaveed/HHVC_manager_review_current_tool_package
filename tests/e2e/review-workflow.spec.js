@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, readState, settleDebounce, openWorkspaceTab } = require('./helpers')
+const { gotoFresh, readState, seedState, settleDebounce, openWorkspaceTab } = require('./helpers')
 
 test.describe('manager review workflow', () => {
   test('decision, notes, and reviewer save to local review state', async ({ page }) => {
@@ -74,6 +74,38 @@ test.describe('manager review workflow', () => {
     history = (await readState(page)).pages.pestsTopic?.history || []
     expect(history).toHaveLength(2)
     expect(history[1]).toMatchObject({ decision: 'Blocked', updated_by: 'decision' })
+  })
+
+  test('editing notes on a record with no stored decision does not fabricate a decision round', async ({
+    page,
+  }) => {
+    await gotoFresh(page)
+
+    // `decision` is optional on a stored record — an imported or
+    // server-provided one may omit it, and the sidebar then shows the
+    // default 'Needs review'. Comparing the sidebar's unchanged default
+    // against a raw `undefined` used to read as a transition and record a
+    // decision round for someone who only edited a note.
+    await seedState(page, {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        notes: 'imported without a decision field',
+        updated_at: '2026-01-01T00:00:00.000Z',
+        history: [],
+      },
+    })
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+
+    await expect(page.locator('#reviewDecision')).toHaveValue('Needs review')
+
+    await page.fill('#reviewNotes', 'just adding a note, no decision made')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+
+    const state = await readState(page)
+    expect(state.pages.pestsTopic?.notes).toBe('just adding a note, no decision made')
+    expect(state.pages.pestsTopic?.history || []).toHaveLength(0)
   })
 
   test('sticky bar next/prev navigate through the review queue order', async ({ page }) => {

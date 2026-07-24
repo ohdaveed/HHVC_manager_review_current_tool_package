@@ -174,6 +174,38 @@ describe('pullFromServer revision handling', () => {
     expect(getState().pages.pestsTopic).toEqual(localRecord)
   })
 
+  test('treats a legacy record with no local_dirty field as unsynced, not as clean', async () => {
+    // Regression coverage for an upgrade-path data-loss bug: every record
+    // saved before local_dirty existed lacks the field, and the storage
+    // version was deliberately not bumped (the field is additive). Reading
+    // a missing flag as "clean" would let the first pull after an upgrade
+    // wholesale replace reviews this browser may never have pushed.
+    const serverRecord = {
+      page_key: 'pestsTopic',
+      decision: 'Approved',
+      notes: 'server notes',
+      updated_at: '2026-01-02T00:00:00.000Z',
+      history: [],
+    }
+    const legacyRecord = {
+      page_key: 'pestsTopic',
+      decision: 'Blocked',
+      notes: 'review written before this browser was upgraded',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      // No synced_at and, crucially, no local_dirty at all.
+      history: [],
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: legacyRecord } })
+    global.fetch = fetchReturning({ pestsTopic: serverRecord })
+
+    const result = await mod.pullFromServer()
+
+    expect(result.ok).toBe(true)
+    expect(result.pulledCount).toBe(0)
+    expect(result.conflicts).toEqual(['pestsTopic'])
+    expect(getState().pages.pestsTopic).toEqual(legacyRecord)
+  })
+
   test('reports (but does not auto-merge) a page with unpushed edits and a newer server revision', async () => {
     // Regression coverage for a second real data-loss bug: an earlier
     // version merged the server record with the ENTIRE local record as the
@@ -274,6 +306,49 @@ describe('resolveConflict', () => {
 
     expect(outcome.ok).toBe(false)
     expect(getState().pages.ratsReport).toEqual(localRecord)
+  })
+
+  test('refuses to resolve against a server the settings no longer point at', async () => {
+    // Regression coverage: conflict rows captured a serverRecord from
+    // server X. If the reviewer then saved server Y, acting on a stale row
+    // would import X's content — and 'local' would restore X's revision
+    // into synced_at right after writeConfig cleared it, letting a later
+    // push pass Y's staleness check against content never observed there.
+    const { mod, getState } = loadReviewStateSync({
+      localPages: { ratsReport: localRecord },
+      apiUrl: 'https://server-x.test',
+    })
+
+    mod.writeConfig({ apiUrl: 'https://server-y.test', apiToken: 'test-token' })
+
+    const outcome = mod.resolveConflict(
+      'ratsReport',
+      'local',
+      serverRecord,
+      'https://server-x.test'
+    )
+
+    expect(outcome.ok).toBe(false)
+    expect(outcome.error).toMatch(/sync server changed/i)
+    // writeConfig's baseline clearing stands — not re-minted by the stale row.
+    expect(getState().pages.ratsReport.synced_at).toBe('')
+  })
+
+  test('still resolves when the endpoint is unchanged', async () => {
+    const { mod, getState } = loadReviewStateSync({
+      localPages: { ratsReport: localRecord },
+      apiUrl: 'https://server-x.test',
+    })
+
+    const outcome = mod.resolveConflict(
+      'ratsReport',
+      'local',
+      serverRecord,
+      'https://server-x.test'
+    )
+
+    expect(outcome.ok).toBe(true)
+    expect(getState().pages.ratsReport.synced_at).toBe('2026-01-02T00:00:00.000Z')
   })
 })
 

@@ -287,7 +287,11 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   `updatedBy: 'sync'`) and cleared only by a real push/pull. It is a genuine
   boolean, hence the explicit branch in `js/review-state-validation.js` —
   the generic `String()` coercion there would turn `false` into the truthy
-  string `'false'`.
+  string `'false'`. Only an **explicit `false`** means clean: records
+  written before the field existed don't carry it (the storage version was
+  deliberately not bumped, the field being additive), and treating
+  "missing" as "clean" would let the first pull after an upgrade overwrite
+  reviews that were never pushed.
 - **A divergence is surfaced, never guessed.** A new server revision _and_
   unpushed local edits means neither side has seen the other's work; the
   record is left completely untouched (no content change, and no `synced_at`
@@ -297,7 +301,12 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
 serverRecord)` is the only way out, one page at a time — `'server'` adopts
   the server copy and clears `local_dirty`; `'local'` keeps local content
   but records the server's revision as observed so the next push stops being
-  rejected. The sync controls render a button pair per conflicted page.
+  rejected. The sync controls render a button pair per conflicted page. Each
+  resolution is bound to the endpoint that produced it (`pullFromServer`
+  returns `apiUrl`, `resolveConflict` refuses a mismatch, and saving new
+  settings clears the panel): a stale row would otherwise import another
+  deployment's content, and its `'local'` branch would re-mint the exact
+  `synced_at` baseline `writeConfig` had just cleared.
 - Switching the sync server URL (`writeConfig`) clears every local page's
   `synced_at`, since a baseline only means something relative to the
   deployment that issued it. There is deliberately **no "both non-empty"

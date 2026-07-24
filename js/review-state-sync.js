@@ -172,7 +172,16 @@
             const serverHasNewRevision = !localRecord || serverRevision > observedRevision
             if (!serverHasNewRevision) continue
 
-            if (!localRecord?.local_dirty) {
+            // Only an EXPLICIT `false` counts as clean. A record saved
+            // before local_dirty existed has no such field, and the storage
+            // version was deliberately not bumped (the field is additive) —
+            // so on the first pull after an upgrade, treating "missing" as
+            // "clean" would wholesale replace reviews this browser may
+            // never have pushed. Assume unsynced and let the reviewer
+            // decide; a false conflict costs a click, the alternative
+            // costs someone's review.
+            const isClean = !localRecord || localRecord.local_dirty === false
+            if (isClean) {
               nextPages[key] = {
                 ...serverRecord,
                 page_key: key,
@@ -189,7 +198,10 @@
           return { ...state, pages: nextPages }
         })
 
-        return { ok: true, pulledCount, conflicts, conflictRecords }
+        // The endpoint these conflicts came from. A resolution is only
+        // meaningful against the server that produced it, and the settings
+        // can change between a pull and a click — see resolveConflict.
+        return { ok: true, pulledCount, conflicts, conflictRecords, apiUrl: readConfig().apiUrl }
       })
       .catch((error) => ({ ok: false, error: error.message || String(error) }))
   }
@@ -211,14 +223,29 @@
    * @param {object} serverRecord The server copy from pullFromServer's
    *   `conflictRecords` — passed in rather than re-fetched so the reviewer
    *   resolves exactly the revision they were shown.
+   * @param {string} [fromApiUrl] The endpoint that produced `serverRecord`
+   *   (pullFromServer's `apiUrl`). Refuses to act if the configured sync
+   *   server has changed since: `serverRecord` describes a revision of a
+   *   DIFFERENT deployment, so adopting it would import foreign content,
+   *   and the 'local' branch would mint a `synced_at` baseline that
+   *   writeConfig had deliberately cleared — letting a later push pass the
+   *   new server's staleness check against content this browser has never
+   *   seen. That is exactly the hole the writeConfig fix closed, so it must
+   *   not be reopened through a stale conflict row.
    * @returns {{ ok: boolean, error?: string }}
    */
-  function resolveConflict(pageKey, resolution, serverRecord) {
+  function resolveConflict(pageKey, resolution, serverRecord, fromApiUrl) {
     if (!pageKey || !serverRecord || typeof serverRecord !== 'object') {
       return { ok: false, error: 'Nothing to resolve for this page.' }
     }
     if (resolution !== 'server' && resolution !== 'local') {
       return { ok: false, error: `Unknown conflict resolution "${resolution}".` }
+    }
+    if (typeof fromApiUrl === 'string' && fromApiUrl !== readConfig().apiUrl) {
+      return {
+        ok: false,
+        error: 'The sync server changed since this conflict was found — pull again first.',
+      }
     }
 
     const serverRevision = serverRecord.updated_at || ''
@@ -344,13 +371,49 @@
   }
 
   /**
+   * Discard whatever the reviewer's local edits did to the in-memory page
+   * object, so adopting the server's copy actually shows the server's copy.
+   *
+   * `updateMockupTextFromSavedState` only assigns a field when the saved
+   * value is truthy, so a server record with an EMPTY `edited_title` (the
+   * page was never retitled on the server) would otherwise leave this
+   * browser's local retitle sitting in `DATA.pages[key]` — visible in the
+   * mockup, and written straight back by the next autosave, re-dirtying a
+   * page the reviewer just resolved. Resetting from ORIGINAL_DATA first
+   * makes "empty on the server" mean "back to the original," which is what
+   * it means on the server.
+   *
+   * ORIGINAL_DATA is a top-level `const` in js/state.js — a shared-scope
+   * global in the browser, absent under the Node unit tests that import
+   * this file, hence the typeof guard.
+   * @param {string} pageKey
+   */
+  function restorePageContentFromOriginal(pageKey) {
+    if (typeof ORIGINAL_DATA === 'undefined') return
+    const original = ORIGINAL_DATA?.pages?.[pageKey]
+    const page = window.HHVC_DATA?.pages?.[pageKey]
+    if (!original || !page) return
+
+    page.title = original.title
+    page.summary = original.summary
+    page.seoTitle = original.seoTitle
+    page.metaDescription = original.metaDescription
+    page.seoTitleEdited = false
+    page.metaDescriptionEdited = false
+    const originalCta = window.utils?.getPrimaryCta?.(original)
+    if (originalCta) window.utils?.setPrimaryCta?.(page, originalCta)
+  }
+
+  /**
    * Render one row per conflicted page with the two explicit resolutions.
    * Built with DOM APIs rather than innerHTML so page keys and titles from
    * the server response are never interpreted as markup.
    * @param {string[]} conflicts
    * @param {Record<string, object>} conflictRecords
+   * @param {string} [fromApiUrl] Endpoint the conflicts came from; passed
+   *   through to resolveConflict so a row can't act after a server switch.
    */
-  function renderConflicts(conflicts, conflictRecords) {
+  function renderConflicts(conflicts, conflictRecords, fromApiUrl) {
     const panel = document.getElementById('reviewSyncConflicts')
     if (!panel) return
 
@@ -389,10 +452,23 @@
         button.dataset.resolution = resolution
         button.textContent = text
         button.addEventListener('click', () => {
-          const outcome = resolveConflict(key, resolution, serverRecord)
+          const outcome = resolveConflict(key, resolution, serverRecord, fromApiUrl)
           if (!outcome.ok) {
             setSyncStatus(`Could not resolve ${key}: ${outcome.error}`)
             return
+          }
+          // Adopting the server's copy means abandoning this browser's
+          // in-memory content edits for that page, not just its saved
+          // record — otherwise the mockup keeps showing them and the next
+          // autosave writes them back.
+          if (resolution === 'server') {
+            restorePageContentFromOriginal(key)
+            if (
+              key === window.utils?.getCurrentKey?.() &&
+              typeof window.renderPage === 'function'
+            ) {
+              window.renderPage(key)
+            }
           }
           row.remove()
           if (!panel.querySelector('.sync-conflict-row')) panel.hidden = true
@@ -459,6 +535,11 @@
     actions.appendChild(saveButton)
     saveButton.addEventListener('click', () => {
       writeConfig({ apiUrl: urlInput.value, apiToken: tokenInput.value })
+      // Any conflicts still on screen describe revisions of the server
+      // configured a moment ago. They are meaningless — and unsafe to act
+      // on — against a different one, so drop them; a fresh pull will
+      // re-report anything that still conflicts.
+      renderConflicts([], {})
       setSyncStatus(isConfigured() ? 'Sync settings saved.' : 'Sync settings cleared.')
     })
 
@@ -478,7 +559,7 @@
             message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes. Choose a version for each below.`
           }
           setSyncStatus(message)
-          renderConflicts(result.conflicts || [], result.conflictRecords || {})
+          renderConflicts(result.conflicts || [], result.conflictRecords || {}, result.apiUrl)
           window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
           window.ReviewUx?.refreshUx?.()
           if (typeof window.showToast === 'function')
