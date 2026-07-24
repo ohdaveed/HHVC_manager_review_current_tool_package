@@ -82,27 +82,31 @@
   }
 
   /**
-   * Pull the server's review state and merge it into local state.
-   * Deliberately last-write-wins PER PAGE by comparing updated_at, not a
-   * field-level merge: a field-level merge here (on top of the field-level
-   * merge the server already did on every PUT) would treat the server's
-   * already-merged history array as just another "patch" and duplicate
-   * history entries. Only overwriting a page's CONTENT when the server is
-   * strictly newer keeps unsynced local edits (which bump updated_at on
-   * every autosave) safe from being silently discarded by a pull.
+   * Pull the server's review state and merge it into local state, PER PAGE.
    *
-   * synced_at is ONLY advanced when the content was actually applied from
-   * the server (the serverIsNewer branch). It must NOT be advanced when
-   * local is kept as-is: a local record whose updated_at happens to be
-   * newer than the server's response doesn't mean its CONTENT reflects
-   * that server state — it may be older content with an unrelated local
-   * edit layered on top, coincidentally timestamped later than a change
-   * someone else pushed in between. Minting synced_at = the server's
-   * current value in that case would make the next push's conflict check
-   * (server.ts's putReviewPage) pass even though this browser's snapshot
-   * never actually incorporated that server change — silently overwriting
-   * it. Leaving synced_at untouched keeps that push correctly rejected
-   * (409) until a real pull actually applies the server's content.
+   * When the server's content is strictly newer than local (or local
+   * doesn't exist yet), it's applied wholesale — no local edits to lose.
+   *
+   * When local looks newer by `updated_at`, there are two different
+   * situations that must NOT be treated the same way:
+   *  - Already reconciled: this browser's `synced_at` for the page is
+   *    already at or past the server's `updated_at` — it has already seen
+   *    (and, per its own newer `updated_at`, edited on top of) this exact
+   *    server revision. Genuinely nothing to do.
+   *  - Diverged: `synced_at` is behind the server's `updated_at` — this
+   *    browser's local copy and the server's copy have real content
+   *    neither side has seen from the other (e.g. another reviewer pushed
+   *    after this browser's last sync, and this browser then edited
+   *    locally without ever pulling that push). Silently skipping here
+   *    would leave `synced_at` stuck behind forever: every future local
+   *    edit keeps `updated_at` newer than the server's, so the "local is
+   *    newer" branch fires every time and the push/pull retry loop never
+   *    resolves. Instead, merge via the same mergeReviewRecord every other
+   *    merge point already uses — the server record as the base, local as
+   *    the patch (this reviewer's own newer edits win field-by-field,
+   *    while both sides' `history` combine through the existing dedup) —
+   *    and advance `synced_at` to the server's `updated_at`, so the next
+   *    push's staleness check in server.ts has a real, current baseline.
    */
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
@@ -127,9 +131,27 @@
             const serverIsNewer =
               !localRecord?.updated_at ||
               (serverRecord.updated_at && serverRecord.updated_at > localRecord.updated_at)
-            if (!serverIsNewer) continue
+
+            if (serverIsNewer) {
+              nextPages[key] = {
+                ...serverRecord,
+                page_key: key,
+                synced_at: serverRecord.updated_at,
+              }
+              pulledCount += 1
+              continue
+            }
+
+            const hasReconciled =
+              localRecord?.synced_at &&
+              serverRecord.updated_at &&
+              localRecord.synced_at >= serverRecord.updated_at
+            if (hasReconciled) continue
+
             nextPages[key] = {
-              ...serverRecord,
+              ...window.reviewMerge.mergeReviewRecord(serverRecord, localRecord, {
+                updatedBy: 'pull',
+              }),
               page_key: key,
               synced_at: serverRecord.updated_at,
             }
@@ -350,5 +372,19 @@
     pushPage,
     pushAllPages,
     mountSyncControls,
+  }
+
+  // Node/Bun-side export for unit testing the pull/push conflict-resolution
+  // logic without a real browser — same dual-export pattern js/review-merge.js
+  // uses. No behavior change in the browser; module is undefined there.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      pullFromServer,
+      pushPage,
+      pushAllPages,
+      isConfigured,
+      readConfig,
+      writeConfig,
+    }
   }
 })()

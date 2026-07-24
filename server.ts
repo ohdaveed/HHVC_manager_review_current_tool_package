@@ -158,11 +158,18 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   // observed" — comparing THAT against the server's timestamp would almost
   // always look artificially fresh and defeat this check entirely.
   // synced_at only changes on an actual pull/push response (see
-  // js/review-state-sync.js), so it's the real baseline. No synced_at (a
-  // page this browser has never synced before) means no conflict is
-  // possible — same as no existing row.
-  if (existing && typeof existing.updated_at === "string" && typeof patch.synced_at === "string") {
-    if (existing.updated_at > patch.synced_at) {
+  // js/review-state-sync.js), so it's the real baseline.
+  //
+  // A missing synced_at is only safe to wave through when there's no
+  // existing row to lose (a page that's never existed on the server). If a
+  // row DOES exist, a missing/blank synced_at means this browser has never
+  // observed it — reviewing locally before ever configuring sync, or
+  // syncing from a different browser — and pushing its full local snapshot
+  // over real server content unconditionally would silently overwrite
+  // another reviewer's decision/notes. Require a real baseline in that
+  // case instead of treating "no baseline" as "no conflict."
+  if (existing && typeof existing.updated_at === "string") {
+    if (typeof patch.synced_at !== "string" || existing.updated_at > patch.synced_at) {
       return jsonResponse(
         { error: "Server has a newer version of this page. Pull before pushing again.", current: existing },
         409

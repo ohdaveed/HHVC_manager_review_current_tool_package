@@ -84,10 +84,17 @@ describe('review-state API (server.ts)', () => {
   })
 
   test('a second PUT to the same page merges onto the prior record instead of replacing it', async () => {
+    // pestsTopic already has a row from the previous test, so this push
+    // needs a real synced_at baseline (the prior PUT's own updated_at) —
+    // a missing one against an existing row is now rejected (409).
+    const first = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+
     const res = await fetch(`${base}/api/review-state/pages/pestsTopic`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ notes: 'ready now' }),
+      body: JSON.stringify({ notes: 'ready now', synced_at: first.pages.pestsTopic.updated_at }),
     })
     const body = await res.json()
     // decision survives from the first PUT even though this patch never mentioned it.
@@ -97,6 +104,7 @@ describe('review-state API (server.ts)', () => {
   })
 
   test('PUTs to different page_keys never clobber each other', async () => {
+    // First-ever write to ratsReport — no existing row, so no synced_at needed.
     await fetch(`${base}/api/review-state/pages/ratsReport`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
@@ -145,11 +153,21 @@ describe('review-state API (server.ts)', () => {
   })
 
   test('rejects a stale push whose synced_at is older than the server has, without overwriting it', async () => {
-    // Establish a current record.
+    // ratsReport already has a row from the previous test — establishing
+    // "current" needs a real synced_at baseline too, same as any other push
+    // to an existing row.
+    const before = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+
     const current = await fetch(`${base}/api/review-state/pages/ratsReport`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ decision: 'Approved', notes: 'current' }),
+      body: JSON.stringify({
+        decision: 'Approved',
+        notes: 'current',
+        synced_at: before.pages.ratsReport.updated_at,
+      }),
     }).then((r) => r.json())
     expect(current.decision).toBe('Approved')
 
@@ -195,11 +213,13 @@ describe('review-state API (server.ts)', () => {
     expect(body.decision).toBe('Blocked')
   })
 
-  test('a push with no synced_at at all is always accepted, regardless of server state (first sync)', async () => {
-    // A page this browser has never synced before has no baseline to be
-    // stale against — the same "no conflict possible" treatment as a page
-    // with no existing server row.
-    const res = await fetch(`${base}/api/review-state/pages/ratsReport`, {
+  test('a push with no synced_at is accepted for a page the server has never seen (true first sync)', async () => {
+    // A page with no existing server row at all has nothing to conflict
+    // with — the same "no baseline needed" treatment applies. Uses a page
+    // key untouched by every other test in this file, since ratsReport
+    // already has a row by this point and a missing synced_at against an
+    // *existing* row is a different (rejected) case — see the next test.
+    const res = await fetch(`${base}/api/review-state/pages/article11Guide`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -210,6 +230,32 @@ describe('review-state API (server.ts)', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.decision).toBe('Approved with edits')
+  })
+
+  test('a push with no synced_at against an EXISTING row is rejected, not treated as first sync', async () => {
+    // ratsReport already has a server row from earlier tests. A browser
+    // that has never pulled/pushed it before (no synced_at) must not be
+    // able to silently overwrite whatever's already there with a stale or
+    // blank local snapshot — it must pull first, same as any other stale
+    // push.
+    const before = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+
+    const res = await fetch(`${base}/api/review-state/pages/ratsReport`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        decision: 'Blocked',
+        notes: 'never synced this browser',
+      }),
+    })
+    expect(res.status).toBe(409)
+
+    const after = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+    expect(after.pages.ratsReport).toEqual(before.pages.ratsReport)
   })
 
   test('blocks dotfile paths from static serving instead of exposing the SQLite DB', async () => {
