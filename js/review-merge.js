@@ -93,7 +93,7 @@ function mergeReviewRecord(existing, patch, options = {}) {
   // — omit the key entirely rather than writing '' when there's no decision.
   if (merged.decision) newEntry.decision = merged.decision
 
-  merged.history = combineHistory(source.history, patch.history, [newEntry])
+  merged.history = combineHistory(source.history, patch?.history, [newEntry])
 
   return merged
 }

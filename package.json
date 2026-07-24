@@ -1,6 +1,10 @@
 {
   "name": "hhvc-manager-review-mockup-tool",
   "private": true,
+  "dependencies": {
+    "// zod": "Required at runtime by server.ts (imports build_scripts/review-state-schema.js for the optional sync API's PUT validation) — must NOT be a devDependency, or a production-only install (bun install --production) would fail to start the server at all, not just the optional sync routes.",
+    "zod": "^3.24.1"
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
@@ -13,8 +17,7 @@
     "googleapis": "^144.0.0",
     "papaparse": "^5.5.4",
     "prettier": "^3.5.1",
-    "text-readability": "^1.1.1",
-    "zod": "^3.24.1"
+    "text-readability": "^1.1.1"
   },
   "scripts": {
     "// dev": "Runs the local development server in watch mode at http://127.0.0.1:8080 (kills stale listeners first)",

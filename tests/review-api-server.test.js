@@ -122,6 +122,10 @@ describe('review-state API (server.ts)', () => {
   })
 
   test('rejects a body that fails schema validation (invalid decision enum value)', async () => {
+    const before = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+
     const res = await fetch(`${base}/api/review-state/pages/pestsTopic`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
@@ -131,12 +135,13 @@ describe('review-state API (server.ts)', () => {
     const body = await res.json()
     expect(body.error).toMatch(/invalid/i)
 
-    // The invalid PUT must not have been merged/persisted.
+    // The invalid PUT must not have changed anything about the record —
+    // not just decision, but notes/history/timestamps too.
     const check = await fetch(`${base}/api/review-state`, {
       headers: { authorization: `Bearer ${TOKEN}` },
     })
     const state = await check.json()
-    expect(state.pages.pestsTopic?.decision).not.toBe('Maybe later')
+    expect(state.pages.pestsTopic).toEqual(before.pages.pestsTopic)
   })
 
   test('rejects a stale push whose synced_at is older than the server has, without overwriting it', async () => {
@@ -175,11 +180,15 @@ describe('review-state API (server.ts)', () => {
     expect(state.pages.ratsReport.notes).toBe('current')
   })
 
-  test('a push whose synced_at is newer than (or absent, unlike) the server record is accepted', async () => {
+  test('accepts a push whose synced_at is newer than the server record', async () => {
     const res = await fetch(`${base}/api/review-state/pages/ratsReport`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ decision: 'Blocked', notes: 'genuinely newer' }),
+      body: JSON.stringify({
+        decision: 'Blocked',
+        notes: 'genuinely newer',
+        synced_at: '2099-01-01T00:00:00.000Z',
+      }),
     })
     expect(res.status).toBe(200)
     const body = await res.json()

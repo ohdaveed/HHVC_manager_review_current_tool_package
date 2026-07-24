@@ -91,11 +91,18 @@
    * strictly newer keeps unsynced local edits (which bump updated_at on
    * every autosave) safe from being silently discarded by a pull.
    *
-   * synced_at, though, is set on every page the server returns regardless
-   * of whether its content was applied: pulling tells this browser what
-   * the server currently has for that page even when local is kept because
-   * it's newer (unpushed edits) — and that's exactly the baseline the next
-   * push's conflict check (server.ts's putReviewPage) needs.
+   * synced_at is ONLY advanced when the content was actually applied from
+   * the server (the serverIsNewer branch). It must NOT be advanced when
+   * local is kept as-is: a local record whose updated_at happens to be
+   * newer than the server's response doesn't mean its CONTENT reflects
+   * that server state — it may be older content with an unrelated local
+   * edit layered on top, coincidentally timestamped later than a change
+   * someone else pushed in between. Minting synced_at = the server's
+   * current value in that case would make the next push's conflict check
+   * (server.ts's putReviewPage) pass even though this browser's snapshot
+   * never actually incorporated that server change — silently overwriting
+   * it. Leaving synced_at untouched keeps that push correctly rejected
+   * (409) until a real pull actually applies the server's content.
    */
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
@@ -120,16 +127,13 @@
             const serverIsNewer =
               !localRecord?.updated_at ||
               (serverRecord.updated_at && serverRecord.updated_at > localRecord.updated_at)
-            if (serverIsNewer) {
-              nextPages[key] = {
-                ...serverRecord,
-                page_key: key,
-                synced_at: serverRecord.updated_at,
-              }
-              pulledCount += 1
-            } else {
-              nextPages[key] = { ...localRecord, synced_at: serverRecord.updated_at }
+            if (!serverIsNewer) continue
+            nextPages[key] = {
+              ...serverRecord,
+              page_key: key,
+              synced_at: serverRecord.updated_at,
             }
+            pulledCount += 1
           }
           return { ...state, pages: nextPages }
         })
@@ -169,13 +173,28 @@
       })
       .then((merged) => {
         window.reviewState.update((state) => {
-          // synced_at = the server's returned updated_at: this push just
-          // told us exactly what the server now has for this page, so
-          // that's the new known-server baseline for the next push's
-          // conflict check — must be set here (not left to merged.synced_at,
-          // whatever the server happened to echo back) since the server has
-          // no reason to know or persist this client-side-only field.
-          state.pages[pageKey] = { ...merged, synced_at: merged.updated_at }
+          // If an autosave landed on this page between reading `record`
+          // above and this response arriving (a real possibility — a push
+          // is a network round-trip, easily longer than the debounce
+          // window), the current local record is now NEWER than the
+          // snapshot this push was based on. Overwriting it with the
+          // response unconditionally would silently drop that later edit.
+          // Keep the newer local content in that case and only advance
+          // synced_at with what the server confirmed.
+          const currentRecord = state.pages[pageKey]
+          const localChangedDuringPush =
+            currentRecord?.updated_at && currentRecord.updated_at > record.updated_at
+
+          state.pages[pageKey] = localChangedDuringPush
+            ? { ...currentRecord, synced_at: merged.updated_at }
+            : // synced_at = the server's returned updated_at: this push just
+              // told us exactly what the server now has for this page, so
+              // that's the new known-server baseline for the next push's
+              // conflict check — must be set here (not left to
+              // merged.synced_at, whatever the server happened to echo
+              // back) since the server has no reason to know or persist
+              // this client-side-only field.
+              { ...merged, synced_at: merged.updated_at }
           return state
         })
         return { ok: true, record: merged }

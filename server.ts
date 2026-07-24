@@ -178,11 +178,30 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
     updatedBy: "sync",
   })
 
-  database.run(
+  // Compare-and-swap the write against the exact row we based `merged` on
+  // (existing?.updated_at, or NULL for "no row yet"): the staleness check
+  // above only proves no conflict existed at READ time. Within a single Bun
+  // process this table only ever gets one JS-thread request at a time
+  // between an `await` and the next, so no two requests can interleave
+  // between that read and this write — but across multiple server
+  // instances/replicas (nothing rules that out for this deployment), two
+  // requests could both pass the check against the same prior row and race
+  // to write. Gating the UPDATE on the row still matching what we read
+  // means the loser's write becomes a no-op (`changes: 0`) instead of
+  // silently clobbering the winner's — same "merge, never wipe" invariant,
+  // just enforced atomically instead of just checked-then-trusted.
+  const result = database.run(
     `INSERT INTO review_pages (page_key, record, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(page_key) DO UPDATE SET record = excluded.record, updated_at = excluded.updated_at`,
-    [pageKey, JSON.stringify(merged), merged.updated_at]
+     ON CONFLICT(page_key) DO UPDATE SET record = excluded.record, updated_at = excluded.updated_at
+     WHERE review_pages.updated_at = ?`,
+    [pageKey, JSON.stringify(merged), merged.updated_at, existing?.updated_at ?? null]
   )
+  if (result.changes === 0) {
+    return jsonResponse(
+      { error: "Server has a newer version of this page. Pull before pushing again." },
+      409
+    )
+  }
 
   return jsonResponse(merged, 200)
 }
