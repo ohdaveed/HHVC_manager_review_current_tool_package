@@ -22,6 +22,7 @@ const REVIEW_RECORD_FIELDS = [
   'edited_summary',
   'updated_at',
   'history',
+  'synced_at',
 ]
 
 ;(function initSharedUtils() {
@@ -518,6 +519,11 @@ function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD
     edited_summary: '',
     updated_at: '',
     history: [],
+    // Distinct from updated_at (bumped on every local edit): synced_at only
+    // changes on an actual pull/push response, so it can be used as the
+    // conflict-detection baseline in server.ts's putReviewPage without a
+    // pre-push autosave silently invalidating it. See js/review-state-sync.js.
+    synced_at: '',
   }
   const merged = { ...base, ...overrides }
   const result = {}

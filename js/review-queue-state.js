@@ -80,7 +80,18 @@
     return trimmed || window.utils.today()
   }
 
-  function updateLocalReviewForPage(pageKey, patch) {
+  /**
+   * @param {string} pageKey
+   * @param {object} patch
+   * @param {string} [updatedBy] History-entry provenance tag. Defaults to
+   *   'action' (a queue button/keyboard shortcut, this function's usual
+   *   caller in js/review-queue-rows.js). js/review-queue-import.js's CSV
+   *   import path passes 'import' explicitly — without that override every
+   *   CSV-imported row would be indistinguishable from a manual action in
+   *   the history audit trail, unlike JSON backup import which already
+   *   correctly tags its entries 'import' (js/ux-improvements-export.js).
+   */
+  function updateLocalReviewForPage(pageKey, patch, updatedBy = 'action') {
     const page = DATA.pages[pageKey] || {}
     const actingReviewer = getSidebarReviewerName()
     let nextSaved
@@ -102,7 +113,7 @@
       // approval to Alice).
       const base = { ...defaults, ...existing, reviewer: actingReviewer }
       nextSaved = window.reviewMerge.mergeReviewRecord(base, patch, {
-        updatedBy: 'action',
+        updatedBy,
       })
       localState.pages[pageKey] = nextSaved
       return localState

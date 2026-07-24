@@ -87,9 +87,15 @@
    * field-level merge: a field-level merge here (on top of the field-level
    * merge the server already did on every PUT) would treat the server's
    * already-merged history array as just another "patch" and duplicate
-   * history entries. Only overwriting a page when the server is strictly
-   * newer keeps unsynced local edits (which bump updated_at on every
-   * autosave) safe from being silently discarded by a pull.
+   * history entries. Only overwriting a page's CONTENT when the server is
+   * strictly newer keeps unsynced local edits (which bump updated_at on
+   * every autosave) safe from being silently discarded by a pull.
+   *
+   * synced_at, though, is set on every page the server returns regardless
+   * of whether its content was applied: pulling tells this browser what
+   * the server currently has for that page even when local is kept because
+   * it's newer (unpushed edits) — and that's exactly the baseline the next
+   * push's conflict check (server.ts's putReviewPage) needs.
    */
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
@@ -114,9 +120,16 @@
             const serverIsNewer =
               !localRecord?.updated_at ||
               (serverRecord.updated_at && serverRecord.updated_at > localRecord.updated_at)
-            if (!serverIsNewer) continue
-            nextPages[key] = { ...serverRecord, page_key: key }
-            pulledCount += 1
+            if (serverIsNewer) {
+              nextPages[key] = {
+                ...serverRecord,
+                page_key: key,
+                synced_at: serverRecord.updated_at,
+              }
+              pulledCount += 1
+            } else {
+              nextPages[key] = { ...localRecord, synced_at: serverRecord.updated_at }
+            }
           }
           return { ...state, pages: nextPages }
         })
@@ -156,7 +169,13 @@
       })
       .then((merged) => {
         window.reviewState.update((state) => {
-          state.pages[pageKey] = merged
+          // synced_at = the server's returned updated_at: this push just
+          // told us exactly what the server now has for this page, so
+          // that's the new known-server baseline for the next push's
+          // conflict check — must be set here (not left to merged.synced_at,
+          // whatever the server happened to echo back) since the server has
+          // no reason to know or persist this client-side-only field.
+          state.pages[pageKey] = { ...merged, synced_at: merged.updated_at }
           return state
         })
         return { ok: true, record: merged }

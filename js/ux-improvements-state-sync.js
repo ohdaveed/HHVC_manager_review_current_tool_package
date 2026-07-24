@@ -175,6 +175,14 @@
       // instead, in js/review-merge.js.
       const existingHistory = state.pages[snapshot.page_key]?.history
       snapshot.history = Array.isArray(existingHistory) ? existingHistory : []
+      // Same reasoning as history: synced_at tracks the last server state
+      // this browser actually observed (via pull/push), NOT local edit
+      // time — a fresh buildReviewRecord() snapshot would otherwise reset
+      // it to '' on every keystroke, which would silently destroy the
+      // conflict-detection baseline server.ts's putReviewPage relies on
+      // the very first time a reviewer edits a page after syncing it. See
+      // js/review-state-sync.js.
+      snapshot.synced_at = state.pages[snapshot.page_key]?.synced_at || ''
 
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false

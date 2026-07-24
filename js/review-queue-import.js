@@ -80,7 +80,7 @@
       }
 
       const existing = readLocalState().pages[pageKey] || {}
-      const saved = updateLocalReviewForPage(pageKey, patch)
+      const saved = updateLocalReviewForPage(pageKey, patch, 'import')
       if (saved && saved.updated_at !== existing.updated_at) {
         imported += 1
       } else {

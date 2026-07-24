@@ -136,7 +136,7 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   if (!parsed.success) {
     return jsonResponse({ error: "Invalid review record.", issues: parsed.error.issues }, 400)
   }
-  const patch = parsed.data as { updated_at?: string; [key: string]: unknown }
+  const patch = parsed.data as { updated_at?: string; synced_at?: string; [key: string]: unknown }
 
   const database = getDb()
   const existingRow = database
@@ -149,11 +149,20 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   // snapshot (not a field-level diff), so if reviewer B already pushed a
   // newer version of this page since reviewer A last pulled, A's push
   // would otherwise carry A's stale copy of every field A didn't touch —
-  // including reverting whatever B just changed. patch.updated_at is
-  // already on every full record the client sends, so this reuses data
-  // already on the wire rather than requiring a new field/wire format.
-  if (existing && typeof existing.updated_at === "string" && typeof patch.updated_at === "string") {
-    if (existing.updated_at > patch.updated_at) {
+  // including reverting whatever B just changed.
+  //
+  // The freshness token is patch.synced_at, NOT patch.updated_at: the
+  // latter is bumped by every local edit/autosave (including one that
+  // fires immediately before every push), so it means "when this browser
+  // last touched the record," not "what server state this browser last
+  // observed" — comparing THAT against the server's timestamp would almost
+  // always look artificially fresh and defeat this check entirely.
+  // synced_at only changes on an actual pull/push response (see
+  // js/review-state-sync.js), so it's the real baseline. No synced_at (a
+  // page this browser has never synced before) means no conflict is
+  // possible — same as no existing row.
+  if (existing && typeof existing.updated_at === "string" && typeof patch.synced_at === "string") {
+    if (existing.updated_at > patch.synced_at) {
       return jsonResponse(
         { error: "Server has a newer version of this page. Pull before pushing again.", current: existing },
         409

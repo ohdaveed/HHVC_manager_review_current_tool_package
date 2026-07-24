@@ -45,6 +45,11 @@ const reviewRecordSchema = z
     // Append-only round history. Constructed exclusively by
     // mergeReviewRecord (js/review-merge.js) — never hand-written.
     history: z.array(historyEntrySchema).optional(),
+    // Last server updated_at this browser has actually observed (via a
+    // pull or push response) — distinct from updated_at, which bumps on
+    // every local edit. Used as the conflict-detection baseline in
+    // server.ts's putReviewPage; see js/review-state-sync.js.
+    synced_at: z.string().optional(),
   })
   .passthrough()
 

@@ -139,7 +139,7 @@ describe('review-state API (server.ts)', () => {
     expect(state.pages.pestsTopic?.decision).not.toBe('Maybe later')
   })
 
-  test('rejects a stale push whose updated_at is older than the server has, without overwriting it', async () => {
+  test('rejects a stale push whose synced_at is older than the server has, without overwriting it', async () => {
     // Establish a current record.
     const current = await fetch(`${base}/api/review-state/pages/ratsReport`, {
       method: 'PUT',
@@ -148,14 +148,20 @@ describe('review-state API (server.ts)', () => {
     }).then((r) => r.json())
     expect(current.decision).toBe('Approved')
 
-    // A push carrying an updated_at from before that write should be rejected.
+    // A push carrying a synced_at from before that write should be rejected
+    // — even though updated_at claims to be from the far future. This is
+    // exactly the scenario a pre-push autosave creates in practice: it
+    // freely rewrites updated_at to "now" on every push, so the freshness
+    // check must key off synced_at (only ever set by an actual sync
+    // response), not updated_at, or a stale push always looks fresh.
     const stale = await fetch(`${base}/api/review-state/pages/ratsReport`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         decision: 'Blocked',
         notes: 'stale',
-        updated_at: '2000-01-01T00:00:00.000Z',
+        updated_at: '2099-01-01T00:00:00.000Z',
+        synced_at: '2000-01-01T00:00:00.000Z',
       }),
     })
     expect(stale.status).toBe(409)
@@ -169,7 +175,7 @@ describe('review-state API (server.ts)', () => {
     expect(state.pages.ratsReport.notes).toBe('current')
   })
 
-  test('a push whose updated_at is newer than (or absent, unlike) the server record is accepted', async () => {
+  test('a push whose synced_at is newer than (or absent, unlike) the server record is accepted', async () => {
     const res = await fetch(`${base}/api/review-state/pages/ratsReport`, {
       method: 'PUT',
       headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
@@ -178,6 +184,23 @@ describe('review-state API (server.ts)', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.decision).toBe('Blocked')
+  })
+
+  test('a push with no synced_at at all is always accepted, regardless of server state (first sync)', async () => {
+    // A page this browser has never synced before has no baseline to be
+    // stale against — the same "no conflict possible" treatment as a page
+    // with no existing server row.
+    const res = await fetch(`${base}/api/review-state/pages/ratsReport`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        decision: 'Approved with edits',
+        notes: 'first sync from this browser',
+      }),
+    })
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.decision).toBe('Approved with edits')
   })
 
   test('blocks dotfile paths from static serving instead of exposing the SQLite DB', async () => {

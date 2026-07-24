@@ -31,6 +31,7 @@
     'edited_title',
     'edited_summary',
     'updated_at',
+    'synced_at',
   ])
 
   const HISTORY_ENTRY_FIELDS = new Set([

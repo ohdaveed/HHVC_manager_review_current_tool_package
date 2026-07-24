@@ -95,6 +95,10 @@ test.describe('review import/export through the UI', () => {
     expect(state.pages.pestsTopic.notes).toBe('Imported pests note')
     expect(state.pages.payFee.decision).toBe(DECISIONS.blocked)
     expect(state.pages.payFee.notes).toBe('Existing fee note')
+    // The new history entry must be tagged as an import, not a manual queue
+    // action, so the audit trail can distinguish a bulk CSV import from
+    // someone clicking a decision button.
+    expect(state.pages.pestsTopic.history?.at(-1)?.updated_by).toBe('import')
   })
 
   test('JSON backup import via file input merges without wiping other pages', async ({ page }) => {
