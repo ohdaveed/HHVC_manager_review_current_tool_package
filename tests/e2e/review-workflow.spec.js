@@ -44,6 +44,38 @@ test.describe('manager review workflow', () => {
     expect(state.pages.pestsTopic?.decision).toBe('Blocked')
   })
 
+  test('sidebar decision changes are recorded as history rounds, typing is not', async ({
+    page,
+  }) => {
+    await gotoFresh(page)
+
+    // A decision set from the sidebar is a real review round, even though it
+    // persists through the same autosave path as free-text fields.
+    await page.selectOption('#reviewDecision', 'Approved')
+    await settleDebounce(page)
+
+    let history = (await readState(page)).pages.pestsTopic?.history || []
+    expect(history).toHaveLength(1)
+    expect(history[0]).toMatchObject({ decision: 'Approved', updated_by: 'decision' })
+
+    // Typing notes must NOT append: that would put one entry per debounced
+    // keystroke into the audit trail.
+    await page.fill('#reviewNotes', 'some notes typed after deciding')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+
+    history = (await readState(page)).pages.pestsTopic?.history || []
+    expect(history).toHaveLength(1)
+
+    // A second, different decision is a second round.
+    await page.selectOption('#reviewDecision', 'Blocked')
+    await settleDebounce(page)
+
+    history = (await readState(page)).pages.pestsTopic?.history || []
+    expect(history).toHaveLength(2)
+    expect(history[1]).toMatchObject({ decision: 'Blocked', updated_by: 'decision' })
+  })
+
   test('sticky bar next/prev navigate through the review queue order', async ({ page }) => {
     await gotoFresh(page)
 

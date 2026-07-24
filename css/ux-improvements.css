@@ -647,6 +647,40 @@
   outline-offset: 2px;
 }
 
+/* Per-page conflict resolution, shown only after a pull reports pages whose
+   unpushed local edits collide with newer server content. */
+.sync-conflict-panel {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--sfds-border);
+  border-left: 4px solid var(--sfds-yellow, #f5c542);
+  border-radius: var(--radius);
+  background: var(--sfds-white);
+}
+
+.sync-conflict-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.sync-conflict-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+}
+
+.sync-conflict-row + .sync-conflict-row {
+  border-top: 1px solid var(--sfds-border);
+}
+
+.sync-conflict-label {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-weight: 600;
+}
+
 .tool-btn.copy-summary {
   background: var(--sfds-slate-1);
   border-color: var(--sfds-slate-1);

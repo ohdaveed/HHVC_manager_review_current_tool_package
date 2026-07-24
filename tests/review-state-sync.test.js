@@ -14,7 +14,7 @@
 // the stubbing window is scoped to this file's own tests only.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
-const { mergeReviewRecord, combineHistory } = require('../js/review-merge.js')
+const { mergeReviewRecord, combineHistory, reviewContentEquals } = require('../js/review-merge.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/review-state-sync.js')
 
@@ -54,7 +54,7 @@ function loadReviewStateSync({ localPages = {}, apiUrl = 'https://example.test' 
         return state
       },
     },
-    reviewMerge: { mergeReviewRecord, combineHistory },
+    reviewMerge: { mergeReviewRecord, combineHistory, reviewContentEquals },
     HHVC_DATA: { pages: { pestsTopic: {}, ratsReport: {} } },
   }
 
@@ -71,14 +71,15 @@ function fetchReturning(serverPages) {
   })
 }
 
-describe('pullFromServer conflict resolution', () => {
-  test('applies the server record wholesale when it is strictly newer than local', async () => {
+describe('pullFromServer revision handling', () => {
+  test('applies a server revision this browser has not observed, when nothing is unpushed', async () => {
     const localRecord = {
       page_key: 'pestsTopic',
       decision: 'Needs review',
       notes: 'stale local notes',
       updated_at: '2026-01-01T00:00:00.000Z',
       synced_at: '2026-01-01T00:00:00.000Z',
+      local_dirty: false,
       history: [{ timestamp: '2026-01-01T00:00:00.000Z', decision: 'Needs review' }],
     }
     const serverRecord = {
@@ -100,9 +101,10 @@ describe('pullFromServer conflict resolution', () => {
     expect(page.decision).toBe('Approved')
     expect(page.notes).toBe('server notes')
     expect(page.synced_at).toBe('2026-01-02T00:00:00.000Z')
+    expect(page.local_dirty).toBe(false)
   })
 
-  test('no-ops when local is newer but has already reconciled this exact server revision', async () => {
+  test('no-ops when the server holds no revision newer than the one already observed', async () => {
     const serverRecord = {
       page_key: 'pestsTopic',
       decision: 'Approved',
@@ -115,9 +117,8 @@ describe('pullFromServer conflict resolution', () => {
       decision: 'Approved with local edits',
       notes: 'local notes after reconciling',
       updated_at: '2026-01-03T00:00:00.000Z',
-      // Already at/past the server's updated_at: this browser has already
-      // seen this revision and edited on top of it locally.
       synced_at: '2026-01-01T00:00:00.000Z',
+      local_dirty: true,
       history: [{ timestamp: '2026-01-03T00:00:00.000Z', decision: 'Approved with local edits' }],
     }
     const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: localRecord } })
@@ -132,14 +133,55 @@ describe('pullFromServer conflict resolution', () => {
     expect(getState().pages.pestsTopic).toEqual(localRecord)
   })
 
-  test('reports (but does not auto-merge) a page that has diverged from an un-synced server revision', async () => {
-    // Regression coverage for a real data-loss bug: an earlier version of
-    // pullFromServer merged the server record with the ENTIRE local record
-    // as the patch, which let this browser's stale copies of fields Bob
-    // changed on the server (e.g. `reviewer`) get silently overwritten by
-    // Alice's local snapshot on the next push. There is no safe way to
-    // auto-resolve this without a stored 3-way base, so the record must be
-    // left untouched and the conflict must be surfaced instead of guessed at.
+  test('does not discard an unpushed local edit just because the browser clock lags the server', async () => {
+    // Regression coverage for a real data-loss bug: the decision used to
+    // compare the server's updated_at against the LOCAL record's
+    // updated_at, which is stamped by the browser's own clock. On a browser
+    // running behind the server, a genuine unsynced local edit carries an
+    // updated_at that looks older than an unchanged server record, so the
+    // server's copy was applied wholesale and the edit vanished. Both
+    // values in the real comparison are now server-issued (synced_at vs the
+    // server's updated_at), so clock skew can't reach the decision at all.
+    const serverRecord = {
+      page_key: 'pestsTopic',
+      decision: 'Approved',
+      notes: 'server notes',
+      // Server clock is well ahead of this browser's.
+      updated_at: '2026-06-01T00:00:00.000Z',
+      history: [],
+    }
+    const localRecord = {
+      page_key: 'pestsTopic',
+      decision: 'Blocked',
+      notes: 'unpushed local edit made on a lagging browser clock',
+      // Browser clock: older than the server's timestamp despite being the
+      // more recent *edit*.
+      updated_at: '2026-01-05T00:00:00.000Z',
+      // ...but this browser HAS already observed the server's current
+      // revision, so there is nothing new to pull.
+      synced_at: '2026-06-01T00:00:00.000Z',
+      local_dirty: true,
+      history: [],
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: localRecord } })
+    global.fetch = fetchReturning({ pestsTopic: serverRecord })
+
+    const result = await mod.pullFromServer()
+
+    expect(result.ok).toBe(true)
+    expect(result.pulledCount).toBe(0)
+    expect(result.conflicts).toEqual([])
+    expect(getState().pages.pestsTopic).toEqual(localRecord)
+  })
+
+  test('reports (but does not auto-merge) a page with unpushed edits and a newer server revision', async () => {
+    // Regression coverage for a second real data-loss bug: an earlier
+    // version merged the server record with the ENTIRE local record as the
+    // patch, which let this browser's stale copies of fields Bob changed on
+    // the server (e.g. `reviewer`) silently overwrite them on the next
+    // push. There is no safe way to auto-resolve this without a stored
+    // 3-way base, so the record must be left untouched and the conflict
+    // surfaced instead of guessed at.
     const serverRecord = {
       page_key: 'ratsReport',
       decision: 'Approved',
@@ -154,8 +196,9 @@ describe('pullFromServer conflict resolution', () => {
       notes: 'local notes never pushed',
       reviewer: 'Alice',
       updated_at: '2026-01-03T00:00:00.000Z',
-      // Behind the server's updated_at: this browser never observed Bob's push.
+      // Behind the server's revision: this browser never observed Bob's push.
       synced_at: '2026-01-01T00:00:00.000Z',
+      local_dirty: true,
       history: [
         { timestamp: '2026-01-01T00:00:00.000Z', decision: 'Needs review', reviewer: 'Alice' },
       ],
@@ -168,8 +211,68 @@ describe('pullFromServer conflict resolution', () => {
     expect(result.ok).toBe(true)
     expect(result.pulledCount).toBe(0)
     expect(result.conflicts).toEqual(['ratsReport'])
+    // The server's copy comes back so the reviewer can resolve the exact
+    // revision they were shown.
+    expect(result.conflictRecords.ratsReport).toEqual(serverRecord)
     // Completely untouched — no field-level guessing, no synced_at bump
     // that would let a later push silently pass the staleness check.
+    expect(getState().pages.ratsReport).toEqual(localRecord)
+  })
+})
+
+describe('resolveConflict', () => {
+  const serverRecord = {
+    page_key: 'ratsReport',
+    decision: 'Approved',
+    notes: 'server notes',
+    reviewer: 'Bob',
+    updated_at: '2026-01-02T00:00:00.000Z',
+    history: [],
+  }
+  const localRecord = {
+    page_key: 'ratsReport',
+    decision: 'Blocked',
+    notes: 'local notes',
+    reviewer: 'Alice',
+    updated_at: '2026-01-03T00:00:00.000Z',
+    synced_at: '2026-01-01T00:00:00.000Z',
+    local_dirty: true,
+    history: [],
+  }
+
+  test("'server' adopts the server copy and marks the page clean", async () => {
+    const { mod, getState } = loadReviewStateSync({ localPages: { ratsReport: localRecord } })
+
+    expect(mod.resolveConflict('ratsReport', 'server', serverRecord).ok).toBe(true)
+
+    const page = getState().pages.ratsReport
+    expect(page.decision).toBe('Approved')
+    expect(page.notes).toBe('server notes')
+    expect(page.synced_at).toBe('2026-01-02T00:00:00.000Z')
+    expect(page.local_dirty).toBe(false)
+  })
+
+  test("'local' keeps local content but adopts the server revision as observed", async () => {
+    const { mod, getState } = loadReviewStateSync({ localPages: { ratsReport: localRecord } })
+
+    expect(mod.resolveConflict('ratsReport', 'local', serverRecord).ok).toBe(true)
+
+    const page = getState().pages.ratsReport
+    // Content is untouched...
+    expect(page.decision).toBe('Blocked')
+    expect(page.notes).toBe('local notes')
+    // ...but the baseline advances, so the next push stops getting a 409
+    // and this browser's version wins the page.
+    expect(page.synced_at).toBe('2026-01-02T00:00:00.000Z')
+    expect(page.local_dirty).toBe(true)
+  })
+
+  test('rejects an unknown resolution instead of silently doing nothing', async () => {
+    const { mod, getState } = loadReviewStateSync({ localPages: { ratsReport: localRecord } })
+
+    const outcome = mod.resolveConflict('ratsReport', 'whatever', serverRecord)
+
+    expect(outcome.ok).toBe(false)
     expect(getState().pages.ratsReport).toEqual(localRecord)
   })
 })
@@ -200,6 +303,29 @@ describe('writeConfig server-switch safety', () => {
     expect(state.pages.ratsReport.decision).toBe('Blocked')
   })
 
+  test('clears baselines across a clear-then-reconfigure, not just a direct swap', async () => {
+    // Regression coverage: requiring BOTH the old and new URL to be
+    // non-empty meant clearing the settings (X -> '') skipped the clear,
+    // and then configuring a different server ('' -> Y) skipped it again —
+    // carrying X's baselines all the way to Y, where a coincidentally
+    // newer timestamp could pass Y's staleness check and overwrite records
+    // this browser had never seen.
+    const localPages = {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        decision: 'Approved',
+        synced_at: '2026-01-01T00:00:00.000Z',
+      },
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages, apiUrl: 'https://old-deploy.test' })
+
+    mod.writeConfig({ apiUrl: '', apiToken: '' })
+    expect(getState().pages.pestsTopic.synced_at).toBe('')
+
+    mod.writeConfig({ apiUrl: 'https://new-deploy.test', apiToken: 'test-token' })
+    expect(getState().pages.pestsTopic.synced_at).toBe('')
+  })
+
   test('leaves synced_at alone when the URL is unchanged (e.g. just updating the token)', async () => {
     const localPages = {
       pestsTopic: {
@@ -217,27 +343,49 @@ describe('writeConfig server-switch safety', () => {
 
     expect(getState().pages.pestsTopic.synced_at).toBe('2026-01-01T00:00:00.000Z')
   })
-
-  test('does not touch synced_at on first-ever configuration (no previous URL to compare against)', async () => {
-    const localPages = {
-      pestsTopic: { page_key: 'pestsTopic', decision: 'Approved', synced_at: '' },
-    }
-    const { mod, getState } = loadReviewStateSync({ localPages, apiUrl: '' })
-
-    mod.writeConfig({ apiUrl: 'https://first-deploy.test', apiToken: 'test-token' })
-
-    expect(getState().pages.pestsTopic.synced_at).toBe('')
-  })
 })
 
-describe('pushPage preserves server history when local changes during the request', () => {
-  test('folds the server-appended history entry into local history instead of dropping it', async () => {
+describe('pushPage', () => {
+  test('clears local_dirty when it adopts the server response', async () => {
+    const record = {
+      page_key: 'pestsTopic',
+      decision: 'Needs review',
+      notes: 'ready to push',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      synced_at: '',
+      local_dirty: true,
+      history: [],
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: record } })
+    global.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        ...record,
+        decision: 'Approved',
+        updated_at: '2026-01-01T00:00:01.000Z',
+        local_dirty: false,
+        history: [{ timestamp: '2026-01-01T00:00:01.000Z', updated_by: 'sync' }],
+      }),
+    })
+
+    const result = await mod.pushPage('pestsTopic')
+
+    expect(result.ok).toBe(true)
+    const page = getState().pages.pestsTopic
+    expect(page.decision).toBe('Approved')
+    expect(page.synced_at).toBe('2026-01-01T00:00:01.000Z')
+    expect(page.local_dirty).toBe(false)
+  })
+
+  test('folds the server-appended history entry into local history when local changes mid-push', async () => {
     const record = {
       page_key: 'pestsTopic',
       decision: 'Needs review',
       notes: 'about to push',
       updated_at: '2026-01-01T00:00:00.000Z',
       synced_at: '',
+      local_dirty: true,
       history: [{ timestamp: '2026-01-01T00:00:00.000Z', decision: 'Needs review' }],
     }
     const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: record } })
@@ -280,5 +428,7 @@ describe('pushPage preserves server history when local changes during the reques
     expect(page.history).toHaveLength(2)
     expect(page.history.map((entry) => entry.updated_by)).toEqual([undefined, 'sync'])
     expect(page.synced_at).toBe('2026-01-01T00:00:01.000Z')
+    // Still dirty: the mid-flight edit has not reached the server.
+    expect(page.local_dirty).toBe(true)
   })
 })

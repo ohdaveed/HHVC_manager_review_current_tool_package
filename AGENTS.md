@@ -209,12 +209,20 @@ Each page's review record also carries an append-only `history[]` array:
 entries recording each review round. **`mergeReviewRecord()` in
 `js/review-merge.js` is the only place a history entry gets constructed**, and
 only at discrete round-boundary events — queue actions/keyboard shortcuts
-(`updateLocalReviewForPage`), CSV/JSON import (`importReviewStateBackup`), and
-server sync (`server.ts`'s `putReviewPage`). The continuous per-keystroke/blur
-autosave (`saveCurrentPageToLocalStorage`) deliberately skips
-`mergeReviewRecord` — it just refreshes the working snapshot, carrying
-`history` forward untouched — otherwise every debounced keystroke would append
-an entry.
+(`updateLocalReviewForPage`), CSV/JSON import (`importReviewStateBackup`),
+server sync (`server.ts`'s `putReviewPage`), and a decision change made from
+the sidebar. The continuous per-keystroke/blur autosave
+(`saveCurrentPageToLocalStorage`) deliberately skips `mergeReviewRecord` — it
+just refreshes the working snapshot, carrying `history` forward untouched —
+otherwise every debounced keystroke would append an entry.
+
+The sidebar decision (`<select>` or quick-action chip) is the one exception
+that shares the autosave path, so `saveCurrentPageToLocalStorage` singles it
+out via `isDecisionRound()`: one entry when the decision actually
+_transitions_, never per keystroke, and on a brand-new record only when the
+reviewer moved off the default `Needs review`. Queue actions append their own
+entry before dispatching sidebar-sync events, so autosave sees a matching
+decision and nothing double-records.
 
 **The review import/export round-trip can destroy existing reviews** — a prior
 regression replaced saved state wholesale instead of merging. The actual
@@ -259,19 +267,43 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   explicit actions.
 - **Push vs. pull differ on purpose**: push sends one page's full record and
   accepts the server's merged response as authoritative for that page; pull
-  is last-write-wins **per page** by `updated_at` comparison, never a
-  field-level re-merge client-side (the server's `history` is already
-  merged — re-merging it would duplicate entries, and treating a full local
-  snapshot as a "patch" onto the server's record would let stale local
-  copies of fields another reviewer changed silently overwrite them). A page
-  whose local copy looks newer but whose `synced_at` predates the server's
-  `updated_at` — real local edits _and_ a server revision this browser has
-  never seen — is a genuine conflict `pullFromServer` can't safely
-  auto-resolve: it's left untouched (no content change, no `synced_at`
-  bump) and reported in the result's `conflicts` array for manual
-  resolution. Switching the sync server URL (`writeConfig`) clears every
-  local page's `synced_at`, since a baseline only means something relative
-  to the deployment that issued it.
+  is last-write-wins **per page**, never a field-level re-merge client-side
+  (the server's `history` is already merged — re-merging it would duplicate
+  entries, and treating a full local snapshot as a "patch" onto the server's
+  record would let stale local copies of fields another reviewer changed
+  silently overwrite them).
+- **Never compare a browser-clock timestamp against a server-clock one.**
+  `pullFromServer` decides each page from two clock-independent facts:
+  does the server hold a revision this browser hasn't observed
+  (`serverRecord.updated_at > localRecord.synced_at` — _both_ server-issued,
+  since `synced_at` is only ever assigned from a sync response), and does
+  this browser hold unpushed work (the explicit boolean `local_dirty`)? A
+  local record's `updated_at` comes from the browser's own clock and must
+  never take part: on a browser running behind the server, a genuine
+  unsynced edit looks older than an untouched server record and used to be
+  silently overwritten by it. `local_dirty` is set by the local write paths
+  (autosave only when content actually changed, per `reviewContentEquals`;
+  every `mergeReviewRecord` call except the server's own
+  `updatedBy: 'sync'`) and cleared only by a real push/pull. It is a genuine
+  boolean, hence the explicit branch in `js/review-state-validation.js` —
+  the generic `String()` coercion there would turn `false` into the truthy
+  string `'false'`.
+- **A divergence is surfaced, never guessed.** A new server revision _and_
+  unpushed local edits means neither side has seen the other's work; the
+  record is left completely untouched (no content change, and no `synced_at`
+  bump, which would let the next push sail through the server's staleness
+  check) and reported in `conflicts`, with the server's copy in
+  `conflictRecords`. `resolveConflict(pageKey, 'server'|'local',
+serverRecord)` is the only way out, one page at a time — `'server'` adopts
+  the server copy and clears `local_dirty`; `'local'` keeps local content
+  but records the server's revision as observed so the next push stops being
+  rejected. The sync controls render a button pair per conflicted page.
+- Switching the sync server URL (`writeConfig`) clears every local page's
+  `synced_at`, since a baseline only means something relative to the
+  deployment that issued it. There is deliberately **no "both non-empty"
+  guard** on that comparison: clearing settings then pointing at a different
+  server is two transitions (`X` → `''` → `Y`), and requiring both sides to
+  be non-empty would skip the clear on both, carrying `X`'s baselines to `Y`.
 - **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
   mounted, `DATA_DB_PATH` pointed at it, and `REVIEW_API_TOKEN` set to a
   generated secret (never committed). Local dev and Netlify's static-only

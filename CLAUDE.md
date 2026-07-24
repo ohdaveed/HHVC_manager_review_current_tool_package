@@ -227,14 +227,25 @@ history entry is constructed in exactly one place —
 `mergeReviewRecord()` in `js/review-merge.js` — and only at discrete
 round-boundary events: queue bulk actions/keyboard shortcuts
 (`updateLocalReviewForPage` in `js/review-queue-state.js`), CSV/JSON backup
-import (`importReviewStateBackup` in `js/ux-improvements-export.js`), and
-server sync (`server.ts`'s `putReviewPage`). The continuous per-keystroke/
-blur autosave (`saveCurrentPageToLocalStorage` in
+import (`importReviewStateBackup` in `js/ux-improvements-export.js`),
+server sync (`server.ts`'s `putReviewPage`), and a **decision change made
+from the sidebar** (the `<select>` or a quick-action chip). The continuous
+per-keystroke/blur autosave (`saveCurrentPageToLocalStorage` in
 `js/ux-improvements-state-sync.js`) deliberately does **not** go through
 `mergeReviewRecord` and does **not** append a history entry — it just keeps
 the working snapshot fresh, carrying the existing `history` array forward
 untouched. Routing autosave through the merge/history path would flood
 `history` with one entry per debounced keystroke.
+
+The sidebar decision is the one exception that shares the autosave path
+(both persist through the same field listeners in `js/ux-improvements.js`),
+so `saveCurrentPageToLocalStorage` singles it out via `isDecisionRound()`:
+one entry when the decision actually _transitions_, never per keystroke.
+A brand-new record only counts when the reviewer moved off the default
+`Needs review`, or typing the first character of a note on an untouched
+page would record a round for every page in the site. Queue actions append
+their own entry before dispatching their sidebar-sync events, so by the
+time autosave runs the decision already matches and nothing double-records.
 
 **The CSV/JSON import path can destroy existing reviews** — a prior
 regression there replaced the saved state wholesale instead of merging. The
@@ -284,22 +295,45 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
 - **Pull vs push semantics differ on purpose**: push sends one page's full
   local record and treats the server's merged response as authoritative for
   that page (the server already did the field-level merge). Pull is
-  last-write-wins **per page**, comparing `updated_at`, and only overwrites
-  a local page when the server is strictly newer — never a field-level
-  merge on the client side, since the server's `history` array is already
-  merged and re-merging it client-side would duplicate entries, and since
-  treating a full local snapshot as a "patch" onto the server's record would
-  let this browser's stale copies of fields another reviewer changed
-  silently overwrite them. A page whose local copy looks newer than the
-  server's but whose `synced_at` predates the server's `updated_at` (this
-  browser has real local edits _and_ has never seen the server's newer
-  revision) is a genuine, unresolvable-by-guessing conflict: `pullFromServer`
-  leaves it untouched, does not advance its `synced_at`, and reports its
-  page key in the result's `conflicts` array so the UI can tell the reviewer
-  to resolve it by hand instead of silently picking a side. Switching the
-  configured sync server URL (`writeConfig`) clears every local page's
-  `synced_at`, since a baseline is only meaningful relative to the specific
-  deployment that issued it.
+  last-write-wins **per page** and never does a field-level merge on the
+  client side — the server's `history` array is already merged (re-merging
+  it client-side would duplicate entries), and treating a full local
+  snapshot as a "patch" onto the server's record would let this browser's
+  stale copies of fields another reviewer changed silently overwrite them.
+- **Never compare a browser-clock timestamp against a server-clock one.**
+  `pullFromServer` decides each page from two clock-independent facts:
+  whether the server holds a revision this browser hasn't observed
+  (`serverRecord.updated_at > localRecord.synced_at` — _both_ server-issued,
+  since `synced_at` is only ever assigned from a sync response), and whether
+  this browser holds unpushed work (the explicit boolean `local_dirty`).
+  `updated_at` on a local record is written by the browser's own clock, so
+  it must never take part in a sync decision: on a browser running behind
+  the server, a genuine unsynced edit looks older than an untouched server
+  record and used to be silently overwritten by it. `local_dirty` is set by
+  the local write paths (autosave only when content actually changed, per
+  `reviewContentEquals`; every `mergeReviewRecord` call except the server's
+  own `updatedBy: 'sync'`) and cleared only by an actual push/pull. It's a
+  real boolean — note the explicit branch for it in
+  `js/review-state-validation.js`, since the generic `String()` coercion
+  there would turn `false` into the truthy string `'false'`.
+- **A divergence is surfaced, never guessed.** A new server revision _and_
+  unpushed local edits means neither side has seen the other's work.
+  `pullFromServer` leaves the record completely untouched (notably without
+  advancing `synced_at`, which would let the next push sail through
+  `server.ts`'s staleness check) and returns the page key in `conflicts`
+  plus the server's copy in `conflictRecords`.
+  `resolveConflict(pageKey, 'server'|'local', serverRecord)` is the only way
+  out, one page at a time: `'server'` adopts the server copy and clears
+  `local_dirty`; `'local'` keeps local content but records the server's
+  revision as observed, so the next push stops being rejected. The sync
+  controls render a button pair per conflicted page.
+- Switching the configured sync server URL (`writeConfig`) clears every
+  local page's `synced_at`, since a baseline is only meaningful relative to
+  the deployment that issued it. The comparison has **no "both non-empty"
+  guard on purpose** — clearing the settings and then pointing at a
+  different server is two transitions (`X` → `''` → `Y`), and requiring both
+  sides to be non-empty would skip the clear on both, carrying `X`'s
+  baselines all the way to `Y`.
 - **Deployment (e.g. Railway)**: run `server.ts` (`bun run start`) with a
   persistent volume mounted, `DATA_DB_PATH` pointed at that volume, and
   `REVIEW_API_TOKEN` set to a generated secret — none of this is committed.

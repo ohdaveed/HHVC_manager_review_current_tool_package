@@ -56,7 +56,15 @@
     // deployment's synced_at values pass the new target's staleness check
     // by pure timestamp coincidence, silently overwriting real content on a
     // server this browser has never actually synced against.
-    if (previous.apiUrl && nextApiUrl && previous.apiUrl !== nextApiUrl) {
+    //
+    // The comparison is against the stored URL with NO "both non-empty"
+    // guard, deliberately: clearing the settings and then configuring a
+    // different server is two transitions (X -> '' -> Y), and requiring
+    // both sides to be non-empty would skip the clear on BOTH of them,
+    // carrying X's baselines all the way to Y. Clearing on any change also
+    // makes first-ever configuration safe, where baselines can only have
+    // come from someone else's browser via a JSON backup import.
+    if (nextApiUrl !== previous.apiUrl) {
       window.reviewState.update((state) => {
         const nextPages = {}
         for (const [key, record] of Object.entries(state.pages || {})) {
@@ -105,40 +113,36 @@
   /**
    * Pull the server's review state and merge it into local state, PER PAGE.
    *
-   * When the server's content is strictly newer than local (or local
-   * doesn't exist yet), it's applied wholesale — no local edits to lose.
+   * Two questions decide each page, and NEITHER compares a browser-clock
+   * timestamp against a server-clock one:
    *
-   * When local looks newer by `updated_at`, there are two different
-   * situations that must NOT be treated the same way:
-   *  - Already reconciled: this browser's `synced_at` for the page is
-   *    already at or past the server's `updated_at` — it has already seen
-   *    (and, per its own newer `updated_at`, edited on top of) this exact
-   *    server revision. Genuinely nothing to do.
-   *  - Diverged: `synced_at` is behind the server's `updated_at` — this
-   *    browser's local copy and the server's copy have real, independently
-   *    edited content neither side has seen from the other (e.g. another
-   *    reviewer pushed after this browser's last sync, and this browser
-   *    then edited locally without ever pulling that push).
+   *  1. Does the server hold a revision this browser hasn't observed?
+   *     `serverRecord.updated_at > localRecord.synced_at`. Both sides of
+   *     that comparison are stamped by the SERVER (synced_at is only ever
+   *     assigned from a sync response), so it stays correct no matter how
+   *     far the browser's clock has drifted. An earlier version compared
+   *     the server's `updated_at` against the local record's `updated_at`,
+   *     which is written by the browser's own clock — on a browser running
+   *     behind the server, a genuine unsynced local edit looked OLDER than
+   *     an unchanged server record and got silently overwritten by it.
+   *  2. Does this browser hold edits it hasn't pushed? The explicit
+   *     `local_dirty` flag, set by the local write paths and cleared only
+   *     by an actual push/pull. Also clock-independent.
    *
-   *    There is no safe way to auto-resolve a divergence: the local record
-   *    is a full snapshot, not a field-level diff, so treating it as a
-   *    "patch" onto the server's record (an earlier version of this
-   *    function did exactly that) lets this browser's stale copies of
-   *    fields ANOTHER reviewer changed silently overwrite them on the next
-   *    push — the same risk the "never a field-level merge on pull" rule
-   *    documented in CLAUDE.md exists to prevent, just reintroduced through
-   *    this recovery path. Guessing which side should win per field isn't
-   *    something this function can safely do without a stored 3-way base.
+   * No new server revision -> nothing to do. New revision and nothing
+   * unpushed -> apply the server's record wholesale; there is nothing to
+   * lose. New revision AND unpushed local edits -> a genuine divergence.
    *
-   *    So a diverged page is left untouched (same as "already reconciled")
-   *    and its key is reported in the returned `conflicts` array instead,
-   *    so the caller can tell the reviewer to resolve it by hand (compare
-   *    notes with whoever pushed, then either intentionally re-push to
-   *    overwrite or discard local edits and pull again). `synced_at` is
-   *    deliberately NOT advanced for a conflicted page either: advancing it
-   *    would make the next push's staleness check in server.ts pass despite
-   *    this browser never having actually incorporated the server's
-   *    content — the exact bug an earlier version of this function had.
+   * A divergence cannot be auto-resolved: the local record is a full
+   * snapshot, not a field-level diff, so treating it as a "patch" onto the
+   * server's record (an earlier version of this function did exactly that)
+   * lets this browser's stale copies of fields ANOTHER reviewer changed
+   * silently overwrite them on the next push. So the record is left
+   * untouched — `synced_at` deliberately NOT advanced, or the next push
+   * would sail through server.ts's staleness check having never
+   * incorporated the server's content — and the page key is reported in
+   * `conflicts`, with the server's copy returned in `conflictRecords` so
+   * the reviewer can resolve it explicitly via resolveConflict().
    */
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
@@ -156,39 +160,78 @@
 
         let pulledCount = 0
         const conflicts = []
+        const conflictRecords = {}
         window.reviewState.update((state) => {
           const nextPages = { ...state.pages }
           for (const [key, serverRecord] of Object.entries(validated.data.pages || {})) {
             if (!window.HHVC_DATA?.pages?.[key]) continue
             const localRecord = state.pages[key]
-            const serverIsNewer =
-              !localRecord?.updated_at ||
-              (serverRecord.updated_at && serverRecord.updated_at > localRecord.updated_at)
 
-            if (serverIsNewer) {
+            const serverRevision = serverRecord.updated_at || ''
+            const observedRevision = localRecord?.synced_at || ''
+            const serverHasNewRevision = !localRecord || serverRevision > observedRevision
+            if (!serverHasNewRevision) continue
+
+            if (!localRecord?.local_dirty) {
               nextPages[key] = {
                 ...serverRecord,
                 page_key: key,
-                synced_at: serverRecord.updated_at,
+                synced_at: serverRevision,
+                local_dirty: false,
               }
               pulledCount += 1
               continue
             }
 
-            const hasReconciled =
-              localRecord?.synced_at &&
-              serverRecord.updated_at &&
-              localRecord.synced_at >= serverRecord.updated_at
-            if (hasReconciled) continue
-
             conflicts.push(key)
+            conflictRecords[key] = serverRecord
           }
           return { ...state, pages: nextPages }
         })
 
-        return { ok: true, pulledCount, conflicts }
+        return { ok: true, pulledCount, conflicts, conflictRecords }
       })
       .catch((error) => ({ ok: false, error: error.message || String(error) }))
+  }
+
+  /**
+   * Resolve one page reported by pullFromServer as a conflict. Both
+   * outcomes are deliberate, reviewer-chosen, and scoped to a single page
+   * — the alternative before this existed was "clear ALL local reviews,"
+   * which throws away unsynced work on every other page too.
+   *
+   * - 'server': discard this browser's unpushed edits for the page and
+   *   adopt the server's copy verbatim.
+   * - 'local': keep this browser's content, but record the server's
+   *   revision as observed. Nothing is pushed here; the next push simply
+   *   stops being rejected, and this browser's version wins that page.
+   *
+   * @param {string} pageKey
+   * @param {'server'|'local'} resolution
+   * @param {object} serverRecord The server copy from pullFromServer's
+   *   `conflictRecords` — passed in rather than re-fetched so the reviewer
+   *   resolves exactly the revision they were shown.
+   * @returns {{ ok: boolean, error?: string }}
+   */
+  function resolveConflict(pageKey, resolution, serverRecord) {
+    if (!pageKey || !serverRecord || typeof serverRecord !== 'object') {
+      return { ok: false, error: 'Nothing to resolve for this page.' }
+    }
+    if (resolution !== 'server' && resolution !== 'local') {
+      return { ok: false, error: `Unknown conflict resolution "${resolution}".` }
+    }
+
+    const serverRevision = serverRecord.updated_at || ''
+    window.reviewState.update((state) => {
+      const localRecord = state.pages[pageKey]
+      state.pages[pageKey] =
+        resolution === 'server'
+          ? { ...serverRecord, page_key: pageKey, synced_at: serverRevision, local_dirty: false }
+          : { ...localRecord, page_key: pageKey, synced_at: serverRevision, local_dirty: true }
+      return state
+    })
+
+    return { ok: true }
   }
 
   /**
@@ -247,6 +290,10 @@
                 // additive union, not a re-merge of content fields.
                 history: window.reviewMerge.combineHistory(currentRecord.history, merged.history),
                 synced_at: merged.updated_at,
+                // Still dirty: the edit that landed mid-flight is newer
+                // than what this push sent, so it hasn't reached the
+                // server yet and must survive the next pull.
+                local_dirty: true,
               }
             : // synced_at = the server's returned updated_at: this push just
               // told us exactly what the server now has for this page, so
@@ -255,7 +302,7 @@
               // merged.synced_at, whatever the server happened to echo
               // back) since the server has no reason to know or persist
               // this client-side-only field.
-              { ...merged, synced_at: merged.updated_at }
+              { ...merged, synced_at: merged.updated_at, local_dirty: false }
           return state
         })
         return { ok: true, record: merged }
@@ -294,6 +341,77 @@
   function setSyncStatus(message) {
     const el = document.getElementById('reviewSyncStatus')
     if (el) el.textContent = message
+  }
+
+  /**
+   * Render one row per conflicted page with the two explicit resolutions.
+   * Built with DOM APIs rather than innerHTML so page keys and titles from
+   * the server response are never interpreted as markup.
+   * @param {string[]} conflicts
+   * @param {Record<string, object>} conflictRecords
+   */
+  function renderConflicts(conflicts, conflictRecords) {
+    const panel = document.getElementById('reviewSyncConflicts')
+    if (!panel) return
+
+    panel.replaceChildren()
+    if (!conflicts.length) {
+      panel.hidden = true
+      return
+    }
+    panel.hidden = false
+
+    const heading = document.createElement('h4')
+    heading.textContent = 'Pages needing a version choice'
+    heading.className = 'sync-conflict-heading'
+    panel.appendChild(heading)
+
+    for (const key of conflicts) {
+      const serverRecord = conflictRecords[key]
+      if (!serverRecord) continue
+
+      const row = document.createElement('div')
+      row.className = 'sync-conflict-row'
+      row.dataset.pageKey = key
+
+      const label = document.createElement('span')
+      label.className = 'sync-conflict-label'
+      label.textContent = window.HHVC_DATA?.pages?.[key]?.title || key
+      row.appendChild(label)
+
+      for (const [resolution, text] of [
+        ['server', 'Use server version'],
+        ['local', 'Keep my version'],
+      ]) {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'tool-btn secondary-tool'
+        button.dataset.resolution = resolution
+        button.textContent = text
+        button.addEventListener('click', () => {
+          const outcome = resolveConflict(key, resolution, serverRecord)
+          if (!outcome.ok) {
+            setSyncStatus(`Could not resolve ${key}: ${outcome.error}`)
+            return
+          }
+          row.remove()
+          if (!panel.querySelector('.sync-conflict-row')) panel.hidden = true
+          window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
+          window.ReviewUx?.refreshUx?.()
+          if (typeof window.showToast === 'function') {
+            window.showToast(
+              resolution === 'server'
+                ? `Using the server's version of ${key}`
+                : `Keeping your version of ${key} — push to send it`,
+              'success'
+            )
+          }
+        })
+        row.appendChild(button)
+      }
+
+      panel.appendChild(row)
+    }
   }
 
   function mountSyncControls() {
@@ -357,15 +475,16 @@
           const conflictCount = result.conflicts?.length || 0
           let message = `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
           if (conflictCount) {
-            message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes: ${result.conflicts.join(', ')}. Resolve by hand (compare with whoever pushed) before pushing ${conflictCount === 1 ? 'it' : 'them'} again.`
+            message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes. Choose a version for each below.`
           }
           setSyncStatus(message)
+          renderConflicts(result.conflicts || [], result.conflictRecords || {})
           window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
           window.ReviewUx?.refreshUx?.()
           if (typeof window.showToast === 'function')
             window.showToast(
               conflictCount
-                ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need manual conflict resolution`
+                ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need a version chosen`
                 : 'Pulled review state from server',
               conflictCount ? 'warn' : 'success'
             )
@@ -408,6 +527,12 @@
       ? 'Sync configured.'
       : 'Sync not configured — enter a server URL and token above, then Save sync settings.'
     actions.insertAdjacentElement('afterend', status)
+
+    const conflictPanel = document.createElement('div')
+    conflictPanel.id = 'reviewSyncConflicts'
+    conflictPanel.className = 'sync-conflict-panel'
+    conflictPanel.hidden = true
+    status.insertAdjacentElement('afterend', conflictPanel)
   }
 
   window.reviewStateSync = {
@@ -416,6 +541,7 @@
     writeConfig,
     isConfigured,
     pullFromServer,
+    resolveConflict,
     pushPage,
     pushAllPages,
     mountSyncControls,
@@ -427,6 +553,7 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       pullFromServer,
+      resolveConflict,
       pushPage,
       pushAllPages,
       isConfigured,
