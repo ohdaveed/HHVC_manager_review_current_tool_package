@@ -521,6 +521,7 @@ describe('writeConfig server-switch safety', () => {
         page_key: 'pestsTopic',
         decision: 'Approved',
         synced_at: '2026-01-01T00:00:00.000Z',
+        local_dirty: false,
       },
     }
     const { mod, getState } = loadReviewStateSync({
@@ -531,6 +532,122 @@ describe('writeConfig server-switch safety', () => {
     mod.writeConfig({ apiUrl: 'https://same-deploy.test', apiToken: 'a-new-token' })
 
     expect(getState().pages.pestsTopic.synced_at).toBe('2026-01-01T00:00:00.000Z')
+    // The dirty flag is endpoint-relative too, but nothing about it changed
+    // meaning here — the endpoint is the same one that set it.
+    expect(getState().pages.pestsTopic.local_dirty).toBe(false)
+  })
+
+  test('drops local_dirty to unknown when the sync server URL changes', async () => {
+    // `local_dirty: false` means "matches what the server has", and that
+    // judgement was made against the OLD server. It has to become absent
+    // (unknown), not stay `false` and not be forced to `true`: absent is
+    // the honest state, and it's the one pullFromServer already treats as
+    // possibly-unpushed. Asserting absence explicitly rather than
+    // `!== false` matters — `!== false` would also pass on the buggy
+    // carry-over of `true`, which is exactly the wrong remedy.
+    const localPages = {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        decision: 'Approved',
+        synced_at: '2026-01-01T00:00:00.000Z',
+        local_dirty: false,
+      },
+      ratsReport: {
+        page_key: 'ratsReport',
+        decision: 'Blocked',
+        synced_at: '2026-01-02T00:00:00.000Z',
+        local_dirty: true,
+      },
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages, apiUrl: 'https://old-deploy.test' })
+
+    mod.writeConfig({ apiUrl: 'https://new-deploy.test', apiToken: 'test-token' })
+
+    const state = getState()
+    expect('local_dirty' in state.pages.pestsTopic).toBe(false)
+    expect('local_dirty' in state.pages.ratsReport).toBe(false)
+    // Content still survives the invalidation untouched.
+    expect(state.pages.pestsTopic.decision).toBe('Approved')
+    expect(state.pages.ratsReport.decision).toBe('Blocked')
+  })
+
+  test('a pull after a server switch reports a conflict instead of overwriting', async () => {
+    // The finding stated as behaviour rather than as a field value: a page
+    // marked clean against server X must not be silently replaced by
+    // server Y's copy on the very first pull after the switch.
+    const localPages = {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        decision: 'Approved',
+        notes: 'local review that was only ever pushed to the old server',
+        updated_at: '2026-01-01T00:00:00.000Z',
+        synced_at: '2026-01-01T00:00:00.000Z',
+        local_dirty: false,
+      },
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages, apiUrl: 'https://old-deploy.test' })
+
+    mod.writeConfig({ apiUrl: 'https://new-deploy.test', apiToken: 'test-token' })
+    global.fetch = fetchReturning({
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        decision: 'Blocked',
+        notes: 'unrelated content from a server this browser never synced with',
+        updated_at: '2026-02-01T00:00:00.000Z',
+      },
+    })
+
+    const result = await mod.pullFromServer()
+
+    expect(result.ok).toBe(true)
+    expect(result.conflicts).toEqual(['pestsTopic'])
+    expect(result.pulledCount).toBe(0)
+    const page = getState().pages.pestsTopic
+    expect(page.decision).toBe('Approved')
+    expect(page.notes).toBe('local review that was only ever pushed to the old server')
+    // A conflict never advances the baseline — see pullFromServer.
+    expect(page.synced_at).toBe('')
+  })
+})
+
+describe('overlapping pulls', () => {
+  test('marks a superseded pull stale and the pull that superseded it fresh', async () => {
+    // Two Pull clicks put two GETs in flight with no ordering guarantee.
+    // assertEndpointUnchanged cannot catch this — both go to the SAME
+    // endpoint — so pullFromServer stamps each call and reports whether it
+    // has been superseded, letting the caller keep a stale (possibly
+    // empty) conflict list from wiping the panel a newer pull populated.
+    const { mod } = loadReviewStateSync()
+    const pending = []
+    global.fetch = () =>
+      new Promise((resolve) => {
+        pending.push(() =>
+          resolve({
+            ok: true,
+            status: 200,
+            json: async () => ({ version: 1, updated_at: null, ui: {}, globals: {}, pages: {} }),
+          })
+        )
+      })
+
+    const first = mod.pullFromServer()
+    const second = mod.pullFromServer()
+    // Resolve out of order, the case that actually bites: the second
+    // request answers first, so the first click's result lands last and
+    // must not be allowed to drive the UI.
+    pending[1]()
+    pending[0]()
+    const [firstResult, secondResult] = await Promise.all([first, second])
+
+    expect(secondResult.stale).toBe(false)
+    expect(firstResult.stale).toBe(true)
+  })
+
+  test('marks a lone pull fresh', async () => {
+    const { mod } = loadReviewStateSync()
+    global.fetch = fetchReturning({})
+
+    expect((await mod.pullFromServer()).stale).toBe(false)
   })
 })
 

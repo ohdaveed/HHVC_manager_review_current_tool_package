@@ -352,12 +352,34 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   `resolveConflict`'s guard, and write X's revision into `synced_at` under
   Y — the exact hole the guard exists to close.
 - Switching the configured sync server URL (`writeConfig`) clears every
-  local page's `synced_at`, since a baseline is only meaningful relative to
-  the deployment that issued it. The comparison has **no "both non-empty"
-  guard on purpose** — clearing the settings and then pointing at a
-  different server is two transitions (`X` → `''` → `Y`), and requiring both
-  sides to be non-empty would skip the clear on both, carrying `X`'s
-  baselines all the way to `Y`.
+  local page's `synced_at` **and deletes its `local_dirty` flag**, since
+  both are only meaningful relative to the deployment that issued them. A
+  baseline is obvious; the dirty flag is the same thing in disguise —
+  `local_dirty: false` asserts "matches what the server has", and that
+  judgement was made against the _old_ server. Carrying it over lets the
+  first pull from the new server see a new revision plus an explicitly
+  clean record and replace the local decision/notes wholesale, losing a
+  review on a server this browser never synced with. It's `delete`d rather
+  than forced to `true` because absent is the honest state (unknown
+  provenance) and is already the value `pullFromServer` treats as
+  possibly-unpushed. The comparison has **no "both non-empty" guard on
+  purpose** — clearing the settings and then pointing at a different server
+  is two transitions (`X` → `''` → `Y`), and requiring both sides to be
+  non-empty would skip the clear on both, carrying `X`'s baselines all the
+  way to `Y`.
+- **A superseded pull must not drive the conflict UI.** Two Pull clicks put
+  two GETs in flight with no ordering guarantee, and
+  `assertEndpointUnchanged` can't help — both go to the _same_ endpoint. A
+  module-level generation counter stamps each `pullFromServer()` call and
+  the result carries `stale: true` if a later pull started while it was in
+  flight. Applying either response's _state_ is fine (last-write-wins per
+  page either way); the conflict panel is not, since an older response
+  reporting no conflicts would erase resolution controls a newer one
+  correctly populated, stranding a page that is still dirty and still
+  diverged. The guard lives in `pullFromServer` rather than the click
+  handler so it's unit-testable and any future caller inherits it; the
+  button is also disabled for the duration, as feedback and to make the
+  race harder to reach at all.
 - **Deployment (e.g. Railway)**: run `server.ts` (`bun run start`) with a
   persistent volume mounted, `DATA_DB_PATH` pointed at that volume, and
   `REVIEW_API_TOKEN` set to a generated secret — none of this is committed.

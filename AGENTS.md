@@ -321,11 +321,29 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   `resolveConflict`'s guard, and writes X's revision into `synced_at`
   under Y.
 - Switching the sync server URL (`writeConfig`) clears every local page's
-  `synced_at`, since a baseline only means something relative to the
-  deployment that issued it. There is deliberately **no "both non-empty"
-  guard** on that comparison: clearing settings then pointing at a different
-  server is two transitions (`X` → `''` → `Y`), and requiring both sides to
-  be non-empty would skip the clear on both, carrying `X`'s baselines to `Y`.
+  `synced_at` **and deletes its `local_dirty` flag**, since both only mean
+  something relative to the deployment that issued them. A `false` dirty
+  flag asserts "matches what the server has" — a judgement made against
+  the _old_ server, so carrying it over lets the first pull from the new
+  one see a new revision plus an explicitly clean record and overwrite the
+  local decision/notes. It's `delete`d rather than forced to `true`:
+  absent is the honest state (unknown provenance) and is already what
+  `pullFromServer` treats as possibly-unpushed. There is deliberately **no
+  "both non-empty" guard** on that comparison: clearing settings then
+  pointing at a different server is two transitions (`X` → `''` → `Y`), and
+  requiring both sides to be non-empty would skip the clear on both,
+  carrying `X`'s baselines to `Y`.
+- **A superseded pull must not drive the conflict UI.** Two Pull clicks put
+  two GETs in flight with no ordering guarantee, and
+  `assertEndpointUnchanged` can't help — both go to the _same_ endpoint. A
+  module-level generation counter stamps each `pullFromServer()` call, and
+  its result carries `stale: true` when a later pull started while it was
+  in flight. Applying either response's _state_ is safe (last-write-wins
+  per page regardless); the conflict panel is not, since a stale empty
+  conflict list would erase resolution controls a newer pull correctly
+  populated. The guard lives in `pullFromServer`, not the click handler, so
+  it's unit-testable and inherited by any caller; the button is disabled
+  for the duration as well.
 - **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
   mounted, `DATA_DB_PATH` pointed at it, and `REVIEW_API_TOKEN` set to a
   generated secret (never committed). Local dev and Netlify's static-only

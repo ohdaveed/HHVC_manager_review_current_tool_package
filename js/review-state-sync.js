@@ -11,6 +11,9 @@
   const CONFIG_KEY = 'hhvcReviewSyncConfig'
   const API_TIMEOUT_MS = 15000
 
+  // Monotonic stamp for in-flight pulls; see pullFromServer's `stale`.
+  let pullGeneration = 0
+
   /**
    * Sync settings (server URL + bearer token) live in their own localStorage
    * key, deliberately separate from hhvcManagerReviewState:v1 — that blob
@@ -68,7 +71,18 @@
       window.reviewState.update((state) => {
         const nextPages = {}
         for (const [key, record] of Object.entries(state.pages || {})) {
-          nextPages[key] = { ...record, synced_at: '' }
+          const next = { ...record, synced_at: '' }
+          // local_dirty is endpoint-relative in exactly the same way
+          // synced_at is: `false` means "matches what the server has," and
+          // that judgement was made against the OLD server. Carrying it to
+          // the new one lets pullFromServer see a new revision plus an
+          // explicitly clean record and replace the local decision/notes
+          // wholesale — losing a review on a server this browser has never
+          // synced with. Delete rather than force `true`: absent is the
+          // honest state (unknown provenance), and the pull path already
+          // treats unknown as possibly-unpushed and raises a conflict.
+          delete next.local_dirty
+          nextPages[key] = next
         }
         return { ...state, pages: nextPages }
       })
@@ -164,6 +178,17 @@
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
 
+    // Two Pull clicks put two GETs in flight, and nothing guarantees they
+    // resolve in order. Applying either one's STATE is fine (it's
+    // last-write-wins per page either way), but the conflict panel is
+    // different: an older response reporting no conflicts would erase the
+    // resolution controls a newer one correctly populated, leaving a page
+    // that is still dirty and still diverged with no way to resolve it.
+    // Stamp each call so the caller can tell whether it has been
+    // superseded. assertEndpointUnchanged doesn't cover this — both
+    // requests go to the SAME endpoint.
+    const generation = ++pullGeneration
+
     // Captured BEFORE the request, not after: apiFetch resolves the URL at
     // call time, so this is genuinely the endpoint being talked to. Reading
     // it in the response handler instead would label a response from server
@@ -246,6 +271,10 @@
           conflicts,
           conflictRecords,
           apiUrl: requestApiUrl,
+          // True when a later pull started while this one was in flight.
+          // The caller must not let a superseded result drive the conflict
+          // UI — see the generation stamp at the top of this function.
+          stale: generation !== pullGeneration,
         }
       })
       .catch((error) => ({ ok: false, error: error.message || String(error) }))
@@ -635,37 +664,55 @@
     actions.appendChild(pullButton)
     pullButton.addEventListener('click', () => {
       setSyncStatus('Pulling from server…')
-      pullFromServer().then((result) => {
-        if (result.ok) {
-          const conflictCount = result.conflicts?.length || 0
-          let message = `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
-          if (conflictCount) {
-            message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes. Choose a version for each below.`
+      // Disabling here makes the overlapping-pull case hard to reach at all
+      // and gives the reviewer feedback; pullFromServer's `stale` stamp is
+      // the actual correctness guard, since a programmatic caller or a
+      // re-enabled button can still overlap.
+      pullButton.disabled = true
+      pullFromServer()
+        .then((result) => {
+          if (result.ok) {
+            const conflictCount = result.conflicts?.length || 0
+            let message = `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
+            if (conflictCount) {
+              message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes. Choose a version for each below.`
+            }
+            setSyncStatus(message)
+            // A superseded pull must not touch the panel: its (possibly
+            // empty) conflict list would wipe controls a newer pull put there,
+            // stranding a page that is still dirty and still diverged with no
+            // way to resolve it.
+            if (!result.stale) {
+              renderConflicts(result.conflicts || [], result.conflictRecords || {}, result.apiUrl)
+            }
+            // The pull reset in-memory content for the pages it applied, so
+            // repaint if the open page was one of them — otherwise the mockup
+            // keeps showing values the server no longer has.
+            const currentKey = window.utils?.getCurrentKey?.()
+            if (
+              result.pulledKeys?.includes(currentKey) &&
+              typeof window.renderPage === 'function'
+            ) {
+              window.renderPage(currentKey)
+            }
+            window.ReviewUx?.stateSync?.applySavedPageState(currentKey)
+            window.ReviewUx?.refreshUx?.()
+            if (typeof window.showToast === 'function')
+              window.showToast(
+                conflictCount
+                  ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need a version chosen`
+                  : 'Pulled review state from server',
+                conflictCount ? 'warn' : 'success'
+              )
+          } else {
+            setSyncStatus(`Pull failed: ${result.error}`)
+            if (typeof window.showToast === 'function')
+              window.showToast(`Sync pull failed: ${result.error}`, 'warn')
           }
-          setSyncStatus(message)
-          renderConflicts(result.conflicts || [], result.conflictRecords || {}, result.apiUrl)
-          // The pull reset in-memory content for the pages it applied, so
-          // repaint if the open page was one of them — otherwise the mockup
-          // keeps showing values the server no longer has.
-          const currentKey = window.utils?.getCurrentKey?.()
-          if (result.pulledKeys?.includes(currentKey) && typeof window.renderPage === 'function') {
-            window.renderPage(currentKey)
-          }
-          window.ReviewUx?.stateSync?.applySavedPageState(currentKey)
-          window.ReviewUx?.refreshUx?.()
-          if (typeof window.showToast === 'function')
-            window.showToast(
-              conflictCount
-                ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need a version chosen`
-                : 'Pulled review state from server',
-              conflictCount ? 'warn' : 'success'
-            )
-        } else {
-          setSyncStatus(`Pull failed: ${result.error}`)
-          if (typeof window.showToast === 'function')
-            window.showToast(`Sync pull failed: ${result.error}`, 'warn')
-        }
-      })
+        })
+        .finally(() => {
+          pullButton.disabled = false
+        })
     })
 
     const pushButton = document.createElement('button')
