@@ -54,10 +54,11 @@ bun run vendor:browser        # rebuild js/vendor/{fuse,defu}.js IIFE bundles fr
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs nine Bun unit-test files under `tests/` — `utils`,
+isn't). `bun run test` runs ten Bun unit-test files under `tests/` — `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
-`index-html-checks`, `review-merge`, and `review-api-server` (the last spawns
-`server.ts` as a subprocess against a temp SQLite DB) — plus `bun run test:e2e`
+`index-html-checks`, `review-merge`, `review-api-server` (which spawns
+`server.ts` as a subprocess against a temp SQLite DB), and `review-state-sync`
+— plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
 nine spec files — eight UI-driven ones covering navigation, editor panel,
 review workflow, review queue, import/export, keyboard shortcuts,
