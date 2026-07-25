@@ -111,6 +111,23 @@
   }
 
   /**
+   * Throw if the configured sync server changed while a request was in
+   * flight. Applying a response under a different deployment's settings is
+   * never safe: its records are foreign content, and its `updated_at`
+   * written into `synced_at` would re-mint the very baseline writeConfig
+   * clears on an endpoint change — letting a later push pass the NEW
+   * server's staleness check against content this browser never saw there.
+   * Callers run this before touching state; the existing .catch turns it
+   * into the standard { ok: false, error } result.
+   * @param {string} requestApiUrl Endpoint captured before the request.
+   */
+  function assertEndpointUnchanged(requestApiUrl) {
+    if (readConfig().apiUrl !== requestApiUrl) {
+      throw new Error('Sync settings changed during this request — try again.')
+    }
+  }
+
+  /**
    * Pull the server's review state and merge it into local state, PER PAGE.
    *
    * Two questions decide each page, and NEITHER compares a browser-clock
@@ -147,12 +164,20 @@
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
 
+    // Captured BEFORE the request, not after: apiFetch resolves the URL at
+    // call time, so this is genuinely the endpoint being talked to. Reading
+    // it in the response handler instead would label a response from server
+    // X with whatever is configured by the time it lands — see the guard
+    // below and resolveConflict's matching check.
+    const requestApiUrl = readConfig().apiUrl
+
     return apiFetch('/api/review-state', { method: 'GET' })
       .then((res) => {
         if (!res.ok) throw new Error(`Server responded ${res.status}`)
         return res.json()
       })
       .then((serverState) => {
+        assertEndpointUnchanged(requestApiUrl)
         const validator = window.reviewStateValidation?.validateReviewState
         const validated =
           typeof validator === 'function' ? validator(serverState) : { ok: true, data: serverState }
@@ -201,7 +226,7 @@
         // The endpoint these conflicts came from. A resolution is only
         // meaningful against the server that produced it, and the settings
         // can change between a pull and a click — see resolveConflict.
-        return { ok: true, pulledCount, conflicts, conflictRecords, apiUrl: readConfig().apiUrl }
+        return { ok: true, pulledCount, conflicts, conflictRecords, apiUrl: requestApiUrl }
       })
       .catch((error) => ({ ok: false, error: error.message || String(error) }))
   }
@@ -276,6 +301,11 @@
     if (!record)
       return Promise.resolve({ ok: false, error: 'Nothing saved locally for this page yet.' })
 
+    // Same request-time capture as pullFromServer: this response writes
+    // synced_at, so it must never be applied under a different deployment's
+    // settings.
+    const requestApiUrl = readConfig().apiUrl
+
     return apiFetch(`/api/review-state/pages/${encodeURIComponent(pageKey)}`, {
       method: 'PUT',
       body: JSON.stringify(record),
@@ -291,18 +321,28 @@
         return res.json()
       })
       .then((merged) => {
+        assertEndpointUnchanged(requestApiUrl)
         window.reviewState.update((state) => {
           // If an autosave landed on this page between reading `record`
           // above and this response arriving (a real possibility — a push
           // is a network round-trip, easily longer than the debounce
-          // window), the current local record is now NEWER than the
-          // snapshot this push was based on. Overwriting it with the
-          // response unconditionally would silently drop that later edit.
-          // Keep the newer local content in that case and only advance
+          // window), the local record may now hold content this push never
+          // sent. Overwriting it with the response would silently drop that
+          // later edit, so keep the local content and only advance
           // synced_at with what the server confirmed.
+          //
+          // The test is CONTENT, not `updated_at`: clicking "Push all
+          // pages" within the debounce window leaves a pending timer that
+          // re-saves the very same content with a later stamp. A timestamp
+          // comparison reads that as a mid-flight edit and marks the page
+          // dirty forever — permanently claiming already-pushed content is
+          // unpushed, and turning the next server revision into a false
+          // conflict. reviewContentEquals ignores exactly the bookkeeping
+          // fields (updated_at/synced_at/local_dirty/history) that a
+          // duplicate save churns.
           const currentRecord = state.pages[pageKey]
           const localChangedDuringPush =
-            currentRecord?.updated_at && currentRecord.updated_at > record.updated_at
+            currentRecord && !window.reviewMerge.reviewContentEquals(currentRecord, record)
 
           state.pages[pageKey] = localChangedDuringPush
             ? {
@@ -400,8 +440,18 @@
     page.metaDescription = original.metaDescription
     page.seoTitleEdited = false
     page.metaDescriptionEdited = false
-    const originalCta = window.utils?.getPrimaryCta?.(original)
-    if (originalCta) window.utils?.setPrimaryCta?.(page, originalCta)
+    const originalCta = window.utils?.getPrimaryCta?.(original) || ''
+    if (originalCta) {
+      window.utils?.setPrimaryCta?.(page, originalCta)
+    } else {
+      // The original has no CTA anywhere, so a local one can only have
+      // landed in page.primaryCta — setPrimaryCta's last-resort branch,
+      // used when there's no step/section/spotlight button to write to.
+      // Clearing that field IS the reset. Calling setPrimaryCta('')
+      // instead would blank a real section or step button on pages that
+      // have one, which is worse than the bug being fixed.
+      page.primaryCta = original.primaryCta || ''
+    }
   }
 
   /**
@@ -635,6 +685,7 @@
     module.exports = {
       pullFromServer,
       resolveConflict,
+      restorePageContentFromOriginal,
       pushPage,
       pushAllPages,
       isConfigured,

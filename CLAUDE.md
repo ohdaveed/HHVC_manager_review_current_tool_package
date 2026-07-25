@@ -336,6 +336,15 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   panel) — otherwise a stale row could import a different deployment's
   content, and its `'local'` branch would re-mint the very `synced_at`
   baseline `writeConfig` had just cleared.
+- **The endpoint binding starts at _request_ time, not response time.**
+  `pullFromServer` and `pushPage` each capture `readConfig().apiUrl` before
+  calling `apiFetch` and re-check it via `assertEndpointUnchanged()` before
+  touching state; a response that outlived its configuration is rejected
+  outright rather than applied. Capturing it in the `.then()` instead is
+  the bug, not a simplification: a pull from server X landing after the
+  reviewer saved server Y would be labelled `Y`, sail through
+  `resolveConflict`'s guard, and write X's revision into `synced_at` under
+  Y — the exact hole the guard exists to close.
 - Switching the configured sync server URL (`writeConfig`) clears every
   local page's `synced_at`, since a baseline is only meaningful relative to
   the deployment that issued it. The comparison has **no "both non-empty"

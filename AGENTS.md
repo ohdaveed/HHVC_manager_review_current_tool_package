@@ -307,6 +307,14 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   settings clears the panel): a stale row would otherwise import another
   deployment's content, and its `'local'` branch would re-mint the exact
   `synced_at` baseline `writeConfig` had just cleared.
+- **That binding starts at _request_ time.** `pullFromServer` and
+  `pushPage` capture `readConfig().apiUrl` before calling `apiFetch` and
+  re-check it (`assertEndpointUnchanged()`) before touching state, so a
+  response that outlived its configuration is rejected rather than applied.
+  Reading the endpoint in the `.then()` instead is the bug it fixes: a pull
+  from X landing after the reviewer saved Y gets labelled `Y`, passes
+  `resolveConflict`'s guard, and writes X's revision into `synced_at`
+  under Y.
 - Switching the sync server URL (`writeConfig`) clears every local page's
   `synced_at`, since a baseline only means something relative to the
   deployment that issued it. There is deliberately **no "both non-empty"

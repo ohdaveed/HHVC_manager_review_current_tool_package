@@ -15,6 +15,7 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const { mergeReviewRecord, combineHistory, reviewContentEquals } = require('../js/review-merge.js')
+const { loadScripts } = require('./helpers/load-scripts')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/review-state-sync.js')
 
@@ -252,6 +253,91 @@ describe('pullFromServer revision handling', () => {
   })
 })
 
+describe('endpoint binding across an in-flight request', () => {
+  const localRecord = {
+    page_key: 'pestsTopic',
+    decision: 'Blocked',
+    notes: 'local work',
+    updated_at: '2026-01-01T00:00:00.000Z',
+    synced_at: '2026-01-01T00:00:00.000Z',
+    local_dirty: false,
+    history: [],
+  }
+
+  test('a pull labels its conflicts with the endpoint configured when it started', async () => {
+    const { mod } = loadReviewStateSync({ apiUrl: 'https://server-x.test' })
+    global.fetch = fetchReturning({})
+
+    const result = await mod.pullFromServer()
+
+    expect(result.ok).toBe(true)
+    expect(result.apiUrl).toBe('https://server-x.test')
+  })
+
+  test('a pull refuses to apply a response that outlived its configuration', async () => {
+    // Regression coverage: the endpoint used to be read in the response
+    // handler, so a pull from X that landed after the reviewer saved Y was
+    // labelled Y. resolveConflict's endpoint guard then saw no mismatch and
+    // would happily adopt X's content, or mint X's revision as Y's baseline
+    // right after writeConfig cleared it.
+    const { mod, getState } = loadReviewStateSync({
+      localPages: { pestsTopic: localRecord },
+      apiUrl: 'https://server-x.test',
+    })
+    global.fetch = async () => {
+      mod.writeConfig({ apiUrl: 'https://server-y.test', apiToken: 'test-token' })
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          version: 1,
+          updated_at: null,
+          ui: {},
+          globals: {},
+          pages: {
+            pestsTopic: {
+              page_key: 'pestsTopic',
+              decision: 'Approved',
+              updated_at: '2026-09-09T00:00:00.000Z',
+            },
+          },
+        }),
+      }
+    }
+
+    const result = await mod.pullFromServer()
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toMatch(/sync settings changed/i)
+    // Server X's content was not written, and writeConfig's baseline
+    // clearing stands.
+    expect(getState().pages.pestsTopic.decision).toBe('Blocked')
+    expect(getState().pages.pestsTopic.synced_at).toBe('')
+  })
+
+  test('a push refuses to apply a response that outlived its configuration', async () => {
+    const { mod, getState } = loadReviewStateSync({
+      localPages: { pestsTopic: localRecord },
+      apiUrl: 'https://server-x.test',
+    })
+    global.fetch = async () => {
+      mod.writeConfig({ apiUrl: 'https://server-y.test', apiToken: 'test-token' })
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ ...localRecord, updated_at: '2026-09-09T00:00:00.000Z' }),
+      }
+    }
+
+    const result = await mod.pushPage('pestsTopic')
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toMatch(/sync settings changed/i)
+    // Server X's updated_at must not become a baseline under server Y.
+    expect(getState().pages.pestsTopic.synced_at).toBe('')
+  })
+})
+
 describe('resolveConflict', () => {
   const serverRecord = {
     page_key: 'ratsReport',
@@ -453,6 +539,54 @@ describe('pushPage', () => {
     expect(page.local_dirty).toBe(false)
   })
 
+  test('a duplicate-content autosave landing mid-push does not leave the page dirty', async () => {
+    // Regression coverage: clicking "Push all pages" within the 300 ms
+    // debounce window leaves a pending timer that re-saves the SAME content
+    // with a later updated_at. The mid-flight test used to be a timestamp
+    // comparison, so that duplicate read as a real edit and pinned
+    // local_dirty true forever — permanently claiming already-pushed
+    // content was unpushed, and turning the next server revision into a
+    // false conflict.
+    const record = {
+      page_key: 'pestsTopic',
+      decision: 'Approved',
+      notes: 'typed just before clicking push',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      synced_at: '',
+      local_dirty: true,
+      history: [],
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: record } })
+
+    global.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        // The pending debounce fires: identical content, later stamp.
+        global.window.reviewState.update((state) => ({
+          ...state,
+          pages: {
+            ...state.pages,
+            pestsTopic: { ...record, updated_at: '2026-01-01T00:00:00.500Z' },
+          },
+        }))
+        return {
+          ...record,
+          updated_at: '2026-01-01T00:00:01.000Z',
+          history: [{ timestamp: '2026-01-01T00:00:01.000Z', updated_by: 'sync' }],
+        }
+      },
+    })
+
+    const result = await mod.pushPage('pestsTopic')
+
+    expect(result.ok).toBe(true)
+    const page = getState().pages.pestsTopic
+    expect(page.synced_at).toBe('2026-01-01T00:00:01.000Z')
+    // The content reached the server, so the page is clean.
+    expect(page.local_dirty).toBe(false)
+  })
+
   test('folds the server-appended history entry into local history when local changes mid-push', async () => {
     const record = {
       page_key: 'pestsTopic',
@@ -505,5 +639,77 @@ describe('pushPage', () => {
     expect(page.synced_at).toBe('2026-01-01T00:00:01.000Z')
     // Still dirty: the mid-flight edit has not reached the server.
     expect(page.local_dirty).toBe(true)
+  })
+})
+
+describe('restorePageContentFromOriginal', () => {
+  // The helper reaches for the real getPrimaryCta/setPrimaryCta, whose
+  // fallback behaviour is the whole point of the CTA branch — stubbing them
+  // would test the stub. js/utils.js is a classic script, so load it the
+  // same way the other unit tests do.
+  const utilsCtx = loadScripts(['js/utils.js'])
+
+  // ORIGINAL_DATA is a top-level const in js/state.js — a shared-scope
+  // global in the browser. The helper's `typeof` guard resolves against
+  // globalThis under Node, so setting it here exercises the real path.
+  let originalOriginalData
+
+  beforeEach(() => {
+    originalOriginalData = global.ORIGINAL_DATA
+  })
+
+  afterEach(() => {
+    if (originalOriginalData === undefined) delete global.ORIGINAL_DATA
+    else global.ORIGINAL_DATA = originalOriginalData
+  })
+
+  test('clears a local CTA when the original page had none anywhere', () => {
+    // Regression coverage: the reset skipped an empty original CTA, so
+    // adopting a server record with an empty primary_cta left the local
+    // CTA in memory — shown in the mockup and written back by the next
+    // autosave, re-dirtying the page just resolved.
+    const { mod } = loadReviewStateSync()
+    global.window.utils = utilsCtx.utils
+    global.window.HHVC_DATA.pages.pestsTopic = {
+      title: 'Locally retitled',
+      summary: 'locally edited summary',
+      // No sections/spotlight, so setPrimaryCta wrote to this fallback.
+      primaryCta: 'CTA added locally',
+    }
+    global.ORIGINAL_DATA = {
+      pages: {
+        pestsTopic: { title: 'Original title', summary: 'original summary' },
+      },
+    }
+
+    mod.restorePageContentFromOriginal('pestsTopic')
+
+    const page = global.window.HHVC_DATA.pages.pestsTopic
+    expect(page.title).toBe('Original title')
+    expect(page.summary).toBe('original summary')
+    expect(page.primaryCta).toBe('')
+  })
+
+  test('restores a real CTA rather than blanking the button it lives on', () => {
+    const { mod } = loadReviewStateSync()
+    global.window.utils = utilsCtx.utils
+    global.window.HHVC_DATA.pages.pestsTopic = {
+      title: 'Locally retitled',
+      sections: [{ steps: [{ button: 'Locally renamed button' }] }],
+    }
+    global.ORIGINAL_DATA = {
+      pages: {
+        pestsTopic: {
+          title: 'Original title',
+          sections: [{ steps: [{ button: 'Report a problem' }] }],
+        },
+      },
+    }
+
+    mod.restorePageContentFromOriginal('pestsTopic')
+
+    const page = global.window.HHVC_DATA.pages.pestsTopic
+    // The structural button is restored to the original label, not blanked.
+    expect(page.sections[0].steps[0].button).toBe('Report a problem')
   })
 })
