@@ -464,6 +464,72 @@ describe('resolveConflict', () => {
     expect(outcome.ok).toBe(true)
     expect(getState().pages.ratsReport.synced_at).toBe('2026-01-02T00:00:00.000Z')
   })
+
+  test('refuses a row whose divergence the local record has already caught up with', async () => {
+    // A conflict row asserts "the server holds a revision this browser has
+    // not observed." Seed the state as though something already observed a
+    // revision at least as new — the push-in-flight case below is how that
+    // happens for real — and the assertion is simply no longer true.
+    const reconciled = {
+      ...localRecord,
+      decision: 'Blocked',
+      notes: 'work done after the page was reconciled',
+      synced_at: serverRecord.updated_at,
+      local_dirty: true,
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { ratsReport: reconciled } })
+
+    const outcome = mod.resolveConflict('ratsReport', 'server', serverRecord)
+
+    expect(outcome.ok).toBe(false)
+    expect(outcome.error).toMatch(/re-synced/i)
+    // The point is the content survives, not merely that a boolean came
+    // back false — adopting the server copy here is the data loss.
+    expect(getState().pages.ratsReport).toEqual(reconciled)
+  })
+
+  test('a push that lands after a conflicting pull retires that conflict row', async () => {
+    // The finding as behaviour. Push and pull overlap: the PUT reaches the
+    // server before the GET, but its response lands after, so the pull sees
+    // a "new" server revision that is really this browser's own push and
+    // reports a conflict. Once the push response settles, the row describes
+    // a divergence that no longer exists — and by then the reviewer may
+    // have edited the page again.
+    const beforePush = {
+      page_key: 'ratsReport',
+      decision: 'Blocked',
+      notes: 'local notes',
+      updated_at: '2026-01-03T00:00:00.000Z',
+      synced_at: '2026-01-01T00:00:00.000Z',
+      local_dirty: true,
+      history: [],
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { ratsReport: beforePush } })
+    global.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        page_key: 'ratsReport',
+        decision: 'Blocked',
+        notes: 'local notes',
+        updated_at: '2026-01-04T00:00:00.000Z',
+        history: [],
+      }),
+    })
+
+    expect((await mod.pushPage('ratsReport')).ok).toBe(true)
+    expect(getState().pages.ratsReport.synced_at).toBe('2026-01-04T00:00:00.000Z')
+
+    // An edit made after the push — exactly what a stale row would discard.
+    getState().pages.ratsReport.notes = 'edited after the push landed'
+
+    // serverRecord is the revision the overlapping pull captured, older
+    // than what the push established.
+    const outcome = mod.resolveConflict('ratsReport', 'server', serverRecord)
+
+    expect(outcome.ok).toBe(false)
+    expect(getState().pages.ratsReport.notes).toBe('edited after the push landed')
+  })
 })
 
 describe('writeConfig server-switch safety', () => {

@@ -342,6 +342,21 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   panel) — otherwise a stale row could import a different deployment's
   content, and its `'local'` branch would re-mint the very `synced_at`
   baseline `writeConfig` had just cleared.
+- **A resolution is bound to the _divergence_ as well as the endpoint.** A
+  row asserts "the server holds a revision this browser hasn't observed",
+  and that can stop being true underneath it: a push whose PUT reaches the
+  server before an overlapping pull's GET, but whose response lands after
+  it, makes the pull report a conflict against this browser's **own**
+  content and then quietly reconciles the record. `resolveConflict`
+  therefore refuses when `serverRecord.updated_at <= localRecord.synced_at`
+  — both server-issued, so the no-cross-clock rule holds — since acting on
+  such a row would adopt a revision the page has already moved past,
+  discarding anything edited since the push. It can't misfire on a real
+  conflict: `pullFromServer` only reports one when the server revision is
+  _newer_ than `synced_at`, and deliberately leaves `synced_at` alone for
+  conflicted pages. `pruneReconciledConflicts()` (run after a push settles)
+  and the mutually-disabled Push/Pull buttons are UI hygiene on top of
+  this, not the mechanism — both calls can be made programmatically.
 - **The endpoint binding starts at _request_ time, not response time.**
   `pullFromServer` and `pushPage` each capture `readConfig().apiUrl` before
   calling `apiFetch` and re-check it via `assertEndpointUnchanged()` before

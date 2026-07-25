@@ -306,6 +306,12 @@
    *   new server's staleness check against content this browser has never
    *   seen. That is exactly the hole the writeConfig fix closed, so it must
    *   not be reopened through a stale conflict row.
+   *
+   * A resolution is bound to TWO things, and refuses on either: the
+   * endpoint that produced it (above) and the divergence itself. See the
+   * revision check in the body — a row whose page has since been
+   * reconciled by a push describes a conflict that no longer exists, and
+   * acting on it would discard whatever was edited after that push.
    * @returns {{ ok: boolean, error?: string }}
    */
   function resolveConflict(pageKey, resolution, serverRecord, fromApiUrl) {
@@ -323,13 +329,38 @@
     }
 
     const serverRevision = serverRecord.updated_at || ''
+
+    // A row asserts a divergence that was true when the pull ran. That
+    // assertion can stop being true without the row knowing: a push whose
+    // PUT reached the server before this pull's GET, but whose response
+    // landed after it, produces a conflict against this browser's OWN
+    // content and then quietly reconciles the record. Acting on the row
+    // afterwards would adopt a revision the page has already moved past —
+    // discarding any edit made since the push.
+    //
+    // Both sides of this comparison are server-issued (`updated_at` from
+    // the conflict record, `synced_at` only ever assigned from a sync
+    // response), so it obeys the same no-cross-clock rule as the rest of
+    // this module. It cannot fire on a legitimate resolution either:
+    // pullFromServer only reports a conflict when the server revision is
+    // NEWER than synced_at, and deliberately leaves synced_at alone for
+    // conflicted pages, so this passes right after any pull and trips only
+    // once something else advanced the baseline past the row.
+    const currentRecord = window.reviewState.read().pages[pageKey]
+    if (serverRevision <= (currentRecord?.synced_at || '')) {
+      return {
+        ok: false,
+        error: 'This page was re-synced after the conflict was found — pull again first.',
+      }
+    }
+
     window.reviewState.update((state) => {
       const localRecord = state.pages[pageKey]
-      state.pages[pageKey] =
+      const next =
         resolution === 'server'
           ? { ...serverRecord, page_key: pageKey, synced_at: serverRevision, local_dirty: false }
           : { ...localRecord, page_key: pageKey, synced_at: serverRevision, local_dirty: true }
-      return state
+      return { ...state, pages: { ...state.pages, [pageKey]: next } }
     })
 
     return { ok: true }
@@ -410,7 +441,7 @@
           // rounds would be marked clean and never pushed.
           const historyGrew = history.length > (merged.history?.length || 0)
 
-          state.pages[pageKey] = localChangedDuringPush
+          const next = localChangedDuringPush
             ? {
                 ...currentRecord,
                 history,
@@ -433,7 +464,10 @@
                 synced_at: merged.updated_at,
                 local_dirty: historyGrew,
               }
-          return state
+          // Fresh objects rather than a mutated `state`, matching
+          // writeConfig and pullFromServer — one rule for updating state
+          // across the whole module.
+          return { ...state, pages: { ...state.pages, [pageKey]: next } }
         })
         return { ok: true, record: merged }
       })
@@ -549,6 +583,9 @@
       const row = document.createElement('div')
       row.className = 'sync-conflict-row'
       row.dataset.pageKey = key
+      // The revision this row is about, so pruneReconciledConflicts can
+      // tell later whether the page has moved past it.
+      row.dataset.serverRevision = serverRecord.updated_at || ''
 
       const label = document.createElement('span')
       label.className = 'sync-conflict-label'
@@ -601,6 +638,24 @@
 
       panel.appendChild(row)
     }
+  }
+
+  /**
+   * Drop conflict rows whose page has since been reconciled — a push that
+   * settles after a pull rendered the row is the case that motivates this.
+   * `resolveConflict` refuses those rows anyway; this is UI hygiene, so the
+   * reviewer sees the control disappear rather than click it and get an
+   * error. Same server-issued-only comparison the guard uses.
+   */
+  function pruneReconciledConflicts() {
+    const panel = document.getElementById('reviewSyncConflicts')
+    if (!panel) return
+    const pages = window.reviewState.read().pages || {}
+    for (const row of panel.querySelectorAll('.sync-conflict-row')) {
+      const observed = pages[row.dataset.pageKey]?.synced_at || ''
+      if ((row.dataset.serverRevision || '') <= observed) row.remove()
+    }
+    if (!panel.querySelector('.sync-conflict-row')) panel.hidden = true
   }
 
   function mountSyncControls() {
@@ -662,13 +717,23 @@
     pullButton.id = 'pullReviewState'
     pullButton.textContent = 'Pull from server'
     actions.appendChild(pullButton)
+
+    // Declared before the handlers so each can disable the other. Pull and
+    // push overlapping is what produces a conflict row against this
+    // browser's own in-flight push; locking both out for the duration makes
+    // that hard to reach, but it is feedback and race-narrowing only —
+    // `stale` in pullFromServer and the revision check in resolveConflict
+    // are the guards that actually hold, since either call can be made
+    // programmatically.
+    let pushButton
+    const setSyncButtonsBusy = (busy) => {
+      pullButton.disabled = busy
+      if (pushButton) pushButton.disabled = busy
+    }
+
     pullButton.addEventListener('click', () => {
       setSyncStatus('Pulling from server…')
-      // Disabling here makes the overlapping-pull case hard to reach at all
-      // and gives the reviewer feedback; pullFromServer's `stale` stamp is
-      // the actual correctness guard, since a programmatic caller or a
-      // re-enabled button can still overlap.
-      pullButton.disabled = true
+      setSyncButtonsBusy(true)
       pullFromServer()
         .then((result) => {
           if (result.ok) {
@@ -677,12 +742,13 @@
             if (conflictCount) {
               message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes. Choose a version for each below.`
             }
-            setSyncStatus(message)
-            // A superseded pull must not touch the panel: its (possibly
-            // empty) conflict list would wipe controls a newer pull put there,
-            // stranding a page that is still dirty and still diverged with no
-            // way to resolve it.
+            // A superseded pull must drive NO user-facing feedback for this
+            // request — not the panel, whose (possibly empty) conflict list
+            // would wipe controls a newer pull put there, and not the status
+            // text or toast, which would then describe an outcome that
+            // contradicts the panel actually on screen.
             if (!result.stale) {
+              setSyncStatus(message)
               renderConflicts(result.conflicts || [], result.conflictRecords || {}, result.apiUrl)
             }
             // The pull reset in-memory content for the pages it applied, so
@@ -697,7 +763,7 @@
             }
             window.ReviewUx?.stateSync?.applySavedPageState(currentKey)
             window.ReviewUx?.refreshUx?.()
-            if (typeof window.showToast === 'function')
+            if (!result.stale && typeof window.showToast === 'function')
               window.showToast(
                 conflictCount
                   ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need a version chosen`
@@ -705,17 +771,20 @@
                 conflictCount ? 'warn' : 'success'
               )
           } else {
+            // Deliberately NOT gated on staleness: a failure is additive
+            // information rather than a claim that contradicts the panel,
+            // and staying silent about a real one is the worse outcome.
             setSyncStatus(`Pull failed: ${result.error}`)
             if (typeof window.showToast === 'function')
               window.showToast(`Sync pull failed: ${result.error}`, 'warn')
           }
         })
         .finally(() => {
-          pullButton.disabled = false
+          setSyncButtonsBusy(false)
         })
     })
 
-    const pushButton = document.createElement('button')
+    pushButton = document.createElement('button')
     pushButton.type = 'button'
     pushButton.className = 'tool-btn secondary-tool'
     pushButton.id = 'pushAllReviewState'
@@ -724,19 +793,29 @@
     pushButton.addEventListener('click', () => {
       window.ReviewUx?.stateSync?.saveCurrentPageToLocalStorage()
       setSyncStatus('Pushing to server…')
-      pushAllPages().then((result) => {
-        setSyncStatus(
-          result.ok
-            ? `Pushed ${result.pushedCount} page review${result.pushedCount === 1 ? '' : 's'} to server.`
-            : `Push failed after ${result.pushedCount} page${result.pushedCount === 1 ? '' : 's'}: ${result.error}`
-        )
-        if (typeof window.showToast === 'function') {
-          window.showToast(
-            result.ok ? 'Pushed review state to server' : `Sync push failed: ${result.error}`,
-            result.ok ? 'success' : 'warn'
+      setSyncButtonsBusy(true)
+      pushAllPages()
+        .then((result) => {
+          setSyncStatus(
+            result.ok
+              ? `Pushed ${result.pushedCount} page review${result.pushedCount === 1 ? '' : 's'} to server.`
+              : `Push failed after ${result.pushedCount} page${result.pushedCount === 1 ? '' : 's'}: ${result.error}`
           )
-        }
-      })
+          if (typeof window.showToast === 'function') {
+            window.showToast(
+              result.ok ? 'Pushed review state to server' : `Sync push failed: ${result.error}`,
+              result.ok ? 'success' : 'warn'
+            )
+          }
+        })
+        .finally(() => {
+          // A push advances synced_at for the pages it reconciled, which can
+          // retire a conflict row a pull rendered against this browser's own
+          // in-flight push. Runs even on a partial failure — pushAllPages is
+          // sequential, so the pages that did land are already reconciled.
+          pruneReconciledConflicts()
+          setSyncButtonsBusy(false)
+        })
     })
 
     const status = document.createElement('p')

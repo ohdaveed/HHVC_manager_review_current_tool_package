@@ -312,6 +312,20 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   settings clears the panel): a stale row would otherwise import another
   deployment's content, and its `'local'` branch would re-mint the exact
   `synced_at` baseline `writeConfig` had just cleared.
+- **A resolution is bound to the _divergence_ too.** A row asserts "the
+  server holds a revision this browser hasn't observed", and that can stop
+  being true underneath it: a push whose PUT reaches the server before an
+  overlapping pull's GET, but whose response lands after, makes the pull
+  report a conflict against this browser's **own** content and then quietly
+  reconcile the record. `resolveConflict` refuses when
+  `serverRecord.updated_at <= localRecord.synced_at` (both server-issued,
+  so the no-cross-clock rule holds) — acting on such a row adopts a revision
+  the page already moved past, discarding anything edited since the push.
+  No misfire on a genuine conflict: `pullFromServer` reports one only when
+  the server revision is _newer_ than `synced_at`, and leaves `synced_at`
+  alone for conflicted pages. `pruneReconciledConflicts()` after a push and
+  the mutually-disabled Push/Pull buttons are hygiene on top, not the
+  mechanism — either call can be made programmatically.
 - **That binding starts at _request_ time.** `pullFromServer` and
   `pushPage` capture `readConfig().apiUrl` before calling `apiFetch` and
   re-check it (`assertEndpointUnchanged()`) before touching state, so a
