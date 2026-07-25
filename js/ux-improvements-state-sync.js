@@ -190,10 +190,9 @@
       // navigation flushes and on edits to other pages' unrelated fields,
       // and marking an untouched page dirty would make the next pull
       // report it as a conflict it isn't.
-      snapshot.local_dirty = existing
-        ? Boolean(existing.local_dirty) ||
-          !window.reviewMerge.reviewContentEquals(existing, snapshot)
-        : true
+      const nextDirty = nextLocalDirty(existing, snapshot)
+      if (nextDirty === undefined) delete snapshot.local_dirty
+      else snapshot.local_dirty = nextDirty
 
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
@@ -220,6 +219,33 @@
     })
 
     updateLocalStorageStatus()
+  }
+
+  /**
+   * The `local_dirty` value this save should persist — `true`, `false`, or
+   * `undefined` for "still unknown."
+   *
+   * The third case is the important one. A record written before
+   * `local_dirty` existed carries no such field, and `pullFromServer`
+   * deliberately treats that absence as "may hold unpushed work" so an
+   * upgraded browser can't have a never-pushed review silently replaced.
+   * Collapsing the absent flag to a boolean here would quietly undo that:
+   * an autosave whose content happens to match the stored record (typing
+   * and undoing before the debounce fires, or a plain navigation flush)
+   * would stamp an explicit `false` on a legacy record and hand the pull
+   * path permission to overwrite it. So an unchanged legacy record keeps
+   * its unknown state, and only a real edit, push, or pull resolves it.
+   * @param {object|undefined} existing
+   * @param {object} snapshot
+   * @returns {boolean|undefined}
+   */
+  function nextLocalDirty(existing, snapshot) {
+    if (!existing) return true
+    if (existing.local_dirty === true) return true
+    if (!window.reviewMerge.reviewContentEquals(existing, snapshot)) return true
+    // Content is unchanged, so this save adds no unpushed work: report
+    // whatever was already known, including "nothing".
+    return existing.local_dirty === false ? false : undefined
   }
 
   /**

@@ -207,6 +207,34 @@ describe('pullFromServer revision handling', () => {
     expect(getState().pages.pestsTopic).toEqual(legacyRecord)
   })
 
+  test('reports which pages it applied so their in-memory content can be reset', async () => {
+    // A clean pull adopts the server's ABSENCES too — a cleared
+    // edited_title has to actually disappear from the in-memory page, or
+    // applySavedPageState's truthy-only assignment leaves the old value on
+    // screen and the next autosave re-saves it as unpushed work.
+    const localRecord = {
+      page_key: 'pestsTopic',
+      decision: 'Needs review',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      synced_at: '2026-01-01T00:00:00.000Z',
+      local_dirty: false,
+      history: [],
+    }
+    const serverRecord = {
+      page_key: 'pestsTopic',
+      decision: 'Approved',
+      edited_title: '',
+      updated_at: '2026-01-02T00:00:00.000Z',
+      history: [],
+    }
+    const { mod } = loadReviewStateSync({ localPages: { pestsTopic: localRecord } })
+    global.fetch = fetchReturning({ pestsTopic: serverRecord })
+
+    const result = await mod.pullFromServer()
+
+    expect(result.pulledKeys).toEqual(['pestsTopic'])
+  })
+
   test('reports (but does not auto-merge) a page with unpushed edits and a newer server revision', async () => {
     // Regression coverage for a second real data-loss bug: an earlier
     // version merged the server record with the ENTIRE local record as the
@@ -585,6 +613,78 @@ describe('pushPage', () => {
     expect(page.synced_at).toBe('2026-01-01T00:00:01.000Z')
     // The content reached the server, so the page is clean.
     expect(page.local_dirty).toBe(false)
+  })
+
+  test('keeps history rounds added mid-push even when the final content matches what was sent', async () => {
+    // Regression coverage: a decision changed and changed back while the
+    // PUT is in flight leaves content equal to the sent snapshot but adds
+    // real audit rounds. reviewContentEquals ignores history by design, so
+    // that read as "no mid-flight change" and the server's response was
+    // adopted wholesale — silently discarding rounds the server never saw.
+    const record = {
+      page_key: 'pestsTopic',
+      decision: 'Approved',
+      notes: 'stable content',
+      updated_at: '2026-01-01T00:00:00.000Z',
+      synced_at: '',
+      local_dirty: true,
+      history: [{ timestamp: '2026-01-01T00:00:00.000Z', decision: 'Approved' }],
+    }
+    const { mod, getState } = loadReviewStateSync({ localPages: { pestsTopic: record } })
+
+    global.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        // Decision flipped away and back: same content, two extra rounds.
+        global.window.reviewState.update((state) => ({
+          ...state,
+          pages: {
+            ...state.pages,
+            pestsTopic: {
+              ...record,
+              updated_at: '2026-01-01T00:00:00.500Z',
+              history: [
+                ...record.history,
+                {
+                  timestamp: '2026-01-01T00:00:00.200Z',
+                  decision: 'Blocked',
+                  updated_by: 'decision',
+                },
+                {
+                  timestamp: '2026-01-01T00:00:00.400Z',
+                  decision: 'Approved',
+                  updated_by: 'decision',
+                },
+              ],
+            },
+          },
+        }))
+        return {
+          ...record,
+          updated_at: '2026-01-01T00:00:01.000Z',
+          history: [
+            ...record.history,
+            { timestamp: '2026-01-01T00:00:01.000Z', updated_by: 'sync' },
+          ],
+        }
+      },
+    })
+
+    const result = await mod.pushPage('pestsTopic')
+
+    expect(result.ok).toBe(true)
+    const page = getState().pages.pestsTopic
+    // Both local decision rounds survive alongside the server's sync round.
+    expect(page.history).toHaveLength(4)
+    expect(page.history.map((entry) => entry.updated_by)).toEqual([
+      undefined,
+      'decision',
+      'decision',
+      'sync',
+    ])
+    // Those rounds have not reached the server, so the page is still dirty.
+    expect(page.local_dirty).toBe(true)
   })
 
   test('folds the server-appended history entry into local history when local changes mid-push', async () => {

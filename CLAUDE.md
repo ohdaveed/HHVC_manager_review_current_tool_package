@@ -320,6 +320,12 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   existed don't carry it (the storage version was deliberately not bumped,
   since the field is additive), and reading "missing" as "clean" would let
   the first pull after an upgrade overwrite reviews that were never pushed.
+  That absence must also _survive_ — `nextLocalDirty()` in
+  `js/ux-improvements-state-sync.js` returns `undefined` for an unchanged
+  legacy record rather than collapsing it to a boolean, because an autosave
+  with content equal to what's stored (typing and undoing, or a navigation
+  flush) would otherwise stamp an explicit `false` and hand the pull path
+  exactly the permission the rule above withholds.
 - **A divergence is surfaced, never guessed.** A new server revision _and_
   unpushed local edits means neither side has seen the other's work.
   `pullFromServer` leaves the record completely untouched (notably without

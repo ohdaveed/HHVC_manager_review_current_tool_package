@@ -291,7 +291,11 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   written before the field existed don't carry it (the storage version was
   deliberately not bumped, the field being additive), and treating
   "missing" as "clean" would let the first pull after an upgrade overwrite
-  reviews that were never pushed.
+  reviews that were never pushed. The absence has to survive autosave too:
+  `nextLocalDirty()` (`js/ux-improvements-state-sync.js`) returns
+  `undefined` for an unchanged legacy record instead of collapsing it to a
+  boolean, since a content-neutral save would otherwise write an explicit
+  `false` and grant the pull path the very permission this rule withholds.
 - **A divergence is surfaced, never guessed.** A new server revision _and_
   unpushed local edits means neither side has seen the other's work; the
   record is left completely untouched (no content change, and no `synced_at`

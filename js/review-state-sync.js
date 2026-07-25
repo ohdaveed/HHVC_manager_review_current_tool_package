@@ -184,6 +184,7 @@
         if (!validated.ok) throw new Error(validated.error || 'Invalid server response.')
 
         let pulledCount = 0
+        const pulledKeys = []
         const conflicts = []
         const conflictRecords = {}
         window.reviewState.update((state) => {
@@ -214,6 +215,7 @@
                 local_dirty: false,
               }
               pulledCount += 1
+              pulledKeys.push(key)
               continue
             }
 
@@ -223,10 +225,28 @@
           return { ...state, pages: nextPages }
         })
 
+        // Adopting a server record means adopting its ABSENCES too. If the
+        // server cleared an edited title/summary/SEO field/CTA, the local
+        // in-memory page still holds the old value: applySavedPageState
+        // only assigns truthy saved values, so the stale edit would stay
+        // visible in the mockup and be collected straight back by the next
+        // autosave — reintroducing, as unpushed work, content the server
+        // had deleted. Resetting first makes "empty on the server" mean
+        // "back to the original" locally, exactly as the conflict path
+        // already does for the resolutions it applies.
+        for (const key of pulledKeys) restorePageContentFromOriginal(key)
+
         // The endpoint these conflicts came from. A resolution is only
         // meaningful against the server that produced it, and the settings
         // can change between a pull and a click — see resolveConflict.
-        return { ok: true, pulledCount, conflicts, conflictRecords, apiUrl: requestApiUrl }
+        return {
+          ok: true,
+          pulledCount,
+          pulledKeys,
+          conflicts,
+          conflictRecords,
+          apiUrl: requestApiUrl,
+        }
       })
       .catch((error) => ({ ok: false, error: error.message || String(error) }))
   }
@@ -344,32 +364,46 @@
           const localChangedDuringPush =
             currentRecord && !window.reviewMerge.reviewContentEquals(currentRecord, record)
 
+          // `merged.history` includes the "sync" round entry the server
+          // just appended for THIS push, and the local record may have
+          // gained rounds of its own while the request was in flight.
+          // Union them in BOTH branches: synced_at is about to advance to
+          // the server's updated_at, so a future pull would treat this page
+          // as already reconciled and never fetch it again — anything
+          // dropped here is dropped permanently. combineHistory dedups by
+          // content, so this is purely additive, never a re-merge of
+          // content fields.
+          const history = window.reviewMerge.combineHistory(currentRecord?.history, merged.history)
+          // A decision changed and changed back mid-flight leaves content
+          // equal to what was sent but adds real audit rounds the server
+          // has not seen. reviewContentEquals deliberately ignores history,
+          // so that case looks unchanged — check it separately or those
+          // rounds would be marked clean and never pushed.
+          const historyGrew = history.length > (merged.history?.length || 0)
+
           state.pages[pageKey] = localChangedDuringPush
             ? {
                 ...currentRecord,
-                // `merged.history` includes the "sync" round entry the
-                // server just appended for THIS push. Dropping it here
-                // would lose that round from the local audit trail
-                // permanently: synced_at is about to advance to the
-                // server's updated_at, so a future pull would treat this
-                // page as "already reconciled" and never fetch it again.
-                // combineHistory's content-based dedup makes this a safe
-                // additive union, not a re-merge of content fields.
-                history: window.reviewMerge.combineHistory(currentRecord.history, merged.history),
+                history,
                 synced_at: merged.updated_at,
                 // Still dirty: the edit that landed mid-flight is newer
                 // than what this push sent, so it hasn't reached the
                 // server yet and must survive the next pull.
                 local_dirty: true,
               }
-            : // synced_at = the server's returned updated_at: this push just
-              // told us exactly what the server now has for this page, so
-              // that's the new known-server baseline for the next push's
-              // conflict check — must be set here (not left to
-              // merged.synced_at, whatever the server happened to echo
-              // back) since the server has no reason to know or persist
-              // this client-side-only field.
-              { ...merged, synced_at: merged.updated_at, local_dirty: false }
+            : {
+                // synced_at = the server's returned updated_at: this push
+                // just told us exactly what the server now has for this
+                // page, so that's the new known-server baseline for the
+                // next push's conflict check — must be set here (not left
+                // to merged.synced_at, whatever the server happened to echo
+                // back) since the server has no reason to know or persist
+                // this client-side-only field.
+                ...merged,
+                history,
+                synced_at: merged.updated_at,
+                local_dirty: historyGrew,
+              }
           return state
         })
         return { ok: true, record: merged }
@@ -610,7 +644,14 @@
           }
           setSyncStatus(message)
           renderConflicts(result.conflicts || [], result.conflictRecords || {}, result.apiUrl)
-          window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
+          // The pull reset in-memory content for the pages it applied, so
+          // repaint if the open page was one of them — otherwise the mockup
+          // keeps showing values the server no longer has.
+          const currentKey = window.utils?.getCurrentKey?.()
+          if (result.pulledKeys?.includes(currentKey) && typeof window.renderPage === 'function') {
+            window.renderPage(currentKey)
+          }
+          window.ReviewUx?.stateSync?.applySavedPageState(currentKey)
           window.ReviewUx?.refreshUx?.()
           if (typeof window.showToast === 'function')
             window.showToast(

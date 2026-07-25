@@ -108,6 +108,40 @@ test.describe('manager review workflow', () => {
     expect(state.pages.pestsTopic?.history || []).toHaveLength(0)
   })
 
+  test('a content-neutral autosave never marks a legacy record clean', async ({ page }) => {
+    // Regression coverage: records written before local_dirty existed carry
+    // no such field, and pullFromServer treats that absence as "may hold
+    // unpushed work" so an upgraded browser can't lose a never-pushed
+    // review. An autosave whose content matched the stored record used to
+    // evaluate Boolean(undefined) || false and stamp an explicit false —
+    // handing the pull path permission to overwrite it wholesale.
+    await gotoFresh(page)
+
+    await seedState(page, {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        decision: 'Approved',
+        notes: 'reviewed before this browser was upgraded',
+        updated_at: '2026-01-01T00:00:00.000Z',
+        // No local_dirty field at all — this is the legacy shape.
+        history: [],
+      },
+    })
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+
+    // Type and undo, so the debounced save fires with unchanged content.
+    await page.fill('#reviewNotes', 'reviewed before this browser was upgraded typo')
+    await page.fill('#reviewNotes', 'reviewed before this browser was upgraded')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+
+    const saved = (await readState(page)).pages.pestsTopic
+    expect(saved.notes).toBe('reviewed before this browser was upgraded')
+    // Still unknown provenance — never an explicit false.
+    expect(saved.local_dirty).not.toBe(false)
+  })
+
   test('sticky bar next/prev navigate through the review queue order', async ({ page }) => {
     await gotoFresh(page)
 
