@@ -32,6 +32,7 @@
     'edited_summary',
     'updated_at',
     'synced_at',
+    'local_dirty',
   ])
 
   const HISTORY_ENTRY_FIELDS = new Set([
@@ -78,6 +79,14 @@
         if (Array.isArray(value)) {
           clean.history = value.map(sanitizeHistoryEntry).filter(Boolean)
         }
+        continue
+      }
+      // local_dirty is a real boolean, and the generic String() coercion
+      // below would turn `false` into the string 'false' — which is TRUTHY.
+      // That would make every clean record read back as having unpushed
+      // local edits, turning routine pulls into permanent conflicts.
+      if (key === 'local_dirty') {
+        if (value != null) clean.local_dirty = value === true || value === 'true'
         continue
       }
       if (!REVIEW_RECORD_FIELDS.has(key) && key !== 'page_key') continue

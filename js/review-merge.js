@@ -75,6 +75,7 @@ function combineHistory(...lists) {
 function mergeReviewRecord(existing, patch, options = {}) {
   const source = existing && typeof existing === 'object' ? existing : {}
   const timestamp = options.timestamp || new Date().toISOString()
+  const updatedBy = options.updatedBy || 'local'
 
   const merged = {
     ...source,
@@ -87,7 +88,7 @@ function mergeReviewRecord(existing, patch, options = {}) {
     reviewer: merged.reviewer || '',
     notes: merged.notes || '',
     risks_or_blockers: merged.risks_or_blockers || '',
-    updated_by: options.updatedBy || 'local',
+    updated_by: updatedBy,
   }
   // historyEntrySchema declares decision as optional, not empty-string-valid
   // — omit the key entirely rather than writing '' when there's no decision.
@@ -95,12 +96,48 @@ function mergeReviewRecord(existing, patch, options = {}) {
 
   merged.history = combineHistory(source.history, patch?.history, [newEntry])
 
+  // Every merge except the server's own is a LOCAL change that hasn't
+  // reached the sync server yet, so it marks the record dirty. `updatedBy:
+  // 'sync'` is used only by server.ts's putReviewPage, whose result is by
+  // definition what the server now holds — so the record it stores and
+  // echoes back is clean, and a client adopting that response wholesale
+  // inherits the correct flag instead of immediately re-flagging itself.
+  merged.local_dirty = updatedBy !== 'sync'
+
   return merged
 }
 
+/** Fields that describe WHEN/WHETHER a record synced rather than what it says. */
+const NON_CONTENT_FIELDS = new Set(['updated_at', 'synced_at', 'local_dirty', 'history'])
+
+/**
+ * Whether two review records carry the same reviewer-visible content,
+ * ignoring bookkeeping fields (timestamps, the sync baseline, the dirty
+ * flag, and the append-only history array).
+ *
+ * Used by the autosave path to decide whether a save actually changed
+ * anything: autosave also fires on navigation flushes and on edits to
+ * unrelated form fields, so marking a record dirty on every call would
+ * flag untouched pages as having unsynced work and turn every later pull
+ * into a spurious conflict.
+ * @param {object|null|undefined} a
+ * @param {object|null|undefined} b
+ * @returns {boolean}
+ */
+function reviewContentEquals(a, b) {
+  const left = a && typeof a === 'object' ? a : {}
+  const right = b && typeof b === 'object' ? b : {}
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)])
+  for (const key of keys) {
+    if (NON_CONTENT_FIELDS.has(key)) continue
+    if (String(left[key] ?? '') !== String(right[key] ?? '')) return false
+  }
+  return true
+}
+
 if (typeof window !== 'undefined') {
-  window.reviewMerge = { mergeReviewRecord, combineHistory }
+  window.reviewMerge = { mergeReviewRecord, combineHistory, reviewContentEquals }
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { mergeReviewRecord, combineHistory }
+  module.exports = { mergeReviewRecord, combineHistory, reviewContentEquals }
 }

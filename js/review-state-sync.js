@@ -11,6 +11,9 @@
   const CONFIG_KEY = 'hhvcReviewSyncConfig'
   const API_TIMEOUT_MS = 15000
 
+  // Monotonic stamp for in-flight pulls; see pullFromServer's `stale`.
+  let pullGeneration = 0
+
   /**
    * Sync settings (server URL + bearer token) live in their own localStorage
    * key, deliberately separate from hhvcManagerReviewState:v1 — that blob
@@ -56,11 +59,30 @@
     // deployment's synced_at values pass the new target's staleness check
     // by pure timestamp coincidence, silently overwriting real content on a
     // server this browser has never actually synced against.
-    if (previous.apiUrl && nextApiUrl && previous.apiUrl !== nextApiUrl) {
+    //
+    // The comparison is against the stored URL with NO "both non-empty"
+    // guard, deliberately: clearing the settings and then configuring a
+    // different server is two transitions (X -> '' -> Y), and requiring
+    // both sides to be non-empty would skip the clear on BOTH of them,
+    // carrying X's baselines all the way to Y. Clearing on any change also
+    // makes first-ever configuration safe, where baselines can only have
+    // come from someone else's browser via a JSON backup import.
+    if (nextApiUrl !== previous.apiUrl) {
       window.reviewState.update((state) => {
         const nextPages = {}
         for (const [key, record] of Object.entries(state.pages || {})) {
-          nextPages[key] = { ...record, synced_at: '' }
+          const next = { ...record, synced_at: '' }
+          // local_dirty is endpoint-relative in exactly the same way
+          // synced_at is: `false` means "matches what the server has," and
+          // that judgement was made against the OLD server. Carrying it to
+          // the new one lets pullFromServer see a new revision plus an
+          // explicitly clean record and replace the local decision/notes
+          // wholesale — losing a review on a server this browser has never
+          // synced with. Delete rather than force `true`: absent is the
+          // honest state (unknown provenance), and the pull path already
+          // treats unknown as possibly-unpushed and raises a conflict.
+          delete next.local_dirty
+          nextPages[key] = next
         }
         return { ...state, pages: nextPages }
       })
@@ -103,45 +125,76 @@
   }
 
   /**
+   * Throw if the configured sync server changed while a request was in
+   * flight. Applying a response under a different deployment's settings is
+   * never safe: its records are foreign content, and its `updated_at`
+   * written into `synced_at` would re-mint the very baseline writeConfig
+   * clears on an endpoint change — letting a later push pass the NEW
+   * server's staleness check against content this browser never saw there.
+   * Callers run this before touching state; the existing .catch turns it
+   * into the standard { ok: false, error } result.
+   * @param {string} requestApiUrl Endpoint captured before the request.
+   */
+  function assertEndpointUnchanged(requestApiUrl) {
+    if (readConfig().apiUrl !== requestApiUrl) {
+      throw new Error('Sync settings changed during this request — try again.')
+    }
+  }
+
+  /**
    * Pull the server's review state and merge it into local state, PER PAGE.
    *
-   * When the server's content is strictly newer than local (or local
-   * doesn't exist yet), it's applied wholesale — no local edits to lose.
+   * Two questions decide each page, and NEITHER compares a browser-clock
+   * timestamp against a server-clock one:
    *
-   * When local looks newer by `updated_at`, there are two different
-   * situations that must NOT be treated the same way:
-   *  - Already reconciled: this browser's `synced_at` for the page is
-   *    already at or past the server's `updated_at` — it has already seen
-   *    (and, per its own newer `updated_at`, edited on top of) this exact
-   *    server revision. Genuinely nothing to do.
-   *  - Diverged: `synced_at` is behind the server's `updated_at` — this
-   *    browser's local copy and the server's copy have real, independently
-   *    edited content neither side has seen from the other (e.g. another
-   *    reviewer pushed after this browser's last sync, and this browser
-   *    then edited locally without ever pulling that push).
+   *  1. Does the server hold a revision this browser hasn't observed?
+   *     `serverRecord.updated_at > localRecord.synced_at`. Both sides of
+   *     that comparison are stamped by the SERVER (synced_at is only ever
+   *     assigned from a sync response), so it stays correct no matter how
+   *     far the browser's clock has drifted. An earlier version compared
+   *     the server's `updated_at` against the local record's `updated_at`,
+   *     which is written by the browser's own clock — on a browser running
+   *     behind the server, a genuine unsynced local edit looked OLDER than
+   *     an unchanged server record and got silently overwritten by it.
+   *  2. Does this browser hold edits it hasn't pushed? The explicit
+   *     `local_dirty` flag, set by the local write paths and cleared only
+   *     by an actual push/pull. Also clock-independent.
    *
-   *    There is no safe way to auto-resolve a divergence: the local record
-   *    is a full snapshot, not a field-level diff, so treating it as a
-   *    "patch" onto the server's record (an earlier version of this
-   *    function did exactly that) lets this browser's stale copies of
-   *    fields ANOTHER reviewer changed silently overwrite them on the next
-   *    push — the same risk the "never a field-level merge on pull" rule
-   *    documented in CLAUDE.md exists to prevent, just reintroduced through
-   *    this recovery path. Guessing which side should win per field isn't
-   *    something this function can safely do without a stored 3-way base.
+   * No new server revision -> nothing to do. New revision and nothing
+   * unpushed -> apply the server's record wholesale; there is nothing to
+   * lose. New revision AND unpushed local edits -> a genuine divergence.
    *
-   *    So a diverged page is left untouched (same as "already reconciled")
-   *    and its key is reported in the returned `conflicts` array instead,
-   *    so the caller can tell the reviewer to resolve it by hand (compare
-   *    notes with whoever pushed, then either intentionally re-push to
-   *    overwrite or discard local edits and pull again). `synced_at` is
-   *    deliberately NOT advanced for a conflicted page either: advancing it
-   *    would make the next push's staleness check in server.ts pass despite
-   *    this browser never having actually incorporated the server's
-   *    content — the exact bug an earlier version of this function had.
+   * A divergence cannot be auto-resolved: the local record is a full
+   * snapshot, not a field-level diff, so treating it as a "patch" onto the
+   * server's record (an earlier version of this function did exactly that)
+   * lets this browser's stale copies of fields ANOTHER reviewer changed
+   * silently overwrite them on the next push. So the record is left
+   * untouched — `synced_at` deliberately NOT advanced, or the next push
+   * would sail through server.ts's staleness check having never
+   * incorporated the server's content — and the page key is reported in
+   * `conflicts`, with the server's copy returned in `conflictRecords` so
+   * the reviewer can resolve it explicitly via resolveConflict().
    */
   function pullFromServer() {
     if (!isConfigured()) return Promise.resolve({ ok: false, error: 'Sync is not configured.' })
+
+    // Two Pull clicks put two GETs in flight, and nothing guarantees they
+    // resolve in order. Applying either one's STATE is fine (it's
+    // last-write-wins per page either way), but the conflict panel is
+    // different: an older response reporting no conflicts would erase the
+    // resolution controls a newer one correctly populated, leaving a page
+    // that is still dirty and still diverged with no way to resolve it.
+    // Stamp each call so the caller can tell whether it has been
+    // superseded. assertEndpointUnchanged doesn't cover this — both
+    // requests go to the SAME endpoint.
+    const generation = ++pullGeneration
+
+    // Captured BEFORE the request, not after: apiFetch resolves the URL at
+    // call time, so this is genuinely the endpoint being talked to. Reading
+    // it in the response handler instead would label a response from server
+    // X with whatever is configured by the time it lands — see the guard
+    // below and resolveConflict's matching check.
+    const requestApiUrl = readConfig().apiUrl
 
     return apiFetch('/api/review-state', { method: 'GET' })
       .then((res) => {
@@ -149,46 +202,168 @@
         return res.json()
       })
       .then((serverState) => {
+        assertEndpointUnchanged(requestApiUrl)
         const validator = window.reviewStateValidation?.validateReviewState
         const validated =
           typeof validator === 'function' ? validator(serverState) : { ok: true, data: serverState }
         if (!validated.ok) throw new Error(validated.error || 'Invalid server response.')
 
         let pulledCount = 0
+        const pulledKeys = []
         const conflicts = []
+        const conflictRecords = {}
         window.reviewState.update((state) => {
           const nextPages = { ...state.pages }
           for (const [key, serverRecord] of Object.entries(validated.data.pages || {})) {
             if (!window.HHVC_DATA?.pages?.[key]) continue
             const localRecord = state.pages[key]
-            const serverIsNewer =
-              !localRecord?.updated_at ||
-              (serverRecord.updated_at && serverRecord.updated_at > localRecord.updated_at)
 
-            if (serverIsNewer) {
+            const serverRevision = serverRecord.updated_at || ''
+            const observedRevision = localRecord?.synced_at || ''
+            const serverHasNewRevision = !localRecord || serverRevision > observedRevision
+            if (!serverHasNewRevision) continue
+
+            // Only an EXPLICIT `false` counts as clean. A record saved
+            // before local_dirty existed has no such field, and the storage
+            // version was deliberately not bumped (the field is additive) —
+            // so on the first pull after an upgrade, treating "missing" as
+            // "clean" would wholesale replace reviews this browser may
+            // never have pushed. Assume unsynced and let the reviewer
+            // decide; a false conflict costs a click, the alternative
+            // costs someone's review.
+            const isClean = !localRecord || localRecord.local_dirty === false
+            if (isClean) {
               nextPages[key] = {
                 ...serverRecord,
                 page_key: key,
-                synced_at: serverRecord.updated_at,
+                synced_at: serverRevision,
+                local_dirty: false,
               }
               pulledCount += 1
+              pulledKeys.push(key)
               continue
             }
 
-            const hasReconciled =
-              localRecord?.synced_at &&
-              serverRecord.updated_at &&
-              localRecord.synced_at >= serverRecord.updated_at
-            if (hasReconciled) continue
-
             conflicts.push(key)
+            conflictRecords[key] = serverRecord
           }
           return { ...state, pages: nextPages }
         })
 
-        return { ok: true, pulledCount, conflicts }
+        // Adopting a server record means adopting its ABSENCES too. If the
+        // server cleared an edited title/summary/SEO field/CTA, the local
+        // in-memory page still holds the old value: applySavedPageState
+        // only assigns truthy saved values, so the stale edit would stay
+        // visible in the mockup and be collected straight back by the next
+        // autosave — reintroducing, as unpushed work, content the server
+        // had deleted. Resetting first makes "empty on the server" mean
+        // "back to the original" locally, exactly as the conflict path
+        // already does for the resolutions it applies.
+        for (const key of pulledKeys) restorePageContentFromOriginal(key)
+
+        // The endpoint these conflicts came from. A resolution is only
+        // meaningful against the server that produced it, and the settings
+        // can change between a pull and a click — see resolveConflict.
+        return {
+          ok: true,
+          pulledCount,
+          pulledKeys,
+          conflicts,
+          conflictRecords,
+          apiUrl: requestApiUrl,
+          // True when a later pull started while this one was in flight.
+          // The caller must not let a superseded result drive the conflict
+          // UI — see the generation stamp at the top of this function.
+          stale: generation !== pullGeneration,
+        }
       })
       .catch((error) => ({ ok: false, error: error.message || String(error) }))
+  }
+
+  /**
+   * Resolve one page reported by pullFromServer as a conflict. Both
+   * outcomes are deliberate, reviewer-chosen, and scoped to a single page
+   * — the alternative before this existed was "clear ALL local reviews,"
+   * which throws away unsynced work on every other page too.
+   *
+   * - 'server': discard this browser's unpushed edits for the page and
+   *   adopt the server's copy verbatim.
+   * - 'local': keep this browser's content, but record the server's
+   *   revision as observed. Nothing is pushed here; the next push simply
+   *   stops being rejected, and this browser's version wins that page.
+   *
+   * @param {string} pageKey
+   * @param {'server'|'local'} resolution
+   * @param {object} serverRecord The server copy from pullFromServer's
+   *   `conflictRecords` — passed in rather than re-fetched so the reviewer
+   *   resolves exactly the revision they were shown.
+   * @param {string} [fromApiUrl] The endpoint that produced `serverRecord`
+   *   (pullFromServer's `apiUrl`). Refuses to act if the configured sync
+   *   server has changed since: `serverRecord` describes a revision of a
+   *   DIFFERENT deployment, so adopting it would import foreign content,
+   *   and the 'local' branch would mint a `synced_at` baseline that
+   *   writeConfig had deliberately cleared — letting a later push pass the
+   *   new server's staleness check against content this browser has never
+   *   seen. That is exactly the hole the writeConfig fix closed, so it must
+   *   not be reopened through a stale conflict row.
+   *
+   * A resolution is bound to TWO things, and refuses on either: the
+   * endpoint that produced it (above) and the divergence itself. See the
+   * revision check in the body — a row whose page has since been
+   * reconciled by a push describes a conflict that no longer exists, and
+   * acting on it would discard whatever was edited after that push.
+   * @returns {{ ok: boolean, error?: string }}
+   */
+  function resolveConflict(pageKey, resolution, serverRecord, fromApiUrl) {
+    if (!pageKey || !serverRecord || typeof serverRecord !== 'object') {
+      return { ok: false, error: 'Nothing to resolve for this page.' }
+    }
+    if (resolution !== 'server' && resolution !== 'local') {
+      return { ok: false, error: `Unknown conflict resolution "${resolution}".` }
+    }
+    if (typeof fromApiUrl === 'string' && fromApiUrl !== readConfig().apiUrl) {
+      return {
+        ok: false,
+        error: 'The sync server changed since this conflict was found — pull again first.',
+      }
+    }
+
+    const serverRevision = serverRecord.updated_at || ''
+
+    // A row asserts a divergence that was true when the pull ran. That
+    // assertion can stop being true without the row knowing: a push whose
+    // PUT reached the server before this pull's GET, but whose response
+    // landed after it, produces a conflict against this browser's OWN
+    // content and then quietly reconciles the record. Acting on the row
+    // afterwards would adopt a revision the page has already moved past —
+    // discarding any edit made since the push.
+    //
+    // Both sides of this comparison are server-issued (`updated_at` from
+    // the conflict record, `synced_at` only ever assigned from a sync
+    // response), so it obeys the same no-cross-clock rule as the rest of
+    // this module. It cannot fire on a legitimate resolution either:
+    // pullFromServer only reports a conflict when the server revision is
+    // NEWER than synced_at, and deliberately leaves synced_at alone for
+    // conflicted pages, so this passes right after any pull and trips only
+    // once something else advanced the baseline past the row.
+    const currentRecord = window.reviewState.read().pages[pageKey]
+    if (serverRevision <= (currentRecord?.synced_at || '')) {
+      return {
+        ok: false,
+        error: 'This page was re-synced after the conflict was found — pull again first.',
+      }
+    }
+
+    window.reviewState.update((state) => {
+      const localRecord = state.pages[pageKey]
+      const next =
+        resolution === 'server'
+          ? { ...serverRecord, page_key: pageKey, synced_at: serverRevision, local_dirty: false }
+          : { ...localRecord, page_key: pageKey, synced_at: serverRevision, local_dirty: true }
+      return { ...state, pages: { ...state.pages, [pageKey]: next } }
+    })
+
+    return { ok: true }
   }
 
   /**
@@ -206,6 +381,11 @@
     if (!record)
       return Promise.resolve({ ok: false, error: 'Nothing saved locally for this page yet.' })
 
+    // Same request-time capture as pullFromServer: this response writes
+    // synced_at, so it must never be applied under a different deployment's
+    // settings.
+    const requestApiUrl = readConfig().apiUrl
+
     return apiFetch(`/api/review-state/pages/${encodeURIComponent(pageKey)}`, {
       method: 'PUT',
       body: JSON.stringify(record),
@@ -221,42 +401,73 @@
         return res.json()
       })
       .then((merged) => {
+        assertEndpointUnchanged(requestApiUrl)
         window.reviewState.update((state) => {
           // If an autosave landed on this page between reading `record`
           // above and this response arriving (a real possibility — a push
           // is a network round-trip, easily longer than the debounce
-          // window), the current local record is now NEWER than the
-          // snapshot this push was based on. Overwriting it with the
-          // response unconditionally would silently drop that later edit.
-          // Keep the newer local content in that case and only advance
+          // window), the local record may now hold content this push never
+          // sent. Overwriting it with the response would silently drop that
+          // later edit, so keep the local content and only advance
           // synced_at with what the server confirmed.
+          //
+          // The test is CONTENT, not `updated_at`: clicking "Push all
+          // pages" within the debounce window leaves a pending timer that
+          // re-saves the very same content with a later stamp. A timestamp
+          // comparison reads that as a mid-flight edit and marks the page
+          // dirty forever — permanently claiming already-pushed content is
+          // unpushed, and turning the next server revision into a false
+          // conflict. reviewContentEquals ignores exactly the bookkeeping
+          // fields (updated_at/synced_at/local_dirty/history) that a
+          // duplicate save churns.
           const currentRecord = state.pages[pageKey]
           const localChangedDuringPush =
-            currentRecord?.updated_at && currentRecord.updated_at > record.updated_at
+            currentRecord && !window.reviewMerge.reviewContentEquals(currentRecord, record)
 
-          state.pages[pageKey] = localChangedDuringPush
+          // `merged.history` includes the "sync" round entry the server
+          // just appended for THIS push, and the local record may have
+          // gained rounds of its own while the request was in flight.
+          // Union them in BOTH branches: synced_at is about to advance to
+          // the server's updated_at, so a future pull would treat this page
+          // as already reconciled and never fetch it again — anything
+          // dropped here is dropped permanently. combineHistory dedups by
+          // content, so this is purely additive, never a re-merge of
+          // content fields.
+          const history = window.reviewMerge.combineHistory(currentRecord?.history, merged.history)
+          // A decision changed and changed back mid-flight leaves content
+          // equal to what was sent but adds real audit rounds the server
+          // has not seen. reviewContentEquals deliberately ignores history,
+          // so that case looks unchanged — check it separately or those
+          // rounds would be marked clean and never pushed.
+          const historyGrew = history.length > (merged.history?.length || 0)
+
+          const next = localChangedDuringPush
             ? {
                 ...currentRecord,
-                // `merged.history` includes the "sync" round entry the
-                // server just appended for THIS push. Dropping it here
-                // would lose that round from the local audit trail
-                // permanently: synced_at is about to advance to the
-                // server's updated_at, so a future pull would treat this
-                // page as "already reconciled" and never fetch it again.
-                // combineHistory's content-based dedup makes this a safe
-                // additive union, not a re-merge of content fields.
-                history: window.reviewMerge.combineHistory(currentRecord.history, merged.history),
+                history,
                 synced_at: merged.updated_at,
+                // Still dirty: the edit that landed mid-flight is newer
+                // than what this push sent, so it hasn't reached the
+                // server yet and must survive the next pull.
+                local_dirty: true,
               }
-            : // synced_at = the server's returned updated_at: this push just
-              // told us exactly what the server now has for this page, so
-              // that's the new known-server baseline for the next push's
-              // conflict check — must be set here (not left to
-              // merged.synced_at, whatever the server happened to echo
-              // back) since the server has no reason to know or persist
-              // this client-side-only field.
-              { ...merged, synced_at: merged.updated_at }
-          return state
+            : {
+                // synced_at = the server's returned updated_at: this push
+                // just told us exactly what the server now has for this
+                // page, so that's the new known-server baseline for the
+                // next push's conflict check — must be set here (not left
+                // to merged.synced_at, whatever the server happened to echo
+                // back) since the server has no reason to know or persist
+                // this client-side-only field.
+                ...merged,
+                history,
+                synced_at: merged.updated_at,
+                local_dirty: historyGrew,
+              }
+          // Fresh objects rather than a mutated `state`, matching
+          // writeConfig and pullFromServer — one rule for updating state
+          // across the whole module.
+          return { ...state, pages: { ...state.pages, [pageKey]: next } }
         })
         return { ok: true, record: merged }
       })
@@ -294,6 +505,157 @@
   function setSyncStatus(message) {
     const el = document.getElementById('reviewSyncStatus')
     if (el) el.textContent = message
+  }
+
+  /**
+   * Discard whatever the reviewer's local edits did to the in-memory page
+   * object, so adopting the server's copy actually shows the server's copy.
+   *
+   * `updateMockupTextFromSavedState` only assigns a field when the saved
+   * value is truthy, so a server record with an EMPTY `edited_title` (the
+   * page was never retitled on the server) would otherwise leave this
+   * browser's local retitle sitting in `DATA.pages[key]` — visible in the
+   * mockup, and written straight back by the next autosave, re-dirtying a
+   * page the reviewer just resolved. Resetting from ORIGINAL_DATA first
+   * makes "empty on the server" mean "back to the original," which is what
+   * it means on the server.
+   *
+   * ORIGINAL_DATA is a top-level `const` in js/state.js — a shared-scope
+   * global in the browser, absent under the Node unit tests that import
+   * this file, hence the typeof guard.
+   * @param {string} pageKey
+   */
+  function restorePageContentFromOriginal(pageKey) {
+    if (typeof ORIGINAL_DATA === 'undefined') return
+    const original = ORIGINAL_DATA?.pages?.[pageKey]
+    const page = window.HHVC_DATA?.pages?.[pageKey]
+    if (!original || !page) return
+
+    page.title = original.title
+    page.summary = original.summary
+    page.seoTitle = original.seoTitle
+    page.metaDescription = original.metaDescription
+    page.seoTitleEdited = false
+    page.metaDescriptionEdited = false
+    const originalCta = window.utils?.getPrimaryCta?.(original) || ''
+    if (originalCta) {
+      window.utils?.setPrimaryCta?.(page, originalCta)
+    } else {
+      // The original has no CTA anywhere, so a local one can only have
+      // landed in page.primaryCta — setPrimaryCta's last-resort branch,
+      // used when there's no step/section/spotlight button to write to.
+      // Clearing that field IS the reset. Calling setPrimaryCta('')
+      // instead would blank a real section or step button on pages that
+      // have one, which is worse than the bug being fixed.
+      page.primaryCta = original.primaryCta || ''
+    }
+  }
+
+  /**
+   * Render one row per conflicted page with the two explicit resolutions.
+   * Built with DOM APIs rather than innerHTML so page keys and titles from
+   * the server response are never interpreted as markup.
+   * @param {string[]} conflicts
+   * @param {Record<string, object>} conflictRecords
+   * @param {string} [fromApiUrl] Endpoint the conflicts came from; passed
+   *   through to resolveConflict so a row can't act after a server switch.
+   */
+  function renderConflicts(conflicts, conflictRecords, fromApiUrl) {
+    const panel = document.getElementById('reviewSyncConflicts')
+    if (!panel) return
+
+    panel.replaceChildren()
+    if (!conflicts.length) {
+      panel.hidden = true
+      return
+    }
+    panel.hidden = false
+
+    const heading = document.createElement('h4')
+    heading.textContent = 'Pages needing a version choice'
+    heading.className = 'sync-conflict-heading'
+    panel.appendChild(heading)
+
+    for (const key of conflicts) {
+      const serverRecord = conflictRecords[key]
+      if (!serverRecord) continue
+
+      const row = document.createElement('div')
+      row.className = 'sync-conflict-row'
+      row.dataset.pageKey = key
+      // The revision this row is about, so pruneReconciledConflicts can
+      // tell later whether the page has moved past it.
+      row.dataset.serverRevision = serverRecord.updated_at || ''
+
+      const label = document.createElement('span')
+      label.className = 'sync-conflict-label'
+      label.textContent = window.HHVC_DATA?.pages?.[key]?.title || key
+      row.appendChild(label)
+
+      for (const [resolution, text] of [
+        ['server', 'Use server version'],
+        ['local', 'Keep my version'],
+      ]) {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'tool-btn secondary-tool'
+        button.dataset.resolution = resolution
+        button.textContent = text
+        button.addEventListener('click', () => {
+          const outcome = resolveConflict(key, resolution, serverRecord, fromApiUrl)
+          if (!outcome.ok) {
+            setSyncStatus(`Could not resolve ${key}: ${outcome.error}`)
+            return
+          }
+          // Adopting the server's copy means abandoning this browser's
+          // in-memory content edits for that page, not just its saved
+          // record — otherwise the mockup keeps showing them and the next
+          // autosave writes them back.
+          if (resolution === 'server') {
+            restorePageContentFromOriginal(key)
+            if (
+              key === window.utils?.getCurrentKey?.() &&
+              typeof window.renderPage === 'function'
+            ) {
+              window.renderPage(key)
+            }
+          }
+          row.remove()
+          if (!panel.querySelector('.sync-conflict-row')) panel.hidden = true
+          window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
+          window.ReviewUx?.refreshUx?.()
+          if (typeof window.showToast === 'function') {
+            window.showToast(
+              resolution === 'server'
+                ? `Using the server's version of ${key}`
+                : `Keeping your version of ${key} — push to send it`,
+              'success'
+            )
+          }
+        })
+        row.appendChild(button)
+      }
+
+      panel.appendChild(row)
+    }
+  }
+
+  /**
+   * Drop conflict rows whose page has since been reconciled — a push that
+   * settles after a pull rendered the row is the case that motivates this.
+   * `resolveConflict` refuses those rows anyway; this is UI hygiene, so the
+   * reviewer sees the control disappear rather than click it and get an
+   * error. Same server-issued-only comparison the guard uses.
+   */
+  function pruneReconciledConflicts() {
+    const panel = document.getElementById('reviewSyncConflicts')
+    if (!panel) return
+    const pages = window.reviewState.read().pages || {}
+    for (const row of panel.querySelectorAll('.sync-conflict-row')) {
+      const observed = pages[row.dataset.pageKey]?.synced_at || ''
+      if ((row.dataset.serverRevision || '') <= observed) row.remove()
+    }
+    if (!panel.querySelector('.sync-conflict-row')) panel.hidden = true
   }
 
   function mountSyncControls() {
@@ -341,6 +703,11 @@
     actions.appendChild(saveButton)
     saveButton.addEventListener('click', () => {
       writeConfig({ apiUrl: urlInput.value, apiToken: tokenInput.value })
+      // Any conflicts still on screen describe revisions of the server
+      // configured a moment ago. They are meaningless — and unsafe to act
+      // on — against a different one, so drop them; a fresh pull will
+      // re-report anything that still conflicts.
+      renderConflicts([], {})
       setSyncStatus(isConfigured() ? 'Sync settings saved.' : 'Sync settings cleared.')
     })
 
@@ -350,34 +717,74 @@
     pullButton.id = 'pullReviewState'
     pullButton.textContent = 'Pull from server'
     actions.appendChild(pullButton)
+
+    // Declared before the handlers so each can disable the other. Pull and
+    // push overlapping is what produces a conflict row against this
+    // browser's own in-flight push; locking both out for the duration makes
+    // that hard to reach, but it is feedback and race-narrowing only —
+    // `stale` in pullFromServer and the revision check in resolveConflict
+    // are the guards that actually hold, since either call can be made
+    // programmatically.
+    let pushButton
+    const setSyncButtonsBusy = (busy) => {
+      pullButton.disabled = busy
+      if (pushButton) pushButton.disabled = busy
+    }
+
     pullButton.addEventListener('click', () => {
       setSyncStatus('Pulling from server…')
-      pullFromServer().then((result) => {
-        if (result.ok) {
-          const conflictCount = result.conflicts?.length || 0
-          let message = `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
-          if (conflictCount) {
-            message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes: ${result.conflicts.join(', ')}. Resolve by hand (compare with whoever pushed) before pushing ${conflictCount === 1 ? 'it' : 'them'} again.`
+      setSyncButtonsBusy(true)
+      pullFromServer()
+        .then((result) => {
+          if (result.ok) {
+            const conflictCount = result.conflicts?.length || 0
+            let message = `Pulled ${result.pulledCount} updated page review${result.pulledCount === 1 ? '' : 's'} from server.`
+            if (conflictCount) {
+              message += ` ${conflictCount} page${conflictCount === 1 ? '' : 's'} could not be auto-merged — they have unsynced local edits that conflict with newer server changes. Choose a version for each below.`
+            }
+            // A superseded pull must drive NO user-facing feedback for this
+            // request — not the panel, whose (possibly empty) conflict list
+            // would wipe controls a newer pull put there, and not the status
+            // text or toast, which would then describe an outcome that
+            // contradicts the panel actually on screen.
+            if (!result.stale) {
+              setSyncStatus(message)
+              renderConflicts(result.conflicts || [], result.conflictRecords || {}, result.apiUrl)
+            }
+            // The pull reset in-memory content for the pages it applied, so
+            // repaint if the open page was one of them — otherwise the mockup
+            // keeps showing values the server no longer has.
+            const currentKey = window.utils?.getCurrentKey?.()
+            if (
+              result.pulledKeys?.includes(currentKey) &&
+              typeof window.renderPage === 'function'
+            ) {
+              window.renderPage(currentKey)
+            }
+            window.ReviewUx?.stateSync?.applySavedPageState(currentKey)
+            window.ReviewUx?.refreshUx?.()
+            if (!result.stale && typeof window.showToast === 'function')
+              window.showToast(
+                conflictCount
+                  ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need a version chosen`
+                  : 'Pulled review state from server',
+                conflictCount ? 'warn' : 'success'
+              )
+          } else {
+            // Deliberately NOT gated on staleness: a failure is additive
+            // information rather than a claim that contradicts the panel,
+            // and staying silent about a real one is the worse outcome.
+            setSyncStatus(`Pull failed: ${result.error}`)
+            if (typeof window.showToast === 'function')
+              window.showToast(`Sync pull failed: ${result.error}`, 'warn')
           }
-          setSyncStatus(message)
-          window.ReviewUx?.stateSync?.applySavedPageState(window.utils?.getCurrentKey?.())
-          window.ReviewUx?.refreshUx?.()
-          if (typeof window.showToast === 'function')
-            window.showToast(
-              conflictCount
-                ? `Pulled from server — ${conflictCount} page${conflictCount === 1 ? '' : 's'} need manual conflict resolution`
-                : 'Pulled review state from server',
-              conflictCount ? 'warn' : 'success'
-            )
-        } else {
-          setSyncStatus(`Pull failed: ${result.error}`)
-          if (typeof window.showToast === 'function')
-            window.showToast(`Sync pull failed: ${result.error}`, 'warn')
-        }
-      })
+        })
+        .finally(() => {
+          setSyncButtonsBusy(false)
+        })
     })
 
-    const pushButton = document.createElement('button')
+    pushButton = document.createElement('button')
     pushButton.type = 'button'
     pushButton.className = 'tool-btn secondary-tool'
     pushButton.id = 'pushAllReviewState'
@@ -386,19 +793,29 @@
     pushButton.addEventListener('click', () => {
       window.ReviewUx?.stateSync?.saveCurrentPageToLocalStorage()
       setSyncStatus('Pushing to server…')
-      pushAllPages().then((result) => {
-        setSyncStatus(
-          result.ok
-            ? `Pushed ${result.pushedCount} page review${result.pushedCount === 1 ? '' : 's'} to server.`
-            : `Push failed after ${result.pushedCount} page${result.pushedCount === 1 ? '' : 's'}: ${result.error}`
-        )
-        if (typeof window.showToast === 'function') {
-          window.showToast(
-            result.ok ? 'Pushed review state to server' : `Sync push failed: ${result.error}`,
-            result.ok ? 'success' : 'warn'
+      setSyncButtonsBusy(true)
+      pushAllPages()
+        .then((result) => {
+          setSyncStatus(
+            result.ok
+              ? `Pushed ${result.pushedCount} page review${result.pushedCount === 1 ? '' : 's'} to server.`
+              : `Push failed after ${result.pushedCount} page${result.pushedCount === 1 ? '' : 's'}: ${result.error}`
           )
-        }
-      })
+          if (typeof window.showToast === 'function') {
+            window.showToast(
+              result.ok ? 'Pushed review state to server' : `Sync push failed: ${result.error}`,
+              result.ok ? 'success' : 'warn'
+            )
+          }
+        })
+        .finally(() => {
+          // A push advances synced_at for the pages it reconciled, which can
+          // retire a conflict row a pull rendered against this browser's own
+          // in-flight push. Runs even on a partial failure — pushAllPages is
+          // sequential, so the pages that did land are already reconciled.
+          pruneReconciledConflicts()
+          setSyncButtonsBusy(false)
+        })
     })
 
     const status = document.createElement('p')
@@ -408,6 +825,12 @@
       ? 'Sync configured.'
       : 'Sync not configured — enter a server URL and token above, then Save sync settings.'
     actions.insertAdjacentElement('afterend', status)
+
+    const conflictPanel = document.createElement('div')
+    conflictPanel.id = 'reviewSyncConflicts'
+    conflictPanel.className = 'sync-conflict-panel'
+    conflictPanel.hidden = true
+    status.insertAdjacentElement('afterend', conflictPanel)
   }
 
   window.reviewStateSync = {
@@ -416,6 +839,7 @@
     writeConfig,
     isConfigured,
     pullFromServer,
+    resolveConflict,
     pushPage,
     pushAllPages,
     mountSyncControls,
@@ -427,6 +851,8 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       pullFromServer,
+      resolveConflict,
+      restorePageContentFromOriginal,
       pushPage,
       pushAllPages,
       isConfigured,

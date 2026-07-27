@@ -166,6 +166,8 @@
 
     const snapshot = collectCurrentPageReviewState(pageKeyOverride)
     window.reviewState.update((state) => {
+      const existing = state.pages[snapshot.page_key]
+
       // This is the continuous per-keystroke/blur autosave path, not a
       // discrete review "round" — it must NOT append a history entry (that
       // would flood history on every debounced save). It must also not
@@ -173,7 +175,7 @@
       // carry the existing array forward untouched. Round-boundary events
       // (queue actions, imports, sync) go through mergeReviewRecord
       // instead, in js/review-merge.js.
-      const existingHistory = state.pages[snapshot.page_key]?.history
+      const existingHistory = existing?.history
       snapshot.history = Array.isArray(existingHistory) ? existingHistory : []
       // Same reasoning as history: synced_at tracks the last server state
       // this browser actually observed (via pull/push), NOT local edit
@@ -182,17 +184,90 @@
       // conflict-detection baseline server.ts's putReviewPage relies on
       // the very first time a reviewer edits a page after syncing it. See
       // js/review-state-sync.js.
-      snapshot.synced_at = state.pages[snapshot.page_key]?.synced_at || ''
+      snapshot.synced_at = existing?.synced_at || ''
+      // Sticky until an actual push/pull clears it. Only flip it on when
+      // the save really changed something: autosave also fires on
+      // navigation flushes and on edits to other pages' unrelated fields,
+      // and marking an untouched page dirty would make the next pull
+      // report it as a conflict it isn't.
+      const nextDirty = nextLocalDirty(existing, snapshot)
+      if (nextDirty === undefined) delete snapshot.local_dirty
+      else snapshot.local_dirty = nextDirty
 
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
       state.globals.reviewer = snapshot.reviewer
       state.globals.owner = snapshot.follow_up_owner
-      state.pages[snapshot.page_key] = snapshot
+
+      // A decision change IS a discrete review round, even though it
+      // arrives through this same autosave path (the sidebar <select> and
+      // the quick-action chips both persist via the generic field
+      // listeners in js/ux-improvements.js). Route just that transition
+      // through mergeReviewRecord so the audit trail records it — without
+      // opening the floodgates, since a decision only transitions on a
+      // deliberate reviewer action, never per keystroke. Queue actions
+      // already appended their own entry before dispatching, so by the
+      // time this runs `existing.decision` matches and nothing is
+      // double-recorded.
+      state.pages[snapshot.page_key] = isDecisionRound(existing, snapshot)
+        ? window.reviewMerge.mergeReviewRecord(existing, snapshot, {
+            updatedBy: 'decision',
+            timestamp: snapshot.updated_at,
+          })
+        : snapshot
       return state
     })
 
     updateLocalStorageStatus()
+  }
+
+  /**
+   * The `local_dirty` value this save should persist — `true`, `false`, or
+   * `undefined` for "still unknown."
+   *
+   * The third case is the important one. A record written before
+   * `local_dirty` existed carries no such field, and `pullFromServer`
+   * deliberately treats that absence as "may hold unpushed work" so an
+   * upgraded browser can't have a never-pushed review silently replaced.
+   * Collapsing the absent flag to a boolean here would quietly undo that:
+   * an autosave whose content happens to match the stored record (typing
+   * and undoing before the debounce fires, or a plain navigation flush)
+   * would stamp an explicit `false` on a legacy record and hand the pull
+   * path permission to overwrite it. So an unchanged legacy record keeps
+   * its unknown state, and only a real edit, push, or pull resolves it.
+   * @param {object|undefined} existing
+   * @param {object} snapshot
+   * @returns {boolean|undefined}
+   */
+  function nextLocalDirty(existing, snapshot) {
+    if (!existing) return true
+    if (existing.local_dirty === true) return true
+    if (!window.reviewMerge.reviewContentEquals(existing, snapshot)) return true
+    // Content is unchanged, so this save adds no unpushed work: report
+    // whatever was already known, including "nothing".
+    return existing.local_dirty === false ? false : undefined
+  }
+
+  /**
+   * Whether this save represents a deliberate decision change worth one
+   * history entry. A brand-new record only counts when the reviewer has
+   * actually moved off the default — otherwise simply typing the first
+   * character of a note on an untouched page would record a "Needs review"
+   * round for every page in the site.
+   * @param {object|undefined} existing
+   * @param {object} snapshot
+   * @returns {boolean}
+   */
+  function isDecisionRound(existing, snapshot) {
+    if (!snapshot.decision) return false
+    if (!existing) return snapshot.decision !== 'Needs review'
+    // `decision` is optional on a stored record (an imported or
+    // server-provided one may omit it), and applySavedPageState shows
+    // 'Needs review' for exactly that case. Comparing against a raw
+    // `undefined` would then read the sidebar's unchanged default as a
+    // transition and record a decision round for someone who only edited
+    // a note. Compare against what the reviewer is actually looking at.
+    return snapshot.decision !== (existing.decision || 'Needs review')
   }
 
   function clearReviewFieldsForNewPage(state) {

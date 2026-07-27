@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, readState, settleDebounce, openWorkspaceTab } = require('./helpers')
+const { gotoFresh, readState, seedState, settleDebounce, openWorkspaceTab } = require('./helpers')
 
 test.describe('manager review workflow', () => {
   test('decision, notes, and reviewer save to local review state', async ({ page }) => {
@@ -42,6 +42,104 @@ test.describe('manager review workflow', () => {
     await settleDebounce(page)
     const state = await readState(page)
     expect(state.pages.pestsTopic?.decision).toBe('Blocked')
+  })
+
+  test('sidebar decision changes are recorded as history rounds, typing is not', async ({
+    page,
+  }) => {
+    await gotoFresh(page)
+
+    // A decision set from the sidebar is a real review round, even though it
+    // persists through the same autosave path as free-text fields.
+    await page.selectOption('#reviewDecision', 'Approved')
+    await settleDebounce(page)
+
+    let history = (await readState(page)).pages.pestsTopic?.history || []
+    expect(history).toHaveLength(1)
+    expect(history[0]).toMatchObject({ decision: 'Approved', updated_by: 'decision' })
+
+    // Typing notes must NOT append: that would put one entry per debounced
+    // keystroke into the audit trail.
+    await page.fill('#reviewNotes', 'some notes typed after deciding')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+
+    history = (await readState(page)).pages.pestsTopic?.history || []
+    expect(history).toHaveLength(1)
+
+    // A second, different decision is a second round.
+    await page.selectOption('#reviewDecision', 'Blocked')
+    await settleDebounce(page)
+
+    history = (await readState(page)).pages.pestsTopic?.history || []
+    expect(history).toHaveLength(2)
+    expect(history[1]).toMatchObject({ decision: 'Blocked', updated_by: 'decision' })
+  })
+
+  test('editing notes on a record with no stored decision does not fabricate a decision round', async ({
+    page,
+  }) => {
+    await gotoFresh(page)
+
+    // `decision` is optional on a stored record — an imported or
+    // server-provided one may omit it, and the sidebar then shows the
+    // default 'Needs review'. Comparing the sidebar's unchanged default
+    // against a raw `undefined` used to read as a transition and record a
+    // decision round for someone who only edited a note.
+    await seedState(page, {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        notes: 'imported without a decision field',
+        updated_at: '2026-01-01T00:00:00.000Z',
+        history: [],
+      },
+    })
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+
+    await expect(page.locator('#reviewDecision')).toHaveValue('Needs review')
+
+    await page.fill('#reviewNotes', 'just adding a note, no decision made')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+
+    const state = await readState(page)
+    expect(state.pages.pestsTopic?.notes).toBe('just adding a note, no decision made')
+    expect(state.pages.pestsTopic?.history || []).toHaveLength(0)
+  })
+
+  test('a content-neutral autosave never marks a legacy record clean', async ({ page }) => {
+    // Regression coverage: records written before local_dirty existed carry
+    // no such field, and pullFromServer treats that absence as "may hold
+    // unpushed work" so an upgraded browser can't lose a never-pushed
+    // review. An autosave whose content matched the stored record used to
+    // evaluate Boolean(undefined) || false and stamp an explicit false —
+    // handing the pull path permission to overwrite it wholesale.
+    await gotoFresh(page)
+
+    await seedState(page, {
+      pestsTopic: {
+        page_key: 'pestsTopic',
+        decision: 'Approved',
+        notes: 'reviewed before this browser was upgraded',
+        updated_at: '2026-01-01T00:00:00.000Z',
+        // No local_dirty field at all — this is the legacy shape.
+        history: [],
+      },
+    })
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+
+    // Type and undo, so the debounced save fires with unchanged content.
+    await page.fill('#reviewNotes', 'reviewed before this browser was upgraded typo')
+    await page.fill('#reviewNotes', 'reviewed before this browser was upgraded')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+
+    const saved = (await readState(page)).pages.pestsTopic
+    expect(saved.notes).toBe('reviewed before this browser was upgraded')
+    // Still unknown provenance — never an explicit false.
+    expect(saved.local_dirty).not.toBe(false)
   })
 
   test('sticky bar next/prev navigate through the review queue order', async ({ page }) => {

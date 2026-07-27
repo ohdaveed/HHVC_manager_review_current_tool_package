@@ -1,5 +1,5 @@
 const { describe, test, expect } = require('bun:test')
-const { mergeReviewRecord } = require('../js/review-merge.js')
+const { mergeReviewRecord, reviewContentEquals } = require('../js/review-merge.js')
 
 describe('mergeReviewRecord', () => {
   test('patch fields overwrite existing fields, unrelated fields untouched', () => {
@@ -141,5 +141,57 @@ describe('mergeReviewRecord', () => {
   test('omits the decision key on a history entry instead of writing an empty string', () => {
     const merged = mergeReviewRecord(null, { notes: 'no decision yet' })
     expect(merged.history[0]).not.toHaveProperty('decision')
+  })
+
+  test('marks the record dirty for local merges and clean for the server-side sync merge', () => {
+    // Every client-side round boundary produces work the server hasn't seen.
+    expect(mergeReviewRecord(null, { decision: 'Approved' }).local_dirty).toBe(true)
+    expect(
+      mergeReviewRecord(null, { decision: 'Approved' }, { updatedBy: 'import' }).local_dirty
+    ).toBe(true)
+    // ...but server.ts's own merge IS what the server now holds, so the
+    // record it stores and echoes back must not read as unpushed work.
+    expect(
+      mergeReviewRecord(null, { decision: 'Approved' }, { updatedBy: 'sync' }).local_dirty
+    ).toBe(false)
+  })
+})
+
+describe('reviewContentEquals', () => {
+  test('ignores bookkeeping fields that say when a record synced, not what it says', () => {
+    const base = { decision: 'Approved', notes: 'same text' }
+    expect(
+      reviewContentEquals(
+        { ...base, updated_at: '2026-01-01T00:00:00.000Z', synced_at: '', local_dirty: true },
+        {
+          ...base,
+          updated_at: '2026-09-09T00:00:00.000Z',
+          synced_at: '2026-05-05T00:00:00.000Z',
+          local_dirty: false,
+          history: [{ timestamp: '2026-01-01T00:00:00.000Z' }],
+        }
+      )
+    ).toBe(true)
+  })
+
+  test('detects a real content change', () => {
+    expect(
+      reviewContentEquals({ decision: 'Approved', notes: 'a' }, { decision: 'Blocked', notes: 'a' })
+    ).toBe(false)
+    expect(reviewContentEquals({ notes: 'a' }, { notes: 'b' })).toBe(false)
+  })
+
+  test('treats a missing field and an empty-string field as the same content', () => {
+    // buildReviewRecord fills every field with '' defaults, so a record read
+    // back from a partial import would otherwise look "changed" on the next
+    // autosave and get flagged as unpushed work it isn't.
+    expect(reviewContentEquals({ decision: 'Approved' }, { decision: 'Approved', notes: '' })).toBe(
+      true
+    )
+  })
+
+  test('tolerates null/undefined records instead of throwing', () => {
+    expect(reviewContentEquals(null, undefined)).toBe(true)
+    expect(reviewContentEquals(null, { notes: 'x' })).toBe(false)
   })
 })

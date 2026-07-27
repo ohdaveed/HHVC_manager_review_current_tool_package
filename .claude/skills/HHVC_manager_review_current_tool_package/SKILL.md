@@ -64,7 +64,7 @@ scripts, and tests.
 | ---------------------- | ------------------------------------------------------ |
 | `bun run dev`          | Dev server with watch at http://127.0.0.1:8080         |
 | `bun run validate`     | Zod-validate all `pages/*.js` (schema + invariants)    |
-| `bun run test`         | Bun unit-test suite (7 files)                          |
+| `bun run test`         | Bun unit-test suite (10 files)                         |
 | `bun run test:e2e`     | Playwright end-to-end tests                            |
 | `bun run format:check` | Prettier check — the lint step                         |
 | `bun run build`        | validate → export → workshop-form → single-file export |

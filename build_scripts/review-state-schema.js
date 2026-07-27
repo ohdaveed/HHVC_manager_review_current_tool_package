@@ -50,6 +50,11 @@ const reviewRecordSchema = z
     // every local edit. Used as the conflict-detection baseline in
     // server.ts's putReviewPage; see js/review-state-sync.js.
     synced_at: z.string().optional(),
+    // Whether this browser holds edits it has not pushed. A real boolean,
+    // not a timestamp, precisely so conflict detection never has to compare
+    // a browser-clock value against a server-clock one — see
+    // pullFromServer in js/review-state-sync.js.
+    local_dirty: z.boolean().optional(),
   })
   .passthrough()
 
