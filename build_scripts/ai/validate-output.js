@@ -36,6 +36,23 @@ const BANNED_TERMS = [
 const CANDIDATE_KEY = '__generated__'
 
 /**
+ * A second key the same page is filed under, for one pass only.
+ *
+ * The link checks in data-checks.js take a single `pages` object and use it for
+ * both jobs: what to walk, and which targets resolve. Filing the draft under
+ * CANDIDATE_KEY is what lets its internal links resolve at all — but it also
+ * makes that sentinel itself a resolvable target, so a draft linking to
+ * `__generated__` would pass every check while being a dead link in the
+ * downloaded module (which is named from the page's slug, never the sentinel).
+ *
+ * Rather than re-implement each traversal to separate the two jobs, every check
+ * runs twice under two different sentinels and the broken targets are unioned.
+ * A link to either sentinel resolves in one pass and breaks in the other, so it
+ * gets reported; a real page key resolves in both and never does.
+ */
+const PROBE_KEY = '__generated_probe__'
+
+/**
  * Format a Zod issue as a sentence the model can act on.
  * @param {object} issue
  * @returns {string}
@@ -46,13 +63,35 @@ function formatZodIssue(issue) {
 }
 
 /**
+ * Run one link check over both sentinel universes and union the results.
+ *
+ * Results are filtered to the candidate so pre-existing problems in the repo's
+ * own pages are never reported as if the model had caused them, and deduped so
+ * an ordinary broken target found in both passes is reported once.
+ * @param {(pages: Record<string, object>) => Array<{pageKey: string, target: string}>} find
+ * @param {object} page The generated page.
+ * @param {Record<string, object>} existingPages
+ * @returns {string[]} Broken targets, each listed once.
+ */
+function findBrokenTargets(find, page, existingPages) {
+  const broken = new Set()
+  for (const key of [CANDIDATE_KEY, PROBE_KEY]) {
+    for (const entry of find({ ...existingPages, [key]: page })) {
+      if (entry.pageKey === key) broken.add(entry.target)
+    }
+  }
+  return [...broken]
+}
+
+/**
  * Check a generated page.
  *
  * Link-target checks need the real page-key universe to resolve against, so the
- * candidate is merged into a copy of the existing pages under CANDIDATE_KEY and
- * the results are filtered back down to it. Without the merge every internal
- * link would look broken; without the filter, pre-existing problems in the
- * repo's own pages would be reported as if the model had caused them.
+ * candidate is merged into a copy of the existing pages under a sentinel key
+ * and the results are filtered back down to it. Without the merge every
+ * internal link would look broken; without the filter, pre-existing problems in
+ * the repo's own pages would be reported as if the model had caused them. See
+ * findBrokenTargets for why that merge happens twice.
  *
  * @param {object} page The generated page object.
  * @param {Record<string, object>} existingPages Real pages, for link resolution.
@@ -71,19 +110,22 @@ function validateGeneratedPage(page, existingPages = {}) {
     return { valid: false, issues, schemaValid: false }
   }
 
-  const universe = { ...existingPages, [CANDIDATE_KEY]: page }
-  const mine = (results) => results.filter((entry) => entry.pageKey === CANDIDATE_KEY)
+  const brokenTargets = (find) => findBrokenTargets(find, page, existingPages)
 
-  for (const { target } of mine(findBrokenCardTargets(universe))) {
+  for (const target of brokenTargets(findBrokenCardTargets)) {
     issues.push(`Broken card target: "${target}" is not an existing page key.`)
   }
-  for (const { target } of mine(findBrokenButtonTargets(universe))) {
+  for (const target of brokenTargets(findBrokenButtonTargets)) {
     issues.push(`Broken button target: "${target}" is not an existing page key.`)
   }
-  for (const { target } of mine(findBrokenInlineLinks(universe))) {
+  for (const target of brokenTargets(findBrokenInlineLinks)) {
     issues.push(`Broken inline link: "${target}" is not an existing page key or an http(s) URL.`)
   }
-  for (const { path, count } of mine(findListFormatViolations(universe))) {
+
+  const listUniverse = { ...existingPages, [CANDIDATE_KEY]: page }
+  for (const { path, count } of findListFormatViolations(listUniverse).filter(
+    (entry) => entry.pageKey === CANDIDATE_KEY
+  )) {
     issues.push(`${path} has ${count} items. Lists of 3 or more must use bullets.`)
   }
 
@@ -112,6 +154,8 @@ function validateGeneratedPage(page, existingPages = {}) {
 
 module.exports = {
   validateGeneratedPage,
+  findBrokenTargets,
   BANNED_TERMS,
   CANDIDATE_KEY,
+  PROBE_KEY,
 }

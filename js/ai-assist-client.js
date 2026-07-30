@@ -75,6 +75,7 @@
    * Applying a response from a server the reviewer has since navigated away
    * from would attribute one deployment's output to another.
    * @param {string} requestApiUrl
+   * @returns {void}
    */
   function assertEndpointUnchanged(requestApiUrl) {
     if (readConfig().apiUrl !== requestApiUrl) {

@@ -14,6 +14,9 @@ const {
   PAGE_OUTPUT_SCHEMA,
   PAGE_TYPES,
   SECTION_COMPONENTS,
+  generateRequestSchema,
+  measureDepth,
+  MAX_PAGE_DEPTH,
 } = require('../build_scripts/ai/schemas')
 const { validateGeneratedPage } = require('../build_scripts/ai/validate-output')
 
@@ -72,7 +75,9 @@ describe('AI output schema shape', () => {
 describe('AI output schema agrees with the Zod page schema', () => {
   test('section components match the Zod enum exactly', () => {
     // The drift this file exists to catch: add a component to one, not the other.
-    const zodComponents = sectionSchema.shape.component.unwrap()._def.values
+    // `.options` is ZodEnum's public accessor; `_def.values` is the same list
+    // reached through internals Zod makes no stability promise about.
+    const zodComponents = sectionSchema.shape.component.unwrap().options
     expect([...SECTION_COMPONENTS].sort()).toEqual([...zodComponents].sort())
     expect(PAGE_OUTPUT_SCHEMA.properties.sections.items.properties.component.enum).toEqual(
       SECTION_COMPONENTS
@@ -242,5 +247,55 @@ describe('validateGeneratedPage', () => {
       ],
     }
     expect(validateGeneratedPage(page).issues.join(' ')).toContain('shall')
+  })
+})
+
+describe('request bounds', () => {
+  const request = (page) => generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
+
+  test('accepts a request with no page at all', () => {
+    expect(generateRequestSchema.safeParse({ task: 'content', prompt: 'x' }).success).toBe(true)
+  })
+
+  test('accepts every real page in this repo as grounding', () => {
+    // The caps exist to stop abuse, not to reject the tool's own content. If
+    // this fails, the "use the current page as context" checkbox has silently
+    // stopped working for some page.
+    const { loadPageData } = require('../build_scripts/load-pages')
+    for (const [key, page] of Object.entries(loadPageData().pages)) {
+      expect(`${key}: ${request(page).success}`).toBe(`${key}: true`)
+    }
+  })
+
+  test('rejects a page that serializes past the size cap', () => {
+    expect(request({ filler: 'x'.repeat(200_000) }).success).toBe(false)
+  })
+
+  test('rejects a page nested past the depth cap', () => {
+    let nested = { end: true }
+    for (let i = 0; i < MAX_PAGE_DEPTH + 5; i += 1) nested = { nested }
+    expect(request(nested).success).toBe(false)
+  })
+
+  test('rejects a circular page rather than throwing on it', () => {
+    const circular = { title: 'Loop' }
+    circular.self = circular
+    expect(request(circular).success).toBe(false)
+  })
+
+  test('measures depth without recursing on the input', () => {
+    // Deliberately deeper than any call stack would survive recursively: the
+    // guard must not be the denial of service it exists to prevent.
+    let nested = { end: true }
+    for (let i = 0; i < 200_000; i += 1) nested = { nested }
+    expect(measureDepth(nested, MAX_PAGE_DEPTH)).toBeGreaterThan(MAX_PAGE_DEPTH)
+  })
+
+  test('counts a flat object as depth 1', () => {
+    expect(measureDepth({ a: 1, b: 'two' }, MAX_PAGE_DEPTH)).toBe(1)
+  })
+
+  test('counts nesting through arrays, not just objects', () => {
+    expect(measureDepth({ sections: [{ steps: [{ title: 'x' }] }] }, MAX_PAGE_DEPTH)).toBe(5)
   })
 })

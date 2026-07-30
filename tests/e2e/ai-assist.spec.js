@@ -220,6 +220,68 @@ test.describe('AI assist panel', () => {
     expect(hasGenerated).toBe(false)
   })
 
+  test('preview links do not navigate the real mockup', async ({ page }) => {
+    // renderPageMain emits the same data-render-target buttons the live page
+    // uses, and the click handler in js/page-render.js is bound to `document` —
+    // so without neutralizing them, clicking a link inside a DRAFT would move
+    // the reviewer off the page they were reviewing.
+    await stubAiApi(page, {
+      generate: {
+        ...VALID_RESULT,
+        result: {
+          ...VALID_RESULT.result,
+          sections: [
+            {
+              heading: 'Related pages',
+              karl: 'Related section.',
+              cards: [{ title: 'Report rats and mice', target: 'rodentsReport', karl: 'Card.' }],
+            },
+          ],
+        },
+      },
+    })
+    await gotoFresh(page)
+    const keyBefore = await page.locator('#pageSelect').inputValue()
+
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+    await page.fill('#aiAssistPrompt', 'Draft a page with a related link.')
+    await page.click('#aiAssistGenerate')
+    await expect(page.locator('.ai-assist-preview')).toBeVisible()
+
+    const previewLink = page.locator('.ai-assist-preview [data-render-inert]').first()
+    await expect(previewLink).toBeVisible()
+    // The live target attribute must be gone, not merely ignored.
+    await expect(page.locator('.ai-assist-preview [data-render-target]')).toHaveCount(0)
+
+    // Dispatched rather than clicked: the button also carries aria-disabled,
+    // so a normal click never reaches it. This asserts the stronger property —
+    // that even a click which does get through leaves the mockup alone,
+    // because the document-level handler has no target to navigate to.
+    await previewLink.dispatchEvent('click')
+    await expect(page.locator('#pageSelect')).toHaveValue(keyBefore)
+  })
+
+  test('keeps the prompt when a generation fails', async ({ page }) => {
+    await stubAiApi(page, {
+      generateStatus: 500,
+      generate: { error: 'Something broke upstream.' },
+    })
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+
+    const prompt = 'Draft an Information page about bed bug reporting.'
+    await page.fill('#aiAssistPrompt', prompt)
+    await page.click('#aiAssistGenerate')
+
+    await expect(page.locator('.ai-assist-error')).toBeVisible()
+    // The panel re-renders on every state change, which replaces the textarea.
+    // Losing the request on a failure would make the reviewer retype it to
+    // retry — worst exactly when retrying is what they want to do.
+    await expect(page.locator('#aiAssistPrompt')).toHaveValue(prompt)
+  })
+
   test('opens from the keyboard shortcut', async ({ page }) => {
     await gotoFresh(page)
     await page.keyboard.press('4')

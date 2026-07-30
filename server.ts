@@ -11,7 +11,7 @@ import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 // @ts-ignore - plain JS modules, CommonJS; the AI assist service (see below).
 import { generateContent, getCapabilities, listModels } from "./build_scripts/ai/index.js"
 // @ts-ignore - plain JS module, CommonJS.
-import { generateRequestSchema } from "./build_scripts/ai/schemas.js"
+import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/ai/schemas.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { RefusalError } from "./build_scripts/ai/provider-anthropic.js"
 
@@ -266,6 +266,15 @@ async function handleReviewStateApi(req: Request, url: URL): Promise<Response> {
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ""
 
+/**
+ * Whole-request budget for a generation, covering both validation attempts and
+ * every SDK-level retry inside them. Four minutes is generous for one page at
+ * high effort and still well under the client's own 180s-per-attempt patience,
+ * so the browser gives up first in the normal case and this only catches a
+ * genuinely wedged upstream.
+ */
+const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS ?? 240_000)
+
 /** Map a thrown error to a status code and a message worth showing a reviewer. */
 function aiErrorResponse(error: unknown): Response {
   if (error instanceof RefusalError) {
@@ -275,6 +284,13 @@ function aiErrorResponse(error: unknown): Response {
       { error: error.message, category: error.category, explanation: error.explanation },
       422
     )
+  }
+  if ((error as { name?: string })?.name === "AbortError") {
+    // The reviewer cancelled or navigated away, or the request hit the timeout
+    // below. Expected, not a fault: returning it through the generic branch
+    // would log every cancelled generation as a server error and make a real
+    // failure impossible to spot in the log.
+    return jsonResponse({ error: "Generation was cancelled or timed out." }, 499)
   }
   const status = (error as { status?: number })?.status
   if (typeof status === "number" && status >= 400 && status < 600) {
@@ -334,9 +350,31 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
   if (url.pathname === "/api/ai/generate" && req.method === "POST") {
     if (!ANTHROPIC_API_KEY) return noProvider()
 
+    // Refuse an oversized body BEFORE reading it. The Zod schema bounds `page`,
+    // but only after req.json() has already buffered and parsed the whole
+    // payload — so without this the cheapest way to burn server memory is a
+    // request the validator was always going to reject.
+    const declaredLength = Number(req.headers.get("content-length") ?? Number.NaN)
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+      return jsonResponse(
+        { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
+        413
+      )
+    }
+
     let body: unknown
     try {
-      body = await req.json()
+      // Content-Length is a claim, not a guarantee — a chunked or lying client
+      // sends no usable header. Read as text against the same cap so the limit
+      // holds either way, then parse.
+      const raw = await req.text()
+      if (raw.length > MAX_REQUEST_BODY_BYTES) {
+        return jsonResponse(
+          { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
+          413
+        )
+      }
+      body = JSON.parse(raw)
     } catch {
       return jsonResponse({ error: "Request body must be valid JSON." }, 400)
     }
@@ -349,10 +387,18 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
       return jsonResponse({ error: "Invalid request.", issues: parsed.error.issues }, 400)
     }
 
+    // Two cancellation sources, combined. req.signal stops an abandoned
+    // generation from costing tokens when the reviewer navigates away or hits
+    // cancel; the timeout bounds the case where the client stays connected but
+    // the upstream never answers. Without it the SDK's ~10-minute default
+    // request timeout, multiplied by its retries and by our own validation
+    // retry, leaves a request able to occupy the server for far longer than
+    // any reviewer would wait.
+    const timeout = AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)
+    const signal = AbortSignal.any([req.signal, timeout])
+
     try {
-      // req.signal aborts the upstream call when the reviewer navigates away or
-      // hits cancel, so an abandoned generation stops costing tokens.
-      const result = await generateContent({ ...parsed.data, signal: req.signal })
+      const result = await generateContent({ ...parsed.data, signal })
       return jsonResponse(result, 200)
     } catch (error) {
       return aiErrorResponse(error)

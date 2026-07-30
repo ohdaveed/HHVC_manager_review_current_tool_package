@@ -21,6 +21,12 @@
     busy: false,
     result: null,
     error: '',
+    // The reviewer's request text, mirrored here on every render. The panel
+    // re-renders wholesale on any state change, which replaces the textarea —
+    // so without this, clicking Generate would blank the box, and a refusal,
+    // timeout, or cancel would take the whole request down with it.
+    prompt: '',
+    includePage: true,
   }
 
   const escapeHtml = (value) => window.utils.escapeHtml(value)
@@ -117,9 +123,9 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
         <label class="field-help" for="aiAssistPrompt">What should the draft cover?</label>
         <textarea id="aiAssistPrompt" rows="4"
           placeholder="Draft an Information page explaining what happens after a bed bug report."
-          ${disabled ? 'disabled' : ''}></textarea>
+          ${disabled ? 'disabled' : ''}>${escapeHtml(state.prompt)}</textarea>
         <label class="ai-assist-checkbox">
-          <input type="checkbox" id="aiAssistIncludePage" checked ${disabled ? 'disabled' : ''} />
+          <input type="checkbox" id="aiAssistIncludePage"${state.includePage ? ' checked' : ''} ${disabled ? 'disabled' : ''} />
           <span>Use the page open in the mockup as context</span>
         </label>
         <div class="ai-assist-actions">
@@ -207,6 +213,31 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
     return panel
   }
 
+  /**
+   * Stop preview links from navigating the real mockup.
+   *
+   * renderPageMain emits the same `data-render-target` buttons the live page
+   * uses, and the click handler in js/page-render.js is bound to `document` —
+   * so a card or inline link in a DRAFT would call window.renderPage() and move
+   * the reviewer off the page they were reviewing. Rewriting the attribute to
+   * `data-render-inert` keeps the button in the same handler branch (so the
+   * click is still swallowed rather than doing something else surprising) while
+   * leaving it with no target to navigate to. Accordion toggles are untouched:
+   * they resolve within the preview's own DOM and are worth keeping usable.
+   * @param {Element} panel
+   * @returns {void}
+   */
+  function neutralizePreviewLinks(panel) {
+    const preview = panel.querySelector('.ai-assist-preview')
+    if (!preview) return
+    for (const node of preview.querySelectorAll('[data-render-target]')) {
+      node.removeAttribute('data-render-target')
+      node.setAttribute('data-render-inert', '')
+      node.setAttribute('aria-disabled', 'true')
+      node.title = 'Preview only — this link does not navigate.'
+    }
+  }
+
   /** Render everything. Cheap enough to redo wholesale on any state change. */
   function renderPanel() {
     const panel = mountPanel()
@@ -222,6 +253,7 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
       ${renderUnavailable()}
       ${renderForm()}
       ${renderResult()}`
+    neutralizePreviewLinks(panel)
   }
 
   const api = {
@@ -232,6 +264,7 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
     buildPageModuleSource,
     mountPanel,
     renderPanel,
+    neutralizePreviewLinks,
     getHost,
   }
 

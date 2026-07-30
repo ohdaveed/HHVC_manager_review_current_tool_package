@@ -67,6 +67,9 @@ const stub = {
   requests: [],
 }
 
+/** Fixed per-call usage, so a retried generation's total is checkable. */
+const STUB_USAGE = { input_tokens: 10, output_tokens: 20 }
+
 function messageResponse(object) {
   return {
     id: 'msg_stub',
@@ -75,7 +78,7 @@ function messageResponse(object) {
     model: 'claude-opus-5',
     content: [{ type: 'text', text: JSON.stringify(object) }],
     stop_reason: 'end_turn',
-    usage: { input_tokens: 10, output_tokens: 20 },
+    usage: { ...STUB_USAGE },
   }
 }
 
@@ -246,6 +249,54 @@ describe('AI assist API (server.ts)', () => {
       const res = await post({ task: 'content', prompt: '' })
       expect(res.status).toBe(400)
     })
+
+    test('rejects a body larger than the cap with 413, not a 400 after parsing it', async () => {
+      // The point is the status: a 413 means the server refused the payload,
+      // where a 400 would mean it buffered and parsed the whole thing first
+      // and only then decided it was too big.
+      const res = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { filler: 'x'.repeat(200_000) },
+      })
+      expect(res.status).toBe(413)
+      expect((await res.json()).error).toContain('bytes or fewer')
+    })
+
+    test('rejects an oversized page even when the prompt is within its own cap', async () => {
+      // `prompt` was always capped at 8000 characters; `page` used to be
+      // unbounded and is serialized into the provider prompt just the same, so
+      // without its own limit the character cap was decorative.
+      const res = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { sections: [{ heading: 'x'.repeat(100_000) }] },
+      })
+      expect(res.status).toBe(400)
+      expect(JSON.stringify((await res.json()).issues)).toContain('serialize')
+    })
+
+    test('rejects a deeply nested page', async () => {
+      let nested = { end: true }
+      for (let i = 0; i < 40; i++) nested = { nested }
+      const res = await post({ task: 'content', prompt: 'Draft a page.', page: nested })
+      expect(res.status).toBe(400)
+      expect(JSON.stringify((await res.json()).issues)).toContain('nest')
+    })
+
+    test('still accepts a real page from this repo as grounding', async () => {
+      // The caps must not reject anything the tool itself displays, or the
+      // "use the current page as context" checkbox silently stops working on
+      // the largest pages — exactly the ones where context helps most.
+      const { loadPageData } = require('../build_scripts/load-pages')
+      const pages = loadPageData().pages
+      const largest = Object.values(pages).sort(
+        (a, b) => JSON.stringify(b).length - JSON.stringify(a).length
+      )[0]
+      stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      const res = await post({ task: 'content', prompt: 'Draft a page.', page: largest })
+      expect(res.status).toBe(200)
+    })
   })
 
   describe('generation', () => {
@@ -313,6 +364,31 @@ describe('AI assist API (server.ts)', () => {
       expect(retryPrompt).toContain('must use bullets')
     })
 
+    test('sends the rejected draft back with the failures, not just the failures', async () => {
+      stub.queue = [{ body: messageResponse(INVALID_PAGE) }, { body: messageResponse(VALID_PAGE) }]
+      await post({ task: 'content', prompt: 'Draft a page.' })
+
+      // Each API call is stateless, so "fix these and change nothing else" is
+      // only followable if the thing to change travels with the instruction.
+      // Without it the retry regenerates from scratch and loses whatever the
+      // first attempt already got right.
+      const retryPrompt = stub.requests[1].messages[0].content
+      expect(retryPrompt).toContain('previous_draft')
+      expect(retryPrompt).toContain('You get a result.')
+    })
+
+    test('reports the token usage of every attempt, not just the last', async () => {
+      stub.queue = [{ body: messageResponse(INVALID_PAGE) }, { body: messageResponse(VALID_PAGE) }]
+      const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
+
+      expect(body.attempts).toBe(2)
+      // The stub reports a fixed usage per call, so a retried generation must
+      // total two calls' worth. Reporting only the final call would understate
+      // the spend of exactly the requests that cost the most.
+      expect(body.usage.output_tokens).toBe(2 * STUB_USAGE.output_tokens)
+      expect(body.usage.input_tokens).toBe(2 * STUB_USAGE.input_tokens)
+    })
+
     test('returns the draft with its issues when both attempts fail', async () => {
       stub.queue = [
         { body: messageResponse(INVALID_PAGE) },
@@ -358,6 +434,31 @@ describe('AI assist API (server.ts)', () => {
       const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
       expect(body.valid).toBe(false)
       expect(body.issues.join(' ')).toContain('thisKeyDoesNotExist')
+    })
+
+    test('flags a link to the validator’s own sentinel key', async () => {
+      // The draft is filed under a sentinel so its internal links can resolve —
+      // which used to make that sentinel a resolvable target too. A card
+      // pointing at it passed every check while being inert in the downloaded
+      // module, which is named from the page's slug and never from the
+      // sentinel.
+      const withSelfTarget = {
+        ...VALID_PAGE,
+        sections: [
+          {
+            heading: 'Related pages',
+            karl: 'Related section.',
+            cards: [{ title: 'Some other page', target: '__generated__' }],
+          },
+        ],
+      }
+      stub.queue = [
+        { body: messageResponse(withSelfTarget) },
+        { body: messageResponse(withSelfTarget) },
+      ]
+      const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
+      expect(body.valid).toBe(false)
+      expect(body.issues.join(' ')).toContain('__generated__')
     })
 
     test('accepts a link to a page key that really exists', async () => {

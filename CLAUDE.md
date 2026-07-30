@@ -32,7 +32,7 @@ bun install                  # install deps (required before first `dev` — ind
 bun run dev                   # dev server with --watch at http://127.0.0.1:8080
 bun run start                 # dev server without --watch
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 10 unit-test files in tests/
+bun run test                  # bun test over the 13 unit-test files in tests/
 bun run test:e2e              # playwright test (9 specs in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -51,18 +51,21 @@ bind (`server.ts` reads `HOST`/`PORT`, defaulting to `127.0.0.1:8080`).
 `start-dev.sh` kills any stale **listener** on the port before starting.
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs ten Bun unit-test files under `tests/`: `utils`,
-`data-validation`, `page-render`, `csv`, `review-state-schema`,
-`reading-level`, `index-html-checks`, `review-merge`, `review-api-server`
-(which spawns `server.ts` as a subprocess against a temp SQLite DB and
-exercises auth/merge/isolation over real HTTP), and `review-state-sync` —
-177 tests at time of writing. `tests/helpers/load-scripts.js` is the harness
-that evaluates the classic `<script>` files and hands back a context object.
+wrong). `bun run test` runs thirteen Bun unit-test files under `tests/`:
+`utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
+`reading-level`, `plain-language`, `index-html-checks`, `review-merge`,
+`review-api-server` (which spawns `server.ts` as a subprocess against a temp
+SQLite DB and exercises auth/merge/isolation over real HTTP),
+`review-state-sync`, `ai-assist-schema`, and `ai-assist-server` (which spawns
+`server.ts` against a stub Anthropic endpoint, so the AI routes are covered
+without a key or a paid call) — 317 tests at time of writing.
+`tests/helpers/load-scripts.js` is the harness that evaluates the classic
+`<script>` files and hands back a context object.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — nine spec files:
-eight UI-driven (navigation, editor panel, review workflow, review queue,
-import/export, keyboard shortcuts, sitemap/workspace, accessibility) plus the
-original API-level `review-import-export` round-trip, sharing plain helper
+`bun run test:e2e` drives Playwright over `tests/e2e/` — ten spec files:
+nine UI-driven (navigation, editor panel, review workflow, review queue,
+import/export, keyboard shortcuts, sitemap/workspace, accessibility, AI assist)
+plus the original API-level `review-import-export` round-trip, sharing plain helper
 functions in `tests/e2e/helpers.js` (no fixture framework). Playwright's
 `webServer` block starts `bun run start` on `:8080` itself. In a sandbox with
 a pre-installed Chromium, point Playwright at it instead of downloading:
@@ -535,6 +538,34 @@ it, and it fails closed rather than open.
   `claude-opus-5`), `AI_EFFORT` (default `high`), and `ANTHROPIC_BASE_URL`
   (only used to point the test suite at a stub). Put them in `.env.local`,
   which is gitignored and must stay that way.
+- **Every input is bounded, and the request is bounded end to end.** `prompt`
+  caps at 8000 characters, but `page` is serialized into the provider prompt
+  just the same — so it carries its own limits (96 KB serialized, 12 levels
+  deep) and the whole body is refused at 413 above 128 KB **before** `req.json()`
+  buffers it. Content-Length is only a claim, so the body is also read as text
+  against the same cap for a chunked or lying client. Depth is measured
+  iteratively, never recursively: a recursive walk over attacker-supplied
+  nesting is itself the denial of service it is meant to detect. Upstream, the
+  SDK client sets `maxRetries: 1` and a 150s per-call timeout, and the route
+  combines `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)`
+  (default 240s) — otherwise two validation attempts times the SDK's default
+  two retries times its ~10-minute default timeout leaves one click able to
+  hold a request open for far longer than anyone waits. A cancelled or
+  timed-out request answers 499 rather than being logged as a server fault.
+- **The retry carries the rejected draft, not just the failures.** Each API
+  call is stateless, so "fix these and change nothing else" is only followable
+  if the thing to change travels with the instruction; without it the retry
+  regenerates from scratch and loses whatever the first attempt got right.
+  Usage is summed across attempts for the same reason it matters at all —
+  reporting only the last call understates exactly the requests that cost most.
+- **The draft is filed under a sentinel key twice, under two different
+  sentinels.** The link checks in `data-checks.js` take one `pages` object and
+  use it both for what to walk and for which targets resolve, so filing the
+  draft under `__generated__` made that string a resolvable target — a card
+  pointing at it passed every check while being inert in the downloaded module.
+  Running each check under `__generated__` and `__generated_probe__` and
+  unioning the broken targets closes that without duplicating any traversal: a
+  link to either sentinel resolves in one pass and breaks in the other.
 - **Validation is the point of the feature.** `build_scripts/ai/validate-output.js`
   runs a generated page through the exact rules CI enforces —
   `build_scripts/schema.js`, the `build_scripts/data-checks.js` invariants

@@ -18,41 +18,82 @@
   let mounted = false
   /** In-flight generation, so Cancel has something to abort. */
   let controller = null
+  /**
+   * Monotonic stamp for capability requests. Saving settings twice puts two
+   * GETs in flight with no ordering guarantee, and the older one finishing
+   * last would overwrite the newer server's capabilities with its own — quite
+   * possibly a `null` from an endpoint-changed error, leaving the panel
+   * disabled for a server that is actually fine. Only the newest request may
+   * write state.
+   */
+  let capabilitiesGeneration = 0
 
+  /**
+   * @param {string} message
+   * @param {string} [type]
+   * @returns {void}
+   */
   function toast(message, type) {
     if (typeof showToast === 'function') showToast(message, type)
   }
 
-  /** The page open in the mockup, sent as grounding when the box is ticked. */
+  /**
+   * The page open in the mockup, sent as grounding when the box is ticked.
+   * @returns {object|null}
+   */
   function getCurrentPage() {
     const key = window.utils?.getCurrentKey?.()
     return (window.HHVC_DATA?.pages || {})[key] || null
   }
 
-  /** Ask the server what it supports, then re-render whatever that implies. */
+  /**
+   * Copy the form's live values into panel state.
+   *
+   * renderPanel replaces the whole panel, so anything typed but not mirrored
+   * here is gone on the next render. Called before every state change that
+   * triggers one.
+   * @returns {void}
+   */
+  function captureForm() {
+    const promptField = document.getElementById('aiAssistPrompt')
+    if (promptField) state.prompt = promptField.value || ''
+    const includeField = document.getElementById('aiAssistIncludePage')
+    if (includeField) state.includePage = Boolean(includeField.checked)
+  }
+
+  /**
+   * Ask the server what it supports, then re-render whatever that implies.
+   * @returns {Promise<void>}
+   */
   async function refreshCapabilities() {
+    const generation = ++capabilitiesGeneration
     if (!client.isConfigured()) {
       state.capabilities = null
       render.renderPanel()
       return
     }
     const result = await client.fetchCapabilities()
+    // A later refresh started while this one was in flight, so this answer is
+    // about a server the panel has already moved on from. Dropping it is
+    // always safe: the newer request writes the state that matters.
+    if (generation !== capabilitiesGeneration) return
     state.capabilities = result.ok ? result.capabilities : null
     state.error = result.ok ? '' : result.error
     render.renderPanel()
   }
 
+  /** @returns {Promise<void>} */
   async function handleGenerate() {
     if (state.busy) return
-    const promptField = document.getElementById('aiAssistPrompt')
-    const prompt = (promptField?.value || '').trim()
+    captureForm()
+    const prompt = state.prompt.trim()
     if (!prompt) {
       state.error = 'Describe what the draft should cover first.'
       render.renderPanel()
       return
     }
 
-    const includePage = document.getElementById('aiAssistIncludePage')?.checked
+    const includePage = state.includePage
     controller = new AbortController()
     state.busy = true
     state.error = ''
@@ -88,7 +129,9 @@
     )
   }
 
+  /** @returns {void} */
   function handleSaveSettings() {
+    captureForm()
     const apiUrl = document.getElementById('aiAssistApiUrl')?.value || ''
     const apiToken = document.getElementById('aiAssistApiToken')?.value || ''
     if (!client.writeConfig({ apiUrl, apiToken })) return
@@ -101,6 +144,7 @@
     refreshCapabilities()
   }
 
+  /** @returns {void} */
   function handleCopyJson() {
     if (!state.result) return
     const copy = window.ReviewUx?.exportImport?.copyText
@@ -108,6 +152,7 @@
     copy(JSON.stringify(state.result.result, null, 2))
   }
 
+  /** @returns {void} */
   function handleDownload() {
     if (!state.result) return
     const page = state.result.result
@@ -124,6 +169,8 @@
    * One delegated listener on document, bound at init. The panel does not
    * exist until the tab is first opened, so binding per-element would have to
    * be redone after every re-render.
+   * @param {Event} event
+   * @returns {void}
    */
   function handleClick(event) {
     const target = event.target
@@ -136,7 +183,10 @@
     return undefined
   }
 
-  /** Called by setWorkspaceTab the first time the AI assist tab opens. */
+  /**
+   * Called by setWorkspaceTab the first time the AI assist tab opens.
+   * @returns {void}
+   */
   function ensureRendered() {
     if (!mounted) {
       mounted = true
@@ -144,9 +194,12 @@
       refreshCapabilities()
       return
     }
+    // Re-opening the tab re-renders, which would blank an unsent prompt.
+    captureForm()
     render.renderPanel()
   }
 
+  /** @returns {void} */
   function init() {
     document.addEventListener('click', handleClick)
     window.__mountAiAssistOnTabOpen = ensureRendered
@@ -162,5 +215,6 @@
     ensureRendered,
     refreshCapabilities,
     getCurrentPage,
+    captureForm,
   }
 })()

@@ -37,7 +37,7 @@ bun install                 # install deps (required before first `dev`)
 bun run dev                  # dev server with --watch at http://127.0.0.1:8080
 bun run start                # dev server without --watch
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 10 unit-test files in tests/
+bun run test                  # Bun test runner over the 13 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -54,16 +54,19 @@ bun run vendor:browser        # rebuild js/vendor/{fuse,defu}.js IIFE bundles fr
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs ten Bun unit-test files under `tests/` — `utils`,
-`data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
-`index-html-checks`, `review-merge`, `review-api-server` (which spawns
-`server.ts` as a subprocess against a temp SQLite DB), and `review-state-sync`
+isn't). `bun run test` runs thirteen Bun unit-test files under `tests/` —
+`utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
+`reading-level`, `plain-language`, `index-html-checks`, `review-merge`,
+`review-api-server` (which spawns `server.ts` as a subprocess against a temp
+SQLite DB), `review-state-sync`, `ai-assist-schema`, and `ai-assist-server`
+(which spawns `server.ts` against a stub Anthropic endpoint, so the AI routes
+are covered without a key or a paid call)
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-nine spec files — eight UI-driven ones covering navigation, editor panel,
+ten spec files — nine UI-driven ones covering navigation, editor panel,
 review workflow, review queue, import/export, keyboard shortcuts,
-sitemap/workspace, and accessibility, plus the original `review-import-export`
-API-level round-trip — sharing plain helper functions in
+sitemap/workspace, accessibility, and AI assist, plus the original
+`review-import-export` API-level round-trip — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework). In a sandbox with a
 pre-installed Chromium, point Playwright at it instead of downloading:
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e`.
@@ -427,6 +430,27 @@ by default, failing closed.
 - **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
   `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only). Keep them in
   the gitignored `.env.local`.
+- **Every input is bounded, and the request is bounded end to end.** `prompt`
+  caps at 8000 characters, but `page` is serialized into the provider prompt
+  just the same — so it carries its own limits (96 KB serialized, 12 levels
+  deep) and the whole body is refused at 413 above 128 KB **before**
+  `req.json()` buffers it. Content-Length is only a claim, so the body is also
+  read as text against the same cap. Depth is measured iteratively, never
+  recursively: a recursive walk over attacker-supplied nesting is itself the
+  denial of service it exists to detect. Upstream, the SDK client sets
+  `maxRetries: 1` and a 150s per-call timeout, and the route combines
+  `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default
+  240s). A cancelled or timed-out request answers 499, not a logged 500.
+- **The retry carries the rejected draft, not just the failures.** Each API
+  call is stateless, so "fix these and change nothing else" is only followable
+  if the draft travels with the instruction. Usage is summed across attempts
+  for the same reason: reporting only the last call understates exactly the
+  requests that cost the most.
+- **The draft is checked under two different sentinel keys.** `data-checks.js`
+  uses one `pages` object both for what to walk and for which targets resolve,
+  so filing the draft under `__generated__` made that string a resolvable
+  target. Running each check under `__generated__` and `__generated_probe__`
+  and unioning the broken targets closes that with no duplicated traversal.
 - **Validation is the feature.** `build_scripts/ai/validate-output.js` runs a
   generated page through the exact rules CI enforces — `build_scripts/schema.js`,
   the `data-checks.js` invariants, and `js/plain-language.js`'s mandates — then

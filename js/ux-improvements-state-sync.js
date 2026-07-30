@@ -438,6 +438,36 @@
    * @param {object} page
    * @returns {string}
    */
+  /**
+   * The lowest manual section cited by any failing check.
+   *
+   * Not `suggestions[0]`: the checks are pushed in roughly section order, but
+   * `reading-target-match` (7.2.1) is appended last, so a page failing a 7.8
+   * rule plus the reading target would announce "section 7.8 onward" directly
+   * above a 7.2.1 finding. Compared segment by segment as numbers so 7.10 sorts
+   * after 7.9 rather than before it, which a string compare would get wrong.
+   * @param {Array<{section: string}>} checks
+   * @returns {string}
+   */
+  function earliestSection(checks) {
+    const parts = (section) =>
+      String(section || '')
+        .split('.')
+        .map(Number)
+    return checks
+      .map((check) => check.section)
+      .reduce((lowest, section) => {
+        const a = parts(section)
+        const b = parts(lowest)
+        for (let i = 0; i < Math.max(a.length, b.length); i++) {
+          const left = a[i] ?? 0
+          const right = b[i] ?? 0
+          if (left !== right) return left < right ? section : lowest
+        }
+        return lowest
+      })
+  }
+
   function renderPlainLanguageAdvice(page) {
     const analysis = window.plainLanguage?.analyzePlainLanguage?.(page)
     if (!analysis) return ''
@@ -452,7 +482,7 @@
         <p class="review-decision-note">
           Advisory only — these do not count toward the checks above. Rules come from the HHVC
           Web Governance and Content Standards Manual, section ${escapeHtml(
-            suggestions[0].section
+            earliestSection(suggestions)
           )} onward.
           Average sentence length is ${escapeHtml(String(analysis.metrics.meanSentenceWords))}
           words across ${escapeHtml(String(analysis.metrics.sentenceCount))} sentences.
