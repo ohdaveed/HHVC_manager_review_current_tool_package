@@ -91,7 +91,8 @@ async function openWorkspace(page) {
 }
 
 // Open a workspace tab by its data-workspace-tab value: overview | checks |
-// sitemap | help. Queue, sitemap, and help panels mount lazily on first open.
+// sitemap | assist | help. Queue, sitemap, assist, and help panels mount
+// lazily on first open.
 async function openWorkspaceTab(page, tab) {
   await openWorkspace(page)
   await page.click(`.review-workspace-tab[data-workspace-tab="${tab}"]`)

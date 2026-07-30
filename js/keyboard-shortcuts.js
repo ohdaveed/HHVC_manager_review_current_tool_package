@@ -15,7 +15,12 @@
     { keys: ['1'], description: 'Open Overview workspace tab' },
     { keys: ['2'], description: 'Open Page checks workspace tab' },
     { keys: ['3'], description: 'Open Sitemap workspace tab' },
-    { keys: ['4'], description: 'Open Help workspace tab' },
+    // Numbered left to right across the tab strip, so the AI assist tab takes
+    // 4 and Help moves to 5. Matching visual order matters more than keeping
+    // Help on 4: the Help panel renders this list, so the mapping documents
+    // itself the moment anyone looks for it.
+    { keys: ['4'], description: 'Open AI assist workspace tab' },
+    { keys: ['5'], description: 'Open Help workspace tab' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
     { keys: ['r'], description: 'Revise and resubmit (current or selected)' },
@@ -248,6 +253,10 @@
         openWorkspaceTab('sitemap')
         break
       case '4':
+        event.preventDefault()
+        openWorkspaceTab('assist')
+        break
+      case '5':
         event.preventDefault()
         openWorkspaceTab('help')
         break
