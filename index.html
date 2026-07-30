@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/ux-improvements.css" />
     <link rel="stylesheet" href="css/interactive-sitemap.css" />
+    <link rel="stylesheet" href="css/ai-assist.css" />
   </head>
   <body>
     <div class="app">
@@ -259,6 +260,17 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabAssist"
+              data-workspace-tab="assist"
+              aria-selected="false"
+              aria-controls="reviewWorkspaceAssist"
+            >
+              AI assist
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
               id="reviewWorkspaceTabHelp"
               data-workspace-tab="help"
               aria-selected="false"
@@ -288,6 +300,14 @@
             role="tabpanel"
             aria-labelledby="reviewWorkspaceTabSitemap"
             data-workspace-panel="sitemap"
+            hidden
+          ></div>
+          <div
+            id="reviewWorkspaceAssist"
+            class="review-workspace-panel"
+            role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabAssist"
+            data-workspace-panel="assist"
             hidden
           ></div>
           <div
@@ -335,6 +355,7 @@
     <script src="js/manager-review-export.js"></script>
     <script src="js/review-state-validation.js"></script>
     <script src="js/reading-level.js"></script>
+    <script src="js/plain-language.js"></script>
     <script src="js/review-state-store.js"></script>
     <script src="js/review-merge.js"></script>
     <script src="js/review-state-sync.js"></script>
@@ -352,6 +373,9 @@
     <script src="js/interactive-sitemap-data.js"></script>
     <script src="js/interactive-sitemap-render.js"></script>
     <script src="js/interactive-sitemap.js"></script>
+    <script src="js/ai-assist-client.js"></script>
+    <script src="js/ai-assist-render.js"></script>
+    <script src="js/ai-assist.js"></script>
     <script src="js/keyboard-shortcuts.js"></script>
   </body>
 </html>

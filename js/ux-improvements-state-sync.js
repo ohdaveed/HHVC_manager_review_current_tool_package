@@ -101,13 +101,30 @@
       },
     ]
 
+    // Always pushed, never conditionally skipped.
+    //
+    // This used to be appended only when a grade could be computed, so a page
+    // with too little body text -- or a browser where js/reading-level.js
+    // failed to load -- silently lost a rule instead of failing one. That
+    // shrinks the denominator behind the Overview tab's "checks passed" ratio,
+    // which quietly flatters exactly the pages with the least content. It also
+    // used to pass on `withinTarget !== false`, so an unparseable target
+    // ("Grade six") scored as a pass rather than the data problem it is.
     const readingAnalysis = window.readingLevel?.analyzeReadingLevel?.(page)
-    if (readingAnalysis && readingAnalysis.computed != null) {
-      rules.push({
-        label: 'Computed reading level',
-        pass: readingAnalysis.withinTarget !== false,
-        detail: readingAnalysis.detail,
-      })
+    rules.push({
+      label: 'Computed reading level',
+      pass: readingAnalysis ? readingAnalysis.withinTarget === true : false,
+      detail: readingAnalysis ? readingAnalysis.detail : 'Reading-level module not loaded',
+    })
+
+    // Plain-language rules from the HHVC standards manual (sections 7.2-7.8),
+    // via js/plain-language.js. Only the manual's mandates are scored here;
+    // its advisory rules are rendered separately by renderPageChecksPanel so
+    // ~90 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    const plainLanguage = window.plainLanguage?.analyzePlainLanguage?.(page)
+    for (const check of plainLanguage?.checks || []) {
+      if (check.severity !== 'error') continue
+      rules.push({ label: check.label, pass: check.pass, detail: check.detail })
     }
 
     return rules
@@ -401,6 +418,81 @@
             .join('')}
         </ul>
       </section>
+      ${renderPlainLanguageAdvice(page)}
+    `
+  }
+
+  // How many offending sentences to show per suggestion. A reviewer needs
+  // enough to see the pattern, not every instance -- the full set is available
+  // from window.plainLanguage.analyzePlainLanguage(page).
+  const MAX_ADVICE_OFFENDERS = 5
+
+  /**
+   * Render the manual's advisory plain-language rules (severity 'warning')
+   * as a separate, clearly non-blocking section.
+   *
+   * These are kept out of the scored list on purpose: they are suggestions,
+   * they run to ~90 findings across the 19 pages, and mixing them into the
+   * pass/fail ratio would make every page look broken. Each finding names the
+   * field it came from so it can be acted on rather than just counted.
+   * @param {object} page
+   * @returns {string}
+   */
+  function renderPlainLanguageAdvice(page) {
+    const analysis = window.plainLanguage?.analyzePlainLanguage?.(page)
+    if (!analysis) return ''
+    const suggestions = analysis.checks.filter(
+      (check) => check.severity === 'warning' && !check.pass
+    )
+    if (!suggestions.length) return ''
+
+    return `
+      <section class="compliance-panel plain-language-panel">
+        <h3>Plain-language suggestions</h3>
+        <p class="review-decision-note">
+          Advisory only — these do not count toward the checks above. Rules come from the HHVC
+          Web Governance and Content Standards Manual, section ${escapeHtml(
+            suggestions[0].section
+          )} onward.
+          Average sentence length is ${escapeHtml(String(analysis.metrics.meanSentenceWords))}
+          words across ${escapeHtml(String(analysis.metrics.sentenceCount))} sentences.
+        </p>
+        <ul class="compliance-list">
+          ${suggestions
+            .map(
+              (check) => `
+            <li class="compliance-item warn">
+              <span>
+                <span class="compliance-rule">${escapeHtml(check.label)}</span>
+                <span class="compliance-detail">${escapeHtml(check.detail)}</span>
+                ${
+                  check.offenders.length
+                    ? `<ul class="plain-language-offenders">${check.offenders
+                        .slice(0, MAX_ADVICE_OFFENDERS)
+                        .map(
+                          (offender) => `
+                          <li>
+                            <code>${escapeHtml(offender.path)}</code>
+                            <span>${escapeHtml(offender.text)}</span>
+                            <em>${escapeHtml(offender.note)}</em>
+                          </li>`
+                        )
+                        .join('')}${
+                        check.offenders.length > MAX_ADVICE_OFFENDERS
+                          ? `<li><em>and ${escapeHtml(
+                              String(check.offenders.length - MAX_ADVICE_OFFENDERS)
+                            )} more</em></li>`
+                          : ''
+                      }</ul>`
+                    : ''
+                }
+              </span>
+            </li>
+          `
+            )
+            .join('')}
+        </ul>
+      </section>
     `
   }
 
@@ -412,6 +504,7 @@
     getRuleResultsFor,
     getRuleResults,
     renderPageChecksPanel,
+    renderPlainLanguageAdvice,
     collectCurrentPageReviewState,
     saveCurrentPageToLocalStorage,
     clearReviewFieldsForNewPage,

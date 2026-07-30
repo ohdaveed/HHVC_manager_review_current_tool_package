@@ -45,7 +45,12 @@ test.describe('keyboard shortcuts', () => {
     await page.keyboard.press('2')
     await expect(page.locator('#reviewWorkspaceTabChecks')).toHaveAttribute('aria-selected', 'true')
 
+    // 4 is the AI assist tab and 5 is Help — the number keys run left to right
+    // across the tab strip, so adding a tab before Help shifted Help to 5.
     await page.keyboard.press('4')
+    await expect(page.locator('#reviewWorkspaceTabAssist')).toHaveAttribute('aria-selected', 'true')
+
+    await page.keyboard.press('5')
     await expect(page.locator('#reviewWorkspaceTabHelp')).toHaveAttribute('aria-selected', 'true')
 
     await focusMockPage(page)

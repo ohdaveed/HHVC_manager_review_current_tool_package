@@ -615,6 +615,57 @@
   line-height: 1.35;
 }
 
+/* ==========================================================================
+   Plain-language suggestions
+   Advisory findings from js/plain-language.js, rendered below the scored
+   compliance list. Single-column because each item carries a nested list of
+   offending sentences, which the two-column .compliance-list grid would
+   squeeze into an unreadable width.
+   ========================================================================== */
+
+.plain-language-panel .compliance-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.plain-language-offenders {
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.plain-language-offenders li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.4rem 0.5rem;
+  border-left: 3px solid var(--ux-warning-border);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--ux-panel-bg);
+}
+
+.plain-language-offenders code {
+  color: var(--sfds-slate-3);
+  font-size: 0.7rem;
+  /* The field path (sections[2].steps[0].bullets[1]) is the point of this
+     line: it tells the reviewer exactly which field to edit. Wrap rather than
+     overflow, since deep paths are long and the panel is narrow. */
+  overflow-wrap: anywhere;
+}
+
+.plain-language-offenders span {
+  color: var(--sfds-slate-1);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.plain-language-offenders em {
+  color: var(--sfds-slate-3);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .review-queue input[type='search'] {
   width: 100%;
   border: 1px solid var(--sfds-border);
