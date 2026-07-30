@@ -168,6 +168,47 @@
 
   const HEADING_PREFIXES = ['how to', 'instructions for', 'information about', 'a guide to']
 
+  // Karl components: Button ("Buttons can only be 25 characters long") and the
+  // A-to-Z guide's Bullets entry ("limit to 3-5 bullets").
+  const MAX_BUTTON_CHARS = 25
+  const MAX_BULLETS_PER_LIST = 5
+
+  /**
+   * SF.gov house style, from the Content style guide A-to-Z and "More house
+   * style rules" on the Karl Editor Help Center. These are mechanical and
+   * unambiguous, which is exactly why they belong in a tool rather than in a
+   * reviewer's head. Grouped into one check so a dozen individually-tiny rules
+   * cannot crowd out the substantive findings above.
+   *
+   * Two entries from those pages are deliberately absent. Verb-first button
+   * text needs a verb allowlist, and an incomplete one flagged "Open lookup
+   * tool" as a violation — the same unimplementable-by-allowlist problem that
+   * removed Title Case detection. Bullet terminal punctuation ("no punctuation
+   * within bullets") matches 115 times because every bullet in the repo ends
+   * in a period; that is a house-convention decision to make once, not 115
+   * findings to show a reviewer.
+   */
+  const HOUSE_STYLE_RULES = [
+    // "Avoid using dashes entirely on SF.gov." Hyphens in compound words
+    // ("four-legged") are correct and must not match, so this looks only for
+    // em dashes, en dashes, and a spaced hyphen used as punctuation.
+    { pattern: /[—–]|\s-\s/, note: 'Do not use dashes — rewrite as two sentences' },
+    { pattern: /\.\.\.|…/, note: 'Do not use ellipses' },
+    { pattern: /(^|[^\w&])&([^\w&]|$)/, note: 'Use "and", not "&"' },
+    { pattern: /\b(i\.e\.|e\.g\.|etc\.)/i, note: 'Avoid Latin abbreviations' },
+    { pattern: /\bplease\b/i, note: 'Be direct — do not say "please" in instructions' },
+    { pattern: /\bU\.S\./, note: 'Write "US", not "U.S."' },
+    { pattern: /\bnon-profit\b/i, note: 'Write "nonprofit" as one word' },
+    { pattern: /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/, note: 'Write dates as "January 28, 2026"' },
+    { pattern: /\b\d+(st|nd|rd|th)\b/, note: 'Use cardinal dates ("28", not "28th")' },
+    {
+      pattern: /\(\d{3}\)\s*\d{3}[-.]\d{4}|\b\d{3}\.\d{3}\.\d{4}\b/,
+      note: 'Format phone numbers as 415-555-1212',
+    },
+    { pattern: /\b\d\s?(AM|PM)\b/, note: 'Use lowercase am/pm' },
+    { pattern: /^welcome to\b/i, note: 'Skip the welcome — say what people can do' },
+  ]
+
   // Uppercase tokens that are acronyms, not shouting (7.4.1 bans ALL CAPS).
   const ACRONYMS = new Set([
     'HHVC',
@@ -936,6 +977,98 @@
           : 'One term per concept',
         terminologyHits,
         'error'
+      )
+    )
+
+    // --- SF.gov house style (Content style guide A-to-Z) ---
+    // Verbatim Health Code quotes are exempt for the same reason they are
+    // exempt from the "shall" rule: their ellipses mark elided statutory text
+    // and cannot be edited away without misquoting the code.
+    const houseStyleHits = []
+    for (const unit of units) {
+      if (isVerbatimCodeQuote(unit.text)) continue
+      const clean = stripInline(unit.text)
+      for (const rule of HOUSE_STYLE_RULES) {
+        if (rule.pattern.test(clean)) {
+          houseStyleHits.push({ path: unit.path, text: excerpt(unit.text), note: rule.note })
+        }
+      }
+    }
+    checks.push(
+      makeCheck(
+        'house-style',
+        'SF.gov house style',
+        '7.8',
+        houseStyleHits.length === 0,
+        houseStyleHits.length
+          ? `${houseStyleHits.length} house-style issue(s)`
+          : 'Matches SF.gov house style',
+        houseStyleHits,
+        'warning'
+      )
+    )
+
+    // --- Karl Button component: 25-character limit ---
+    // Length only. The same page also says button text should start with a
+    // verb, which is not checked here -- see HOUSE_STYLE_RULES for why.
+    const buttonHits = []
+    const addButton = (path, label) => {
+      const value = String(label || '').trim()
+      if (value.length > MAX_BUTTON_CHARS) {
+        buttonHits.push({
+          path,
+          text: value,
+          note: `${value.length} characters, limit ${MAX_BUTTON_CHARS}`,
+        })
+      }
+    }
+    if (page && page.primaryCta) addButton('primaryCta', page.primaryCta)
+    ;((page && page.sections) || []).forEach((section, sectionIndex) => {
+      addButton(`sections[${sectionIndex}].button`, section.button)
+      ;(section.steps || []).forEach((step, stepIndex) => {
+        addButton(`sections[${sectionIndex}].steps[${stepIndex}].button`, step.button)
+      })
+    })
+    if (page && page.spotlight) addButton('spotlight.button', page.spotlight.button)
+    checks.push(
+      makeCheck(
+        'button-length',
+        'Button text length',
+        '7.8',
+        buttonHits.length === 0,
+        buttonHits.length
+          ? `${buttonHits.length} button(s) over ${MAX_BUTTON_CHARS} characters`
+          : 'Button text fits Karl’s limit',
+        buttonHits,
+        'error'
+      )
+    )
+
+    // --- A-to-Z guide, Bullets: keep lists to 3-5 items ---
+    // Note this pulls against manual 7.2.2, which pushes prose *into* lists.
+    // Both hold at once: use a list, but split it once it runs long.
+    const listHits = []
+    ;((page && page.sections) || []).forEach((section, sectionIndex) => {
+      const bullets = (section.bullets || []).length
+      if (bullets > MAX_BULLETS_PER_LIST) {
+        listHits.push({
+          path: `sections[${sectionIndex}].bullets`,
+          text: section.heading || '(untitled section)',
+          note: `${bullets} bullets, aim for ${MAX_BULLETS_PER_LIST} or fewer`,
+        })
+      }
+    })
+    checks.push(
+      makeCheck(
+        'list-length',
+        'Bulleted list length',
+        '7.2.2',
+        listHits.length === 0,
+        listHits.length
+          ? `${listHits.length} list(s) over ${MAX_BULLETS_PER_LIST} bullets`
+          : 'Lists stay short',
+        listHits,
+        'warning'
       )
     )
 

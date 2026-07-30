@@ -428,6 +428,104 @@ describe('meta description check', () => {
   })
 })
 
+describe('SF.gov house style', () => {
+  test('flags an em dash, which SF.gov bans outright', () => {
+    const page = makePage({
+      sections: [sectionWith(['An inspector may visit—especially if it is urgent.'])],
+    })
+    const check = checkFor(page, 'house-style')
+    expect(check.pass).toBe(false)
+    expect(check.offenders[0].note).toBe('Do not use dashes — rewrite as two sentences')
+  })
+
+  test('leaves a hyphenated compound word alone', () => {
+    const page = makePage({
+      sections: [sectionWith(['Report four-legged pests in your in-law unit.'])],
+    })
+    expect(checkFor(page, 'house-style').pass).toBe(true)
+  })
+
+  test('flags an ampersand, Latin abbreviation, and "please"', () => {
+    for (const text of [
+      'Rats & mice are covered.',
+      'Bring ID, e.g. a passport.',
+      'Please call 311.',
+    ]) {
+      expect(checkFor(makePage({ sections: [sectionWith([text])] }), 'house-style').pass).toBe(
+        false
+      )
+    }
+  })
+
+  test('flags a slash date and a parenthesised phone number', () => {
+    const page = makePage({
+      sections: [sectionWith(['Rates took effect 7/1/2025.', 'Call (415) 701-2311 for help.'])],
+    })
+    expect(checkFor(page, 'house-style').offenders.length).toBe(2)
+  })
+
+  test('exempts a verbatim Health Code quote, whose ellipsis marks elided text', () => {
+    const page = makePage({
+      sections: [
+        {
+          heading: 'Health code',
+          karl: 'Report table',
+          table: [['Sec. 92(c): All building walls … shall be repaired', 'Keep walls sound.']],
+        },
+      ],
+    })
+    expect(checkFor(page, 'house-style').pass).toBe(true)
+  })
+})
+
+describe('button length', () => {
+  test('flags a button over Karl’s 25-character limit', () => {
+    const page = makePage({
+      sections: [{ heading: 'Act', karl: 'Body block', button: 'View Health Code Article 11' }],
+    })
+    const check = checkFor(page, 'button-length')
+    expect(check.pass).toBe(false)
+    expect(check.offenders[0].note).toBe('27 characters, limit 25')
+  })
+
+  test('accepts a button at exactly the limit', () => {
+    const page = makePage({
+      sections: [{ heading: 'Act', karl: 'Body block', button: 'Report through 311 online' }],
+    })
+    expect(checkFor(page, 'button-length').pass).toBe(true)
+  })
+
+  test('checks step buttons and the page primary CTA too', () => {
+    const page = makePage({
+      primaryCta: 'Report a rodent problem right now',
+      sections: [
+        {
+          heading: 'Act',
+          karl: 'Body block',
+          steps: [{ title: 'Start', button: 'Report this to the State of California' }],
+        },
+      ],
+    })
+    expect(checkFor(page, 'button-length').offenders.length).toBe(2)
+  })
+})
+
+describe('bulleted list length', () => {
+  test('flags a list over five bullets', () => {
+    const page = makePage({
+      sections: [{ heading: 'Steps', karl: 'Body block', bullets: ['a', 'b', 'c', 'd', 'e', 'f'] }],
+    })
+    expect(checkFor(page, 'list-length').pass).toBe(false)
+  })
+
+  test('accepts a list of exactly five bullets', () => {
+    const page = makePage({
+      sections: [{ heading: 'Steps', karl: 'Body block', bullets: ['a', 'b', 'c', 'd', 'e'] }],
+    })
+    expect(checkFor(page, 'list-length').pass).toBe(true)
+  })
+})
+
 describe('reading target recommendation', () => {
   test('flags a Transaction page whose stated target is not Grade 5-6', () => {
     const page = makePage({ type: 'Transaction', reading: 'Grade 7' })
