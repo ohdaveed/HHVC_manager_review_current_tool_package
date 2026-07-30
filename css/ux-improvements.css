@@ -859,7 +859,14 @@
 }
 
 .shortcuts-or {
-  color: var(--sfds-slate-4);
+  /* --sfds-slate-4 (#c9caca) is the BORDER step of the neutral ramp, not a
+     text step: as text on the dialog's white surface it measures 1.60:1,
+     far under WCAG 1.4.3's 4.5:1, so the "or" separating alternative keys
+     was effectively invisible. --text-secondary is the ramp's secondary
+     TEXT step and clears it at 4.86:1 (7.88:1 in dark mode). Caught by the
+     axe color-contrast rule once it was re-enabled in
+     tests/e2e/accessibility.spec.js. */
+  color: var(--text-secondary);
   font-size: 0.7rem;
 }
 

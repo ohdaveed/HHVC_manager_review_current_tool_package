@@ -51,6 +51,14 @@ jobs:
       - name: Vite build + Netlify bundle assembly (deploy-integrity check)
         run: bun run build:netlify
 
+      # build:netlify only exercises the default build mode. The single-file
+      # export goes through vite-plugin-singlefile with different inlining
+      # rules, so a regression there (an asset the plugin cannot inline, a
+      # mode-specific config mistake) would otherwise surface only when
+      # someone tried to produce the portable HTML for a reviewer.
+      - name: Single-file export build
+        run: bun run build:singlefile
+
   e2e:
     name: Playwright end-to-end tests
     runs-on: ubuntu-latest

@@ -21,43 +21,46 @@
 // Styles. Vite resolves and bundles these, so the deployed build no longer
 // depends on node_modules/ being present at runtime the way the old
 // <link href="node_modules/..."> tags did.
+//
+// ORDER MATTERS, and css/theme.css must stay LAST.
+//
+// theme.css is the semantic token layer, and its dark-mode block overrides the
+// raw `--sfds-*` primitives that css/styles.css declares on :root. Custom
+// properties resolve at use time, so a token can be *referenced* before it is
+// declared without trouble — but when the same property is declared twice at
+// the same specificity, the later declaration wins. Importing theme.css first
+// (as it was) meant styles.css re-declared every --sfds-* afterwards and the
+// entire dark theme silently did nothing.
 // ---------------------------------------------------------------------------
-import './../css/theme.css'
 import '@sfgov/design-system/dist/css/base.css'
 import '@sfgov/design-system/dist/css/typography.css'
 import '@sfgov/design-system/dist/css/components.css'
 import './../css/styles.css'
 import './../css/ux-improvements.css'
 import './../css/interactive-sitemap.css'
+import './../css/dashboard.css'
+import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
-// Third-party libraries.
+// Third-party libraries (papaparse, Fuse, defu), published onto `window` for
+// the consumers that still read them as globals.
 //
-// These three used to arrive as browser globals: papaparse straight from
-// node_modules/, and Fuse/defu as committed IIFE bundles under js/vendor/
-// rebuilt by a `vendor:browser` npm script. Vite imports them from npm
-// directly, so js/vendor/ and that script are both gone.
+// This MUST stay first, and must stay a separate module rather than a few
+// assignments in this file's body: a module body runs after every one of its
+// static imports has evaluated, so inlining these would set the globals only
+// after the review-queue modules had already mounted and rendered. See the
+// header of js/third-party-globals.js for the failure that caused.
+// ---------------------------------------------------------------------------
+import './third-party-globals.js'
+
+// ---------------------------------------------------------------------------
+// Core modules, in dependency order.
 //
-// They are re-published onto `window` here because their consumers still
-// reach for them as globals behind `typeof X === 'undefined'` guards
-// (js/utils.js's parseCsv, js/review-queue-rows.js's fuzzy search,
-// js/ux-improvements-export.js's backup merge). Those guards are the
-// documented fallback path that keeps each feature degrading gracefully
-// rather than throwing, and they are exercised by the Node-side tests where
-// no bundler runs — so the globals stay, and no consumer needed editing.
-// ---------------------------------------------------------------------------
-import Papa from 'papaparse'
-import Fuse from 'fuse.js'
-import { defu } from 'defu'
-
-window.Papa = Papa
-window.Fuse = Fuse
-window.defu = defu
-
-// ---------------------------------------------------------------------------
-// Core modules, in dependency order. js/state.js pulls in js/page-data.js,
-// which pulls in all 19 pages/*.js files, so importing it here is what
-// populates window.HHVC_DATA before anything reads it.
+// js/page-data.js imports all 19 pages/*.js files (each registering itself
+// onto window.HHVC_PAGES) and then assembles window.HHVC_DATA. js/state.js
+// side-effect-imports it for exactly that reason, so the ordering is already
+// guaranteed by the module graph; listing page-data.js here as well is
+// belt-and-braces documentation of the sequence, not what makes it work.
 // ---------------------------------------------------------------------------
 import './utils.js'
 import './karl-tag-meta.js'

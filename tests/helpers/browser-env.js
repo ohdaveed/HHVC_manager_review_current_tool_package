@@ -76,7 +76,21 @@ for (const name of ['window', 'document', 'localStorage', 'sessionStorage']) {
   })
 }
 
-// happy-dom implements localStorage, but each test file shares one process —
-// so a review written by one file would otherwise be visible to the next.
-// Clearing here keeps files independent without every test remembering to.
-if (typeof localStorage !== 'undefined') localStorage.clear()
+/* happy-dom implements localStorage, and bun:test runs every test file in ONE
+   process — so a review written by one test stays visible to every test that
+   follows, in that file and in later files.
+
+   This has to be an afterEach hook, not a bare call. A preload script runs
+   once, before the first test file is loaded, so clearing at the top level
+   only guarantees a clean slate for the very first test in the run; every
+   test after it would inherit whatever its predecessors wrote. Hooks
+   registered from a preload apply to the whole suite, which is what actually
+   enforces the isolation.
+
+   Clearing AFTER each test rather than before means a test that wants to seed
+   storage can still do so in its own setup without this hook wiping it. */
+const { afterEach } = require('bun:test')
+
+afterEach(() => {
+  if (typeof localStorage !== 'undefined') localStorage.clear()
+})

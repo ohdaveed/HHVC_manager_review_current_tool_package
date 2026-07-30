@@ -33,7 +33,7 @@ bun install                  # install deps (required before first `dev` — js/
                              # and validate/test need zod, fast-glob, happy-dom)
 bun run dev                   # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run dev:api               # optional sync backend (server.ts) on :8081; dev proxies /api to it
-bun run start                 # production-like: build:app then serve dist/ + the API
+bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # bun test over the 10 unit-test files in tests/ (176 tests)
@@ -42,7 +42,7 @@ bun run export                # regenerate data/page_inventory.{json,csv} AND th
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
 bun run push-tracking         # push page review status to the Google Sheets tracker
-bun run build                 # validate -> export -> build:workshop-form -> build:app -> build:singlefile
+bun run build                 # validate -> export -> workshop form -> build:app -> publish form -> singlefile
 bun run build:app             # vite build -> dist/ (what server.ts and Netlify serve)
 bun run build:singlefile      # vite build --mode singlefile -> dist-singlefile/index.html
 bun run build:workshop-form   # bun install + vite build inside forms/mosquito-workshop-request
@@ -686,9 +686,12 @@ stylesheets; `css/interactive-sitemap.css` holds the sitemap's styles.
 
 ### Tests
 
-Bun test: `const { describe, test, expect } = require('bun:test')`. The
-`tests/helpers/load-scripts.js` harness evaluates the classic `<script>` files
-and returns a context object. `describe` blocks are named after the unit under
+Bun test: `import { describe, test, expect } from 'bun:test'`, importing the
+modules under test directly. `tests/helpers/browser-env.js` — preloaded via
+`bunfig.toml` — registers a happy-dom global environment before the loader runs,
+restores Bun's native fetch, and clears localStorage after every test. The old
+`tests/helpers/load-scripts.js` harness evaluated the classic `<script>` files
+into a shared context, which ES modules made impossible. `describe` blocks are named after the unit under
 test; `test` names are **behavioral verb sentences** ("escapes all five HTML
 special characters"). Prefer exact-string assertions over loose matching. The
 XSS/escaping surface (`page-render.test.js`) is exhaustively covered — one

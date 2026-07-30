@@ -9,22 +9,24 @@ two ever disagree, `AGENTS.md` wins.
 ## What this is
 
 A static, no-framework mockup tool for manager review of a redesigned HHVC
-(Healthy Housing and Vector Control) section of SF.gov. There is no backend and no
-build step for development — `index.html` loads plain classic `<script>` tags
-directly (not ES modules). **Bun** powers the dev server, the CLI scripts, and the
-test runner. This is **plain browser JavaScript, not TypeScript.**
+(Healthy Housing and Vector Control) section of SF.gov. There is no backend. It IS
+bundled: **Vite** builds it from a single ES-module entry point, `js/main.js`, and
+`index.html` carries one `<script type="module">` tag. **Bun** powers the CLI
+scripts and the test runner. This is **plain browser JavaScript, not TypeScript** —
+but `js/*.js` are ES modules, so use `import`/`export` with explicit relative
+specifiers including the `.js` extension.
 
 ## Commands
 
 ```bash
 bun install          # install deps (required before first `dev`)
-bun run dev           # dev server with --watch at http://127.0.0.1:8080
-bun run start         # dev server without watch
+bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
+bun run start         # production-like: assemble dist/ (build:netlify), then serve it
 bun run validate      # Zod-validate pages/*.js and js/page-data.js (schema + invariants)
-bun run test          # Bun test runner over the 7 unit-test files in tests/
+bun run test          # Bun test runner over the 10 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
-bun run build         # validate -> export -> build:workshop-form -> single-file HTML
+bun run build         # validate -> export -> workshop form -> dist/ -> single-file HTML
 bun run format        # prettier --write on everything
 bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```

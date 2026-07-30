@@ -1,7 +1,7 @@
 import { serve } from "bun"
 import { Database } from "bun:sqlite"
 import { mkdirSync } from "node:fs"
-import { dirname } from "node:path"
+import { dirname, resolve } from "node:path"
 import { timingSafeEqual } from "node:crypto"
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
@@ -23,9 +23,14 @@ const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
 // development Vite serves the app on :8080 and proxies /api here, so the
 // static handler simply goes unused.
 const APP_DIR = import.meta.dir
-const ROOT = process.env.STATIC_ROOT
-  ? `${APP_DIR}/${process.env.STATIC_ROOT}`.replace(/\/+$/, "")
-  : `${APP_DIR}/dist`
+// resolve() rather than string concatenation, so an ABSOLUTE STATIC_ROOT is
+// honoured as given. A production deployment pointing at, say,
+// /srv/app/dist would otherwise be glued onto APP_DIR and become
+// `${APP_DIR}/srv/app/dist` — a directory that does not exist, so every
+// static request 404s while the API keeps answering and the server looks
+// healthy. Relative values still resolve against APP_DIR, which is what the
+// documented `STATIC_ROOT=dist` style override expects.
+const ROOT = resolve(APP_DIR, process.env.STATIC_ROOT ?? "dist")
 
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",

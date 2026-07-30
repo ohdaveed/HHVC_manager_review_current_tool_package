@@ -530,9 +530,12 @@ SFDS-token overrides layered under the `@sfgov/design-system` stylesheets.
 
 ### Tests
 
-Bun test: `const { describe, test, expect } = require('bun:test')`. A
-`tests/helpers/load-scripts.js` harness evaluates the classic `<script>` files and
-returns a context object. `describe` blocks are named after the unit under test;
+Bun test: `import { describe, test, expect } from 'bun:test'`, importing the
+modules under test directly. `tests/helpers/browser-env.js` — preloaded via
+`bunfig.toml` — registers a happy-dom global environment before the loader runs,
+restores Bun's native fetch, and clears localStorage after every test. The old
+`tests/helpers/load-scripts.js` vm harness is gone — it evaluated classic scripts
+into a shared context, which ES modules made impossible. `describe` blocks are named after the unit under test;
 `test` names are **behavioral verb sentences** ("escapes all five HTML special
 characters"). Prefer exact-string assertions over loose matching. The XSS/escaping
 surface (`page-render.test.js`) is exhaustively covered — one assertion per render
