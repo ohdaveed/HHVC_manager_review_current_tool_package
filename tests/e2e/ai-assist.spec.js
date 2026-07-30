@@ -284,6 +284,15 @@ test.describe('AI assist panel', () => {
 
   test('opens from the keyboard shortcut', async ({ page }) => {
     await gotoFresh(page)
+
+    // Focus has to be inside a shortcut context first — isShortcutContext in
+    // js/keyboard-shortcuts.js ignores keys unless the event target is within
+    // #reviewWorkspace, .canvas-toolbar, or #mockPage. Without this the test
+    // depended on first-run onboarding happening to focus the workspace tab
+    // before the keypress, which is a race: it passed locally and failed in
+    // CI. Every test in keyboard-shortcuts.spec.js focuses the mock page for
+    // exactly this reason.
+    await page.locator('#mockPage h1').first().click()
     await page.keyboard.press('4')
 
     await expect(page.locator('[data-workspace-panel="assist"]')).toBeVisible()
