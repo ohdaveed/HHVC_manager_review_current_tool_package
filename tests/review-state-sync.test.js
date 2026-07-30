@@ -15,7 +15,6 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const { mergeReviewRecord, combineHistory, reviewContentEquals } = require('../js/review-merge.js')
-const { loadScripts } = require('./helpers/load-scripts')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/review-state-sync.js')
 
@@ -928,23 +927,16 @@ describe('pushPage', () => {
 describe('restorePageContentFromOriginal', () => {
   // The helper reaches for the real getPrimaryCta/setPrimaryCta, whose
   // fallback behaviour is the whole point of the CTA branch — stubbing them
-  // would test the stub. js/utils.js is a classic script, so load it the
-  // same way the other unit tests do.
-  const utilsCtx = loadScripts(['js/utils.js'])
+  // would test the stub. js/utils.js is an ES module now, and its namespace
+  // has the same shape as the window.utils object it publishes, so it can be
+  // handed straight to the fake window below.
+  const utilsModule = require('../js/utils.js')
 
-  // ORIGINAL_DATA is a top-level const in js/state.js — a shared-scope
-  // global in the browser. The helper's `typeof` guard resolves against
-  // globalThis under Node, so setting it here exercises the real path.
-  let originalOriginalData
-
-  beforeEach(() => {
-    originalOriginalData = global.ORIGINAL_DATA
-  })
-
-  afterEach(() => {
-    if (originalOriginalData === undefined) delete global.ORIGINAL_DATA
-    else global.ORIGINAL_DATA = originalOriginalData
-  })
+  // ORIGINAL_DATA is published onto `window` by js/state.js, and
+  // restorePageContentFromOriginal reads it from there rather than importing
+  // it (see that function's comment). loadReviewStateSync() builds a fresh
+  // fake window per test, so each test sets it on that object and nothing
+  // needs saving or restoring across tests.
 
   test('clears a local CTA when the original page had none anywhere', () => {
     // Regression coverage: the reset skipped an empty original CTA, so
@@ -952,14 +944,14 @@ describe('restorePageContentFromOriginal', () => {
     // CTA in memory — shown in the mockup and written back by the next
     // autosave, re-dirtying the page just resolved.
     const { mod } = loadReviewStateSync()
-    global.window.utils = utilsCtx.utils
+    global.window.utils = utilsModule
     global.window.HHVC_DATA.pages.pestsTopic = {
       title: 'Locally retitled',
       summary: 'locally edited summary',
       // No sections/spotlight, so setPrimaryCta wrote to this fallback.
       primaryCta: 'CTA added locally',
     }
-    global.ORIGINAL_DATA = {
+    global.window.ORIGINAL_DATA = {
       pages: {
         pestsTopic: { title: 'Original title', summary: 'original summary' },
       },
@@ -975,12 +967,12 @@ describe('restorePageContentFromOriginal', () => {
 
   test('restores a real CTA rather than blanking the button it lives on', () => {
     const { mod } = loadReviewStateSync()
-    global.window.utils = utilsCtx.utils
+    global.window.utils = utilsModule
     global.window.HHVC_DATA.pages.pestsTopic = {
       title: 'Locally retitled',
       sections: [{ steps: [{ button: 'Locally renamed button' }] }],
     }
-    global.ORIGINAL_DATA = {
+    global.window.ORIGINAL_DATA = {
       pages: {
         pestsTopic: {
           title: 'Original title',

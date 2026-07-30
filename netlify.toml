@@ -1,7 +1,8 @@
 # Netlify config for the HHVC manager-review mockup (static site, no backend).
-# `bun run build:netlify` validates page data and assembles dist/ with only the
-# runtime files (index.html, css/, js/, pages/, and the three @sfgov/design-system
-# stylesheets index.html references).
+# `bun run build:netlify` validates page data, runs the Vite production build
+# into dist/, and copies the committed workshop-form sub-app in alongside it.
+# The optional /api/review-state sync backend has no runtime here, so a Netlify
+# deploy is read-only/no-sync by design.
 [build]
   command = "npm run build:netlify"
   publish = "dist"

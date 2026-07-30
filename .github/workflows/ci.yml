@@ -27,8 +27,9 @@ jobs:
         with:
           bun-version: latest
 
-      # index.html links node_modules/@sfgov/design-system CSS directly, and
-      # validate/test load pages through node_modules deps (zod, fast-glob).
+      # js/main.js imports @sfgov/design-system CSS and the third-party
+      # libraries for Vite to bundle, and validate/test load pages through
+      # node_modules deps (zod, fast-glob, happy-dom).
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -41,10 +42,13 @@ jobs:
       - name: Unit tests (bun test)
         run: bun run test
 
-      # The Netlify bundle assembly doubles as a deploy-integrity check: it
-      # fails if the committed workshop-form dist references assets that were
-      # never committed (the "form shell that never hydrates" regression).
-      - name: Netlify bundle assembly (deploy-integrity check)
+      # Runs the real Vite production build, so a bundling failure (a bad
+      # import path, a missing dependency) is caught here rather than at
+      # deploy time. It also doubles as a deploy-integrity check: the
+      # workshop-form copy step fails if the committed sub-app dist
+      # references assets that were never committed (the "form shell that
+      # never hydrates" regression).
+      - name: Vite build + Netlify bundle assembly (deploy-integrity check)
         run: bun run build:netlify
 
   e2e:

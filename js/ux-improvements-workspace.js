@@ -1,5 +1,7 @@
 /* Manager review: sticky bar, workspace tabs, and decision quick actions.
    Loads after js/ux-improvements-state-sync.js. */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountUxImprovementsWorkspace() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState || !window.ReviewUx?.stateSync) return

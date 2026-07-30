@@ -40,8 +40,26 @@ function createPageContext() {
   return ctx
 }
 
+/** Matches a bare side-effect import line, e.g. `import '../pages/foo.js'`. */
+const SIDE_EFFECT_IMPORT = /^import\s+'[^']+'\s*$/gm
+
 /**
  * Execute page script files in the given VM context.
+ *
+ * `pages/*.js` are still plain scripts — each one assigns its page object
+ * onto `window.HHVC_PAGES` and imports nothing — so they run in a vm
+ * context unchanged. `js/page-data.js` is the exception: as an ES module it
+ * now opens with one side-effect import per page file, and `vm.runInContext`
+ * evaluates as a script, where `import` is a syntax error.
+ *
+ * Those import lines are stripped rather than honoured, because this loader
+ * has already executed every page file in `files` by the time page-data.js
+ * runs — the imports and this loop express the same dependency, so dropping
+ * them is exact rather than approximate. Doing it this way keeps the whole
+ * path synchronous (validate.js, extract-pages.js and the tracking-sheet
+ * scripts are straight-line CommonJS) and preserves `options.exclude`, which
+ * tests use to load a deliberately incomplete page set and assert that the
+ * business invariants fail loudly.
  * @param {vm.Context} ctx
  * @param {string[]} files repo-relative paths
  * @param {{ exclude?: string[] }} [options]
@@ -54,7 +72,8 @@ function runPageScripts(ctx, files, options = {}) {
     if (!fs.existsSync(abs)) {
       throw new Error(`Page script not found: ${rel}`)
     }
-    vm.runInContext(fs.readFileSync(abs, 'utf8'), ctx, { filename: rel })
+    const source = fs.readFileSync(abs, 'utf8').replace(SIDE_EFFECT_IMPORT, '')
+    vm.runInContext(source, ctx, { filename: rel })
   }
 }
 

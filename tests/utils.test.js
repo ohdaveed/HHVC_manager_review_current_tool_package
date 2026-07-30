@@ -1,7 +1,10 @@
-const { describe, test, expect } = require('bun:test')
-const { loadScripts } = require('./helpers/load-scripts')
+import { describe, test, expect } from 'bun:test'
 
-const ctx = loadScripts(['js/utils.js'])
+// js/utils.js is an ES module now, so its helpers are imported directly
+// instead of being evaluated into a vm context by the old load-scripts
+// harness. `ctx` is kept as the local name so the assertions below read
+// unchanged.
+import * as ctx from '../js/utils.js'
 
 describe('escapeHtml', () => {
   test('escapes all five HTML special characters', () => {

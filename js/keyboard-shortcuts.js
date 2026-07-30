@@ -1,6 +1,8 @@
 /* Global keyboard shortcuts for the manager review workflow.
    Shortcuts are ignored while typing in form fields so they never
    interfere with review notes or content edits. */
+
+import { hasValidPageData } from './utils.js'
 ;(function initReviewKeyboardShortcuts() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA)) return

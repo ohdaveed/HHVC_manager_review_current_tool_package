@@ -3,6 +3,13 @@
 // and js/page-render.js, all of which it depends on directly, and before
 // js/manager-review-export.js, which wraps renderPage once init() has run.
 
+import { buildPageSelect, initChecklist, showToast } from './ui-controls.js'
+import { currentPageKey, pageData } from './state.js'
+import { mountKarlTagLegend } from './karl-tag-meta.js'
+import { renderPage } from './page-render.js'
+import { resolvePageKey } from './utils.js'
+import { updateSearchPreview } from './editor-panel.js'
+
 // Resolves a ?page= URL param to a real page key, following the
 // consolidation alias map for retired keys and falling back to the
 // default page. Without this, renderPage() silently no-ops on an unknown

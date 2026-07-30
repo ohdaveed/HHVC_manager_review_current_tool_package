@@ -1,5 +1,7 @@
 /* Manager review: page state sync between the SEO/editor sidebar and
    window.reviewState. Loads after js/review-state-store.js. */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountUxImprovementsStateSync() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState) return

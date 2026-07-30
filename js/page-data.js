@@ -1,3 +1,34 @@
+/* Assembles window.HHVC_DATA from the individual page modules.
+
+   The imports below are for their side effects: each pages/*.js file
+   registers its own page object onto window.HHVC_PAGES, and this module
+   then wraps that registry with the `order` array that drives navigation
+   and menu order. Listing them here — rather than in a hand-maintained
+   block of <script> tags in index.html — is what makes the old
+   "tag missing / tag points at a deleted file" drift class impossible;
+   a bad path is now a build error. Adding a page means adding an import
+   here plus an `order` entry below. */
+
+import '../pages/agency-service-grouping.js'
+import '../pages/report-rats-mice-four-legged-problems.js'
+import '../pages/report-garbage-filth-vegetation.js'
+import '../pages/report-cockroaches-mosquitoes-insects.js'
+import '../pages/lookup-building-records.js'
+import '../pages/lookup-complaints-inspections.js'
+import '../pages/lookup-residential-violations.js'
+import '../pages/lookup-residential-hotel-records.js'
+import '../pages/public-records-request.js'
+import '../pages/property-owner-responsibilities.js'
+import '../pages/respond-to-notice-of-violation.js'
+import '../pages/hhvc-inspection-scope.js'
+import '../pages/integrated-pest-management-property-managers.js'
+import '../pages/what-happens-after-report.js'
+import '../pages/tenant-rights-reporting.js'
+import '../pages/mosquito-control-program.js'
+import '../pages/mosquito-education-workshop.js'
+import '../pages/pay-healthy-housing-fee.js'
+import '../pages/health-code-article-11.js'
+
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_DATA = {
   pages: window.HHVC_PAGES,

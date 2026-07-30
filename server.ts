@@ -11,7 +11,21 @@ import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
-const ROOT = import.meta.dir
+
+// Directory the static handler serves from. Defaults to dist/, the Vite build
+// output, because the app's entry point is now a bundled ES module: the repo
+// root no longer contains anything a browser can load directly (index.html
+// there references /js/main.js, which imports from node_modules and needs
+// resolving). Overridable so a deployment can point at a different build
+// directory, and so tests can serve a fixture tree.
+//
+// The API routes below are independent of this and work either way — during
+// development Vite serves the app on :8080 and proxies /api here, so the
+// static handler simply goes unused.
+const APP_DIR = import.meta.dir
+const ROOT = process.env.STATIC_ROOT
+  ? `${APP_DIR}/${process.env.STATIC_ROOT}`.replace(/\/+$/, "")
+  : `${APP_DIR}/dist`
 
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
@@ -43,7 +57,11 @@ const STATIC_HEADERS = {
 // page_key at a time through the same mergeReviewRecord used client-side).
 
 const REVIEW_API_TOKEN = process.env.REVIEW_API_TOKEN ?? ""
-const DATA_DB_PATH = process.env.DATA_DB_PATH ?? `${ROOT}/.data/review-state.local.db`
+// Anchored to APP_DIR, not ROOT: the static root moved to dist/, which is
+// wiped on every build (`emptyOutDir`), and a database living there would be
+// deleted by the next one. Keeping it beside the source also means the
+// gitignored .data/ path stays exactly where it has always been.
+const DATA_DB_PATH = process.env.DATA_DB_PATH ?? `${APP_DIR}/.data/review-state.local.db`
 
 let db: Database | null = null
 function getDb(): Database {
@@ -253,9 +271,11 @@ const server = serve({
     // Never let the static handler below serve a dotfile/dotdir path (e.g.
     // /.data/review-state.local.db, /.git/..., /.env.local). The static
     // branch has no denylist otherwise — it serves any existing path under
-    // ROOT — and DATA_DB_PATH's local-dev default lives under ROOT/.data/,
-    // so without this guard the SQLite file holding every reviewer's
-    // decisions/notes would be downloadable with no auth once synced.
+    // ROOT. ROOT now defaults to dist/, which no longer contains .data/ or
+    // .git/, but the guard stays: STATIC_ROOT can point anywhere (including
+    // back at the repo root, where DATA_DB_PATH's default lives), and
+    // "the build output happens not to include secrets today" is a much
+    // weaker guarantee than refusing dotpaths outright.
     if (/(^|\/)\.[^/]+/.test(url.pathname)) {
       return new Response("Not Found", { status: 404, headers: HTML_HEADERS })
     }

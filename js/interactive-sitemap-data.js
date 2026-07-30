@@ -1,6 +1,8 @@
 /* Interactive HHVC sitemap: graph-building and page-row query layer.
    Loads before js/interactive-sitemap-render.js and js/interactive-sitemap.js,
    which read window.InteractiveSitemap.state and window.InteractiveSitemap.data. */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountInteractiveSitemapData() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA)) return

@@ -3,6 +3,18 @@
 // defaultSeoTitle, defaultMetaDescription, setText, getPrimaryCta,
 // buildReviewRecord), js/state.js, js/ui-controls.js (showToast), and
 // js/page-render.js (renderPage, which this file wraps).
+
+import {
+  buildReviewRecord,
+  defaultMetaDescription,
+  defaultSeoTitle,
+  downloadFile,
+  setText,
+  toCsv,
+  today,
+} from './utils.js'
+import { currentPageKey, pageData, pageOrder } from './state.js'
+import { showToast } from './ui-controls.js'
 ;(function initManagerReviewExport() {
   const MANAGER_REVIEW_RECORD_FIELDS = [
     'review_date',

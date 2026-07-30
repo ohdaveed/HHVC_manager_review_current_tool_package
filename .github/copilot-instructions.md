@@ -29,9 +29,11 @@ bun run format        # prettier --write on everything
 bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```
 
-**There is a real test suite.** `bun run test` runs seven Bun unit-test files
+**There is a real test suite.** `bun run test` runs ten Bun unit-test files
 (`utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
-`reading-level`, `index-html-checks`) plus Playwright e2e. `bun run validate` is a
+`reading-level`, `page-import-checks`, `review-merge`, `review-api-server`,
+`review-state-sync`) plus Playwright e2e. A happy-dom environment is preloaded
+via `bunfig.toml` so the ES modules can be imported directly. `bun run validate` is a
 complementary check that Zod-validates the full `pages/*.js` set — you can't
 validate one page in isolation. Run both after editing anything under `pages/` or
 `js/page-data.js`.
@@ -40,9 +42,12 @@ validate one page in isolation. Run both after editing anything under `pages/` o
 
 - **Data-driven, no framework.** Each `pages/*.js` file assigns onto
   `window.HHVC_PAGES['<pageKey>']`; `js/page-data.js` builds
-  `window.HHVC_DATA = { pages, order }`. **Script load order in `index.html`
-  matters** — classic `<script>` tags share one global lexical scope, and
-  `js/state.js` throws if `HHVC_DATA` is missing.
+  `window.HHVC_DATA = { pages, order }`. **The app is bundled by Vite from one
+  ES-module entry point, `js/main.js`** — `index.html` has a single
+  `<script type="module">` tag. Core modules import what they need; the
+  self-mounting IIFE layers take no imports and depend on their listed order in
+  `js/main.js`. Add a new page by importing it in `js/page-data.js` (validated by
+  `build_scripts/page-import-checks.js`) and adding an `order` entry.
 - **Core is split into focused modules** (formerly one `app.js`): `js/utils.js`
   (shared helpers, loads first), `js/state.js`, `js/ui-controls.js`,
   `js/editor-panel.js`, `js/page-render.js` (holds `karlTag()`), `js/app.js`.
