@@ -37,7 +37,7 @@ bun install                 # install deps (required before first `dev`)
 bun run dev                  # dev server with --watch at http://127.0.0.1:8080
 bun run start                # dev server without --watch
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 9 unit-test files in tests/
+bun run test                  # Bun test runner over the 10 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -74,6 +74,20 @@ full page set — you can't validate a single page file in isolation. **Run `bun
 run validate` and `bun run test` after editing anything under `pages/` or
 `js/page-data.js`.**
 
+### CI
+
+`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, in
+two deliberately separate jobs so a formatting or schema failure reports in
+seconds without waiting on a Chromium download, and a flaky browser run never
+masks a unit failure:
+
+- **checks** — `bun install --frozen-lockfile` → `format:check` → `validate` →
+  `test` → `build:netlify`. That last step doubles as a deploy-integrity check:
+  it fails if the committed workshop-form `dist` references assets that were
+  never committed (the "form shell that never hydrates" regression).
+- **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
+  `playwright-report/` as an artifact on failure.
+
 ## Architecture
 
 ### Data-driven rendering, no framework
@@ -87,20 +101,31 @@ Each file in `pages/*.js` assigns a page object onto the global
 sharing one global lexical scope (not ES modules), so `const`/`let` declared in an
 earlier file are visible to files loaded after it. `js/state.js` throws
 immediately if `window.HHVC_DATA` is missing — that throw ("Check script order in
-index.html") is the fast signal that the order broke. All `pages/*.js` must load
-before `js/page-data.js`, which loads before the core (`state` → `ui-controls` →
-`editor-panel` → `page-render` → `app`) and the additive review/UX layers.
+index.html") is the fast signal that the order broke. Papaparse (from
+`node_modules`) and `js/vendor/defu.js` load first, then `js/utils.js` and
+`js/karl-tag-meta.js`; all `pages/*.js` load before `js/page-data.js`, which
+loads before the core (`state` → `ui-controls` → `editor-panel` → `page-render`
+→ `app`) and then the additive review/UX layers (`js/vendor/fuse.js` sits just
+before the `review-queue*` files that use it).
+
+`js/vendor/` holds committed third-party IIFE bundles (Fuse.js for review-queue
+search, defu for defaults merging) so the browser needs no bundler — regenerate
+them with `bun run vendor:browser` after a dependency bump, never by hand.
 
 When adding a new page file: add its `<script>` tag in the `pages/*.js` block of
 `index.html`, **before** `js/page-data.js`, and add a `[pageKey, menuLabel]` entry
-to the `order` array in `js/page-data.js`. Node-side scripts
-(`build_scripts/`, `tests/`) discover `pages/*.js` dynamically via
-`build_scripts/load-pages.js` — only `index.html`'s `<script>` tags need a manual
-entry. If you forget the tag (or leave a stale one after deleting a page),
-`bun run validate` catches it: `build_scripts/index-html-checks.js` diffs
-`pages/*.js` on disk against the `<script src="pages/...">` tags and fails on
-drift in either direction. Tag _order_ isn't checked (page modules are
-independent); only set membership matters.
+to the `order` array in `js/page-data.js`. A new `js/*.js` module needs a
+`<script>` tag too, positioned for its load-order dependencies. Node-side scripts
+(`build_scripts/`, `tests/`) hardcode no file lists — they discover both
+`pages/*.js` and `js/*.js` dynamically via `build_scripts/load-pages.js`, so only
+`index.html`'s `<script>` tags need a manual entry. If you forget one (or leave a
+stale tag after deleting a file), `bun run validate` catches it:
+`build_scripts/index-html-checks.js` diffs **both** `pages/*.js` and `js/*.js` on
+disk against the corresponding `<script src="...">` tags and fails on drift in
+either direction. Tag _order_ isn't checked — it's irrelevant for page modules
+(each only writes into `window.HHVC_PAGES`) and still hand-reviewed for
+`js/*.js`; only set membership is enforced. `js/vendor/*.js` is excluded by
+construction (the tag regex matches a single path segment after the prefix).
 
 ### Core module split (formerly one `app.js`)
 
@@ -157,21 +182,30 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 
 ### Page object shape and validation rules
 
-See `build_scripts/validate.js` for the enforced Zod schema. A page has `slug`,
+The enforced Zod schema lives in `build_scripts/schema.js` (shared by
+`build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
+has coverage independent of current page content). A page has `slug`,
 `type` (a free-form string, only `min(1)` checked — values in use are `Agency`,
 `Transaction`, `Information`, `Resource Collection`, `Campaign`, and `Report`,
 matching Karl content-type names; see `docs/wagtail-content-mapping.md`), `title`,
 `summary`, `audience[]`,
 `reading` (grade-level string), and `sections[]`. For Karl editor field mapping by
 content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
-Sections carry `cards[]`, `bullets[]`, `paragraphs[]`, `table[][]`, a `callout`, a
-`button`/`buttonUrl`/`buttonTarget`/`buttonStyle`, and/or `steps[]`; steps carry
-`text[]`, `callout`, and `button`/`buttonTarget`/`buttonUrl`. `js/page-render.js`
-also renders a `bullets[]` array on steps even though `stepSchema` doesn't declare
-it — rendered but unvalidated. Optional SEO/review fields: `seoTitle`,
-`metaDescription`, `primaryCta`, `editorNote`. A newer schema addition —
-`unverified: true` + `unverifiedReason` on text items — flags claims needing SME
-confirmation, rendered as an "Unverified" pill.
+Sections carry a required `heading` and `karl`, plus optional `kind`, `component`
+(enum: `body`, `services`, `resources`, `related`, `contact`, `spotlight`,
+`what-to-do`, `supporting`, `intro`), `open` (renders a Transaction supporting
+accordion expanded), `cards[]`, `bullets[]`, `paragraphs[]`, `table[][]`,
+`image`, a `callout` (`text` + optional `title`/`variant` of
+`info`/`warning`/`note`), a `button`/`buttonUrl`/`buttonTarget`/`buttonStyle`,
+and/or `steps[]`; steps carry `title`, `text[]`, `bullets[]`, `callout`, `karl`,
+and `button`/`buttonTarget`/`buttonUrl`. Optional page-level fields: `seoTitle`,
+`metaDescription`, `primaryCta`, `editorNote`, `topicTag`, `whatToKnow`,
+`contact`, `spotlight`, `reportDate`, `printVersionUrl`, and `editorStatus`
+(`needs-review` | `blocked` | `placeholder`). Text-bearing arrays
+(`paragraphs`, `bullets`, step `text`/`bullets`) accept either a plain string or
+`{ text, unverified?, unverifiedReason? }` — `unverified: true` flags a claim
+needing SME confirmation, rendered as an "Unverified" pill and counted in
+`validate.js`'s summary line. Cards support the same two fields.
 
 Beyond schema shape, `validate.js` enforces business invariants:
 
@@ -180,12 +214,19 @@ Beyond schema shape, `validate.js` enforces business invariants:
   retained from the Topic-page era for invariant/test/review-state stability.
 - The bare `agency` key must **not** be present (nobody should "fix" the key name
   and break that stability).
-- Every `card.target` must resolve to a real page key, and every inline markdown
-  link `[label](pageKey)` in paragraphs/bullets/step text must resolve to a real
-  page key, an `http(s)` URL, or the inert `#` sentinel.
+- Every page key must appear in `order` (`findMissingOrderKeys`).
+- Every `card.target` **and** every section/step `buttonTarget` must resolve to a
+  real page key, and every inline markdown link `[label](pageKey)` in
+  paragraphs/bullets/table cells/callouts/step text must resolve to a real page
+  key, an `http(s)` URL, or the inert `#` sentinel.
 - The Agency page's content must not contain banned out-of-scope terms
   (`plumbing`, `dbi`, `roof leak`, `sewer`, `permit issue`, `construction
 defect`) — HHVC scope is Article 11 only.
+- **Lists of three or more items must use `bullets[]`**, not `paragraphs[]` or
+  step `text[]` (`findListFormatViolations`) — a hard validation failure.
+
+All of these live in `build_scripts/data-checks.js` as pure functions, testable
+without the real page data.
 
 **`karl` fields are first-class content, not comments.** Every card, step,
 section, and callout can carry a `karl` string — a precise, CMS-technical
@@ -373,9 +414,17 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   stylesheets and scripts (in document order) into
   `manager-review-single-file.html` and `single-file-export-current-source.html` —
   **gitignored generated files; never hand-edit.** Edit sources, re-run `bun run build`.
-- **`build_scripts/extract-pages.js`** (`bun run export`) regenerates
-  `data/page_inventory.{json,csv}`. `data/` is absent on a fresh clone
-  (gitignored); this script creates it. Dev/serve never touches `data/`.
+- **`build_scripts/extract-pages.js`** (first half of `bun run export`)
+  regenerates `data/page_inventory.{json,csv}`. `data/` is absent on a fresh
+  clone (gitignored); this script creates it. Dev/serve never touches `data/`.
+- **`build_scripts/sync-tracking-sheet.js`** (second half of `bun run export`,
+  also `bun run sync-tracking`) regenerates the Google Sheets–ready tracking CSVs
+  under `review/`. **`build_scripts/push-tracking-sheet.js`**
+  (`bun run push-tracking`) three-way-merges against the live Master Control
+  workbook (IDs/tab gids in `build_scripts/sheet-config.json`) and optionally
+  pushes via the Sheets API. It needs a Google service-account key — gitignored,
+  and it must stay that way (never commit `*-service-account*.json` or
+  `.env.local`).
 - **`build_scripts/build-netlify-dist.js`** (`bun run build:netlify`, driven by
   `netlify.toml`) assembles `dist/` with only runtime files. It does **not** run
   the Vite build — it copies whatever is checked into
