@@ -408,6 +408,43 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
   DB, exercises auth/merge/isolation over real HTTP).
 
+### AI assist backend (optional)
+
+`server.ts` also hosts an optional content-drafting API under `/api/ai/*`,
+backed by `build_scripts/ai/`. Same posture as the sync backend: additive, off
+by default, failing closed.
+
+- **Two independent gates.** `REVIEW_API_TOKEN` (shared with the sync routes —
+  one server secret, not two) decides whether the API exists; unset makes every
+  `/api/ai/*` route 501. `ANTHROPIC_API_KEY` decides whether generation works;
+  unset makes `generate` and `models` 501 while `capabilities` still answers.
+  That asymmetry is deliberate — `capabilities` is the browser's discovery
+  endpoint, and a 501 there cannot be told apart from "no server at all".
+- **The provider gate lives inside each route, not before routing**, so an
+  unknown path answers 404 rather than 501 claiming the route exists.
+- **Routes**: `GET /api/ai/capabilities`, `GET /api/ai/models` (queried live,
+  never hardcoded), `POST /api/ai/generate` (`{task, prompt, page?}`, Zod-validated).
+- **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
+  `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only). Keep them in
+  the gitignored `.env.local`.
+- **Validation is the feature.** `build_scripts/ai/validate-output.js` runs a
+  generated page through the exact rules CI enforces — `build_scripts/schema.js`,
+  the `data-checks.js` invariants, and `js/plain-language.js`'s mandates — then
+  names the failures back to the model for exactly one retry. Results always
+  return 200 with issues attached, since a draft failing one rule still helps a
+  reviewer who can see which rule.
+- **The system prompt must stay byte-stable.** It inlines the vendored
+  `docs/source/sfgov-style/` corpus behind a `cache_control` breakpoint;
+  caching is a prefix match, so anything variable in it kills the cache.
+- **Never writes anything** — no filesystem, no review state, no `pages/*.js`.
+  Standards manual §1.11 forbids automated approval and SF.gov's AI guidelines
+  require disclosing generative-AI use, so every response carries a
+  `disclosure` string.
+- **Tests**: `tests/ai-assist-server.test.js` (spawns `server.ts` against a stub
+  Anthropic endpoint — no API key, CI never makes a paid call) and
+  `tests/ai-assist-schema.test.js` (guards the structured-output schema against
+  drifting from the Zod page schema).
+
 ### Build outputs
 
 - **`build_scripts/build-single-file.js`** inlines `index.html`'s local

@@ -510,6 +510,59 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   `server.ts` as a subprocess with a temp SQLite DB and exercises auth,
   merge-not-wipe, and per-page isolation over real HTTP).
 
+### AI assist backend (optional)
+
+`server.ts` also hosts an optional content-drafting API under `/api/ai/*`,
+backed by `build_scripts/ai/`. Same posture as the sync backend above:
+**entirely additive and off by default**, nothing else in the tool depends on
+it, and it fails closed rather than open.
+
+- **Two independent gates.** `REVIEW_API_TOKEN` (shared with the sync routes —
+  one server secret, not two) decides whether the API exists at all; unset
+  makes every `/api/ai/*` route 501. `ANTHROPIC_API_KEY` decides whether
+  generation is possible; unset makes `generate` and `models` 501 while
+  `capabilities` still answers. That asymmetry is deliberate: `capabilities` is
+  the discovery endpoint the browser uses for its empty state, and a 501 there
+  would leave it unable to tell "no AI key" from "no server at all".
+- **The provider gate is checked inside each route, not before routing.**
+  Hoisting it would make every unmatched path answer 501 "no provider
+  configured" instead of 404 — telling a client a route exists when it does not.
+- **Routes**: `GET /api/ai/capabilities` (configured providers, grounding
+  files, page count), `GET /api/ai/models` (queried live, since model lineups
+  move and a hardcoded id becomes a 404 nobody notices), and
+  `POST /api/ai/generate` (`{task, prompt, page?}`, Zod-validated).
+- **Env**: `ANTHROPIC_API_KEY` (the gate), `ANTHROPIC_MODEL` (default
+  `claude-opus-5`), `AI_EFFORT` (default `high`), and `ANTHROPIC_BASE_URL`
+  (only used to point the test suite at a stub). Put them in `.env.local`,
+  which is gitignored and must stay that way.
+- **Validation is the point of the feature.** `build_scripts/ai/validate-output.js`
+  runs a generated page through the exact rules CI enforces —
+  `build_scripts/schema.js`, the `build_scripts/data-checks.js` invariants
+  (link targets resolved against the real page-key universe, lists of 3+ using
+  bullets, the Agency page staying inside Article 11), and
+  `js/plain-language.js`'s mandates. On failure the specific issues are named
+  back to the model for **exactly one** retry; a bare "try again" reproduces the
+  same violation. Results always return 200 with their issues attached even
+  when invalid, because a draft failing one rule is still useful to a reviewer
+  who can see which rule.
+- **The system prompt must stay byte-stable.** `build_scripts/ai/prompts.js`
+  inlines the vendored `docs/source/sfgov-style/` corpus and carries a
+  `cache_control` breakpoint. Caching is a prefix match, so anything variable
+  in it — a timestamp, an unsorted page-key list — invalidates the cache on
+  every call. Request-specific material goes in the user turn.
+- **Never writes anything.** No filesystem write path, no review-state write,
+  no `pages/*.js` mutation. Standards manual §1.11 forbids automated approval,
+  and SF.gov's published AI guidelines require disclosing generative-AI use, so
+  every response carries a `disclosure` string that travels with the draft
+  rather than being something a client may forget to add.
+- **Tests**: `tests/ai-assist-server.test.js` spawns `server.ts` with
+  `ANTHROPIC_BASE_URL` pointed at a stub Anthropic endpoint, so the gates, the
+  retry loop, and the error mapping are covered with no API key and CI never
+  makes a paid call. `tests/ai-assist-schema.test.js` guards the hand-authored
+  structured-output JSON Schema against drifting from the Zod page schema.
+- **Netlify** (`build:netlify`) has no server runtime, so the static deploy
+  simply has no AI — the same way it has no sync.
+
 ### Build outputs
 
 - **`build_scripts/build-single-file.js`** inlines `index.html`'s local
