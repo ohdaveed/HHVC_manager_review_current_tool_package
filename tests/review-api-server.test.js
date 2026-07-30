@@ -22,7 +22,7 @@ async function waitForServer(url, attempts = 50) {
   throw new Error(`Server at ${url} did not start in time`)
 }
 
-function spawnServer({ port, token, dbDir }) {
+function spawnServer({ port, token, dbDir, staticRoot }) {
   return Bun.spawn(['bun', 'run', 'server.ts'], {
     cwd: ROOT,
     env: {
@@ -31,6 +31,7 @@ function spawnServer({ port, token, dbDir }) {
       HOST: '127.0.0.1',
       REVIEW_API_TOKEN: token,
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
+      ...(staticRoot === undefined ? {} : { STATIC_ROOT: staticRoot }),
     },
     stdout: 'ignore',
     stderr: 'ignore',
@@ -297,5 +298,41 @@ describe('review-state API without REVIEW_API_TOKEN configured', () => {
       headers: { authorization: 'Bearer anything' },
     })
     expect(res.status).toBe(501)
+  })
+})
+
+// Regression: STATIC_ROOT set-but-empty must fall back to dist/, not resolve to
+// the repository root.
+//
+// The fallback used `??`, which only catches null/undefined, so an empty string
+// survived and resolve(APP_DIR, '') returned APP_DIR. The static handler then
+// served the entire source tree: /server.ts and /package.json came back 200,
+// and / served the unbundled index.html that no browser can run. The dotfile
+// guard does not help — it blocks /.env.local and /.git, not ordinary source
+// files. An env var that is set but empty is trivially common in shell
+// wrappers, CI matrices and container manifests, so this is a realistic
+// misconfiguration rather than a contrived one.
+describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
+  const PORT = 8125
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-review-api-emptyroot-'))
+    proc = spawnServer({ port: PORT, token: 'token', dbDir, staticRoot: '' })
+    await waitForServer(`${base}/api/review-state`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('does not serve repository source files', async () => {
+    for (const sourcePath of ['/server.ts', '/package.json', '/vite.config.mjs']) {
+      const res = await fetch(`${base}${sourcePath}`)
+      expect(res.status, `${sourcePath} must not be served`).toBe(404)
+    }
   })
 })

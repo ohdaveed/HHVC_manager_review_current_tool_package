@@ -30,7 +30,14 @@ const APP_DIR = import.meta.dir
 // static request 404s while the API keeps answering and the server looks
 // healthy. Relative values still resolve against APP_DIR, which is what the
 // documented `STATIC_ROOT=dist` style override expects.
-const ROOT = resolve(APP_DIR, process.env.STATIC_ROOT ?? "dist")
+// `||` rather than `??` on purpose: an empty STATIC_ROOT must fall back to
+// dist/, and `??` only catches null/undefined. `resolve(APP_DIR, "")` returns
+// APP_DIR — the repository root — so an env var that is merely SET-BUT-EMPTY
+// (trivially common in shell scripts, CI matrices and container manifests)
+// would silently publish the whole source tree. The dotfile guard further down
+// blocks /.env.local and /.git, but nothing stops /server.ts or /package.json,
+// and / would serve the unbundled index.html that no browser can execute.
+const ROOT = resolve(APP_DIR, process.env.STATIC_ROOT || "dist")
 
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
