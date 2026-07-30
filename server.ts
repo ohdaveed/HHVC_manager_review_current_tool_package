@@ -8,6 +8,12 @@ import { timingSafeEqual } from "node:crypto"
 import { mergeReviewRecord } from "./js/review-merge.js"
 // @ts-ignore - plain JS module (CJS via Zod), no .d.ts; same interop as above.
 import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
+// @ts-ignore - plain JS modules, CommonJS; the AI assist service (see below).
+import { generateContent, getCapabilities, listModels } from "./build_scripts/ai/index.js"
+// @ts-ignore - plain JS module, CommonJS.
+import { generateRequestSchema } from "./build_scripts/ai/schemas.js"
+// @ts-ignore - plain JS module, CommonJS.
+import { RefusalError } from "./build_scripts/ai/provider-anthropic.js"
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
@@ -95,7 +101,10 @@ function getDb(): Database {
 
 const API_CORS_HEADERS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, PUT, OPTIONS",
+  // Shared by every /api/* route. POST is here for the AI assist routes below;
+  // the review-state routes still only accept GET and PUT, which their own
+  // method matching enforces.
+  "access-control-allow-methods": "GET, POST, PUT, OPTIONS",
   "access-control-allow-headers": "authorization, content-type",
 }
 
@@ -270,6 +279,119 @@ async function handleReviewStateApi(req: Request, url: URL): Promise<Response> {
   return jsonResponse({ error: "Not Found" }, 404)
 }
 
+// --- Optional AI assist backend (GET/POST /api/ai/*) ---------------------
+//
+// Same posture as the review-state sync layer above: entirely additive, off by
+// default, and failing closed. Two independent switches gate it —
+// REVIEW_API_TOKEN (shared with the sync routes; one server secret, not two)
+// controls whether the API exists at all, and ANTHROPIC_API_KEY controls
+// whether generation is possible. The key never leaves the server: the browser
+// talks only to this origin.
+//
+// Nothing here writes to disk or to review state. Generated drafts are returned
+// to the browser to preview, copy, and download — they never touch pages/*.js.
+// HHVC standards manual §1.11 forbids any automated approval, and SF.gov's AI
+// guidelines require generative-AI use to be disclosed, so every response
+// carries a `disclosure` string the client renders alongside the draft.
+
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ""
+
+/** Map a thrown error to a status code and a message worth showing a reviewer. */
+function aiErrorResponse(error: unknown): Response {
+  if (error instanceof RefusalError) {
+    // A refusal is a content outcome, not a server fault. 422 so the client can
+    // say "the model declined" rather than "something broke".
+    return jsonResponse(
+      { error: error.message, category: error.category, explanation: error.explanation },
+      422
+    )
+  }
+  const status = (error as { status?: number })?.status
+  if (typeof status === "number" && status >= 400 && status < 600) {
+    // An upstream API error (bad key, rate limit, overload). Surface it as a
+    // gateway failure with the upstream status attached, so a 429 is not
+    // mistaken for a bug in this server.
+    return jsonResponse(
+      { error: `The model provider returned ${status}.`, upstreamStatus: status },
+      502
+    )
+  }
+  console.error("AI request failed:", error)
+  return jsonResponse({ error: (error as Error)?.message || "AI request failed." }, 500)
+}
+
+async function handleAiApi(req: Request, url: URL): Promise<Response> {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: { ...SECURITY_HEADERS, ...API_CORS_HEADERS } })
+  }
+
+  if (!REVIEW_API_TOKEN) {
+    return jsonResponse(
+      { error: "AI assist is not configured on this server (REVIEW_API_TOKEN unset)." },
+      501
+    )
+  }
+  if (!isAuthorized(req)) {
+    return jsonResponse({ error: "Unauthorized" }, 401)
+  }
+
+  // Deliberately answers even with no ANTHROPIC_API_KEY. This is the discovery
+  // endpoint the browser uses to render its empty state, and a 501 here would
+  // leave it unable to tell "no AI key" from "no server at all".
+  if (url.pathname === "/api/ai/capabilities" && req.method === "GET") {
+    return jsonResponse(getCapabilities(), 200)
+  }
+
+  // The provider gate is checked INSIDE each route that needs it, not before
+  // the routing below. Hoisting it would make every unmatched path answer 501
+  // "no provider configured" instead of 404, which tells a client the route
+  // exists when it does not.
+  const noProvider = () =>
+    jsonResponse(
+      { error: "No model provider is configured on this server (ANTHROPIC_API_KEY unset)." },
+      501
+    )
+
+  if (url.pathname === "/api/ai/models" && req.method === "GET") {
+    if (!ANTHROPIC_API_KEY) return noProvider()
+    try {
+      return jsonResponse(await listModels(), 200)
+    } catch (error) {
+      return aiErrorResponse(error)
+    }
+  }
+
+  if (url.pathname === "/api/ai/generate" && req.method === "POST") {
+    if (!ANTHROPIC_API_KEY) return noProvider()
+
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch {
+      return jsonResponse({ error: "Request body must be valid JSON." }, 400)
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return jsonResponse({ error: "Request body must be a JSON object." }, 400)
+    }
+
+    const parsed = generateRequestSchema.safeParse(body)
+    if (!parsed.success) {
+      return jsonResponse({ error: "Invalid request.", issues: parsed.error.issues }, 400)
+    }
+
+    try {
+      // req.signal aborts the upstream call when the reviewer navigates away or
+      // hits cancel, so an abandoned generation stops costing tokens.
+      const result = await generateContent({ ...parsed.data, signal: req.signal })
+      return jsonResponse(result, 200)
+    } catch (error) {
+      return aiErrorResponse(error)
+    }
+  }
+
+  return jsonResponse({ error: "Not Found" }, 404)
+}
+
 const server = serve({
   hostname: HOST,
   port: PORT,
@@ -278,6 +400,10 @@ const server = serve({
 
     if (url.pathname === "/api/review-state" || url.pathname.startsWith("/api/review-state/")) {
       return handleReviewStateApi(req, url)
+    }
+
+    if (url.pathname === "/api/ai" || url.pathname.startsWith("/api/ai/")) {
+      return handleAiApi(req, url)
     }
 
     // Never let the static handler below serve a dotfile/dotdir path (e.g.

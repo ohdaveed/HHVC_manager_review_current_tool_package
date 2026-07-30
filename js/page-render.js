@@ -756,10 +756,25 @@ function renderPage(key, skipHistory = false) {
    page itself still renders, so nothing looks broken. */
 window.renderPage = renderPage
 
+/* Also published for js/ai-assist-render.js, which calls it to preview an
+   AI-drafted page object without touching pageData or the live mockup.
+
+   That module is a self-mounting IIFE with no imports (like the other
+   review/UX layers), so it reaches this through `window` — and the call sits
+   inside a try/catch that turns any throw into "Could not preview this
+   draft". Without this line the bare reference is a ReferenceError under ES
+   modules, the catch swallows it, and the preview silently degrades to an
+   error string while everything else keeps working. That matters more than
+   usual here: renderPageMain is the escaping-audited renderer
+   (tests/page-render.test.js), and it is deliberately the only path allowed
+   to render untrusted model output. */
+window.renderPageMain = renderPageMain
+
 export {
   bulletList,
   button,
   karlTag,
+  renderPageMain,
   paragraphList,
   renderAudience,
   renderCards,

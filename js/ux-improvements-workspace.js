@@ -8,7 +8,7 @@ import { hasValidPageData } from './utils.js'
 
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
-  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'help']
+  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'help']
   let workspaceTriggerButton = null
 
   const { getValue, getStatusChipClass, escapeHtml } = window.utils
@@ -81,6 +81,10 @@ import { hasValidPageData } from './utils.js'
 
     if (tabId === 'sitemap' && typeof window.__mountInteractiveSitemapOnTabOpen === 'function') {
       window.__mountInteractiveSitemapOnTabOpen()
+    }
+
+    if (tabId === 'assist' && typeof window.__mountAiAssistOnTabOpen === 'function') {
+      window.__mountAiAssistOnTabOpen()
     }
 
     if (tabId === 'help') {

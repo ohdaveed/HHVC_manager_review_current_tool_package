@@ -38,6 +38,7 @@ import '@sfgov/design-system/dist/css/components.css'
 import './../css/styles.css'
 import './../css/ux-improvements.css'
 import './../css/interactive-sitemap.css'
+import './../css/ai-assist.css'
 import './../css/dashboard.css'
 import './../css/theme.css'
 
@@ -98,4 +99,14 @@ import './dashboard-guidance.js'
 import './interactive-sitemap-data.js'
 import './interactive-sitemap-render.js'
 import './interactive-sitemap.js'
+
+// Plain-language scoring and the AI-assist workspace tab. Same IIFE pattern as
+// the layers above: no imports, mounted on window, so they must run after the
+// core modules that publish the namespaces they read (window.renderPageMain
+// for the draft preview, window.showToast for feedback).
+import './plain-language.js'
+import './ai-assist-client.js'
+import './ai-assist-render.js'
+import './ai-assist.js'
+
 import './keyboard-shortcuts.js'

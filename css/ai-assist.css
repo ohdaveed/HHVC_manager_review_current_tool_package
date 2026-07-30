@@ -1,0 +1,174 @@
+/* AI assist panel.
+   Layered on top of the existing workspace styles, in its own file for the
+   same reason css/interactive-sitemap.css is: a self-contained subsystem's
+   styles are easier to reason about next to its JS than buried in the shared
+   override sheet. Uses the same --sfds-* / --ux-* tokens as the rest of the
+   review layer, so retheming still happens in one place. */
+
+.ai-assist-panel {
+  padding: 0.9rem 1rem 1.25rem;
+}
+
+.ai-assist-panel h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.ai-assist-panel h4 {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.9rem;
+}
+
+/* --- Settings ---------------------------------------------------------- */
+
+.ai-assist-settings {
+  margin: 0.75rem 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--ux-panel-border);
+  border-radius: var(--radius);
+  background: var(--ux-soft-bg);
+}
+
+.ai-assist-settings summary {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--sfds-slate-1);
+  cursor: pointer;
+}
+
+.ai-assist-settings .sync-config-input {
+  margin-bottom: 0.4rem;
+}
+
+/* --- Request form ------------------------------------------------------ */
+
+.ai-assist-form textarea {
+  width: 100%;
+  padding: 0.55rem;
+  border: 1px solid var(--ux-panel-border);
+  border-radius: var(--radius);
+  background: var(--ux-panel-bg);
+  color: var(--sfds-slate-1);
+  font: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+
+.ai-assist-form textarea:disabled {
+  background: var(--ux-soft-bg);
+  color: var(--sfds-slate-3);
+  cursor: not-allowed;
+}
+
+.ai-assist-checkbox {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0.5rem 0;
+  color: var(--sfds-slate-2);
+  font-size: 0.82rem;
+}
+
+.ai-assist-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.ai-assist-error {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-left: 3px solid var(--ux-danger-border);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--ux-danger-bg);
+  color: var(--sfds-slate-1);
+  font-size: 0.82rem;
+}
+
+/* --- Result ------------------------------------------------------------ */
+
+.ai-assist-result {
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--ux-panel-border);
+}
+
+/* The AI disclosure SF.gov's guidelines require. Styled to be genuinely hard
+   to miss rather than a subtle footnote: it is the line that stops a draft
+   being mistaken for reviewed content. */
+.ai-assist-disclosure {
+  margin: 0 0 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--ux-warning-border);
+  border-radius: var(--radius);
+  background: var(--ux-warning-bg);
+  color: var(--sfds-slate-1);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ai-assist-verdict {
+  margin: 0 0 0.7rem;
+  font-size: 0.83rem;
+}
+
+.ai-assist-verdict p {
+  margin: 0 0 0.35rem;
+}
+
+.ai-assist-verdict.pass {
+  color: var(--sfds-green, #1a7f37);
+  font-weight: 700;
+}
+
+.ai-assist-verdict.fail ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--sfds-slate-2);
+}
+
+.ai-assist-verdict.fail li {
+  margin-bottom: 0.2rem;
+  line-height: 1.35;
+}
+
+.ai-assist-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  color: var(--sfds-slate-3);
+  font-size: 0.75rem;
+}
+
+.ai-assist-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* The draft preview is rendered by renderPageMain(), the same function the
+   real mockup uses, so it arrives with page-level styles attached. Boxing and
+   scaling it keeps a full page from visually impersonating the actual mockup
+   above — a reviewer should never be unsure which one they are looking at. */
+.ai-assist-preview {
+  max-height: 32rem;
+  overflow: auto;
+  padding: 0.75rem;
+  border: 2px dashed var(--ux-warning-border);
+  border-radius: var(--radius);
+  background: var(--ux-panel-bg);
+}
+
+.ai-assist-preview .page-body,
+.ai-assist-preview .hero {
+  padding: 0.5rem 0;
+}
+
+@media (max-width: 900px) {
+  .ai-assist-preview {
+    max-height: 22rem;
+  }
+}

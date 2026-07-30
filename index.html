@@ -252,6 +252,17 @@
               type="button"
               class="review-workspace-tab"
               role="tab"
+              id="reviewWorkspaceTabAssist"
+              data-workspace-tab="assist"
+              aria-selected="false"
+              aria-controls="reviewWorkspaceAssist"
+            >
+              AI assist
+            </button>
+            <button
+              type="button"
+              class="review-workspace-tab"
+              role="tab"
               id="reviewWorkspaceTabHelp"
               data-workspace-tab="help"
               aria-selected="false"
@@ -281,6 +292,14 @@
             role="tabpanel"
             aria-labelledby="reviewWorkspaceTabSitemap"
             data-workspace-panel="sitemap"
+            hidden
+          ></div>
+          <div
+            id="reviewWorkspaceAssist"
+            class="review-workspace-panel"
+            role="tabpanel"
+            aria-labelledby="reviewWorkspaceTabAssist"
+            data-workspace-panel="assist"
             hidden
           ></div>
           <div
