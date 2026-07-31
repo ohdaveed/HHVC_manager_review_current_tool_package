@@ -202,10 +202,16 @@
      a separately chosen set, not an automatic lightening: the light green
      lands at 2.96:1 on the dark panel, under the 3:1 floor.
 
-     --viz-decision-pending is a deliberate exception: it is a true neutral and
-     so cannot meet a chroma floor by definition. That is the point — "Needs
-     review" is the ABSENCE of a decision and should recede rather than compete
-     with the four real outcomes for attention.
+     --viz-decision-pending is a deliberate exception to the chroma floor (and,
+     in dark mode, the lightness band): it is a true neutral, and a neutral
+     cannot carry chroma by definition. That is the point — "Needs review" is
+     the ABSENCE of a decision and should read as uncoloured rather than
+     compete with the four real outcomes for attention. It is NOT exempt from
+     the separation floors, which is the check that actually matters: each
+     mode's neutral is picked so it clears the adjacent green by ΔE 15 under
+     normal vision. Validate both modes WITH the neutral included when
+     changing any of this — validating the four coloured steps alone hides the
+     one pair most likely to collide.
 
      Colour is never the only encoding regardless: the decision-mix card
      carries a visible legend with per-segment counts, and every chart has an
@@ -329,8 +335,15 @@
     /* Dark steps for the decision fills — chosen against the dark panel, not
        lightened from the light set. The light green clears 3:1 on white and
        only 2.96:1 here, which is exactly the trap an automatic flip falls
-       into. This set passes every validator check against the dark surface. */
-    --viz-decision-pending: #9aa0a0;
+       into.
+
+       The neutral is LIGHTER here than the light-mode one, which looks
+       backwards until you measure it. It has to clear the green by ΔE 15
+       under normal vision, and on a dark panel the green sits mid-lightness,
+       so the grey has to move away from it — upward. Dimming it to "recede"
+       the way it does in light mode was tried and drops the pair to ΔE 11.9,
+       reintroducing exactly the failure these tokens exist to fix. */
+    --viz-decision-pending: #adb3b3;
     --viz-decision-approved: #34a06f;
     --viz-decision-edits: #c08400;
     --viz-decision-revise: #a273cc;
