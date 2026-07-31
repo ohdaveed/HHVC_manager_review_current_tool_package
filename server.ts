@@ -14,6 +14,10 @@ import { generateContent, getCapabilities, listModels } from "./build_scripts/ai
 import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/ai/schemas.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { RefusalError } from "./build_scripts/ai/provider-anthropic.js"
+// Imported for its error classes only, as the fallback arm of the cancellation
+// mapping in aiErrorResponse. The SDK is never constructed here — every call
+// goes through build_scripts/ai/.
+import Anthropic from "@anthropic-ai/sdk"
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
@@ -51,6 +55,21 @@ const STATIC_HEADERS = {
 const REVIEW_API_TOKEN = process.env.REVIEW_API_TOKEN ?? ""
 const DATA_DB_PATH = process.env.DATA_DB_PATH ?? `${ROOT}/.data/review-state.local.db`
 
+/**
+ * Ceiling on a single review-record PUT. One page's decision, notes, reviewer,
+ * and history is a few KB at most; 64 KB leaves generous room for a long
+ * history array while still bounding the endpoint.
+ */
+const MAX_REVIEW_BODY_BYTES = 64 * 1024
+
+/**
+ * How far past a body cap `readBodyWithLimit` will keep draining before it
+ * gives up and breaks the connection. Draining keeps the connection usable for
+ * the client's next request; this stops a sender who ignores the 413 from
+ * making us read forever.
+ */
+const DRAIN_LIMIT_MULTIPLIER = 8
+
 let db: Database | null = null
 function getDb(): Database {
   if (db) return db
@@ -87,6 +106,83 @@ function jsonResponse(data: unknown, status: number): Response {
       "content-type": "application/json; charset=utf-8",
     },
   })
+}
+
+/**
+ * Read a request body as text, refusing it the moment it passes `maxBytes`.
+ *
+ * `await req.text()` buffers the WHOLE body before anything can measure it, so
+ * a chunked request — or one that simply lies in Content-Length — allocates
+ * whatever it likes and a 413 afterwards does not give the memory back. This
+ * pulls the stream chunk by chunk and stops at the first byte over the limit.
+ *
+ * The count is in real bytes, not characters. The previous check compared
+ * `raw.length` (UTF-16 code units) against a limit named in bytes, so a body
+ * of multi-byte UTF-8 could be roughly three times the cap and still pass.
+ *
+ * Past the cap it stops accumulating but keeps draining — see the comment at
+ * the drain branch for why cancelling the reader is not safe.
+ *
+ * @param req
+ * @param maxBytes Hard ceiling on the decoded body.
+ * @returns The body text, or null if it exceeded `maxBytes`.
+ */
+async function readBodyWithLimit(req: Request, maxBytes: number): Promise<string | null> {
+  // A body-less request is legitimately the empty string; JSON.parse rejects
+  // it downstream with the same 400 an unparseable body gets.
+  if (!req.body) return ""
+
+  const reader = req.body.getReader()
+  // stream: true so a multi-byte character split across two chunks is decoded
+  // once both halves have arrived, instead of becoming a replacement char.
+  const decoder = new TextDecoder("utf-8")
+  let total = 0
+  let text = ""
+  let overLimit = false
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+
+      if (!overLimit && total > maxBytes) {
+        // Stop ACCUMULATING here — that is what bounds memory, and it is the
+        // whole point of the cap. Release what was collected so far.
+        overLimit = true
+        text = ""
+      }
+      if (overLimit) {
+        // Keep draining, discarding as we go.
+        //
+        // Cancelling the reader instead leaves the connection framed
+        // mid-request: the client is still sending, so the next request on
+        // that keep-alive connection is read as garbage and Bun answers it
+        // with an empty-bodied protocol-level 400. That surfaced as a flaky
+        // failure in the test that runs after the chunked-oversize one, and
+        // would hit a real client the same way — a 413 followed by an
+        // inexplicable 400 on their next, perfectly valid, request.
+        //
+        // Draining costs bandwidth the sender is transmitting anyway, and
+        // costs no memory, so the DoS this cap exists to stop is still
+        // stopped. DRAIN_LIMIT below bounds even that.
+        if (total > maxBytes * DRAIN_LIMIT_MULTIPLIER) {
+          // Absurdly over: give up on a clean connection rather than read an
+          // unbounded stream. Breaking this connection is the lesser harm.
+          await reader.cancel()
+          return null
+        }
+        continue
+      }
+
+      text += decoder.decode(value, { stream: true })
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  if (overLimit) return null
+  return text + decoder.decode()
 }
 
 function isAuthorized(req: Request): boolean {
@@ -127,9 +223,20 @@ function getFullReviewState(): object {
 }
 
 async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
+  // One page's review record — decision, notes, reviewer, history — is far
+  // smaller than an AI request, so it gets its own tighter ceiling rather than
+  // inheriting the AI cap and being loosely bounded for no reason.
+  const raw = await readBodyWithLimit(req, MAX_REVIEW_BODY_BYTES)
+  if (raw === null) {
+    return jsonResponse(
+      { error: `Request body must be ${MAX_REVIEW_BODY_BYTES} bytes or fewer.` },
+      413
+    )
+  }
+
   let body: unknown
   try {
-    body = await req.json()
+    body = JSON.parse(raw)
   } catch {
     return jsonResponse({ error: "Request body must be valid JSON." }, 400)
   }
@@ -276,7 +383,10 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ""
 const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS ?? 240_000)
 
 /** Map a thrown error to a status code and a message worth showing a reviewer. */
-function aiErrorResponse(error: unknown): Response {
+function aiErrorResponse(
+  error: unknown,
+  signals?: { client?: AbortSignal; timeout?: AbortSignal }
+): Response {
   if (error instanceof RefusalError) {
     // A refusal is a content outcome, not a server fault. 422 so the client can
     // say "the model declined" rather than "something broke".
@@ -285,13 +395,44 @@ function aiErrorResponse(error: unknown): Response {
       422
     )
   }
-  if ((error as { name?: string })?.name === "AbortError") {
-    // The reviewer cancelled or navigated away, or the request hit the timeout
-    // below. Expected, not a fault: returning it through the generic branch
-    // would log every cancelled generation as a server error and make a real
-    // failure impossible to spot in the log.
+
+  // Cancellation is decided by SIGNAL STATE, not by the shape of the error.
+  //
+  // This branch used to test `error.name === "AbortError"` and never once ran:
+  // the Anthropic SDK throws APIUserAbortError and APIConnectionTimeoutError,
+  // both of which inherit name "Error" and carry no `status`, so every
+  // cancelled generation fell through to the generic branch and was logged as
+  // a 500. AbortSignal.timeout() also reports "TimeoutError", not "AbortError",
+  // so a name check written for one would have missed the other anyway.
+  //
+  // Asking the signal instead is provider-agnostic — it will still be correct
+  // for Gemini, whose error classes are entirely different — where an
+  // instanceof list has to be extended per provider and rots silently the day
+  // it isn't. The narrow cost is that an unrelated error thrown in the same
+  // tick as an abort is reported as a cancellation, for a request that was
+  // being torn down regardless.
+  if (signals?.client?.aborted) {
+    // The reviewer hit Cancel or navigated away. Nothing to log.
+    return jsonResponse({ error: "Generation was cancelled." }, 499)
+  }
+  if (signals?.timeout?.aborted) {
+    // Our own budget expired, which is a gateway timeout rather than a client
+    // cancellation. Separating the two lets the log answer "who gave up first?"
+    // instead of collapsing both into one ambiguous code.
+    return jsonResponse({ error: "Generation timed out." }, 504)
+  }
+  // Fallback for aborts raised where no signal was threaded through, so the
+  // mapping degrades to something sane instead of back to a logged 500.
+  const errorName = (error as { name?: string })?.name
+  if (
+    error instanceof Anthropic.APIUserAbortError ||
+    error instanceof Anthropic.APIConnectionTimeoutError ||
+    errorName === "AbortError" ||
+    errorName === "TimeoutError"
+  ) {
     return jsonResponse({ error: "Generation was cancelled or timed out." }, 499)
   }
+
   const status = (error as { status?: number })?.status
   if (typeof status === "number" && status >= 400 && status < 600) {
     // An upstream API error (bad key, rate limit, overload). Surface it as a
@@ -362,18 +503,20 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
       )
     }
 
+    // Content-Length is a claim, not a guarantee — a chunked or lying client
+    // sends no usable header. Streaming the body against the same cap makes the
+    // limit hold either way, and stops an oversized body from being allocated
+    // in full before anything is allowed to object to it.
+    const raw = await readBodyWithLimit(req, MAX_REQUEST_BODY_BYTES)
+    if (raw === null) {
+      return jsonResponse(
+        { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
+        413
+      )
+    }
+
     let body: unknown
     try {
-      // Content-Length is a claim, not a guarantee — a chunked or lying client
-      // sends no usable header. Read as text against the same cap so the limit
-      // holds either way, then parse.
-      const raw = await req.text()
-      if (raw.length > MAX_REQUEST_BODY_BYTES) {
-        return jsonResponse(
-          { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
-          413
-        )
-      }
       body = JSON.parse(raw)
     } catch {
       return jsonResponse({ error: "Request body must be valid JSON." }, 400)
@@ -401,7 +544,7 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
       const result = await generateContent({ ...parsed.data, signal })
       return jsonResponse(result, 200)
     } catch (error) {
-      return aiErrorResponse(error)
+      return aiErrorResponse(error, { client: req.signal, timeout })
     }
   }
 

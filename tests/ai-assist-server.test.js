@@ -63,6 +63,13 @@ const stub = {
    * is down" this way keeps the test from encoding the SDK's retry count.
    */
   always: null,
+  /**
+   * Hold the response open this long before answering. Lets a test cancel or
+   * time out a generation mid-flight, which is the only way to exercise the
+   * cancellation mapping — the bug it guards was a branch that looked right
+   * and never executed.
+   */
+  delayMs: 0,
   /** Every request body the stub received. */
   requests: [],
 }
@@ -148,6 +155,7 @@ describe('AI assist API (server.ts)', () => {
           })
         }
         stub.requests.push(await req.json().catch(() => null))
+        if (stub.delayMs) await new Promise((resolve) => setTimeout(resolve, stub.delayMs))
         const next = stub.always || stub.queue.shift()
         if (!next) return Response.json(messageResponse(VALID_PAGE))
         if (next.status) return Response.json(next.body, { status: next.status })
@@ -173,6 +181,7 @@ describe('AI assist API (server.ts)', () => {
   beforeEach(() => {
     stub.queue = []
     stub.always = null
+    stub.delayMs = 0
     stub.requests = []
   })
 
@@ -282,6 +291,77 @@ describe('AI assist API (server.ts)', () => {
       const res = await post({ task: 'content', prompt: 'Draft a page.', page: nested })
       expect(res.status).toBe(400)
       expect(JSON.stringify((await res.json()).issues)).toContain('nest')
+    })
+
+    test('rejects an oversized chunked body the Content-Length check cannot see', async () => {
+      // The pre-check only catches an honest Content-Length. A streamed body
+      // sends none, so this is the case that has to be enforced while reading
+      // rather than after buffering.
+      const chunk = new TextEncoder().encode('x'.repeat(64 * 1024))
+      const body = new ReadableStream({
+        start(controller) {
+          for (let i = 0; i < 6; i += 1) controller.enqueue(chunk)
+          controller.close()
+        },
+      })
+      const res = await fetch(`${base}/api/ai/generate`, {
+        method: 'POST',
+        headers: authed(),
+        body,
+        duplex: 'half',
+      })
+      expect(res.status).toBe(413)
+    })
+
+    test('leaves the connection usable after rejecting an oversized body', async () => {
+      // Rejecting a body must not poison the keep-alive connection. Cancelling
+      // the request-body reader mid-stream does exactly that: the client is
+      // still sending, so the next request on the same connection is read as
+      // garbage and Bun answers it with an empty-bodied protocol-level 400.
+      // That showed up first as a flaky failure in the test that happened to
+      // run next; a real client would see a 413 followed by an inexplicable
+      // 400 on their next, perfectly valid, request.
+      // Chunks are produced SLOWLY and on demand. Enqueuing them all up front
+      // lets the client finish sending before the server ever reads, so a
+      // cancel has nothing to interrupt and the bug hides. Trickling them keeps
+      // the client genuinely mid-send when the cap trips, which is the state
+      // that corrupts the connection.
+      const chunk = new TextEncoder().encode('x'.repeat(32 * 1024))
+      let sent = 0
+      const big = new ReadableStream({
+        async pull(controller) {
+          if (sent >= 12) return controller.close()
+          sent += 1
+          await new Promise((resolve) => setTimeout(resolve, 15))
+          controller.enqueue(chunk)
+        },
+      })
+      const rejected = await fetch(`${base}/api/ai/generate`, {
+        method: 'POST',
+        headers: authed(),
+        body: big,
+        duplex: 'half',
+      })
+      expect(rejected.status).toBe(413)
+
+      // Immediately reuse the connection with a request that must succeed.
+      stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      const after = await post({ task: 'content', prompt: 'Draft a page.' })
+      expect(after.status).toBe(200)
+      expect((await after.json()).valid).toBe(true)
+    })
+
+    test('measures the body in bytes, not characters', async () => {
+      // '€' is 3 bytes of UTF-8 but one JS character, so a cap compared against
+      // String#length would let roughly three times the intended payload
+      // through. 60k of them is ~180 KB on the wire, over the 128 KB cap, but
+      // only 60k characters.
+      const res = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { filler: '€'.repeat(60_000) },
+      })
+      expect(res.status).toBe(413)
     })
 
     test('still accepts a real page from this repo as grounding', async () => {
@@ -543,5 +623,76 @@ describe('AI assist API when unconfigured', () => {
     })
     expect(res.status).toBe(501)
     expect((await res.json()).error).toContain('ANTHROPIC_API_KEY unset')
+  })
+})
+
+// The whole-request timeout, on its own server so AI_REQUEST_TIMEOUT_MS can be
+// short enough to hit deliberately.
+//
+// This is the regression test for the cancellation mapping. The old
+// aiErrorResponse matched on `error.name === "AbortError"`, but aborting the
+// SDK's call makes it throw APIUserAbortError — name "Error", no status — so
+// the branch never ran and every timed-out generation came back as a logged
+// 500. A client-cancelled request maps to 499 through the same code, but that
+// case is not observable from a test: the client that aborts is precisely the
+// one that cannot then read the response. The timeout path is the same branch
+// with a client still attached to see the answer.
+describe('AI assist API request timeout', () => {
+  const TIMEOUT_PORT = 8134
+  const TIMEOUT_STUB_PORT = 8135
+  const timeoutBase = `http://127.0.0.1:${TIMEOUT_PORT}`
+  let proc
+  let slowStub
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-timeout-'))
+
+    slowStub = Bun.serve({
+      port: TIMEOUT_STUB_PORT,
+      hostname: '127.0.0.1',
+      async fetch() {
+        // Far longer than the server's budget, so the server always gives up
+        // first and the assertion is about the server, not about this timing.
+        await new Promise((resolve) => setTimeout(resolve, 10_000))
+        return Response.json(messageResponse(VALID_PAGE))
+      },
+    })
+
+    proc = Bun.spawn(['bun', 'run', 'server.ts'], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        PORT: String(TIMEOUT_PORT),
+        HOST: '127.0.0.1',
+        REVIEW_API_TOKEN: TOKEN,
+        ANTHROPIC_API_KEY: 'sk-ant-stub',
+        ANTHROPIC_BASE_URL: `http://127.0.0.1:${TIMEOUT_STUB_PORT}`,
+        AI_REQUEST_TIMEOUT_MS: '400',
+        DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
+      },
+      stdout: 'ignore',
+      stderr: 'ignore',
+    })
+    await waitForServer(`${timeoutBase}/api/ai/capabilities`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    slowStub?.stop(true)
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('answers 504 when the upstream outlives the request budget', async () => {
+    const res = await fetch(`${timeoutBase}/api/ai/generate`, {
+      method: 'POST',
+      headers: authed(),
+      body: JSON.stringify({ task: 'content', prompt: 'Take your time.' }),
+    })
+
+    // Specifically NOT 500: a wedged upstream is a gateway timeout, and
+    // logging it as a server fault buries the failures that are real ones.
+    expect(res.status).toBe(504)
+    expect((await res.json()).error).toContain('timed out')
   })
 })

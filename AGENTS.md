@@ -295,7 +295,12 @@ unconfigured.
   a patch via the shared `mergeReviewRecord()` — `server.ts` imports
   `js/review-merge.js` directly, the same file a `<script>` tag loads
   client-side — and returns the merged record). Every write is scoped to one
-  `page_key`; the server never wholesale-replaces the table.
+  `page_key`; the server never wholesale-replaces the table. The PUT body is
+  capped at `MAX_REVIEW_BODY_BYTES` (64 KB) via the same streaming
+  `readBodyWithLimit()` the AI routes use — its own tighter ceiling, since one
+  page's record is a few KB. The cap sits in front of the parse, so an
+  oversized body never reaches `mergeReviewRecord` and a rejected write is
+  never a partial one.
 - **Auth**: `Authorization: Bearer <REVIEW_API_TOKEN>` required on every
   `/api/*` request; missing/wrong → 401; `REVIEW_API_TOKEN` unset → 501 (not
   open access).
@@ -430,17 +435,38 @@ by default, failing closed.
 - **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
   `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only). Keep them in
   the gitignored `.env.local`.
-- **Every input is bounded, and the request is bounded end to end.** `prompt`
+- **Every input is bounded, and the bound is enforced while reading.** `prompt`
   caps at 8000 characters, but `page` is serialized into the provider prompt
   just the same — so it carries its own limits (96 KB serialized, 12 levels
-  deep) and the whole body is refused at 413 above 128 KB **before**
-  `req.json()` buffers it. Content-Length is only a claim, so the body is also
-  read as text against the same cap. Depth is measured iteratively, never
+  deep). The body goes through `readBodyWithLimit()`, which streams `req.body`
+  and stops at the first byte past 128 KB. `await req.text()` is the wrong
+  tool: it buffers everything before anything can measure it, so a chunked or
+  Content-Length-lying client allocates freely and a later 413 does not give
+  that back. The Content-Length pre-check stays as a cheap first pass. The count
+  is in **bytes, not characters** — `String#length` against a byte limit lets
+  multi-byte UTF-8 through at ~3× the cap. Depth is measured iteratively, never
   recursively: a recursive walk over attacker-supplied nesting is itself the
-  denial of service it exists to detect. Upstream, the SDK client sets
-  `maxRetries: 1` and a 150s per-call timeout, and the route combines
-  `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default
-  240s). A cancelled or timed-out request answers 499, not a logged 500.
+  denial of service it exists to detect.
+- **Past the cap it stops accumulating but keeps draining.** Cancelling the
+  reader leaves the connection framed mid-request, so the client's _next_
+  request is read as garbage and gets an empty-bodied protocol-level 400 from
+  Bun — a 413 followed by an inexplicable failure on a valid follow-up.
+  Dropping the accumulated text is what bounds memory; draining costs only
+  bandwidth already in flight. `DRAIN_LIMIT_MULTIPLIER` (8×) bounds that too.
+  The regression test must trickle chunks on a timer, or the client finishes
+  sending before the server reads and the bug hides.
+- **Cancellation is decided by signal state, not the error's shape.** The SDK
+  client sets `maxRetries: 1` and a 150s per-call timeout; the route combines
+  `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default 240s)
+  and hands **both** to `aiErrorResponse`, which maps `client.aborted` → **499**
+  and `timeout.aborted` → **504**. Matching on the error does not work: the SDK
+  throws `APIUserAbortError` / `APIConnectionTimeoutError`, both inheriting
+  `name` `"Error"` with no `status`, so a `name === 'AbortError'` test never
+  fired and every cancellation was logged as a 500. `AbortSignal.timeout()`
+  reports `"TimeoutError"` besides. Signal state is also provider-agnostic;
+  `instanceof` checks remain only as a fallback. The 504 path is tested against
+  a slow stub — 499 is not observable, since the client that aborts cannot read
+  the response.
 - **The retry carries the rejected draft, not just the failures.** Each API
   call is stateless, so "fix these and change nothing else" is only followable
   if the draft travels with the instruction. Usage is summed across attempts

@@ -129,6 +129,25 @@ describe('review-state API (server.ts)', () => {
     expect(res.status).toBe(400)
   })
 
+  test('rejects an oversized body with 413 before parsing or merging it', async () => {
+    // This endpoint read req.json() with no size limit at all — the same gap
+    // the AI routes had. The cap sits in FRONT of the parse, so an oversized
+    // body never reaches mergeReviewRecord and cannot touch a stored record.
+    const res = await fetch(`${base}/api/review-state/pages/pestsTopic`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ page_key: 'pestsTopic', notes: 'x'.repeat(128 * 1024) }),
+    })
+    expect(res.status).toBe(413)
+
+    // And the page it targeted is untouched — a rejected write must not be a
+    // partial write.
+    const after = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+    expect(after.pages.pestsTopic?.notes || '').not.toContain('xxxx')
+  })
+
   test('rejects a body that fails schema validation (invalid decision enum value)', async () => {
     const before = await fetch(`${base}/api/review-state`, {
       headers: { authorization: `Bearer ${TOKEN}` },
