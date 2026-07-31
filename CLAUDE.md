@@ -355,15 +355,23 @@ run the same implementation the Checks panel does.
 `escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
 none of the five characters it escapes — so every structured `href` in
 `js/page-render.js` goes through `safeUrl()` from `js/utils.js`, which allows
-`http`/`https`/`mailto`/`tel` and root-relative paths and rewrites anything
-else to the inert `#`. It strips control characters first, since browsers
+`http`/`https`/`mailto`/`tel` **and anything without a scheme at all** —
+root-relative (`/forms/…`), document-relative (`help/foo`, `../help`), and bare
+fragment or query targets (`#top`, `?q=1`) all pass through unchanged. It is a
+_scheme_ guard, not a URL allowlist: what it rewrites to the inert `#` is a
+recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) and
+protocol-relative `//host`, which reads as relative but leaves the origin. Note
+it strips control characters only from the string it _tests_, returning the
+caller's original on success. It strips control characters first, since browsers
 resolve `java\tscript:` as `javascript:`, and rejects protocol-relative
 `//host`. `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the
 same rule at validation time — in `bun run validate` **and** in the AI output
 validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
-crosses the CJS/ESM boundary and relies on Node ≥22's `require(esm)`; CI's
-`build:netlify` runs `validate.js` under Node, not Bun.
+crosses the CJS/ESM boundary. **Bun is the only runtime CI exercises** — both
+`bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js` —
+so the Node ≥22 `require(esm)` path works but is _not_ covered by CI. Anything
+relying on Node-specific interop here would go unnoticed.
 
 ### Page object shape and validation rules
 
@@ -781,8 +789,9 @@ it, and it fails closed rather than open.
   mandates. **Neither this nor CI contains the other, so a passing draft does
   not mean "this would pass CI".** It is tighter on content: `validate.js`
   never calls `analyzePlainLanguage()`, and the only CI-side plain-language
-  gate is a budget in `tests/plain-language.test.js` allowing up to 12
-  mandatory failures across the whole corpus — so authored copy can carry a
+  gate is a set of budgets in `tests/plain-language.test.js` — at most 15
+  mandatory failures corpus-wide, 3 per page, and any one rule failing at most
+  8 pages — so authored copy can carry a
   mandate failure that would get a generated draft rejected. It is looser on
   wiring, because it only ever sees one page object: dropping a passing draft
   into `pages/` still needs the `import` in `js/page-data.js` and its

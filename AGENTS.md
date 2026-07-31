@@ -248,14 +248,21 @@ miscitations. Like `js/review-merge.js` the module is dual-export
 ### URL schemes are validated, not just escaped
 
 `escapeHtml` does not neutralize a scheme, so every structured `href` in
-`js/page-render.js` runs through `safeUrl()` from `js/utils.js` — `http`,
-`https`, `mailto`, `tel` and root-relative paths pass; anything else becomes the
-inert `#`. It strips control characters first (browsers resolve `java\tscript:`
-as `javascript:`) and rejects protocol-relative `//host`. `findUnsafeUrls()` in
-`build_scripts/data-checks.js` enforces the same rule in `bun run validate` and
-in the AI output validator, importing `safeUrl` rather than restating it so
-renderer and validator cannot drift. That import crosses the CJS/ESM boundary
-and relies on Node >= 22's `require(esm)`; CI runs `validate.js` under Node.
+`js/page-render.js` runs through `safeUrl()` from `js/utils.js`. It is a
+**scheme** guard, not a URL allowlist: `http`, `https`, `mailto`, `tel` and
+**anything with no scheme at all** pass unchanged — root-relative
+(`/forms/…`), document-relative (`help/foo`, `../help`), and bare fragment or
+query targets (`#top`, `?q=1`). What it rewrites to the inert `#` is a
+recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) or
+protocol-relative `//host`, which reads as relative but leaves the origin. It
+strips control characters from the string it _tests_ (browsers resolve
+`java\tscript:` as `javascript:`) and returns the caller's original on success.
+`findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the same rule in
+`bun run validate` and in the AI output validator, importing `safeUrl` rather
+than restating it so renderer and validator cannot drift. That import crosses
+the CJS/ESM boundary; **Bun is the only runtime CI exercises** (both
+`bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js`),
+so the Node >= 22 `require(esm)` path works but is not covered by CI.
 
 ### Page object shape and validation rules
 
