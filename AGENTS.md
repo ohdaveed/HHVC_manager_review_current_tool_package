@@ -256,7 +256,11 @@ query targets (`#top`, `?q=1`). What it rewrites to the inert `#` is a
 recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) or
 protocol-relative `//host`, which reads as relative but leaves the origin. It
 strips control characters from the string it _tests_ (browsers resolve
-`java\tscript:` as `javascript:`) and returns the caller's original on success.
+`java\tscript:` as `javascript:`) but **trims whitespace from the value it
+returns**. Since `findUnsafeUrls()` decides by comparing `safeUrl(value)`
+against the original, a whitespace-padded but otherwise safe URL is reported as
+an unsafe scheme — a false positive, not intended behaviour. No page carries
+one today.
 `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the same rule in
 `bun run validate` and in the AI output validator, importing `safeUrl` rather
 than restating it so renderer and validator cannot drift. That import crosses

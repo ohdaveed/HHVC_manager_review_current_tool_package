@@ -360,11 +360,18 @@ root-relative (`/forms/…`), document-relative (`help/foo`, `../help`), and bar
 fragment or query targets (`#top`, `?q=1`) all pass through unchanged. It is a
 _scheme_ guard, not a URL allowlist: what it rewrites to the inert `#` is a
 recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) and
-protocol-relative `//host`, which reads as relative but leaves the origin. Note
-it strips control characters only from the string it _tests_, returning the
-caller's original on success. It strips control characters first, since browsers
-resolve `java\tscript:` as `javascript:`, and rejects protocol-relative
-`//host`. `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the
+protocol-relative `//host`, which reads as relative but leaves the origin. It
+strips control characters before testing, since browsers resolve
+`java\tscript:` as `javascript:`.
+
+Two normalization details matter, because `findUnsafeUrls()` decides by
+comparing `safeUrl(value)` against the original. Control characters are removed
+only from the string being _tested_, so an accepted URL keeps them — but
+leading and trailing whitespace is trimmed from the **returned** value. **A
+whitespace-padded but otherwise safe URL is therefore reported as an "unsafe
+URL scheme"**, which is a false positive rather than intended behaviour: the
+check is about schemes, not whitespace hygiene. No page carries a padded URL
+today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the
 same rule at validation time — in `bun run validate` **and** in the AI output
 validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
