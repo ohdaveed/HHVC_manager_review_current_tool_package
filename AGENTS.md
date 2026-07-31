@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:app then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 17 unit-test files in tests/
+bun run test                  # Bun test runner over the 18 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,14 +59,16 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs seventeen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs eighteen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
-`ai-assist-env`, and
-`ai-assist-server` (which spawns `server.ts` against a stub Anthropic endpoint,
-so the AI routes are covered without a key or a paid call). **The list in
+`ai-assist-env`, `ai-assist-providers` (the provider registry and usage
+normalization, varying the provider keys directly — which the server tests
+cannot, since a spawn only ever sees the environment it was given), and
+`ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
+endpoints, so both AI paths are covered without a key or a paid call). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
@@ -581,11 +583,84 @@ by default, failing closed.
   endpoint, and a 501 there cannot be told apart from "no server at all".
 - **The provider gate lives inside each route, not before routing**, so an
   unknown path answers 404 rather than 501 claiming the route exists.
-- **Routes**: `GET /api/ai/capabilities`, `GET /api/ai/models` (queried live,
-  never hardcoded), `POST /api/ai/generate` (`{task, prompt, page?}`, Zod-validated).
+- **Two providers, behind a registry.** `build_scripts/ai/providers.js` holds
+  `provider-anthropic.js` and `provider-gemini.js` behind one list; nothing in
+  `index.js` or `server.ts` names a provider. A third is a require plus a line
+  there. Every entry exports the same surface: `name`, `label`,
+  `isConfigured()`, `getModel()`, `listModelIds()`, `normalizeUsage()`, and
+  `generateObject({system, userPrompt, jsonSchema, signal})`. Configuration is
+  read from the environment **per call**, not snapshot at require time — the
+  registry is a module singleton `server.ts` imports once at startup, so caching
+  it would freeze the first environment it ever saw.
+- **Registration order is the preference order.** An unnamed request runs on the
+  first _configured_ provider (Claude, then Gemini). A request naming an
+  unconfigured provider is a **400**, never a silent fallback — running a Gemini
+  request on Claude would attribute one model's output to another in the panel's
+  meta line and in the downloaded module. "Nothing configured at all" stays a
+  501: the server genuinely cannot, rather than merely lacking what was asked for.
+- **Shared error types live in `build_scripts/ai/errors.js`**, not in a provider
+  module. `RefusalError` is raised by both providers from entirely different
+  signals — Claude's `stop_reason: 'refusal'`, Gemini's `promptFeedback.blockReason`
+  or a `finishReason` of `SAFETY`/`PROHIBITED_CONTENT`/`BLOCKLIST`/`SPII` — so
+  `server.ts` maps 422 with one `instanceof` instead of a per-provider branch
+  that rots the day a provider is added. `provider-anthropic.js` re-exports it,
+  since that was the documented import site.
+- **Usage is normalized at the provider boundary** to
+  `{inputTokens, outputTokens, totalTokens}`, because `addUsage()` sums usage
+  across the validation retry field by field and Anthropic's `input_tokens` and
+  Gemini's `promptTokenCount` would otherwise sum into something meaningless.
+  Gemini's `totalTokenCount` is trusted over input+output: thinking tokens are
+  billed on top, so recomputing understates exactly the thinking-heavy requests
+  this feature makes. Provider-native counters ride alongside as
+  `usageByAttempt[]` rather than inside the sum — `addUsage` keeps the _first_
+  attempt's value for non-numeric fields, so a nested raw object in the total
+  would claim attempt one's numbers covered every attempt.
+- **Anthropic's input total is all THREE counters**, per the API's own
+  definition: `input_tokens` **+** `cache_creation_input_tokens` **+**
+  `cache_read_input_tokens`. They are reported separately, not folded in. This
+  is not a rounding detail here: `prompts.js` inlines the whole vendored style
+  corpus and marks it `cache_control` precisely so it is cached, so on a warm
+  request nearly the entire prompt is billed through `cache_read_input_tokens`
+  and `input_tokens` is a small remainder. Reading only that counter reported
+  **42** input tokens for a request that really used **18042** — understating
+  usage by most of the prompt on exactly the requests the caching exists to
+  make cheap.
+- **The `provider` enum is read from the registry, never written out.**
+  `schemas.js` builds it from `allProviderNames()`. A second hardcoded list
+  silently breaks the "a require plus a line in `REGISTRY`" contract:
+  `capabilities` would advertise the new provider and the browser picker would
+  send its name, but the schema would reject the request as malformed before
+  `resolveProvider` ever ran — a failure that reads as a client bug rather than
+  a missed registration.
+- **Routes**: `GET /api/ai/capabilities` (per-provider `providers`, `models`,
+  `providerLabels`, and `defaultProvider` — every _registered_ provider, including
+  unconfigured ones, so the panel can tell "no key for Gemini" from "no Gemini
+  here"), `GET /api/ai/models` (queried live, never hardcoded; settled per
+  provider so one bad key does not blank the other's list),
+  `POST /api/ai/generate` (`{task, prompt, page?, provider?}`, Zod-validated).
 - **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
-  `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only). Keep them in
-  the gitignored `.env.local`.
+  `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only);
+  `GEMINI_API_KEY`, `GEMINI_MODEL` (default `gemini-2.5-pro`),
+  `GEMINI_MAX_ATTEMPTS` (default 2), `GEMINI_TIMEOUT_MS`, `GEMINI_BASE_URL`
+  (tests only). Keep them in the gitignored `.env.local`.
+- **Gemini specifics that a naive port gets wrong.** Use `responseJsonSchema`,
+  not `responseSchema` — the latter takes a narrower OpenAPI subset, and the
+  wider one is what lets `PAGE_OUTPUT_SCHEMA` be shared byte-for-byte instead of
+  forked into a second copy `tests/ai-assist-schema.test.js` would have to guard
+  twice. Check `promptFeedback.blockReason` **and** `candidates[0].finishReason`:
+  the first covers a blocked _input_ where no candidate exists at all, and
+  checking only the second makes those surface as "returned no text" and read as
+  an outage. Both are checked before touching content, for the same reason the
+  Claude path checks `stop_reason` first. `finishMessage` looks like the refusal
+  explanation and is always absent — it is Vertex-only and the SDK's converter
+  drops it on the Developer API path — so the explanation is built from the
+  blocked `safetyRatings` entries instead. `httpOptions.retryOptions.attempts`
+  defaults to **5**, which composes as badly as the Anthropic default did: two
+  validation attempts times five is ten upstream calls per click, so it is
+  pinned to 2. There is no `cache_control` equivalent; Gemini caches implicitly
+  on a prefix match, which is exactly what `prompts.js`'s byte-stability rule
+  already provides. API-key auth only — `@google/genai` also speaks to Vertex,
+  but that is a different credential story than a single `GEMINI_API_KEY`.
 - **Every input is bounded, and the bound is enforced while reading.** `prompt`
   caps at 8000 characters, but `page` is serialized into the provider prompt
   just the same — so it carries its own limits (96 KB serialized, 12 levels
@@ -637,6 +712,20 @@ by default, failing closed.
   cases split the same way the signal branches do —
   `APIUserAbortError` → 499, `APIConnectionTimeoutError` → **504** — because an
   upstream that ran out of time is not a client that hung up.
+- **Gemini's timeout has to be normalized at the provider, because its SDK
+  makes it unrecognizable at the route.** `@google/genai` implements
+  `httpOptions.timeout` as a bare `abortController.abort()` — no reason — which
+  rejects with a `DOMException` whose `name` is `"AbortError"`: byte-identical
+  to a reviewer pressing Cancel, and so answered **499 "Generation was
+  cancelled."** for a request nobody cancelled. `constructor.name` cannot help
+  here the way it does for Anthropic; it is `"DOMException"`. The caller's
+  signal is the only thing that still distinguishes the two, and it is in scope
+  only inside the provider, so `classifyAbort()` in `provider-gemini.js` raises
+  a `ProviderTimeoutError` when the SDK aborted and the caller's signal did
+  **not** — and rethrows untouched when it did, so a genuine cancel still
+  reaches the signal branches. `ProviderTimeoutError` lives in `errors.js` for
+  the reason `RefusalError` does: it belongs to no provider, and normalizing it
+  keeps `aiErrorResponse` one `instanceof` instead of a per-provider branch.
 - **Numeric env tunables are range-checked, not merely parsed.**
   `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
   fractions, and anything outside `[min, max]` (default max

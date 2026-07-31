@@ -7,6 +7,11 @@
 // producing output near the cap.
 const Anthropic = require('@anthropic-ai/sdk')
 const { numberFromEnv } = require('./env')
+const { RefusalError } = require('./errors')
+
+/** Registry key and the label the browser's provider picker shows. */
+const NAME = 'claude'
+const LABEL = 'Claude'
 
 const DEFAULT_MODEL = 'claude-opus-5'
 const DEFAULT_EFFORT = 'high'
@@ -74,17 +79,57 @@ function createClient() {
 }
 
 /**
- * Raised when the model declines the request. Carried as its own class so the
- * route can answer 422 rather than a generic 500 — a refusal is a content
- * outcome, not a server fault.
+ * List the model ids this key can see.
+ *
+ * Queried live rather than hardcoded: model lineups move, and a stale constant
+ * in committed code turns into a 404 nobody notices until a reviewer hits it.
+ * @returns {Promise<string[]>}
  */
-class RefusalError extends Error {
-  constructor(details) {
-    super('The model declined this request.')
-    this.name = 'RefusalError'
-    this.category = (details && details.category) || null
-    this.explanation = (details && details.explanation) || null
-  }
+async function listModelIds() {
+  const client = createClient()
+  const ids = []
+  for await (const model of client.models.list()) ids.push(model.id)
+  return ids
+}
+
+/**
+ * Map Anthropic's token counters onto the shape every provider reports.
+ *
+ * The counters themselves are provider-native (`input_tokens` here,
+ * `promptTokenCount` on Gemini), and `addUsage()` in index.js sums usage across
+ * the validation retry field by field. Summing two providers' differently-named
+ * fields into one object would produce a total that is not wrong so much as
+ * meaningless, and would force every consumer to know which provider produced
+ * it. Normalizing at the provider boundary keeps the response shape stable no
+ * matter who answered.
+ *
+ * The raw object is NOT folded in here — it travels separately as `rawUsage`,
+ * because `addUsage` keeps the first attempt's value for non-numeric fields and
+ * would therefore report attempt one's raw counters as if they covered both.
+ * @param {object} [usage] Anthropic's `response.usage`.
+ * @returns {{inputTokens: number, outputTokens: number, totalTokens: number}}
+ */
+function normalizeUsage(usage) {
+  // All THREE input counters, per the API's own definition: "Total input tokens
+  // in a request is the summation of input_tokens, cache_creation_input_tokens,
+  // and cache_read_input_tokens." They are reported separately, not folded into
+  // input_tokens.
+  //
+  // This is not a rounding detail for this feature specifically. prompts.js
+  // inlines the entire vendored sfgov-style corpus into the system prompt and
+  // marks it with cache_control precisely so it is cached — so on every warm
+  // request virtually the whole prompt is billed through
+  // cache_read_input_tokens and `input_tokens` alone is a small remainder.
+  // Reading only that counter made the provider-neutral total understate real
+  // usage by most of the prompt, on exactly the requests the caching was added
+  // to make cheap. The per-attempt raw counters still travel separately as
+  // `rawUsage`/`usageByAttempt[]`, so the creation-vs-read split is not lost.
+  const input = Number(usage?.input_tokens) || 0
+  const cacheCreation = Number(usage?.cache_creation_input_tokens) || 0
+  const cacheRead = Number(usage?.cache_read_input_tokens) || 0
+  const output = Number(usage?.output_tokens) || 0
+  const totalInput = input + cacheCreation + cacheRead
+  return { inputTokens: totalInput, outputTokens: output, totalTokens: totalInput + output }
 }
 
 /**
@@ -95,7 +140,8 @@ class RefusalError extends Error {
  * @param {string} options.userPrompt The request turn.
  * @param {object} options.jsonSchema Structured-output schema.
  * @param {AbortSignal} [options.signal]
- * @returns {Promise<{object: object, model: string, usage: object, stopReason: string}>}
+ * @returns {Promise<{object: object, model: string, usage: object, rawUsage: object,
+ *   stopReason: string}>}
  */
 async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   const client = createClient()
@@ -156,16 +202,24 @@ async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   return {
     object: parsed,
     model: response.model || getModel(),
-    usage: response.usage || {},
+    usage: normalizeUsage(response.usage),
+    rawUsage: response.usage || {},
     stopReason: response.stop_reason || 'end_turn',
   }
 }
 
 module.exports = {
+  name: NAME,
+  label: LABEL,
   generateObject,
   isConfigured,
   getModel,
+  listModelIds,
+  normalizeUsage,
   createClient,
+  // Re-exported rather than defined here. It moved to ./errors.js when Gemini
+  // landed (a refusal is not an Anthropic concept), but this module was the
+  // documented import site, so the old spelling keeps working.
   RefusalError,
   DEFAULT_MODEL,
   MAX_TOKENS,

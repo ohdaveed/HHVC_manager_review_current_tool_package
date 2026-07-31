@@ -43,6 +43,24 @@ const VALID_RESULT = {
   },
 }
 
+/**
+ * Capabilities for a server holding BOTH keys — the only configuration where
+ * the picker exists and routing can be wrong.
+ * @returns {object}
+ */
+function bothProviders() {
+  return {
+    providers: { claude: true, gemini: true },
+    models: { claude: 'claude-opus-5', gemini: 'gemini-2.5-pro' },
+    providerLabels: { claude: 'Claude', gemini: 'Gemini' },
+    defaultProvider: 'claude',
+    tasks: ['content'],
+    groundedBy: ['writing-and-style.md'],
+    pageCount: 19,
+    disclosureRequired: true,
+  }
+}
+
 /** Intercept the AI API. `overrides` sets the response per route. */
 async function stubAiApi(page, { capabilities, generate, generateStatus } = {}) {
   await page.route(`${AI_ORIGIN}/api/ai/capabilities`, (route) =>
@@ -51,8 +69,12 @@ async function stubAiApi(page, { capabilities, generate, generateStatus } = {}) 
       contentType: 'application/json',
       body: JSON.stringify(
         capabilities || {
-          providers: { claude: true },
-          models: { claude: 'claude-opus-5' },
+          // One provider by default, so the picker stays absent and every
+          // pre-existing spec describes the same panel it always did.
+          providers: { claude: true, gemini: false },
+          models: { claude: 'claude-opus-5', gemini: null },
+          providerLabels: { claude: 'Claude', gemini: 'Gemini' },
+          defaultProvider: 'claude',
           tasks: ['content'],
           groundedBy: ['writing-and-style.md'],
           pageCount: 19,
@@ -100,7 +122,11 @@ test.describe('AI assist panel', () => {
 
   test('distinguishes a server with no model key from no server at all', async ({ page }) => {
     await stubAiApi(page, {
-      capabilities: { providers: { claude: false }, tasks: ['content'], groundedBy: [] },
+      capabilities: {
+        providers: { claude: false, gemini: false },
+        tasks: ['content'],
+        groundedBy: [],
+      },
     })
     await gotoFresh(page)
     await openWorkspaceTab(page, 'assist')
@@ -108,7 +134,10 @@ test.describe('AI assist panel', () => {
     await page.fill('#aiAssistApiToken', 'test-token')
     await page.click('#aiAssistSaveSettings')
 
+    // Both keys named. Pointing only at ANTHROPIC_API_KEY would send a reviewer
+    // who intended to run Gemini off to configure something they do not want.
     await expect(page.locator('#aiAssistPanel')).toContainText('ANTHROPIC_API_KEY')
+    await expect(page.locator('#aiAssistPanel')).toContainText('GEMINI_API_KEY')
     await expect(page.locator('#aiAssistGenerate')).toBeDisabled()
   })
 
@@ -119,6 +148,59 @@ test.describe('AI assist panel', () => {
     await configure(page)
 
     await expect(page.locator('#aiAssistGenerate')).toBeEnabled()
+  })
+
+  test('hides the provider picker when only one provider is configured', async ({ page }) => {
+    // A select with one option is noise: it takes a row, invites a click, and
+    // changes nothing.
+    await stubAiApi(page)
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+
+    await expect(page.locator('#aiAssistProvider')).toHaveCount(0)
+  })
+
+  test('offers a provider picker when the server reports two', async ({ page }) => {
+    await stubAiApi(page, { capabilities: bothProviders() })
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+
+    const picker = page.locator('#aiAssistProvider')
+    await expect(picker).toBeVisible()
+    await expect(picker.locator('option')).toHaveCount(2)
+    // Pre-selected to the server's own default, so the picker's initial state
+    // matches what an unnamed request would actually do.
+    await expect(picker).toHaveValue('claude')
+    // The model id rides along with the label — it is the thing that actually
+    // varies between two deployments of the same provider.
+    await expect(picker).toContainText('gemini-2.5-pro')
+  })
+
+  test('sends the picked provider with the generate request', async ({ page }) => {
+    await stubAiApi(page, {
+      capabilities: bothProviders(),
+      generate: { ...VALID_RESULT, provider: 'gemini', model: 'gemini-2.5-pro' },
+    })
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+
+    await page.selectOption('#aiAssistProvider', 'gemini')
+    await page.fill('#aiAssistPrompt', 'Draft an Information page about rats.')
+
+    const request = page.waitForRequest(
+      (req) => req.url().includes('/api/ai/generate') && req.method() === 'POST'
+    )
+    await page.click('#aiAssistGenerate')
+    const body = JSON.parse((await request).postData() || '{}')
+    expect(body.provider).toBe('gemini')
+
+    // And the draft is attributed to whoever the SERVER says answered, using
+    // the human-readable label rather than the registry key.
+    await expect(page.locator('.ai-assist-meta')).toContainText('Gemini')
+    await expect(page.locator('.ai-assist-meta')).toContainText('gemini-2.5-pro')
   })
 
   test('refuses to send an empty prompt', async ({ page }) => {

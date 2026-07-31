@@ -27,9 +27,56 @@
     // timeout, or cancel would take the whole request down with it.
     prompt: '',
     includePage: true,
+    // Which provider the next generation runs on. Empty means "let the server
+    // pick its default", which is what a single-provider deployment always
+    // does. Not persisted alongside the server URL/token: a pick is only
+    // meaningful against the endpoint that reported it, and reconcileProvider
+    // below re-derives it from every capabilities response instead.
+    provider: '',
   }
 
   const escapeHtml = (value) => window.utils.escapeHtml(value)
+
+  /**
+   * Provider names this server can actually generate with, in the order the
+   * server registered them.
+   *
+   * `capabilities.providers` covers every provider the BUILD knows about, with
+   * `false` for the ones this deployment holds no key for — so it cannot be
+   * used as a list directly, only filtered.
+   * @returns {string[]}
+   */
+  function availableProviders() {
+    const providers = state.capabilities?.providers || {}
+    return Object.keys(providers).filter((name) => providers[name] === true)
+  }
+
+  /**
+   * Reconcile the selected provider against what the server actually offers.
+   *
+   * Called after every capabilities refresh. A pick can survive a change of
+   * server — the reviewer points the panel at a different deployment, or a key
+   * is removed from the one they are on — and sending it verbatim would earn a
+   * 400 for a choice they never consciously made. Falling back to the server's
+   * own default is the same hygiene handleSaveSettings applies when it drops a
+   * stale draft.
+   * @returns {void}
+   */
+  function reconcileProvider() {
+    const available = availableProviders()
+    if (state.provider && available.includes(state.provider)) return
+    state.provider = state.capabilities?.defaultProvider || available[0] || ''
+  }
+
+  /**
+   * Human-readable name for a provider key.
+   * @param {string} name
+   * @returns {string}
+   */
+  function providerLabel(name) {
+    if (!name) return ''
+    return state.capabilities?.providerLabels?.[name] || name
+  }
 
   function getHost() {
     return document.getElementById(HOST_ID)
@@ -106,20 +153,55 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
       return `<p class="field-help">Enter a server URL and token above, then save, to use AI assist.
         The tool works normally without it.</p>`
     }
-    if (state.capabilities && !state.capabilities.providers?.claude) {
+    // "No provider at all", not "no Claude". A deployment holding only a Gemini
+    // key is fully working, and naming one variable would tell that reviewer to
+    // go set a key they do not need.
+    if (state.capabilities && !availableProviders().length) {
       return `<p class="field-help">The server is reachable but has no model provider configured
-        (<code>ANTHROPIC_API_KEY</code> is unset). Drafting is unavailable until it is set.</p>`
+        (neither <code>ANTHROPIC_API_KEY</code> nor <code>GEMINI_API_KEY</code> is set).
+        Drafting is unavailable until one is.</p>`
     }
     return ''
   }
 
+  /**
+   * The provider picker, shown only when there is a choice to make.
+   *
+   * A select with one option is noise: it takes up a row, invites a click, and
+   * changes nothing. With none configured the form is disabled anyway and the
+   * explanation above says why.
+   * @param {boolean} disabled
+   * @returns {string}
+   */
+  function renderProviderPicker(disabled) {
+    const available = availableProviders()
+    if (available.length < 2) return ''
+    const labels = state.capabilities?.providerLabels || {}
+    const models = state.capabilities?.models || {}
+    const options = available
+      .map((name) => {
+        const label = labels[name] || name
+        // The model id is shown next to the label because it is the thing that
+        // actually varies between two deployments of the same provider, and it
+        // is what a reviewer comparing drafts needs to be able to name.
+        const model = models[name] ? ` (${models[name]})` : ''
+        return `<option value="${escapeHtml(name)}"${state.provider === name ? ' selected' : ''}>
+          ${escapeHtml(label + model)}
+        </option>`
+      })
+      .join('')
+    return `
+      <label class="field-help" for="aiAssistProvider">Model provider</label>
+      <select id="aiAssistProvider" class="sync-config-input"${disabled}>${options}</select>`
+  }
+
   /** @returns {string} the request form. */
   function renderForm() {
-    const ready =
-      window.AiAssist.client.isConfigured() && state.capabilities?.providers?.claude === true
+    const ready = window.AiAssist.client.isConfigured() && availableProviders().length > 0
     const disabled = !ready || state.busy ? ' disabled' : ''
     return `
       <div class="ai-assist-form">
+        ${renderProviderPicker(disabled)}
         <label class="field-help" for="aiAssistPrompt">What should the draft cover?</label>
         <textarea id="aiAssistPrompt" rows="4"
           placeholder="Draft an Information page explaining what happens after a bed bug report."
@@ -183,7 +265,14 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
         <p class="ai-assist-disclosure">${escapeHtml(result.disclosure || '')}</p>
         ${renderVerdict(result)}
         <div class="ai-assist-meta">
-          <span>${escapeHtml(result.provider || '')} · ${escapeHtml(result.model || '')}</span>
+          <!-- The provider the server RESOLVED, not the one picked before the
+               request. Those differ whenever the picker was left on the
+               server's default, and with two providers configured an
+               unattributed draft is exactly the thing a reviewer comparing them
+               cannot afford. Falls back to the raw name if this server sent no
+               label — an older deployment, or one that added a provider this
+               build has no label for. -->
+          <span>${escapeHtml(providerLabel(result.provider))} · ${escapeHtml(result.model || '')}</span>
           <span>${escapeHtml(String(result.attempts || 1))} attempt(s)</span>
         </div>
         <div class="ai-assist-result-actions">
@@ -288,6 +377,9 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
     renderPanel,
     neutralizePreviewLinks,
     getHost,
+    availableProviders,
+    reconcileProvider,
+    providerLabel,
   }
 
   window.AiAssist = window.AiAssist || {}

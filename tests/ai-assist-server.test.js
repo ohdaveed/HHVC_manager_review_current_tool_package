@@ -19,6 +19,7 @@ const ROOT = path.resolve(__dirname, '..')
 
 const PORT = 8131
 const STUB_PORT = 8132
+const GEMINI_STUB_PORT = 8133
 const TOKEN = 'test-ai-api-token'
 const base = `http://127.0.0.1:${PORT}`
 
@@ -74,8 +75,67 @@ const stub = {
   requests: [],
 }
 
+/**
+ * The Gemini stub's own mutable state, deliberately separate from `stub`.
+ *
+ * Keeping one shared queue for both providers would make "the request went to
+ * Gemini and not to Claude" unassertable — which is the single most important
+ * thing about provider routing, and the failure a plausible-looking `switch`
+ * bug actually produces.
+ */
+const geminiStub = {
+  queue: [],
+  requests: [],
+}
+
 /** Fixed per-call usage, so a retried generation's total is checkable. */
 const STUB_USAGE = { input_tokens: 10, output_tokens: 20 }
+
+/** Gemini's counters, deliberately different numbers from STUB_USAGE. */
+const GEMINI_STUB_USAGE = {
+  promptTokenCount: 11,
+  candidatesTokenCount: 22,
+  thoughtsTokenCount: 7,
+  totalTokenCount: 40,
+}
+
+/** A Gemini generateContent response carrying `object` as its JSON payload. */
+function geminiResponse(object) {
+  return {
+    candidates: [{ content: { parts: [{ text: JSON.stringify(object) }] }, finishReason: 'STOP' }],
+    modelVersion: 'gemini-2.5-pro',
+    usageMetadata: { ...GEMINI_STUB_USAGE },
+  }
+}
+
+/**
+ * A Gemini response that declined.
+ *
+ * Modelled as a candidate-level `finishReason`, which is the harder of the two
+ * refusal shapes: generation started and was then stopped, so unlike a
+ * prompt-level `blockReason` there IS a candidate — just one with no parts.
+ * Reaching for its text before checking the reason is what throws a TypeError
+ * over the real cause.
+ */
+function geminiRefusalResponse() {
+  return {
+    candidates: [
+      {
+        finishReason: 'PROHIBITED_CONTENT',
+        // NOT finishMessage, which looks like the field for this and is always
+        // absent here: it is Vertex-only and the SDK's response converter drops
+        // it on the Gemini Developer API path. safetyRatings survives, so that
+        // is what the explanation is built from.
+        safetyRatings: [
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', probability: 'HIGH', blocked: true },
+          { category: 'HARM_CATEGORY_HARASSMENT', probability: 'LOW', blocked: false },
+        ],
+      },
+    ],
+    modelVersion: 'gemini-2.5-pro',
+    usageMetadata: { promptTokenCount: 11, candidatesTokenCount: 0, totalTokenCount: 11 },
+  }
+}
 
 function messageResponse(object) {
   return {
@@ -138,10 +198,33 @@ function post(body, headers = authed()) {
 describe('AI assist API (server.ts)', () => {
   let proc
   let stubServer
+  let geminiStubServer
   let dbDir
 
   beforeAll(async () => {
     dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-api-'))
+
+    // The Gemini Developer API's wire paths, as @google/genai builds them from
+    // httpOptions.baseUrl: GET /v1beta/models to list, and
+    // POST /v1beta/models/{model}:generateContent to generate. Matched on the
+    // suffix rather than the exact string so an apiVersion change in the SDK
+    // does not silently route every request into the 404 branch and leave the
+    // failure looking like a server bug.
+    geminiStubServer = Bun.serve({
+      port: GEMINI_STUB_PORT,
+      hostname: '127.0.0.1',
+      async fetch(req) {
+        const url = new URL(req.url)
+        if (url.pathname.endsWith('/models')) {
+          return Response.json({ models: [{ name: 'models/gemini-2.5-pro' }] })
+        }
+        geminiStub.requests.push(await req.json().catch(() => null))
+        const next = geminiStub.queue.shift()
+        if (!next) return Response.json(geminiResponse(VALID_PAGE))
+        if (next.status) return Response.json(next.body, { status: next.status })
+        return Response.json(next.body)
+      },
+    })
 
     stubServer = Bun.serve({
       port: STUB_PORT,
@@ -167,6 +250,10 @@ describe('AI assist API (server.ts)', () => {
       REVIEW_API_TOKEN: TOKEN,
       ANTHROPIC_API_KEY: 'sk-ant-stub',
       ANTHROPIC_BASE_URL: `http://127.0.0.1:${STUB_PORT}`,
+      // Both providers configured, which is the interesting case: it is the
+      // only one where routing, the picker, and the default can be wrong.
+      GEMINI_API_KEY: 'gemini-stub',
+      GEMINI_BASE_URL: `http://127.0.0.1:${GEMINI_STUB_PORT}`,
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
     })
     await waitForServer(`${base}/api/ai/capabilities`)
@@ -175,6 +262,7 @@ describe('AI assist API (server.ts)', () => {
   afterAll(() => {
     proc?.kill()
     stubServer?.stop(true)
+    geminiStubServer?.stop(true)
     fs.rmSync(dbDir, { recursive: true, force: true })
   })
 
@@ -183,6 +271,8 @@ describe('AI assist API (server.ts)', () => {
     stub.always = null
     stub.delayMs = 0
     stub.requests = []
+    geminiStub.queue = []
+    geminiStub.requests = []
   })
 
   describe('gates', () => {
@@ -226,6 +316,25 @@ describe('AI assist API (server.ts)', () => {
       expect(body.pageCount).toBe(19)
       expect(body.disclosureRequired).toBe(true)
     })
+
+    test('reports every configured provider, with its model and label', async () => {
+      const res = await fetch(`${base}/api/ai/capabilities`, { headers: authed() })
+      const body = await res.json()
+      expect(body.providers).toEqual({ claude: true, gemini: true })
+      expect(body.models.claude).toBe('claude-opus-5')
+      expect(body.models.gemini).toBe('gemini-2.5-pro')
+      // Labels drive the browser's picker. Without them it would have to map
+      // registry keys to display names itself, which is the sort of duplicated
+      // table that goes stale the first time a provider is added.
+      expect(body.providerLabels).toEqual({ claude: 'Claude', gemini: 'Gemini' })
+    })
+
+    test('names the provider an unnamed request would run on', async () => {
+      const res = await fetch(`${base}/api/ai/capabilities`, { headers: authed() })
+      // Registration order, so the picker's initial selection matches what the
+      // server actually does rather than merely looking plausible.
+      expect((await res.json()).defaultProvider).toBe('claude')
+    })
   })
 
   describe('models', () => {
@@ -233,6 +342,131 @@ describe('AI assist API (server.ts)', () => {
       const res = await fetch(`${base}/api/ai/models`, { headers: authed() })
       expect(res.status).toBe(200)
       expect((await res.json()).claude).toContain('claude-opus-5')
+    })
+
+    test('lists each provider separately', async () => {
+      const res = await fetch(`${base}/api/ai/models`, { headers: authed() })
+      const body = await res.json()
+      // Stripped of the `models/` resource prefix the API returns, so the ids
+      // listed are the ids GEMINI_MODEL accepts. Returning a name the config
+      // would reject makes this endpoint actively misleading.
+      expect(body.gemini).toEqual(['gemini-2.5-pro'])
+      expect(body.claude).toContain('claude-opus-5')
+    })
+  })
+
+  // Routing, and the two ways it can be wrong: sending a request to the wrong
+  // provider, and attributing a draft to a provider that did not write it.
+  describe('provider selection', () => {
+    test('routes an unnamed request to the default provider', async () => {
+      const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
+      expect(body.provider).toBe('claude')
+      expect(stub.requests).toHaveLength(1)
+      // The negative half matters as much as the positive one: a broken switch
+      // that calls both providers still satisfies "claude answered".
+      expect(geminiStub.requests).toHaveLength(0)
+    })
+
+    test('routes a request naming gemini to gemini, and nowhere else', async () => {
+      const res = await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.provider).toBe('gemini')
+      expect(body.model).toBe('gemini-2.5-pro')
+      expect(geminiStub.requests).toHaveLength(1)
+      expect(stub.requests).toHaveLength(0)
+    })
+
+    test('sends the same system prompt and schema to gemini', async () => {
+      await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      const sent = geminiStub.requests[0]
+      // The system prompt goes in systemInstruction, not folded into contents:
+      // a prefix-cached corpus that moves into the user turn stops being a
+      // stable prefix and starts costing full price on every call.
+      expect(JSON.stringify(sent.systemInstruction)).toContain('Healthy Housing')
+      // responseJsonSchema, not responseSchema — the latter takes a narrower
+      // OpenAPI subset that PAGE_OUTPUT_SCHEMA would not survive intact.
+      expect(sent.generationConfig.responseJsonSchema).toBeDefined()
+      expect(sent.generationConfig.responseMimeType).toBe('application/json')
+    })
+
+    test('normalizes gemini usage into the same shape as claude', async () => {
+      const body = await (
+        await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      ).json()
+      expect(body.usage).toEqual({
+        inputTokens: GEMINI_STUB_USAGE.promptTokenCount,
+        outputTokens: GEMINI_STUB_USAGE.candidatesTokenCount,
+        // totalTokenCount is taken as authoritative rather than recomputed:
+        // Gemini bills thinking tokens on top of prompt+candidates, so
+        // input+output (33 here) understates the real 40.
+        totalTokens: GEMINI_STUB_USAGE.totalTokenCount,
+      })
+      expect(body.usageByAttempt[0].thoughtsTokenCount).toBe(GEMINI_STUB_USAGE.thoughtsTokenCount)
+    })
+
+    test('maps a gemini finishReason refusal to 422, not a 500', async () => {
+      geminiStub.queue = [{ body: geminiRefusalResponse() }]
+      const res = await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      expect(res.status).toBe(422)
+      const body = await res.json()
+      expect(body.category).toBe('PROHIBITED_CONTENT')
+      // Only the BLOCKED categories, not every rating. Listing HARASSMENT here
+      // because it was scored at all would tell a reviewer to reword something
+      // that was never the problem.
+      expect(body.explanation).toBe('Blocked on HARM_CATEGORY_DANGEROUS_CONTENT.')
+    })
+
+    test('maps a gemini prompt-level block to 422', async () => {
+      // The other refusal shape: the INPUT was blocked, so there is no
+      // candidate at all. Checking only finishReason misses this entirely and
+      // it surfaces as "returned no text content" — an outage, to a reviewer.
+      geminiStub.queue = [
+        {
+          body: {
+            promptFeedback: { blockReason: 'SAFETY', blockReasonMessage: 'Blocked on input.' },
+          },
+        },
+      ]
+      const res = await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      expect(res.status).toBe(422)
+      expect((await res.json()).category).toBe('SAFETY')
+    })
+
+    test('rejects a provider this build does not know about', async () => {
+      const res = await post({ task: 'content', prompt: 'Draft a page.', provider: 'gpt-9' })
+      // Caught by the Zod enum before any provider work happens.
+      expect(res.status).toBe(400)
+    })
+
+    test('validates and retries on gemini exactly as it does on claude', async () => {
+      geminiStub.queue = [
+        { body: geminiResponse(INVALID_PAGE) },
+        { body: geminiResponse(VALID_PAGE) },
+      ]
+      const body = await (
+        await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      ).json()
+      expect(body.attempts).toBe(2)
+      expect(body.valid).toBe(true)
+      // The retry names the failures AND carries the rejected draft, which is
+      // the orchestration layer's job rather than the provider's — this asserts
+      // the new provider really is behind the same loop, not beside it.
+      const retry = JSON.stringify(geminiStub.requests[1].contents)
+      expect(retry).toContain('validation_failures')
+      expect(retry).toContain('previous_draft')
+    })
+
+    test('sums normalized usage across a gemini retry', async () => {
+      geminiStub.queue = [
+        { body: geminiResponse(INVALID_PAGE) },
+        { body: geminiResponse(VALID_PAGE) },
+      ]
+      const body = await (
+        await post({ task: 'content', prompt: 'Draft a page.', provider: 'gemini' })
+      ).json()
+      expect(body.usage.totalTokens).toBe(2 * GEMINI_STUB_USAGE.totalTokenCount)
+      expect(body.usageByAttempt).toHaveLength(2)
     })
   })
 
@@ -465,8 +699,20 @@ describe('AI assist API (server.ts)', () => {
       // The stub reports a fixed usage per call, so a retried generation must
       // total two calls' worth. Reporting only the final call would understate
       // the spend of exactly the requests that cost the most.
-      expect(body.usage.output_tokens).toBe(2 * STUB_USAGE.output_tokens)
-      expect(body.usage.input_tokens).toBe(2 * STUB_USAGE.input_tokens)
+      //
+      // Asserted on the NORMALIZED counters, not Anthropic's own field names.
+      // Each provider maps its native counters into this shape before
+      // addUsage() sums them, which is what lets one assertion describe a
+      // retried generation regardless of who answered it.
+      expect(body.usage.outputTokens).toBe(2 * STUB_USAGE.output_tokens)
+      expect(body.usage.inputTokens).toBe(2 * STUB_USAGE.input_tokens)
+      expect(body.usage.totalTokens).toBe(2 * (STUB_USAGE.input_tokens + STUB_USAGE.output_tokens))
+      // The provider-native counters ride alongside, one entry per attempt,
+      // rather than being folded into the sum — addUsage keeps the FIRST
+      // attempt's value for non-numeric fields, so a nested raw object in the
+      // total would claim attempt one's numbers covered both.
+      expect(body.usageByAttempt).toHaveLength(2)
+      expect(body.usageByAttempt[0].input_tokens).toBe(STUB_USAGE.input_tokens)
     })
 
     test('returns the draft with its issues when both attempts fail', async () => {
@@ -596,6 +842,11 @@ describe('AI assist API when unconfigured', () => {
         HOST: '127.0.0.1',
         REVIEW_API_TOKEN: TOKEN,
         ANTHROPIC_API_KEY: '',
+        // Blanked explicitly, like the Anthropic key. The spawn inherits
+        // process.env, so a developer who has a real Gemini key exported would
+        // otherwise turn "unconfigured" into "configured with one provider" and
+        // every assertion in this block would fail on their machine only.
+        GEMINI_API_KEY: '',
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
       },
       stdout: 'ignore',
@@ -612,7 +863,13 @@ describe('AI assist API when unconfigured', () => {
   test('still answers capabilities, so the browser can explain itself', async () => {
     const res = await fetch(`${unconfiguredBase}/api/ai/capabilities`, { headers: authed() })
     expect(res.status).toBe(200)
-    expect((await res.json()).providers.claude).toBe(false)
+    const body = await res.json()
+    expect(body.providers.claude).toBe(false)
+    expect(body.providers.gemini).toBe(false)
+    // Every REGISTERED provider is listed, including the unconfigured ones, so
+    // the panel can say "this server has no Gemini key" rather than only
+    // "Gemini is not a thing here". Those want different copy.
+    expect(body.defaultProvider).toBeNull()
   })
 
   test('fails closed on generate with 501, never an unauthenticated success', async () => {
@@ -622,7 +879,12 @@ describe('AI assist API when unconfigured', () => {
       body: JSON.stringify({ task: 'content', prompt: 'Draft a page.' }),
     })
     expect(res.status).toBe(501)
-    expect((await res.json()).error).toContain('ANTHROPIC_API_KEY unset')
+    // Names both keys: with two providers registered, pointing only at
+    // ANTHROPIC_API_KEY would send an operator who intended to run Gemini off
+    // to set a key they do not want.
+    const { error } = await res.json()
+    expect(error).toContain('ANTHROPIC_API_KEY')
+    expect(error).toContain('GEMINI_API_KEY')
   })
 })
 
