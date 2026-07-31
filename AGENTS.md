@@ -266,7 +266,10 @@ one today.
 than restating it so renderer and validator cannot drift. That import crosses
 the CJS/ESM boundary; **Bun is the only runtime CI exercises** (both
 `bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js`),
-so the Node >= 22 `require(esm)` path works but is not covered by CI.
+so the Node `require(esm)` path works but is not covered by CI. That path needs
+`require(esm)` enabled — check `process.features.require_module` rather than a
+version number; it is opt-out by default on current Node 22 but was flag-gated
+in early 22.x.
 
 ### Page object shape and validation rules
 

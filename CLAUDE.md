@@ -377,7 +377,10 @@ validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
 crosses the CJS/ESM boundary. **Bun is the only runtime CI exercises** — both
 `bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js` —
-so the Node ≥22 `require(esm)` path works but is _not_ covered by CI. Anything
+so the Node `require(esm)` path works but is _not_ covered by CI. (That path
+needs `require(esm)` enabled — check `process.features.require_module` rather
+than trusting a version number; it is opt-out by default on current Node 22 but
+was flag-gated in early 22.x.) Anything
 relying on Node-specific interop here would go unnoticed.
 
 ### Page object shape and validation rules
