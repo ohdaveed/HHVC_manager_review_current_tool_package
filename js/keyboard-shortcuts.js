@@ -23,6 +23,7 @@ import { hasValidPageData } from './utils.js'
     // itself the moment anyone looks for it.
     { keys: ['4'], description: 'Open AI assist workspace tab' },
     { keys: ['5'], description: 'Open Help workspace tab' },
+    { keys: ['6'], description: 'Open Tool status workspace tab' },
     { keys: ['p'], description: 'Download this mockup as a PNG' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
@@ -265,6 +266,10 @@ import { hasValidPageData } from './utils.js'
       case '5':
         event.preventDefault()
         openWorkspaceTab('help')
+        break
+      case '6':
+        event.preventDefault()
+        openWorkspaceTab('ops')
         break
       case 'p':
         // Only the single-page export gets a shortcut. Bulk export navigates

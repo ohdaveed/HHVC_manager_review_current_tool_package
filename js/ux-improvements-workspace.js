@@ -8,7 +8,9 @@ import { hasValidPageData } from './utils.js'
 
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
-  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'help']
+  // Appended, never inserted: the 1-9 shortcuts number these left to right,
+  // so adding at the end renumbers nothing.
+  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'help', 'ops']
   let workspaceTriggerButton = null
 
   const { getValue, getDecisionChipClass, escapeHtml } = window.utils
@@ -89,6 +91,10 @@ import { hasValidPageData } from './utils.js'
 
     if (tabId === 'help') {
       window.refreshDashboardGuidance?.()
+    }
+
+    if (tabId === 'ops' && typeof window.__mountReviewOpsOnTabOpen === 'function') {
+      window.__mountReviewOpsOnTabOpen()
     }
 
     window.reviewState.update((state) => {
