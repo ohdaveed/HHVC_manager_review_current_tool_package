@@ -476,6 +476,29 @@ describe('findUnsafeUrls', () => {
     expect(findUnsafeUrls(pages)).toEqual([])
   })
 
+  test('flags a protocol-relative url disguised with backslashes', () => {
+    const pages = {
+      a: {
+        sections: [{ heading: 'H', karl: 'k', cards: [{ title: 'X', url: '\\\\evil.example' }] }],
+      },
+    }
+    expect(findUnsafeUrls(pages).map((entry) => entry.path)).toEqual(['sections[0].cards[0].url'])
+  })
+
+  // safeUrl() trims before returning, so comparing its output against the raw
+  // input reported any padded URL as an unsafe scheme. Whitespace hygiene is
+  // not what this check is for.
+  test('does not flag a safe url merely for surrounding whitespace', () => {
+    const pages = {
+      a: {
+        sections: [
+          { heading: 'H', karl: 'k', cards: [{ title: 'X', url: '  https://sf.gov/x  ' }] },
+        ],
+      },
+    }
+    expect(findUnsafeUrls(pages)).toEqual([])
+  })
+
   test('returns nothing for pages with no url fields', () => {
     expect(findUnsafeUrls({ a: { sections: [{ heading: 'H', karl: 'k' }] } })).toEqual([])
   })

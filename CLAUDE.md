@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 17 unit-test files in tests/ (418 tests)
+bun run test                  # bun test over the 17 unit-test files in tests/ (421 tests)
 bun run test:e2e              # playwright test (90 specs across 12 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -73,7 +73,7 @@ wrong). `bun run test` runs seventeen Bun unit-test files under `tests/`:
 auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, and `ai-assist-server` (which spawns `server.ts` against a stub
 Anthropic endpoint, so the AI routes are covered without a key or a paid call)
-— 418 tests at time of writing.
+— 421 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
