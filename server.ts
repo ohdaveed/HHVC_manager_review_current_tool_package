@@ -16,10 +16,13 @@ import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/a
 import { RefusalError } from "./build_scripts/ai/provider-anthropic.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { numberFromEnv } from "./build_scripts/ai/env.js"
-// Imported for its error classes only, as the fallback arm of the cancellation
-// mapping in aiErrorResponse. The SDK is never constructed here — every call
-// goes through build_scripts/ai/.
-import Anthropic from "@anthropic-ai/sdk"
+// Deliberately NOT importing @anthropic-ai/sdk here. It was imported for its
+// error classes alone, as the fallback arm of aiErrorResponse's cancellation
+// mapping — but the SDK ships separate require/import builds, so importing it
+// here while build_scripts/ai/provider-anthropic.js requires it produced two
+// unrelated copies of every class and made those `instanceof` checks
+// permanently false. That fallback now matches on `constructor.name`, which
+// needs no import and does not care which build threw.
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
@@ -436,7 +439,12 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ""
  * so the browser gives up first in the normal case and this only catches a
  * genuinely wedged upstream.
  */
-const AI_REQUEST_TIMEOUT_MS = numberFromEnv("AI_REQUEST_TIMEOUT_MS", 240_000)
+// max: one hour, matching ANTHROPIC_TIMEOUT_MS. The ceiling is not decorative:
+// this value is handed straight to AbortSignal.timeout(), which throws a
+// TypeError past Number.MAX_SAFE_INTEGER, and it is called BEFORE the generate
+// route's try block — so an out-of-range value here is an unmapped 500 on every
+// generation rather than a merely over-generous budget.
+const AI_REQUEST_TIMEOUT_MS = numberFromEnv("AI_REQUEST_TIMEOUT_MS", 240_000, { max: 3_600_000 })
 
 /** Map a thrown error to a status code and a message worth showing a reviewer. */
 function aiErrorResponse(
@@ -477,16 +485,41 @@ function aiErrorResponse(
     // instead of collapsing both into one ambiguous code.
     return jsonResponse({ error: "Generation timed out." }, 504)
   }
-  // Fallback for aborts raised where no signal was threaded through, so the
-  // mapping degrades to something sane instead of back to a logged 500.
+  // Fallback for aborts raised where NO signal was threaded through, so the
+  // mapping degrades to something sane instead of back to a logged 500. This is
+  // not a hypothetical path: the SDK enforces its own per-call timeout
+  // (ANTHROPIC_TIMEOUT_MS) inside AI_REQUEST_TIMEOUT_MS, so whenever it gives up
+  // first — a short per-call timeout, or ANTHROPIC_MAX_RETRIES=0 removing the
+  // retries that would otherwise carry the call past our budget — the error
+  // arrives here with neither signal aborted.
+  //
+  // Matched on `constructor.name` rather than `instanceof`, because the
+  // instanceof spelling was ALSO dead and for a second, separate reason.
+  // @anthropic-ai/sdk ships two builds (`index.js` for require, `index.mjs` for
+  // import). This file imported it while build_scripts/ai/provider-anthropic.js
+  // requires it, so the two halves held different copies of the same class and
+  // every `error instanceof Anthropic.*` here was comparing against a
+  // constructor the thrown error had never been built from — the classic dual
+  // package hazard. Measured directly: an SDK timeout reached this function and
+  // came back 500, not the 499 the code reads as. `constructor.name` is one
+  // string on one object and crosses that boundary intact, and it lets the SDK
+  // import be dropped from this file altogether.
+  //
+  // `name` stays "Error" on both SDK classes (which is what defeated the
+  // original check), so the DOM names are tested separately — those are for a
+  // real DOMException raised outside the SDK.
   const errorName = (error as { name?: string })?.name
-  if (
-    error instanceof Anthropic.APIUserAbortError ||
-    error instanceof Anthropic.APIConnectionTimeoutError ||
-    errorName === "AbortError" ||
-    errorName === "TimeoutError"
-  ) {
-    return jsonResponse({ error: "Generation was cancelled or timed out." }, 499)
+  const constructorName = (error as { constructor?: { name?: string } })?.constructor?.name
+  if (constructorName === "APIUserAbortError" || errorName === "AbortError") {
+    return jsonResponse({ error: "Generation was cancelled." }, 499)
+  }
+  if (constructorName === "APIConnectionTimeoutError" || errorName === "TimeoutError") {
+    // Same split as the signal branches above, and for the same reason: the
+    // upstream ran out of time while the client sat there waiting. Folding it
+    // in with the cancellation codes claims the reviewer walked away, which
+    // hides a genuinely slow provider behind a status that reads as "nobody was
+    // listening anyway".
+    return jsonResponse({ error: "Generation timed out." }, 504)
   }
 
   const status = (error as { status?: number })?.status

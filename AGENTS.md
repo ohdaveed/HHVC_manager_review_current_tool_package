@@ -59,13 +59,17 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs fourteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs fifteen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
-against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`, and
+against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
+`ai-assist-env`, and
 `ai-assist-server` (which spawns `server.ts` against a stub Anthropic endpoint,
-so the AI routes are covered without a key or a paid call)
+so the AI routes are covered without a key or a paid call). **The list in
+`package.json`'s `test` script is explicit, not a glob** — a new
+`tests/*.test.js` that is not added there simply never runs, and reports
+nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
 ten spec files — nine UI-driven ones covering navigation, editor panel,
@@ -490,10 +494,33 @@ by default, failing closed.
   throws `APIUserAbortError` / `APIConnectionTimeoutError`, both inheriting
   `name` `"Error"` with no `status`, so a `name === 'AbortError'` test never
   fired and every cancellation was logged as a 500. `AbortSignal.timeout()`
-  reports `"TimeoutError"` besides. Signal state is also provider-agnostic;
-  `instanceof` checks remain only as a fallback. The 504 path is tested against
-  a slow stub — 499 is not observable, since the client that aborts cannot read
-  the response.
+  reports `"TimeoutError"` besides. Signal state is also provider-agnostic.
+  The 504 path is tested against a slow stub — 499 is not observable, since the
+  client that aborts cannot read the response.
+- **The fallback arm matches `constructor.name`, never `instanceof`.** Neither
+  signal is aborted when the SDK's own per-call timeout fires first — which a
+  short `ANTHROPIC_TIMEOUT_MS`, or `ANTHROPIC_MAX_RETRIES=0` removing the
+  retries that would carry the call past the route budget, makes routine — so
+  the fallback is a live path, not a safety net. It was dead for a **second**
+  reason on top of the `name` one above: `@anthropic-ai/sdk` ships separate
+  `require` and `import` builds, and `server.ts` imported it while
+  `build_scripts/ai/provider-anthropic.js` requires it, so `instanceof` compared
+  the thrown error against a different copy of the same class and was
+  permanently false. Measured: an SDK timeout returned **500**, not the 499 the
+  code read as. `constructor.name` is one string on one object, crosses that
+  boundary intact, and lets `server.ts` drop the SDK import entirely. The two
+  cases split the same way the signal branches do —
+  `APIUserAbortError` → 499, `APIConnectionTimeoutError` → **504** — because an
+  upstream that ran out of time is not a client that hung up.
+- **Numeric env tunables are range-checked, not merely parsed.**
+  `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
+  fractions, and anything outside `[min, max]` (default max
+  `Number.MAX_SAFE_INTEGER`), warning and falling back rather than throwing.
+  `Number.isFinite` is not sufficient: `AI_REQUEST_TIMEOUT_MS=1e20` is finite
+  and `AbortSignal.timeout()` rejects it, and that call sits outside the
+  generate route's `try` — so the value becomes an unmapped 500 on every
+  generation, the very failure the helper exists to prevent. Both timeouts also
+  cap at one hour and `ANTHROPIC_MAX_RETRIES` at 10.
 - **The retry carries the rejected draft, not just the failures.** Each API
   call is stateless, so "fix these and change nothing else" is only followable
   if the draft travels with the instruction. Usage is summed across attempts
