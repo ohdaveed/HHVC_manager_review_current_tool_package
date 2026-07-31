@@ -9,14 +9,27 @@
 // below therefore assert the RANGE CONTRACT as well as the parsing: whatever
 // numberFromEnv returns must be a value AbortSignal.timeout() will accept.
 
-import { describe, test, expect, afterEach } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { numberFromEnv } from '../build_scripts/ai/env.js'
 
 const VAR = 'HHVC_TEST_NUMERIC_ENV'
 
-// Stubbing process.env leaks into sibling test files if it isn't undone.
-afterEach(() => {
+// Captured once, before any test can touch it. Restoring rather than deleting
+// matters in both directions: an unconditional delete would strip a value the
+// parent process legitimately set, and the clear-before-each is what stops the
+// caller's environment leaking IN — without it the "variable is unset" test
+// below silently reads whatever the shell happened to export and asserts
+// nothing. The name is deliberately obscure, but "nobody would set that" is a
+// guess, and this is the repo's stated rule for any test that stubs a global.
+const ORIGINAL_VALUE = process.env[VAR]
+
+beforeEach(() => {
   delete process.env[VAR]
+})
+
+afterEach(() => {
+  if (ORIGINAL_VALUE === undefined) delete process.env[VAR]
+  else process.env[VAR] = ORIGINAL_VALUE
 })
 
 describe('numberFromEnv', () => {

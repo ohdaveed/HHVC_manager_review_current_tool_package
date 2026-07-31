@@ -693,7 +693,7 @@ describe('AI assist API request timeout', () => {
     // Specifically NOT 500: a wedged upstream is a gateway timeout, and
     // logging it as a server fault buries the failures that are real ones.
     expect(res.status).toBe(504)
-    expect((await res.json()).error).toContain('timed out')
+    expect((await res.json()).error).toBe('Generation timed out.')
   })
 })
 
@@ -770,6 +770,6 @@ describe('AI assist API upstream (SDK) timeout', () => {
     })
 
     expect(res.status).toBe(504)
-    expect((await res.json()).error).toContain('timed out')
+    expect((await res.json()).error).toBe('Generation timed out.')
   })
 })
