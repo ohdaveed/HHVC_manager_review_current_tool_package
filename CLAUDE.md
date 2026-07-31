@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 15 unit-test files in tests/ (371 tests)
-bun run test:e2e              # playwright test (11 specs in tests/e2e/)
+bun run test                  # bun test over the 17 unit-test files in tests/ (421 tests)
+bun run test:e2e              # playwright test (90 specs across 12 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,14 +65,15 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs fifteen Bun unit-test files under `tests/`:
+wrong). `bun run test` runs seventeen Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
-against a temp SQLite DB and exercises auth/merge/isolation over real HTTP),
-`review-state-sync`, `ai-assist-schema`, `ai-assist-env`, and `ai-assist-server`
-(which spawns `server.ts` against a stub Anthropic endpoint, so the AI routes
-are covered without a key or a paid call) — 371 tests at time of writing.
+`review-insights-data`, `review-insights-charts`, `review-merge`, `review-api-server` (which spawns
+`server.ts` as a subprocess against a temp SQLite DB and exercises
+auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
+`ai-assist-env`, and `ai-assist-server` (which spawns `server.ts` against a stub
+Anthropic endpoint, so the AI routes are covered without a key or a paid call)
+— 421 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -86,11 +87,12 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — eleven spec files:
-ten UI-driven (navigation, editor panel, review workflow, review queue,
-import/export, keyboard shortcuts, sitemap/workspace, accessibility, AI assist,
-PNG export) plus the original API-level `review-import-export` round-trip,
-sharing plain helper functions in `tests/e2e/helpers.js` (no fixture framework).
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twelve spec files
+(90 specs): eleven UI-driven (navigation, editor panel, review workflow,
+review queue, import/export, keyboard shortcuts, sitemap/workspace,
+accessibility, AI assist, mockup PNG export, Overview insight charts) plus the
+original API-level `review-import-export` round-trip, sharing plain helper
+functions in `tests/e2e/helpers.js` (no fixture framework).
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
 sticky bar: the bar is mounted early by `js/ux-improvements.js`, so waiting on
 it alone let a test press a global shortcut before `js/keyboard-shortcuts.js`
@@ -382,6 +384,49 @@ needs `require(esm)` enabled — check `process.features.require_module` rather
 than trusting a version number; it is opt-out by default on current Node 22 but
 was flag-gated in early 22.x.) Anything
 relying on Node-specific interop here would go unnoticed.
+
+### Overview charts (`js/review-insights*.js`)
+
+Three compact charts above the review queue table — decision mix, review
+activity over time, and the pages whose automated checks are failing. They sit
+on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–5
+are bound to keyboard shortcuts, and inserting one would renumber the rest.
+
+- **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
+  `buildActivitySeries`, `buildChecksSeries`, `insightsSignature`), dual
+  `window`/`module.exports` like `js/review-merge.js` so
+  `tests/review-insights-data.test.js` can `require` it with no browser.
+- **`js/review-insights.js`** — the orchestrator. Builds the card markup and
+  the hidden data tables, then draws.
+- **`js/review-insights-charts.js`** — the only module that imports ECharts.
+
+**ECharts is dynamically imported, and that is load-bearing, not tidiness.**
+It is ~530 KB raw / ~180 KB gzip — more than the entire rest of the bundle.
+The dynamic import makes Vite emit it as its own chunk, so the initial
+download stays ~114 KB gzip and the library arrives only when the Overview
+tab first renders. A second consequence shapes the file order: the headings
+and data tables are built **synchronously, before the import is requested**,
+so the numbers are in the DOM even if the chunk is slow or never loads.
+
+Other invariants worth not rediscovering:
+
+- **The chart host is re-parented, never rebuilt.** The Overview panel
+  replaces its whole `innerHTML` on every filter, sort and search keystroke.
+  `insightsSignature()` gates redraws, and a module-level generation counter
+  stops a slow async draw from painting stale data over newer numbers.
+- **The charts always describe the whole site, never the filtered view** —
+  they read `getQueueRows()`, not the visible rows.
+- **Decision fills use `--viz-decision-*`, not the `--status-*-border` chip
+  tokens.** The chip borders are tuned as 1px strokes; as large fills,
+  Approved and Needs review separate by ΔE 8.4 under _normal_ vision against
+  a floor of 15 — and they are the two most common states, adjacent in the
+  bar. Dark mode gets a separately chosen set, not a lightened copy (the
+  light green lands at 2.96:1 on the dark panel). If you change these,
+  re-validate rather than eyeball.
+- **Colour is never the only encoding**: the decision card carries a visible
+  legend with counts, every chart is `aria-hidden` beside an
+  `.hhvc-sr-only` data table, and the checks chart states its own top-8 cap
+  while the table carries every page.
 
 ### Page object shape and validation rules
 

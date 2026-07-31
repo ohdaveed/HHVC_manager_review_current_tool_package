@@ -183,6 +183,44 @@
   --viz-4: #ca77a5; /* reddish purple — light 3.06:1 | dark 5.66:1 */
   --viz-neutral: var(--sfds-slate-4, #c9caca);
   --viz-separator: var(--surface-panel);
+
+  /* Fills for the five review decisions in the Overview charts.
+     ==========================================================
+     These are NOT the --status-*-border tokens the chips use, and the
+     difference is measured rather than stylistic. Those tokens are tuned to
+     be 1px strokes beside a tinted background; as large fills, two of them
+     collide. Running the four coloured steps through a CVD/ΔE validator:
+
+       chip borders  #a6d8a8 (approved) vs #c9caca (pending)
+                     → ΔE 8.4 under NORMAL vision, against a floor of 15
+
+     Approved and Needs review are the two most common states and sit next to
+     each other in the stacked bar, so that pair failing is the whole chart
+     failing. The steps below were re-picked against the same validator and
+     clear every check — lightness band, chroma floor, colourblind separation,
+     normal-vision separation, and 3:1 against the surface — per mode. Dark is
+     a separately chosen set, not an automatic lightening: the light green
+     lands at 2.96:1 on the dark panel, under the 3:1 floor.
+
+     --viz-decision-pending is a deliberate exception to the chroma floor (and,
+     in dark mode, the lightness band): it is a true neutral, and a neutral
+     cannot carry chroma by definition. That is the point — "Needs review" is
+     the ABSENCE of a decision and should read as uncoloured rather than
+     compete with the four real outcomes for attention. It is NOT exempt from
+     the separation floors, which is the check that actually matters: each
+     mode's neutral is picked so it clears the adjacent green by ΔE 15 under
+     normal vision. Validate both modes WITH the neutral included when
+     changing any of this — validating the four coloured steps alone hides the
+     one pair most likely to collide.
+
+     Colour is never the only encoding regardless: the decision-mix card
+     carries a visible legend with per-segment counts, and every chart has an
+     equivalent data table. */
+  --viz-decision-pending: #8a8d8d;
+  --viz-decision-approved: #00734f;
+  --viz-decision-edits: #c07000;
+  --viz-decision-revise: #8f57b3;
+  --viz-decision-blocked: #c0392b;
   /* Minimum stroke width for chart lines. 1px hairlines are the most
      common 1.4.11 failure in charting libraries' defaults. */
   --viz-stroke: 2px;
@@ -293,6 +331,23 @@
     --surface-sunken: #0c0e11;
     --surface-raised: #1d2027;
     --brand-on-primary: #001033;
+
+    /* Dark steps for the decision fills — chosen against the dark panel, not
+       lightened from the light set. The light green clears 3:1 on white and
+       only 2.96:1 here, which is exactly the trap an automatic flip falls
+       into.
+
+       The neutral is LIGHTER here than the light-mode one, which looks
+       backwards until you measure it. It has to clear the green by ΔE 15
+       under normal vision, and on a dark panel the green sits mid-lightness,
+       so the grey has to move away from it — upward. Dimming it to "recede"
+       the way it does in light mode was tried and drops the pair to ΔE 11.9,
+       reintroducing exactly the failure these tokens exist to fix. */
+    --viz-decision-pending: #adb3b3;
+    --viz-decision-approved: #34a06f;
+    --viz-decision-edits: #c08400;
+    --viz-decision-revise: #a273cc;
+    --viz-decision-blocked: #d4544a;
   }
 
   /* The mockup is a preview of a light PUBLIC page. Pin the primitives

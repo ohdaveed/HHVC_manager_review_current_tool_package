@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:app then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 15 unit-test files in tests/
+bun run test                  # Bun test runner over the 17 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,10 +59,10 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs fifteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs seventeen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
+`review-insights-data`, `review-insights-charts`, `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, and
 `ai-assist-server` (which spawns `server.ts` against a stub Anthropic endpoint,
@@ -72,10 +72,11 @@ so the AI routes are covered without a key or a paid call). **The list in
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-eleven spec files — ten UI-driven ones covering navigation, editor panel,
+twelve spec files — eleven UI-driven ones covering navigation, editor panel,
 review workflow, review queue, import/export, keyboard shortcuts,
-sitemap/workspace, accessibility, AI assist, and PNG export, plus the original
-`review-import-export` API-level round-trip — sharing plain helper functions in
+sitemap/workspace, accessibility, AI assist, mockup PNG export, and the
+Overview insight charts, plus the original `review-import-export` API-level
+round-trip — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework). `gotoFresh()` waits on
 `window.reviewKeyboardShortcuts.ready`, not just the sticky bar, so a test
 cannot press a global shortcut before the `keydown` listener exists. In a sandbox with a
@@ -270,6 +271,38 @@ so the Node `require(esm)` path works but is not covered by CI. That path needs
 `require(esm)` enabled — check `process.features.require_module` rather than a
 version number; it is opt-out by default on current Node 22 but was flag-gated
 in early 22.x.
+
+### Overview charts (`js/review-insights*.js`)
+
+Three compact charts above the review queue table — decision mix, review
+activity over time, and the pages whose automated checks are failing. They live
+on the **Overview tab rather than a sixth workspace tab**: tabs 1–5 are bound to
+keyboard shortcuts, and adding one would renumber the rest.
+
+- **`js/review-insights-data.js`** — pure data shaping, dual
+  `window`/`module.exports` like `js/review-merge.js`, so
+  `tests/review-insights-data.test.js` can `require` it with no browser.
+- **`js/review-insights.js`** — orchestrator: card markup, hidden data tables,
+  redraw gating.
+- **`js/review-insights-charts.js`** — the only module importing ECharts.
+
+**ECharts is dynamically imported, and that is load-bearing.** It is ~530 KB
+raw / ~180 KB gzip, more than the whole rest of the bundle. The dynamic import
+makes Vite emit it as its own chunk, keeping the initial download at ~114 KB
+gzip. The headings and data tables are built **synchronously, before the import
+is requested**, so the numbers are present even if the chunk never loads.
+
+- **The chart host is re-parented, never rebuilt** — the Overview panel replaces
+  its whole `innerHTML` per keystroke. `insightsSignature()` gates redraws and a
+  generation counter stops a slow async draw overwriting newer numbers.
+- **Charts describe the whole site, never the filtered view.**
+- **Decision fills use `--viz-decision-*`, not the `--status-*-border` chip
+  tokens** — as large fills the chip borders put Approved and Needs review at
+  ΔE 8.4 under normal vision against a floor of 15. Dark mode is a separately
+  chosen set, not a lightened copy. Re-validate rather than eyeball.
+- **Colour is never the only encoding**: visible legend with counts, every chart
+  `aria-hidden` beside an `.hhvc-sr-only` table, and the checks chart states its
+  own top-8 cap while the table carries every page.
 
 ### Page object shape and validation rules
 

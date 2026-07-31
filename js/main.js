@@ -40,6 +40,7 @@ import './../css/ux-improvements.css'
 import './../css/interactive-sitemap.css'
 import './../css/ai-assist.css'
 import './../css/dashboard.css'
+import './../css/review-insights.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
@@ -95,6 +96,10 @@ import './review-queue-rows.js'
 import './review-queue-render.js'
 import './review-queue-import.js'
 import './review-queue.js'
+// Overview charts. After review-queue-render.js, which calls into it, and
+// after review-queue-rows.js, whose getQueueRows() supplies its data.
+import './review-insights-data.js'
+import './review-insights.js'
 import './dashboard-guidance.js'
 import './interactive-sitemap-data.js'
 import './interactive-sitemap-render.js'
