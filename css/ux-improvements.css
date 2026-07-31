@@ -999,4 +999,19 @@ ol li {
   .shortcuts-hint-button {
     transition: none !important;
   }
+
+  /* The dashboard layer (css/dashboard.css) adds surfaces and transitions of
+     its own. Its rules live there, but the reduced-motion overrides belong
+     here with the rest of them: this is the designated `!important` override
+     layer, and splitting one media query across two files gives the same
+     preference two places to be honoured — or missed. */
+  .review-workspace,
+  .review-workspace *,
+  .ds-card,
+  .ds-card * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

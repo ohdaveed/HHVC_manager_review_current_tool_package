@@ -1,5 +1,11 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, openWorkspaceTab, focusMockPage } = require('./helpers')
+const {
+  gotoFresh,
+  openWorkspaceTab,
+  focusMockPage,
+  recordToasts,
+  readRecordedToasts,
+} = require('./helpers')
 
 // The AI assist panel, driven through the real UI.
 //
@@ -218,6 +224,27 @@ test.describe('AI assist panel', () => {
       Object.keys(window.HHVC_DATA.pages).includes('reportAPestProblem')
     )
     expect(hasGenerated).toBe(false)
+  })
+
+  // Regression: the AI-assist toast helper must actually reach showToast.
+  //
+  // js/ai-assist.js guards with `typeof showToast === 'function'` against a
+  // BARE identifier rather than window.showToast. A review flagged that as
+  // dead under ES modules, which would silently swallow every AI-assist
+  // toast — settings saved, generation failed, draft downloaded. Nothing
+  // covered it either way, so this asserts the user-visible outcome rather
+  // than the mechanism: save settings, expect the confirmation toast.
+  test('saving AI settings shows a confirmation toast', async ({ page }) => {
+    await recordToasts(page)
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+
+    await page.fill('#aiAssistApiUrl', 'https://example.test')
+    await page.fill('#aiAssistApiToken', 'a-test-token')
+    await page.click('#aiAssistSaveSettings')
+
+    await expect(page.locator('.toast')).toContainText(/AI settings saved/i)
+    expect(await readRecordedToasts(page)).toMatch(/AI settings saved/i)
   })
 
   test('opens from the keyboard shortcut', async ({ page }) => {

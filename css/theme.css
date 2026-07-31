@@ -335,6 +335,19 @@
     --sfds-info-light: #e5f1ff;
     --sfds-info-border: #c7dae5;
 
+    /* The two brand tint steps and the pending status border are overridden
+       in the dark :root block above, so they have to be restored here too.
+       Nothing inside the mockup consumes them TODAY — --brand-95 is used only
+       by the workspace tab, and --brand-90 and --status-pending-border have no
+       consumer yet — so this is closing a latent hole rather than fixing a
+       visible bug. It still belongs here: the whole point of this block is
+       that a reader can trust the mockup renders light, and a guarantee with
+       three silent exceptions is not one. The next person to use a pending
+       chip inside the mockup should not have to rediscover this. */
+    --brand-95: #ecf2fb;
+    --brand-90: #dbe6f7;
+    --status-pending-border: #c9caca;
+
     --surface-sunken: #f8fafc;
     --surface-raised: #fcfcfc;
     --brand-on-primary: #fcfcfc;

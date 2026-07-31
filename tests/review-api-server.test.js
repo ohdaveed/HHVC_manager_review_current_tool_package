@@ -335,4 +335,18 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
       expect(res.status, `${sourcePath} must not be served`).toBe(404)
     }
   })
+
+  // The 404s above only prove the repository root was not selected. A typo'd
+  // or nonexistent static root would 404 those same paths just as happily,
+  // so the test would pass while serving nothing at all. Assert the positive
+  // case too: the fallback has to land on the real built app.
+  test('still serves the built application from dist/', async () => {
+    const res = await fetch(`${base}/`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    // The built index.html references Vite's hashed module bundle. The source
+    // index.html points at /js/main.js instead, so this also distinguishes
+    // "served dist/" from "served the repo root".
+    expect(html).toMatch(/<script[^>]+type="module"[^>]+src="[^"]*assets\/index-[^"]+\.js"/)
+  })
 })
