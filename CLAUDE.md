@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 10 unit-test files in tests/ (176 tests)
-bun run test:e2e              # playwright test (9 specs in tests/e2e/)
+bun run test                  # bun test over the 14 unit-test files in tests/ (326 tests)
+bun run test:e2e              # playwright test (11 specs in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,12 +65,21 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs ten Bun unit-test files under `tests/`: `utils`,
-`data-validation`, `page-render`, `csv`, `review-state-schema`,
-`reading-level`, `page-import-checks`, `review-merge`, `review-api-server`
-(which spawns `server.ts` as a subprocess against a temp SQLite DB and
-exercises auth/merge/isolation over real HTTP), and `review-state-sync` —
-176 tests at time of writing. Tests import the modules under test directly.
+wrong). `bun run test` runs fourteen Bun unit-test files under `tests/`:
+`utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
+`reading-level`, `plain-language`, `page-import-checks`, `review-merge`,
+`review-api-server` and `ai-assist-server` (both spawn `server.ts` as a
+subprocess against a temp SQLite DB and exercise the real HTTP surface —
+auth/merge/isolation and the AI routes respectively), `review-state-sync`,
+`ai-assist-schema`, and `mockup-image-export` — 326 tests at time of writing
+(325 passing plus one skip). Tests import the modules under test directly.
+
+**The `test` script names its files explicitly** rather than globbing
+`tests/*.test.js`, so a new test file runs when you invoke it by name but is
+silently skipped by `bun run test` and by CI until you add it to that list in
+`package.json`. Nothing guards this — unlike the page-import check, there is
+no equivalent drift test.
+
 `tests/helpers/browser-env.js`, preloaded via `bunfig.toml`, registers a
 **happy-dom** global environment first — the module graph does real work at
 import time (`js/state.js` reads `window.HHVC_DATA`), so the browser globals
@@ -80,11 +89,16 @@ breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — nine spec files:
-eight UI-driven (navigation, editor panel, review workflow, review queue,
-import/export, keyboard shortcuts, sitemap/workspace, accessibility) plus the
-original API-level `review-import-export` round-trip, sharing plain helper
-functions in `tests/e2e/helpers.js` (no fixture framework). Playwright's
+`bun run test:e2e` drives Playwright over `tests/e2e/` — eleven spec files:
+ten UI-driven (navigation, editor panel, review workflow, review queue,
+import/export, keyboard shortcuts, sitemap/workspace, accessibility, AI
+assist, PNG export) plus the original API-level `review-import-export`
+round-trip, sharing plain helper functions in `tests/e2e/helpers.js` (no
+fixture framework). **`gotoFresh()` waits for
+`window.reviewKeyboardShortcuts.ready`**, not just for the sticky bar: the bar
+is mounted early by `js/ux-improvements.js`, so waiting on it alone let a test
+press a global shortcut before `js/keyboard-shortcuts.js` had attached its
+`keydown` listener. Playwright's
 `webServer` block starts `bun run start` on `:8080` itself. In a sandbox with
 a pre-installed Chromium, point Playwright at it instead of downloading:
 
@@ -280,6 +294,80 @@ never referenced from `pages/*.js` or outside its own module's files):
   and `js/interactive-sitemap-render.js` (DOM rendering, search/filter UI).
   Its styles live in `css/interactive-sitemap.css` rather than a runtime
   `injectStyles()` call.
+
+- **AI assist breaks the naming pattern above — mind the case.**
+  `window.AiAssist` is the **internal** namespace: `js/ai-assist-client.js`
+  attaches `.client` (the browser half of the optional `/api/ai/*` routes, a
+  no-op unless configured) and `js/ai-assist-render.js` attaches `.render`
+  (panel rendering, styles in `css/ai-assist.css`). `js/ai-assist.js` consumes
+  both, owns the request lifecycle and cancel, and publishes its public API on
+  the separate lowercase **`window.aiAssist`** (`ensureRendered`,
+  `refreshCapabilities`, `getCurrentPage`). The orchestrator does **not** own
+  the capitalized namespace here — `window.AiAssist.ensureRendered` does not
+  exist.
+
+  `js/ai-assist-render.js` renders model output, which is text nobody in this
+  repo wrote, so it escapes everything before `innerHTML` (the exception being
+  the page preview, which routes through the escaping-audited
+  `renderPageMain()`). **That is not a security boundary, though** — imported
+  CSV/JSON backups and records pulled from the sync server also carry
+  externally-supplied reviewer names, notes, and edited fields into the sticky
+  bar, queue, sitemap, and preview. Those are safe because they already use
+  `escapeHtml`/`textContent`, and must stay that way.
+
+The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
+'help']`, numbered left to right by the `1`–`5` shortcuts. The sitemap and AI
+panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
+/ `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
+tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
+initializes earlier and restores a persisted `workspace_tab` before those
+hooks exist, so without the catch-up a reviewer who left Assist or Sitemap
+open saw an empty panel until switching tabs and back.
+
+Relatedly, `js/keyboard-shortcuts.js` dispatches `hhvc:shortcuts-ready` and
+sets `window.reviewKeyboardShortcuts.ready` **from `init()`, after** the
+`keydown` listener is attached. It used to fire at module scope, announcing a
+capability that did not exist yet.
+
+### Content-standards scoring
+
+`js/plain-language.js` scores page copy against written standards, not
+preferences. Each check carries `severity` plus a `source`/`section` pair and
+a ready-to-render `citation`:
+
+- **`severity: 'error'`** are the standards manual's mandates. They join the
+  scored rule list behind the Overview tab's "checks passed" ratio, and their
+  citation renders on the Checks tab alongside the rule.
+- **`severity: 'warning'`** are advisory, run to ~115 across the 19 pages, and
+  render separately — folding them into the ratio would make every page look
+  broken.
+- A scored rule must always be **pushed**, passing or failing, never omitted
+  when it can't be computed: dropping one shrinks the denominator and quietly
+  flatters exactly the thinnest pages.
+- `source` exists because not every rule comes from the manual. Two
+  (`house-style`, `list-length`) cite the vendored `docs/source/sfgov-style/`
+  snapshot, and `button-length` cites manual §6.3 (the Karl Button component),
+  not §7.8. Requiring a bare §7.x number is what previously pushed all three
+  into miscitations.
+
+Like `js/review-merge.js` it is **dual-export** (`window.plainLanguage` plus
+`module.exports`, no DOM dependency) so the AI output validator and the tests
+run the same implementation the Checks panel does.
+
+### URL schemes are validated, not just escaped
+
+`escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
+none of the five characters it escapes — so every structured `href` in
+`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, which allows
+`http`/`https`/`mailto`/`tel` and root-relative paths and rewrites anything
+else to the inert `#`. It strips control characters first, since browsers
+resolve `java\tscript:` as `javascript:`, and rejects protocol-relative
+`//host`. `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the
+same rule at validation time — in `bun run validate` **and** in the AI output
+validator — and imports `safeUrl` rather than restating it, so the renderer
+and the validator cannot come to disagree about what is safe. That import
+crosses the CJS/ESM boundary and relies on Node ≥22's `require(esm)`; CI's
+`build:netlify` runs `validate.js` under Node, not Bun.
 
 ### Page object shape and validation rules
 
@@ -561,7 +649,10 @@ it, and it fails closed rather than open.
 
 - **Two independent gates.** `REVIEW_API_TOKEN` (shared with the sync routes —
   one server secret, not two) decides whether the API exists at all; unset
-  makes every `/api/ai/*` route 501. `ANTHROPIC_API_KEY` decides whether
+  makes every `/api/ai/*` route 501 — with one deliberate exception: a CORS
+  `OPTIONS` preflight is answered 204 _before_ the token gate, so a
+  cross-origin browser client can still preflight an unconfigured server.
+  Don't move the gate above the `OPTIONS` branch. `ANTHROPIC_API_KEY` decides whether
   generation is possible; unset makes `generate` and `models` 501 while
   `capabilities` still answers. That asymmetry is deliberate: `capabilities` is
   the discovery endpoint the browser uses for its empty state, and a 501 there
@@ -578,11 +669,20 @@ it, and it fails closed rather than open.
   (only used to point the test suite at a stub). Put them in `.env.local`,
   which is gitignored and must stay that way.
 - **Validation is the point of the feature.** `build_scripts/ai/validate-output.js`
-  runs a generated page through the exact rules CI enforces —
-  `build_scripts/schema.js`, the `build_scripts/data-checks.js` invariants
-  (link targets resolved against the real page-key universe, lists of 3+ using
-  bullets, the Agency page staying inside Article 11), and
-  `js/plain-language.js`'s mandates. On failure the specific issues are named
+  runs a generated page through `build_scripts/schema.js`, the
+  `build_scripts/data-checks.js` invariants (link targets resolved against the
+  real page-key universe, lists of 3+ using bullets, unsafe URL schemes, the
+  Agency page staying inside Article 11), and `js/plain-language.js`'s
+  mandates. **Neither this nor CI contains the other, so a passing draft does
+  not mean "this would pass CI".** It is tighter on content: `validate.js`
+  never calls `analyzePlainLanguage()`, and the only CI-side plain-language
+  gate is a budget in `tests/plain-language.test.js` allowing up to 12
+  mandatory failures across the whole corpus — so authored copy can carry a
+  mandate failure that would get a generated draft rejected. It is looser on
+  wiring, because it only ever sees one page object: dropping a passing draft
+  into `pages/` still needs the `import` in `js/page-data.js` and its
+  `[pageKey, menuLabel]` entry, which `bun run validate` checks and this does
+  not. On failure the specific issues are named
   back to the model for **exactly one** retry; a bare "try again" reproduces the
   same violation. Results always return 200 with their issues attached even
   when invalid, because a draft failing one rule is still useful to a reviewer
@@ -595,8 +695,13 @@ it, and it fails closed rather than open.
 - **Never writes anything.** No filesystem write path, no review-state write,
   no `pages/*.js` mutation. Standards manual §1.11 forbids automated approval,
   and SF.gov's published AI guidelines require disclosing generative-AI use, so
-  every response carries a `disclosure` string that travels with the draft
-  rather than being something a client may forget to add.
+  every successful `generate` result carries a `disclosure` string. Scoped to
+  that response shape only — `capabilities` advertises the requirement as
+  `disclosureRequired: true`, `models` returns bare ids, and errors carry
+  none, so a client must not use the field's presence as its test for whether
+  a payload holds generated content. Both browser export paths do carry it:
+  _Download pages module_ and _Copy pages module_ emit the same
+  `buildPageModuleSource()` output, disclosure comment included.
 - **Tests**: `tests/ai-assist-server.test.js` spawns `server.ts` with
   `ANTHROPIC_BASE_URL` pointed at a stub Anthropic endpoint, so the gates, the
   retry loop, and the error mapping are covered with no API key and CI never
