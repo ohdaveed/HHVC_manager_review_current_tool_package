@@ -92,6 +92,8 @@ import './ux-improvements-workspace.js'
 import './ux-improvements-export.js'
 import './ux-improvements.js'
 import './review-queue-state.js'
+// Undo before rows: applyQueueAction records its snapshot through this.
+import './review-queue-undo.js'
 import './review-queue-rows.js'
 import './review-queue-render.js'
 import './review-queue-import.js'

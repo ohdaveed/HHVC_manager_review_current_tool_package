@@ -30,6 +30,7 @@ import { hasValidPageData } from './utils.js'
     { keys: ['b'], description: 'Blocked (current or selected)' },
     { keys: ['u'], description: 'Needs review (current or selected)' },
     { keys: ['m'], description: 'Assign to me (current or selected)' },
+    { keys: ['z'], description: 'Undo the last decision action' },
     { keys: ['x'], description: 'Toggle selection for the current page' },
     { keys: ['s'], description: 'Select all visible queue pages' },
     { keys: ['Escape'], description: 'Clear the queue selection' },
@@ -295,6 +296,12 @@ import { hasValidPageData } from './utils.js'
       case 'm':
         event.preventDefault()
         assignToMe()
+        break
+      case 'z':
+        event.preventDefault()
+        // Plain z, not Ctrl/Cmd+Z: shortcuts only fire outside form fields
+        // (isShortcutContext), so this cannot shadow undo while typing a note.
+        window.reviewQueue?.undoLast?.()
         break
       case 'x':
         event.preventDefault()

@@ -36,6 +36,33 @@
   const { importReviewsFromCsvText, importReviewsFromCsvFile } =
     window.ReviewQueueInternal.importCsv
 
+  /**
+   * Reverse the last row or bulk decision action and report honestly.
+   *
+   * Pages edited since the action are skipped rather than overwritten, so the
+   * toast distinguishes "reversed everything" from "reversed what was still
+   * untouched" — a silent partial undo would be worse than none.
+   * @returns {void}
+   */
+  function undoLastQueueAction() {
+    const undo = window.ReviewQueueInternal?.undo
+    if (!undo?.canUndo?.()) return
+
+    const { undone, skipped } = undo.undoLastAction()
+    document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
+    window.ReviewQueueInternal.render.renderReviewQueue()
+
+    if (!undone && skipped.length) {
+      window.showToast?.('Nothing undone — those pages changed since.', 'warn')
+      return
+    }
+    const base = undone === 1 ? 'Undid 1 page' : `Undid ${undone} pages`
+    window.showToast?.(
+      skipped.length ? `${base} · ${skipped.length} changed since and were left alone` : base,
+      skipped.length ? 'warn' : 'success'
+    )
+  }
+
   function handleQueueClick(event) {
     const filterButton = event.target.closest('[data-queue-filter]')
     if (filterButton) {
@@ -72,6 +99,12 @@
     const importButton = event.target.closest('[data-queue-import="csv"]')
     if (importButton) {
       document.getElementById('reviewQueueCsvInput')?.click()
+      return
+    }
+
+    const undoButton = event.target.closest('[data-queue-undo]')
+    if (undoButton) {
+      undoLastQueueAction()
       return
     }
 
@@ -206,6 +239,8 @@
     toggleSelected,
     syncSelectionUi,
     applyQueueAction,
+    undoLast: undoLastQueueAction,
+    canUndo: () => Boolean(window.ReviewQueueInternal?.undo?.canUndo?.()),
     getActionTargets,
     focusQueueSearch,
     importReviewsFromCsvText,
