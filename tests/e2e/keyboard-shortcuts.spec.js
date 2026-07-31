@@ -1,12 +1,16 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, seedState, readState, makeReviewRecord, DECISIONS } = require('./helpers')
+const {
+  gotoFresh,
+  seedState,
+  readState,
+  makeReviewRecord,
+  DECISIONS,
+  focusMockPage,
+} = require('./helpers')
 
 // Shortcuts only fire while focus is inside #reviewWorkspace, .canvas-toolbar,
 // or #mockPage (isShortcutContext in js/keyboard-shortcuts.js), so each test
 // clicks the mock page heading first to land focus in a shortcut context.
-async function focusMockPage(page) {
-  await page.locator('#mockPage h1').first().click()
-}
 
 test.describe('keyboard shortcuts', () => {
   test('j and k navigate to the next and previous queue page', async ({ page }) => {

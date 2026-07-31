@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, openWorkspaceTab } = require('./helpers')
+const { gotoFresh, openWorkspaceTab, focusMockPage } = require('./helpers')
 
 // The AI assist panel, driven through the real UI.
 //
@@ -222,6 +222,9 @@ test.describe('AI assist panel', () => {
 
   test('opens from the keyboard shortcut', async ({ page }) => {
     await gotoFresh(page)
+    // Shortcuts only fire when focus is in a shortcut context; without this
+    // the test races the first-run onboarding for focus. See focusMockPage.
+    await focusMockPage(page)
     await page.keyboard.press('4')
 
     await expect(page.locator('[data-workspace-panel="assist"]')).toBeVisible()
