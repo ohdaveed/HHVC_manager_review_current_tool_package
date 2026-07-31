@@ -23,10 +23,28 @@
 
   const PANEL_SELECTOR = '[data-workspace-panel="ops"]'
 
+  /**
+   * Escape a value for interpolation into this panel's innerHTML.
+   *
+   * The fallback escapes too. It used to return the raw string when
+   * window.utils was unavailable, which is the wrong shape for a defensive
+   * default: every call site here — page keys and a sync URL, both of which
+   * can arrive from an import or a sync response — depends on this to
+   * sanitize. In practice js/utils.js always loads first, so the fallback is
+   * unreachable today; a guard that silently stops guarding in the one case
+   * it exists for is still worth not shipping.
+   * @param {unknown} value
+   * @returns {string}
+   */
   function escape(value) {
-    return window.utils?.escapeHtml
-      ? window.utils.escapeHtml(String(value ?? ''))
-      : String(value ?? '')
+    const text = String(value ?? '')
+    if (window.utils?.escapeHtml) return window.utils.escapeHtml(text)
+    return text
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;')
   }
 
   /** The page keys the site currently has, for the orphan check. */
@@ -102,7 +120,9 @@
   /** Sync and AI are both optional; "not configured" is a normal answer. */
   function connections() {
     const sync = window.reviewStateSync?.readConfig?.() || {}
-    const syncOn = Boolean(sync.apiUrl && sync.apiToken)
+    // The module's own predicate rather than a second copy of the same test —
+    // if what counts as "configured" ever changes, this follows it.
+    const syncOn = Boolean(window.reviewStateSync?.isConfigured?.())
     const ai = window.AiAssist?.client?.isConfigured?.() || false
 
     return `
@@ -112,6 +132,12 @@
           syncOn ? 'Configured' : 'Not configured',
           // The URL, never the token: this panel is the kind of thing that
           // ends up in a screenshot.
+          // Rendered as TEXT, not as an href — deliberately NOT run through
+          // safeUrl(). That helper rewrites an unrecognised scheme to the
+          // inert '#', which is right for something clickable and wrong here:
+          // this panel's job is to report what is actually configured, and
+          // showing '#' in place of a misconfigured URL would hide the very
+          // problem an operator opened the tab to find.
           syncOn ? sync.apiUrl : 'Reviews stay in this browser'
         )}
         ${stat('AI assist', ai ? 'Configured' : 'Not configured', ai ? '' : 'Drafting is disabled')}

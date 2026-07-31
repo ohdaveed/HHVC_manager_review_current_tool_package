@@ -76,7 +76,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 472 tests at time of writing.
+without a key or a paid call) — 497 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -318,7 +318,7 @@ never referenced from `pages/*.js` or outside its own module's files):
   `escapeHtml`/`textContent`, and must stay that way.
 
 The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
-'help', 'ops']`, numbered left to right by the `1`–`5` shortcuts. The sitemap and AI
+'help', 'ops']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
 panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
 / `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
 tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
@@ -393,7 +393,7 @@ relying on Node-specific interop here would go unnoticed.
 
 Three compact charts above the review queue table — decision mix, review
 activity over time, and the pages whose automated checks are failing. They sit
-on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–5
+on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–6
 are bound to keyboard shortcuts, and inserting one would renumber the rest.
 
 - **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,

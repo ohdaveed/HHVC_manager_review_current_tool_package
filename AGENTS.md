@@ -223,7 +223,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   does not exist.
 
 The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist', 'help', 'ops']`,
-numbered left to right by the `1`–`5` shortcuts. Sitemap and AI assist mount
+numbered left to right by the `1`–`6` shortcuts. Sitemap and AI assist mount
 lazily on tab open, **and each also catches an already-open tab at its own
 `init()`** (`mountIfTabAlreadyOpen`) — `js/ux-improvements.js` initializes
 earlier and restores a persisted `workspace_tab` before those hooks exist, so
@@ -279,7 +279,7 @@ in early 22.x.
 
 Three compact charts above the review queue table — decision mix, review
 activity over time, and the pages whose automated checks are failing. They live
-on the **Overview tab rather than a sixth workspace tab**: tabs 1–5 are bound to
+on the **Overview tab rather than a sixth workspace tab**: tabs 1–6 are bound to
 keyboard shortcuts, and adding one would renumber the rest.
 
 - **`js/review-insights-data.js`** — pure data shaping, dual
