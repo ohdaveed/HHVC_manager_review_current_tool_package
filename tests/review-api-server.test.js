@@ -340,13 +340,22 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
   // or nonexistent static root would 404 those same paths just as happily,
   // so the test would pass while serving nothing at all. Assert the positive
   // case too: the fallback has to land on the real built app.
-  test('still serves the built application from dist/', async () => {
-    const res = await fetch(`${base}/`)
-    expect(res.status).toBe(200)
-    const html = await res.text()
-    // The built index.html references Vite's hashed module bundle. The source
-    // index.html points at /js/main.js instead, so this also distinguishes
-    // "served dist/" from "served the repo root".
-    expect(html).toMatch(/<script[^>]+type="module"[^>]+src="[^"]*assets\/index-[^"]+\.js"/)
-  })
+  //
+  // Unlike every other test in this suite, this one needs a build to exist —
+  // it is asserting on what dist/ contains. `bun test` on a fresh clone has no
+  // dist/, so it skips rather than failing for a reason unrelated to whatever
+  // the developer changed. CI runs build:netlify before the unit tests
+  // specifically so this never skips there; see the note in ci.yml.
+  test.skipIf(!fs.existsSync(path.join(ROOT, 'dist', 'index.html')))(
+    'still serves the built application from dist/',
+    async () => {
+      const res = await fetch(`${base}/`)
+      expect(res.status).toBe(200)
+      const html = await res.text()
+      // The built index.html references Vite's hashed module bundle. The source
+      // index.html points at /js/main.js instead, so this also distinguishes
+      // "served dist/" from "served the repo root".
+      expect(html).toMatch(/<script[^>]+type="module"[^>]+src="[^"]*assets\/index-[^"]+\.js"/)
+    }
+  )
 })

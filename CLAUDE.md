@@ -108,9 +108,15 @@ reports in seconds without waiting on a Chromium download, and a flaky
 browser run never masks a unit failure:
 
 - **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
-  → `test` → `build:netlify`. That last step doubles as a deploy-integrity
+  → `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity
   check: it fails if the committed workshop-form `dist` references assets
   that were never committed (the "form shell that never hydrates" regression).
+  **It runs before `test` on purpose**, even though that delays a unit
+  failure by a build: one test in `tests/review-api-server.test.js` asserts
+  that a set-but-empty `STATIC_ROOT` still serves the real built app, and it
+  can only tell a correct fallback from a broken one if `dist/` exists. It
+  skips itself when there is no build — so with the fast order it passed by
+  skipping and covered nothing.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure (traces are on-first-retry).
 

@@ -243,7 +243,13 @@ test.describe('AI assist panel', () => {
     await page.fill('#aiAssistApiToken', 'a-test-token')
     await page.click('#aiAssistSaveSettings')
 
-    await expect(page.locator('.toast')).toContainText(/AI settings saved/i)
+    // Filtered by text rather than asserting on a bare `.toast`. Opening the
+    // workspace raises its own "Review workspace opened" toast, and toasts live
+    // for 4s, so whether the two overlap is a matter of how fast the machine
+    // is: locally the first had expired by now, in CI it had not and the bare
+    // locator hit a strict-mode violation against two elements. Naming the one
+    // under test makes the assertion independent of that timing.
+    await expect(page.locator('.toast').filter({ hasText: /AI settings saved/i })).toBeVisible()
     expect(await readRecordedToasts(page)).toMatch(/AI settings saved/i)
   })
 

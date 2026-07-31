@@ -39,17 +39,25 @@ jobs:
       - name: Validate page data (Zod schema + invariants)
         run: bun run validate
 
-      - name: Unit tests (bun test)
-        run: bun run test
-
       # Runs the real Vite production build, so a bundling failure (a bad
       # import path, a missing dependency) is caught here rather than at
       # deploy time. It also doubles as a deploy-integrity check: the
       # workshop-form copy step fails if the committed sub-app dist
       # references assets that were never committed (the "form shell that
       # never hydrates" regression).
+      #
+      # This runs BEFORE the unit tests, which is worth a sentence because the
+      # obvious order is the other way round. One test in
+      # tests/review-api-server.test.js asserts that a set-but-empty
+      # STATIC_ROOT still serves the real built app, and it can only tell a
+      # correct fallback from a broken one if dist/ actually exists. The test
+      # skips itself when there is no build, so with the fast order it passed
+      # by skipping and the regression it guards went uncovered in CI.
       - name: Vite build + Netlify bundle assembly (deploy-integrity check)
         run: bun run build:netlify
+
+      - name: Unit tests (bun test)
+        run: bun run test
 
       # build:netlify only exercises the default build mode. The single-file
       # export goes through vite-plugin-singlefile with different inlining
