@@ -42,6 +42,15 @@ describe('safeUrl', () => {
     expect(ctx.safeUrl('//evil.example/x')).toBe('#')
   })
 
+  // A browser treats backslashes as forward slashes in the authority position:
+  // new URL('\\\\evil.example', 'https://sf.gov') resolves to https://evil.example.
+  // Checking only for "//" let every one of these leave the origin.
+  test('replaces protocol-relative URLs written with backslashes', () => {
+    expect(ctx.safeUrl('\\\\evil.example/path')).toBe('#')
+    expect(ctx.safeUrl('\\/evil.example')).toBe('#')
+    expect(ctx.safeUrl('/\\evil.example')).toBe('#')
+  })
+
   test('treats empty, null, and undefined as the inert sentinel', () => {
     expect(ctx.safeUrl('')).toBe('#')
     expect(ctx.safeUrl(null)).toBe('#')
