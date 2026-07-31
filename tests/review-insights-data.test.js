@@ -83,6 +83,32 @@ describe('toDayKey', () => {
     expect(toDayKey('2026-07-31T18:45:12.000Z')).toBe('2026-07-31')
   })
 
+  test('groups by the reviewer local day, not the UTC one', () => {
+    // Regression: this used toISOString().slice(0, 10), so a decision made at
+    // 5pm in San Francisco was filed under the NEXT day — disagreeing with the
+    // review_date stored beside it, which utils.today() builds from local
+    // getFullYear/getMonth/getDate. Asserted against the same local calendar
+    // fields rather than a literal, so it holds in any TZ the suite runs in
+    // (CI runs UTC, where the two happen to coincide).
+    const ts = '2026-07-01T23:30:00-07:00'
+    const local = new Date(ts)
+    const expected = `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, '0')}-${String(local.getDate()).padStart(2, '0')}`
+    expect(toDayKey(ts)).toBe(expected)
+  })
+
+  test('maps two spellings of the same instant to the same day', () => {
+    // TZ-independent: the same moment written with different offsets must not
+    // land on different days.
+    expect(toDayKey('2026-07-01T23:30:00-07:00')).toBe(toDayKey('2026-07-02T06:30:00Z'))
+  })
+
+  test('passes a plain calendar date through untouched', () => {
+    // review_date is stored as YYYY-MM-DD. Parsing it would read it as UTC
+    // midnight and re-render it locally, shifting it back a day everywhere
+    // west of Greenwich.
+    expect(toDayKey('2026-07-01')).toBe('2026-07-01')
+  })
+
   test('returns null for a malformed or missing timestamp', () => {
     // History entries arrive from CSV/JSON imports as well as local writes, so
     // a bad timestamp is realistic and must not take the chart down.
@@ -140,6 +166,33 @@ describe('firstDecidedDay', () => {
     expect(firstDecidedDay(null)).toBeNull()
   })
 
+  test('falls back to review_date for a legacy record with no history', () => {
+    // history[] was added without bumping the storage version, so records
+    // written before it carry a real decision and no history at all. Without
+    // the fallback such a page counts as decided in the mix but contributes
+    // nothing to activity — the same card contradicting itself.
+    expect(firstDecidedDay({ decision: 'Approved', review_date: '2026-06-15' })).toBe('2026-06-15')
+  })
+
+  test('falls back to updated_at when a legacy record has no review_date', () => {
+    const day = firstDecidedDay({ decision: 'Blocked', updated_at: '2026-06-20T10:00:00.000Z' })
+    expect(day).toBe(toDayKey('2026-06-20T10:00:00.000Z'))
+  })
+
+  test('does not invent a decided day for a legacy record still needing review', () => {
+    expect(firstDecidedDay({ decision: 'Needs review', review_date: '2026-06-15' })).toBeNull()
+    expect(firstDecidedDay({ review_date: '2026-06-15' })).toBeNull()
+  })
+
+  test('prefers real history over the legacy fallback', () => {
+    const record = {
+      decision: 'Approved',
+      review_date: '2026-06-15',
+      history: [{ timestamp: '2026-07-03T10:00:00.000Z', decision: 'Approved' }],
+    }
+    expect(firstDecidedDay(record)).toBe('2026-07-03')
+  })
+
   test('skips an entry whose timestamp will not parse', () => {
     const record = {
       history: [
@@ -191,6 +244,27 @@ describe('buildActivitySeries', () => {
     }
 
     expect(buildActivitySeries(pages)).toEqual([])
+  })
+
+  test('ignores saved records for page keys the site no longer has', () => {
+    // Nothing prunes review records when a page is retired, so a browser that
+    // reviewed the old IA still holds rows for dead keys. Counting them made
+    // the running total climb past the site total the other charts use.
+    const pages = {
+      live: { history: [{ timestamp: '2026-07-01T10:00:00.000Z', decision: 'Approved' }] },
+      retired: { history: [{ timestamp: '2026-07-01T10:00:00.000Z', decision: 'Approved' }] },
+    }
+    expect(buildActivitySeries(pages, new Set(['live']))).toEqual([
+      { date: '2026-07-01', decided: 1, total: 1 },
+    ])
+  })
+
+  test('counts every record when no key set is supplied', () => {
+    const pages = {
+      a: { history: [{ timestamp: '2026-07-01T10:00:00.000Z', decision: 'Approved' }] },
+    }
+    expect(buildActivitySeries(pages)).toHaveLength(1)
+    expect(buildActivitySeries(pages, new Set())).toHaveLength(1)
   })
 
   test('tolerates a missing or non-object pages map', () => {
@@ -281,6 +355,38 @@ describe('insightsSignature', () => {
     expect(insightsSignature(before)).not.toBe(insightsSignature(after))
   })
 
+  test('changes when a page title changes but its pass rate does not', () => {
+    // Restoring an edited_title from a backup import or a sync pull changes
+    // what the axis label and the accessible table render while leaving pct
+    // identical. The old signature missed it and the redraw was skipped, so
+    // both kept showing the previous title.
+    const pages = {}
+    const before = buildInsightsModel(
+      [{ key: 'a', title: 'Old', checksPassed: 1, checksTotal: 2 }],
+      pages
+    )
+    const after = buildInsightsModel(
+      [{ key: 'a', title: 'New', checksPassed: 1, checksTotal: 2 }],
+      pages
+    )
+
+    expect(insightsSignature(before)).not.toBe(insightsSignature(after))
+  })
+
+  test('changes when passed/total change but the rounded percentage does not', () => {
+    const pages = {}
+    const before = buildInsightsModel(
+      [{ key: 'a', title: 'A', checksPassed: 1, checksTotal: 2 }],
+      pages
+    )
+    const after = buildInsightsModel(
+      [{ key: 'a', title: 'A', checksPassed: 2, checksTotal: 4 }],
+      pages
+    )
+
+    expect(insightsSignature(before)).not.toBe(insightsSignature(after))
+  })
+
   test('is unchanged by row order, since the charts sort their own data', () => {
     // The Overview panel re-sorts rows on every sort-control change. Those
     // renders must not rebuild the charts, which is the whole point of the
@@ -292,6 +398,31 @@ describe('insightsSignature', () => {
     expect(insightsSignature(buildInsightsModel([rowA, rowB], pages))).toBe(
       insightsSignature(buildInsightsModel([rowB, rowA], pages))
     )
+  })
+})
+
+describe('buildInsightsModel checksFailing', () => {
+  test('carries only the pages with failing checks', () => {
+    // The "Checks needing attention" card draws this subset. Slicing the full
+    // list padded the chart out to its row cap with pages sitting at 100%.
+    const rows = [
+      { key: 'a', title: 'A', checksPassed: 2, checksTotal: 2 },
+      { key: 'b', title: 'B', checksPassed: 1, checksTotal: 2 },
+    ]
+    const model = buildInsightsModel(rows, {})
+
+    expect(model.checks.map((item) => item.key)).toEqual(['b', 'a'])
+    expect(model.checksFailing.map((item) => item.key)).toEqual(['b'])
+  })
+
+  test('is empty when every page passes, so the card can say so', () => {
+    const model = buildInsightsModel(
+      [{ key: 'a', title: 'A', checksPassed: 3, checksTotal: 3 }],
+      {}
+    )
+
+    expect(model.checks).toHaveLength(1)
+    expect(model.checksFailing).toEqual([])
   })
 })
 

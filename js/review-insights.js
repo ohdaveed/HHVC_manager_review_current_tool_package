@@ -200,19 +200,21 @@ function buildMarkup(model) {
           )
     }
     ${
-      model.checks.length
+      model.checksFailing.length
         ? card(
             'checks',
             'Checks needing attention',
-            model.checks.length > CHECKS_VISIBLE
-              ? `${CHECKS_VISIBLE} lowest of ${model.checks.length} pages`
-              : `${model.checks.length} pages`,
+            model.checksFailing.length > CHECKS_VISIBLE
+              ? `${CHECKS_VISIBLE} lowest of ${model.checksFailing.length} pages with failing checks`
+              : `${model.checksFailing.length} of ${model.checks.length} pages have failing checks`,
             checksTable
           )
         : emptyCard(
             'Checks needing attention',
             'Automated page checks',
-            'No check results available for these pages.'
+            model.checks.length
+              ? 'Every page is passing all of its checks.'
+              : 'No check results available for these pages.'
           )
     }
   `

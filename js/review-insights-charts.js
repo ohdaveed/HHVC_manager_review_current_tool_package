@@ -21,6 +21,7 @@ import * as echarts from 'echarts/core'
 import { BarChart, LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
+import { escapeHtml } from './utils.js'
 
 // Register only what these three charts use, so the rest of ECharts is
 // tree-shaken out of the chunk rather than merely deferred.
@@ -60,7 +61,13 @@ function decisionOption(model, theme) {
     yAxis: { type: 'category', data: [''], show: false },
     tooltip: {
       ...baseOption(theme).tooltip,
-      formatter: (params) => `${params.seriesName}: ${params.value} of ${model.total}`,
+      // ECharts renders a formatter's return value as HTML. Everything
+      // interpolated here is escaped for the same reason the queue table and
+      // the hidden data tables are: a decision string is saved state, and
+      // buildDecisionMix deliberately counts unrecognised values rather than
+      // dropping them, so an imported backup can put arbitrary text here.
+      formatter: (params) =>
+        `${escapeHtml(params.seriesName)}: ${escapeHtml(params.value)} of ${escapeHtml(model.total)}`,
     },
     series: present.map((item) => ({
       name: item.decision,
@@ -95,11 +102,17 @@ function activityOption(model, theme) {
   return {
     ...baseOption(theme),
     grid: { top: 12, bottom: 24, left: 32, right: 12 },
+    // A TIME axis, not a category one. The model deliberately records only the
+    // days something was decided, so on a category axis July 1 and July 30 sit
+    // one tick apart exactly like two consecutive days — which erases a
+    // month-long stall and makes a slow review look identical to a fast one.
+    // Since the whole point of this card is the pace of review, the gaps have
+    // to be to scale.
     xAxis: {
-      type: 'category',
-      data: model.activity.map((point) => point.date.slice(5)),
+      type: 'time',
       axisLine: { lineStyle: { color: theme.border } },
       axisTick: { show: false },
+      axisLabel: { formatter: '{MM}-{dd}', hideOverlap: true },
     },
     yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { color: theme.border } } },
     tooltip: {
@@ -107,13 +120,13 @@ function activityOption(model, theme) {
       trigger: 'axis',
       formatter: (params) => {
         const point = model.activity[params[0]?.dataIndex] || {}
-        return `${point.date}<br>${point.total} decided (+${point.decided})`
+        return `${escapeHtml(point.date)}<br>${escapeHtml(point.total)} decided (+${escapeHtml(point.decided)})`
       },
     },
     series: [
       {
         type: 'line',
-        data: model.activity.map((point) => point.total),
+        data: model.activity.map((point) => [point.date, point.total]),
         smooth: false,
         symbolSize: 6,
         lineStyle: { color: theme.line, width: 2 },
@@ -138,7 +151,11 @@ function activityOption(model, theme) {
  * @returns {object} ECharts option
  */
 function checksOption(model, theme, limit) {
-  const visible = model.checks.slice(0, limit).reverse()
+  // checksFailing, not checks: this card is titled "Checks needing attention",
+  // and slicing the full list pads it out to `limit` with pages sitting at
+  // 100%. On a site where everything passes that produced eight green bars
+  // under a heading about problems.
+  const visible = model.checksFailing.slice(0, limit).reverse()
   return {
     ...baseOption(theme),
     grid: { top: 4, bottom: 8, left: 4, right: 36, containLabel: true },
@@ -164,9 +181,14 @@ function checksOption(model, theme, limit) {
     },
     tooltip: {
       ...baseOption(theme).tooltip,
+      // item.title is NOT trusted input. js/ux-improvements-state-sync.js
+      // assigns a restored edited_title straight onto the in-memory page
+      // object, so a JSON backup or a sync response can put markup here — and
+      // this formatter's return value is inserted as HTML. Escaped, like every
+      // other path in this repo that reaches innerHTML.
       formatter: (params) => {
         const item = visible[params.dataIndex] || {}
-        return `${item.title}<br>${item.passed} of ${item.total} checks passing`
+        return `${escapeHtml(item.title)}<br>${escapeHtml(item.passed)} of ${escapeHtml(item.total)} checks passing`
       },
     },
     series: [

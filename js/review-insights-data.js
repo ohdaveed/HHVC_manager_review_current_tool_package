@@ -68,9 +68,23 @@ function buildDecisionMix(rows) {
  */
 function toDayKey(timestamp) {
   if (typeof timestamp !== 'string' || !timestamp) return null
+  // An already-plain calendar date (review_date is stored this way) is passed
+  // through untouched. Parsing it would read it as UTC midnight and then
+  // re-render it locally, which shifts it back a day in every timezone west of
+  // Greenwich — turning a stored date into the previous one.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(timestamp)) return timestamp
+
   const parsed = new Date(timestamp)
   if (Number.isNaN(parsed.getTime())) return null
-  return parsed.toISOString().slice(0, 10)
+  // The reviewer's LOCAL day, not the UTC one. This used to be
+  // toISOString().slice(0, 10), which buckets a decision made at 5pm in San
+  // Francisco into the following day — disagreeing with the review_date saved
+  // alongside it, since utils.today() builds that from local getFullYear/
+  // getMonth/getDate. The chart has to speak the same calendar as the record.
+  const year = parsed.getFullYear()
+  const month = String(parsed.getMonth() + 1).padStart(2, '0')
+  const day = String(parsed.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**
@@ -93,8 +107,25 @@ function firstDecidedDay(record) {
     if (!day) continue
     if (!earliest || day < earliest) earliest = day
   }
+  if (earliest) return earliest
 
-  return earliest
+  // Legacy fallback. history[] was added alongside the sync backend, and the
+  // storage version was deliberately NOT bumped because the field is additive
+  // — so a record saved before it exists carries a real decision and no
+  // history at all, and autosave preserves that emptiness rather than
+  // backfilling it. Without this branch such a page counts as decided in the
+  // mix and the queue but contributes nothing to activity, so the two halves
+  // of the same card contradict each other: "12 of 19 decided" above a chart
+  // reading "No decisions recorded yet".
+  //
+  // review_date first: it is the reviewer's own stated date. updated_at is the
+  // fallback's fallback — it is a browser-clock write time rather than a
+  // decision date, which is why it is not preferred.
+  if (record?.decision && record.decision !== UNDECIDED) {
+    return toDayKey(record.review_date) || toDayKey(record.updated_at)
+  }
+
+  return null
 }
 
 /**
@@ -110,11 +141,22 @@ function firstDecidedDay(record) {
  * @param {Record<string, object>} savedPages the `pages` map from review state
  * @returns {Array<{date: string, decided: number, total: number}>}
  */
-function buildActivitySeries(savedPages) {
+function buildActivitySeries(savedPages, validKeys) {
   const pages = savedPages && typeof savedPages === 'object' ? savedPages : {}
+  // Saved state outlives the sitemap. Review records are keyed by page key and
+  // nothing prunes them when a page is retired in an IA consolidation, so a
+  // browser that reviewed the old site still holds rows for keys that no
+  // longer exist. Counting those makes the running total climb past the site
+  // total the other two charts are computed from — a chart claiming 23 of 19
+  // pages decided. Restricted to the keys the queue actually has.
+  //
+  // An absent/empty set means "no restriction", so a caller that has no key
+  // list still gets the whole map rather than an empty chart.
+  const allowed = validKeys instanceof Set ? validKeys : null
   const perDay = new Map()
 
   for (const key of Object.keys(pages)) {
+    if (allowed && allowed.size && !allowed.has(key)) continue
     const day = firstDecidedDay(pages[key])
     if (!day) continue
     perDay.set(day, (perDay.get(day) || 0) + 1)
@@ -173,7 +215,15 @@ function buildChecksSeries(rows) {
 function insightsSignature(model) {
   const mix = (model?.decisionMix || []).map((item) => `${item.decision}:${item.count}`).join(',')
   const activity = (model?.activity || []).map((item) => `${item.date}:${item.total}`).join(',')
-  const checks = (model?.checks || []).map((item) => `${item.key}:${item.pct}`).join(',')
+  // Every field that gets RENDERED belongs in the fingerprint, not just the
+  // one the bar length is drawn from. A page whose title changes while its
+  // pass rate does not — restoring an edited_title from a backup import or a
+  // sync pull — produced an identical signature, so the redraw was skipped and
+  // both the chart's axis label and its accessible data table kept showing the
+  // old title indefinitely.
+  const checks = (model?.checks || [])
+    .map((item) => `${item.key}:${item.title}:${item.passed}/${item.total}`)
+    .join(',')
   return `${mix}|${activity}|${checks}`
 }
 
@@ -184,11 +234,21 @@ function insightsSignature(model) {
  * @returns {{decisionMix: Array, activity: Array, checks: Array, total: number}}
  */
 function buildInsightsModel(rows, savedPages) {
+  const list = Array.isArray(rows) ? rows : []
+  const checks = buildChecksSeries(list)
   return {
-    decisionMix: buildDecisionMix(rows),
-    activity: buildActivitySeries(savedPages),
-    checks: buildChecksSeries(rows),
-    total: Array.isArray(rows) ? rows.length : 0,
+    decisionMix: buildDecisionMix(list),
+    // Scoped to the keys the queue holds, so activity can never describe more
+    // pages than the site has.
+    activity: buildActivitySeries(savedPages, new Set(list.map((row) => row?.key))),
+    checks,
+    // The pages the "Checks needing attention" card should actually draw.
+    // `checks` keeps every page for the accessible table; this is the subset
+    // the card's own title promises. Without it the chart pads itself out to
+    // its row cap with pages at 100%, and a site where everything passes shows
+    // eight green bars under a heading about problems instead of saying so.
+    checksFailing: checks.filter((item) => item.pct < 100),
+    total: list.length,
   }
 }
 
