@@ -3,7 +3,7 @@
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.ReviewQueueInternal?.rows) return
 
-  const { escapeHtml, getStatusChipClass, getCurrentKey } = window.utils
+  const { escapeHtml, getDecisionChipClass, getCurrentKey } = window.utils
   const state = window.ReviewQueueInternal.state
   const { QUEUE_PANEL_ID, STALE_DAYS, getSidebarReviewerName, normalize, restoreQueueUiState } =
     window.ReviewQueueInternal.helpers
@@ -74,6 +74,17 @@
           <button type="button" class="review-queue-action" data-queue-bulk-action="approved-with-edits"${selectedCount ? '' : ' disabled'}>Approve w/ edits</button>
         </div>
         <div class="review-queue-import">
+          ${
+            /* Undo lives in the bulk bar rather than in the action toast:
+               toasts self-dismiss after 4s, which is far too short a window
+               to notice a wrong bulk action and reverse it. The label names
+               what will be reversed so the button is never a mystery. */
+            window.ReviewQueueInternal?.undo?.canUndo?.()
+              ? `<button type="button" class="review-queue-action" data-queue-undo="last">${escapeHtml(
+                  window.ReviewQueueInternal.undo.describeUndo()
+                )}</button>`
+              : ''
+          }
           <button type="button" class="review-queue-action" data-queue-import="csv">Import CSV</button>
         </div>
       </section>
@@ -213,11 +224,11 @@
           </div>
         </header>
         <div class="review-queue-stats" aria-label="Decision breakdown">
-          <span class="status-chip warn">Needs review ${stats.byDecision['Needs review'] || 0}</span>
-          <span class="status-chip pass">Approved ${stats.byDecision.Approved || 0}</span>
-          <span class="status-chip warn">Edits ${stats.byDecision['Approved with edits'] || 0}</span>
-          <span class="status-chip fail">Revise ${stats.byDecision['Revise and resubmit'] || 0}</span>
-          <span class="status-chip fail">Blocked ${stats.byDecision.Blocked || 0}</span>
+          <span class="status-chip ${getDecisionChipClass('Needs review')}">Needs review ${stats.byDecision['Needs review'] || 0}</span>
+          <span class="status-chip ${getDecisionChipClass('Approved')}">Approved ${stats.byDecision.Approved || 0}</span>
+          <span class="status-chip ${getDecisionChipClass('Approved with edits')}">Edits ${stats.byDecision['Approved with edits'] || 0}</span>
+          <span class="status-chip ${getDecisionChipClass('Revise and resubmit')}">Revise ${stats.byDecision['Revise and resubmit'] || 0}</span>
+          <span class="status-chip ${getDecisionChipClass('Blocked')}">Blocked ${stats.byDecision.Blocked || 0}</span>
           <button type="button" class="review-queue-action" data-queue-next-needs-review="true">Next needs review</button>
         </div>
         ${renderQueueStats(stats, rows.length)}
@@ -277,7 +288,7 @@
               <tbody>
                 ${rows
                   .map((row) => {
-                    const chipClass = getStatusChipClass(row.decision)
+                    const chipClass = getDecisionChipClass(row.decision)
                     const ownerLabel = row.followUpOwner || 'No owner'
                     const notesLabel = row.notes ? 'Notes saved' : 'No notes'
                     const ageChipClass = row.isStale

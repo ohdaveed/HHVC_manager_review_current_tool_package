@@ -235,14 +235,30 @@
     let currentKeySaved = null
     let updatedCount = 0
 
+    // Snapshot for one-step undo. Captured per page BEFORE its write and
+    // paired with the updated_at the write produces, so the undo can tell an
+    // untouched page from one edited since. Only pages that actually changed
+    // are recorded — an action that was a no-op for a page has nothing to
+    // reverse. See js/review-queue-undo.js.
+    const undo = window.ReviewQueueInternal?.undo
+    const undoEntries = []
+
     for (const key of keyList) {
       const currentSaved = fullState.pages[key] || {}
       const patch = buildActionPatch(action, suggestedOwner, reviewDate, currentSaved)
       if (!patch) continue
+      const prior = undo ? undo.captureRecord(fullState.pages[key]) : null
       const saved = updateLocalReviewForPage(key, patch)
       if (!saved || saved.updated_at === currentSaved.updated_at) continue
       updatedCount += 1
+      undoEntries.push({ pageKey: key, prior, appliedUpdatedAt: saved.updated_at })
       if (key === getCurrentKey()) currentKeySaved = saved
+    }
+
+    // An undo is itself applied through this function's siblings, not through
+    // applyQueueAction, so it never overwrites the snapshot it is consuming.
+    if (undo && undoEntries.length) {
+      undo.recordAction({ label: actionLabel(action), entries: undoEntries })
     }
 
     if (currentKeySaved) {

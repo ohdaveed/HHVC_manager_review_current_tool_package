@@ -293,3 +293,55 @@ describe('today', () => {
     expect(ctx.today()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })
+
+describe('getDecisionChipClass', () => {
+  test('gives each of the five decisions its own class', () => {
+    // Regression: the previous mapping returned pass/warn/fail, so five
+    // decisions drew as three colours. Uniqueness is the whole property.
+    const decisions = [
+      'Needs review',
+      'Approved',
+      'Approved with edits',
+      'Revise and resubmit',
+      'Blocked',
+    ]
+    const classes = decisions.map((decision) => ctx.getDecisionChipClass(decision))
+
+    expect(new Set(classes).size).toBe(decisions.length)
+  })
+
+  test('keeps Blocked and Revise and resubmit distinct', () => {
+    // The pair that matters most: Blocked is waiting on an outside party,
+    // Revise and resubmit is waiting on the author and is actionable today.
+    // They both used to render as `fail`.
+    expect(ctx.getDecisionChipClass('Blocked')).not.toBe(
+      ctx.getDecisionChipClass('Revise and resubmit')
+    )
+  })
+
+  test('keeps Needs review and Approved with edits distinct', () => {
+    // The other collapsed pair — both used to render as `warn`.
+    expect(ctx.getDecisionChipClass('Needs review')).not.toBe(
+      ctx.getDecisionChipClass('Approved with edits')
+    )
+  })
+
+  test('maps each decision to its matching status token family', () => {
+    // The class name is what selects the --status-* triplet in
+    // css/dashboard.css, so the exact strings are load-bearing.
+    expect(ctx.getDecisionChipClass('Approved')).toBe('decision-approved')
+    expect(ctx.getDecisionChipClass('Approved with edits')).toBe('decision-edits')
+    expect(ctx.getDecisionChipClass('Revise and resubmit')).toBe('decision-revise')
+    expect(ctx.getDecisionChipClass('Blocked')).toBe('decision-blocked')
+    expect(ctx.getDecisionChipClass('Needs review')).toBe('decision-pending')
+  })
+
+  test('falls back to the neutral chip for an unknown or missing decision', () => {
+    // Saved state can carry a decision this build does not know about — an
+    // imported backup, or one added later. Returning no class at all would
+    // leave an unstyled chip.
+    expect(ctx.getDecisionChipClass('Escalated')).toBe('decision-pending')
+    expect(ctx.getDecisionChipClass('')).toBe('decision-pending')
+    expect(ctx.getDecisionChipClass(undefined)).toBe('decision-pending')
+  })
+})

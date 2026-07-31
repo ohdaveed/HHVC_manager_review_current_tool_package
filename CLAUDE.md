@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 18 unit-test files in tests/ (472 tests)
-bun run test:e2e              # playwright test (90 specs across 12 files in tests/e2e/)
+bun run test                  # bun test over the 18 unit-test files in tests/ (477 tests)
+bun run test:e2e              # playwright test (99 specs across 13 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -90,10 +90,11 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twelve spec files
-(90 specs): eleven UI-driven (navigation, editor panel, review workflow,
-review queue, import/export, keyboard shortcuts, sitemap/workspace,
-accessibility, AI assist, mockup PNG export, Overview insight charts) plus the
+`bun run test:e2e` drives Playwright over `tests/e2e/` — thirteen spec files
+(99 specs): twelve UI-driven (navigation, editor panel, review workflow,
+review queue, review-queue undo, import/export, keyboard shortcuts,
+sitemap/workspace, accessibility, AI assist, mockup PNG export, Overview
+insight charts) plus the
 original API-level `review-import-export` round-trip, sharing plain helper
 functions in `tests/e2e/helpers.js` (no fixture framework).
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
@@ -430,6 +431,31 @@ Other invariants worth not rediscovering:
   legend with counts, every chart is `aria-hidden` beside an
   `.hhvc-sr-only` data table, and the checks chart states its own top-8 cap
   while the table carries every page.
+
+### Queue undo (`js/review-queue-undo.js`)
+
+One step of undo for row and bulk decision actions. `applyQueueAction` in
+`js/review-queue-rows.js` is the single funnel every such action goes through,
+so it is the only place a snapshot is recorded.
+
+- **The undo is a new round, not a deletion.** `history[]` is append-only —
+  `mergeReviewRecord` is the only thing that ever constructs an entry, and it
+  only ever appends — so undoing writes the previous content back as another
+  recorded round. The trail reads "set to Approved, then reverted", which is
+  what happened. Removing the entry would let a reviewer quietly erase a
+  decision from the record.
+- **A page edited since the action is skipped, not rolled back.** Each snapshot
+  entry stores the `updated_at` its own write produced; if the stored record no
+  longer matches, something else has touched the page (sidebar, import, sync
+  pull) and restoring the pre-action content would discard newer work. The
+  toast reports the skipped count rather than claiming a clean undo.
+- **One level deep, and consumed on use.** A stack would imply an undo history
+  the review state cannot reconstruct, since every undo is itself a
+  forward-only write. The button also leaves the bulk bar once pressed, so a
+  second press cannot reverse a different set of pages than its label named.
+- It lives in the bulk bar rather than in the action toast, because toasts
+  self-dismiss after 4s — far too short to notice a wrong bulk action and
+  reverse it. Keyboard shortcut `z`.
 
 ### Page object shape and validation rules
 

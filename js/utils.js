@@ -45,7 +45,7 @@ const REVIEW_RECORD_FIELDS = [
     debounce,
     throttle,
     showErrorBanner,
-    getStatusChipClass,
+    getDecisionChipClass,
     defaultSeoTitle,
     defaultMetaDescription,
     getValue,
@@ -452,17 +452,42 @@ function throttle(fn, limit) {
 }
 
 /**
- * Map a review decision to its status-chip color class.
- * 'Approved with edits' counts as passing (green) alongside 'Approved' —
- * to a reviewer scanning a list, it reads as an approved state.
- * @param {string} decision
- * @returns {'pass'|'fail'|'warn'}
+ * One chip class per decision, keyed by the decision string itself.
+ *
+ * This replaced a three-way pass/warn/fail mapping, and the reason is a
+ * triage one rather than a cosmetic one. Under that mapping `Blocked` and
+ * `Revise and resubmit` both rendered `fail`, and `Needs review` and
+ * `Approved with edits` both rendered `warn` — so the queue drew as three
+ * colours for five states. The two collapsed pairs are exactly the ones a
+ * manager needs to tell apart while scanning: `Blocked` is waiting on an
+ * outside party and nothing the author does will move it, while `Revise and
+ * resubmit` is waiting on the author and is actionable today.
+ *
+ * The `--status-*` token triplets for all five already existed in
+ * css/theme.css; `--status-revise-*` and `--status-pending-*` simply had no
+ * consumer, because nothing could ever emit a class that used them.
+ *
+ * Colour is not the only cue: every chip renders the decision text beside it.
  */
-function getStatusChipClass(decision) {
-  if (decision === 'Approved') return 'pass'
-  if (decision === 'Approved with edits') return 'warn'
-  if (decision === 'Blocked' || decision === 'Revise and resubmit') return 'fail'
-  return 'warn'
+const DECISION_CHIP_CLASSES = {
+  Approved: 'decision-approved',
+  'Approved with edits': 'decision-edits',
+  'Revise and resubmit': 'decision-revise',
+  Blocked: 'decision-blocked',
+  'Needs review': 'decision-pending',
+}
+
+/**
+ * Map a review decision to its chip class.
+ *
+ * Falls back to the neutral pending chip for an unrecognised decision rather
+ * than dropping the class, since saved state can carry values this build does
+ * not know about (an imported backup, or a decision added later).
+ * @param {string} decision
+ * @returns {string}
+ */
+function getDecisionChipClass(decision) {
+  return DECISION_CHIP_CLASSES[decision] || 'decision-pending'
 }
 
 /**
@@ -627,7 +652,7 @@ export {
   escapeHtml,
   getCurrentKey,
   getPrimaryCta,
-  getStatusChipClass,
+  getDecisionChipClass,
   getValue,
   hasValidPageData,
   parseCsv,

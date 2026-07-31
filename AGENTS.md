@@ -74,10 +74,11 @@ endpoints, so both AI paths are covered without a key or a paid call). **The lis
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twelve spec files — eleven UI-driven ones covering navigation, editor panel,
-review workflow, review queue, import/export, keyboard shortcuts,
-sitemap/workspace, accessibility, AI assist, mockup PNG export, and the
-Overview insight charts, plus the original `review-import-export` API-level
+thirteen spec files — twelve UI-driven ones covering navigation, editor
+panel, review workflow, review queue, review-queue undo, import/export,
+keyboard shortcuts, sitemap/workspace, accessibility, AI assist, mockup PNG
+export, and the Overview insight charts, plus the original
+`review-import-export` API-level
 round-trip — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework). `gotoFresh()` waits on
 `window.reviewKeyboardShortcuts.ready`, not just the sticky bar, so a test
@@ -305,6 +306,31 @@ is requested**, so the numbers are present even if the chunk never loads.
 - **Colour is never the only encoding**: visible legend with counts, every chart
   `aria-hidden` beside an `.hhvc-sr-only` table, and the checks chart states its
   own top-8 cap while the table carries every page.
+
+### Queue undo (`js/review-queue-undo.js`)
+
+One step of undo for row and bulk decision actions. `applyQueueAction` in
+`js/review-queue-rows.js` is the single funnel every such action goes through,
+so it is the only place a snapshot is recorded.
+
+- **The undo is a new round, not a deletion.** `history[]` is append-only —
+  `mergeReviewRecord` is the only thing that ever constructs an entry, and it
+  only ever appends — so undoing writes the previous content back as another
+  recorded round. The trail reads "set to Approved, then reverted", which is
+  what happened. Removing the entry would let a reviewer quietly erase a
+  decision from the record.
+- **A page edited since the action is skipped, not rolled back.** Each snapshot
+  entry stores the `updated_at` its own write produced; if the stored record no
+  longer matches, something else has touched the page (sidebar, import, sync
+  pull) and restoring the pre-action content would discard newer work. The
+  toast reports the skipped count rather than claiming a clean undo.
+- **One level deep, and consumed on use.** A stack would imply an undo history
+  the review state cannot reconstruct, since every undo is itself a
+  forward-only write. The button also leaves the bulk bar once pressed, so a
+  second press cannot reverse a different set of pages than its label named.
+- It lives in the bulk bar rather than in the action toast, because toasts
+  self-dismiss after 4s — far too short to notice a wrong bulk action and
+  reverse it. Keyboard shortcut `z`.
 
 ### Page object shape and validation rules
 
