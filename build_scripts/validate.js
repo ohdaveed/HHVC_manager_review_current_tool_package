@@ -13,6 +13,7 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  findUnsafeUrls,
   countUnverifiedClaims,
 } = require('./data-checks')
 const { findPageImports, findPageImportDrift } = require('./page-import-checks')
@@ -85,6 +86,12 @@ const listFormatViolations = findListFormatViolations(parsed.data.pages)
 if (listFormatViolations.length) {
   const { pageKey, path, count } = listFormatViolations[0]
   throw new Error(`${pageKey} ${path} has ${count} items; use bullets[] for lists of 3 or more`)
+}
+
+const unsafeUrls = findUnsafeUrls(parsed.data.pages)
+if (unsafeUrls.length) {
+  const { pageKey, path, url } = unsafeUrls[0]
+  throw new Error(`${pageKey} ${path} has an unsafe URL scheme: ${url}`)
 }
 
 const unverifiedCount = countUnverifiedClaims(parsed.data.pages)

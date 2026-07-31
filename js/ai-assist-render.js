@@ -181,8 +181,11 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
           <span>${escapeHtml(String(result.attempts || 1))} attempt(s)</span>
         </div>
         <div class="ai-assist-result-actions">
+          <!-- Label says "module", not "JSON": this copies the same disclosure-
+               carrying module source the Download button writes, so the two
+               export paths cannot disagree about whether the draft is labelled. -->
           <button type="button" class="tool-btn secondary-tool" id="aiAssistCopyJson">
-            Copy page JSON
+            Copy pages module
           </button>
           <button type="button" class="tool-btn secondary-tool" id="aiAssistDownload">
             Download pages module
