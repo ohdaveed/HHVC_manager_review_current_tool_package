@@ -230,11 +230,30 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
   function neutralizePreviewLinks(panel) {
     const preview = panel.querySelector('.ai-assist-preview')
     if (!preview) return
+
     for (const node of preview.querySelectorAll('[data-render-target]')) {
       node.removeAttribute('data-render-target')
       node.setAttribute('data-render-inert', '')
       node.setAttribute('aria-disabled', 'true')
       node.title = 'Preview only — this link does not navigate.'
+    }
+
+    // Real anchors too, not just the in-mockup buttons. renderPageMain emits
+    // `<a href>` for every external URL — cards, service tiles, buttons,
+    // inline markdown links, the print-version link — plus `href="#..."` for
+    // the on-page contents list. A draft's `url` and `buttonUrl` values come
+    // from the MODEL, so leaving them live means one click on unreviewed
+    // content opens a model-invented destination. `aria-disabled` does not
+    // stop an anchor; only removing href does.
+    for (const anchor of preview.querySelectorAll('a[href]')) {
+      // Keep the original visible for a reviewer judging the draft — the
+      // destination is part of what they are reviewing — but make it inert.
+      anchor.setAttribute('data-preview-href', anchor.getAttribute('href') || '')
+      anchor.removeAttribute('href')
+      anchor.removeAttribute('target')
+      anchor.setAttribute('role', 'link')
+      anchor.setAttribute('aria-disabled', 'true')
+      anchor.title = 'Preview only — this link does not navigate.'
     }
   }
 

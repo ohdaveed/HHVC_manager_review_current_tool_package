@@ -645,22 +645,44 @@ describe('against the real page corpus', () => {
     // The whole point of tuning the rules was signal over volume: a panel that
     // fails everything gets ignored.
     //
-    // Bounded per page rather than across the corpus. A single global counter
-    // fails on any copy PR that adds one finding anywhere, and reports only
-    // that the total moved - not which page moved it. This says the same thing
-    // about rule breadth while naming the page that regressed, and it does not
-    // tighten every time an unrelated page improves.
-    // No page may carry more than 3 mandatory failures at once. A page that
-    // does is either badly written or being judged by an over-broad rule, and
-    // the assertion message names it either way.
+    // Three bounds, because each catches a failure the others miss. A per-page
+    // cap alone is not enough: an over-broad rule that adds exactly one failure
+    // to every page passes it while nearly tripling the corpus total. A corpus
+    // total alone is not enough either — it fails on any copy PR that adds one
+    // finding anywhere, and reports only that a number moved, not which page
+    // moved it. Current values are 11 corpus-wide, 2 on the worst page, and 4
+    // pages for the broadest single rule.
     const MAX_FAILURES_PER_PAGE = 3
+    const MAX_FAILURES_CORPUS_WIDE = 15
+    const MAX_PAGES_PER_RULE = 8
+
+    let total = 0
+    const pagesPerRule = {}
+
     for (const [key] of data.order) {
       const failed = analyzePlainLanguage(data.pages[key])
         .checks.filter((check) => check.severity === 'error' && !check.pass)
         .map((check) => check.id)
+      total += failed.length
+      for (const id of failed) pagesPerRule[id] = (pagesPerRule[id] || 0) + 1
+
+      // Names the page that regressed rather than only reporting a counter.
       expect(`${key}: ${failed.join(', ') || 'none'}`).toBe(
         `${key}: ${failed.slice(0, MAX_FAILURES_PER_PAGE).join(', ') || 'none'}`
       )
+    }
+
+    // Breadth across the corpus, which no per-page assertion can see.
+    expect(
+      `corpus failures over ${MAX_FAILURES_CORPUS_WIDE}: ${total > MAX_FAILURES_CORPUS_WIDE}`
+    ).toBe(`corpus failures over ${MAX_FAILURES_CORPUS_WIDE}: false`)
+
+    // The most direct statement of "this rule is too broad": one mandate
+    // should never be failing most of the site at once.
+    for (const [id, pages] of Object.entries(pagesPerRule)) {
+      expect(
+        `${id} fails ${pages > MAX_PAGES_PER_RULE ? 'too many' : 'an acceptable number of'} pages`
+      ).toBe(`${id} fails an acceptable number of pages`)
     }
   })
 

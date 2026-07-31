@@ -222,13 +222,18 @@ const groundingPageSchema = z
   .refine(
     (page) => {
       try {
-        return serializePageForPrompt(page).length <= MAX_PAGE_JSON_BYTES
+        // Buffer.byteLength, not String#length: the constant is named in bytes
+        // and the request contract is byte-based, but `.length` counts UTF-16
+        // code units, so multi-byte page copy could exceed the cap by roughly
+        // 3x. Same unit bug that was already fixed in readBodyWithLimit —
+        // worth checking anywhere a byte limit meets a JS string.
+        return Buffer.byteLength(serializePageForPrompt(page), 'utf8') <= MAX_PAGE_JSON_BYTES
       } catch {
         // A circular structure cannot be serialized into the prompt either.
         return false
       }
     },
-    { message: `page must serialize to ${MAX_PAGE_JSON_BYTES} characters or fewer` }
+    { message: `page must serialize to ${MAX_PAGE_JSON_BYTES} bytes or fewer` }
   )
   .refine((page) => measureDepth(page, MAX_PAGE_DEPTH) <= MAX_PAGE_DEPTH, {
     message: `page must not nest deeper than ${MAX_PAGE_DEPTH} levels`,

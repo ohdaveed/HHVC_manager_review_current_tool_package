@@ -14,6 +14,8 @@ import { generateContent, getCapabilities, listModels } from "./build_scripts/ai
 import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/ai/schemas.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { RefusalError } from "./build_scripts/ai/provider-anthropic.js"
+// @ts-ignore - plain JS module, CommonJS.
+import { numberFromEnv } from "./build_scripts/ai/env.js"
 // Imported for its error classes only, as the fallback arm of the cancellation
 // mapping in aiErrorResponse. The SDK is never constructed here — every call
 // goes through build_scripts/ai/.
@@ -154,7 +156,18 @@ async function readBodyWithLimit(req: Request, maxBytes: number): Promise<string
 
   try {
     for (;;) {
-      const { done, value } = await reader.read()
+      let chunk
+      try {
+        chunk = await reader.read()
+      } catch {
+        // The client went away or the connection errored mid-upload.
+        // reader.read() rejects, and neither call site wraps this function, so
+        // letting it escape turns an ordinary disconnect into an unhandled
+        // rejection and a 500. There is no usable body either way — report it
+        // as empty and let the JSON parse produce the normal 400.
+        return ""
+      }
+      const { done, value } = chunk
       if (done) break
       total += value.byteLength
 
@@ -235,9 +248,10 @@ function getFullReviewState(): object {
 }
 
 async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
-  // One page's review record — decision, notes, reviewer, history — is far
-  // smaller than an AI request, so it gets its own tighter ceiling rather than
-  // inheriting the AI cap and being loosely bounded for no reason.
+  // A review record accumulates append-only history across a page's whole
+  // review life, so it gets its own — deliberately LARGER — ceiling rather than
+  // inheriting the AI cap. See MAX_REVIEW_BODY_BYTES for why too small a limit
+  // here is a permanent sync lockout.
   const raw = await readBodyWithLimit(req, MAX_REVIEW_BODY_BYTES)
   if (raw === null) {
     return jsonResponse(
@@ -392,7 +406,7 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ""
  * so the browser gives up first in the normal case and this only catches a
  * genuinely wedged upstream.
  */
-const AI_REQUEST_TIMEOUT_MS = Number(process.env.AI_REQUEST_TIMEOUT_MS ?? 240_000)
+const AI_REQUEST_TIMEOUT_MS = numberFromEnv("AI_REQUEST_TIMEOUT_MS", 240_000)
 
 /** Map a thrown error to a status code and a message worth showing a reviewer. */
 function aiErrorResponse(

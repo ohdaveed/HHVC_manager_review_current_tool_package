@@ -314,14 +314,20 @@ test.describe('AI assist panel', () => {
     // The settings <details> collapses once configured, so re-open it before
     // reaching the Save button.
     await page.click('.ai-assist-settings summary')
+
+    // Synchronize on the response rather than a fixed wait. A timeout that
+    // expires before the re-render would let the assertion pass without the
+    // behaviour under test ever happening — the test would look green and
+    // guard nothing.
+    const capabilities = page.waitForResponse((res) => res.url().includes('/api/ai/capabilities'))
     // Re-saving keeps the existing capabilities in state, so the field stays
     // enabled while the new request is in flight.
     await page.click('#aiAssistSaveSettings')
     const typed = 'Draft a page about reporting cockroaches.'
     await page.fill('#aiAssistPrompt', typed)
 
-    // Let the slow response land and re-render on top of the typing.
-    await page.waitForTimeout(2000)
+    await capabilities
+    // The re-render happens in the microtask after the response resolves.
     await expect(page.locator('#aiAssistPrompt')).toHaveValue(typed)
   })
 

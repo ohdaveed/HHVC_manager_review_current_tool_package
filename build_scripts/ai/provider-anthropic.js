@@ -6,6 +6,7 @@
 // both sides. Revisit if a future task (a whole sitemap, a long report) starts
 // producing output near the cap.
 const Anthropic = require('@anthropic-ai/sdk')
+const { numberFromEnv } = require('./env')
 
 const DEFAULT_MODEL = 'claude-opus-5'
 const DEFAULT_EFFORT = 'high'
@@ -39,7 +40,9 @@ function getModel() {
  * click. One SDK retry still absorbs a single transient blip while keeping the
  * worst case bounded at four.
  */
-const MAX_RETRIES = Number(process.env.ANTHROPIC_MAX_RETRIES ?? 1)
+// min: 0 — "no SDK retries at all" is a legitimate choice here, unlike a
+// timeout, where zero would mean every call fails instantly.
+const MAX_RETRIES = numberFromEnv('ANTHROPIC_MAX_RETRIES', 1, { min: 0 })
 
 /**
  * Per-call ceiling. The SDK's default is about 10 minutes, which is longer
@@ -47,7 +50,7 @@ const MAX_RETRIES = Number(process.env.ANTHROPIC_MAX_RETRIES ?? 1)
  * wedged upstream would hold a server request open long after the only person
  * who wanted the answer had gone.
  */
-const REQUEST_TIMEOUT_MS = Number(process.env.ANTHROPIC_TIMEOUT_MS ?? 150_000)
+const REQUEST_TIMEOUT_MS = numberFromEnv('ANTHROPIC_TIMEOUT_MS', 150_000)
 
 function createClient() {
   return new Anthropic({

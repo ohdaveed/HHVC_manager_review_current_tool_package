@@ -254,7 +254,8 @@ describe('request bounds', () => {
   const request = (page) => generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
 
   test('accepts a request with no page at all', () => {
-    expect(generateRequestSchema.safeParse({ task: 'content', prompt: 'x' }).success).toBe(true)
+    const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x' })
+    expect(`no page: ${result.success}`).toBe('no page: true')
   })
 
   test('accepts every real page in this repo as grounding', () => {
@@ -268,19 +269,21 @@ describe('request bounds', () => {
   })
 
   test('rejects a page that serializes past the size cap', () => {
-    expect(request({ filler: 'x'.repeat(200_000) }).success).toBe(false)
+    expect(`oversized: ${request({ filler: 'x'.repeat(200_000) }).success}`).toBe(
+      'oversized: false'
+    )
   })
 
   test('rejects a page nested past the depth cap', () => {
     let nested = { end: true }
     for (let i = 0; i < MAX_PAGE_DEPTH + 5; i += 1) nested = { nested }
-    expect(request(nested).success).toBe(false)
+    expect(`too deep: ${request(nested).success}`).toBe('too deep: false')
   })
 
   test('rejects a circular page rather than throwing on it', () => {
     const circular = { title: 'Loop' }
     circular.self = circular
-    expect(request(circular).success).toBe(false)
+    expect(`circular: ${request(circular).success}`).toBe('circular: false')
   })
 
   test('measures depth without recursing on the input', () => {
@@ -292,11 +295,12 @@ describe('request bounds', () => {
   })
 
   test('counts a flat object as depth 1', () => {
-    expect(measureDepth({ a: 1, b: 'two' }, MAX_PAGE_DEPTH)).toBe(1)
+    expect(`depth: ${measureDepth({ a: 1, b: 'two' }, MAX_PAGE_DEPTH)}`).toBe('depth: 1')
   })
 
   test('counts nesting through arrays, not just objects', () => {
-    expect(measureDepth({ sections: [{ steps: [{ title: 'x' }] }] }, MAX_PAGE_DEPTH)).toBe(5)
+    const depth = measureDepth({ sections: [{ steps: [{ title: 'x' }] }] }, MAX_PAGE_DEPTH)
+    expect(`depth: ${depth}`).toBe('depth: 5')
   })
 })
 
@@ -328,6 +332,21 @@ describe('grounding page size is measured on what is actually sent', () => {
     expect(generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page }).success).toBe(
       false
     )
+  })
+
+  test('measures the page cap in UTF-8 bytes, not UTF-16 code units', () => {
+    // MAX_PAGE_JSON_BYTES is named in bytes and the request contract is
+    // byte-based, but String#length counts UTF-16 units — so multi-byte copy
+    // could exceed the cap by roughly 3x. This page is comfortably under the
+    // limit by character count and over it by bytes.
+    const page = { filler: '€'.repeat(40_000) }
+    const sent = serializePageForPrompt(page)
+    expect(`chars under cap: ${sent.length < MAX_PAGE_JSON_BYTES}`).toBe('chars under cap: true')
+    expect(`bytes over cap: ${Buffer.byteLength(sent, 'utf8') > MAX_PAGE_JSON_BYTES}`).toBe(
+      'bytes over cap: true'
+    )
+    const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
+    expect(`multibyte rejected: ${result.success}`).toBe('multibyte rejected: false')
   })
 
   test('every real page still fits once measured the way it is sent', () => {
