@@ -11,7 +11,7 @@ import { hasValidPageData } from './utils.js'
   const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'help']
   let workspaceTriggerButton = null
 
-  const { getValue, getStatusChipClass, escapeHtml } = window.utils
+  const { getValue, getDecisionChipClass, escapeHtml } = window.utils
 
   function renderStickyBar() {
     const bar = document.getElementById(STICKY_BAR_ID)
@@ -19,7 +19,7 @@ import { hasValidPageData } from './utils.js'
 
     const page = window.ReviewUx.stateSync.getCurrentPage()
     const decision = getValue('reviewDecision') || 'Needs review'
-    const chipClass = getStatusChipClass(decision)
+    const chipClass = getDecisionChipClass(decision)
     const stats = window.reviewQueue?.getQueueStats?.() || {
       reviewed: 0,
       total: DATA.order.length,

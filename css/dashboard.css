@@ -238,14 +238,23 @@
 /* =====================================================================
    Status chips
    =====================================================================
-   js/utils.js's getStatusChipClass() maps five decisions onto three
-   classes, so `Blocked` and `Revise and resubmit` render identically —
-   the two states a manager most needs to tell apart, since one is waiting
-   on an outside party and the other is waiting on the author.
+   Two different jobs share the .status-chip shape, and they are styled
+   from two different class families on purpose:
 
-   Distinguishing them properly needs a change in the JS that emits the
-   chip, which is queued for the triage phase. Until then the shared
-   classes at least get the token treatment, so they theme correctly. */
+     .pass / .warn / .fail    — a JUDGEMENT about something measured:
+                                check results, record age, "Blockers
+                                logged", "Needs owner". Three levels is
+                                the right number here.
+     .decision-*              — WHICH of the five review decisions a page
+                                is in. Not a severity scale; five distinct
+                                states.
+
+   Collapsing the second onto the first is what this layer used to do, and
+   it cost real information: `Blocked` and `Revise and resubmit` both drew
+   as `fail`, and `Needs review` and `Approved with edits` both as `warn`,
+   so a queue of five states rendered as three colours. See
+   getDecisionChipClass() in js/utils.js for why those two pairs are the
+   ones that matter. */
 
 .status-chip {
   border-radius: var(--ds-radius-pill);
@@ -268,6 +277,45 @@
   border-color: var(--status-blocked-border);
   background: var(--status-blocked-bg);
   color: var(--status-blocked-fg);
+}
+
+/* One per decision. The token triplets for all five already existed —
+   --status-revise-* and --status-pending-* simply had no consumer, because
+   nothing could emit a class that used them.
+
+   Each triplet is a border/background/foreground set already tuned for a
+   chip, so the text keeps its contrast against its own tinted background
+   rather than against the panel. Colour is never the only cue: the chip
+   always renders the decision text inside it. */
+
+.status-chip.decision-approved {
+  border-color: var(--status-approved-border);
+  background: var(--status-approved-bg);
+  color: var(--status-approved-fg);
+}
+
+.status-chip.decision-edits {
+  border-color: var(--status-edits-border);
+  background: var(--status-edits-bg);
+  color: var(--status-edits-fg);
+}
+
+.status-chip.decision-revise {
+  border-color: var(--status-revise-border);
+  background: var(--status-revise-bg);
+  color: var(--status-revise-fg);
+}
+
+.status-chip.decision-blocked {
+  border-color: var(--status-blocked-border);
+  background: var(--status-blocked-bg);
+  color: var(--status-blocked-fg);
+}
+
+.status-chip.decision-pending {
+  border-color: var(--status-pending-border);
+  background: var(--status-pending-bg);
+  color: var(--status-pending-fg);
 }
 
 /* Motion for this layer is handled in css/ux-improvements.css's
