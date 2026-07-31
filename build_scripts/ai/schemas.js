@@ -18,6 +18,10 @@
 // Anything this schema allows must also pass build_scripts/schema.js.
 // tests/ai-assist-schema.test.js is the guard against those two drifting.
 const { z } = require('zod')
+// The registry is the single source of truth for which provider names exist.
+// Safe to require here: no provider module requires this file back, so there is
+// no cycle.
+const { allProviderNames } = require('./providers')
 
 /** Karl content types this mockup uses. Matches the values in pages/*.js. */
 const PAGE_TYPES = [
@@ -239,10 +243,26 @@ const groundingPageSchema = z
     message: `page must not nest deeper than ${MAX_PAGE_DEPTH} levels`,
   })
 
-/** Inbound POST /api/ai/generate body. */
+/**
+ * Inbound POST /api/ai/generate body.
+ *
+ * `provider` names a REGISTERED provider, not necessarily a configured one.
+ * The enum only asks "is this a provider this build knows about?"; whether the
+ * deployment holds a key for it is decided later by `resolveProvider`, which
+ * can answer with the list of what IS available. Folding both checks in here
+ * would turn a fixable "pick the other one" into a generic schema rejection.
+ *
+ * The accepted names are READ FROM THE REGISTRY rather than written out here.
+ * providers.js documents that adding a provider is "a require plus a line in
+ * REGISTRY; nothing downstream of here mentions a provider by name" — and a
+ * second hardcoded list quietly breaks that: `capabilities` would advertise
+ * the new provider and the browser picker would send its name, but this schema
+ * would reject the request as malformed before `resolveProvider` ever ran. The
+ * failure would look like a client bug rather than a missed registration.
+ */
 const generateRequestSchema = z.object({
   task: z.enum(['content']),
-  provider: z.enum(['claude']).optional(),
+  provider: z.enum(allProviderNames()).optional(),
   prompt: z.string().min(1).max(8000),
   page: groundingPageSchema.optional(),
 })
