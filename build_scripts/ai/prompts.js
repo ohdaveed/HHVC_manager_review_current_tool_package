@@ -10,6 +10,7 @@
 // prefix match, so one changed byte early costs the whole cache.
 const { readFileSync, existsSync } = require('node:fs')
 const { join } = require('node:path')
+const { serializePageForPrompt } = require('./schemas')
 
 const STYLE_DIR = join(__dirname, '..', '..', 'docs', 'source', 'sfgov-style')
 
@@ -61,7 +62,7 @@ You are drafting content for human review. You are not publishing it.
   must review before it goes anywhere near staging.
 - Never state or imply that a page is approved, signed off, or ready to publish.
 - Ground every factual claim in the source material you are given. If you do not
-  have a source for something, leave it out and say so in editorText, rather
+  have a source for something, leave it out and say so in editorNote, rather
   than filling the gap from general knowledge. Invented inspection timelines,
   fees, phone numbers, or legal citations are the single worst failure mode here.
 - HHVC's scope is San Francisco Health Code Article 11 only. Structural
@@ -142,17 +143,19 @@ ${corpus.text}
  * @param {string} options.prompt The reviewer's instruction.
  * @param {object} [options.page] The page open in the mockup, as grounding.
  * @param {string[]} [options.issues] Validation failures from a previous attempt.
+ * @param {object} [options.previousDraft] The draft those failures came from.
  * @returns {string}
  */
-function buildContentUserPrompt({ prompt, page, issues }) {
+function buildContentUserPrompt({ prompt, page, issues, previousDraft }) {
   const parts = []
 
   if (page && Object.keys(page).length) {
+    // serializePageForPrompt, not a local JSON.stringify: the size cap in
+    // schemas.js measures this exact string, and the two silently diverging is
+    // what let a page pass the limit and then arrive several times larger.
     parts.push(
-      `<current_page>\nThe reviewer is looking at this page. Use it as context for voice, structure, and Karl notes.\n\n${JSON.stringify(
-        page,
-        null,
-        2
+      `<current_page>\nThe reviewer is looking at this page. Use it as context for voice, structure, and Karl notes.\n\n${serializePageForPrompt(
+        page
       )}\n</current_page>`
     )
   }
@@ -162,8 +165,17 @@ function buildContentUserPrompt({ prompt, page, issues }) {
   if (issues && issues.length) {
     // The retry turn. Naming the exact failures is what makes one retry worth
     // having: a bare "try again" tends to reproduce the same violation.
+    //
+    // The rejected draft has to travel with them. Each API call is stateless,
+    // so without it "fix every item below and change nothing else" is an
+    // instruction the model cannot follow — it has nothing to change. It would
+    // regenerate from scratch and quietly lose whatever was already right,
+    // which is the opposite of what a targeted retry is for.
+    if (previousDraft) {
+      parts.push(`<previous_draft>\n${JSON.stringify(previousDraft, null, 2)}\n</previous_draft>`)
+    }
     parts.push(
-      `<validation_failures>\nYour previous draft failed validation. Fix every item below and return the corrected page. Change nothing else.\n\n${issues
+      `<validation_failures>\nThe draft above failed validation. Return the same page with every item below fixed, and change nothing else.\n\n${issues
         .map((issue) => `- ${issue}`)
         .join('\n')}\n</validation_failures>`
     )

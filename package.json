@@ -58,7 +58,7 @@
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
     "// test": "Runs the test suite using Bun's test runner",
-    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/review-merge.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/mockup-image-export.test.js tests/ai-assist-schema.test.js tests/ai-assist-server.test.js",
+    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/review-merge.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/mockup-image-export.test.js tests/ai-assist-schema.test.js tests/ai-assist-env.test.js tests/ai-assist-server.test.js",
     "// test:e2e": "Playwright end-to-end tests (builds, then serves dist/ on :8080)",
     "test:e2e": "playwright test"
   }

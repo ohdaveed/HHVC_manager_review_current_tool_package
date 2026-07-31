@@ -74,6 +74,28 @@ async function listModels() {
 }
 
 /**
+ * Add one attempt's usage counters into a running total, in place.
+ *
+ * Only numeric fields are summed. The usage object also carries non-numeric
+ * entries (`service_tier`, and nested cache-creation breakdowns), and summing
+ * or clobbering those would produce a total that is wrong rather than merely
+ * incomplete — so anything that is not a number from every attempt is left at
+ * whatever the first attempt reported.
+ * @param {Record<string, unknown>} total Mutated.
+ * @param {Record<string, unknown>} [next] One attempt's usage.
+ * @returns {Record<string, unknown>} `total`, for chaining.
+ */
+function addUsage(total, next) {
+  if (!next || typeof next !== 'object') return total
+  for (const [key, value] of Object.entries(next)) {
+    if (typeof value === 'number')
+      total[key] = (typeof total[key] === 'number' ? total[key] : 0) + value
+    else if (!(key in total)) total[key] = value
+  }
+  return total
+}
+
+/**
  * Generate a page draft, validate it, and retry once with the failures named.
  *
  * Always resolves with the draft, valid or not: a page that fails one
@@ -93,13 +115,19 @@ async function generateContent({ prompt, page, signal }) {
   let issues = []
   let generated = null
   let attempts = 0
+  // Usage is summed, not overwritten. A retried generation really did cost two
+  // calls, and reporting only the last one would understate the spend of
+  // exactly the requests that cost the most.
+  const usage = {}
 
   while (attempts < MAX_ATTEMPTS) {
+    const previousDraft = generated ? generated.object : undefined
     attempts += 1
     const userPrompt = buildContentUserPrompt({
       prompt,
       page,
       issues: attempts > 1 ? issues : undefined,
+      previousDraft: attempts > 1 ? previousDraft : undefined,
     })
 
     generated = await anthropic.generateObject({
@@ -108,6 +136,7 @@ async function generateContent({ prompt, page, signal }) {
       jsonSchema: PAGE_OUTPUT_SCHEMA,
       signal,
     })
+    addUsage(usage, generated.usage)
 
     const validation = validateGeneratedPage(generated.object, pages)
     issues = validation.issues
@@ -122,7 +151,7 @@ async function generateContent({ prompt, page, signal }) {
     valid: issues.length === 0,
     issues,
     result: generated.object,
-    usage: generated.usage,
+    usage,
     groundedBy,
     disclosure: DISCLOSURE,
   }
@@ -133,6 +162,7 @@ module.exports = {
   getCapabilities,
   listModels,
   getPages,
+  addUsage,
   DISCLOSURE,
   MAX_ATTEMPTS,
 }

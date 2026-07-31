@@ -41,8 +41,8 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:app then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 14 unit-test files in tests/ (326)
-bun run test:e2e              # Playwright end-to-end tests (11 specs; server on :8080)
+bun run test                  # Bun test runner over the 15 unit-test files in tests/
+bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
 bun run push-tracking         # push page review status to the Google Sheets tracker
@@ -59,15 +59,18 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs fourteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs fifteen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
-`reading-level`, `plain-language`, `page-import-checks`, `review-merge`,
-`review-api-server` and `ai-assist-server` (both spawn `server.ts` as a
-subprocess and exercise the real HTTP surface), `review-state-sync`,
-`ai-assist-schema`, and `mockup-image-export` — 326 tests at time of writing.
-**The `test` script names its files explicitly rather than globbing**, so a new
-test file is skipped by `bun run test` and by CI until it is added to that list
-in `package.json`; nothing guards this. Plus `bun run test:e2e`
+`reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
+`review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
+against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
+`ai-assist-env`, and
+`ai-assist-server` (which spawns `server.ts` against a stub Anthropic endpoint,
+so the AI routes are covered without a key or a paid call). **The list in
+`package.json`'s `test` script is explicit, not a glob** — a new
+`tests/*.test.js` that is not added there simply never runs, and reports
+nothing
+— plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
 eleven spec files — ten UI-driven ones covering navigation, editor panel,
 review workflow, review queue, import/export, keyboard shortcuts,
@@ -212,7 +215,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   `js/ai-assist-render.js` attaches `.render`). `js/ai-assist.js` consumes both,
   owns the request lifecycle and cancel, and publishes its public API on the
   separate lowercase **`window.aiAssist`** (`ensureRendered`,
-  `refreshCapabilities`, `getCurrentPage`). `window.AiAssist.ensureRendered`
+  `refreshCapabilities`, `getCurrentPage`, `captureForm`). `window.AiAssist.ensureRendered`
   does not exist.
 
 The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist', 'help']`,
@@ -366,7 +369,14 @@ unconfigured.
   a patch via the shared `mergeReviewRecord()` — `server.ts` imports
   `js/review-merge.js` directly, the same file a `<script>` tag loads
   client-side — and returns the merged record). Every write is scoped to one
-  `page_key`; the server never wholesale-replaces the table.
+  `page_key`; the server never wholesale-replaces the table. The PUT body is
+  capped at `MAX_REVIEW_BODY_BYTES` (1 MB) via the same streaming
+  `readBodyWithLimit()` the AI routes use, in front of the parse — so an
+  oversized body never reaches `mergeReviewRecord` and a rejected write is
+  never partial. **Deliberately larger than the AI cap:** `history[]` is
+  append-only and the client pushes the whole record, so this bounds a page's
+  entire review life, not one edit. Too low and it is a permanent sync lockout
+  — 64 KB measured at ~70 recorded rounds with long notes.
 - **Auth**: `Authorization: Bearer <REVIEW_API_TOKEN>` required on every
   `/api/*` request; missing/wrong → 401; `REVIEW_API_TOKEN` unset → 501 (not
   open access).
@@ -503,6 +513,76 @@ by default, failing closed.
 - **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
   `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only). Keep them in
   the gitignored `.env.local`.
+- **Every input is bounded, and the bound is enforced while reading.** `prompt`
+  caps at 8000 characters, but `page` is serialized into the provider prompt
+  just the same — so it carries its own limits (96 KB serialized, 12 levels
+  deep). The body goes through `readBodyWithLimit()`, which streams `req.body`
+  and stops at the first byte past 128 KB. `await req.text()` is the wrong
+  tool: it buffers everything before anything can measure it, so a chunked or
+  Content-Length-lying client allocates freely and a later 413 does not give
+  that back. The Content-Length pre-check stays as a cheap first pass. The count
+  is in **bytes, not characters** — `String#length` against a byte limit lets
+  multi-byte UTF-8 through at ~3× the cap. Depth is measured iteratively, never
+  recursively: a recursive walk over attacker-supplied nesting is itself the
+  denial of service it exists to detect.
+- **Past the cap it stops accumulating but keeps draining.** Cancelling the
+  reader leaves the connection framed mid-request, so the client's _next_
+  request is read as garbage and gets an empty-bodied protocol-level 400 from
+  Bun — a 413 followed by an inexplicable failure on a valid follow-up.
+  Dropping the accumulated text is what bounds memory; draining costs only
+  bandwidth already in flight. `DRAIN_LIMIT_MULTIPLIER` (8×) bounds that too.
+  The regression test must trickle chunks on a timer, or the client finishes
+  sending before the server reads and the bug hides.
+- **The `page` cap measures the string actually sent.**
+  `serializePageForPrompt()` is shared by the size refinement and
+  `buildContentUserPrompt`. They used to differ (compact measured,
+  pretty-printed sent), so a page could measure ~100 KB and arrive ~4x larger.
+  Real pages expand only ~1.2x, so nothing legitimate is rejected.
+- **Cancellation is decided by signal state, not the error's shape.** The SDK
+  client sets `maxRetries: 1` and a 150s per-call timeout; the route combines
+  `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default 240s)
+  and hands **both** to `aiErrorResponse`, which maps `client.aborted` → **499**
+  and `timeout.aborted` → **504**. Matching on the error does not work: the SDK
+  throws `APIUserAbortError` / `APIConnectionTimeoutError`, both inheriting
+  `name` `"Error"` with no `status`, so a `name === 'AbortError'` test never
+  fired and every cancellation was logged as a 500. `AbortSignal.timeout()`
+  reports `"TimeoutError"` besides. Signal state is also provider-agnostic.
+  The 504 path is tested against a slow stub — 499 is not observable, since the
+  client that aborts cannot read the response.
+- **The fallback arm matches `constructor.name`, never `instanceof`.** Neither
+  signal is aborted when the SDK's own per-call timeout fires first — which a
+  short `ANTHROPIC_TIMEOUT_MS`, or `ANTHROPIC_MAX_RETRIES=0` removing the
+  retries that would carry the call past the route budget, makes routine — so
+  the fallback is a live path, not a safety net. It was dead for a **second**
+  reason on top of the `name` one above: `@anthropic-ai/sdk` ships separate
+  `require` and `import` builds, and `server.ts` imported it while
+  `build_scripts/ai/provider-anthropic.js` requires it, so `instanceof` compared
+  the thrown error against a different copy of the same class and was
+  permanently false. Measured: an SDK timeout returned **500**, not the 499 the
+  code read as. `constructor.name` is one string on one object, crosses that
+  boundary intact, and lets `server.ts` drop the SDK import entirely. The two
+  cases split the same way the signal branches do —
+  `APIUserAbortError` → 499, `APIConnectionTimeoutError` → **504** — because an
+  upstream that ran out of time is not a client that hung up.
+- **Numeric env tunables are range-checked, not merely parsed.**
+  `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
+  fractions, and anything outside `[min, max]` (default max
+  `Number.MAX_SAFE_INTEGER`), warning and falling back rather than throwing.
+  `Number.isFinite` is not sufficient: `AI_REQUEST_TIMEOUT_MS=1e20` is finite
+  and `AbortSignal.timeout()` rejects it, and that call sits outside the
+  generate route's `try` — so the value becomes an unmapped 500 on every
+  generation, the very failure the helper exists to prevent. Both timeouts also
+  cap at one hour and `ANTHROPIC_MAX_RETRIES` at 10.
+- **The retry carries the rejected draft, not just the failures.** Each API
+  call is stateless, so "fix these and change nothing else" is only followable
+  if the draft travels with the instruction. Usage is summed across attempts
+  for the same reason: reporting only the last call understates exactly the
+  requests that cost the most.
+- **The draft is checked under two different sentinel keys.** `data-checks.js`
+  uses one `pages` object both for what to walk and for which targets resolve,
+  so filing the draft under `__generated__` made that string a resolvable
+  target. Running each check under `__generated__` and `__generated_probe__`
+  and unioning the broken targets closes that with no duplicated traversal.
 - **Validation is the feature.** `build_scripts/ai/validate-output.js` runs a
   generated page through `build_scripts/schema.js`,
   the `data-checks.js` invariants, and `js/plain-language.js`'s mandates — then

@@ -205,7 +205,10 @@
       pattern: /\(\d{3}\)\s*\d{3}[-.]\d{4}|\b\d{3}\.\d{3}\.\d{4}\b/,
       note: 'Format phone numbers as 415-555-1212',
     },
-    { pattern: /\b\d\s?(AM|PM)\b/, note: 'Use lowercase am/pm' },
+    // \b\d only matches a single digit, and \b sits before it — so "10 AM"
+    // slipped through while "9 AM" was caught. Bounded to 1-2 digits with an
+    // optional :mm so every clock time is covered.
+    { pattern: /\b\d{1,2}(:\d{2})?\s?(AM|PM)\b/, note: 'Use lowercase am/pm' },
     { pattern: /^welcome to\b/i, note: 'Skip the welcome — say what people can do' },
   ]
 
@@ -251,10 +254,14 @@
   function extractLinks(text) {
     const links = []
     const pattern = /\[([^\]]+)\]\(([^)]*)\)/g
-    let match = pattern.exec(String(text == null ? '' : text))
+    // Coerced once. The loop advances through `pattern.lastIndex`, not through
+    // the string, so re-coercing per iteration only hides where the cursor
+    // actually lives.
+    const source = String(text == null ? '' : text)
+    let match = pattern.exec(source)
     while (match) {
       links.push({ label: match[1], target: match[2] })
-      match = pattern.exec(String(text == null ? '' : text))
+      match = pattern.exec(source)
     }
     return links
   }
@@ -328,6 +335,12 @@
       }
       return undefined
     }
+    // `title: false` is the documented way to render a callout with no title
+    // (see renderCallout), so it is an absence, not a heading to score.
+    const addCalloutTitle = (path, title) => {
+      if (title === false) return undefined
+      return add(path, 'callout-title', title, { heading: true })
+    }
 
     add('title', 'title', page.title, { heading: true })
     add('summary', 'summary', page.summary, { prose: true })
@@ -375,6 +388,11 @@
           addItem(`${stepBase}.bullets[${index}]`, 'step-bullet', entry, { prose: true })
         })
         if (step.callout) {
+          // The title is rendered (renderCallout in js/page-render.js) and so
+          // has to be analysed. Collecting only `.text` left a visible field
+          // exempt from the mandate rules — "The owner shall act" as a callout
+          // title passed while the identical wording anywhere else failed.
+          addCalloutTitle(`${stepBase}.callout.title`, step.callout.title)
           add(`${stepBase}.callout.text`, 'callout', step.callout.text, { prose: true })
         }
       })
@@ -388,6 +406,7 @@
         })
       })
       if (section.callout) {
+        addCalloutTitle(`${base}.callout.title`, section.callout.title)
         add(`${base}.callout.text`, 'callout', section.callout.text, { prose: true })
       }
       if (section.image) {
@@ -460,6 +479,32 @@
   }
 
   /**
+   * Compiled phrase patterns, keyed by phrase.
+   *
+   * Every phrase comes from a module constant, so the set is small and fixed
+   * while the call count is not: each text unit is tested against CONTRACTIONS,
+   * WORD_SWAPS, IDIOMS, and WEAK_MODALS, and the panel re-analyses on every
+   * debounced autosave. Without this that is a few thousand identical
+   * recompilations per render.
+   */
+  const phrasePatterns = new Map()
+
+  /**
+   * Fold typographic apostrophes to the ASCII form.
+   *
+   * Page copy mixes both — "Karl's" with U+2019 sits a few hundred lines from
+   * "don't" with U+0027 — so a single spelling in CONTRACTIONS would silently
+   * miss half the real uses. Normalizing the haystack covers both without
+   * doubling every list, and it is deliberately NOT applied in `excerpt`: what
+   * the reviewer is shown should be the text as written.
+   * @param {string} text
+   * @returns {string}
+   */
+  function normalizeApostrophes(text) {
+    return String(text == null ? '' : text).replace(/[‘’ʼ]/g, "'")
+  }
+
+  /**
    * Case-insensitive whole-phrase search that ignores matches inside a longer
    * word, so "require" does not fire on "requirement".
    * @param {string} haystack
@@ -467,8 +512,13 @@
    * @returns {boolean}
    */
   function containsPhrase(haystack, phrase) {
-    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return new RegExp(`(^|[^\\w-])${escaped}([^\\w-]|$)`, 'i').test(haystack)
+    let pattern = phrasePatterns.get(phrase)
+    if (!pattern) {
+      const escaped = normalizeApostrophes(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      pattern = new RegExp(`(^|[^\\w-])${escaped}([^\\w-]|$)`, 'i')
+      phrasePatterns.set(phrase, pattern)
+    }
+    return pattern.test(normalizeApostrophes(haystack))
   }
 
   // --- The checks -------------------------------------------------------
