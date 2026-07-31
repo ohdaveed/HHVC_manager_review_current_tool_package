@@ -58,4 +58,36 @@ class UnknownProviderError extends Error {
   }
 }
 
-module.exports = { RefusalError, UnknownProviderError }
+/**
+ * Raised when a PROVIDER's own per-call deadline expired.
+ *
+ * Here for the same reason `RefusalError` is: it belongs to no provider in
+ * particular, and normalizing it is what keeps `aiErrorResponse` a single
+ * `instanceof` rather than a per-provider branch.
+ *
+ * The concrete failure this prevents: each provider enforces its own timeout
+ * (`ANTHROPIC_TIMEOUT_MS` / `GEMINI_TIMEOUT_MS`, both 150s) *inside* the
+ * route's longer budget (`AI_REQUEST_TIMEOUT_MS`, 240s). So a provider that
+ * runs out of time throws with NEITHER of the route's signals aborted, and
+ * `aiErrorResponse` has to classify it from the error alone. Anthropic's SDK
+ * makes that possible — it throws `APIConnectionTimeoutError`, matched by
+ * `constructor.name`. Gemini's does not: `@google/genai` implements its
+ * timeout as a bare `abortController.abort()` with no reason, which rejects
+ * with a DOMException whose `name` is **"AbortError"** — indistinguishable
+ * from the reviewer pressing Cancel, and mapped to 499 "Generation was
+ * cancelled." So a request that actually timed out told the reviewer they had
+ * cancelled it.
+ *
+ * Detecting it at the provider boundary is the only place the distinction is
+ * still available: the provider knows whether the caller's signal was the one
+ * that aborted, and the route does not.
+ */
+class ProviderTimeoutError extends Error {
+  constructor(provider) {
+    super('The model provider did not respond in time.')
+    this.name = 'ProviderTimeoutError'
+    this.provider = provider || null
+  }
+}
+
+module.exports = { RefusalError, UnknownProviderError, ProviderTimeoutError }

@@ -12,7 +12,12 @@ const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const providers = require('../build_scripts/ai/providers.js')
 const anthropic = require('../build_scripts/ai/provider-anthropic.js')
 const gemini = require('../build_scripts/ai/provider-gemini.js')
-const { UnknownProviderError, RefusalError } = require('../build_scripts/ai/errors.js')
+const {
+  UnknownProviderError,
+  RefusalError,
+  ProviderTimeoutError,
+} = require('../build_scripts/ai/errors.js')
+const { generateRequestSchema } = require('../build_scripts/ai/schemas.js')
 
 /**
  * Both keys, saved and restored around every test.
@@ -175,6 +180,38 @@ describe('usage normalization', () => {
     })
   })
 
+  test('counts anthropic cached input tokens toward the input total', () => {
+    // The API's own definition: "Total input tokens in a request is the
+    // summation of input_tokens, cache_creation_input_tokens, and
+    // cache_read_input_tokens." They are reported separately, not folded in.
+    //
+    // This is the warm-cache shape that matters here. prompts.js inlines the
+    // whole vendored style corpus and marks it cache_control, so on a warm
+    // request essentially the entire prompt is billed through
+    // cache_read_input_tokens and input_tokens is a small remainder. Reading
+    // only input_tokens reported 42 for a request that really used 18042.
+    expect(
+      anthropic.normalizeUsage({
+        input_tokens: 42,
+        cache_read_input_tokens: 18000,
+        cache_creation_input_tokens: 0,
+        output_tokens: 900,
+      })
+    ).toEqual({ inputTokens: 18042, outputTokens: 900, totalTokens: 18942 })
+  })
+
+  test('counts anthropic cache-creation tokens the same way', () => {
+    // The cold half of the same request: identical billing, different counter.
+    expect(
+      anthropic.normalizeUsage({
+        input_tokens: 42,
+        cache_read_input_tokens: 0,
+        cache_creation_input_tokens: 18000,
+        output_tokens: 900,
+      })
+    ).toEqual({ inputTokens: 18042, outputTokens: 900, totalTokens: 18942 })
+  })
+
   test('maps gemini counters onto the common shape', () => {
     expect(
       gemini.normalizeUsage({
@@ -271,5 +308,90 @@ describe('shared error types', () => {
     // server.ts imported it from there before it moved to errors.js. The
     // re-export is what keeps that spelling working for anything not updated.
     expect(anthropic.RefusalError).toBe(RefusalError)
+  })
+})
+
+describe('gemini timeout normalization', () => {
+  // The regression: @google/genai implements httpOptions.timeout as a bare
+  // `abortController.abort()`, which rejects with a DOMException named
+  // "AbortError" — byte-identical to the reviewer pressing Cancel.
+  // aiErrorResponse matches that name and answers 499 "Generation was
+  // cancelled.", so a Gemini request that ran out of time told the reviewer
+  // they had cancelled it. Only the provider can still tell the two apart,
+  // because only it can see whether the CALLER's signal was the one that fired.
+  function abortError() {
+    const controller = new AbortController()
+    controller.abort()
+    return controller.signal.reason
+  }
+
+  test('the SDK timeout is indistinguishable from a cancel by name alone', () => {
+    // Pins the premise. If a future SDK starts aborting with a reason, this
+    // fails and the normalization below can be reconsidered rather than
+    // silently kept forever.
+    const error = abortError()
+    expect(error.name).toBe('AbortError')
+    expect(error.constructor.name).toBe('DOMException')
+  })
+
+  test('raises ProviderTimeoutError when the caller never aborted', () => {
+    const error = abortError()
+    const signal = new AbortController().signal // never aborted
+    expect(() => gemini.classifyAbort(error, signal)).toThrow(ProviderTimeoutError)
+  })
+
+  test('passes the error through untouched when the caller did abort', () => {
+    // A real cancellation still has to reach the signal branches in
+    // aiErrorResponse, which answer 499/504 from the route's own signals.
+    // Converting this one would report a reviewer's Cancel as a 504.
+    const error = abortError()
+    const controller = new AbortController()
+    controller.abort()
+    expect(() => gemini.classifyAbort(error, controller.signal)).toThrow(error)
+  })
+
+  test('passes a non-abort error through untouched', () => {
+    const error = new Error('upstream exploded')
+    expect(() => gemini.classifyAbort(error, new AbortController().signal)).toThrow(error)
+  })
+
+  test('ProviderTimeoutError names the provider that ran out of time', () => {
+    const error = new ProviderTimeoutError('gemini')
+    expect(error).toBeInstanceOf(Error)
+    expect(error.name).toBe('ProviderTimeoutError')
+    expect(error.provider).toBe('gemini')
+  })
+})
+
+describe('request schema provider enum', () => {
+  test('accepts every registered provider name', () => {
+    // The contract providers.js states: adding a provider is "a require plus a
+    // line in REGISTRY; nothing downstream of here mentions a provider by
+    // name." A second hardcoded list here would let capabilities advertise a
+    // provider the schema then rejects as malformed.
+    for (const name of providers.allProviderNames()) {
+      const result = generateRequestSchema.safeParse({
+        task: 'content',
+        prompt: 'x',
+        provider: name,
+      })
+      expect(result.success).toBe(true)
+    }
+  })
+
+  test('rejects a name no registered provider answers to', () => {
+    const result = generateRequestSchema.safeParse({
+      task: 'content',
+      prompt: 'x',
+      provider: 'not-a-provider',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  test('derives its accepted values from the registry rather than a literal list', () => {
+    // Asserted structurally, so the test keeps its meaning when a third
+    // provider lands: whatever REGISTRY holds is exactly what the enum accepts.
+    const accepted = generateRequestSchema.shape.provider.unwrap().options
+    expect([...accepted].sort()).toEqual([...providers.allProviderNames()].sort())
   })
 })

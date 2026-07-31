@@ -145,6 +145,21 @@
       state.error = response.error
       render.renderPanel()
       toast(response.error, 'warn')
+      // A 400 from this route means the server rejected the PROVIDER, not the
+      // prompt — the only 400 generate can produce past client-side validation
+      // is UnknownProviderError (a schema rejection needs a body this panel
+      // cannot construct). That happens when the server's keys changed after
+      // the panel last read capabilities: a Claude-only deployment becoming
+      // Gemini-only leaves `state.provider` pinned to a provider that no longer
+      // exists, and every retry sends the same dead choice.
+      //
+      // Re-reading capabilities is the fix because refreshCapabilities() calls
+      // reconcileProvider(), which drops a selection the server no longer
+      // offers. Without this the reviewer had to reload the page or re-save
+      // otherwise-unchanged settings to escape — neither of which the failure
+      // message suggests. Deliberately narrowed to 400: refreshing on every
+      // failure would fire a capability GET after each network blip.
+      if (response.status === 400) refreshCapabilities()
       return
     }
 

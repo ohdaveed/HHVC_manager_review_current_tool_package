@@ -16,7 +16,11 @@ import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/a
 // used to come from provider-anthropic.js, which meant this file imported an
 // Anthropic module for concepts ("the model declined", "no such provider") that
 // belong to no provider in particular.
-import { RefusalError, UnknownProviderError } from "./build_scripts/ai/errors.js"
+import {
+  RefusalError,
+  UnknownProviderError,
+  ProviderTimeoutError,
+} from "./build_scripts/ai/errors.js"
 // @ts-ignore - plain JS module, CommonJS. The registry, so nothing below has to
 // name a provider or read a provider's API key directly.
 import { hasConfiguredProvider } from "./build_scripts/ai/providers.js"
@@ -473,6 +477,22 @@ function aiErrorResponse(
     // picker built from another endpoint's capabilities. `available` lets it
     // recover without the reviewer guessing.
     return jsonResponse({ error: error.message, available: error.available }, 400)
+  }
+
+  if (error instanceof ProviderTimeoutError) {
+    // A provider's OWN deadline expired inside our longer budget, so neither
+    // signal below is aborted and the error has to carry the distinction
+    // itself. Checked before the signal branches because it is strictly more
+    // specific than either: the provider already established that the client
+    // was still connected when it gave up.
+    //
+    // This exists because Gemini's SDK aborts on timeout with a bare
+    // `abort()`, producing a DOMException named "AbortError" — identical to a
+    // reviewer pressing Cancel, and so answered 499 "Generation was
+    // cancelled." for a request nobody cancelled. Normalized at the provider
+    // boundary (build_scripts/ai/provider-gemini.js) where the caller's signal
+    // is still in scope to tell the two apart.
+    return jsonResponse({ error: "Generation timed out." }, 504)
   }
 
   // Cancellation is decided by SIGNAL STATE, not by the shape of the error.

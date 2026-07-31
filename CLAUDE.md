@@ -638,6 +638,28 @@ it, and it fails closed rather than open.
   keeps the **first** attempt's value for non-numeric fields — a nested raw
   object folded into the total would claim attempt one's numbers covered every
   attempt.
+- **Anthropic's input total is all three counters**, per the API's own
+  definition: `input_tokens` **+** `cache_creation_input_tokens` **+**
+  `cache_read_input_tokens`, which are reported separately rather than folded
+  into the first. That distinction is load-bearing here rather than pedantic:
+  `prompts.js` inlines the entire vendored style corpus into the system prompt
+  and marks it `cache_control` precisely so it is cached, so on every warm
+  request virtually the whole prompt is billed through `cache_read_input_tokens`
+  while `input_tokens` is a small remainder. Reading only `input_tokens`
+  reported **42** input tokens for a request that actually used **18042** —
+  understating usage by most of the prompt on exactly the requests the caching
+  was added to make cheap. The creation-vs-read split is not lost; it still
+  travels per attempt in `rawUsage`/`usageByAttempt[]`.
+- **The `provider` enum is derived from the registry, never written out.**
+  `build_scripts/ai/schemas.js` builds it from `allProviderNames()` rather than
+  listing names. `providers.js` promises that adding a provider is "a require
+  plus a line in `REGISTRY`; nothing downstream of here mentions a provider by
+  name" — and a second hardcoded list breaks that quietly: `capabilities` would
+  advertise the new provider and the browser's picker would send its name, but
+  this schema would reject the request as malformed before `resolveProvider`
+  ever ran. The symptom would look like a client bug rather than a missed
+  registration. Safe to import: no provider module requires `schemas.js` back,
+  so there is no cycle.
 - **Routes**: `GET /api/ai/capabilities` (per-provider `providers`, `models`,
   `providerLabels` and `defaultProvider`, plus grounding files and page count),
   `GET /api/ai/models` (queried live, since model lineups move and a hardcoded
@@ -755,6 +777,26 @@ it, and it fails closed rather than open.
   `APIConnectionTimeoutError` → **504**, since a provider that ran out of time
   is not a reviewer who walked away, and folding them together hides a slow
   upstream behind a status that reads as "nobody was listening".
+- **Gemini's own timeout is normalized at the provider, because the route
+  cannot recognize it.** The trick that works for Anthropic does not transfer.
+  `@google/genai` implements `httpOptions.timeout` as a bare
+  `abortController.abort()` with no reason, and `abort()` with no reason
+  rejects with a `DOMException` whose `name` is `"AbortError"` — the exact
+  shape a reviewer pressing Cancel produces, and its `constructor.name` is
+  `"DOMException"`, so neither the name check nor the constructor check can
+  separate them. The result was a Gemini request that ran out of time telling
+  the reviewer **499 "Generation was cancelled."** — the same class of
+  misreporting the `constructor.name` fix above was written to end, reappearing
+  through a second provider. The one thing that still distinguishes the two is
+  whether the **caller's** signal aborted, and that is in scope only inside the
+  provider: `classifyAbort()` in `provider-gemini.js` raises a
+  `ProviderTimeoutError` when the SDK aborted and the caller's signal did not,
+  and rethrows the original untouched when it did, so a real cancellation still
+  reaches the signal branches that own 499/504. `ProviderTimeoutError` lives in
+  `errors.js` for exactly the reason `RefusalError` does — it is a concept no
+  single provider owns, and normalizing it there keeps `aiErrorResponse` a
+  single `instanceof` rather than a per-provider branch that rots. Split out as
+  a pure function so it is testable without an SDK client or a real 150s wait.
 - **Numeric env tunables are range-checked, not merely parsed.**
   `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
   fractions, and anything outside `[min, max]` (default max

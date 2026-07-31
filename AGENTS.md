@@ -491,6 +491,23 @@ by default, failing closed.
   `usageByAttempt[]` rather than inside the sum — `addUsage` keeps the _first_
   attempt's value for non-numeric fields, so a nested raw object in the total
   would claim attempt one's numbers covered every attempt.
+- **Anthropic's input total is all THREE counters**, per the API's own
+  definition: `input_tokens` **+** `cache_creation_input_tokens` **+**
+  `cache_read_input_tokens`. They are reported separately, not folded in. This
+  is not a rounding detail here: `prompts.js` inlines the whole vendored style
+  corpus and marks it `cache_control` precisely so it is cached, so on a warm
+  request nearly the entire prompt is billed through `cache_read_input_tokens`
+  and `input_tokens` is a small remainder. Reading only that counter reported
+  **42** input tokens for a request that really used **18042** — understating
+  usage by most of the prompt on exactly the requests the caching exists to
+  make cheap.
+- **The `provider` enum is read from the registry, never written out.**
+  `schemas.js` builds it from `allProviderNames()`. A second hardcoded list
+  silently breaks the "a require plus a line in `REGISTRY`" contract:
+  `capabilities` would advertise the new provider and the browser picker would
+  send its name, but the schema would reject the request as malformed before
+  `resolveProvider` ever ran — a failure that reads as a client bug rather than
+  a missed registration.
 - **Routes**: `GET /api/ai/capabilities` (per-provider `providers`, `models`,
   `providerLabels`, and `defaultProvider` — every _registered_ provider, including
   unconfigured ones, so the panel can tell "no key for Gemini" from "no Gemini
@@ -571,6 +588,20 @@ by default, failing closed.
   cases split the same way the signal branches do —
   `APIUserAbortError` → 499, `APIConnectionTimeoutError` → **504** — because an
   upstream that ran out of time is not a client that hung up.
+- **Gemini's timeout has to be normalized at the provider, because its SDK
+  makes it unrecognizable at the route.** `@google/genai` implements
+  `httpOptions.timeout` as a bare `abortController.abort()` — no reason — which
+  rejects with a `DOMException` whose `name` is `"AbortError"`: byte-identical
+  to a reviewer pressing Cancel, and so answered **499 "Generation was
+  cancelled."** for a request nobody cancelled. `constructor.name` cannot help
+  here the way it does for Anthropic; it is `"DOMException"`. The caller's
+  signal is the only thing that still distinguishes the two, and it is in scope
+  only inside the provider, so `classifyAbort()` in `provider-gemini.js` raises
+  a `ProviderTimeoutError` when the SDK aborted and the caller's signal did
+  **not** — and rethrows untouched when it did, so a genuine cancel still
+  reaches the signal branches. `ProviderTimeoutError` lives in `errors.js` for
+  the reason `RefusalError` does: it belongs to no provider, and normalizing it
+  keeps `aiErrorResponse` one `instanceof` instead of a per-provider branch.
 - **Numeric env tunables are range-checked, not merely parsed.**
   `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
   fractions, and anything outside `[min, max]` (default max

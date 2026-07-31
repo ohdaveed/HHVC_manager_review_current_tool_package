@@ -164,7 +164,7 @@
    * before the picker existed; an empty string would fail the enum instead.
    * @param {{task: string, prompt: string, page?: object, provider?: string,
    *   signal?: AbortSignal}} request
-   * @returns {Promise<{ok: boolean, result?: object, error?: string}>}
+   * @returns {Promise<{ok: boolean, result?: object, error?: string, status?: number}>}
    */
   async function generate({ task, prompt, page, provider, signal }) {
     if (!isConfigured()) return { ok: false, error: 'AI assist is not configured.' }
@@ -181,7 +181,14 @@
         }),
       })
       assertEndpointUnchanged(requestApiUrl)
-      if (!response.ok) return { ok: false, error: await describeFailure(response) }
+      if (!response.ok) {
+        // `status` rides along with the message. Reducing a failure to its
+        // error string throws away the one thing that distinguishes a
+        // recoverable "your provider choice is stale" 400 from a network
+        // problem, and the caller then has no basis for deciding whether
+        // re-reading capabilities would help.
+        return { ok: false, status: response.status, error: await describeFailure(response) }
+      }
       return { ok: true, result: await response.json() }
     } catch (error) {
       if (error?.name === 'AbortError') return { ok: false, error: 'Generation cancelled.' }

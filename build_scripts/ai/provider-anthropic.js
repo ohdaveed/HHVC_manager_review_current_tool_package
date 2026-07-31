@@ -110,9 +110,26 @@ async function listModelIds() {
  * @returns {{inputTokens: number, outputTokens: number, totalTokens: number}}
  */
 function normalizeUsage(usage) {
+  // All THREE input counters, per the API's own definition: "Total input tokens
+  // in a request is the summation of input_tokens, cache_creation_input_tokens,
+  // and cache_read_input_tokens." They are reported separately, not folded into
+  // input_tokens.
+  //
+  // This is not a rounding detail for this feature specifically. prompts.js
+  // inlines the entire vendored sfgov-style corpus into the system prompt and
+  // marks it with cache_control precisely so it is cached — so on every warm
+  // request virtually the whole prompt is billed through
+  // cache_read_input_tokens and `input_tokens` alone is a small remainder.
+  // Reading only that counter made the provider-neutral total understate real
+  // usage by most of the prompt, on exactly the requests the caching was added
+  // to make cheap. The per-attempt raw counters still travel separately as
+  // `rawUsage`/`usageByAttempt[]`, so the creation-vs-read split is not lost.
   const input = Number(usage?.input_tokens) || 0
+  const cacheCreation = Number(usage?.cache_creation_input_tokens) || 0
+  const cacheRead = Number(usage?.cache_read_input_tokens) || 0
   const output = Number(usage?.output_tokens) || 0
-  return { inputTokens: input, outputTokens: output, totalTokens: input + output }
+  const totalInput = input + cacheCreation + cacheRead
+  return { inputTokens: totalInput, outputTokens: output, totalTokens: totalInput + output }
 }
 
 /**

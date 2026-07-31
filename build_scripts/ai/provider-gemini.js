@@ -15,7 +15,7 @@
 // GEMINI_API_KEY the rest of this feature's env handling assumes.
 const { GoogleGenAI } = require('@google/genai')
 const { numberFromEnv } = require('./env')
-const { RefusalError } = require('./errors')
+const { RefusalError, ProviderTimeoutError } = require('./errors')
 
 /** Registry key and the label the browser's provider picker shows. */
 const NAME = 'gemini'
@@ -162,6 +162,58 @@ function normalizeUsage(usage) {
 }
 
 /**
+ * Run one generateContent call, turning the SDK's own timeout into a typed
+ * error the route can tell apart from a cancellation.
+ *
+ * `@google/genai` implements `httpOptions.timeout` as a bare
+ * `abortController.abort()` (dist/index.cjs, the `setTimeout(() =>
+ * abortController.abort(), httpOptions.timeout)` line). `abort()` with no
+ * reason rejects with a DOMException whose `name` is **"AbortError"** — the
+ * exact shape a reviewer pressing Cancel produces. `aiErrorResponse` matches
+ * that name and answers 499 "Generation was cancelled.", so before this a
+ * Gemini request that ran out of time told the reviewer they had cancelled it.
+ *
+ * The caller's signal is what disambiguates, and it is only in scope here: if
+ * `signal` is aborted, the abort really was the client (or the route deadline)
+ * and the error is passed through untouched so the existing 499/504 signal
+ * branches still own it. If it is NOT aborted, the only thing that could have
+ * aborted the fetch is the SDK's own deadline.
+ *
+ * Note the deliberate asymmetry with the Anthropic path, which needs no
+ * equivalent: its SDK throws a distinctly-named `APIConnectionTimeoutError`,
+ * so `constructor.name` already separates the two cases there.
+ *
+ * Split out as a pure function rather than inlined in the catch below so it can
+ * be tested without standing up an SDK client or waiting out a real timeout —
+ * the whole behaviour is a decision about two inputs.
+ *
+ * @param {unknown} error The error the SDK threw.
+ * @param {AbortSignal} [signal] The caller's signal, if any.
+ * @throws {ProviderTimeoutError} when the SDK's own deadline aborted the call.
+ * @throws {unknown} the original error in every other case.
+ * @returns {never}
+ */
+function classifyAbort(error, signal) {
+  const isAbort = error?.name === 'AbortError'
+  if (isAbort && !signal?.aborted) throw new ProviderTimeoutError(NAME)
+  throw error
+}
+
+/**
+ * @param {object} client A GoogleGenAI instance.
+ * @param {object} request The generateContent request.
+ * @param {AbortSignal} [signal] The caller's signal, if any.
+ * @returns {Promise<object>} the SDK response.
+ */
+async function generateWithNormalizedTimeout(client, request, signal) {
+  try {
+    return await client.models.generateContent(request)
+  } catch (error) {
+    classifyAbort(error, signal)
+  }
+}
+
+/**
  * Ask Gemini for a JSON object matching `jsonSchema`.
  *
  * @param {object} options
@@ -175,32 +227,36 @@ function normalizeUsage(usage) {
 async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   const client = createClient()
 
-  const response = await client.models.generateContent({
-    model: getModel(),
-    contents: userPrompt,
-    config: {
-      systemInstruction: system,
-      maxOutputTokens: MAX_OUTPUT_TOKENS,
-      // `responseJsonSchema`, NOT `responseSchema`. The latter takes a narrow
-      // OpenAPI 3.0 subset; this one takes real JSON Schema, which is what lets
-      // PAGE_OUTPUT_SCHEMA be shared byte-for-byte with the Claude path rather
-      // than forked into a second copy that tests/ai-assist-schema.test.js
-      // would then have to guard twice. Every keyword the schema uses (type,
-      // properties, items, enum, required, description, additionalProperties)
-      // is supported.
-      responseMimeType: 'application/json',
-      responseJsonSchema: jsonSchema,
-      // No thinkingConfig: the model's own default is used. AI_EFFORT maps to
-      // Anthropic's output_config.effort, and Gemini's thinking budget is not
-      // the same dial — translating one into the other would be a guess
-      // presented as a setting.
-      //
-      // No explicit cache breakpoint either. Gemini caches implicitly on a
-      // prefix match, so the byte-stability prompts.js already guarantees is
-      // what makes caching work here; there is simply nothing to mark.
-      ...(signal ? { abortSignal: signal } : {}),
+  const response = await generateWithNormalizedTimeout(
+    client,
+    {
+      model: getModel(),
+      contents: userPrompt,
+      config: {
+        systemInstruction: system,
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
+        // `responseJsonSchema`, NOT `responseSchema`. The latter takes a narrow
+        // OpenAPI 3.0 subset; this one takes real JSON Schema, which is what lets
+        // PAGE_OUTPUT_SCHEMA be shared byte-for-byte with the Claude path rather
+        // than forked into a second copy that tests/ai-assist-schema.test.js
+        // would then have to guard twice. Every keyword the schema uses (type,
+        // properties, items, enum, required, description, additionalProperties)
+        // is supported.
+        responseMimeType: 'application/json',
+        responseJsonSchema: jsonSchema,
+        // No thinkingConfig: the model's own default is used. AI_EFFORT maps to
+        // Anthropic's output_config.effort, and Gemini's thinking budget is not
+        // the same dial — translating one into the other would be a guess
+        // presented as a setting.
+        //
+        // No explicit cache breakpoint either. Gemini caches implicitly on a
+        // prefix match, so the byte-stability prompts.js already guarantees is
+        // what makes caching work here; there is simply nothing to mark.
+        ...(signal ? { abortSignal: signal } : {}),
+      },
     },
-  })
+    signal
+  )
 
   // Check why generation stopped BEFORE touching the content, exactly as the
   // Claude path checks stop_reason first. On a block the candidate carries no
@@ -266,6 +322,7 @@ module.exports = {
   listModelIds,
   normalizeUsage,
   explainRefusal,
+  classifyAbort,
   createClient,
   DEFAULT_MODEL,
   MAX_OUTPUT_TOKENS,
