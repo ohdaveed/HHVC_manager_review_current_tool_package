@@ -217,6 +217,17 @@ test.describe('manager review workflow', () => {
     await expect(panel).toContainText(/summary/i)
   })
 
+  // A failed mandate has to name the document it comes from, or a reviewer who
+  // disagrees has nothing to check. The citation used to be computed and then
+  // dropped on the way to this list.
+  test('checks tab shows the source citation on a plain-language rule', async ({ page }) => {
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'checks')
+    const citations = page.locator('#reviewChecksPanel .compliance-citation')
+    expect(await citations.count()).toBeGreaterThan(0)
+    await expect(citations.first()).toContainText(/Manual §\d|SF\.gov/)
+  })
+
   test('karl tag toggle hides tags and the preference survives reload', async ({ page }) => {
     await gotoFresh(page)
     await expect(page.locator('#tagToggle')).toBeChecked()

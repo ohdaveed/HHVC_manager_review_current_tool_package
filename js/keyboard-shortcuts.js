@@ -195,8 +195,10 @@
     else dialog.showModal()
   }
 
-  window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog }
-  document.dispatchEvent(new CustomEvent('hhvc:shortcuts-ready'))
+  // The list is published at module scope because consumers read it
+  // synchronously (js/dashboard-guidance.js's Help panel does, during its own
+  // DOMContentLoaded init). `ready` is NOT set here — see init().
+  window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog, ready: false }
 
   function openWorkspaceTab(tabId) {
     const workspace = document.getElementById('reviewWorkspace')
@@ -328,6 +330,18 @@
   function init() {
     document.addEventListener('keydown', handleKeyDown)
     mountShortcutHint()
+
+    // Announce readiness only once the keydown listener actually exists.
+    // This used to fire at module scope, i.e. while the page was still
+    // parsing and long before any key could be handled — so anything that
+    // waited for "shortcuts ready" and then sent a key was racing a promise
+    // the event had already broken. Nothing in the app depended on the early
+    // timing (js/dashboard-guidance.js only registers for this event as a
+    // fallback when the list is missing, which cannot happen by its own init),
+    // and a test or integration that needs to press a key now has a truthful
+    // signal to wait on.
+    window.reviewKeyboardShortcuts.ready = true
+    document.dispatchEvent(new CustomEvent('hhvc:shortcuts-ready'))
   }
 
   if (document.readyState === 'loading') {

@@ -117,14 +117,24 @@
       detail: readingAnalysis ? readingAnalysis.detail : 'Reading-level module not loaded',
     })
 
-    // Plain-language rules from the HHVC standards manual (sections 7.2-7.8),
-    // via js/plain-language.js. Only the manual's mandates are scored here;
-    // its advisory rules are rendered separately by renderPageChecksPanel so
+    // Plain-language rules via js/plain-language.js. Only mandates are scored
+    // here; advisory rules are rendered separately by renderPageChecksPanel so
     // ~115 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    //
+    // `citation` is carried through deliberately. It used to be dropped here,
+    // which meant a reviewer looking at a failed mandate had no way to find the
+    // rule's authority — the whole reason each rule records one. The
+    // hand-written rules above carry no citation, so the renderer treats it as
+    // optional rather than every rule growing an empty line.
     const plainLanguage = window.plainLanguage?.analyzePlainLanguage?.(page)
     for (const check of plainLanguage?.checks || []) {
       if (check.severity !== 'error') continue
-      rules.push({ label: check.label, pass: check.pass, detail: check.detail })
+      rules.push({
+        label: check.label,
+        pass: check.pass,
+        detail: check.detail,
+        citation: check.citation,
+      })
     }
 
     return rules
@@ -410,6 +420,11 @@
             <li class="compliance-item ${rule.pass ? 'pass' : 'warn'}">
               <span>
                 <span class="compliance-rule">${escapeHtml(rule.label)}</span>
+                ${
+                  rule.citation
+                    ? `<span class="compliance-citation">${escapeHtml(rule.citation)}</span>`
+                    : ''
+                }
                 <span class="compliance-detail">${escapeHtml(rule.detail)}</span>
               </span>
             </li>

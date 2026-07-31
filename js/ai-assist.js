@@ -101,11 +101,21 @@
     refreshCapabilities()
   }
 
+  /**
+   * Copy the same artifact handleDownload() writes, disclosure included.
+   *
+   * This used to serialize `state.result.result` alone, which dropped the
+   * sibling `disclosure` field and let a draft leave the panel with no label on
+   * it — the one thing standards manual §1.11 and SF.gov's AI guidelines both
+   * require to travel with generated content. Copy and Download now emit byte-
+   * identical output, so there is one artifact to reason about rather than two
+   * that disagree about disclosure.
+   */
   function handleCopyJson() {
     if (!state.result) return
     const copy = window.ReviewUx?.exportImport?.copyText
     if (typeof copy !== 'function') return
-    copy(JSON.stringify(state.result.result, null, 2))
+    copy(render.buildPageModuleSource(state.result.result, state.result.disclosure || ''))
   }
 
   function handleDownload() {
