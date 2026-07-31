@@ -5,6 +5,7 @@
    here is a no-op whenever no sync URL/token is configured, so the app
    keeps working fully offline exactly as it did before this file existed.
    Loads after js/review-merge.js and js/review-state-store.js. */
+
 ;(function mountReviewStateSync() {
   if (typeof window === 'undefined' || !window.reviewState || !window.reviewMerge) return
 
@@ -520,12 +521,18 @@
    * makes "empty on the server" mean "back to the original," which is what
    * it means on the server.
    *
-   * ORIGINAL_DATA is a top-level `const` in js/state.js — a shared-scope
-   * global in the browser, absent under the Node unit tests that import
-   * this file, hence the typeof guard.
+   * ORIGINAL_DATA is published onto `window` by js/state.js and read from
+   * there rather than imported, deliberately. A static import would make
+   * this module depend on js/state.js, which pulls in js/page-data.js and
+   * all 19 pages/*.js — and would also make the guard below dead, since an
+   * imported binding always exists. The Node unit tests for this file mount
+   * it against a minimal fake window with no page data at all, and the
+   * documented behavior there is that this function no-ops rather than
+   * throwing. Reading through `window` keeps that true.
    * @param {string} pageKey
    */
   function restorePageContentFromOriginal(pageKey) {
+    const ORIGINAL_DATA = window.ORIGINAL_DATA
     if (typeof ORIGINAL_DATA === 'undefined') return
     const original = ORIGINAL_DATA?.pages?.[pageKey]
     const page = window.HHVC_DATA?.pages?.[pageKey]

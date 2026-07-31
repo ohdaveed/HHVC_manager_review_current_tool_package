@@ -1,5 +1,7 @@
 // Shared Karl tag kind labels and legend markup. Loaded after js/utils.js so
 // escapeHtml is available for legend rendering.
+
+import { escapeHtml } from './utils.js'
 const KARL_TAG_KINDS = {
   meta: {
     label: 'Metadata',
@@ -57,3 +59,5 @@ function mountKarlTagLegend() {
 window.KARL_TAG_KINDS = KARL_TAG_KINDS
 window.karlKindMeta = karlKindMeta
 window.mountKarlTagLegend = mountKarlTagLegend
+
+export { karlKindMeta, mountKarlTagLegend }

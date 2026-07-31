@@ -235,19 +235,26 @@ Then open:
 http://127.0.0.1:8080/
 ```
 
-Or use the static server of your choice:
+Use `PORT=3000 bun run dev` to change the port, or `HOST=0.0.0.0 bun run dev` to listen on all interfaces.
+
+**A plain static server no longer works.** `python3 -m http.server`, `npx serve`
+and friends used to be a valid way to open this tool, because `index.html`
+loaded a list of classic `<script>` tags that a browser could fetch directly.
+The app is now bundled by Vite from one ES-module entry point (`js/main.js`),
+which imports packages by bare specifier (`import Fuse from 'fuse.js'`) and
+imports CSS from JavaScript. No browser can resolve either without a bundler, so
+serving the repository root raw leaves the page sitting on its "Loading…"
+placeholder. Use `bun run dev` above, or build first and serve the output:
 
 ```bash
-python3 -m http.server 8000
+bun run build       # validate, export, bundle to dist/ and dist-singlefile/
+bun run serve       # serve the built dist/ plus the optional sync API
 ```
 
-Then open:
-
-```text
-http://localhost:8000/
-```
-
-Use `PORT=3000 bun run dev` to change the port, or `HOST=0.0.0.0 bun run dev` to listen on all interfaces.
+`bun run start` does both in one step, assembling the same `dist/` bundle that
+gets deployed. For a copy you can email around or open straight off disk with no
+server at all, `bun run build:singlefile` writes a self-contained
+`dist-singlefile/index.html` with every script and stylesheet inlined.
 
 ## File structure
 

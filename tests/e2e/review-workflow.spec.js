@@ -1,5 +1,12 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, readState, seedState, settleDebounce, openWorkspaceTab } = require('./helpers')
+const {
+  gotoFresh,
+  readState,
+  seedState,
+  settleDebounce,
+  openWorkspaceTab,
+  selectPage,
+} = require('./helpers')
 
 test.describe('manager review workflow', () => {
   test('decision, notes, and reviewer save to local review state', async ({ page }) => {
@@ -189,6 +196,55 @@ test.describe('manager review workflow', () => {
     expect(state.pages.pestsTopic?.notes).toBe('Flushed before switch')
     // The destination page was only opened, never edited — no record for it.
     expect(state.pages.payFee).toBeUndefined()
+  })
+
+  // Regression: page-picker navigation must run through the DECORATED
+  // window.renderPage, not js/page-render.js's raw export.
+  //
+  // js/manager-review-export.js, js/ux-improvements.js and
+  // js/interactive-sitemap.js each wrap window.renderPage after startup.
+  // Reassigning window.renderPage does not rebind an ES module `import`, so
+  // when js/app.js called its imported binding the picker silently bypassed
+  // every wrapper — and applySavedPageState() never ran for the destination,
+  // leaving the PREVIOUS page's decision and notes sitting in the sidebar
+  // form. The next autosave would then write them onto the wrong page.
+  //
+  // The sibling flush test above does not catch this: the debounced save
+  // fires on its own timer under the stale reviewFormPageKey, so the note
+  // still lands under the outgoing key whether or not the wrapper ran. Only
+  // the restore half of the wrapper is observably missing, which is what this
+  // asserts. It navigates with #pageSelect specifically — the sticky bar and
+  // queue rows call window.renderPage directly and were never affected.
+  test('page-picker navigation restores each page saved review fields', async ({ page }) => {
+    await gotoFresh(page)
+
+    await page.selectOption('#reviewDecision', 'Approved')
+    await page.fill('#reviewNotes', 'Agency page reads well')
+    await settleDebounce(page)
+
+    await selectPage(page, 'payFee')
+    await page.selectOption('#reviewDecision', 'Blocked')
+    await page.fill('#reviewNotes', 'Fee amount unconfirmed')
+    await settleDebounce(page)
+
+    // Back to the first page: its own saved values must be restored, not the
+    // ones left over from the page we just came from.
+    await selectPage(page, 'pestsTopic')
+    await expect(page.locator('#reviewDecision')).toHaveValue('Approved')
+    await expect(page.locator('#reviewNotes')).toHaveValue('Agency page reads well')
+
+    // And forward again, to prove the restore is per-page rather than a
+    // one-off replay of whatever was saved first.
+    await selectPage(page, 'payFee')
+    await expect(page.locator('#reviewDecision')).toHaveValue('Blocked')
+    await expect(page.locator('#reviewNotes')).toHaveValue('Fee amount unconfirmed')
+
+    // Neither page may have inherited the other's content on disk.
+    const state = await readState(page)
+    expect(state.pages.pestsTopic.decision).toBe('Approved')
+    expect(state.pages.pestsTopic.notes).toBe('Agency page reads well')
+    expect(state.pages.payFee.decision).toBe('Blocked')
+    expect(state.pages.payFee.notes).toBe('Fee amount unconfirmed')
   })
 
   test('sticky bar toggle opens and closes the review workspace', async ({ page }) => {
