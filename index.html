@@ -175,8 +175,14 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </figcaption>
+          <!-- Review chrome, not page content. It sits inside .browser-shell so the
+               tag toggle stays next to the tags it controls, but .browser-shell is
+               also what js/mockup-image-export.js captures — hence
+               data-export-exclude, which keeps the tool's own switch and legend out
+               of a PNG handed to anyone outside the review. -->
           <div
             class="karl-page-tags-banner"
+            data-export-exclude="true"
             style="
               padding: 1rem 1rem 0.5rem;
               border-bottom: 1px solid var(--sfds-border);

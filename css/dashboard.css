@@ -270,21 +270,26 @@
   color: var(--status-blocked-fg);
 }
 
+/* Motion for this layer is handled in css/ux-improvements.css's
+   prefers-reduced-motion block, alongside the existing progress-fill and
+   button rules. That file is the repo's designated `!important` override
+   layer; keeping the reduced-motion overrides together there avoids a second
+   source of truth for the same media query. */
+
 /* =====================================================================
-   Motion
+   Mockup PNG export controls
    =====================================================================
-   Anything added here animates only when the reviewer has not asked
-   otherwise. css/ux-improvements.css already disables the progress-fill
-   and button transitions under the same query; this covers the dashboard
-   layer's own transitions and any chart animation added later. */
-@media (prefers-reduced-motion: reduce) {
-  .review-workspace,
-  .review-workspace *,
-  .ds-card,
-  .ds-card * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+   Injected into .canvas-toolbar by js/mockup-image-export.js. They carry
+   data-export-exclude so a capture never includes the buttons that
+   triggered it. */
+
+.mockup-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+
+.mockup-export-actions button[disabled] {
+  opacity: 0.6;
+  cursor: progress;
 }

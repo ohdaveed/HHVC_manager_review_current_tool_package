@@ -40,6 +40,7 @@ const REVIEW_RECORD_FIELDS = [
     toCsv,
     parseCsv,
     downloadFile,
+    downloadBlob,
     debounce,
     throttle,
     showErrorBanner,
@@ -327,7 +328,25 @@ function parseCsv(text) {
  * @param {string} mimeType
  */
 function downloadFile(filename, content, mimeType) {
-  const blob = new Blob([content], { type: mimeType })
+  downloadBlob(filename, new Blob([content], { type: mimeType }))
+}
+
+/**
+ * Trigger a browser download for an already-built Blob.
+ *
+ * Split out of downloadFile because the PNG export path
+ * (js/mockup-image-export.js) gets a Blob straight from the renderer and has
+ * nothing to serialize — routing it through downloadFile would mean wrapping
+ * a Blob inside another Blob. Both share the same object-URL lifecycle:
+ * create, click a detached <a>, revoke immediately. Revoking synchronously
+ * after click() is safe, since the browser has already begun the download by
+ * then, and skipping it leaks the whole blob for the life of the document —
+ * which for a 2x page capture is megabytes per export.
+ * @param {string} filename suggested name for the saved file
+ * @param {Blob} blob
+ * @returns {void}
+ */
+function downloadBlob(filename, blob) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -540,6 +559,7 @@ export {
   debounce,
   defaultMetaDescription,
   defaultSeoTitle,
+  downloadBlob,
   downloadFile,
   escapeHtml,
   getCurrentKey,

@@ -23,6 +23,7 @@ import { hasValidPageData } from './utils.js'
     // itself the moment anyone looks for it.
     { keys: ['4'], description: 'Open AI assist workspace tab' },
     { keys: ['5'], description: 'Open Help workspace tab' },
+    { keys: ['p'], description: 'Download this mockup as a PNG' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
     { keys: ['r'], description: 'Revise and resubmit (current or selected)' },
@@ -261,6 +262,13 @@ import { hasValidPageData } from './utils.js'
       case '5':
         event.preventDefault()
         openWorkspaceTab('help')
+        break
+      case 'p':
+        // Only the single-page export gets a shortcut. Bulk export navigates
+        // through all 19 pages and fires a download for each, which is far too
+        // much to hang off one keystroke a reviewer might hit by accident.
+        event.preventDefault()
+        window.MockupImageExport?.exportCurrentPage?.()
         break
       case 'a':
         event.preventDefault()
