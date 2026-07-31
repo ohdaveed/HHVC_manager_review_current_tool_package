@@ -200,6 +200,38 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   `js/interactive-sitemap-render.js`; its styles live in
   `css/interactive-sitemap.css`.
 
+### Overview charts (`js/review-insights*.js`)
+
+Three compact charts above the review queue table — decision mix, review
+activity over time, and the pages whose automated checks are failing. They live
+on the **Overview tab rather than a sixth workspace tab**: tabs 1–5 are bound to
+keyboard shortcuts, and adding one would renumber the rest.
+
+- **`js/review-insights-data.js`** — pure data shaping, dual
+  `window`/`module.exports` like `js/review-merge.js`, so
+  `tests/review-insights-data.test.js` can `require` it with no browser.
+- **`js/review-insights.js`** — orchestrator: card markup, hidden data tables,
+  redraw gating.
+- **`js/review-insights-charts.js`** — the only module importing ECharts.
+
+**ECharts is dynamically imported, and that is load-bearing.** It is ~530 KB
+raw / ~180 KB gzip, more than the whole rest of the bundle. The dynamic import
+makes Vite emit it as its own chunk, keeping the initial download at ~114 KB
+gzip. The headings and data tables are built **synchronously, before the import
+is requested**, so the numbers are present even if the chunk never loads.
+
+- **The chart host is re-parented, never rebuilt** — the Overview panel replaces
+  its whole `innerHTML` per keystroke. `insightsSignature()` gates redraws and a
+  generation counter stops a slow async draw overwriting newer numbers.
+- **Charts describe the whole site, never the filtered view.**
+- **Decision fills use `--viz-decision-*`, not the `--status-*-border` chip
+  tokens** — as large fills the chip borders put Approved and Needs review at
+  ΔE 8.4 under normal vision against a floor of 15. Dark mode is a separately
+  chosen set, not a lightened copy. Re-validate rather than eyeball.
+- **Colour is never the only encoding**: visible legend with counts, every chart
+  `aria-hidden` beside an `.hhvc-sr-only` table, and the checks chart states its
+  own top-8 cap while the table carries every page.
+
 ### Page object shape and validation rules
 
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by

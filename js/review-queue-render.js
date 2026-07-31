@@ -221,6 +221,7 @@
           <button type="button" class="review-queue-action" data-queue-next-needs-review="true">Next needs review</button>
         </div>
         ${renderQueueStats(stats, rows.length)}
+        <div id="reviewInsights"></div>
         <div class="review-queue-toolbar" aria-label="Queue controls">
           <label class="review-queue-search">
             <span class="review-queue-control-label">Search queue</span>
@@ -358,6 +359,11 @@
         }
       </section>
     `
+
+    // Charts go in after the panel exists, since ECharts sizes itself to a
+    // mounted container. Optional-chained because js/review-insights.js is an
+    // additive layer: if it never loaded, the queue still renders.
+    window.ReviewInsights?.render?.()
 
     restoreSearchFocus(searchFocus)
   }
