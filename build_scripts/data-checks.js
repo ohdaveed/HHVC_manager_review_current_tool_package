@@ -3,6 +3,12 @@
 // Split out from build_scripts/validate.js as pure functions so they have
 // direct test coverage (see tests/data-validation.test.js) independent of
 // the real pages/*.js content.
+//
+// safeUrl comes from js/utils.js — the same function js/page-render.js applies
+// at render time — so findUnsafeUrls below cannot drift from what the renderer
+// actually considers safe. That file is browser-first and exports only its URL
+// guard to Node; see the note at its foot.
+const { safeUrl } = require('../js/utils.js')
 
 /**
  * Find order entries that reference a page key missing from `pages`.
@@ -186,6 +192,48 @@ function countUnverifiedClaims(pages) {
   return count
 }
 
+/**
+ * Find `url` / `buttonUrl` / `printVersionUrl` values whose scheme is unsafe to
+ * put in an href — `javascript:`, `data:`, and friends.
+ *
+ * The page schema types these as bare strings, and `escapeHtml` does not touch
+ * a scheme, so before this check a `javascript:` URL passed validation and
+ * reached a clickable link. That matters most for the AI assist preview, which
+ * renders model-generated drafts through the same renderer as real pages, but
+ * it is enforced repo-wide because there is no reason authored copy should
+ * carry one either.
+ *
+ * Shares `safeUrl` with js/page-render.js rather than re-deriving the rule, so
+ * the validator cannot come to disagree with the renderer about what is safe.
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string, path: string, url: string}>}
+ */
+function findUnsafeUrls(pages) {
+  const unsafe = []
+
+  function check(pageKey, path, value) {
+    if (typeof value !== 'string' || !value) return
+    if (safeUrl(value) !== value) unsafe.push({ pageKey, path, url: value })
+  }
+
+  for (const [pageKey, page] of Object.entries(pages)) {
+    check(pageKey, 'printVersionUrl', page.printVersionUrl)
+    if (page.spotlight) check(pageKey, 'spotlight.buttonUrl', page.spotlight.buttonUrl)
+    ;(page.sections || []).forEach((section, sectionIndex) => {
+      const at = `sections[${sectionIndex}]`
+      check(pageKey, `${at}.buttonUrl`, section.buttonUrl)
+      ;(section.cards || []).forEach((card, cardIndex) => {
+        check(pageKey, `${at}.cards[${cardIndex}].url`, card.url)
+      })
+      ;(section.steps || []).forEach((step, stepIndex) => {
+        check(pageKey, `${at}.steps[${stepIndex}].buttonUrl`, step.buttonUrl)
+      })
+    })
+  }
+
+  return unsafe
+}
+
 module.exports = {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -194,5 +242,6 @@ module.exports = {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  findUnsafeUrls,
   countUnverifiedClaims,
 }

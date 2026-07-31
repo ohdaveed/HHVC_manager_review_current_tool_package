@@ -615,6 +615,20 @@
   line-height: 1.35;
 }
 
+/* The source a plain-language rule comes from, shown per finding so a reviewer
+   who disagrees knows which document to go argue with. Sits between the rule
+   name and its detail; --sfds-slate-3 on the panel background clears 4.5:1, and
+   it is deliberately quieter than .compliance-detail (same colour, smaller and
+   uppercase) because it is provenance rather than the finding itself. */
+.compliance-citation {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--sfds-slate-3);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 /* ==========================================================================
    Plain-language suggestions
    Advisory findings from js/plain-language.js, rendered below the scored
@@ -910,7 +924,14 @@
 }
 
 .shortcuts-or {
-  color: var(--sfds-slate-4);
+  /* --sfds-slate-4 (#c9caca) is the BORDER step of the neutral ramp, not a
+     text step: as text on the dialog's white surface it measures 1.60:1,
+     far under WCAG 1.4.3's 4.5:1, so the "or" separating alternative keys
+     was effectively invisible. --text-secondary is the ramp's secondary
+     TEXT step and clears it at 4.86:1 (7.88:1 in dark mode). Caught by the
+     axe color-contrast rule once it was re-enabled in
+     tests/e2e/accessibility.spec.js. */
+  color: var(--text-secondary);
   font-size: 0.7rem;
 }
 
@@ -991,5 +1012,20 @@ ol li {
   .decision-chip,
   .shortcuts-hint-button {
     transition: none !important;
+  }
+
+  /* The dashboard layer (css/dashboard.css) adds surfaces and transitions of
+     its own. Its rules live there, but the reduced-motion overrides belong
+     here with the rest of them: this is the designated `!important` override
+     layer, and splitting one media query across two files gives the same
+     preference two places to be honoured — or missed. */
+  .review-workspace,
+  .review-workspace *,
+  .ds-card,
+  .ds-card * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

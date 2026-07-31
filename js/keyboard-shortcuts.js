@@ -1,6 +1,8 @@
 /* Global keyboard shortcuts for the manager review workflow.
    Shortcuts are ignored while typing in form fields so they never
    interfere with review notes or content edits. */
+
+import { hasValidPageData } from './utils.js'
 ;(function initReviewKeyboardShortcuts() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA)) return
@@ -21,6 +23,7 @@
     // itself the moment anyone looks for it.
     { keys: ['4'], description: 'Open AI assist workspace tab' },
     { keys: ['5'], description: 'Open Help workspace tab' },
+    { keys: ['p'], description: 'Download this mockup as a PNG' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
     { keys: ['r'], description: 'Revise and resubmit (current or selected)' },
@@ -195,8 +198,10 @@
     else dialog.showModal()
   }
 
-  window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog }
-  document.dispatchEvent(new CustomEvent('hhvc:shortcuts-ready'))
+  // The list is published at module scope because consumers read it
+  // synchronously (js/dashboard-guidance.js's Help panel does, during its own
+  // DOMContentLoaded init). `ready` is NOT set here — see init().
+  window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog, ready: false }
 
   function openWorkspaceTab(tabId) {
     const workspace = document.getElementById('reviewWorkspace')
@@ -259,6 +264,13 @@
       case '5':
         event.preventDefault()
         openWorkspaceTab('help')
+        break
+      case 'p':
+        // Only the single-page export gets a shortcut. Bulk export navigates
+        // through all 19 pages and fires a download for each, which is far too
+        // much to hang off one keystroke a reviewer might hit by accident.
+        event.preventDefault()
+        window.MockupImageExport?.exportCurrentPage?.()
         break
       case 'a':
         event.preventDefault()
@@ -328,6 +340,18 @@
   function init() {
     document.addEventListener('keydown', handleKeyDown)
     mountShortcutHint()
+
+    // Announce readiness only once the keydown listener actually exists.
+    // This used to fire at module scope, i.e. while the page was still
+    // parsing and long before any key could be handled — so anything that
+    // waited for "shortcuts ready" and then sent a key was racing a promise
+    // the event had already broken. Nothing in the app depended on the early
+    // timing (js/dashboard-guidance.js only registers for this event as a
+    // fallback when the list is missing, which cannot happen by its own init),
+    // and a test or integration that needs to press a key now has a truthful
+    // signal to wait on.
+    window.reviewKeyboardShortcuts.ready = true
+    document.dispatchEvent(new CustomEvent('hhvc:shortcuts-ready'))
   }
 
   if (document.readyState === 'loading') {

@@ -93,4 +93,27 @@ test.describe('page navigation', () => {
     await page.goForward()
     await expect(page.locator('#pageSelect')).toHaveValue('scopeInfo')
   })
+
+  // Regression: the served bundle must actually contain the embedded workshop
+  // form and the stylesheets that form links by absolute path.
+  //
+  // The form is a separate Vite sub-app whose built output is committed and
+  // copied into dist/ by build_scripts/copy-workshop-form.js. Two ways it has
+  // broken: the copy step not running at all in a serving path (so the CTA in
+  // pages/mosquito-education-workshop.js 404s), and the form's hand-written
+  // <link href="/css/…"> tags pointing at files the bundler now hashes into
+  // dist/assets/ (so the form hydrates but renders unstyled). Neither shows up
+  // in any page-level test, because the form lives outside the mockup viewer.
+  test('the built bundle serves the workshop form and its shared stylesheets', async ({
+    request,
+  }) => {
+    for (const url of [
+      '/forms/mosquito-workshop-request/',
+      '/css/styles.css',
+      '/css/ux-improvements.css',
+    ]) {
+      const response = await request.get(url)
+      expect(response.status(), `${url} should be served by the built bundle`).toBe(200)
+    }
+  })
 })

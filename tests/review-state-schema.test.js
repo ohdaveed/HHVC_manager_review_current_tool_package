@@ -1,10 +1,10 @@
-const { describe, test, expect } = require('bun:test')
-const {
+import { describe, test, expect } from 'bun:test'
+import '../js/review-state-validation.js'
+import {
   validateReviewState,
   validateReviewRecord,
   STORAGE_VERSION,
-} = require('../build_scripts/review-state-schema')
-const { loadScripts } = require('./helpers/load-scripts')
+} from '../build_scripts/review-state-schema.js'
 
 describe('review-state-schema', () => {
   test('accepts a valid review state backup', () => {
@@ -50,8 +50,10 @@ describe('review-state-schema', () => {
 // same rules. It runs on every read of hhvcManagerReviewState:v1, so a
 // mismatch here silently corrupts state rather than failing loudly.
 describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', () => {
-  const ctx = loadScripts(['js/review-state-validation.js'])
-  const { sanitizeReviewRecord } = ctx.window.reviewStateValidation
+  // The module is a self-mounting IIFE that publishes its API onto
+  // window.reviewStateValidation; importing it for that side effect is the
+  // ESM equivalent of the old harness evaluating it into a vm context.
+  const { sanitizeReviewRecord } = window.reviewStateValidation
 
   test('preserves local_dirty as a boolean rather than stringifying it', () => {
     // The generic branch coerces every other field with String(), which

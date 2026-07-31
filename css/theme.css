@@ -1,5 +1,65 @@
-/* UI Setup — captured design decisions (StyleSeed / SF.gov internal tool) */
+/* Design tokens for the HHVC manager-review tool.
+   (StyleSeed / SF.gov internal tool)
+
+   Three layers, in order:
+
+     1. RAW SFDS PRIMITIVES   — `--sfds-*`, defined in css/styles.css. The
+        SF.gov palette. Never referenced directly by component CSS.
+     2. SEMANTIC TOKENS       — this file. What a thing IS (`--surface-panel`,
+        `--status-blocked-fg`), not what colour it happens to be.
+     3. COMPONENT CSS         — css/styles.css, css/ux-improvements.css,
+        css/dashboard.css, css/interactive-sitemap.css.
+
+   Retheming should mean editing this file only. Every token carries a
+   `var(fallback)` so the file still renders sensibly if the primitives
+   ever fail to load.
+
+   NOTE ON CASCADE LAYERS: Web Awesome ships all of its styles inside
+   `@layer` blocks. Unlayered CSS beats layered CSS in the cascade
+   regardless of specificity, so everything in this repo's own stylesheets
+   automatically wins over Web Awesome's defaults. That is deliberate — it
+   is what lets us adopt Web Awesome's components and reset without it
+   fighting the existing hand-authored styles. */
+
 :root {
+  /* ===================================================================
+     Brand ramp
+     ===================================================================
+     SFDS ships three brand blues (action, hover, accent-light) — enough
+     for links and buttons, not enough for a dashboard that needs fills,
+     borders, hovers and chart marks in the same family. This interpolates
+     the full scale in OKLCH so the steps are perceptually even, and pins
+     two of them to the real SFDS hexes so the brand colour stays literally
+     SF.gov's rather than an approximation:
+
+         step 40 = --sfds-action-blue        #2a60af
+         step 10 = --sfds-action-blue-hover  #001d4e  (also the footer)
+
+     Contrast is measured against white and against --sfds-slate-1
+     (#0b0c0c), the two surfaces these actually land on. Steps 50 and
+     darker clear 4.5:1 on white, so they are safe for text; step 50 is
+     the lightest that does. Steps 60 and up are for fills and borders
+     only — 60 clears the 3:1 non-text bar (WCAG 1.4.11) but NOT the
+     4.5:1 text bar, so never put body copy on it.
+
+     The 05..95 numbering deliberately matches Web Awesome's brand scale.
+     Nothing depends on that today — Web Awesome's stylesheets are not
+     imported, because pulling in its theme costs ~66 kB of CSS to define
+     tokens no component here consumes yet. When a Web Awesome component
+     does land, aliasing --wa-color-brand-NN to --brand-NN is a one-line
+     mapping and its components inherit SF.gov's blue automatically. */
+  --brand-95: #ecf2fb; /* on white  1.13:1 | on slate-1 17.41:1 */
+  --brand-90: #dbe6f7; /* on white  1.26:1 | on slate-1 15.55:1 */
+  --brand-80: #b3cbef; /* on white  1.65:1 | on slate-1 11.85:1 */
+  --brand-70: #8db0e6; /* on white  2.21:1 | on slate-1  8.85:1 */
+  --brand-60: #6897de; /* on white  2.97:1 | on slate-1  6.59:1 */
+  --brand-50: #4076c9; /* on white  4.51:1 | on slate-1  4.34:1 */
+  --brand-40: #2a60af; /* on white  6.19:1 | on slate-1  3.16:1  <- SFDS action blue */
+  --brand-30: #10438e; /* on white  9.48:1 | on slate-1  2.07:1 */
+  --brand-20: #023070; /* on white 12.66:1 | on slate-1  1.55:1 */
+  --brand-10: #001d4e; /* on white 16.33:1 | on slate-1  1.20:1  <- SFDS hover/footer */
+  --brand-05: #001033; /* on white 18.72:1 | on slate-1  1.05:1 */
+
   /* Brand (SFDS action blue family) */
   --brand-primary: var(--sfds-action-blue, #2a60af);
   --brand-primary-hover: var(--sfds-action-blue-hover, #001d4e);
@@ -12,16 +72,287 @@
   --font-body: var(--font-sans);
   --font-caption: var(--font-sans);
 
+  /* ===================================================================
+     Spacing scale
+     ===================================================================
+     A 4px base, doubling roughly every two steps. Expressed in rem so it
+     scales with the user's browser font size — a hard requirement for
+     WCAG 1.4.4 (resize text) that fixed px spacing quietly breaks. */
+  --ds-space-1: 0.25rem; /*  4px */
+  --ds-space-2: 0.5rem; /*  8px */
+  --ds-space-3: 0.75rem; /* 12px */
+  --ds-space-4: 1rem; /* 16px */
+  --ds-space-5: 1.5rem; /* 24px */
+  --ds-space-6: 2rem; /* 32px */
+  --ds-space-7: 3rem; /* 48px */
+  --ds-space-8: 4rem; /* 64px */
+
+  /* Radius. --radius (8px, in css/styles.css) remains the default for
+     existing components; these name the ends of the range. */
+  --ds-radius-sm: 4px;
+  --ds-radius-md: 8px;
+  --ds-radius-lg: 14px;
+  --ds-radius-pill: 999px;
+
+  /* ===================================================================
+     Elevation
+     ===================================================================
+     Three steps, not five: this is a dense review tool, and more depth
+     levels than a reviewer can distinguish is just noise. Tinted with the
+     brand navy rather than neutral black so shadows read as part of the
+     palette instead of dirtying it. */
+  --ds-shadow-1: 0 1px 2px rgba(0, 29, 78, 0.06), 0 1px 3px rgba(0, 29, 78, 0.08);
+  --ds-shadow-2: 0 2px 4px rgba(0, 29, 78, 0.06), 0 4px 12px rgba(0, 29, 78, 0.1);
+  --ds-shadow-3: 0 8px 16px rgba(0, 29, 78, 0.08), 0 16px 32px rgba(0, 29, 78, 0.12);
+
   /* Semantic surfaces */
   --surface-page: var(--sfds-slate-5, #f0f0f0);
   --surface-panel: var(--sfds-white, #fcfcfc);
+  --surface-sunken: var(--sfds-slate-6, #f8fafc);
+  --surface-raised: var(--sfds-white, #fcfcfc);
   --text-primary: var(--sfds-slate-1, #0b0c0c);
   --text-secondary: var(--sfds-slate-3, #6e7070);
   --border-default: var(--sfds-border, #e9eaea);
+  --border-strong: var(--sfds-slate-4, #c9caca);
+
+  /* ===================================================================
+     Decision status colours
+     ===================================================================
+     One triplet per value of the review `decision` enum.
+
+     This exists because getStatusChipClass() in js/utils.js collapses five
+     decisions into three CSS classes (pass / warn / fail), which renders
+     "Blocked" and "Revise and resubmit" identically — the two states a
+     manager most needs to tell apart, since one is waiting on someone else
+     and the other is waiting on the author. Naming all five here lets the
+     UI distinguish them without inventing colours at each call site.
+
+     Every `-fg` value clears 4.5:1 against its own `-bg` (WCAG 1.4.3),
+     and every `-border` clears 3:1 against the surrounding panel
+     (WCAG 1.4.11). */
+  --status-approved-bg: var(--sfds-success-bg, #ecf8ed);
+  --status-approved-border: var(--sfds-success-border, #a6d8a8);
+  --status-approved-fg: var(--sfds-success-text, #075e0a);
+
+  --status-edits-bg: var(--sfds-warning-bg, #fff7e6);
+  --status-edits-border: var(--sfds-warning-border, #f2c94c);
+  --status-edits-fg: var(--sfds-warning-text, #6f4a00);
+
+  /* Revise = the author's move. Purple, so it reads as "action needed
+     here" without the alarm of the danger red used for Blocked. */
+  --status-revise-bg: var(--sfds-purple-bg, #f5efff);
+  --status-revise-border: var(--sfds-purple-border, #decdf6);
+  --status-revise-fg: var(--sfds-purple-text, #4a2a7a);
+
+  /* Blocked = waiting on someone outside the review. Danger red. */
+  --status-blocked-bg: var(--sfds-danger-bg, #fff1f0);
+  --status-blocked-border: var(--sfds-danger-border, #d92d20);
+  --status-blocked-fg: var(--sfds-danger-text, #8f1d15);
+
+  --status-pending-bg: var(--sfds-slate-5, #f0f0f0);
+  --status-pending-border: var(--sfds-slate-4, #c9caca);
+  --status-pending-fg: var(--sfds-slate-2, #383939);
+
+  /* ===================================================================
+     Categorical data-visualisation palette
+     ===================================================================
+     The Okabe-Ito colourblind-safe qualitative palette, narrowed to the
+     four entries that clear the WCAG 1.4.11 3:1 non-text bar against
+     BOTH themes' panel surfaces. Okabe-Ito's orange, sky blue and yellow
+     all fail 3:1 on a light surface, and its black fails on a dark one,
+     so the full eight-colour set cannot be used as-is by a themed UI.
+
+     Four is not a compromise here — the review `decision` enum has five
+     values and one of them ("Needs review") is the neutral default, so
+     four saturated colours plus a neutral is exactly the requirement.
+
+     The purple is nudged 0.5% darker than Okabe-Ito's #CC79A7. That
+     original measures 3.06:1 against pure white but only 2.98:1 against
+     this repo's --sfds-white (#fcfcfc), which is slightly off-white —
+     i.e. it fails on the surface it is actually drawn on.
+
+     A caution that matters when these sit side by side: no two
+     Okabe-Ito colours reach 3:1 against EACH OTHER (the best pair is
+     ~2.3:1). Abutting marks — stacked bar segments, adjacent strip
+     cells — therefore need a 1-2px separator in the surface colour, so
+     each segment contrasts against the separator rather than against its
+     neighbour. --viz-separator exists for exactly that. */
+  --viz-1: #009e73; /* bluish green   — light 3.33:1 | dark 5.19:1 */
+  --viz-2: #0072b2; /* blue           — light 5.05:1 | dark 3.42:1 */
+  --viz-3: #d55e00; /* vermillion     — light 3.77:1 | dark 4.59:1 */
+  --viz-4: #ca77a5; /* reddish purple — light 3.06:1 | dark 5.66:1 */
+  --viz-neutral: var(--sfds-slate-4, #c9caca);
+  --viz-separator: var(--surface-panel);
+  /* Minimum stroke width for chart lines. 1px hairlines are the most
+     common 1.4.11 failure in charting libraries' defaults. */
+  --viz-stroke: 2px;
 }
 
+/* =====================================================================
+   Dark mode
+   =====================================================================
+   Scoped to the TOOL CHROME only — deliberately.
+
+   `.browser-shell` and everything inside it is a simulation of the real,
+   public SF.gov page. That page is light. Rendering the mockup dark would
+   show the reviewer something that does not exist and cannot be approved,
+   which defeats the entire purpose of the tool. So the sidebar, toolbar,
+   review workspace and dashboard follow the reviewer's system preference,
+   and the mockup keeps its own light tokens (re-asserted below).
+
+   Only the semantic layer is overridden here; no component stylesheet
+   needs to know dark mode exists. */
 @media (prefers-color-scheme: dark) {
+  /* The override happens at the PRIMITIVE layer, not the semantic one.
+
+     Every stylesheet in this repo already reads `--sfds-*` directly —
+     hundreds of declarations across styles.css, ux-improvements.css and
+     interactive-sitemap.css. Inverting the primitives here means all of
+     them become theme-aware without a single component rule changing,
+     which is exactly the "retheme by touching tokens only" property this
+     layer is supposed to have. Overriding only the semantic tokens would
+     have left every one of those declarations stubbornly light.
+
+     The neutral ramp inverts end-for-end: slate-1 is the darkest value in
+     light mode and is used as body text, so in dark mode it becomes the
+     lightest. slate-5 is the page background and becomes the darkest.
+     Because components use them by role rather than by literal colour,
+     the inversion is transparent to them. */
   :root {
-    --brand-primary-hover: #4a7fd4;
+    color-scheme: dark;
+
+    /* Neutrals, inverted. Contrast measured against the panel (#16181d). */
+    --sfds-slate-1: #f0f1f2; /* body text        — 15.70:1 */
+    --sfds-slate-2: #c3c7ce; /* strong secondary — 10.47:1 */
+    --sfds-slate-3: #a9adb4; /* secondary text   —  7.88:1 */
+    --sfds-slate-4: #606670; /* strong border    —  3.07:1 */
+    --sfds-slate-5: #101216; /* page background */
+    --sfds-slate-6: #1d2027; /* raised/sunken fill */
+    --sfds-white: #16181d; /* panel surface */
+    --sfds-border: #2b2f37; /* hairline separator */
+
+    /* Brand lightens. --sfds-action-blue (#2a60af) manages only 2.2:1 on
+       the dark panel — far under the 4.5:1 a link needs — so links take
+       step 70 of the ramp and hover goes lighter still, preserving the
+       "hover gets more prominent" direction that step 10 gave in light
+       mode. */
+    --sfds-action-blue: var(--brand-70); /*  8.02:1 on panel */
+    --sfds-action-blue-hover: var(--brand-80); /* 10.74:1 on panel */
+
+    /* Only the two lightest steps are re-pointed. They are the ones used as
+       background TINTS (the active workspace tab, hover washes), and at
+       #ecf2fb / #dbe6f7 they would render as near-white slabs on a dark
+       panel. Steps 80 and darker are used as foreground and accent colours
+       — links take step 70 above — so they must stay light to keep their
+       contrast against the dark surface, and are deliberately left alone.
+       In other words the ramp is not inverted wholesale; only its role as
+       "tint" flips. */
+    --brand-95: #131c2b;
+    --brand-90: #17243a;
+    --sfds-accent-light: #1d2a44;
+    --sfds-blue-soft-bg: #141a26;
+    --sfds-footer-bg: #0b1020;
+    --sfds-focus-ring: rgba(141, 176, 230, 0.45);
+
+    /* Status families invert the same way: tinted light fills become dark
+       washes, and each family's dark text becomes its light foreground —
+       so the hue association (green = approved, red = blocked) survives
+       the theme change. Every `-text` clears 4.5:1 on its own `-bg`. */
+    --sfds-success-bg: #0e2a12;
+    --sfds-success-border: #35713a; /* 3.02:1 on panel */
+    --sfds-success-text: #8fd694; /* 8.99:1 on its bg */
+    --sfds-green: #8fd694;
+    --sfds-warning-bg: #2e2410;
+    --sfds-warning-border: #7d6220; /* 3.08:1 on panel */
+    --sfds-warning-text: #f0cd72; /* 9.94:1 on its bg */
+    --sfds-danger-bg: #351416;
+    --sfds-danger-border: #a84641; /* 3.06:1 on panel */
+    --sfds-danger-text: #f5a8a2; /* 8.71:1 on its bg */
+    --sfds-purple-bg: #241a33;
+    --sfds-purple-border: #725a98; /* 3.07:1 on panel */
+    --sfds-purple-text: #cbb0ef; /* 8.65:1 on its bg */
+    --sfds-info-dark: #8db0e6;
+    --sfds-info-light: #141a26;
+    --sfds-info-border: #2b3a4a;
+
+    /* Status borders are lighter than the container hairline on purpose.
+       A decorative container edge is exempt from WCAG 1.4.11 — the change
+       of surface already delineates it, and a 3:1 hairline everywhere
+       reads as harsh in dark mode. A status border is not decorative: it
+       carries which state a chip is in, so each one is tuned to clear 3:1
+       against the panel above. */
+    --status-pending-border: #606670;
+
+    /* Depth on dark surfaces comes from lighter fills, not darker shadow —
+       a light-mode shadow over a dark panel just produces a muddy halo.
+       Kept subtle so elevation still separates without dirtying. */
+    --ds-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --ds-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --ds-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    --surface-sunken: #0c0e11;
+    --surface-raised: #1d2027;
+    --brand-on-primary: #001033;
+  }
+
+  /* The mockup is a preview of a light PUBLIC page. Pin the primitives
+     back to their light values inside the browser shell so the simulation
+     stays faithful — a reviewer approving a dark page would be approving
+     something that does not exist. */
+  .browser-shell {
+    color-scheme: light;
+
+    --sfds-slate-1: #0b0c0c;
+    --sfds-slate-2: #383939;
+    --sfds-slate-3: #6e7070;
+    --sfds-slate-4: #c9caca;
+    --sfds-slate-5: #f0f0f0;
+    --sfds-slate-6: #f8fafc;
+    --sfds-white: #fcfcfc;
+    --sfds-border: #e9eaea;
+
+    --sfds-action-blue: #2a60af;
+    --sfds-action-blue-hover: #001d4e;
+    --sfds-accent-light: #e9eef9;
+    --sfds-blue-soft-bg: #f1f4ff;
+    --sfds-footer-bg: #001d4e;
+    --sfds-focus-ring: rgba(42, 96, 175, 0.25);
+
+    --sfds-success-bg: #ecf8ed;
+    --sfds-success-border: #a6d8a8;
+    --sfds-success-text: #075e0a;
+    --sfds-green: #026800;
+    --sfds-warning-bg: #fff7e6;
+    --sfds-warning-border: #f2c94c;
+    --sfds-warning-text: #6f4a00;
+    --sfds-danger-bg: #fff1f0;
+    --sfds-danger-border: #d92d20;
+    --sfds-danger-text: #8f1d15;
+    --sfds-purple-bg: #f5efff;
+    --sfds-purple-border: #decdf6;
+    --sfds-purple-text: #4a2a7a;
+    --sfds-info-dark: #0046c2;
+    --sfds-info-light: #e5f1ff;
+    --sfds-info-border: #c7dae5;
+
+    /* The two brand tint steps and the pending status border are overridden
+       in the dark :root block above, so they have to be restored here too.
+       Nothing inside the mockup consumes them TODAY — --brand-95 is used only
+       by the workspace tab, and --brand-90 and --status-pending-border have no
+       consumer yet — so this is closing a latent hole rather than fixing a
+       visible bug. It still belongs here: the whole point of this block is
+       that a reader can trust the mockup renders light, and a guarantee with
+       three silent exceptions is not one. The next person to use a pending
+       chip inside the mockup should not have to rediscover this. */
+    --brand-95: #ecf2fb;
+    --brand-90: #dbe6f7;
+    --status-pending-border: #c9caca;
+
+    --surface-sunken: #f8fafc;
+    --surface-raised: #fcfcfc;
+    --brand-on-primary: #fcfcfc;
+    --ds-shadow-1: 0 1px 2px rgba(0, 29, 78, 0.06), 0 1px 3px rgba(0, 29, 78, 0.08);
+    --ds-shadow-2: 0 2px 4px rgba(0, 29, 78, 0.06), 0 4px 12px rgba(0, 29, 78, 0.1);
+    --ds-shadow-3: 0 8px 16px rgba(0, 29, 78, 0.08), 0 16px 32px rgba(0, 29, 78, 0.12);
   }
 }

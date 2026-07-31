@@ -1,0 +1,11 @@
+# Bun configuration.
+#
+# `preload` runs tests/helpers/browser-env.js before any test file is
+# evaluated, registering a happy-dom global environment. That has to happen
+# first: the js/*.js modules are now ES modules, and several of them read
+# window/document/localStorage during evaluation (js/state.js reads
+# window.HHVC_DATA the moment it is imported), so the globals must exist
+# before the module loader touches them — an import inside a test file is
+# already too late.
+[test]
+preload = ["./tests/helpers/browser-env.js"]

@@ -14,10 +14,12 @@ const REPRESENTATIVE_PAGES = [
 ]
 
 async function expectNoSeriousViolations(page) {
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa'])
-    .disableRules(['color-contrast'])
-    .analyze()
+  // color-contrast is ENABLED. It used to be disabled here, which meant the
+  // suite could not catch the most common WCAG failure in the product it
+  // guards. The css/theme.css token layer now carries measured ratios for
+  // every text/surface pairing in both themes, so the rule has something
+  // deliberate to check rather than a pile of ad-hoc colours.
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
   // Map to a compact summary so a failure prints the offending rules and
   // nodes instead of dumping full Axe violation objects.
   const serious = results.violations

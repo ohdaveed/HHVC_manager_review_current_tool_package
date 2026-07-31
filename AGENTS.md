@@ -12,10 +12,11 @@ confidently.
 ## What this is
 
 A static, no-framework mockup tool for **manager review** of a redesigned HHVC
-(Healthy Housing and Vector Control) section of SF.gov. `index.html` loads plain
-`<script>` tags directly, and `server.ts` serves the mockup. **Bun** powers the
-dev server, the CLI scripts (validate/export/build), and the test runner — not a
-bundler or framework. Reviewer state lives in the browser's `localStorage` by
+(Healthy Housing and Vector Control) section of SF.gov. It is **bundled by Vite**
+from a single ES-module entry point (`js/main.js`), and `server.ts` serves the
+build output plus the optional sync API. **Bun** powers the CLI scripts
+(validate/export/build) and the test runner. There is still **no UI framework** —
+rendering is data-driven string templates, not components. Reviewer state lives in the browser's `localStorage` by
 default, and the tool works fully offline with **no backend/database/external
 service required.** `server.ts` also hosts an **optional** Bun + SQLite
 review-state sync backend (see [Review-state sync backend](#review-state-sync-backend-optional))
@@ -28,39 +29,43 @@ build step, built independently — see [Build outputs](#build-outputs)).
 
 If `bun` is not found, it installs to `~/.bun/bin`; run
 `export PATH="$HOME/.bun/bin:$PATH"`. Run `bun install` before the first `dev` —
-`index.html` links `node_modules/@sfgov/design-system` CSS directly.
+`js/main.js` imports `@sfgov/design-system` CSS and the third-party libraries for
+Vite to bundle.
 
 ## Commands
 
 ```bash
 bun install                 # install deps (required before first `dev`)
-bun run dev                  # dev server with --watch at http://127.0.0.1:8080
-bun run start                # dev server without --watch
+bun run dev                  # Vite dev server (HMR) at http://127.0.0.1:8080
+bun run dev:api              # optional sync backend (server.ts) on :8081; dev proxies /api
+bun run start                # production-like: build:app then serve dist/ + the API
+bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # Bun test runner over the 13 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
 bun run push-tracking         # push page review status to the Google Sheets tracker
-bun run build                 # validate -> export -> build:workshop-form -> build-single-file.js
+bun run build                 # validate -> export -> build:workshop-form -> build:app -> build:singlefile
+bun run build:app             # vite build -> dist/ (what server.ts and Netlify serve)
+bun run build:singlefile      # vite build --mode singlefile -> dist-singlefile/index.html
 bun run build:workshop-form   # bun install + vite build inside forms/mosquito-workshop-request
-bun run build:netlify         # validate.js -> build-netlify-dist.js (assembles dist/ for Netlify)
+bun run build:netlify         # validate -> build:app -> copy-workshop-form.js (assembles dist/)
 bun run format                # prettier --write on everything
 bun run format:check          # prettier --check — THIS IS THE LINT STEP (no ESLint/tsc)
-bun run vendor:browser        # rebuild js/vendor/{fuse,defu}.js IIFE bundles from node_modules
 ```
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs thirteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs fourteen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
-`reading-level`, `plain-language`, `index-html-checks`, `review-merge`,
-`review-api-server` (which spawns `server.ts` as a subprocess against a temp
-SQLite DB), `review-state-sync`, `ai-assist-schema`, and `ai-assist-server`
-(which spawns `server.ts` against a stub Anthropic endpoint, so the AI routes
-are covered without a key or a paid call)
+`reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
+`review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
+against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`, and
+`ai-assist-server` (which spawns `server.ts` against a stub Anthropic endpoint,
+so the AI routes are covered without a key or a paid call)
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
 ten spec files — nine UI-driven ones covering navigation, editor panel,
@@ -85,9 +90,15 @@ seconds without waiting on a Chromium download, and a flaky browser run never
 masks a unit failure:
 
 - **checks** — `bun install --frozen-lockfile` → `format:check` → `validate` →
-  `test` → `build:netlify`. That last step doubles as a deploy-integrity check:
+  `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity check:
   it fails if the committed workshop-form `dist` references assets that were
-  never committed (the "form shell that never hydrates" regression).
+  never committed (the "form shell that never hydrates" regression). **It runs
+  before `test` on purpose**, even though that delays a unit failure by a
+  build: one test in `tests/review-api-server.test.js` asserts that a
+  set-but-empty `STATIC_ROOT` still serves the real built app, and it can only
+  tell a correct fallback from a broken one if `dist/` exists. It skips itself
+  when there is no build — so with the fast order it passed by skipping and
+  covered nothing.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
 
@@ -100,35 +111,44 @@ Each file in `pages/*.js` assigns a page object onto the global
 `window.HHVC_DATA = { pages, order }`, where `order` is the array of
 `[pageKey, menuLabel]` pairs driving navigation/menu order.
 
-**Script load order in `index.html` matters.** These are classic `<script>` tags
-sharing one global lexical scope (not ES modules), so `const`/`let` declared in an
-earlier file are visible to files loaded after it. `js/state.js` throws
-immediately if `window.HHVC_DATA` is missing — that throw ("Check script order in
-index.html") is the fast signal that the order broke. Papaparse (from
-`node_modules`) and `js/vendor/defu.js` load first, then `js/utils.js` and
-`js/karl-tag-meta.js`; all `pages/*.js` load before `js/page-data.js`, which
-loads before the core (`state` → `ui-controls` → `editor-panel` → `page-render`
-→ `app`) and then the additive review/UX layers (`js/vendor/fuse.js` sits just
-before the `review-queue*` files that use it).
+**Load order lives in `js/main.js`, not `index.html`.** `index.html` has exactly
+one script tag — `<script type="module" src="/js/main.js">` — and `js/main.js` is
+the root of the module graph: CSS, then the three third-party libraries, then the
+core modules, then the review/UX layers. The old model (~47 classic `<script>`
+tags sharing one global lexical scope) and the committed `js/vendor/` IIFE
+bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
-`js/vendor/` holds committed third-party IIFE bundles (Fuse.js for review-queue
-search, defu for defaults merging) so the browser needs no bundler — regenerate
-them with `bun run vendor:browser` after a dependency bump, never by hand.
+Order is enforced two ways. **Core modules enforce it themselves** — a module
+that needs `escapeHtml` imports it, and `js/state.js` imports `js/page-data.js`,
+which imports all 19 `pages/*.js`, so `window.HHVC_DATA` is always populated
+before anything reads it. **The self-mounting IIFE subsystems still depend on
+listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
+`js/interactive-sitemap*.js`, `js/dashboard-guidance.js` and
+`js/keyboard-shortcuts.js` take no imports and communicate through
+`window.<Namespace>` objects, so their sequence in `js/main.js` is load-bearing
+and hand-reviewed.
 
-When adding a new page file: add its `<script>` tag in the `pages/*.js` block of
-`index.html`, **before** `js/page-data.js`, and add a `[pageKey, menuLabel]` entry
-to the `order` array in `js/page-data.js`. A new `js/*.js` module needs a
-`<script>` tag too, positioned for its load-order dependencies. Node-side scripts
-(`build_scripts/`, `tests/`) hardcode no file lists — they discover both
-`pages/*.js` and `js/*.js` dynamically via `build_scripts/load-pages.js`, so only
-`index.html`'s `<script>` tags need a manual entry. If you forget one (or leave a
-stale tag after deleting a file), `bun run validate` catches it:
-`build_scripts/index-html-checks.js` diffs **both** `pages/*.js` and `js/*.js` on
-disk against the corresponding `<script src="...">` tags and fails on drift in
-either direction. Tag _order_ isn't checked — it's irrelevant for page modules
-(each only writes into `window.HHVC_PAGES`) and still hand-reviewed for
-`js/*.js`; only set membership is enforced. `js/vendor/*.js` is excluded by
-construction (the tag regex matches a single path segment after the prefix).
+A few functions are deliberately republished onto `window`, because callers
+depend on the implicit globals the old shared scope provided: `window.renderPage`
+(three modules wrap it to refresh after navigation — the decorator chain only
+forms if the original is on `window`), `window.toggleSidebar` (an inline
+`onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
+(called optionally by the IIFE layers, which degrade to silence rather than
+throw), and `window.ORIGINAL_DATA` (read by `js/review-state-sync.js`).
+
+When adding a new page file: add `import '../pages/<file>.js'` to
+`js/page-data.js` and a `[pageKey, menuLabel]` entry to its `order` array. A new
+`js/*.js` module just needs an importer; if it is a self-mounting IIFE with no
+importer, add it to `js/main.js` in the right position. Node-side scripts
+(`build_scripts/`, `tests/`) hardcode no file lists — they discover `pages/*.js`
+dynamically via `build_scripts/load-pages.js`. If you forget the page import,
+`bun run validate` catches it: `build_scripts/page-import-checks.js` diffs
+`pages/*.js` on disk against `js/page-data.js`'s imports. Vite already turns the
+reverse case (an import naming a missing file) into a build error, but a page
+nobody imports fails silently — it never registers onto `window.HHVC_PAGES`, so
+the page just disappears. Import _order_ isn't checked; it's irrelevant, since
+each page module only writes into `window.HHVC_PAGES` and navigation order comes
+from the `order` array.
 
 ### Core module split (formerly one `app.js`)
 
@@ -504,9 +524,10 @@ by default, failing closed.
 
 ### Build outputs
 
-- **`build_scripts/build-single-file.js`** inlines `index.html`'s local
-  stylesheets and scripts (in document order) into
-  `manager-review-single-file.html` and `single-file-export-current-source.html` —
+- **`bun run build:singlefile`** (`vite build --mode singlefile`, via
+  `vite-plugin-singlefile`) inlines every script and stylesheet into one portable
+  `dist-singlefile/index.html`. It replaced the hand-rolled
+  `build_scripts/build-single-file.js`. That output and `dist/` are
   **gitignored generated files; never hand-edit.** Edit sources, re-run `bun run build`.
 - **`build_scripts/extract-pages.js`** (first half of `bun run export`)
   regenerates `data/page_inventory.{json,csv}`. `data/` is absent on a fresh
@@ -519,12 +540,14 @@ by default, failing closed.
   pushes via the Sheets API. It needs a Google service-account key — gitignored,
   and it must stay that way (never commit `*-service-account*.json` or
   `.env.local`).
-- **`build_scripts/build-netlify-dist.js`** (`bun run build:netlify`, driven by
-  `netlify.toml`) assembles `dist/` with only runtime files. It does **not** run
-  the Vite build — it copies whatever is checked into
+- **`bun run build:netlify`** (driven by `netlify.toml`) runs `validate` →
+  `build:app` (the real Vite production build) →
+  `build_scripts/copy-workshop-form.js`. That copy step does **not** run the
+  sub-app's Vite build — it copies whatever is checked into
   `forms/mosquito-workshop-request/dist`, so rebuild that form first
   (`bun run build:workshop-form`) after editing its `src` or Netlify ships stale
-  assets.
+  assets. It fails loudly if the committed form HTML references assets that were
+  never committed (the "form shell that never hydrates" regression).
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
 
@@ -552,17 +575,20 @@ ASI-safe and semicolon-free. Run `bun run format` before committing;
 
 ### JavaScript
 
-- **This is plain browser JS — not TypeScript, no build step, no ES modules or
-  `import`/`export` in `js/*.js`.** (Auto-generated skill files that call this a
-  "TypeScript repo" or prescribe relative imports / named ES-module exports are
-  wrong — ignore them.)
+- **This is plain browser JS — not TypeScript — but it IS bundled, and
+  `js/*.js` ARE ES modules.** Use `import`/`export` with explicit relative
+  specifiers including the `.js` extension (`import { escapeHtml } from
+'./utils.js'`). Vite builds it; `server.ts` is the one TypeScript file.
+  (Notes elsewhere describing "no build step, no ES modules" predate the Vite
+  migration.)
 - **File naming:** lowercase — single words for the core modules (`app.js`,
   `state.js`, `utils.js`), hyphenated for multi-word ones
   (`review-queue-state.js`, `page-render.js`); never camelCase. Match sibling
   files.
-- **Two deliberate module patterns:** (1) bare `const`/`function` at file top for
-  the core scripts that share one global lexical scope via ordered `<script>`
-  tags; (2) **named IIFEs with a leading semicolon** — `;(function mountX(){…})()`
+- **Two deliberate module patterns:** (1) plain modules for the core files —
+  bare `const`/`function` declarations plus an `export { … }` block at the bottom,
+  and a `window.X = X` line for the few things other code reaches through
+  `window`; (2) **named IIFEs with a leading semicolon** — `;(function mountX(){…})()`
   — for newer stateful subsystems (the leading `;` is required because there are
   no statement-terminating semicolons). Expose via `window.<Namespace>` with the
   idempotent `window.X = window.X || {}` idiom.
@@ -604,9 +630,12 @@ SFDS-token overrides layered under the `@sfgov/design-system` stylesheets.
 
 ### Tests
 
-Bun test: `const { describe, test, expect } = require('bun:test')`. A
-`tests/helpers/load-scripts.js` harness evaluates the classic `<script>` files and
-returns a context object. `describe` blocks are named after the unit under test;
+Bun test: `import { describe, test, expect } from 'bun:test'`, importing the
+modules under test directly. `tests/helpers/browser-env.js` — preloaded via
+`bunfig.toml` — registers a happy-dom global environment before the loader runs,
+restores Bun's native fetch, and clears localStorage after every test. The old
+`tests/helpers/load-scripts.js` vm harness is gone — it evaluated classic scripts
+into a shared context, which ES modules made impossible. `describe` blocks are named after the unit under test;
 `test` names are **behavioral verb sentences** ("escapes all five HTML special
 characters"). Prefer exact-string assertions over loose matching. The XSS/escaping
 surface (`page-render.test.js`) is exhaustively covered — one assertion per render

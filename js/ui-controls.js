@@ -1,6 +1,9 @@
 // General UI chrome: toasts, sidebar collapse/scroll persistence, the page
 // picker dropdown, and the review checklist. Depends on js/state.js
 // (escapeHtml, pageOrder, currentPageKey).
+
+import { currentPageKey, pageData, pageOrder } from './state.js'
+import { escapeHtml } from './utils.js'
 function showToast(message, type) {
   const container = document.getElementById('toastContainer')
   if (!container) return
@@ -103,4 +106,32 @@ function applyChecklistState(key) {
     else el.classList.remove('unchecked')
     el.setAttribute('aria-checked', el.classList.contains('unchecked') ? 'false' : 'true')
   })
+}
+
+/* Republished as browser globals, not just module exports.
+
+   Under the old classic-<script> model every top-level function in this file
+   was automatically a property of `window`, and two callers still depend on
+   that rather than on importing:
+
+   - `toggleSidebar` is invoked from an inline handler in index.html
+     (`onclick="window.toggleSidebar?.()"`), which is plain HTML and has no
+     way to reach a module scope.
+   - `showToast` is called through `window.showToast?.(...)` by five of the
+     self-mounting review/UX modules. They reach for it optionally on purpose:
+     each is designed to degrade to silence rather than throw if the core
+     failed to load, which an import would turn into a hard load-time failure.
+
+   Assigning them here preserves both behaviors exactly. */
+window.toggleSidebar = toggleSidebar
+window.showToast = showToast
+
+export {
+  applyChecklistState,
+  buildPageSelect,
+  initChecklist,
+  restoreSidebarScroll,
+  saveSidebarScroll,
+  showToast,
+  toggleSidebar,
 }

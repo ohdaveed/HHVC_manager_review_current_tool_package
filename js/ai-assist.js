@@ -34,7 +34,17 @@
    * @returns {void}
    */
   function toast(message, type) {
-    if (typeof showToast === 'function') showToast(message, type)
+    // Reads window.showToast rather than a bare `showToast`. The bare form
+    // does work — an undeclared identifier resolves through the scope chain to
+    // the global object, where js/ui-controls.js publishes it, and the bundler
+    // hoists both modules into one scope anyway — and a review flagged it as
+    // dead only for the guard to pass when actually tested (see "saving AI
+    // settings shows a confirmation toast" in tests/e2e/ai-assist.spec.js).
+    // It is spelled out explicitly because that is the pattern every other
+    // self-mounting layer uses (js/review-queue-state.js,
+    // js/ux-improvements-workspace.js), and because a global that only works
+    // by scope-chain fallback is worth not making anyone re-derive.
+    window.showToast?.(message, type)
   }
 
   /**
@@ -150,12 +160,21 @@
     refreshCapabilities()
   }
 
-  /** @returns {void} */
+  /**
+   * Copy the same artifact handleDownload() writes, disclosure included.
+   *
+   * This used to serialize `state.result.result` alone, which dropped the
+   * sibling `disclosure` field and let a draft leave the panel with no label on
+   * it — the one thing standards manual §1.11 and SF.gov's AI guidelines both
+   * require to travel with generated content. Copy and Download now emit byte-
+   * identical output, so there is one artifact to reason about rather than two
+   * that disagree about disclosure.
+   */
   function handleCopyJson() {
     if (!state.result) return
     const copy = window.ReviewUx?.exportImport?.copyText
     if (typeof copy !== 'function') return
-    copy(JSON.stringify(state.result.result, null, 2))
+    copy(render.buildPageModuleSource(state.result.result, state.result.disclosure || ''))
   }
 
   /** @returns {void} */
@@ -205,10 +224,32 @@
     render.renderPanel()
   }
 
+  /**
+   * Catch the case where this tab is ALREADY open by the time we initialize.
+   *
+   * js/ux-improvements.js loads earlier, so its DOMContentLoaded handler runs
+   * first, and initWorkspaceTabs() restores a persisted workspace_open /
+   * workspace_tab by calling setWorkspaceTab(). That call's
+   * `typeof window.__mountAiAssistOnTabOpen === 'function'` guard silently
+   * skips, because the hook below has not been assigned yet — so a reviewer who
+   * left the Assist tab open saw an empty panel on reload until they switched
+   * tabs and back. js/review-queue-render.js documents the same hazard and
+   * solves it the same way, inside its own mount function.
+   *
+   * Panel visibility is the signal rather than the persisted state, because it
+   * reflects whatever setWorkspaceTab actually settled on, including the
+   * onboarding path that forces the workspace open on first visit.
+   */
+  function mountIfTabAlreadyOpen() {
+    const panel = document.querySelector('[data-workspace-panel="assist"]')
+    if (panel && !panel.hidden) ensureRendered()
+  }
+
   /** @returns {void} */
   function init() {
     document.addEventListener('click', handleClick)
     window.__mountAiAssistOnTabOpen = ensureRendered
+    mountIfTabAlreadyOpen()
   }
 
   if (document.readyState === 'loading') {

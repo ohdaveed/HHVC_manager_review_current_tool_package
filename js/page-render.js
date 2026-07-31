@@ -3,6 +3,17 @@
 // js/state.js (escapeHtml, pageData) and js/editor-panel.js /
 // js/ui-controls.js for the post-render side effects triggered by
 // applyPageContent (syncEditorFields, etc.).
+
+import {
+  applyChecklistState,
+  restoreSidebarScroll,
+  saveSidebarScroll,
+  showToast,
+} from './ui-controls.js'
+import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
+import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
+import { karlKindMeta } from './karl-tag-meta.js'
+import { syncEditorFields, updatePageBadge, updateReadingTarget } from './editor-panel.js'
 function karlTag(label, kind = 'body') {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
   return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
@@ -180,7 +191,7 @@ document.addEventListener('click', (event) => {
 function button(label, kind = 'primary', target = null, url = null) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
   if (url) {
-    return `<a class="${cls}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Links: Body external resource' : 'Button: Primary CTA (external)', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
+    return `<a class="${cls}" href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Links: Body external resource' : 'Button: Primary CTA (external)', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
   }
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
   return `<button type="button" class="${cls}"${attr}>${karlTag(kind === 'secondary' ? 'Links: Related Transaction page' : 'Button: Primary CTA', 'placement')}${escapeHtml(label)}</button>`
@@ -210,7 +221,7 @@ function renderCards(cards = []) {
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
       const action = c.url
-        ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
+        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
       return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
     })
@@ -226,7 +237,7 @@ function renderServiceTiles(cards = []) {
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
       if (c.url) {
-        return `<a class="service-tile" href="${escapeHtml(c.url)}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
+        return `<a class="service-tile" href="${escapeHtml(safeUrl(c.url))}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
       }
       return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></button>`
     })
@@ -246,7 +257,7 @@ function renderResourcesList(cards = [], heading = 'Resources') {
         ? `<span class="file-badge">${escapeHtml(c.fileType)}</span>`
         : ''
       const action = c.url
-        ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
+        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
       return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
     })
@@ -267,7 +278,7 @@ function renderRelatedRail(sections = []) {
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const action = c.url
-        ? `<a href="${escapeHtml(c.url)}"${attr}>${escapeHtml(c.title)}</a>`
+        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
       return `<li>${action}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
     })
@@ -484,7 +495,7 @@ function renderHero(page, heroCta) {
 }
 function renderPrintVersion(url) {
   if (!url) return ''
-  return `<p class="print-version-link">${karlTag('Report Print version field', 'placement')}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
+  return `<p class="print-version-link">${karlTag('Report Print version field', 'placement')}<a href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
 }
 function renderPageMain(page) {
   const parts = partitionSections(page)
@@ -598,7 +609,7 @@ function applyPageContent(key) {
   const page = pageData[key]
   if (!page) return
   saveSidebarScroll()
-  currentPageKey = key
+  setCurrentPageKey(key)
   document.getElementById('browserUrl').textContent = 'https://' + page.slug
   const urlInput = document.getElementById('urlInput')
   if (urlInput) urlInput.value = page.slug
@@ -728,4 +739,52 @@ function renderPage(key, skipHistory = false) {
   return transition.updateCallbackDone.catch((err) => {
     if (err?.name !== 'AbortError') throw err
   })
+}
+
+/* Republished as a browser global. This one is load-bearing in a way the
+   others are not: three separate modules — js/manager-review-export.js,
+   js/ux-improvements.js and js/interactive-sitemap.js — wrap
+   `window.renderPage` to refresh themselves after every navigation, each
+   reading the current value, closing over it, and reassigning the wrapper
+   (guarded by its own `__…Wrapped` flag so the chain builds exactly once).
+
+   That decorator chain only forms if the original function is on `window`
+   to begin with, which the old shared script scope provided for free.
+   Without this line each wrapper's `typeof window.renderPage !== 'function'`
+   guard returns early, every wrapper silently no-ops, and navigation stops
+   updating the review bar, the sitemap and the export snapshot — while the
+   page itself still renders, so nothing looks broken. */
+window.renderPage = renderPage
+
+/* Also published for js/ai-assist-render.js, which calls it to preview an
+   AI-drafted page object without touching pageData or the live mockup.
+
+   That module is a self-mounting IIFE with no imports (like the other
+   review/UX layers), so it reaches this through `window` — and the call sits
+   inside a try/catch that turns any throw into "Could not preview this
+   draft". Without this line the bare reference is a ReferenceError under ES
+   modules, the catch swallows it, and the preview silently degrades to an
+   error string while everything else keeps working. That matters more than
+   usual here: renderPageMain is the escaping-audited renderer
+   (tests/page-render.test.js), and it is deliberately the only path allowed
+   to render untrusted model output. */
+window.renderPageMain = renderPageMain
+
+export {
+  bulletList,
+  button,
+  karlTag,
+  renderPageMain,
+  paragraphList,
+  renderAudience,
+  renderCards,
+  renderPage,
+  renderRelatedList,
+  renderRelatedRail,
+  renderResourcesList,
+  renderSection,
+  renderServiceTiles,
+  renderSteps,
+  renderTable,
+  renderTextItems,
 }
