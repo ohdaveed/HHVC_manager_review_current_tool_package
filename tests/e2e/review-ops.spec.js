@@ -97,6 +97,48 @@ test.describe('Tool status tab', () => {
     expect(state.pages.pestsTopic.history).toHaveLength(1)
   })
 
+  test('measures the stored blob through the store key, not a hardcoded copy', async ({ page }) => {
+    await gotoFresh(page)
+    await seedWithOrphans(page)
+    await openWorkspaceTab(page, 'ops')
+
+    // A second hardcoded copy of the versioned storage key would not be bumped
+    // along with the real one, and this panel would then read a key nothing
+    // writes and report "0 B" forever — a wrong number rather than a visible
+    // failure. Asserting on a real size is what catches that.
+    const stored = page.locator('.ops-stat', { hasText: 'Stored data' })
+    await expect(stored).not.toContainText('0 B')
+    await expect(stored.locator('.ops-stat-value')).toContainText(/\d/)
+  })
+
+  test('does not delete anything when no confirmation is possible', async ({ page }) => {
+    await gotoFresh(page)
+    await seedWithOrphans(page)
+    await openWorkspaceTab(page, 'ops')
+
+    // The inverted default — proceeding when the prompt cannot be shown —
+    // reads as harmless but makes the one irreversible path in this tool run
+    // unattended in exactly the contexts where nobody is watching it.
+    const removed = await page.evaluate(() => {
+      const original = window.confirm
+      // eslint-disable-next-line no-global-assign
+      window.confirm = undefined
+      try {
+        return window.ReviewOps.pruneOrphans()
+      } finally {
+        window.confirm = original
+      }
+    })
+
+    expect(removed).toBe(0)
+    const state = await readState(page)
+    expect(Object.keys(state.pages).sort()).toEqual([
+      'anotherGonePage',
+      'pestsTopic',
+      'retiredOldPage',
+    ])
+  })
+
   test('cancelling the prompt changes nothing', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)

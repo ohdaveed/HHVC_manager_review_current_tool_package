@@ -34,13 +34,22 @@
     return new Set((window.HHVC_DATA?.order || []).map(([key]) => key))
   }
 
-  /** Read the persisted blob as text, for an honest size measurement. */
+  /**
+   * Read the persisted blob as text, for an honest size measurement.
+   *
+   * The key comes from the store rather than being written out here. The
+   * versioned suffix is meant to be bumped whenever the persisted shape
+   * changes incompatibly, and a second hardcoded copy would not be bumped
+   * with it — this panel would then read a key nothing writes and report
+   * "0 B" forever, which is a wrong number rather than a visible failure.
+   */
   function rawState() {
+    const key = window.reviewState?.STORAGE_KEY
+    if (!key) return ''
     try {
-      return localStorage.getItem('hhvcManagerReviewState:v1') || ''
+      return localStorage.getItem(key) || ''
     } catch {
-      // Private-mode or a blocked storage partition. Size is unknown rather
-      // than zero, and the caller renders it as such.
+      // Private-mode or a blocked storage partition.
       return ''
     }
   }
@@ -181,7 +190,11 @@
       `${orphaned.join(', ')}\n\n` +
       'Their decisions, notes and history will be deleted from this browser. ' +
       'Export a backup first if you might need them.'
-    if (typeof window.confirm === 'function' && !window.confirm(message)) return 0
+    // No confirm available means DO NOT DELETE. The inverted form — proceeding
+    // when the prompt cannot be shown — reads as harmless but makes the one
+    // irreversible path in this tool run unattended in exactly the contexts
+    // where nobody is watching it.
+    if (typeof window.confirm !== 'function' || !window.confirm(message)) return 0
 
     window.reviewState.update((localState) => {
       for (const key of orphaned) delete localState.pages[key]
