@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 16 unit-test files in tests/ (412 tests)
-bun run test:e2e              # playwright test (11 specs in tests/e2e/)
+bun run test                  # bun test over the 18 unit-test files in tests/ (472 tests)
+bun run test:e2e              # playwright test (90 specs across 12 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,18 +65,18 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs sixteen Bun unit-test files under `tests/`:
+wrong). `bun run test` runs eighteen Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
-against a temp SQLite DB and exercises auth/merge/isolation over real HTTP),
-`review-state-sync`, `ai-assist-schema`, `ai-assist-env`, `ai-assist-providers`
-(the provider registry and per-provider usage normalization, varying the
-provider API keys directly — which the server tests structurally cannot, since a
-spawned subprocess only ever sees the environment it was given), and
-`ai-assist-server` (which spawns `server.ts` against stub Anthropic **and**
-Gemini endpoints, so both AI paths are covered without a key or a paid call) —
-412 tests at time of writing.
+`review-insights-data`, `review-insights-charts`, `review-merge`, `review-api-server` (which spawns
+`server.ts` as a subprocess against a temp SQLite DB and exercises
+auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
+`ai-assist-env`, `ai-assist-providers` (the provider registry and per-provider
+usage normalization, varying the provider API keys directly — which the server
+tests structurally cannot, since a spawned subprocess only ever sees the
+environment it was given), and `ai-assist-server` (which spawns `server.ts`
+against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
+without a key or a paid call) — 472 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -90,11 +90,16 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — ten spec files:
-nine UI-driven (navigation, editor panel, review workflow, review queue,
-import/export, keyboard shortcuts, sitemap/workspace, accessibility, AI assist)
-plus the original API-level `review-import-export` round-trip, sharing plain helper
-functions in `tests/e2e/helpers.js` (no fixture framework). Playwright's
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twelve spec files
+(90 specs): eleven UI-driven (navigation, editor panel, review workflow,
+review queue, import/export, keyboard shortcuts, sitemap/workspace,
+accessibility, AI assist, mockup PNG export, Overview insight charts) plus the
+original API-level `review-import-export` round-trip, sharing plain helper
+functions in `tests/e2e/helpers.js` (no fixture framework).
+**`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
+sticky bar: the bar is mounted early by `js/ux-improvements.js`, so waiting on
+it alone let a test press a global shortcut before `js/keyboard-shortcuts.js`
+had attached its `keydown` listener. Playwright's
 `webServer` block starts `bun run start` on `:8080` itself. In a sandbox with
 a pre-installed Chromium, point Playwright at it instead of downloading:
 
@@ -290,6 +295,141 @@ never referenced from `pages/*.js` or outside its own module's files):
   and `js/interactive-sitemap-render.js` (DOM rendering, search/filter UI).
   Its styles live in `css/interactive-sitemap.css` rather than a runtime
   `injectStyles()` call.
+
+- **AI assist breaks the naming pattern above — mind the case.**
+  `window.AiAssist` is the **internal** namespace: `js/ai-assist-client.js`
+  attaches `.client` (the browser half of the optional `/api/ai/*` routes, a
+  no-op unless configured) and `js/ai-assist-render.js` attaches `.render`
+  (panel rendering, styles in `css/ai-assist.css`). `js/ai-assist.js` consumes
+  both, owns the request lifecycle and cancel, and publishes its public API on
+  the separate lowercase **`window.aiAssist`** (`ensureRendered`,
+  `refreshCapabilities`, `getCurrentPage`, `captureForm`). The orchestrator does **not** own
+  the capitalized namespace here — `window.AiAssist.ensureRendered` does not
+  exist.
+
+  `js/ai-assist-render.js` renders model output, which is text nobody in this
+  repo wrote, so it escapes everything before `innerHTML` (the exception being
+  the page preview, which routes through the escaping-audited
+  `renderPageMain()`). **That is not a security boundary, though** — imported
+  CSV/JSON backups and records pulled from the sync server also carry
+  externally-supplied reviewer names, notes, and edited fields into the sticky
+  bar, queue, sitemap, and preview. Those are safe because they already use
+  `escapeHtml`/`textContent`, and must stay that way.
+
+The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
+'help']`, numbered left to right by the `1`–`5` shortcuts. The sitemap and AI
+panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
+/ `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
+tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
+initializes earlier and restores a persisted `workspace_tab` before those
+hooks exist, so without the catch-up a reviewer who left Assist or Sitemap
+open saw an empty panel until switching tabs and back.
+
+Relatedly, `js/keyboard-shortcuts.js` dispatches `hhvc:shortcuts-ready` and
+sets `window.reviewKeyboardShortcuts.ready` **from `init()`, after** the
+`keydown` listener is attached. It used to fire at module scope, announcing a
+capability that did not exist yet.
+
+### Content-standards scoring
+
+`js/plain-language.js` scores page copy against written standards, not
+preferences. Each check carries `severity` plus a `source`/`section` pair and
+a ready-to-render `citation`:
+
+- **`severity: 'error'`** are the standards manual's mandates. They join the
+  scored rule list behind the Overview tab's "checks passed" ratio, and their
+  citation renders on the Checks tab alongside the rule.
+- **`severity: 'warning'`** are advisory, run to ~115 across the 19 pages, and
+  render separately — folding them into the ratio would make every page look
+  broken.
+- A scored rule must always be **pushed**, passing or failing, never omitted
+  when it can't be computed: dropping one shrinks the denominator and quietly
+  flatters exactly the thinnest pages.
+- `source` exists because not every rule comes from the manual. Two
+  (`house-style`, `list-length`) cite the vendored `docs/source/sfgov-style/`
+  snapshot, and `button-length` cites manual §6.3 (the Karl Button component),
+  not §7.8. Requiring a bare §7.x number is what previously pushed all three
+  into miscitations.
+
+Like `js/review-merge.js` it is **dual-export** (`window.plainLanguage` plus
+`module.exports`, no DOM dependency) so the AI output validator and the tests
+run the same implementation the Checks panel does.
+
+### URL schemes are validated, not just escaped
+
+`escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
+none of the five characters it escapes — so every structured `href` in
+`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, which allows
+`http`/`https`/`mailto`/`tel` **and anything without a scheme at all** —
+root-relative (`/forms/…`), document-relative (`help/foo`, `../help`), and bare
+fragment or query targets (`#top`, `?q=1`) all pass through unchanged. It is a
+_scheme_ guard, not a URL allowlist: what it rewrites to the inert `#` is a
+recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) and
+protocol-relative `//host`, which reads as relative but leaves the origin. It
+strips control characters before testing, since browsers resolve
+`java\tscript:` as `javascript:`.
+
+Two normalization details matter, because `findUnsafeUrls()` decides by
+comparing `safeUrl(value)` against the original. Control characters are removed
+only from the string being _tested_, so an accepted URL keeps them — but
+leading and trailing whitespace is trimmed from the **returned** value. **A
+whitespace-padded but otherwise safe URL is therefore reported as an "unsafe
+URL scheme"**, which is a false positive rather than intended behaviour: the
+check is about schemes, not whitespace hygiene. No page carries a padded URL
+today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the
+same rule at validation time — in `bun run validate` **and** in the AI output
+validator — and imports `safeUrl` rather than restating it, so the renderer
+and the validator cannot come to disagree about what is safe. That import
+crosses the CJS/ESM boundary. **Bun is the only runtime CI exercises** — both
+`bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js` —
+so the Node `require(esm)` path works but is _not_ covered by CI. (That path
+needs `require(esm)` enabled — check `process.features.require_module` rather
+than trusting a version number; it is opt-out by default on current Node 22 but
+was flag-gated in early 22.x.) Anything
+relying on Node-specific interop here would go unnoticed.
+
+### Overview charts (`js/review-insights*.js`)
+
+Three compact charts above the review queue table — decision mix, review
+activity over time, and the pages whose automated checks are failing. They sit
+on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–5
+are bound to keyboard shortcuts, and inserting one would renumber the rest.
+
+- **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
+  `buildActivitySeries`, `buildChecksSeries`, `insightsSignature`), dual
+  `window`/`module.exports` like `js/review-merge.js` so
+  `tests/review-insights-data.test.js` can `require` it with no browser.
+- **`js/review-insights.js`** — the orchestrator. Builds the card markup and
+  the hidden data tables, then draws.
+- **`js/review-insights-charts.js`** — the only module that imports ECharts.
+
+**ECharts is dynamically imported, and that is load-bearing, not tidiness.**
+It is ~530 KB raw / ~180 KB gzip — more than the entire rest of the bundle.
+The dynamic import makes Vite emit it as its own chunk, so the initial
+download stays ~114 KB gzip and the library arrives only when the Overview
+tab first renders. A second consequence shapes the file order: the headings
+and data tables are built **synchronously, before the import is requested**,
+so the numbers are in the DOM even if the chunk is slow or never loads.
+
+Other invariants worth not rediscovering:
+
+- **The chart host is re-parented, never rebuilt.** The Overview panel
+  replaces its whole `innerHTML` on every filter, sort and search keystroke.
+  `insightsSignature()` gates redraws, and a module-level generation counter
+  stops a slow async draw from painting stale data over newer numbers.
+- **The charts always describe the whole site, never the filtered view** —
+  they read `getQueueRows()`, not the visible rows.
+- **Decision fills use `--viz-decision-*`, not the `--status-*-border` chip
+  tokens.** The chip borders are tuned as 1px strokes; as large fills,
+  Approved and Needs review separate by ΔE 8.4 under _normal_ vision against
+  a floor of 15 — and they are the two most common states, adjacent in the
+  bar. Dark mode gets a separately chosen set, not a lightened copy (the
+  light green lands at 2.96:1 on the dark panel). If you change these,
+  re-validate rather than eyeball.
+- **Colour is never the only encoding**: the decision card carries a visible
+  legend with counts, every chart is `aria-hidden` beside an
+  `.hhvc-sr-only` data table, and the checks chart states its own top-8 cap
+  while the table carries every page.
 
 ### Page object shape and validation rules
 
@@ -581,12 +721,14 @@ it, and it fails closed rather than open.
 
 - **Two independent gates.** `REVIEW_API_TOKEN` (shared with the sync routes —
   one server secret, not two) decides whether the API exists at all; unset
-  makes every `/api/ai/*` route 501. At least one **provider key** decides
-  whether generation is possible; with none set, `generate` and `models` answer
-  501 while `capabilities` still answers. That asymmetry is deliberate:
-  `capabilities` is the discovery endpoint the browser uses for its empty state
-  and its provider picker, and a 501 there would leave it unable to tell "no AI
-  key" from "no server at all".
+  makes every `/api/ai/*` route 501 — with one deliberate exception: a CORS
+  `OPTIONS` preflight is answered 204 _before_ the token gate, so a
+  cross-origin browser client can still preflight an unconfigured server.
+  Don't move the gate above the `OPTIONS` branch. `ANTHROPIC_API_KEY` decides whether
+  generation is possible; unset makes `generate` and `models` 501 while
+  `capabilities` still answers. That asymmetry is deliberate: `capabilities` is
+  the discovery endpoint the browser uses for its empty state, and a 501 there
+  would leave it unable to tell "no AI key" from "no server at all".
 - **The provider gate is checked inside each route, not before routing.**
   Hoisting it would make every unmatched path answer 501 "no provider
   configured" instead of 404 — telling a client a route exists when it does not.
@@ -824,11 +966,21 @@ it, and it fails closed rather than open.
   unioning the broken targets closes that without duplicating any traversal: a
   link to either sentinel resolves in one pass and breaks in the other.
 - **Validation is the point of the feature.** `build_scripts/ai/validate-output.js`
-  runs a generated page through the exact rules CI enforces —
-  `build_scripts/schema.js`, the `build_scripts/data-checks.js` invariants
-  (link targets resolved against the real page-key universe, lists of 3+ using
-  bullets, the Agency page staying inside Article 11), and
-  `js/plain-language.js`'s mandates. On failure the specific issues are named
+  runs a generated page through `build_scripts/schema.js`, the
+  `build_scripts/data-checks.js` invariants (link targets resolved against the
+  real page-key universe, lists of 3+ using bullets, unsafe URL schemes, the
+  Agency page staying inside Article 11), and `js/plain-language.js`'s
+  mandates. **Neither this nor CI contains the other, so a passing draft does
+  not mean "this would pass CI".** It is tighter on content: `validate.js`
+  never calls `analyzePlainLanguage()`, and the only CI-side plain-language
+  gate is a set of budgets in `tests/plain-language.test.js` — at most 15
+  mandatory failures corpus-wide, 3 per page, and any one rule failing at most
+  8 pages — so authored copy can carry a
+  mandate failure that would get a generated draft rejected. It is looser on
+  wiring, because it only ever sees one page object: dropping a passing draft
+  into `pages/` still needs the `import` in `js/page-data.js` and its
+  `[pageKey, menuLabel]` entry, which `bun run validate` checks and this does
+  not. On failure the specific issues are named
   back to the model for **exactly one** retry; a bare "try again" reproduces the
   same violation. Results always return 200 with their issues attached even
   when invalid, because a draft failing one rule is still useful to a reviewer
@@ -841,8 +993,13 @@ it, and it fails closed rather than open.
 - **Never writes anything.** No filesystem write path, no review-state write,
   no `pages/*.js` mutation. Standards manual §1.11 forbids automated approval,
   and SF.gov's published AI guidelines require disclosing generative-AI use, so
-  every response carries a `disclosure` string that travels with the draft
-  rather than being something a client may forget to add.
+  every successful `generate` result carries a `disclosure` string. Scoped to
+  that response shape only — `capabilities` advertises the requirement as
+  `disclosureRequired: true`, `models` returns bare ids, and errors carry
+  none, so a client must not use the field's presence as its test for whether
+  a payload holds generated content. Both browser export paths do carry it:
+  _Download pages module_ and _Copy pages module_ emit the same
+  `buildPageModuleSource()` output, disclosure comment included.
 - **Tests**: `tests/ai-assist-server.test.js` spawns `server.ts` with
   `ANTHROPIC_BASE_URL` pointed at a stub Anthropic endpoint, so the gates, the
   retry loop, and the error mapping are covered with no API key and CI never

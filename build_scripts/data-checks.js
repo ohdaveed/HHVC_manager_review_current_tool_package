@@ -213,7 +213,11 @@ function findUnsafeUrls(pages) {
 
   function check(pageKey, path, value) {
     if (typeof value !== 'string' || !value) return
-    if (safeUrl(value) !== value) unsafe.push({ pageKey, path, url: value })
+    // Compare against the TRIMMED value, not the raw one. safeUrl() trims
+    // before returning, so comparing with the original reported any
+    // whitespace-padded URL — including a perfectly safe https:// one — as an
+    // unsafe scheme. This check is about schemes, not whitespace hygiene.
+    if (safeUrl(value) !== value.trim()) unsafe.push({ pageKey, path, url: value })
   }
 
   for (const [pageKey, page] of Object.entries(pages)) {

@@ -157,8 +157,11 @@ const SAFE_URL_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:']
 /**
  * Return a URL that is safe to interpolate into an `href`, or the inert `#`
  * sentinel when it is not. Accepts absolute http(s)/mailto/tel URLs and
- * root-relative paths (the mockup uses `/forms/mosquito-workshop-request/`);
- * rejects protocol-relative `//host` URLs, which look relative but are not.
+ * any scheme-less relative value (root-relative `/forms/…`, document-relative
+ * `help/foo`, bare `#top` or `?q=1`); rejects protocol-relative URLs in every
+ * spelling a browser accepts — `//host`, `\\\\host`, `\\/host`, `/\\host` — which
+ * look relative but leave the origin. Whitespace is trimmed from the returned
+ * value, so callers comparing output against input must trim first.
  *
  * The caller must still run the result through `escapeHtml` — this guards the
  * scheme, not the attribute delimiters.
@@ -169,10 +172,19 @@ function safeUrl(value) {
   const raw = String(value ?? '').trim()
   if (!raw) return '#'
 
-  // Browsers strip tabs, newlines, and other control characters out of a URL
-  // before resolving it, so "java\tscript:alert(1)" runs. Test the same string
-  // the browser would, while still returning the caller's original on success.
-  const probe = raw.replace(/[\u0000-\u0020]/g, '').toLowerCase()
+  // Normalize the string the way a browser would before resolving it, so the
+  // tests below see what actually gets navigated to:
+  //
+  //   - Control characters are stripped: "java\tscript:alert(1)" runs.
+  //   - Backslashes are equivalent to forward slashes in the authority
+  //     position. `new URL('\\\\evil.example', 'https://sf.gov')` resolves to
+  //     https://evil.example — so "\\\\evil.example", "\\/evil.example" and
+  //     "/\\evil.example" are all protocol-relative URLs wearing a disguise,
+  //     and checking only for "//" let every one of them through.
+  const probe = raw
+    .replace(/[\u0000-\u0020]/g, '')
+    .replace(/\\/g, '/')
+    .toLowerCase()
 
   if (probe.startsWith('#')) return raw
   // Protocol-relative: "//evil.example" inherits the page scheme and leaves the

@@ -13,7 +13,27 @@ const REPRESENTATIVE_PAGES = [
   'article11Guide', // Report
 ]
 
+/**
+ * Wait for the "Viewing: …" badge to finish fading in.
+ *
+ * .page-badge animates opacity 0 → 1 over 250ms every time the page changes,
+ * and axe computes color-contrast from the BLENDED colour it sees. A scan that
+ * starts mid-fade therefore reports the badge as a serious contrast violation
+ * that does not exist once the transition settles — a real flake, and one that
+ * gets likelier as other work shifts render timing around it. Settling the
+ * transition is the deterministic fix; excluding the node would blind the scan
+ * to a genuine regression on it.
+ */
+async function waitForBadgeToSettle(page) {
+  await page.waitForFunction(() => {
+    const badge = document.getElementById('currentPageBadge')
+    if (!badge || !badge.classList.contains('visible')) return true
+    return Number(window.getComputedStyle(badge).opacity) === 1
+  })
+}
+
 async function expectNoSeriousViolations(page) {
+  await waitForBadgeToSettle(page)
   // color-contrast is ENABLED. It used to be disabled here, which meant the
   // suite could not catch the most common WCAG failure in the product it
   // guards. The css/theme.css token layer now carries measured ratios for
