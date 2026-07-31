@@ -22,7 +22,7 @@ async function waitForServer(url, attempts = 50) {
   throw new Error(`Server at ${url} did not start in time`)
 }
 
-function spawnServer({ port, token, dbDir }) {
+function spawnServer({ port, token, dbDir, staticRoot }) {
   return Bun.spawn(['bun', 'run', 'server.ts'], {
     cwd: ROOT,
     env: {
@@ -31,6 +31,7 @@ function spawnServer({ port, token, dbDir }) {
       HOST: '127.0.0.1',
       REVIEW_API_TOKEN: token,
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
+      ...(staticRoot === undefined ? {} : { STATIC_ROOT: staticRoot }),
     },
     stdout: 'ignore',
     stderr: 'ignore',
@@ -298,4 +299,63 @@ describe('review-state API without REVIEW_API_TOKEN configured', () => {
     })
     expect(res.status).toBe(501)
   })
+})
+
+// Regression: STATIC_ROOT set-but-empty must fall back to dist/, not resolve to
+// the repository root.
+//
+// The fallback used `??`, which only catches null/undefined, so an empty string
+// survived and resolve(APP_DIR, '') returned APP_DIR. The static handler then
+// served the entire source tree: /server.ts and /package.json came back 200,
+// and / served the unbundled index.html that no browser can run. The dotfile
+// guard does not help — it blocks /.env.local and /.git, not ordinary source
+// files. An env var that is set but empty is trivially common in shell
+// wrappers, CI matrices and container manifests, so this is a realistic
+// misconfiguration rather than a contrived one.
+describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
+  const PORT = 8125
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-review-api-emptyroot-'))
+    proc = spawnServer({ port: PORT, token: 'token', dbDir, staticRoot: '' })
+    await waitForServer(`${base}/api/review-state`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('does not serve repository source files', async () => {
+    for (const sourcePath of ['/server.ts', '/package.json', '/vite.config.mjs']) {
+      const res = await fetch(`${base}${sourcePath}`)
+      expect(res.status, `${sourcePath} must not be served`).toBe(404)
+    }
+  })
+
+  // The 404s above only prove the repository root was not selected. A typo'd
+  // or nonexistent static root would 404 those same paths just as happily,
+  // so the test would pass while serving nothing at all. Assert the positive
+  // case too: the fallback has to land on the real built app.
+  //
+  // Unlike every other test in this suite, this one needs a build to exist —
+  // it is asserting on what dist/ contains. `bun test` on a fresh clone has no
+  // dist/, so it skips rather than failing for a reason unrelated to whatever
+  // the developer changed. CI runs build:netlify before the unit tests
+  // specifically so this never skips there; see the note in ci.yml.
+  test.skipIf(!fs.existsSync(path.join(ROOT, 'dist', 'index.html')))(
+    'still serves the built application from dist/',
+    async () => {
+      const res = await fetch(`${base}/`)
+      expect(res.status).toBe(200)
+      const html = await res.text()
+      // The built index.html references Vite's hashed module bundle. The source
+      // index.html points at /js/main.js instead, so this also distinguishes
+      // "served dist/" from "served the repo root".
+      expect(html).toMatch(/<script[^>]+type="module"[^>]+src="[^"]*assets\/index-[^"]+\.js"/)
+    }
+  )
 })

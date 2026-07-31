@@ -1,5 +1,11 @@
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, openWorkspaceTab } = require('./helpers')
+const {
+  gotoFresh,
+  openWorkspaceTab,
+  focusMockPage,
+  recordToasts,
+  readRecordedToasts,
+} = require('./helpers')
 
 // The AI assist panel, driven through the real UI.
 //
@@ -220,8 +226,38 @@ test.describe('AI assist panel', () => {
     expect(hasGenerated).toBe(false)
   })
 
+  // Regression: the AI-assist toast helper must actually reach showToast.
+  //
+  // js/ai-assist.js guards with `typeof showToast === 'function'` against a
+  // BARE identifier rather than window.showToast. A review flagged that as
+  // dead under ES modules, which would silently swallow every AI-assist
+  // toast — settings saved, generation failed, draft downloaded. Nothing
+  // covered it either way, so this asserts the user-visible outcome rather
+  // than the mechanism: save settings, expect the confirmation toast.
+  test('saving AI settings shows a confirmation toast', async ({ page }) => {
+    await recordToasts(page)
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+
+    await page.fill('#aiAssistApiUrl', 'https://example.test')
+    await page.fill('#aiAssistApiToken', 'a-test-token')
+    await page.click('#aiAssistSaveSettings')
+
+    // Filtered by text rather than asserting on a bare `.toast`. Opening the
+    // workspace raises its own "Review workspace opened" toast, and toasts live
+    // for 4s, so whether the two overlap is a matter of how fast the machine
+    // is: locally the first had expired by now, in CI it had not and the bare
+    // locator hit a strict-mode violation against two elements. Naming the one
+    // under test makes the assertion independent of that timing.
+    await expect(page.locator('.toast').filter({ hasText: /AI settings saved/i })).toBeVisible()
+    expect(await readRecordedToasts(page)).toMatch(/AI settings saved/i)
+  })
+
   test('opens from the keyboard shortcut', async ({ page }) => {
     await gotoFresh(page)
+    // Shortcuts only fire when focus is in a shortcut context; without this
+    // the test races the first-run onboarding for focus. See focusMockPage.
+    await focusMockPage(page)
     await page.keyboard.press('4')
 
     await expect(page.locator('[data-workspace-panel="assist"]')).toBeVisible()

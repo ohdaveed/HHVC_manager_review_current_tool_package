@@ -2,6 +2,8 @@
    Orchestrator: interaction handlers and lifecycle wiring on top of
    window.InteractiveSitemap.state/.data (js/interactive-sitemap-data.js) and
    window.InteractiveSitemap.render (js/interactive-sitemap-render.js). */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountInteractiveSitemap() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.InteractiveSitemap?.render) return

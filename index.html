@@ -8,14 +8,6 @@
       name="description"
       content="Review rebuilt SF.gov page mockups for Environmental Health and HHVC: Karl tags, metadata, and placement."
     />
-    <link rel="stylesheet" href="css/theme.css" />
-    <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/base.css" />
-    <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/typography.css" />
-    <link rel="stylesheet" href="node_modules/@sfgov/design-system/dist/css/components.css" />
-    <link rel="stylesheet" href="css/styles.css" />
-    <link rel="stylesheet" href="css/ux-improvements.css" />
-    <link rel="stylesheet" href="css/interactive-sitemap.css" />
-    <link rel="stylesheet" href="css/ai-assist.css" />
   </head>
   <body>
     <div class="app">
@@ -183,8 +175,14 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </figcaption>
+          <!-- Review chrome, not page content. It sits inside .browser-shell so the
+               tag toggle stays next to the tags it controls, but .browser-shell is
+               also what js/mockup-image-export.js captures — hence
+               data-export-exclude, which keeps the tool's own switch and legend out
+               of a PNG handed to anyone outside the review. -->
           <div
             class="karl-page-tags-banner"
+            data-export-exclude="true"
             style="
               padding: 1rem 1rem 0.5rem;
               border-bottom: 1px solid var(--sfds-border);
@@ -323,59 +321,6 @@
       </main>
     </div>
 
-    <script src="node_modules/papaparse/papaparse.min.js"></script>
-    <script src="js/vendor/defu.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/karl-tag-meta.js"></script>
-    <script src="pages/agency-service-grouping.js"></script>
-    <script src="pages/report-rats-mice-four-legged-problems.js"></script>
-    <script src="pages/report-garbage-filth-vegetation.js"></script>
-    <script src="pages/report-cockroaches-mosquitoes-insects.js"></script>
-    <script src="pages/lookup-building-records.js"></script>
-    <script src="pages/lookup-complaints-inspections.js"></script>
-    <script src="pages/lookup-residential-violations.js"></script>
-    <script src="pages/lookup-residential-hotel-records.js"></script>
-    <script src="pages/public-records-request.js"></script>
-    <script src="pages/property-owner-responsibilities.js"></script>
-    <script src="pages/respond-to-notice-of-violation.js"></script>
-    <script src="pages/hhvc-inspection-scope.js"></script>
-    <script src="pages/integrated-pest-management-property-managers.js"></script>
-    <script src="pages/what-happens-after-report.js"></script>
-    <script src="pages/tenant-rights-reporting.js"></script>
-    <script src="pages/mosquito-control-program.js"></script>
-    <script src="pages/mosquito-education-workshop.js"></script>
-    <script src="pages/pay-healthy-housing-fee.js"></script>
-    <script src="pages/health-code-article-11.js"></script>
-    <script src="js/page-data.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/ui-controls.js"></script>
-    <script src="js/editor-panel.js"></script>
-    <script src="js/page-render.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/manager-review-export.js"></script>
-    <script src="js/review-state-validation.js"></script>
-    <script src="js/reading-level.js"></script>
-    <script src="js/plain-language.js"></script>
-    <script src="js/review-state-store.js"></script>
-    <script src="js/review-merge.js"></script>
-    <script src="js/review-state-sync.js"></script>
-    <script src="js/ux-improvements-state-sync.js"></script>
-    <script src="js/ux-improvements-workspace.js"></script>
-    <script src="js/ux-improvements-export.js"></script>
-    <script src="js/ux-improvements.js"></script>
-    <script src="js/vendor/fuse.js"></script>
-    <script src="js/review-queue-state.js"></script>
-    <script src="js/review-queue-rows.js"></script>
-    <script src="js/review-queue-render.js"></script>
-    <script src="js/review-queue-import.js"></script>
-    <script src="js/review-queue.js"></script>
-    <script src="js/dashboard-guidance.js"></script>
-    <script src="js/interactive-sitemap-data.js"></script>
-    <script src="js/interactive-sitemap-render.js"></script>
-    <script src="js/interactive-sitemap.js"></script>
-    <script src="js/ai-assist-client.js"></script>
-    <script src="js/ai-assist-render.js"></script>
-    <script src="js/ai-assist.js"></script>
-    <script src="js/keyboard-shortcuts.js"></script>
+    <script type="module" src="/js/main.js"></script>
   </body>
 </html>

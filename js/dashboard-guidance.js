@@ -1,5 +1,9 @@
 /* Dashboard guidance copy migration.
    Keeps descriptive review guidance near the page preview and trims repeated sidebar helper copy at runtime. */
+
+import { applyChecklistState, initChecklist } from './ui-controls.js'
+import { getCurrentKey } from './utils.js'
+import { updateReadingTarget } from './editor-panel.js'
 ;(function migrateDescriptiveTextToDashboard() {
   const GUIDANCE_ID = 'dashboardGuidancePanel'
   const REFERENCE_ID = 'dashboardReferencePanel'

@@ -132,6 +132,28 @@ async function settleDebounce(page) {
   await page.waitForTimeout(400)
 }
 
+/**
+ * Put keyboard focus somewhere the global shortcuts will actually fire.
+ *
+ * js/keyboard-shortcuts.js gates every shortcut on isShortcutContext(): the
+ * focused element must sit inside #reviewWorkspace, .canvas-toolbar or
+ * #mockPage. That is deliberate — it stops single-letter shortcuts firing
+ * while a reviewer types in the sidebar — so a test that presses a key
+ * without establishing focus first is testing a race, not the shortcut.
+ *
+ * The race is real and it is environment-dependent. After gotoFresh() the
+ * only thing that happens to land focus inside the workspace is the
+ * first-run onboarding, which opens the workspace and focuses the selected
+ * tab asynchronously. On a fast machine the keypress arrives after that and
+ * the test passes; on a slower CI runner it arrives first and the shortcut is
+ * correctly ignored. Call this before any keyboard.press() to remove the
+ * timing dependency entirely.
+ * @param {import('@playwright/test').Page} page
+ */
+async function focusMockPage(page) {
+  await page.locator('#mockPage h1').first().click()
+}
+
 // Switch pages via the sidebar picker and wait for the render to land.
 // renderPage() pushes ?page=<key> immediately but applies content inside a
 // View Transition, so wait for #browserUrl to show the target page's slug —
@@ -163,4 +185,5 @@ module.exports = {
   openSearchMetadata,
   settleDebounce,
   selectPage,
+  focusMockPage,
 }

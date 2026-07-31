@@ -1,5 +1,7 @@
 /* Interactive HHVC sitemap: rendering layer.
    Loads after js/interactive-sitemap-data.js and before js/interactive-sitemap.js. */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountInteractiveSitemapRender() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.InteractiveSitemap?.data) return

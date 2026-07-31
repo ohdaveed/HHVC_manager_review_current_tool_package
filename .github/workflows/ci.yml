@@ -27,8 +27,9 @@ jobs:
         with:
           bun-version: latest
 
-      # index.html links node_modules/@sfgov/design-system CSS directly, and
-      # validate/test load pages through node_modules deps (zod, fast-glob).
+      # js/main.js imports @sfgov/design-system CSS and the third-party
+      # libraries for Vite to bundle, and validate/test load pages through
+      # node_modules deps (zod, fast-glob, happy-dom).
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -38,14 +39,33 @@ jobs:
       - name: Validate page data (Zod schema + invariants)
         run: bun run validate
 
+      # Runs the real Vite production build, so a bundling failure (a bad
+      # import path, a missing dependency) is caught here rather than at
+      # deploy time. It also doubles as a deploy-integrity check: the
+      # workshop-form copy step fails if the committed sub-app dist
+      # references assets that were never committed (the "form shell that
+      # never hydrates" regression).
+      #
+      # This runs BEFORE the unit tests, which is worth a sentence because the
+      # obvious order is the other way round. One test in
+      # tests/review-api-server.test.js asserts that a set-but-empty
+      # STATIC_ROOT still serves the real built app, and it can only tell a
+      # correct fallback from a broken one if dist/ actually exists. The test
+      # skips itself when there is no build, so with the fast order it passed
+      # by skipping and the regression it guards went uncovered in CI.
+      - name: Vite build + Netlify bundle assembly (deploy-integrity check)
+        run: bun run build:netlify
+
       - name: Unit tests (bun test)
         run: bun run test
 
-      # The Netlify bundle assembly doubles as a deploy-integrity check: it
-      # fails if the committed workshop-form dist references assets that were
-      # never committed (the "form shell that never hydrates" regression).
-      - name: Netlify bundle assembly (deploy-integrity check)
-        run: bun run build:netlify
+      # build:netlify only exercises the default build mode. The single-file
+      # export goes through vite-plugin-singlefile with different inlining
+      # rules, so a regression there (an asset the plugin cannot inline, a
+      # mode-specific config mistake) would otherwise surface only when
+      # someone tried to produce the portable HTML for a reviewer.
+      - name: Single-file export build
+        run: bun run build:singlefile
 
   e2e:
     name: Playwright end-to-end tests
