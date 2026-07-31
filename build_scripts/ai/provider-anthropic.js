@@ -7,6 +7,11 @@
 // producing output near the cap.
 const Anthropic = require('@anthropic-ai/sdk')
 const { numberFromEnv } = require('./env')
+const { RefusalError } = require('./errors')
+
+/** Registry key and the label the browser's provider picker shows. */
+const NAME = 'claude'
+const LABEL = 'Claude'
 
 const DEFAULT_MODEL = 'claude-opus-5'
 const DEFAULT_EFFORT = 'high'
@@ -74,17 +79,40 @@ function createClient() {
 }
 
 /**
- * Raised when the model declines the request. Carried as its own class so the
- * route can answer 422 rather than a generic 500 — a refusal is a content
- * outcome, not a server fault.
+ * List the model ids this key can see.
+ *
+ * Queried live rather than hardcoded: model lineups move, and a stale constant
+ * in committed code turns into a 404 nobody notices until a reviewer hits it.
+ * @returns {Promise<string[]>}
  */
-class RefusalError extends Error {
-  constructor(details) {
-    super('The model declined this request.')
-    this.name = 'RefusalError'
-    this.category = (details && details.category) || null
-    this.explanation = (details && details.explanation) || null
-  }
+async function listModelIds() {
+  const client = createClient()
+  const ids = []
+  for await (const model of client.models.list()) ids.push(model.id)
+  return ids
+}
+
+/**
+ * Map Anthropic's token counters onto the shape every provider reports.
+ *
+ * The counters themselves are provider-native (`input_tokens` here,
+ * `promptTokenCount` on Gemini), and `addUsage()` in index.js sums usage across
+ * the validation retry field by field. Summing two providers' differently-named
+ * fields into one object would produce a total that is not wrong so much as
+ * meaningless, and would force every consumer to know which provider produced
+ * it. Normalizing at the provider boundary keeps the response shape stable no
+ * matter who answered.
+ *
+ * The raw object is NOT folded in here — it travels separately as `rawUsage`,
+ * because `addUsage` keeps the first attempt's value for non-numeric fields and
+ * would therefore report attempt one's raw counters as if they covered both.
+ * @param {object} [usage] Anthropic's `response.usage`.
+ * @returns {{inputTokens: number, outputTokens: number, totalTokens: number}}
+ */
+function normalizeUsage(usage) {
+  const input = Number(usage?.input_tokens) || 0
+  const output = Number(usage?.output_tokens) || 0
+  return { inputTokens: input, outputTokens: output, totalTokens: input + output }
 }
 
 /**
@@ -95,7 +123,8 @@ class RefusalError extends Error {
  * @param {string} options.userPrompt The request turn.
  * @param {object} options.jsonSchema Structured-output schema.
  * @param {AbortSignal} [options.signal]
- * @returns {Promise<{object: object, model: string, usage: object, stopReason: string}>}
+ * @returns {Promise<{object: object, model: string, usage: object, rawUsage: object,
+ *   stopReason: string}>}
  */
 async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   const client = createClient()
@@ -156,16 +185,24 @@ async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   return {
     object: parsed,
     model: response.model || getModel(),
-    usage: response.usage || {},
+    usage: normalizeUsage(response.usage),
+    rawUsage: response.usage || {},
     stopReason: response.stop_reason || 'end_turn',
   }
 }
 
 module.exports = {
+  name: NAME,
+  label: LABEL,
   generateObject,
   isConfigured,
   getModel,
+  listModelIds,
+  normalizeUsage,
   createClient,
+  // Re-exported rather than defined here. It moved to ./errors.js when Gemini
+  // landed (a refusal is not an Anthropic concept), but this module was the
+  // documented import site, so the old spelling keeps working.
   RefusalError,
   DEFAULT_MODEL,
   MAX_TOKENS,

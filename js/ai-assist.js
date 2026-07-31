@@ -69,6 +69,13 @@
     if (promptField) state.prompt = promptField.value || ''
     const includeField = document.getElementById('aiAssistIncludePage')
     if (includeField) state.includePage = Boolean(includeField.checked)
+    // Absent whenever fewer than two providers are configured, which is why
+    // this is a guarded read rather than an assignment: blanking state.provider
+    // on a single-provider server would be harmless today (the server falls
+    // back to its default) but would silently discard a pick the moment a
+    // second key is added and the picker appears mid-session.
+    const providerField = document.getElementById('aiAssistProvider')
+    if (providerField) state.provider = providerField.value || ''
   }
 
   /**
@@ -95,6 +102,11 @@
     captureForm()
     state.capabilities = result.ok ? result.capabilities : null
     state.error = result.ok ? '' : result.error
+    // After capabilities, before the render that draws the picker from them. A
+    // selection made against another deployment (or against this one before a
+    // key was removed) would otherwise be sent verbatim and earn a 400 for a
+    // choice the reviewer never consciously made.
+    render.reconcileProvider()
     render.renderPanel()
   }
 
@@ -121,6 +133,7 @@
       task: 'content',
       prompt,
       page: includePage ? getCurrentPage() : undefined,
+      provider: state.provider,
       signal: controller.signal,
     })
 

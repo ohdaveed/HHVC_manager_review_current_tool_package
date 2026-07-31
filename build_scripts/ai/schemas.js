@@ -239,10 +239,18 @@ const groundingPageSchema = z
     message: `page must not nest deeper than ${MAX_PAGE_DEPTH} levels`,
   })
 
-/** Inbound POST /api/ai/generate body. */
+/**
+ * Inbound POST /api/ai/generate body.
+ *
+ * `provider` names a REGISTERED provider, not necessarily a configured one.
+ * The enum only asks "is this a provider this build knows about?"; whether the
+ * deployment holds a key for it is decided later by `resolveProvider`, which
+ * can answer with the list of what IS available. Folding both checks in here
+ * would turn a fixable "pick the other one" into a generic schema rejection.
+ */
 const generateRequestSchema = z.object({
   task: z.enum(['content']),
-  provider: z.enum(['claude']).optional(),
+  provider: z.enum(['claude', 'gemini']).optional(),
   prompt: z.string().min(1).max(8000),
   page: groundingPageSchema.optional(),
 })

@@ -157,17 +157,28 @@
 
   /**
    * Generate a draft.
-   * @param {{task: string, prompt: string, page?: object, signal?: AbortSignal}} request
+   *
+   * `provider` is omitted from the body when empty rather than sent as `''`.
+   * The server reads a missing provider as "use this deployment's default",
+   * which is what a single-provider server should do and what every caller did
+   * before the picker existed; an empty string would fail the enum instead.
+   * @param {{task: string, prompt: string, page?: object, provider?: string,
+   *   signal?: AbortSignal}} request
    * @returns {Promise<{ok: boolean, result?: object, error?: string}>}
    */
-  async function generate({ task, prompt, page, signal }) {
+  async function generate({ task, prompt, page, provider, signal }) {
     if (!isConfigured()) return { ok: false, error: 'AI assist is not configured.' }
     const requestApiUrl = readConfig().apiUrl
     try {
       const response = await apiFetch('/api/ai/generate', {
         method: 'POST',
         signal,
-        body: JSON.stringify({ task, prompt, ...(page ? { page } : {}) }),
+        body: JSON.stringify({
+          task,
+          prompt,
+          ...(page ? { page } : {}),
+          ...(provider ? { provider } : {}),
+        }),
       })
       assertEndpointUnchanged(requestApiUrl)
       if (!response.ok) return { ok: false, error: await describeFailure(response) }

@@ -1,13 +1,14 @@
 // Orchestration for the AI assist feature: generate, validate, retry once.
 //
-// Imported by server.ts's /api/ai/* routes. Everything here is provider-shaped
-// but currently Claude-only; adding Gemini means a sibling of
-// provider-anthropic.js and a switch in generateContent, not a rewrite.
+// Imported by server.ts's /api/ai/* routes. Provider-agnostic throughout — no
+// function here names Claude or Gemini. Everything provider-specific is behind
+// the registry in providers.js, so a third provider is a line there and nothing
+// in this file.
 const { loadPageData } = require('../load-pages')
 const { buildContentSystemPrompt, buildContentUserPrompt, loadStyleCorpus } = require('./prompts')
 const { PAGE_OUTPUT_SCHEMA } = require('./schemas')
 const { validateGeneratedPage } = require('./validate-output')
-const anthropic = require('./provider-anthropic')
+const { REGISTRY, configuredProviders, resolveProvider } = require('./providers')
 
 // One retry, not a loop. A second attempt with the specific failures named
 // fixes most mechanical violations; a third rarely adds anything and doubles
@@ -42,15 +43,34 @@ function getPages() {
 }
 
 /**
- * What this deployment can actually do. Drives the browser's empty state, so
- * an unconfigured server explains itself instead of failing on first use.
+ * What this deployment can actually do. Drives the browser's empty state and
+ * its provider picker, so an unconfigured server explains itself instead of
+ * failing on first use.
+ *
+ * `providers` and `models` are keyed maps covering EVERY registered provider,
+ * including the unconfigured ones (`false` / `null`). Listing only what is
+ * configured would leave the panel unable to say "this server has no Gemini
+ * key" as distinct from "Gemini does not exist here", and the two want
+ * different copy. `defaultProvider` tells the picker what an unnamed request
+ * would run on, so its initial selection matches what the server would do.
  * @returns {object}
  */
 function getCapabilities() {
   const corpus = loadStyleCorpus()
+  const providers = {}
+  const models = {}
+  const labels = {}
+  for (const provider of REGISTRY) {
+    const configured = provider.isConfigured()
+    providers[provider.name] = configured
+    models[provider.name] = configured ? provider.getModel() : null
+    labels[provider.name] = provider.label
+  }
   return {
-    providers: { claude: anthropic.isConfigured() },
-    models: { claude: anthropic.isConfigured() ? anthropic.getModel() : null },
+    providers,
+    models,
+    providerLabels: labels,
+    defaultProvider: configuredProviders()[0]?.name || null,
     tasks: ['content'],
     groundedBy: corpus.files,
     pageCount: Object.keys(getPages()).length,
@@ -59,18 +79,29 @@ function getCapabilities() {
 }
 
 /**
- * List the models the configured key can actually see.
+ * List the models each configured key can actually see.
  *
  * Queried live rather than hardcoded: model lineups move, and a stale constant
  * in committed code turns into a 404 nobody notices until a reviewer hits it.
- * @returns {Promise<{claude: string[]}>}
+ *
+ * Settled per provider rather than awaited together. One bad key or one
+ * provider's outage must not blank the other's list — this endpoint exists to
+ * help a reviewer find a working model id, and answering "nothing anywhere"
+ * because one of two providers is down is the opposite of useful. A failed
+ * lookup reports an empty array, which reads the same as "no models" and is
+ * honest about what was learned.
+ * @returns {Promise<Record<string, string[]>>}
  */
 async function listModels() {
-  if (!anthropic.isConfigured()) return { claude: [] }
-  const client = anthropic.createClient()
-  const ids = []
-  for await (const model of client.models.list()) ids.push(model.id)
-  return { claude: ids }
+  const settled = await Promise.allSettled(
+    REGISTRY.map((provider) => (provider.isConfigured() ? provider.listModelIds() : []))
+  )
+  const result = {}
+  REGISTRY.forEach((provider, index) => {
+    const outcome = settled[index]
+    result[provider.name] = outcome.status === 'fulfilled' ? outcome.value : []
+  })
+  return result
 }
 
 /**
@@ -105,10 +136,15 @@ function addUsage(total, next) {
  * @param {object} options
  * @param {string} options.prompt
  * @param {object} [options.page] The page open in the mockup, as grounding.
+ * @param {string} [options.provider] Which provider to run on. Unset takes the
+ *   deployment's default; a name that is not configured throws rather than
+ *   falling back, so a draft is never attributed to a model that did not write it.
  * @param {AbortSignal} [options.signal]
  * @returns {Promise<object>}
  */
-async function generateContent({ prompt, page, signal }) {
+async function generateContent({ prompt, page, provider, signal }) {
+  // Resolved before any work is done, so an unknown provider costs nothing.
+  const selected = resolveProvider(provider)
   const pages = getPages()
   const { system, groundedBy } = buildContentSystemPrompt(Object.keys(pages))
 
@@ -117,8 +153,14 @@ async function generateContent({ prompt, page, signal }) {
   let attempts = 0
   // Usage is summed, not overwritten. A retried generation really did cost two
   // calls, and reporting only the last one would understate the spend of
-  // exactly the requests that cost the most.
+  // exactly the requests that cost the most. Summing works across providers
+  // only because each one normalizes its counters first — see normalizeUsage.
   const usage = {}
+  // The provider-native counters, one entry per attempt. Kept OUT of the summed
+  // object on purpose: addUsage keeps the first attempt's value for non-numeric
+  // fields, so folding a nested raw object in would report attempt one's
+  // numbers as though they covered every attempt.
+  const usageByAttempt = []
 
   while (attempts < MAX_ATTEMPTS) {
     const previousDraft = generated ? generated.object : undefined
@@ -130,13 +172,14 @@ async function generateContent({ prompt, page, signal }) {
       previousDraft: attempts > 1 ? previousDraft : undefined,
     })
 
-    generated = await anthropic.generateObject({
+    generated = await selected.generateObject({
       system,
       userPrompt,
       jsonSchema: PAGE_OUTPUT_SCHEMA,
       signal,
     })
     addUsage(usage, generated.usage)
+    usageByAttempt.push(generated.rawUsage || {})
 
     const validation = validateGeneratedPage(generated.object, pages)
     issues = validation.issues
@@ -145,13 +188,17 @@ async function generateContent({ prompt, page, signal }) {
 
   return {
     task: 'content',
-    provider: 'claude',
+    // The RESOLVED provider, not what the client asked for. An unnamed request
+    // still has to report which model actually answered — the panel's meta line
+    // and the downloaded module both carry it.
+    provider: selected.name,
     model: generated.model,
     attempts,
     valid: issues.length === 0,
     issues,
     result: generated.object,
     usage,
+    usageByAttempt,
     groundedBy,
     disclosure: DISCLOSURE,
   }

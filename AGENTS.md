@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:app then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 15 unit-test files in tests/
+bun run test                  # Bun test runner over the 16 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,14 +59,16 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs fifteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs sixteen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
-`ai-assist-env`, and
-`ai-assist-server` (which spawns `server.ts` against a stub Anthropic endpoint,
-so the AI routes are covered without a key or a paid call). **The list in
+`ai-assist-env`, `ai-assist-providers` (the provider registry and usage
+normalization, varying the provider keys directly — which the server tests
+cannot, since a spawn only ever sees the environment it was given), and
+`ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
+endpoints, so both AI paths are covered without a key or a paid call). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
@@ -450,17 +452,74 @@ by default, failing closed.
 
 - **Two independent gates.** `REVIEW_API_TOKEN` (shared with the sync routes —
   one server secret, not two) decides whether the API exists; unset makes every
-  `/api/ai/*` route 501. `ANTHROPIC_API_KEY` decides whether generation works;
-  unset makes `generate` and `models` 501 while `capabilities` still answers.
-  That asymmetry is deliberate — `capabilities` is the browser's discovery
-  endpoint, and a 501 there cannot be told apart from "no server at all".
+  `/api/ai/*` route 501. At least one **provider key** decides whether
+  generation works; with none set, `generate` and `models` answer 501 while
+  `capabilities` still answers. That asymmetry is deliberate — `capabilities` is
+  the browser's discovery endpoint, and a 501 there cannot be told apart from
+  "no server at all".
 - **The provider gate lives inside each route, not before routing**, so an
   unknown path answers 404 rather than 501 claiming the route exists.
-- **Routes**: `GET /api/ai/capabilities`, `GET /api/ai/models` (queried live,
-  never hardcoded), `POST /api/ai/generate` (`{task, prompt, page?}`, Zod-validated).
+- **Two providers, behind a registry.** `build_scripts/ai/providers.js` holds
+  `provider-anthropic.js` and `provider-gemini.js` behind one list; nothing in
+  `index.js` or `server.ts` names a provider. A third is a require plus a line
+  there. Every entry exports the same surface: `name`, `label`,
+  `isConfigured()`, `getModel()`, `listModelIds()`, `normalizeUsage()`, and
+  `generateObject({system, userPrompt, jsonSchema, signal})`. Configuration is
+  read from the environment **per call**, not snapshot at require time — the
+  registry is a module singleton `server.ts` imports once at startup, so caching
+  it would freeze the first environment it ever saw.
+- **Registration order is the preference order.** An unnamed request runs on the
+  first _configured_ provider (Claude, then Gemini). A request naming an
+  unconfigured provider is a **400**, never a silent fallback — running a Gemini
+  request on Claude would attribute one model's output to another in the panel's
+  meta line and in the downloaded module. "Nothing configured at all" stays a
+  501: the server genuinely cannot, rather than merely lacking what was asked for.
+- **Shared error types live in `build_scripts/ai/errors.js`**, not in a provider
+  module. `RefusalError` is raised by both providers from entirely different
+  signals — Claude's `stop_reason: 'refusal'`, Gemini's `promptFeedback.blockReason`
+  or a `finishReason` of `SAFETY`/`PROHIBITED_CONTENT`/`BLOCKLIST`/`SPII` — so
+  `server.ts` maps 422 with one `instanceof` instead of a per-provider branch
+  that rots the day a provider is added. `provider-anthropic.js` re-exports it,
+  since that was the documented import site.
+- **Usage is normalized at the provider boundary** to
+  `{inputTokens, outputTokens, totalTokens}`, because `addUsage()` sums usage
+  across the validation retry field by field and Anthropic's `input_tokens` and
+  Gemini's `promptTokenCount` would otherwise sum into something meaningless.
+  Gemini's `totalTokenCount` is trusted over input+output: thinking tokens are
+  billed on top, so recomputing understates exactly the thinking-heavy requests
+  this feature makes. Provider-native counters ride alongside as
+  `usageByAttempt[]` rather than inside the sum — `addUsage` keeps the _first_
+  attempt's value for non-numeric fields, so a nested raw object in the total
+  would claim attempt one's numbers covered every attempt.
+- **Routes**: `GET /api/ai/capabilities` (per-provider `providers`, `models`,
+  `providerLabels`, and `defaultProvider` — every _registered_ provider, including
+  unconfigured ones, so the panel can tell "no key for Gemini" from "no Gemini
+  here"), `GET /api/ai/models` (queried live, never hardcoded; settled per
+  provider so one bad key does not blank the other's list),
+  `POST /api/ai/generate` (`{task, prompt, page?, provider?}`, Zod-validated).
 - **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
-  `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only). Keep them in
-  the gitignored `.env.local`.
+  `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only);
+  `GEMINI_API_KEY`, `GEMINI_MODEL` (default `gemini-2.5-pro`),
+  `GEMINI_MAX_ATTEMPTS` (default 2), `GEMINI_TIMEOUT_MS`, `GEMINI_BASE_URL`
+  (tests only). Keep them in the gitignored `.env.local`.
+- **Gemini specifics that a naive port gets wrong.** Use `responseJsonSchema`,
+  not `responseSchema` — the latter takes a narrower OpenAPI subset, and the
+  wider one is what lets `PAGE_OUTPUT_SCHEMA` be shared byte-for-byte instead of
+  forked into a second copy `tests/ai-assist-schema.test.js` would have to guard
+  twice. Check `promptFeedback.blockReason` **and** `candidates[0].finishReason`:
+  the first covers a blocked _input_ where no candidate exists at all, and
+  checking only the second makes those surface as "returned no text" and read as
+  an outage. Both are checked before touching content, for the same reason the
+  Claude path checks `stop_reason` first. `finishMessage` looks like the refusal
+  explanation and is always absent — it is Vertex-only and the SDK's converter
+  drops it on the Developer API path — so the explanation is built from the
+  blocked `safetyRatings` entries instead. `httpOptions.retryOptions.attempts`
+  defaults to **5**, which composes as badly as the Anthropic default did: two
+  validation attempts times five is ten upstream calls per click, so it is
+  pinned to 2. There is no `cache_control` equivalent; Gemini caches implicitly
+  on a prefix match, which is exactly what `prompts.js`'s byte-stability rule
+  already provides. API-key auth only — `@google/genai` also speaks to Vertex,
+  but that is a different credential story than a single `GEMINI_API_KEY`.
 - **Every input is bounded, and the bound is enforced while reading.** `prompt`
   caps at 8000 characters, but `page` is serialized into the provider prompt
   just the same — so it carries its own limits (96 KB serialized, 12 levels
@@ -544,8 +603,12 @@ by default, failing closed.
   Standards manual §1.11 forbids automated approval and SF.gov's AI guidelines
   require disclosing generative-AI use, so every response carries a
   `disclosure` string.
-- **Tests**: `tests/ai-assist-server.test.js` (spawns `server.ts` against a stub
-  Anthropic endpoint — no API key, CI never makes a paid call) and
+- **Tests**: `tests/ai-assist-server.test.js` (spawns `server.ts` against stub
+  Anthropic **and** Gemini endpoints — no API keys, CI never makes a paid call;
+  the two stubs are kept separate so "the request went to Gemini and _not_ to
+  Claude" is assertable, which is the failure a plausible-looking routing bug
+  actually produces), `tests/ai-assist-providers.test.js` (the registry and
+  usage normalization, with the provider keys varied per test), and
   `tests/ai-assist-schema.test.js` (guards the structured-output schema against
   drifting from the Zod page schema).
 

@@ -12,8 +12,14 @@ import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 import { generateContent, getCapabilities, listModels } from "./build_scripts/ai/index.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/ai/schemas.js"
-// @ts-ignore - plain JS module, CommonJS.
-import { RefusalError } from "./build_scripts/ai/provider-anthropic.js"
+// @ts-ignore - plain JS module, CommonJS. Provider-neutral on purpose: these
+// used to come from provider-anthropic.js, which meant this file imported an
+// Anthropic module for concepts ("the model declined", "no such provider") that
+// belong to no provider in particular.
+import { RefusalError, UnknownProviderError } from "./build_scripts/ai/errors.js"
+// @ts-ignore - plain JS module, CommonJS. The registry, so nothing below has to
+// name a provider or read a provider's API key directly.
+import { hasConfiguredProvider } from "./build_scripts/ai/providers.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { numberFromEnv } from "./build_scripts/ai/env.js"
 // Deliberately NOT importing @anthropic-ai/sdk here. It was imported for its
@@ -420,17 +426,15 @@ async function handleReviewStateApi(req: Request, url: URL): Promise<Response> {
 // Same posture as the review-state sync layer above: entirely additive, off by
 // default, and failing closed. Two independent switches gate it —
 // REVIEW_API_TOKEN (shared with the sync routes; one server secret, not two)
-// controls whether the API exists at all, and ANTHROPIC_API_KEY controls
-// whether generation is possible. The key never leaves the server: the browser
-// talks only to this origin.
+// controls whether the API exists at all, and at least one provider key
+// (ANTHROPIC_API_KEY, GEMINI_API_KEY) controls whether generation is possible.
+// The keys never leave the server: the browser talks only to this origin.
 //
 // Nothing here writes to disk or to review state. Generated drafts are returned
 // to the browser to preview, copy, and download — they never touch pages/*.js.
 // HHVC standards manual §1.11 forbids any automated approval, and SF.gov's AI
 // guidelines require generative-AI use to be disclosed, so every response
 // carries a `disclosure` string the client renders alongside the draft.
-
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ""
 
 /**
  * Whole-request budget for a generation, covering both validation attempts and
@@ -453,11 +457,22 @@ function aiErrorResponse(
 ): Response {
   if (error instanceof RefusalError) {
     // A refusal is a content outcome, not a server fault. 422 so the client can
-    // say "the model declined" rather than "something broke".
+    // say "the model declined" rather than "something broke". Raised by both
+    // providers from their own very different signals (Claude's
+    // `stop_reason: 'refusal'`, Gemini's blockReason/finishReason), normalized
+    // in build_scripts/ai/errors.js so this stays one check.
     return jsonResponse(
       { error: error.message, category: error.category, explanation: error.explanation },
       422
     )
+  }
+
+  if (error instanceof UnknownProviderError) {
+    // 400, NOT 501. The server is working; the client asked for a provider this
+    // deployment does not have, which in practice means a panel still holding a
+    // picker built from another endpoint's capabilities. `available` lets it
+    // recover without the reviewer guessing.
+    return jsonResponse({ error: error.message, available: error.available }, 400)
   }
 
   // Cancellation is decided by SIGNAL STATE, not by the shape of the error.
@@ -551,9 +566,10 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     return jsonResponse({ error: "Unauthorized" }, 401)
   }
 
-  // Deliberately answers even with no ANTHROPIC_API_KEY. This is the discovery
-  // endpoint the browser uses to render its empty state, and a 501 here would
-  // leave it unable to tell "no AI key" from "no server at all".
+  // Deliberately answers even with no provider key at all. This is the
+  // discovery endpoint the browser uses to render its empty state and build its
+  // provider picker, and a 501 here would leave it unable to tell "no AI key"
+  // from "no server at all".
   if (url.pathname === "/api/ai/capabilities" && req.method === "GET") {
     return jsonResponse(getCapabilities(), 200)
   }
@@ -562,14 +578,24 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
   // the routing below. Hoisting it would make every unmatched path answer 501
   // "no provider configured" instead of 404, which tells a client the route
   // exists when it does not.
+  //
+  // The condition is "no provider at all", not "this specific key is unset" —
+  // a deployment with only a Gemini key is fully working, and a request naming
+  // an unconfigured provider is a 400 raised downstream by resolveProvider, not
+  // a 501 from here. Read from the registry per request rather than a
+  // start-time constant so the two cannot drift.
   const noProvider = () =>
     jsonResponse(
-      { error: "No model provider is configured on this server (ANTHROPIC_API_KEY unset)." },
+      {
+        error:
+          "No model provider is configured on this server " +
+          "(set ANTHROPIC_API_KEY or GEMINI_API_KEY).",
+      },
       501
     )
 
   if (url.pathname === "/api/ai/models" && req.method === "GET") {
-    if (!ANTHROPIC_API_KEY) return noProvider()
+    if (!hasConfiguredProvider()) return noProvider()
     try {
       return jsonResponse(await listModels(), 200)
     } catch (error) {
@@ -578,7 +604,7 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
   }
 
   if (url.pathname === "/api/ai/generate" && req.method === "POST") {
-    if (!ANTHROPIC_API_KEY) return noProvider()
+    if (!hasConfiguredProvider()) return noProvider()
 
     // Refuse an oversized body BEFORE reading it. The Zod schema bounds `page`,
     // but only after req.json() has already buffered and parsed the whole
