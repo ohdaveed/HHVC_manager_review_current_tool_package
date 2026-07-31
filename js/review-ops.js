@@ -47,7 +47,10 @@
       .replaceAll("'", '&#039;')
   }
 
-  /** The page keys the site currently has, for the orphan check. */
+  /**
+   * The page keys the site currently has, for the orphan check.
+   * @returns {Set<string>} every key in HHVC_DATA.order, empty if data has not loaded
+   */
   function siteKeys() {
     return new Set((window.HHVC_DATA?.order || []).map(([key]) => key))
   }
@@ -60,6 +63,7 @@
    * changes incompatibly, and a second hardcoded copy would not be bumped
    * with it — this panel would then read a key nothing writes and report
    * "0 B" forever, which is a wrong number rather than a visible failure.
+   * @returns {string} the serialized blob, or '' when unreadable
    */
   function rawState() {
     const key = window.reviewState?.STORAGE_KEY
@@ -72,6 +76,10 @@
     }
   }
 
+  /**
+   * Assemble every diagnostic from the current saved state.
+   * @returns {object} the report shape js/review-ops-data.js's buildOpsReport returns
+   */
   function buildReport() {
     const state = window.reviewState?.read?.() || { pages: {} }
     return window.ReviewOps.data.buildOpsReport({
@@ -81,7 +89,13 @@
     })
   }
 
-  /** One labelled figure. */
+  /**
+   * One labelled figure.
+   * @param {string} label the uppercase caption
+   * @param {string|number} value the figure itself
+   * @param {string} [hint] optional secondary line explaining what the figure means
+   * @returns {string} escaped markup
+   */
   function stat(label, value, hint) {
     return `
       <div class="ops-stat">
@@ -95,6 +109,11 @@
   /**
    * A finding: fine when the count is zero, actionable when it is not.
    * Never colour alone — the wording states the state too.
+   * @param {string} title what was looked for
+   * @param {string[]} keys the affected page keys; empty means nothing is wrong
+   * @param {string} explanation why it matters, shown whether or not there are keys
+   * @param {string} [action] markup for a remedy button, rendered only when keys exist
+   * @returns {string} escaped markup
    */
   function finding(title, keys, explanation, action = '') {
     const count = keys.length
@@ -117,7 +136,10 @@
     `
   }
 
-  /** Sync and AI are both optional; "not configured" is a normal answer. */
+  /**
+   * Sync and AI are both optional; "not configured" is a normal answer.
+   * @returns {string} escaped markup for the two connection cards
+   */
   function connections() {
     const sync = window.reviewStateSync?.readConfig?.() || {}
     // The module's own predicate rather than a second copy of the same test —
@@ -145,6 +167,13 @@
     `
   }
 
+  /**
+   * Paint the whole panel from a fresh report.
+   *
+   * Rebuilds rather than patches: the panel is a snapshot of saved state, and
+   * every figure on it can move together when a sync pull lands.
+   * @returns {void} no-op when the panel or the diagnostics module is absent
+   */
   function render() {
     const panel = document.querySelector(PANEL_SELECTOR)
     if (!panel || !window.ReviewOps?.data) return
@@ -202,6 +231,7 @@
    * first, and re-derives the orphan list at click time rather than trusting
    * what was rendered — the panel may have been sitting open while a sync
    * pull or an import changed the saved state underneath it.
+   * @returns {number} how many records were deleted; 0 if declined or none found
    */
   function pruneOrphans() {
     const state = window.reviewState?.read?.() || { pages: {} }
@@ -233,13 +263,22 @@
     return orphaned.length
   }
 
+  /**
+   * Delegated click handling, so the panel's markup can be replaced wholesale
+   * on every render without rebinding anything.
+   * @param {Event} event a document-level click
+   * @returns {void}
+   */
   function handleClick(event) {
     const target = event.target
     if (!(target instanceof Element)) return
     if (target.closest('[data-ops-action="prune-orphans"]')) pruneOrphans()
   }
 
-  /** Called by setWorkspaceTab the first time the Ops tab opens. */
+  /**
+   * Called by setWorkspaceTab the first time the Ops tab opens.
+   * @returns {void}
+   */
   function ensureRendered() {
     render()
   }
@@ -248,12 +287,17 @@
    * js/ux-improvements.js initializes earlier and restores a persisted
    * workspace_tab before the mount hook below exists, so a reviewer who left
    * this tab open would see an empty panel until switching away and back.
+   * @returns {void}
    */
   function mountIfTabAlreadyOpen() {
     const panel = document.querySelector(PANEL_SELECTOR)
     if (panel && !panel.hidden) render()
   }
 
+  /**
+   * Wire the delegated click handler and the tab-open hook.
+   * @returns {void}
+   */
   function init() {
     document.addEventListener('click', handleClick)
     // Diagnostics are a snapshot, not a live view — but a decision made in the
