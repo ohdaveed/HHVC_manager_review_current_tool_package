@@ -693,6 +693,83 @@ describe('AI assist API request timeout', () => {
     // Specifically NOT 500: a wedged upstream is a gateway timeout, and
     // logging it as a server fault buries the failures that are real ones.
     expect(res.status).toBe(504)
-    expect((await res.json()).error).toContain('timed out')
+    expect((await res.json()).error).toBe('Generation timed out.')
+  })
+})
+
+// The OTHER timeout — the SDK's own per-call one, firing inside the route's
+// budget rather than at the end of it.
+//
+// Everything about this configuration is supported: ANTHROPIC_TIMEOUT_MS is
+// documented, and ANTHROPIC_MAX_RETRIES=0 is explicitly a legitimate choice. So
+// whenever the SDK's ceiling is the lower of the two, APIConnectionTimeoutError
+// reaches aiErrorResponse's fallback with NEITHER signal aborted — the client is
+// still connected and the route's own timer has not expired.
+//
+// That fallback was doubly broken. It matched with `instanceof` against a copy
+// of the SDK imported into server.ts, while the throw came from the copy
+// build_scripts/ai/ requires — the package ships separate require/import
+// builds, so the two classes were different objects and the check was
+// permanently false. Measured before the fix, this exact request returned
+// **500**, not even the 499 the code reads as. And 499 would have been wrong
+// too: it says the client hung up, when in fact the client was waiting and the
+// provider was the one that ran out of time.
+describe('AI assist API upstream (SDK) timeout', () => {
+  const SDK_PORT = 8136
+  const SDK_STUB_PORT = 8137
+  const sdkBase = `http://127.0.0.1:${SDK_PORT}`
+  let proc
+  let slowStub
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-sdk-timeout-'))
+
+    slowStub = Bun.serve({
+      port: SDK_STUB_PORT,
+      hostname: '127.0.0.1',
+      async fetch() {
+        await new Promise((resolve) => setTimeout(resolve, 10_000))
+        return Response.json(messageResponse(VALID_PAGE))
+      },
+    })
+
+    proc = Bun.spawn(['bun', 'run', 'server.ts'], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        PORT: String(SDK_PORT),
+        HOST: '127.0.0.1',
+        REVIEW_API_TOKEN: TOKEN,
+        ANTHROPIC_API_KEY: 'sk-ant-stub',
+        ANTHROPIC_BASE_URL: `http://127.0.0.1:${SDK_STUB_PORT}`,
+        // The inversion that makes this path reachable: the SDK gives up long
+        // before the route does, and does not retry its way past it.
+        ANTHROPIC_TIMEOUT_MS: '500',
+        ANTHROPIC_MAX_RETRIES: '0',
+        AI_REQUEST_TIMEOUT_MS: '30000',
+        DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
+      },
+      stdout: 'ignore',
+      stderr: 'ignore',
+    })
+    await waitForServer(`${sdkBase}/api/ai/capabilities`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    slowStub?.stop(true)
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('answers 504 when the SDK times out before the request budget', async () => {
+    const res = await fetch(`${sdkBase}/api/ai/generate`, {
+      method: 'POST',
+      headers: authed(),
+      body: JSON.stringify({ task: 'content', prompt: 'Take your time.' }),
+    })
+
+    expect(res.status).toBe(504)
+    expect((await res.json()).error).toBe('Generation timed out.')
   })
 })

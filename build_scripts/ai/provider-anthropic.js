@@ -41,8 +41,12 @@ function getModel() {
  * worst case bounded at four.
  */
 // min: 0 — "no SDK retries at all" is a legitimate choice here, unlike a
-// timeout, where zero would mean every call fails instantly.
-const MAX_RETRIES = numberFromEnv('ANTHROPIC_MAX_RETRIES', 1, { min: 0 })
+// timeout, where zero would mean every call fails instantly. max: 10 because
+// each retry is a full upstream call against a provider that is already
+// failing, and this multiplies with the validation retry above it; a mistyped
+// count in the thousands would not be a slow request, it would be a request
+// that never returns.
+const MAX_RETRIES = numberFromEnv('ANTHROPIC_MAX_RETRIES', 1, { min: 0, max: 10 })
 
 /**
  * Per-call ceiling. The SDK's default is about 10 minutes, which is longer
@@ -50,7 +54,12 @@ const MAX_RETRIES = numberFromEnv('ANTHROPIC_MAX_RETRIES', 1, { min: 0 })
  * wedged upstream would hold a server request open long after the only person
  * who wanted the answer had gone.
  */
-const REQUEST_TIMEOUT_MS = numberFromEnv('ANTHROPIC_TIMEOUT_MS', 150_000)
+// max: one hour. Nothing about this feature is a background job — a reviewer is
+// watching a spinner — so an hour is already far past useful and any larger
+// value is a typo rather than an intent. Capping it keeps the "wedged upstream
+// holds the request open" failure this constant exists to prevent from being
+// reintroduced by the environment variable that configures it.
+const REQUEST_TIMEOUT_MS = numberFromEnv('ANTHROPIC_TIMEOUT_MS', 150_000, { max: 3_600_000 })
 
 function createClient() {
   return new Anthropic({

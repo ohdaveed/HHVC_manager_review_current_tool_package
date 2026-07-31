@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 14 unit-test files in tests/ (358 tests)
+bun run test                  # bun test over the 15 unit-test files in tests/ (371 tests)
 bun run test:e2e              # playwright test (11 specs in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,14 +65,18 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs fourteen Bun unit-test files under `tests/`:
+wrong). `bun run test` runs fifteen Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB and exercises auth/merge/isolation over real HTTP),
-`review-state-sync`, `ai-assist-schema`, and `ai-assist-server` (which spawns
-`server.ts` against a stub Anthropic endpoint, so the AI routes are covered
-without a key or a paid call) — 358 tests at time of writing. Tests import the
+`review-state-sync`, `ai-assist-schema`, `ai-assist-env`, and `ai-assist-server`
+(which spawns `server.ts` against a stub Anthropic endpoint, so the AI routes
+are covered without a key or a paid call) — 371 tests at time of writing.
+**That list is spelled out explicitly in `package.json`'s `test` script rather
+than globbed**, so a newly added `tests/*.test.js` runs only once it is named
+there; until then it passes locally when invoked by hand and covers nothing in
+CI. Tests import the
 modules under test directly. `tests/helpers/browser-env.js`, preloaded via
 `bunfig.toml`, registers a **happy-dom** global environment first — the module
 graph does real work at import time (`js/state.js` reads `window.HHVC_DATA`),
@@ -637,11 +641,43 @@ it, and it fails closed rather than open.
   `"Error"` and carry no `status`, so a `name === 'AbortError'` test never fired
   and every cancelled generation was logged as a 500. `AbortSignal.timeout()`
   also reports `"TimeoutError"`, not `"AbortError"`. Asking the signal is also
-  provider-agnostic, which matters the moment a second provider lands; the
-  `instanceof` checks remain only as a fallback for aborts raised where no
-  signal was threaded through. `tests/ai-assist-server.test.js` pins the 504
-  path against a deliberately slow stub — the 499 path is not observable from a
-  test, since the client that aborts is the one that cannot read the answer.
+  provider-agnostic, which matters the moment a second provider lands.
+  `tests/ai-assist-server.test.js` pins the 504 path against a deliberately slow
+  stub — the 499 path is not observable from a test, since the client that
+  aborts is the one that cannot read the answer.
+- **The fallback arm matches `constructor.name`, never `instanceof`, and splits
+  504 out of it.** The fallback is not a safety net for exotic cases; it is a
+  routine path. The SDK enforces its own per-call `ANTHROPIC_TIMEOUT_MS` inside
+  `AI_REQUEST_TIMEOUT_MS`, so any configuration where it gives up first — a
+  short per-call timeout, or the explicitly supported `ANTHROPIC_MAX_RETRIES=0`
+  removing the retries that would otherwise carry the call past the route's
+  budget — throws `APIConnectionTimeoutError` with **neither** signal aborted.
+  That arm was dead for a second reason beyond the `name` problem above:
+  `@anthropic-ai/sdk` publishes separate `require` (`index.js`) and `import`
+  (`index.mjs`) builds, and `server.ts` imported the SDK while
+  `build_scripts/ai/provider-anthropic.js` requires it — the classic dual
+  package hazard. The two halves held different objects for the same class, so
+  every `error instanceof Anthropic.*` compared against a constructor the
+  thrown error had never been built from. Measured before the fix, an SDK
+  timeout came back **500** — not even the 499 the code reads as.
+  `constructor.name` is a single string on a single object, survives that
+  boundary, and removes the need for the SDK import in `server.ts` at all. The
+  two errors then split like the signal branches do: `APIUserAbortError` → 499,
+  `APIConnectionTimeoutError` → **504**, since a provider that ran out of time
+  is not a reviewer who walked away, and folding them together hides a slow
+  upstream behind a status that reads as "nobody was listening".
+- **Numeric env tunables are range-checked, not merely parsed.**
+  `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
+  fractions, and anything outside `[min, max]` (default max
+  `Number.MAX_SAFE_INTEGER`), warning and falling back rather than throwing.
+  `Number.isFinite` is **not** a sufficient test: `AI_REQUEST_TIMEOUT_MS=1e20`
+  is finite, and `AbortSignal.timeout()` rejects it outright — that call sits
+  _outside_ the generate route's `try`, so an accepted-but-unusable value is an
+  unmapped 500 on every generation rather than an over-generous budget, which
+  is the exact failure this helper exists to prevent. Both timeouts additionally
+  cap at one hour and `ANTHROPIC_MAX_RETRIES` at 10: a reviewer is watching a
+  spinner, so larger values are typos, and a retry count in the thousands is not
+  a slow request but one that never returns.
 - **The retry carries the rejected draft, not just the failures.** Each API
   call is stateless, so "fix these and change nothing else" is only followable
   if the thing to change travels with the instruction; without it the retry
