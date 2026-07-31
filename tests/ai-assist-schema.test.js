@@ -14,6 +14,9 @@ const {
   PAGE_OUTPUT_SCHEMA,
   PAGE_TYPES,
   SECTION_COMPONENTS,
+  generateRequestSchema,
+  measureDepth,
+  MAX_PAGE_DEPTH,
 } = require('../build_scripts/ai/schemas')
 const { validateGeneratedPage } = require('../build_scripts/ai/validate-output')
 
@@ -72,7 +75,9 @@ describe('AI output schema shape', () => {
 describe('AI output schema agrees with the Zod page schema', () => {
   test('section components match the Zod enum exactly', () => {
     // The drift this file exists to catch: add a component to one, not the other.
-    const zodComponents = sectionSchema.shape.component.unwrap()._def.values
+    // `.options` is ZodEnum's public accessor; `_def.values` is the same list
+    // reached through internals Zod makes no stability promise about.
+    const zodComponents = sectionSchema.shape.component.unwrap().options
     expect([...SECTION_COMPONENTS].sort()).toEqual([...zodComponents].sort())
     expect(PAGE_OUTPUT_SCHEMA.properties.sections.items.properties.component.enum).toEqual(
       SECTION_COMPONENTS
@@ -242,5 +247,115 @@ describe('validateGeneratedPage', () => {
       ],
     }
     expect(validateGeneratedPage(page).issues.join(' ')).toContain('shall')
+  })
+})
+
+describe('request bounds', () => {
+  const request = (page) => generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
+
+  test('accepts a request with no page at all', () => {
+    const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x' })
+    expect(`no page: ${result.success}`).toBe('no page: true')
+  })
+
+  test('accepts every real page in this repo as grounding', () => {
+    // The caps exist to stop abuse, not to reject the tool's own content. If
+    // this fails, the "use the current page as context" checkbox has silently
+    // stopped working for some page.
+    const { loadPageData } = require('../build_scripts/load-pages')
+    for (const [key, page] of Object.entries(loadPageData().pages)) {
+      expect(`${key}: ${request(page).success}`).toBe(`${key}: true`)
+    }
+  })
+
+  test('rejects a page that serializes past the size cap', () => {
+    expect(`oversized: ${request({ filler: 'x'.repeat(200_000) }).success}`).toBe(
+      'oversized: false'
+    )
+  })
+
+  test('rejects a page nested past the depth cap', () => {
+    let nested = { end: true }
+    for (let i = 0; i < MAX_PAGE_DEPTH + 5; i += 1) nested = { nested }
+    expect(`too deep: ${request(nested).success}`).toBe('too deep: false')
+  })
+
+  test('rejects a circular page rather than throwing on it', () => {
+    const circular = { title: 'Loop' }
+    circular.self = circular
+    expect(`circular: ${request(circular).success}`).toBe('circular: false')
+  })
+
+  test('measures depth without recursing on the input', () => {
+    // Deliberately deeper than any call stack would survive recursively: the
+    // guard must not be the denial of service it exists to prevent.
+    let nested = { end: true }
+    for (let i = 0; i < 200_000; i += 1) nested = { nested }
+    expect(measureDepth(nested, MAX_PAGE_DEPTH)).toBeGreaterThan(MAX_PAGE_DEPTH)
+  })
+
+  test('counts a flat object as depth 1', () => {
+    expect(`depth: ${measureDepth({ a: 1, b: 'two' }, MAX_PAGE_DEPTH)}`).toBe('depth: 1')
+  })
+
+  test('counts nesting through arrays, not just objects', () => {
+    const depth = measureDepth({ sections: [{ steps: [{ title: 'x' }] }] }, MAX_PAGE_DEPTH)
+    expect(`depth: ${depth}`).toBe('depth: 5')
+  })
+})
+
+describe('grounding page size is measured on what is actually sent', () => {
+  const { buildContentUserPrompt } = require('../build_scripts/ai/prompts')
+  const {
+    serializePageForPrompt,
+    generateRequestSchema,
+    MAX_PAGE_JSON_BYTES,
+  } = require('../build_scripts/ai/schemas')
+
+  test('the prompt embeds the exact string the cap measured', () => {
+    // The bug this pins: the cap measured compact JSON while the prompt sent
+    // the pretty-printed form, so indentation was free and a page could arrive
+    // upstream several times larger than the limit it passed.
+    const page = { title: 'A page', sections: [{ heading: 'What to do', karl: 'Body.' }] }
+    expect(buildContentUserPrompt({ prompt: 'Draft.', page })).toContain(
+      serializePageForPrompt(page)
+    )
+  })
+
+  test('rejects a page whose sent form exceeds the cap even though its compact form does not', () => {
+    // Many small nested entries: cheap compact, expensive pretty-printed.
+    // Sized so the compact form is comfortably UNDER the cap — that is the
+    // whole point, since the old check would have waved this through.
+    const page = { rows: Array.from({ length: 2500 }, () => ({ a: [1, 2, 3], b: { c: 1 } })) }
+    expect(JSON.stringify(page).length).toBeLessThan(MAX_PAGE_JSON_BYTES)
+    expect(serializePageForPrompt(page).length).toBeGreaterThan(MAX_PAGE_JSON_BYTES)
+    expect(generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page }).success).toBe(
+      false
+    )
+  })
+
+  test('measures the page cap in UTF-8 bytes, not UTF-16 code units', () => {
+    // MAX_PAGE_JSON_BYTES is named in bytes and the request contract is
+    // byte-based, but String#length counts UTF-16 units — so multi-byte copy
+    // could exceed the cap by roughly 3x. This page is comfortably under the
+    // limit by character count and over it by bytes.
+    const page = { filler: '€'.repeat(40_000) }
+    const sent = serializePageForPrompt(page)
+    expect(`chars under cap: ${sent.length < MAX_PAGE_JSON_BYTES}`).toBe('chars under cap: true')
+    expect(`bytes over cap: ${Buffer.byteLength(sent, 'utf8') > MAX_PAGE_JSON_BYTES}`).toBe(
+      'bytes over cap: true'
+    )
+    const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
+    expect(`multibyte rejected: ${result.success}`).toBe('multibyte rejected: false')
+  })
+
+  test('every real page still fits once measured the way it is sent', () => {
+    // Pretty-printing is only ~1.2x on real page shapes, so tightening the
+    // measurement must not start rejecting the tool's own content.
+    const { loadPageData } = require('../build_scripts/load-pages')
+    for (const [key, page] of Object.entries(loadPageData().pages)) {
+      const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
+      expect(`${key}: ${result.success}`).toBe(`${key}: true`)
+    }
   })
 })

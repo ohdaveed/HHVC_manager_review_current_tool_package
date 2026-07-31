@@ -6,6 +6,7 @@
 // both sides. Revisit if a future task (a whole sitemap, a long report) starts
 // producing output near the cap.
 const Anthropic = require('@anthropic-ai/sdk')
+const { numberFromEnv } = require('./env')
 
 const DEFAULT_MODEL = 'claude-opus-5'
 const DEFAULT_EFFORT = 'high'
@@ -31,9 +32,31 @@ function getModel() {
   return process.env.ANTHROPIC_MODEL || DEFAULT_MODEL
 }
 
+/**
+ * Retries inside the SDK, on top of our own validation retry.
+ *
+ * The SDK defaults to 2, which composes badly here: two validation attempts,
+ * each retried twice on a 429 or 5xx, is up to six upstream calls for one
+ * click. One SDK retry still absorbs a single transient blip while keeping the
+ * worst case bounded at four.
+ */
+// min: 0 — "no SDK retries at all" is a legitimate choice here, unlike a
+// timeout, where zero would mean every call fails instantly.
+const MAX_RETRIES = numberFromEnv('ANTHROPIC_MAX_RETRIES', 1, { min: 0 })
+
+/**
+ * Per-call ceiling. The SDK's default is about 10 minutes, which is longer
+ * than any reviewer waits and longer than the browser's own timeout, so a
+ * wedged upstream would hold a server request open long after the only person
+ * who wanted the answer had gone.
+ */
+const REQUEST_TIMEOUT_MS = numberFromEnv('ANTHROPIC_TIMEOUT_MS', 150_000)
+
 function createClient() {
   return new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
+    maxRetries: MAX_RETRIES,
+    timeout: REQUEST_TIMEOUT_MS,
     // Explicit rather than relying on the SDK's env fallback, so the stub
     // server in tests/ai-assist-server.test.js can be pointed at without
     // depending on undocumented resolution order.
@@ -137,4 +160,6 @@ module.exports = {
   RefusalError,
   DEFAULT_MODEL,
   MAX_TOKENS,
+  MAX_RETRIES,
+  REQUEST_TIMEOUT_MS,
 }

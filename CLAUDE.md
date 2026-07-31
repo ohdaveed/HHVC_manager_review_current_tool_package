@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 10 unit-test files in tests/ (176 tests)
-bun run test:e2e              # playwright test (9 specs in tests/e2e/)
+bun run test                  # bun test over the 14 unit-test files in tests/ (358 tests)
+bun run test:e2e              # playwright test (11 specs in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,25 +65,27 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs ten Bun unit-test files under `tests/`: `utils`,
-`data-validation`, `page-render`, `csv`, `review-state-schema`,
-`reading-level`, `page-import-checks`, `review-merge`, `review-api-server`
-(which spawns `server.ts` as a subprocess against a temp SQLite DB and
-exercises auth/merge/isolation over real HTTP), and `review-state-sync` —
-176 tests at time of writing. Tests import the modules under test directly.
-`tests/helpers/browser-env.js`, preloaded via `bunfig.toml`, registers a
-**happy-dom** global environment first — the module graph does real work at
-import time (`js/state.js` reads `window.HHVC_DATA`), so the browser globals
-have to exist before the loader runs. It also restores Bun's native
-`fetch`/`Request`/`Response` afterwards, because happy-dom's HTTP client
-breaks `review-api-server`'s real requests, and redefines
+wrong). `bun run test` runs fourteen Bun unit-test files under `tests/`:
+`utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
+`reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
+`review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
+against a temp SQLite DB and exercises auth/merge/isolation over real HTTP),
+`review-state-sync`, `ai-assist-schema`, and `ai-assist-server` (which spawns
+`server.ts` against a stub Anthropic endpoint, so the AI routes are covered
+without a key or a paid call) — 358 tests at time of writing. Tests import the
+modules under test directly. `tests/helpers/browser-env.js`, preloaded via
+`bunfig.toml`, registers a **happy-dom** global environment first — the module
+graph does real work at import time (`js/state.js` reads `window.HHVC_DATA`),
+so the browser globals have to exist before the loader runs. It also restores
+Bun's native `fetch`/`Request`/`Response` afterwards, because happy-dom's HTTP
+client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — nine spec files:
-eight UI-driven (navigation, editor panel, review workflow, review queue,
-import/export, keyboard shortcuts, sitemap/workspace, accessibility) plus the
-original API-level `review-import-export` round-trip, sharing plain helper
+`bun run test:e2e` drives Playwright over `tests/e2e/` — ten spec files:
+nine UI-driven (navigation, editor panel, review workflow, review queue,
+import/export, keyboard shortcuts, sitemap/workspace, accessibility, AI assist)
+plus the original API-level `review-import-export` round-trip, sharing plain helper
 functions in `tests/e2e/helpers.js` (no fixture framework). Playwright's
 `webServer` block starts `bun run start` on `:8080` itself. In a sandbox with
 a pre-installed Chromium, point Playwright at it instead of downloading:
@@ -418,7 +420,17 @@ ui, globals, pages}` state (same shape `window.reviewState.read()`
   returns the merged record. Writes are always scoped to one `page_key` at a
   time — the server never wholesale-replaces the `review_pages` table — the
   server-side half of the same "merge, never wipe" invariant the CSV/JSON
-  import path relies on.
+  import path relies on. The PUT body is capped at `MAX_REVIEW_BODY_BYTES`
+  (1 MB) through the same streaming `readBodyWithLimit()` the AI routes use.
+  The check sits **in front of** the parse, so an oversized body never reaches
+  `mergeReviewRecord` and a rejected write is never a partial one.
+  **The cap is deliberately larger than the AI one**, even though a review
+  record is typically far smaller: `history[]` is append-only and the client
+  pushes the whole record, so this bounds a page's entire review life rather
+  than one edit. Set too low it becomes a permanent sync lockout — once a
+  record crosses it every push fails, and shortening the current note cannot
+  remove historical copies. 64 KB was measured at roughly 70 recorded rounds
+  with long notes, which a real review cycle can reach.
 - **Auth**: every `/api/*` request requires `Authorization: Bearer
 <REVIEW_API_TOKEN>`; a missing/wrong token gets 401, and an unset
   `REVIEW_API_TOKEN` makes the routes return 501 rather than silently allow
@@ -577,6 +589,73 @@ it, and it fails closed rather than open.
   `claude-opus-5`), `AI_EFFORT` (default `high`), and `ANTHROPIC_BASE_URL`
   (only used to point the test suite at a stub). Put them in `.env.local`,
   which is gitignored and must stay that way.
+- **Every input is bounded, and the bound is enforced while reading.** `prompt`
+  caps at 8000 characters, but `page` is serialized into the provider prompt
+  just the same — so it carries its own limits (96 KB serialized, 12 levels
+  deep). The body itself goes through `readBodyWithLimit()`, which streams
+  `req.body` and stops at the first byte past 128 KB. `await req.text()` is the
+  wrong tool: it buffers the whole payload before anything can measure it, so a
+  chunked request (or one that simply lies in Content-Length) allocates
+  whatever it likes and a 413 afterwards does not give the memory back. The
+  Content-Length pre-check stays as a cheap first pass for the honest case. The
+  count is in **bytes, not characters** — comparing `String#length` (UTF-16 code
+  units) against a byte limit lets multi-byte UTF-8 through at roughly three
+  times the cap. Depth is measured iteratively, never recursively: a recursive
+  walk over attacker-supplied nesting is itself the denial of service it is
+  meant to detect.
+- **Past the cap it stops accumulating but keeps draining.** Cancelling the
+  request-body reader is the obvious move and it is wrong: the client is still
+  sending, so the connection is left framed mid-request and its _next_ request
+  is read as garbage — Bun answers that with an empty-bodied protocol-level 400. A real client would see a 413 followed by an inexplicable 400 on a
+  perfectly valid follow-up. It first showed up as a flaky unit-test failure in
+  whichever test happened to run next. Dropping the accumulated text is what
+  actually bounds memory; draining the rest costs only bandwidth the sender is
+  transmitting anyway. `DRAIN_LIMIT_MULTIPLIER` (8×) caps even that, trading
+  the connection away only for a sender who ignores the 413 entirely. The
+  regression test trickles chunks on a timer — enqueuing them all up front lets
+  the client finish before the server reads, so the bug hides.
+- **The `page` cap measures the string that is actually sent.**
+  `serializePageForPrompt()` in `build_scripts/ai/schemas.js` is used by both
+  the size refinement and `buildContentUserPrompt`. They used to differ — the
+  cap measured compact `JSON.stringify(page)` while the prompt sent the
+  pretty-printed form — so indentation was free and an object of many small
+  nested entries could measure ~100 KB and arrive upstream ~4x larger, past the
+  very limit meant to bound tokenization. Measuring one string and sending
+  another is the bug; one shared function is the fix. Real pages expand only
+  ~1.2x, so the tighter measurement rejects nothing the tool itself sends.
+- **Cancellation is decided by signal state, not by the error's shape.**
+  Upstream, the SDK client sets `maxRetries: 1` and a 150s per-call timeout, and
+  the route combines `req.signal` with
+  `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default 240s) — otherwise two
+  validation attempts times the SDK's default two retries times its ~10-minute
+  default timeout leaves one click able to hold a request open far longer than
+  anyone waits. `aiErrorResponse` then takes **both signals** and maps
+  `client.aborted` → **499** and `timeout.aborted` → **504**, so the log answers
+  "who gave up first?" rather than collapsing both into one code. Matching on
+  the error instead does not work and was a real bug: the SDK throws
+  `APIUserAbortError` / `APIConnectionTimeoutError`, which inherit `name`
+  `"Error"` and carry no `status`, so a `name === 'AbortError'` test never fired
+  and every cancelled generation was logged as a 500. `AbortSignal.timeout()`
+  also reports `"TimeoutError"`, not `"AbortError"`. Asking the signal is also
+  provider-agnostic, which matters the moment a second provider lands; the
+  `instanceof` checks remain only as a fallback for aborts raised where no
+  signal was threaded through. `tests/ai-assist-server.test.js` pins the 504
+  path against a deliberately slow stub — the 499 path is not observable from a
+  test, since the client that aborts is the one that cannot read the answer.
+- **The retry carries the rejected draft, not just the failures.** Each API
+  call is stateless, so "fix these and change nothing else" is only followable
+  if the thing to change travels with the instruction; without it the retry
+  regenerates from scratch and loses whatever the first attempt got right.
+  Usage is summed across attempts for the same reason it matters at all —
+  reporting only the last call understates exactly the requests that cost most.
+- **The draft is filed under a sentinel key twice, under two different
+  sentinels.** The link checks in `data-checks.js` take one `pages` object and
+  use it both for what to walk and for which targets resolve, so filing the
+  draft under `__generated__` made that string a resolvable target — a card
+  pointing at it passed every check while being inert in the downloaded module.
+  Running each check under `__generated__` and `__generated_probe__` and
+  unioning the broken targets closes that without duplicating any traversal: a
+  link to either sentinel resolves in one pass and breaks in the other.
 - **Validation is the point of the feature.** `build_scripts/ai/validate-output.js`
   runs a generated page through the exact rules CI enforces —
   `build_scripts/schema.js`, the `build_scripts/data-checks.js` invariants

@@ -84,35 +84,40 @@ function joinChunks(chunks) {
  */
 function extractPageBodyText(page) {
   if (!page || typeof page !== 'object') return ''
-  const chunks = [page.title, page.summary]
+  // Every field goes through normalizeTextItem, including the ones that are
+  // plain strings in today's data. It is a no-op for a string, and the moment
+  // any of these picks up the `{text, unverified}` shape the rest of the schema
+  // already allows, the untouched ones would silently re-introduce the exact
+  // `[object Object]` corruption this function was fixed to remove.
+  const chunks = [normalizeTextItem(page.title), normalizeTextItem(page.summary)]
 
   for (const item of page.audience || []) chunks.push(normalizeTextItem(item))
 
   if (page.whatToKnow) {
-    if (page.whatToKnow.cost) chunks.push(page.whatToKnow.cost)
+    if (page.whatToKnow.cost) chunks.push(normalizeTextItem(page.whatToKnow.cost))
     for (const item of page.whatToKnow.thingsToKnow || []) chunks.push(normalizeTextItem(item))
     for (const item of page.whatToKnow.items || []) chunks.push(normalizeTextItem(item))
   }
 
   if (page.spotlight) {
-    if (page.spotlight.title) chunks.push(page.spotlight.title)
+    if (page.spotlight.title) chunks.push(normalizeTextItem(page.spotlight.title))
     for (const paragraph of page.spotlight.paragraphs || [])
       chunks.push(normalizeTextItem(paragraph))
   }
 
   for (const section of page.sections || []) {
-    if (section.heading) chunks.push(section.heading)
+    if (section.heading) chunks.push(normalizeTextItem(section.heading))
     for (const paragraph of section.paragraphs || []) chunks.push(normalizeTextItem(paragraph))
     for (const bullet of section.bullets || []) chunks.push(normalizeTextItem(bullet))
     for (const step of section.steps || []) {
-      if (step.title) chunks.push(step.title)
+      if (step.title) chunks.push(normalizeTextItem(step.title))
       for (const line of step.text || []) chunks.push(normalizeTextItem(line))
       for (const bullet of step.bullets || []) chunks.push(normalizeTextItem(bullet))
       chunks.push(calloutText(step.callout))
     }
     for (const card of section.cards || []) {
-      if (card.title) chunks.push(card.title)
-      if (card.text) chunks.push(card.text)
+      if (card.title) chunks.push(normalizeTextItem(card.title))
+      if (card.text) chunks.push(normalizeTextItem(card.text))
     }
     for (const row of section.table || []) {
       for (const cell of row || []) chunks.push(normalizeTextItem(cell))

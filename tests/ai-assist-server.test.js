@@ -63,9 +63,19 @@ const stub = {
    * is down" this way keeps the test from encoding the SDK's retry count.
    */
   always: null,
+  /**
+   * Hold the response open this long before answering. Lets a test cancel or
+   * time out a generation mid-flight, which is the only way to exercise the
+   * cancellation mapping — the bug it guards was a branch that looked right
+   * and never executed.
+   */
+  delayMs: 0,
   /** Every request body the stub received. */
   requests: [],
 }
+
+/** Fixed per-call usage, so a retried generation's total is checkable. */
+const STUB_USAGE = { input_tokens: 10, output_tokens: 20 }
 
 function messageResponse(object) {
   return {
@@ -75,7 +85,7 @@ function messageResponse(object) {
     model: 'claude-opus-5',
     content: [{ type: 'text', text: JSON.stringify(object) }],
     stop_reason: 'end_turn',
-    usage: { input_tokens: 10, output_tokens: 20 },
+    usage: { ...STUB_USAGE },
   }
 }
 
@@ -145,6 +155,7 @@ describe('AI assist API (server.ts)', () => {
           })
         }
         stub.requests.push(await req.json().catch(() => null))
+        if (stub.delayMs) await new Promise((resolve) => setTimeout(resolve, stub.delayMs))
         const next = stub.always || stub.queue.shift()
         if (!next) return Response.json(messageResponse(VALID_PAGE))
         if (next.status) return Response.json(next.body, { status: next.status })
@@ -170,6 +181,7 @@ describe('AI assist API (server.ts)', () => {
   beforeEach(() => {
     stub.queue = []
     stub.always = null
+    stub.delayMs = 0
     stub.requests = []
   })
 
@@ -246,6 +258,125 @@ describe('AI assist API (server.ts)', () => {
       const res = await post({ task: 'content', prompt: '' })
       expect(res.status).toBe(400)
     })
+
+    test('rejects a body larger than the cap with 413, not a 400 after parsing it', async () => {
+      // The point is the status: a 413 means the server refused the payload,
+      // where a 400 would mean it buffered and parsed the whole thing first
+      // and only then decided it was too big.
+      const res = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { filler: 'x'.repeat(200_000) },
+      })
+      expect(res.status).toBe(413)
+      expect((await res.json()).error).toContain('bytes or fewer')
+    })
+
+    test('rejects an oversized page even when the prompt is within its own cap', async () => {
+      // `prompt` was always capped at 8000 characters; `page` used to be
+      // unbounded and is serialized into the provider prompt just the same, so
+      // without its own limit the character cap was decorative.
+      const res = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { sections: [{ heading: 'x'.repeat(100_000) }] },
+      })
+      expect(res.status).toBe(400)
+      expect(JSON.stringify((await res.json()).issues)).toContain('serialize')
+    })
+
+    test('rejects a deeply nested page', async () => {
+      let nested = { end: true }
+      for (let i = 0; i < 40; i++) nested = { nested }
+      const res = await post({ task: 'content', prompt: 'Draft a page.', page: nested })
+      expect(res.status).toBe(400)
+      expect(JSON.stringify((await res.json()).issues)).toContain('nest')
+    })
+
+    test('rejects an oversized chunked body the Content-Length check cannot see', async () => {
+      // The pre-check only catches an honest Content-Length. A streamed body
+      // sends none, so this is the case that has to be enforced while reading
+      // rather than after buffering.
+      const chunk = new TextEncoder().encode('x'.repeat(64 * 1024))
+      const body = new ReadableStream({
+        start(controller) {
+          for (let i = 0; i < 6; i += 1) controller.enqueue(chunk)
+          controller.close()
+        },
+      })
+      const res = await fetch(`${base}/api/ai/generate`, {
+        method: 'POST',
+        headers: authed(),
+        body,
+        duplex: 'half',
+      })
+      expect(res.status).toBe(413)
+    })
+
+    test('leaves the connection usable after rejecting an oversized body', async () => {
+      // Rejecting a body must not poison the keep-alive connection. Cancelling
+      // the request-body reader mid-stream does exactly that: the client is
+      // still sending, so the next request on the same connection is read as
+      // garbage and Bun answers it with an empty-bodied protocol-level 400.
+      // That showed up first as a flaky failure in the test that happened to
+      // run next; a real client would see a 413 followed by an inexplicable
+      // 400 on their next, perfectly valid, request.
+      // Chunks are produced SLOWLY and on demand. Enqueuing them all up front
+      // lets the client finish sending before the server ever reads, so a
+      // cancel has nothing to interrupt and the bug hides. Trickling them keeps
+      // the client genuinely mid-send when the cap trips, which is the state
+      // that corrupts the connection.
+      const chunk = new TextEncoder().encode('x'.repeat(32 * 1024))
+      let sent = 0
+      const big = new ReadableStream({
+        async pull(controller) {
+          if (sent >= 12) return controller.close()
+          sent += 1
+          await new Promise((resolve) => setTimeout(resolve, 15))
+          controller.enqueue(chunk)
+        },
+      })
+      const rejected = await fetch(`${base}/api/ai/generate`, {
+        method: 'POST',
+        headers: authed(),
+        body: big,
+        duplex: 'half',
+      })
+      expect(rejected.status).toBe(413)
+
+      // Immediately reuse the connection with a request that must succeed.
+      stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      const after = await post({ task: 'content', prompt: 'Draft a page.' })
+      expect(after.status).toBe(200)
+      expect((await after.json()).valid).toBe(true)
+    })
+
+    test('measures the body in bytes, not characters', async () => {
+      // '€' is 3 bytes of UTF-8 but one JS character, so a cap compared against
+      // String#length would let roughly three times the intended payload
+      // through. 60k of them is ~180 KB on the wire, over the 128 KB cap, but
+      // only 60k characters.
+      const res = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { filler: '€'.repeat(60_000) },
+      })
+      expect(res.status).toBe(413)
+    })
+
+    test('still accepts a real page from this repo as grounding', async () => {
+      // The caps must not reject anything the tool itself displays, or the
+      // "use the current page as context" checkbox silently stops working on
+      // the largest pages — exactly the ones where context helps most.
+      const { loadPageData } = require('../build_scripts/load-pages')
+      const pages = loadPageData().pages
+      const largest = Object.values(pages).sort(
+        (a, b) => JSON.stringify(b).length - JSON.stringify(a).length
+      )[0]
+      stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      const res = await post({ task: 'content', prompt: 'Draft a page.', page: largest })
+      expect(res.status).toBe(200)
+    })
   })
 
   describe('generation', () => {
@@ -313,6 +444,31 @@ describe('AI assist API (server.ts)', () => {
       expect(retryPrompt).toContain('must use bullets')
     })
 
+    test('sends the rejected draft back with the failures, not just the failures', async () => {
+      stub.queue = [{ body: messageResponse(INVALID_PAGE) }, { body: messageResponse(VALID_PAGE) }]
+      await post({ task: 'content', prompt: 'Draft a page.' })
+
+      // Each API call is stateless, so "fix these and change nothing else" is
+      // only followable if the thing to change travels with the instruction.
+      // Without it the retry regenerates from scratch and loses whatever the
+      // first attempt already got right.
+      const retryPrompt = stub.requests[1].messages[0].content
+      expect(retryPrompt).toContain('previous_draft')
+      expect(retryPrompt).toContain('You get a result.')
+    })
+
+    test('reports the token usage of every attempt, not just the last', async () => {
+      stub.queue = [{ body: messageResponse(INVALID_PAGE) }, { body: messageResponse(VALID_PAGE) }]
+      const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
+
+      expect(body.attempts).toBe(2)
+      // The stub reports a fixed usage per call, so a retried generation must
+      // total two calls' worth. Reporting only the final call would understate
+      // the spend of exactly the requests that cost the most.
+      expect(body.usage.output_tokens).toBe(2 * STUB_USAGE.output_tokens)
+      expect(body.usage.input_tokens).toBe(2 * STUB_USAGE.input_tokens)
+    })
+
     test('returns the draft with its issues when both attempts fail', async () => {
       stub.queue = [
         { body: messageResponse(INVALID_PAGE) },
@@ -358,6 +514,31 @@ describe('AI assist API (server.ts)', () => {
       const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
       expect(body.valid).toBe(false)
       expect(body.issues.join(' ')).toContain('thisKeyDoesNotExist')
+    })
+
+    test('flags a link to the validator’s own sentinel key', async () => {
+      // The draft is filed under a sentinel so its internal links can resolve —
+      // which used to make that sentinel a resolvable target too. A card
+      // pointing at it passed every check while being inert in the downloaded
+      // module, which is named from the page's slug and never from the
+      // sentinel.
+      const withSelfTarget = {
+        ...VALID_PAGE,
+        sections: [
+          {
+            heading: 'Related pages',
+            karl: 'Related section.',
+            cards: [{ title: 'Some other page', target: '__generated__' }],
+          },
+        ],
+      }
+      stub.queue = [
+        { body: messageResponse(withSelfTarget) },
+        { body: messageResponse(withSelfTarget) },
+      ]
+      const body = await (await post({ task: 'content', prompt: 'Draft a page.' })).json()
+      expect(body.valid).toBe(false)
+      expect(body.issues.join(' ')).toContain('__generated__')
     })
 
     test('accepts a link to a page key that really exists', async () => {
@@ -442,5 +623,76 @@ describe('AI assist API when unconfigured', () => {
     })
     expect(res.status).toBe(501)
     expect((await res.json()).error).toContain('ANTHROPIC_API_KEY unset')
+  })
+})
+
+// The whole-request timeout, on its own server so AI_REQUEST_TIMEOUT_MS can be
+// short enough to hit deliberately.
+//
+// This is the regression test for the cancellation mapping. The old
+// aiErrorResponse matched on `error.name === "AbortError"`, but aborting the
+// SDK's call makes it throw APIUserAbortError — name "Error", no status — so
+// the branch never ran and every timed-out generation came back as a logged
+// 500. A client-cancelled request maps to 499 through the same code, but that
+// case is not observable from a test: the client that aborts is precisely the
+// one that cannot then read the response. The timeout path is the same branch
+// with a client still attached to see the answer.
+describe('AI assist API request timeout', () => {
+  const TIMEOUT_PORT = 8134
+  const TIMEOUT_STUB_PORT = 8135
+  const timeoutBase = `http://127.0.0.1:${TIMEOUT_PORT}`
+  let proc
+  let slowStub
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-timeout-'))
+
+    slowStub = Bun.serve({
+      port: TIMEOUT_STUB_PORT,
+      hostname: '127.0.0.1',
+      async fetch() {
+        // Far longer than the server's budget, so the server always gives up
+        // first and the assertion is about the server, not about this timing.
+        await new Promise((resolve) => setTimeout(resolve, 10_000))
+        return Response.json(messageResponse(VALID_PAGE))
+      },
+    })
+
+    proc = Bun.spawn(['bun', 'run', 'server.ts'], {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        PORT: String(TIMEOUT_PORT),
+        HOST: '127.0.0.1',
+        REVIEW_API_TOKEN: TOKEN,
+        ANTHROPIC_API_KEY: 'sk-ant-stub',
+        ANTHROPIC_BASE_URL: `http://127.0.0.1:${TIMEOUT_STUB_PORT}`,
+        AI_REQUEST_TIMEOUT_MS: '400',
+        DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
+      },
+      stdout: 'ignore',
+      stderr: 'ignore',
+    })
+    await waitForServer(`${timeoutBase}/api/ai/capabilities`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    slowStub?.stop(true)
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('answers 504 when the upstream outlives the request budget', async () => {
+    const res = await fetch(`${timeoutBase}/api/ai/generate`, {
+      method: 'POST',
+      headers: authed(),
+      body: JSON.stringify({ task: 'content', prompt: 'Take your time.' }),
+    })
+
+    // Specifically NOT 500: a wedged upstream is a gateway timeout, and
+    // logging it as a server fault buries the failures that are real ones.
+    expect(res.status).toBe(504)
+    expect((await res.json()).error).toContain('timed out')
   })
 })
