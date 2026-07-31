@@ -21,6 +21,22 @@ async function gotoFresh(page, path = '/') {
   // The sticky review bar mounts a beat after the first render; most flows
   // (workspace toggling, w shortcut) need it, so wait for full app init.
   await page.waitForSelector('[data-sticky-action="toggle-workspace"]')
+  // ...but the sticky bar is mounted by js/ux-improvements.js, which runs
+  // EARLY in the DOMContentLoaded cascade. js/keyboard-shortcuts.js is the last
+  // script in index.html and attaches its keydown listener in its own init, so
+  // waiting for it is what actually makes "full app init" true. Without this a
+  // test could press a global shortcut into a document with no handler yet.
+  await waitForShortcuts(page)
+}
+
+// Wait until js/keyboard-shortcuts.js has actually attached its keydown
+// listener. The sticky bar that gotoFresh waits for is mounted by
+// js/ux-improvements.js, which initializes EARLIER in the DOMContentLoaded
+// cascade, so it is a proxy for "the app booted", not for "a keypress will be
+// handled". Any test that presses a global shortcut must await this first or
+// it is racing the listener.
+async function waitForShortcuts(page) {
+  await page.waitForFunction(() => window.reviewKeyboardShortcuts?.ready === true)
 }
 
 // Record every toast that appears into window.__toasts. Toasts auto-dismiss
@@ -154,6 +170,7 @@ async function selectPage(page, key) {
 }
 
 module.exports = {
+  waitForShortcuts,
   STORAGE_KEY,
   DECISIONS,
   gotoFresh,

@@ -150,16 +150,101 @@ const PAGE_OUTPUT_SCHEMA = {
   required: ['slug', 'type', 'title', 'summary', 'audience', 'reading', 'sections'],
 }
 
+/**
+ * Caps on the `page` grounding object.
+ *
+ * `prompt` is capped at 8000 characters, but `page` used to be an unbounded
+ * `z.record(z.unknown())` — and it is serialized wholesale into the provider
+ * prompt. That made the character cap decorative: an authenticated client could
+ * send a megabyte of nested JSON and have the server pay for tokenizing it.
+ * The real page objects in `pages/*.js` are nowhere near either limit (the
+ * largest serializes to a few tens of KB and nests about six deep), so these
+ * bound the abuse case without rejecting anything the tool itself displays.
+ */
+const MAX_PAGE_JSON_BYTES = 96 * 1024
+const MAX_PAGE_DEPTH = 12
+
+/**
+ * Serialize the grounding page exactly as the provider prompt will send it.
+ *
+ * Shared with `buildContentUserPrompt` on purpose. The cap used to measure
+ * compact `JSON.stringify(page)` while the prompt sent the pretty-printed
+ * form, so indentation was free: an object of many small nested entries
+ * measured ~100 KB here and expanded to ~400 KB upstream, sailing past a limit
+ * whose whole job is bounding what gets tokenized. Measuring one string and
+ * sending another is the bug; one function used by both is the fix.
+ * @param {unknown} page
+ * @returns {string}
+ */
+function serializePageForPrompt(page) {
+  return JSON.stringify(page, null, 2)
+}
+
+/**
+ * Depth of the deepest nested array/object, counting the root as 1.
+ *
+ * Iterative rather than recursive on purpose: a recursive walk over
+ * attacker-supplied nesting is itself the denial-of-service it is meant to
+ * detect, since it blows the stack before it can report anything. This bails
+ * out as soon as the limit is passed, so a deeply nested payload costs one
+ * partial traversal rather than a full one.
+ * @param {unknown} value
+ * @param {number} limit Stop once depth exceeds this.
+ * @returns {number} The measured depth, capped at `limit + 1`.
+ */
+function measureDepth(value, limit) {
+  let deepest = 0
+  const stack = [{ node: value, depth: 1 }]
+  while (stack.length) {
+    const { node, depth } = stack.pop()
+    if (!node || typeof node !== 'object') continue
+    if (depth > deepest) deepest = depth
+    if (depth > limit) return depth
+    for (const child of Array.isArray(node) ? node : Object.values(node)) {
+      if (child && typeof child === 'object') stack.push({ node: child, depth: depth + 1 })
+    }
+  }
+  return deepest
+}
+
+/**
+ * The page open in the mockup, sent as grounding context.
+ *
+ * Still passed through as opaque JSON rather than re-validated against
+ * `pageSchema`: it comes from `pages/*.js`, which `validate.js` already
+ * guarantees, and a stricter shape check here would reject a page the tool is
+ * currently displaying. Size and depth are a different matter — those are
+ * resource limits, not shape opinions, and they hold regardless of where the
+ * object came from.
+ */
+const groundingPageSchema = z
+  .record(z.unknown())
+  .refine(
+    (page) => {
+      try {
+        // Buffer.byteLength, not String#length: the constant is named in bytes
+        // and the request contract is byte-based, but `.length` counts UTF-16
+        // code units, so multi-byte page copy could exceed the cap by roughly
+        // 3x. Same unit bug that was already fixed in readBodyWithLimit —
+        // worth checking anywhere a byte limit meets a JS string.
+        return Buffer.byteLength(serializePageForPrompt(page), 'utf8') <= MAX_PAGE_JSON_BYTES
+      } catch {
+        // A circular structure cannot be serialized into the prompt either.
+        return false
+      }
+    },
+    { message: `page must serialize to ${MAX_PAGE_JSON_BYTES} bytes or fewer` }
+  )
+  .refine((page) => measureDepth(page, MAX_PAGE_DEPTH) <= MAX_PAGE_DEPTH, {
+    message: `page must not nest deeper than ${MAX_PAGE_DEPTH} levels`,
+  })
+
 /** Inbound POST /api/ai/generate body. */
 const generateRequestSchema = z.object({
   task: z.enum(['content']),
   provider: z.enum(['claude']).optional(),
   prompt: z.string().min(1).max(8000),
-  // The page currently open in the mockup, sent as grounding context. Passed
-  // through as opaque JSON rather than re-validated: it comes from pages/*.js,
-  // which validate.js already guarantees, and a stricter check here would
-  // reject a page the tool itself is displaying.
-  page: z.record(z.unknown()).optional(),
+  page: groundingPageSchema.optional(),
 })
 
 module.exports = {
@@ -167,4 +252,9 @@ module.exports = {
   PAGE_TYPES,
   SECTION_COMPONENTS,
   generateRequestSchema,
+  serializePageForPrompt,
+  measureDepth,
+  MAX_PAGE_JSON_BYTES,
+  MAX_PAGE_DEPTH,
+  MAX_REQUEST_BODY_BYTES: 128 * 1024,
 }

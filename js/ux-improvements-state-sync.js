@@ -119,14 +119,24 @@ import { hasValidPageData } from './utils.js'
       detail: readingAnalysis ? readingAnalysis.detail : 'Reading-level module not loaded',
     })
 
-    // Plain-language rules from the HHVC standards manual (sections 7.2-7.8),
-    // via js/plain-language.js. Only the manual's mandates are scored here;
-    // its advisory rules are rendered separately by renderPageChecksPanel so
-    // ~90 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    // Plain-language rules via js/plain-language.js. Only mandates are scored
+    // here; advisory rules are rendered separately by renderPageChecksPanel so
+    // ~115 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    //
+    // `citation` is carried through deliberately. It used to be dropped here,
+    // which meant a reviewer looking at a failed mandate had no way to find the
+    // rule's authority — the whole reason each rule records one. The
+    // hand-written rules above carry no citation, so the renderer treats it as
+    // optional rather than every rule growing an empty line.
     const plainLanguage = window.plainLanguage?.analyzePlainLanguage?.(page)
     for (const check of plainLanguage?.checks || []) {
       if (check.severity !== 'error') continue
-      rules.push({ label: check.label, pass: check.pass, detail: check.detail })
+      rules.push({
+        label: check.label,
+        pass: check.pass,
+        detail: check.detail,
+        citation: check.citation,
+      })
     }
 
     return rules
@@ -412,6 +422,11 @@ import { hasValidPageData } from './utils.js'
             <li class="compliance-item ${rule.pass ? 'pass' : 'warn'}">
               <span>
                 <span class="compliance-rule">${escapeHtml(rule.label)}</span>
+                ${
+                  rule.citation
+                    ? `<span class="compliance-citation">${escapeHtml(rule.citation)}</span>`
+                    : ''
+                }
                 <span class="compliance-detail">${escapeHtml(rule.detail)}</span>
               </span>
             </li>
@@ -434,7 +449,7 @@ import { hasValidPageData } from './utils.js'
    * as a separate, clearly non-blocking section.
    *
    * These are kept out of the scored list on purpose: they are suggestions,
-   * they run to ~90 findings across the 19 pages, and mixing them into the
+   * they run to ~115 findings across the 19 pages, and mixing them into the
    * pass/fail ratio would make every page look broken. Each finding names the
    * field it came from so it can be acted on rather than just counted.
    * @param {object} page
@@ -453,9 +468,8 @@ import { hasValidPageData } from './utils.js'
         <h3>Plain-language suggestions</h3>
         <p class="review-decision-note">
           Advisory only — these do not count toward the checks above. Rules come from the HHVC
-          Web Governance and Content Standards Manual, section ${escapeHtml(
-            suggestions[0].section
-          )} onward.
+          Web Governance and Content Standards Manual and SF.gov's published style guidance;
+          each finding cites its own source below.
           Average sentence length is ${escapeHtml(String(analysis.metrics.meanSentenceWords))}
           words across ${escapeHtml(String(analysis.metrics.sentenceCount))} sentences.
         </p>
@@ -466,6 +480,7 @@ import { hasValidPageData } from './utils.js'
             <li class="compliance-item warn">
               <span>
                 <span class="compliance-rule">${escapeHtml(check.label)}</span>
+                <span class="compliance-citation">${escapeHtml(check.citation)}</span>
                 <span class="compliance-detail">${escapeHtml(check.detail)}</span>
                 ${
                   check.offenders.length

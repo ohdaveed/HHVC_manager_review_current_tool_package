@@ -226,6 +226,117 @@ test.describe('AI assist panel', () => {
     expect(hasGenerated).toBe(false)
   })
 
+  test('preview links do not navigate the real mockup', async ({ page }) => {
+    // renderPageMain emits the same data-render-target buttons the live page
+    // uses, and the click handler in js/page-render.js is bound to `document` —
+    // so without neutralizing them, clicking a link inside a DRAFT would move
+    // the reviewer off the page they were reviewing.
+    await stubAiApi(page, {
+      generate: {
+        ...VALID_RESULT,
+        result: {
+          ...VALID_RESULT.result,
+          sections: [
+            {
+              heading: 'Related pages',
+              karl: 'Related section.',
+              cards: [{ title: 'Report rats and mice', target: 'rodentsReport', karl: 'Card.' }],
+            },
+          ],
+        },
+      },
+    })
+    await gotoFresh(page)
+    const keyBefore = await page.locator('#pageSelect').inputValue()
+
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+    await page.fill('#aiAssistPrompt', 'Draft a page with a related link.')
+    await page.click('#aiAssistGenerate')
+    await expect(page.locator('.ai-assist-preview')).toBeVisible()
+
+    const previewLink = page.locator('.ai-assist-preview [data-render-inert]').first()
+    await expect(previewLink).toBeVisible()
+    // The live target attribute must be gone, not merely ignored.
+    await expect(page.locator('.ai-assist-preview [data-render-target]')).toHaveCount(0)
+
+    // Dispatched rather than clicked: the button also carries aria-disabled,
+    // so a normal click never reaches it. This asserts the stronger property —
+    // that even a click which does get through leaves the mockup alone,
+    // because the document-level handler has no target to navigate to.
+    await previewLink.dispatchEvent('click')
+    await expect(page.locator('#pageSelect')).toHaveValue(keyBefore)
+  })
+
+  test('keeps the prompt when a generation fails', async ({ page }) => {
+    await stubAiApi(page, {
+      generateStatus: 500,
+      generate: { error: 'Something broke upstream.' },
+    })
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    await configure(page)
+
+    const prompt = 'Draft an Information page about bed bug reporting.'
+    await page.fill('#aiAssistPrompt', prompt)
+    await page.click('#aiAssistGenerate')
+
+    await expect(page.locator('.ai-assist-error')).toBeVisible()
+    // The panel re-renders on every state change, which replaces the textarea.
+    // Losing the request on a failure would make the reviewer retype it to
+    // retry — worst exactly when retrying is what they want to do.
+    await expect(page.locator('#aiAssistPrompt')).toHaveValue(prompt)
+  })
+
+  test('keeps prompt text typed while the capability request is in flight', async ({ page }) => {
+    // Saving settings kicks off a capability GET and re-renders when it
+    // resolves. A reviewer can easily type through that round trip, and the
+    // re-render replaces the textarea from panel state — so state has to be
+    // re-read immediately before rendering, not just when Save was clicked.
+    await stubAiApi(page)
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    // Configure FIRST so the prompt field is already enabled. Otherwise
+    // page.fill blocks until the field enables — which only happens after the
+    // very re-render this test is about, so the race never occurs.
+    await configure(page)
+
+    // Now make the next capabilities call slow, leaving a window to type in.
+    await page.route(`${AI_ORIGIN}/api/ai/capabilities`, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          providers: { claude: true },
+          models: { claude: 'claude-opus-5' },
+          tasks: ['content'],
+          groundedBy: [],
+          pageCount: 19,
+        }),
+      })
+    })
+
+    // The settings <details> collapses once configured, so re-open it before
+    // reaching the Save button.
+    await page.click('.ai-assist-settings summary')
+
+    // Synchronize on the response rather than a fixed wait. A timeout that
+    // expires before the re-render would let the assertion pass without the
+    // behaviour under test ever happening — the test would look green and
+    // guard nothing.
+    const capabilities = page.waitForResponse((res) => res.url().includes('/api/ai/capabilities'))
+    // Re-saving keeps the existing capabilities in state, so the field stays
+    // enabled while the new request is in flight.
+    await page.click('#aiAssistSaveSettings')
+    const typed = 'Draft a page about reporting cockroaches.'
+    await page.fill('#aiAssistPrompt', typed)
+
+    await capabilities
+    // The re-render happens in the microtask after the response resolves.
+    await expect(page.locator('#aiAssistPrompt')).toHaveValue(typed)
+  })
+
   // Regression: the AI-assist toast helper must actually reach showToast.
   //
   // js/ai-assist.js guards with `typeof showToast === 'function'` against a

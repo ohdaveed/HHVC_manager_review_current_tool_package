@@ -32,6 +32,7 @@ const REVIEW_RECORD_FIELDS = [
 
   window.utils = {
     escapeHtml,
+    safeUrl,
     getPrimaryCta,
     setPrimaryCta,
     resolvePageKey,
@@ -136,6 +137,56 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;')
+}
+
+/**
+ * Schemes that are safe to put in an `href`. Anything else — `javascript:`,
+ * `data:`, `vbscript:` — executes on click, and `escapeHtml` does NOT stop it:
+ * `javascript:alert(1)` contains none of the five characters it escapes, so it
+ * passes through an escaped attribute completely intact.
+ *
+ * This matters most for AI assist. `js/page-render.js` renders generated drafts
+ * through the same functions as real pages, and the page schema types `url` /
+ * `buttonUrl` as bare strings, so a draft could otherwise put a `javascript:`
+ * URL behind a clickable link in the preview. `formatMarkdown` already applies
+ * the same rule to inline `[label](target)` links via its `^https?://` test;
+ * this extends it to the structured URL fields, which had no such guard.
+ */
+const SAFE_URL_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:']
+
+/**
+ * Return a URL that is safe to interpolate into an `href`, or the inert `#`
+ * sentinel when it is not. Accepts absolute http(s)/mailto/tel URLs and
+ * root-relative paths (the mockup uses `/forms/mosquito-workshop-request/`);
+ * rejects protocol-relative `//host` URLs, which look relative but are not.
+ *
+ * The caller must still run the result through `escapeHtml` — this guards the
+ * scheme, not the attribute delimiters.
+ * @param {string} value
+ * @returns {string} the original URL, or '#' if its scheme is not safe
+ */
+function safeUrl(value) {
+  const raw = String(value ?? '').trim()
+  if (!raw) return '#'
+
+  // Browsers strip tabs, newlines, and other control characters out of a URL
+  // before resolving it, so "java\tscript:alert(1)" runs. Test the same string
+  // the browser would, while still returning the caller's original on success.
+  const probe = raw.replace(/[\u0000-\u0020]/g, '').toLowerCase()
+
+  if (probe.startsWith('#')) return raw
+  // Protocol-relative: "//evil.example" inherits the page scheme and leaves the
+  // origin, so it is not the same thing as a root-relative path.
+  if (probe.startsWith('//')) return '#'
+  if (probe.startsWith('/')) return raw
+
+  // Deliberately hand-parsed rather than using `new URL()`: this file is
+  // evaluated in the plain VM context that tests/helpers/load-scripts.js builds,
+  // which has no URL constructor, and a guard that silently fails closed in one
+  // of its two execution contexts is worse than no guard at all.
+  const scheme = probe.match(/^([a-z][a-z0-9+.-]*):/)
+  if (!scheme) return raw // no scheme at all — a relative path
+  return SAFE_URL_SCHEMES.includes(scheme[1] + ':') ? raw : '#'
 }
 
 /**
@@ -569,6 +620,8 @@ export {
   hasValidPageData,
   parseCsv,
   resolvePageKey,
+  SAFE_URL_SCHEMES,
+  safeUrl,
   setPrimaryCta,
   setText,
   setValue,

@@ -9,6 +9,7 @@ const {
   countWords,
   containsPhrase,
   normalizePageType,
+  SOURCES,
 } = require('../js/plain-language.js')
 
 /** Minimal schema-valid page to hang a single rule off. */
@@ -251,6 +252,69 @@ describe('contractions check', () => {
     const page = makePage({ sections: [sectionWith(["The City's inspectors will visit."])] })
     expect(checkFor(page, 'contractions').pass).toBe(true)
   })
+
+  test('flags a contraction written with a typographic apostrophe', () => {
+    // Repo copy mixes U+2019 and U+0027 freely, and this is an error-severity
+    // mandate — a curly apostrophe silently passing would make the rule
+    // unenforced for roughly half the real text.
+    const page = makePage({ sections: [sectionWith(['You don’t need to send photos.'])] })
+    expect(checkFor(page, 'contractions').pass).toBe(false)
+  })
+
+  test('leaves a typographic possessive alone', () => {
+    const page = makePage({ sections: [sectionWith(['The City’s inspectors will visit.'])] })
+    expect(checkFor(page, 'contractions').pass).toBe(true)
+  })
+})
+
+describe('callout titles are analysed, not just callout text', () => {
+  test('flags a banned mandate in a section callout title', () => {
+    // renderCallout displays the title, so exempting it left a visible field
+    // outside every mandate rule.
+    const page = makePage({
+      sections: [
+        {
+          heading: 'What to do',
+          karl: 'Body block',
+          callout: { title: 'The owner shall act', text: 'We will inspect.', karl: 'Callout' },
+        },
+      ],
+    })
+    expect(checkFor(page, 'shall-prohibited').pass).toBe(false)
+  })
+
+  test('flags a banned mandate in a step callout title', () => {
+    const page = makePage({
+      sections: [
+        {
+          heading: 'What to do',
+          karl: 'Body block',
+          steps: [
+            {
+              title: 'Start your report',
+              karl: 'Step',
+              callout: { title: 'You shall wait', text: 'We will call you.', karl: 'Callout' },
+            },
+          ],
+        },
+      ],
+    })
+    expect(checkFor(page, 'shall-prohibited').pass).toBe(false)
+  })
+
+  test('treats title: false as no title rather than a heading to score', () => {
+    const page = makePage({
+      sections: [
+        {
+          heading: 'What to do',
+          karl: 'Body block',
+          callout: { title: false, text: 'We will inspect.', karl: 'Callout' },
+        },
+      ],
+    })
+    const paths = collectTextUnits(page).map((unit) => unit.path)
+    expect(paths).not.toContain('sections[0].callout.title')
+  })
 })
 
 describe('shall prohibition', () => {
@@ -445,6 +509,21 @@ describe('SF.gov house style', () => {
     expect(checkFor(page, 'house-style').pass).toBe(true)
   })
 
+  test('flags uppercase AM/PM on a two-digit hour', () => {
+    // `\b\d` only matches a single digit, so "10 AM" used to slip through
+    // while "9 AM" was caught — and office hours are almost always two digits.
+    for (const text of ['We are open from 9 AM.', 'We close at 10 AM.', 'Call before 12 PM.']) {
+      expect(checkFor(makePage({ sections: [sectionWith([text])] }), 'house-style').pass).toBe(
+        false
+      )
+    }
+  })
+
+  test('leaves lowercase am/pm alone', () => {
+    const page = makePage({ sections: [sectionWith(['We are open from 10 am to 4 pm.'])] })
+    expect(checkFor(page, 'house-style').pass).toBe(true)
+  })
+
   test('flags an ampersand, Latin abbreviation, and "please"', () => {
     for (const text of [
       'Rats & mice are covered.',
@@ -547,10 +626,51 @@ describe('severity split', () => {
     }
   })
 
-  test('cites a manual section on every check', () => {
+  // This used to assert /^7\.\d/ on every check, which is what produced the
+  // miscitations it was meant to prevent: rules whose authority is NOT a §7
+  // manual section had to invent one, so the Karl button cap and two A-to-Z
+  // house-style rules all claimed §7.8 (the SEO section). A citation is only
+  // useful if it can name the document it points into.
+  test('cites a real source document on every check', () => {
+    const sourceIds = Object.values(SOURCES).map((source) => source.id)
     for (const check of analyzePlainLanguage(makePage({})).checks) {
-      expect(check.section).toMatch(/^7\.\d/)
+      expect(sourceIds).toContain(check.source)
+      expect(check.section.length).toBeGreaterThan(0)
     }
+  })
+
+  test('cites a numbered section when the source is the standards manual', () => {
+    const manualChecks = analyzePlainLanguage(makePage({})).checks.filter(
+      (check) => check.source === 'manual'
+    )
+    expect(manualChecks.length).toBeGreaterThan(0)
+    for (const check of manualChecks) {
+      expect(check.section).toMatch(/^\d+\.\d/)
+    }
+  })
+
+  test('does not cite the SEO section for rules that are not about SEO', () => {
+    const bySection = new Map(
+      analyzePlainLanguage(makePage({})).checks.map((check) => [check.id, check])
+    )
+    // 7.8 is "Search Engine Optimization (SEO) and Metadata Controls".
+    expect(bySection.get('seo-title').section).toBe('7.8')
+    expect(bySection.get('meta-description-opening').section).toBe('7.8')
+    // The Karl button cap is component governance (6.3), not SEO.
+    expect(bySection.get('button-length').section).toBe('6.3')
+    // These two come from SF.gov's published style guide, not the manual.
+    expect(bySection.get('house-style').source).toBe('sfgovStyle')
+    expect(bySection.get('list-length').source).toBe('sfgovStyle')
+  })
+
+  test('builds a citation that names the document for non-manual sources', () => {
+    const bySection = new Map(
+      analyzePlainLanguage(makePage({})).checks.map((check) => [check.id, check])
+    )
+    expect(bySection.get('button-length').citation).toBe('Manual §6.3')
+    expect(bySection.get('list-length').citation).toBe(
+      'SF.gov / Karl Editor Help Center — House style, A to Z — Bullets'
+    )
   })
 })
 
@@ -565,15 +685,47 @@ describe('against the real page corpus', () => {
 
   test('keeps mandatory failures rare enough to be actionable', () => {
     // The whole point of tuning the rules was signal over volume: a panel that
-    // fails everything gets ignored. If a rule change pushes this up, either
-    // the rule is too broad or the copy genuinely regressed - check which.
-    let failures = 0
+    // fails everything gets ignored.
+    //
+    // Three bounds, because each catches a failure the others miss. A per-page
+    // cap alone is not enough: an over-broad rule that adds exactly one failure
+    // to every page passes it while nearly tripling the corpus total. A corpus
+    // total alone is not enough either — it fails on any copy PR that adds one
+    // finding anywhere, and reports only that a number moved, not which page
+    // moved it. Current values are 11 corpus-wide, 2 on the worst page, and 4
+    // pages for the broadest single rule.
+    const MAX_FAILURES_PER_PAGE = 3
+    const MAX_FAILURES_CORPUS_WIDE = 15
+    const MAX_PAGES_PER_RULE = 8
+
+    let total = 0
+    const pagesPerRule = {}
+
     for (const [key] of data.order) {
-      for (const check of analyzePlainLanguage(data.pages[key]).checks) {
-        if (check.severity === 'error' && !check.pass) failures += 1
-      }
+      const failed = analyzePlainLanguage(data.pages[key])
+        .checks.filter((check) => check.severity === 'error' && !check.pass)
+        .map((check) => check.id)
+      total += failed.length
+      for (const id of failed) pagesPerRule[id] = (pagesPerRule[id] || 0) + 1
+
+      // Names the page that regressed rather than only reporting a counter.
+      expect(`${key}: ${failed.join(', ') || 'none'}`).toBe(
+        `${key}: ${failed.slice(0, MAX_FAILURES_PER_PAGE).join(', ') || 'none'}`
+      )
     }
-    expect(failures).toBeLessThanOrEqual(12)
+
+    // Breadth across the corpus, which no per-page assertion can see.
+    expect(
+      `corpus failures over ${MAX_FAILURES_CORPUS_WIDE}: ${total > MAX_FAILURES_CORPUS_WIDE}`
+    ).toBe(`corpus failures over ${MAX_FAILURES_CORPUS_WIDE}: false`)
+
+    // The most direct statement of "this rule is too broad": one mandate
+    // should never be failing most of the site at once.
+    for (const [id, pages] of Object.entries(pagesPerRule)) {
+      expect(
+        `${id} fails ${pages > MAX_PAGES_PER_RULE ? 'too many' : 'an acceptable number of'} pages`
+      ).toBe(`${id} fails an acceptable number of pages`)
+    }
   })
 
   test('never reports an offender without a field path to fix', () => {

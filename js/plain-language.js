@@ -205,7 +205,10 @@
       pattern: /\(\d{3}\)\s*\d{3}[-.]\d{4}|\b\d{3}\.\d{3}\.\d{4}\b/,
       note: 'Format phone numbers as 415-555-1212',
     },
-    { pattern: /\b\d\s?(AM|PM)\b/, note: 'Use lowercase am/pm' },
+    // \b\d only matches a single digit, and \b sits before it — so "10 AM"
+    // slipped through while "9 AM" was caught. Bounded to 1-2 digits with an
+    // optional :mm so every clock time is covered.
+    { pattern: /\b\d{1,2}(:\d{2})?\s?(AM|PM)\b/, note: 'Use lowercase am/pm' },
     { pattern: /^welcome to\b/i, note: 'Skip the welcome — say what people can do' },
   ]
 
@@ -251,10 +254,14 @@
   function extractLinks(text) {
     const links = []
     const pattern = /\[([^\]]+)\]\(([^)]*)\)/g
-    let match = pattern.exec(String(text == null ? '' : text))
+    // Coerced once. The loop advances through `pattern.lastIndex`, not through
+    // the string, so re-coercing per iteration only hides where the cursor
+    // actually lives.
+    const source = String(text == null ? '' : text)
+    let match = pattern.exec(source)
     while (match) {
       links.push({ label: match[1], target: match[2] })
-      match = pattern.exec(String(text == null ? '' : text))
+      match = pattern.exec(source)
     }
     return links
   }
@@ -328,6 +335,12 @@
       }
       return undefined
     }
+    // `title: false` is the documented way to render a callout with no title
+    // (see renderCallout), so it is an absence, not a heading to score.
+    const addCalloutTitle = (path, title) => {
+      if (title === false) return undefined
+      return add(path, 'callout-title', title, { heading: true })
+    }
 
     add('title', 'title', page.title, { heading: true })
     add('summary', 'summary', page.summary, { prose: true })
@@ -375,6 +388,11 @@
           addItem(`${stepBase}.bullets[${index}]`, 'step-bullet', entry, { prose: true })
         })
         if (step.callout) {
+          // The title is rendered (renderCallout in js/page-render.js) and so
+          // has to be analysed. Collecting only `.text` left a visible field
+          // exempt from the mandate rules — "The owner shall act" as a callout
+          // title passed while the identical wording anywhere else failed.
+          addCalloutTitle(`${stepBase}.callout.title`, step.callout.title)
           add(`${stepBase}.callout.text`, 'callout', step.callout.text, { prose: true })
         }
       })
@@ -388,6 +406,7 @@
         })
       })
       if (section.callout) {
+        addCalloutTitle(`${base}.callout.title`, section.callout.title)
         add(`${base}.callout.text`, 'callout', section.callout.text, { prose: true })
       }
       if (section.image) {
@@ -401,20 +420,51 @@
   // --- Check helpers ----------------------------------------------------
 
   /**
+   * Which document a rule's `section` locator points into. Most rules come from
+   * the standards manual, but a few encode SF.gov's published house style,
+   * which the manual does not restate — those cite the vendored snapshot
+   * instead. Before this existed every rule carried a bare manual-style number,
+   * which pushed three rules into citing sections they do not come from (the
+   * Karl button cap and two A-to-Z rules all pointed at §7.8, the SEO section).
+   * A citation shown to a reviewer has to name the document as well as the
+   * section, or "7.8" silently means two different authorities.
+   */
+  const SOURCES = {
+    manual: {
+      id: 'manual',
+      label: 'HHVC Web Governance and Content Standards Manual',
+      path: 'notebooklm/hhvc-standards-manual.md',
+    },
+    sfgovStyle: {
+      id: 'sfgovStyle',
+      label: 'SF.gov / Karl Editor Help Center',
+      path: 'docs/source/sfgov-style/writing-and-style.md',
+    },
+  }
+
+  /**
    * @param {string} id
    * @param {string} label
-   * @param {string} section Manual section this rule comes from.
+   * @param {string} section Locator within `source` — a manual section number
+   *   ("7.2.2", "6.3") or a heading in the vendored SF.gov snapshot.
    * @param {boolean} pass
    * @param {string} detail
    * @param {Array<object>} offenders
    * @param {string} severity 'error' for a manual mandate, 'warning' for advice.
+   * @param {object} [source] One of SOURCES; defaults to the standards manual.
    * @returns {object}
    */
-  function makeCheck(id, label, section, pass, detail, offenders, severity) {
+  function makeCheck(id, label, section, pass, detail, offenders, severity, source) {
+    const from = source || SOURCES.manual
     return {
       id,
       label,
       section,
+      source: from.id,
+      sourceLabel: from.label,
+      sourcePath: from.path,
+      /** Ready-to-render citation, so callers never re-assemble one. */
+      citation: from.id === 'manual' ? `Manual §${section}` : `${from.label} — ${section}`,
       pass,
       severity: severity || 'error',
       detail,
@@ -429,6 +479,32 @@
   }
 
   /**
+   * Compiled phrase patterns, keyed by phrase.
+   *
+   * Every phrase comes from a module constant, so the set is small and fixed
+   * while the call count is not: each text unit is tested against CONTRACTIONS,
+   * WORD_SWAPS, IDIOMS, and WEAK_MODALS, and the panel re-analyses on every
+   * debounced autosave. Without this that is a few thousand identical
+   * recompilations per render.
+   */
+  const phrasePatterns = new Map()
+
+  /**
+   * Fold typographic apostrophes to the ASCII form.
+   *
+   * Page copy mixes both — "Karl's" with U+2019 sits a few hundred lines from
+   * "don't" with U+0027 — so a single spelling in CONTRACTIONS would silently
+   * miss half the real uses. Normalizing the haystack covers both without
+   * doubling every list, and it is deliberately NOT applied in `excerpt`: what
+   * the reviewer is shown should be the text as written.
+   * @param {string} text
+   * @returns {string}
+   */
+  function normalizeApostrophes(text) {
+    return String(text == null ? '' : text).replace(/[‘’ʼ]/g, "'")
+  }
+
+  /**
    * Case-insensitive whole-phrase search that ignores matches inside a longer
    * word, so "require" does not fire on "requirement".
    * @param {string} haystack
@@ -436,8 +512,13 @@
    * @returns {boolean}
    */
   function containsPhrase(haystack, phrase) {
-    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    return new RegExp(`(^|[^\\w-])${escaped}([^\\w-]|$)`, 'i').test(haystack)
+    let pattern = phrasePatterns.get(phrase)
+    if (!pattern) {
+      const escaped = normalizeApostrophes(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      pattern = new RegExp(`(^|[^\\w-])${escaped}([^\\w-]|$)`, 'i')
+      phrasePatterns.set(phrase, pattern)
+    }
+    return pattern.test(normalizeApostrophes(haystack))
   }
 
   // --- The checks -------------------------------------------------------
@@ -998,13 +1079,14 @@
       makeCheck(
         'house-style',
         'SF.gov house style',
-        '7.8',
+        'House style, A to Z',
         houseStyleHits.length === 0,
         houseStyleHits.length
           ? `${houseStyleHits.length} house-style issue(s)`
           : 'Matches SF.gov house style',
         houseStyleHits,
-        'warning'
+        'warning',
+        SOURCES.sfgovStyle
       )
     )
 
@@ -1034,7 +1116,7 @@
       makeCheck(
         'button-length',
         'Button text length',
-        '7.8',
+        '6.3',
         buttonHits.length === 0,
         buttonHits.length
           ? `${buttonHits.length} button(s) over ${MAX_BUTTON_CHARS} characters`
@@ -1062,13 +1144,14 @@
       makeCheck(
         'list-length',
         'Bulleted list length',
-        '7.2.2',
+        'House style, A to Z — Bullets',
         listHits.length === 0,
         listHits.length
           ? `${listHits.length} list(s) over ${MAX_BULLETS_PER_LIST} bullets`
           : 'Lists stay short',
         listHits,
-        'warning'
+        'warning',
+        SOURCES.sfgovStyle
       )
     )
 
@@ -1212,6 +1295,7 @@
     countWords,
     containsPhrase,
     normalizePageType,
+    SOURCES,
     RECOMMENDED_READING_TARGETS,
     MEAN_SENTENCE_WORDS,
     LONG_SENTENCE_WORDS,

@@ -130,6 +130,51 @@ describe('review-state API (server.ts)', () => {
     expect(res.status).toBe(400)
   })
 
+  test('accepts a record with a long append-only history', async () => {
+    // history[] is append-only and the client pushes the WHOLE record, so the
+    // body cap is really a ceiling on a page's entire review life, not on one
+    // edit. Set too low it becomes a permanent sync lockout: once a record
+    // crosses it every push fails, and shortening the current note cannot
+    // remove historical copies. 300 rounds with realistic notes is well beyond
+    // any real review cycle and must still go through.
+    const history = Array.from({ length: 300 }, (_, i) => ({
+      timestamp: `2026-07-${String((i % 28) + 1).padStart(2, '0')}T00:00:00.000Z`,
+      reviewer: 'Dana Alvarez',
+      decision: i % 2 ? 'Approved with edits' : 'Revise and resubmit',
+      notes:
+        'The intro copy still leads with the department name instead of the tenant action. '.repeat(
+          6
+        ),
+      risks_or_blockers: 'Waiting on SME confirmation for the inspection timeline. '.repeat(3),
+      updated_by: 'reviewer',
+    }))
+    const res = await fetch(`${base}/api/review-state/pages/longHistoryPage`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ page_key: 'longHistoryPage', decision: 'Approved', history }),
+    })
+    expect(res.status).toBe(200)
+  })
+
+  test('rejects an oversized body with 413 before parsing or merging it', async () => {
+    // This endpoint read req.json() with no size limit at all — the same gap
+    // the AI routes had. The cap sits in FRONT of the parse, so an oversized
+    // body never reaches mergeReviewRecord and cannot touch a stored record.
+    const res = await fetch(`${base}/api/review-state/pages/pestsTopic`, {
+      method: 'PUT',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ page_key: 'pestsTopic', notes: 'x'.repeat(2 * 1024 * 1024) }),
+    })
+    expect(res.status).toBe(413)
+
+    // And the page it targeted is untouched — a rejected write must not be a
+    // partial write.
+    const after = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    }).then((r) => r.json())
+    expect(after.pages.pestsTopic?.notes || '').not.toContain('xxxx')
+  })
+
   test('rejects a body that fails schema validation (invalid decision enum value)', async () => {
     const before = await fetch(`${base}/api/review-state`, {
       headers: { authorization: `Bearer ${TOKEN}` },
