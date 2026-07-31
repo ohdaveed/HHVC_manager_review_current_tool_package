@@ -401,20 +401,51 @@
   // --- Check helpers ----------------------------------------------------
 
   /**
+   * Which document a rule's `section` locator points into. Most rules come from
+   * the standards manual, but a few encode SF.gov's published house style,
+   * which the manual does not restate — those cite the vendored snapshot
+   * instead. Before this existed every rule carried a bare manual-style number,
+   * which pushed three rules into citing sections they do not come from (the
+   * Karl button cap and two A-to-Z rules all pointed at §7.8, the SEO section).
+   * A citation shown to a reviewer has to name the document as well as the
+   * section, or "7.8" silently means two different authorities.
+   */
+  const SOURCES = {
+    manual: {
+      id: 'manual',
+      label: 'HHVC Web Governance and Content Standards Manual',
+      path: 'notebooklm/hhvc-standards-manual.md',
+    },
+    sfgovStyle: {
+      id: 'sfgovStyle',
+      label: 'SF.gov / Karl Editor Help Center',
+      path: 'docs/source/sfgov-style/writing-and-style.md',
+    },
+  }
+
+  /**
    * @param {string} id
    * @param {string} label
-   * @param {string} section Manual section this rule comes from.
+   * @param {string} section Locator within `source` — a manual section number
+   *   ("7.2.2", "6.3") or a heading in the vendored SF.gov snapshot.
    * @param {boolean} pass
    * @param {string} detail
    * @param {Array<object>} offenders
    * @param {string} severity 'error' for a manual mandate, 'warning' for advice.
+   * @param {object} [source] One of SOURCES; defaults to the standards manual.
    * @returns {object}
    */
-  function makeCheck(id, label, section, pass, detail, offenders, severity) {
+  function makeCheck(id, label, section, pass, detail, offenders, severity, source) {
+    const from = source || SOURCES.manual
     return {
       id,
       label,
       section,
+      source: from.id,
+      sourceLabel: from.label,
+      sourcePath: from.path,
+      /** Ready-to-render citation, so callers never re-assemble one. */
+      citation: from.id === 'manual' ? `Manual §${section}` : `${from.label} — ${section}`,
       pass,
       severity: severity || 'error',
       detail,
@@ -998,13 +1029,14 @@
       makeCheck(
         'house-style',
         'SF.gov house style',
-        '7.8',
+        'House style, A to Z',
         houseStyleHits.length === 0,
         houseStyleHits.length
           ? `${houseStyleHits.length} house-style issue(s)`
           : 'Matches SF.gov house style',
         houseStyleHits,
-        'warning'
+        'warning',
+        SOURCES.sfgovStyle
       )
     )
 
@@ -1034,7 +1066,7 @@
       makeCheck(
         'button-length',
         'Button text length',
-        '7.8',
+        '6.3',
         buttonHits.length === 0,
         buttonHits.length
           ? `${buttonHits.length} button(s) over ${MAX_BUTTON_CHARS} characters`
@@ -1062,13 +1094,14 @@
       makeCheck(
         'list-length',
         'Bulleted list length',
-        '7.2.2',
+        'House style, A to Z — Bullets',
         listHits.length === 0,
         listHits.length
           ? `${listHits.length} list(s) over ${MAX_BULLETS_PER_LIST} bullets`
           : 'Lists stay short',
         listHits,
-        'warning'
+        'warning',
+        SOURCES.sfgovStyle
       )
     )
 
@@ -1212,6 +1245,7 @@
     countWords,
     containsPhrase,
     normalizePageType,
+    SOURCES,
     RECOMMENDED_READING_TARGETS,
     MEAN_SENTENCE_WORDS,
     LONG_SENTENCE_WORDS,

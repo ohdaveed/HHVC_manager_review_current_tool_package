@@ -120,7 +120,7 @@
     // Plain-language rules from the HHVC standards manual (sections 7.2-7.8),
     // via js/plain-language.js. Only the manual's mandates are scored here;
     // its advisory rules are rendered separately by renderPageChecksPanel so
-    // ~90 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    // ~115 style suggestions cannot swamp the pass/fail ratio this list feeds.
     const plainLanguage = window.plainLanguage?.analyzePlainLanguage?.(page)
     for (const check of plainLanguage?.checks || []) {
       if (check.severity !== 'error') continue
@@ -432,7 +432,7 @@
    * as a separate, clearly non-blocking section.
    *
    * These are kept out of the scored list on purpose: they are suggestions,
-   * they run to ~90 findings across the 19 pages, and mixing them into the
+   * they run to ~115 findings across the 19 pages, and mixing them into the
    * pass/fail ratio would make every page look broken. Each finding names the
    * field it came from so it can be acted on rather than just counted.
    * @param {object} page
@@ -451,9 +451,8 @@
         <h3>Plain-language suggestions</h3>
         <p class="review-decision-note">
           Advisory only — these do not count toward the checks above. Rules come from the HHVC
-          Web Governance and Content Standards Manual, section ${escapeHtml(
-            suggestions[0].section
-          )} onward.
+          Web Governance and Content Standards Manual and SF.gov's published style guidance;
+          each finding cites its own source below.
           Average sentence length is ${escapeHtml(String(analysis.metrics.meanSentenceWords))}
           words across ${escapeHtml(String(analysis.metrics.sentenceCount))} sentences.
         </p>
@@ -464,6 +463,7 @@
             <li class="compliance-item warn">
               <span>
                 <span class="compliance-rule">${escapeHtml(check.label)}</span>
+                <span class="compliance-citation">${escapeHtml(check.citation)}</span>
                 <span class="compliance-detail">${escapeHtml(check.detail)}</span>
                 ${
                   check.offenders.length

@@ -615,6 +615,20 @@
   line-height: 1.35;
 }
 
+/* The source a plain-language rule comes from, shown per finding so a reviewer
+   who disagrees knows which document to go argue with. Sits between the rule
+   name and its detail; --sfds-slate-3 on the panel background clears 4.5:1, and
+   it is deliberately quieter than .compliance-detail (same colour, smaller and
+   uppercase) because it is provenance rather than the finding itself. */
+.compliance-citation {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--sfds-slate-3);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 /* ==========================================================================
    Plain-language suggestions
    Advisory findings from js/plain-language.js, rendered below the scored

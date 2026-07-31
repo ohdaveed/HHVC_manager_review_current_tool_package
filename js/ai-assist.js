@@ -147,9 +147,31 @@
     render.renderPanel()
   }
 
+  /**
+   * Catch the case where this tab is ALREADY open by the time we initialize.
+   *
+   * js/ux-improvements.js loads earlier, so its DOMContentLoaded handler runs
+   * first, and initWorkspaceTabs() restores a persisted workspace_open /
+   * workspace_tab by calling setWorkspaceTab(). That call's
+   * `typeof window.__mountAiAssistOnTabOpen === 'function'` guard silently
+   * skips, because the hook below has not been assigned yet — so a reviewer who
+   * left the Assist tab open saw an empty panel on reload until they switched
+   * tabs and back. js/review-queue-render.js documents the same hazard and
+   * solves it the same way, inside its own mount function.
+   *
+   * Panel visibility is the signal rather than the persisted state, because it
+   * reflects whatever setWorkspaceTab actually settled on, including the
+   * onboarding path that forces the workspace open on first visit.
+   */
+  function mountIfTabAlreadyOpen() {
+    const panel = document.querySelector('[data-workspace-panel="assist"]')
+    if (panel && !panel.hidden) ensureRendered()
+  }
+
   function init() {
     document.addEventListener('click', handleClick)
     window.__mountAiAssistOnTabOpen = ensureRendered
+    mountIfTabAlreadyOpen()
   }
 
   if (document.readyState === 'loading') {

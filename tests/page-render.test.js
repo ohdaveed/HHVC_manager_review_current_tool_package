@@ -223,3 +223,51 @@ describe('page-render.js escaping', () => {
     assertEscaped(html)
   })
 })
+
+// escapeHtml does not neutralize a URL scheme — `javascript:alert(1)` contains
+// none of the five characters it escapes — so every href the renderer emits
+// runs through safeUrl first. The AI assist preview renders model-generated
+// pages through these same functions, which is what makes this reachable.
+describe('page-render.js URL scheme guarding', () => {
+  const DANGEROUS = 'javascript:alert(1)'
+
+  test('button neutralizes a javascript: url', () => {
+    const html = ctx.button('Go', 'primary', null, DANGEROUS)
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderCards neutralizes a javascript: card url', () => {
+    const html = ctx.renderCards([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderServiceTiles neutralizes a javascript: card url', () => {
+    const html = ctx.renderServiceTiles([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderResourcesList neutralizes a javascript: card url', () => {
+    const html = ctx.renderResourcesList([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderRelatedList neutralizes a javascript: card url', () => {
+    const html = ctx.renderRelatedList([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('keeps a legitimate https url intact', () => {
+    const html = ctx.renderCards([{ title: 'CDC', url: 'https://www.cdc.gov/rodents/' }])
+    expect(html).toContain('href="https://www.cdc.gov/rodents/"')
+  })
+
+  test('keeps the root-relative workshop form path intact', () => {
+    const html = ctx.button('Request', 'primary', null, '/forms/mosquito-workshop-request/')
+    expect(html).toContain('href="/forms/mosquito-workshop-request/"')
+  })
+})

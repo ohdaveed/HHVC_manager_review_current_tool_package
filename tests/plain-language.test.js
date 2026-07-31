@@ -9,6 +9,7 @@ const {
   countWords,
   containsPhrase,
   normalizePageType,
+  SOURCES,
 } = require('../js/plain-language.js')
 
 /** Minimal schema-valid page to hang a single rule off. */
@@ -547,10 +548,51 @@ describe('severity split', () => {
     }
   })
 
-  test('cites a manual section on every check', () => {
+  // This used to assert /^7\.\d/ on every check, which is what produced the
+  // miscitations it was meant to prevent: rules whose authority is NOT a §7
+  // manual section had to invent one, so the Karl button cap and two A-to-Z
+  // house-style rules all claimed §7.8 (the SEO section). A citation is only
+  // useful if it can name the document it points into.
+  test('cites a real source document on every check', () => {
+    const sourceIds = Object.values(SOURCES).map((source) => source.id)
     for (const check of analyzePlainLanguage(makePage({})).checks) {
-      expect(check.section).toMatch(/^7\.\d/)
+      expect(sourceIds).toContain(check.source)
+      expect(check.section.length).toBeGreaterThan(0)
     }
+  })
+
+  test('cites a numbered section when the source is the standards manual', () => {
+    const manualChecks = analyzePlainLanguage(makePage({})).checks.filter(
+      (check) => check.source === 'manual'
+    )
+    expect(manualChecks.length).toBeGreaterThan(0)
+    for (const check of manualChecks) {
+      expect(check.section).toMatch(/^\d+\.\d/)
+    }
+  })
+
+  test('does not cite the SEO section for rules that are not about SEO', () => {
+    const bySection = new Map(
+      analyzePlainLanguage(makePage({})).checks.map((check) => [check.id, check])
+    )
+    // 7.8 is "Search Engine Optimization (SEO) and Metadata Controls".
+    expect(bySection.get('seo-title').section).toBe('7.8')
+    expect(bySection.get('meta-description-opening').section).toBe('7.8')
+    // The Karl button cap is component governance (6.3), not SEO.
+    expect(bySection.get('button-length').section).toBe('6.3')
+    // These two come from SF.gov's published style guide, not the manual.
+    expect(bySection.get('house-style').source).toBe('sfgovStyle')
+    expect(bySection.get('list-length').source).toBe('sfgovStyle')
+  })
+
+  test('builds a citation that names the document for non-manual sources', () => {
+    const bySection = new Map(
+      analyzePlainLanguage(makePage({})).checks.map((check) => [check.id, check])
+    )
+    expect(bySection.get('button-length').citation).toBe('Manual §6.3')
+    expect(bySection.get('list-length').citation).toBe(
+      'SF.gov / Karl Editor Help Center — House style, A to Z — Bullets'
+    )
   })
 })
 

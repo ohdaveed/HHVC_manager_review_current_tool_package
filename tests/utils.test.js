@@ -3,6 +3,60 @@ const { loadScripts } = require('./helpers/load-scripts')
 
 const ctx = loadScripts(['js/utils.js'])
 
+describe('safeUrl', () => {
+  test('passes through absolute http and https URLs unchanged', () => {
+    expect(ctx.safeUrl('https://sf.gov/a?b=c#d')).toBe('https://sf.gov/a?b=c#d')
+    expect(ctx.safeUrl('http://example.test')).toBe('http://example.test')
+  })
+
+  test('passes through mailto and tel URLs', () => {
+    expect(ctx.safeUrl('mailto:hhvc@sfdph.org')).toBe('mailto:hhvc@sfdph.org')
+    expect(ctx.safeUrl('tel:+14155551212')).toBe('tel:+14155551212')
+  })
+
+  test('passes through root-relative paths', () => {
+    expect(ctx.safeUrl('/forms/mosquito-workshop-request/')).toBe(
+      '/forms/mosquito-workshop-request/'
+    )
+  })
+
+  test('replaces a javascript: URL with the inert sentinel', () => {
+    expect(ctx.safeUrl('javascript:alert(1)')).toBe('#')
+  })
+
+  test('replaces a javascript: URL regardless of case or leading whitespace', () => {
+    expect(ctx.safeUrl('JaVaScRiPt:alert(1)')).toBe('#')
+    expect(ctx.safeUrl('   javascript:alert(1)')).toBe('#')
+  })
+
+  test('replaces a data: URL', () => {
+    expect(ctx.safeUrl('data:text/html,<script>alert(1)</script>')).toBe('#')
+  })
+
+  // "//evil.example" reads as relative but inherits the page scheme and leaves
+  // the origin, so it must not be treated like a root-relative path.
+  test('replaces a protocol-relative URL', () => {
+    expect(ctx.safeUrl('//evil.example/x')).toBe('#')
+  })
+
+  test('treats empty, null, and undefined as the inert sentinel', () => {
+    expect(ctx.safeUrl('')).toBe('#')
+    expect(ctx.safeUrl(null)).toBe('#')
+    expect(ctx.safeUrl(undefined)).toBe('#')
+  })
+
+  // Browsers strip control characters before resolving a URL, so a scheme
+  // broken up by a tab or newline still executes.
+  test('replaces a javascript: URL obfuscated with control characters', () => {
+    expect(ctx.safeUrl('java\tscript:alert(1)')).toBe('#')
+    expect(ctx.safeUrl('java\nscript:alert(1)')).toBe('#')
+  })
+
+  test('leaves an existing fragment sentinel alone', () => {
+    expect(ctx.safeUrl('#')).toBe('#')
+  })
+})
+
 describe('escapeHtml', () => {
   test('escapes all five HTML special characters', () => {
     expect(ctx.escapeHtml(`<script>alert('x')&"y"</script>`)).toBe(
