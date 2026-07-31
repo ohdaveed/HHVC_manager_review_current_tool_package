@@ -58,7 +58,7 @@ wrong). `bun run test` runs thirteen Bun unit-test files under `tests/`:
 SQLite DB and exercises auth/merge/isolation over real HTTP),
 `review-state-sync`, `ai-assist-schema`, and `ai-assist-server` (which spawns
 `server.ts` against a stub Anthropic endpoint, so the AI routes are covered
-without a key or a paid call) — 322 tests at time of writing.
+without a key or a paid call) — 326 tests at time of writing.
 `tests/helpers/load-scripts.js` is the harness that evaluates the classic
 `<script>` files and hands back a context object.
 
@@ -380,11 +380,16 @@ ui, globals, pages}` state (same shape `window.reviewState.read()`
   time — the server never wholesale-replaces the `review_pages` table — the
   server-side half of the same "merge, never wipe" invariant the CSV/JSON
   import path relies on. The PUT body is capped at `MAX_REVIEW_BODY_BYTES`
-  (64 KB) through the same streaming `readBodyWithLimit()` the AI routes use.
-  One page's decision, notes, and history is a few KB, so it gets its own
-  tighter ceiling rather than inheriting the AI cap. The check sits **in front
-  of** the parse, so an oversized body never reaches `mergeReviewRecord` and a
-  rejected write is never a partial one.
+  (1 MB) through the same streaming `readBodyWithLimit()` the AI routes use.
+  The check sits **in front of** the parse, so an oversized body never reaches
+  `mergeReviewRecord` and a rejected write is never a partial one.
+  **The cap is deliberately larger than the AI one**, even though a review
+  record is typically far smaller: `history[]` is append-only and the client
+  pushes the whole record, so this bounds a page's entire review life rather
+  than one edit. Set too low it becomes a permanent sync lockout — once a
+  record crosses it every push fails, and shortening the current note cannot
+  remove historical copies. 64 KB was measured at roughly 70 recorded rounds
+  with long notes, which a real review cycle can reach.
 - **Auth**: every `/api/*` request requires `Authorization: Bearer
 <REVIEW_API_TOKEN>`; a missing/wrong token gets 401, and an unset
   `REVIEW_API_TOKEN` makes the routes return 501 rather than silently allow
@@ -568,6 +573,15 @@ it, and it fails closed rather than open.
   the connection away only for a sender who ignores the 413 entirely. The
   regression test trickles chunks on a timer — enqueuing them all up front lets
   the client finish before the server reads, so the bug hides.
+- **The `page` cap measures the string that is actually sent.**
+  `serializePageForPrompt()` in `build_scripts/ai/schemas.js` is used by both
+  the size refinement and `buildContentUserPrompt`. They used to differ — the
+  cap measured compact `JSON.stringify(page)` while the prompt sent the
+  pretty-printed form — so indentation was free and an object of many small
+  nested entries could measure ~100 KB and arrive upstream ~4x larger, past the
+  very limit meant to bound tokenization. Measuring one string and sending
+  another is the bug; one shared function is the fix. Real pages expand only
+  ~1.2x, so the tighter measurement rejects nothing the tool itself sends.
 - **Cancellation is decided by signal state, not by the error's shape.**
   Upstream, the SDK client sets `maxRetries: 1` and a 150s per-call timeout, and
   the route combines `req.signal` with

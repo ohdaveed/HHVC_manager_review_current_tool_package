@@ -299,3 +299,44 @@ describe('request bounds', () => {
     expect(measureDepth({ sections: [{ steps: [{ title: 'x' }] }] }, MAX_PAGE_DEPTH)).toBe(5)
   })
 })
+
+describe('grounding page size is measured on what is actually sent', () => {
+  const { buildContentUserPrompt } = require('../build_scripts/ai/prompts')
+  const {
+    serializePageForPrompt,
+    generateRequestSchema,
+    MAX_PAGE_JSON_BYTES,
+  } = require('../build_scripts/ai/schemas')
+
+  test('the prompt embeds the exact string the cap measured', () => {
+    // The bug this pins: the cap measured compact JSON while the prompt sent
+    // the pretty-printed form, so indentation was free and a page could arrive
+    // upstream several times larger than the limit it passed.
+    const page = { title: 'A page', sections: [{ heading: 'What to do', karl: 'Body.' }] }
+    expect(buildContentUserPrompt({ prompt: 'Draft.', page })).toContain(
+      serializePageForPrompt(page)
+    )
+  })
+
+  test('rejects a page whose sent form exceeds the cap even though its compact form does not', () => {
+    // Many small nested entries: cheap compact, expensive pretty-printed.
+    // Sized so the compact form is comfortably UNDER the cap — that is the
+    // whole point, since the old check would have waved this through.
+    const page = { rows: Array.from({ length: 2500 }, () => ({ a: [1, 2, 3], b: { c: 1 } })) }
+    expect(JSON.stringify(page).length).toBeLessThan(MAX_PAGE_JSON_BYTES)
+    expect(serializePageForPrompt(page).length).toBeGreaterThan(MAX_PAGE_JSON_BYTES)
+    expect(generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page }).success).toBe(
+      false
+    )
+  })
+
+  test('every real page still fits once measured the way it is sent', () => {
+    // Pretty-printing is only ~1.2x on real page shapes, so tightening the
+    // measurement must not start rejecting the tool's own content.
+    const { loadPageData } = require('../build_scripts/load-pages')
+    for (const [key, page] of Object.entries(loadPageData().pages)) {
+      const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
+      expect(`${key}: ${result.success}`).toBe(`${key}: true`)
+    }
+  })
+})

@@ -77,6 +77,12 @@
     // about a server the panel has already moved on from. Dropping it is
     // always safe: the newer request writes the state that matters.
     if (generation !== capabilitiesGeneration) return
+    // Re-capture immediately before rendering, not just at the call site. The
+    // reviewer can type through the whole await — a capability GET is a real
+    // round trip — and the render below replaces the textarea with
+    // `state.prompt`. Capturing only when Save was clicked silently discards
+    // everything typed since.
+    captureForm()
     state.capabilities = result.ok ? result.capabilities : null
     state.error = result.ok ? '' : result.error
     render.renderPanel()

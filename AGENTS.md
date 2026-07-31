@@ -296,11 +296,13 @@ unconfigured.
   `js/review-merge.js` directly, the same file a `<script>` tag loads
   client-side — and returns the merged record). Every write is scoped to one
   `page_key`; the server never wholesale-replaces the table. The PUT body is
-  capped at `MAX_REVIEW_BODY_BYTES` (64 KB) via the same streaming
-  `readBodyWithLimit()` the AI routes use — its own tighter ceiling, since one
-  page's record is a few KB. The cap sits in front of the parse, so an
+  capped at `MAX_REVIEW_BODY_BYTES` (1 MB) via the same streaming
+  `readBodyWithLimit()` the AI routes use, in front of the parse — so an
   oversized body never reaches `mergeReviewRecord` and a rejected write is
-  never a partial one.
+  never partial. **Deliberately larger than the AI cap:** `history[]` is
+  append-only and the client pushes the whole record, so this bounds a page's
+  entire review life, not one edit. Too low and it is a permanent sync lockout
+  — 64 KB measured at ~70 recorded rounds with long notes.
 - **Auth**: `Authorization: Bearer <REVIEW_API_TOKEN>` required on every
   `/api/*` request; missing/wrong → 401; `REVIEW_API_TOKEN` unset → 501 (not
   open access).
@@ -455,6 +457,11 @@ by default, failing closed.
   bandwidth already in flight. `DRAIN_LIMIT_MULTIPLIER` (8×) bounds that too.
   The regression test must trickle chunks on a timer, or the client finishes
   sending before the server reads and the bug hides.
+- **The `page` cap measures the string actually sent.**
+  `serializePageForPrompt()` is shared by the size refinement and
+  `buildContentUserPrompt`. They used to differ (compact measured,
+  pretty-printed sent), so a page could measure ~100 KB and arrive ~4x larger.
+  Real pages expand only ~1.2x, so nothing legitimate is rejected.
 - **Cancellation is decided by signal state, not the error's shape.** The SDK
   client sets `maxRetries: 1` and a 150s per-call timeout; the route combines
   `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default 240s)

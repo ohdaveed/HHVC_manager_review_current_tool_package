@@ -282,6 +282,49 @@ test.describe('AI assist panel', () => {
     await expect(page.locator('#aiAssistPrompt')).toHaveValue(prompt)
   })
 
+  test('keeps prompt text typed while the capability request is in flight', async ({ page }) => {
+    // Saving settings kicks off a capability GET and re-renders when it
+    // resolves. A reviewer can easily type through that round trip, and the
+    // re-render replaces the textarea from panel state — so state has to be
+    // re-read immediately before rendering, not just when Save was clicked.
+    await stubAiApi(page)
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'assist')
+    // Configure FIRST so the prompt field is already enabled. Otherwise
+    // page.fill blocks until the field enables — which only happens after the
+    // very re-render this test is about, so the race never occurs.
+    await configure(page)
+
+    // Now make the next capabilities call slow, leaving a window to type in.
+    await page.route(`${AI_ORIGIN}/api/ai/capabilities`, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          providers: { claude: true },
+          models: { claude: 'claude-opus-5' },
+          tasks: ['content'],
+          groundedBy: [],
+          pageCount: 19,
+        }),
+      })
+    })
+
+    // The settings <details> collapses once configured, so re-open it before
+    // reaching the Save button.
+    await page.click('.ai-assist-settings summary')
+    // Re-saving keeps the existing capabilities in state, so the field stays
+    // enabled while the new request is in flight.
+    await page.click('#aiAssistSaveSettings')
+    const typed = 'Draft a page about reporting cockroaches.'
+    await page.fill('#aiAssistPrompt', typed)
+
+    // Let the slow response land and re-render on top of the typing.
+    await page.waitForTimeout(2000)
+    await expect(page.locator('#aiAssistPrompt')).toHaveValue(typed)
+  })
+
   test('opens from the keyboard shortcut', async ({ page }) => {
     await gotoFresh(page)
 

@@ -56,11 +56,23 @@ const REVIEW_API_TOKEN = process.env.REVIEW_API_TOKEN ?? ""
 const DATA_DB_PATH = process.env.DATA_DB_PATH ?? `${ROOT}/.data/review-state.local.db`
 
 /**
- * Ceiling on a single review-record PUT. One page's decision, notes, reviewer,
- * and history is a few KB at most; 64 KB leaves generous room for a long
- * history array while still bounding the endpoint.
+ * Ceiling on a single review-record PUT.
+ *
+ * Deliberately LARGER than the AI cap, even though a typical review record is
+ * far smaller than an AI request. `history[]` is append-only and the client
+ * pushes the whole record, so this limit is not a quota on one edit — it is a
+ * ceiling on the accumulated history of a page's entire review life. Once a
+ * record crosses it, every subsequent push fails and the reviewer cannot
+ * recover from the UI: shortening the current note does not remove historical
+ * copies. That is a permanent sync lockout, which is far worse than the
+ * unbounded read this cap exists to prevent.
+ *
+ * 64 KB was measured as roughly 70 recorded rounds with long notes — reachable
+ * on a page that goes back and forth through a real review cycle. 1 MB clears
+ * that by more than an order of magnitude while still bounding memory, which
+ * is all the cap is actually for on an authenticated endpoint.
  */
-const MAX_REVIEW_BODY_BYTES = 64 * 1024
+const MAX_REVIEW_BODY_BYTES = 1024 * 1024
 
 /**
  * How far past a body cap `readBodyWithLimit` will keep draining before it

@@ -165,6 +165,22 @@ const MAX_PAGE_JSON_BYTES = 96 * 1024
 const MAX_PAGE_DEPTH = 12
 
 /**
+ * Serialize the grounding page exactly as the provider prompt will send it.
+ *
+ * Shared with `buildContentUserPrompt` on purpose. The cap used to measure
+ * compact `JSON.stringify(page)` while the prompt sent the pretty-printed
+ * form, so indentation was free: an object of many small nested entries
+ * measured ~100 KB here and expanded to ~400 KB upstream, sailing past a limit
+ * whose whole job is bounding what gets tokenized. Measuring one string and
+ * sending another is the bug; one function used by both is the fix.
+ * @param {unknown} page
+ * @returns {string}
+ */
+function serializePageForPrompt(page) {
+  return JSON.stringify(page, null, 2)
+}
+
+/**
  * Depth of the deepest nested array/object, counting the root as 1.
  *
  * Iterative rather than recursive on purpose: a recursive walk over
@@ -206,7 +222,7 @@ const groundingPageSchema = z
   .refine(
     (page) => {
       try {
-        return JSON.stringify(page).length <= MAX_PAGE_JSON_BYTES
+        return serializePageForPrompt(page).length <= MAX_PAGE_JSON_BYTES
       } catch {
         // A circular structure cannot be serialized into the prompt either.
         return false
@@ -231,6 +247,7 @@ module.exports = {
   PAGE_TYPES,
   SECTION_COMPONENTS,
   generateRequestSchema,
+  serializePageForPrompt,
   measureDepth,
   MAX_PAGE_JSON_BYTES,
   MAX_PAGE_DEPTH,

@@ -10,6 +10,7 @@
 // prefix match, so one changed byte early costs the whole cache.
 const { readFileSync, existsSync } = require('node:fs')
 const { join } = require('node:path')
+const { serializePageForPrompt } = require('./schemas')
 
 const STYLE_DIR = join(__dirname, '..', '..', 'docs', 'source', 'sfgov-style')
 
@@ -149,11 +150,12 @@ function buildContentUserPrompt({ prompt, page, issues, previousDraft }) {
   const parts = []
 
   if (page && Object.keys(page).length) {
+    // serializePageForPrompt, not a local JSON.stringify: the size cap in
+    // schemas.js measures this exact string, and the two silently diverging is
+    // what let a page pass the limit and then arrive several times larger.
     parts.push(
-      `<current_page>\nThe reviewer is looking at this page. Use it as context for voice, structure, and Karl notes.\n\n${JSON.stringify(
-        page,
-        null,
-        2
+      `<current_page>\nThe reviewer is looking at this page. Use it as context for voice, structure, and Karl notes.\n\n${serializePageForPrompt(
+        page
       )}\n</current_page>`
     )
   }
