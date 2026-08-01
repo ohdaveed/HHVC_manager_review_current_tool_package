@@ -563,9 +563,16 @@ Beyond schema shape, `validate.js` enforces business invariants:
   photo is an inline WebP data URI for that reason, and it has to be one
   rather than a file under `public/`: it must survive
   `vite build --mode singlefile`, whose output is a single HTML file meant to
-  be emailed and double-clicked, where a relative path would 404. WebP at q78
-  rather than the source JPEG — indistinguishable side by side, 17 KB instead
-  of 49 KB, and this string ships inside the bundle.
+  be emailed and double-clicked, where a relative path would 404. WebP rather
+  than the source JPEG, at the lowest quality with no visible cost — the
+  string ships inside the bundle, so compare crops at 1:1 on the busiest
+  region and pick from that rather than defaulting to a high number. The
+  current photo (a row of SF apartment buildings, all window mullions and
+  ironwork) is indistinguishable at q78, q70 and q64, so it ships at **q70,
+  48 KB**. **Size is subject-dependent, not a fixed budget**: compared at the
+  same q78, this photo is 57 KB where the model-house photo that preceded it
+  was 17 KB. Quote the quality alongside any size here — the two numbers are
+  meaningless apart.
   **`findBannedTerms` skips `src` for a related reason.** It asks an editorial
   question ("does this page discuss plumbing, DBI, sewers?") by substring-
   matching the serialized page, and base64 is an arbitrary run of letters: the
