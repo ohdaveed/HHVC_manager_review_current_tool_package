@@ -690,8 +690,16 @@
   background: var(--sfds-white);
 }
 
+/* --sfds-focus-ring, not a literal. These two rules used to hardcode
+   `rgba(42, 96, 175, 0.25)` — byte-identical to the token's LIGHT value, which
+   is exactly what made the bug invisible in review. css/theme.css deliberately
+   re-points the token in dark mode (to `rgba(141, 176, 230, 0.45)`), so these
+   two inputs drew a dark-blue 25%-alpha ring over the near-black page and lost
+   their focus indicator entirely — a WCAG 2.4.11 failure on the queue's search
+   box and the sync settings, two of the most-used fields in the tool. Every
+   other focus ring in the repo already went through the token. */
 .review-queue input[type='search']:focus {
-  outline: 3px solid rgba(42, 96, 175, 0.25);
+  outline: 3px solid var(--sfds-focus-ring);
   outline-offset: 2px;
 }
 
@@ -708,7 +716,7 @@
 }
 
 .sync-config-input:focus {
-  outline: 3px solid rgba(42, 96, 175, 0.25);
+  outline: 3px solid var(--sfds-focus-ring);
   outline-offset: 2px;
 }
 
@@ -718,7 +726,13 @@
   margin-top: 0.75rem;
   padding: 0.75rem;
   border: 1px solid var(--sfds-border);
-  border-left: 4px solid var(--sfds-yellow, #f5c542);
+  /* --sfds-warning-border, not the undeclared `--sfds-yellow`. That token was
+     never declared anywhere in the repo, so its `#f5c542` fallback was the
+     value that always rendered — a literal no theme could reach, and the one
+     accent in the tool that stayed identical in dark mode. It was within a
+     hair of --sfds-warning-border (#f2c94c), which is a real token and does
+     re-tune for dark. */
+  border-left: 4px solid var(--sfds-warning-border);
   border-radius: var(--radius);
   background: var(--sfds-white);
 }

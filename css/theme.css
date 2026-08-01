@@ -116,6 +116,38 @@
   --border-strong: var(--sfds-slate-4, #c9caca);
 
   /* ===================================================================
+     Notification chrome — the one family that must NOT follow the ramp
+     ===================================================================
+     Toasts and the fatal-error banner are the only surfaces in the tool
+     painted as a SOLID saturated fill with light text on top. Everything
+     else uses a tinted `-bg` with a matching dark `-text`, which inverts
+     safely because both halves of the pair move together.
+
+     These do not, and pointing them at the neutral ramp was a real bug.
+     `.toast` used `--sfds-slate-1` as its BACKGROUND — a token whose role
+     is body text, so in dark mode it inverted end-for-end to #f0f1f2 and
+     the toast became a near-white slab still carrying white-alpha
+     controls. The close button measured 1.06:1 and simply disappeared.
+     The toast container lives outside `.browser-shell`, so the
+     light-pinned mockup region did not rescue it either.
+
+     So these are declared as literals and pinned across both themes. A
+     notification is a transient overlay, not part of the page surface —
+     dark chrome reads correctly on a light or a dark page, and pinning it
+     is what keeps its foreground pairing true in both. Contrast below is
+     against --toast-fg (#fcfcfc).
+
+     The banner is the exception that DOES get a dark override: it spans
+     the full viewport width, and a bright #d92d20 band that is merely
+     accessible is still a glare source against a dark page. */
+  --toast-fg: #fcfcfc;
+  --toast-bg: #1f2229; /* 15.52:1 */
+  --toast-success-bg: #026800; /*  6.86:1 */
+  --toast-info-bg: #2a60af; /*  6.04:1 */
+  --banner-danger-fg: #fcfcfc;
+  --banner-danger-bg: #d92d20; /*  4.71:1 */
+
+  /* ===================================================================
      Decision status colours
      ===================================================================
      One triplet per value of the review `decision` enum.
@@ -331,6 +363,14 @@
     --surface-sunken: #0c0e11;
     --surface-raised: #1d2027;
     --brand-on-primary: #001033;
+
+    /* The one piece of notification chrome that is re-tuned rather than
+       pinned. The toast palette above stays as declared — a small dark
+       overlay reads correctly on either page — but this banner is a
+       full-width band, and #d92d20 across the top of a #101216 page is a
+       glare source even though it clears 4.5:1. Deepened to 9.79:1 on
+       --banner-danger-fg, which is both softer and more legible. */
+    --banner-danger-bg: #7f1d18;
 
     /* Dark steps for the decision fills — chosen against the dark panel, not
        lightened from the light set. The light green clears 3:1 on white and
