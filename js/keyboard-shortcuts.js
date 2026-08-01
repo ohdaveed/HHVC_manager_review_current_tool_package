@@ -77,13 +77,11 @@ import { hasValidPageData } from './utils.js'
     document.querySelector('[data-sticky-action="toggle-workspace"]')?.click()
   }
 
-  const DECISION_TO_ACTION = {
-    Approved: 'approved',
-    'Approved with edits': 'approved-with-edits',
-    'Revise and resubmit': 'revise',
-    Blocked: 'blocked',
-    'Needs review': 'needs-review',
-  }
+  /* Derived from the canonical decision table in js/utils.js. This was a
+     hand-written literal that happened to be the exact inverse of ACTION_LABELS
+     in js/review-queue-state.js — the same five pairs typed out twice, in two
+     files, with nothing keeping them agreed. */
+  const DECISION_TO_ACTION = window.utils.DECISION_SLUG_BY_LABEL
 
   function applyQueueAction(action) {
     if (typeof window.reviewQueue?.applyQueueAction !== 'function') return false

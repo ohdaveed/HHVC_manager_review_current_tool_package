@@ -8,13 +8,23 @@
    charting library. js/review-insights.js owns all the rendering.
 
    Loaded before js/review-insights.js. Takes no imports — it is required
-   directly by tests/review-insights.test.js as well as being bundled. */
+   directly by tests/review-insights-data.test.js as well as being bundled, and
+   that dual-export shape is what forbids an `import` here: adding one would
+   make this an ES module, `module.exports` would stop running, and the test's
+   `require` would come back empty. */
 
 /**
- * The five decisions, in the order a reviewer moves through them. Chart
- * segments and table rows both follow this order rather than whatever order
- * the data happens to arrive in, so the mix bar does not reshuffle itself as
- * counts change during triage.
+ * The decisions, in the order a reviewer moves through them. Chart segments and
+ * table rows both follow this order rather than whatever order the data happens
+ * to arrive in, so the mix bar does not reshuffle itself as counts change
+ * during triage.
+ *
+ * **This is a restatement of `DECISIONS` in js/utils.js, and one of only two
+ * left in the repo.** It cannot import that table: this file is dual-export
+ * (see the header), so an `import` would break the `require` its tests use.
+ * `tests/decision-vocabulary.test.js` pins the two together, so a decision
+ * added to the canonical table and not mirrored here fails CI rather than
+ * silently dropping a chart segment.
  */
 const DECISION_ORDER = [
   'Needs review',

@@ -183,19 +183,10 @@ import { hasValidPageData } from './utils.js'
     wrapRenderPageForSitemap()
 
     window.__mountInteractiveSitemapOnTabOpen = ensureSitemapRendered
-    mountIfTabAlreadyOpen()
-  }
-
-  /**
-   * Same catch-up as js/ai-assist.js, for the same reason: js/ux-improvements.js
-   * loads earlier, so initWorkspaceTabs() can restore a persisted Sitemap tab
-   * and call setWorkspaceTab('sitemap') before the hook above exists, leaving
-   * the guarded mount call to skip and the panel to paint empty until the
-   * reviewer switches tabs and back.
-   */
-  function mountIfTabAlreadyOpen() {
-    const panel = document.querySelector('[data-workspace-panel="sitemap"]')
-    if (panel && !panel.hidden) ensureSitemapRendered()
+    // Catch a tab that is ALREADY open at init time — see
+    // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
+    // this, and why panel visibility is the signal rather than saved state.
+    window.utils.mountWorkspacePanelIfOpen('sitemap', ensureSitemapRendered)
   }
 
   function teardown() {
