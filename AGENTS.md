@@ -959,3 +959,39 @@ known-but-unfixed bug rather than asserting wrong behavior.
 Login URL for the Karl (Wagtail-based) CMS admin:
 `https://api.sf.gov/sso/login?next=/admin/`. Keep user-specific credentials and
 private MCP config out of the repo (in `~/.codex/config.toml` or equivalent).
+
+## Cross-tool canon
+
+**This file is the source of truth.** Every other agent-instruction file in the
+repo mirrors it. If any two disagree, this one wins and the other is the bug.
+
+Two of the mirrors carry real content and must be updated alongside this file:
+
+| File                              | Role                                                                   |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| `CLAUDE.md`                       | Claude Code's mirror — the same facts plus Claude Code–specific notes. |
+| `.github/copilot-instructions.md` | Copilot's mirror — a condensed subset.                                 |
+
+The rest are **pointers on purpose** and must stay that way — no counts, no file
+inventories, no architecture summaries:
+
+- `.cursor/rules/repo-context.mdc` (Cursor)
+- `.windsurfrules` (Windsurf)
+- `.claude/skills/HHVC_manager_review_current_tool_package/SKILL.md` and
+  `.agents/skills/HHVC_manager_review_current_tool_package/SKILL.md` (kept
+  byte-identical; different tools read different paths)
+- `.codex/AGENTS.md` (Codex — MCP baseline only, no architecture claims)
+
+**Why pointers.** All six previously restated a summary of the architecture, and
+every one of those summaries rotted. Months after the Vite migration they were
+still telling agents this repo had "no bundler", "no ES modules/`import`/`export`
+in `js/*.js`", a `tests/helpers/load-scripts.js` harness that no longer exists,
+and — worst — that registering a new page meant adding a `<script>` tag to
+`index.html`, which now has exactly one. None of them were in anybody's update
+path, because this section did not exist to name them. A mirror that repeats a
+fact drifts from it; a mirror that points at it cannot.
+
+**When you add a fact here,** decide whether `CLAUDE.md` and
+`.github/copilot-instructions.md` need it too. When you add a new
+agent-instruction file for some other tool, add it to the pointer list above and
+write it as a pointer.

@@ -1138,9 +1138,8 @@ single quotes, 2-space indentation, `printWidth: 100`, ES5 trailing commas.
 Code must be ASI-safe and semicolon-free. Run `bun run format` before
 committing; `bun run format:check` is the lint step and CI fails on it.
 `.prettierignore` excludes `data/`, `node_modules/`, `dist/`, `server.ts`,
-the generated single-file HTML exports, `.claude/homunculus/`, and the
-reference/planning dirs (`docs/source/`, `docs/superpowers/`, `review/`,
-`.playwright-mcp/`).
+the generated single-file HTML exports, and the reference/planning dirs
+(`docs/source/`, `docs/superpowers/`, `review/`, `.playwright-mcp/`).
 
 ### JavaScript
 
@@ -1292,8 +1291,15 @@ equivalent).
 
 ## Cross-tool canon
 
-`AGENTS.md` is the tool-agnostic source of truth shared with Cursor, Copilot,
-Codex, Windsurf, Aider, and other assistants; `.github/copilot-instructions.md`
-is Copilot's mirror. This file mirrors the same facts plus the Claude
-Code–specific notes above. Keep them in sync; if they ever disagree, reconcile
+`AGENTS.md` is the tool-agnostic source of truth. This file mirrors the same
+facts plus the Claude Code–specific notes above; `.github/copilot-instructions.md`
+is Copilot's mirror. Keep the three in sync, and if they ever disagree, reconcile
 toward `AGENTS.md`.
+
+**The full mirror inventory lives in `AGENTS.md`'s own "Cross-tool canon"
+section** — including the Cursor, Windsurf, Codex, and skill files, which are
+deliberately **pointers** carrying no counts, no file inventories, and no
+architecture summaries. Every one of them previously restated a summary and every
+one of those summaries rotted into instructions that were actively wrong (see
+that section for what they were still claiming). Do not "helpfully" re-expand
+one; add the fact to `AGENTS.md` instead.
