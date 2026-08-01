@@ -6,10 +6,11 @@
    are configured, how much review data is stored, and whether any of it has
    gone bad. All of that previously required devtools.
 
-   The tab is SIXTH, and that is why the charts in Phase 2 went on the Overview
-   tab instead of getting their own. Tabs are numbered left to right by the
-   1-9 shortcuts, so appending a sixth takes `6` and renumbers nothing;
-   inserting one would have shifted every tab after it.
+   It sits FIFTH, just before Help, and that is why the charts in Phase 2 went
+   on the Overview tab instead of getting their own — a workspace tab is a
+   scarce slot, not a free one. Tabs are numbered left to right by the 1-6
+   shortcuts, so this one takes `5` and Help moves to `6`. Help stays last on
+   purpose: it is the reference panel, not a working one.
 
    Mounts lazily on first tab open, and — like js/interactive-sitemap.js and
    js/ai-assist.js — also catches an already-open tab at its own init(), since
@@ -171,7 +172,7 @@ import { escapeHtml as escape } from './utils.js'
           <div>
             <h3 class="ds-section-title">Tool status</h3>
             <p class="ds-section-hint">
-              What this browser is holding and how it is connected. Press <kbd>6</kbd> for this tab.
+              What this browser is holding and how it is connected. Press <kbd>5</kbd> for this tab.
             </p>
           </div>
         </header>

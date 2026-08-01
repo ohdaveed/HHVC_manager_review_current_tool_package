@@ -8,9 +8,13 @@ import { hasValidPageData } from './utils.js'
 
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
-  // Appended, never inserted: the 1-9 shortcuts number these left to right,
-  // so adding at the end renumbers nothing.
-  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'help', 'ops']
+  // Left-to-right tab order. Help stays LAST — it is the reference panel, not
+  // a working one, and a reviewer scanning the strip expects it there. The
+  // Tool status tab was originally appended after it, which read as a
+  // regression the moment there were two tabs past Help's old position.
+  // Keep in step with the tab markup in index.html and the 1-6 shortcut
+  // cases in js/keyboard-shortcuts.js.
+  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'ops', 'help']
   let workspaceTriggerButton = null
 
   const { getValue, getDecisionChipClass, escapeHtml } = window.utils

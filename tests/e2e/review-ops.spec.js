@@ -26,16 +26,16 @@ async function seedWithOrphans(page) {
 }
 
 test.describe('Tool status tab', () => {
-  test('opens from the 6 shortcut without renumbering the others', async ({ page }) => {
+  test('opens from the 5 shortcut, with Help last on 6', async ({ page }) => {
     await gotoFresh(page)
     // Shortcuts are gated on focus being in a shortcut context.
     await focusMockPage(page)
 
-    await page.keyboard.press('6')
+    await page.keyboard.press('5')
     await expect(page.locator('[data-workspace-panel="ops"]')).toBeVisible()
 
-    // The tab was appended, so 5 must still be Help.
-    await page.keyboard.press('5')
+    // Help stays last in the strip, so it is the digit that moves.
+    await page.keyboard.press('6')
     await expect(page.locator('[data-workspace-panel="help"]')).toBeVisible()
   })
 

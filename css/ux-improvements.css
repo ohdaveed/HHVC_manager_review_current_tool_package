@@ -1,16 +1,6 @@
 /* Manager review UX/UI enhancements.
    These styles layer on top of the existing mockup tool without changing page content. */
 
-:root {
-  --ux-panel-bg: var(--sfds-white);
-  --ux-panel-border: var(--sfds-border);
-  --ux-soft-bg: var(--sfds-slate-5);
-  --ux-warning-bg: var(--sfds-warning-bg);
-  --ux-warning-border: var(--sfds-warning-border);
-  --ux-danger-bg: var(--sfds-danger-bg);
-  --ux-danger-border: var(--sfds-danger-border);
-}
-
 .canvas-toolbar {
   align-items: center;
   flex-direction: row;
@@ -27,9 +17,9 @@
   gap: 0.55rem;
   min-width: 0;
   padding: 0.45rem 0.65rem;
-  border: 1px solid var(--ux-panel-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius);
-  background: var(--ux-panel-bg);
+  background: var(--surface-panel);
 }
 
 .review-sticky-bar-main {
@@ -100,55 +90,6 @@
   color: var(--sfds-white);
 }
 
-.review-workspace {
-  width: 100%;
-  max-width: var(--page-max);
-  margin: 0.85rem auto 0;
-  border: 1px solid var(--ux-panel-border);
-  border-radius: var(--radius);
-  background: var(--ux-panel-bg);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-}
-
-.review-workspace-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  border-bottom: 1px solid var(--sfds-border);
-  background: var(--ux-soft-bg);
-}
-
-.review-workspace-tab {
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  color: var(--sfds-slate-3);
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  min-height: 2.5rem;
-  padding: 0.55rem 0.95rem;
-}
-
-.review-workspace-tab:hover,
-.review-workspace-tab:focus-visible {
-  color: var(--sfds-action-blue);
-  background: var(--sfds-white);
-}
-
-.review-workspace-tab[aria-selected='true'] {
-  color: var(--sfds-action-blue);
-  border-bottom-color: var(--sfds-action-blue);
-  background: var(--sfds-white);
-}
-
-.review-workspace-panel {
-  max-height: min(52vh, 560px);
-  overflow: auto;
-}
-
 .review-workspace-panel[hidden] {
   display: none !important;
 }
@@ -183,29 +124,6 @@
   min-width: 10rem;
 }
 
-.review-queue-progress-bar {
-  height: 0.45rem;
-  border-radius: 999px;
-  background: var(--sfds-slate-5);
-  overflow: hidden;
-}
-
-.review-queue-progress-fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--sfds-green);
-  transition: width 0.2s ease;
-}
-
-.review-queue-progress-label {
-  display: block;
-  margin-top: 0.25rem;
-  color: var(--sfds-slate-3);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
 .review-queue-stats {
   display: flex;
   flex-wrap: wrap;
@@ -215,36 +133,6 @@
 
 .review-queue-overview {
   margin-bottom: 0.75rem;
-}
-
-.review-queue-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.review-queue-kpi {
-  padding: 0.65rem 0.75rem;
-  border: 1px solid var(--sfds-border);
-  border-radius: var(--radius);
-  background: var(--ux-soft-bg);
-}
-
-.review-queue-kpi-label {
-  display: block;
-  margin-bottom: 0.18rem;
-  color: var(--sfds-slate-3);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.review-queue-kpi-value {
-  display: block;
-  color: var(--sfds-slate-1);
-  font-size: 1rem;
-  font-weight: 800;
 }
 
 .review-queue-toolbar {
@@ -316,7 +204,7 @@
   padding: 0.7rem 0.75rem;
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
-  background: var(--ux-soft-bg);
+  background: var(--surface-soft);
 }
 
 .review-queue-bulk-main,
@@ -442,7 +330,7 @@
   padding: 1rem;
   border: 1px dashed var(--sfds-border);
   border-radius: var(--radius);
-  background: var(--ux-soft-bg);
+  background: var(--surface-soft);
 }
 
 .review-queue-empty p {
@@ -454,6 +342,9 @@
   overflow-x: auto;
 }
 
+/* TOOL-CHROME table — a dense scanning surface, so underline-only rules and
+   uppercase micro-cap headers rather than the full grid `.table` uses in
+   css/styles.css. See the note there: the two are meant to look different. */
 .review-queue-table {
   width: 100%;
   border-collapse: collapse;
@@ -521,37 +412,6 @@
   overflow: hidden;
 }
 
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  border-radius: 999px;
-  padding: 0.22rem 0.65rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  border: 1px solid var(--sfds-border);
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
-}
-
-.status-chip.pass {
-  border-color: var(--sfds-success-border);
-  background: var(--sfds-success-bg);
-  color: var(--sfds-success-text);
-}
-
-.status-chip.warn {
-  border-color: var(--ux-warning-border);
-  background: var(--ux-warning-bg);
-  color: var(--sfds-warning-text);
-}
-
-.status-chip.fail {
-  border-color: var(--ux-danger-border);
-  background: var(--ux-danger-bg);
-  color: var(--sfds-danger-text);
-}
-
 .compliance-panel {
   padding: 0.9rem 1rem 1rem;
 }
@@ -578,7 +438,7 @@
   padding: 0.65rem;
   border: 1px solid var(--sfds-border);
   border-radius: var(--radius);
-  background: var(--ux-soft-bg);
+  background: var(--surface-soft);
   cursor: help;
 }
 
@@ -653,9 +513,9 @@
   display: grid;
   gap: 0.15rem;
   padding: 0.4rem 0.5rem;
-  border-left: 3px solid var(--ux-warning-border);
+  border-left: 3px solid var(--sfds-warning-border);
   border-radius: 0 var(--radius) var(--radius) 0;
-  background: var(--ux-panel-bg);
+  background: var(--surface-panel);
 }
 
 .plain-language-offenders code {
@@ -856,7 +716,7 @@
   border: 1px solid var(--sfds-border);
   border-bottom-width: 2px;
   border-radius: var(--radius);
-  background: var(--ux-soft-bg);
+  background: var(--surface-soft);
   color: var(--sfds-slate-1);
   font-family: inherit;
   font-size: 0.74rem;
@@ -868,9 +728,9 @@
 
 .shortcuts-dialog {
   width: min(30rem, calc(100vw - 2rem));
-  border: 1px solid var(--ux-panel-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius);
-  background: var(--ux-panel-bg);
+  background: var(--surface-panel);
   box-shadow: var(--shadow);
   padding: 1rem 1.15rem 1.15rem;
 }

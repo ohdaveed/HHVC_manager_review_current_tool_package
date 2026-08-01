@@ -2,7 +2,7 @@
    Layered on top of the existing workspace styles, in its own file for the
    same reason css/interactive-sitemap.css is: a self-contained subsystem's
    styles are easier to reason about next to its JS than buried in the shared
-   override sheet. Uses the same --sfds-* / --ux-* tokens as the rest of the
+   override sheet. Uses the same --sfds-* and semantic tokens as the rest of the
    review layer, so retheming still happens in one place. */
 
 .ai-assist-panel {
@@ -24,9 +24,9 @@
 .ai-assist-settings {
   margin: 0.75rem 0;
   padding: 0.6rem 0.75rem;
-  border: 1px solid var(--ux-panel-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius);
-  background: var(--ux-soft-bg);
+  background: var(--surface-soft);
 }
 
 .ai-assist-settings summary {
@@ -45,9 +45,9 @@
 .ai-assist-form textarea {
   width: 100%;
   padding: 0.55rem;
-  border: 1px solid var(--ux-panel-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius);
-  background: var(--ux-panel-bg);
+  background: var(--surface-panel);
   color: var(--sfds-slate-1);
   font: inherit;
   font-size: 0.85rem;
@@ -55,7 +55,7 @@
 }
 
 .ai-assist-form textarea:disabled {
-  background: var(--ux-soft-bg);
+  background: var(--surface-soft);
   color: var(--sfds-slate-3);
   cursor: not-allowed;
 }
@@ -79,9 +79,9 @@
 .ai-assist-error {
   margin: 0.5rem 0 0;
   padding: 0.5rem 0.65rem;
-  border-left: 3px solid var(--ux-danger-border);
+  border-left: 3px solid var(--sfds-danger-border);
   border-radius: 0 var(--radius) var(--radius) 0;
-  background: var(--ux-danger-bg);
+  background: var(--sfds-danger-bg);
   color: var(--sfds-slate-1);
   font-size: 0.82rem;
 }
@@ -91,7 +91,7 @@
 .ai-assist-result {
   margin-top: 1.1rem;
   padding-top: 0.9rem;
-  border-top: 1px solid var(--ux-panel-border);
+  border-top: 1px solid var(--border-default);
 }
 
 /* The AI disclosure SF.gov's guidelines require. Styled to be genuinely hard
@@ -100,9 +100,9 @@
 .ai-assist-disclosure {
   margin: 0 0 0.7rem;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--ux-warning-border);
+  border: 1px solid var(--sfds-warning-border);
   border-radius: var(--radius);
-  background: var(--ux-warning-bg);
+  background: var(--sfds-warning-bg);
   color: var(--sfds-slate-1);
   font-size: 0.82rem;
   font-weight: 700;
@@ -118,7 +118,11 @@
 }
 
 .ai-assist-verdict.pass {
-  color: var(--sfds-green, #1a7f37);
+  /* Fallback matches the token's real light value. It was #1a7f37, which
+     matched neither the light (#026800) nor the dark (#8fd694) value — a stale
+     copy of a colour that had since changed twice. It never rendered, which is
+     exactly why nobody noticed. */
+  color: var(--sfds-green, #026800);
   font-weight: 700;
 }
 
@@ -157,9 +161,9 @@
   max-height: 32rem;
   overflow: auto;
   padding: 0.75rem;
-  border: 2px dashed var(--ux-warning-border);
+  border: 2px dashed var(--sfds-warning-border);
   border-radius: var(--radius);
-  background: var(--ux-panel-bg);
+  background: var(--surface-panel);
 }
 
 .ai-assist-preview .page-body,

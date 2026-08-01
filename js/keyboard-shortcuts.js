@@ -17,13 +17,14 @@ import { hasValidPageData } from './utils.js'
     { keys: ['1'], description: 'Open Overview workspace tab' },
     { keys: ['2'], description: 'Open Page checks workspace tab' },
     { keys: ['3'], description: 'Open Sitemap workspace tab' },
-    // Numbered left to right across the tab strip, so the AI assist tab takes
-    // 4 and Help moves to 5. Matching visual order matters more than keeping
-    // Help on 4: the Help panel renders this list, so the mapping documents
-    // itself the moment anyone looks for it.
+    // Numbered left to right across the tab strip. Matching visual order
+    // matters more than keeping any one tab on a fixed digit: the Help panel
+    // renders this list, so the mapping documents itself the moment anyone
+    // looks for it. Keep these in step with WORKSPACE_TABS in
+    // js/ux-improvements-workspace.js and the tab markup in index.html.
     { keys: ['4'], description: 'Open AI assist workspace tab' },
-    { keys: ['5'], description: 'Open Help workspace tab' },
-    { keys: ['6'], description: 'Open Tool status workspace tab' },
+    { keys: ['5'], description: 'Open Tool status workspace tab' },
+    { keys: ['6'], description: 'Open Help workspace tab' },
     { keys: ['p'], description: 'Download this mockup as a PNG' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
@@ -263,11 +264,11 @@ import { hasValidPageData } from './utils.js'
         break
       case '5':
         event.preventDefault()
-        openWorkspaceTab('help')
+        openWorkspaceTab('ops')
         break
       case '6':
         event.preventDefault()
-        openWorkspaceTab('ops')
+        openWorkspaceTab('help')
         break
       case 'p':
         // Only the single-page export gets a shortcut. Bulk export navigates

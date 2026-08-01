@@ -87,6 +87,27 @@
   --ds-space-7: 3rem; /* 48px */
   --ds-space-8: 4rem; /* 64px */
 
+  /* ===================================================================
+     Type scale for tool chrome
+     ===================================================================
+     There was a --ds-space-* scale but no type scale, and the result was
+     predictable: four separate sessions each invented their own heading
+     and hint sizes for what is visually the same pair. The dashboard
+     section header, the insights card head, the ops subhead and the ops
+     finding title were 1.05 / 0.82 / 0.95 / 0.88rem — all weight 800, all
+     paired with a --text-secondary hint at 0.82 / 0.72 / — / 0.8rem.
+
+     Three steps, because tool chrome only has three jobs: name a panel,
+     name a card inside it, and label a control or a figure. Anything
+     needing a fourth size is probably a card that should be a panel.
+
+     In rem, not px, so they scale with the user's browser font size —
+     the same WCAG 1.4.4 requirement the spacing scale is built for. */
+  --ds-text-panel: 1.05rem; /* a workspace panel's own heading */
+  --ds-text-card: 0.88rem; /* a card or section inside a panel */
+  --ds-text-label: 0.78rem; /* hints, captions, control labels */
+  --ds-text-micro: 0.68rem; /* uppercase eyebrow labels only */
+
   /* Radius. --radius (8px, in css/styles.css) remains the default for
      existing components; these name the ends of the range. */
   --ds-radius-sm: 4px;
@@ -110,6 +131,18 @@
   --surface-panel: var(--sfds-white, #fcfcfc);
   --surface-sunken: var(--sfds-slate-6, #f8fafc);
   --surface-raised: var(--sfds-white, #fcfcfc);
+  /* A tinted fill INSIDE a panel — toolbar strips, KPI wells, the tab bar.
+     Same value as --surface-page, deliberately: a soft area reads as the page
+     showing through the panel. It exists as its own name so those rules do not
+     have to claim they are painting the page background, and so the two can be
+     tuned apart later without hunting for which is which.
+
+     This replaced `--ux-soft-bg`, one of seven `--ux-*` aliases that used to be
+     declared in css/ux-improvements.css. Those were a second vocabulary for
+     tokens that already had names here — `--ux-panel-bg` and `--surface-panel`
+     were the same thing — and having both is how `.status-chip` ended up
+     declared twice under two different token families. */
+  --surface-soft: var(--sfds-slate-5, #f0f0f0);
   --text-primary: var(--sfds-slate-1, #0b0c0c);
   --text-secondary: var(--sfds-slate-3, #6e7070);
   --border-default: var(--sfds-border, #e9eaea);

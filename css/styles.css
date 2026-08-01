@@ -660,6 +660,15 @@ a:focus {
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
 }
+/* MOCKUP tables — content inside the page being reviewed, so they wear a full
+   grid and a filled header row the way an SF.gov content table does.
+
+   Deliberately NOT the same as `.review-queue-table` in css/ux-improvements.css,
+   which is tool chrome: that one is underline-only with uppercase micro-caps and
+   tighter padding, because it is a dense scanning surface rather than something
+   a resident reads. The two looking different is the point — a reviewer must be
+   able to tell the mockup from the tool at a glance. Neither file said so, which
+   made the divergence read like drift. */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -1349,13 +1358,11 @@ a:focus {
   font-weight: 700;
   vertical-align: middle;
 }
-body.hide-karl-tags .karl-tag,
-body.hide-karl-tags .cms-help,
-body.hide-karl-tags .karl-tag-legend,
-body.hide-karl-tags .editor-qa,
-body.hide-karl-tags .unverified-pill {
-  display: none !important;
-}
+/* The `body.hide-karl-tags` hiding rule lives near the bottom of this file,
+   beside `.karl-help-nested`, which it also has to hide. It used to be written
+   here as well, identically apart from that one missing selector — so this copy
+   was entirely subsumed by the later one and did nothing the later one did not
+   already do. */
 .karl-tag-legend {
   margin: 0.65rem 0 0;
   padding: 0.65rem 0.75rem;
