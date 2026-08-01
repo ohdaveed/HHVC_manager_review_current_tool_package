@@ -85,7 +85,11 @@ For a change that is _supposed_ to be behavior-preserving, saying "this preserve
 
 - Refactoring CSS that merges duplicate rules? Capture the computed styles before and after and diff them. In the real case this came from, that diff showed exactly one change across fourteen selectors and two themes — the one intended fix. Every other property was byte-identical, which no amount of careful reading would have established.
 - Refactoring a pure function? Run both versions over the same inputs and compare.
-- Reorganizing prose? Check that every factual claim in the original still appears.
+- Reorganizing prose? Extract the factual claims from both versions and diff the
+  two sets. This is not optional ceremony: in a measured comparison, a careful
+  edit that skipped this step silently dropped three dates from a status memo —
+  the start date, the test date, and the completion commitment. Reading the
+  result twice would not have caught it; `comm` over the extracted sets did.
 
 ### 6. Report honestly
 
