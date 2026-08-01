@@ -8,7 +8,7 @@
 // at render time — so findUnsafeUrls below cannot drift from what the renderer
 // actually considers safe. That file is browser-first and exports only its URL
 // guard to Node; see the note at its foot.
-const { safeUrl } = require('../js/utils.js')
+const { safeUrl, urlProbe } = require('../js/utils.js')
 
 /**
  * Find order entries that reference a page key missing from `pages`.
@@ -264,9 +264,17 @@ function findExternalAssetUrls(pages) {
 
   function check(pageKey, path, value) {
     if (typeof value !== 'string') return
+    // Test the browser-normalized probe, not the raw string. Matching the raw
+    // string on /^(https?:)?\/\// was wrong in exactly the way safeUrl already
+    // documents: `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and
+    // `https:<TAB>//cdn…` all pass that test and all still fetch off-origin —
+    // verified in Chromium, not inferred from the URL spec. Sharing urlProbe
+    // with safeUrl is what stops the two guards from disagreeing about what a
+    // browser will do.
+    const probe = urlProbe(value.trim())
     // Anything with an explicit host is off-site: an absolute http(s) URL, or
     // a protocol-relative one, which reads as a path but leaves the origin.
-    if (/^(https?:)?\/\//i.test(value.trim())) external.push({ pageKey, path, url: value })
+    if (/^(https?:)?\/\//.test(probe)) external.push({ pageKey, path, url: value })
   }
 
   for (const [pageKey, page] of Object.entries(pages)) {

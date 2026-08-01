@@ -463,6 +463,37 @@ describe('findExternalAssetUrls', () => {
     ])
   })
 
+  test('flags protocol-relative image srcs disguised with backslashes', () => {
+    // Browsers treat backslashes as forward slashes in the authority position,
+    // so every one of these fetches from cdn.example.com. Confirmed in
+    // Chromium against a live <img>, not inferred: matching the raw string on
+    // /^(https?:)?\/\// let all four through while the offline guarantee they
+    // break stayed silently broken.
+    const spellings = [
+      '\\\\cdn.example.com/a.jpg',
+      '\\/cdn.example.com/a.jpg',
+      '/\\cdn.example.com/a.jpg',
+      'https:\t//cdn.example.com/a.jpg',
+    ]
+
+    for (const src of spellings) {
+      expect(findExternalAssetUrls({ a: { spotlight: { image: { src } } } })).toEqual([
+        { pageKey: 'a', path: 'spotlight.image.src', url: src },
+      ])
+    }
+  })
+
+  test('flags a whitespace-padded absolute URL', () => {
+    // Padding must not evade the check. Unlike the backslash spellings above
+    // this one was never a bypass — trim() alone already caught it — so it
+    // documents the behaviour rather than guarding a regression.
+    const src = '   https://images.unsplash.com/photo-1560518883   '
+
+    expect(findExternalAssetUrls({ a: { spotlight: { image: { src } } } })).toEqual([
+      { pageKey: 'a', path: 'spotlight.image.src', url: src },
+    ])
+  })
+
   test('accepts a data: URI, which is the whole point of the placeholder', () => {
     // Deliberately the opposite of findUnsafeUrls' rule: there data: is
     // rejected because the value is navigated to; here it is rendered as

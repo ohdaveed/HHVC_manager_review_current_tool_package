@@ -421,6 +421,10 @@ defect`) — HHVC scope is Article 11 only.
   self-contained is the point. The Agency spotlight placeholder is an inline
   SVG data URI, and has to be one rather than a file under `public/` so it
   survives `vite build --mode singlefile`, where a relative path would 404.
+  It tests the browser-normalized string via the `urlProbe()` helper it shares
+  with `safeUrl`: matching the raw value on `/^(https?:)?\/\//` misses
+  `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`, all of
+  which still fetch off-origin (confirmed in Chromium, not inferred).
 
 All of these live in `build_scripts/data-checks.js` as pure functions, testable
 without the real page data.

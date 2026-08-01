@@ -564,6 +564,14 @@ Beyond schema shape, `validate.js` enforces business invariants:
   rather than a file under `public/`: it must survive
   `vite build --mode singlefile`, whose output is a single HTML file meant to
   be emailed and double-clicked, where a relative path would 404.
+  **It tests the browser-normalized string, via the `urlProbe()` helper it
+  shares with `safeUrl`.** Matching the raw value on `/^(https?:)?\/\//` is not
+  enough: `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`
+  all pass that test and all still fetch off-origin — confirmed in Chromium
+  against a live `<img>`, not inferred from the URL spec. The two guards ask
+  different questions (scheme vs. host) but must agree on what a browser will
+  actually do with the string, which is why the normalization lives in one
+  place rather than being restated in each.
 
 All of these live in `build_scripts/data-checks.js` as pure functions, so they
 can be unit-tested without the real page data.
