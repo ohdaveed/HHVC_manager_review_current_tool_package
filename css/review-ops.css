@@ -1,0 +1,128 @@
+/* Tool status tab (js/review-ops.js).
+
+   Loads after css/dashboard.css, whose .ds-* primitives and semantic tokens
+   this builds on, and before css/theme.css. Nothing here reaches for a raw
+   --sfds-* value.
+
+   The panel is a diagnostics readout, so it is styled to be scanned rather
+   than admired: figures large enough to read at a glance, explanations in
+   secondary ink, and findings that look identical whether they are reporting
+   a problem or the absence of one — apart from their chip. */
+
+.ops-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-4);
+}
+
+/* =====================================================================
+   Figures
+   ===================================================================== */
+
+.ops-connections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--ds-space-3);
+}
+
+.ops-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-md);
+  background: var(--surface-panel);
+  /* Lets a grid item shrink below its content's intrinsic width, so a long
+     sync URL wraps instead of forcing the row into a horizontal scroll. */
+  min-width: 0;
+}
+
+.ops-stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.ops-stat-value {
+  font-size: 1.2rem;
+  line-height: 1.2;
+  color: var(--text-primary);
+  /* Tabular figures so counts do not shuffle as the panel re-renders on
+     every review-data change. */
+  font-variant-numeric: tabular-nums;
+  /* A sync URL is one long unbroken token; without this it overflows the
+     card rather than wrapping. */
+  overflow-wrap: anywhere;
+}
+
+.ops-stat-hint {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* =====================================================================
+   Findings
+   ===================================================================== */
+
+.ops-subhead {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.ops-finding {
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-md);
+  background: var(--surface-sunken);
+}
+
+.ops-finding + .ops-finding {
+  margin-top: var(--ds-space-3);
+}
+
+.ops-finding-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  margin-bottom: var(--ds-space-2);
+}
+
+.ops-finding-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.ops-finding-explain {
+  margin: 0 0 var(--ds-space-2);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* The affected page keys. Listed in full rather than truncated with a count:
+   the whole point of naming them is that an operator can go look. */
+.ops-finding-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-1) var(--ds-space-2);
+  margin: 0 0 var(--ds-space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.ops-finding-keys code {
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--ds-radius-sm, 4px);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-default);
+  font-size: 0.74rem;
+  color: var(--text-primary);
+}

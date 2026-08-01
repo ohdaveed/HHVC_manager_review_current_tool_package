@@ -41,6 +41,7 @@ import './../css/interactive-sitemap.css'
 import './../css/ai-assist.css'
 import './../css/dashboard.css'
 import './../css/review-insights.css'
+import './../css/review-ops.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
@@ -102,6 +103,10 @@ import './review-queue.js'
 // after review-queue-rows.js, whose getQueueRows() supplies its data.
 import './review-insights-data.js'
 import './review-insights.js'
+// Ops/status tab. After review-state-sync.js, whose config it reports, and
+// after the review layers whose state it inspects.
+import './review-ops-data.js'
+import './review-ops.js'
 import './dashboard-guidance.js'
 import './interactive-sitemap-data.js'
 import './interactive-sitemap-render.js'

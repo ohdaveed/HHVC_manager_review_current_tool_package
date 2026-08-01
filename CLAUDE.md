@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 18 unit-test files in tests/ (477 tests)
-bun run test:e2e              # playwright test (99 specs across 13 files in tests/e2e/)
+bun run test                  # bun test over the 19 unit-test files in tests/ (497 tests)
+bun run test:e2e              # playwright test (108 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,10 +65,10 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs eighteen Bun unit-test files under `tests/`:
+wrong). `bun run test` runs nineteen Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-insights-data`, `review-insights-charts`, `review-merge`, `review-api-server` (which spawns
+`review-insights-data`, `review-insights-charts`, `review-ops-data`, `review-merge`, `review-api-server` (which spawns
 `server.ts` as a subprocess against a temp SQLite DB and exercises
 auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and per-provider
@@ -76,7 +76,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 472 tests at time of writing.
+without a key or a paid call) — 497 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -90,11 +90,11 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — thirteen spec files
-(99 specs): twelve UI-driven (navigation, editor panel, review workflow,
-review queue, review-queue undo, import/export, keyboard shortcuts,
-sitemap/workspace, accessibility, AI assist, mockup PNG export, Overview
-insight charts) plus the
+`bun run test:e2e` drives Playwright over `tests/e2e/` — fourteen spec files
+(108 specs): thirteen UI-driven (navigation, editor panel, review workflow,
+review queue, review-queue undo, Tool status, import/export, keyboard
+shortcuts, sitemap/workspace, accessibility, AI assist, mockup PNG export,
+Overview insight charts) plus the
 original API-level `review-import-export` round-trip, sharing plain helper
 functions in `tests/e2e/helpers.js` (no fixture framework).
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
@@ -318,7 +318,7 @@ never referenced from `pages/*.js` or outside its own module's files):
   `escapeHtml`/`textContent`, and must stay that way.
 
 The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
-'help']`, numbered left to right by the `1`–`5` shortcuts. The sitemap and AI
+'help', 'ops']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
 panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
 / `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
 tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
@@ -393,7 +393,7 @@ relying on Node-specific interop here would go unnoticed.
 
 Three compact charts above the review queue table — decision mix, review
 activity over time, and the pages whose automated checks are failing. They sit
-on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–5
+on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–6
 are bound to keyboard shortcuts, and inserting one would renumber the rest.
 
 - **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
@@ -456,6 +456,39 @@ so it is the only place a snapshot is recorded.
 - It lives in the bulk bar rather than in the action toast, because toasts
   self-dismiss after 4s — far too short to notice a wrong bulk action and
   reverse it. Keyboard shortcut `z`.
+
+### Tool status tab (`js/review-ops*.js`)
+
+A sixth workspace tab reporting what this browser is actually holding and how
+it is connected — previously only visible in devtools. There are no roles in
+this tool: the reviewer and the operator are the same person, deliberately.
+
+- **`js/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
+  `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
+  `window`/`module.exports` so the tests need no browser.
+- **`js/review-ops.js`** — the panel, lazily mounted on tab open with the same
+  `mountIfTabAlreadyOpen()` catch-up the sitemap and AI tabs use.
+
+**The tab is appended, not inserted.** Tabs are numbered left to right by the
+`1`–`9` shortcuts, so a sixth takes `6` and renumbers nothing. This is also why
+the Overview charts did not get their own tab.
+
+- **Orphaned records are a real class, not a hypothetical.** Review state is
+  keyed by page key and nothing prunes it when a page is retired, so a browser
+  that reviewed an earlier IA still carries rows for keys that no longer
+  exist. They are invisible in the queue, inflate any total taken from saved
+  state, and ride along in every backup.
+- **An empty page-key set reports NO orphans, not all of them.** An empty set
+  means page data has not loaded; the other reading would put a "remove these"
+  button in front of the reviewer's entire review history.
+- **`local_dirty`'s three states are reported separately.** `true`,
+  an explicit `false`, and ABSENT are different things — the whole reason the
+  field is tri-state is that missing must not be read as clean.
+- **Pruning is the only path in the tool that deletes review data outright**
+  (everything else merges). It confirms with the count and the keys first, and
+  **re-derives the list at click time** rather than trusting what was
+  rendered — the panel can sit open while a sync pull or import changes state
+  underneath it.
 
 ### Page object shape and validation rules
 

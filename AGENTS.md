@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:app then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 18 unit-test files in tests/
+bun run test                  # Bun test runner over the 19 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,10 +59,10 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs eighteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs nineteen Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-insights-data`, `review-insights-charts`, `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
+`review-insights-data`, `review-insights-charts`, `review-ops-data`, `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
 normalization, varying the provider keys directly — which the server tests
@@ -74,10 +74,10 @@ endpoints, so both AI paths are covered without a key or a paid call). **The lis
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-thirteen spec files — twelve UI-driven ones covering navigation, editor
-panel, review workflow, review queue, review-queue undo, import/export,
-keyboard shortcuts, sitemap/workspace, accessibility, AI assist, mockup PNG
-export, and the Overview insight charts, plus the original
+fourteen spec files — thirteen UI-driven ones covering navigation, editor
+panel, review workflow, review queue, review-queue undo, Tool status,
+import/export, keyboard shortcuts, sitemap/workspace, accessibility, AI
+assist, mockup PNG export, and the Overview insight charts, plus the original
 `review-import-export` API-level
 round-trip — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework). `gotoFresh()` waits on
@@ -222,8 +222,8 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   `refreshCapabilities`, `getCurrentPage`, `captureForm`). `window.AiAssist.ensureRendered`
   does not exist.
 
-The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist', 'help']`,
-numbered left to right by the `1`–`5` shortcuts. Sitemap and AI assist mount
+The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist', 'help', 'ops']`,
+numbered left to right by the `1`–`6` shortcuts. Sitemap and AI assist mount
 lazily on tab open, **and each also catches an already-open tab at its own
 `init()`** (`mountIfTabAlreadyOpen`) — `js/ux-improvements.js` initializes
 earlier and restores a persisted `workspace_tab` before those hooks exist, so
@@ -279,7 +279,7 @@ in early 22.x.
 
 Three compact charts above the review queue table — decision mix, review
 activity over time, and the pages whose automated checks are failing. They live
-on the **Overview tab rather than a sixth workspace tab**: tabs 1–5 are bound to
+on the **Overview tab rather than a sixth workspace tab**: tabs 1–6 are bound to
 keyboard shortcuts, and adding one would renumber the rest.
 
 - **`js/review-insights-data.js`** — pure data shaping, dual
@@ -331,6 +331,39 @@ so it is the only place a snapshot is recorded.
 - It lives in the bulk bar rather than in the action toast, because toasts
   self-dismiss after 4s — far too short to notice a wrong bulk action and
   reverse it. Keyboard shortcut `z`.
+
+### Tool status tab (`js/review-ops*.js`)
+
+A sixth workspace tab reporting what this browser is actually holding and how
+it is connected — previously only visible in devtools. There are no roles in
+this tool: the reviewer and the operator are the same person, deliberately.
+
+- **`js/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
+  `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
+  `window`/`module.exports` so the tests need no browser.
+- **`js/review-ops.js`** — the panel, lazily mounted on tab open with the same
+  `mountIfTabAlreadyOpen()` catch-up the sitemap and AI tabs use.
+
+**The tab is appended, not inserted.** Tabs are numbered left to right by the
+`1`–`9` shortcuts, so a sixth takes `6` and renumbers nothing. This is also why
+the Overview charts did not get their own tab.
+
+- **Orphaned records are a real class, not a hypothetical.** Review state is
+  keyed by page key and nothing prunes it when a page is retired, so a browser
+  that reviewed an earlier IA still carries rows for keys that no longer
+  exist. They are invisible in the queue, inflate any total taken from saved
+  state, and ride along in every backup.
+- **An empty page-key set reports NO orphans, not all of them.** An empty set
+  means page data has not loaded; the other reading would put a "remove these"
+  button in front of the reviewer's entire review history.
+- **`local_dirty`'s three states are reported separately.** `true`,
+  an explicit `false`, and ABSENT are different things — the whole reason the
+  field is tri-state is that missing must not be read as clean.
+- **Pruning is the only path in the tool that deletes review data outright**
+  (everything else merges). It confirms with the count and the keys first, and
+  **re-derives the list at click time** rather than trusting what was
+  rendered — the panel can sit open while a sync pull or import changes state
+  underneath it.
 
 ### Page object shape and validation rules
 
