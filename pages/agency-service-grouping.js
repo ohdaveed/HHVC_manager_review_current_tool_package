@@ -37,10 +37,12 @@ window.HHVC_PAGES['pestsTopic'] = {
       // third party being reachable. findExternalAssetUrls() now fails
       // validation on any such URL.
       //
-      // WebP at q70. This photo is far more detailed than the one it replaced
-      // (window mullions, ironwork, wires), so it costs 48 KB where that one
-      // cost 17 KB — but q78, q70 and q64 are indistinguishable at 1:1 on the
-      // busiest region, and q70 is 12 KB cheaper than q78 for nothing visible.
+      // WebP at q70, 48 KB. This photo is far more detailed than the one it
+      // replaced (window mullions, ironwork, wires), and detail is what costs
+      // bytes: compared at the same q78 it is 57 KB against that one's 17 KB.
+      // Quality and size only mean something quoted together. q78, q70 and q64
+      // are indistinguishable at 1:1 on the busiest region, so q70 is 9 KB
+      // cheaper than q78 here for nothing visible.
       // Kept at the source 800x533: the spotlight renders it around 370 CSS px
       // and js/mockup-image-export.js captures at 2x, so roughly 740 device
       // pixels are genuinely used.
