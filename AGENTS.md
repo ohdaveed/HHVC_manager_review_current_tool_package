@@ -38,15 +38,15 @@ Vite to bundle.
 bun install                 # install deps (required before first `dev`)
 bun run dev                  # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run dev:api              # optional sync backend (server.ts) on :8081; dev proxies /api
-bun run start                # production-like: build:app then serve dist/ + the API
+bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 19 unit-test files in tests/
+bun run test                  # Bun test runner over the 20 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
 bun run push-tracking         # push page review status to the Google Sheets tracker
-bun run build                 # validate -> export -> build:workshop-form -> build:app -> build:singlefile
+bun run build                 # validate -> export -> workshop form -> build:app -> publish form -> singlefile
 bun run build:app             # vite build -> dist/ (what server.ts and Netlify serve)
 bun run build:singlefile      # vite build --mode singlefile -> dist-singlefile/index.html
 bun run build:workshop-form   # bun install + vite build inside forms/mosquito-workshop-request
@@ -59,10 +59,13 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs nineteen Bun unit-test files under `tests/` —
+isn't). `bun run test` runs twenty Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-insights-data`, `review-insights-charts`, `review-ops-data`, `review-merge`, `review-api-server` (which spawns `server.ts` as a subprocess
+`review-insights-data`, `review-insights-charts`, `review-ops-data`,
+`decision-vocabulary` (pins the two module-boundary restatements of the
+decision list against the canonical table in `js/utils.js`), `review-merge`,
+`review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
 normalization, varying the provider keys directly — which the server tests
@@ -213,6 +216,25 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   `js/interactive-sitemap-render.js`; its styles live in
   `css/interactive-sitemap.css`.
 
+- **`window.ReviewInsights`** (`js/review-insights.js`) ←
+  `js/review-insights-data.js`, which attaches `.data`. The Overview charts;
+  `js/review-queue-render.js` calls `window.ReviewInsights.render()` at the end
+  of its own render, optional-chained.
+- **`window.ReviewOps`** (`js/review-ops.js`) ← `js/review-ops-data.js`, which
+  attaches `.data`. The Tool status panel.
+- **`window.MockupImageExport`** (`js/mockup-image-export.js`) — PNG export of
+  the mockups, standing on its own.
+
+- **Three lazily-mounted panels publish a mount hook rather than rendering at
+  init:** `window.__mountInteractiveSitemapOnTabOpen`,
+  `window.__mountAiAssistOnTabOpen`, and `window.__mountReviewOpsOnTabOpen`.
+  `setWorkspaceTab` calls whichever one matches the tab being opened. Each panel
+  ALSO catches an already-open tab at its own `init()` via
+  `mountWorkspacePanelIfOpen()` in `js/utils.js` — `js/ux-improvements.js`
+  initializes earlier and restores a persisted `workspace_tab` before these
+  hooks exist, so without the catch-up a reviewer who left one of these tabs
+  open came back to an empty panel.
+
 - **AI assist breaks that naming pattern — mind the case.** `window.AiAssist` is
   the **internal** namespace (`js/ai-assist-client.js` attaches `.client`, the
   browser half of the optional `/api/ai/*` routes and a no-op unless configured;
@@ -279,8 +301,8 @@ in early 22.x.
 
 Three compact charts above the review queue table — decision mix, review
 activity over time, and the pages whose automated checks are failing. They live
-on the **Overview tab rather than a sixth workspace tab**: tabs 1–6 are bound to
-keyboard shortcuts, and adding one would renumber the rest.
+on the **Overview tab rather than a workspace tab of their own**: a tab is a
+scarce slot bound to a number key, and the strip already carries six.
 
 - **`js/review-insights-data.js`** — pure data shaping, dual
   `window`/`module.exports` like `js/review-merge.js`, so
@@ -344,9 +366,13 @@ this tool: the reviewer and the operator are the same person, deliberately.
 - **`js/review-ops.js`** — the panel, lazily mounted on tab open with the same
   `mountIfTabAlreadyOpen()` catch-up the sitemap and AI tabs use.
 
-**The tab is appended, not inserted.** Tabs are numbered left to right by the
-`1`–`9` shortcuts, so a sixth takes `6` and renumbers nothing. This is also why
-the Overview charts did not get their own tab.
+**It sits fifth, just before Help.** Tabs are numbered left to right by the
+`1`–`6` shortcuts, so this one takes `5` and Help takes `6`. Help stays last
+deliberately — it is the reference panel, not a working one — which means Help
+is the digit that moves whenever a tab is added. `WORKSPACE_TABS`
+(`js/ux-improvements-workspace.js`), the tab markup in `index.html`, and the
+shortcut cases in `js/keyboard-shortcuts.js` must be changed together. This
+scarcity is also why the Overview charts did not get their own tab.
 
 - **Orphaned records are a real class, not a hypothetical.** Review state is
   keyed by page key and nothing prunes it when a page is retired, so a browser
@@ -903,8 +929,35 @@ preprocessor. Boxed section-banner comments; justify color/accessibility choices
 in-comment with the contrast math. `!important` is used liberally **only** in the
 self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
-`clamp()`. Edit base styles in `css/styles.css`; `css/theme.css` holds the
-SFDS-token overrides layered under the `@sfgov/design-system` stylesheets.
+`clamp()`.
+
+**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+stay last — it is the semantic token layer, and its dark-mode block overrides
+the `--sfds-*` primitives `css/styles.css` declares on `:root`):
+
+| File                          | Owns                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
+| `css/interactive-sitemap.css` | the sitemap panel                                                                              |
+| `css/ai-assist.css`           | the AI assist panel                                                                            |
+| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
+| `css/review-insights.css`     | the Overview charts' cards and legend                                                          |
+| `css/review-ops.css`          | the Tool status panel                                                                          |
+| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+
+Retheming should mean editing `css/theme.css` only. A component rule that needs
+a colour, a size step or a radius takes a semantic token; it should not reach
+for a raw `--sfds-*` value, and it must never hardcode a literal — every
+dark-mode contrast bug this repo has had came from a literal sitting where a
+token belonged.
+
+**A selector should be declared in exactly one file.** `.review-workspace`,
+its tabs, the KPI tiles and `.status-chip` were each split across
+`css/ux-improvements.css` and `css/dashboard.css`, with the later file
+declaring only what it wanted to change — so what actually rendered was a merge
+of the two and neither block described it. They now live wholly in
+`css/dashboard.css`.
 
 ### Tests
 
