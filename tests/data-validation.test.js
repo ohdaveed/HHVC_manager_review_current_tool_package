@@ -13,6 +13,7 @@ const {
   findBannedTerms,
   findListFormatViolations,
   findUnsafeUrls,
+  findExternalAssetUrls,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 
@@ -280,6 +281,31 @@ describe('findBannedTerms', () => {
     const page = { title: 'plumbing and sewer issues' }
     expect(findBannedTerms(page, bannedTerms)).toEqual(['plumbing', 'sewer'])
   })
+
+  test('ignores image src, so base64 bytes cannot trip a term', () => {
+    // Not hypothetical: the real Agency spotlight photo, inlined as a base64
+    // data: URI, happens to contain the sequence "dbi" and failed validation
+    // on a page whose copy says nothing about DBI. Base64 is an arbitrary run
+    // of letters and an image source is machine data, not prose — this check
+    // asks an editorial question and must only read editorial content.
+    const page = {
+      title: 'Healthy Housing and Vector Control',
+      spotlight: { image: { src: 'data:image/webp;base64,UklGRxxdbiQUJEUA' } },
+    }
+
+    expect(findBannedTerms(page, bannedTerms)).toEqual([])
+  })
+
+  test('still finds a banned term in copy on a page that also has an image', () => {
+    // The exclusion must be narrow: stripping src must not blind the check to
+    // the prose sitting next to it.
+    const page = {
+      spotlight: { image: { src: 'data:image/webp;base64,AAAA', alt: 'A photo' } },
+      sections: [{ paragraphs: ['Contact DBI about this.'] }],
+    }
+
+    expect(findBannedTerms(page, bannedTerms)).toEqual(['dbi'])
+  })
 })
 
 describe('findListFormatViolations', () => {
@@ -423,6 +449,100 @@ describe('countUnverifiedClaims', () => {
   test('does not count an object item with unverified: false', () => {
     const pages = { a: { sections: [{ bullets: [{ text: 'Not flagged', unverified: false }] }] } }
     expect(countUnverifiedClaims(pages)).toBe(0)
+  })
+})
+
+describe('findExternalAssetUrls', () => {
+  test('flags a hotlinked spotlight image', () => {
+    // The exact regression this check exists for: one image on one page,
+    // loaded from a third party, quietly making the whole tool need a network.
+    const pages = {
+      a: { spotlight: { image: { src: 'https://images.unsplash.com/photo-1560518883' } } },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([
+      {
+        pageKey: 'a',
+        path: 'spotlight.image.src',
+        url: 'https://images.unsplash.com/photo-1560518883',
+      },
+    ])
+  })
+
+  test('flags a hotlinked section image', () => {
+    const pages = {
+      a: { sections: [{ heading: 'H', karl: 'k', image: { src: 'http://example.com/a.jpg' } }] },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([
+      { pageKey: 'a', path: 'sections[0].image.src', url: 'http://example.com/a.jpg' },
+    ])
+  })
+
+  test('flags a protocol-relative image src', () => {
+    // Reads as a path but leaves the origin, so it is an off-site load.
+    const pages = { a: { spotlight: { image: { src: '//cdn.example.com/a.jpg' } } } }
+
+    expect(findExternalAssetUrls(pages)).toEqual([
+      { pageKey: 'a', path: 'spotlight.image.src', url: '//cdn.example.com/a.jpg' },
+    ])
+  })
+
+  test('flags protocol-relative image srcs disguised with backslashes', () => {
+    // Browsers treat backslashes as forward slashes in the authority position,
+    // so every one of these fetches from cdn.example.com. Confirmed in
+    // Chromium against a live <img>, not inferred: matching the raw string on
+    // /^(https?:)?\/\// let all four through while the offline guarantee they
+    // break stayed silently broken.
+    const spellings = [
+      '\\\\cdn.example.com/a.jpg',
+      '\\/cdn.example.com/a.jpg',
+      '/\\cdn.example.com/a.jpg',
+      'https:\t//cdn.example.com/a.jpg',
+    ]
+
+    for (const src of spellings) {
+      expect(findExternalAssetUrls({ a: { spotlight: { image: { src } } } })).toEqual([
+        { pageKey: 'a', path: 'spotlight.image.src', url: src },
+      ])
+    }
+  })
+
+  test('flags a whitespace-padded absolute URL', () => {
+    // Padding must not evade the check. Unlike the backslash spellings above
+    // this one was never a bypass — trim() alone already caught it — so it
+    // documents the behaviour rather than guarding a regression.
+    const src = '   https://images.unsplash.com/photo-1560518883   '
+
+    expect(findExternalAssetUrls({ a: { spotlight: { image: { src } } } })).toEqual([
+      { pageKey: 'a', path: 'spotlight.image.src', url: src },
+    ])
+  })
+
+  test('accepts a data: URI, which is the whole point of the placeholder', () => {
+    // Deliberately the opposite of findUnsafeUrls' rule: there data: is
+    // rejected because the value is navigated to; here it is rendered as
+    // bytes, and being self-contained is exactly what is wanted.
+    const pages = {
+      a: { spotlight: { image: { src: 'data:image/svg+xml,%3Csvg/%3E' } } },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([])
+  })
+
+  test('accepts relative and root-relative image paths', () => {
+    const pages = {
+      a: {
+        spotlight: { image: { src: '/images/a.svg' } },
+        sections: [{ heading: 'H', karl: 'k', image: { src: 'images/b.svg' } }],
+      },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([])
+  })
+
+  test('ignores a page with no images at all', () => {
+    expect(findExternalAssetUrls({ a: { sections: [{ heading: 'H', karl: 'k' }] } })).toEqual([])
   })
 })
 

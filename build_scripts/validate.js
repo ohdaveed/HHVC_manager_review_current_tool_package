@@ -14,6 +14,7 @@ const {
   findBannedTerms,
   findListFormatViolations,
   findUnsafeUrls,
+  findExternalAssetUrls,
   countUnverifiedClaims,
 } = require('./data-checks')
 const { findPageImports, findPageImportDrift } = require('./page-import-checks')
@@ -92,6 +93,16 @@ const unsafeUrls = findUnsafeUrls(parsed.data.pages)
 if (unsafeUrls.length) {
   const { pageKey, path, url } = unsafeUrls[0]
   throw new Error(`${pageKey} ${path} has an unsafe URL scheme: ${url}`)
+}
+
+const externalAssets = findExternalAssetUrls(parsed.data.pages)
+if (externalAssets.length) {
+  const { pageKey, path, url } = externalAssets[0]
+  throw new Error(
+    `${pageKey} ${path} loads an image from another host: ${url}\n` +
+      'Inline it as a data: URI or serve it locally — a hotlinked image breaks ' +
+      'offline review and makes this page’s PNG export depend on a third party.'
+  )
 }
 
 const unverifiedCount = countUnverifiedClaims(parsed.data.pages)

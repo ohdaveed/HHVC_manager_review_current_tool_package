@@ -575,6 +575,45 @@ Beyond schema shape, `validate.js` enforces business invariants:
 - **Lists of three or more items must use `bullets[]`**, not `paragraphs[]` or
   step `text[]` (`findListFormatViolations`). A section with 3+ paragraphs, or
   a step with 3+ text items, is a hard validation failure.
+- **No image may be loaded from another host** (`findExternalAssetUrls`) —
+  absolute `http(s)` or protocol-relative `image.src`, on a section or on the
+  spotlight, fails validation. The tool's central claim is that it works fully
+  offline, and for a long time that was false because of one hotlinked
+  `images.unsplash.com` URL on the Agency page. It hid well precisely because
+  it _worked_: on a connected machine the page looked right, and the only
+  symptoms showed up elsewhere — an air-gapped review with a broken image, and
+  that page's PNG export quietly depending on a third-party host.
+  **`data:` is allowed here, which is deliberately the opposite of
+  `findUnsafeUrls`'s rule.** There a `data:` value is rejected because it
+  becomes a navigation target, where a data URL is a phishing vector; here it
+  becomes an `<img src>`, which renders bytes rather than navigating, and
+  self-contained is exactly the property wanted. The Agency spotlight
+  photo is an inline WebP data URI for that reason, and it has to be one
+  rather than a file under `public/`: it must survive
+  `vite build --mode singlefile`, whose output is a single HTML file meant to
+  be emailed and double-clicked, where a relative path would 404. WebP rather
+  than the source JPEG, at the lowest quality with no visible cost — the
+  string ships inside the bundle, so compare crops at 1:1 on the busiest
+  region and pick from that rather than defaulting to a high number. The
+  current photo (a row of SF apartment buildings, all window mullions and
+  ironwork) is indistinguishable at q78, q70 and q64, so it ships at **q70,
+  48 KB**. **Size is subject-dependent, not a fixed budget**: compared at the
+  same q78, this photo is 57 KB where the model-house photo that preceded it
+  was 17 KB. Quote the quality alongside any size here — the two numbers are
+  meaningless apart.
+  **`findBannedTerms` skips `src` for a related reason.** It asks an editorial
+  question ("does this page discuss plumbing, DBI, sewers?") by substring-
+  matching the serialized page, and base64 is an arbitrary run of letters: the
+  inlined photo contains the sequence `dbi` and failed validation on a page
+  whose copy never mentions DBI.
+  **It tests the browser-normalized string, via the `urlProbe()` helper it
+  shares with `safeUrl`.** Matching the raw value on `/^(https?:)?\/\//` is not
+  enough: `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`
+  all pass that test and all still fetch off-origin — confirmed in Chromium
+  against a live `<img>`, not inferred from the URL spec. The two guards ask
+  different questions (scheme vs. host) but must agree on what a browser will
+  actually do with the string, which is why the normalization lives in one
+  place rather than being restated in each.
 
 All of these live in `build_scripts/data-checks.js` as pure functions, so they
 can be unit-tested without the real page data.

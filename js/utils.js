@@ -288,6 +288,36 @@ function escapeHtml(value) {
 const SAFE_URL_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:']
 
 /**
+ * Normalize a URL the way a browser does before resolving it, so a check sees
+ * what actually gets fetched rather than what was typed.
+ *
+ *   - Control characters are stripped: `java\tscript:alert(1)` runs, and
+ *     `https:\t//host` loads from `host`.
+ *   - Backslashes are equivalent to forward slashes in the authority position.
+ *     `new URL('\\\\evil.example', 'https://sf.gov')` resolves to
+ *     https://evil.example — so `\\\\host`, `\\/host` and `/\\host` are all
+ *     protocol-relative URLs wearing a disguise, and matching only on `//`
+ *     lets every one of them through.
+ *
+ * Shared by `safeUrl()` (the scheme guard, for navigation targets) and
+ * `findExternalAssetUrls()` in build_scripts/data-checks.js (the host guard,
+ * for image sources). Those two answer different questions but must agree on
+ * what the browser will actually do with the string, so the normalization is
+ * defined once here rather than restated in each.
+ *
+ * Returns a probe for TESTING only — never render it. It is lowercased and has
+ * characters removed, so it is not the value the caller should emit.
+ * @param {string} raw an already-trimmed URL
+ * @returns {string} the lowercased, control-stripped, slash-normalized probe
+ */
+function urlProbe(raw) {
+  return String(raw ?? '')
+    .replace(/[\u0000-\u0020]/g, '')
+    .replace(/\\/g, '/')
+    .toLowerCase()
+}
+
+/**
  * Return a URL that is safe to interpolate into an `href`, or the inert `#`
  * sentinel when it is not. Accepts absolute http(s)/mailto/tel URLs and
  * any scheme-less relative value (root-relative `/forms/…`, document-relative
@@ -305,19 +335,9 @@ function safeUrl(value) {
   const raw = String(value ?? '').trim()
   if (!raw) return '#'
 
-  // Normalize the string the way a browser would before resolving it, so the
-  // tests below see what actually gets navigated to:
-  //
-  //   - Control characters are stripped: "java\tscript:alert(1)" runs.
-  //   - Backslashes are equivalent to forward slashes in the authority
-  //     position. `new URL('\\\\evil.example', 'https://sf.gov')` resolves to
-  //     https://evil.example — so "\\\\evil.example", "\\/evil.example" and
-  //     "/\\evil.example" are all protocol-relative URLs wearing a disguise,
-  //     and checking only for "//" let every one of them through.
-  const probe = raw
-    .replace(/[\u0000-\u0020]/g, '')
-    .replace(/\\/g, '/')
-    .toLowerCase()
+  // See urlProbe() for why the raw string cannot be tested directly. The probe
+  // is for the tests below only — every `return` here hands back `raw`.
+  const probe = urlProbe(raw)
 
   if (probe.startsWith('#')) return raw
   // Protocol-relative: "//evil.example" inherits the page scheme and leaves the
@@ -825,4 +845,5 @@ export {
   throttle,
   toCsv,
   today,
+  urlProbe,
 }
