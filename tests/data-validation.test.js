@@ -13,6 +13,7 @@ const {
   findBannedTerms,
   findListFormatViolations,
   findUnsafeUrls,
+  findExternalAssetUrls,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 
@@ -423,6 +424,69 @@ describe('countUnverifiedClaims', () => {
   test('does not count an object item with unverified: false', () => {
     const pages = { a: { sections: [{ bullets: [{ text: 'Not flagged', unverified: false }] }] } }
     expect(countUnverifiedClaims(pages)).toBe(0)
+  })
+})
+
+describe('findExternalAssetUrls', () => {
+  test('flags a hotlinked spotlight image', () => {
+    // The exact regression this check exists for: one image on one page,
+    // loaded from a third party, quietly making the whole tool need a network.
+    const pages = {
+      a: { spotlight: { image: { src: 'https://images.unsplash.com/photo-1560518883' } } },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([
+      {
+        pageKey: 'a',
+        path: 'spotlight.image.src',
+        url: 'https://images.unsplash.com/photo-1560518883',
+      },
+    ])
+  })
+
+  test('flags a hotlinked section image', () => {
+    const pages = {
+      a: { sections: [{ heading: 'H', karl: 'k', image: { src: 'http://example.com/a.jpg' } }] },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([
+      { pageKey: 'a', path: 'sections[0].image.src', url: 'http://example.com/a.jpg' },
+    ])
+  })
+
+  test('flags a protocol-relative image src', () => {
+    // Reads as a path but leaves the origin, so it is an off-site load.
+    const pages = { a: { spotlight: { image: { src: '//cdn.example.com/a.jpg' } } } }
+
+    expect(findExternalAssetUrls(pages)).toEqual([
+      { pageKey: 'a', path: 'spotlight.image.src', url: '//cdn.example.com/a.jpg' },
+    ])
+  })
+
+  test('accepts a data: URI, which is the whole point of the placeholder', () => {
+    // Deliberately the opposite of findUnsafeUrls' rule: there data: is
+    // rejected because the value is navigated to; here it is rendered as
+    // bytes, and being self-contained is exactly what is wanted.
+    const pages = {
+      a: { spotlight: { image: { src: 'data:image/svg+xml,%3Csvg/%3E' } } },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([])
+  })
+
+  test('accepts relative and root-relative image paths', () => {
+    const pages = {
+      a: {
+        spotlight: { image: { src: '/images/a.svg' } },
+        sections: [{ heading: 'H', karl: 'k', image: { src: 'images/b.svg' } }],
+      },
+    }
+
+    expect(findExternalAssetUrls(pages)).toEqual([])
+  })
+
+  test('ignores a page with no images at all', () => {
+    expect(findExternalAssetUrls({ a: { sections: [{ heading: 'H', karl: 'k' }] } })).toEqual([])
   })
 })
 

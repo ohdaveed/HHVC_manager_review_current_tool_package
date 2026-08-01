@@ -23,11 +23,32 @@ window.HHVC_PAGES['pestsTopic'] = {
       'Use 311 to report pests, vectors, garbage, filth, and other Article 11 conditions in San Francisco. You can ask 311 for help in your language.',
     ],
     image: {
-      src: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&h=533&q=80',
-      alt: 'Residential apartment building exterior in San Francisco',
+      // An inline SVG placeholder, not a photo. This was a hotlinked
+      // images.unsplash.com URL, which made the one page carrying an image the
+      // one page that needed the network: it broke the tool's "works fully
+      // offline" promise, and it made a PNG export of this page depend on a
+      // third party being reachable.
+      //
+      // A data: URI rather than a file under public/ because the image has to
+      // survive `vite build --mode singlefile`, whose whole point is one
+      // self-contained HTML file that gets emailed around and double-clicked.
+      // A relative path would 404 there — trading a network dependency for a
+      // broken image in the export people actually pass around. Note that
+      // data: is a scheme safeUrl() rewrites to '#', and correctly so: that
+      // guard is for navigation targets, where a data: URL is a phishing
+      // vector. This is an <img src>, which renders bytes rather than
+      // navigating, so the rule does not apply here — the same distinction
+      // that keeps safeUrl() off the sync URL on the Tool status tab.
+      // findUnsafeUrls() does not inspect image.src today; if it ever does, it
+      // needs to allow data:image/ rather than this needing to change.
+      src: 'data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20800%20533%22%20width=%22800%22%20height=%22533%22%3E%3Crect%20width=%22800%22%20height=%22533%22%20fill=%22%23dfe8f1%22/%3E%3Cg%20fill=%22%238ca6bf%22%3E%3Crect%20x=%22196%22%20y=%22250%22%20width=%22104%22%20height=%22150%22/%3E%3Crect%20x=%22316%22%20y=%22196%22%20width=%22130%22%20height=%22204%22/%3E%3Crect%20x=%22462%22%20y=%22286%22%20width=%2296%22%20height=%22114%22/%3E%3C/g%3E%3Cg%20fill=%22%23dfe8f1%22%3E%3Crect%20x=%22206%22%20y=%22286%22%20width=%2284%22%20height=%2214%22/%3E%3Crect%20x=%22206%22%20y=%22330%22%20width=%2284%22%20height=%2214%22/%3E%3Crect%20x=%22326%22%20y=%22232%22%20width=%22110%22%20height=%2214%22/%3E%3Crect%20x=%22326%22%20y=%22286%22%20width=%22110%22%20height=%2214%22/%3E%3Crect%20x=%22326%22%20y=%22330%22%20width=%22110%22%20height=%2214%22/%3E%3Crect%20x=%22472%22%20y=%22318%22%20width=%2276%22%20height=%2214%22/%3E%3C/g%3E%3Crect%20x=%22140%22%20y=%22400%22%20width=%22520%22%20height=%226%22%20fill=%22%238ca6bf%22/%3E%3Ctext%20x=%22400%22%20y=%22462%22%20text-anchor=%22middle%22%20font-family=%22Helvetica,Arial,sans-serif%22%20font-size=%2254%22%20font-weight=%22bold%22%20fill=%22%231b3049%22%3ESpotlight%20image%3C/text%3E%3Ctext%20x=%22400%22%20y=%22508%22%20text-anchor=%22middle%22%20font-family=%22Helvetica,Arial,sans-serif%22%20font-size=%2236%22%20fill=%22%2333506e%22%3Eplaceholder%3C/text%3E%3C/svg%3E',
+      // Describes what is actually on screen. The old alt text described a
+      // photo of an apartment building, which would have told a screen-reader
+      // user the mockup showed approved imagery it does not have.
+      alt: 'Placeholder for the Agency spotlight photo, which Digital Services will supply',
       width: 800,
       height: 533,
-      karl: 'Agency Spotlight 1: image',
+      karl: 'Agency Spotlight 1: image. Placeholder only — Digital Services to supply the real Spotlight image (Agency Spotlight 1 requires one; see the editor note for the Agency fields left empty in this mockup).',
     },
     button: 'Report through 311',
     buttonUrl: 'https://www.sf311.org/',

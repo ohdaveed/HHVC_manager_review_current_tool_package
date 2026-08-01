@@ -409,6 +409,18 @@ Beyond schema shape, `validate.js` enforces business invariants:
 defect`) — HHVC scope is Article 11 only.
 - **Lists of three or more items must use `bullets[]`**, not `paragraphs[]` or
   step `text[]` (`findListFormatViolations`) — a hard validation failure.
+- **No image may be loaded from another host** (`findExternalAssetUrls`) —
+  absolute `http(s)` or protocol-relative `image.src`, on a section or on the
+  spotlight, fails validation. The tool claims to work fully offline, and that
+  was false for a long time because of one hotlinked `images.unsplash.com` URL
+  on the Agency page; it hid well because on a connected machine it simply
+  worked, and only an air-gapped review or that page's PNG export showed the
+  problem. **`data:` is allowed here, deliberately the opposite of
+  `findUnsafeUrls`'s rule** — there the value is navigated to, where a data URL
+  is a phishing vector; here it is an `<img src>` that renders bytes, and being
+  self-contained is the point. The Agency spotlight placeholder is an inline
+  SVG data URI, and has to be one rather than a file under `public/` so it
+  survives `vite build --mode singlefile`, where a relative path would 404.
 
 All of these live in `build_scripts/data-checks.js` as pure functions, testable
 without the real page data.

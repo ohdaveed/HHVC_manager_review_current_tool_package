@@ -238,8 +238,50 @@ function findUnsafeUrls(pages) {
   return unsafe
 }
 
+/**
+ * Find image sources that would make rendering a page depend on a third party.
+ *
+ * This tool's central claim is that it works fully offline with no server
+ * beyond static files, and for a long time that claim was false because of a
+ * single hotlinked `images.unsplash.com` URL on the Agency page. It was easy
+ * to miss precisely because it *worked* — on a connected machine the page
+ * looked fine, so the only visible symptoms were somewhere else entirely: an
+ * air-gapped review showing a broken image, and a PNG export of that page
+ * silently depending on a third-party host being up.
+ *
+ * `data:` is allowed and is what the placeholder uses. That is the opposite of
+ * `findUnsafeUrls`'s rule on purpose: there, `data:` is rejected because the
+ * value becomes a navigation target, where a data URL is a phishing vector.
+ * Here the value becomes an `<img src>`, which renders bytes rather than
+ * navigating, and being self-contained is exactly the property wanted.
+ * Relative and root-relative paths are fine too — they resolve against
+ * whatever is serving the tool, so they add no external dependency.
+ * @param {Record<string, object>} pages
+ * @returns {Array<{pageKey: string, path: string, url: string}>}
+ */
+function findExternalAssetUrls(pages) {
+  const external = []
+
+  function check(pageKey, path, value) {
+    if (typeof value !== 'string') return
+    // Anything with an explicit host is off-site: an absolute http(s) URL, or
+    // a protocol-relative one, which reads as a path but leaves the origin.
+    if (/^(https?:)?\/\//i.test(value.trim())) external.push({ pageKey, path, url: value })
+  }
+
+  for (const [pageKey, page] of Object.entries(pages)) {
+    if (page.spotlight?.image) check(pageKey, 'spotlight.image.src', page.spotlight.image.src)
+    ;(page.sections || []).forEach((section, sectionIndex) => {
+      if (section.image) check(pageKey, `sections[${sectionIndex}].image.src`, section.image.src)
+    })
+  }
+
+  return external
+}
+
 module.exports = {
   findMissingOrderKeys,
+  findExternalAssetUrls,
   findBrokenCardTargets,
   findBrokenButtonTargets,
   findBrokenInlineLinks,
