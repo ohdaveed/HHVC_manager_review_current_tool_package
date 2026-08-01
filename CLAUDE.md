@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 20 unit-test files in tests/ (503 tests)
+bun run test                  # bun test over the 21 unit-test files in tests/ (512 tests)
 bun run test:e2e              # playwright test (108 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,12 +65,14 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs twenty Bun unit-test files under `tests/`:
+wrong). `bun run test` runs twenty-one Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `review-merge`,
+decision list against the canonical table in `js/utils.js`), `doc-counts`
+(reads the counts back out of these docs and compares them to the filesystem),
+`review-merge`,
 `review-api-server` (which spawns
 `server.ts` as a subprocess against a temp SQLite DB and exercises
 auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
@@ -79,7 +81,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 503 tests at time of writing.
+without a key or a paid call) — 512 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

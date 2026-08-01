@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 20 unit-test files in tests/
+bun run test                  # Bun test runner over the 21 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,12 +59,14 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs twenty Bun unit-test files under `tests/` —
+isn't). `bun run test` runs twenty-one Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `review-merge`,
+decision list against the canonical table in `js/utils.js`), `doc-counts`
+(reads the counts back out of these docs and compares them to the filesystem),
+`review-merge`,
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
