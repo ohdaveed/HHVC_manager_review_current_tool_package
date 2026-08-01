@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 19 unit-test files in tests/ (497 tests)
+bun run test                  # bun test over the 19 unit-test files in tests/ (507 tests)
 bun run test:e2e              # playwright test (108 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -76,7 +76,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 497 tests at time of writing.
+without a key or a paid call) — 507 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -547,6 +547,38 @@ Beyond schema shape, `validate.js` enforces business invariants:
 - **Lists of three or more items must use `bullets[]`**, not `paragraphs[]` or
   step `text[]` (`findListFormatViolations`). A section with 3+ paragraphs, or
   a step with 3+ text items, is a hard validation failure.
+- **No image may be loaded from another host** (`findExternalAssetUrls`) —
+  absolute `http(s)` or protocol-relative `image.src`, on a section or on the
+  spotlight, fails validation. The tool's central claim is that it works fully
+  offline, and for a long time that was false because of one hotlinked
+  `images.unsplash.com` URL on the Agency page. It hid well precisely because
+  it _worked_: on a connected machine the page looked right, and the only
+  symptoms showed up elsewhere — an air-gapped review with a broken image, and
+  that page's PNG export quietly depending on a third-party host.
+  **`data:` is allowed here, which is deliberately the opposite of
+  `findUnsafeUrls`'s rule.** There a `data:` value is rejected because it
+  becomes a navigation target, where a data URL is a phishing vector; here it
+  becomes an `<img src>`, which renders bytes rather than navigating, and
+  self-contained is exactly the property wanted. The Agency spotlight
+  photo is an inline WebP data URI for that reason, and it has to be one
+  rather than a file under `public/`: it must survive
+  `vite build --mode singlefile`, whose output is a single HTML file meant to
+  be emailed and double-clicked, where a relative path would 404. WebP at q78
+  rather than the source JPEG — indistinguishable side by side, 17 KB instead
+  of 49 KB, and this string ships inside the bundle.
+  **`findBannedTerms` skips `src` for a related reason.** It asks an editorial
+  question ("does this page discuss plumbing, DBI, sewers?") by substring-
+  matching the serialized page, and base64 is an arbitrary run of letters: the
+  inlined photo contains the sequence `dbi` and failed validation on a page
+  whose copy never mentions DBI.
+  **It tests the browser-normalized string, via the `urlProbe()` helper it
+  shares with `safeUrl`.** Matching the raw value on `/^(https?:)?\/\//` is not
+  enough: `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`
+  all pass that test and all still fetch off-origin — confirmed in Chromium
+  against a live `<img>`, not inferred from the URL spec. The two guards ask
+  different questions (scheme vs. host) but must agree on what a browser will
+  actually do with the string, which is why the normalization lives in one
+  place rather than being restated in each.
 
 All of these live in `build_scripts/data-checks.js` as pure functions, so they
 can be unit-tested without the real page data.
