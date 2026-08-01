@@ -418,9 +418,12 @@ defect`) — HHVC scope is Article 11 only.
   problem. **`data:` is allowed here, deliberately the opposite of
   `findUnsafeUrls`'s rule** — there the value is navigated to, where a data URL
   is a phishing vector; here it is an `<img src>` that renders bytes, and being
-  self-contained is the point. The Agency spotlight placeholder is an inline
-  SVG data URI, and has to be one rather than a file under `public/` so it
+  self-contained is the point. The Agency spotlight photo is an inline
+  WebP data URI, and has to be one rather than a file under `public/` so it
   survives `vite build --mode singlefile`, where a relative path would 404.
+  `findBannedTerms` skips `src` for a related reason: it substring-matches the
+  serialized page, and the base64 photo contains the sequence `dbi`, which
+  failed validation on a page whose copy never mentions DBI.
   It tests the browser-normalized string via the `urlProbe()` helper it shares
   with `safeUrl`: matching the raw value on `/^(https?:)?\/\//` misses
   `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`, all of

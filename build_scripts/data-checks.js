@@ -123,13 +123,29 @@ function findBrokenInlineLinks(pages) {
 
 /**
  * Case-insensitive search for any banned term inside a page (or any object),
- * serialized to JSON. Used to keep off-topic content out of the Topic page.
+ * serialized to JSON. Used to keep off-topic content out of the Agency page.
+ *
+ * Image `src` values are stripped before the search. The question this check
+ * asks is editorial — "does this page discuss plumbing, DBI, sewers?" — and an
+ * image source is opaque machine data, never prose. That distinction stopped
+ * being academic the moment the Agency spotlight photo was inlined as a base64
+ * `data:` URI: base64 is an arbitrary run of letters, this one happens to
+ * contain the sequence `dbi`, and the match failed validation on a page whose
+ * copy says nothing about DBI at all.
+ *
+ * Note the matching is plain substring, not word-boundary, so a short term can
+ * still match inside a longer token. That is left as-is deliberately — the
+ * terms are checked against human-written copy, where partial matches like
+ * "sewerage" for "sewer" are wanted — but it is the reason stripping the
+ * non-prose fields matters rather than being tidiness.
  * @param {object} page
  * @param {string[]} bannedTerms
  * @returns {string[]} banned terms found
  */
 function findBannedTerms(page, bannedTerms) {
-  const text = JSON.stringify(page).toLowerCase()
+  const text = JSON.stringify(page, (key, value) =>
+    key === 'src' ? undefined : value
+  ).toLowerCase()
   return bannedTerms.filter((term) => text.includes(term.toLowerCase()))
 }
 

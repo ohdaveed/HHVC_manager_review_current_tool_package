@@ -281,6 +281,31 @@ describe('findBannedTerms', () => {
     const page = { title: 'plumbing and sewer issues' }
     expect(findBannedTerms(page, bannedTerms)).toEqual(['plumbing', 'sewer'])
   })
+
+  test('ignores image src, so base64 bytes cannot trip a term', () => {
+    // Not hypothetical: the real Agency spotlight photo, inlined as a base64
+    // data: URI, happens to contain the sequence "dbi" and failed validation
+    // on a page whose copy says nothing about DBI. Base64 is an arbitrary run
+    // of letters and an image source is machine data, not prose — this check
+    // asks an editorial question and must only read editorial content.
+    const page = {
+      title: 'Healthy Housing and Vector Control',
+      spotlight: { image: { src: 'data:image/webp;base64,UklGRxxdbiQUJEUA' } },
+    }
+
+    expect(findBannedTerms(page, bannedTerms)).toEqual([])
+  })
+
+  test('still finds a banned term in copy on a page that also has an image', () => {
+    // The exclusion must be narrow: stripping src must not blind the check to
+    // the prose sitting next to it.
+    const page = {
+      spotlight: { image: { src: 'data:image/webp;base64,AAAA', alt: 'A photo' } },
+      sections: [{ paragraphs: ['Contact DBI about this.'] }],
+    }
+
+    expect(findBannedTerms(page, bannedTerms)).toEqual(['dbi'])
+  })
 })
 
 describe('findListFormatViolations', () => {
