@@ -246,7 +246,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   `refreshCapabilities`, `getCurrentPage`, `captureForm`). `window.AiAssist.ensureRendered`
   does not exist.
 
-The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist', 'help', 'ops']`,
+The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist', 'ops', 'help']`,
 numbered left to right by the `1`–`6` shortcuts. Sitemap and AI assist mount
 lazily on tab open, **and each also catches an already-open tab at its own
 `init()`** (`mountIfTabAlreadyOpen`) — `js/ux-improvements.js` initializes
