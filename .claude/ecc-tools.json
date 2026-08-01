@@ -106,8 +106,7 @@
     ".codex/AGENTS.md",
     ".codex/agents/explorer.toml",
     ".codex/agents/reviewer.toml",
-    ".codex/agents/docs-researcher.toml",
-    ".claude/homunculus/instincts/inherited/HHVC_manager_review_current_tool_package-instincts.yaml"
+    ".codex/agents/docs-researcher.toml"
   ],
   "packageFiles": {
     "runtime-core": [
@@ -119,8 +118,7 @@
       ".codex/AGENTS.md",
       ".codex/agents/explorer.toml",
       ".codex/agents/reviewer.toml",
-      ".codex/agents/docs-researcher.toml",
-      ".claude/homunculus/instincts/inherited/HHVC_manager_review_current_tool_package-instincts.yaml"
+      ".codex/agents/docs-researcher.toml"
     ]
   },
   "moduleFiles": {
@@ -133,8 +131,7 @@
       ".codex/AGENTS.md",
       ".codex/agents/explorer.toml",
       ".codex/agents/reviewer.toml",
-      ".codex/agents/docs-researcher.toml",
-      ".claude/homunculus/instincts/inherited/HHVC_manager_review_current_tool_package-instincts.yaml"
+      ".codex/agents/docs-researcher.toml"
     ]
   },
   "files": [
@@ -182,11 +179,6 @@
       "moduleId": "runtime-core",
       "path": ".codex/agents/docs-researcher.toml",
       "description": "Read-only docs researcher role config for API verification."
-    },
-    {
-      "moduleId": "runtime-core",
-      "path": ".claude/homunculus/instincts/inherited/HHVC_manager_review_current_tool_package-instincts.yaml",
-      "description": "Continuous-learning instincts derived from repository patterns."
     }
   ],
   "workflows": [],

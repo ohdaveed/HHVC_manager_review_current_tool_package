@@ -4,6 +4,18 @@ const { z } = require('zod')
 
 const STORAGE_VERSION = 1
 
+/**
+ * **A restatement of `DECISIONS` in js/utils.js, and one of only two left in
+ * the repo.** It cannot import that table: this file is CommonJS and is loaded
+ * by server.ts, so reaching into a browser ES module would pull the whole
+ * browser utils graph into the server's dependency tree.
+ *
+ * `tests/decision-vocabulary.test.js` pins the two together, so a decision
+ * added to the canonical table and not mirrored here fails CI rather than
+ * producing a value the browser accepts and the sync API rejects.
+ *
+ * Order is not meaningful here — it feeds a Zod `z.enum()`.
+ */
 const VALID_DECISIONS = [
   'Approved',
   'Approved with edits',

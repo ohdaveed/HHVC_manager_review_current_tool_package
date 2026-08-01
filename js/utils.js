@@ -25,6 +25,129 @@ const REVIEW_RECORD_FIELDS = [
   'synced_at',
 ]
 
+/**
+ * THE review decision vocabulary. One row per decision; everything else in the
+ * tool derives from this array rather than restating it.
+ *
+ * It was previously restated in eight places — a chip-class map here, a
+ * `VALID_DECISIONS` set and a slug→label map in js/review-queue-state.js, a
+ * label→slug map in js/keyboard-shortcuts.js, a display order in
+ * js/review-insights-data.js, a colour map in js/review-insights.js, a
+ * pre-zeroed tally in js/review-queue-rows.js, and another valid-value set in
+ * js/review-state-validation.js. Two of those were exact INVERSES of each other
+ * maintained by hand in different files, which is a drift waiting to happen:
+ * adding a sixth decision meant finding all eight, and missing one produced a
+ * decision that saved but could not be filtered, or filtered but drew no chip.
+ *
+ * Field notes:
+ *
+ * - `label` is the persisted value. It goes into localStorage, CSV/JSON
+ *   exports, and the sync API, so it is data, not display text — renaming one
+ *   is a storage migration, not a copy edit.
+ * - `slug` is the `data-queue-action` value used by queue buttons and the
+ *   keyboard shortcuts.
+ * - `chipClass` replaced an older three-way pass/warn/fail mapping, for triage
+ *   rather than cosmetic reasons: that mapping drew `Blocked` and `Revise and
+ *   resubmit` identically, and those are exactly the two a manager must tell
+ *   apart while scanning — one is waiting on an outside party and nothing the
+ *   author does will move it, the other is waiting on the author and is
+ *   actionable today. Colour is never the only cue; every chip renders its
+ *   decision text beside it.
+ * - `vizToken` is the chart fill, deliberately NOT the chip's `--status-*`
+ *   border: those are tuned as 1px strokes and, used as large fills, Approved
+ *   and Needs review separate by only ΔE 8.4 against a floor of 15. See the
+ *   block comment on `--viz-decision-*` in css/theme.css.
+ *
+ * ORDER IS MEANINGFUL: this is the order a reviewer moves through, and charts,
+ * legends and tally rows all follow it so the mix bar does not reshuffle itself
+ * as counts change during triage.
+ */
+const DECISIONS = [
+  {
+    label: 'Needs review',
+    slug: 'needs-review',
+    chipClass: 'decision-pending',
+    vizToken: '--viz-decision-pending',
+    vizFallback: '#8a8d8d',
+  },
+  {
+    label: 'Approved',
+    slug: 'approved',
+    chipClass: 'decision-approved',
+    vizToken: '--viz-decision-approved',
+    vizFallback: '#00734f',
+  },
+  {
+    label: 'Approved with edits',
+    slug: 'approved-with-edits',
+    chipClass: 'decision-edits',
+    vizToken: '--viz-decision-edits',
+    vizFallback: '#c07000',
+  },
+  {
+    label: 'Revise and resubmit',
+    slug: 'revise',
+    chipClass: 'decision-revise',
+    vizToken: '--viz-decision-revise',
+    vizFallback: '#8f57b3',
+  },
+  {
+    label: 'Blocked',
+    slug: 'blocked',
+    chipClass: 'decision-blocked',
+    vizToken: '--viz-decision-blocked',
+    vizFallback: '#c0392b',
+  },
+]
+
+/** Every decision label, in triage order. */
+const DECISION_LABELS = DECISIONS.map((decision) => decision.label)
+
+/**
+ * The one decision that means "nobody has decided yet".
+ *
+ * It is the default a brand-new record carries, so it is also what every
+ * "has this been reviewed?" test compares against. Named rather than written
+ * inline so the comparison cannot drift from the label above.
+ */
+const DECISION_UNDECIDED = 'Needs review'
+
+/** label -> chip class. */
+const DECISION_CHIP_CLASSES = Object.fromEntries(
+  DECISIONS.map((decision) => [decision.label, decision.chipClass])
+)
+
+/** label -> queue-action slug. */
+const DECISION_SLUG_BY_LABEL = Object.fromEntries(
+  DECISIONS.map((decision) => [decision.label, decision.slug])
+)
+
+/** queue-action slug -> label. The exact inverse of the map above, derived. */
+const DECISION_LABEL_BY_SLUG = Object.fromEntries(
+  DECISIONS.map((decision) => [decision.slug, decision.label])
+)
+
+/**
+ * Whether a decision counts as reviewed — i.e. anything but the default.
+ * @param {string} decision
+ * @returns {boolean}
+ */
+function isDecided(decision) {
+  return Boolean(decision) && decision !== DECISION_UNDECIDED
+}
+
+/**
+ * A fresh per-decision tally with every decision present at zero, in order.
+ *
+ * Pre-seeded rather than built up from the rows on purpose: a decision nobody
+ * currently holds must still render as "0", not vanish from the chart legend
+ * and the stats row.
+ * @returns {Record<string, number>}
+ */
+function zeroDecisionTally() {
+  return Object.fromEntries(DECISION_LABELS.map((label) => [label, 0]))
+}
+
 ;(function initSharedUtils() {
   // Expose utilities to window for backward compatibility
   // during the migration period.
@@ -46,6 +169,14 @@ const REVIEW_RECORD_FIELDS = [
     throttle,
     showErrorBanner,
     getDecisionChipClass,
+    DECISIONS,
+    DECISION_LABELS,
+    DECISION_UNDECIDED,
+    DECISION_CHIP_CLASSES,
+    DECISION_SLUG_BY_LABEL,
+    DECISION_LABEL_BY_SLUG,
+    isDecided,
+    zeroDecisionTally,
     defaultSeoTitle,
     defaultMetaDescription,
     getValue,
@@ -57,6 +188,8 @@ const REVIEW_RECORD_FIELDS = [
     countRelatedLinks,
     hasValidPageData,
     buildPageRows,
+    isWorkspacePanelOpen,
+    mountWorkspacePanelIfOpen,
   }
 
   installGlobalErrorHandlers()
@@ -472,32 +605,6 @@ function throttle(fn, limit) {
 }
 
 /**
- * One chip class per decision, keyed by the decision string itself.
- *
- * This replaced a three-way pass/warn/fail mapping, and the reason is a
- * triage one rather than a cosmetic one. Under that mapping `Blocked` and
- * `Revise and resubmit` both rendered `fail`, and `Needs review` and
- * `Approved with edits` both rendered `warn` — so the queue drew as three
- * colours for five states. The two collapsed pairs are exactly the ones a
- * manager needs to tell apart while scanning: `Blocked` is waiting on an
- * outside party and nothing the author does will move it, while `Revise and
- * resubmit` is waiting on the author and is actionable today.
- *
- * The `--status-*` token triplets for all five already existed in
- * css/theme.css; `--status-revise-*` and `--status-pending-*` simply had no
- * consumer, because nothing could ever emit a class that used them.
- *
- * Colour is not the only cue: every chip renders the decision text beside it.
- */
-const DECISION_CHIP_CLASSES = {
-  Approved: 'decision-approved',
-  'Approved with edits': 'decision-edits',
-  'Revise and resubmit': 'decision-revise',
-  Blocked: 'decision-blocked',
-  'Needs review': 'decision-pending',
-}
-
-/**
  * Map a review decision to its chip class.
  *
  * Falls back to the neutral pending chip for an unrecognised decision rather
@@ -588,6 +695,48 @@ function buildPageRows(data, enrich) {
 }
 
 /**
+ * Whether a lazily-mounted workspace panel is currently on screen.
+ *
+ * Panel VISIBILITY is the signal, deliberately, rather than the persisted
+ * `state.ui.workspace_tab`: visibility reflects whatever setWorkspaceTab
+ * actually settled on, including the onboarding path that forces the
+ * workspace open on first visit and the fallback to 'overview' when a saved
+ * tab id is no longer valid.
+ *
+ * @param {string} panelName The `data-workspace-panel` value, e.g. 'assist'.
+ * @returns {boolean}
+ */
+function isWorkspacePanelOpen(panelName) {
+  if (typeof document === 'undefined') return false
+  const panel = document.querySelector(`[data-workspace-panel="${panelName}"]`)
+  return Boolean(panel) && !panel.hidden
+}
+
+/**
+ * Mount a lazy workspace panel if its tab is ALREADY open at init() time.
+ *
+ * Every lazily-mounted panel needs this, and each one needs it for the same
+ * reason, so the reason is written here once instead of three times.
+ *
+ * The panels (Sitemap, AI assist, Tool status) publish a
+ * `window.__mount…OnTabOpen` hook that setWorkspaceTab calls when the reviewer
+ * opens the tab. But js/ux-improvements.js initializes EARLIER and restores a
+ * persisted `workspace_tab` during its own init — before those hooks exist. Its
+ * guarded call therefore finds nothing to call and skips, and a reviewer who
+ * left one of these tabs open on their last visit came back to an empty panel
+ * that only filled in once they switched tabs and back.
+ *
+ * So each panel also catches the already-open case itself, at its own init().
+ *
+ * @param {string} panelName The `data-workspace-panel` value, e.g. 'assist'.
+ * @param {() => void} mount The panel's own render/ensure-rendered function.
+ * @returns {void}
+ */
+function mountWorkspacePanelIfOpen(panelName, mount) {
+  if (isWorkspacePanelOpen(panelName)) mount()
+}
+
+/**
  * Get the page key currently selected in the sidebar page picker.
  * @param {string} [fallback] Extra fallback used only when the picker has no
  *   value yet; falls back further to 'pestsTopic' if omitted or also empty.
@@ -673,8 +822,18 @@ export {
   getCurrentKey,
   getPrimaryCta,
   getDecisionChipClass,
+  DECISIONS,
+  DECISION_LABELS,
+  DECISION_UNDECIDED,
+  DECISION_CHIP_CLASSES,
+  DECISION_SLUG_BY_LABEL,
+  DECISION_LABEL_BY_SLUG,
+  isDecided,
+  zeroDecisionTally,
   getValue,
   hasValidPageData,
+  isWorkspacePanelOpen,
+  mountWorkspacePanelIfOpen,
   parseCsv,
   resolvePageKey,
   SAFE_URL_SCHEMES,

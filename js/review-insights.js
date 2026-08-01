@@ -25,6 +25,7 @@
    the end of its own render. That call is optional-chained, so the ordering is
    a performance detail rather than a correctness one. */
 
+import { DECISIONS, escapeHtml } from './utils.js'
 import { buildInsightsModel, insightsSignature } from './review-insights-data.js'
 
 /** How many pages the checks chart draws. See checksOption for why. */
@@ -50,25 +51,33 @@ function readTheme() {
     // use. See the block comment on them in css/theme.css: the chip borders are
     // tuned as 1px strokes and, used as large fills, Approved and Needs review
     // separate by ΔE 8.4 under normal vision against a floor of 15.
-    decision: {
-      'Needs review': token('--viz-decision-pending', '#8a8d8d'),
-      Approved: token('--viz-decision-approved', '#00734f'),
-      'Approved with edits': token('--viz-decision-edits', '#c07000'),
-      'Revise and resubmit': token('--viz-decision-revise', '#8f57b3'),
-      Blocked: token('--viz-decision-blocked', '#c0392b'),
-    },
+    //
+    // Built from the canonical decision table rather than listed here, so a
+    // decision can never exist without a chart colour.
+    decision: Object.fromEntries(
+      DECISIONS.map((decision) => [decision.label, token(decision.vizToken, decision.vizFallback)])
+    ),
     line: token('--viz-2', '#0072b2'),
     bar: token('--viz-1', '#009e73'),
     barWarn: token('--viz-3', '#d55e00'),
   }
 }
 
-/** Escape for the data tables, which are built as HTML strings. */
-function escape(value) {
-  return window.utils?.escapeHtml
-    ? window.utils.escapeHtml(String(value ?? ''))
-    : String(value ?? '')
-}
+/* Escaping for the data tables, which are built as HTML strings.
+
+   This used to be a local wrapper that read `window.utils?.escapeHtml` and,
+   when it was absent, returned the raw string. That fallback failed OPEN,
+   which is the wrong direction for a guard: the values passing through here
+   are page titles and decision strings, and those arrive from imported
+   CSV/JSON backups and from sync responses — content this repo did not
+   author. js/review-ops.js hit the same question and answered it correctly
+   in its own file; this module could not see that, because the two were
+   written in parallel.
+
+   The wrapper is gone rather than corrected. This is a real ES module, so it
+   can import the one implementation directly and there is no third copy of
+   the rule to keep in step. */
+const escape = escapeHtml
 
 /**
  * The visually hidden table carrying a chart's data to assistive tech.

@@ -102,19 +102,16 @@
   function getQueueStats() {
     const rows = getQueueRows()
     const total = rows.length
-    const byDecision = {
-      'Needs review': 0,
-      Approved: 0,
-      'Approved with edits': 0,
-      'Revise and resubmit': 0,
-      Blocked: 0,
-    }
+    // Pre-seeded with every decision at zero, in canonical order: a decision
+    // nobody currently holds must still render as "0" rather than disappear
+    // from the stats row.
+    const byDecision = window.utils.zeroDecisionTally()
 
     for (const row of rows) {
       byDecision[row.decision] = (byDecision[row.decision] || 0) + 1
     }
 
-    const reviewed = rows.filter((row) => row.decision !== 'Needs review').length
+    const reviewed = rows.filter((row) => window.utils.isDecided(row.decision)).length
     const stale = rows.filter((row) => row.isStale).length
     const unassigned = rows.filter(isUnassigned).length
     const blocked = rows.filter(
