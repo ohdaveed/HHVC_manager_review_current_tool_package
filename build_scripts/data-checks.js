@@ -281,7 +281,6 @@ function findExternalAssetUrls(pages) {
 
 module.exports = {
   findMissingOrderKeys,
-  findExternalAssetUrls,
   findBrokenCardTargets,
   findBrokenButtonTargets,
   findBrokenInlineLinks,
@@ -289,5 +288,6 @@ module.exports = {
   findBannedTerms,
   findListFormatViolations,
   findUnsafeUrls,
+  findExternalAssetUrls,
   countUnverifiedClaims,
 }
