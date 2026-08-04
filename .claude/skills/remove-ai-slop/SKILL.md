@@ -41,6 +41,8 @@ Skipping this is the single most common way a de-slop pass goes wrong, so do it 
 
 Read whatever the project uses to state its standards: `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `.editorconfig`, linter and formatter configs, style guides, and — for prose — any voice or brand guide. Note anything the project explicitly asks for that a naive pass would strip.
 
+**If the project names one of these canonical, read that one first and reconcile the rest toward it.** Projects that mirror their guide across several agent-instruction files usually say which is the source of truth, and the mirrors are exactly where stale claims accumulate — so a rule you find only in a mirror is a finding, not an instruction to follow.
+
 **Whatever the project documents as intentional is protected.** If it says comments should be verbose, verbose comments are not slop. If it says a browser/Node pair is deliberately duplicated, that pair stays. You can still flag a documented convention you think is wrong, but flag it — do not quietly override it.
 
 ### 2. Gather candidates with evidence
@@ -48,8 +50,11 @@ Read whatever the project uses to state its standards: `CLAUDE.md`, `AGENTS.md`,
 Work through the taxonomies below. For each candidate, record what it is, where it is, and the evidence. Cheap mechanical checks first, since they find the highest-confidence items fastest:
 
 ```bash
-# Files nothing else mentions — the strongest single signal.
-scripts/find_unreferenced.py           # see the script's --help for options
+# Files nothing else mentions — the strongest single signal. The script lives
+# beside this file, so give its full path; your shell starts at the repo root,
+# not in the skill directory. Exits 3 rather than reporting an empty result if
+# a search fails. See its --help for options.
+python3 <skill-dir>/scripts/find_unreferenced.py
 
 # Are two files that look like copies actually identical?
 diff -q path/a path/b
@@ -57,6 +62,9 @@ diff -q path/a path/b
 # Does a dependency the config recommends actually exist here?
 grep -rn "tailwind\|flowbite" --include=package.json --include="*.css" .
 ```
+
+It matches on basename, so it cannot rule on two files sharing a name — it lists
+those separately as ambiguous. Check those by qualified path if you suspect them.
 
 ### 3. Check whether duplicate copies agree
 
@@ -170,6 +178,13 @@ Lead with a findings table so the user can scan and object before anything is ap
 - <measurement for anything claimed behavior-preserving>
 ```
 
-Then apply, in the order from step 4.
+## Audit and cleanup are different jobs
 
-For a small, obvious cleanup, this is too much ceremony — just make the change and say what you did and why. Scale the process to the size of the job.
+This skill triggers on both "clean this up" and "review what these agents did" — and those want different endings. **Match the ending to what was asked.**
+
+- **A cleanup request** — clean up, polish, tighten, de-slop, consolidate — is authorization to edit. Present the findings, then apply them in the order from step 4. For a small, obvious cleanup the full table is too much ceremony: make the change and say what you did and why.
+- **A review or audit request** — review, audit, check, "what's wrong with this" — is not. Stop at the report. Editing the branch you were asked to assess destroys the thing under assessment and pre-empts a decision that was the user's to make. Offer to apply the findings; do not apply them unasked.
+
+When the request is genuinely ambiguous, report first and ask. That costs one exchange; the other error costs the user work they had not agreed to lose.
+
+Either way, **anything irreversible or outside the stated scope needs explicit approval** — deleting files the user did not point you at, rewriting history, touching anything outside the path they named. A file that is out of scope but looks like slop gets flagged, not deleted.

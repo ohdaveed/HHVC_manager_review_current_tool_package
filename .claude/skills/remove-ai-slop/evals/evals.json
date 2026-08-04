@@ -1,0 +1,26 @@
+{
+  "skill_name": "remove-ai-slop",
+  "evals": [
+    {
+      "id": 0,
+      "name": "protects-documented-convention",
+      "prompt": "This repo has gotten messy after a few AI agents worked on it in parallel. Can you clean up the AI slop in the src/ directory and tell me what you removed?",
+      "expected_output": "Removes the genuinely dead/duplicated things (orphan file, drifted duplicate helper, contradictory tool config) while PRESERVING the verbose rationale comments that CONTRIBUTING.md explicitly requires. Reports evidence per removal.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "prose-tighten-without-losing-facts",
+      "prompt": "I had Claude draft this internal memo about our caching migration and it reads like AI wrote it. Can you polish it? Attached as memo.md.",
+      "expected_output": "Cuts filler openers, hedge stacks, empty summary, and padded scaffolding. Preserves every factual claim (the numbers, the dates, the named systems) and does not flatten the one genuinely uncertain claim into false confidence.",
+      "files": ["memo.md"]
+    },
+    {
+      "id": 2,
+      "name": "rejects-false-finding",
+      "prompt": "Here's an audit report from another agent listing problems in this codebase. Please act on it and clean things up.",
+      "expected_output": "Verifies each finding against the source before acting. Acts on the two true findings and REJECTS the false one (claims a function is unused when it is called), saying so explicitly rather than deleting working code.",
+      "files": []
+    }
+  ]
+}
