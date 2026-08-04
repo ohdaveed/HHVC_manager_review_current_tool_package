@@ -3,8 +3,12 @@
 # Mirrors the local pre-commit gauntlet documented in AGENTS.md:
 #   format:check  — Prettier is the ONLY linter in this repo (no ESLint/tsc)
 #   validate      — Zod schema + business invariants over pages/*.js
-#   test          — the 10 Bun unit-test files under tests/
-#   test:e2e      — the 9 Playwright specs under tests/e2e/
+#   test          — the Bun unit-test files EXPLICITLY NAMED in package.json's
+#                   `test` script (not a glob — an unnamed test file never runs)
+#   test:e2e      — the Playwright specs under tests/e2e/
+#
+# Counts are deliberately not written here. They were "10" and "9" against a
+# real 20 and 14, because nothing makes a comment fail when it goes stale.
 #
 # Unit checks and the (slower, browser-downloading) e2e suite run as separate
 # jobs so a formatting or schema failure reports in seconds without waiting on

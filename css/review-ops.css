@@ -25,21 +25,22 @@
   gap: var(--ds-space-3);
 }
 
+/* Surface (border, radius, fill, elevation) comes from the shared `.ds-card`
+   recipe in css/dashboard.css, which this class is listed on. That is also
+   what gives these tiles the box-shadow they were missing — they used to sit
+   flat while the visually identical Overview tiles were elevated. */
 .ops-stat {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   padding: var(--ds-space-3);
-  border: 1px solid var(--border-default);
-  border-radius: var(--ds-radius-md);
-  background: var(--surface-panel);
   /* Lets a grid item shrink below its content's intrinsic width, so a long
      sync URL wraps instead of forcing the row into a horizontal scroll. */
   min-width: 0;
 }
 
 .ops-stat-label {
-  font-size: 0.68rem;
+  font-size: var(--ds-text-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -70,7 +71,7 @@
 
 .ops-subhead {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: var(--ds-text-card);
   font-weight: 800;
   color: var(--text-primary);
 }
@@ -95,14 +96,14 @@
 
 .ops-finding-title {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--ds-text-card);
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .ops-finding-explain {
   margin: 0 0 var(--ds-space-2);
-  font-size: 0.8rem;
+  font-size: var(--ds-text-label);
   line-height: 1.5;
   color: var(--text-secondary);
 }

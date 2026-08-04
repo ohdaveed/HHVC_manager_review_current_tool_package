@@ -6,10 +6,11 @@
    are configured, how much review data is stored, and whether any of it has
    gone bad. All of that previously required devtools.
 
-   The tab is SIXTH, and that is why the charts in Phase 2 went on the Overview
-   tab instead of getting their own. Tabs are numbered left to right by the
-   1-9 shortcuts, so appending a sixth takes `6` and renumbers nothing;
-   inserting one would have shifted every tab after it.
+   It sits FIFTH, just before Help, and that is why the charts in Phase 2 went
+   on the Overview tab instead of getting their own — a workspace tab is a
+   scarce slot, not a free one. Tabs are numbered left to right by the 1-6
+   shortcuts, so this one takes `5` and Help moves to `6`. Help stays last on
+   purpose: it is the reference panel, not a working one.
 
    Mounts lazily on first tab open, and — like js/interactive-sitemap.js and
    js/ai-assist.js — also catches an already-open tab at its own init(), since
@@ -18,34 +19,20 @@
 
    Loads after js/review-ops-data.js (its diagnostics) and after
    js/review-state-sync.js, whose config it reads to report sync status. */
+
+/* Imported rather than read off `window.utils` at call time. This file used to
+   carry its own copy of the escape table as a fallback for "what if utils has
+   not loaded yet", which is a load-order worry the module graph settles
+   outright: an import cannot resolve late. It also left the repo with three
+   hand-maintained copies of the same five replacements, and they had already
+   drifted — js/review-insights.js's version failed OPEN. */
+import { escapeHtml as escape } from './utils.js'
 ;(function mountReviewOps() {
   if (typeof window === 'undefined') return
 
-  const PANEL_SELECTOR = '[data-workspace-panel="ops"]'
-
-  /**
-   * Escape a value for interpolation into this panel's innerHTML.
-   *
-   * The fallback escapes too. It used to return the raw string when
-   * window.utils was unavailable, which is the wrong shape for a defensive
-   * default: every call site here — page keys and a sync URL, both of which
-   * can arrive from an import or a sync response — depends on this to
-   * sanitize. In practice js/utils.js always loads first, so the fallback is
-   * unreachable today; a guard that silently stops guarding in the one case
-   * it exists for is still worth not shipping.
-   * @param {unknown} value
-   * @returns {string}
-   */
-  function escape(value) {
-    const text = String(value ?? '')
-    if (window.utils?.escapeHtml) return window.utils.escapeHtml(text)
-    return text
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;')
-  }
+  /** This panel's `data-workspace-panel` value, and the selector built from it. */
+  const OPS_PANEL = 'ops'
+  const PANEL_SELECTOR = `[data-workspace-panel="${OPS_PANEL}"]`
 
   /**
    * The page keys the site currently has, for the orphan check.
@@ -185,7 +172,7 @@
           <div>
             <h3 class="ds-section-title">Tool status</h3>
             <p class="ds-section-hint">
-              What this browser is holding and how it is connected. Press <kbd>6</kbd> for this tab.
+              What this browser is holding and how it is connected. Press <kbd>5</kbd> for this tab.
             </p>
           </div>
         </header>
@@ -284,17 +271,6 @@
   }
 
   /**
-   * js/ux-improvements.js initializes earlier and restores a persisted
-   * workspace_tab before the mount hook below exists, so a reviewer who left
-   * this tab open would see an empty panel until switching away and back.
-   * @returns {void}
-   */
-  function mountIfTabAlreadyOpen() {
-    const panel = document.querySelector(PANEL_SELECTOR)
-    if (panel && !panel.hidden) render()
-  }
-
-  /**
    * Wire the delegated click handler and the tab-open hook.
    * @returns {void}
    */
@@ -303,11 +279,13 @@
     // Diagnostics are a snapshot, not a live view — but a decision made in the
     // queue while this tab is open should not leave stale numbers on screen.
     document.addEventListener('hhvc:review-data-changed', () => {
-      const panel = document.querySelector(PANEL_SELECTOR)
-      if (panel && !panel.hidden) render()
+      if (window.utils.isWorkspacePanelOpen(OPS_PANEL)) render()
     })
     window.__mountReviewOpsOnTabOpen = ensureRendered
-    mountIfTabAlreadyOpen()
+    // Catch a tab that is ALREADY open at init time — see
+    // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
+    // this, and why panel visibility is the signal rather than saved state.
+    window.utils.mountWorkspacePanelIfOpen(OPS_PANEL, render)
   }
 
   if (document.readyState === 'loading') {

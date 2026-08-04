@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 19 unit-test files in tests/ (507 tests)
+bun run test                  # bun test over the 21 unit-test files in tests/ (522 tests)
 bun run test:e2e              # playwright test (109 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,10 +65,15 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs nineteen Bun unit-test files under `tests/`:
+wrong). `bun run test` runs twenty-one Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-insights-data`, `review-insights-charts`, `review-ops-data`, `review-merge`, `review-api-server` (which spawns
+`review-insights-data`, `review-insights-charts`, `review-ops-data`,
+`decision-vocabulary` (pins the two module-boundary restatements of the
+decision list against the canonical table in `js/utils.js`), `doc-counts`
+(reads the counts back out of these docs and compares them to the filesystem),
+`review-merge`,
+`review-api-server` (which spawns
 `server.ts` as a subprocess against a temp SQLite DB and exercises
 auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and per-provider
@@ -76,7 +81,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 507 tests at time of writing.
+without a key or a paid call) — 522 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -297,6 +302,25 @@ never referenced from `pages/*.js` or outside its own module's files):
   Its styles live in `css/interactive-sitemap.css` rather than a runtime
   `injectStyles()` call.
 
+- **`window.ReviewInsights`** (`js/review-insights.js`) ←
+  `js/review-insights-data.js`, which attaches `.data`. The Overview charts;
+  `js/review-queue-render.js` calls `window.ReviewInsights.render()` at the end
+  of its own render, optional-chained.
+- **`window.ReviewOps`** (`js/review-ops.js`) ← `js/review-ops-data.js`, which
+  attaches `.data`. The Tool status panel.
+- **`window.MockupImageExport`** (`js/mockup-image-export.js`) — PNG export of
+  the mockups, standing on its own.
+
+- **Three lazily-mounted panels publish a mount hook rather than rendering at
+  init:** `window.__mountInteractiveSitemapOnTabOpen`,
+  `window.__mountAiAssistOnTabOpen`, and `window.__mountReviewOpsOnTabOpen`.
+  `setWorkspaceTab` calls whichever one matches the tab being opened. Each panel
+  ALSO catches an already-open tab at its own `init()` via
+  `mountWorkspacePanelIfOpen()` in `js/utils.js` — `js/ux-improvements.js`
+  initializes earlier and restores a persisted `workspace_tab` before these
+  hooks exist, so without the catch-up a reviewer who left one of these tabs
+  open came back to an empty panel.
+
 - **AI assist breaks the naming pattern above — mind the case.**
   `window.AiAssist` is the **internal** namespace: `js/ai-assist-client.js`
   attaches `.client` (the browser half of the optional `/api/ai/*` routes, a
@@ -318,7 +342,7 @@ never referenced from `pages/*.js` or outside its own module's files):
   `escapeHtml`/`textContent`, and must stay that way.
 
 The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
-'help', 'ops']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
+'ops', 'help']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
 panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
 / `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
 tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
@@ -393,8 +417,8 @@ relying on Node-specific interop here would go unnoticed.
 
 Three compact charts above the review queue table — decision mix, review
 activity over time, and the pages whose automated checks are failing. They sit
-on the **Overview tab rather than a sixth workspace tab** on purpose: tabs 1–6
-are bound to keyboard shortcuts, and inserting one would renumber the rest.
+on the **Overview tab rather than a workspace tab of their own** on purpose: a
+tab is a scarce slot bound to a number key, and the strip already carries six.
 
 - **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
   `buildActivitySeries`, `buildChecksSeries`, `insightsSignature`), dual
@@ -469,9 +493,13 @@ this tool: the reviewer and the operator are the same person, deliberately.
 - **`js/review-ops.js`** — the panel, lazily mounted on tab open with the same
   `mountIfTabAlreadyOpen()` catch-up the sitemap and AI tabs use.
 
-**The tab is appended, not inserted.** Tabs are numbered left to right by the
-`1`–`9` shortcuts, so a sixth takes `6` and renumbers nothing. This is also why
-the Overview charts did not get their own tab.
+**It sits fifth, just before Help.** Tabs are numbered left to right by the
+`1`–`6` shortcuts, so this one takes `5` and Help takes `6`. Help stays last
+deliberately — it is the reference panel, not a working one — which means Help
+is the digit that moves whenever a tab is added. `WORKSPACE_TABS`
+(`js/ux-improvements-workspace.js`), the tab markup in `index.html`, and the
+shortcut cases in `js/keyboard-shortcuts.js` must be changed together. This
+scarcity is also why the Overview charts did not get their own tab.
 
 - **Orphaned records are a real class, not a hypothetical.** Review state is
   keyed by page key and nothing prunes it when a page is retired, so a browser
@@ -1177,9 +1205,8 @@ single quotes, 2-space indentation, `printWidth: 100`, ES5 trailing commas.
 Code must be ASI-safe and semicolon-free. Run `bun run format` before
 committing; `bun run format:check` is the lint step and CI fails on it.
 `.prettierignore` excludes `data/`, `node_modules/`, `dist/`, `server.ts`,
-the generated single-file HTML exports, `.claude/homunculus/`, and the
-reference/planning dirs (`docs/source/`, `docs/superpowers/`, `review/`,
-`.playwright-mcp/`).
+the generated single-file HTML exports, and the reference/planning dirs
+(`docs/source/`, `docs/superpowers/`, `review/`, `.playwright-mcp/`).
 
 ### JavaScript
 
@@ -1240,9 +1267,35 @@ color/accessibility choices in-comment with the contrast math. `!important` is
 used liberally **only** in the self-aware override layer
 (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
-`clamp()`. Edit base styles in `css/styles.css`; `css/theme.css` holds the
-SFDS design-token overrides layered under the `@sfgov/design-system`
-stylesheets; `css/interactive-sitemap.css` holds the sitemap's styles.
+`clamp()`.
+
+**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+stay last — it is the semantic token layer, and its dark-mode block overrides
+the `--sfds-*` primitives `css/styles.css` declares on `:root`):
+
+| File                          | Owns                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
+| `css/interactive-sitemap.css` | the sitemap panel                                                                              |
+| `css/ai-assist.css`           | the AI assist panel                                                                            |
+| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
+| `css/review-insights.css`     | the Overview charts' cards and legend                                                          |
+| `css/review-ops.css`          | the Tool status panel                                                                          |
+| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+
+Retheming should mean editing `css/theme.css` only. A component rule that needs
+a colour, a size step or a radius takes a semantic token; it should not reach
+for a raw `--sfds-*` value, and it must never hardcode a literal — every
+dark-mode contrast bug this repo has had came from a literal sitting where a
+token belonged.
+
+**A selector should be declared in exactly one file.** `.review-workspace`,
+its tabs, the KPI tiles and `.status-chip` were each split across
+`css/ux-improvements.css` and `css/dashboard.css`, with the later file
+declaring only what it wanted to change — so what actually rendered was a merge
+of the two and neither block described it. They now live wholly in
+`css/dashboard.css`.
 
 ### Tests
 
@@ -1273,8 +1326,11 @@ that stub globals must restore them, or they pollute sibling test files.
   entry should ever be constructed). Optional sync backend → `server.ts` (API
   routes) and `js/review-state-sync.js` (client pull/push + settings UI).
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
-- Any new file under `pages/` or `js/` needs a matching `<script>` tag in
-  `index.html`, or `bun run validate` fails.
+- Any new file under `pages/` needs an `import` in `js/page-data.js` (enforced
+  by `build_scripts/page-import-checks.js`, so `bun run validate` fails without
+  it) plus an `order` entry. A new `js/` module is imported by whoever needs it,
+  or added to `js/main.js` if it is a self-mounting IIFE. **`index.html` has
+  exactly one `<script>` tag** — do not add tags to it.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate`
   **and** `bun run test`. After touching the import/export round-trip,
   manually verify it (export → re-import → decisions survive).
@@ -1331,8 +1387,15 @@ equivalent).
 
 ## Cross-tool canon
 
-`AGENTS.md` is the tool-agnostic source of truth shared with Cursor, Copilot,
-Codex, Windsurf, Aider, and other assistants; `.github/copilot-instructions.md`
-is Copilot's mirror. This file mirrors the same facts plus the Claude
-Code–specific notes above. Keep them in sync; if they ever disagree, reconcile
+`AGENTS.md` is the tool-agnostic source of truth. This file mirrors the same
+facts plus the Claude Code–specific notes above; `.github/copilot-instructions.md`
+is Copilot's mirror. Keep the three in sync, and if they ever disagree, reconcile
 toward `AGENTS.md`.
+
+**The full mirror inventory lives in `AGENTS.md`'s own "Cross-tool canon"
+section** — including the Cursor, Windsurf, Codex, and skill files, which are
+deliberately **pointers** carrying no counts, no file inventories, and no
+architecture summaries. Every one of them previously restated a summary and every
+one of those summaries rotted into instructions that were actively wrong (see
+that section for what they were still claiming). Do not "helpfully" re-expand
+one; add the fact to `AGENTS.md` instead.

@@ -1,17 +1,22 @@
 // Browser-side validation for hhvcManagerReviewState:v1.
 // Mirrors build_scripts/review-state-schema.js rules without requiring Zod in the browser.
+
+// Imported rather than read off `window.utils`, so the decision vocabulary is
+// guaranteed present by the module graph instead of by load order — and so
+// tests/review-state-schema.test.js, which side-effect-imports this file on its
+// own, gets it too. Safe to import here (unlike js/review-insights-data.js):
+// this module publishes only onto `window` and nothing `require`s it.
+import { DECISION_LABELS } from './utils.js'
 ;(function initReviewStateValidation() {
   if (typeof window === 'undefined') return
 
   const STORAGE_VERSION = 1
 
-  const VALID_DECISIONS = new Set([
-    'Approved',
-    'Approved with edits',
-    'Revise and resubmit',
-    'Blocked',
-    'Needs review',
-  ])
+  // From the canonical decision table in js/utils.js. The Node-side mirror of
+  // this validator (build_scripts/review-state-schema.js) keeps its own copy —
+  // it is CommonJS and cannot reach a browser ES module — and
+  // tests/decision-vocabulary.test.js pins the two together.
+  const VALID_DECISIONS = new Set(DECISION_LABELS)
 
   const REVIEW_RECORD_FIELDS = new Set([
     'review_date',

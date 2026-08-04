@@ -13,25 +13,27 @@
     sort: 'priority',
   }
 
-  const { getCurrentKey } = window.utils
+  const { getCurrentKey, DECISION_LABELS, DECISION_LABEL_BY_SLUG } = window.utils
   const readLocalState = window.reviewState.read
   const updateLocalState = window.reviewState.update
 
-  const VALID_DECISIONS = new Set([
-    'Approved',
-    'Approved with edits',
-    'Revise and resubmit',
-    'Blocked',
-    'Needs review',
-  ])
+  const VALID_DECISIONS = new Set(DECISION_LABELS)
 
+  /**
+   * Human label for each queue action.
+   *
+   * The decision entries are derived from the canonical table in js/utils.js
+   * rather than retyped. They used to be spelled out here AND inverted by hand
+   * in js/keyboard-shortcuts.js, so the same five pairs lived in two files with
+   * nothing keeping them agreed.
+   *
+   * `assign-me` is spread in on top because it is a queue action that is not a
+   * decision — it sets the reviewer without touching `decision` — so it belongs
+   * to this map and not to the decision vocabulary.
+   */
   const ACTION_LABELS = {
+    ...DECISION_LABEL_BY_SLUG,
     'assign-me': 'Assign to me',
-    'needs-review': 'Needs review',
-    revise: 'Revise and resubmit',
-    blocked: 'Blocked',
-    approved: 'Approved',
-    'approved-with-edits': 'Approved with edits',
   }
 
   function toast(message, tone = 'success') {

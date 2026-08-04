@@ -40,14 +40,36 @@
 
 /* =====================================================================
    Card / panel
-   ===================================================================== */
+   =====================================================================
+   ONE card recipe. `.ds-card` sets the shared surface — border, radius,
+   fill, elevation — and the specific card classes below attach to it via
+   a selector list rather than restating those four properties.
 
-.ds-card {
-  padding: var(--ds-space-4);
+   It did not start out being used. It was introduced here as a "reusable
+   primitive for surfaces built from here on", and then the two sessions
+   that came next each wrote their own from scratch (`.insights-card`,
+   `.ops-stat`) — leaving the primitive as dead code, three different
+   radii in play, and `.ops-stat` missing its box-shadow, so the Tool
+   status tiles sat flat while the visually identical Overview tiles were
+   elevated. Two tabs of one workspace disagreeing about what a tile
+   looks like is the thing a design system exists to prevent. */
+
+.ds-card,
+.insights-card,
+.ops-stat,
+.review-queue-kpi {
   border: 1px solid var(--border-default);
-  border-radius: var(--ds-radius-lg);
+  border-radius: var(--ds-radius-md);
   background: var(--surface-panel);
   box-shadow: var(--ds-shadow-1);
+}
+
+/* The workspace-level card is the one that carries the larger radius: it is
+   the outermost surface, and its corners read against the page rather than
+   against a sibling tile. */
+.ds-card {
+  padding: var(--ds-space-4);
+  border-radius: var(--ds-radius-lg);
 }
 
 .ds-card-quiet {
@@ -66,14 +88,14 @@
 
 .ds-section-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--ds-text-panel);
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .ds-section-hint {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
   color: var(--text-secondary);
 }
 
@@ -95,10 +117,24 @@
    The workspace is the manager's actual dashboard. It was a flat bordered
    box flush against the mockup above it; giving it a real surface, radius
    and elevation is what separates "tool chrome" from "the page being
-   reviewed" at a glance. */
+   reviewed" at a glance.
+
+   EVERY RULE IN THIS SECTION IS COMPLETE. These selectors used to be
+   declared in BOTH this file and css/ux-improvements.css — this one
+   listed only the properties it wanted to change and relied on the other
+   for the rest. Since this file imports later, the rendered result was a
+   merge of the two, and neither block described it. Concretely: the
+   workspace got a border nobody here declared, the KPI value's
+   `font-weight: 800` came from the other file so deleting the
+   apparently-superseded block would have silently regressed it, and the
+   tabs ended up with hover and focus styled from different files. If you
+   are changing one of these, this is the only place to look. */
 
 .review-workspace {
-  margin-top: var(--ds-space-5);
+  width: 100%;
+  max-width: var(--page-max);
+  margin: var(--ds-space-5) auto 0;
+  border: 1px solid var(--border-default);
   border-radius: var(--ds-radius-lg);
   background: var(--surface-panel);
   box-shadow: var(--ds-shadow-2);
@@ -106,6 +142,8 @@
 }
 
 .review-workspace-tabs {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0;
   padding: 0 var(--ds-space-2);
   border-bottom: 1px solid var(--border-default);
@@ -113,16 +151,27 @@
 }
 
 .review-workspace-tab {
+  /* Holds the 44px-ish touch target that the padding alone does not reach
+     at this font size. */
+  min-height: 2.5rem;
   padding: var(--ds-space-3) var(--ds-space-4);
   border: 0;
   border-bottom: 3px solid transparent;
   background: transparent;
   color: var(--text-secondary);
-  font-weight: 700;
-  font-size: 0.88rem;
   cursor: pointer;
+  /* `font: inherit` first — a <button> does not inherit the page font, and
+     the shorthand resets size and weight, so it has to precede them. */
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
 }
 
+/* Hover and focus are deliberately on DIFFERENT channels: hover brightens the
+   label toward the primary text colour, focus draws the ring below. They used
+   to fight — one file coloured hover and focus identically (blue), the other
+   re-coloured only hover (near-black), so the merged result was a tab that
+   turned near-black on hover and blue on focus. Neither author chose that. */
 .review-workspace-tab:hover {
   color: var(--text-primary);
   background: var(--surface-panel);
@@ -151,6 +200,8 @@
 
 .review-workspace-panel {
   padding: var(--ds-space-4);
+  max-height: min(52vh, 560px);
+  overflow: auto;
 }
 
 /* =====================================================================
@@ -164,16 +215,17 @@
    which is which). */
 
 .review-queue-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--ds-space-3);
 }
 
+/* Surface comes from the shared `.ds-card` recipe above, which this class is
+   listed on. `overflow: hidden` is what clips the accent rail below to the
+   card's rounded corners. */
 .review-queue-kpi {
   position: relative;
   padding: var(--ds-space-3) var(--ds-space-4);
-  border: 1px solid var(--border-default);
-  border-radius: var(--ds-radius-md);
-  background: var(--surface-panel);
-  box-shadow: var(--ds-shadow-1);
   overflow: hidden;
 }
 
@@ -198,15 +250,21 @@
 }
 
 .review-queue-kpi-label {
+  display: block;
   margin-bottom: var(--ds-space-1);
   color: var(--text-secondary);
-  font-size: 0.68rem;
+  font-size: var(--ds-text-micro);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .review-queue-kpi-value {
+  display: block;
   color: var(--text-primary);
   font-size: 1.65rem;
   line-height: 1.1;
+  font-weight: 800;
   /* Tabular figures so the numbers do not shuffle horizontally as counts
      change during triage. */
   font-variant-numeric: tabular-nums;
@@ -225,14 +283,20 @@
 }
 
 .review-queue-progress-fill {
-  background: linear-gradient(90deg, var(--viz-1), var(--brand-primary));
+  display: block;
+  height: 100%;
   border-radius: var(--ds-radius-pill);
+  background: linear-gradient(90deg, var(--viz-1), var(--brand-primary));
+  transition: width 0.2s ease;
 }
 
 .review-queue-progress-label {
-  font-variant-numeric: tabular-nums;
+  display: block;
+  margin-top: var(--ds-space-1);
   color: var(--text-secondary);
+  font-size: 0.76rem;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* =====================================================================
@@ -257,7 +321,19 @@
    ones that matter. */
 
 .status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.22rem 0.65rem;
+  border: 1px solid var(--border-default);
   border-radius: var(--ds-radius-pill);
+  background: var(--surface-panel);
+  /* slate-2 ("strong secondary"), not --text-secondary, which is slate-3.
+     A chip's default text sits a step darker than body secondary because it
+     is a label, not prose. */
+  color: var(--sfds-slate-2);
+  font-size: 0.78rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 

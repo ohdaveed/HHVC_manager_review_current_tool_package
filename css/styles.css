@@ -660,6 +660,15 @@ a:focus {
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
 }
+/* MOCKUP tables — content inside the page being reviewed, so they wear a full
+   grid and a filled header row the way an SF.gov content table does.
+
+   Deliberately NOT the same as `.review-queue-table` in css/ux-improvements.css,
+   which is tool chrome: that one is underline-only with uppercase micro-caps and
+   tighter padding, because it is a dense scanning surface rather than something
+   a resident reads. The two looking different is the point — a reviewer must be
+   able to tell the mockup from the tool at a glance. Neither file said so, which
+   made the divergence read like drift. */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -1349,13 +1358,11 @@ a:focus {
   font-weight: 700;
   vertical-align: middle;
 }
-body.hide-karl-tags .karl-tag,
-body.hide-karl-tags .cms-help,
-body.hide-karl-tags .karl-tag-legend,
-body.hide-karl-tags .editor-qa,
-body.hide-karl-tags .unverified-pill {
-  display: none !important;
-}
+/* The `body.hide-karl-tags` hiding rule lives near the bottom of this file,
+   beside `.karl-help-nested`, which it also has to hide. It used to be written
+   here as well, identically apart from that one missing selector — so this copy
+   was entirely subsumed by the later one and did nothing the later one did not
+   already do. */
 .karl-tag-legend {
   margin: 0.65rem 0 0;
   padding: 0.65rem 0.75rem;
@@ -1662,76 +1669,100 @@ body.hide-karl-tags .unverified-pill {
   gap: 0.5rem;
   max-width: 24rem;
 }
+/* Surfaces and foreground come from the pinned notification-chrome tokens in
+   css/theme.css, NOT from the neutral ramp. See the comment there for why:
+   these paint a solid saturated fill with light text, so the two halves do not
+   invert together the way a tinted `-bg`/`-text` pair does.
+
+   Every child control below derives its colour from `currentColor` rather than
+   naming white. That is the part that keeps this fixed: a hardcoded
+   `rgba(255,255,255,…)` is only correct while the surface behind it happens to
+   be dark, and it silently stopped being correct the moment the background
+   token inverted. `currentColor` cannot drift from its own surface. */
 .toast {
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
-  background: var(--sfds-slate-1);
-  color: var(--sfds-white);
+  background: var(--toast-bg);
+  color: var(--toast-fg);
   font-size: 0.88rem;
   line-height: 1.35;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ds-shadow-2);
   animation: toastIn 0.25s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 .toast.success {
-  background: var(--sfds-green);
+  background: var(--toast-success-bg);
 }
 .toast.info {
-  background: var(--sfds-action-blue);
+  background: var(--toast-info-bg);
 }
 .toast .toast-close {
   margin-left: auto;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  /* Dimmed via opacity rather than a lighter colour so it tracks whichever
+     toast variant it lands on. 0.85 is set by the WORST variant, not the
+     default one: on --toast-bg it leaves 11.51:1, but on the lighter
+     --toast-info-bg it comes out at 4.87:1, and dropping to 0.75 would put
+     that variant at 4.17:1 — under 4.5:1 while the default still looked
+     comfortable. Check the info and success toasts, not just the plain one,
+     before lowering this. */
+  color: currentColor;
+  opacity: 0.85;
   cursor: pointer;
   font-size: 1rem;
   padding: 0 0.25rem;
   line-height: 1;
 }
 .toast .toast-close:hover {
-  color: var(--sfds-white);
+  opacity: 1;
 }
 .toast .toast-action {
   margin-left: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--sfds-white);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: currentColor;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .toast .toast-action:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  border-color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
+/* Same pinned-chrome treatment as the toast above, for the same reason. This
+   one previously used `--sfds-danger-border` as a TEXT background: a token
+   tuned to clear 3:1 as a border, which is not the 4.5:1 a background owes its
+   text. It measured 4.65:1 in light only because the light value happens to be
+   saturated enough, and fell to 3.06:1 once dark mode re-tuned it for its
+   actual border role. */
 .error-banner {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 9999;
-  background: var(--sfds-danger-border);
-  color: var(--sfds-white);
+  background: var(--banner-danger-bg);
+  color: var(--banner-danger-fg);
   padding: 10px 16px;
   font: 14px/1.4 sans-serif;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--ds-shadow-2);
 }
 
 .error-banner-dismiss {
   background: transparent;
-  color: var(--sfds-white);
-  border: 1px solid var(--sfds-white);
+  color: currentColor;
+  border: 1px solid currentColor;
   border-radius: var(--radius);
   padding: 4px 10px;
   cursor: pointer;
@@ -1739,7 +1770,7 @@ body.hide-karl-tags .unverified-pill {
 }
 
 .error-banner-dismiss:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, currentColor 18%, transparent);
 }
 
 .error-banner-dismiss:focus-visible {
