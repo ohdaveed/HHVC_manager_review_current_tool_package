@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 21 unit-test files in tests/ (512 tests)
+bun run test                  # bun test over the 21 unit-test files in tests/ (522 tests)
 bun run test:e2e              # playwright test (108 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -81,7 +81,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 512 tests at time of writing.
+without a key or a paid call) — 522 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -342,7 +342,7 @@ never referenced from `pages/*.js` or outside its own module's files):
   `escapeHtml`/`textContent`, and must stay that way.
 
 The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
-'help', 'ops']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
+'ops', 'help']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
 panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
 / `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
 tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
