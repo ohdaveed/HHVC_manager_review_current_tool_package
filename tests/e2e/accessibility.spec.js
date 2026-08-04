@@ -13,11 +13,27 @@ const REPRESENTATIVE_PAGES = [
   'article11Guide', // Report
 ]
 
-/* The "Viewing: …" badge this used to wait on is gone — it was the fourth
-   place the open page's name appeared, and it faded in over 250ms, which meant
-   a scan starting mid-fade read the blended colour and reported a contrast
-   violation that did not exist. With the element removed there is no
-   transition left to settle, so the wait went with it. */
+/* There is no badge left to wait on.
+
+   A `waitForBadgeToSettle()` helper used to run before every scan here. The
+   "Viewing: …" badge faded over 250ms, and axe computes color-contrast from the
+   BLENDED colour it sees — measured on the real page, a partially faded badge
+   is a serious `color-contrast` violation from about 0.7 opacity down. Any scan
+   overlapping the transition therefore failed on a defect that did not exist
+   once it settled.
+
+   The element is gone: it was the fourth place the open page's name appeared,
+   after the sidebar picker, a "Current page:" label under it, and the sticky
+   bar. Removing it removes the transition, so the wait has nothing left to do.
+
+   Worth keeping from #92, which hardened this helper immediately before it was
+   deleted, in case a fading element is ever added to a scanned page again: the
+   `.visible` CLASS is not a proxy for "settled". `js/editor-panel.js` added it
+   and then removed it again on a 5s timer, so the class was absent in two
+   completely different states — before the fade in (settled) and during the
+   fade OUT (not settled). The fix was to ask the element what it is doing
+   (`getAnimations()` plus a terminal opacity) rather than to read the class,
+   and that is the shape any replacement should take. */
 
 async function expectNoSeriousViolations(page) {
   // color-contrast is ENABLED. It used to be disabled here, which meant the
