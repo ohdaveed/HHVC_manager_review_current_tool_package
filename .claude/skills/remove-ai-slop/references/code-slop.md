@@ -21,7 +21,9 @@ Read this when doing a substantial code cleanup. Each pattern has: how to find i
 
 Files nothing imports, references, or executes.
 
-**Find:** grep the basename across the entire repo — source, tests, configs, CI, package manifests, docs. `scripts/find_unreferenced.py` automates the sweep.
+**Find:** grep the basename across the entire repo — source, tests, configs, CI, package manifests, docs. `<skill-dir>/scripts/find_unreferenced.py` automates the sweep (the script sits beside this file; your shell starts at the repo root, so give its full path).
+
+**Search hidden and ignored files too.** Agent instructions, CI workflows and editor config live in dot-directories, and `rg` skips those by default — so a file referenced only from `.github/` or `.claude/` looks like an orphan. This is not hypothetical: the scanner above once reported _its own source_ as unreferenced for exactly this reason.
 
 **Evidence:** zero references outside the file itself.
 
@@ -161,7 +163,7 @@ Docs describing an architecture the project has replaced.
 
 - Make satellite docs **pointers** to one canonical source rather than restatements. A mirror that repeats a fact drifts from it; a mirror that points at it cannot.
 - **Delete counts from places nothing checks.** A comment saying "the 10 test files" has no mechanism to fail.
-- Add a **drift test** that reads the documented number and compares it to the filesystem. See `scripts/find_unreferenced.py` for the reference-sweep half of this idea.
+- Add a **drift test** that reads the documented number and compares it to the filesystem. See the skill's `scripts/find_unreferenced.py` for the reference-sweep half of this idea.
 
 ## 8. Fossil comments
 
