@@ -83,8 +83,8 @@ import './review-state-sync.js'
 // Review/UX layers. Each is a self-mounting IIFE that reads window.HHVC_DATA
 // and localStorage and attaches its own window.<Namespace>; they are additive
 // on top of the core and must run after it. Order within this block still
-// matters — the orchestrators (ux-improvements, review-queue,
-// review-queue) assemble public APIs from the sibling files listed
+// matters — the orchestrators (ux-improvements, review-queue) assemble
+// public APIs from the sibling files listed
 // immediately above them.
 // ---------------------------------------------------------------------------
 import './ux-improvements-state-sync.js'

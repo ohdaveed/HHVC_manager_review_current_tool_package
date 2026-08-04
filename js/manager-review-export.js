@@ -99,11 +99,10 @@ import { showToast } from './ui-controls.js'
      index.html for why nine buttons became two. Publishing rather than
      exporting keeps this module reachable from the self-mounting IIFE layers,
      which take no imports. */
-  window.ReviewExport = {
-    currentCsv: exportCurrentManagerReviewCsv,
-    currentJson: exportCurrentManagerReviewJson,
-    blankTemplateCsv: exportAllPageDecisionTemplateCsv,
-  }
+  window.ReviewExport = window.ReviewExport || {}
+  window.ReviewExport.currentCsv = exportCurrentManagerReviewCsv
+  window.ReviewExport.currentJson = exportCurrentManagerReviewJson
+  window.ReviewExport.blankTemplateCsv = exportAllPageDecisionTemplateCsv
   ;(function attachManagerReviewTools() {
     const dateInput = document.getElementById('reviewDateInput')
     if (dateInput && !dateInput.value) dateInput.value = today()

@@ -1523,6 +1523,36 @@ a:focus {
   color: var(--sfds-action-blue-hover);
 }
 
+/* The one control in this group that DESTROYS review data rather than copying
+   it, so it must not read as a third way to export. It shares the button group
+   with Export/Import, which makes the visual distinction the whole safeguard —
+   and this rule was missing entirely, so `.danger-tool` fell through to the
+   plain blue `.tool-btn` and rendered identically to the two safe buttons
+   stacked directly above it.
+
+   Outlined rather than solid red: solid would read as an error state on a
+   control that is idle, and the outline still separates it from two solid
+   blues at a glance. Both themes carry it, since --sfds-white re-points to the
+   dark panel surface (#16181d) and the danger tokens re-point with it.
+
+   Contrast, measured against the surface each theme actually renders:
+     light  text #8f1d15 on #fcfcfc → 8.69:1  (AA needs 4.5)
+     light  border #d92d20 on #fcfcfc → 4.71:1  (non-text needs 3.0)
+     light  hover text on #fff1f0 → 8.11:1
+     dark   text #f5a8a2 on #16181d → 9.31:1
+     dark   border #a84641 on #16181d → 3.06:1
+     dark   hover text on #351416 → 8.71:1 */
+.danger-tool {
+  background: var(--sfds-white);
+  color: var(--sfds-danger-text);
+  border-color: var(--sfds-danger-border);
+}
+.danger-tool:hover {
+  background: var(--sfds-danger-bg);
+  color: var(--sfds-danger-text);
+  border-color: var(--sfds-danger-border);
+}
+
 /* WCAG contrast fix — use darker gray for better accessibility
    Original #6e7070 had 4.2:1 ratio; using #5a5c5c achieves 5.7:1 against white */
 .field-help,

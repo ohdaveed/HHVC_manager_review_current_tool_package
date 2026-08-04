@@ -173,7 +173,8 @@ import { escapeHtml as escape } from './utils.js'
           <div>
             <h3 class="ds-section-title">Tool status</h3>
             <p class="ds-section-hint">
-              What this browser is holding and how it is connected. Press <kbd>5</kbd> for this tab.
+              What this browser is holding and how it is connected. Press <kbd>3</kbd> for Help,
+              then expand this section.
             </p>
           </div>
         </header>

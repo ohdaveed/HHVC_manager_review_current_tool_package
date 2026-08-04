@@ -28,7 +28,13 @@ import { hasValidPageData } from './utils.js'
     const page = window.ReviewUx.stateSync.getCurrentPage()
     const seoTitle = window.ReviewUx.stateSync.getSeoTitle(page)
     const metaDescription = window.ReviewUx.stateSync.getMetaDescription(page)
-    const rules = window.ReviewUx.stateSync.getRuleResults(page)
+    // Scored rules only, matching the Checks panel and the queue's ratio. Page
+    // type / Audience / Reading target are schema-required and CI-enforced, so
+    // counting them here would make a pasted summary disagree with the panel a
+    // reviewer is looking at — the same self-contradiction this PR removed from
+    // the KPI tiles, just relocated into a clipboard.
+    const allRules = window.ReviewUx.stateSync.getRuleResults(page)
+    const rules = window.reviewChecks?.scoredRules?.(allRules) ?? allRules
     const passed = rules.filter((rule) => rule.pass).length
     const seoLimit = window.ReviewUx.stateSync.SEO_TITLE_LIMIT
     const metaLimit = window.ReviewUx.stateSync.META_DESCRIPTION_LIMIT
@@ -312,8 +318,12 @@ import { hasValidPageData } from './utils.js'
 
     document.getElementById('importReviews')?.addEventListener('click', () => importInput.click())
 
-    // Kept separate from the export pair and styled as destructive: this is the
-    // one control here that removes review data rather than copying it.
+    // Sits in the same button group as Export/Import but is styled destructive
+    // (`.danger-tool`), because it is the one control here that removes review
+    // data rather than copying it. The styling is what distinguishes it — it
+    // previously claimed to be "kept separate" while sharing the container, and
+    // `.danger-tool` matched no CSS rule at all, so it rendered as a third blue
+    // button identical to the two safe ones directly above it.
     const clearButton = document.createElement('button')
     clearButton.type = 'button'
     clearButton.className = 'tool-btn danger-tool'

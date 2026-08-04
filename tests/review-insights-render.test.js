@@ -96,7 +96,7 @@ describe('failing-checks ranking', () => {
     }))
     const html = buildMarkup(model({ checks: failing, checksFailing: failing }))
 
-    expect(html.match(/insights-ranked-item/g)).toHaveLength(8)
+    expect(html.match(/insights-ranked-item/g) ?? []).toHaveLength(8)
     expect(html).toContain('Worst 8 of 12 pages with failing checks')
   })
 

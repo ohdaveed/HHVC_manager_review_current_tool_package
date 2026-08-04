@@ -177,7 +177,9 @@ import { hasValidPageData } from './utils.js'
   // Exposed for js/review-queue.js's Overview tab, which needs to compute a
   // checks passed/total count for every page, not just the one currently
   // open in the editor.
-  window.reviewChecks = { getRuleResultsFor, scoredRules }
+  window.reviewChecks = window.reviewChecks || {}
+  window.reviewChecks.getRuleResultsFor = getRuleResultsFor
+  window.reviewChecks.scoredRules = scoredRules
 
   /**
    * Snapshot the review form into a persistable record.

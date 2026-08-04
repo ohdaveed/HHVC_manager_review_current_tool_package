@@ -185,9 +185,10 @@ them.**
   including `karlTag()` for Karl CMS placement annotations.
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
   first page (`pestsTopic`).
-- **`js/manager-review-export.js`** — manager review CSV/JSON snapshot;
-  monkey-patches `renderPage` to refresh the review label after render (handles
-  `renderPage` returning a Promise under View Transitions).
+- **`js/manager-review-export.js`** — manager review CSV/JSON snapshot,
+  published on `window.ReviewExport` for the consolidated export control. It no
+  longer wraps `renderPage`: that decorator existed only to refresh a sidebar
+  label that has been cut.
 
 ### Review/UX layers are additive, on top of the core
 

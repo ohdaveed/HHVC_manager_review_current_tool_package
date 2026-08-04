@@ -248,9 +248,9 @@ re-monolith them.**
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and kicks off
   the first `renderPage('pestsTopic')`.
 - **`js/manager-review-export.js`** — manager review CSV/JSON export
-  snapshot; monkey-patches `renderPage` to refresh the review page label
-  after render (handles the case where `renderPage` returns a Promise under
-  View Transitions).
+  snapshot, published on `window.ReviewExport` for the consolidated export
+  control. It no longer wraps `renderPage`: that decorator existed only to
+  refresh a sidebar label that has been cut.
 - **`js/reading-level.js`** — browser-safe Flesch-Kincaid grade level for body
   copy, no Node deps. `build_scripts/reading-level.js` is the Node/Bun
   counterpart (backed by `text-readability`) used for parity checks in tests.

@@ -43,10 +43,10 @@ redirect instead of dead-ending.
 The manager-review interface uses a **mockup-first layout**:
 
 - The page preview loads above the fold
-- Review tools sit in a collapsible workspace below the preview
+- Review tools sit in a workspace docked beside the preview, sticky to the viewport
 - A sticky review bar shows the current page title, decision chip, check count, queue progress, and navigation shortcuts
 - A review queue tracks all 19 pages with filters, progress, and one-click navigation
-- Workspace tabs hold the Queue, Checks, Sitemap, and Help panels
+- Workspace tabs hold the Overview, Page checks, and Help panels (shortcuts `1`–`3`)
 
 Additional review aids:
 
@@ -74,19 +74,18 @@ The sticky bar includes:
 
 The workspace tabs are:
 
-| Tab     | Purpose                                                            |
-| ------- | ------------------------------------------------------------------ |
-| Queue   | Progress bar, decision breakdown, filters, and clickable page list |
-| Checks  | Metrics grid and Karl compliance scorecard                         |
-| Sitemap | Interactive HHVC sitemap with filtering and linked-page details    |
-| Help    | Review guidance cards                                              |
+| Tab         | Purpose                                                          |
+| ----------- | ---------------------------------------------------------------- |
+| Overview    | Insight cards, progress, filters, and the clickable review queue |
+| Page checks | Scored rules for the open page, failures first, plus page facts  |
+| Help        | Review guidance, the Karl tag legend, and advanced sections      |
 
 Workspace UI preferences persist in `localStorage` under additive keys:
 
 ```js
 state.ui = {
   workspace_open: false,
-  workspace_tab: 'queue',
+  workspace_tab: 'overview',
   last_page_key: '...',
   show_karl_tags: true,
 }

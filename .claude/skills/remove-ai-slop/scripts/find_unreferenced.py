@@ -101,8 +101,11 @@ def count_references(root: Path, needle: str, self_path: Path, use_rg: bool) -> 
         # as unreferenced, because the SKILL.md naming them sits under .claude/.
         # The SKIP_DIRS globs still exclude .git, verified under --hidden.
         cmd = ["rg", "--files-with-matches", "--fixed-strings", "--no-messages", "--hidden", "--no-ignore"]
+        # Both forms per directory: `!d/**` is anchored at the search root, so a
+        # nested packages/app/node_modules/ was still searched even though walk()
+        # skips it by basename at any depth. `!**/d/**` covers the nested case.
         for d in sorted(SKIP_DIRS):  # sorted: same command every run, easy to paste and re-check
-            cmd += ["--glob", f"!{d}/**"]
+            cmd += ["--glob", f"!{d}/**", "--glob", f"!**/{d}/**"]
         # -e, because a candidate named like `-z.js` is otherwise parsed as flags.
         cmd += ["-e", needle, str(root)]
     else:
