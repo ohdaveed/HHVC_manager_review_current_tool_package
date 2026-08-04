@@ -149,11 +149,16 @@ async function exportAllPages() {
  *
  * Injected rather than written into index.html so the buttons live next to the
  * behaviour that owns them, matching how the other review controls mount
- * (js/ux-improvements-export.js does the same for the CSV/JSON buttons).
+ * (js/ux-improvements-export.js does the same for the export/import pair).
  * @returns {void}
  */
 function mountExportControls() {
-  const toolbar = document.querySelector('.canvas-toolbar')
+  // Was .canvas-toolbar, beside the decision chip and Previous/Next. Saving a
+  // picture of a mockup is a real task but an occasional one — handing a
+  // stakeholder something outside the review — and it does not belong in the
+  // strip a reviewer uses on every page. It sits in Help's advanced section
+  // now; the `p` shortcut is unchanged, so the fast path did not move.
+  const toolbar = document.getElementById('mockupExportControls')
   if (!toolbar || toolbar.querySelector('[data-mockup-export]')) return
 
   const group = document.createElement('div')

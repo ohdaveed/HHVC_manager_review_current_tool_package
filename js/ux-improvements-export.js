@@ -230,37 +230,103 @@ import { hasValidPageData } from './utils.js'
       .catch(() => fail('Import failed: could not read the selected file.'))
   }
 
-  function mountBackupControls() {
-    const actions = document.querySelector('.review-actions')
-    if (!actions || document.getElementById('exportReviewStateBackup')) return
+  /**
+   * Run whichever export the "What to export" scope currently names.
+   *
+   * The scope values are the union of what used to be six separate buttons in
+   * two different places. Keeping the dispatch in one function is the point:
+   * a reviewer picks what they want and presses one button, instead of choosing
+   * between similarly-named controls whose difference was never on screen.
+   * @param {string} scope value of #exportScope
+   */
+  function runExport(scope) {
+    if (scope === 'current-csv') return window.ReviewExport?.currentCsv?.()
+    if (scope === 'current-json') return window.ReviewExport?.currentJson?.()
+    if (scope === 'template-csv') return window.ReviewExport?.blankTemplateCsv?.()
+    if (scope === 'all-csv') return exportSavedLocalReviewsCsv()
+    if (scope === 'backup-json') return exportReviewStateBackup()
+    if (scope === 'summary-clipboard') return copyCurrentReviewSummary()
+    return exportReviewStateBackup()
+  }
 
-    const backupButton = document.createElement('button')
-    backupButton.type = 'button'
-    backupButton.className = 'tool-btn secondary-tool'
-    backupButton.id = 'exportReviewStateBackup'
-    backupButton.textContent = 'Download backup (JSON)'
-    actions.appendChild(backupButton)
-    backupButton.addEventListener('click', exportReviewStateBackup)
+  /** The clipboard scope: a human-readable summary for pasting into a ticket. */
+  function copyCurrentReviewSummary() {
+    window.ReviewUx.stateSync.saveCurrentPageToLocalStorage()
+    return copyText(buildReviewSummary())
+      .then(() => {
+        setText('reviewExportStatus', 'Copied this page’s review to the clipboard.')
+        window.showToast?.('Review summary copied', 'success')
+      })
+      .catch(() => {
+        setText('reviewExportStatus', 'Copy failed. Select the text and copy it manually.')
+        window.showToast?.('Copy failed. Copy manually instead.', 'warn')
+      })
+  }
+
+  /**
+   * Route an imported file by extension.
+   *
+   * One control accepts both formats rather than making the reviewer match a
+   * file to the button that reads it — they arrive from this same tool, and
+   * picking wrong used to mean an error rather than an import. Both paths merge
+   * per page key through mergeReviewRecord; neither replaces saved state.
+   * @param {File} file
+   */
+  function importReviewFile(file) {
+    if (!file) return
+    const isCsv = /\.csv$/i.test(file.name) || file.type === 'text/csv'
+    if (isCsv) {
+      window.reviewQueue?.importReviewsFromCsvFile?.(file)
+      return
+    }
+    importReviewStateBackup(file)
+  }
+
+  /**
+   * Mount the two review-data controls plus the destructive clear.
+   *
+   * Replaces mountBackupControls/mountLocalStorageControls/mountCopySummaryButton,
+   * which between them appended five buttons to this container while three more
+   * sat in the markup and a ninth lived in the queue's bulk bar.
+   */
+  function mountReviewDataControls() {
+    const actions = document.querySelector('.review-actions')
+    if (!actions || document.getElementById('reviewImportFile')) return
+
+    document.getElementById('exportReviews')?.addEventListener('click', () => {
+      runExport(document.getElementById('exportScope')?.value || 'backup-json')
+    })
 
     const importInput = document.createElement('input')
     importInput.type = 'file'
-    importInput.accept = 'application/json,.json'
-    importInput.id = 'importReviewStateFile'
+    // Both formats, one control. The queue's separate "Import CSV" button is
+    // gone; this is the only import door now.
+    importInput.accept = '.json,.csv,application/json,text/csv'
+    importInput.id = 'reviewImportFile'
     importInput.hidden = true
     importInput.addEventListener('change', () => {
-      const file = importInput.files?.[0]
-      if (file) importReviewStateBackup(file)
+      importReviewFile(importInput.files?.[0])
       importInput.value = ''
     })
-
-    const importButton = document.createElement('button')
-    importButton.type = 'button'
-    importButton.className = 'tool-btn secondary-tool'
-    importButton.id = 'importReviewStateBackup'
-    importButton.textContent = 'Import backup (JSON)'
-    actions.appendChild(importButton)
     actions.appendChild(importInput)
-    importButton.addEventListener('click', () => importInput.click())
+
+    document.getElementById('importReviews')?.addEventListener('click', () => importInput.click())
+
+    // Kept separate from the export pair and styled as destructive: this is the
+    // one control here that removes review data rather than copying it.
+    const clearButton = document.createElement('button')
+    clearButton.type = 'button'
+    clearButton.className = 'tool-btn danger-tool'
+    clearButton.id = 'clearSavedLocalReviews'
+    clearButton.textContent = 'Clear saved reviews'
+    clearButton.addEventListener('click', clearSavedLocalReviews)
+    actions.querySelector('.review-actions-buttons')?.appendChild(clearButton)
+
+    const status = document.createElement('p')
+    status.id = 'localStorageStatus'
+    status.className = 'field-help local-storage-status'
+    status.textContent = 'No local review data saved yet.'
+    actions.insertAdjacentElement('afterend', status)
   }
 
   function clearSavedLocalReviews() {
@@ -279,75 +345,17 @@ import { hasValidPageData } from './utils.js'
       window.showToast('Local review data cleared', 'info')
   }
 
-  function mountLocalStorageControls() {
-    const actions = document.querySelector('.review-actions')
-    if (!actions || document.getElementById('exportSavedLocalReviewsCsv')) return
-
-    const exportButton = document.createElement('button')
-    exportButton.type = 'button'
-    exportButton.className = 'tool-btn secondary-tool'
-    exportButton.id = 'exportSavedLocalReviewsCsv'
-    exportButton.textContent = 'Export saved local reviews CSV'
-    actions.appendChild(exportButton)
-    exportButton.addEventListener('click', exportSavedLocalReviewsCsv)
-
-    const clearButton = document.createElement('button')
-    clearButton.type = 'button'
-    clearButton.className = 'tool-btn danger-tool'
-    clearButton.id = 'clearSavedLocalReviews'
-    clearButton.textContent = 'Clear local saved reviews'
-    actions.appendChild(clearButton)
-    clearButton.addEventListener('click', clearSavedLocalReviews)
-
-    const status = document.createElement('p')
-    status.id = 'localStorageStatus'
-    status.className = 'field-help local-storage-status'
-    status.textContent = 'No local review data saved yet.'
-    actions.insertAdjacentElement('afterend', status)
-  }
-
-  function mountCopySummaryButton() {
-    const actions = document.querySelector('.review-actions')
-    if (!actions || document.getElementById('copyReviewSummary')) return
-
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.className = 'tool-btn copy-summary'
-    button.id = 'copyReviewSummary'
-    button.textContent = 'Copy review summary'
-    actions.appendChild(button)
-
-    button.addEventListener('click', () => {
-      window.ReviewUx.stateSync.saveCurrentPageToLocalStorage()
-      copyText(buildReviewSummary())
-        .then(() => {
-          const status = document.getElementById('reviewExportStatus')
-          if (status) status.textContent = 'Copied review summary to clipboard.'
-          if (typeof window.showToast === 'function') {
-            window.showToast('Review summary copied', 'success')
-          }
-        })
-        .catch(() => {
-          const status = document.getElementById('reviewExportStatus')
-          if (status) status.textContent = 'Copy failed. Copy manually instead.'
-          if (typeof window.showToast === 'function') {
-            window.showToast('Copy failed. Copy manually instead.', 'warn')
-          }
-        })
-    })
-  }
-
   window.ReviewUx = window.ReviewUx || {}
   window.ReviewUx.exportImport = {
     getCurrentReviewSummaryLines,
     buildReviewSummary,
     copyText,
-    mountCopySummaryButton,
     exportSavedLocalReviewsCsv,
     exportReviewStateBackup,
     importReviewStateBackup,
-    mountBackupControls,
+    importReviewFile,
     clearSavedLocalReviews,
-    mountLocalStorageControls,
+    runExport,
+    mountReviewDataControls,
   }
 })()

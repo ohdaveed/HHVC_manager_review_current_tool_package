@@ -44,16 +44,11 @@ function updateReadingTarget(page) {
     el.textContent = '\u2014'
   }
 }
-function updatePageBadge(title) {
-  const badge = document.getElementById('currentPageBadge')
-  if (!badge) return
-  // textContent needs no HTML escaping; escaping here would show literal
-  // entities like &amp; in the badge.
-  badge.textContent = 'Viewing: ' + (title || '')
-  badge.classList.add('visible')
-  clearTimeout(badge._timeout)
-  badge._timeout = setTimeout(() => badge.classList.remove('visible'), 5000)
-}
+/* updatePageBadge() is gone with #currentPageBadge. The badge flashed
+   "Viewing: <page>" for five seconds after each render — the fourth place the
+   open page's name appeared, after the sidebar picker, the sidebar's "Current
+   page:" label and the sticky review bar, all three of which are permanent
+   rather than transient. */
 
 // Republished as a browser global because js/ux-improvements-state-sync.js
 // calls it as `window.updateSearchPreview?.()` — an optional call, so that
@@ -61,4 +56,4 @@ function updatePageBadge(title) {
 // note in js/ui-controls.js for why these stay globals rather than imports.
 window.updateSearchPreview = updateSearchPreview
 
-export { syncEditorFields, updatePageBadge, updateReadingTarget, updateSearchPreview }
+export { syncEditorFields, updateReadingTarget, updateSearchPreview }

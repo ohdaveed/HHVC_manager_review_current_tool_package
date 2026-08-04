@@ -5,7 +5,6 @@
 
 import { buildPageSelect, initChecklist, showToast } from './ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
-import { mountKarlTagLegend } from './karl-tag-meta.js'
 import { renderPage } from './page-render.js'
 import { resolvePageKey } from './utils.js'
 import { updateSearchPreview } from './editor-panel.js'
@@ -23,7 +22,7 @@ import { updateSearchPreview } from './editor-panel.js'
  * This indirection is load-bearing and must not be "simplified" back to the
  * imported `renderPage`. Three modules decorate `window.renderPage` after
  * init() runs — js/manager-review-export.js, js/ux-improvements.js and
- * js/interactive-sitemap.js — each reading the current value, closing over
+ * js/manager-review-export.js — each reading the current value, closing over
  * it, and reassigning the wrapper.
  *
  * Reassigning `window.renderPage` does NOT rebind this module's `import`,
@@ -94,7 +93,6 @@ function init() {
   document.getElementById('tagToggle').addEventListener('change', (e) => {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })
-  mountKarlTagLegend?.()
   initChecklist()
 
   window.addEventListener('popstate', (e) => {

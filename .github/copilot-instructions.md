@@ -32,7 +32,7 @@ bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run start         # production-like: assemble dist/ (build:netlify), then serve it
 bun run validate      # Zod-validate pages/*.js and js/page-data.js (schema + invariants)
-bun run test          # Bun test runner over the 21 unit-test files in tests/
+bun run test          # Bun test runner over the 22 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run build         # validate -> export -> workshop form -> dist/ -> single-file HTML
@@ -71,7 +71,7 @@ validate one page in isolation. Run both after editing anything under `pages/` o
   and the copies drifted.
 - **Review/UX layers are additive** self-contained IIFEs on top of the core
   (`js/ux-improvements*.js`, `js/review-queue*.js`, `js/review-insights*.js`,
-  `js/review-ops*.js`, `js/dashboard-guidance.js`, `js/interactive-sitemap*.js`,
+  `js/review-ops*.js`, `js/dashboard-guidance.js`,
   `js/ai-assist*.js`, `js/plain-language.js`, `js/mockup-image-export.js`,
   `js/keyboard-shortcuts.js`) that read `HHVC_DATA`
   and `localStorage`. They may edit the **in-memory** page data but must never

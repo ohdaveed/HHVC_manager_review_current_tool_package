@@ -13,7 +13,7 @@ import {
 import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
 import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
 import { karlKindMeta } from './karl-tag-meta.js'
-import { syncEditorFields, updatePageBadge, updateReadingTarget } from './editor-panel.js'
+import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
 function karlTag(label, kind = 'body') {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
   return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
@@ -678,7 +678,6 @@ function applyPageContent(key) {
         </footer>`
   syncEditorFields(page)
   updateReadingTarget(page)
-  updatePageBadge(page.title)
   applyChecklistState(key)
   restoreSidebarScroll()
 }
@@ -743,7 +742,7 @@ function renderPage(key, skipHistory = false) {
 
 /* Republished as a browser global. This one is load-bearing in a way the
    others are not: three separate modules — js/manager-review-export.js,
-   js/ux-improvements.js and js/interactive-sitemap.js — wrap
+   js/ux-improvements.js and js/manager-review-export.js — wrap
    `window.renderPage` to refresh themselves after every navigation, each
    reading the current value, closing over it, and reassigning the wrapper
    (guarded by its own `__…Wrapped` flag so the chain builds exactly once).

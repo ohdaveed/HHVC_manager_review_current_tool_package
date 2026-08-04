@@ -7,6 +7,7 @@ const {
   makeReviewRecord,
   settleDebounce,
   DECISIONS,
+  setDecision,
 } = require('./helpers')
 
 async function downloadToText(page, trigger) {
@@ -26,12 +27,13 @@ function writeTempFile(name, content) {
 test.describe('review import/export through the UI', () => {
   test('single-page CSV export contains the current review', async ({ page }) => {
     await gotoFresh(page)
-    await page.selectOption('#reviewDecision', DECISIONS.approved)
+    await setDecision(page, DECISIONS.approved)
     await page.fill('#reviewNotes', 'Exported note')
     await page.dispatchEvent('#reviewNotes', 'change')
     await settleDebounce(page)
 
-    const { download, text } = await downloadToText(page, () => page.click('#exportReviewCsv'))
+    await page.selectOption('#exportScope', 'current-csv')
+    const { download, text } = await downloadToText(page, () => page.click('#exportReviews'))
 
     expect(download.suggestedFilename()).toBe('pestsTopic-manager-review.csv')
     expect(text).toContain('page_key')
@@ -43,7 +45,8 @@ test.describe('review import/export through the UI', () => {
   test('all-page template CSV export has one row per page', async ({ page }) => {
     await gotoFresh(page)
 
-    const { download, text } = await downloadToText(page, () => page.click('#exportAllTemplateCsv'))
+    await page.selectOption('#exportScope', 'template-csv')
+    const { download, text } = await downloadToText(page, () => page.click('#exportReviews'))
 
     expect(download.suggestedFilename()).toBe('hhvc-all-page-manager-review-template.csv')
     const lines = text.trim().split('\n')
@@ -53,12 +56,13 @@ test.describe('review import/export through the UI', () => {
 
   test('JSON state backup export matches saved localStorage state', async ({ page }) => {
     await gotoFresh(page)
-    await page.selectOption('#reviewDecision', DECISIONS.blocked)
+    await setDecision(page, DECISIONS.blocked)
     await page.fill('#reviewNotes', 'Backup me')
     await page.dispatchEvent('#reviewNotes', 'change')
     await settleDebounce(page)
 
-    const { text } = await downloadToText(page, () => page.click('#exportReviewStateBackup'))
+    await page.selectOption('#exportScope', 'backup-json')
+    const { text } = await downloadToText(page, () => page.click('#exportReviews'))
 
     const backup = JSON.parse(text)
     expect(backup.version).toBe(1)
@@ -85,7 +89,7 @@ test.describe('review import/export through the UI', () => {
       'import.csv',
       'page_key,decision,notes\npestsTopic,Revise and resubmit,Imported pests note\n'
     )
-    await page.setInputFiles('#reviewQueueCsvInput', csvPath)
+    await page.setInputFiles('#reviewImportFile', csvPath)
     await expect(
       page.locator('#toastContainer .toast').filter({ hasText: /imported 1/i })
     ).toBeVisible()
@@ -131,7 +135,7 @@ test.describe('review import/export through the UI', () => {
         },
       })
     )
-    await page.setInputFiles('#importReviewStateFile', backupPath)
+    await page.setInputFiles('#reviewImportFile', backupPath)
     await settleDebounce(page)
 
     const state = await readState(page)
@@ -145,12 +149,13 @@ test.describe('review import/export through the UI', () => {
     page,
   }) => {
     await gotoFresh(page)
-    await page.selectOption('#reviewDecision', DECISIONS.approvedWithEdits)
+    await setDecision(page, DECISIONS.approvedWithEdits)
     await page.fill('#reviewNotes', 'Round-trip note')
     await page.dispatchEvent('#reviewNotes', 'change')
     await settleDebounce(page)
 
-    const { text } = await downloadToText(page, () => page.click('#exportReviewStateBackup'))
+    await page.selectOption('#exportScope', 'backup-json')
+    const { text } = await downloadToText(page, () => page.click('#exportReviews'))
     const backupPath = writeTempFile('roundtrip.json', text)
 
     page.on('dialog', (dialog) => dialog.accept())
@@ -159,7 +164,7 @@ test.describe('review import/export through the UI', () => {
     const cleared = await readState(page)
     expect(cleared.pages.pestsTopic).toBeUndefined()
 
-    await page.setInputFiles('#importReviewStateFile', backupPath)
+    await page.setInputFiles('#reviewImportFile', backupPath)
     await settleDebounce(page)
 
     const restored = await readState(page)

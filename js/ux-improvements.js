@@ -23,8 +23,16 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
   const REFRESH_DEBOUNCE_MS = 300
 
   function refreshUx() {
-    window.ReviewUx.workspace.renderStickyBar()
-    window.ReviewUx.stateSync.renderPageChecksPanel()
+    // Pass reviewFormPageKey rather than letting these re-derive the page from
+    // #pageSelect: during startup the picker still holds its first <option>
+    // while the initial View Transition is in flight, and both panels were
+    // painting that arbitrary page. reviewFormPageKey is assigned in every
+    // branch of restoreInitialPage() before the first refreshUx(), and again
+    // in applyAndRefresh() after each render, so it is the one value here that
+    // is never mid-navigation. It is null only before the first render, where
+    // both callees fall back to the old behaviour.
+    window.ReviewUx.workspace.renderStickyBar(reviewFormPageKey ?? undefined)
+    window.ReviewUx.stateSync.renderPageChecksPanel(reviewFormPageKey ?? undefined)
     window.ReviewUx.stateSync.updateLocalStorageStatus()
     window.ReviewUx.workspace.updateDecisionQuickActions()
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
@@ -234,9 +242,7 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
   function init() {
     window.ReviewUx.workspace.initWorkspaceTabs()
     window.ReviewUx.workspace.initDecisionQuickActions()
-    window.ReviewUx.exportImport.mountCopySummaryButton()
-    window.ReviewUx.exportImport.mountBackupControls()
-    window.ReviewUx.exportImport.mountLocalStorageControls()
+    window.ReviewUx.exportImport.mountReviewDataControls()
     window.reviewStateSync?.mountSyncControls()
     attachRefreshListeners()
     wrapRenderPage()

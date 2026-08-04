@@ -2,7 +2,7 @@
    publishes the mount hook the workspace tab calls. Thin by design — the
    client lives in js/ai-assist-client.js and the rendering in
    js/ai-assist-render.js, mirroring the ux-improvements / review-queue /
-   interactive-sitemap split.
+   review-queue split.
 
    Loads after js/ai-assist-render.js. May load after js/ux-improvements.js,
    because setWorkspaceTab calls the mount hook through optional chaining at
@@ -259,7 +259,10 @@
     // Catch a tab that is ALREADY open at init time — see
     // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
     // this, and why panel visibility is the signal rather than saved state.
-    window.utils.mountWorkspacePanelIfOpen('assist', ensureRendered)
+    // 'help', not 'assist': this panel no longer has a tab of its own — it is a
+    // collapsed section inside Help, so Help being open is what means "already
+    // on screen" at init time.
+    window.utils.mountWorkspacePanelIfOpen('help', ensureRendered)
   }
 
   if (document.readyState === 'loading') {

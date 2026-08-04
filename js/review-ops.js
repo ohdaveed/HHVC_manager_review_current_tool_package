@@ -12,7 +12,7 @@
    shortcuts, so this one takes `5` and Help moves to `6`. Help stays last on
    purpose: it is the reference panel, not a working one.
 
-   Mounts lazily on first tab open, and — like js/interactive-sitemap.js and
+   Mounts lazily when the Help tab opens, and — like js/ai-assist.js and
    js/ai-assist.js — also catches an already-open tab at its own init(), since
    js/ux-improvements.js restores a persisted workspace_tab before these hooks
    exist and a restored tab would otherwise paint empty.
@@ -30,9 +30,10 @@ import { escapeHtml as escape } from './utils.js'
 ;(function mountReviewOps() {
   if (typeof window === 'undefined') return
 
-  /** This panel's `data-workspace-panel` value, and the selector built from it. */
-  const OPS_PANEL = 'ops'
-  const PANEL_SELECTOR = `[data-workspace-panel="${OPS_PANEL}"]`
+  /* This used to be a tab of its own with `data-workspace-panel="ops"`. It is
+     now a collapsed section inside Help, so its host is a plain id and the
+     "is it on screen?" question is asked about the Help panel instead. */
+  const PANEL_SELECTOR = '#reviewWorkspaceOps'
 
   /**
    * The page keys the site currently has, for the orphan check.
@@ -279,13 +280,15 @@ import { escapeHtml as escape } from './utils.js'
     // Diagnostics are a snapshot, not a live view — but a decision made in the
     // queue while this tab is open should not leave stale numbers on screen.
     document.addEventListener('hhvc:review-data-changed', () => {
-      if (window.utils.isWorkspacePanelOpen(OPS_PANEL)) render()
+      if (window.utils.isWorkspacePanelOpen('help')) render()
     })
     window.__mountReviewOpsOnTabOpen = ensureRendered
     // Catch a tab that is ALREADY open at init time — see
     // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
     // this, and why panel visibility is the signal rather than saved state.
-    window.utils.mountWorkspacePanelIfOpen(OPS_PANEL, render)
+    // See the note in js/ai-assist.js: this is a section inside Help now, so
+    // Help is the panel whose open state matters.
+    window.utils.mountWorkspacePanelIfOpen('help', render)
   }
 
   if (document.readyState === 'loading') {

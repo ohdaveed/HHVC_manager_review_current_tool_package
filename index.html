@@ -76,9 +76,6 @@
               Use these fields during review. Exports download to your browser only; they do not
               change source files or publish pages.
             </p>
-            <div class="review-page-label" id="reviewPageLabel">
-              Current page: Pests and housing problems
-            </div>
             <label for="reviewerInput">Reviewer name</label>
             <input
               id="reviewerInput"
@@ -88,19 +85,24 @@
             />
             <label for="reviewDateInput">Review date</label>
             <input id="reviewDateInput" type="date" aria-label="Review date" />
-            <label for="reviewDecision">Decision</label>
-            <select id="reviewDecision" aria-label="Review decision">
-              <option value="Needs review">Needs review</option>
-              <option value="Approved">Approved</option>
-              <option value="Approved with edits">Approved with edits</option>
-              <option value="Revise and resubmit">Revise and resubmit</option>
-              <option value="Blocked">Blocked</option>
-            </select>
+            <!-- The decision used to be set from a <select> AND from the chips
+                 below it, stacked one above the other: two controls writing one
+                 value, where the chips do it in a single click and read as state
+                 as well as action. The <select> is now a hidden input rather
+                 than gone outright — it is the field every persistence path
+                 already reads and writes through utils' getValue/setValue, and
+                 the change event dispatched on it is what autosave, the history
+                 round detection and the sticky bar all listen for. Keeping it as
+                 the value holder removes the duplicate control without moving
+                 that plumbing; the chips carry the visible and accessible
+                 semantics. -->
+            <input id="reviewDecision" type="hidden" value="Needs review" />
+            <span class="field-label" id="decisionGroupLabel">Decision</span>
             <div
               class="decision-quick-actions"
               id="decisionQuickActions"
               role="group"
-              aria-label="Quick decision actions"
+              aria-labelledby="decisionGroupLabel"
             >
               <button type="button" class="decision-chip approve" data-decision="Approved">
                 Approve
@@ -145,29 +147,66 @@
               aria-label="Follow-up owner"
               placeholder="Name, role, or team"
             />
+            <!-- One export control with a scope, and one import control that
+                 takes either format.
+
+                 Nine separate buttons used to move review data, split across the
+                 sidebar and the Overview panel — two places a reviewer cannot
+                 see at once — and nothing on screen distinguished "Export
+                 current review JSON" from "Download backup (JSON)" from "Export
+                 saved local reviews CSV". This is also the highest-consequence
+                 surface in the tool: a prior regression on the import path
+                 replaced saved state wholesale instead of merging it. Fewer
+                 doors into it is a safety property, not only a tidiness one. -->
             <div class="review-actions" aria-label="Review export actions">
-              <button type="button" class="tool-btn" id="exportReviewCsv">
-                Export current review CSV
-              </button>
-              <button type="button" class="tool-btn secondary-tool" id="exportReviewJson">
-                Export current review JSON
-              </button>
-              <button type="button" class="tool-btn secondary-tool" id="exportAllTemplateCsv">
-                Export all-page decision template
-              </button>
+              <label for="exportScope">What to export</label>
+              <select id="exportScope">
+                <option value="current-csv">This page — CSV</option>
+                <option value="current-json">This page — JSON</option>
+                <option value="all-csv">All pages, as reviewed — CSV</option>
+                <option value="template-csv">All pages, blank template — CSV</option>
+                <option value="backup-json">Everything, for another browser — JSON</option>
+                <option value="summary-clipboard">This page, as text — to clipboard</option>
+              </select>
+              <div class="review-actions-buttons">
+                <button type="button" class="tool-btn" id="exportReviews">Export reviews</button>
+                <button type="button" class="tool-btn secondary-tool" id="importReviews">
+                  Import reviews
+                </button>
+              </div>
             </div>
-            <p class="field-help" id="reviewExportStatus">No review exported yet.</p>
+            <p class="field-help" id="reviewExportStatus">
+              Reviews are saved in this browser only. Export to keep a copy or move them to another
+              machine.
+            </p>
           </div>
         </details>
       </aside>
       <main class="canvas">
         <nav class="canvas-toolbar">
-          <span id="currentPageBadge" class="page-badge"></span>
           <div
             id="reviewStickyBar"
             class="review-sticky-bar"
             aria-label="Review status and navigation"
           ></div>
+          <!-- The Karl tag switch lives in the toolbar rather than above the
+               mockup. It used to head a banner inside .browser-shell carrying a
+               four-row colour legend, an explanatory sentence and a "What are
+               Karl tags?" disclosure — about 495px, half a screen, of permanent
+               reference material between the toolbar and the SF.gov header on
+               every page and every load. The legend was decoding something that
+               was never encoded in colour alone: each tag already reads
+               "Metadata", "Body", "Placement" or "Editor only" in words. The
+               explanation now lives only in the Help tab, where reference
+               material belongs; the switch stays, because it is the control that
+               turns annotation on and off. -->
+          <div class="karl-tag-toggle">
+            <label class="karl-switch" for="tagToggle">
+              <input id="tagToggle" type="checkbox" checked />
+              <span class="karl-slider"></span>
+            </label>
+            <label class="karl-tag-toggle-text" for="tagToggle">Karl tags</label>
+          </div>
         </nav>
         <figure class="browser-shell">
           <figcaption class="browser-bar">
@@ -175,43 +214,6 @@
             ><span class="dot green"></span>
             <div class="url" id="browserUrl">https://sf.gov/topic-pests-and-housing-problems</div>
           </figcaption>
-          <!-- Review chrome, not page content. It sits inside .browser-shell so the
-               tag toggle stays next to the tags it controls, but .browser-shell is
-               also what js/mockup-image-export.js captures — hence
-               data-export-exclude, which keeps the tool's own switch and legend out
-               of a PNG handed to anyone outside the review. -->
-          <div
-            class="karl-page-tags-banner"
-            data-export-exclude="true"
-            style="
-              padding: 1rem 1rem 0.5rem;
-              border-bottom: 1px solid var(--sfds-border);
-              background: var(--sfds-blue-soft-bg);
-            "
-          >
-            <div class="karl-tag-toggle">
-              <span>Show Karl tags</span
-              ><label class="karl-switch" aria-label="Show Karl CMS tags"
-                ><input id="tagToggle" type="checkbox" checked /><span class="karl-slider"></span
-              ></label>
-            </div>
-            <div id="karlTagLegendSidebar"></div>
-            <p class="field-help" style="margin-top: 1rem">
-              Toggle Karl tags on/off in the page mockup. Tag colors match the key above.
-            </p>
-            <details class="karl-help-nested" style="margin-top: 0.5rem">
-              <summary class="field-help">What are Karl tags?</summary>
-              <div class="cms-help">
-                Tags identify where each text block should be entered in Karl CMS: metadata fields,
-                body sections, primary actions, body links, Related section links, Agency page link
-                sections, Resource Collection items, or editor-only notes.
-              </div>
-              <div class="cms-help">
-                <strong>Note:</strong> Visual boxes are mockup previews. Karl placement is
-                determined by the tag text, not by the visual box shape.
-              </div>
-            </details>
-          </div>
           <div id="mockPage">
             <div class="page-body">
               <h1>Loading HHVC mockup…</h1>
@@ -219,125 +221,108 @@
             </div>
           </div>
         </figure>
-        <section id="reviewWorkspace" class="review-workspace" hidden aria-label="Review workspace">
-          <nav class="review-workspace-tabs" id="reviewWorkspaceTabs" role="tablist">
-            <button
-              type="button"
-              class="review-workspace-tab"
-              role="tab"
-              id="reviewWorkspaceTabOverview"
-              data-workspace-tab="overview"
-              aria-selected="true"
-              aria-controls="reviewWorkspaceOverview"
-            >
-              Overview
-            </button>
-            <button
-              type="button"
-              class="review-workspace-tab"
-              role="tab"
-              id="reviewWorkspaceTabChecks"
-              data-workspace-tab="checks"
-              aria-selected="false"
-              aria-controls="reviewChecksPanel"
-            >
-              Page checks
-            </button>
-            <button
-              type="button"
-              class="review-workspace-tab"
-              role="tab"
-              id="reviewWorkspaceTabSitemap"
-              data-workspace-tab="sitemap"
-              aria-selected="false"
-              aria-controls="reviewWorkspaceSitemap"
-            >
-              Sitemap
-            </button>
-            <button
-              type="button"
-              class="review-workspace-tab"
-              role="tab"
-              id="reviewWorkspaceTabAssist"
-              data-workspace-tab="assist"
-              aria-selected="false"
-              aria-controls="reviewWorkspaceAssist"
-            >
-              AI assist
-            </button>
-            <button
-              type="button"
-              class="review-workspace-tab"
-              role="tab"
-              id="reviewWorkspaceTabOps"
-              data-workspace-tab="ops"
-              aria-selected="false"
-              aria-controls="reviewWorkspaceOps"
-            >
-              Status
-            </button>
-            <button
-              type="button"
-              class="review-workspace-tab"
-              role="tab"
-              id="reviewWorkspaceTabHelp"
-              data-workspace-tab="help"
-              aria-selected="false"
-              aria-controls="reviewWorkspaceHelp"
-            >
-              Help
-            </button>
-          </nav>
-          <div
-            id="reviewWorkspaceOverview"
-            class="review-workspace-panel"
-            role="tabpanel"
-            aria-labelledby="reviewWorkspaceTabOverview"
-            data-workspace-panel="overview"
-          ></div>
-          <div
-            id="reviewChecksPanel"
-            class="review-workspace-panel review-checks-panel"
-            role="tabpanel"
-            aria-labelledby="reviewWorkspaceTabChecks"
-            data-workspace-panel="checks"
-            hidden
-          ></div>
-          <div
-            id="reviewWorkspaceSitemap"
-            class="review-workspace-panel"
-            role="tabpanel"
-            aria-labelledby="reviewWorkspaceTabSitemap"
-            data-workspace-panel="sitemap"
-            hidden
-          ></div>
-          <div
-            id="reviewWorkspaceAssist"
-            class="review-workspace-panel"
-            role="tabpanel"
-            aria-labelledby="reviewWorkspaceTabAssist"
-            data-workspace-panel="assist"
-            hidden
-          ></div>
-          <div
-            id="reviewWorkspaceOps"
-            class="review-workspace-panel"
-            role="tabpanel"
-            aria-labelledby="reviewWorkspaceTabOps"
-            data-workspace-panel="ops"
-            hidden
-          ></div>
-          <div
-            id="reviewWorkspaceHelp"
-            class="review-workspace-panel"
-            role="tabpanel"
-            aria-labelledby="reviewWorkspaceTabHelp"
-            data-workspace-panel="help"
-            hidden
-          ></div>
-        </section>
         <div id="toastContainer" class="toast-container" aria-live="polite"></div>
       </main>
+      <section id="reviewWorkspace" class="review-workspace" hidden aria-label="Review workspace">
+        <nav class="review-workspace-tabs" id="reviewWorkspaceTabs" role="tablist">
+          <button
+            type="button"
+            class="review-workspace-tab"
+            role="tab"
+            id="reviewWorkspaceTabOverview"
+            data-workspace-tab="overview"
+            aria-selected="true"
+            aria-controls="reviewWorkspaceOverview"
+          >
+            Overview
+          </button>
+          <button
+            type="button"
+            class="review-workspace-tab"
+            role="tab"
+            id="reviewWorkspaceTabChecks"
+            data-workspace-tab="checks"
+            aria-selected="false"
+            aria-controls="reviewChecksPanel"
+          >
+            Page checks
+          </button>
+          <button
+            type="button"
+            class="review-workspace-tab"
+            role="tab"
+            id="reviewWorkspaceTabHelp"
+            data-workspace-tab="help"
+            aria-selected="false"
+            aria-controls="reviewWorkspaceHelp"
+          >
+            Help
+          </button>
+        </nav>
+        <div
+          id="reviewWorkspaceOverview"
+          class="review-workspace-panel"
+          role="tabpanel"
+          aria-labelledby="reviewWorkspaceTabOverview"
+          data-workspace-panel="overview"
+        ></div>
+        <div
+          id="reviewChecksPanel"
+          class="review-workspace-panel review-checks-panel"
+          role="tabpanel"
+          aria-labelledby="reviewWorkspaceTabChecks"
+          data-workspace-panel="checks"
+          hidden
+        ></div>
+        <div
+          id="reviewWorkspaceHelp"
+          class="review-workspace-panel"
+          role="tabpanel"
+          aria-labelledby="reviewWorkspaceTabHelp"
+          data-workspace-panel="help"
+          hidden
+        >
+          <!-- Three tabs, not six. Sitemap, AI assist and Status each held a
+               top-level slot numbered by the 1-6 shortcuts, and none of the
+               three earned one.
+
+               Sitemap is gone outright: it was a fourth way to navigate 19
+               pages, drawing a hierarchy that is one level deep — most hubs
+               rendered as "HUB 0/0" with "No child pages assigned" — and it
+               leaked js/page-data.js to reviewers.
+
+               AI assist and Status are not gone; they are demoted to here.
+               Both depend on server.ts, and the Netlify build managers
+               actually open has no server runtime, so on that deploy they were
+               two permanently-empty panels out of six. Everything Status
+               reported was "not configured" or "none" — except the one line a
+               reviewer genuinely needs, which now sits beside the export
+               controls in the sidebar where the risk it describes lives.
+
+               js/dashboard-guidance.js moves this block to the end of the Help
+               panel after mounting its own sections, so guidance comes first
+               and DOM order still matches reading order. -->
+          <div id="reviewWorkspaceAdvanced" class="review-advanced">
+            <details class="review-advanced-group">
+              <summary>Draft content with AI</summary>
+              <div id="reviewWorkspaceAssist"></div>
+            </details>
+            <details class="review-advanced-group">
+              <summary>Stored review data on this browser</summary>
+              <div id="reviewWorkspaceOps"></div>
+            </details>
+            <details class="review-advanced-group">
+              <summary>Save mockups as images</summary>
+              <div id="mockupExportControls">
+                <p class="field-help">
+                  Saves a PNG of the mockup as a reviewer sees it, without the review tool's own
+                  controls. Press <kbd>p</kbd> anywhere to save the open page.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
     </div>
 
     <script type="module" src="/js/main.js"></script>

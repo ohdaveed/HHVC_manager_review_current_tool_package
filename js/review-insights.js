@@ -1,8 +1,11 @@
-/* Review insights: the Overview charts.
+/* Review insights: the Overview activity chart and failing-checks ranking.
 
-   Three compact cards above the review queue table, answering what a manager
-   asks before scanning 19 rows: what is the decision mix, is review actually
-   progressing, and which pages are failing their checks.
+   Two compact cards above the review queue table, answering what a manager
+   asks before scanning 19 rows: is review actually progressing, and which pages
+   are failing their checks. A third card ("Decision mix") was cut — the filter
+   chips directly above already print the same five counts and filter by them,
+   so the chart and its legend were the second and third rendering of numbers
+   the reader had not yet scrolled past.
 
    ECharts is NOT imported here. It lives in js/review-insights-charts.js and
    is pulled in with a dynamic import the first time this renders, so Vite
@@ -15,20 +18,21 @@
    to load outright, the accessible content is already there and only the
    decorative graphic is missing.
 
-   Each chart is aria-hidden and paired with one of those tables. That mirrors
-   USWDS's data-visualisation guidance: the graphic is not the accessible
-   artifact, the equivalent table is, and exposing both just makes a screen
-   reader read the numbers twice.
+   The activity chart is aria-hidden and paired with one of those tables. That
+   mirrors USWDS's data-visualisation guidance: the graphic is not the
+   accessible artifact, the equivalent table is, and exposing both just makes a
+   screen reader read the numbers twice. The checks card needs neither — it is a
+   visible ranked list, which is already the accessible artifact.
 
    Load-order dependency: imported by js/main.js after js/review-queue*.js,
    because js/review-queue-render.js calls window.ReviewInsights.render() at
    the end of its own render. That call is optional-chained, so the ordering is
    a performance detail rather than a correctness one. */
 
-import { DECISIONS, escapeHtml } from './utils.js'
+import { escapeHtml } from './utils.js'
 import { buildInsightsModel, insightsSignature } from './review-insights-data.js'
 
-/** How many pages the checks chart draws. See checksOption for why. */
+/** How many pages the checks ranking lists. See checksList for why it is capped. */
 const CHECKS_VISIBLE = 8
 
 /**
@@ -47,19 +51,7 @@ function readTheme() {
     muted: token('--text-secondary', '#6e7070'),
     border: token('--border-default', '#e9eaea'),
     surface: token('--surface-panel', '#fcfcfc'),
-    // The --viz-decision-* tokens, not the --status-*-border ones the chips
-    // use. See the block comment on them in css/theme.css: the chip borders are
-    // tuned as 1px strokes and, used as large fills, Approved and Needs review
-    // separate by ΔE 8.4 under normal vision against a floor of 15.
-    //
-    // Built from the canonical decision table rather than listed here, so a
-    // decision can never exist without a chart colour.
-    decision: Object.fromEntries(
-      DECISIONS.map((decision) => [decision.label, token(decision.vizToken, decision.vizFallback)])
-    ),
     line: token('--viz-2', '#0072b2'),
-    bar: token('--viz-1', '#009e73'),
-    barWarn: token('--viz-3', '#d55e00'),
   }
 }
 
@@ -100,44 +92,40 @@ function dataTable(caption, headers, rows) {
   `
 }
 
-/** Stable slug for a decision, used to key the legend swatch colours in CSS. */
-function decisionSlug(decision) {
-  return String(decision)
-    .toLowerCase()
-    .replace(/[^a-z]+/g, '-')
-}
-
 /**
- * Visible legend for the decision mix, with a count beside each label.
+ * The pages failing checks, worst first, as a plain ranked list.
  *
- * Not optional decoration. The stacked bar carries five series, and identity in
- * the graphic is otherwise conveyed by colour alone — so this is what keeps the
- * card off WCAG 1.4.1. It also supplies the secondary encoding that makes the
- * closest colour pair legitimate: the green/amber step separates at ΔE 7.4
- * under protanopia, which sits in the band that is only acceptable alongside
- * direct labels.
+ * This card used to be a horizontal bar chart. On real data every bar landed
+ * between 86% and 95% — one colour, eight near-identical lengths — so the
+ * encoding carried no signal a reader could act on, while the axis labels
+ * truncated at ~18 characters and left several bars effectively anonymous. The
+ * polarity read backwards too: bars sitting at 95% under a heading about
+ * needing attention.
  *
- * Deliberately NOT aria-hidden, unlike the chart it labels — this is real
- * content, and it is the sighted reader's equivalent of the data table.
+ * The ranking was always the value here, so this ships the ranking and nothing
+ * else. It also replaces the card's visually hidden table rather than sitting
+ * beside one — the list IS the accessible content now, and pairing it with a
+ * table would just read the same numbers twice.
  * @param {object} model
+ * @param {number} limit How many rows to draw.
  * @returns {string}
  */
-function decisionLegend(model) {
-  const present = model.decisionMix.filter((item) => item.count > 0)
+function checksList(model, limit) {
+  const visible = model.checksFailing.slice(0, limit)
   return `
-    <ul class="insights-legend">
-      ${present
-        .map(
-          (item) => `
-        <li class="insights-legend-item">
-          <span class="insights-swatch" data-decision="${escape(decisionSlug(item.decision))}"></span>
-          <span class="insights-legend-label">${escape(item.decision)}</span>
-          <b class="insights-legend-count">${escape(item.count)}</b>
+    <ol class="insights-ranked">
+      ${visible
+        .map((item) => {
+          const failing = item.total - item.passed
+          return `
+        <li class="insights-ranked-item">
+          <span class="insights-ranked-title">${escape(item.title)}</span>
+          <span class="insights-ranked-value">${escape(failing)} of ${escape(item.total)} failing</span>
         </li>
       `
-        )
+        })
         .join('')}
-    </ul>
+    </ol>
   `
 }
 
@@ -169,36 +157,27 @@ function emptyCard(title, hint, message) {
   `
 }
 
-/** Build the three cards, tables included, chart boxes still empty. */
+/**
+ * Build the two cards, tables included, chart boxes still empty.
+ *
+ * There used to be three. The "Decision mix" stacked bar was cut: the Overview
+ * already prints the same five counts in the filter chips — which filter as
+ * well as count — and the chart's own legend then reprinted them a third time,
+ * all within about 200 vertical pixels. A stacked bar whose exact values are
+ * already on screen twice is a restatement rather than an encoding, so the card
+ * carried no information a reader did not have before reaching it.
+ *
+ * What is left is the pair that says something the table cannot: how the review
+ * is moving, and which pages are failing.
+ */
 function buildMarkup(model) {
-  const decisionTable = dataTable(
-    'Pages by review decision',
-    ['Decision', 'Pages', 'Share'],
-    model.decisionMix.map((item) => [item.decision, item.count, `${item.pct}%`])
-  )
   const activityTable = dataTable(
     'Pages decided over time',
     ['Date', 'Decided that day', 'Running total'],
     model.activity.map((point) => [point.date, point.decided, point.total])
   )
-  const checksTable = dataTable(
-    'Automated check results by page',
-    ['Page', 'Checks passing', 'Checks total', 'Pass rate'],
-    model.checks.map((item) => [item.title, item.passed, item.total, `${item.pct}%`])
-  )
-
-  const decided = model.decisionMix
-    .filter((item) => item.decision !== 'Needs review')
-    .reduce((sum, item) => sum + item.count, 0)
 
   return `
-    ${card(
-      'decision',
-      'Decision mix',
-      `${decided} of ${model.total} pages decided`,
-      decisionTable,
-      decisionLegend(model)
-    )}
     ${
       model.activity.length
         ? card('activity', 'Review activity', 'Pages decided, running total', activityTable)
@@ -210,14 +189,23 @@ function buildMarkup(model) {
     }
     ${
       model.checksFailing.length
-        ? card(
-            'checks',
-            'Checks needing attention',
+        ? // No chart mount and no hidden table: checksList() renders the ranking
+          // as visible content, which is both the graphic and the accessible
+          // artifact. card() is not reused here because it would add an empty
+          // aria-hidden chart box for a card that no longer draws one.
+          `
+      <section class="insights-card">
+        <div class="insights-card-head">
+          <h4 class="insights-card-title">Checks needing attention</h4>
+          <p class="insights-card-hint">${escape(
             model.checksFailing.length > CHECKS_VISIBLE
-              ? `${CHECKS_VISIBLE} lowest of ${model.checksFailing.length} pages with failing checks`
-              : `${model.checksFailing.length} of ${model.checks.length} pages have failing checks`,
-            checksTable
-          )
+              ? `Worst ${CHECKS_VISIBLE} of ${model.checksFailing.length} pages with failing checks`
+              : `${model.checksFailing.length} of ${model.checks.length} pages have failing checks`
+          )}</p>
+        </div>
+        ${checksList(model, CHECKS_VISIBLE)}
+      </section>
+    `
         : emptyCard(
             'Checks needing attention',
             'Automated page checks',
@@ -312,7 +300,7 @@ async function render() {
   }
   if (mine !== generation) return
 
-  instances = charts.draw(chartsRoot, model, readTheme(), CHECKS_VISIBLE)
+  instances = charts.draw(chartsRoot, model, readTheme())
 }
 
 /** Keep the charts sized to their container, and themed to the OS setting. */

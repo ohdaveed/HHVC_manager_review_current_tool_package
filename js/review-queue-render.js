@@ -23,24 +23,35 @@
     return `Updated ${row.ageDays} days ago`
   }
 
-  function renderQueueStats(stats, visibleCount) {
+  /**
+   * The two queue metrics that are not already on screen somewhere else.
+   *
+   * Four tiles used to render here and two of them were noise. "Visible"
+   * restated the "N of 19" the progress line prints directly above. "Blocked"
+   * showed `stats.blocked`, which counts Blocked *plus* Revise and resubmit —
+   * so it read 5 while the Blocked filter chip forty pixels away read 2. Both
+   * numbers were right; the label was not, and a panel that visibly disagrees
+   * with itself in its first two rows spends credibility the rest of it needs.
+   * The decision tally belongs to the filter chips, which count and filter with
+   * one control.
+   *
+   * What survives is the work nothing else surfaces: pages nobody owns, and
+   * pages nobody has touched lately. Both labels now say what they are rather
+   * than abbreviating ("Stale 3+d" told a reviewer nothing without the source).
+   *
+   * @param {object} stats Tally from getQueueStats().
+   * @returns {string} Markup for the KPI strip.
+   */
+  function renderQueueStats(stats) {
     return `
       <section class="review-queue-overview">
         <div class="review-queue-kpis" aria-label="Queue metrics">
           <div class="review-queue-kpi">
-            <span class="review-queue-kpi-label">Visible</span>
-            <strong class="review-queue-kpi-value">${visibleCount}</strong>
-          </div>
-          <div class="review-queue-kpi">
-            <span class="review-queue-kpi-label">Blocked</span>
-            <strong class="review-queue-kpi-value">${stats.blocked}</strong>
-          </div>
-          <div class="review-queue-kpi">
-            <span class="review-queue-kpi-label">Unassigned</span>
+            <span class="review-queue-kpi-label">No reviewer</span>
             <strong class="review-queue-kpi-value">${stats.unassigned}</strong>
           </div>
           <div class="review-queue-kpi">
-            <span class="review-queue-kpi-label">Stale ${STALE_DAYS}+d</span>
+            <span class="review-queue-kpi-label">Untouched ${STALE_DAYS}+ days</span>
             <strong class="review-queue-kpi-value">${stats.stale}</strong>
           </div>
         </div>
@@ -85,7 +96,6 @@
                 )}</button>`
               : ''
           }
-          <button type="button" class="review-queue-action" data-queue-import="csv">Import CSV</button>
         </div>
       </section>
     `
@@ -214,7 +224,7 @@
         <header class="review-queue-header">
           <div>
             <h3>Overview</h3>
-            <p class="review-queue-subtitle">Triage every page by decision, checks, ownership, and staleness. Use <strong>Open</strong> to switch pages (rows no longer navigate on click). Press <kbd>1</kbd> for this tab or <kbd>?</kbd> for all shortcuts.</p>
+            <p class="review-queue-subtitle">Triage every page by decision, checks, ownership, and staleness. Use <strong>Open</strong> to switch pages. Press <kbd>?</kbd> for all shortcuts.</p>
           </div>
           <div class="review-queue-progress" aria-label="Review progress">
             <div class="review-queue-progress-bar">
@@ -231,7 +241,7 @@
           <span class="status-chip ${getDecisionChipClass('Blocked')}">Blocked ${stats.byDecision.Blocked || 0}</span>
           <button type="button" class="review-queue-action" data-queue-next-needs-review="true">Next needs review</button>
         </div>
-        ${renderQueueStats(stats, rows.length)}
+        ${renderQueueStats(stats)}
         <div id="reviewInsights"></div>
         <div class="review-queue-toolbar" aria-label="Queue controls">
           <label class="review-queue-search">

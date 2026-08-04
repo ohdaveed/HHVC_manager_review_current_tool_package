@@ -1,11 +1,15 @@
-// Overview charts, driven through the real UI.
+// Overview insight cards, driven through the real UI.
 //
-// The unit tests in tests/review-insights-data.test.js already cover the data
-// shaping exhaustively. What only a browser can prove is the part those cannot
+// The unit tests in tests/review-insights-data.test.js and
+// tests/review-insights-render.test.js already cover the data shaping and the
+// markup exhaustively. What only a browser can prove is the part those cannot
 // touch: that the ECharts chunk actually loads on demand, that it draws into
-// the mounted containers, that the accessible data tables carry the same
-// numbers the graphics do, and that the charts survive the Overview panel
-// rebuilding its innerHTML underneath them.
+// the mounted container, and that the card survives the Overview panel
+// rebuilding its innerHTML underneath it.
+//
+// Two cards, not three. The "Decision mix" stacked bar was cut — the filter
+// chips directly above print the same five counts and filter by them, and the
+// chart's own legend reprinted them a third time within about 200 pixels.
 const { test, expect } = require('@playwright/test')
 const { gotoFresh, seedState, makeReviewRecord, openWorkspaceTab } = require('./helpers')
 
@@ -26,65 +30,74 @@ async function seedDecidedPages(page) {
 }
 
 test.describe('Overview insight charts', () => {
-  test('renders three cards, each with a drawn chart', async ({ page }) => {
+  test('renders two cards: one drawn chart and one ranked list', async ({ page }) => {
     await gotoFresh(page)
     await seedDecidedPages(page)
     await openWorkspaceTab(page, 'overview')
 
-    await expect(page.locator('.insights-card')).toHaveCount(3)
-    // ECharts arrives in a lazily imported chunk, so the SVGs appear a tick
-    // after the cards do. Waiting on the SVG is what proves the dynamic import
+    await expect(page.locator('.insights-card')).toHaveCount(2)
+    // ECharts arrives in a lazily imported chunk, so the SVG appears a tick
+    // after the cards do. Waiting on it is what proves the dynamic import
     // resolved and drew, rather than just that the markup shell rendered.
-    await expect(page.locator('.insights-chart svg')).toHaveCount(3)
+    await expect(page.locator('.insights-chart svg')).toHaveCount(1)
+    // The failing-checks card draws no chart at all now.
+    await expect(page.locator('.insights-ranked')).toHaveCount(1)
   })
 
-  test('pairs every chart with an accessible data table', async ({ page }) => {
+  test('pairs the chart with an accessible data table', async ({ page }) => {
     await gotoFresh(page)
     await seedDecidedPages(page)
     await openWorkspaceTab(page, 'overview')
-    await expect(page.locator('.insights-chart svg')).toHaveCount(3)
+    await expect(page.locator('.insights-chart svg')).toHaveCount(1)
 
-    // The graphic is not the accessible artifact; the table is. Each chart box
+    // The graphic is not the accessible artifact; the table is. The chart box
     // is hidden from assistive tech and a captioned table carries its numbers.
-    await expect(page.locator('.insights-chart[aria-hidden="true"]')).toHaveCount(3)
-    await expect(page.locator('.insights-card table.hhvc-sr-only')).toHaveCount(3)
+    await expect(page.locator('.insights-chart[aria-hidden="true"]')).toHaveCount(1)
+    await expect(page.locator('.insights-card table.hhvc-sr-only')).toHaveCount(1)
 
-    const decisionTable = page.locator('table.hhvc-sr-only', {
-      hasText: 'Pages by review decision',
+    const activityTable = page.locator('table.hhvc-sr-only', {
+      hasText: 'Pages decided over time',
     })
-    await expect(decisionTable).toContainText('Approved')
-    await expect(decisionTable).toContainText('Blocked')
+    await expect(activityTable).toContainText('2026-07-10')
+
+    // The ranking needs no parallel table: it is visible content, so one copy
+    // of those numbers serves both audiences.
+    await expect(
+      page.locator('.insights-card', { hasText: 'Checks needing attention' }).locator('table')
+    ).toHaveCount(0)
   })
 
-  test('the decision table agrees with the queue it summarises', async ({ page }) => {
+  test('the ranking names pages, and counts failures rather than passes', async ({ page }) => {
     await gotoFresh(page)
     await seedDecidedPages(page)
     await openWorkspaceTab(page, 'overview')
-    await expect(page.locator('.insights-chart svg')).toHaveCount(3)
 
-    // Two pages were seeded as decided, so the card heading must say so. This
-    // is the assertion that would catch the charts silently summarising a
-    // filtered view instead of the whole site.
-    await expect(page.locator('.insights-card').first()).toContainText('2 of 19 pages decided')
+    const ranked = page.locator('.insights-ranked-item').first()
+    // "N of M failing" — the bar chart this replaced drew a PASS rate, so a
+    // page at 95% rendered a nearly-full bar under a heading about attention.
+    await expect(ranked.locator('.insights-ranked-value')).toContainText(/\d+ of \d+ failing/)
+    await expect(ranked.locator('.insights-ranked-title')).not.toBeEmpty()
   })
 
-  test('charts survive the panel rebuilding on filter and search', async ({ page }) => {
+  test('cards survive the panel rebuilding on filter and search', async ({ page }) => {
     await gotoFresh(page)
     await seedDecidedPages(page)
     await openWorkspaceTab(page, 'overview')
-    await expect(page.locator('.insights-chart svg')).toHaveCount(3)
+    await expect(page.locator('.insights-chart svg')).toHaveCount(1)
+    const rankedBefore = await page.locator('.insights-ranked-item').count()
 
     // Every filter, sort and keystroke replaces the Overview panel's entire
     // innerHTML. The chart host is deliberately re-parented rather than
-    // rebuilt, so a filter must leave the drawn SVGs intact — and must not
-    // change them, since the charts describe the whole site, not the filter.
+    // rebuilt, so a filter must leave the drawn SVG intact — and must not
+    // change the numbers, since the cards describe the whole site, not the
+    // filtered view.
     await page.click('[data-queue-filter="Blocked"]')
-    await expect(page.locator('.insights-chart svg')).toHaveCount(3)
-    await expect(page.locator('.insights-card').first()).toContainText('2 of 19 pages decided')
+    await expect(page.locator('.insights-chart svg')).toHaveCount(1)
+    await expect(page.locator('.insights-ranked-item')).toHaveCount(rankedBefore)
 
     await page.fill('#reviewQueueSearch', 'mosquito')
-    await expect(page.locator('.insights-chart svg')).toHaveCount(3)
-    await expect(page.locator('.insights-card').first()).toContainText('2 of 19 pages decided')
+    await expect(page.locator('.insights-chart svg')).toHaveCount(1)
+    await expect(page.locator('.insights-ranked-item')).toHaveCount(rankedBefore)
   })
 
   test('shows an empty state for activity before anything is decided', async ({ page }) => {
@@ -98,7 +111,8 @@ test.describe('Overview insight charts', () => {
     await expect(activityCard.locator('.ds-empty')).toContainText('No decisions recorded yet')
     await expect(activityCard.locator('svg')).toHaveCount(0)
 
-    // The other two still draw, so an empty series does not take the row down.
-    await expect(page.locator('.insights-chart svg')).toHaveCount(2)
+    // The failing-checks card still renders, so an empty series does not take
+    // the row down with it.
+    await expect(page.locator('.insights-ranked')).toHaveCount(1)
   })
 })

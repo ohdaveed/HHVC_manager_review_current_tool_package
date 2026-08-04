@@ -6,13 +6,14 @@ const {
   settleDebounce,
   openWorkspaceTab,
   selectPage,
+  setDecision,
 } = require('./helpers')
 
 test.describe('manager review workflow', () => {
   test('decision, notes, and reviewer save to local review state', async ({ page }) => {
     await gotoFresh(page)
 
-    await page.selectOption('#reviewDecision', 'Approved')
+    await setDecision(page, 'Approved')
     await page.fill('#reviewNotes', 'Looks good overall')
     await page.fill('#reviewerInput', 'E2E Reviewer')
     await page.dispatchEvent('#reviewerInput', 'change')
@@ -27,7 +28,7 @@ test.describe('manager review workflow', () => {
   test('review fields are restored after a page reload', async ({ page }) => {
     await gotoFresh(page)
 
-    await page.selectOption('#reviewDecision', 'Revise and resubmit')
+    await setDecision(page, 'Revise and resubmit')
     await page.fill('#reviewNotes', 'Needs shorter summary')
     await page.dispatchEvent('#reviewNotes', 'change')
     await settleDebounce(page)
@@ -58,7 +59,7 @@ test.describe('manager review workflow', () => {
 
     // A decision set from the sidebar is a real review round, even though it
     // persists through the same autosave path as free-text fields.
-    await page.selectOption('#reviewDecision', 'Approved')
+    await setDecision(page, 'Approved')
     await settleDebounce(page)
 
     let history = (await readState(page)).pages.pestsTopic?.history || []
@@ -75,7 +76,7 @@ test.describe('manager review workflow', () => {
     expect(history).toHaveLength(1)
 
     // A second, different decision is a second round.
-    await page.selectOption('#reviewDecision', 'Blocked')
+    await setDecision(page, 'Blocked')
     await settleDebounce(page)
 
     history = (await readState(page)).pages.pestsTopic?.history || []
@@ -218,12 +219,12 @@ test.describe('manager review workflow', () => {
   test('page-picker navigation restores each page saved review fields', async ({ page }) => {
     await gotoFresh(page)
 
-    await page.selectOption('#reviewDecision', 'Approved')
+    await setDecision(page, 'Approved')
     await page.fill('#reviewNotes', 'Agency page reads well')
     await settleDebounce(page)
 
     await selectPage(page, 'payFee')
-    await page.selectOption('#reviewDecision', 'Blocked')
+    await setDecision(page, 'Blocked')
     await page.fill('#reviewNotes', 'Fee amount unconfirmed')
     await settleDebounce(page)
 

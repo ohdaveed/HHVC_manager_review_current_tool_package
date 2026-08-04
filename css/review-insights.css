@@ -5,17 +5,17 @@
    and their cards follow the theme through the same semantic layer everything
    else in the dashboard uses.
 
-   The charts themselves are drawn by ECharts into the .insights-chart boxes,
-   so this file only sizes and frames them. Colours inside the SVG come from
-   readTheme() in the JS, which reads the same custom properties declared in
-   css/theme.css — there is one source of truth for the palette, it is just
-   consumed from two places. */
+   The activity chart is drawn by ECharts into the .insights-chart box, so this
+   file only sizes and frames it. Colours inside the SVG come from readTheme()
+   in the JS, which reads the same custom properties declared in css/theme.css —
+   there is one source of truth for the palette, it is just consumed from two
+   places. The failing-checks card is plain markup and is styled here outright. */
 
 .insights-grid {
   display: grid;
-  /* Three cards side by side on a wide screen, stacking through two columns
-     to one as the workspace narrows. auto-fit rather than a fixed count so a
-     collapsed sidebar or a split window reflows instead of overflowing. */
+  /* Two cards side by side on a wide screen, stacking to one as the workspace
+     narrows. auto-fit rather than a fixed count so a collapsed sidebar or a
+     docked panel reflows instead of overflowing. */
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--ds-space-3);
   margin-bottom: var(--ds-space-4);
@@ -66,88 +66,69 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Fixed heights rather than aspect ratios: ECharts measures its container on
-   init, and a percentage height inside an auto-height grid item resolves to
-   zero, which silently produces an empty chart. Each height is tuned to what
-   that chart draws — a single stacked bar needs far less room than eight
-   labelled horizontal bars. */
+/* A fixed height rather than an aspect ratio: ECharts measures its container
+   on init, and a percentage height inside an auto-height grid item resolves to
+   zero, which silently produces an empty chart. */
 .insights-chart {
   width: 100%;
-  height: 64px;
-}
-
-.insights-chart[data-insights-chart='activity'] {
   height: 132px;
 }
 
-.insights-chart[data-insights-chart='checks'] {
-  height: 168px;
-}
-
 /* =====================================================================
-   Decision-mix legend
+   Failing-checks ranking
    =====================================================================
-   The stacked bar carries five series and the graphic itself is aria-hidden,
-   so this legend is what stops identity being conveyed by colour alone. It is
-   ordinary visible content, not a chart annotation.
+   This card was a horizontal bar chart until the bars stopped earning their
+   place: on real data every page sat between 86% and 95% passing, so eight bars
+   drew at eight indistinguishable lengths in one colour, under a heading about
+   what needs attention. The ranking was the signal the whole time.
 
-   Swatch colours are keyed off the decision slug rather than written inline by
-   the JS, so the palette stays entirely in css/theme.css — including its
-   dark-mode steps, which the JS never has to know about. */
+   It renders as ordinary visible content rather than an aria-hidden graphic
+   beside a screen-reader table, so there is one copy of these numbers and both
+   audiences read the same one. */
 
-.insights-legend {
+.insights-ranked {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--ds-space-1) var(--ds-space-3);
-  margin: var(--ds-space-2) 0 0;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
   padding: 0;
+  /* The rank is carried by document order and by the count on each row, so the
+     list markers would only add noise — <ol> stays for the semantics. */
   list-style: none;
+  /* A hairline between rows, drawn by the gap over the container's own colour,
+     so rows read as a table without borders on every cell. */
+  background: var(--border-subtle, var(--border-default));
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-2, 4px);
+  overflow: hidden;
 }
 
-.insights-legend-item {
+.insights-ranked-item {
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  /* Labels wear text tokens, never the series colour — the swatch beside them
-     carries the identity. Coloured text would fail contrast at this size and
-     make the label itself a second, weaker colour encoding. */
-  color: var(--text-secondary);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ds-space-2);
+  padding: 6px var(--ds-space-2);
+  background: var(--surface-panel);
+  font-size: var(--ds-text-label);
 }
 
-.insights-swatch {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 2px;
-  /* Fixed size against the flex parent: without this the swatch is squashed
-     to nothing when several legend items wrap onto one line. */
-  flex: 0 0 auto;
-  background: var(--viz-neutral);
-}
-
-.insights-swatch[data-decision='needs-review'] {
-  background: var(--viz-decision-pending);
-}
-.insights-swatch[data-decision='approved'] {
-  background: var(--viz-decision-approved);
-}
-.insights-swatch[data-decision='approved-with-edits'] {
-  background: var(--viz-decision-edits);
-}
-.insights-swatch[data-decision='revise-and-resubmit'] {
-  background: var(--viz-decision-revise);
-}
-.insights-swatch[data-decision='blocked'] {
-  background: var(--viz-decision-blocked);
-}
-
-.insights-legend-count {
+.insights-ranked-title {
   color: var(--text-primary);
+  font-weight: 600;
+  /* Truncate rather than wrap: the value on the right is the comparable part,
+     and a wrapping title would break the row rhythm the ranking depends on. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insights-ranked-value {
+  flex: none;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-/* The empty state sits where a chart would, so a card with no data keeps the
-   grid's rhythm instead of collapsing to its heading. */
 .insights-card .ds-empty {
   display: flex;
   align-items: center;

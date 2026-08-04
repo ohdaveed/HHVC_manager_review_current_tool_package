@@ -7,7 +7,7 @@
 // than a trivial number of them) is what separates "a download happened" from
 // "a usable image was produced".
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, focusMockPage } = require('./helpers')
+const { gotoFresh, focusMockPage, openAdvancedSection } = require('./helpers')
 
 // PNG files always begin with this 8-byte signature.
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
@@ -20,8 +20,13 @@ async function readDownload(download) {
 }
 
 test.describe('mockup PNG export', () => {
-  test('the toolbar button downloads a PNG of the current mockup', async ({ page }) => {
+  test('the Help panel button downloads a PNG of the current mockup', async ({ page }) => {
     await gotoFresh(page)
+    // These two buttons used to sit in .canvas-toolbar beside the decision chip
+    // and Previous/Next. Saving a picture for someone outside the review is a
+    // real task but an occasional one, so it moved into Help's advanced
+    // sections; the `p` shortcut is unchanged and still the fast path.
+    await openAdvancedSection(page, 'Save mockups as images')
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),
@@ -52,81 +57,23 @@ test.describe('mockup PNG export', () => {
     expect(bytes.subarray(0, 8).equals(PNG_MAGIC)).toBe(true)
   })
 
-  test('the export omits the Karl tag toggle banner', async ({ page }) => {
-    await gotoFresh(page)
+  /* A test here used to prove the capture EXCLUDED the Karl tag banner — the
+     block carrying the "Show Karl tags" switch, the colour legend and a
+     "What are Karl tags?" disclosure, which sat inside figure.browser-shell and
+     so inside the capture target. It did that by decoding the PNG and scanning
+     the top of the image for rows of the banner's flat tint, because three
+     cheaper assertions all passed even when the banner WAS captured.
 
-    // The banner carrying the "Show Karl tags" switch and the tag legend sits
-    // INSIDE figure.browser-shell — it has to, so the switch is next to what it
-    // controls — which puts it inside the capture target. It is tool chrome, so
-    // index.html marks it data-export-exclude.
-    //
-    // This has to be checked against pixels, and by searching for the banner
-    // rather than by looking where it ought to be. Three cheaper assertions were
-    // tried and all three pass even when the banner IS captured:
-    //
-    //   - Asserting the attribute is present only restates the markup.
-    //   - Asserting on the PNG's height proves nothing: modern-screenshot sizes
-    //     the output canvas from the SOURCE node's box, so excluding a child
-    //     shortens the drawn content but leaves the canvas exactly as tall
-    //     (measured: 13508px either way).
-    //   - Sampling one pixel at the banner's shell-relative position misses,
-    //     because the serialiser draws with its own offset — image coordinates
-    //     are not shell coordinates.
-    //
-    // What is left is a property of the whole image: the banner is a wide band
-    // of one flat tint, and nothing else near the top of a mockup uses that
-    // colour. So scan the top of the image for rows that are mostly that tint.
-    // Measured: 18 such rows when the banner is captured, 0 when it is excluded.
-    const bannerBackground = await page.evaluate(
-      () =>
-        window.getComputedStyle(document.querySelector('.karl-page-tags-banner')).backgroundColor
-    )
-
-    const [download] = await Promise.all([
-      page.waitForEvent('download'),
-      page.click('[data-mockup-export="current"]'),
-    ])
-    const bytes = await readDownload(download)
-
-    // Decode in the browser rather than adding a PNG library to the repo for one
-    // assertion — the page already has canvas.
-    const bandedRows = await page.evaluate(
-      async ({ base64, background }) => {
-        const [r0, g0, b0] = background.match(/\d+/g).map(Number)
-        const blob = await (await fetch(`data:image/png;base64,${base64}`)).blob()
-        const bitmap = await createImageBitmap(blob)
-        const canvas = document.createElement('canvas')
-        canvas.width = bitmap.width
-        canvas.height = bitmap.height
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(bitmap, 0, 0)
-
-        // Only the top of the image: the banner sits directly under the browser
-        // bar, and limiting the scan keeps unrelated tinted blocks further down
-        // the page from ever being mistaken for it.
-        const top = Math.min(1600, bitmap.height)
-        const data = ctx.getImageData(0, 0, bitmap.width, top).data
-        let banded = 0
-        for (let y = 0; y < top; y += 8) {
-          let hits = 0
-          let samples = 0
-          for (let x = 0; x < bitmap.width; x += 16) {
-            const i = (y * bitmap.width + x) * 4
-            samples += 1
-            if (data[i] === r0 && data[i + 1] === g0 && data[i + 2] === b0) hits += 1
-          }
-          if (hits / samples > 0.5) banded += 1
-        }
-        return banded
-      },
-      { base64: bytes.toString('base64'), background: bannerBackground }
-    )
-
-    expect(bandedRows).toBe(0)
-  })
+     The banner is gone from the mockup entirely — about 495px of permanent
+     reference material above every page — and the switch it carried now lives
+     in the toolbar, outside .browser-shell. There is nothing left to exclude,
+     and "the element does not exist in the capture target" is a stronger
+     guarantee than "the serialiser skips it". The Karl-tag legend's new home in
+     Help is asserted in tests/e2e/workspace-panels.spec.js. */
 
   test('the export omits Karl tags and restores them afterwards', async ({ page }) => {
     await gotoFresh(page)
+    await openAdvancedSection(page, 'Save mockups as images')
 
     // Karl tags are on by default; they are review scaffolding and must not
     // appear in a deliverable handed to anyone outside the review.

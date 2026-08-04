@@ -8,7 +8,7 @@
      2. SEMANTIC TOKENS       — this file. What a thing IS (`--surface-panel`,
         `--status-blocked-fg`), not what colour it happens to be.
      3. COMPONENT CSS         — css/styles.css, css/ux-improvements.css,
-        css/dashboard.css, css/interactive-sitemap.css.
+        css/dashboard.css, css/ai-assist.css.
 
    Retheming should mean editing this file only. Every token carries a
    `var(fallback)` so the file still renders sensibly if the primitives
@@ -310,7 +310,7 @@
 
      Every stylesheet in this repo already reads `--sfds-*` directly —
      hundreds of declarations across styles.css, ux-improvements.css and
-     interactive-sitemap.css. Inverting the primitives here means all of
+     ai-assist.css. Inverting the primitives here means all of
      them become theme-aware without a single component rule changing,
      which is exactly the "retheme by touching tokens only" property this
      layer is supposed to have. Overriding only the semantic tokens would

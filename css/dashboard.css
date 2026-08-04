@@ -130,15 +130,86 @@
    tabs ended up with hover and focus styled from different files. If you
    are changing one of these, this is the only place to look. */
 
+/* =====================================================================
+   The docked review workspace
+   =====================================================================
+   This panel used to be the last child of .canvas, below the mockup. The
+   mockup runs to about 8,800px, so the workspace began around y=9,400 in a
+   10,300px document — more than nine screenfuls down. A reviewer could never
+   see the page and the instruments judging it at the same time, which was
+   sharpest on the Page checks tab: it scores THE PAGE CURRENTLY IN THE MOCKUP
+   and rendered that score nine screens away from it.
+
+   It is now a third grid column in .app, sticky to the viewport, so the page
+   and the panel are side by side. Almost every redundancy this redesign
+   removed existed because information had to be repeated in the places a
+   reviewer could actually see; co-visibility is what makes one copy enough. */
 .review-workspace {
-  width: 100%;
-  max-width: var(--page-max);
-  margin: var(--ds-space-5) auto 0;
-  border: 1px solid var(--border-default);
-  border-radius: var(--ds-radius-lg);
+  border-left: 1px solid var(--border-default);
   background: var(--surface-panel);
-  box-shadow: var(--ds-shadow-2);
-  overflow: hidden;
+  /* Sticky rather than fixed so it participates in the grid and cannot overlap
+     the canvas. Its own scroll container, because the mockup beside it is far
+     taller than the viewport and the two must scroll independently. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* `display: flex` above is a class selector and therefore beats the UA
+   stylesheet's `[hidden] { display: none }`, which is where the attribute's
+   whole effect lives. Without this the panel stayed on screen after
+   setWorkspaceOpen(false) set the attribute — "Hide workspace" and the `w`
+   shortcut both appeared to do nothing. Any element that both carries `hidden`
+   and declares its own `display` needs this pairing. */
+.review-workspace[hidden] {
+  display: none;
+}
+
+/* The grid only grows a third column while the workspace is actually open;
+   js/ux-improvements-workspace.js toggles this class alongside the panel's
+   hidden attribute. minmax() rather than a fixed width so the panel gives room
+   back to the mockup on a smaller screen instead of squeezing it. */
+.app.workspace-docked {
+  grid-template-columns: 370px minmax(0, 1fr) minmax(340px, 30vw);
+}
+
+.app.sidebar-collapsed.workspace-docked {
+  grid-template-columns: 0px minmax(0, 1fr) minmax(340px, 30vw);
+}
+
+/* Below this the three columns stop fitting: the mockup is a fixed-ish page
+   design and squeezing it to make room misrepresents the thing under review.
+   The workspace returns to its old position under the canvas, spanning the
+   full width — the original layout, kept as the narrow-screen fallback rather
+   than as the default. */
+@media (max-width: 1400px) {
+  .app.workspace-docked,
+  .app.sidebar-collapsed.workspace-docked {
+    grid-template-columns: 370px minmax(0, 1fr);
+  }
+
+  .app.sidebar-collapsed.workspace-docked {
+    grid-template-columns: 0px minmax(0, 1fr);
+  }
+
+  /* Column 2, NOT `1 / -1`. Spanning both columns puts the panel underneath
+     the sidebar, which is `position: sticky; height: 100vh` — so scrolling
+     slid the sidebar over the queue's left edge and covered the row titles.
+     Axe caught it before a human did: 57 queue-row cells came back as
+     "background could not be determined, partially obscured by another
+     element". Column 2 is where the panel used to sit as the last child of
+     .canvas, which is the layout this fallback is restoring. */
+  .review-workspace {
+    grid-column: 2;
+    position: static;
+    height: auto;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--border-default);
+  }
 }
 
 .review-workspace-tabs {
@@ -416,4 +487,53 @@
 .mockup-export-actions button[disabled] {
   opacity: 0.6;
   cursor: progress;
+}
+
+/* =====================================================================
+   Advanced sections inside Help
+   =====================================================================
+   AI assist and the stored-data diagnostics used to be tabs. Both depend on
+   server.ts, which the static Netlify deploy has no runtime for, so on the
+   build managers actually open they were two permanently-empty panels holding
+   two of six top-level slots. They are collapsed <details> at the end of Help
+   now — present and reachable, but not competing with the two panels a
+   reviewer uses to do the work. */
+
+.review-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+  margin-top: var(--ds-space-5);
+  padding-top: var(--ds-space-4);
+  border-top: 1px solid var(--border-default);
+}
+
+.review-advanced-group {
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-2, 4px);
+  background: var(--surface-sunken);
+}
+
+.review-advanced-group > summary {
+  padding: var(--ds-space-3);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.review-advanced-group > summary:hover {
+  color: var(--text-primary);
+}
+
+.review-advanced-group[open] > summary {
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+}
+
+/* The panels inside render their own padded surfaces, so this only supplies
+   the gutter between the disclosure edge and their content. */
+.review-advanced-group > div {
+  padding: var(--ds-space-3);
+  background: var(--surface-panel);
 }

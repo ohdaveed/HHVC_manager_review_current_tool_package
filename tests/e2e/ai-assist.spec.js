@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test')
 const {
   gotoFresh,
-  openWorkspaceTab,
+  openAdvancedSection,
   focusMockPage,
   recordToasts,
   readRecordedToasts,
@@ -105,14 +105,14 @@ test.describe('AI assist panel', () => {
     await gotoFresh(page)
     await expect(page.locator('#aiAssistPanel')).toHaveCount(0)
 
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
 
     await expect(page.locator('#aiAssistPanel')).toBeVisible()
   })
 
   test('explains what to configure when no server is set', async ({ page }) => {
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
 
     await expect(page.locator('#aiAssistPanel')).toContainText('Enter a server URL and token')
     // The form must be inert until it can actually do something.
@@ -129,7 +129,7 @@ test.describe('AI assist panel', () => {
       },
     })
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await page.fill('#aiAssistApiUrl', AI_ORIGIN)
     await page.fill('#aiAssistApiToken', 'test-token')
     await page.click('#aiAssistSaveSettings')
@@ -144,7 +144,7 @@ test.describe('AI assist panel', () => {
   test('enables the form once the server reports a configured provider', async ({ page }) => {
     await stubAiApi(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     await expect(page.locator('#aiAssistGenerate')).toBeEnabled()
@@ -155,7 +155,7 @@ test.describe('AI assist panel', () => {
     // changes nothing.
     await stubAiApi(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     await expect(page.locator('#aiAssistProvider')).toHaveCount(0)
@@ -164,7 +164,7 @@ test.describe('AI assist panel', () => {
   test('offers a provider picker when the server reports two', async ({ page }) => {
     await stubAiApi(page, { capabilities: bothProviders() })
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     const picker = page.locator('#aiAssistProvider')
@@ -184,7 +184,7 @@ test.describe('AI assist panel', () => {
       generate: { ...VALID_RESULT, provider: 'gemini', model: 'gemini-2.5-pro' },
     })
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     await page.selectOption('#aiAssistProvider', 'gemini')
@@ -206,7 +206,7 @@ test.describe('AI assist panel', () => {
   test('refuses to send an empty prompt', async ({ page }) => {
     await stubAiApi(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     await page.click('#aiAssistGenerate')
@@ -217,7 +217,7 @@ test.describe('AI assist panel', () => {
   test('renders a draft, its disclosure, and a preview', async ({ page }) => {
     await stubAiApi(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     await page.fill('#aiAssistPrompt', 'Draft a pest reporting page.')
@@ -244,7 +244,7 @@ test.describe('AI assist panel', () => {
       },
     })
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
     await page.fill('#aiAssistPrompt', 'Draft a page.')
     await page.click('#aiAssistGenerate')
@@ -261,7 +261,7 @@ test.describe('AI assist panel', () => {
       generate: { error: 'The model declined this request.', category: 'cyber' },
     })
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
     await page.fill('#aiAssistPrompt', 'Something declined.')
     await page.click('#aiAssistGenerate')
@@ -272,7 +272,7 @@ test.describe('AI assist panel', () => {
   test('never writes the API token into the review state blob', async ({ page }) => {
     await stubAiApi(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     // The review-state blob round-trips through the shareable CSV/JSON export
@@ -291,7 +291,7 @@ test.describe('AI assist panel', () => {
     await gotoFresh(page)
     const titleBefore = await page.locator('#mockPage h1').textContent()
 
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
     await page.fill('#aiAssistPrompt', 'Draft a page.')
     await page.click('#aiAssistGenerate')
@@ -331,7 +331,7 @@ test.describe('AI assist panel', () => {
     await gotoFresh(page)
     const keyBefore = await page.locator('#pageSelect').inputValue()
 
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
     await page.fill('#aiAssistPrompt', 'Draft a page with a related link.')
     await page.click('#aiAssistGenerate')
@@ -356,7 +356,7 @@ test.describe('AI assist panel', () => {
       generate: { error: 'Something broke upstream.' },
     })
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     await configure(page)
 
     const prompt = 'Draft an Information page about bed bug reporting.'
@@ -377,7 +377,7 @@ test.describe('AI assist panel', () => {
     // re-read immediately before rendering, not just when Save was clicked.
     await stubAiApi(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
     // Configure FIRST so the prompt field is already enabled. Otherwise
     // page.fill blocks until the field enables — which only happens after the
     // very re-render this test is about, so the race never occurs.
@@ -430,7 +430,7 @@ test.describe('AI assist panel', () => {
   test('saving AI settings shows a confirmation toast', async ({ page }) => {
     await recordToasts(page)
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'assist')
+    await openAdvancedSection(page, 'Draft content with AI')
 
     await page.fill('#aiAssistApiUrl', 'https://example.test')
     await page.fill('#aiAssistApiToken', 'a-test-token')
@@ -446,14 +446,19 @@ test.describe('AI assist panel', () => {
     expect(await readRecordedToasts(page)).toMatch(/AI settings saved/i)
   })
 
-  test('opens from the keyboard shortcut', async ({ page }) => {
+  test('is reached through Help rather than a tab of its own', async ({ page }) => {
     await gotoFresh(page)
     // Shortcuts only fire when focus is in a shortcut context; without this
     // the test races the first-run onboarding for focus. See focusMockPage.
     await focusMockPage(page)
-    await page.keyboard.press('4')
+    // It had the 4 key while it was a tab. It is inert without a configured
+    // server — which the Netlify deploy has no runtime for — so it is a
+    // collapsed section in Help now.
+    await page.keyboard.press('3')
 
-    await expect(page.locator('[data-workspace-panel="assist"]')).toBeVisible()
-    await expect(page.locator('#aiAssistPanel')).toBeVisible()
+    await expect(page.locator('[data-workspace-panel="help"]')).toBeVisible()
+    await expect(page.locator('[data-workspace-tab="assist"]')).toHaveCount(0)
+    // Mounted on Help opening, so expanding never shows an empty box.
+    await expect(page.locator('#aiAssistPanel')).toHaveCount(1)
   })
 })

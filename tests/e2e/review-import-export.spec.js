@@ -1,5 +1,6 @@
 const { test, expect } = require('@playwright/test')
 const AxeBuilder = require('@axe-core/playwright').default
+const { setDecision } = require('./helpers')
 
 test.describe('HHVC manager review tool', () => {
   test('loads the HHVC agency page', async ({ page }) => {
@@ -23,7 +24,7 @@ test.describe('HHVC manager review tool', () => {
     await page.goto('/')
     await page.evaluate(() => localStorage.removeItem('hhvcManagerReviewState:v1'))
 
-    await page.selectOption('#reviewDecision', 'Approved')
+    await setDecision(page, 'Approved')
     await page.fill('#reviewNotes', 'E2E round-trip note')
     await page.fill('#reviewerInput', 'Playwright Tester')
     await page.dispatchEvent('#reviewNotes', 'change')

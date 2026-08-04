@@ -49,17 +49,18 @@ test.describe('keyboard shortcuts', () => {
     await page.keyboard.press('2')
     await expect(page.locator('#reviewWorkspaceTabChecks')).toHaveAttribute('aria-selected', 'true')
 
-    // The number keys run left to right across the tab strip: 4 is AI assist,
-    // 5 is Tool status, 6 is Help. Help is deliberately last, so it is the
-    // digit that moves whenever a tab is added.
-    await page.keyboard.press('4')
-    await expect(page.locator('#reviewWorkspaceTabAssist')).toHaveAttribute('aria-selected', 'true')
-
-    await page.keyboard.press('5')
-    await expect(page.locator('#reviewWorkspaceTabOps')).toHaveAttribute('aria-selected', 'true')
-
-    await page.keyboard.press('6')
+    // The number keys run left to right across the tab strip, which is three
+    // tabs wide now: 1 Overview, 2 Page checks, 3 Help. Help is deliberately
+    // last, so it is the digit that moves whenever the strip changes — it was
+    // on 6 while Sitemap, AI assist and Tool status each held a slot.
+    await page.keyboard.press('3')
     await expect(page.locator('#reviewWorkspaceTabHelp')).toHaveAttribute('aria-selected', 'true')
+
+    await page.keyboard.press('1')
+    await expect(page.locator('#reviewWorkspaceTabOverview')).toHaveAttribute(
+      'aria-selected',
+      'true'
+    )
 
     await focusMockPage(page)
     await page.keyboard.press('w')

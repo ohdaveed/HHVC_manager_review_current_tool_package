@@ -6,7 +6,7 @@
 // records, and above all that its one destructive button asks first, deletes
 // exactly what it named, and leaves everything else alone.
 const { test, expect } = require('@playwright/test')
-const { gotoFresh, readState, openWorkspaceTab, focusMockPage } = require('./helpers')
+const { gotoFresh, readState, openAdvancedSection, focusMockPage } = require('./helpers')
 
 /** Seed a live record plus two for pages the site no longer has. */
 async function seedWithOrphans(page) {
@@ -25,23 +25,30 @@ async function seedWithOrphans(page) {
   await page.waitForSelector('#mockPage h1')
 }
 
-test.describe('Tool status tab', () => {
-  test('opens from the 5 shortcut, with Help last on 6', async ({ page }) => {
+test.describe('Stored review data (Help)', () => {
+  test('is a collapsed section at the end of Help, not a tab of its own', async ({ page }) => {
     await gotoFresh(page)
     // Shortcuts are gated on focus being in a shortcut context.
     await focusMockPage(page)
 
-    await page.keyboard.press('5')
-    await expect(page.locator('[data-workspace-panel="ops"]')).toBeVisible()
-
-    // Help stays last in the strip, so it is the digit that moves.
-    await page.keyboard.press('6')
+    // It had the 5 key while it was a tab. There is no tab and no digit now —
+    // everything it reports is "not configured" or "none" on the deploy
+    // managers use, which is not worth one of three top-level slots.
+    await page.keyboard.press('3')
     await expect(page.locator('[data-workspace-panel="help"]')).toBeVisible()
+    await expect(page.locator('[data-workspace-tab="ops"]')).toHaveCount(0)
+
+    const group = page.locator(
+      '.review-advanced-group:has(summary:text-is("Stored review data on this browser"))'
+    )
+    await expect(group).toBeVisible()
+    // Rendered but closed: a reviewer opens it deliberately.
+    await expect(group).not.toHaveAttribute('open', '')
   })
 
   test('reports connection status when nothing is configured', async ({ page }) => {
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     // "Not configured" is a normal answer for both optional backends, not an
     // error state.
@@ -52,7 +59,7 @@ test.describe('Tool status tab', () => {
   test('names the records whose pages no longer exist', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     const finding = page.locator('.ops-finding', { hasText: 'pages that no longer exist' })
     await expect(finding).toContainText('2 found')
@@ -64,7 +71,7 @@ test.describe('Tool status tab', () => {
 
   test('says so plainly when there is nothing wrong', async ({ page }) => {
     await gotoFresh(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     const finding = page.locator('.ops-finding', { hasText: 'pages that no longer exist' })
     await expect(finding).toContainText('None')
@@ -75,7 +82,7 @@ test.describe('Tool status tab', () => {
   test('removing orphans asks first and deletes only those records', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     const seen = []
     page.on('dialog', (dialog) => {
@@ -100,7 +107,7 @@ test.describe('Tool status tab', () => {
   test('measures the stored blob through the store key, not a hardcoded copy', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     // A second hardcoded copy of the versioned storage key would not be bumped
     // along with the real one, and this panel would then read a key nothing
@@ -114,7 +121,7 @@ test.describe('Tool status tab', () => {
   test('does not delete anything when no confirmation is possible', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     // The inverted default — proceeding when the prompt cannot be shown —
     // reads as harmless but makes the one irreversible path in this tool run
@@ -142,7 +149,7 @@ test.describe('Tool status tab', () => {
   test('cancelling the prompt changes nothing', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     page.on('dialog', (dialog) => dialog.dismiss())
     await page.click('[data-ops-action="prune-orphans"]')
@@ -158,7 +165,7 @@ test.describe('Tool status tab', () => {
   test('re-derives the orphan list at click time, not from what was rendered', async ({ page }) => {
     await gotoFresh(page)
     await seedWithOrphans(page)
-    await openWorkspaceTab(page, 'ops')
+    await openAdvancedSection(page, 'Stored review data on this browser')
 
     // The panel can sit open while a sync pull or an import changes saved
     // state underneath it. Deleting the list it happened to render would then
