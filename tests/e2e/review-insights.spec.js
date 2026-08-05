@@ -86,6 +86,14 @@ test.describe('Overview insight charts', () => {
     await expect(page.locator('.insights-chart svg')).toHaveCount(1)
     const rankedBefore = await page.locator('.insights-ranked-item').count()
 
+    // Capture the rendered VALUES, not just how many rows there are. A count
+    // alone lets every page name and every "X of Y failing" figure change while
+    // the test still passes — which would miss exactly the regression this test
+    // exists to catch, since the claim being tested is that the numbers are
+    // unaffected rather than that the rows are still present.
+    const activityBefore = await page.locator('.insights-card table.hhvc-sr-only').innerText()
+    const rankedTextBefore = await page.locator('.insights-ranked').innerText()
+
     // Every filter, sort and keystroke replaces the Overview panel's entire
     // innerHTML. The chart host is deliberately re-parented rather than
     // rebuilt, so a filter must leave the drawn SVG intact — and must not
@@ -94,10 +102,14 @@ test.describe('Overview insight charts', () => {
     await page.click('[data-queue-filter="Blocked"]')
     await expect(page.locator('.insights-chart svg')).toHaveCount(1)
     await expect(page.locator('.insights-ranked-item')).toHaveCount(rankedBefore)
+    expect(await page.locator('.insights-card table.hhvc-sr-only').innerText()).toBe(activityBefore)
+    expect(await page.locator('.insights-ranked').innerText()).toBe(rankedTextBefore)
 
     await page.fill('#reviewQueueSearch', 'mosquito')
     await expect(page.locator('.insights-chart svg')).toHaveCount(1)
     await expect(page.locator('.insights-ranked-item')).toHaveCount(rankedBefore)
+    expect(await page.locator('.insights-card table.hhvc-sr-only').innerText()).toBe(activityBefore)
+    expect(await page.locator('.insights-ranked').innerText()).toBe(rankedTextBefore)
   })
 
   test('shows an empty state for activity before anything is decided', async ({ page }) => {
