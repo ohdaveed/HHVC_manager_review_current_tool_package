@@ -1476,16 +1476,11 @@ a:focus {
 }
 
 /* Manager review package additions */
-.manager-review .review-page-label {
-  border: 1px solid var(--sfds-border);
-  border-radius: var(--radius);
-  background: var(--sfds-white);
-  padding: 0.75rem 0.85rem;
-  margin: 0.75rem 0 1rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--sfds-slate-1);
-}
+/* `.review-page-label` is gone with its element, alongside `.page-badge` and
+   `.karl-help-nested` further down: it was the "Current page:" line under the
+   sidebar picker, the third printing of the open page's name. The badge and
+   the nested help were tombstoned when they were cut; this rule was missed and
+   styled nothing for a release. */
 .review-actions {
   display: grid;
   gap: 0.55rem;

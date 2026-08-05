@@ -80,13 +80,18 @@ endpoints, so both AI paths are covered without a key or a paid call). **The lis
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-fourteen spec files — thirteen UI-driven ones covering navigation, editor
-panel, review workflow, review queue, review-queue undo, stored review data,
-import/export, keyboard shortcuts, workspace panels, accessibility, AI
-assist, mockup PNG export, and the Overview insight cards, plus the original
-`review-import-export` API-level
-round-trip — sharing plain helper functions in
-`tests/e2e/helpers.js`, no fixture framework). `gotoFresh()` waits on
+thirteen spec files, all UI-driven — navigation, editor panel, review
+workflow, review queue, review-queue undo, stored review data, import/export,
+keyboard shortcuts, workspace panels, accessibility, AI assist, mockup PNG
+export, and the Overview insight cards — sharing plain helper functions in
+`tests/e2e/helpers.js`, no fixture framework. A fourteenth,
+`review-import-export.spec.js`, was **deleted rather than repaired**: its two
+round-trip tests hand-rolled the merge inside `page.evaluate()` rather than
+calling `importReviewStateBackup()`, so reverting that function to the
+wholesale replace that once destroyed reviews left them passing. Its other two
+tests duplicated existing coverage, one of them a weaker copy of the
+accessibility scan with `color-contrast` disabled. `import-export.spec.js` is
+the real coverage). `gotoFresh()` waits on
 `window.reviewKeyboardShortcuts.ready`, not just the sticky bar, so a test
 cannot press a global shortcut before the `keydown` listener exists. In a sandbox with a
 pre-installed Chromium, point Playwright at it instead of downloading:

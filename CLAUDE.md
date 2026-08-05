@@ -37,7 +37,7 @@ bun run start                 # production-like: build:netlify then serve dist/ 
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # bun test over the 22 unit-test files in tests/ (528 tests)
-bun run test:e2e              # playwright test (109 specs across 14 files in tests/e2e/)
+bun run test:e2e              # playwright test (105 specs across 13 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -96,13 +96,20 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — fourteen spec files
-(109 specs): thirteen UI-driven (navigation, editor panel, review workflow,
-review queue, review-queue undo, stored review data, import/export, keyboard
-shortcuts, workspace panels, accessibility, AI assist, mockup PNG export,
-Overview insight cards) plus the
-original API-level `review-import-export` round-trip, sharing plain helper
-functions in `tests/e2e/helpers.js` (no fixture framework).
+`bun run test:e2e` drives Playwright over `tests/e2e/` — thirteen spec files
+(105 specs), all UI-driven: navigation, editor panel, review workflow, review
+queue, review-queue undo, stored review data, import/export, keyboard
+shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
+Overview insight cards. They share plain helper functions in
+`tests/e2e/helpers.js` (no fixture framework).
+A fourteenth file, `review-import-export.spec.js`, was deleted rather than
+repaired. Its two round-trip tests hand-rolled the merge inside
+`page.evaluate()` instead of calling `importReviewStateBackup()`, so reverting
+that function to the wholesale replace that once destroyed reviews left them
+green — and its other two tests duplicated `keyboard-shortcuts.spec.js` and a
+**weaker** copy of `accessibility.spec.js`'s scan with `color-contrast`
+disabled. The real coverage is `import-export.spec.js`, which drives both
+paths through the file input and asserts `history.at(-1).updated_by`.
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
 sticky bar: the bar is mounted early by `js/ux-improvements.js`, so waiting on
 it alone let a test press a global shortcut before `js/keyboard-shortcuts.js`
