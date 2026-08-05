@@ -3,12 +3,18 @@
    Split from js/review-insights.js so it can be loaded on demand. This is the
    only module that imports ECharts, which is what lets Vite emit it as its own
    chunk: the library is ~530KB raw, and pulling it into the main bundle would
-   more than double the initial download for three charts most reviewers never
+   more than double the initial download for a chart most reviewers never
    scroll to. js/review-insights.js dynamic-imports this module the first time
    the Overview tab renders.
 
+   Only the activity line survives here — the decision-mix and checks cards were
+   cut (see js/review-insights.js), so ECharts is now carrying a single chart.
+   That is still worth deferring rather than inlining, but it is a thin
+   justification for the dependency; a hand-drawn SVG line would remove it
+   outright, which is a build decision rather than a UX one and is left alone.
+
    Rendering is the SVG renderer, not the default canvas one. SVG costs a
-   little performance that three small charts will never notice, and buys
+   little performance that one small chart will never notice, and buys
    output that inherits the page's font rendering, stays sharp at any zoom, and
    survives DOM serialisation — the last one keeping these charts compatible
    with the capture in js/mockup-image-export.js should they ever be included
@@ -18,16 +24,17 @@
    it stays a pure "draw this model into these boxes" module. */
 
 import * as echarts from 'echarts/core'
-import { BarChart, LineChart } from 'echarts/charts'
+import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
 import { escapeHtml } from './utils.js'
 
-// Register only what these three charts use, so the rest of ECharts is
-// tree-shaken out of the chunk rather than merely deferred.
-echarts.use([BarChart, LineChart, GridComponent, TooltipComponent, SVGRenderer])
+// Register only what this chart uses, so the rest of ECharts is tree-shaken out
+// of the chunk rather than merely deferred. BarChart went with the decision-mix
+// and checks cards — see js/review-insights.js for why both were cut.
+echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer])
 
-/** Shared styling, so the three charts read as one family. */
+/** Shared styling, kept as its own function so a second chart can rejoin it. */
 function baseOption(theme) {
   return {
     animation: false,
@@ -38,53 +45,6 @@ function baseOption(theme) {
       borderColor: theme.border,
       textStyle: { color: theme.text, fontSize: 12 },
     },
-  }
-}
-
-/**
- * Decision mix: one horizontal bar split into the five decisions.
- *
- * A stacked bar rather than a pie. The question is "how much of the site is in
- * each state" — a part-to-whole comparison along one axis, which is the thing
- * a pie is worst at and a single stacked bar is best at, especially with five
- * categories where several are usually zero.
- * @param {object} model
- * @param {object} theme
- * @returns {object} ECharts option
- */
-function decisionOption(model, theme) {
-  const present = model.decisionMix.filter((item) => item.count > 0)
-  return {
-    ...baseOption(theme),
-    grid: { top: 8, bottom: 8, left: 0, right: 0 },
-    xAxis: { type: 'value', max: model.total || 1, show: false },
-    yAxis: { type: 'category', data: [''], show: false },
-    tooltip: {
-      ...baseOption(theme).tooltip,
-      // ECharts renders a formatter's return value as HTML. Everything
-      // interpolated here is escaped for the same reason the queue table and
-      // the hidden data tables are: a decision string is saved state, and
-      // buildDecisionMix deliberately counts unrecognised values rather than
-      // dropping them, so an imported backup can put arbitrary text here.
-      formatter: (params) =>
-        `${escapeHtml(params.seriesName)}: ${escapeHtml(params.value)} of ${escapeHtml(model.total)}`,
-    },
-    series: present.map((item) => ({
-      name: item.decision,
-      type: 'bar',
-      stack: 'mix',
-      barWidth: 28,
-      data: [item.count],
-      itemStyle: {
-        color: theme.decision[item.decision] || theme.muted,
-        // A 2px gap in the surface colour between touching segments. Abutting
-        // fills are judged against each other rather than against the surface,
-        // and adjacent chart colours are nowhere near 3:1 apart; the separator
-        // means each segment contrasts against it instead of its neighbour.
-        borderColor: theme.surface,
-        borderWidth: 2,
-      },
-    })),
   }
 }
 
@@ -138,82 +98,6 @@ function activityOption(model, theme) {
 }
 
 /**
- * Checks pass rate, worst pages first.
- *
- * Draws only the lowest `limit` pages. Nineteen horizontal bars would make the
- * card taller than the table it sits above, and the bottom of that list — the
- * pages already passing everything — is exactly the part a manager does not
- * need to look at. The card heading states the cap and the hidden data table
- * carries every page, so nothing is silently dropped.
- * @param {object} model
- * @param {object} theme
- * @param {number} limit
- * @returns {object} ECharts option
- */
-function checksOption(model, theme, limit) {
-  // checksFailing, not checks: this card is titled "Checks needing attention",
-  // and slicing the full list pads it out to `limit` with pages sitting at
-  // 100%. On a site where everything passes that produced eight green bars
-  // under a heading about problems.
-  const visible = model.checksFailing.slice(0, limit).reverse()
-  return {
-    ...baseOption(theme),
-    grid: { top: 4, bottom: 8, left: 4, right: 36, containLabel: true },
-    // The value axis carries no labels: every bar is already labelled with its
-    // own percentage on the right, so a second scale along the bottom is
-    // duplicate ink that also crowds into an unreadable "0%20%40%" run at this
-    // card width.
-    xAxis: { type: 'value', max: 100, axisLabel: { show: false }, splitLine: { show: false } },
-    yAxis: {
-      type: 'category',
-      data: visible.map((item) => item.title),
-      axisLine: { show: false },
-      axisTick: { show: false },
-      axisLabel: {
-        // interval: 0 forces every category label to draw. ECharts thins them
-        // out by default when they would collide, which on a chart whose whole
-        // point is naming the pages needing attention leaves some bars
-        // anonymous.
-        interval: 0,
-        width: 110,
-        overflow: 'truncate',
-      },
-    },
-    tooltip: {
-      ...baseOption(theme).tooltip,
-      // item.title is NOT trusted input. js/ux-improvements-state-sync.js
-      // assigns a restored edited_title straight onto the in-memory page
-      // object, so a JSON backup or a sync response can put markup here — and
-      // this formatter's return value is inserted as HTML. Escaped, like every
-      // other path in this repo that reaches innerHTML.
-      formatter: (params) => {
-        const item = visible[params.dataIndex] || {}
-        return `${escapeHtml(item.title)}<br>${escapeHtml(item.passed)} of ${escapeHtml(item.total)} checks passing`
-      },
-    },
-    series: [
-      {
-        type: 'bar',
-        data: visible.map((item) => ({
-          value: item.pct,
-          // Colour by outcome, not by rank: anything short of every check
-          // passing is the same call to action.
-          itemStyle: { color: item.pct === 100 ? theme.bar : theme.barWarn },
-        })),
-        barMaxWidth: 14,
-        label: {
-          show: true,
-          position: 'right',
-          formatter: '{c}%',
-          color: theme.muted,
-          fontSize: 10,
-        },
-      },
-    ],
-  }
-}
-
-/**
  * Draw every chart the model has data for into the mount points already
  * present in `root`, and return the live instances.
  *
@@ -222,10 +106,9 @@ function checksOption(model, theme, limit) {
  * @param {Element} root
  * @param {object} model
  * @param {object} theme
- * @param {number} checksLimit
  * @returns {Array<object>} ECharts instances
  */
-function draw(root, model, theme, checksLimit) {
+function draw(root, model, theme) {
   const instances = []
   const mount = (id, option) => {
     const node = root.querySelector(`[data-insights-chart="${id}"]`)
@@ -235,10 +118,8 @@ function draw(root, model, theme, checksLimit) {
     instances.push(instance)
   }
 
-  mount('decision', decisionOption(model, theme))
   if (model.activity.length) mount('activity', activityOption(model, theme))
-  if (model.checks.length) mount('checks', checksOption(model, theme, checksLimit))
   return instances
 }
 
-export { draw, decisionOption, activityOption, checksOption }
+export { draw, activityOption }

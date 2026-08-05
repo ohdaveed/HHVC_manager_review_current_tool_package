@@ -2,6 +2,7 @@
    Keeps descriptive review guidance near the page preview and trims repeated sidebar helper copy at runtime. */
 
 import { applyChecklistState, initChecklist } from './ui-controls.js'
+import { renderKarlTagLegend } from './karl-tag-meta.js'
 import { getCurrentKey } from './utils.js'
 import { updateReadingTarget } from './editor-panel.js'
 ;(function migrateDescriptiveTextToDashboard() {
@@ -15,30 +16,30 @@ import { updateReadingTarget } from './editor-panel.js'
   // helper is always available.
   const { escapeHtml } = window.utils
 
+  // A card is `{ title, text }`, or `{ title, html }` when it renders real
+  // markup rather than a description of it.
+  //
+  // Two cards were removed rather than reworded. "Overview vs Page checks"
+  // existed to explain why two tabs looked alike — a help card standing in for
+  // a fix, and the tabs now differ (Overview triages the site, Page checks
+  // scores the open page and no longer scores rules that cannot fail).
+  // "Karl tag colors" described a colour key in prose; the key itself is below.
   const guidanceItems = [
     {
-      title: 'Review page patterns',
-      text: 'Use the page dropdown in the sidebar, sticky-bar Previous/Next, or the Sitemap tab to move between mockups.',
-    },
-    {
-      title: 'Overview vs Page checks',
-      text: 'Overview scores every page in one table. Page checks shows the same 9 rules for only the page in the mockup.',
+      title: 'Move between pages',
+      text: 'Use the page dropdown in the sidebar, the sticky-bar Previous and Next buttons, or Open on any Overview row.',
     },
     {
       title: 'Search metadata',
       text: 'Edit SEO title and meta description in the sidebar to test search-result wording. Changes stay local until you export or clear them.',
     },
     {
-      title: 'Karl tag colors',
-      text: 'Each tag shows its type (Metadata, Body, Placement, Editor only) and color. Purple = body structure. Yellow = CMS placement for links and cards. Blue = page metadata. Green = editor-only QA.',
+      title: 'Karl tags',
+      html: `${renderKarlTagLegend('full')}<span>Tags mark where each block is entered in Karl CMS. Placement follows the tag text, not the shape of the mockup box around it. Toggle them with the switch in the toolbar.</span>`,
     },
     {
-      title: 'Export review decisions',
-      text: 'Review exports download to your browser only. They do not publish pages or change source files.',
-    },
-    {
-      title: 'Back up your reviews',
-      text: 'Reviews save to this browser only. Use "Download backup (JSON)" to keep a copy, and "Import backup (JSON)" to restore it on another machine.',
+      title: 'Reviews live in this browser',
+      text: 'Nothing here publishes a page or changes a source file. Decisions are saved to this browser only, so use Export reviews to keep a copy or move them to another machine.',
     },
   ]
 
@@ -176,7 +177,12 @@ import { updateReadingTarget } from './editor-panel.js'
             (item) => `
           <div class="dashboard-guidance-card">
             <strong>${escapeHtml(item.title)}</strong>
-            <span>${escapeHtml(item.text)}</span>
+            ${
+              /* item.html is markup this module builds itself (the Karl legend),
+                 never reviewer- or import-supplied content — the escaped
+                 item.text branch is what every other card takes. */
+              item.html ? item.html : `<span>${escapeHtml(item.text)}</span>`
+            }
           </div>
         `
           )
@@ -331,12 +337,30 @@ import { updateReadingTarget } from './editor-panel.js'
     })
   }
 
+  /**
+   * Keep the collapsed AI assist / stored-data sections at the end of Help.
+   *
+   * They are authored in index.html, so they start as the Help panel's first
+   * child, while every panel above mounts by appending. Re-appending an element
+   * already in the DOM moves it, which puts them last without an `order` rule —
+   * so the reading order a keyboard or screen-reader user gets still matches
+   * what is on screen.
+   */
+  function moveAdvancedToEnd() {
+    const helpPanel = document.getElementById('reviewWorkspaceHelp')
+    const advanced = document.getElementById('reviewWorkspaceAdvanced')
+    if (helpPanel && advanced && advanced.parentNode === helpPanel) {
+      helpPanel.appendChild(advanced)
+    }
+  }
+
   function refresh() {
     injectStyles()
     mountGuidancePanel()
     mountComplianceRulesPanel()
     mountShortcutsPanel()
     mountReferencePanel()
+    moveAdvancedToEnd()
     compactSidebarCopy()
   }
 

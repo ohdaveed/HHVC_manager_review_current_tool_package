@@ -5,8 +5,15 @@
 // directly — no browser, no hover, no chart instance. That matters most for
 // the escaping: driving it through a real hover would be a slow and flaky way
 // to test the one thing that must never regress.
+//
+// Only the activity chart is covered here because only the activity chart is
+// left. The decision-mix bar and the failing-checks bar were both cut — the
+// first was the third rendering of counts already printed twice above it, and
+// the second drew eight indistinguishable lengths under a heading about what
+// needs attention. The checks ranking is now plain markup, so its escaping is
+// asserted in tests/review-insights-render.test.js instead.
 const { describe, test, expect } = require('bun:test')
-const { decisionOption, activityOption, checksOption } = require('../js/review-insights-charts.js')
+const { activityOption } = require('../js/review-insights-charts.js')
 
 /** Minimal stand-in for readTheme()'s output. */
 const THEME = {
@@ -14,16 +21,7 @@ const THEME = {
   muted: '#666',
   border: '#eee',
   surface: '#fff',
-  decision: {
-    'Needs review': '#8a8d8d',
-    Approved: '#00734f',
-    'Approved with edits': '#c07000',
-    'Revise and resubmit': '#8f57b3',
-    Blocked: '#c0392b',
-  },
   line: '#0072b2',
-  bar: '#009e73',
-  barWarn: '#d55e00',
 }
 
 const XSS = '<img src=x onerror="window.__xss=1">'
@@ -45,48 +43,6 @@ function model(overrides = {}) {
   }
 }
 
-describe('checks tooltip escaping', () => {
-  test('escapes a page title before returning it as tooltip HTML', () => {
-    // A page title is NOT trusted input: js/ux-improvements-state-sync.js
-    // assigns a restored edited_title straight onto the in-memory page object,
-    // so a JSON backup or a sync response can put markup here — and an ECharts
-    // formatter's return value is inserted as HTML.
-    const failing = [{ key: 'a', title: XSS, passed: 1, total: 2, pct: 50 }]
-    const option = checksOption(model({ checks: failing, checksFailing: failing }), THEME, 8)
-    const html = option.tooltip.formatter({ dataIndex: 0 })
-
-    // The payload survives as inert TEXT — "onerror=" still appears as
-    // characters, which is fine and expected. What must not survive is anything
-    // the HTML parser would act on: the tag delimiters and the attribute
-    // quotes. Asserting on the absence of the word "onerror" would be testing
-    // the wrong thing and would pass against a merely-stripped payload.
-    expect(html).not.toContain('<img')
-    expect(html).not.toContain('"')
-    expect(html).toContain('&lt;img')
-    expect(html).toContain('&quot;')
-  })
-
-  test('escapes the numeric fields too, rather than trusting their type', () => {
-    const failing = [{ key: 'a', title: 'A', passed: '<b>1</b>', total: 2, pct: 50 }]
-    const option = checksOption(model({ checks: failing, checksFailing: failing }), THEME, 8)
-
-    expect(option.tooltip.formatter({ dataIndex: 0 })).not.toContain('<b>')
-  })
-})
-
-describe('decision tooltip escaping', () => {
-  test('escapes the series name, which is a saved decision string', () => {
-    // buildDecisionMix deliberately counts unrecognised decisions rather than
-    // dropping them, so an imported backup can put arbitrary text in a series
-    // name.
-    const option = decisionOption(model(), THEME)
-    const html = option.tooltip.formatter({ seriesName: XSS, value: 1 })
-
-    expect(html).not.toContain('<img')
-    expect(html).toContain('&lt;img')
-  })
-})
-
 describe('activity axis', () => {
   test('uses a time axis so unequal gaps stay to scale', () => {
     // On a category axis, July 1 and July 30 sit one tick apart exactly like
@@ -102,31 +58,26 @@ describe('activity axis', () => {
   })
 })
 
-describe('checks chart contents', () => {
-  test('draws only pages with failing checks, never padding with passing ones', () => {
-    const checks = [
-      { key: 'fail', title: 'Failing', passed: 1, total: 2, pct: 50 },
-      { key: 'pass', title: 'Passing', passed: 2, total: 2, pct: 100 },
-    ]
-    const option = checksOption(
-      model({ checks, checksFailing: checks.filter((item) => item.pct < 100) }),
-      THEME,
-      8
-    )
+describe('activity tooltip escaping', () => {
+  test('escapes the date, which arrives from saved review state', () => {
+    // A review_date is whatever an imported CSV or a sync response put there,
+    // and an ECharts formatter's return value is inserted as HTML.
+    const option = activityOption(model({ activity: [{ date: XSS, decided: 1, total: 1 }] }), THEME)
+    const html = option.tooltip.formatter([{ dataIndex: 0 }])
 
-    expect(option.yAxis.data).toEqual(['Failing'])
+    // The payload survives as inert TEXT — "onerror=" still appears as
+    // characters, which is fine and expected. What must not survive is anything
+    // the HTML parser would act on: the tag delimiters and the attribute quotes.
+    expect(html).not.toContain('<img')
+    expect(html).toContain('&lt;img')
   })
 
-  test('honours the row cap', () => {
-    const failing = Array.from({ length: 12 }, (_, i) => ({
-      key: `k${i}`,
-      title: `Page ${i}`,
-      passed: 1,
-      total: 2,
-      pct: 50,
-    }))
-    const option = checksOption(model({ checks: failing, checksFailing: failing }), THEME, 8)
+  test('escapes the numeric fields too, rather than trusting their type', () => {
+    const option = activityOption(
+      model({ activity: [{ date: '2026-07-01', decided: '<b>1</b>', total: 1 }] }),
+      THEME
+    )
 
-    expect(option.yAxis.data).toHaveLength(8)
+    expect(option.tooltip.formatter([{ dataIndex: 0 }])).not.toContain('<b>')
   })
 })

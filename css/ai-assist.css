@@ -1,6 +1,6 @@
 /* AI assist panel.
    Layered on top of the existing workspace styles, in its own file for the
-   same reason css/interactive-sitemap.css is: a self-contained subsystem's
+   same reason css/review-ops.css is: a self-contained subsystem's
    styles are easier to reason about next to its JS than buried in the shared
    override sheet. Uses the same --sfds-* and semantic tokens as the rest of the
    review layer, so retheming still happens in one place. */

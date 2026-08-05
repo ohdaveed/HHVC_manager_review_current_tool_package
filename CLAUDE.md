@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 21 unit-test files in tests/ (522 tests)
+bun run test                  # bun test over the 22 unit-test files in tests/ (528 tests)
 bun run test:e2e              # playwright test (109 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,10 +65,11 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs twenty-one Bun unit-test files under `tests/`:
+wrong). `bun run test` runs twenty-two Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
-`review-insights-data`, `review-insights-charts`, `review-ops-data`,
+`review-insights-data`, `review-insights-charts`, `review-insights-render`,
+`review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
 decision list against the canonical table in `js/utils.js`), `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
@@ -81,7 +82,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 522 tests at time of writing.
+without a key or a paid call) — 528 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -97,9 +98,9 @@ can still stub them.
 
 `bun run test:e2e` drives Playwright over `tests/e2e/` — fourteen spec files
 (109 specs): thirteen UI-driven (navigation, editor panel, review workflow,
-review queue, review-queue undo, Tool status, import/export, keyboard
-shortcuts, sitemap/workspace, accessibility, AI assist, mockup PNG export,
-Overview insight charts) plus the
+review queue, review-queue undo, stored review data, import/export, keyboard
+shortcuts, workspace panels, accessibility, AI assist, mockup PNG export,
+Overview insight cards) plus the
 original API-level `review-import-export` round-trip, sharing plain helper
 functions in `tests/e2e/helpers.js` (no fixture framework).
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
@@ -166,7 +167,7 @@ Order still matters, but it is now enforced in two different ways:
   files — so `window.HHVC_DATA` is guaranteed populated before anything reads
   it, and `js/state.js`'s throw now only fires on genuinely malformed data.
 - **The self-mounting IIFE subsystems still depend on listed order.**
-  `js/ux-improvements*.js`, `js/review-queue*.js`, `js/interactive-sitemap*.js`,
+  `js/ux-improvements*.js`, `js/review-queue*.js`,
   `js/dashboard-guidance.js` and `js/keyboard-shortcuts.js` take no imports and
   talk to each other through `window.<Namespace>` objects, so they must run
   after the core modules that create those namespaces. Their sequence in
@@ -176,9 +177,11 @@ Order still matters, but it is now enforced in two different ways:
 shared scope every top-level function was implicitly a `window` property, and
 several callers still rely on that rather than importing:
 
-- `window.renderPage` (`js/page-render.js`) — three modules wrap it to refresh
-  after navigation (`js/manager-review-export.js`, `js/ux-improvements.js`,
-  `js/interactive-sitemap.js`). The decorator chain only forms if the original
+- `window.renderPage` (`js/page-render.js`) — wrapped to refresh after
+  navigation by `js/ux-improvements.js`. (There were three wrappers;
+  `js/interactive-sitemap.js` is gone, and `js/manager-review-export.js`'s
+  existed only to refresh a "Current page:" sidebar label that has been cut.)
+  The decorator chain only forms if the original
   is on `window`; otherwise each wrapper's `typeof` guard returns early and
   every wrapper silently no-ops while the page still renders.
 - `window.toggleSidebar` (`js/ui-controls.js`) — called from an inline
@@ -245,9 +248,9 @@ re-monolith them.**
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and kicks off
   the first `renderPage('pestsTopic')`.
 - **`js/manager-review-export.js`** — manager review CSV/JSON export
-  snapshot; monkey-patches `renderPage` to refresh the review page label
-  after render (handles the case where `renderPage` returns a Promise under
-  View Transitions).
+  snapshot, published on `window.ReviewExport` for the consolidated export
+  control. It no longer wraps `renderPage`: that decorator existed only to
+  refresh a sidebar label that has been cut.
 - **`js/reading-level.js`** — browser-safe Flesch-Kincaid grade level for body
   copy, no Node deps. `build_scripts/reading-level.js` is the Node/Bun
   counterpart (backed by `text-readability`) used for parity checks in tests.
@@ -262,16 +265,14 @@ re-monolith them.**
 scorecard), `js/review-queue.js` (cross-page review queue/progress),
 `js/dashboard-guidance.js` (consolidates sidebar helper copy into the Help
 workspace tab, hiding duplicated sidebar text at runtime without deleting
-HTML), `js/interactive-sitemap.js` (clickable sitemap reading from
-`HHVC_DATA`, lazy-rendered when the Sitemap tab opens), and
-`js/keyboard-shortcuts.js` (global shortcuts, ignored while typing in form
+HTML), and `js/keyboard-shortcuts.js` (global shortcuts, ignored while typing in form
 fields) are each self-contained IIFEs that read `window.HHVC_DATA` and
 `localStorage`. Some (e.g. `js/ux-improvements.js`, when restoring saved
 edits) do write edited title/summary/CTA/SEO fields back onto the **in-memory**
 `pageData` objects — but **must never write back to the `pages/*.js` source
 files or publish content**; they are review aids only, not publishing tools.
 
-`js/ux-improvements.js`, `js/review-queue.js`, and `js/interactive-sitemap.js`
+`js/ux-improvements.js` and `js/review-queue.js`
 are thin orchestrators (event wiring + `init()` + public API assembly) over
 sibling files that do the actual work, mirroring the existing
 `window.utils`/`window.reviewState` pattern — each sibling attaches its
@@ -296,27 +297,22 @@ never referenced from `pages/*.js` or outside its own module's files):
   actions, Fuse.js search), `js/review-queue-render.js` (table/stats/bulk-bar
   rendering), and `js/review-queue-import.js` (CSV import — kept isolated as
   the highest-regression-risk area; see "Local persistence" below).
-- **`window.InteractiveSitemap`** (`js/interactive-sitemap.js`'s orchestrator)
-  ← `js/interactive-sitemap-data.js` (graph/data building from `HHVC_DATA`)
-  and `js/interactive-sitemap-render.js` (DOM rendering, search/filter UI).
-  Its styles live in `css/interactive-sitemap.css` rather than a runtime
-  `injectStyles()` call.
-
 - **`window.ReviewInsights`** (`js/review-insights.js`) ←
-  `js/review-insights-data.js`, which attaches `.data`. The Overview charts;
+  `js/review-insights-data.js`, which attaches `.data`. The Overview cards;
   `js/review-queue-render.js` calls `window.ReviewInsights.render()` at the end
   of its own render, optional-chained.
 - **`window.ReviewOps`** (`js/review-ops.js`) ← `js/review-ops-data.js`, which
-  attaches `.data`. The Tool status panel.
+  attaches `.data`. The stored-review-data panel, a collapsed section in Help.
 - **`window.MockupImageExport`** (`js/mockup-image-export.js`) — PNG export of
   the mockups, standing on its own.
 
-- **Three lazily-mounted panels publish a mount hook rather than rendering at
-  init:** `window.__mountInteractiveSitemapOnTabOpen`,
-  `window.__mountAiAssistOnTabOpen`, and `window.__mountReviewOpsOnTabOpen`.
-  `setWorkspaceTab` calls whichever one matches the tab being opened. Each panel
+- **Two lazily-mounted panels publish a mount hook rather than rendering at
+  init:** `window.__mountAiAssistOnTabOpen` and `window.__mountReviewOpsOnTabOpen`.
+  Both are collapsed `<details>` at the end of Help rather than tabs of their
+  own, so `setWorkspaceTab` calls **both** when Help opens — a reviewer
+  expanding one must never find an empty box. Each panel
   ALSO catches an already-open tab at its own `init()` via
-  `mountWorkspacePanelIfOpen()` in `js/utils.js` — `js/ux-improvements.js`
+  `mountWorkspacePanelIfOpen('help')` in `js/utils.js` — `js/ux-improvements.js`
   initializes earlier and restores a persisted `workspace_tab` before these
   hooks exist, so without the catch-up a reviewer who left one of these tabs
   open came back to an empty panel.
@@ -338,22 +334,123 @@ never referenced from `pages/*.js` or outside its own module's files):
   `renderPageMain()`). **That is not a security boundary, though** — imported
   CSV/JSON backups and records pulled from the sync server also carry
   externally-supplied reviewer names, notes, and edited fields into the sticky
-  bar, queue, sitemap, and preview. Those are safe because they already use
+  bar, queue, and preview. Those are safe because they already use
   `escapeHtml`/`textContent`, and must stay that way.
 
-The workspace tab strip is `['overview', 'checks', 'sitemap', 'assist',
-'ops', 'help']`, numbered left to right by the `1`–`6` shortcuts. The sitemap and AI
-panels mount lazily on tab open via `window.__mountInteractiveSitemapOnTabOpen()`
-/ `window.__mountAiAssistOnTabOpen()`. **Each also catches an already-open
-tab at its own `init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js`
-initializes earlier and restores a persisted `workspace_tab` before those
-hooks exist, so without the catch-up a reviewer who left Assist or Sitemap
-open saw an empty panel until switching tabs and back.
+The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
+right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
+**Sitemap** was removed outright (a fourth way to navigate 19 pages, drawing a
+hierarchy one level deep — most hubs rendered as `HUB 0/0` above "No child pages
+assigned"), and **AI assist** and **Tool status** became collapsed `<details>`
+at the end of Help. Both of those depend on `server.ts`, which the Netlify
+deploy has no runtime for, so on the build managers actually open they were two
+permanently-empty panels holding two of six slots. Help stays last, so it is the
+digit that moves whenever the strip changes; `WORKSPACE_TABS`
+(`js/ux-improvements-workspace.js`), the tab markup in `index.html` and the
+`1`–`3` cases in `js/keyboard-shortcuts.js` must change together.
+
+The two surviving lazy panels **also catch an already-open Help tab at their own
+`init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js` initializes earlier
+and restores a persisted `workspace_tab` before those hooks exist, so without
+the catch-up a reviewer who left Help open saw an empty panel until switching
+tabs and back.
 
 Relatedly, `js/keyboard-shortcuts.js` dispatches `hhvc:shortcuts-ready` and
 sets `window.reviewKeyboardShortcuts.ready` **from `init()`, after** the
 `keydown` listener is attached. It used to fire at module scope, announcing a
 capability that did not exist yet.
+
+### The workspace is docked, not stacked
+
+`#reviewWorkspace` is a **third grid column in `.app`**, sticky to the viewport
+— not the last child of `.canvas`, which is where it used to live. The numbers
+are the whole argument: the mockup runs about 8,766px, so the panel began around
+y=9,413 in a 10,348px document, more than nine screenfuls down. A reviewer could
+never see the page and the instruments judging it at the same time, which was
+sharpest on **Page checks** — a panel that scores _the page currently open in
+the mockup_ and rendered that score nine screens away from it.
+
+Most of the redundancy this tool accumulated followed from that one placement:
+the same fact had to be repeated wherever the reviewer might be looking.
+Co-visibility is what makes a single copy sufficient, so resist re-adding a
+second printing of anything.
+
+- **`.app.workspace-docked` is what grows the third column**, toggled alongside
+  the panel's `hidden` attribute. `applyWorkspaceVisibility()` in
+  `js/ux-improvements-workspace.js` is the single place that does both, plus the
+  toggle button's label and `aria-expanded`. The first-run onboarding path used
+  to set `hidden` inline and duplicate two of the three steps — which is exactly
+  how it came to miss the third, giving a first-run reviewer an open panel the
+  grid had made no room for.
+- **`.review-workspace[hidden] { display: none }` is load-bearing.** The rule
+  above it sets `display: flex`, and a class selector outranks the UA
+  stylesheet's `[hidden] { display: none }`, which is where that attribute's
+  entire effect lives. Without the pairing, "Hide workspace" and the `w`
+  shortcut both appeared to do nothing. Any element that both carries `hidden`
+  and declares its own `display` needs this.
+- **Below 1400px the panel returns under the canvas, in `grid-column: 2`** —
+  deliberately not `1 / -1`. Spanning both columns puts it beneath the sticky,
+  full-height sidebar, which then slides over the queue's left edge as the
+  reviewer scrolls. Axe caught that before a human did (57 queue cells reported
+  as "background could not be determined, partially obscured by another
+  element"); it is invisible in a screenshot taken at scroll position 0.
+
+### What the UX review removed, and why not to re-add it
+
+- **The Karl-tag legend above the mockup.** A toggle, a four-row `TAG COLORS`
+  key, an explanatory sentence and a "What are Karl tags?" disclosure occupied
+  ~495px — half a screen — between the toolbar and the SF.gov header, on every
+  page and every load. The key decoded something that was never encoded in
+  colour alone: each tag already reads `METADATA`, `BODY`, `PLACEMENT` or
+  `EDITOR ONLY` in words. The switch moved into `.canvas-toolbar`; the legend
+  renders once, in Help, via `renderKarlTagLegend()`. `mountKarlTagLegend()` is
+  gone with both of its mount points — `#karlTagLegendCompact` had no element in
+  `index.html` at all and had been a no-op for some time.
+- **Three of four Overview KPI tiles.** "Visible" restated the "N of 19" printed
+  directly above it. "Blocked" showed `stats.blocked`, which counts Blocked
+  **plus** Revise and resubmit (`js/review-queue-rows.js`) — so it read 5 while
+  the Blocked filter chip forty pixels away read 2. Both numbers were correct
+  and the label was not, and a panel that visibly disagrees with itself in its
+  first two rows spends the credibility the rest of it needs. The decision tally
+  belongs to the filter chips, which count and filter with one control.
+- **The open page's name, printed four times.** The sidebar picker, a "Current
+  page:" label directly under it, a "Viewing: …" badge in the toolbar, and the
+  sticky bar. The middle two are gone — and with the label went the only reason
+  `js/manager-review-export.js` wrapped `renderPage` at all, so that decorator
+  went with it.
+- **The decision `<select>`.** It sat directly above five chips writing the same
+  field: two controls, one value. `#reviewDecision` survives as an
+  `<input type="hidden">` rather than being deleted, because it is the field
+  every persistence path reads and writes through `getValue`/`setValue`, and its
+  `change` event is what autosave, `isDecisionRound()` and the sticky bar all
+  listen for. The chips carry the visible and accessible semantics. E2E specs
+  set it through `setDecision()` in `tests/e2e/helpers.js`, not `selectOption`.
+- **Six of nine export/import controls.** Five ways to get review data out, in
+  two formats, split across the sidebar and the Overview panel, with nothing on
+  screen distinguishing "Export current review JSON" from "Download backup
+  (JSON)" from "Export saved local reviews CSV". There is now one **Export
+  reviews** button with a scope `<select>` (`runExport()` dispatches on it) and
+  one **Import reviews** button whose file input accepts either format
+  (`importReviewFile()` routes by extension). The queue's separate "Import CSV"
+  button is gone. Fewer doors into the merge path is a safety property here, not
+  just tidiness — see "Local persistence" below for the regression that makes
+  this the highest-consequence surface in the tool.
+
+### Checks that cannot fail are not scored
+
+`getRuleResultsFor()` marks **Page type**, **Audience** and **Reading target**
+with `scored: false`. All three are required by `build_scripts/schema.js` and
+enforced by `bun run validate` in CI, so no page that can ship will ever fail
+them: scoring them handed every page three free passes, lifting every ratio by a
+constant and burying the rules that do fail under a wall of permanent green.
+(Note that **Reading target** only checks that a target is _declared_ — whether
+the copy hits it is `Computed reading level`, which is scored and does fail.)
+
+`window.reviewChecks.scoredRules()` is the filter, and both the Checks panel and
+the queue's `checksPassed`/`checksTotal` go through it. The three still render,
+under a "Page facts" subheading, and the scored list orders **failures first** —
+it used to render in declaration order, so on a page passing all but one rule a
+reviewer scanned a column of green to find the single item they could act on.
 
 ### Content-standards scoring
 
@@ -413,19 +510,44 @@ than trusting a version number; it is opt-out by default on current Node 22 but
 was flag-gated in early 22.x.) Anything
 relying on Node-specific interop here would go unnoticed.
 
-### Overview charts (`js/review-insights*.js`)
+### Overview insight cards (`js/review-insights*.js`)
 
-Three compact charts above the review queue table — decision mix, review
-activity over time, and the pages whose automated checks are failing. They sit
-on the **Overview tab rather than a workspace tab of their own** on purpose: a
-tab is a scarce slot bound to a number key, and the strip already carries six.
+Two compact cards above the review queue table — review activity over time (a
+chart) and the pages whose automated checks are failing (a ranked list). They
+sit on the **Overview tab rather than a workspace tab of their own** on purpose:
+a tab is a scarce slot bound to a number key.
+
+There were three, and the two that were cut are worth not re-adding:
+
+- **Decision mix** was a stacked bar of the five decision counts. The filter
+  chips directly above already print those counts _and_ filter by them, and the
+  chart's own legend reprinted them a third time — all within about 200 vertical
+  pixels. A chart whose exact values are already on screen twice is a
+  restatement, not an encoding. The careful colour work behind it (the
+  `--viz-decision-*` tokens, the separately chosen dark palette, the ΔE
+  validation) was real and was spent on a card carrying no new information.
+- **Checks needing attention** was a horizontal bar chart. On real data every
+  bar landed between 86% and 95% — one colour, eight near-identical lengths —
+  the axis labels truncated at ~18 characters, and the polarity read backwards
+  (a bar at 95% under a heading about what needs attention). The ranking was
+  always the value, so it ships as a ranked list naming the page and its count
+  of failing rules. It needs no parallel `.hhvc-sr-only` table, because it is
+  visible content rather than an aria-hidden graphic — one copy of those numbers
+  serves both audiences.
+
+That leaves **ECharts drawing exactly one line chart**. Still worth deferring
+rather than inlining, but a thin justification for a ~170 KB gzip chunk — a
+hand-drawn SVG line would remove the dependency outright. That is a build
+decision rather than a UX one, and was deliberately left alone.
 
 - **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
   `buildActivitySeries`, `buildChecksSeries`, `insightsSignature`), dual
   `window`/`module.exports` like `js/review-merge.js` so
   `tests/review-insights-data.test.js` can `require` it with no browser.
-- **`js/review-insights.js`** — the orchestrator. Builds the card markup and
-  the hidden data tables, then draws.
+  `buildDecisionMix` still runs: `insightsSignature()` uses it to gate redraws,
+  since a decision change moves the activity series.
+- **`js/review-insights.js`** — the orchestrator. Builds the card markup, the
+  hidden data table and the ranked list, then draws.
 - **`js/review-insights-charts.js`** — the only module that imports ECharts.
 
 **ECharts is dynamically imported, and that is load-bearing, not tidiness.**
@@ -481,25 +603,26 @@ so it is the only place a snapshot is recorded.
   self-dismiss after 4s — far too short to notice a wrong bulk action and
   reverse it. Keyboard shortcut `z`.
 
-### Tool status tab (`js/review-ops*.js`)
+### Stored review data (`js/review-ops*.js`)
 
-A sixth workspace tab reporting what this browser is actually holding and how
-it is connected — previously only visible in devtools. There are no roles in
-this tool: the reviewer and the operator are the same person, deliberately.
+A collapsed section at the end of the **Help** tab reporting what this browser
+is actually holding and how it is connected — previously only visible in
+devtools. There are no roles in this tool: the reviewer and the operator are
+the same person, deliberately.
 
 - **`js/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
   `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
   `window`/`module.exports` so the tests need no browser.
-- **`js/review-ops.js`** — the panel, lazily mounted on tab open with the same
-  `mountIfTabAlreadyOpen()` catch-up the sitemap and AI tabs use.
+- **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
+  same `mountIfTabAlreadyOpen()` catch-up the AI assist panel uses.
 
-**It sits fifth, just before Help.** Tabs are numbered left to right by the
-`1`–`6` shortcuts, so this one takes `5` and Help takes `6`. Help stays last
-deliberately — it is the reference panel, not a working one — which means Help
-is the digit that moves whenever a tab is added. `WORKSPACE_TABS`
-(`js/ux-improvements-workspace.js`), the tab markup in `index.html`, and the
-shortcut cases in `js/keyboard-shortcuts.js` must be changed together. This
-scarcity is also why the Overview charts did not get their own tab.
+**It had a tab of its own — the `5` key — and lost it.** On a default or
+Netlify deploy every value it reported was "not configured" or "none", because
+both optional backends need `server.ts`; that is not worth one of the strip's
+slots. The one line a reviewer genuinely needs from it — _reviews are saved in
+this browser only_ — was promoted into the sidebar beside the export controls,
+where the risk it describes actually lives. What stays here is the diagnostics
+and the orphan pruning, which a reviewer opens deliberately.
 
 - **Orphaned records are a real class, not a hypothetical.** Review state is
   keyed by page key and nothing prunes it when a page is retired, so a browser
@@ -1269,20 +1392,19 @@ used liberally **only** in the self-aware override layer
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+**The seven stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
 the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
-| File                          | Owns                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
-| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
-| `css/interactive-sitemap.css` | the sitemap panel                                                                              |
-| `css/ai-assist.css`           | the AI assist panel                                                                            |
-| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
-| `css/review-insights.css`     | the Overview charts' cards and legend                                                          |
-| `css/review-ops.css`          | the Tool status panel                                                                          |
-| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+| File                      | Owns                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `css/styles.css`          | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/ux-improvements.css` | the review layer's own chrome — the designated `!important` override sheet                     |
+| `css/ai-assist.css`       | the AI assist panel                                                                            |
+| `css/dashboard.css`       | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
+| `css/review-insights.css` | the Overview cards and the failing-checks ranking                                              |
+| `css/review-ops.css`      | the stored-review-data panel                                                                   |
+| `css/theme.css`           | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
@@ -1318,9 +1440,8 @@ that stub globals must restore them, or they pollute sibling test files.
 - Core render/state → `js/state.js`, `js/page-render.js`, `js/ui-controls.js`,
   `js/editor-panel.js`, `js/app.js`.
 - Review/UX layers → `js/ux-improvements.js`, `js/review-queue.js`,
-  `js/dashboard-guidance.js`, `js/interactive-sitemap.js`,
-  `js/keyboard-shortcuts.js`, `js/manager-review-export.js`,
-  `css/ux-improvements.css`.
+  `js/dashboard-guidance.js`, `js/keyboard-shortcuts.js`,
+  `js/manager-review-export.js`, `css/ux-improvements.css`.
 - Shared merge/history logic → `js/review-merge.js` (loaded both as a browser
   `<script>` and imported directly by `server.ts` — the only place a `history`
   entry should ever be constructed). Optional sync backend → `server.ts` (API

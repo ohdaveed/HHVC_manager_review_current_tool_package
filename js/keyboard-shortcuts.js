@@ -16,15 +16,16 @@ import { hasValidPageData } from './utils.js'
     { keys: ['w'], description: 'Show or hide the review workspace' },
     { keys: ['1'], description: 'Open Overview workspace tab' },
     { keys: ['2'], description: 'Open Page checks workspace tab' },
-    { keys: ['3'], description: 'Open Sitemap workspace tab' },
     // Numbered left to right across the tab strip. Matching visual order
     // matters more than keeping any one tab on a fixed digit: the Help panel
     // renders this list, so the mapping documents itself the moment anyone
     // looks for it. Keep these in step with WORKSPACE_TABS in
     // js/ux-improvements-workspace.js and the tab markup in index.html.
-    { keys: ['4'], description: 'Open AI assist workspace tab' },
-    { keys: ['5'], description: 'Open Tool status workspace tab' },
-    { keys: ['6'], description: 'Open Help workspace tab' },
+    //
+    // 4, 5 and 6 are unbound now. Sitemap was cut; AI assist and Tool status
+    // moved inside Help, so they are reached by opening Help rather than by a
+    // digit of their own.
+    { keys: ['3'], description: 'Open Help workspace tab' },
     { keys: ['p'], description: 'Download this mockup as a PNG' },
     { keys: ['a'], description: 'Approve current page, or all selected pages' },
     { keys: ['e'], description: 'Approve with edits (current or selected)' },
@@ -255,18 +256,6 @@ import { hasValidPageData } from './utils.js'
         openWorkspaceTab('checks')
         break
       case '3':
-        event.preventDefault()
-        openWorkspaceTab('sitemap')
-        break
-      case '4':
-        event.preventDefault()
-        openWorkspaceTab('assist')
-        break
-      case '5':
-        event.preventDefault()
-        openWorkspaceTab('ops')
-        break
-      case '6':
         event.preventDefault()
         openWorkspaceTab('help')
         break

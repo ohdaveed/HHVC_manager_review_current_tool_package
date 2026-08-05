@@ -87,39 +87,24 @@ import { showToast } from './ui-controls.js'
     setText('reviewExportStatus', 'Exported all-page decision template.')
     showToast('All-page decision template exported', 'success')
   }
-  function updateManagerReviewPageLabel() {
-    const page = pageData[currentPageKey] || {}
-    setText('reviewPageLabel', `Current page: ${page.title || currentPageKey}`)
-  }
-  function wrapRenderPageForManagerExport() {
-    if (typeof window.renderPage !== 'function' || window.renderPage.__managerExportWrapped) return
-    const originalRenderPage = window.renderPage
-    // Forward skipHistory so wrapped popstate renders don't push history
-    // entries (which would clear the browser's forward stack).
-    window.renderPage = function renderPageWithManagerExportRefresh(key, skipHistory) {
-      const result = originalRenderPage.call(this, key, skipHistory)
-      // Under View Transitions, renderPage returns a promise that resolves once
-      // applyPageContent has updated currentPageKey; refreshing earlier would
-      // label the previous page.
-      if (result && typeof result.then === 'function') result.then(updateManagerReviewPageLabel)
-      else updateManagerReviewPageLabel()
-      return result
-    }
-    window.renderPage.__managerExportWrapped = true
-  }
+  /* This module used to wrap window.renderPage as well, purely to refresh a
+     "Current page: <title>" label in the sidebar after each navigation. Both are
+     gone: the label was the third permanent printing of the open page's name
+     (the picker sits a few rows above it, the sticky bar names it too), and with
+     nothing left to refresh, the decorator had no work to do. One fewer wrapper
+     in the renderPage chain. */
+  /* These three used to own a button each in the sidebar. They are published
+     instead, and js/ux-improvements-export.js calls whichever one the single
+     "Export reviews" control's scope names — see the comment on that markup in
+     index.html for why nine buttons became two. Publishing rather than
+     exporting keeps this module reachable from the self-mounting IIFE layers,
+     which take no imports. */
+  window.ReviewExport = window.ReviewExport || {}
+  window.ReviewExport.currentCsv = exportCurrentManagerReviewCsv
+  window.ReviewExport.currentJson = exportCurrentManagerReviewJson
+  window.ReviewExport.blankTemplateCsv = exportAllPageDecisionTemplateCsv
   ;(function attachManagerReviewTools() {
     const dateInput = document.getElementById('reviewDateInput')
     if (dateInput && !dateInput.value) dateInput.value = today()
-    document
-      .getElementById('exportReviewCsv')
-      ?.addEventListener('click', exportCurrentManagerReviewCsv)
-    document
-      .getElementById('exportReviewJson')
-      ?.addEventListener('click', exportCurrentManagerReviewJson)
-    document
-      .getElementById('exportAllTemplateCsv')
-      ?.addEventListener('click', exportAllPageDecisionTemplateCsv)
-    wrapRenderPageForManagerExport()
-    updateManagerReviewPageLabel()
   })()
 })()

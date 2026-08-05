@@ -9,21 +9,42 @@ import { hasValidPageData } from './utils.js'
   const STICKY_BAR_ID = 'reviewStickyBar'
   const WORKSPACE_ID = 'reviewWorkspace'
   // Left-to-right tab order. Help stays LAST — it is the reference panel, not
-  // a working one, and a reviewer scanning the strip expects it there. The
-  // Tool status tab was originally appended after it, which read as a
-  // regression the moment there were two tabs past Help's old position.
-  // Keep in step with the tab markup in index.html and the 1-6 shortcut
-  // cases in js/keyboard-shortcuts.js.
-  const WORKSPACE_TABS = ['overview', 'checks', 'sitemap', 'assist', 'ops', 'help']
+  // a working one, and a reviewer scanning the strip expects it there.
+  //
+  // Six tabs became three. Sitemap was cut; AI assist and Status moved into
+  // Help as collapsed sections (see the comment on #reviewWorkspaceAdvanced in
+  // index.html). Because Help is last, and everything added lands before it,
+  // Help's shortcut digit is the one that moves whenever the strip changes — so
+  // keep this array, the tab markup in index.html and the 1-3 shortcut cases in
+  // js/keyboard-shortcuts.js in step with each other.
+  const WORKSPACE_TABS = ['overview', 'checks', 'help']
   let workspaceTriggerButton = null
 
   const { getValue, getDecisionChipClass, escapeHtml } = window.utils
 
-  function renderStickyBar() {
+  /**
+   * Paint the sticky review bar.
+   *
+   * @param {string} [pageKey] The page the bar should describe. Pass this
+   *   whenever the caller already knows which page is loaded, because the
+   *   fallback cannot be trusted during startup: `getCurrentKey()` reads
+   *   `#pageSelect.value`, and under View Transitions the initial
+   *   `applyPageContent()` runs inside the transition callback — so at
+   *   `init()` time the picker can still be sitting on its first `<option>`,
+   *   an arbitrary page. The bar was painted once from that stale value and
+   *   never repainted until the reviewer navigated, so every load announced
+   *   the wrong page beside a correct decision chip (the chip reads the
+   *   sidebar, which `applySavedPageState()` had already filled in).
+   *   js/ux-improvements.js tracks the authoritative key as
+   *   `reviewFormPageKey` for exactly this class of bug; this parameter is
+   *   how it reaches here.
+   */
+  function renderStickyBar(pageKey) {
     const bar = document.getElementById(STICKY_BAR_ID)
     if (!bar) return
 
-    const page = window.ReviewUx.stateSync.getCurrentPage()
+    const page =
+      (pageKey && DATA.pages[pageKey]) || window.ReviewUx.stateSync.getCurrentPage() || {}
     const decision = getValue('reviewDecision') || 'Needs review'
     const chipClass = getDecisionChipClass(decision)
     const stats = window.reviewQueue?.getQueueStats?.() || {
@@ -38,7 +59,7 @@ import { hasValidPageData } from './utils.js'
     const workspaceOpen = Boolean(state.ui.workspace_open)
     const prevNavLabel = filterLabel ? `Previous page (${filterLabel} filter)` : 'Previous page'
     const nextNavLabel = filterLabel ? `Next page (${filterLabel} filter)` : 'Next page'
-    const currentKey = window.utils.getCurrentKey()
+    const currentKey = pageKey || window.utils.getCurrentKey()
 
     bar.innerHTML = `
       <div class="review-sticky-bar-main">
@@ -85,20 +106,16 @@ import { hasValidPageData } from './utils.js'
       window.ReviewUx?.stateSync?.renderPageChecksPanel?.()
     }
 
-    if (tabId === 'sitemap' && typeof window.__mountInteractiveSitemapOnTabOpen === 'function') {
-      window.__mountInteractiveSitemapOnTabOpen()
-    }
-
-    if (tabId === 'assist' && typeof window.__mountAiAssistOnTabOpen === 'function') {
-      window.__mountAiAssistOnTabOpen()
-    }
-
     if (tabId === 'help') {
       window.refreshDashboardGuidance?.()
-    }
-
-    if (tabId === 'ops' && typeof window.__mountReviewOpsOnTabOpen === 'function') {
-      window.__mountReviewOpsOnTabOpen()
+      // Both of these used to be tabs of their own and mounted when their tab
+      // opened. They now live inside Help as collapsed <details>, so Help's
+      // opening is the event that has to mount them — a reviewer expanding one
+      // must not find an empty box. Mounting both on Help open rather than on
+      // each disclosure's toggle keeps the two panels' own init-time catch-up
+      // (mountWorkspacePanelIfOpen) working unchanged.
+      window.__mountAiAssistOnTabOpen?.()
+      window.__mountReviewOpsOnTabOpen?.()
     }
 
     window.reviewState.update((state) => {
@@ -107,17 +124,41 @@ import { hasValidPageData } from './utils.js'
     })
   }
 
-  function setWorkspaceOpen(isOpen) {
+  /**
+   * Put the DOM into the open or closed state, without touching saved state.
+   *
+   * Every caller that shows the workspace has to do all three of these, and the
+   * onboarding path below used to do two of them inline — which is exactly how
+   * it came to miss the third: `.workspace-docked` is what grows the `.app`
+   * grid's third column, so a first-run reviewer got an open panel that the
+   * grid had made no room for, and it wrapped underneath the sidebar instead of
+   * docking. Sharing one function is what stops the next addition here from
+   * being missed in the same place.
+   * @param {boolean} isOpen
+   * @returns {Element|null} the workspace element, or null if it is absent
+   */
+  function applyWorkspaceVisibility(isOpen) {
     const workspace = document.getElementById(WORKSPACE_ID)
-    if (!workspace) return
+    if (!workspace) return null
 
     workspace.hidden = !isOpen
+    // The grid only carries a third column while the panel is open, so a closed
+    // workspace gives its width back to the mockup rather than leaving a gap.
+    // See the block comment on .review-workspace in css/dashboard.css.
+    document.querySelector('.app')?.classList.toggle('workspace-docked', isOpen)
 
     const toggleButton = document.querySelector('[data-sticky-action="toggle-workspace"]')
     if (toggleButton) {
       toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
       toggleButton.textContent = isOpen ? 'Hide workspace' : 'Show workspace'
     }
+
+    return workspace
+  }
+
+  function setWorkspaceOpen(isOpen) {
+    const workspace = applyWorkspaceVisibility(isOpen)
+    if (!workspace) return
 
     window.reviewState.update((state) => {
       state.ui.workspace_open = isOpen
@@ -130,13 +171,11 @@ import { hasValidPageData } from './utils.js'
       setWorkspaceTab(state.ui.workspace_tab || 'overview')
       const selectedTab = document.querySelector('[data-workspace-tab][aria-selected="true"]')
       selectedTab?.focus()
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      setTimeout(() => {
-        workspace.scrollIntoView({
-          behavior: prefersReducedMotion ? 'auto' : 'smooth',
-          block: 'start',
-        })
-      }, 50)
+      // No scrollIntoView any more. Opening the workspace used to scroll the
+      // reviewer more than nine screens down to reach it, away from the page
+      // they were reviewing. Docked, it is already beside them — and on the
+      // narrow-screen fallback below 1400px, focusing the selected tab brings
+      // it into view without commandeering the scroll position.
     } else if (workspaceTriggerButton && document.contains(workspaceTriggerButton)) {
       workspaceTriggerButton.focus()
     }
@@ -169,14 +208,11 @@ import { hasValidPageData } from './utils.js'
       return nextState
     })
 
-    const workspace = document.getElementById(WORKSPACE_ID)
-    if (workspace) workspace.hidden = false
-
-    const toggleButton = document.querySelector('[data-sticky-action="toggle-workspace"]')
-    if (toggleButton) {
-      toggleButton.setAttribute('aria-expanded', 'true')
-      toggleButton.textContent = 'Hide workspace'
-    }
+    // Deliberately applyWorkspaceVisibility rather than setWorkspaceOpen: the
+    // reviewState.update above has already recorded workspace_open, and
+    // setWorkspaceOpen would also move focus to the selected tab, which on a
+    // first run steals it from the page the reviewer just landed on.
+    applyWorkspaceVisibility(true)
 
     setWorkspaceTab('overview')
     if (typeof window.showToast === 'function') {

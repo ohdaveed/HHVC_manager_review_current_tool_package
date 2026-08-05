@@ -43,21 +43,15 @@ function renderKarlTagLegend(variant = 'full') {
   `
 }
 
-function mountKarlTagLegend() {
-  const compactMount = document.getElementById('karlTagLegendCompact')
-  const sidebarMount = document.getElementById('karlTagLegendSidebar')
-  if (compactMount && !compactMount.dataset.mounted) {
-    compactMount.innerHTML = renderKarlTagLegend('compact')
-    compactMount.dataset.mounted = 'true'
-  }
-  if (sidebarMount && !sidebarMount.dataset.mounted) {
-    sidebarMount.innerHTML = renderKarlTagLegend('full')
-    sidebarMount.dataset.mounted = 'true'
-  }
-}
+/* mountKarlTagLegend() is gone along with both of its mount points.
+   #karlTagLegendSidebar headed a permanent banner above the mockup — half a
+   screen of colour key on every page load, decoding an encoding that was never
+   colour-only, since each tag already names its kind in words. #karlTagLegendCompact
+   had no element in index.html at all and had been a no-op for some time.
+   js/dashboard-guidance.js now renders this legend once, in the Help tab, where
+   reference material belongs. */
 
 window.KARL_TAG_KINDS = KARL_TAG_KINDS
 window.karlKindMeta = karlKindMeta
-window.mountKarlTagLegend = mountKarlTagLegend
 
-export { karlKindMeta, mountKarlTagLegend }
+export { karlKindMeta, renderKarlTagLegend }

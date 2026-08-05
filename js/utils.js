@@ -718,7 +718,7 @@ function isWorkspacePanelOpen(panelName) {
  * Every lazily-mounted panel needs this, and each one needs it for the same
  * reason, so the reason is written here once instead of three times.
  *
- * The panels (Sitemap, AI assist, Tool status) publish a
+ * The panels (AI assist, Tool status — both now sections inside Help) publish a
  * `window.__mount…OnTabOpen` hook that setWorkspaceTab calls when the reviewer
  * opens the tab. But js/ux-improvements.js initializes EARLIER and restores a
  * persisted `workspace_tab` during its own init — before those hooks exist. Its

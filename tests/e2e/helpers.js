@@ -1,5 +1,6 @@
 // Shared helpers for the Playwright e2e suite. Plain functions (no fixture
 // framework) to match this repo's no-framework ethos.
+const { expect } = require('@playwright/test')
 const STORAGE_KEY = 'hhvcManagerReviewState:v1'
 
 const DECISIONS = {
@@ -107,14 +108,44 @@ async function openWorkspace(page) {
 }
 
 // Open a workspace tab by its data-workspace-tab value: overview | checks |
-// sitemap | assist | help. Queue, sitemap, assist, and help panels mount
-// lazily on first open.
+// help. The queue and the help panels mount lazily on first open. AI assist
+// and the stored-data diagnostics are collapsed <details> INSIDE help now, not
+// tabs of their own — openAdvancedSection() below reaches them.
 async function openWorkspaceTab(page, tab) {
   await openWorkspace(page)
   await page.click(`.review-workspace-tab[data-workspace-tab="${tab}"]`)
   await page.locator(`.review-workspace-panel[data-workspace-panel="${tab}"]`).waitFor({
     state: 'visible',
   })
+}
+
+// Expand one of the collapsed sections at the end of the Help tab (AI assist,
+// stored review data, mockup images). They render on Help opening but stay
+// closed, so their contents are invisible to actionability checks until this
+// runs.
+async function openAdvancedSection(page, summaryText) {
+  await openWorkspaceTab(page, 'help')
+  const group = page.locator(`.review-advanced-group:has(> summary:text-is("${summaryText}"))`)
+  if (!(await group.evaluate((el) => el.open))) {
+    // `> summary` — the direct child. The AI assist panel renders its own
+    // nested <details><summary>AI server settings</summary>, so a descendant
+    // match resolves to two elements and trips Playwright's strict mode.
+    await group.locator('> summary').click()
+  }
+  return group
+}
+
+// Set the sidebar decision the way a reviewer does: by clicking a chip.
+//
+// This used to be `page.selectOption('#reviewDecision', …)`. The <select> that
+// sat above the chips was a second control writing the same field, so it is now
+// an <input type="hidden"> holding the value while the chips carry the visible
+// and accessible semantics — which means selectOption no longer applies, and
+// clicking is what the reviewer actually does. Assertions can still read
+// `#reviewDecision`'s value: a hidden input has one.
+async function setDecision(page, decision) {
+  await page.click(`#decisionQuickActions [data-decision="${decision}"]`)
+  await expect(page.locator('#reviewDecision')).toHaveValue(decision)
 }
 
 // The "Search metadata" sidebar group is a closed <details> by default, so
@@ -182,6 +213,8 @@ module.exports = {
   makeReviewRecord,
   openWorkspace,
   openWorkspaceTab,
+  openAdvancedSection,
+  setDecision,
   openSearchMetadata,
   settleDebounce,
   selectPage,

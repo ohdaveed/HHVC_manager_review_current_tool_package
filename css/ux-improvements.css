@@ -225,8 +225,16 @@
   font-weight: 700;
 }
 
+/* --text-primary, not the raw --sfds-slate-3 this used to reach for. That
+   value is #6e7070, and the bulk bar it sits on is --surface-page (#f0f0f0),
+   which works out at 4.37:1 — under the 4.5:1 AA threshold for text this size
+   (0.8rem bold is well short of the 18.66px that would make bold text
+   "large"). Axe had been unable to judge it because the queue rows were
+   partially obscured by the sticky sidebar, so the failure sat unreported
+   rather than absent. It is also a live count a reviewer reads off the bar,
+   which is not secondary text. */
 .review-queue-bulk-count {
-  color: var(--sfds-slate-3);
+  color: var(--text-primary);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -428,6 +436,21 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* Page facts — the schema-guaranteed entries that render for reference but are
+   not scored. Held back visually so the scored list above stays the thing the
+   eye lands on; they are context a reviewer occasionally wants, not results. */
+.compliance-subhead {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.compliance-list--facts {
+  margin-top: 0.55rem;
+  opacity: 0.85;
 }
 
 .compliance-item {

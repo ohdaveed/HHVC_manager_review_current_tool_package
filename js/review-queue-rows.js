@@ -55,8 +55,14 @@
       const followUpOwner = saved?.follow_up_owner || ''
       const reviewer = saved?.reviewer || ''
       const isCurrentPage = key === getCurrentKey()
+      // Scored rules only. Page type, Audience and Reading target are required
+      // by the page schema and enforced in CI, so counting them handed every
+      // page three free passes — a constant that lifted every ratio and made
+      // the pages with real failures look closer to passing than they were.
       const rules =
-        window.reviewChecks?.getRuleResultsFor?.(page, { useEditor: isCurrentPage }) || []
+        window.reviewChecks?.scoredRules?.(
+          window.reviewChecks?.getRuleResultsFor?.(page, { useEditor: isCurrentPage })
+        ) || []
       const checksPassed = rules.filter((rule) => rule.pass).length
       const checksTotal = rules.length
       const searchText = normalize(

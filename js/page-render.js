@@ -13,7 +13,7 @@ import {
 import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
 import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
 import { karlKindMeta } from './karl-tag-meta.js'
-import { syncEditorFields, updatePageBadge, updateReadingTarget } from './editor-panel.js'
+import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
 function karlTag(label, kind = 'body') {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
   return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
@@ -678,7 +678,6 @@ function applyPageContent(key) {
         </footer>`
   syncEditorFields(page)
   updateReadingTarget(page)
-  updatePageBadge(page.title)
   applyChecklistState(key)
   restoreSidebarScroll()
 }
@@ -742,17 +741,18 @@ function renderPage(key, skipHistory = false) {
 }
 
 /* Republished as a browser global. This one is load-bearing in a way the
-   others are not: three separate modules — js/manager-review-export.js,
-   js/ux-improvements.js and js/interactive-sitemap.js — wrap
-   `window.renderPage` to refresh themselves after every navigation, each
-   reading the current value, closing over it, and reassigning the wrapper
-   (guarded by its own `__…Wrapped` flag so the chain builds exactly once).
+   others are not: js/ux-improvements.js wraps `window.renderPage` to refresh
+   itself after every navigation — reading the current value, closing over it,
+   and reassigning the wrapper (guarded by its own `__…Wrapped` flag so the
+   chain builds exactly once).
 
-   That decorator chain only forms if the original function is on `window`
-   to begin with, which the old shared script scope provided for free.
-   Without this line each wrapper's `typeof window.renderPage !== 'function'`
-   guard returns early, every wrapper silently no-ops, and navigation stops
-   updating the review bar, the sitemap and the export snapshot — while the
+   There were three wrappers. js/interactive-sitemap.js is gone, and
+   js/manager-review-export.js's existed only to refresh a "Current page:"
+   sidebar label that has since been cut, so it went with the label. The
+   remaining one still needs the original on `window`, which the old shared
+   script scope provided for free. Without this line its
+   `typeof window.renderPage !== 'function'` guard returns early, the wrapper
+   silently no-ops, and navigation stops updating the review bar — while the
    page itself still renders, so nothing looks broken. */
 window.renderPage = renderPage
 

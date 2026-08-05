@@ -96,12 +96,6 @@
       return
     }
 
-    const importButton = event.target.closest('[data-queue-import="csv"]')
-    if (importButton) {
-      document.getElementById('reviewQueueCsvInput')?.click()
-      return
-    }
-
     const undoButton = event.target.closest('[data-queue-undo]')
     if (undoButton) {
       undoLastQueueAction()
@@ -198,22 +192,6 @@
 
     restoreQueueUiState()
 
-    let fileInput = document.getElementById('reviewQueueCsvInput')
-    if (!fileInput) {
-      fileInput = document.createElement('input')
-      fileInput.id = 'reviewQueueCsvInput'
-      fileInput.type = 'file'
-      fileInput.accept = '.csv,text/csv'
-      fileInput.hidden = true
-      document.body.appendChild(fileInput)
-    }
-
-    fileInput.addEventListener('change', (event) => {
-      const file = event.target.files?.[0]
-      if (file) importReviewsFromCsvFile(file)
-      event.target.value = ''
-    })
-
     panel.addEventListener('click', handleQueueClick)
     panel.addEventListener('input', handleQueueInput)
     panel.addEventListener('change', handleQueueChange)
@@ -244,6 +222,11 @@
     getActionTargets,
     focusQueueSearch,
     importReviewsFromCsvText,
+    // Published so the sidebar's single "Import reviews" control can route a
+    // .csv file here. The queue's own "Import CSV" button is gone — one import
+    // door, taking either format, rather than two that each rejected the other's
+    // file. See the comment on .review-actions in index.html.
+    importReviewsFromCsvFile,
     renderReviewQueue,
     mountQueueOnTabOpen: mountReviewQueueOnTabOpen,
   }

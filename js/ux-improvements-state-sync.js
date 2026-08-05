@@ -55,7 +55,12 @@ import { hasValidPageData } from './utils.js'
 
     const rules = [
       {
+        // scored: false — see scoredRules() below. `type` is required with
+        // min(1) by build_scripts/schema.js and enforced by `bun run validate`
+        // in CI, so this can only fail for a page that could not ship. It reads
+        // as a permanently green check while padding the denominator.
         label: 'Page type',
+        scored: false,
         pass: Boolean(page.type),
         detail: page.type || 'Missing page type',
       },
@@ -70,7 +75,9 @@ import { hasValidPageData } from './utils.js'
         detail: summary ? `${summary.length} characters` : 'Missing summary',
       },
       {
+        // Same as Page type: the schema requires a non-empty audience[].
         label: 'Audience',
+        scored: false,
         pass: Array.isArray(page.audience) && page.audience.length > 0,
         detail: Array.isArray(page.audience)
           ? `${page.audience.length} audience entries`
@@ -97,7 +104,11 @@ import { hasValidPageData } from './utils.js'
         detail: `${metaDescription.length}/${META_DESCRIPTION_LIMIT} characters`,
       },
       {
+        // Also schema-required. Note this is only the DECLARED target — whether
+        // the copy actually hits it is 'Computed reading level' below, which is
+        // scored and does fail.
         label: 'Reading target',
+        scored: false,
         pass: Boolean(page.reading),
         detail: page.reading || 'Missing reading target',
       },
@@ -146,10 +157,29 @@ import { hasValidPageData } from './utils.js'
     return getRuleResultsFor(page, { useEditor: true })
   }
 
+  /**
+   * The rules that count toward "checks passed".
+   *
+   * Three entries in the list describe the page rather than test it. Page type,
+   * Audience and Reading target are all required by build_scripts/schema.js and
+   * enforced by `bun run validate`, so no page that can ship will ever fail
+   * them. Scoring them meant every page carried three free passes, which
+   * inflated the ratio by a constant and — worse — buried the rules that do
+   * fail among a wall of permanent green. They still render, as page facts
+   * rather than as results.
+   * @param {Array<object>} rules
+   * @returns {Array<object>}
+   */
+  function scoredRules(rules) {
+    return (rules || []).filter((rule) => rule.scored !== false)
+  }
+
   // Exposed for js/review-queue.js's Overview tab, which needs to compute a
   // checks passed/total count for every page, not just the one currently
   // open in the editor.
-  window.reviewChecks = { getRuleResultsFor }
+  window.reviewChecks = window.reviewChecks || {}
+  window.reviewChecks.getRuleResultsFor = getRuleResultsFor
+  window.reviewChecks.scoredRules = scoredRules
 
   /**
    * Snapshot the review form into a persistable record.
@@ -395,7 +425,18 @@ import { hasValidPageData } from './utils.js'
     status.textContent = `${savedCount} page review${savedCount === 1 ? '' : 's'} saved locally. Last save: ${updatedLabel}.`
   }
 
-  function renderPageChecksPanel() {
+  /**
+   * Render the Checks panel for the page currently in the mockup.
+   *
+   * @param {string} [pageKey] The page to score. Same reasoning as
+   *   `renderStickyBar()`: the `getCurrentPage()` fallback reads
+   *   `#pageSelect.value`, which is still on its first `<option>` while the
+   *   initial View Transition is in flight. This panel returns early while
+   *   hidden, so the stale read only surfaced for a reviewer who left the
+   *   Checks tab open — `initWorkspaceTabs()` restores that tab before
+   *   `restoreInitialPage()` runs, and they came back to another page's scores.
+   */
+  function renderPageChecksPanel(pageKey) {
     const panel = document.getElementById(CHECKS_PANEL_ID)
     if (!panel) return
 
@@ -404,36 +445,56 @@ import { hasValidPageData } from './utils.js'
     const workspace = document.getElementById('reviewWorkspace')
     if (workspace?.hidden || panel.hidden) return
 
-    const page = getCurrentPage()
-    const rules = getRuleResults(page)
+    const page = (pageKey && DATA.pages[pageKey]) || getCurrentPage()
+    const allRules = getRuleResults(page)
+    const scored = scoredRules(allRules)
+    const facts = allRules.filter((rule) => rule.scored === false)
+    // Failures first. The list used to render in declaration order, so on a
+    // page passing all but one rule a reviewer scanned a column of green to
+    // find the single item they could act on — and the three schema-guaranteed
+    // rules sat at the top of it. Order within each group is preserved.
+    const ordered = [...scored.filter((rule) => !rule.pass), ...scored.filter((rule) => rule.pass)]
+    const passed = scored.filter((rule) => rule.pass).length
+
+    const ruleItem = (rule) => `
+      <li class="compliance-item ${rule.pass ? 'pass' : 'warn'}">
+        <span>
+          <span class="compliance-rule">${escapeHtml(rule.label)}</span>
+          ${
+            rule.citation
+              ? `<span class="compliance-citation">${escapeHtml(rule.citation)}</span>`
+              : ''
+          }
+          <span class="compliance-detail">${escapeHtml(rule.detail)}</span>
+        </span>
+      </li>
+    `
 
     panel.innerHTML = `
       <section class="compliance-panel">
-        <h3>Current page checks</h3>
+        <h3>Checks for this page</h3>
         <p class="review-decision-note">
-          Scores only the page open in the mockup (${escapeHtml(getCurrentKey())}). For all pages at
-          once, use the <strong>Overview</strong> tab. Search metadata values update as you edit
-          them in the sidebar.
+          <strong>${escapeHtml(page.title || pageKey || getCurrentKey())}</strong> —
+          ${passed} of ${scored.length} checks passing. For every page at once, use the
+          <strong>Overview</strong> tab. Search metadata values update as you edit them in the
+          sidebar.
         </p>
         <ul class="compliance-list">
-          ${rules
-            .map(
-              (rule) => `
-            <li class="compliance-item ${rule.pass ? 'pass' : 'warn'}">
-              <span>
-                <span class="compliance-rule">${escapeHtml(rule.label)}</span>
-                ${
-                  rule.citation
-                    ? `<span class="compliance-citation">${escapeHtml(rule.citation)}</span>`
-                    : ''
-                }
-                <span class="compliance-detail">${escapeHtml(rule.detail)}</span>
-              </span>
-            </li>
-          `
-            )
-            .join('')}
+          ${ordered.map(ruleItem).join('')}
         </ul>
+        ${
+          facts.length
+            ? `
+        <h4 class="compliance-subhead">Page facts</h4>
+        <p class="review-decision-note">
+          Required by the page schema, so they cannot fail here — shown for reference, not scored.
+        </p>
+        <ul class="compliance-list compliance-list--facts">
+          ${facts.map(ruleItem).join('')}
+        </ul>
+        `
+            : ''
+        }
       </section>
       ${renderPlainLanguageAdvice(page)}
     `

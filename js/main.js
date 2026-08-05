@@ -37,7 +37,6 @@ import '@sfgov/design-system/dist/css/typography.css'
 import '@sfgov/design-system/dist/css/components.css'
 import './../css/styles.css'
 import './../css/ux-improvements.css'
-import './../css/interactive-sitemap.css'
 import './../css/ai-assist.css'
 import './../css/dashboard.css'
 import './../css/review-insights.css'
@@ -84,8 +83,8 @@ import './review-state-sync.js'
 // Review/UX layers. Each is a self-mounting IIFE that reads window.HHVC_DATA
 // and localStorage and attaches its own window.<Namespace>; they are additive
 // on top of the core and must run after it. Order within this block still
-// matters — the orchestrators (ux-improvements, review-queue,
-// interactive-sitemap) assemble public APIs from the sibling files listed
+// matters — the orchestrators (ux-improvements, review-queue) assemble
+// public APIs from the sibling files listed
 // immediately above them.
 // ---------------------------------------------------------------------------
 import './ux-improvements-state-sync.js'
@@ -108,9 +107,6 @@ import './review-insights.js'
 import './review-ops-data.js'
 import './review-ops.js'
 import './dashboard-guidance.js'
-import './interactive-sitemap-data.js'
-import './interactive-sitemap-render.js'
-import './interactive-sitemap.js'
 
 // Plain-language scoring and the AI-assist workspace tab. Same IIFE pattern as
 // the layers above: no imports, mounted on window, so they must run after the
