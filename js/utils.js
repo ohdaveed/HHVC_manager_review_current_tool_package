@@ -679,11 +679,13 @@ function hasValidPageData(data) {
 
 /**
  * Map HHVC_DATA.order into one row per page, looking up each page object and
- * delegating the row's actual shape to the caller. Shared scaffolding for
- * the review queue, portfolio overview, and interactive sitemap, which each
- * enrich a row very differently (staleness/ownership, compliance checks,
- * and link-graph/cluster info respectively) but all start from "one row per
- * page in DATA.order, with that page's data looked up."
+ * delegating the row's actual shape to the caller.
+ *
+ * NO CURRENT CALLERS. It was shared scaffolding for the review queue, the
+ * portfolio overview and the interactive sitemap; the sitemap was deleted
+ * outright and the other two no longer route through it. Recorded rather than
+ * removed because it is still published on `window.utils`, but it is a
+ * deletion candidate — not a helper to reach for.
  * @param {object} data HHVC_DATA (must have .order and .pages)
  * @param {(key: string, label: string, page: object) => object} enrich
  *   Builds the row for one page; receives the looked-up page object (an
@@ -703,7 +705,9 @@ function buildPageRows(data, enrich) {
  * workspace open on first visit and the fallback to 'overview' when a saved
  * tab id is no longer valid.
  *
- * @param {string} panelName The `data-workspace-panel` value, e.g. 'assist'.
+ * @param {string} panelName The `data-workspace-panel` value. Both real call
+ *   sites pass 'help'; the strip is ['overview', 'checks', 'help'] and the
+ *   'assist' panel this used to name is now a section inside Help.
  * @returns {boolean}
  */
 function isWorkspacePanelOpen(panelName) {

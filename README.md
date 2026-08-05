@@ -61,16 +61,21 @@ Additional review aids:
 
 On load, the canvas shows:
 
-1. A compact toolbar with the current page badge and sticky review bar
+1. A compact toolbar with the Karl-tag switch and the sticky review bar
 2. The browser mockup preview
-3. A collapsed workspace panel that opens with **Show workspace**
+3. A workspace panel, docked as a third column, that toggles with **Show workspace**
 
 The sticky bar includes:
 
-- Current page title, decision chip, and `X/9` checks chip
-- Queue progress (`X/19 touched`) — counts pages with any saved localStorage entry; decision chips show decided counts separately
-- **Previous**, **Next**, and **Next needs review** navigation
+- Decision chip and the current page title
+- The active queue filter, when one is set
+- Review progress (`X/19 reviewed`) — counts pages whose decision has moved off
+  the default `Needs review`
+- **Previous** / **Next** navigation, which follow the active filter
 - **Show workspace** / **Hide workspace** toggle
+
+The per-page checks ratio is not on the sticky bar; it is a column in the
+review queue on the Overview tab.
 
 The workspace tabs are:
 

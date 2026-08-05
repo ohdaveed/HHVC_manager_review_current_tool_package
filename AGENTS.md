@@ -145,14 +145,24 @@ which imports all 19 `pages/*.js`, so `window.HHVC_DATA` is always populated
 before anything reads it. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
 `js/dashboard-guidance.js` and
-`js/keyboard-shortcuts.js` take no imports and communicate through
-`window.<Namespace>` objects, so their sequence in `js/main.js` is load-bearing
+`js/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
+objects rather than imports, so their sequence in `js/main.js` is load-bearing
 and hand-reviewed.
+
+Note that "no imports" would be too strong, and used to be written that way:
+only `js/review-queue*.js` takes none. The others do import — `js/utils.js`
+helpers, and four imports in `js/dashboard-guidance.js` — so the module graph
+already orders them against the _core_. What it cannot order is the part that
+matters here: a `window.<Namespace>` a sibling IIFE assigns at mount time is
+invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(three modules wrap it to refresh after navigation — the decorator chain only
-forms if the original is on `window`), `window.toggleSidebar` (an inline
+(`js/ux-improvements.js` wraps it to refresh after navigation — the decorator
+only forms if the original is on `window`; it is the last of three, the other
+two having been the deleted `js/interactive-sitemap.js` and
+`js/manager-review-export.js`, whose decorator went with the sidebar label it
+refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/review-state-sync.js`).
@@ -176,10 +186,18 @@ from the `order` array.
 The old monolithic `app.js` was split into focused modules — **do not re-monolith
 them.**
 
-- **`js/utils.js`** — shared helpers (`escapeHtml`, `getPrimaryCta`,
-  `setPrimaryCta`, `today`, `csvEscape`, `toCsv`, `downloadFile`, `debounce`,
-  `throttle`), exposed as `window.utils` and as bare top-level functions. Loads
-  first. **Add new cross-cutting helpers here rather than duplicating logic.**
+- **`js/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
+  exported as bare top-level functions. Loads first. Beyond the obvious
+  (`escapeHtml`, `today`, `debounce`, CSV parse/serialize/download, DOM
+  get/set) it owns three things worth knowing by name: **`safeUrl`/`urlProbe`**,
+  the scheme guard the security section below is about; the **decision
+  vocabulary** (`DECISIONS` and everything derived from it), which is the
+  canonical list the rest of the tool must not restate; and
+  `buildReviewRecord`/`REVIEW_RECORD_FIELDS`, the persisted record shape.
+  **Add new cross-cutting helpers here rather than duplicating logic** — but
+  note the module has drifted toward a grab-bag, and
+  `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` are a layer inversion
+  living here: the bottom-most module reaching up into the workspace DOM.
 - **`js/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone for
   field-reset), `pageData`, `pageOrder`, `currentPageKey`.
 - **`js/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the
@@ -362,7 +380,14 @@ miscitations. Like `js/review-merge.js` the module is dual-export
 ### URL schemes are validated, not just escaped
 
 `escapeHtml` does not neutralize a scheme, so every structured `href` in
-`js/page-render.js` runs through `safeUrl()` from `js/utils.js`. It is a
+`js/page-render.js` runs through `safeUrl()` from `js/utils.js` — with one
+exception worth knowing about: `formatMarkdown()` (`js/page-render.js:51`)
+gates inline `[label](target)` links on a bare `/^https?:\/\//` test instead.
+That is not a hole today, for two reasons that both have to hold: `escapeHtml`
+runs over the whole string first, so the attribute cannot be broken out of,
+and the regex admits only `http(s)`, which `safeUrl` would allow anyway. It is
+still the one `href` that would not follow `safeUrl` if the scheme rules
+changed. It is a
 **scheme** guard, not a URL allowlist: `http`, `https`, `mailto`, `tel` and
 **anything with no scheme at all** pass unchanged — root-relative
 (`/forms/…`), document-relative (`help/foo`, `../help`), and bare fragment or
@@ -378,9 +403,12 @@ one today.
 `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the same rule in
 `bun run validate` and in the AI output validator, importing `safeUrl` rather
 than restating it so renderer and validator cannot drift. That import crosses
-the CJS/ESM boundary; **Bun is the only runtime CI exercises** (both
-`bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js`),
-so the Node `require(esm)` path works but is not covered by CI. That path needs
+the CJS/ESM boundary, and **CI never exercises that crossing under Node**:
+every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
+`build:netlify`, which invokes `bun build_scripts/validate.js`). CI does run
+Node — `build:netlify` ends in `node build_scripts/copy-workshop-form.js` — but
+that script never touches `data-checks.js`, so the `require(esm)` path is
+uncovered. That path needs
 `require(esm)` enabled — check `process.features.require_module` rather than a
 version number; it is opt-out by default on current Node 22 but was flag-gated
 in early 22.x.
@@ -473,7 +501,7 @@ same person, deliberately.
   `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
   `window`/`module.exports` so the tests need no browser.
 - **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
-  same `mountIfTabAlreadyOpen()` catch-up the AI assist panel uses.
+  same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
 **It had a tab of its own — the `5` key — and lost it.** On a default or Netlify
 deploy every value it reported was "not configured" or "none", because both

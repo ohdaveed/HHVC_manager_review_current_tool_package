@@ -175,10 +175,15 @@ Order still matters, but it is now enforced in two different ways:
   it, and `js/state.js`'s throw now only fires on genuinely malformed data.
 - **The self-mounting IIFE subsystems still depend on listed order.**
   `js/ux-improvements*.js`, `js/review-queue*.js`,
-  `js/dashboard-guidance.js` and `js/keyboard-shortcuts.js` take no imports and
-  talk to each other through `window.<Namespace>` objects, so they must run
+  `js/dashboard-guidance.js` and `js/keyboard-shortcuts.js` talk to each other
+  through `window.<Namespace>` objects rather than imports, so they must run
   after the core modules that create those namespaces. Their sequence in
   `js/main.js` is load-bearing and is still reviewed by hand.
+  **Not "no imports"** — that was the old wording and only
+  `js/review-queue*.js` actually takes none; the rest import `js/utils.js`
+  helpers, `js/dashboard-guidance.js` four of them. The graph therefore orders
+  them against the core already. What it cannot see is a `window.<Namespace>`
+  a sibling assigns at mount time, and that is the edge this list enforces.
 
 **Some functions are deliberately published onto `window`.** Under the old
 shared scope every top-level function was implicitly a `window` property, and
@@ -235,11 +240,16 @@ express the same dependency.
 The old monolithic `app.js` was split into focused modules — **do not
 re-monolith them.**
 
-- **`js/utils.js`** — shared helpers (`escapeHtml`, `getPrimaryCta`,
-  `setPrimaryCta`, `today`, `csvEscape`, `toCsv`, `downloadFile`, `debounce`,
-  `throttle`), exposed as `window.utils` and as bare top-level functions.
-  Loads first; **add new cross-cutting helpers here** rather than duplicating
-  logic.
+- **`js/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
+  exported as bare top-level functions. Loads first. Beyond the obvious
+  (`escapeHtml`, `today`, `debounce`, CSV parse/serialize/download, DOM
+  get/set) it owns **`safeUrl`/`urlProbe`** (the scheme guard described below),
+  the **decision vocabulary** (`DECISIONS` and its derived maps — the canonical
+  list nothing else may restate), and `buildReviewRecord`/
+  `REVIEW_RECORD_FIELDS`. **Add new cross-cutting helpers here** rather than
+  duplicating logic — though the module has drifted toward a grab-bag, and
+  `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` sit here as a layer
+  inversion: the bottom-most module reaching up into the workspace DOM.
 - **`js/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
   `body`, `placement`, `editor`) and legend markup used by `karlTag()` and the
   workspace legend. Loads after `js/utils.js` for `escapeHtml`.
@@ -357,7 +367,7 @@ digit that moves whenever the strip changes; `WORKSPACE_TABS`
 `1`–`3` cases in `js/keyboard-shortcuts.js` must change together.
 
 The two surviving lazy panels **also catch an already-open Help tab at their own
-`init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js` initializes earlier
+`init()`** (`mountWorkspacePanelIfOpen`): `js/ux-improvements.js` initializes earlier
 and restores a persisted `workspace_tab` before those hooks exist, so without
 the catch-up a reviewer who left Help open saw an empty panel until switching
 tabs and back.
@@ -488,7 +498,12 @@ run the same implementation the Checks panel does.
 
 `escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
 none of the five characters it escapes — so every structured `href` in
-`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, which allows
+`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, **except
+`formatMarkdown()`'s inline `[label](target)` links** (`js/page-render.js:51`),
+which gate on a bare `/^https?:\/\//` instead. Not a hole today: `escapeHtml`
+runs over the whole string first so the attribute cannot be broken out of, and
+the regex admits only `http(s)`, which `safeUrl` allows anyway. `safeUrl`
+allows
 `http`/`https`/`mailto`/`tel` **and anything without a scheme at all** —
 root-relative (`/forms/…`), document-relative (`help/foo`, `../help`), and bare
 fragment or query targets (`#top`, `?q=1`) all pass through unchanged. It is a
@@ -509,9 +524,12 @@ today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data
 same rule at validation time — in `bun run validate` **and** in the AI output
 validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
-crosses the CJS/ESM boundary. **Bun is the only runtime CI exercises** — both
-`bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js` —
-so the Node `require(esm)` path works but is _not_ covered by CI. (That path
+crosses the CJS/ESM boundary. **CI never exercises that crossing under Node** —
+every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
+`build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
+Node, at the end of `build:netlify` (`node build_scripts/copy-workshop-form.js`),
+but that script never touches `data-checks.js`, so the `require(esm)` path is
+_not_ covered. (That path
 needs `require(esm)` enabled — check `process.features.require_module` rather
 than trusting a version number; it is opt-out by default on current Node 22 but
 was flag-gated in early 22.x.) Anything
@@ -621,7 +639,7 @@ the same person, deliberately.
   `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
   `window`/`module.exports` so the tests need no browser.
 - **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
-  same `mountIfTabAlreadyOpen()` catch-up the AI assist panel uses.
+  same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
 **It had a tab of its own — the `5` key — and lost it.** On a default or
 Netlify deploy every value it reported was "not configured" or "none", because

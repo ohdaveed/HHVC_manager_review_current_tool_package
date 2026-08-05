@@ -202,8 +202,10 @@ test.describe('manager review workflow', () => {
   // Regression: page-picker navigation must run through the DECORATED
   // window.renderPage, not js/page-render.js's raw export.
   //
-  // js/manager-review-export.js, js/ux-improvements.js and
-  // js/interactive-sitemap.js each wrap window.renderPage after startup.
+  // js/ux-improvements.js wraps window.renderPage after startup. It is the
+  // only wrapper left — js/interactive-sitemap.js was deleted and
+  // js/manager-review-export.js's decorator went with the sidebar label it
+  // refreshed — but one is enough to make the bug below reachable.
   // Reassigning window.renderPage does not rebind an ES module `import`, so
   // when js/app.js called its imported binding the picker silently bypassed
   // every wrapper — and applySavedPageState() never ran for the destination,
