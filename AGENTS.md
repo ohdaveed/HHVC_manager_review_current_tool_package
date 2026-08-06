@@ -674,9 +674,10 @@ known-but-unfixed bug rather than asserting wrong behavior.
   `js/keyboard-shortcuts.js`, `js/manager-review-export.js`,
   `css/ux-improvements.css`.
 - Shared merge/history logic → `js/review-merge.js` (the only place a
-  `history` entry should be constructed; loaded both as a browser `<script>`
-  and imported directly by `server.ts`). Optional sync backend → `server.ts`
-  (API routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+  `history` entry should be constructed; bundled into the browser through
+  `js/main.js` and imported directly by `server.ts`). Optional sync backend →
+  `server.ts` (API routes) and `js/review-state-sync.js` (client pull/push +
+  settings UI).
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

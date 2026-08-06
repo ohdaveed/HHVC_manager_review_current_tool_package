@@ -853,13 +853,12 @@ that stub globals must restore them, or they pollute sibling test files.
   `js/dashboard-guidance.js`, `js/interactive-sitemap.js`,
   `js/keyboard-shortcuts.js`, `js/manager-review-export.js`,
   `css/ux-improvements.css`.
-- Shared merge/history logic → `js/review-merge.js` (loaded both as a browser
-  `<script>` and imported directly by `server.ts` — the only place a `history`
-  entry should ever be constructed). Optional sync backend → `server.ts` (API
-  routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+- Shared merge/history logic → `js/review-merge.js` (bundled into the browser
+  through `js/main.js` and imported directly by `server.ts` — the only place a
+  `history` entry should ever be constructed). Optional sync backend →
+  `server.ts` (API routes) and `js/review-state-sync.js` (client pull/push +
+  settings UI).
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
-- Any new file under `pages/` or `js/` needs a matching `<script>` tag in
-  `index.html`, or `bun run validate` fails.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate`
   **and** `bun run test`. After touching the import/export round-trip,
   manually verify it (export → re-import → decisions survive).
