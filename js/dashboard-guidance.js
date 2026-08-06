@@ -122,10 +122,17 @@ import { updateReadingTarget } from './editor-panel.js'
         gap: 0.2rem;
       }
 
+      /* The explicit color is load-bearing. @sfgov/design-system ships a bare
+         kbd element rule setting color to #1d4d70 — a hardcoded light-mode
+         blue with no dark-mode counterpart — and an element selector outranks
+         the inherited panel colour, so every key in this list rendered at
+         2.09:1 on the dark background. Naming the token here is what removes
+         the vendor colour from the cascade in both themes. */
       .dashboard-shortcuts-keys kbd {
         border: 1px solid var(--sfds-border);
         border-radius: 4px;
         background: var(--sfds-slate-5);
+        color: var(--sfds-slate-1);
         padding: 0.1rem 0.35rem;
         font-size: 0.72rem;
         font-weight: 700;

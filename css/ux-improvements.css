@@ -252,6 +252,14 @@
   height: 1rem;
 }
 
+/* `color` is not optional on a styled kbd here, however redundant it looks.
+   @sfgov/design-system ships a bare element rule — `kbd { color: #1d4d70 }` —
+   a hardcoded light-mode blue with no dark-mode counterpart, and an element
+   selector beats inheritance, so it wins over whatever the surrounding panel
+   sets. On the dark page background that lands at 2.09:1. Naming a token here
+   is what takes the vendor colour out of play in both themes;
+   `.shortcuts-dialog kbd` below already does this, and the two rules that
+   omitted it were the two that broke. */
 .review-queue-subtitle kbd {
   display: inline-block;
   min-width: 1.2rem;
@@ -259,6 +267,7 @@
   border: 1px solid var(--sfds-border);
   border-radius: 0.25rem;
   background: var(--sfds-white);
+  color: var(--sfds-slate-1);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 700;

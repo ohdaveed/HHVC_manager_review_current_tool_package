@@ -37,7 +37,7 @@ bun run start                 # production-like: build:netlify then serve dist/ 
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
-bun run test:e2e              # playwright test (110 specs across 14 files in tests/e2e/)
+bun run test:e2e              # playwright test (115 specs across 14 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -97,7 +97,7 @@ client breaks `review-api-server`'s real requests, and redefines
 can still stub them.
 
 `bun run test:e2e` drives Playwright over `tests/e2e/` — fourteen spec files
-(110 specs), all UI-driven: navigation, editor panel, review workflow, review
+(115 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
 Overview insight cards. They share plain helper functions in

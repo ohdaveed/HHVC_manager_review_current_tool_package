@@ -430,6 +430,22 @@
   .browser-shell {
     color-scheme: light;
 
+    /* Re-declaring the primitives is NOT enough on its own, and this line is
+       the whole reason why. A custom property only takes effect where a var()
+       is actually evaluated; `color` is INHERITED, and inheritance passes the
+       computed value, not the reference. `body` resolves
+       `color: var(--sfds-slate-1)` against the dark :root above and computes
+       #f0f1f2, and every element in here with no colour rule of its own — most
+       body copy — inherited that straight past the light tokens below onto the
+       light --sfds-white background this shell paints.
+
+       Measured: #f0f1f2 on #fcfcfc is 1.1:1. Not "low contrast" — invisible.
+       Nine nodes per page of unreadable body text on a reviewer's machine set
+       to dark, on the one surface that is supposed to be immune to the theme.
+       Re-stating `color` here evaluates the light token at the boundary and
+       gives the subtree something correct to inherit. */
+    color: var(--sfds-slate-1);
+
     --sfds-slate-1: #0b0c0c;
     --sfds-slate-2: #383939;
     --sfds-slate-3: #6e7070;
