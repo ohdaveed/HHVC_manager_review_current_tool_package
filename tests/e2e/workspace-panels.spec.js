@@ -36,6 +36,49 @@ test.describe('workspace panels', () => {
     expect(shell.y).toBeLessThan(1000)
   })
 
+  /* The mockup and the workspace must never occupy the same pixels, at ANY
+     width — whichever layout is in force.
+
+     The test above proves docking works at 1800 and every other spec in the
+     suite runs at Playwright's 1280 default, so for a while the only widths
+     under test were one above the problem and one below it. In between, the
+     breakpoint said "dock" while the mockup was still wider than the column
+     left for it: .browser-shell carries `flex-shrink: 0` and bottoms out around
+     780px, so it ran underneath the sticky panel by 162px at 1440, 100px at
+     1536 and 50px at 1600 — the widths a 14-inch laptop and a 125%-scaled
+     1920px display actually report.
+
+     Sampling across the range is the point. A single extra width would just
+     move the blind spot somewhere else. */
+  test('the mockup never overlaps the workspace, at any width', async ({ page }) => {
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'overview')
+
+    for (let width = 1280; width <= 1920; width += 40) {
+      await page.setViewportSize({ width, height: 950 })
+      const geometry = await page.evaluate(() => {
+        const shell = document.querySelector('.browser-shell').getBoundingClientRect()
+        const workspace = document.querySelector('#reviewWorkspace').getBoundingClientRect()
+        return {
+          shellRight: shell.right,
+          workspaceLeft: workspace.left,
+          workspaceTop: workspace.top,
+        }
+      })
+
+      // Stacked (the panel sits below the canvas) is fine by construction —
+      // only the side-by-side case can collide horizontally.
+      const isSideBySide = geometry.workspaceTop < 400
+      if (!isSideBySide) continue
+
+      expect(
+        geometry.workspaceLeft,
+        `mockup overlaps the workspace at ${width}px by ` +
+          `${Math.round(geometry.shellRight - geometry.workspaceLeft)}px`
+      ).toBeGreaterThanOrEqual(geometry.shellRight)
+    }
+  })
+
   test('hiding the workspace really removes it', async ({ page }) => {
     // `.review-workspace` declares its own `display`, which outranks the UA
     // stylesheet's `[hidden] { display: none }` — the panel stayed on screen

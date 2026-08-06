@@ -71,6 +71,26 @@ test.describe('accessibility', () => {
     await expectNoSeriousViolations(page)
   })
 
+  /* The workspace scan above opens Overview and stops there, so for a long time
+     two of the three tabs were never scanned at all. Both were carrying serious
+     WCAG 2.1 AA failures when these tests were added: 44 color-contrast nodes on
+     Checks (--sfds-slate-3 on the docked panel's surface, 4.37:1) plus a
+     scrollable-region-focusable failure on the panel itself, and 4 more contrast
+     nodes on Help where a blanket `.dashboard-guidance-card span` rule reached
+     into the Karl tag legend and overrode the slate-2 it carries deliberately.
+
+     None of it was width-dependent — measured identically at 1280 and 1800 —
+     so the gap was never the viewport, it was which tabs anyone thought to
+     open. A tab that is not scanned is a tab with no accessibility coverage,
+     however thorough the scan of its neighbour. */
+  for (const tab of ['checks', 'help']) {
+    test(`workspace "${tab}" tab has no serious violations`, async ({ page }) => {
+      await gotoFresh(page)
+      await openWorkspaceTab(page, tab)
+      await expectNoSeriousViolations(page)
+    })
+  }
+
   test('shortcuts help dialog has no serious violations', async ({ page }) => {
     await gotoFresh(page)
     await page.locator('#mockPage h1').first().click()

@@ -490,23 +490,40 @@
   line-height: 1.25;
 }
 
+/* --sfds-slate-2, not slate-3. This panel sits on --surface-page (#f0f0f0),
+   where slate-3 (#6e7070) measures 4.37:1 — under the 4.5:1 this size of text
+   needs. It was not always wrong: on the white panel this content used to sit
+   on, slate-3 gives 4.98:1 and passed. Docking the workspace changed the
+   surface underneath it and took the ratio down with it, which is the failure
+   mode a literal-free token layer is supposed to prevent and did not, because
+   the token was chosen against a different background than the one it ended up
+   on. slate-2 (#383939) measures 10.17:1 here, and stays quieter than the rule
+   name above it, which is slate-1. Dark mode inverts by role rather than by
+   value — slate-2 is #c3c7ce there — so this reads 10.47:1 on the dark panel
+   against slate-3's 7.88:1, improving in both themes rather than trading one
+   for the other. */
 .compliance-detail {
   display: block;
   margin-top: 0.15rem;
-  color: var(--sfds-slate-3);
+  color: var(--sfds-slate-2);
   font-size: 0.78rem;
   line-height: 1.35;
 }
 
 /* The source a plain-language rule comes from, shown per finding so a reviewer
    who disagrees knows which document to go argue with. Sits between the rule
-   name and its detail; --sfds-slate-3 on the panel background clears 4.5:1, and
-   it is deliberately quieter than .compliance-detail (same colour, smaller and
-   uppercase) because it is provenance rather than the finding itself. */
+   name and its detail, and stays deliberately quieter than .compliance-detail
+   (same colour, smaller and uppercase) because it is provenance rather than the
+   finding itself. Takes slate-2 for the reason spelled out above — and note
+   this is the smaller of the two sizes, so it was the further under the line,
+   not the nearer. The comment that used to sit here claimed slate-3 "clears
+   4.5:1 on the panel background"; it measured 4.37:1. An asserted contrast
+   ratio nobody re-measures after the surface moves is worse than none, because
+   it reads as evidence the check was done. */
 .compliance-citation {
   display: block;
   margin-top: 0.15rem;
-  color: var(--sfds-slate-3);
+  color: var(--sfds-slate-2);
   font-size: 0.7rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;

@@ -80,7 +80,17 @@ import { updateReadingTarget } from './editor-panel.js'
         line-height: 1.25;
       }
 
-      .dashboard-guidance-card span {
+      /* DIRECT children only. A card is either a title plus its own text span,
+         or a title followed by a whole embedded component — today the Karl tag
+         legend, which arrived here when the legend moved out of the mockup and
+         into Help. An unscoped descendant selector reached inside that
+         component and restyled its parts: the .karl-tag-kind pills lost the
+         deliberate --sfds-slate-2 they carry for contrast (3.78:1 on the pill
+         fill, a WCAG 2.1 AA failure axe never saw because no scan opened this
+         tab) and were forced to display:block, stacking pills designed to sit
+         inline. Scoping to the child combinator keeps the intended styling for
+         the text cards and stops the rule reaching into anything nested. */
+      .dashboard-guidance-card > span {
         display: block;
         color: var(--sfds-slate-3);
         font-size: 0.76rem;
