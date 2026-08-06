@@ -266,6 +266,28 @@ test.describe('manager review workflow', () => {
     await expect(workspace).toBeHidden()
   })
 
+  test('the decision toast offers a jump to the next page needing review', async ({ page }) => {
+    await gotoFresh(page)
+
+    // js/ux-improvements-workspace.js has always passed this action to
+    // showToast, but showToast only declared (message, type), so the object
+    // was dropped and the button never rendered — a shipped affordance that
+    // did nothing, with matching CSS that styled nothing.
+    await setDecision(page, 'Approved')
+
+    const toast = page.locator('.toast', { hasText: 'Decision set: Approved' })
+    await expect(toast).toBeVisible()
+    const action = toast.locator('.toast-action')
+    await expect(action).toHaveText('Next Actionable Page')
+
+    // It must actually navigate, not just render.
+    const startKey = await page.locator('#pageSelect').inputValue()
+    await action.click()
+    await expect(page.locator('#pageSelect')).not.toHaveValue(startKey)
+    // Clicking dismisses the toast, which otherwise describes the page we left.
+    await expect(toast).toHaveCount(0)
+  })
+
   test('checks tab renders rule results for the current page', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'checks')

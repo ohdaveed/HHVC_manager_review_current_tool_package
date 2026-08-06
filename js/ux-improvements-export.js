@@ -34,8 +34,19 @@ import { hasValidPageData } from './utils.js'
     // reviewer is looking at — the same self-contradiction this PR removed from
     // the KPI tiles, just relocated into a clipboard.
     const allRules = window.ReviewUx.stateSync.getRuleResults(page)
-    const rules = window.reviewChecks?.scoredRules?.(allRules) ?? allRules
-    const passed = rules.filter((rule) => rule.pass).length
+    // No `?? allRules` fallback. That is the tempting shape and it is wrong
+    // here: if scoredRules() is missing, falling back to the unfiltered list
+    // silently adds the three unscored page-fact rules — Page type, Audience,
+    // Reading target — which are schema-required and can never fail. Every
+    // ratio in the summary would then read high by a constant, in a document a
+    // manager pastes into a decision record, with nothing on screen to say so.
+    // A number that is quietly wrong is worse than an absent one, so say the
+    // ratio is unavailable instead.
+    const scoredRules = window.reviewChecks?.scoredRules
+    const rules = typeof scoredRules === 'function' ? scoredRules(allRules) : null
+    const checksLine = rules
+      ? `${rules.filter((rule) => rule.pass).length}/${rules.length}`
+      : 'unavailable (scored-rule filter not loaded)'
     const seoLimit = window.ReviewUx.stateSync.SEO_TITLE_LIMIT
     const metaLimit = window.ReviewUx.stateSync.META_DESCRIPTION_LIMIT
 
@@ -46,7 +57,7 @@ import { hasValidPageData } from './utils.js'
       `Type: ${page.type || ''}`,
       `URL: https://${getValue('urlInput') || page.slug || ''}`,
       `Decision: ${getValue('reviewDecision') || 'Needs review'}`,
-      `Checks: ${passed}/${rules.length}`,
+      `Checks: ${checksLine}`,
       `SEO title: ${seoTitle} (${seoTitle.length}/${seoLimit})`,
       `Meta description: ${metaDescription} (${metaDescription.length}/${metaLimit})`,
       `Reading target: ${page.reading || ''}`,

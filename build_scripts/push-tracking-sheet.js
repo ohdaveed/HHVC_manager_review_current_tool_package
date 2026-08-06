@@ -23,6 +23,25 @@ const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'sheet-config.jso
 const trackingPath = path.join(root, 'review/mockup_tracking_sheet.csv')
 const updateOutPath = path.join(root, 'review/page_inventory_sheet_update.csv')
 
+/**
+ * Today's date in the operator's LOCAL calendar, as YYYY-MM-DD.
+ *
+ * Not `toISOString().slice(0, 10)`, which is UTC: a push run at 5pm in San
+ * Francisco stamps tomorrow's date, so the tracking sheet disagrees with the
+ * `review_date` saved alongside it — `utils.today()` builds that from local
+ * getFullYear/getMonth/getDate, and js/review-insights-data.js:88-96 already
+ * rejected the UTC form for exactly this reason. This file kept it in two
+ * places and is the last one that had to speak a different calendar.
+ * @returns {string}
+ */
+function localToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function rowsToObjects(rows) {
   const [header, ...body] = rows
   return body
@@ -97,9 +116,7 @@ function buildScopeNotes(existing, tracking) {
   }
   if (tracking.content_review_flag) syncParts.push(tracking.content_review_flag)
 
-  const syncLine = syncParts.length
-    ? `Mockup sync (${new Date().toISOString().slice(0, 10)}): ${syncParts.join('; ')}`
-    : ''
+  const syncLine = syncParts.length ? `Mockup sync (${localToday()}): ${syncParts.join('; ')}` : ''
 
   const preserved = String(existing || '').trim()
   if (!syncLine) return preserved
@@ -153,7 +170,7 @@ function mergeInventoryRows(sheetRows, trackingByKey, registry) {
   const keyIndex = header.indexOf(config.matchColumn)
   if (keyIndex < 0) throw new Error(`Missing match column: ${config.matchColumn}`)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localToday()
   let updatedCount = 0
   let retiredCount = 0
 

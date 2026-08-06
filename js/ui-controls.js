@@ -4,12 +4,43 @@
 
 import { currentPageKey, pageData, pageOrder } from './state.js'
 import { escapeHtml } from './utils.js'
-function showToast(message, type) {
+/**
+ * Show a transient toast, optionally with one action button.
+ *
+ * `action` was a real gap rather than a new feature: js/ux-improvements-workspace.js
+ * has always passed a third argument offering a "Next Actionable Page" jump
+ * after a decision, and `css/styles.css`'s `.toast .toast-action` has always
+ * styled it \u2014 but this function only ever declared two parameters, so the
+ * object was silently dropped and the button never rendered. Two parallel
+ * sessions built the two halves and neither learned about the other.
+ *
+ * Deliberately ONE action, not a list: the toast self-dismisses after 4s, and
+ * anything a reviewer needs longer than that to decide on does not belong here
+ * (which is why queue undo lives in the bulk bar instead).
+ * @param {string} message
+ * @param {string} [type] extra class, e.g. 'success' | 'error'
+ * @param {{label: string, callback: () => void}} [action]
+ */
+function showToast(message, type, action) {
   const container = document.getElementById('toastContainer')
   if (!container) return
   const el = document.createElement('div')
   el.className = 'toast' + (type ? ' ' + type : '')
   el.textContent = message
+  if (action && action.label && typeof action.callback === 'function') {
+    const actionBtn = document.createElement('button')
+    actionBtn.type = 'button'
+    actionBtn.className = 'toast-action'
+    // textContent, not innerHTML \u2014 the label is caller-supplied.
+    actionBtn.textContent = action.label
+    actionBtn.addEventListener('click', () => {
+      // Dismiss first: the callback usually navigates, and a toast left behind
+      // describes the page the reviewer just left.
+      el.remove()
+      action.callback()
+    })
+    el.appendChild(actionBtn)
+  }
   const close = document.createElement('button')
   close.className = 'toast-close'
   close.textContent = '\u00d7'
