@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 22 unit-test files in tests/ (528 tests)
+bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
 bun run test:e2e              # playwright test (105 specs across 13 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -82,7 +82,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 528 tests at time of writing.
+without a key or a paid call) — 533 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -268,9 +268,15 @@ re-monolith them.**
   snapshot, published on `window.ReviewExport` for the consolidated export
   control. It no longer wraps `renderPage`: that decorator existed only to
   refresh a sidebar label that has been cut.
-- **`js/reading-level.js`** — browser-safe Flesch-Kincaid grade level for body
-  copy, no Node deps. `build_scripts/reading-level.js` is the Node/Bun
-  counterpart (backed by `text-readability`) used for parity checks in tests.
+- **`js/reading-level.js`** — Flesch-Kincaid grade level for body copy, backed
+  by `text-readability` (a runtime dependency, bundled: 40 kB raw / 17.9 kB
+  gzip). **There used to be two implementations and now there is one.** This
+  file carried a hand-rolled formula from the no-build-step era while
+  `build_scripts/reading-level.js` wrapped the library for Node — and only the
+  Node copy had tests, while only this one shipped. They disagreed by 1.14
+  grades on average across the 19 pages, always in the direction of "easier
+  than it is", so nine pages reported hitting a reading target they miss. The
+  Node copy is deleted; `tests/reading-level.test.js` now imports this one.
 - **`js/review-state-validation.js`** — browser-side validation of the
   `hhvcManagerReviewState:v1` blob, mirroring
   `build_scripts/review-state-schema.js`'s Zod rules without shipping Zod to

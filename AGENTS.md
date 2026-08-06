@@ -212,6 +212,20 @@ them.**
   published on `window.ReviewExport` for the consolidated export control. It no
   longer wraps `renderPage`: that decorator existed only to refresh a sidebar
   label that has been cut.
+- **`js/reading-level.js`** — Flesch-Kincaid grade for body copy, behind
+  `window.readingLevel`, backed by `text-readability` (a runtime dependency;
+  40 kB raw / 17.9 kB gzip in the app chunk). **There used to be two
+  implementations of this and now there is one.** This file carried a
+  hand-rolled formula from the no-build-step era, and `build_scripts/reading-level.js`
+  wrapped the library for Node — but only the Node copy had tests and only this
+  one shipped, which is how they drifted 1.14 grades apart on average across
+  the 19 pages without a red test anywhere. The drift ran toward "easier than
+  it is" in aggregate, so nine pages reported hitting a reading target they
+  miss — a check biased in exactly the direction that makes it useless. The
+  Node copy is deleted and `tests/reading-level.test.js` imports this one. Do
+  not reintroduce a second copy to avoid the dependency: the gap was
+  rule-based syllable counting, which no regex approximates closely enough to
+  matter.
 
 ### Review/UX layers are additive, on top of the core
 
