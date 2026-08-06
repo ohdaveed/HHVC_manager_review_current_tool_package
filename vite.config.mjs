@@ -28,10 +28,16 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: mode === 'singlefile' ? 'dist-singlefile' : 'dist',
     emptyOutDir: true,
-    // ECharts and Web Awesome are both large enough to trip Rollup's default
-    // 500 kB warning. Raise the threshold rather than silence the warning
-    // entirely, so a genuinely surprising jump still gets flagged.
-    chunkSizeWarningLimit: 1500,
+    // ECharts trips Rollup's default 500 kB warning: its lazy-loaded chunk is
+    // ~502 kB and the app chunk ~466 kB. Raise the threshold rather than
+    // silence the warning, so a genuinely surprising jump still gets flagged.
+    //
+    // 600, not 1500. The old value was set when Web Awesome was also expected
+    // in the bundle; that dependency was never imported and has been removed,
+    // which left the limit roughly 3x larger than anything it guards — it
+    // would not have flagged the app chunk tripling. 600 clears both current
+    // chunks with headroom and still fires well before that.
+    chunkSizeWarningLimit: 600,
   },
   server: {
     host: process.env.HOST || '127.0.0.1',

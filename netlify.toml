@@ -4,7 +4,14 @@
 # The optional /api/review-state sync backend has no runtime here, so a Netlify
 # deploy is read-only/no-sync by design.
 [build]
-  command = "npm run build:netlify"
+  # Bun, not npm. This said `npm run build:netlify` while the comment above it
+  # said `bun`, and the repo commits only bun.lock — no package-lock.json. npm
+  # therefore resolved every dependency fresh from the `^` ranges in
+  # package.json, so the deployed artifact could be built against versions no
+  # CI run ever exercised, while CI itself uses `bun install --frozen-lockfile`.
+  # A lockfile that governs CI but not production is worse than no lockfile,
+  # because it looks like it is doing the job.
+  command = "bun run build:netlify"
   publish = "dist"
 
 # Mirror the security headers served by server.ts in local dev.
