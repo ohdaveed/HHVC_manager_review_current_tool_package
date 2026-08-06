@@ -23,6 +23,25 @@ const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'sheet-config.jso
 const trackingPath = path.join(root, 'review/mockup_tracking_sheet.csv')
 const updateOutPath = path.join(root, 'review/page_inventory_sheet_update.csv')
 
+/**
+ * Today's date in the operator's LOCAL calendar, as YYYY-MM-DD.
+ *
+ * Not `toISOString().slice(0, 10)`, which is UTC: a push run at 5pm in San
+ * Francisco stamps tomorrow's date, so the tracking sheet disagrees with the
+ * `review_date` saved alongside it — `utils.today()` builds that from local
+ * getFullYear/getMonth/getDate, and js/review-insights-data.js:88-96 already
+ * rejected the UTC form for exactly this reason. This file kept it in two
+ * places and is the last one that had to speak a different calendar.
+ * @returns {string}
+ */
+function localToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function rowsToObjects(rows) {
   const [header, ...body] = rows
   return body
@@ -87,7 +106,23 @@ function mapMockupStatus(status) {
   }
 }
 
-function buildScopeNotes(existing, tracking) {
+/**
+ * Append this run's "Mockup sync (date)" line to a row's preserved scope notes.
+ *
+ * `today` is a parameter rather than another `localToday()` call so that one
+ * push speaks one date. `mergeInventoryRows()` captures the date once and
+ * stamps it into `Last Repo Sync`; computing a second one here means a run
+ * that happens to cross local midnight writes one date into the sync column
+ * and a different one into the note beside it — on the same row, and
+ * potentially a different pair row to row. Rare, but the whole point of the
+ * local-date fix was that this file stops disagreeing with itself about what
+ * day it is.
+ * @param {string} existing prior contents of the Scope / Review Notes cell
+ * @param {object} tracking the page's tracking record
+ * @param {string} today YYYY-MM-DD captured once for the whole run
+ * @returns {string}
+ */
+function buildScopeNotes(existing, tracking, today) {
   const syncParts = []
   if (tracking.mockup_change_status && tracking.mockup_change_status !== 'Current') {
     syncParts.push(`change=${tracking.mockup_change_status}`)
@@ -97,9 +132,7 @@ function buildScopeNotes(existing, tracking) {
   }
   if (tracking.content_review_flag) syncParts.push(tracking.content_review_flag)
 
-  const syncLine = syncParts.length
-    ? `Mockup sync (${new Date().toISOString().slice(0, 10)}): ${syncParts.join('; ')}`
-    : ''
+  const syncLine = syncParts.length ? `Mockup sync (${today}): ${syncParts.join('; ')}` : ''
 
   const preserved = String(existing || '').trim()
   if (!syncLine) return preserved
@@ -153,7 +186,7 @@ function mergeInventoryRows(sheetRows, trackingByKey, registry) {
   const keyIndex = header.indexOf(config.matchColumn)
   if (keyIndex < 0) throw new Error(`Missing match column: ${config.matchColumn}`)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localToday()
   let updatedCount = 0
   let retiredCount = 0
 
@@ -172,7 +205,10 @@ function mergeInventoryRows(sheetRows, trackingByKey, registry) {
     if (tracking) {
       set('Source File', tracking.mockup_source_file || next[col('Source File')] || '')
       set('Status', resolveStatus(next[col('Status')], tracking))
-      set('Scope / Review Notes', buildScopeNotes(next[col('Scope / Review Notes')], tracking))
+      set(
+        'Scope / Review Notes',
+        buildScopeNotes(next[col('Scope / Review Notes')], tracking, today)
+      )
       set('Source Basis', buildSourceBasis(next[col('Source Basis')], tracking))
       set('Last Repo Sync', today)
       updatedCount += 1
@@ -193,7 +229,8 @@ function mergeInventoryRows(sheetRows, trackingByKey, registry) {
             next[col('Scope / Review Notes')],
             // Synthesize a minimal tracking-like object so the note explains
             // the retirement in the same "Mockup sync (date): ..." format.
-            { mockup_change_status: `retired, see ${replacement}` }
+            { mockup_change_status: `retired, see ${replacement}` },
+            today
           )
         )
         set('Last Repo Sync', today)
@@ -238,7 +275,7 @@ function mergeInventoryRows(sheetRows, trackingByKey, registry) {
     set('Primary Audience', Array.isArray(page.audience) ? page.audience.join(', ') : '')
     set('Primary CTA', page.primaryCta || '')
     set('Status', mapMockupStatus(tracking.mockup_status))
-    set('Scope / Review Notes', buildScopeNotes('', tracking))
+    set('Scope / Review Notes', buildScopeNotes('', tracking, today))
     set('Source Basis', buildSourceBasis('', tracking))
     set('Last Repo Sync', today)
     appendedRows.push(next)

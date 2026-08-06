@@ -1,47 +1,56 @@
-// Flesch-Kincaid grade level for mockup body copy (browser-safe, no Node deps).
-// Node build scripts can use build_scripts/reading-level.js (text-readability) for parity checks.
+// Flesch-Kincaid grade level for mockup body copy.
+//
+// This is the ONLY reading-level implementation in the repo, and that is a
+// recent and deliberate change. There used to be two: this file carried a
+// hand-rolled formula because it had to run in the browser with no build step,
+// and build_scripts/reading-level.js wrapped `text-readability` for Node. Only
+// the Node copy had tests. Only the browser copy shipped.
+//
+// They did not agree, and not marginally: over the 19 real pages the browser
+// formula read LOWER on 18 of them, by 1.14 grades on average and 2.7 at the
+// worst (article11Guide: 7.6 here against 10.3 there). The whole point of the
+// check is to tell a reviewer whether copy is harder than its stated target, so
+// a formula biased toward "easier than it is" fails in the one direction that
+// matters. Nine of the 19 pages were reported as hitting their target when the
+// authoritative formula says they do not.
+//
+// The cause was syllable counting. The old countSyllables() counted vowel runs
+// and subtracted a silent trailing "e"; `text-readability` delegates to the
+// rule-based `syllable` package. The approximation was not uniformly low —
+// per word it missed in both directions ("remediation" 4 against the correct
+// 5, "investigates" 5 against the correct 4) — but over the vocabulary these
+// pages actually use it netted out consistently easy. That is not a gap a
+// regex can be tuned to close, so the browser now uses the same library
+// instead of approximating it. Vite bundles it, which costs 40 kB raw / 17.9
+// kB gzip on the app chunk — real, and worth it for the tool's only automated
+// content-quality number. The "no Node deps" constraint this file was written
+// under disappeared with the Vite migration, and the duplicate outlived its
+// own reason for existing.
+import readability from 'text-readability'
 ;(function initReadingLevel() {
   if (typeof window === 'undefined') return
 
-  function countSyllables(word) {
-    const w = String(word)
-      .toLowerCase()
-      .replace(/[^a-z]/g, '')
-    if (!w) return 0
-    if (w.length <= 3) return 1
-    const vowels = w.match(/[aeiouy]+/g)
-    let count = vowels ? vowels.length : 1
-    if (w.endsWith('e') && !w.endsWith('le')) count -= 1
-    return Math.max(1, count)
-  }
-
-  function tokenize(text) {
-    return String(text || '')
-      .replace(/\*\*/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .split(/\s+/)
-      .filter(Boolean)
-  }
-
   /**
    * Compute Flesch-Kincaid grade level for plain text.
+   *
+   * `text-readability` returns a grade for any non-empty string, including a
+   * two-word fragment where the sentence-length term is meaningless. The
+   * five-word floor below is this tool's own guard, kept from the previous
+   * implementation: a page with almost no body copy should report "not enough
+   * text to compute" rather than a confident number derived from a headline.
    * @param {string} text
    * @returns {number|null} grade level, or null when text is too short
    */
   function fleschKincaidGrade(text) {
-    const words = tokenize(text)
-    if (words.length < 5) return null
+    const clean = String(text || '').trim()
+    // Markdown emphasis and link syntax are authoring marks, not words the
+    // reader sees. Left in, `[Report a problem](rodentsReport)` contributes the
+    // page key as if it were prose.
+    const plain = clean.replace(/\*\*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    if (plain.split(/\s+/).filter(Boolean).length < 5) return null
 
-    const sentences = String(text)
-      .split(/[.!?]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-    const sentenceCount = Math.max(1, sentences.length)
-    const wordCount = words.length
-    const syllableCount = words.reduce((sum, word) => sum + countSyllables(word), 0)
-
-    const grade = 0.39 * (wordCount / sentenceCount) + 11.8 * (syllableCount / wordCount) - 15.59
-    return Math.round(grade * 10) / 10
+    const grade = readability.fleschKincaidGrade(plain)
+    return Number.isFinite(grade) ? Math.round(grade * 10) / 10 : null
   }
 
   /**
@@ -51,8 +60,9 @@
    * `{ text, unverified? }` for body copy and `{ label?, text }` for
    * whatToKnow entries. Before this existed the traversal below pushed those
    * objects straight into the chunk list, so they reached the readability
-   * formula as the literal string "[object Object]". Keep in step with
-   * build_scripts/reading-level.js.
+   * formula as the literal string "[object Object]": 10 occurrences across 4
+   * real pages, which pushed `scopeInfo` to a nonsense grade 21.4. Both shapes
+   * are handled here so the grade is computed over the words a reader sees.
    * @param {unknown} item
    * @returns {string}
    */
@@ -82,9 +92,10 @@
    *
    * Chunks are self-contained units — a heading, a bullet, an audience entry —
    * and most carry no terminal punctuation. Joining them with a bare space
-   * made every consecutive unpunctuated unit read as one enormous sentence
-   * (`scopeInfo`'s bullet list became a single 218-word "sentence"). Keep in
-   * step with build_scripts/reading-level.js.
+   * made every consecutive unpunctuated unit read as one enormous sentence:
+   * `scopeInfo`'s bullet list alone became a single 218-word "sentence",
+   * dragging its average to 37.4 words and its grade to a meaningless 21.4.
+   * Terminating each chunk keeps one unit as one sentence.
    * @param {Array<unknown>} chunks
    * @returns {string}
    */

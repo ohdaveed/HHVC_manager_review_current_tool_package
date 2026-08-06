@@ -56,8 +56,9 @@ validate one page in isolation. Run both after editing anything under `pages/` o
   `window.HHVC_DATA = { pages, order }`. **The app is bundled by Vite from one
   ES-module entry point, `js/main.js`** — `index.html` has a single
   `<script type="module">` tag. Core modules import what they need; the
-  self-mounting IIFE layers take no imports and depend on their listed order in
-  `js/main.js`. Add a new page by importing it in `js/page-data.js` (validated by
+  self-mounting IIFE layers reach each other through `window.<Namespace>`
+  objects rather than imports (most still import `js/utils.js` helpers), so
+  they depend on their listed order in `js/main.js`. Add a new page by importing it in `js/page-data.js` (validated by
   `build_scripts/page-import-checks.js`) and adding an `order` entry.
 - **Core is split into focused modules** (formerly one `app.js`): `js/utils.js`
   (shared helpers, loads first), `js/karl-tag-meta.js`, `js/state.js`,

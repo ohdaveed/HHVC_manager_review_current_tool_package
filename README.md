@@ -44,7 +44,7 @@ The manager-review interface uses a **mockup-first layout**:
 
 - The page preview loads above the fold
 - Review tools sit in a workspace docked beside the preview, sticky to the viewport
-- A sticky review bar shows the current page title, decision chip, check count, queue progress, and navigation shortcuts
+- A sticky review bar shows the current page title, decision chip, queue progress, and navigation shortcuts
 - A review queue tracks all 19 pages with filters, progress, and one-click navigation
 - Workspace tabs hold the Overview, Page checks, and Help panels (shortcuts `1`–`3`)
 
@@ -61,16 +61,21 @@ Additional review aids:
 
 On load, the canvas shows:
 
-1. A compact toolbar with the current page badge and sticky review bar
+1. A compact toolbar with the Karl-tag switch and the sticky review bar
 2. The browser mockup preview
-3. A collapsed workspace panel that opens with **Show workspace**
+3. A workspace panel, docked as a third column, that toggles with **Show workspace**
 
 The sticky bar includes:
 
-- Current page title, decision chip, and `X/9` checks chip
-- Queue progress (`X/19 touched`) — counts pages with any saved localStorage entry; decision chips show decided counts separately
-- **Previous**, **Next**, and **Next needs review** navigation
+- Decision chip and the current page title
+- The active queue filter, when one is set
+- Review progress (`X/19 reviewed`) — counts pages whose decision has moved off
+  the default `Needs review`
+- **Previous** / **Next** navigation, which follow the active filter
 - **Show workspace** / **Hide workspace** toggle
+
+The per-page checks ratio is not on the sticky bar; it is a column in the
+review queue on the Overview tab.
 
 The workspace tabs are:
 
@@ -93,7 +98,7 @@ state.ui = {
 
 Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**.
 
-**Progress semantics:** The sticky bar and queue progress bar count **touched** pages — any page with a saved entry in `localStorage`, even if the decision is still **Needs review** (for example, after saving notes without changing the decision). The decision breakdown chips count **decided** pages where the saved decision is not **Needs review**. Sticky-bar prev/next respects the active queue filter when one is selected.
+**Progress semantics:** The sticky bar and queue progress bar count **decided** pages — `stats.reviewed` in `js/review-queue-rows.js` filters on `utils.isDecided(row.decision)`, so a page whose decision is still **Needs review** does not count even when it carries saved notes. Saving a note is not a decision, and counting it as one would report the site as reviewed when nothing had been judged. The decision breakdown chips split the same set by decision. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Dashboard guidance copy
 

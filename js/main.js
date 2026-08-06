@@ -10,9 +10,15 @@
    graph now enforces it: a module that needs `escapeHtml` imports it, so it
    cannot run too early no matter what this file says. What remains
    order-sensitive is the group of self-mounting IIFE subsystems further
-   down, which take no imports and communicate through `window.<Namespace>`
-   objects — they still have to run after the core modules that create those
-   namespaces, which is why they stay listed in their original sequence.
+   down, which communicate through `window.<Namespace>` objects — they still
+   have to run after the core modules that create those namespaces, which is
+   why they stay listed in their original sequence.
+
+   "Take no imports" is what this used to say, and it is not true: only
+   js/review-queue*.js takes none. The rest import js/utils.js helpers, so the
+   graph orders them against the core on its own. The edge it cannot see, and
+   the reason this order is still hand-maintained, is a `window.<Namespace>`
+   one IIFE assigns and another reads at mount time.
 
    Load-order dependency: this file is the root of the graph. Nothing
    imports it. */

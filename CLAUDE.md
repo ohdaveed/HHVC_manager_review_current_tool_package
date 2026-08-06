@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 22 unit-test files in tests/ (528 tests)
-bun run test:e2e              # playwright test (109 specs across 14 files in tests/e2e/)
+bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
+bun run test:e2e              # playwright test (106 specs across 13 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -82,7 +82,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 528 tests at time of writing.
+without a key or a paid call) — 533 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -96,13 +96,20 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — fourteen spec files
-(109 specs): thirteen UI-driven (navigation, editor panel, review workflow,
-review queue, review-queue undo, stored review data, import/export, keyboard
-shortcuts, workspace panels, accessibility, AI assist, mockup PNG export,
-Overview insight cards) plus the
-original API-level `review-import-export` round-trip, sharing plain helper
-functions in `tests/e2e/helpers.js` (no fixture framework).
+`bun run test:e2e` drives Playwright over `tests/e2e/` — thirteen spec files
+(106 specs), all UI-driven: navigation, editor panel, review workflow, review
+queue, review-queue undo, stored review data, import/export, keyboard
+shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
+Overview insight cards. They share plain helper functions in
+`tests/e2e/helpers.js` (no fixture framework).
+A fourteenth file, `review-import-export.spec.js`, was deleted rather than
+repaired. Its two round-trip tests hand-rolled the merge inside
+`page.evaluate()` instead of calling `importReviewStateBackup()`, so reverting
+that function to the wholesale replace that once destroyed reviews left them
+green — and its other two tests duplicated `keyboard-shortcuts.spec.js` and a
+**weaker** copy of `accessibility.spec.js`'s scan with `color-contrast`
+disabled. The real coverage is `import-export.spec.js`, which drives both
+paths through the file input and asserts `history.at(-1).updated_by`.
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
 sticky bar: the bar is mounted early by `js/ux-improvements.js`, so waiting on
 it alone let a test press a global shortcut before `js/keyboard-shortcuts.js`
@@ -168,10 +175,15 @@ Order still matters, but it is now enforced in two different ways:
   it, and `js/state.js`'s throw now only fires on genuinely malformed data.
 - **The self-mounting IIFE subsystems still depend on listed order.**
   `js/ux-improvements*.js`, `js/review-queue*.js`,
-  `js/dashboard-guidance.js` and `js/keyboard-shortcuts.js` take no imports and
-  talk to each other through `window.<Namespace>` objects, so they must run
+  `js/dashboard-guidance.js` and `js/keyboard-shortcuts.js` talk to each other
+  through `window.<Namespace>` objects rather than imports, so they must run
   after the core modules that create those namespaces. Their sequence in
   `js/main.js` is load-bearing and is still reviewed by hand.
+  **Not "no imports"** — that was the old wording and only
+  `js/review-queue*.js` actually takes none; the rest import `js/utils.js`
+  helpers, `js/dashboard-guidance.js` four of them. The graph therefore orders
+  them against the core already. What it cannot see is a `window.<Namespace>`
+  a sibling assigns at mount time, and that is the edge this list enforces.
 
 **Some functions are deliberately published onto `window`.** Under the old
 shared scope every top-level function was implicitly a `window` property, and
@@ -228,11 +240,16 @@ express the same dependency.
 The old monolithic `app.js` was split into focused modules — **do not
 re-monolith them.**
 
-- **`js/utils.js`** — shared helpers (`escapeHtml`, `getPrimaryCta`,
-  `setPrimaryCta`, `today`, `csvEscape`, `toCsv`, `downloadFile`, `debounce`,
-  `throttle`), exposed as `window.utils` and as bare top-level functions.
-  Loads first; **add new cross-cutting helpers here** rather than duplicating
-  logic.
+- **`js/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
+  exported as bare top-level functions. Loads first. Beyond the obvious
+  (`escapeHtml`, `today`, `debounce`, CSV parse/serialize/download, DOM
+  get/set) it owns **`safeUrl`/`urlProbe`** (the scheme guard described below),
+  the **decision vocabulary** (`DECISIONS` and its derived maps — the canonical
+  list nothing else may restate), and `buildReviewRecord`/
+  `REVIEW_RECORD_FIELDS`. **Add new cross-cutting helpers here** rather than
+  duplicating logic — though the module has drifted toward a grab-bag, and
+  `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` sit here as a layer
+  inversion: the bottom-most module reaching up into the workspace DOM.
 - **`js/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
   `body`, `placement`, `editor`) and legend markup used by `karlTag()` and the
   workspace legend. Loads after `js/utils.js` for `escapeHtml`.
@@ -251,9 +268,15 @@ re-monolith them.**
   snapshot, published on `window.ReviewExport` for the consolidated export
   control. It no longer wraps `renderPage`: that decorator existed only to
   refresh a sidebar label that has been cut.
-- **`js/reading-level.js`** — browser-safe Flesch-Kincaid grade level for body
-  copy, no Node deps. `build_scripts/reading-level.js` is the Node/Bun
-  counterpart (backed by `text-readability`) used for parity checks in tests.
+- **`js/reading-level.js`** — Flesch-Kincaid grade level for body copy, backed
+  by `text-readability` (a runtime dependency, bundled: 40 kB raw / 17.9 kB
+  gzip). **There used to be two implementations and now there is one.** This
+  file carried a hand-rolled formula from the no-build-step era while
+  `build_scripts/reading-level.js` wrapped the library for Node — and only the
+  Node copy had tests, while only this one shipped. They disagreed by 1.14
+  grades on average across the 19 pages, always in the direction of "easier
+  than it is", so nine pages reported hitting a reading target they miss. The
+  Node copy is deleted; `tests/reading-level.test.js` now imports this one.
 - **`js/review-state-validation.js`** — browser-side validation of the
   `hhvcManagerReviewState:v1` blob, mirroring
   `build_scripts/review-state-schema.js`'s Zod rules without shipping Zod to
@@ -350,7 +373,7 @@ digit that moves whenever the strip changes; `WORKSPACE_TABS`
 `1`–`3` cases in `js/keyboard-shortcuts.js` must change together.
 
 The two surviving lazy panels **also catch an already-open Help tab at their own
-`init()`** (`mountIfTabAlreadyOpen`): `js/ux-improvements.js` initializes earlier
+`init()`** (`mountWorkspacePanelIfOpen`): `js/ux-improvements.js` initializes earlier
 and restores a persisted `workspace_tab` before those hooks exist, so without
 the catch-up a reviewer who left Help open saw an empty panel until switching
 tabs and back.
@@ -481,7 +504,12 @@ run the same implementation the Checks panel does.
 
 `escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
 none of the five characters it escapes — so every structured `href` in
-`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, which allows
+`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, **except
+`formatMarkdown()`'s inline `[label](target)` links** (`js/page-render.js:51`),
+which gate on a bare `/^https?:\/\//` instead. Not a hole today: `escapeHtml`
+runs over the whole string first so the attribute cannot be broken out of, and
+the regex admits only `http(s)`, which `safeUrl` allows anyway. `safeUrl`
+allows
 `http`/`https`/`mailto`/`tel` **and anything without a scheme at all** —
 root-relative (`/forms/…`), document-relative (`help/foo`, `../help`), and bare
 fragment or query targets (`#top`, `?q=1`) all pass through unchanged. It is a
@@ -502,9 +530,12 @@ today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data
 same rule at validation time — in `bun run validate` **and** in the AI output
 validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
-crosses the CJS/ESM boundary. **Bun is the only runtime CI exercises** — both
-`bun run validate` and `build:netlify` invoke `bun build_scripts/validate.js` —
-so the Node `require(esm)` path works but is _not_ covered by CI. (That path
+crosses the CJS/ESM boundary. **CI never exercises that crossing under Node** —
+every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
+`build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
+Node, at the end of `build:netlify` (`node build_scripts/copy-workshop-form.js`),
+but that script never touches `data-checks.js`, so the `require(esm)` path is
+_not_ covered. (That path
 needs `require(esm)` enabled — check `process.features.require_module` rather
 than trusting a version number; it is opt-out by default on current Node 22 but
 was flag-gated in early 22.x.) Anything
@@ -614,7 +645,7 @@ the same person, deliberately.
   `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
   `window`/`module.exports` so the tests need no browser.
 - **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
-  same `mountIfTabAlreadyOpen()` catch-up the AI assist panel uses.
+  same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
 **It had a tab of its own — the `5` key — and lost it.** On a default or
 Netlify deploy every value it reported was "not configured" or "none", because
@@ -797,9 +828,20 @@ backend uses, while `js/review-queue.js` wires the handlers and
 any of these modules, or to `js/review-merge.js`, must be manually verified
 before being called done:** export a snapshot, re-import it, and confirm
 existing decisions/notes are still present rather than wiped.
-`tests/e2e/review-import-export.spec.js` covers this at the API level and
-`tests/e2e/import-export.spec.js` covers it through the real UI (export button
-clicks + file-input imports asserting merge-not-wipe).
+**`tests/e2e/import-export.spec.js` is the only automated coverage, and there
+is no API-level or unit layer beneath it.** It drives both directions through
+the real UI (export button clicks, file-input imports) and asserts
+`history.at(-1).updated_by === 'import'`, which is what proves merge rather
+than wipe. `review-import-export.spec.js` used to be described here as the
+API-level half; it was deleted because it never was one — it hand-rolled the
+merge inside `page.evaluate` instead of calling `importReviewStateBackup()`,
+so it stayed green against the wholesale replace that destroyed reviews once
+already.
+
+Nothing can unit-test this path today: both modules are browser-only, with no
+`module.exports` to import from Bun. **That gap is why the manual check above
+is mandatory rather than advisory** — on this one path, a green CI run is not
+evidence the round-trip still merges.
 
 ### Review-state sync backend (optional)
 

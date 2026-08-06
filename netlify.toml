@@ -4,8 +4,49 @@
 # The optional /api/review-state sync backend has no runtime here, so a Netlify
 # deploy is read-only/no-sync by design.
 [build]
-  command = "npm run build:netlify"
+  # Bun, not npm. This said `npm run build:netlify` while the comment above it
+  # said `bun`, and the repo commits only bun.lock — no package-lock.json. npm
+  # therefore resolved every dependency fresh from the `^` ranges in
+  # package.json, so the deployed artifact could be built against versions no
+  # CI run ever exercised, while CI itself uses `bun install --frozen-lockfile`.
+  # A lockfile that governs CI but not production is worse than no lockfile,
+  # because it looks like it is doing the job.
+  command = "bun run build:netlify"
   publish = "dist"
+
+# No build plugins are declared here, deliberately — which is NOT the same as
+# "no plugins run." This project has UI-installed plugins that this file cannot
+# see or control, and the deploy on 012e499 proved it: that commit removed the
+# only `[[plugins]]` block in the file, and the deploy still reported Lighthouse
+# scores. So `@netlify/plugin-lighthouse` was already installed through the UI,
+# and 193d00f's registration of it here was a duplicate — which is precisely
+# what broke the build, since a file-registered plugin must also be in
+# package.json and this one never was.
+#
+# Read this file as "what the repo adds," never as the full plugin list. The
+# authoritative list is Project configuration > Build & deploy > Build plugins.
+#
+# `netlify-plugin-a11y` timed out and failed three consecutive deploy previews
+# of a build that succeeds everywhere else — in CI (the "Vite build + Netlify
+# bundle assembly" step runs this exact command) and in a clean clone. Its
+# v0.0.12 does not expose Pa11y's timeout setting, so there is no configuration
+# that would have made it pass.
+#
+# It could not be removed from this file, because it was never in it: it was
+# installed through the Netlify UI, and per Netlify's docs "removing the plugin
+# from one does not automatically remove it from the other." A UI-installed
+# plugin is disabled only under Project configuration > Build & deploy >
+# Build plugins. Adding a DIFFERENT plugin here does not displace it — that was
+# tried in 193d00f with `@netlify/plugin-lighthouse` and the deploy failed
+# again, since that plugin was also registered without ever being added to
+# package.json for Netlify to install.
+#
+# Accessibility is covered where it can actually gate a merge:
+# tests/e2e/accessibility.spec.js runs axe (`wcag2a` + `wcag2aa`) over six
+# representative pages in the Playwright job, and that job is required. A
+# deploy-time plugin would re-check, more slowly and after the fact, what CI
+# has already proven — and the UI-installed Lighthouse scored accessibility
+# 100 on the first green deploy, so dropping the a11y plugin hid nothing.
 
 # Mirror the security headers served by server.ts in local dev.
 [[headers]]

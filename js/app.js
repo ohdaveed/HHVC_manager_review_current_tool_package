@@ -1,7 +1,7 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
 // render. Loaded after js/state.js, js/ui-controls.js, js/editor-panel.js,
 // and js/page-render.js, all of which it depends on directly, and before
-// js/manager-review-export.js, which wraps renderPage once init() has run.
+// js/ux-improvements.js, which wraps renderPage once init() has run.
 
 import { buildPageSelect, initChecklist, showToast } from './ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
@@ -20,10 +20,16 @@ import { updateSearchPreview } from './editor-panel.js'
  * Navigate to a page through whatever `window.renderPage` currently is.
  *
  * This indirection is load-bearing and must not be "simplified" back to the
- * imported `renderPage`. Three modules decorate `window.renderPage` after
- * init() runs — js/manager-review-export.js, js/ux-improvements.js and
- * js/manager-review-export.js — each reading the current value, closing over
- * it, and reassigning the wrapper.
+ * imported `renderPage`. js/ux-improvements.js decorates `window.renderPage`
+ * after init() runs, reading the current value, closing over it, and
+ * reassigning the wrapper.
+ *
+ * It is the only wrapper left, and the count is worth stating carefully
+ * because this comment used to claim three and then name two — listing
+ * js/manager-review-export.js twice, the one module that provably no longer
+ * wraps at all (see its own header). js/interactive-sitemap.js, the third,
+ * was deleted outright. One wrapper is still one more than zero: the hazard
+ * below is unchanged, and a future module adding a second would rely on it.
  *
  * Reassigning `window.renderPage` does NOT rebind this module's `import`,
  * which points at js/page-render.js's original export forever. Under the old

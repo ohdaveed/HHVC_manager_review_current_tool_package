@@ -1,4 +1,4 @@
-/* Ops surface: the workspace tab.
+/* Ops surface: a collapsed section inside the Help tab.
 
    This tool has no roles — the reviewer and the operator are the same person
    (a deliberate product decision, not an omission). What that person lacked
@@ -6,16 +6,18 @@
    are configured, how much review data is stored, and whether any of it has
    gone bad. All of that previously required devtools.
 
-   It sits FIFTH, just before Help, and that is why the charts in Phase 2 went
-   on the Overview tab instead of getting their own — a workspace tab is a
-   scarce slot, not a free one. Tabs are numbered left to right by the 1-6
-   shortcuts, so this one takes `5` and Help moves to `6`. Help stays last on
-   purpose: it is the reference panel, not a working one.
+   It shipped as a workspace tab of its own, fifth of six, and this header used
+   to argue from that: a tab is a scarce slot bound to a number key, which is
+   why the Phase 2 charts went on Overview rather than getting one. The
+   argument outlived the tab. The strip is now `['overview', 'checks', 'help']`
+   on shortcuts 1-3, and a diagnostics readout turned out not to earn a
+   top-level slot either — so this panel is docked inside Help, next to AI
+   assist.
 
-   Mounts lazily when the Help tab opens, and — like js/ai-assist.js and
-   js/ai-assist.js — also catches an already-open tab at its own init(), since
-   js/ux-improvements.js restores a persisted workspace_tab before these hooks
-   exist and a restored tab would otherwise paint empty.
+   Mounts lazily when Help opens, and — like js/ai-assist.js — also catches an
+   already-open panel at its own init(), since js/ux-improvements.js restores a
+   persisted workspace_tab before these hooks exist and a restored tab would
+   otherwise paint empty.
 
    Loads after js/review-ops-data.js (its diagnostics) and after
    js/review-state-sync.js, whose config it reads to report sync status. */

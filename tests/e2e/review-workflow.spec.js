@@ -202,8 +202,10 @@ test.describe('manager review workflow', () => {
   // Regression: page-picker navigation must run through the DECORATED
   // window.renderPage, not js/page-render.js's raw export.
   //
-  // js/manager-review-export.js, js/ux-improvements.js and
-  // js/interactive-sitemap.js each wrap window.renderPage after startup.
+  // js/ux-improvements.js wraps window.renderPage after startup. It is the
+  // only wrapper left — js/interactive-sitemap.js was deleted and
+  // js/manager-review-export.js's decorator went with the sidebar label it
+  // refreshed — but one is enough to make the bug below reachable.
   // Reassigning window.renderPage does not rebind an ES module `import`, so
   // when js/app.js called its imported binding the picker silently bypassed
   // every wrapper — and applySavedPageState() never ran for the destination,
@@ -262,6 +264,32 @@ test.describe('manager review workflow', () => {
 
     await page.click('[data-sticky-action="toggle-workspace"]')
     await expect(workspace).toBeHidden()
+  })
+
+  test('the decision toast offers a jump to the next page needing review', async ({ page }) => {
+    await gotoFresh(page)
+
+    // js/ux-improvements-workspace.js has always passed this action to
+    // showToast, but showToast only declared (message, type), so the object
+    // was dropped and the button never rendered — a shipped affordance that
+    // did nothing, with matching CSS that styled nothing.
+    await setDecision(page, 'Approved')
+
+    const toast = page.locator('.toast', { hasText: 'Decision set: Approved' })
+    await expect(toast).toBeVisible()
+    const action = toast.locator('.toast-action')
+    await expect(action).toHaveText('Next Actionable Page')
+
+    // It must land on the page the LABEL names, not merely somewhere else —
+    // asserting "the key changed" would pass for a callback navigating anywhere.
+    // Same capture-then-compare shape as keyboard-shortcuts.spec.js's `n` test.
+    const expected = await page.evaluate(() => window.reviewQueue.getNextNeedsReviewKey())
+    await action.click()
+    await expect(page.locator('#pageSelect')).toHaveValue(expected)
+    // Clicking dismisses the toast, which otherwise describes the page we left.
+    // The explicit timeout has to beat showToast's 4s auto-dismiss: on the 5s
+    // default this passes whether or not the click removes anything.
+    await expect(toast).toHaveCount(0, { timeout: 1000 })
   })
 
   test('checks tab renders rule results for the current page', async ({ page }) => {
