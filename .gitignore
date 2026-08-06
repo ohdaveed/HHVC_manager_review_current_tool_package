@@ -14,6 +14,14 @@ data/page_inventory.csv
 # single-file-export-current-source.html at the repo root.
 /dist-singlefile/
 
+# Those two root-level exports, which linger in older working copies. Nothing
+# regenerates them any more — the script that did was deleted with the Vite
+# migration — so these patterns keep leftover copies out of `git status`
+# rather than ignoring a live build output, and can be dropped once no working
+# copy still has them. `.prettierignore` lists the same two files.
+/manager-review-single-file.html
+/single-file-export-current-source.html
+
 # Local dev SQLite DB for the optional /api/review-state sync backend
 # (server.ts). Production points DATA_DB_PATH at a Railway volume instead.
 /.data/
