@@ -2,6 +2,8 @@
    Orchestrator: interaction handlers and lifecycle wiring on top of
    window.InteractiveSitemap.state/.data (js/interactive-sitemap-data.js) and
    window.InteractiveSitemap.render (js/interactive-sitemap-render.js). */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountInteractiveSitemap() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.InteractiveSitemap?.render) return
@@ -181,6 +183,19 @@
     wrapRenderPageForSitemap()
 
     window.__mountInteractiveSitemapOnTabOpen = ensureSitemapRendered
+    mountIfTabAlreadyOpen()
+  }
+
+  /**
+   * Same catch-up as js/ai-assist.js, for the same reason: js/ux-improvements.js
+   * loads earlier, so initWorkspaceTabs() can restore a persisted Sitemap tab
+   * and call setWorkspaceTab('sitemap') before the hook above exists, leaving
+   * the guarded mount call to skip and the panel to paint empty until the
+   * reviewer switches tabs and back.
+   */
+  function mountIfTabAlreadyOpen() {
+    const panel = document.querySelector('[data-workspace-panel="sitemap"]')
+    if (panel && !panel.hidden) ensureSitemapRendered()
   }
 
   function teardown() {

@@ -18,6 +18,7 @@ const {
   findBrokenInlineLinks,
   findBannedTerms,
   findListFormatViolations,
+  findUnsafeUrls,
 } = require('../data-checks')
 const { analyzePlainLanguage } = require('../../js/plain-language.js')
 
@@ -127,6 +128,16 @@ function validateGeneratedPage(page, existingPages = {}) {
     (entry) => entry.pageKey === CANDIDATE_KEY
   )) {
     issues.push(`${path} has ${count} items. Lists of 3 or more must use bullets.`)
+  }
+  // The output JSON Schema only *describes* url/buttonUrl as "an absolute
+  // http(s) URL"; a description does not constrain, the same way length limits
+  // in that schema do not (see build_scripts/ai/schemas.js). Without this, a
+  // draft carrying a `javascript:` URL validated clean and reached a clickable
+  // link in the assist preview.
+  for (const { path, url } of findUnsafeUrls(listUniverse).filter(
+    (entry) => entry.pageKey === CANDIDATE_KEY
+  )) {
+    issues.push(`${path} uses an unsafe URL scheme: "${url}". Use an absolute http(s) URL.`)
   }
 
   // Scope check applies to the Agency page only, matching validate.js. Other

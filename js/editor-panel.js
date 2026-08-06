@@ -2,6 +2,9 @@
 // the search-result preview, and reading-target display. Depends on
 // js/utils.js (defaultSeoTitle, defaultMetaDescription, getValue, setValue,
 // setText) and js/state.js (pageData, currentPageKey).
+
+import { currentPageKey, pageData } from './state.js'
+import { defaultMetaDescription, defaultSeoTitle, getValue, setText, setValue } from './utils.js'
 function statusClass(length, max) {
   return length <= max ? 'ok' : 'warn'
 }
@@ -51,3 +54,11 @@ function updatePageBadge(title) {
   clearTimeout(badge._timeout)
   badge._timeout = setTimeout(() => badge.classList.remove('visible'), 5000)
 }
+
+// Republished as a browser global because js/ux-improvements-state-sync.js
+// calls it as `window.updateSearchPreview?.()` — an optional call, so that
+// module keeps working when the core editor panel is absent. See the longer
+// note in js/ui-controls.js for why these stay globals rather than imports.
+window.updateSearchPreview = updateSearchPreview
+
+export { syncEditorFields, updatePageBadge, updateReadingTarget, updateSearchPreview }

@@ -12,6 +12,7 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  findUnsafeUrls,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 
@@ -422,5 +423,60 @@ describe('countUnverifiedClaims', () => {
   test('does not count an object item with unverified: false', () => {
     const pages = { a: { sections: [{ bullets: [{ text: 'Not flagged', unverified: false }] }] } }
     expect(countUnverifiedClaims(pages)).toBe(0)
+  })
+})
+
+describe('findUnsafeUrls', () => {
+  test('flags a javascript: card url', () => {
+    const pages = {
+      a: {
+        sections: [
+          { heading: 'H', karl: 'k', cards: [{ title: 'X', url: 'javascript:alert(1)' }] },
+        ],
+      },
+    }
+    expect(findUnsafeUrls(pages)).toEqual([
+      { pageKey: 'a', path: 'sections[0].cards[0].url', url: 'javascript:alert(1)' },
+    ])
+  })
+
+  test('flags a data: buttonUrl on a section', () => {
+    const pages = { a: { sections: [{ heading: 'H', karl: 'k', buttonUrl: 'data:text/html,x' }] } }
+    expect(findUnsafeUrls(pages)).toEqual([
+      { pageKey: 'a', path: 'sections[0].buttonUrl', url: 'data:text/html,x' },
+    ])
+  })
+
+  test('flags an unsafe step buttonUrl and printVersionUrl', () => {
+    const pages = {
+      a: {
+        printVersionUrl: 'javascript:1',
+        sections: [{ heading: 'H', karl: 'k', steps: [{ title: 'S', buttonUrl: 'vbscript:1' }] }],
+      },
+    }
+    const paths = findUnsafeUrls(pages).map((entry) => entry.path)
+    expect(paths).toContain('printVersionUrl')
+    expect(paths).toContain('sections[0].steps[0].buttonUrl')
+  })
+
+  test('accepts https, mailto, and root-relative urls', () => {
+    const pages = {
+      a: {
+        printVersionUrl: 'https://sf.gov/x.pdf',
+        sections: [
+          {
+            heading: 'H',
+            karl: 'k',
+            buttonUrl: '/forms/mosquito-workshop-request/',
+            cards: [{ title: 'X', url: 'mailto:hhvc@sfdph.org' }],
+          },
+        ],
+      },
+    }
+    expect(findUnsafeUrls(pages)).toEqual([])
+  })
+
+  test('returns nothing for pages with no url fields', () => {
+    expect(findUnsafeUrls({ a: { sections: [{ heading: 'H', karl: 'k' }] } })).toEqual([])
   })
 })

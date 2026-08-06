@@ -63,7 +63,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  /* 0.5rem (8px) buffer between adjacent nav/decision buttons: Fitts's Law
+     hit-target spacing for a rapid, low-precision click during page-to-page
+     review, not just the WCAG 24px-target-or-spacing minimum. */
+  gap: 0.5rem;
 }
 
 .review-sticky-btn {
@@ -77,7 +80,11 @@
   font-weight: 700;
   line-height: 1.2;
   min-height: 2.75rem;
-  padding: 0.35rem 0.6rem;
+  /* Previous/Next used to hug their text (~3rem wide) — a poor target for
+     the rapid click-through-19-pages flow this bar exists for. min-width
+     gives both a consistent, larger hit box regardless of label length. */
+  min-width: 4.75rem;
+  padding: 0.4rem 0.9rem;
 }
 
 .review-sticky-btn:hover,
@@ -615,6 +622,20 @@
   line-height: 1.35;
 }
 
+/* The source a plain-language rule comes from, shown per finding so a reviewer
+   who disagrees knows which document to go argue with. Sits between the rule
+   name and its detail; --sfds-slate-3 on the panel background clears 4.5:1, and
+   it is deliberately quieter than .compliance-detail (same colour, smaller and
+   uppercase) because it is provenance rather than the finding itself. */
+.compliance-citation {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--sfds-slate-3);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 /* ==========================================================================
    Plain-language suggestions
    Advisory findings from js/plain-language.js, rendered below the scored
@@ -679,6 +700,30 @@
 .review-queue input[type='search']:focus {
   outline: 3px solid rgba(42, 96, 175, 0.25);
   outline-offset: 2px;
+}
+
+/* Sync configuration (server URL, token, pull/push) is technical setup, not
+   a review decision — collapsing it into its own <details> keeps it from
+   competing with the decision fields and export buttons above for
+   attention. Container styling mirrors .ai-assist-settings
+   (css/ai-assist.css); the grid + gap matches .review-actions so the
+   vertical rhythm between fields is unchanged from before this was split
+   into its own disclosure. */
+.review-sync-settings {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--ux-panel-border);
+  border-radius: var(--radius);
+  background: var(--ux-soft-bg);
+}
+
+.review-sync-settings summary {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--sfds-slate-1);
+  cursor: pointer;
 }
 
 .sync-config-input {
@@ -752,7 +797,10 @@
 .decision-quick-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  /* 0.35rem (5.6px) let adjacent chips (e.g. "Approve" and "Revise") sit
+     close enough that a fast click during rapid review risked landing on
+     the wrong decision. 0.5rem matches the sticky-bar nav buttons' buffer. */
+  gap: 0.5rem;
   margin: 0.45rem 0 0.2rem;
 }
 
@@ -767,7 +815,11 @@
   font-weight: 700;
   line-height: 1.2;
   min-height: 2.75rem;
-  padding: 0.25rem 0.65rem;
+  /* min-width keeps the shortest labels ("Blocked") from shrinking to a
+     narrow hit target; padding grew alongside it for a bigger click area
+     without changing the pill shape. */
+  min-width: 4.5rem;
+  padding: 0.35rem 0.85rem;
 }
 
 .decision-chip:hover,
@@ -910,7 +962,14 @@
 }
 
 .shortcuts-or {
-  color: var(--sfds-slate-4);
+  /* --sfds-slate-4 (#c9caca) is the BORDER step of the neutral ramp, not a
+     text step: as text on the dialog's white surface it measures 1.60:1,
+     far under WCAG 1.4.3's 4.5:1, so the "or" separating alternative keys
+     was effectively invisible. --text-secondary is the ramp's secondary
+     TEXT step and clears it at 4.86:1 (7.88:1 in dark mode). Caught by the
+     axe color-contrast rule once it was re-enabled in
+     tests/e2e/accessibility.spec.js. */
+  color: var(--text-secondary);
   font-size: 0.7rem;
 }
 
@@ -991,5 +1050,20 @@ ol li {
   .decision-chip,
   .shortcuts-hint-button {
     transition: none !important;
+  }
+
+  /* The dashboard layer (css/dashboard.css) adds surfaces and transitions of
+     its own. Its rules live there, but the reduced-motion overrides belong
+     here with the rest of them: this is the designated `!important` override
+     layer, and splitting one media query across two files gives the same
+     preference two places to be honoured — or missed. */
+  .review-workspace,
+  .review-workspace *,
+  .ds-card,
+  .ds-card * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

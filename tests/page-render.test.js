@@ -2,10 +2,14 @@
 // page-data field values before they reach innerHTML. This is the review
 // tool's main HTML-building path, so an unescaped field here is an XSS
 // regression the same shape as the one fixed in the workshop request form.
-const { describe, test, expect } = require('bun:test')
-const { loadScripts } = require('./helpers/load-scripts')
+import { describe, test, expect } from 'bun:test'
 
-const ctx = loadScripts(['js/utils.js', 'js/karl-tag-meta.js', 'js/page-render.js'])
+// Importing js/page-render.js pulls in js/utils.js, js/karl-tag-meta.js and
+// js/state.js through the module graph — the same three files the old vm
+// harness had to be handed explicitly, now resolved by the loader. The
+// happy-dom environment preloaded via bunfig.toml is what lets that chain
+// evaluate here, since js/state.js reads window.HHVC_DATA on import.
+import * as ctx from '../js/page-render.js'
 
 const PAYLOAD = `<script>alert('xss')</script>`
 const ESCAPED = `&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;`
@@ -221,5 +225,53 @@ describe('page-render.js escaping', () => {
   test('renderSection escapes a section-level button label', () => {
     const html = ctx.renderSection({ heading: 'Heading', button: PAYLOAD, karl: 'Body section' })
     assertEscaped(html)
+  })
+})
+
+// escapeHtml does not neutralize a URL scheme — `javascript:alert(1)` contains
+// none of the five characters it escapes — so every href the renderer emits
+// runs through safeUrl first. The AI assist preview renders model-generated
+// pages through these same functions, which is what makes this reachable.
+describe('page-render.js URL scheme guarding', () => {
+  const DANGEROUS = 'javascript:alert(1)'
+
+  test('button neutralizes a javascript: url', () => {
+    const html = ctx.button('Go', 'primary', null, DANGEROUS)
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderCards neutralizes a javascript: card url', () => {
+    const html = ctx.renderCards([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderServiceTiles neutralizes a javascript: card url', () => {
+    const html = ctx.renderServiceTiles([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderResourcesList neutralizes a javascript: card url', () => {
+    const html = ctx.renderResourcesList([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('renderRelatedList neutralizes a javascript: card url', () => {
+    const html = ctx.renderRelatedList([{ title: 'Click me', url: DANGEROUS }])
+    expect(html).toContain('href="#"')
+    expect(html).not.toContain('javascript:')
+  })
+
+  test('keeps a legitimate https url intact', () => {
+    const html = ctx.renderCards([{ title: 'CDC', url: 'https://www.cdc.gov/rodents/' }])
+    expect(html).toContain('href="https://www.cdc.gov/rodents/"')
+  })
+
+  test('keeps the root-relative workshop form path intact', () => {
+    const html = ctx.button('Request', 'primary', null, '/forms/mosquito-workshop-request/')
+    expect(html).toContain('href="/forms/mosquito-workshop-request/"')
   })
 })

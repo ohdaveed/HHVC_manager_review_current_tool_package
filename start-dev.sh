@@ -19,5 +19,6 @@ fi
 # Wait a moment for port to be released
 sleep 0.2
 
-# Start the server
-exec bun run --watch server.ts
+# Start the Vite dev server (HMR). The optional sync API is a separate
+# process; run "bun run dev:api" alongside this and Vite proxies /api to it.
+exec npx vite

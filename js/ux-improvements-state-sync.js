@@ -1,5 +1,7 @@
 /* Manager review: page state sync between the SEO/editor sidebar and
    window.reviewState. Loads after js/review-state-store.js. */
+
+import { hasValidPageData } from './utils.js'
 ;(function mountUxImprovementsStateSync() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState) return
@@ -117,14 +119,24 @@
       detail: readingAnalysis ? readingAnalysis.detail : 'Reading-level module not loaded',
     })
 
-    // Plain-language rules from the HHVC standards manual (sections 7.2-7.8),
-    // via js/plain-language.js. Only the manual's mandates are scored here;
-    // its advisory rules are rendered separately by renderPageChecksPanel so
-    // ~90 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    // Plain-language rules via js/plain-language.js. Only mandates are scored
+    // here; advisory rules are rendered separately by renderPageChecksPanel so
+    // ~115 style suggestions cannot swamp the pass/fail ratio this list feeds.
+    //
+    // `citation` is carried through deliberately. It used to be dropped here,
+    // which meant a reviewer looking at a failed mandate had no way to find the
+    // rule's authority — the whole reason each rule records one. The
+    // hand-written rules above carry no citation, so the renderer treats it as
+    // optional rather than every rule growing an empty line.
     const plainLanguage = window.plainLanguage?.analyzePlainLanguage?.(page)
     for (const check of plainLanguage?.checks || []) {
       if (check.severity !== 'error') continue
-      rules.push({ label: check.label, pass: check.pass, detail: check.detail })
+      rules.push({
+        label: check.label,
+        pass: check.pass,
+        detail: check.detail,
+        citation: check.citation,
+      })
     }
 
     return rules
@@ -410,6 +422,11 @@
             <li class="compliance-item ${rule.pass ? 'pass' : 'warn'}">
               <span>
                 <span class="compliance-rule">${escapeHtml(rule.label)}</span>
+                ${
+                  rule.citation
+                    ? `<span class="compliance-citation">${escapeHtml(rule.citation)}</span>`
+                    : ''
+                }
                 <span class="compliance-detail">${escapeHtml(rule.detail)}</span>
               </span>
             </li>
@@ -432,42 +449,12 @@
    * as a separate, clearly non-blocking section.
    *
    * These are kept out of the scored list on purpose: they are suggestions,
-   * they run to ~90 findings across the 19 pages, and mixing them into the
+   * they run to ~115 findings across the 19 pages, and mixing them into the
    * pass/fail ratio would make every page look broken. Each finding names the
    * field it came from so it can be acted on rather than just counted.
    * @param {object} page
    * @returns {string}
    */
-  /**
-   * The lowest manual section cited by any failing check.
-   *
-   * Not `suggestions[0]`: the checks are pushed in roughly section order, but
-   * `reading-target-match` (7.2.1) is appended last, so a page failing a 7.8
-   * rule plus the reading target would announce "section 7.8 onward" directly
-   * above a 7.2.1 finding. Compared segment by segment as numbers so 7.10 sorts
-   * after 7.9 rather than before it, which a string compare would get wrong.
-   * @param {Array<{section: string}>} checks
-   * @returns {string}
-   */
-  function earliestSection(checks) {
-    const parts = (section) =>
-      String(section || '')
-        .split('.')
-        .map(Number)
-    return checks
-      .map((check) => check.section)
-      .reduce((lowest, section) => {
-        const a = parts(section)
-        const b = parts(lowest)
-        for (let i = 0; i < Math.max(a.length, b.length); i++) {
-          const left = a[i] ?? 0
-          const right = b[i] ?? 0
-          if (left !== right) return left < right ? section : lowest
-        }
-        return lowest
-      })
-  }
-
   function renderPlainLanguageAdvice(page) {
     const analysis = window.plainLanguage?.analyzePlainLanguage?.(page)
     if (!analysis) return ''
@@ -481,9 +468,8 @@
         <h3>Plain-language suggestions</h3>
         <p class="review-decision-note">
           Advisory only — these do not count toward the checks above. Rules come from the HHVC
-          Web Governance and Content Standards Manual, section ${escapeHtml(
-            earliestSection(suggestions)
-          )} onward.
+          Web Governance and Content Standards Manual and SF.gov's published style guidance;
+          each finding cites its own source below.
           Average sentence length is ${escapeHtml(String(analysis.metrics.meanSentenceWords))}
           words across ${escapeHtml(String(analysis.metrics.sentenceCount))} sentences.
         </p>
@@ -494,6 +480,7 @@
             <li class="compliance-item warn">
               <span>
                 <span class="compliance-rule">${escapeHtml(check.label)}</span>
+                <span class="compliance-citation">${escapeHtml(check.citation)}</span>
                 <span class="compliance-detail">${escapeHtml(check.detail)}</span>
                 ${
                   check.offenders.length

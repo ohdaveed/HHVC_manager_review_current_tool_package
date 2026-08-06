@@ -5,6 +5,7 @@
    here is a no-op whenever no sync URL/token is configured, so the app
    keeps working fully offline exactly as it did before this file existed.
    Loads after js/review-merge.js and js/review-state-store.js. */
+
 ;(function mountReviewStateSync() {
   if (typeof window === 'undefined' || !window.reviewState || !window.reviewMerge) return
 
@@ -520,12 +521,18 @@
    * makes "empty on the server" mean "back to the original," which is what
    * it means on the server.
    *
-   * ORIGINAL_DATA is a top-level `const` in js/state.js — a shared-scope
-   * global in the browser, absent under the Node unit tests that import
-   * this file, hence the typeof guard.
+   * ORIGINAL_DATA is published onto `window` by js/state.js and read from
+   * there rather than imported, deliberately. A static import would make
+   * this module depend on js/state.js, which pulls in js/page-data.js and
+   * all 19 pages/*.js — and would also make the guard below dead, since an
+   * imported binding always exists. The Node unit tests for this file mount
+   * it against a minimal fake window with no page data at all, and the
+   * documented behavior there is that this function no-ops rather than
+   * throwing. Reading through `window` keeps that true.
    * @param {string} pageKey
    */
   function restorePageContentFromOriginal(pageKey) {
+    const ORIGINAL_DATA = window.ORIGINAL_DATA
     if (typeof ORIGINAL_DATA === 'undefined') return
     const original = ORIGINAL_DATA?.pages?.[pageKey]
     const page = window.HHVC_DATA?.pages?.[pageKey]
@@ -664,6 +671,22 @@
 
     const config = readConfig()
 
+    // Sync configuration (server URL, bearer token, pull/push) is technical
+    // setup, not a per-page review decision — nesting it in its own
+    // <details> keeps the decision fields and export buttons above
+    // immediately visible while collapsing the rarely-touched sync config
+    // out of the way, mirroring the ai-assist-settings <details> pattern in
+    // js/ai-assist-render.js. Open by default only while unconfigured, so a
+    // first-time reviewer still sees the fields without having to find them.
+    const details = document.createElement('details')
+    details.className = 'review-sync-settings'
+    details.open = !isConfigured()
+    actions.insertAdjacentElement('afterend', details)
+
+    const summary = document.createElement('summary')
+    summary.textContent = 'Server sync settings'
+    details.appendChild(summary)
+
     // Placeholder text isn't a reliable accessible name (it disappears once
     // typed, and screen readers don't treat it as a persistent label), so
     // each input gets a real <label for="..."> alongside its placeholder.
@@ -671,7 +694,7 @@
     urlLabel.htmlFor = 'reviewSyncApiUrl'
     urlLabel.className = 'field-help sync-config-label'
     urlLabel.textContent = 'Sync server URL'
-    actions.appendChild(urlLabel)
+    details.appendChild(urlLabel)
 
     const urlInput = document.createElement('input')
     urlInput.type = 'text'
@@ -679,13 +702,13 @@
     urlInput.placeholder = 'https://your-app.up.railway.app'
     urlInput.value = config.apiUrl
     urlInput.className = 'sync-config-input'
-    actions.appendChild(urlInput)
+    details.appendChild(urlInput)
 
     const tokenLabel = document.createElement('label')
     tokenLabel.htmlFor = 'reviewSyncApiToken'
     tokenLabel.className = 'field-help sync-config-label'
     tokenLabel.textContent = 'Sync token'
-    actions.appendChild(tokenLabel)
+    details.appendChild(tokenLabel)
 
     const tokenInput = document.createElement('input')
     tokenInput.type = 'password'
@@ -693,14 +716,14 @@
     tokenInput.placeholder = 'Bearer token'
     tokenInput.value = config.apiToken
     tokenInput.className = 'sync-config-input'
-    actions.appendChild(tokenInput)
+    details.appendChild(tokenInput)
 
     const saveButton = document.createElement('button')
     saveButton.type = 'button'
     saveButton.className = 'tool-btn secondary-tool'
     saveButton.id = 'saveSyncSettings'
     saveButton.textContent = 'Save sync settings'
-    actions.appendChild(saveButton)
+    details.appendChild(saveButton)
     saveButton.addEventListener('click', () => {
       writeConfig({ apiUrl: urlInput.value, apiToken: tokenInput.value })
       // Any conflicts still on screen describe revisions of the server
@@ -716,7 +739,7 @@
     pullButton.className = 'tool-btn secondary-tool'
     pullButton.id = 'pullReviewState'
     pullButton.textContent = 'Pull from server'
-    actions.appendChild(pullButton)
+    details.appendChild(pullButton)
 
     // Declared before the handlers so each can disable the other. Pull and
     // push overlapping is what produces a conflict row against this
@@ -789,7 +812,7 @@
     pushButton.className = 'tool-btn secondary-tool'
     pushButton.id = 'pushAllReviewState'
     pushButton.textContent = 'Push all pages'
-    actions.appendChild(pushButton)
+    details.appendChild(pushButton)
     pushButton.addEventListener('click', () => {
       window.ReviewUx?.stateSync?.saveCurrentPageToLocalStorage()
       setSyncStatus('Pushing to server…')
@@ -824,13 +847,13 @@
     status.textContent = isConfigured()
       ? 'Sync configured.'
       : 'Sync not configured — enter a server URL and token above, then Save sync settings.'
-    actions.insertAdjacentElement('afterend', status)
+    details.appendChild(status)
 
     const conflictPanel = document.createElement('div')
     conflictPanel.id = 'reviewSyncConflicts'
     conflictPanel.className = 'sync-conflict-panel'
     conflictPanel.hidden = true
-    status.insertAdjacentElement('afterend', conflictPanel)
+    details.appendChild(conflictPanel)
   }
 
   window.reviewStateSync = {

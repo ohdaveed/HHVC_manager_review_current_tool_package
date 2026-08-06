@@ -21,6 +21,22 @@ async function gotoFresh(page, path = '/') {
   // The sticky review bar mounts a beat after the first render; most flows
   // (workspace toggling, w shortcut) need it, so wait for full app init.
   await page.waitForSelector('[data-sticky-action="toggle-workspace"]')
+  // ...but the sticky bar is mounted by js/ux-improvements.js, which runs
+  // EARLY in the DOMContentLoaded cascade. js/keyboard-shortcuts.js is the last
+  // script in index.html and attaches its keydown listener in its own init, so
+  // waiting for it is what actually makes "full app init" true. Without this a
+  // test could press a global shortcut into a document with no handler yet.
+  await waitForShortcuts(page)
+}
+
+// Wait until js/keyboard-shortcuts.js has actually attached its keydown
+// listener. The sticky bar that gotoFresh waits for is mounted by
+// js/ux-improvements.js, which initializes EARLIER in the DOMContentLoaded
+// cascade, so it is a proxy for "the app booted", not for "a keypress will be
+// handled". Any test that presses a global shortcut must await this first or
+// it is racing the listener.
+async function waitForShortcuts(page) {
+  await page.waitForFunction(() => window.reviewKeyboardShortcuts?.ready === true)
 }
 
 // Record every toast that appears into window.__toasts. Toasts auto-dismiss
@@ -116,6 +132,28 @@ async function settleDebounce(page) {
   await page.waitForTimeout(400)
 }
 
+/**
+ * Put keyboard focus somewhere the global shortcuts will actually fire.
+ *
+ * js/keyboard-shortcuts.js gates every shortcut on isShortcutContext(): the
+ * focused element must sit inside #reviewWorkspace, .canvas-toolbar or
+ * #mockPage. That is deliberate — it stops single-letter shortcuts firing
+ * while a reviewer types in the sidebar — so a test that presses a key
+ * without establishing focus first is testing a race, not the shortcut.
+ *
+ * The race is real and it is environment-dependent. After gotoFresh() the
+ * only thing that happens to land focus inside the workspace is the
+ * first-run onboarding, which opens the workspace and focuses the selected
+ * tab asynchronously. On a fast machine the keypress arrives after that and
+ * the test passes; on a slower CI runner it arrives first and the shortcut is
+ * correctly ignored. Call this before any keyboard.press() to remove the
+ * timing dependency entirely.
+ * @param {import('@playwright/test').Page} page
+ */
+async function focusMockPage(page) {
+  await page.locator('#mockPage h1').first().click()
+}
+
 // Switch pages via the sidebar picker and wait for the render to land.
 // renderPage() pushes ?page=<key> immediately but applies content inside a
 // View Transition, so wait for #browserUrl to show the target page's slug —
@@ -132,6 +170,7 @@ async function selectPage(page, key) {
 }
 
 module.exports = {
+  waitForShortcuts,
   STORAGE_KEY,
   DECISIONS,
   gotoFresh,
@@ -146,4 +185,5 @@ module.exports = {
   openSearchMetadata,
   settleDebounce,
   selectPage,
+  focusMockPage,
 }

@@ -4,7 +4,7 @@
 const fs = require('fs')
 const path = require('path')
 const { dataSchema } = require('./schema')
-const { loadPageData, getPageScriptPaths, getJsScriptPaths, root } = require('./load-pages')
+const { loadPageData, getPageScriptPaths, root } = require('./load-pages')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -13,38 +13,28 @@ const {
   isTopicPageFirst,
   findBannedTerms,
   findListFormatViolations,
+  findUnsafeUrls,
   countUnverifiedClaims,
 } = require('./data-checks')
-const { findPageScriptTags, findJsScriptTags, findScriptTagDrift } = require('./index-html-checks')
+const { findPageImports, findPageImportDrift } = require('./page-import-checks')
 
+// A page file nobody imports never registers onto window.HHVC_PAGES, so the
+// page silently disappears from the tool. Vite catches the opposite case (an
+// import naming a file that does not exist) as a build error, but not this
+// one — see build_scripts/page-import-checks.js.
 const pageFilesOnDisk = getPageScriptPaths().filter((file) => file !== 'js/page-data.js')
-const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
-const scriptDrift = findScriptTagDrift(pageFilesOnDisk, findPageScriptTags(indexHtml))
-if (scriptDrift.missingFromHtml.length) {
+const pageDataSource = fs.readFileSync(path.join(root, 'js/page-data.js'), 'utf8')
+const importDrift = findPageImportDrift(pageFilesOnDisk, findPageImports(pageDataSource))
+if (importDrift.missingFromImports.length) {
   throw new Error(
-    'pages/*.js file(s) missing a <script> tag in index.html: ' +
-      scriptDrift.missingFromHtml.join(', ')
+    'pages/*.js file(s) never imported by js/page-data.js: ' +
+      importDrift.missingFromImports.join(', ')
   )
 }
-if (scriptDrift.missingFromDisk.length) {
+if (importDrift.missingFromDisk.length) {
   throw new Error(
-    'index.html references pages/*.js file(s) that no longer exist: ' +
-      scriptDrift.missingFromDisk.join(', ')
-  )
-}
-
-const jsFilesOnDisk = getJsScriptPaths()
-const jsScriptDrift = findScriptTagDrift(jsFilesOnDisk, findJsScriptTags(indexHtml))
-if (jsScriptDrift.missingFromHtml.length) {
-  throw new Error(
-    'js/*.js file(s) missing a <script> tag in index.html: ' +
-      jsScriptDrift.missingFromHtml.join(', ')
-  )
-}
-if (jsScriptDrift.missingFromDisk.length) {
-  throw new Error(
-    'index.html references js/*.js file(s) that no longer exist: ' +
-      jsScriptDrift.missingFromDisk.join(', ')
+    'js/page-data.js imports pages/*.js file(s) that no longer exist: ' +
+      importDrift.missingFromDisk.join(', ')
   )
 }
 
@@ -96,6 +86,12 @@ const listFormatViolations = findListFormatViolations(parsed.data.pages)
 if (listFormatViolations.length) {
   const { pageKey, path, count } = listFormatViolations[0]
   throw new Error(`${pageKey} ${path} has ${count} items; use bullets[] for lists of 3 or more`)
+}
+
+const unsafeUrls = findUnsafeUrls(parsed.data.pages)
+if (unsafeUrls.length) {
+  const { pageKey, path, url } = unsafeUrls[0]
+  throw new Error(`${pageKey} ${path} has an unsafe URL scheme: ${url}`)
 }
 
 const unverifiedCount = countUnverifiedClaims(parsed.data.pages)
