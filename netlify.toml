@@ -14,7 +14,17 @@
   command = "bun run build:netlify"
   publish = "dist"
 
-# No build plugins are declared here, deliberately.
+# No build plugins are declared here, deliberately — which is NOT the same as
+# "no plugins run." This project has UI-installed plugins that this file cannot
+# see or control, and the deploy on 012e499 proved it: that commit removed the
+# only `[[plugins]]` block in the file, and the deploy still reported Lighthouse
+# scores. So `@netlify/plugin-lighthouse` was already installed through the UI,
+# and 193d00f's registration of it here was a duplicate — which is precisely
+# what broke the build, since a file-registered plugin must also be in
+# package.json and this one never was.
+#
+# Read this file as "what the repo adds," never as the full plugin list. The
+# authoritative list is Project configuration > Build & deploy > Build plugins.
 #
 # `netlify-plugin-a11y` timed out and failed three consecutive deploy previews
 # of a build that succeeds everywhere else — in CI (the "Vite build + Netlify
@@ -35,7 +45,8 @@
 # tests/e2e/accessibility.spec.js runs axe (`wcag2a` + `wcag2aa`) over six
 # representative pages in the Playwright job, and that job is required. A
 # deploy-time plugin would re-check, more slowly and after the fact, what CI
-# has already proven.
+# has already proven — and the UI-installed Lighthouse scored accessibility
+# 100 on the first green deploy, so dropping the a11y plugin hid nothing.
 
 # Mirror the security headers served by server.ts in local dev.
 [[headers]]
