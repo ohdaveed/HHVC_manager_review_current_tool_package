@@ -14,6 +14,14 @@
   command = "bun run build:netlify"
   publish = "dist"
 
+# Accessibility checks run in the Playwright/axe end-to-end suite instead of
+# netlify-plugin-a11y. Version 0.0.12 does not expose Pa11y's timeout setting,
+# so the UI-installed plugin could fail an otherwise successful deploy after
+# its fixed 30-second browser timeout.
+
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
 # Mirror the security headers served by server.ts in local dev.
 [[headers]]
   for = "/*"
