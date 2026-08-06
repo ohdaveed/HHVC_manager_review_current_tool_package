@@ -692,7 +692,7 @@ describe('against the real page corpus', () => {
     // to every page passes it while nearly tripling the corpus total. A corpus
     // total alone is not enough either — it fails on any copy PR that adds one
     // finding anywhere, and reports only that a number moved, not which page
-    // moved it. Current values are 11 corpus-wide, 2 on the worst page, and 4
+    // moved it. Current values are 10 corpus-wide, 2 on the worst page, and 4
     // pages for the broadest single rule.
     const MAX_FAILURES_PER_PAGE = 3
     const MAX_FAILURES_CORPUS_WIDE = 15
