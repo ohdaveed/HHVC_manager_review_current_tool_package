@@ -80,7 +80,7 @@ endpoints, so both AI paths are covered without a key or a paid call). **The lis
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-fourteen spec files, all UI-driven — navigation, editor panel, review
+fifteen spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, mockup PNG
 export, and the Overview insight cards — sharing plain helper functions in
