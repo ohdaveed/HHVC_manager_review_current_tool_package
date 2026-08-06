@@ -657,9 +657,20 @@ exports current-page snapshots. **Any change to any of these review
 import/export modules, or to `js/review-merge.js`, must be manually
 verified**: export a snapshot, re-import it, and confirm existing
 decisions/notes survive rather than being wiped.
-`tests/e2e/review-import-export.spec.js` covers this round-trip at the API
-level, and `tests/e2e/import-export.spec.js` covers it through the real UI
-(export button clicks + file-input imports asserting merge-not-wipe).
+**`tests/e2e/import-export.spec.js` is the only automated coverage, and there
+is no API-level or unit layer beneath it.** It drives both directions through
+the real UI — export button clicks, file-input imports — and asserts
+`history.at(-1).updated_by === 'import'`, which is what proves merge rather
+than wipe. The file that used to be described here as the API-level half,
+`review-import-export.spec.js`, was deleted precisely because it did not
+provide that: it hand-rolled the merge inside `page.evaluate` instead of
+calling `importReviewStateBackup()`, so it stayed green against the wholesale
+replace that destroyed reviews once already.
+
+Nothing can unit-test this path today: both modules are browser-only, with no
+`module.exports` to import from Bun. **That gap is why the manual check above
+is mandatory rather than advisory** — on this one path, a green CI run is not
+evidence the round-trip still merges.
 
 ### Review-state sync backend (optional)
 

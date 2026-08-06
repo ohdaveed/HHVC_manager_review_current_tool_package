@@ -828,9 +828,20 @@ backend uses, while `js/review-queue.js` wires the handlers and
 any of these modules, or to `js/review-merge.js`, must be manually verified
 before being called done:** export a snapshot, re-import it, and confirm
 existing decisions/notes are still present rather than wiped.
-`tests/e2e/review-import-export.spec.js` covers this at the API level and
-`tests/e2e/import-export.spec.js` covers it through the real UI (export button
-clicks + file-input imports asserting merge-not-wipe).
+**`tests/e2e/import-export.spec.js` is the only automated coverage, and there
+is no API-level or unit layer beneath it.** It drives both directions through
+the real UI (export button clicks, file-input imports) and asserts
+`history.at(-1).updated_by === 'import'`, which is what proves merge rather
+than wipe. `review-import-export.spec.js` used to be described here as the
+API-level half; it was deleted because it never was one — it hand-rolled the
+merge inside `page.evaluate` instead of calling `importReviewStateBackup()`,
+so it stayed green against the wholesale replace that destroyed reviews once
+already.
+
+Nothing can unit-test this path today: both modules are browser-only, with no
+`module.exports` to import from Bun. **That gap is why the manual check above
+is mandatory rather than advisory** — on this one path, a green CI run is not
+evidence the round-trip still merges.
 
 ### Review-state sync backend (optional)
 
