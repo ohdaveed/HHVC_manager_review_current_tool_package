@@ -27,7 +27,16 @@ function showToast(message, type, action) {
   const el = document.createElement('div')
   el.className = 'toast' + (type ? ' ' + type : '')
   el.textContent = message
-  if (action && action.label && typeof action.callback === 'function') {
+  // A non-empty STRING label, not merely a truthy one: showToast is published on
+  // window, so `action` is caller-supplied, and any other type would reach
+  // textContent below and render as '[object Object]' — a button a reviewer
+  // cannot interpret is worse than no button.
+  if (
+    action &&
+    typeof action.label === 'string' &&
+    action.label.trim() &&
+    typeof action.callback === 'function'
+  ) {
     const actionBtn = document.createElement('button')
     actionBtn.type = 'button'
     actionBtn.className = 'toast-action'

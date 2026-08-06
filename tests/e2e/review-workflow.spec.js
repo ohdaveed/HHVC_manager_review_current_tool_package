@@ -280,12 +280,16 @@ test.describe('manager review workflow', () => {
     const action = toast.locator('.toast-action')
     await expect(action).toHaveText('Next Actionable Page')
 
-    // It must actually navigate, not just render.
-    const startKey = await page.locator('#pageSelect').inputValue()
+    // It must land on the page the LABEL names, not merely somewhere else —
+    // asserting "the key changed" would pass for a callback navigating anywhere.
+    // Same capture-then-compare shape as keyboard-shortcuts.spec.js's `n` test.
+    const expected = await page.evaluate(() => window.reviewQueue.getNextNeedsReviewKey())
     await action.click()
-    await expect(page.locator('#pageSelect')).not.toHaveValue(startKey)
+    await expect(page.locator('#pageSelect')).toHaveValue(expected)
     // Clicking dismisses the toast, which otherwise describes the page we left.
-    await expect(toast).toHaveCount(0)
+    // The explicit timeout has to beat showToast's 4s auto-dismiss: on the 5s
+    // default this passes whether or not the click removes anything.
+    await expect(toast).toHaveCount(0, { timeout: 1000 })
   })
 
   test('checks tab renders rule results for the current page', async ({ page }) => {
