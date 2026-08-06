@@ -14,13 +14,28 @@
   command = "bun run build:netlify"
   publish = "dist"
 
-# Accessibility checks run in the Playwright/axe end-to-end suite instead of
-# netlify-plugin-a11y. Version 0.0.12 does not expose Pa11y's timeout setting,
-# so the UI-installed plugin could fail an otherwise successful deploy after
-# its fixed 30-second browser timeout.
-
-[[plugins]]
-  package = "@netlify/plugin-lighthouse"
+# No build plugins are declared here, deliberately.
+#
+# `netlify-plugin-a11y` timed out and failed three consecutive deploy previews
+# of a build that succeeds everywhere else — in CI (the "Vite build + Netlify
+# bundle assembly" step runs this exact command) and in a clean clone. Its
+# v0.0.12 does not expose Pa11y's timeout setting, so there is no configuration
+# that would have made it pass.
+#
+# It could not be removed from this file, because it was never in it: it was
+# installed through the Netlify UI, and per Netlify's docs "removing the plugin
+# from one does not automatically remove it from the other." A UI-installed
+# plugin is disabled only under Project configuration > Build & deploy >
+# Build plugins. Adding a DIFFERENT plugin here does not displace it — that was
+# tried in 193d00f with `@netlify/plugin-lighthouse` and the deploy failed
+# again, since that plugin was also registered without ever being added to
+# package.json for Netlify to install.
+#
+# Accessibility is covered where it can actually gate a merge:
+# tests/e2e/accessibility.spec.js runs axe (`wcag2a` + `wcag2aa`) over six
+# representative pages in the Playwright job, and that job is required. A
+# deploy-time plugin would re-check, more slowly and after the fact, what CI
+# has already proven.
 
 # Mirror the security headers served by server.ts in local dev.
 [[headers]]
