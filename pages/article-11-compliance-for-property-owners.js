@@ -16,8 +16,7 @@ window.HHVC_PAGES['article11Compliance'] = {
   editorStatus: 'needs-review',
   topicTag: 'Agency: Healthy Housing and Vector Control',
   whatToKnow: {
-    cost:
-      'Annual fee for buildings with 3 or more rental units — current certified rates range $103–$808+ depending on unit count',
+    cost: 'Annual fee for buildings with 3 or more rental units — current certified rates range $103–$808+ depending on unit count',
     thingsToKnow: [
       'See the full fee schedule for exact tier amounts and reinspection rates.',
       'This page summarizes requirements — see the full Article 11 guide for the complete section-by-section mapping.',
@@ -60,7 +59,7 @@ window.HHVC_PAGES['article11Compliance'] = {
     },
     {
       heading: "What you're required to do",
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below. Condensed from the owner-responsibility and PCO-requirement content in `article11Guide` (Director\'s Rules §V.2 and related citations) — not a full restatement; links out to the complete table.',
+      karl: "Maps to a third Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below. Condensed from the owner-responsibility and PCO-requirement content in `article11Guide` (Director's Rules §V.2 and related citations) — not a full restatement; links out to the complete table.",
       kind: 'body',
       paragraphs: [
         "These requirements come from Article 11 and the SFDPH Director's Rules and Regulations.",

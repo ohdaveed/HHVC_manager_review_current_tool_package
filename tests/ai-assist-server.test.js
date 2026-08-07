@@ -313,7 +313,7 @@ describe('AI assist API (server.ts)', () => {
       expect(body.providers.claude).toBe(true)
       expect(body.tasks).toEqual(['content'])
       expect(body.groundedBy).toContain('writing-and-style.md')
-      expect(body.pageCount).toBe(19)
+      expect(body.pageCount).toBe(20)
       expect(body.disclosureRequired).toBe(true)
     })
 
