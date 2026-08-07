@@ -12,7 +12,6 @@
 // retry actually happened.
 const { describe, test, expect, beforeAll, afterAll, beforeEach } = require('bun:test')
 const path = require('path')
-const os = require('os')
 const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
@@ -174,10 +173,27 @@ async function waitForServer(url, attempts = 60) {
   throw new Error(`Server at ${url} did not start in time`)
 }
 
+function createTestDbDir(name) {
+  return fs.mkdtempSync(path.join(ROOT, `.ai-api-${name}-`))
+}
+
+function isolatedApiEnvironment(overrides) {
+  const env = { ...process.env }
+  for (const key of [
+    'REVIEW_API_PRINCIPALS',
+    'REVIEW_API_ALLOWED_ORIGINS',
+    'REVIEW_API_RATE_LIMIT',
+    'REVIEW_API_RATE_WINDOW_MS',
+  ]) {
+    delete env[key]
+  }
+  return { ...env, ...overrides }
+}
+
 function spawnServer(env) {
   return Bun.spawn(['bun', 'run', 'server.ts'], {
     cwd: ROOT,
-    env: { ...process.env, PORT: String(PORT), HOST: '127.0.0.1', ...env },
+    env: isolatedApiEnvironment({ PORT: String(PORT), HOST: '127.0.0.1', ...env }),
     stdout: 'ignore',
     stderr: 'ignore',
   })
@@ -202,7 +218,7 @@ describe('AI assist API (server.ts)', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-api-'))
+    dbDir = createTestDbDir('main')
 
     // The Gemini Developer API's wire paths, as @google/genai builds them from
     // httpOptions.baseUrl: GET /v1beta/models to list, and
@@ -833,11 +849,10 @@ describe('AI assist API when unconfigured', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-unconfigured-'))
+    dbDir = createTestDbDir('unconfigured')
     proc = Bun.spawn(['bun', 'run', 'server.ts'], {
       cwd: ROOT,
-      env: {
-        ...process.env,
+      env: isolatedApiEnvironment({
         PORT: String(UNCONFIGURED_PORT),
         HOST: '127.0.0.1',
         REVIEW_API_TOKEN: TOKEN,
@@ -848,7 +863,7 @@ describe('AI assist API when unconfigured', () => {
         // every assertion in this block would fail on their machine only.
         GEMINI_API_KEY: '',
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
-      },
+      }),
       stdout: 'ignore',
       stderr: 'ignore',
     })
@@ -908,7 +923,7 @@ describe('AI assist API request timeout', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-timeout-'))
+    dbDir = createTestDbDir('request-timeout')
 
     slowStub = Bun.serve({
       port: TIMEOUT_STUB_PORT,
@@ -923,8 +938,7 @@ describe('AI assist API request timeout', () => {
 
     proc = Bun.spawn(['bun', 'run', 'server.ts'], {
       cwd: ROOT,
-      env: {
-        ...process.env,
+      env: isolatedApiEnvironment({
         PORT: String(TIMEOUT_PORT),
         HOST: '127.0.0.1',
         REVIEW_API_TOKEN: TOKEN,
@@ -932,7 +946,7 @@ describe('AI assist API request timeout', () => {
         ANTHROPIC_BASE_URL: `http://127.0.0.1:${TIMEOUT_STUB_PORT}`,
         AI_REQUEST_TIMEOUT_MS: '400',
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
-      },
+      }),
       stdout: 'ignore',
       stderr: 'ignore',
     })
@@ -985,7 +999,7 @@ describe('AI assist API upstream (SDK) timeout', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-ai-sdk-timeout-'))
+    dbDir = createTestDbDir('sdk-timeout')
 
     slowStub = Bun.serve({
       port: SDK_STUB_PORT,
@@ -998,8 +1012,7 @@ describe('AI assist API upstream (SDK) timeout', () => {
 
     proc = Bun.spawn(['bun', 'run', 'server.ts'], {
       cwd: ROOT,
-      env: {
-        ...process.env,
+      env: isolatedApiEnvironment({
         PORT: String(SDK_PORT),
         HOST: '127.0.0.1',
         REVIEW_API_TOKEN: TOKEN,
@@ -1011,7 +1024,7 @@ describe('AI assist API upstream (SDK) timeout', () => {
         ANTHROPIC_MAX_RETRIES: '0',
         AI_REQUEST_TIMEOUT_MS: '30000',
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
-      },
+      }),
       stdout: 'ignore',
       stderr: 'ignore',
     })
