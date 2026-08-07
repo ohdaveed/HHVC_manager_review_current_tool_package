@@ -313,6 +313,54 @@ async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   }
 }
 
+/**
+ * Task types the Gemini embeddings API accepts, confirmed against
+ * https://googleapis.github.io/js-genai/release_docs/interfaces/types.EmbedContentConfig.html
+ * via Context7 (2026-08-07). DOCUMENT is for indexed corpus chunks
+ * (ingestion); QUERY is for the text being searched with (retrieval time) —
+ * the API's own docs recommend matching task type to role for retrieval
+ * quality, so build_scripts/ingest-knowledge.js and
+ * build_scripts/ai/compliance-audit.js each pass the one that matches what
+ * they are doing.
+ */
+const EMBEDDING_TASK_TYPES = { DOCUMENT: 'RETRIEVAL_DOCUMENT', QUERY: 'RETRIEVAL_QUERY' }
+
+/**
+ * Default embedding model id. `text-embedding-004` per the confirmed
+ * @google/genai example (client.models.embedContent({model:
+ * 'text-embedding-004', ...})). `GEMINI_EMBEDDING_MODEL` overrides it, for
+ * the same reason DEFAULT_MODEL is overridable: Gemini's lineup moves.
+ */
+const DEFAULT_EMBEDDING_MODEL = 'text-embedding-004'
+
+/** @returns {string} the configured embedding model id. */
+function getEmbeddingModel() {
+  return process.env.GEMINI_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL
+}
+
+/**
+ * Embed a batch of texts.
+ *
+ * Anthropic has no embeddings API, so this is the ONLY source of embeddings
+ * in the provider registry. Callers that need one (ingestion, compliance-audit
+ * retrieval) call this directly rather than going through resolveProvider(),
+ * which resolves a GENERATION provider and may legitimately be Anthropic —
+ * embeddings and generation are independent choices for this task.
+ *
+ * @param {string[]} texts
+ * @param {'DOCUMENT'|'QUERY'} taskType
+ * @returns {Promise<Float32Array[]>} One embedding per input text, same order.
+ */
+async function embedContent(texts, taskType) {
+  const client = createClient()
+  const response = await client.models.embedContent({
+    model: getEmbeddingModel(),
+    contents: texts,
+    config: { taskType: EMBEDDING_TASK_TYPES[taskType] },
+  })
+  return (response.embeddings || []).map((embedding) => Float32Array.from(embedding.values || []))
+}
+
 module.exports = {
   name: NAME,
   label: LABEL,
@@ -324,7 +372,10 @@ module.exports = {
   explainRefusal,
   classifyAbort,
   createClient,
+  embedContent,
+  getEmbeddingModel,
   DEFAULT_MODEL,
+  DEFAULT_EMBEDDING_MODEL,
   MAX_OUTPUT_TOKENS,
   MAX_ATTEMPTS,
   REQUEST_TIMEOUT_MS,
