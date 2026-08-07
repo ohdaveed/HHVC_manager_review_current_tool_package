@@ -60,33 +60,85 @@ test.describe('workspace panels', () => {
      1920px display actually report.
 
      Sampling across the range is the point. A single extra width would just
-     move the blind spot somewhere else. */
+     move the blind spot somewhere else.
+
+     The assertion is plain rectangle non-intersection, and deliberately does
+     NOT first work out which layout is in force. An earlier version decided
+     that with `workspace.top < 400`, which is a bug rather than a shortcut:
+     getBoundingClientRect() is viewport-relative, so the threshold moves with
+     the scroll position. openWorkspaceTab() clicks the tab, and in the stacked
+     layout Playwright scrolls that off-screen tab into view — which can drag a
+     stacked panel under 400 and run the side-by-side assertion against it
+     (left ~370 vs a shell ending near 1170: a failure with no defect behind
+     it). The converse hid real breakage: a docked layout scrolled past the
+     threshold skipped the check entirely.
+
+     Non-intersection needs no mode at all. Two boxes are disjoint when one is
+     entirely left, right, above or below the other, which is exactly what this
+     test's name claims and is true in both layouts. It also avoids restating
+     the 1700px breakpoint, so the guard cannot drift out of step with the
+     rule it guards.
+
+     THE SCROLL RESET BELOW IS LOAD-BEARING, and non-intersection alone did not
+     remove the need for it. The workspace is `position: sticky`, so it holds
+     the viewport while the mockup scrolls past underneath — which means the
+     two rectangles' VERTICAL relationship still moves with scroll even though
+     their horizontal one does not. openWorkspaceTab() leaves the page at
+     scrollY 8589 (in the stacked layout the panel really is nine screenfuls
+     down, which is the distance the docked layout exists to remove), and that
+     scroll persists across every setViewportSize in the loop. Measured at
+     1720px it left the shell at [-7925, 934] against a workspace at [0, 950]:
+     an overlap of 934px, correct today but only by 933px of margin, from a
+     page already scrolled to the bottom of the document. Anything that makes
+     the mockup shorter or the stacked page taller pushes shell.bottom above
+     the viewport, overlapY goes negative, and the horizontal check — the one
+     that actually catches the bug — is masked at every docked width.
+
+     Scrolling to the top before each measurement pins the one degree of
+     freedom sticky positioning leaves. The area assertion underneath it closes
+     the same class from the other side: a zero-sized rect (a panel gone
+     display:none, a selector that stopped matching) intersects nothing and
+     would otherwise sail through as a pass. */
   test('the mockup never overlaps the workspace, at any width', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')
 
     for (let width = 1280; width <= 1920; width += 40) {
       await page.setViewportSize({ width, height: 950 })
-      const geometry = await page.evaluate(() => {
-        const shell = document.querySelector('.browser-shell').getBoundingClientRect()
-        const workspace = document.querySelector('#reviewWorkspace').getBoundingClientRect()
-        return {
-          shellRight: shell.right,
-          workspaceLeft: workspace.left,
-          workspaceTop: workspace.top,
+      const boxes = await page.evaluate(() => {
+        window.scrollTo(0, 0)
+        const rect = (selector) => {
+          const { left, right, top, bottom } = document
+            .querySelector(selector)
+            .getBoundingClientRect()
+          return { left, right, top, bottom }
         }
+        return { shell: rect('.browser-shell'), workspace: rect('#reviewWorkspace') }
       })
 
-      // Stacked (the panel sits below the canvas) is fine by construction —
-      // only the side-by-side case can collide horizontally.
-      const isSideBySide = geometry.workspaceTop < 400
-      if (!isSideBySide) continue
+      const { shell, workspace } = boxes
+
+      // Both boxes must actually exist before "they do not overlap" means
+      // anything — see the header note on zero-sized rects.
+      for (const [name, box] of Object.entries({ shell, workspace })) {
+        expect(box.right - box.left, `${name} has no width at ${width}px`).toBeGreaterThan(0)
+        expect(box.bottom - box.top, `${name} has no height at ${width}px`).toBeGreaterThan(0)
+      }
+
+      // Sub-pixel layout rounding can leave the two edges a hair apart in
+      // either direction, so allow 1px of slack before calling it an overlap.
+      const GAP_TOLERANCE = 1
+      const overlapX = Math.min(shell.right, workspace.right) - Math.max(shell.left, workspace.left)
+      const overlapY = Math.min(shell.bottom, workspace.bottom) - Math.max(shell.top, workspace.top)
+      const intersects = overlapX > GAP_TOLERANCE && overlapY > GAP_TOLERANCE
 
       expect(
-        geometry.workspaceLeft,
+        intersects,
         `mockup overlaps the workspace at ${width}px by ` +
-          `${Math.round(geometry.shellRight - geometry.workspaceLeft)}px`
-      ).toBeGreaterThanOrEqual(geometry.shellRight)
+          `${Math.round(overlapX)}x${Math.round(overlapY)}px — ` +
+          `shell [${Math.round(shell.left)},${Math.round(shell.right)}] ` +
+          `workspace [${Math.round(workspace.left)},${Math.round(workspace.right)}]`
+      ).toBe(false)
     }
   })
 

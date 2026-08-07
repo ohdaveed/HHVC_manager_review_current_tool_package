@@ -49,7 +49,7 @@ recent reviewing. The generator takes a second and keeps the two in step.
 4. **Seed the review state, in this order.** Importing merges *per page*, and
    for the 12 pages the seed names, the seed's values replace whatever was
    there. Pages it does not name are left alone. So skipping the clear step on
-   a browser you have used before will not give you 12/19, and will overwrite
+   a browser you have used before will not give you 12/20, and will overwrite
    any real review work on those 12 pages.
    1. If this browser holds review work you care about, export it first:
       **What to export → "Everything, for another browser — JSON"** →
@@ -63,7 +63,7 @@ recent reviewing. The generator takes a second and keeps the two in step.
       is where Beat 2 starts.
    4. **Import reviews** → `review/demo-review-state.json`.
 
-   The Overview should then read **12/19 reviewed**.
+   The Overview should then read **12/20 reviewed**.
 5. **Click once on the mockup** before trying any keyboard shortcut, then press
    `w` to confirm the workspace opens and closes. Leave it open.
 
@@ -96,7 +96,7 @@ merges per page and returns early when the file names none.
 ## Beat 1 — What this is (1 min, no clicking)
 
 You are looking at a **mockup of a redesigned SF.gov section**, plus the tool
-built to review it. Nineteen pages, one information architecture, and a
+built to review it. Twenty pages, one information architecture, and a
 structured way for managers to sign each page off.
 
 The thing to say early, because it pre-empts the obvious question: **nothing
@@ -110,7 +110,7 @@ Opens on **Healthy Housing and Vector Control** — the page the review packet
 tells managers to look at first.
 
 Point at the **service grouping**: scannable groups instead of one long mixed
-link list, which is what the old Topic page was. Nineteen pages replaced a
+link list, which is what the old Topic page was. Twenty pages replaced a
 33-to-40 page set.
 
 Scroll to the **Editor QA** block at the bottom.
@@ -176,7 +176,7 @@ This page fails two mandatory checks, and both are legible to a non-specialist:
 
 Failures sort to the top, so what a reviewer can act on is what they see first.
 
-If asked how many there are across the site: **ten mandatory failures across 19
+If asked how many there are across the site: **eleven mandatory failures across 20
 pages**, all one-line content edits. The Agency page passes all of its.
 
 ---
@@ -188,7 +188,7 @@ the shortcut works) — or click the tab.
 
 Walk it top to bottom:
 
-- **12 of 19 reviewed** — progress, not a guess.
+- **12 of 20 reviewed** — progress, not a guess.
 - **Filter chips** — click **Blocked**. Four pages. Say plainly that this groups
   *Blocked* with *Revise and resubmit*, because both mean "cannot publish yet";
   the count and the filter are one control, so they can never disagree.
@@ -248,7 +248,7 @@ authority for the pages it names), not an accident.
 
 Three sentences:
 
-- Nineteen pages, one IA, reviewable page by page with a recorded decision trail.
+- Twenty pages, one IA, reviewable page by page with a recorded decision trail.
 - The standards are enforced by the tool, not remembered by a person — and it
   catches things on our own pages, including the flagship one.
 - It runs offline, stores nothing outside the browser, and sends nothing
@@ -272,4 +272,4 @@ Then stop and take questions. The answers to the likely ones are in
 
 **Do not demo live** unless you have rehearsed it: the AI drafting panel (needs
 a key and makes a real model call) and **Save all mockups as PNGs** (navigates
-all 19 pages in sequence). Neither is needed for the story above.
+all 20 pages in sequence). Neither is needed for the story above.
