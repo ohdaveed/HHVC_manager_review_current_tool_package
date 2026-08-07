@@ -15,11 +15,17 @@ async function reloadAndOpenQueue(page) {
   await page.waitForSelector('.review-queue-table-row')
 }
 
+async function pageCount(page) {
+  return page.evaluate(() => window.HHVC_DATA.order.length)
+}
+
 test.describe('review queue (Overview tab)', () => {
   test('renders one row per page', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')
-    await expect(page.locator('.review-queue-table-row[data-page-key]')).toHaveCount(19)
+    await expect(page.locator('.review-queue-table-row[data-page-key]')).toHaveCount(
+      await pageCount(page)
+    )
   })
 
   test('decision filters narrow the visible rows', async ({ page }) => {
@@ -48,13 +54,14 @@ test.describe('review queue (Overview tab)', () => {
     )
 
     await page.click('.review-queue-filter[data-queue-filter="All"]')
-    await expect(page.locator('.review-queue-table-row')).toHaveCount(19)
+    await expect(page.locator('.review-queue-table-row')).toHaveCount(await pageCount(page))
   })
 
   test('queue search filters rows and clearing restores them', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')
     await page.waitForSelector('.review-queue-table-row')
+    const totalPages = await pageCount(page)
 
     await page.fill('#reviewQueueSearch', 'mosquito')
     // The queue rebuilds its table on each keystroke; wait for a known
@@ -62,19 +69,20 @@ test.describe('review queue (Overview tab)', () => {
     await expect(page.locator('.review-queue-table-row[data-page-key="payFee"]')).toBeHidden()
     const visible = await page.locator('.review-queue-table-row').count()
     expect(visible).toBeGreaterThan(0)
-    expect(visible).toBeLessThan(19)
+    expect(visible).toBeLessThan(totalPages)
     await expect(
       page.locator('.review-queue-table-row[data-page-key="mosquitoControl"]')
     ).toHaveCount(1)
 
     await page.fill('#reviewQueueSearch', '')
-    await expect(page.locator('.review-queue-table-row')).toHaveCount(19)
+    await expect(page.locator('.review-queue-table-row')).toHaveCount(totalPages)
   })
 
   test('sorting by title orders rows alphabetically', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')
     await page.waitForSelector('.review-queue-table-row')
+    const totalPages = await pageCount(page)
 
     await page.selectOption('#reviewQueueSort', 'title')
 
@@ -84,7 +92,7 @@ test.describe('review queue (Overview tab)', () => {
       .poll(async () => {
         const titles = await page.locator('.review-queue-row-title').allTextContents()
         return (
-          titles.length === 19 &&
+          titles.length === totalPages &&
           titles.every((title, i) => i === 0 || titles[i - 1].localeCompare(title) <= 0)
         )
       })
@@ -132,7 +140,9 @@ test.describe('review queue (Overview tab)', () => {
     await page.waitForSelector('.review-queue-table-row')
 
     await page.check('#reviewQueueSelectAll')
-    await expect(page.locator('.review-queue-bulk-count')).toHaveText('19 selected')
+    await expect(page.locator('.review-queue-bulk-count')).toHaveText(
+      `${await pageCount(page)} selected`
+    )
   })
 
   test('row Open action navigates to that page', async ({ page }) => {

@@ -3,7 +3,7 @@ const AxeBuilder = require('@axe-core/playwright').default
 const { gotoFresh, openWorkspaceTab, selectPage } = require('./helpers')
 
 // One representative page per content type in use (see docs/wagtail-content-mapping.md);
-// scanning all 19 pages x states would be slow for little extra signal.
+// Scanning every page and state would be slow for little extra signal.
 const REPRESENTATIVE_PAGES = [
   'pestsTopic', // Agency
   'payFee', // Transaction

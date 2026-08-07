@@ -50,7 +50,8 @@ test.describe('review import/export through the UI', () => {
 
     expect(download.suggestedFilename()).toBe('hhvc-all-page-manager-review-template.csv')
     const lines = text.trim().split('\n')
-    expect(lines.length).toBe(20)
+    const pageCount = await page.evaluate(() => window.HHVC_DATA.order.length)
+    expect(lines.length).toBe(pageCount + 1)
     expect(lines[0]).toContain('page_key')
   })
 

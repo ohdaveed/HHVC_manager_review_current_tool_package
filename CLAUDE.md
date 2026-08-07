@@ -22,7 +22,7 @@ the tool is unaffected if it's never used.
 A separate Vite sub-app lives at `forms/mosquito-workshop-request/` (a real
 build step, built independently — see Build outputs below).
 
-The repo currently holds **19 pages** under `pages/`. If `bun` isn't on
+The repo currently holds **20 pages** under `pages/`. If `bun` isn't on
 `PATH` it installs to `~/.bun/bin`; run `export PATH="$HOME/.bun/bin:$PATH"`.
 
 ## Commands
@@ -37,7 +37,7 @@ bun run start                 # production-like: build:netlify then serve dist/ 
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
-bun run test:e2e              # playwright test (117 specs across 15 files in tests/e2e/)
+bun run test:e2e              # playwright test (123 specs across 16 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -96,11 +96,11 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — fifteen spec files
-(117 specs), all UI-driven: navigation, editor panel, review workflow, review
+`bun run test:e2e` drives Playwright over `tests/e2e/` — sixteen spec files
+(123 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
-Overview insight cards. They share plain helper functions in
+Overview insight cards, and workshop-form submission handling. They share plain helper functions in
 `tests/e2e/helpers.js` (no fixture framework).
 A fourteenth file, `review-import-export.spec.js`, was deleted rather than
 repaired. Its two round-trip tests hand-rolled the merge inside
@@ -274,7 +274,7 @@ re-monolith them.**
   file carried a hand-rolled formula from the no-build-step era while
   `build_scripts/reading-level.js` wrapped the library for Node — and only the
   Node copy had tests, while only this one shipped. They disagreed by 1.14
-  grades on average across the 19 pages, always in the direction of "easier
+  grades on average across the 20 pages, always in the direction of "easier
   than it is", so nine pages reported hitting a reading target they miss. The
   Node copy is deleted; `tests/reading-level.test.js` now imports this one.
 - **`js/review-state-validation.js`** — browser-side validation of the
@@ -362,7 +362,7 @@ never referenced from `pages/*.js` or outside its own module's files):
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 19 pages, drawing a
+**Sitemap** was removed outright (a fourth way to navigate 20 pages, drawing a
 hierarchy one level deep — most hubs rendered as `HUB 0/0` above "No child pages
 assigned"), and **AI assist** and **Tool status** became collapsed `<details>`
 at the end of Help. Both of those depend on `server.ts`, which the Netlify
@@ -498,7 +498,7 @@ a ready-to-render `citation`:
 - **`severity: 'error'`** are the standards manual's mandates. They join the
   scored rule list behind the Overview tab's "checks passed" ratio, and their
   citation renders on the Checks tab alongside the rule.
-- **`severity: 'warning'`** are advisory, run to ~115 across the 19 pages, and
+- **`severity: 'warning'`** are advisory, run to ~115 across the 20 pages, and
   render separately — folding them into the ratio would make every page look
   broken.
 - A scored rule must always be **pushed**, passing or failing, never omitted
@@ -857,6 +857,52 @@ Nothing can unit-test this path today: both modules are browser-only, with no
 is mandatory rather than advisory** — on this one path, a green CI run is not
 evidence the round-trip still merges.
 
+### Optional API access hardening
+
+`server.ts`'s optional `/api/*` routes have one shared, server-side access
+control layer. It protects the review-state and AI APIs without changing the
+offline static tool.
+
+- **Legacy compatibility and opt-in principals:** an unset
+  `REVIEW_API_TOKEN` _and_ unset `REVIEW_API_PRINCIPALS` still yields 501 —
+  the API is not accidentally open. Setting only `REVIEW_API_TOKEN` remains
+  supported and creates one broad legacy principal with every role. For
+  least-privilege deployments, set `REVIEW_API_PRINCIPALS` to a JSON array
+  such as
+  `[{"principal":"reviewer-a","token":"replace-with-a-secret","roles":["review:read"]}]`.
+  Each entry has exactly `principal` (letters, digits, `.`, `_`, `-`),
+  `token` (one non-whitespace bearer token), and nonempty `roles`; principal
+  names and tokens must be unique. The allowed roles are `review:read`,
+  `review:write`, and `ai:generate`.
+- **No ambiguous fallback:** a present `REVIEW_API_PRINCIPALS` replaces the
+  legacy token completely. Empty, malformed, oversized, duplicate, unknown,
+  or invalid-role configuration fails closed with 503; it never falls back to
+  `REVIEW_API_TOKEN`. Keep both token values out of source control and logs.
+  `review:read` gates `GET /api/review-state`, `review:write` gates its PUT,
+  and `ai:generate` gates all AI discovery/model/generation routes.
+- **Origins:** no cross-origin browser origin is allowed by default and no API
+  response sends `Access-Control-Allow-Origin: *`. Same-origin requests work
+  normally. To authorize a separate trusted browser app, set
+  `REVIEW_API_ALLOWED_ORIGINS` to a comma-separated list of exact serialized
+  HTTP(S) origins, for example
+  `https://review.example.gov,https://manager.example.gov`; no wildcards,
+  paths, credentials, or `null` origins. Invalid origin configuration fails
+  closed with 503. Allowed preflights do not authenticate or grant a role; the
+  following request still does both.
+- **Process-local rate limit:** authenticated requests use a fixed window per
+  configured principal and role bucket. `REVIEW_API_RATE_LIMIT` defaults to
+  120 requests and `REVIEW_API_RATE_WINDOW_MS` to 60000 (valid ranges are
+  1–10000 and 1000–3600000 respectively); invalid numeric values warn and use
+  those safe defaults. The in-memory map is bounded by the maximum configured
+  principals and three roles, and 429 responses carry `Retry-After`.
+- **Production boundary:** this limiter and bearer-token lookup are
+  intentionally per-process. A public or multi-instance deployment **must**
+  additionally enforce identity, origin policy, and shared rate limits at a
+  reverse proxy or identity-aware edge; do not treat a process-local counter
+  as coordinated abuse protection. API responses, including authorization,
+  CORS, configuration, and rate-limit errors, retain the server's security
+  headers and are `no-store`.
+
 ### Review-state sync backend (optional)
 
 `server.ts` optionally hosts a small sync API on top of its static file
@@ -884,10 +930,10 @@ ui, globals, pages}` state (same shape `window.reviewState.read()`
   record crosses it every push fails, and shortening the current note cannot
   remove historical copies. 64 KB was measured at roughly 70 recorded rounds
   with long notes, which a real review cycle can reach.
-- **Auth**: every `/api/*` request requires `Authorization: Bearer
-<REVIEW_API_TOKEN>`; a missing/wrong token gets 401, and an unset
-  `REVIEW_API_TOKEN` makes the routes return 501 rather than silently allow
-  unauthenticated writes.
+- **Auth**: see [Optional API access hardening](#optional-api-access-hardening).
+  The legacy token remains broad for compatibility; production deployments
+  should use per-token principals and grant only `review:read`/`review:write`
+  to sync reviewers.
 - **Storage**: SQLite table `review_pages (page_key TEXT PRIMARY KEY, record
 TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   `.data/review-state.local.db`, gitignored, for local dev; point it at a
@@ -1006,11 +1052,13 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
   race harder to reach at all.
 - **Deployment (e.g. Railway)**: run `server.ts` (`bun run start`) with a
   persistent volume mounted, `DATA_DB_PATH` pointed at that volume, and
-  `REVIEW_API_TOKEN` set to a generated secret — none of this is committed.
-  Local `bun run dev`/`bun run start` keep working fully offline with sync
-  simply disabled when unconfigured; Netlify's static-only deploy
-  (`build:netlify`) has no server runtime for these routes and stays a
-  read-only/no-sync deployment target.
+  either a generated `REVIEW_API_TOKEN` or the documented
+  `REVIEW_API_PRINCIPALS` secret configuration — none of this is committed.
+  Apply the reverse-proxy/identity-aware edge control described above for
+  public or replicated deployments. Local `bun run dev`/`bun run start` keep
+  working fully offline with sync simply disabled when unconfigured; Netlify's
+  static-only deploy (`build:netlify`) has no server runtime for these routes
+  and stays a read-only/no-sync deployment target.
 - **Tests**: `tests/review-merge.test.js` (unit tests for
   `mergeReviewRecord`), `tests/review-state-sync.test.js` (the client
   pull/push/conflict logic), and `tests/review-api-server.test.js` (spawns
@@ -1024,16 +1072,17 @@ backed by `build_scripts/ai/`. Same posture as the sync backend above:
 **entirely additive and off by default**, nothing else in the tool depends on
 it, and it fails closed rather than open.
 
-- **Two independent gates.** `REVIEW_API_TOKEN` (shared with the sync routes —
-  one server secret, not two) decides whether the API exists at all; unset
-  makes every `/api/ai/*` route 501 — with one deliberate exception: a CORS
-  `OPTIONS` preflight is answered 204 _before_ the token gate, so a
-  cross-origin browser client can still preflight an unconfigured server.
-  Don't move the gate above the `OPTIONS` branch. `ANTHROPIC_API_KEY` decides whether
-  generation is possible; unset makes `generate` and `models` 501 while
-  `capabilities` still answers. That asymmetry is deliberate: `capabilities` is
-  the discovery endpoint the browser uses for its empty state, and a 501 there
-  would leave it unable to tell "no AI key" from "no server at all".
+- **Two independent gates.** The shared optional API authorization
+  configuration described above (legacy `REVIEW_API_TOKEN` or
+  `REVIEW_API_PRINCIPALS`) decides whether the API exists; no configuration
+  makes every actual `/api/ai/*` route 501. A CORS `OPTIONS` preflight remains
+  unauthenticated because browsers cannot attach the bearer header to it, but
+  it must pass the exact-origin policy and grants no role. `ai:generate` is
+  required for every AI route. `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` decides
+  whether generation is possible; unset makes `generate` and `models` 501
+  while `capabilities` still answers. That asymmetry is deliberate:
+  `capabilities` is the discovery endpoint the browser uses for its empty
+  state, and a 501 there cannot be told apart from "no server at all".
 - **The provider gate is checked inside each route, not before routing.**
   Hoisting it would make every unmatched path answer 501 "no provider
   configured" instead of 404 — telling a client a route exists when it does not.

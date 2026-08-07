@@ -15,6 +15,7 @@ const PAGE_KEYS = [
   'noticeOfViolation',
   'payFee',
   'scopeInfo',
+  'article11Compliance',
   'article11Guide',
   'ownerGuidance',
   'afterReport',
@@ -36,7 +37,7 @@ test.describe('page navigation', () => {
     expect(page.url()).toContain('page=rodentsReport')
   })
 
-  test('all 19 pages render without errors', async ({ page }) => {
+  test('all registered pages render without errors', async ({ page }) => {
     await gotoFresh(page)
     for (const key of PAGE_KEYS.slice(1)) {
       await selectPage(page, key)
