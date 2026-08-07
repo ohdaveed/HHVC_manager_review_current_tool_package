@@ -172,8 +172,20 @@ way to reset between runs — it is destructive by design, not a trap.
   invisible — because `color` is inherited as a computed value, so the dark
   theme's text colour leaked past the light tokens onto the mockup's light
   background. Every keyboard shortcut key was at 2.09:1 for a different reason.
-  Both are fixed and both are now scanned on every commit. Either theme is safe
-  to present from.
+  Both are fixed and both are now scanned on every commit.
+
+  What that does and does not license: **the paths this demo actually walks are
+  clean in both themes**, which is what matters tomorrow. It is not a
+  whole-product guarantee — the dark-mode scan covers the three workspace tabs
+  and two of the nineteen pages, so the other seventeen have never been rendered
+  under a dark scan. The reason that is a small risk rather than an open one is
+  structural rather than statistical: the mockup declares `color-scheme: light`
+  and re-pins its colours, so page content renders light whatever the system
+  theme is. The bug that was found was precisely a leak across that boundary,
+  and the fix closed the boundary rather than patching one page.
+
+  Presenting in light mode still removes the question entirely, if you would
+  rather not have it.
 - **Docking is unavailable below 1700px.** That is a deliberate trade made
   tonight — a correct stacked layout instead of a broken overlapping one — but
   it does mean a 14-inch laptop no longer gets the side-by-side view the recent

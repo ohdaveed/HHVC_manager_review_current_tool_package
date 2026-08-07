@@ -29,9 +29,11 @@ recent reviewing. The generator takes a second and keeps the two in step.
    - **Under 1700** → the workspace stacks underneath. Still correct, but you
      lose the side-by-side story. Reduce display scaling or move to a bigger
      screen if you can.
-3. **Either colour scheme is fine.** Dark mode is verified and clean as of this
-   pass, and the mockup is pinned to light in both, so the page under review
-   looks identical either way.
+3. **Either colour scheme works for this walkthrough.** The pages and panels
+   below are scanned clean in both, and the mockup is pinned to light either
+   way, so the page under review looks identical. Light mode removes the
+   question entirely if you would rather not field it — see the coverage note in
+   `demo-readiness-notes.md` for what the dark scan does and does not cover.
 4. **Seed the review state, in this order.** Importing merges *per page*, and
    for the 12 pages the seed names, the seed's values replace whatever was
    there. Pages it does not name are left alone. So skipping the clear step on
