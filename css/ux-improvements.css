@@ -586,6 +586,30 @@
   outline-offset: 2px;
 }
 
+/* Sync configuration (server URL, token, pull/push) is technical setup, not
+   a review decision — collapsing it into its own <details> keeps it from
+   competing with the decision fields and export buttons above for
+   attention. Container styling mirrors .ai-assist-settings
+   (css/ai-assist.css); the grid + gap matches .review-actions so the
+   vertical rhythm between fields is unchanged from before this was split
+   into its own disclosure. */
+.review-sync-settings {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.review-sync-settings summary {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--sfds-slate-1);
+  cursor: pointer;
+}
+
 .sync-config-input {
   width: 100%;
   min-height: 44px;
