@@ -27,6 +27,7 @@ import '../pages/tenant-rights-reporting.js'
 import '../pages/mosquito-control-program.js'
 import '../pages/mosquito-education-workshop.js'
 import '../pages/pay-healthy-housing-fee.js'
+import '../pages/article-11-compliance-for-property-owners.js'
 import '../pages/health-code-article-11.js'
 
 window.HHVC_PAGES = window.HHVC_PAGES || {}
@@ -46,6 +47,7 @@ window.HHVC_DATA = {
     ['noticeOfViolation', 'Information: How to respond to a notice of violation'],
     ['payFee', 'Transaction: Pay your Healthy Housing fee'],
     ['scopeInfo', 'Information: Learn what HHVC can inspect'],
+    ['article11Compliance', 'Information: Article 11 compliance for property owners'],
     ['article11Guide', 'Report: Health Code Article 11 in plain language'],
     ['ownerGuidance', 'Information: Integrated pest management for property owners and managers'],
     ['afterReport', 'Information: What happens after you report'],
