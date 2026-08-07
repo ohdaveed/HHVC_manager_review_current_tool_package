@@ -37,6 +37,8 @@
     "validate": "bun build_scripts/validate.js",
     "// export": "Generates data/page_inventory.{json,csv} and syncs the local tracking sheet",
     "export": "bun build_scripts/extract-pages.js && bun build_scripts/sync-tracking-sheet.js",
+    "// ingest": "Chunks docs/source/**/*.md, embeds via Gemini, and upserts into knowledge_chunks. Needs GEMINI_API_KEY. Manual, not part of the build pipeline.",
+    "ingest": "bun build_scripts/ingest-knowledge.js",
     "// sync-tracking": "Re-generates the local mockup tracking CSV sheets",
     "sync-tracking": "bun build_scripts/sync-tracking-sheet.js",
     "// push-tracking": "Pushes the local page review status to the Google Sheets tracker",
