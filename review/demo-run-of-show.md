@@ -23,12 +23,24 @@ as they are — so a stale file charts stale dates while this script talks about
 recent reviewing. The generator takes a second and keeps the two in step.
 
 1. Open `http://127.0.0.1:8080`.
-2. **Check the width.** In the console: `window.innerWidth`.
-   - **1720 or more** → the workspace docks beside the mockup. This is the
-     layout you want.
-   - **Under 1700** → the workspace stacks underneath. Still correct, but you
-     lose the side-by-side story. Reduce display scaling or move to a bigger
-     screen if you can.
+2. **Check the width — this one is a prerequisite, not a preference.** In the
+   console: `window.innerWidth`.
+   - **1720 or more** → the workspace docks beside the mockup. Run the script
+     as written.
+   - **Under 1700** → the workspace stacks *below the whole mockup*, roughly
+     eleven screenfuls down at a laptop height (measured: the panel starts at
+     ~8,994px). The layout is correct, but **the script's keystrokes
+     will look broken**: with the workspace already open, `1`/`2`/`3` switch the
+     panel without scrolling to it, so you press a key and nothing visibly
+     happens. Get above 1720 if you possibly can — reduce display scaling, or
+     use a larger screen.
+
+     If you are stuck narrower, two things work:
+     - **Scroll down** to the panel after switching tabs, or
+     - press **`w` twice** (close, reopen) — reopening focuses the active tab,
+       which brings the panel into view.
+
+     Rehearse whichever one you will use. Do not discover it live.
 3. **Either colour scheme works for this walkthrough.** The pages and panels
    below are scanned clean in both, and the mockup is pinned to light either
    way, so the page under review looks identical. Light mode removes the
@@ -43,7 +55,13 @@ recent reviewing. The generator takes a second and keeps the two in step.
       **What to export → "Everything, for another browser — JSON"** →
       **Export reviews**.
    2. **Clear saved reviews**, and confirm.
-   3. **Import reviews** → `review/demo-review-state.json`.
+   3. **Reload the page.** Do not skip this. Clearing empties the saved data and
+      the review form, but any edited title / summary / CTA / SEO text that had
+      already been restored onto the page stays there until a reload rebuilds
+      the page from source — and the seed cannot undo it, because it carries no
+      page-content fields. The reload also returns you to the Agency page, which
+      is where Beat 2 starts.
+   4. **Import reviews** → `review/demo-review-state.json`.
 
    The Overview should then read **12/19 reviewed**.
 5. **Click once on the mockup** before trying any keyboard shortcut, then press
@@ -68,10 +86,10 @@ recent reviewing. The generator takes a second and keeps the two in step.
 > it works again. The visible buttons and tabs always work regardless, and this
 > script uses them wherever focus would otherwise be in doubt.
 
-To show the empty first-run state at any point, use **Clear saved reviews**, and
-re-import the seed to restore. There is no "empty backup" file to import: an
-empty import does nothing at all, because the import path merges per page and
-returns early when the file names none.
+To show the empty first-run state at any point, use **Clear saved reviews** and
+reload; reload and re-import the seed to get back. There is no "empty backup"
+file to import: an empty import does nothing at all, because the import path
+merges per page and returns early when the file names none.
 
 ---
 
@@ -189,8 +207,16 @@ Then the part worth doing live:
 > recorded round, so the trail reads *set to Approved, then reverted* — because
 > that's what happened. You can't quietly remove a decision from the record."
 
-That is the single most convincing thing in the tool: it is auditable by
-construction.
+That is the single most convincing thing in the tool: within the review
+workflow, the trail is append-only by construction — every decision path goes
+through one merge function, and that function only ever appends.
+
+If someone presses on it, the honest boundary is worth knowing: **Clear saved
+reviews** wipes this browser's review data outright, and the Stored review data
+panel can prune orphaned records. Both are deliberate, confirm-gated, and
+all-or-nothing rather than surgical — you cannot quietly rewrite one decision,
+which is the property that matters. Say that rather than claiming the record is
+indelible.
 
 ---
 
@@ -200,12 +226,21 @@ In the sidebar, set **What to export** to *"Everything, for another browser —
 JSON"* and click **Export reviews**. Then click **Import reviews** and choose
 the file you just exported.
 
-Nothing is lost, and nothing is duplicated. Imports **merge** — they never
-replace.
+Nothing is lost and nothing is duplicated — you exported and re-imported the
+same state, so the 12 reviews come back exactly as they were, with the trail
+showing the import.
 
 > "That matters because reviews live in this browser. The export is how you move
-> them between machines or hand them to someone else, and it has to be safe to
-> re-import a stale copy."
+> them between machines or hand them to someone else, and re-importing has to be
+> non-destructive."
+
+**Do not extend that to stale copies.** Imports merge *per page*: pages the file
+does not name are untouched and the history is appended rather than replaced,
+but for a page the file *does* name, its saved decision, notes, risks, owner and
+reviewer replace the current ones. Re-importing an old export therefore reverts
+that page to the older review. If asked, say exactly that — it is the same
+merge rule as the setup step, and it is a design choice (the file is the
+authority for the pages it names), not an accident.
 
 ---
 
@@ -229,9 +264,9 @@ Then stop and take questions. The answers to the likely ones are in
 | Symptom | What to do |
 | --- | --- |
 | Panels look empty / everything says "Not reviewed yet" | The seed did not import. Sidebar → **Import reviews** → `review/demo-review-state.json`. |
-| You clicked **Clear saved reviews** | Re-import the seed. Nothing is lost that the file does not restore. |
-| Full-width red banner appears | Something threw. Reload the page — review state is saved and will come back. Do not debug it live. |
-| Workspace sits under the mockup, not beside it | The window is under 1700px. Expected, not broken. Carry on; the layout is the only difference. |
+| You clicked **Clear saved reviews** | Reload, then re-import the seed. That restores the 12 seeded pages; any other review work in this browser is gone. |
+| Full-width red banner appears | Something threw. Reload — saved reviews come back, though anything typed in the seconds before it may not have been written yet. Do not debug it live. |
+| Workspace sits under the mockup, not beside it | The window is under 1700px — expected, but see setup step 2: tab shortcuts will not scroll to it. Scroll down, or press `w` twice to bring it into view. |
 | Charts missing but the numbers are there | The chart library is a separate lazy-loaded file. The data tables beside it are the real content — carry on. |
 | A panel says "Not configured" | The optional sync and AI drafting servers are off by design. That is their correct state, not an error. |
 
