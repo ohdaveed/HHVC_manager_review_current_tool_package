@@ -77,7 +77,28 @@ test.describe('workspace panels', () => {
      entirely left, right, above or below the other, which is exactly what this
      test's name claims and is true in both layouts. It also avoids restating
      the 1700px breakpoint, so the guard cannot drift out of step with the
-     rule it guards. */
+     rule it guards.
+
+     THE SCROLL RESET BELOW IS LOAD-BEARING, and non-intersection alone did not
+     remove the need for it. The workspace is `position: sticky`, so it holds
+     the viewport while the mockup scrolls past underneath — which means the
+     two rectangles' VERTICAL relationship still moves with scroll even though
+     their horizontal one does not. openWorkspaceTab() leaves the page at
+     scrollY 8589 (in the stacked layout the panel really is nine screenfuls
+     down, which is the distance the docked layout exists to remove), and that
+     scroll persists across every setViewportSize in the loop. Measured at
+     1720px it left the shell at [-7925, 934] against a workspace at [0, 950]:
+     an overlap of 934px, correct today but only by 933px of margin, from a
+     page already scrolled to the bottom of the document. Anything that makes
+     the mockup shorter or the stacked page taller pushes shell.bottom above
+     the viewport, overlapY goes negative, and the horizontal check — the one
+     that actually catches the bug — is masked at every docked width.
+
+     Scrolling to the top before each measurement pins the one degree of
+     freedom sticky positioning leaves. The area assertion underneath it closes
+     the same class from the other side: a zero-sized rect (a panel gone
+     display:none, a selector that stopped matching) intersects nothing and
+     would otherwise sail through as a pass. */
   test('the mockup never overlaps the workspace, at any width', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')
@@ -85,6 +106,7 @@ test.describe('workspace panels', () => {
     for (let width = 1280; width <= 1920; width += 40) {
       await page.setViewportSize({ width, height: 950 })
       const boxes = await page.evaluate(() => {
+        window.scrollTo(0, 0)
         const rect = (selector) => {
           const { left, right, top, bottom } = document
             .querySelector(selector)
@@ -95,6 +117,14 @@ test.describe('workspace panels', () => {
       })
 
       const { shell, workspace } = boxes
+
+      // Both boxes must actually exist before "they do not overlap" means
+      // anything — see the header note on zero-sized rects.
+      for (const [name, box] of Object.entries({ shell, workspace })) {
+        expect(box.right - box.left, `${name} has no width at ${width}px`).toBeGreaterThan(0)
+        expect(box.bottom - box.top, `${name} has no height at ${width}px`).toBeGreaterThan(0)
+      }
+
       // Sub-pixel layout rounding can leave the two edges a hair apart in
       // either direction, so allow 1px of slack before calling it an overlap.
       const GAP_TOLERANCE = 1

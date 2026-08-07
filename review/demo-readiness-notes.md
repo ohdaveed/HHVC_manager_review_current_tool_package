@@ -91,7 +91,7 @@ tabs and never ran in dark mode, and the only two screen widths under test were
 New tests now close all three gaps, including one that sweeps every width from
 1280 to 1920 and five that scan in dark mode.
 
-Verified green after all changes: 533 unit tests, 117 end-to-end tests, schema
+Verified green after all changes: 539 unit tests, 123 end-to-end tests, schema
 validation, and the lint step.
 
 ## Questions you should expect, with answers

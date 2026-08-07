@@ -96,7 +96,7 @@ merges per page and returns early when the file names none.
 ## Beat 1 — What this is (1 min, no clicking)
 
 You are looking at a **mockup of a redesigned SF.gov section**, plus the tool
-built to review it. Nineteen pages, one information architecture, and a
+built to review it. Twenty pages, one information architecture, and a
 structured way for managers to sign each page off.
 
 The thing to say early, because it pre-empts the obvious question: **nothing
@@ -110,7 +110,7 @@ Opens on **Healthy Housing and Vector Control** — the page the review packet
 tells managers to look at first.
 
 Point at the **service grouping**: scannable groups instead of one long mixed
-link list, which is what the old Topic page was. Nineteen pages replaced a
+link list, which is what the old Topic page was. Twenty pages replaced a
 33-to-40 page set.
 
 Scroll to the **Editor QA** block at the bottom.
@@ -248,7 +248,7 @@ authority for the pages it names), not an accident.
 
 Three sentences:
 
-- Nineteen pages, one IA, reviewable page by page with a recorded decision trail.
+- Twenty pages, one IA, reviewable page by page with a recorded decision trail.
 - The standards are enforced by the tool, not remembered by a person — and it
   catches things on our own pages, including the flagship one.
 - It runs offline, stores nothing outside the browser, and sends nothing
