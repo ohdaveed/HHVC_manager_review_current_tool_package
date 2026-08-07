@@ -280,9 +280,9 @@ textarea {
      into the sidebar it sits on — most visible in dark mode, where the
      panel and the old field background were nearly the same value. */
   background-color: var(--surface-sunken);
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  /* border-color only. Nothing sets box-shadow on these fields, and :focus
+     draws its ring with outline, so listing box-shadow here animated nothing. */
+  transition: border-color 0.15s ease;
 }
 textarea {
   min-height: 5.5rem;
@@ -316,7 +316,9 @@ textarea:hover {
 }
 /* Placeholder text is required-reading guidance for reviewers.
    Browser defaults are light greys (~2:1). Force token ink that clears AA.
-   --sfds-slate-2 (#383939) on --sfds-white (#fcfcfc) is ~11.4:1. */
+   Measured against --surface-sunken, the fill these fields now carry, not the
+   panel: light --sfds-slate-2 (#383939) on #f8fafc is ~11.07:1; dark
+   (#c3c7ce on #0c0e11) is ~11.39:1. Both clear AA comfortably. */
 select::placeholder,
 input[type='text']::placeholder,
 input[type='date']::placeholder,
@@ -518,6 +520,13 @@ a:focus {
   border: none;
   padding: 0.5rem 1rem;
   outline: none;
+  /* Re-assert the panel colour. This input matches the global
+     input[type='text'] rule at equal specificity (one class + one element vs
+     one attribute + one element), so the sunken fill meant for the reviewer
+     sidebar was reaching into .browser-shell — which simulates the real, light
+     public SF.gov page and must not drift with the tool's chrome. --sfds-white
+     is re-pinned inside .browser-shell, so this stays #fcfcfc in both schemes. */
+  background: var(--sfds-white);
 }
 .site-search input:focus-visible {
   outline: 3px solid var(--sfds-focus-ring);
