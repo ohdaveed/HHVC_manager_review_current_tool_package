@@ -67,7 +67,7 @@ window.HHVC_PAGES['insectsReport'] = {
     },
     {
       heading: 'Get help making your report',
-      karl: 'Best real-schema fit: one things_to_know entry (confirmed repeatable, no max). Title: "Get help making your report". Text: the paragraph + bulleted list below (third-party reporting, language access, privacy). Open question for Digital Services: things_to_know renders ABOVE what_to_do on the real form, so this content may need to move earlier on the live page even though it stays here in this mockup draft.',
+      karl: 'Best real-schema fit: one things_to_know entry (confirmed repeatable, no hard schema max — but Karl\'s own editorial guidance recommends keeping this section to 2 items or fewer; this page uses one, so it\'s within guidance). Title: "Get help making your report". Text: the paragraph + bulleted list below (third-party reporting, language access, privacy). Open question for Digital Services: things_to_know renders ABOVE what_to_do on the real form, so this content may need to move earlier on the live page even though it stays here in this mockup draft.',
       kind: 'body',
       paragraphs: [
         'You can make a report even if you are not the tenant. A friend, family member, advocate, or helper can report for someone else.',
