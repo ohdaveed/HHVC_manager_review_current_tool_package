@@ -21,9 +21,12 @@ bun install                 # required — a fresh clone has no node_modules
 bun run start               # builds dist/ and serves on :8080
 ```
 
-Then seed the review state. **Order matters, because importing merges rather
-than replaces** — it will not overwrite reviews you already had on this origin,
-and it will not give you a clean 12 of 19 if there are any:
+Then seed the review state. **Order matters. Importing merges per page, and for
+a page the file names, the file wins** — the seed's decision, notes, risks,
+owner and reviewer replace whatever was there. Pages the file does *not* name
+are left untouched. So on a browser you have used before, importing the seed
+both fails to give you a clean 12 of 19 *and* overwrites real review work on any
+of those 12 pages:
 
 1. If this browser holds review work you care about, export it first
    (**What to export → "Everything, for another browser — JSON"** → **Export
@@ -106,21 +109,31 @@ removed for exactly this reason.)
 
 **"Your own checks are failing on 10 items."**
 That is the tool working. They are real, specific, and each cites the standard
-it comes from: four buttons over 25 characters, two pages averaging long
-sentences, one "click here" style link, one page using contractions, two SEO
-titles missing the site suffix. None is a blocker; all are one-line content
-edits. A tool that reported everything passing on a 19-page draft would be the
-thing to worry about.
+it comes from — ten failing checks across the nineteen pages:
+
+- **button text over 25 characters** — 4 pages (five buttons in total;
+  `insectsReport` has two, so the page count and the button count differ)
+- **average sentence length** over the Grade 6 target — 2 pages
+- **a generic "click here" style link** — 1 page
+- **contractions** — 1 page
+- **SEO titles missing the site suffix** — 2 pages
+
+None is a blocker; all are one-line content edits. A tool that reported
+everything passing on a 19-page draft would be the thing to worry about.
 
 **"Is it accessible?"**
 Automated WCAG 2.1 A and AA scans run on every commit and the build fails on a
-serious or critical violation. They cover **one representative page per content
-type — six of the nineteen — plus all three workspace tabs, in both light and
-dark mode.** Be precise about that if pressed: it is representative coverage
-chosen because the nineteen pages are built from the same render functions, not
-a scan of every page, so a defect in markup unique to one unscanned page could
-still get through. Those scans are what caught five of the six defects this pass
-fixed.
+serious or critical violation. Coverage, precisely:
+
+- **Light mode** — one representative page per content type (**six** of the
+  nineteen), plus all three workspace tabs and the shortcuts dialog.
+- **Dark mode** — all three workspace tabs, plus **two** pages (the Agency page
+  and one Transaction).
+
+Be precise about that if pressed. It is representative coverage, chosen because
+the nineteen pages are built from the same render functions, not a scan of every
+page — so a defect in markup unique to one unscanned page could still get
+through. Those scans caught five of the six defects this pass fixed.
 
 **"Where does the data live? Is anything sent anywhere?"**
 Reviews are saved in the browser's local storage only. No backend, no database,

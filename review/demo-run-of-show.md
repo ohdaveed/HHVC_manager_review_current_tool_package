@@ -12,9 +12,15 @@ and 7 are the ones to cut if you are running short.
 
 ```bash
 export PATH="$HOME/.bun/bin:$PATH"
-bun install          # only needed on a fresh clone
-bun run start        # builds and serves on http://127.0.0.1:8080
+bun install                                   # only needed on a fresh clone
+bun build_scripts/make-demo-review-state.js   # refresh the seed's dates
+bun run start                                 # serves on http://127.0.0.1:8080
 ```
+
+Regenerate the seed if any time has passed since it was last committed. The
+dates inside it are fixed when it is generated and the activity chart plots them
+as they are — so a stale file charts stale dates while this script talks about
+recent reviewing. The generator takes a second and keeps the two in step.
 
 1. Open `http://127.0.0.1:8080`.
 2. **Check the width.** In the console: `window.innerWidth`.
@@ -26,10 +32,11 @@ bun run start        # builds and serves on http://127.0.0.1:8080
 3. **Either colour scheme is fine.** Dark mode is verified and clean as of this
    pass, and the mockup is pinned to light in both, so the page under review
    looks identical either way.
-4. **Seed the review state, in this order.** Importing *merges* — it does not
-   replace — so skipping the clear step on a browser you have used before will
-   not give you 12/19, and will fold the demo values into whatever real review
-   work is already saved there.
+4. **Seed the review state, in this order.** Importing merges *per page*, and
+   for the 12 pages the seed names, the seed's values replace whatever was
+   there. Pages it does not name are left alone. So skipping the clear step on
+   a browser you have used before will not give you 12/19, and will overwrite
+   any real review work on those 12 pages.
    1. If this browser holds review work you care about, export it first:
       **What to export → "Everything, for another browser — JSON"** →
       **Export reviews**.
@@ -37,7 +44,27 @@ bun run start        # builds and serves on http://127.0.0.1:8080
    3. **Import reviews** → `review/demo-review-state.json`.
 
    The Overview should then read **12/19 reviewed**.
-5. Press `w` to confirm the workspace opens and closes. Leave it open.
+5. **Click once on the mockup** before trying any keyboard shortcut, then press
+   `w` to confirm the workspace opens and closes. Leave it open.
+
+> ### Keyboard shortcuts need focus in the right place — read this once
+>
+> Shortcuts only fire when focus is inside the **mockup**, the **toolbar above
+> it**, or the **workspace panel**. That is deliberate — it stops single letters
+> firing while you type in the sidebar — but it has one consequence worth
+> knowing before you are standing up. Measured, not guessed:
+>
+> | Right after you… | Next shortcut |
+> | --- | --- |
+> | **change the page** with the sidebar picker | **works** — rendering moves focus to the page heading |
+> | click a sidebar **button** (Import, Clear, Export) | **ignored** |
+> | click a sidebar **decision chip** | **ignored** |
+> | click anywhere in the mockup or the workspace | **works** |
+>
+> So the trap is narrow but real: after pressing a sidebar *button*, the next
+> key does nothing at all — no error, no feedback. **Click the mockup once** and
+> it works again. The visible buttons and tabs always work regardless, and this
+> script uses them wherever focus would otherwise be in doubt.
 
 To show the empty first-run state at any point, use **Clear saved reviews**, and
 re-import the seed to restore. There is no "empty backup" file to import: an
@@ -112,8 +139,9 @@ the mosquito workshop. Worth naming so nobody thinks the flags are decorative.
 
 ## Beat 5 — The checks are real (3 min) — *the credibility beat*
 
-Picker → **Property owner responsibilities**. Then open **Page checks**
-(press `2`).
+Picker → **Property owner responsibilities**. Then open **Page checks** —
+click the tab, or press `2` (changing the page puts focus back on the mockup, so
+the shortcut works here).
 
 This page fails two mandatory checks, and both are legible to a non-specialist:
 
@@ -135,7 +163,8 @@ pages**, all one-line content edits. The Agency page passes all of its.
 
 ## Beat 6 — The review workflow (4 min) — *the strongest single beat*
 
-Press `1` for **Overview**.
+Press `1` for **Overview** (focus is in the workspace from the previous beat, so
+the shortcut works) — or click the tab.
 
 Walk it top to bottom:
 
@@ -143,15 +172,16 @@ Walk it top to bottom:
 - **Filter chips** — click **Blocked**. Four pages. Say plainly that this groups
   *Blocked* with *Revise and resubmit*, because both mean "cannot publish yet";
   the count and the filter are one control, so they can never disagree.
-- **Review activity** — decisions accumulating over the last fortnight.
+- **Review activity** — decisions accumulating over a fortnight of reviewing.
 - **Pages whose checks are failing** — ranked, worst first.
 
 Then the part worth doing live:
 
 1. Tick two or three rows.
 2. Click **Approve** in the bulk bar.
-3. Press `z` — or click the undo button that appears in the bulk bar. It names
-   what it will reverse rather than just saying "Undo", so you can read it aloud.
+3. Click the undo button that appears in the bulk bar — it names what it will
+   reverse rather than just saying "Undo", so you can read it aloud. (`z` does
+   the same, and focus is already in the workspace here, so it will work.)
 
 > "The undo doesn't erase anything. It writes the previous state back as a new
 > recorded round, so the trail reads *set to Approved, then reverted* — because

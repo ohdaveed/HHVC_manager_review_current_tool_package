@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-08-06T23:58:17.989Z",
+  "updated_at": "2026-08-07T03:53:48.361Z",
   "ui": {},
   "globals": {
     "reviewer": "M. Chen"
@@ -12,15 +12,15 @@
       "page_type": "Agency",
       "url_slug": "sf.gov/agency-healthy-housing-and-vector-control",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-24",
+      "review_date": "2026-07-25",
       "decision": "Approved",
       "notes": "Service grouping works. Article 11 scope holds — no DBI or plumbing routing.",
       "risks_or_blockers": "",
       "follow_up_owner": "Content team",
-      "updated_at": "2026-07-24T09:15:00.000Z",
+      "updated_at": "2026-07-25T09:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-24T09:15:00.000Z",
+          "timestamp": "2026-07-25T09:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Service grouping works. Article 11 scope holds — no DBI or plumbing routing.",
           "risks_or_blockers": "",
@@ -36,15 +36,15 @@
       "page_type": "Transaction",
       "url_slug": "sf.gov/report-rats-mice-four-legged-problems",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-25",
+      "review_date": "2026-07-26",
       "decision": "Approved",
       "notes": "The \"choose the closest problem\" framing reads well for the rodent cluster.",
       "risks_or_blockers": "",
       "follow_up_owner": "Content team",
-      "updated_at": "2026-07-25T10:15:00.000Z",
+      "updated_at": "2026-07-26T10:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-25T10:15:00.000Z",
+          "timestamp": "2026-07-26T10:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "The \"choose the closest problem\" framing reads well for the rodent cluster.",
           "risks_or_blockers": "",
@@ -60,15 +60,15 @@
       "page_type": "Transaction",
       "url_slug": "sf.gov/report-garbage-filth-vegetation",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-25",
+      "review_date": "2026-07-26",
       "decision": "Approved with edits",
       "notes": "Shorten the primary button label; otherwise matches the rodent pattern.",
       "risks_or_blockers": "",
       "follow_up_owner": "Content team",
-      "updated_at": "2026-07-25T11:15:00.000Z",
+      "updated_at": "2026-07-26T11:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-24T14:15:00.000Z",
+          "timestamp": "2026-07-25T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -76,7 +76,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-07-25T11:15:00.000Z",
+          "timestamp": "2026-07-26T11:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Shorten the primary button label; otherwise matches the rodent pattern.",
           "risks_or_blockers": "",
@@ -92,15 +92,15 @@
       "page_type": "Transaction",
       "url_slug": "sf.gov/report-cockroaches-mosquitoes-insects",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-26",
+      "review_date": "2026-07-27",
       "decision": "Approved with edits",
       "notes": "Same button-length edit as the other two report transactions.",
       "risks_or_blockers": "",
       "follow_up_owner": "Content team",
-      "updated_at": "2026-07-26T12:15:00.000Z",
+      "updated_at": "2026-07-27T12:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-25T14:15:00.000Z",
+          "timestamp": "2026-07-26T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -108,7 +108,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-07-26T12:15:00.000Z",
+          "timestamp": "2026-07-27T12:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Same button-length edit as the other two report transactions.",
           "risks_or_blockers": "",
@@ -124,15 +124,15 @@
       "page_type": "Resource Collection",
       "url_slug": "sf.gov/look-up-building-records",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-28",
+      "review_date": "2026-07-29",
       "decision": "Approved",
       "notes": "Good landing point for the five lookup pages.",
       "risks_or_blockers": "",
       "follow_up_owner": "Records team",
-      "updated_at": "2026-07-28T13:15:00.000Z",
+      "updated_at": "2026-07-29T13:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-28T13:15:00.000Z",
+          "timestamp": "2026-07-29T13:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Good landing point for the five lookup pages.",
           "risks_or_blockers": "",
@@ -148,15 +148,15 @@
       "page_type": "Transaction",
       "url_slug": "sf.gov/find-complaints-and-inspection-records",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-28",
+      "review_date": "2026-07-29",
       "decision": "Approved",
       "notes": "Complaint and inspection lookup confirmed against the live tool.",
       "risks_or_blockers": "",
       "follow_up_owner": "Records team",
-      "updated_at": "2026-07-28T14:15:00.000Z",
+      "updated_at": "2026-07-29T14:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-28T14:15:00.000Z",
+          "timestamp": "2026-07-29T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Complaint and inspection lookup confirmed against the live tool.",
           "risks_or_blockers": "",
@@ -172,15 +172,15 @@
       "page_type": "Transaction",
       "url_slug": "sf.gov/find-residential-hotel-and-shelter-records",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-29",
+      "review_date": "2026-07-30",
       "decision": "Revise and resubmit",
       "notes": "Interim sfdph.org URL. Needs the real lookup entry point before this can go further.",
       "risks_or_blockers": "Placeholder destination — flagged editorStatus: placeholder in the page data.",
       "follow_up_owner": "Records team",
-      "updated_at": "2026-07-29T15:15:00.000Z",
+      "updated_at": "2026-07-30T15:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-28T14:15:00.000Z",
+          "timestamp": "2026-07-29T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -188,7 +188,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-07-29T15:15:00.000Z",
+          "timestamp": "2026-07-30T15:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Interim sfdph.org URL. Needs the real lookup entry point before this can go further.",
           "risks_or_blockers": "Placeholder destination — flagged editorStatus: placeholder in the page data.",
@@ -204,15 +204,15 @@
       "page_type": "Resource Collection",
       "url_slug": "sf.gov/property-owner-responsibilities-hhvc",
       "reviewer": "M. Chen",
-      "review_date": "2026-07-31",
+      "review_date": "2026-08-01",
       "decision": "Revise and resubmit",
       "notes": "Sentences run long against the Grade 6 target, and one link reads \"click here\".",
       "risks_or_blockers": "FY26–27 fee schedule PDF URL still outstanding.",
       "follow_up_owner": "Owner comms",
-      "updated_at": "2026-07-31T09:15:00.000Z",
+      "updated_at": "2026-08-01T09:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-30T14:15:00.000Z",
+          "timestamp": "2026-07-31T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -220,7 +220,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-07-31T09:15:00.000Z",
+          "timestamp": "2026-08-01T09:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Sentences run long against the Grade 6 target, and one link reads \"click here\".",
           "risks_or_blockers": "FY26–27 fee schedule PDF URL still outstanding.",
@@ -236,15 +236,15 @@
       "page_type": "Information",
       "url_slug": "sf.gov/information/how-to-respond-to-notice-of-violation",
       "reviewer": "M. Chen",
-      "review_date": "2026-08-01",
+      "review_date": "2026-08-02",
       "decision": "Blocked",
       "notes": "Cannot progress until Legal confirms the NOV templates and appeal windows.",
       "risks_or_blockers": "BLOCKED: NOV templates, tenant-specific orders, appeal windows and contact routes all unconfirmed.",
       "follow_up_owner": "Legal review",
-      "updated_at": "2026-08-01T10:15:00.000Z",
+      "updated_at": "2026-08-02T10:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-07-31T14:15:00.000Z",
+          "timestamp": "2026-08-01T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -252,7 +252,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-08-01T10:15:00.000Z",
+          "timestamp": "2026-08-02T10:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Cannot progress until Legal confirms the NOV templates and appeal windows.",
           "risks_or_blockers": "BLOCKED: NOV templates, tenant-specific orders, appeal windows and contact routes all unconfirmed.",
@@ -268,15 +268,15 @@
       "page_type": "Transaction",
       "url_slug": "sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings",
       "reviewer": "M. Chen",
-      "review_date": "2026-08-02",
+      "review_date": "2026-08-03",
       "decision": "Blocked",
       "notes": "CTA is inert until the real SF.gov payment URL is confirmed.",
       "risks_or_blockers": "Payment destination unconfirmed — do not publish with an inert primary CTA.",
       "follow_up_owner": "Finance",
-      "updated_at": "2026-08-02T11:15:00.000Z",
+      "updated_at": "2026-08-03T11:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-08-01T14:15:00.000Z",
+          "timestamp": "2026-08-02T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -284,7 +284,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-08-02T11:15:00.000Z",
+          "timestamp": "2026-08-03T11:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "CTA is inert until the real SF.gov payment URL is confirmed.",
           "risks_or_blockers": "Payment destination unconfirmed — do not publish with an inert primary CTA.",
@@ -300,15 +300,15 @@
       "page_type": "Information",
       "url_slug": "sf.gov/information/learn-what-hhvc-can-inspect",
       "reviewer": "M. Chen",
-      "review_date": "2026-08-03",
+      "review_date": "2026-08-04",
       "decision": "Approved with edits",
       "notes": "Tighten the SEO title. Content direction is right.",
       "risks_or_blockers": "",
       "follow_up_owner": "Content team",
-      "updated_at": "2026-08-03T12:15:00.000Z",
+      "updated_at": "2026-08-04T12:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-08-02T14:15:00.000Z",
+          "timestamp": "2026-08-03T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -316,7 +316,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-08-03T12:15:00.000Z",
+          "timestamp": "2026-08-04T12:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Tighten the SEO title. Content direction is right.",
           "risks_or_blockers": "",
@@ -332,15 +332,15 @@
       "page_type": "Report",
       "url_slug": "sf.gov/report/health-code-article-11-plain-language",
       "reviewer": "M. Chen",
-      "review_date": "2026-08-04",
+      "review_date": "2026-08-05",
       "decision": "Approved with edits",
       "notes": "Plain-language rewrite is a big improvement. Trim the SEO title and one button label.",
       "risks_or_blockers": "",
       "follow_up_owner": "Content team",
-      "updated_at": "2026-08-04T13:15:00.000Z",
+      "updated_at": "2026-08-05T13:15:00.000Z",
       "history": [
         {
-          "timestamp": "2026-08-03T14:15:00.000Z",
+          "timestamp": "2026-08-04T14:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "First pass — reading through.",
           "risks_or_blockers": "",
@@ -348,7 +348,7 @@
           "decision": "Needs review"
         },
         {
-          "timestamp": "2026-08-04T13:15:00.000Z",
+          "timestamp": "2026-08-05T13:15:00.000Z",
           "reviewer": "M. Chen",
           "notes": "Plain-language rewrite is a big improvement. Trim the SEO title and one button label.",
           "risks_or_blockers": "",
