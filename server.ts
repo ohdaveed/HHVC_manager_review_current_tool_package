@@ -548,26 +548,26 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     if (!ANTHROPIC_API_KEY) return noProvider()
 
     // Every oversized body goes through readBodyWithLimit, including one that
-    // announces its size honestly in Content-Length.
+    // announces its size honestly in Content-Length. There is no separate
+    // Content-Length pre-check in front of it, for two reasons.
     //
-    // Rejecting on the declared length alone looks like a free optimization and
-    // is a connection-level bug: answering 413 without reading leaves the body
-    // the client is still sending unread on a keep-alive connection, so Bun
-    // parses those leftover bytes as the NEXT request's headers and answers a
-    // perfectly valid follow-up with a protocol-level 431 and an empty body.
-    // That is the same desync the drain branch inside readBodyWithLimit exists
-    // to prevent — a pre-check that skips the read reintroduces it from the
-    // other direction. putReviewPage() has always taken this route for the same
-    // reason.
+    // It would be redundant. readBodyWithLimit enforces the same cap and
+    // returns the same 413; past the cap it stops accumulating AND stops
+    // decoding, so an oversized body costs bandwidth the sender is transmitting
+    // anyway and no memory, which is what the cap is for. DRAIN_LIMIT_MULTIPLIER
+    // bounds even that. putReviewPage() has always taken this route alone, and
+    // both body-reading routes now agree.
     //
-    // Nothing is lost by dropping the pre-check: past the cap readBodyWithLimit
-    // stops accumulating AND stops decoding, so an oversized body costs
-    // bandwidth the sender is transmitting anyway and no memory — which is what
-    // the cap is actually for. DRAIN_LIMIT_MULTIPLIER bounds even that.
-    //
-    // Content-Length is a claim, not a guarantee — a chunked or lying client
-    // sends no usable header. Streaming the body against the cap makes the
-    // limit hold either way.
+    // And answering 413 on the declared size means responding without consuming
+    // the body, which leaves a keep-alive connection in an ambiguous state — the
+    // drain branch inside readBodyWithLimit exists to avoid exactly that from
+    // the other direction. Treat this as a reason to prefer one code path, NOT
+    // as a fixed bug: an attempt to demonstrate a concrete desync (a 413
+    // followed by a corrupted next request) could not reproduce one on Bun
+    // 1.3.14, which appears to clean up after an unread body. Content-Length is
+    // a claim rather than a guarantee in any case — a chunked or lying client
+    // sends no usable header — so streaming against the cap is what actually
+    // makes the limit hold.
     const raw = await readBodyWithLimit(req, MAX_REQUEST_BODY_BYTES)
     if (raw === null) {
       return jsonResponse(

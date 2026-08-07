@@ -599,13 +599,14 @@ it, and it fails closed rather than open.
   wrong tool: it buffers the whole payload before anything can measure it, so a
   chunked request (or one that simply lies in Content-Length) allocates
   whatever it likes and a 413 afterwards does not give the memory back. There is
-  deliberately **no Content-Length pre-check** in front of it: answering 413 on
-  the declared size without reading leaves the body unread on a keep-alive
-  connection, so Bun parses the leftover bytes as the next request's headers and
-  answers a valid follow-up with an empty-bodied 431 — the same desync the drain
-  branch exists to prevent, reintroduced from the other side. It buys nothing
-  either, since past the cap `readBodyWithLimit` stops decoding as well as
-  accumulating. The count is in **bytes, not characters** — comparing `String#length` (UTF-16 code
+  deliberately **no Content-Length pre-check** in front of it. It would be
+  redundant — `readBodyWithLimit` enforces the same cap, returns the same 413,
+  and past the cap stops decoding as well as accumulating — and rejecting on the
+  declared size means answering without consuming the body, leaving a keep-alive
+  connection ambiguous. That second point is a reason to prefer one code path,
+  **not** a bug that was fixed: an attempt to demonstrate a concrete desync could
+  not reproduce one on Bun 1.3.14. `putReviewPage()` has always read this way, so
+  both routes now agree. The count is in **bytes, not characters** — comparing `String#length` (UTF-16 code
   units) against a byte limit lets multi-byte UTF-8 through at roughly three
   times the cap. Depth is measured iteratively, never recursively: a recursive
   walk over attacker-supplied nesting is itself the denial of service it is
