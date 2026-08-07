@@ -840,6 +840,253 @@ describe('AI assist API (server.ts)', () => {
       expect((await res.json()).upstreamStatus).toBe(429)
     })
   })
+
+  // The compliance-audit task, nested inside this describe block rather than
+  // sibling to it: unlike every other describe block in this file, it needs
+  // the Gemini stub server that only exists within THIS block's beforeAll/
+  // afterAll lifecycle, and it needs a Gemini key actually configured (the
+  // outer proc has both providers configured, which is what makes the "no
+  // chunks ingested yet" gate reachable at all — see the next describe block
+  // below for the "no Gemini key" half of the gate).
+  //
+  // The outer beforeEach only resets the stub queues, never the DB, so this
+  // block seeds knowledge_chunks itself and must run its own tests in an
+  // order that does not surprise a later one: the "no chunks ingested" gate
+  // test runs FIRST, before anything below it seeds a row into the same
+  // dbDir database the whole outer suite shares.
+  describe('compliance-audit task', () => {
+    /** A Gemini embedContent response carrying one embedding. */
+    function geminiEmbeddingResponse(values) {
+      return { embeddings: [{ values }] }
+    }
+
+    /**
+     * Insert one knowledge chunk directly into the shared test DB, bypassing
+     * `bun run ingest` entirely. `INSERT OR REPLACE` rather than a bare
+     * INSERT so a second test seeding the same id (the retry test reuses the
+     * happy-path's chunk) does not fail on the PRIMARY KEY constraint.
+     */
+    function seedChunk({ id, sourceFile, headingPath, content, embedding }) {
+      const { Database } = require('bun:sqlite')
+      const db = new Database(path.join(dbDir, 'review-state.db'), { create: true })
+      db.run(`
+        CREATE TABLE IF NOT EXISTS knowledge_chunks (
+          id TEXT PRIMARY KEY,
+          source_file TEXT NOT NULL,
+          category TEXT NOT NULL,
+          heading_path TEXT,
+          content TEXT NOT NULL,
+          chunk_index INTEGER NOT NULL,
+          embedding BLOB NOT NULL,
+          embedding_model TEXT NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      `)
+      const buffer = Buffer.from(Float32Array.from(embedding).buffer)
+      db.run(
+        `INSERT OR REPLACE INTO knowledge_chunks
+         (id, source_file, category, heading_path, content, chunk_index, embedding, embedding_model, created_at)
+         VALUES (?, ?, 'hhvc-policy', ?, ?, 0, ?, 'test-model', ?)`,
+        [id, sourceFile, headingPath, content, buffer, new Date().toISOString()]
+      )
+      db.close()
+    }
+
+    test('returns 501 when no chunks have been ingested', async () => {
+      // Runs first in this describe block, before any sibling test below
+      // seeds a row — Gemini IS configured on the outer proc (both providers
+      // are, for this whole file's main suite), so this isolates the "empty
+      // knowledge_chunks table" half of the compliance-audit gate from the
+      // "Gemini not configured" half, which gets its own server below.
+      const res = await post({ task: 'compliance-audit', page: VALID_PAGE })
+      expect(res.status).toBe(501)
+      const body = await res.json()
+      expect(body.error).toContain('bun run ingest')
+    })
+
+    test('rejects compliance-audit without a page', async () => {
+      // Zod requires `page` for this task (unlike `content`, where it is
+      // optional), so this is a 400 from request validation and never
+      // reaches the knowledge-base gate at all.
+      const res = await post({ task: 'compliance-audit' })
+      expect(res.status).toBe(400)
+    })
+
+    test('embeds the page, retrieves the closest chunk, and returns cited findings', async () => {
+      seedChunk({
+        id: 'hhvc-policy/rats.md#0',
+        sourceFile: 'hhvc-policy/rats.md',
+        headingPath: 'Reporting a sighting',
+        content: 'Reporting a sighting\n\nCall 311 to report rats.',
+        embedding: [1, 0, 0],
+      })
+
+      geminiStub.queue = [
+        // First call: embedContent for the page under review.
+        { body: geminiEmbeddingResponse([1, 0, 0]) },
+        // Second call: generateContent for the audit itself.
+        {
+          body: geminiResponse({
+            findings: [
+              {
+                issue: 'The page never mentions calling 311.',
+                severity: 'error',
+                citedChunkIds: ['hhvc-policy/rats.md#0'],
+                recommendation: 'Add a step telling the reader to call 311.',
+              },
+            ],
+            summary: 'One grounded finding about the missing 311 instruction.',
+          }),
+        },
+      ]
+
+      const res = await post({ task: 'compliance-audit', page: VALID_PAGE, provider: 'gemini' })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+
+      expect(body.task).toBe('compliance-audit')
+      expect(body.provider).toBe('gemini')
+      expect(body.valid).toBe(true)
+      expect(body.findings).toHaveLength(1)
+      // citedSources is resolved server-side from the matched chunk row, not
+      // echoed back from the model — this is the assertion that proves that
+      // resolution actually happened rather than merely returning 200.
+      expect(body.findings[0].citedSources[0].sourceFile).toBe('hhvc-policy/rats.md')
+      expect(body.disclosure).toContain('AI-assisted draft')
+
+      // Two Gemini calls: the embed, then the generate. Confirms the
+      // embed-then-generate sequence actually reached the stub twice, not
+      // that a single call happened to satisfy both expectations.
+      expect(geminiStub.requests).toHaveLength(2)
+    })
+
+    test('retries once when the model cites a chunk id that was never retrieved', async () => {
+      seedChunk({
+        id: 'hhvc-policy/rats.md#0',
+        sourceFile: 'hhvc-policy/rats.md',
+        headingPath: 'Reporting a sighting',
+        content: 'Reporting a sighting\n\nCall 311 to report rats.',
+        embedding: [1, 0, 0],
+      })
+
+      geminiStub.queue = [
+        { body: geminiEmbeddingResponse([1, 0, 0]) },
+        {
+          // First generate attempt cites an id that was never retrieved.
+          body: geminiResponse({
+            findings: [
+              {
+                issue: 'Bad citation',
+                severity: 'error',
+                citedChunkIds: ['nonexistent.md#0'],
+                recommendation: 'x',
+              },
+            ],
+            summary: 'x',
+          }),
+        },
+        {
+          // Second attempt cites the real, retrieved id.
+          body: geminiResponse({
+            findings: [
+              {
+                issue: 'Fixed citation',
+                severity: 'error',
+                citedChunkIds: ['hhvc-policy/rats.md#0'],
+                recommendation: 'x',
+              },
+            ],
+            summary: 'x',
+          }),
+        },
+      ]
+
+      const res = await post({ task: 'compliance-audit', page: VALID_PAGE, provider: 'gemini' })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+
+      expect(body.attempts).toBe(2)
+      expect(body.valid).toBe(true)
+      expect(body.findings[0].issue).toBe('Fixed citation')
+      // Embed once, generate twice: 3 Gemini calls total.
+      expect(geminiStub.requests).toHaveLength(3)
+      // The retry turn named the bad id from attempt 1, the same
+      // "state what was wrong" contract the content task's retry uses.
+      const retryPrompt = JSON.stringify(geminiStub.requests[2].contents)
+      expect(retryPrompt).toContain('nonexistent.md#0')
+    })
+  })
+})
+
+// A standalone server with only Anthropic configured (GEMINI_API_KEY
+// explicitly blanked, since isolatedApiEnvironment only strips
+// REVIEW_API_*, and a developer's real exported key would otherwise turn
+// "unconfigured" into "configured" and silently invalidate this test). This
+// is the other half of the compliance-audit gate: Gemini is the ONLY
+// embedding source (see provider-gemini.js), so a request naming any
+// provider — even Claude, which the earlier tests use to generate the audit
+// TEXT — must still fail closed if there is no Gemini key to embed with.
+describe('compliance-audit task when Gemini is not configured', () => {
+  const NO_GEMINI_PORT = 8138
+  const noGeminiBase = `http://127.0.0.1:${NO_GEMINI_PORT}`
+  let proc
+  let stubServer
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('no-gemini')
+
+    stubServer = Bun.serve({
+      port: NO_GEMINI_PORT + 1000,
+      hostname: '127.0.0.1',
+      async fetch(req) {
+        const url = new URL(req.url)
+        if (url.pathname === '/v1/models') {
+          return Response.json({
+            data: [{ id: 'claude-opus-5', display_name: 'Claude Opus 5', type: 'model' }],
+            has_more: false,
+          })
+        }
+        return Response.json(messageResponse(VALID_PAGE))
+      },
+    })
+
+    proc = Bun.spawn(['bun', 'run', 'server.ts'], {
+      cwd: ROOT,
+      env: isolatedApiEnvironment({
+        PORT: String(NO_GEMINI_PORT),
+        HOST: '127.0.0.1',
+        REVIEW_API_TOKEN: TOKEN,
+        ANTHROPIC_API_KEY: 'sk-ant-stub',
+        ANTHROPIC_BASE_URL: `http://127.0.0.1:${NO_GEMINI_PORT + 1000}`,
+        GEMINI_API_KEY: '',
+        DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
+      }),
+      stdout: 'ignore',
+      stderr: 'ignore',
+    })
+    await waitForServer(`${noGeminiBase}/api/ai/capabilities`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    stubServer?.stop(true)
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('returns 501 naming GEMINI_API_KEY, even though Claude is configured', async () => {
+    // Claude IS configured here (it could generate the audit text), but the
+    // request must still fail closed: there is no provider that can embed
+    // the page, so retrieval can never run.
+    const res = await fetch(`${noGeminiBase}/api/ai/generate`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ task: 'compliance-audit', page: VALID_PAGE }),
+    })
+    expect(res.status).toBe(501)
+    const body = await res.json()
+    expect(body.error).toContain('GEMINI_API_KEY')
+  })
 })
 
 describe('AI assist API when unconfigured', () => {
