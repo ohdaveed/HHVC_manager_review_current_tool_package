@@ -30,7 +30,13 @@
    a performance detail rather than a correctness one. */
 
 import { escapeHtml } from './utils.js'
-import { buildInsightsModel, insightsSignature } from './review-insights-data.js'
+
+// js/review-insights-data.js is a dual-export module (window.ReviewInsights.data
+// plus module.exports, no DOM dependency — see its header) so it stays
+// require()-able from Node/Bun test files with no ESM/CJS interop. It carries
+// no `export` statement, so it's loaded here as a side effect (js/main.js
+// imports it immediately before this file) and consumed off the window
+// namespace, matching how js/review-ops.js calls window.ReviewOps.data.*.
 
 /** How many pages the checks ranking lists. See checksList for why it is capped. */
 const CHECKS_VISIBLE = 8
@@ -263,8 +269,8 @@ async function render() {
 
   const rows = window.ReviewQueueInternal?.rows?.getQueueRows?.() || []
   const savedPages = window.reviewState?.read?.()?.pages || {}
-  const model = buildInsightsModel(rows, savedPages)
-  const signature = insightsSignature(model)
+  const model = window.ReviewInsights.data.buildInsightsModel(rows, savedPages)
+  const signature = window.ReviewInsights.data.insightsSignature(model)
 
   if (!chartsRoot) {
     chartsRoot = document.createElement('div')

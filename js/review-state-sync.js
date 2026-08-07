@@ -671,6 +671,22 @@
 
     const config = readConfig()
 
+    // Sync configuration (server URL, bearer token, pull/push) is technical
+    // setup, not a per-page review decision — nesting it in its own
+    // <details> keeps the decision fields and export buttons above
+    // immediately visible while collapsing the rarely-touched sync config
+    // out of the way, mirroring the ai-assist-settings <details> pattern in
+    // js/ai-assist-render.js. Open by default only while unconfigured, so a
+    // first-time reviewer still sees the fields without having to find them.
+    const details = document.createElement('details')
+    details.className = 'review-sync-settings'
+    details.open = !isConfigured()
+    actions.insertAdjacentElement('afterend', details)
+
+    const summary = document.createElement('summary')
+    summary.textContent = 'Server sync settings'
+    details.appendChild(summary)
+
     // Placeholder text isn't a reliable accessible name (it disappears once
     // typed, and screen readers don't treat it as a persistent label), so
     // each input gets a real <label for="..."> alongside its placeholder.
@@ -678,7 +694,7 @@
     urlLabel.htmlFor = 'reviewSyncApiUrl'
     urlLabel.className = 'field-help sync-config-label'
     urlLabel.textContent = 'Sync server URL'
-    actions.appendChild(urlLabel)
+    details.appendChild(urlLabel)
 
     const urlInput = document.createElement('input')
     urlInput.type = 'text'
@@ -686,13 +702,13 @@
     urlInput.placeholder = 'https://your-app.up.railway.app'
     urlInput.value = config.apiUrl
     urlInput.className = 'sync-config-input'
-    actions.appendChild(urlInput)
+    details.appendChild(urlInput)
 
     const tokenLabel = document.createElement('label')
     tokenLabel.htmlFor = 'reviewSyncApiToken'
     tokenLabel.className = 'field-help sync-config-label'
     tokenLabel.textContent = 'Sync token'
-    actions.appendChild(tokenLabel)
+    details.appendChild(tokenLabel)
 
     const tokenInput = document.createElement('input')
     tokenInput.type = 'password'
@@ -700,14 +716,14 @@
     tokenInput.placeholder = 'Bearer token'
     tokenInput.value = config.apiToken
     tokenInput.className = 'sync-config-input'
-    actions.appendChild(tokenInput)
+    details.appendChild(tokenInput)
 
     const saveButton = document.createElement('button')
     saveButton.type = 'button'
     saveButton.className = 'tool-btn secondary-tool'
     saveButton.id = 'saveSyncSettings'
     saveButton.textContent = 'Save sync settings'
-    actions.appendChild(saveButton)
+    details.appendChild(saveButton)
     saveButton.addEventListener('click', () => {
       writeConfig({ apiUrl: urlInput.value, apiToken: tokenInput.value })
       // Any conflicts still on screen describe revisions of the server
@@ -723,7 +739,7 @@
     pullButton.className = 'tool-btn secondary-tool'
     pullButton.id = 'pullReviewState'
     pullButton.textContent = 'Pull from server'
-    actions.appendChild(pullButton)
+    details.appendChild(pullButton)
 
     // Declared before the handlers so each can disable the other. Pull and
     // push overlapping is what produces a conflict row against this
@@ -796,7 +812,7 @@
     pushButton.className = 'tool-btn secondary-tool'
     pushButton.id = 'pushAllReviewState'
     pushButton.textContent = 'Push all pages'
-    actions.appendChild(pushButton)
+    details.appendChild(pushButton)
     pushButton.addEventListener('click', () => {
       window.ReviewUx?.stateSync?.saveCurrentPageToLocalStorage()
       setSyncStatus('Pushing to server…')
@@ -831,13 +847,13 @@
     status.textContent = isConfigured()
       ? 'Sync configured.'
       : 'Sync not configured — enter a server URL and token above, then Save sync settings.'
-    actions.insertAdjacentElement('afterend', status)
+    details.appendChild(status)
 
     const conflictPanel = document.createElement('div')
     conflictPanel.id = 'reviewSyncConflicts'
     conflictPanel.className = 'sync-conflict-panel'
     conflictPanel.hidden = true
-    status.insertAdjacentElement('afterend', conflictPanel)
+    details.appendChild(conflictPanel)
   }
 
   window.reviewStateSync = {
