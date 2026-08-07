@@ -5,7 +5,6 @@
 // exercise the exact code path a deployed Railway instance runs.
 const { describe, test, expect, beforeAll, afterAll } = require('bun:test')
 const path = require('path')
-const os = require('os')
 const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
@@ -22,16 +21,38 @@ async function waitForServer(url, attempts = 50) {
   throw new Error(`Server at ${url} did not start in time`)
 }
 
-function spawnServer({ port, token, dbDir, staticRoot }) {
+function createTestDbDir(name) {
+  // Keep test artifacts in this checkout, not the host-wide temp directory:
+  // these server subprocesses create SQLite files, and project-local cleanup
+  // makes their lifecycle visible if a failed test needs investigation.
+  return fs.mkdtempSync(path.join(ROOT, `.review-api-${name}-`))
+}
+
+function spawnServer({ port, token, dbDir, staticRoot, extraEnv = {} }) {
+  // A developer may have API hardening values in their shell for a local
+  // deployment. Tests that exercise the legacy token must explicitly remove
+  // them or the opt-in principal config correctly takes precedence and turns
+  // this compatibility suite into a test of the developer's environment.
+  const env = { ...process.env }
+  for (const key of [
+    'REVIEW_API_PRINCIPALS',
+    'REVIEW_API_ALLOWED_ORIGINS',
+    'REVIEW_API_RATE_LIMIT',
+    'REVIEW_API_RATE_WINDOW_MS',
+  ]) {
+    delete env[key]
+  }
+
   return Bun.spawn(['bun', 'run', 'server.ts'], {
     cwd: ROOT,
     env: {
-      ...process.env,
+      ...env,
       PORT: String(port),
       HOST: '127.0.0.1',
       REVIEW_API_TOKEN: token,
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
       ...(staticRoot === undefined ? {} : { STATIC_ROOT: staticRoot }),
+      ...extraEnv,
     },
     stdout: 'ignore',
     stderr: 'ignore',
@@ -46,7 +67,7 @@ describe('review-state API (server.ts)', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-review-api-'))
+    dbDir = createTestDbDir('legacy')
     proc = spawnServer({ port: PORT, token: TOKEN, dbDir })
     await waitForServer(`${base}/api/review-state`)
   })
@@ -315,9 +336,11 @@ describe('review-state API (server.ts)', () => {
     expect(gitRes.status).toBe(404)
   })
 
-  test('CORS preflight succeeds without requiring auth', async () => {
+  test('answers a non-CORS preflight without requiring auth or adding a wildcard origin', async () => {
     const res = await fetch(`${base}/api/review-state`, { method: 'OPTIONS' })
     expect(res.status).toBe(204)
+    expect(res.headers.get('access-control-allow-origin')).toBeNull()
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff')
   })
 })
 
@@ -328,7 +351,7 @@ describe('review-state API without REVIEW_API_TOKEN configured', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-review-api-notoken-'))
+    dbDir = createTestDbDir('no-token')
     proc = spawnServer({ port: PORT, token: '', dbDir })
     await waitForServer(`${base}/api/review-state`)
   })
@@ -364,7 +387,7 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
   let dbDir
 
   beforeAll(async () => {
-    dbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-review-api-emptyroot-'))
+    dbDir = createTestDbDir('empty-static-root')
     proc = spawnServer({ port: PORT, token: 'token', dbDir, staticRoot: '' })
     await waitForServer(`${base}/api/review-state`)
   })
@@ -403,4 +426,220 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
       expect(html).toMatch(/<script[^>]+type="module"[^>]+src="[^"]*assets\/index-[^"]+\.js"/)
     }
   )
+})
+
+// Principal configuration replaces the broad legacy token with individually
+// scoped credentials. These integration tests run against the real server,
+// since role checks must happen before both the SQLite write and AI provider
+// gate; a mocked handler could easily prove the wrong ordering.
+describe('optional API principal roles, CORS, and rate limits', () => {
+  const PORT = 8126
+  const base = `http://127.0.0.1:${PORT}`
+  const TRUSTED_ORIGIN = 'https://manager.example.test'
+  const tokens = {
+    reader: 'test-reader-token',
+    writer: 'test-writer-token',
+    ai: 'test-ai-token',
+    limited: 'test-rate-limit-token',
+  }
+  const principals = [
+    { principal: 'read-only', token: tokens.reader, roles: ['review:read'] },
+    { principal: 'write-only', token: tokens.writer, roles: ['review:write'] },
+    { principal: 'ai-drafter', token: tokens.ai, roles: ['ai:generate'] },
+    { principal: 'rate-limited', token: tokens.limited, roles: ['review:read'] },
+  ]
+  let proc
+  let dbDir
+
+  function bearer(token, extra = {}) {
+    return { authorization: `Bearer ${token}`, ...extra }
+  }
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('principals')
+    proc = spawnServer({
+      port: PORT,
+      token: 'legacy-token-must-not-remain-active',
+      dbDir,
+      extraEnv: {
+        REVIEW_API_PRINCIPALS: JSON.stringify(principals),
+        REVIEW_API_ALLOWED_ORIGINS: TRUSTED_ORIGIN,
+        REVIEW_API_RATE_LIMIT: '2',
+        REVIEW_API_RATE_WINDOW_MS: '60000',
+      },
+    })
+    await waitForServer(`${base}/api/review-state`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('enforces separate review read and write roles before touching review state', async () => {
+    const read = await fetch(`${base}/api/review-state`, { headers: bearer(tokens.reader) })
+    expect(read.status).toBe(200)
+
+    const deniedWrite = await fetch(`${base}/api/review-state/pages/roleCheck`, {
+      method: 'PUT',
+      headers: bearer(tokens.reader, { 'content-type': 'application/json' }),
+      body: JSON.stringify({ decision: 'Approved' }),
+    })
+    expect(deniedWrite.status).toBe(403)
+    expect(deniedWrite.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(deniedWrite.headers.get('x-frame-options')).toBe('DENY')
+
+    const deniedRead = await fetch(`${base}/api/review-state`, { headers: bearer(tokens.writer) })
+    expect(deniedRead.status).toBe(403)
+
+    const write = await fetch(`${base}/api/review-state/pages/roleCheck`, {
+      method: 'PUT',
+      headers: bearer(tokens.writer, { 'content-type': 'application/json' }),
+      body: JSON.stringify({ decision: 'Approved' }),
+    })
+    expect(write.status).toBe(200)
+  })
+
+  test('requires the AI generation role for AI discovery and generation routes', async () => {
+    const allowed = await fetch(`${base}/api/ai/capabilities`, { headers: bearer(tokens.ai) })
+    expect(allowed.status).toBe(200)
+
+    const denied = await fetch(`${base}/api/ai/generate`, {
+      method: 'POST',
+      headers: bearer(tokens.reader, { 'content-type': 'application/json' }),
+      body: JSON.stringify({ task: 'content', prompt: 'Draft a page.' }),
+    })
+    expect(denied.status).toBe(403)
+    expect(denied.headers.get('x-content-type-options')).toBe('nosniff')
+  })
+
+  test('reflects only trusted and same origins, and rejects an untrusted preflight', async () => {
+    const trusted = await fetch(`${base}/api/review-state`, {
+      headers: bearer(tokens.reader, { origin: TRUSTED_ORIGIN }),
+    })
+    expect(trusted.status).toBe(200)
+    expect(trusted.headers.get('access-control-allow-origin')).toBe(TRUSTED_ORIGIN)
+    expect(trusted.headers.get('vary')).toBe('Origin')
+
+    const sameOrigin = await fetch(`${base}/api/ai/capabilities`, {
+      headers: bearer(tokens.ai, { origin: base }),
+    })
+    expect(sameOrigin.status).toBe(200)
+    expect(sameOrigin.headers.get('access-control-allow-origin')).toBe(base)
+
+    const rejected = await fetch(`${base}/api/review-state`, {
+      headers: bearer(tokens.reader, { origin: 'https://untrusted.example.test' }),
+    })
+    expect(rejected.status).toBe(403)
+    expect(rejected.headers.get('access-control-allow-origin')).toBeNull()
+    expect(rejected.headers.get('x-content-type-options')).toBe('nosniff')
+
+    const preflight = await fetch(`${base}/api/review-state`, {
+      method: 'OPTIONS',
+      headers: {
+        origin: TRUSTED_ORIGIN,
+        'access-control-request-method': 'GET',
+        'access-control-request-headers': 'authorization',
+      },
+    })
+    expect(preflight.status).toBe(204)
+    expect(preflight.headers.get('access-control-allow-origin')).toBe(TRUSTED_ORIGIN)
+
+    const deniedPreflight = await fetch(`${base}/api/review-state`, {
+      method: 'OPTIONS',
+      headers: {
+        origin: 'https://untrusted.example.test',
+        'access-control-request-method': 'GET',
+      },
+    })
+    expect(deniedPreflight.status).toBe(403)
+    expect(deniedPreflight.headers.get('x-frame-options')).toBe('DENY')
+  })
+
+  test('limits authenticated principals in bounded role-specific buckets', async () => {
+    for (let index = 0; index < 2; index += 1) {
+      const res = await fetch(`${base}/api/review-state`, { headers: bearer(tokens.limited) })
+      expect(res.status).toBe(200)
+    }
+
+    const limited = await fetch(`${base}/api/review-state`, { headers: bearer(tokens.limited) })
+    expect(limited.status).toBe(429)
+    expect(Number(limited.headers.get('retry-after'))).toBeGreaterThan(0)
+    expect(limited.headers.get('x-content-type-options')).toBe('nosniff')
+  })
+})
+
+describe('optional API invalid security configuration', () => {
+  const PORT = 8127
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('invalid-principals')
+    proc = spawnServer({
+      port: PORT,
+      token: 'legacy-token-must-not-bypass-invalid-principals',
+      dbDir,
+      extraEnv: {
+        // A present but malformed opt-in must not fall back to the broad
+        // legacy credential, or a deployment typo becomes an escalation.
+        REVIEW_API_PRINCIPALS: '{"principal":"missing-array"}',
+      },
+    })
+    await waitForServer(`${base}/api/review-state`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('fails closed instead of falling back to REVIEW_API_TOKEN', async () => {
+    const res = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: 'Bearer legacy-token-must-not-bypass-invalid-principals' },
+    })
+    expect(res.status).toBe(503)
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(res.headers.get('x-frame-options')).toBe('DENY')
+  })
+})
+
+describe('optional API invalid CORS configuration', () => {
+  const PORT = 8128
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('invalid-origins')
+    proc = spawnServer({
+      port: PORT,
+      token: 'valid-token-must-not-bypass-invalid-origins',
+      dbDir,
+      extraEnv: {
+        // Origins are exact origins, not URL prefixes. A path must fail
+        // closed instead of quietly broadening the browser trust boundary.
+        REVIEW_API_ALLOWED_ORIGINS: 'https://manager.example.test/review',
+      },
+    })
+    await waitForServer(`${base}/api/review-state`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('fails closed when an origin allowlist entry is not an exact origin', async () => {
+    const res = await fetch(`${base}/api/review-state`, {
+      headers: {
+        authorization: 'Bearer valid-token-must-not-bypass-invalid-origins',
+        origin: 'https://manager.example.test',
+      },
+    })
+    expect(res.status).toBe(503)
+    expect(res.headers.get('access-control-allow-origin')).toBeNull()
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff')
+  })
 })

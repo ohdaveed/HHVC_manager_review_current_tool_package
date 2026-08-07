@@ -97,8 +97,10 @@
               id="reviewerInput"
               type="text"
               aria-label="Reviewer name"
+              aria-describedby="reviewerDecisionError"
               placeholder="Name or initials"
             />
+            <p id="reviewerDecisionError" class="review-field-error" role="alert" hidden></p>
             <label for="reviewDateInput">Review date</label>
             <input id="reviewDateInput" type="date" aria-label="Review date" />
             <!-- The decision used to be set from a <select> AND from the chips
@@ -218,7 +220,7 @@
                turns annotation on and off. -->
           <div class="karl-tag-toggle">
             <label class="karl-switch" for="tagToggle">
-              <input id="tagToggle" type="checkbox" checked />
+              <input id="tagToggle" type="checkbox" />
               <span class="karl-slider"></span>
             </label>
             <label class="karl-tag-toggle-text" for="tagToggle">Karl tags</label>

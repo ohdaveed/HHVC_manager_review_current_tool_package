@@ -759,6 +759,17 @@
   box-shadow: inset 0 0 0 1px var(--sfds-danger-border);
 }
 
+.review-field-error {
+  margin: -0.15rem 0 0.35rem;
+  color: var(--sfds-danger-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+#reviewerInput[aria-invalid='true'] {
+  border-color: var(--sfds-danger-border);
+}
+
 .shortcuts-hint-button {
   display: inline-flex;
   align-items: center;

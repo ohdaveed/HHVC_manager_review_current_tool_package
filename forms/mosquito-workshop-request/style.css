@@ -63,6 +63,14 @@
   margin: 0 0 1rem;
 }
 
+.form-error {
+  border-left: 4px solid var(--sfds-red, #8f1d15);
+  color: var(--sfds-red, #8f1d15);
+  font-weight: 600;
+  margin: 0 0 1rem;
+  padding-left: 0.75rem;
+}
+
 .form-actions {
   display: flex;
   flex-wrap: wrap;

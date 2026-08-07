@@ -95,6 +95,9 @@ import { hasValidPageData } from './utils.js'
   }
 
   function setDecision(decision) {
+    if (window.reviewDecisions && !window.reviewDecisions.validateReviewerForDecision?.(decision)) {
+      return
+    }
     const action = DECISION_TO_ACTION[decision]
     if (action && applyQueueAction(action)) return
     window.reviewDecisions?.set?.(decision)

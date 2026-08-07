@@ -3,7 +3,7 @@ const AxeBuilder = require('@axe-core/playwright').default
 const { gotoFresh, openWorkspaceTab, selectPage } = require('./helpers')
 
 // One representative page per content type in use (see docs/wagtail-content-mapping.md);
-// scanning all 19 pages x states would be slow for little extra signal.
+// Scanning every page and state would be slow for little extra signal.
 const REPRESENTATIVE_PAGES = [
   'pestsTopic', // Agency
   'payFee', // Transaction
@@ -56,6 +56,18 @@ async function expectNoSeriousViolations(page) {
 }
 
 test.describe('accessibility', () => {
+  test('Karl annotations default off and do not expand a service action name', async ({ page }) => {
+    await gotoFresh(page)
+
+    await expect(page.locator('#tagToggle')).not.toBeChecked()
+    await expect(page.locator('.service-tile').first()).not.toHaveAccessibleName(/Karl:/)
+
+    await page.locator('.karl-switch').click()
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+    await expect(page.locator('#tagToggle')).toBeChecked()
+  })
+
   for (const key of REPRESENTATIVE_PAGES) {
     test(`page "${key}" has no serious violations`, async ({ page }) => {
       await gotoFresh(page)

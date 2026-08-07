@@ -110,6 +110,7 @@ function renderForm() {
         This form collects interest for HHVC's free mosquito education workshop campaign. Submitting
         does not guarantee a scheduled date.
       </p>
+      <p class="form-error" id="submissionError" role="alert" hidden></p>
       <div class="form-grid two-col">${top.map(fieldHtml).join('')}</div>
       <div class="form-grid two-col">${middle.map(fieldHtml).join('')}</div>
       <div class="form-grid">${bottom.map(fieldHtml).join('')}</div>
@@ -138,6 +139,13 @@ function getFormData(form) {
   return Object.fromEntries(new FormData(form).entries())
 }
 
+function showSubmissionError(message) {
+  const error = document.getElementById('submissionError')
+  if (!error) return
+  error.textContent = message
+  error.hidden = false
+}
+
 renderForm()
 
 document.getElementById('workshopForm').addEventListener('submit', async (event) => {
@@ -149,9 +157,13 @@ document.getElementById('workshopForm').addEventListener('submit', async (event)
   try {
     const body = new FormData(form)
     body.append('form-name', 'mosquito-workshop-request')
-    await fetch('/', { method: 'POST', body })
+    const response = await fetch('/', { method: 'POST', body })
+    if (!response.ok) throw new Error(`Submission failed with status ${response.status}.`)
   } catch {
-    // Local preview has no Netlify form handler; still show the success state.
+    showSubmissionError(
+      'We could not submit your request. Please check your connection and try again.'
+    )
+    return
   }
 
   renderSuccess(data)

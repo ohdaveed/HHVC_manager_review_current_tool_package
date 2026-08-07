@@ -10,6 +10,17 @@ const { gotoFresh, openWorkspaceTab } = require('./helpers')
    and the sidebar toggle. */
 
 test.describe('workspace panels', () => {
+  test('the narrow review layout does not overflow the document', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await gotoFresh(page)
+
+    const width = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      document: document.documentElement.scrollWidth,
+    }))
+    expect(width.document).toBe(width.viewport)
+  })
+
   test('the tab strip carries exactly three tabs', async ({ page }) => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'overview')
@@ -136,6 +147,34 @@ test.describe('workspace panels', () => {
 
     await openWorkspaceTab(page, 'help')
     await expect(page.locator('#reviewWorkspaceHelp .karl-tag-legend')).toBeVisible()
+  })
+
+  test('server sync is local-only until saved configuration enables it', async ({ page }) => {
+    await gotoFresh(page)
+
+    const settings = page.locator('.review-sync-settings')
+    await expect(settings).not.toHaveAttribute('open', '')
+    await expect(settings.locator('summary')).toHaveText('Server sync (optional — local-only)')
+    await expect(page.locator('#pullReviewState')).toBeDisabled()
+    await expect(page.locator('#pushAllReviewState')).toBeDisabled()
+
+    await settings.locator('summary').click()
+    await page.fill('#reviewSyncApiUrl', 'https://sync.example.test')
+    await page.fill('#reviewSyncApiToken', 'review-token')
+    await expect(page.locator('#pullReviewState')).toBeDisabled()
+    await page.click('#saveSyncSettings')
+
+    await expect(settings.locator('summary')).toHaveText('Server sync')
+    await expect(page.locator('#pullReviewState')).toBeEnabled()
+    await expect(page.locator('#pushAllReviewState')).toBeEnabled()
+
+    await page.fill('#reviewSyncApiUrl', '')
+    await page.fill('#reviewSyncApiToken', '')
+    await page.click('#saveSyncSettings')
+
+    await expect(settings.locator('summary')).toHaveText('Server sync (optional — local-only)')
+    await expect(page.locator('#pullReviewState')).toBeDisabled()
+    await expect(page.locator('#pushAllReviewState')).toBeDisabled()
   })
 
   test('the advanced sections sit at the end of Help, after the guidance', async ({ page }) => {

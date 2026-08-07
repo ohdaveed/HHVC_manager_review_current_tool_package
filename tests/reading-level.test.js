@@ -21,7 +21,7 @@ const { fleschKincaidGrade, extractPageBodyText, normalizeTextItem, calloutText,
 describe('load-pages', () => {
   test('discovers all page modules and loads HHVC_DATA', () => {
     const data = loadPageData()
-    expect(data.order.length).toBe(19)
+    expect(data.order.length).toBe(20)
     expect(data.pages.pestsTopic).toBeTruthy()
     expect(data.order[0][0]).toBe('pestsTopic')
   })

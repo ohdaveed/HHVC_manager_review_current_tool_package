@@ -75,8 +75,10 @@ test.describe('mockup PNG export', () => {
     await gotoFresh(page)
     await openAdvancedSection(page, 'Save mockups as images')
 
-    // Karl tags are on by default; they are review scaffolding and must not
-    // appear in a deliverable handed to anyone outside the review.
+    // Karl tags default off, but this regression must cover the reviewer's
+    // enabled state: the exporter may hide them for capture, never after it.
+    await expect(page.locator('#tagToggle')).not.toBeChecked()
+    await page.locator('.karl-switch').click()
     await expect(page.locator('#tagToggle')).toBeChecked()
     await expect(page.locator('body')).not.toHaveClass(/hide-karl-tags/)
 

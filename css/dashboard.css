@@ -234,6 +234,23 @@
   }
 }
 
+/* The stacked workspace fallback above still retains the sidebar/canvas
+   two-column grid, which is useful down to a tablet width. Below that, its
+   more-specific `.workspace-docked` selector would otherwise beat
+   css/styles.css's plain `.app` mobile rule and leave just 20px for the
+   canvas. Reset both workspace variants to one track so the mockup can
+   reflow within the viewport instead of widening the document. */
+@media (max-width: 980px) {
+  .app.workspace-docked,
+  .app.sidebar-collapsed.workspace-docked {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .review-workspace {
+    grid-column: 1;
+  }
+}
+
 .review-workspace-tabs {
   display: flex;
   flex-wrap: wrap;

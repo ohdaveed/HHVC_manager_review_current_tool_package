@@ -20,10 +20,15 @@ specifiers including the `.js` extension.
 works fully offline. But `server.ts` (Bun) exists and hosts **two optional,
 additive APIs** that are off by default and fail closed with a 501 when
 unconfigured: a **review-state sync backend** (SQLite via `bun:sqlite`, gated on
-`REVIEW_API_TOKEN`) and an **AI assist backend** at `/api/ai/*` (gated on
-`REVIEW_API_TOKEN` plus a provider key — `ANTHROPIC_API_KEY` or
-`GEMINI_API_KEY`). Netlify's static deploy has no server runtime, so it simply
-has neither. Nothing else in the tool depends on either one.
+the legacy `REVIEW_API_TOKEN` or opt-in per-token role configuration) and an
+**AI assist backend** at `/api/ai/*` (the `ai:generate` role plus a provider key
+— `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`). Cross-origin browser callers are
+denied unless explicitly allowlisted, and process-local limits are only a
+supplement to reverse-proxy/identity-aware-edge controls in public,
+multi-instance production. See `AGENTS.md`'s “Optional API access hardening”
+for the exact environment format and failure behavior. Netlify's static deploy
+has no server runtime, so it simply has neither. Nothing else in the tool
+depends on either one.
 
 ## Commands
 
@@ -41,7 +46,7 @@ bun run format:check  # prettier --check — this is the lint step (no ESLint/ts
 ```
 
 **There is a real test suite.** `bun run test` runs **twenty-two** Bun unit-test
-files, plus fourteen Playwright e2e specs. **The list in `package.json`'s `test`
+files, plus sixteen Playwright e2e spec files. **The list in `package.json`'s `test`
 script is explicit, not a glob** — a new `tests/*.test.js` that is not named
 there never runs and reports nothing. A happy-dom environment is preloaded
 via `bunfig.toml` so the ES modules can be imported directly. `bun run validate` is a

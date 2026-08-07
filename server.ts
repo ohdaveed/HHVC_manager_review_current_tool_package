@@ -100,6 +100,377 @@ const REVIEW_API_TOKEN = process.env.REVIEW_API_TOKEN ?? ""
 // gitignored .data/ path stays exactly where it has always been.
 const DATA_DB_PATH = process.env.DATA_DB_PATH ?? `${APP_DIR}/.data/review-state.local.db`
 
+// --- Optional API access controls -----------------------------------------
+//
+// The legacy REVIEW_API_TOKEN remains deliberately supported: deployments that
+// only set it receive one principal with every role, exactly as they did before
+// roles existed. REVIEW_API_PRINCIPALS is an explicit replacement, never a
+// supplement. Falling back to the broad legacy token after a malformed
+// principal configuration would turn a typo in a least-privilege deployment
+// into an escalation, so a present-but-invalid configuration disables API
+// access instead.
+
+const API_ROLES = {
+  reviewRead: "review:read",
+  reviewWrite: "review:write",
+  aiGenerate: "ai:generate",
+} as const
+
+type ApiRole = (typeof API_ROLES)[keyof typeof API_ROLES]
+
+const API_ROLE_VALUES = new Set<ApiRole>(Object.values(API_ROLES))
+const ALL_API_ROLES = new Set<ApiRole>(Object.values(API_ROLES))
+const MAX_API_PRINCIPALS = 100
+const MAX_PRINCIPAL_CONFIG_BYTES = 64 * 1024
+const MAX_ALLOWED_ORIGIN_CONFIG_BYTES = 16 * 1024
+
+interface ApiPrincipal {
+  principal: string
+  token: string
+  roles: Set<ApiRole>
+}
+
+type ApiAuthorizationConfiguration =
+  | { state: "disabled" }
+  | { state: "invalid" }
+  | { state: "configured"; principals: ApiPrincipal[] }
+
+interface AllowedOriginsConfiguration {
+  valid: boolean
+  origins: Set<string>
+}
+
+interface ApiRequestContext {
+  corsHeaders: Record<string, string>
+}
+
+/**
+ * Parse the opt-in JSON principal configuration without ever logging its
+ * contents: it contains bearer credentials. The intentionally small shape
+ * catches a misspelled role, a duplicate token, or a broad accidental value at
+ * startup instead of silently accepting an authentication configuration the
+ * operator did not mean to deploy.
+ *
+ * @example
+ * REVIEW_API_PRINCIPALS='[{"principal":"reviewer","token":"...","roles":["review:read"]}]'
+ */
+function parseApiAuthorizationConfiguration(raw: string | undefined): ApiAuthorizationConfiguration {
+  if (raw === undefined) {
+    if (!REVIEW_API_TOKEN) return { state: "disabled" }
+    return {
+      state: "configured",
+      principals: [
+        {
+          principal: "legacy-review-api-token",
+          token: REVIEW_API_TOKEN,
+          roles: new Set(ALL_API_ROLES),
+        },
+      ],
+    }
+  }
+
+  // An explicitly empty value is a configuration error, not the same as an
+  // absent opt-in. Treating it as absent would unexpectedly reactivate the
+  // broad legacy credential if a deployment system emitted `NAME=""`.
+  if (!raw || Buffer.byteLength(raw, "utf8") > MAX_PRINCIPAL_CONFIG_BYTES) {
+    return { state: "invalid" }
+  }
+
+  let entries: unknown
+  try {
+    entries = JSON.parse(raw)
+  } catch {
+    return { state: "invalid" }
+  }
+  if (!Array.isArray(entries) || entries.length === 0 || entries.length > MAX_API_PRINCIPALS) {
+    return { state: "invalid" }
+  }
+
+  const tokenValues = new Set<string>()
+  const principalNames = new Set<string>()
+  const principals: ApiPrincipal[] = []
+
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return { state: "invalid" }
+
+    const record = entry as Record<string, unknown>
+    const keys = Object.keys(record)
+    if (
+      keys.length !== 3 ||
+      !keys.includes("principal") ||
+      !keys.includes("token") ||
+      !keys.includes("roles")
+    ) {
+      return { state: "invalid" }
+    }
+
+    const principal = record.principal
+    const token = record.token
+    const roles = record.roles
+    if (
+      typeof principal !== "string" ||
+      !/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(principal) ||
+      typeof token !== "string" ||
+      !/^\S+$/.test(token) ||
+      !Array.isArray(roles) ||
+      roles.length === 0 ||
+      roles.length > API_ROLE_VALUES.size ||
+      tokenValues.has(token) ||
+      principalNames.has(principal)
+    ) {
+      return { state: "invalid" }
+    }
+
+    const roleSet = new Set<ApiRole>()
+    for (const role of roles) {
+      if (typeof role !== "string" || !API_ROLE_VALUES.has(role as ApiRole) || roleSet.has(role as ApiRole)) {
+        return { state: "invalid" }
+      }
+      roleSet.add(role as ApiRole)
+    }
+
+    tokenValues.add(token)
+    principalNames.add(principal)
+    principals.push({ principal, token, roles: roleSet })
+  }
+
+  return { state: "configured", principals }
+}
+
+/**
+ * Validate an exact HTTP(S) origin. Wildcards, paths, credentials and opaque
+ * origins are all deliberately rejected: the server reflects only an exact
+ * serialized origin after matching it against this set.
+ */
+function parseHttpOrigin(value: string): string | null {
+  try {
+    const url = new URL(value)
+    if ((url.protocol !== "http:" && url.protocol !== "https:") || url.origin !== value) {
+      return null
+    }
+    return url.origin
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Parse REVIEW_API_ALLOWED_ORIGINS as a comma-separated list of exact
+ * browser origins. An unset or whitespace-only value means no cross-origin
+ * callers; it does not mean "*".
+ */
+function parseAllowedOrigins(raw: string | undefined): AllowedOriginsConfiguration {
+  if (raw === undefined || raw.trim() === "") return { valid: true, origins: new Set() }
+  if (Buffer.byteLength(raw, "utf8") > MAX_ALLOWED_ORIGIN_CONFIG_BYTES) {
+    return { valid: false, origins: new Set() }
+  }
+
+  const origins = new Set<string>()
+  for (const candidate of raw.split(",")) {
+    const origin = parseHttpOrigin(candidate.trim())
+    if (!origin || origins.has(origin)) return { valid: false, origins: new Set() }
+    origins.add(origin)
+  }
+  return { valid: true, origins }
+}
+
+const API_AUTH_CONFIGURATION = parseApiAuthorizationConfiguration(process.env.REVIEW_API_PRINCIPALS)
+const ALLOWED_ORIGINS_CONFIGURATION = parseAllowedOrigins(process.env.REVIEW_API_ALLOWED_ORIGINS)
+
+if (API_AUTH_CONFIGURATION.state === "invalid") {
+  // Do not include the parse error or environment value: configuration often
+  // contains bearer tokens and deployment logs are not a credential store.
+  console.error("Review API authorization configuration is invalid; API access is fail-closed.")
+}
+if (!ALLOWED_ORIGINS_CONFIGURATION.valid) {
+  console.error("Review API allowed-origin configuration is invalid; API access is fail-closed.")
+}
+
+// Fixed-window request limits are intentionally conservative. The map is
+// bounded by configured principals × the three role buckets below, rather than
+// by attacker-controlled IP addresses or request paths. It is a single-process
+// safety belt, not a substitute for a shared edge limiter in a public
+// multi-instance deployment.
+const API_RATE_LIMIT = numberFromEnv("REVIEW_API_RATE_LIMIT", 120, { min: 1, max: 10_000 })
+const API_RATE_WINDOW_MS = numberFromEnv("REVIEW_API_RATE_WINDOW_MS", 60_000, {
+  min: 1_000,
+  max: 3_600_000,
+})
+const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>()
+
+const API_PREFLIGHT_HEADERS = {
+  "access-control-allow-methods": "GET, POST, PUT, OPTIONS",
+  "access-control-allow-headers": "authorization, content-type",
+}
+const ALLOWED_PREFLIGHT_HEADERS = new Set(["authorization", "content-type"])
+
+function jsonResponse(
+  data: unknown,
+  status: number,
+  corsHeaders: Record<string, string> = {},
+  extraHeaders: Record<string, string> = {}
+): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      ...SECURITY_HEADERS,
+      ...corsHeaders,
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      ...extraHeaders,
+    },
+  })
+}
+
+/**
+ * Reject cross-origin API calls unless their exact origin is explicitly trusted.
+ * Same-origin requests do not need configuration; requests without Origin are
+ * non-browser or same-origin clients and deliberately receive no CORS header.
+ */
+function getApiRequestContext(req: Request, url: URL): ApiRequestContext | Response {
+  if (!ALLOWED_ORIGINS_CONFIGURATION.valid) {
+    return jsonResponse({ error: "API CORS configuration is invalid." }, 503)
+  }
+
+  const origin = req.headers.get("origin")
+  if (!origin) return { corsHeaders: {} }
+
+  const normalizedOrigin = parseHttpOrigin(origin)
+  if (
+    !normalizedOrigin ||
+    (normalizedOrigin !== url.origin && !ALLOWED_ORIGINS_CONFIGURATION.origins.has(normalizedOrigin))
+  ) {
+    return jsonResponse({ error: "Origin is not allowed." }, 403)
+  }
+
+  return {
+    corsHeaders: {
+      "access-control-allow-origin": normalizedOrigin,
+      vary: "Origin",
+    },
+  }
+}
+
+/**
+ * OPTIONS requests cannot carry Authorization, so an allowed CORS preflight is
+ * not proof of access. The subsequent request still must authenticate, pass a
+ * role check, and consume its principal's own rate-limit bucket.
+ */
+function preflightResponse(req: Request, context: ApiRequestContext): Response {
+  const requestedMethod = req.headers.get("access-control-request-method")
+  if (requestedMethod && !["GET", "POST", "PUT", "OPTIONS"].includes(requestedMethod.toUpperCase())) {
+    return jsonResponse({ error: "CORS method is not allowed." }, 403, context.corsHeaders)
+  }
+
+  const requestedHeaders = req.headers.get("access-control-request-headers")
+  if (requestedHeaders) {
+    const headers = requestedHeaders.split(",").map((header) => header.trim().toLowerCase())
+    if (headers.some((header) => !header || !ALLOWED_PREFLIGHT_HEADERS.has(header))) {
+      return jsonResponse({ error: "CORS headers are not allowed." }, 403, context.corsHeaders)
+    }
+  }
+
+  return new Response(null, {
+    status: 204,
+    headers: {
+      ...SECURITY_HEADERS,
+      ...context.corsHeaders,
+      ...API_PREFLIGHT_HEADERS,
+      "cache-control": "no-store",
+    },
+  })
+}
+
+function constantTimeBearerMatch(header: string, token: string): boolean {
+  const received = Buffer.from(header)
+  const expected = Buffer.from(`Bearer ${token}`)
+  return received.length === expected.length && timingSafeEqual(received, expected)
+}
+
+/**
+ * Return a configured principal for this bearer credential. Every configured
+ * candidate is compared, rather than returning from the first match, so a
+ * matching position cannot be learned by timing a list of credentials.
+ */
+function authenticatePrincipal(req: Request): ApiPrincipal | null {
+  if (API_AUTH_CONFIGURATION.state !== "configured") return null
+
+  const header = req.headers.get("authorization") ?? ""
+  let matched: ApiPrincipal | null = null
+  for (const principal of API_AUTH_CONFIGURATION.principals) {
+    if (constantTimeBearerMatch(header, principal.token)) matched = principal
+  }
+  return matched
+}
+
+function requireApiPrincipal(
+  req: Request,
+  apiName: string,
+  context: ApiRequestContext
+): ApiPrincipal | Response {
+  if (API_AUTH_CONFIGURATION.state === "disabled") {
+    return jsonResponse(
+      { error: `${apiName} is not configured on this server (REVIEW_API_TOKEN unset).` },
+      501,
+      context.corsHeaders
+    )
+  }
+  if (API_AUTH_CONFIGURATION.state === "invalid") {
+    return jsonResponse(
+      { error: "API authorization configuration is invalid." },
+      503,
+      context.corsHeaders
+    )
+  }
+
+  const principal = authenticatePrincipal(req)
+  if (!principal) {
+    return jsonResponse(
+      { error: "Unauthorized" },
+      401,
+      context.corsHeaders,
+      { "www-authenticate": "Bearer" }
+    )
+  }
+  return principal
+}
+
+function consumeRateLimit(principal: ApiPrincipal, role: ApiRole): number | null {
+  const now = Date.now()
+  const key = `${principal.principal}\u0000${role}`
+  const current = rateLimitBuckets.get(key)
+  if (!current || now >= current.resetAt) {
+    rateLimitBuckets.set(key, { count: 1, resetAt: now + API_RATE_WINDOW_MS })
+    return null
+  }
+  if (current.count >= API_RATE_LIMIT) {
+    return Math.max(1, Math.ceil((current.resetAt - now) / 1000))
+  }
+  current.count += 1
+  return null
+}
+
+function requireApiRole(
+  principal: ApiPrincipal,
+  role: ApiRole,
+  context: ApiRequestContext
+): Response | null {
+  if (!principal.roles.has(role)) {
+    return jsonResponse({ error: "Forbidden" }, 403, context.corsHeaders)
+  }
+
+  const retryAfter = consumeRateLimit(principal, role)
+  if (retryAfter !== null) {
+    return jsonResponse(
+      { error: "Rate limit exceeded. Try again later." },
+      429,
+      context.corsHeaders,
+      { "retry-after": String(retryAfter) }
+    )
+  }
+  return null
+}
+
 /**
  * Ceiling on a single review-record PUT.
  *
@@ -143,26 +514,6 @@ function getDb(): Database {
     )
   `)
   return db
-}
-
-const API_CORS_HEADERS = {
-  "access-control-allow-origin": "*",
-  // Shared by every /api/* route. POST is here for the AI assist routes below;
-  // the review-state routes still only accept GET and PUT, which their own
-  // method matching enforces.
-  "access-control-allow-methods": "GET, POST, PUT, OPTIONS",
-  "access-control-allow-headers": "authorization, content-type",
-}
-
-function jsonResponse(data: unknown, status: number): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      ...SECURITY_HEADERS,
-      ...API_CORS_HEADERS,
-      "content-type": "application/json; charset=utf-8",
-    },
-  })
 }
 
 /**
@@ -253,19 +604,6 @@ async function readBodyWithLimit(req: Request, maxBytes: number): Promise<string
   return text + decoder.decode()
 }
 
-function isAuthorized(req: Request): boolean {
-  if (!REVIEW_API_TOKEN) return false
-  const header = req.headers.get("authorization") ?? ""
-  const expected = `Bearer ${REVIEW_API_TOKEN}`
-  // Constant-time comparison: a raw `===` on the token leaks timing info an
-  // attacker could use to guess it one byte at a time. timingSafeEqual
-  // throws on a length mismatch, so that has to be checked first — which is
-  // itself timing-safe since header length isn't secret.
-  const headerBuf = Buffer.from(header)
-  const expectedBuf = Buffer.from(expected)
-  return headerBuf.length === expectedBuf.length && timingSafeEqual(headerBuf, expectedBuf)
-}
-
 /** Reassemble the flattened { version, updated_at, ui, globals, pages } shape
  *  js/review-state-store.js already uses, from the per-page rows table. */
 function getFullReviewState(): object {
@@ -290,7 +628,11 @@ function getFullReviewState(): object {
   return { version: 1, updated_at: latestUpdatedAt, ui: {}, globals: {}, pages }
 }
 
-async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
+async function putReviewPage(
+  pageKey: string,
+  req: Request,
+  context: ApiRequestContext
+): Promise<Response> {
   // A review record accumulates append-only history across a page's whole
   // review life, so it gets its own — deliberately LARGER — ceiling rather than
   // inheriting the AI cap. See MAX_REVIEW_BODY_BYTES for why too small a limit
@@ -299,7 +641,8 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   if (raw === null) {
     return jsonResponse(
       { error: `Request body must be ${MAX_REVIEW_BODY_BYTES} bytes or fewer.` },
-      413
+      413,
+      context.corsHeaders
     )
   }
 
@@ -307,10 +650,10 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   try {
     body = JSON.parse(raw)
   } catch {
-    return jsonResponse({ error: "Request body must be valid JSON." }, 400)
+    return jsonResponse({ error: "Request body must be valid JSON." }, 400, context.corsHeaders)
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ error: "Request body must be a JSON object." }, 400)
+    return jsonResponse({ error: "Request body must be a JSON object." }, 400, context.corsHeaders)
   }
 
   // Validate against the same schema the browser validates GET responses
@@ -319,7 +662,11 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   // persist as-is, unlike every other entry point into review state.
   const parsed = reviewRecordSchema.safeParse(body)
   if (!parsed.success) {
-    return jsonResponse({ error: "Invalid review record.", issues: parsed.error.issues }, 400)
+    return jsonResponse(
+      { error: "Invalid review record.", issues: parsed.error.issues },
+      400,
+      context.corsHeaders
+    )
   }
   const patch = parsed.data as { updated_at?: string; synced_at?: string; [key: string]: unknown }
 
@@ -357,7 +704,8 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
     if (typeof patch.synced_at !== "string" || existing.updated_at > patch.synced_at) {
       return jsonResponse(
         { error: "Server has a newer version of this page. Pull before pushing again.", current: existing },
-        409
+        409,
+        context.corsHeaders
       )
     }
   }
@@ -391,48 +739,49 @@ async function putReviewPage(pageKey: string, req: Request): Promise<Response> {
   if (result.changes === 0) {
     return jsonResponse(
       { error: "Server has a newer version of this page. Pull before pushing again." },
-      409
+      409,
+      context.corsHeaders
     )
   }
 
-  return jsonResponse(merged, 200)
+  return jsonResponse(merged, 200, context.corsHeaders)
 }
 
 async function handleReviewStateApi(req: Request, url: URL): Promise<Response> {
+  const context = getApiRequestContext(req, url)
+  if (context instanceof Response) return context
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: { ...SECURITY_HEADERS, ...API_CORS_HEADERS } })
+    return preflightResponse(req, context)
   }
 
-  if (!REVIEW_API_TOKEN) {
-    return jsonResponse(
-      { error: "Review-state sync is not configured on this server (REVIEW_API_TOKEN unset)." },
-      501
-    )
-  }
-  if (!isAuthorized(req)) {
-    return jsonResponse({ error: "Unauthorized" }, 401)
-  }
+  const principal = requireApiPrincipal(req, "Review-state sync", context)
+  if (principal instanceof Response) return principal
 
   if (url.pathname === "/api/review-state" && req.method === "GET") {
-    return jsonResponse(getFullReviewState(), 200)
+    const roleResponse = requireApiRole(principal, API_ROLES.reviewRead, context)
+    if (roleResponse) return roleResponse
+    return jsonResponse(getFullReviewState(), 200, context.corsHeaders)
   }
 
   const pageMatch = url.pathname.match(/^\/api\/review-state\/pages\/([^/]+)$/)
   if (pageMatch && req.method === "PUT") {
-    return putReviewPage(decodeURIComponent(pageMatch[1]), req)
+    const roleResponse = requireApiRole(principal, API_ROLES.reviewWrite, context)
+    if (roleResponse) return roleResponse
+    return putReviewPage(decodeURIComponent(pageMatch[1]), req, context)
   }
 
-  return jsonResponse({ error: "Not Found" }, 404)
+  return jsonResponse({ error: "Not Found" }, 404, context.corsHeaders)
 }
 
 // --- Optional AI assist backend (GET/POST /api/ai/*) ---------------------
 //
 // Same posture as the review-state sync layer above: entirely additive, off by
-// default, and failing closed. Two independent switches gate it —
-// REVIEW_API_TOKEN (shared with the sync routes; one server secret, not two)
-// controls whether the API exists at all, and at least one provider key
-// (ANTHROPIC_API_KEY, GEMINI_API_KEY) controls whether generation is possible.
-// The keys never leave the server: the browser talks only to this origin.
+// default, and failing closed. The shared API authorization configuration
+// (legacy REVIEW_API_TOKEN or REVIEW_API_PRINCIPALS) controls whether the API
+// exists at all, and at least one provider key (ANTHROPIC_API_KEY,
+// GEMINI_API_KEY) controls whether generation is possible. The keys never
+// leave the server: the browser talks only to this origin.
 //
 // Nothing here writes to disk or to review state. Generated drafts are returned
 // to the browser to preview, copy, and download — they never touch pages/*.js.
@@ -457,6 +806,7 @@ const AI_REQUEST_TIMEOUT_MS = numberFromEnv("AI_REQUEST_TIMEOUT_MS", 240_000, { 
 /** Map a thrown error to a status code and a message worth showing a reviewer. */
 function aiErrorResponse(
   error: unknown,
+  context: ApiRequestContext,
   signals?: { client?: AbortSignal; timeout?: AbortSignal }
 ): Response {
   if (error instanceof RefusalError) {
@@ -467,7 +817,8 @@ function aiErrorResponse(
     // in build_scripts/ai/errors.js so this stays one check.
     return jsonResponse(
       { error: error.message, category: error.category, explanation: error.explanation },
-      422
+      422,
+      context.corsHeaders
     )
   }
 
@@ -476,7 +827,7 @@ function aiErrorResponse(
     // deployment does not have, which in practice means a panel still holding a
     // picker built from another endpoint's capabilities. `available` lets it
     // recover without the reviewer guessing.
-    return jsonResponse({ error: error.message, available: error.available }, 400)
+    return jsonResponse({ error: error.message, available: error.available }, 400, context.corsHeaders)
   }
 
   if (error instanceof ProviderTimeoutError) {
@@ -492,7 +843,7 @@ function aiErrorResponse(
     // cancelled." for a request nobody cancelled. Normalized at the provider
     // boundary (build_scripts/ai/provider-gemini.js) where the caller's signal
     // is still in scope to tell the two apart.
-    return jsonResponse({ error: "Generation timed out." }, 504)
+    return jsonResponse({ error: "Generation timed out." }, 504, context.corsHeaders)
   }
 
   // Cancellation is decided by SIGNAL STATE, not by the shape of the error.
@@ -512,13 +863,13 @@ function aiErrorResponse(
   // being torn down regardless.
   if (signals?.client?.aborted) {
     // The reviewer hit Cancel or navigated away. Nothing to log.
-    return jsonResponse({ error: "Generation was cancelled." }, 499)
+    return jsonResponse({ error: "Generation was cancelled." }, 499, context.corsHeaders)
   }
   if (signals?.timeout?.aborted) {
     // Our own budget expired, which is a gateway timeout rather than a client
     // cancellation. Separating the two lets the log answer "who gave up first?"
     // instead of collapsing both into one ambiguous code.
-    return jsonResponse({ error: "Generation timed out." }, 504)
+    return jsonResponse({ error: "Generation timed out." }, 504, context.corsHeaders)
   }
   // Fallback for aborts raised where NO signal was threaded through, so the
   // mapping degrades to something sane instead of back to a logged 500. This is
@@ -546,7 +897,7 @@ function aiErrorResponse(
   const errorName = (error as { name?: string })?.name
   const constructorName = (error as { constructor?: { name?: string } })?.constructor?.name
   if (constructorName === "APIUserAbortError" || errorName === "AbortError") {
-    return jsonResponse({ error: "Generation was cancelled." }, 499)
+    return jsonResponse({ error: "Generation was cancelled." }, 499, context.corsHeaders)
   }
   if (constructorName === "APIConnectionTimeoutError" || errorName === "TimeoutError") {
     // Same split as the signal branches above, and for the same reason: the
@@ -554,7 +905,7 @@ function aiErrorResponse(
     // in with the cancellation codes claims the reviewer walked away, which
     // hides a genuinely slow provider behind a status that reads as "nobody was
     // listening anyway".
-    return jsonResponse({ error: "Generation timed out." }, 504)
+    return jsonResponse({ error: "Generation timed out." }, 504, context.corsHeaders)
   }
 
   const status = (error as { status?: number })?.status
@@ -564,34 +915,40 @@ function aiErrorResponse(
     // mistaken for a bug in this server.
     return jsonResponse(
       { error: `The model provider returned ${status}.`, upstreamStatus: status },
-      502
+      502,
+      context.corsHeaders
     )
   }
   console.error("AI request failed:", error)
-  return jsonResponse({ error: (error as Error)?.message || "AI request failed." }, 500)
+  return jsonResponse(
+    { error: (error as Error)?.message || "AI request failed." },
+    500,
+    context.corsHeaders
+  )
 }
 
 async function handleAiApi(req: Request, url: URL): Promise<Response> {
+  const context = getApiRequestContext(req, url)
+  if (context instanceof Response) return context
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: { ...SECURITY_HEADERS, ...API_CORS_HEADERS } })
+    return preflightResponse(req, context)
   }
 
-  if (!REVIEW_API_TOKEN) {
-    return jsonResponse(
-      { error: "AI assist is not configured on this server (REVIEW_API_TOKEN unset)." },
-      501
-    )
-  }
-  if (!isAuthorized(req)) {
-    return jsonResponse({ error: "Unauthorized" }, 401)
-  }
+  const principal = requireApiPrincipal(req, "AI assist", context)
+  if (principal instanceof Response) return principal
 
   // Deliberately answers even with no provider key at all. This is the
   // discovery endpoint the browser uses to render its empty state and build its
   // provider picker, and a 501 here would leave it unable to tell "no AI key"
   // from "no server at all".
   if (url.pathname === "/api/ai/capabilities" && req.method === "GET") {
-    return jsonResponse(getCapabilities(), 200)
+    // Every AI endpoint requires the generation role. Capabilities and models
+    // can reveal enabled providers and model names, so letting a review-only
+    // token call them would weaken the role boundary even if POST stayed locked.
+    const roleResponse = requireApiRole(principal, API_ROLES.aiGenerate, context)
+    if (roleResponse) return roleResponse
+    return jsonResponse(getCapabilities(), 200, context.corsHeaders)
   }
 
   // The provider gate is checked INSIDE each route that needs it, not before
@@ -611,19 +968,24 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
           "No model provider is configured on this server " +
           "(set ANTHROPIC_API_KEY or GEMINI_API_KEY).",
       },
-      501
+      501,
+      context.corsHeaders
     )
 
   if (url.pathname === "/api/ai/models" && req.method === "GET") {
+    const roleResponse = requireApiRole(principal, API_ROLES.aiGenerate, context)
+    if (roleResponse) return roleResponse
     if (!hasConfiguredProvider()) return noProvider()
     try {
-      return jsonResponse(await listModels(), 200)
+      return jsonResponse(await listModels(), 200, context.corsHeaders)
     } catch (error) {
-      return aiErrorResponse(error)
+      return aiErrorResponse(error, context)
     }
   }
 
   if (url.pathname === "/api/ai/generate" && req.method === "POST") {
+    const roleResponse = requireApiRole(principal, API_ROLES.aiGenerate, context)
+    if (roleResponse) return roleResponse
     if (!hasConfiguredProvider()) return noProvider()
 
     // Refuse an oversized body BEFORE reading it. The Zod schema bounds `page`,
@@ -634,7 +996,8 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
       return jsonResponse(
         { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
-        413
+        413,
+        context.corsHeaders
       )
     }
 
@@ -646,7 +1009,8 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     if (raw === null) {
       return jsonResponse(
         { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
-        413
+        413,
+        context.corsHeaders
       )
     }
 
@@ -654,15 +1018,19 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     try {
       body = JSON.parse(raw)
     } catch {
-      return jsonResponse({ error: "Request body must be valid JSON." }, 400)
+      return jsonResponse({ error: "Request body must be valid JSON." }, 400, context.corsHeaders)
     }
     if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return jsonResponse({ error: "Request body must be a JSON object." }, 400)
+      return jsonResponse({ error: "Request body must be a JSON object." }, 400, context.corsHeaders)
     }
 
     const parsed = generateRequestSchema.safeParse(body)
     if (!parsed.success) {
-      return jsonResponse({ error: "Invalid request.", issues: parsed.error.issues }, 400)
+      return jsonResponse(
+        { error: "Invalid request.", issues: parsed.error.issues },
+        400,
+        context.corsHeaders
+      )
     }
 
     // Two cancellation sources, combined. req.signal stops an abandoned
@@ -677,13 +1045,13 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
 
     try {
       const result = await generateContent({ ...parsed.data, signal })
-      return jsonResponse(result, 200)
+      return jsonResponse(result, 200, context.corsHeaders)
     } catch (error) {
-      return aiErrorResponse(error, { client: req.signal, timeout })
+      return aiErrorResponse(error, context, { client: req.signal, timeout })
     }
   }
 
-  return jsonResponse({ error: "Not Found" }, 404)
+  return jsonResponse({ error: "Not Found" }, 404, context.corsHeaders)
 }
 
 const server = serve({
@@ -751,4 +1119,3 @@ const server = serve({
 console.log(`HHVC mockup server running at http://${server.hostname}:${server.port}`)
 
 export default server
-
