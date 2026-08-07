@@ -67,10 +67,19 @@ test.describe('keyboard shortcuts', () => {
     await expect(workspace).toBeHidden()
   })
 
-  test('decision keys set the current page decision', async ({ page }) => {
+  test('decision keys require a reviewer name before setting the current page decision', async ({
+    page,
+  }) => {
     await gotoFresh(page)
     await focusMockPage(page)
 
+    await page.keyboard.press('a')
+    await expect(page.locator('#reviewDecision')).toHaveValue(DECISIONS.needsReview)
+    await expect(page.locator('#reviewerInput')).toBeFocused()
+    await expect(page.locator('#reviewerDecisionError')).toBeVisible()
+
+    await page.fill('#reviewerInput', 'E2E Reviewer')
+    await focusMockPage(page)
     await page.keyboard.press('a')
     await expect(page.locator('#reviewDecision')).toHaveValue(DECISIONS.approved)
 

@@ -1475,6 +1475,7 @@ a:focus {
 @media (max-width: 980px) {
   .app {
     grid-template-columns: 1fr;
+    min-width: 0;
   }
   .sidebar {
     position: relative;
@@ -1482,6 +1483,22 @@ a:focus {
   }
   .canvas {
     padding: 1rem;
+    min-width: 0;
+  }
+  /* A <figure> carries an intrinsic min-content width and browser-default
+     horizontal margins. In the one-column layout that made the mockup widen
+     the document to 943px at a 390px viewport, forcing the reviewer to pan
+     the entire tool. Keep the mockup responsive here; its desktop dimensions
+     remain unchanged where it is the object being reviewed beside the panel. */
+  .browser-shell {
+    width: 100%;
+    min-width: 0;
+    margin-inline: 0;
+    flex-shrink: 1;
+  }
+  .browser-bar,
+  #mockPage {
+    min-width: 0;
   }
   .cards {
     grid-template-columns: 1fr;

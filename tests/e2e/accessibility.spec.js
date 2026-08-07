@@ -56,6 +56,18 @@ async function expectNoSeriousViolations(page) {
 }
 
 test.describe('accessibility', () => {
+  test('Karl annotations default off and do not expand a service action name', async ({ page }) => {
+    await gotoFresh(page)
+
+    await expect(page.locator('#tagToggle')).not.toBeChecked()
+    await expect(page.locator('.service-tile').first()).not.toHaveAccessibleName(/Karl:/)
+
+    await page.locator('.karl-switch').click()
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+    await expect(page.locator('#tagToggle')).toBeChecked()
+  })
+
   for (const key of REPRESENTATIVE_PAGES) {
     test(`page "${key}" has no serious violations`, async ({ page }) => {
       await gotoFresh(page)

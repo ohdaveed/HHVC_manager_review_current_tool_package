@@ -144,6 +144,12 @@ async function openAdvancedSection(page, summaryText) {
 // clicking is what the reviewer actually does. Assertions can still read
 // `#reviewDecision`'s value: a hidden input has one.
 async function setDecision(page, decision) {
+  // Non-default decisions are attributable review actions. Existing tests
+  // using this convenience helper exercise successful persistence rather than
+  // anonymous-decision rejection, so supply the same explicit reviewer a
+  // person would enter before choosing a chip.
+  const reviewer = page.locator('#reviewerInput')
+  if (!(await reviewer.inputValue()).trim()) await reviewer.fill('E2E Reviewer')
   await page.click(`#decisionQuickActions [data-decision="${decision}"]`)
   await expect(page.locator('#reviewDecision')).toHaveValue(decision)
 }

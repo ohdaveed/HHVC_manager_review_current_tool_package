@@ -10,6 +10,27 @@ const {
 } = require('./helpers')
 
 test.describe('manager review workflow', () => {
+  test('requires a reviewer name before recording a non-default decision', async ({ page }) => {
+    await gotoFresh(page)
+
+    await page.click('#decisionQuickActions .decision-chip[data-decision="Approved"]')
+
+    await expect(page.locator('#reviewDecision')).toHaveValue('Needs review')
+    await expect(page.locator('#reviewerDecisionError')).toHaveText(
+      'Enter your name or initials before recording this decision.'
+    )
+    await expect(page.locator('#reviewerInput')).toBeFocused()
+    await expect(page.locator('#reviewerInput')).toHaveAttribute('aria-invalid', 'true')
+    expect((await readState(page)).pages.pestsTopic).toBeUndefined()
+
+    await page.fill('#reviewerInput', 'E2E Reviewer')
+    await expect(page.locator('#reviewerDecisionError')).toBeHidden()
+    await page.click('#decisionQuickActions .decision-chip[data-decision="Approved"]')
+    await settleDebounce(page)
+
+    expect((await readState(page)).pages.pestsTopic?.decision).toBe('Approved')
+  })
+
   test('decision, notes, and reviewer save to local review state', async ({ page }) => {
     await gotoFresh(page)
 
@@ -43,6 +64,7 @@ test.describe('manager review workflow', () => {
   test('quick-action chips set the decision and show a toast', async ({ page }) => {
     await gotoFresh(page)
 
+    await page.fill('#reviewerInput', 'E2E Reviewer')
     await page.click('#decisionQuickActions .decision-chip[data-decision="Blocked"]')
 
     await expect(page.locator('#reviewDecision')).toHaveValue('Blocked')
@@ -315,18 +337,18 @@ test.describe('manager review workflow', () => {
 
   test('karl tag toggle hides tags and the preference survives reload', async ({ page }) => {
     await gotoFresh(page)
-    await expect(page.locator('#tagToggle')).toBeChecked()
+    await expect(page.locator('#tagToggle')).not.toBeChecked()
 
     // The checkbox is visually replaced by the .karl-slider span, so click the
     // wrapping switch label instead of the hidden input.
     await page.locator('.karl-switch').click()
-    await expect(page.locator('#tagToggle')).not.toBeChecked()
-    await expect(page.locator('body')).toHaveClass(/hide-karl-tags/)
+    await expect(page.locator('#tagToggle')).toBeChecked()
+    await expect(page.locator('body')).not.toHaveClass(/hide-karl-tags/)
     await settleDebounce(page)
 
     await page.reload()
     await page.waitForSelector('#mockPage h1')
-    await expect(page.locator('#tagToggle')).not.toBeChecked()
-    await expect(page.locator('body')).toHaveClass(/hide-karl-tags/)
+    await expect(page.locator('#tagToggle')).toBeChecked()
+    await expect(page.locator('body')).not.toHaveClass(/hide-karl-tags/)
   })
 })

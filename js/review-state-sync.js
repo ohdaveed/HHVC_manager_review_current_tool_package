@@ -676,15 +676,13 @@
     // <details> keeps the decision fields and export buttons above
     // immediately visible while collapsing the rarely-touched sync config
     // out of the way, mirroring the ai-assist-settings <details> pattern in
-    // js/ai-assist-render.js. Open by default only while unconfigured, so a
-    // first-time reviewer still sees the fields without having to find them.
+    // js/ai-assist-render.js. A local-only reviewer should not have to scan
+    // server credentials or actions before reaching the review workflow.
     const details = document.createElement('details')
     details.className = 'review-sync-settings'
-    details.open = !isConfigured()
     actions.insertAdjacentElement('afterend', details)
 
     const summary = document.createElement('summary')
-    summary.textContent = 'Server sync settings'
     details.appendChild(summary)
 
     // Placeholder text isn't a reliable accessible name (it disappears once
@@ -732,6 +730,7 @@
       // re-report anything that still conflicts.
       renderConflicts([], {})
       setSyncStatus(isConfigured() ? 'Sync settings saved.' : 'Sync settings cleared.')
+      updateSyncActionAvailability()
     })
 
     const pullButton = document.createElement('button')
@@ -749,9 +748,10 @@
     // are the guards that actually hold, since either call can be made
     // programmatically.
     let pushButton
+    let syncBusy = false
     const setSyncButtonsBusy = (busy) => {
-      pullButton.disabled = busy
-      if (pushButton) pushButton.disabled = busy
+      syncBusy = busy
+      updateSyncActionAvailability()
     }
 
     pullButton.addEventListener('click', () => {
@@ -848,6 +848,15 @@
       ? 'Sync configured.'
       : 'Sync not configured — enter a server URL and token above, then Save sync settings.'
     details.appendChild(status)
+
+    function updateSyncActionAvailability() {
+      const configured = isConfigured()
+      summary.textContent = configured ? 'Server sync' : 'Server sync (optional — local-only)'
+      pullButton.disabled = syncBusy || !configured
+      if (pushButton) pushButton.disabled = syncBusy || !configured
+    }
+
+    updateSyncActionAvailability()
 
     const conflictPanel = document.createElement('div')
     conflictPanel.id = 'reviewSyncConflicts'

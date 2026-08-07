@@ -18,6 +18,12 @@ import { hasValidPageData } from './utils.js'
   // keep this array, the tab markup in index.html and the 1-3 shortcut cases in
   // js/keyboard-shortcuts.js in step with each other.
   const WORKSPACE_TABS = ['overview', 'checks', 'help']
+  const REVIEWER_REQUIRED_DECISIONS = new Set([
+    'Approved',
+    'Approved with edits',
+    'Revise and resubmit',
+    'Blocked',
+  ])
   let workspaceTriggerButton = null
 
   const { getValue, getDecisionChipClass, escapeHtml } = window.utils
@@ -321,12 +327,49 @@ import { hasValidPageData } from './utils.js'
       applyDecisionToCurrentPage(button.getAttribute('data-decision'))
     })
 
+    document.getElementById('reviewerInput')?.addEventListener('input', () => {
+      clearReviewerDecisionError()
+    })
+
     updateDecisionQuickActions()
+  }
+
+  function clearReviewerDecisionError() {
+    const input = document.getElementById('reviewerInput')
+    const error = document.getElementById('reviewerDecisionError')
+    input?.removeAttribute('aria-invalid')
+    if (error) {
+      error.hidden = true
+      error.textContent = ''
+    }
+  }
+
+  function validateReviewerForDecision(decision) {
+    if (!REVIEWER_REQUIRED_DECISIONS.has(decision)) {
+      clearReviewerDecisionError()
+      return true
+    }
+
+    const input = document.getElementById('reviewerInput')
+    const error = document.getElementById('reviewerDecisionError')
+    if (String(input?.value || '').trim()) {
+      clearReviewerDecisionError()
+      return true
+    }
+
+    input?.setAttribute('aria-invalid', 'true')
+    if (error) {
+      error.textContent = 'Enter your name or initials before recording this decision.'
+      error.hidden = false
+    }
+    input?.focus()
+    return false
   }
 
   function applyDecisionToCurrentPage(decision) {
     const select = document.getElementById('reviewDecision')
     if (!select || !decision) return
+    if (!validateReviewerForDecision(decision)) return false
     if (select.value === decision) return
 
     select.value = decision
@@ -344,9 +387,13 @@ import { hasValidPageData } from './utils.js'
       }
       window.showToast(`Decision set: ${decision}`, tone, toastAction)
     }
+    return true
   }
 
-  window.reviewDecisions = { set: applyDecisionToCurrentPage }
+  window.reviewDecisions = {
+    set: applyDecisionToCurrentPage,
+    validateReviewerForDecision,
+  }
 
   window.ReviewUx = window.ReviewUx || {}
   window.ReviewUx.workspace = {
@@ -359,6 +406,8 @@ import { hasValidPageData } from './utils.js'
     initWorkspaceTabs,
     updateDecisionQuickActions,
     initDecisionQuickActions,
+    clearReviewerDecisionError,
+    validateReviewerForDecision,
     applyDecisionToCurrentPage,
   }
 })()

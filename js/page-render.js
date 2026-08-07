@@ -16,7 +16,12 @@ import { karlKindMeta } from './karl-tag-meta.js'
 import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
 function karlTag(label, kind = 'body') {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
-  return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
+  // Karl tags are visual reviewer annotations, not part of the public-page
+  // control they precede. Leaving their long placement notes in the
+  // accessibility tree made a card button announce the entire CMS rationale
+  // before its actual destination; the toolbar toggle is the discoverable
+  // control for showing that visual layer.
+  return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
 }
 const EDITOR_QA_STATUS = {
   'needs-review': { icon: '⚠', label: 'Needs review' },
