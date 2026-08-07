@@ -35,6 +35,11 @@ test('re-importing a snapshot over newer work merges rather than wipes', async (
   await gotoFresh(page)
 
   // Three pages reviewed entirely through the sidebar, as a manager would.
+  // The first is selected explicitly rather than relying on it being the
+  // default landing page: that dependency is real either way, and left implicit
+  // it surfaces sixty lines below as a confusing key-set mismatch instead of
+  // here, where the cause would be obvious.
+  await selectPage(page, 'pestsTopic')
   await page.fill('#reviewerInput', 'Director Demo')
   await page.dispatchEvent('#reviewerInput', 'change')
   await setDecision(page, DECISIONS.approved)

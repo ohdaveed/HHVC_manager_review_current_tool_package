@@ -21,18 +21,33 @@ bun install                 # required — a fresh clone has no node_modules
 bun run start               # builds dist/ and serves on :8080
 ```
 
-Then import `review/demo-review-state.json` through **Import reviews** in the
-sidebar. Without it the tool opens at 0 of 19 reviewed and every panel that
-makes the case — progress, decision mix, activity over time, history — is empty.
-With it: 12 of 19 reviewed, 20 recorded review rounds, four decision types in
-play. `review/demo-review-state-empty.json` resets it if you want to show the
-first-run state deliberately.
+Then seed the review state. **Order matters, because importing merges rather
+than replaces** — it will not overwrite reviews you already had on this origin,
+and it will not give you a clean 12 of 19 if there are any:
+
+1. If this browser holds review work you care about, export it first
+   (**What to export → "Everything, for another browser — JSON"** → **Export
+   reviews**).
+2. Click **Clear saved reviews** and confirm. This is the only thing that
+   actually clears local state.
+3. Import `review/demo-review-state.json` through **Import reviews**.
+
+Without the seed the tool opens at 0 of 19 and every panel that makes the case —
+progress, decision mix, activity over time, history — is empty. With it: 12 of
+19 reviewed, four decision types, and 32 recorded review rounds (the file
+carries 20; the import records one more per page, by design, so the trail shows
+who loaded them).
+
+To show the first-run state deliberately, use **Clear saved reviews** and
+re-import afterwards. There is no "empty backup" file — an empty import is a
+no-op, because the import path merges per page and returns early when the file
+names none.
 
 ## What this pass found and fixed
 
-Four real defects, all on surfaces the room will see. All four came in with the
-two large PRs that merged in the 24 hours before this review (#93 docking the
-workspace, #94 tech debt), and all four were invisible to a green CI run.
+Six real defects, all on surfaces the room will see. All of them came in with
+the two large PRs that merged in the 24 hours before this review (#93 docking
+the workspace, #94 tech debt), and all of them were invisible to a green CI run.
 
 1. **The mockup overlapped the review panel between 1401px and ~1672px.** 162px
    of overlap at 1440, 100px at 1536, 50px at 1600 — the widths 13-inch and
@@ -52,6 +67,15 @@ workspace, #94 tech debt), and all four were invisible to a green CI run.
 4. **The Page checks panel could not be scrolled by keyboard at all.** It is a
    scrollable region that was not in the tab order, so there was no way to put
    the caret in it.
+5. **In dark mode, body copy inside the mockup was invisible — 1.1:1.** The
+   mockup is deliberately pinned to a light theme so it stays a faithful preview
+   of a public page. But text colour is inherited as an already-computed value,
+   so the dark theme's near-white text leaked straight past those light tokens
+   onto the mockup's light background. On a dark-mode laptop, most of the page
+   copy simply could not be read.
+6. **Every keyboard shortcut key was illegible in dark mode — 2.09:1.** The
+   SF.gov design system ships a fixed light-mode blue for `kbd` with no dark
+   counterpart, and it outranked the panel's own colour.
 
 Also fixed: the Agency page's SEO title was missing the `| SF.gov` suffix that
 the other 16 pages carry. Content standard failures went from 11 to 10, and
@@ -59,11 +83,12 @@ the other 16 pages carry. Content standard failures went from 11 to 10, and
 all of its mandatory checks.**
 
 Why they were missed: the accessibility scan never opened the Checks or Help
-tabs, and the only two screen widths under test were 1800px (in one test) and
-1280px (everything else) — either side of the overlap. Three new tests now close
-both gaps, including one that sweeps every width from 1280 to 1920.
+tabs and never ran in dark mode, and the only two screen widths under test were
+1800px (in one test) and 1280px (everything else) — either side of the overlap.
+New tests now close all three gaps, including one that sweeps every width from
+1280 to 1920 and five that scan in dark mode.
 
-Verified green after all changes: 533 unit tests, 110 end-to-end tests, schema
+Verified green after all changes: 533 unit tests, 117 end-to-end tests, schema
 validation, and the lint step.
 
 ## Questions you should expect, with answers
@@ -88,9 +113,14 @@ edits. A tool that reported everything passing on a 19-page draft would be the
 thing to worry about.
 
 **"Is it accessible?"**
-Every page and all three workspace tabs are scanned against WCAG 2.1 A and AA on
-every commit, and the build fails on a serious or critical violation. That scan
-is what caught three of the four defects above.
+Automated WCAG 2.1 A and AA scans run on every commit and the build fails on a
+serious or critical violation. They cover **one representative page per content
+type — six of the nineteen — plus all three workspace tabs, in both light and
+dark mode.** Be precise about that if pressed: it is representative coverage
+chosen because the nineteen pages are built from the same render functions, not
+a scan of every page, so a defect in markup unique to one unscanned page could
+still get through. Those scans are what caught five of the six defects this pass
+fixed.
 
 **"Where does the data live? Is anything sent anywhere?"**
 Reviews are saved in the browser's local storage only. No backend, no database,
@@ -117,14 +147,20 @@ that page shows the most.
 - **Clear saved reviews**, in the sidebar next to Export and Import.
 - **Remove these records**, inside Stored review data at the end of Help.
 
-Both ask for confirmation first, and the seed file will restore everything.
+Both ask for confirmation first, and re-importing `review/demo-review-state.json`
+restores the demo state. Note that **Clear saved reviews** is also the intended
+way to reset between runs — it is destructive by design, not a trap.
 
 ## Known gaps — say these if asked, do not discover them live
 
-- **Dark mode is unverified.** The accessibility scan only runs in light mode.
-  The mockup itself is pinned to light regardless of system theme, so a dark
-  laptop only darkens the review chrome around it — but it has not been checked.
-  Set the machine to light mode.
+- **Dark mode is now verified and clean**, so this is no longer a gap — but it
+  was a bad one, and it is worth knowing what was there in case anyone asks why
+  it changed. Body copy inside the mockup was rendering at 1.1:1 — effectively
+  invisible — because `color` is inherited as a computed value, so the dark
+  theme's text colour leaked past the light tokens onto the mockup's light
+  background. Every keyboard shortcut key was at 2.09:1 for a different reason.
+  Both are fixed and both are now scanned on every commit. Either theme is safe
+  to present from.
 - **Docking is unavailable below 1700px.** That is a deliberate trade made
   tonight — a correct stacked layout instead of a broken overlapping one — but
   it does mean a 14-inch laptop no longer gets the side-by-side view the recent

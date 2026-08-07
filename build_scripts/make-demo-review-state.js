@@ -27,8 +27,10 @@
  * Usage:
  *   bun build_scripts/make-demo-review-state.js [outfile]
  *
- * Defaults to review/demo-review-state.json. A companion empty backup is
- * written alongside it so a demo can be reset and re-seeded live.
+ * Defaults to review/demo-review-state.json. There is no companion "empty"
+ * backup: an empty file cannot reset anything, because the import path merges
+ * per page key and takes an early return when the backup names no pages. The
+ * Clear saved reviews button is the only thing that actually clears state.
  */
 
 const path = require('path')
@@ -222,29 +224,33 @@ function main() {
   fs.mkdirSync(path.dirname(outPath), { recursive: true })
   fs.writeFileSync(outPath, JSON.stringify(state, null, 2) + '\n')
 
-  // An empty backup beside it, so a demo can clear and re-seed live without
-  // needing the Clear saved reviews button (which is destructive and sits
-  // beside Export/Import in the sidebar).
-  const emptyPath = outPath.replace(/\.json$/, '-empty.json')
-  fs.writeFileSync(
-    emptyPath,
-    JSON.stringify(
-      { version: 1, updated_at: new Date().toISOString(), ui: {}, globals: {}, pages: {} },
-      null,
-      2
-    ) + '\n'
-  )
+  /* There is deliberately NO companion "empty" backup written here, and it is
+     worth saying why, because writing one is the obvious idea and it does not
+     work. `importReviewStateBackup()` merges per page key: it builds `entries`
+     from the backup's own pages, and a backup with none takes the
+     `!entries.length` early return — "the backup has no reviews matching the
+     current page list" — and changes nothing at all. An empty file is not a
+     reset, it is a no-op that reports success. The only thing that actually
+     clears local review state is the Clear saved reviews button, and that is
+     what the demo docs point at. */
 
   const decisions = {}
   for (const record of Object.values(state.pages)) {
     decisions[record.decision] = (decisions[record.decision] || 0) + 1
   }
+  /* Rounds as they exist IN THE FILE. The imported state carries one more per
+     page: importReviewStateBackup runs every record through mergeReviewRecord
+     with `updatedBy: 'import'`, which appends a boundary entry by design. So
+     12 pages generated with 20 rounds land as 32 after import — correct
+     behaviour, but the two numbers are not the same number, and the demo notes
+     quote the post-import one because that is what a reviewer sees. */
   const rounds = Object.values(state.pages).reduce((sum, r) => sum + r.history.length, 0)
+  const pageCount = Object.keys(state.pages).length
 
   console.log(`wrote ${outPath}`)
-  console.log(`wrote ${emptyPath}`)
   console.log(
-    `${Object.keys(state.pages).length} pages reviewed, ${rounds} recorded rounds — ` +
+    `${pageCount} pages reviewed, ${rounds} recorded rounds in the file ` +
+      `(${rounds + pageCount} after import adds its own round per page) — ` +
       Object.entries(decisions)
         .map(([d, n]) => `${d}: ${n}`)
         .join(', ')

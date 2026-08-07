@@ -429,8 +429,8 @@ second printing of anything.
 - **Any new layout assertion should sweep a range of widths, not pick one.**
   The overlap survived because the only two widths under test sat either side
   of it: `workspace-panels.spec.js` set 1800 to prove docking, and every other
-  spec ran at Playwright's 1280 default. `the mockup never overlaps the
-workspace, at any width` samples 1280→1920 in 40px steps for that reason.
+  spec ran at Playwright's 1280 default. The assertion added for it samples
+  1280→1920 in 40px steps for that reason.
 
 ### What the UX review removed, and why not to re-add it
 

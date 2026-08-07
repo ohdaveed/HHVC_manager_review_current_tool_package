@@ -23,17 +23,26 @@ bun run start        # builds and serves on http://127.0.0.1:8080
    - **Under 1700** → the workspace stacks underneath. Still correct, but you
      lose the side-by-side story. Reduce display scaling or move to a bigger
      screen if you can.
-3. **Set the machine to light mode.** Dark mode is now verified and clean, but
-   the mockup is deliberately pinned to light either way, so light avoids any
-   mismatch between what you say and what they see.
-4. In the sidebar under **Manager review**, click **Import reviews** and choose
-   `review/demo-review-state.json`. The Overview should now read **12/19
-   reviewed**.
+3. **Either colour scheme is fine.** Dark mode is verified and clean as of this
+   pass, and the mockup is pinned to light in both, so the page under review
+   looks identical either way.
+4. **Seed the review state, in this order.** Importing *merges* — it does not
+   replace — so skipping the clear step on a browser you have used before will
+   not give you 12/19, and will fold the demo values into whatever real review
+   work is already saved there.
+   1. If this browser holds review work you care about, export it first:
+      **What to export → "Everything, for another browser — JSON"** →
+      **Export reviews**.
+   2. **Clear saved reviews**, and confirm.
+   3. **Import reviews** → `review/demo-review-state.json`.
+
+   The Overview should then read **12/19 reviewed**.
 5. Press `w` to confirm the workspace opens and closes. Leave it open.
 
-If you want to show the empty first-run state at any point, import
-`review/demo-review-state-empty.json` to clear, and re-import the seed to
-restore. Both take about two seconds.
+To show the empty first-run state at any point, use **Clear saved reviews**, and
+re-import the seed to restore. There is no "empty backup" file to import: an
+empty import does nothing at all, because the import path merges per page and
+returns early when the file names none.
 
 ---
 
@@ -85,8 +94,16 @@ Picker → **How to respond to a notice of violation**.
 The Editor QA block reads **⛔ Blocked**.
 
 > "This page cannot go out until Legal confirms the notice templates and the
-> appeal windows. The tool says so on the page itself, and it will not let it be
-> marked approved by accident."
+> appeal windows. The tool carries that on the page itself, so it travels with
+> the content instead of living in someone's inbox."
+
+**Do not say the tool prevents approving it.** It does not — `editorStatus`
+drives the banner and nothing else; no decision path, queue action or shortcut
+consults it, so a reviewer can mark this page Approved immediately. The flag is
+advisory, and claiming enforcement is the kind of thing a director will test.
+If asked directly whether it is enforced, say no, and that the enforcement that
+does exist is the recorded decision trail — you can always see who approved a
+flagged page and when.
 
 Two other pages carry **Placeholder**: the residential hotel records lookup, and
 the mosquito workshop. Worth naming so nobody thinks the flags are decorative.
