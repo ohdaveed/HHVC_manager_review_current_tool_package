@@ -37,7 +37,7 @@ bun run start                 # production-like: build:netlify then serve dist/ 
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
-bun run test:e2e              # playwright test (106 specs across 13 files in tests/e2e/)
+bun run test:e2e              # playwright test (117 specs across 15 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -96,8 +96,8 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — thirteen spec files
-(106 specs), all UI-driven: navigation, editor panel, review workflow, review
+`bun run test:e2e` drives Playwright over `tests/e2e/` — fifteen spec files
+(117 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
 Overview insight cards. They share plain helper functions in
@@ -411,12 +411,26 @@ second printing of anything.
   entire effect lives. Without the pairing, "Hide workspace" and the `w`
   shortcut both appeared to do nothing. Any element that both carries `hidden`
   and declares its own `display` needs this.
-- **Below 1400px the panel returns under the canvas, in `grid-column: 2`** —
+- **Below 1700px the panel returns under the canvas, in `grid-column: 2`** —
   deliberately not `1 / -1`. Spanning both columns puts it beneath the sticky,
   full-height sidebar, which then slides over the queue's left edge as the
   reviewer scrolls. Axe caught that before a human did (57 queue cells reported
   as "background could not be determined, partially obscured by another
   element"); it is invisible in a screenshot taken at scroll position 0.
+- **The breakpoint is 1700px because that is where three columns actually
+  fit**, and it was 1400px for a while, which is not. `.browser-shell` carries
+  `flex-shrink: 0` and bottoms out near 780px wide, so it ends around x=1170
+  however narrow its column gets, while the panel starts at `100vw - 30vw`.
+  Those cross at ~1671px: every width from 1401px to there docked the panel
+  _on top of_ the mockup — 162px of overlap at 1440, 100px at 1536, 50px at 1600. Do not lower it again without re-measuring both numbers. The cost is
+  that a 14-inch laptop (1512 CSS px) now stacks rather than docks; squeezing
+  the mockup instead is the other way out and is rejected on purpose, since it
+  would misrepresent the page under review.
+- **Any new layout assertion should sweep a range of widths, not pick one.**
+  The overlap survived because the only two widths under test sat either side
+  of it: `workspace-panels.spec.js` set 1800 to prove docking, and every other
+  spec ran at Playwright's 1280 default. The assertion added for it samples
+  1280→1920 in 40px steps for that reason.
 
 ### What the UX review removed, and why not to re-add it
 

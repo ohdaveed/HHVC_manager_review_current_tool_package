@@ -12,7 +12,7 @@ window.HHVC_PAGES['pestsTopic'] = {
     'A building worker who handles pest or housing health issues',
   ],
   reading: 'Grade 6',
-  seoTitle: 'Healthy Housing and Vector Control',
+  seoTitle: 'Healthy Housing and Vector Control | SF.gov',
   metaDescription:
     'Report pest, vector, and housing health problems, and learn what Healthy Housing and Vector Control inspects.',
   editorNote:

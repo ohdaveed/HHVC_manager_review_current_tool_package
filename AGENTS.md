@@ -80,7 +80,7 @@ endpoints, so both AI paths are covered without a key or a paid call). **The lis
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-thirteen spec files, all UI-driven — navigation, editor panel, review
+fifteen spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, mockup PNG
 export, and the Overview insight cards — sharing plain helper functions in
@@ -324,11 +324,24 @@ makes one copy enough, so resist re-adding a second printing of anything.
   above it sets `display: flex`, and a class selector outranks the UA
   stylesheet's `[hidden]` rule — without the pairing, "Hide workspace" and the
   `w` shortcut both appeared to do nothing.
-- **Below 1400px the panel returns under the canvas, in `grid-column: 2`** —
+- **Below 1700px the panel returns under the canvas, in `grid-column: 2`** —
   not `1 / -1`. Spanning both columns puts it beneath the sticky, full-height
   sidebar, which then slides over the queue's left edge as you scroll. Axe
   caught that before a human did (57 queue cells reported as "partially obscured
   by another element"); it is not visible in a screenshot taken at scroll 0.
+- **The breakpoint is 1700px because that is where three columns actually
+  fit**, and it was 1400px for a while, which is not. `.browser-shell` carries
+  `flex-shrink: 0` and bottoms out near 780px wide, so it ends around x=1170
+  however narrow its column gets, while the panel starts at `100vw - 30vw`.
+  Those cross at ~1671px: every width from 1401px to there docked the panel
+  _on top of_ the mockup — 162px of overlap at 1440, 100px at 1536, 50px at 1600. Do not lower it again without re-measuring both numbers. The cost is
+  that a 14-inch laptop (1512 CSS px) now stacks rather than docks; squeezing
+  the mockup instead is rejected on purpose, since it would misrepresent the
+  page under review.
+- **Any new layout assertion should sweep a range of widths, not pick one.**
+  The overlap survived because the only two widths under test sat either side
+  of it: `workspace-panels.spec.js` set 1800 to prove docking, and every other
+  spec ran at Playwright's 1280 default.
 
 ### What the UX review removed, and why not to re-add it
 

@@ -8,6 +8,22 @@
       name="description"
       content="Review rebuilt SF.gov page mockups for Environmental Health and HHVC: Karl tags, metadata, and placement."
     />
+    <!-- Inline data URI rather than a file under public/, for the same reason
+         the Agency spotlight photo is one: `vite build --mode singlefile` emits
+         a single HTML file meant to be emailed and double-clicked, where a
+         relative path would 404. Without any icon declared the browser requests
+         /favicon.ico on every load and logs a 404 — harmless, but it was the
+         only console error left on the demo path, and it left a blank tab icon
+         on a projector.
+
+         Deliberately a neutral checklist glyph in the review layer's own blue,
+         NOT an SF.gov or city mark: this is an internal review instrument, and
+         an official-looking icon would misrepresent an unpublished mockup as a
+         city page. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232a60af'/%3E%3Cpath d='M4.2 8.4l2.4 2.4 5-5.2' fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
   </head>
   <body>
     <div class="app">

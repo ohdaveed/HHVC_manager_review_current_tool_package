@@ -71,6 +71,68 @@ test.describe('accessibility', () => {
     await expectNoSeriousViolations(page)
   })
 
+  /* The workspace scan above opens Overview and stops there, so for a long time
+     two of the three tabs were never scanned at all. Both were carrying serious
+     WCAG 2.1 AA failures when these tests were added: 44 color-contrast nodes on
+     Checks (--sfds-slate-3 on the docked panel's surface, 4.37:1) plus a
+     scrollable-region-focusable failure on the panel itself, and 4 more contrast
+     nodes on Help where a blanket `.dashboard-guidance-card span` rule reached
+     into the Karl tag legend and overrode the slate-2 it carries deliberately.
+
+     None of it was width-dependent — measured identically at 1280 and 1800 —
+     so the gap was never the viewport, it was which tabs anyone thought to
+     open. A tab that is not scanned is a tab with no accessibility coverage,
+     however thorough the scan of its neighbour. */
+  for (const tab of ['checks', 'help']) {
+    test(`workspace "${tab}" tab has no serious violations`, async ({ page }) => {
+      await gotoFresh(page)
+      await openWorkspaceTab(page, tab)
+      await expectNoSeriousViolations(page)
+    })
+  }
+
+  /* Dark mode, which no scan had ever run in.
+
+     The theme layer inverts the neutral ramp by ROLE rather than by value, and
+     the mockup is pinned back to light inside .browser-shell so a reviewer is
+     never approving a dark page that does not exist. Both are good decisions
+     and both hid a failure until something measured them:
+
+     - `color` is inherited, and inheritance carries the computed value, not the
+       var() reference. `body` resolved --sfds-slate-1 against the dark :root and
+       computed #f0f1f2; every element inside the shell without a colour rule of
+       its own inherited that straight onto the shell's light background. #f0f1f2
+       on #fcfcfc is 1.1:1 — most of the body copy on every page, invisible.
+       Re-pointing the tokens could not fix it; .browser-shell has to restate
+       `color` so the subtree inherits something correct.
+     - @sfgov/design-system ships a bare `kbd` element rule hardcoding a
+       light-mode blue with no dark counterpart. An element selector outranks
+       inheritance, so it survived the panel's colour and landed at 2.09:1.
+
+     Scanning the three tabs and two pages rather than everything: the chrome is
+     what inverts, and the mockup is theme-pinned, so one Agency page and one
+     Transaction is enough to catch a leak across the pinning boundary. */
+  test.describe('dark mode', () => {
+    for (const tab of ['overview', 'checks', 'help']) {
+      test(`workspace "${tab}" tab has no serious violations in dark mode`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: 'dark' })
+        await gotoFresh(page)
+        await openWorkspaceTab(page, tab)
+        if (tab === 'overview') await page.waitForSelector('.review-queue-table-row')
+        await expectNoSeriousViolations(page)
+      })
+    }
+
+    for (const key of ['pestsTopic', 'payFee']) {
+      test(`page "${key}" has no serious violations in dark mode`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: 'dark' })
+        await gotoFresh(page)
+        if (key !== 'pestsTopic') await selectPage(page, key)
+        await expectNoSeriousViolations(page)
+      })
+    }
+  })
+
   test('shortcuts help dialog has no serious violations', async ({ page }) => {
     await gotoFresh(page)
     await page.locator('#mockPage h1').first().click()

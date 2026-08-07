@@ -94,7 +94,15 @@ import { hasValidPageData } from './utils.js'
     panels.forEach((panel) => {
       const isActive = panel.getAttribute('data-workspace-panel') === tabId
       panel.hidden = !isActive
-      if (isActive) panel.setAttribute('tabindex', '-1')
+      /* tabindex="0", not "-1". These panels scroll — the Checks panel runs
+         well past a viewport on a page with many rules — and a scrollable
+         region that is not in the tab order cannot be scrolled by a keyboard
+         user at all: there is no way to put the caret inside it. That is
+         WCAG 2.1 AA (axe's `scrollable-region-focusable`), and it went unseen
+         because no accessibility scan opened this tab. "0" still allows the
+         programmatic focus "-1" was chosen for, so the focus management on tab
+         switch is unaffected; it only adds the stop a keyboard user needs. */
+      if (isActive) panel.setAttribute('tabindex', '0')
       else panel.removeAttribute('tabindex')
     })
 

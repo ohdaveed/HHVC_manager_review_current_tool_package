@@ -184,8 +184,30 @@
    design and squeezing it to make room misrepresents the thing under review.
    The workspace returns to its old position under the canvas, spanning the
    full width — the original layout, kept as the narrow-screen fallback rather
-   than as the default. */
-@media (max-width: 1400px) {
+   than as the default.
+
+   1700px, not 1400px. The intent was always "dock only where three columns
+   fit"; 1400 was simply the wrong number for it, and between 1401px and
+   ~1672px the two columns collided. The arithmetic: .browser-shell carries
+   `flex-shrink: 0` (css/styles.css) and will not go below about 780px, so it
+   ends at roughly x=1170 no matter how narrow the column gets, while this
+   panel starts at `100vw - 30vw` = 0.7 x viewport. Those cross at 1170/0.7 =
+   1671px, and below that the mockup runs underneath the sticky workspace —
+   162px of overlap at 1440px, 100px at 1536px, 50px at 1600px.
+
+   That band is not exotic; it is where laptops live. A 14-inch MacBook Pro is
+   1512 CSS px, a 13-inch Air 1470, and any 1920px screen at the 125% scaling
+   Windows ships by default is 1536. The regression hid because the one test
+   that measures the docked geometry (tests/e2e/workspace-panels.spec.js) sets
+   1800x1000 — above the band — and every other spec runs at Playwright's
+   1280 default, below it. The bug lived entirely in the gap between the two
+   widths anyone had thought to check.
+
+   Raising the breakpoint trades docking away on those laptops rather than
+   rendering it broken there. Making the mockup shrink instead is the other
+   way out and is deliberately not taken: it would misrepresent the page under
+   review, which is the whole reason the shell refuses to shrink. */
+@media (max-width: 1700px) {
   .app.workspace-docked,
   .app.sidebar-collapsed.workspace-docked {
     grid-template-columns: 370px minmax(0, 1fr);
