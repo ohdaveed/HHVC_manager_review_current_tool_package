@@ -184,9 +184,84 @@ function buildContentUserPrompt({ prompt, page, issues, previousDraft }) {
   return parts.join('\n\n')
 }
 
+/**
+ * Build the system prompt for the compliance-audit task.
+ *
+ * Byte-stable like buildContentSystemPrompt: the retrieved knowledge chunks
+ * are per-request and belong in the user turn, never here — putting them here
+ * would invalidate the provider-side prompt cache on every call, since a
+ * different page retrieves different chunks.
+ * @returns {{system: string}}
+ */
+function buildComplianceAuditSystemPrompt() {
+  const system = `You are a compliance auditor for San Francisco's Healthy Housing and Vector
+Control (HHVC) program, reviewing a page mockup against the HHVC policy and
+SF.gov style reference material you are given for each request.
+
+${GUARDRAILS}
+
+<audit_rules>
+- Every source you are given carries an id attribute. Ground every finding in
+  one or more of those ids via citedChunkIds. Never cite an id that was not
+  given to you, and never leave citedChunkIds empty.
+- If nothing in the provided sources supports a finding, do not report it.
+  Absence of evidence is not evidence of a problem.
+- severity "error" means the page contradicts or omits something a cited
+  source requires. "warning" is a real but lower-stakes gap. "note" is worth a
+  human's attention but is not itself a compliance issue.
+- This is an audit, not a rewrite. Name the issue and recommend what a human
+  editor should check or change — do not draft replacement copy.
+</audit_rules>`
+
+  return { system }
+}
+
+/**
+ * Build the user turn for a compliance-audit request.
+ * @param {object} options
+ * @param {object} options.page The page being audited.
+ * @param {Array<{chunk: {id: string, sourceFile: string, headingPath: string|null, content: string}, score: number}>} options.retrieved
+ *   Top-K knowledge chunks, most relevant first.
+ * @param {string[]} [options.issues] Citation failures from a previous attempt.
+ * @param {object} [options.previousDraft] The draft those failures came from.
+ * @returns {string}
+ */
+function buildComplianceAuditUserPrompt({ page, retrieved, issues, previousDraft }) {
+  const sources = retrieved
+    .map(({ chunk }) => {
+      const headingAttr = chunk.headingPath ? ` heading="${chunk.headingPath}"` : ''
+      return `<source id="${chunk.id}" file="${chunk.sourceFile}"${headingAttr}>\n${chunk.content}\n</source>`
+    })
+    .join('\n\n')
+
+  const parts = [
+    `<cited_sources>\n${sources}\n</cited_sources>`,
+    `<page_under_audit>\n${serializePageForPrompt(page)}\n</page_under_audit>`,
+  ]
+
+  if (issues && issues.length) {
+    // The retry turn, mirroring buildContentUserPrompt's: the rejected draft
+    // has to travel with the instruction, or "fix these and change nothing
+    // else" is not followable.
+    if (previousDraft) {
+      parts.push(`<previous_draft>\n${JSON.stringify(previousDraft, null, 2)}\n</previous_draft>`)
+    }
+    parts.push(
+      `<validation_failures>\nThe draft above failed validation. Return the same audit with ` +
+        `every item below fixed, and change nothing else.\n\n${issues
+          .map((issue) => `- ${issue}`)
+          .join('\n')}\n</validation_failures>`
+    )
+  }
+
+  return parts.join('\n\n')
+}
+
 module.exports = {
   buildContentSystemPrompt,
   buildContentUserPrompt,
+  buildComplianceAuditSystemPrompt,
+  buildComplianceAuditUserPrompt,
   loadStyleCorpus,
   GUARDRAILS,
 }

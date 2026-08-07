@@ -1,0 +1,108 @@
+// Orchestration for the compliance-audit task: embed the page, retrieve the
+// most relevant knowledge chunks, ground a provider call in them, validate
+// citations against the retrieved set, retry once if any are unverifiable.
+// Sibling of index.js's generateContent — kept separate rather than folded
+// into it, since generateContent() stays exactly what it is today
+// (hardcoded to PAGE_OUTPUT_SCHEMA/validateGeneratedPage) and this task's
+// Gemini-only embedding dependency and citation-checking retry loop have
+// nothing to do with the page-drafting path.
+const { serializePageForPrompt, COMPLIANCE_AUDIT_OUTPUT_SCHEMA } = require('./schemas')
+const { buildComplianceAuditSystemPrompt, buildComplianceAuditUserPrompt } = require('./prompts')
+const { resolveProvider } = require('./providers')
+const gemini = require('./provider-gemini')
+const { retrieveRelevantChunks } = require('./knowledge-retrieval')
+const { findInvalidCitations } = require('./validate-compliance-audit')
+const { DISCLOSURE, addUsage } = require('./index')
+
+/** Chunks retrieved per audit. Small enough that every retrieved chunk
+ * plausibly fits the page under review, large enough to cover more than one
+ * policy document when the page touches more than one topic. */
+const TOP_K = 6
+
+// One retry, not a loop — same reasoning as index.js's generateContent:
+// a second attempt with the specific bad citations named fixes most
+// mechanical mistakes, and a third rarely adds anything.
+const MAX_ATTEMPTS = 2
+
+/**
+ * @param {object} options
+ * @param {object} options.page The page open in the mockup.
+ * @param {string} [options.provider] Which provider GENERATES the audit
+ *   text. Independent of embeddings, which always run on Gemini regardless
+ *   (see provider-gemini.js's embedContent doc comment) — a deployment can
+ *   generate on Anthropic while still using Gemini purely for retrieval.
+ * @param {AbortSignal} [options.signal]
+ * @returns {Promise<object>}
+ */
+async function generateComplianceAudit({ page, provider, signal }) {
+  const selected = resolveProvider(provider)
+  const pageText = serializePageForPrompt(page)
+
+  const [queryEmbedding] = await gemini.embedContent([pageText], 'QUERY')
+  const retrieved = retrieveRelevantChunks(queryEmbedding, TOP_K)
+  const retrievedIds = new Set(retrieved.map((entry) => entry.chunk.id))
+  const chunksById = new Map(retrieved.map((entry) => [entry.chunk.id, entry.chunk]))
+
+  const { system } = buildComplianceAuditSystemPrompt()
+
+  let issues = []
+  let generated = null
+  let attempts = 0
+  const usage = {}
+  const usageByAttempt = []
+
+  while (attempts < MAX_ATTEMPTS) {
+    const previousDraft = generated ? generated.object : undefined
+    attempts += 1
+    const userPrompt = buildComplianceAuditUserPrompt({
+      page,
+      retrieved,
+      issues: attempts > 1 ? issues : undefined,
+      previousDraft: attempts > 1 ? previousDraft : undefined,
+    })
+
+    generated = await selected.generateObject({
+      system,
+      userPrompt,
+      jsonSchema: COMPLIANCE_AUDIT_OUTPUT_SCHEMA,
+      signal,
+    })
+    addUsage(usage, generated.usage)
+    usageByAttempt.push(generated.rawUsage || {})
+
+    issues = findInvalidCitations(generated.object, retrievedIds)
+    if (issues.length === 0) break
+  }
+
+  // The source_file/headingPath a reviewer reads is resolved server-side from
+  // the matched chunk row, never echoed back from the model — real corpus
+  // metadata, not model-generated text, even for a finding whose citation
+  // failed validation (a reviewer can still see what it WAS trying to cite).
+  const findings = generated.object.findings.map((finding) => ({
+    ...finding,
+    citedSources: (finding.citedChunkIds || [])
+      .filter((id) => chunksById.has(id))
+      .map((id) => {
+        const chunk = chunksById.get(id)
+        return { id: chunk.id, sourceFile: chunk.sourceFile, headingPath: chunk.headingPath }
+      }),
+  }))
+
+  return {
+    task: 'compliance-audit',
+    // The RESOLVED provider, matching generateContent's convention: an
+    // unnamed request still has to report which model actually answered.
+    provider: selected.name,
+    model: generated.model,
+    attempts,
+    valid: issues.length === 0,
+    issues,
+    findings,
+    summary: generated.object.summary,
+    usage,
+    usageByAttempt,
+    disclosure: DISCLOSURE,
+  }
+}
+
+module.exports = { generateComplianceAudit, TOP_K, MAX_ATTEMPTS }
