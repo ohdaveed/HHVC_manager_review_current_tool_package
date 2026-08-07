@@ -65,8 +65,8 @@ report that as a broken deploy — it's Netlify's visitor access control
 (`projectAccessControls.requiresSSOTeamLogin` /
 `requiresPassword` in the `get-projects` response), a site-wide gate
 separate from whether the build succeeded. Report it as its own finding:
-*the deploy is correct, but the live URL currently requires Netlify team SSO
-to view* — worth flagging on its own, since this tool's whole purpose is a
+_the deploy is correct, but the live URL currently requires Netlify team SSO
+to view_ — worth flagging on its own, since this tool's whole purpose is a
 mockup manager-review reviewers open directly, and a team-SSO gate means
 reviewers without Netlify org access can't. (Confirmed present as of
 2026-08-07 — checked the primary URL, the `main--hhvc.netlify.app` branch
@@ -85,7 +85,7 @@ https://hhvc.netlify.app/`. Vite content-hashes its output filenames, so if
   the hashes match, the bytes match — no ambiguity, no guessing from
   timestamps.
 - **Live browser check** (when you want to confirm a specific user-visible
-  behavior, not just that *some* bundle shipped): navigate there with the
+  behavior, not just that _some_ bundle shipped): navigate there with the
   Playwright or chrome-devtools MCP, check the console for errors the way
   `bun run dev` surfaced the review-insights bug, and look for the specific
   thing the merge was supposed to change. This is the only way to catch a

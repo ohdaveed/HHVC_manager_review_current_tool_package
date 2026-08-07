@@ -839,23 +839,32 @@ round-trip logic lives in `js/review-queue-import.js` (CSV) and
 both merge through the same `mergeReviewRecord` per-page-key path the sync
 backend uses, while `js/review-queue.js` wires the handlers and
 `js/manager-review-export.js` exports current-page snapshots. **Any change to
-any of these modules, or to `js/review-merge.js`, must be manually verified
-before being called done:** export a snapshot, re-import it, and confirm
-existing decisions/notes are still present rather than wiped.
-**`tests/e2e/import-export.spec.js` is the only automated coverage, and there
-is no API-level or unit layer beneath it.** It drives both directions through
-the real UI (export button clicks, file-input imports) and asserts
-`history.at(-1).updated_by === 'import'`, which is what proves merge rather
-than wipe. `review-import-export.spec.js` used to be described here as the
-API-level half; it was deleted because it never was one — it hand-rolled the
-merge inside `page.evaluate` instead of calling `importReviewStateBackup()`,
-so it stayed green against the wholesale replace that destroyed reviews once
-already.
+any of these modules, or to `js/review-merge.js`, must be verified against the
+round trip itself before being called done:** export a snapshot, re-import it,
+and confirm existing decisions/notes are still present rather than wiped.
+
+**Two e2e specs cover this, and the split between them is the interesting
+part.** Both drive the real UI (export button clicks, file-input imports),
+because `review-import-export.spec.js` — once described here as the API-level
+half — was deleted for not doing so: it hand-rolled the merge inside
+`page.evaluate` instead of calling `importReviewStateBackup()`, so it stayed
+green against the wholesale replace that destroyed reviews once already.
+
+- **`tests/e2e/import-export.spec.js`** — both directions end to end, asserting
+  `history.at(-1).updated_by === 'import'`, which is what proves merge rather
+  than wipe. Its merge tests seed state through `seedState()` (a direct
+  `localStorage` write, so the export path never runs), and its round-trip test
+  clears state before re-importing, so nothing is left for a wipe to destroy.
+- **`tests/e2e/merge-verification.spec.js`** — the shape that misses, and the
+  one the warning is actually about: re-importing an **older snapshot on top of
+  live state that has moved on**. A page reviewed after the export is absent
+  from the file, so a wholesale replace drops it. Everything routes through the
+  sidebar fields and the real buttons; nothing touches review state directly.
 
 Nothing can unit-test this path today: both modules are browser-only, with no
-`module.exports` to import from Bun. **That gap is why the manual check above
-is mandatory rather than advisory** — on this one path, a green CI run is not
-evidence the round-trip still merges.
+`module.exports` to import from Bun. **A green CI run is evidence for those two
+scenarios and nothing else on this path** — anything a change puts at risk
+outside them is still yours to verify by hand.
 
 ### Review-state sync backend (optional)
 
