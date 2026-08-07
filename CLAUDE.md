@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
+bun run test                  # bun test over the 25 unit-test files in tests/ (533 tests)
 bun run test:e2e              # playwright test (123 specs across 16 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,13 +65,13 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs twenty-two Bun unit-test files under `tests/`:
+wrong). `bun run test` runs 25 Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `doc-counts`
+decision list against the canonical table in `js/utils.js`), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
 `review-merge`,
 `review-api-server` (which spawns
