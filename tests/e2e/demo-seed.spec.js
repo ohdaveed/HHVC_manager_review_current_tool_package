@@ -24,11 +24,18 @@ const SEED = path.resolve(__dirname, '../../review/demo-review-state.json')
    reviewed", and review/demo-readiness-notes.md adds "four decision types". Both
    are claims about this file, and neither has anything holding it true.
 
+   BOTH HALVES OF THE RATIO ARE PINNED, and the denominator is not redundant.
+   Pinning only the seed count is what let "12/19" go stale the moment a
+   twentieth page was added: the seed was untouched and correct, the docs were
+   wrong, and a guard watching only the numerator stayed green through it. The
+   ratio is the claim, so the ratio is what gets held.
+
    Written as the decision map rather than as string literals: js/utils.js owns
    the decision vocabulary and tests/decision-vocabulary.test.js exists to stop
    the module-boundary restatements, so a spec spelling out "Approved with edits"
    would be one more copy to keep in step. */
 const EXPECTED_SEEDED_PAGES = 12
+const EXPECTED_TOTAL_PAGES = 20
 const EXPECTED_DECISION_MIX = {
   [DECISIONS.approved]: 4,
   [DECISIONS.approvedWithEdits]: 4,
@@ -65,6 +72,7 @@ test.describe('demo seed', () => {
        Regenerating the seed should therefore require editing the constants at
        the top of this file — that is the point, not an inconvenience. */
     expect(seededCount).toBe(EXPECTED_SEEDED_PAGES)
+    expect(totalPages).toBe(EXPECTED_TOTAL_PAGES)
     expect(seededCount).toBeLessThan(totalPages)
 
     const decisionCounts = {}

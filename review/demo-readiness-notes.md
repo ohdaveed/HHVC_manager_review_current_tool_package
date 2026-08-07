@@ -25,7 +25,7 @@ Then seed the review state. **Order matters. Importing merges per page, and for
 a page the file names, the file wins** — the seed's decision, notes, risks,
 owner and reviewer replace whatever was there. Pages the file does *not* name
 are left untouched. So on a browser you have used before, importing the seed
-both fails to give you a clean 12 of 19 *and* overwrites real review work on any
+both fails to give you a clean 12 of 20 *and* overwrites real review work on any
 of those 12 pages:
 
 1. If this browser holds review work you care about, export it first
@@ -35,9 +35,9 @@ of those 12 pages:
    actually clears local state.
 3. Import `review/demo-review-state.json` through **Import reviews**.
 
-Without the seed the tool opens at 0 of 19 and every panel that makes the case —
+Without the seed the tool opens at 0 of 20 and every panel that makes the case —
 progress, decision mix, activity over time, history — is empty. With it: 12 of
-19 reviewed, four decision types, and 32 recorded review rounds (the file
+20 reviewed, four decision types, and 32 recorded review rounds (the file
 carries 20; the import records one more per page, by design, so the trail shows
 who loaded them).
 
@@ -98,7 +98,7 @@ validation, and the lint step.
 
 **"Why does every page say Needs review?"**
 That block is labelled *Editor-only QA note / Do not publish* and it renders on
-all 19 pages by design — the default is "not yet signed off" and a page has to
+all 20 pages by design — the default is "not yet signed off" and a page has to
 earn its way out of it. Three pages carry a stronger explicit flag, below.
 
 **"You said 4 blocked but I only count 2."**
@@ -107,31 +107,31 @@ both mean "cannot publish yet." The count and the filter always agree; they are
 one control. (An earlier tile that counted one thing and labelled it another was
 removed for exactly this reason.)
 
-**"Your own checks are failing on 10 items."**
+**"Your own checks are failing on 11 items."**
 That is the tool working. They are real, specific, and each cites the standard
-it comes from — ten failing checks across the nineteen pages:
+it comes from — eleven failing checks across the twenty pages:
 
 - **button text over 25 characters** — 4 pages (five buttons in total;
   `insectsReport` has two, so the page count and the button count differ)
 - **average sentence length** over the Grade 6 target — 2 pages
 - **a generic "click here" style link** — 1 page
-- **contractions** — 1 page
+- **contractions** — 2 pages
 - **SEO titles missing the site suffix** — 2 pages
 
 None is a blocker; all are one-line content edits. A tool that reported
-everything passing on a 19-page draft would be the thing to worry about.
+everything passing on a 20-page draft would be the thing to worry about.
 
 **"Is it accessible?"**
 Automated WCAG 2.1 A and AA scans run on every commit and the build fails on a
 serious or critical violation. Coverage, precisely:
 
 - **Light mode** — one representative page per content type (**six** of the
-  nineteen), plus all three workspace tabs and the shortcuts dialog.
+  twenty), plus all three workspace tabs and the shortcuts dialog.
 - **Dark mode** — all three workspace tabs, plus **two** pages (the Agency page
   and one Transaction).
 
 Be precise about that if pressed. It is representative coverage, chosen because
-the nineteen pages are built from the same render functions, not a scan of every
+the twenty pages are built from the same render functions, not a scan of every
 page — so a defect in markup unique to one unscanned page could still get
 through. Those scans caught five of the six defects this pass fixed.
 
@@ -177,7 +177,7 @@ way to reset between runs — it is destructive by design, not a trap.
   What that does and does not license: **the paths this demo actually walks are
   clean in both themes**, which is what matters tomorrow. It is not a
   whole-product guarantee — the dark-mode scan covers the three workspace tabs
-  and two of the nineteen pages, so the other seventeen have never been rendered
+  and two of the twenty pages, so the other eighteen have never been rendered
   under a dark scan. The reason that is a small risk rather than an open one is
   structural rather than statistical: the mockup declares `color-scheme: light`
   and re-pins its colours, so page content renders light whatever the system
