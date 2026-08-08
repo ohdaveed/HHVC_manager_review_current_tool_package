@@ -244,7 +244,32 @@ const groundingPageSchema = z
   })
 
 /**
+ * The `rewrite-field` task's output: one replacement string, nothing else.
+ *
+ * Deliberately minimal. The field's identity (which paragraph, which section)
+ * is the browser's to track — the model is handed text and asked for text, so
+ * it has no opportunity to relocate a rewrite onto a different field.
+ */
+const REWRITE_OUTPUT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['rewrittenText'],
+  properties: {
+    rewrittenText: {
+      type: 'string',
+      description: 'The rewritten field text, plain prose, markdown links preserved.',
+    },
+  },
+}
+
+/**
  * Inbound POST /api/ai/generate body.
+ *
+ * A discriminated union rather than one object with optional fields. The two
+ * tasks genuinely differ: `content` cannot work without a prompt and
+ * `rewrite-field` has no use for one. Expressing that as a single shape would
+ * mean making `prompt` optional for both, which silently drops the guarantee
+ * that a content request always carries an instruction.
  *
  * `provider` names a REGISTERED provider, not necessarily a configured one.
  * The enum only asks "is this a provider this build knows about?"; whether the
@@ -260,15 +285,25 @@ const groundingPageSchema = z
  * would reject the request as malformed before `resolveProvider` ever ran. The
  * failure would look like a client bug rather than a missed registration.
  */
-const generateRequestSchema = z.object({
-  task: z.enum(['content']),
-  provider: z.enum(allProviderNames()).optional(),
-  prompt: z.string().min(1).max(8000),
-  page: groundingPageSchema.optional(),
-})
+const generateRequestSchema = z.discriminatedUnion('task', [
+  z.object({
+    task: z.literal('content'),
+    provider: z.enum(allProviderNames()).optional(),
+    prompt: z.string().min(1).max(8000),
+    page: groundingPageSchema.optional(),
+  }),
+  z.object({
+    task: z.literal('rewrite-field'),
+    provider: z.enum(allProviderNames()).optional(),
+    fieldText: z.string().min(1).max(8000),
+    instruction: z.string().max(2000).optional(),
+    page: groundingPageSchema.optional(),
+  }),
+])
 
 module.exports = {
   PAGE_OUTPUT_SCHEMA,
+  REWRITE_OUTPUT_SCHEMA,
   PAGE_TYPES,
   SECTION_COMPONENTS,
   generateRequestSchema,

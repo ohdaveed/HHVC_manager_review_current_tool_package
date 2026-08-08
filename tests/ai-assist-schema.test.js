@@ -15,6 +15,7 @@ const {
   PAGE_TYPES,
   SECTION_COMPONENTS,
   generateRequestSchema,
+  REWRITE_OUTPUT_SCHEMA,
   measureDepth,
   MAX_PAGE_DEPTH,
 } = require('../build_scripts/ai/schemas')
@@ -357,5 +358,47 @@ describe('grounding page size is measured on what is actually sent', () => {
       const result = generateRequestSchema.safeParse({ task: 'content', prompt: 'x', page })
       expect(`${key}: ${result.success}`).toBe(`${key}: true`)
     }
+  })
+})
+
+describe('generateRequestSchema task branches', () => {
+  test('still rejects a content request with no prompt', () => {
+    const result = generateRequestSchema.safeParse({ task: 'content' })
+    expect(result.success).toBe(false)
+  })
+
+  test('accepts a rewrite-field request with fieldText and no prompt', () => {
+    const result = generateRequestSchema.safeParse({
+      task: 'rewrite-field',
+      fieldText: 'Some copy to improve.',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('rejects a rewrite-field request with no fieldText', () => {
+    const result = generateRequestSchema.safeParse({ task: 'rewrite-field' })
+    expect(result.success).toBe(false)
+  })
+
+  test('accepts an optional instruction on rewrite-field', () => {
+    const result = generateRequestSchema.safeParse({
+      task: 'rewrite-field',
+      fieldText: 'Some copy.',
+      instruction: 'Make it shorter.',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('rejects an unknown task', () => {
+    const result = generateRequestSchema.safeParse({ task: 'audit', fieldText: 'x' })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('REWRITE_OUTPUT_SCHEMA', () => {
+  test('requires a rewrittenText string and forbids extra properties', () => {
+    expect(REWRITE_OUTPUT_SCHEMA.required).toEqual(['rewrittenText'])
+    expect(REWRITE_OUTPUT_SCHEMA.additionalProperties).toBe(false)
+    expect(REWRITE_OUTPUT_SCHEMA.properties.rewrittenText.type).toBe('string')
   })
 })
