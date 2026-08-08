@@ -5,9 +5,15 @@
 // the registry in providers.js, so a third provider is a line there and nothing
 // in this file.
 const { loadPageData } = require('../load-pages')
-const { buildContentSystemPrompt, buildContentUserPrompt, loadStyleCorpus } = require('./prompts')
-const { PAGE_OUTPUT_SCHEMA } = require('./schemas')
-const { validateGeneratedPage } = require('./validate-output')
+const {
+  buildContentSystemPrompt,
+  buildContentUserPrompt,
+  buildRewriteSystemPrompt,
+  buildRewriteUserPrompt,
+  loadStyleCorpus,
+} = require('./prompts')
+const { PAGE_OUTPUT_SCHEMA, REWRITE_OUTPUT_SCHEMA } = require('./schemas')
+const { validateGeneratedPage, validateRewrite } = require('./validate-output')
 const { REGISTRY, configuredProviders, resolveProvider } = require('./providers')
 
 // One retry, not a loop. A second attempt with the specific failures named
@@ -75,7 +81,15 @@ function getCapabilities() {
     models,
     providerLabels: labels,
     defaultProvider: configuredProviders()[0]?.name || null,
-    tasks: knowledgeBaseReady ? ['content', 'compliance-audit'] : ['content'],
+    // Every task this deployment can actually run, composed from BOTH gates.
+    // `rewrite-field` needs only a configured provider, which getting here
+    // already implies; `compliance-audit` additionally needs an ingested
+    // knowledge base. The browser reads this list to decide whether to mount
+    // the selection-rewrite affordance at all — a deploy with no /api/ai/*
+    // runtime must show no button rather than one that always fails.
+    tasks: knowledgeBaseReady
+      ? ['content', 'compliance-audit', 'rewrite-field']
+      : ['content', 'rewrite-field'],
     groundedBy: corpus.files,
     pageCount: Object.keys(getPages()).length,
     disclosureRequired: true,
@@ -212,8 +226,86 @@ async function generateContent({ prompt, page, provider, signal }) {
   }
 }
 
+/**
+ * Rewrite one field of body copy, validate it, and retry once with the
+ * failures named.
+ *
+ * A SIBLING of generateContent, not a generalization of it. The two share only
+ * the retry/usage/disclosure envelope, and folding them into one dispatcher
+ * would put the page-draft path — the one with real users and real coverage
+ * today — at risk for no gain. The cost is the duplicated loop below, which is
+ * the cheaper of the two mistakes.
+ * @param {object} options
+ * @param {string} options.fieldText The whole field to rewrite.
+ * @param {string} [options.instruction] The reviewer's optional steer.
+ * @param {object} [options.page] The page open in the mockup, as context.
+ * @param {string} [options.provider] Unset takes the deployment's default; a
+ *   name that is not configured throws rather than falling back, so a rewrite
+ *   is never attributed to a model that did not produce it.
+ * @param {AbortSignal} [options.signal]
+ * @returns {Promise<object>}
+ */
+async function generateRewrite({ fieldText, instruction, page, provider, signal }) {
+  // Resolved before any work is done, so an unknown provider costs nothing.
+  const selected = resolveProvider(provider)
+  const { system, groundedBy } = buildRewriteSystemPrompt()
+
+  let issues = []
+  let generated = null
+  let attempts = 0
+  const usage = {}
+  const usageByAttempt = []
+
+  while (attempts < MAX_ATTEMPTS) {
+    // The previous REWRITE string, not the whole object — that is what the
+    // retry turn asks the model to correct.
+    const previousDraft = generated ? generated.object?.rewrittenText : undefined
+    attempts += 1
+    const userPrompt = buildRewriteUserPrompt({
+      fieldText,
+      instruction,
+      page,
+      issues: attempts > 1 ? issues : undefined,
+      previousDraft: attempts > 1 ? previousDraft : undefined,
+    })
+
+    generated = await selected.generateObject({
+      system,
+      userPrompt,
+      jsonSchema: REWRITE_OUTPUT_SCHEMA,
+      signal,
+    })
+    addUsage(usage, generated.usage)
+    usageByAttempt.push(generated.rawUsage || {})
+
+    const validation = validateRewrite(generated.object, fieldText)
+    issues = validation.issues
+    if (validation.valid) break
+  }
+
+  return {
+    task: 'rewrite-field',
+    // The RESOLVED provider, for the same reason the content task reports it:
+    // the panel's meta line attributes the suggestion to a specific model.
+    provider: selected.name,
+    model: generated.model,
+    attempts,
+    // Always resolves with the rewrite, valid or not. A suggestion that dropped
+    // a link is still useful to a reviewer who can SEE that it dropped a link —
+    // hiding it would leave them with a spinner and no explanation.
+    valid: issues.length === 0,
+    issues,
+    result: generated.object,
+    usage,
+    usageByAttempt,
+    groundedBy,
+    disclosure: DISCLOSURE,
+  }
+}
+
 module.exports = {
   generateContent,
+  generateRewrite,
   getCapabilities,
   listModels,
   getPages,
