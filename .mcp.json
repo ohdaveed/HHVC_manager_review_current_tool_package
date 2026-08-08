@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hhvc-sqlite": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/database-server", ".data/review-state.local.db"]
+    }
+  }
+}

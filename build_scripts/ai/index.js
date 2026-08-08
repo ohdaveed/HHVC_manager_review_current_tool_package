@@ -66,15 +66,23 @@ function getCapabilities() {
     models[provider.name] = configured ? provider.getModel() : null
     labels[provider.name] = provider.label
   }
+  // Read lazily, not at module load: knowledge_chunks can go from empty to
+  // populated (a fresh `bun run ingest`) while the server keeps running.
+  const { isComplianceAuditAvailable, countKnowledgeChunks } = require('./knowledge-retrieval')
+  const knowledgeBaseReady = isComplianceAuditAvailable()
   return {
     providers,
     models,
     providerLabels: labels,
     defaultProvider: configuredProviders()[0]?.name || null,
-    tasks: ['content'],
+    tasks: knowledgeBaseReady ? ['content', 'compliance-audit'] : ['content'],
     groundedBy: corpus.files,
     pageCount: Object.keys(getPages()).length,
     disclosureRequired: true,
+    // So the browser panel can tell "no Gemini key" apart from "key present,
+    // nobody has run `bun run ingest` yet" — both are real, distinct empty
+    // states a reviewer could hit, and they want different copy.
+    knowledgeBase: { ready: knowledgeBaseReady, chunkCount: countKnowledgeChunks() },
   }
 }
 

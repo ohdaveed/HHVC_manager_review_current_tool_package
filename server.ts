@@ -10,6 +10,12 @@ import { mergeReviewRecord } from "./js/review-merge.js"
 import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 // @ts-ignore - plain JS modules, CommonJS; the AI assist service (see below).
 import { generateContent, getCapabilities, listModels } from "./build_scripts/ai/index.js"
+// @ts-ignore - plain JS module, CommonJS. The compliance-audit task's
+// orchestration — kept out of index.js because its Gemini-only embedding
+// dependency has nothing to do with the page-drafting path.
+import { generateComplianceAudit } from "./build_scripts/ai/compliance-audit.js"
+// @ts-ignore - plain JS module, CommonJS.
+import { isComplianceAuditAvailable } from "./build_scripts/ai/knowledge-retrieval.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { generateRequestSchema, MAX_REQUEST_BODY_BYTES } from "./build_scripts/ai/schemas.js"
 // @ts-ignore - plain JS module, CommonJS. Provider-neutral on purpose: these
@@ -23,7 +29,7 @@ import {
 } from "./build_scripts/ai/errors.js"
 // @ts-ignore - plain JS module, CommonJS. The registry, so nothing below has to
 // name a provider or read a provider's API key directly.
-import { hasConfiguredProvider } from "./build_scripts/ai/providers.js"
+import { hasConfiguredProvider, getProvider } from "./build_scripts/ai/providers.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { numberFromEnv } from "./build_scripts/ai/env.js"
 // Deliberately NOT importing @anthropic-ai/sdk here. It was imported for its
@@ -1033,6 +1039,20 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
       )
     }
 
+    if (parsed.data.task === "compliance-audit" && !isComplianceAuditAvailable()) {
+      const geminiConfigured = Boolean(getProvider("gemini")?.isConfigured())
+      return jsonResponse(
+        {
+          error: geminiConfigured
+            ? "No knowledge base has been ingested yet. Run `bun run ingest`."
+            : "Compliance audits require GEMINI_API_KEY (used for embeddings), " +
+              "even when generating with a different provider.",
+        },
+        501,
+        context.corsHeaders
+      )
+    }
+
     // Two cancellation sources, combined. req.signal stops an abandoned
     // generation from costing tokens when the reviewer navigates away or hits
     // cancel; the timeout bounds the case where the client stays connected but
@@ -1044,7 +1064,10 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     const signal = AbortSignal.any([req.signal, timeout])
 
     try {
-      const result = await generateContent({ ...parsed.data, signal })
+      const result =
+        parsed.data.task === "compliance-audit"
+          ? await generateComplianceAudit({ ...parsed.data, signal })
+          : await generateContent({ ...parsed.data, signal })
       return jsonResponse(result, 200, context.corsHeaders)
     } catch (error) {
       return aiErrorResponse(error, context, { client: req.signal, timeout })

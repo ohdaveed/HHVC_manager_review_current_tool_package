@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 22 unit-test files in tests/ (533 tests)
+bun run test                  # bun test over the 25 unit-test files in tests/ (567 tests)
 bun run test:e2e              # playwright test (123 specs across 16 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,13 +65,13 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs twenty-two Bun unit-test files under `tests/`:
+wrong). `bun run test` runs 25 Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `doc-counts`
+decision list against the canonical table in `js/utils.js`), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
 `review-merge`,
 `review-api-server` (which spawns
@@ -82,7 +82,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 533 tests at time of writing.
+without a key or a paid call) — 567 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -1371,6 +1371,125 @@ it, and it fails closed rather than open.
 - **Netlify** (`build:netlify`) has no server runtime, so the static deploy
   simply has no AI — the same way it has no sync.
 
+### RAG knowledge base (optional)
+
+`compliance-audit` is a second task on `/api/ai/generate`, sitting alongside
+`content` — a reviewer can ask for an AI-drafted compliance audit of the
+currently-open page, grounded in this repo's actual policy/style corpus
+rather than the model's unaided judgment. It reuses the same posture as the
+rest of the AI assist backend it's layered onto: additive, off unless
+configured, fails closed rather than open, never writes anything, and every
+result carries the same `disclosure` string `content` does.
+
+- **The corpus lives in `docs/source/**/*.md`, and it is not filtered by
+  publication status.** `build_scripts/ingest-knowledge.js` globs every
+  markdown file under `docs/source/` except `README.md` files (folder-level
+  indexes, not corpus content) — including the one file named
+  `DRAFT-NOT-FOR-PUBLICATION`. That inclusion is a deliberate reviewer
+  decision, not an oversight: the alternative was an ingestion script quietly
+  applying its own editorial judgment about what counts as citable, which is
+  exactly the kind of unaccountable filtering this feature exists to avoid.
+  A draft can therefore surface as a cited source in an audit finding, same
+  as any other file in the corpus.
+- **Storage is one new table in the same SQLite file the sync backend
+  already uses**, not a second database. `knowledge_chunks` lives at the same
+  `DATA_DB_PATH` that holds `review_pages` — one connection, one file, one
+  volume to back up in production, rather than a second DB path to configure
+  and mount. The table definition lives in one shared helper,
+  `build_scripts/knowledge-schema.js`, used by both the write path
+  (`build_scripts/ingest-knowledge.js`) and the read path
+  (`build_scripts/ai/knowledge-retrieval.js`, opened by the running server),
+  so the two processes cannot define the table differently, and ingestion
+  never has to assume the server has run first.
+- **Chunking splits on headings first, then on size.**
+  `build_scripts/knowledge-chunking.js` splits each file on `##`/`###`
+  headings, keeping a section's ideas together, then further splits any
+  section over 500 words at paragraph boundaries with a 50-word overlap
+  between adjacent chunks — so a fact sitting near a chunk boundary doesn't
+  lose the context on either side of it. Every chunk is prefixed with its
+  heading path before it's embedded, so the embedded text and what's later
+  shown to the model both carry section context on their own, with no join
+  back to the source document needed to explain where a chunk came from.
+- **Embeddings are Gemini-only, and that constraint is why
+  `compliance-audit` needs `GEMINI_API_KEY` even on an Anthropic-only
+  deployment.** Anthropic has no embeddings API, so `provider-gemini.js`'s
+  `embedContent` is the only path to a vector in this codebase — regardless
+  of which provider actually _generates_ the audit text. Default model id is
+  `text-embedding-004`; `GEMINI_EMBEDDING_MODEL` overrides it. A deployment
+  that only ever configured `ANTHROPIC_API_KEY` for drafting pages will find
+  `compliance-audit` unavailable until a Gemini key is added, even though
+  Claude is perfectly capable of writing the audit itself.
+- **Retrieval is brute-force cosine similarity in plain JS, not a vector-index
+  extension.** `build_scripts/knowledge-search.js` ranks the whole corpus by
+  cosine similarity against the query embedding and takes the top matches.
+  At this corpus's size — an estimated 150-200 chunks — that's microseconds
+  of work, and a loadable extension like `sqlite-vec` would buy nothing here
+  while adding a native-binary deployment risk against Railway's runtime for
+  no measurable benefit. The function is dual-exported
+  (`window`/`module.exports`) like `js/review-merge.js` and
+  `js/plain-language.js`, so the ranking logic is unit-tested against
+  synthetic embeddings with no real Gemini call and no live database.
+- **Re-ingestion is idempotent per file, and always full, never
+  incremental.** `bun run ingest` deletes and reinserts a file's rows in one
+  transaction, and it reprocesses every file in the corpus on every run
+  rather than diffing for changes — so the whole table is rebuilt from
+  current `docs/source/` content and the current embedding model every time.
+  That makes `bun run ingest` always safe to re-run after editing
+  `docs/source/`, or after changing `GEMINI_EMBEDDING_MODEL`: there's no
+  stale mix of two embedding models to worry about, because a run either
+  finishes and replaces everything, or it doesn't run at all. Manual,
+  developer-triggered — like `bun run export` — not part of `bun run build`,
+  since `docs/source/` changes rarely and a real ingest needs a real
+  (billed) `GEMINI_API_KEY` call that has no place in CI.
+- **`GET /api/ai/capabilities` reports `knowledgeBase: {ready, chunkCount}`**
+  so the browser's empty state can tell apart two genuinely different
+  reasons `compliance-audit` might be unavailable: no `GEMINI_API_KEY` at
+  all, versus a key that's present but nobody has run `bun run ingest` yet.
+  Those want different copy, and collapsing them into one generic "not
+  available" would leave a reviewer who already has a working key unable to
+  tell whether they're missing configuration or just missing a command.
+- **Citations are checked against what was actually retrieved for that
+  request, not accepted as free text.** A finding's `citedChunkIds` names
+  chunk ids by their stable `${source_file}#${chunk_index}` form rather than
+  having the model restate a source or heading from memory — the one place
+  this feature could quietly fail at its own job is a citation that sounds
+  plausible but was never retrieved, or that misquotes what a real chunk
+  says. `build_scripts/ai/validate-compliance-audit.js`'s
+  `findInvalidCitations()` checks every cited id against the retrieved set
+  held for that request (not the whole table), and an empty `citedChunkIds`
+  array is rejected too — citing nothing is not a valid finding. A bad
+  citation feeds back into one retry turn naming exactly which finding cited
+  an unknown or missing id, mirroring `content`'s retry-with-named-issues
+  pattern; a finding that still carries a bad citation after that retry is
+  still returned (per this feature's "always resolves with the draft, valid
+  or not" rule) but flagged `valid: false` with the bad id named in `issues`,
+  so a reviewer sees exactly which finding not to trust rather than an audit
+  that silently omits it. The `source_file`/`heading_path` a reviewer
+  actually reads is resolved server-side from the matched chunk row, never
+  echoed back from the model, so the rendered citation is always real corpus
+  metadata even when the model's own citation attempt failed.
+- **The route gates on knowledge-base readiness specifically, separately
+  from the generic no-provider gate.** `hasConfiguredProvider()` still gates
+  every `/api/ai/generate` request first, same as `content`; past that,
+  `compliance-audit` has its own check — Gemini configured _and_
+  `knowledge_chunks` holding at least one row — and answers 501 with a
+  message naming which half is missing (no Gemini key at all, versus a key
+  but an empty table) rather than one undifferentiated failure.
+  `generateComplianceAudit()` itself (`build_scripts/ai/compliance-audit.js`)
+  is a sibling function to `generateContent()`, not a generalization of it:
+  it owns its own retry loop, structured the same way, rather than forcing
+  the one existing task's machinery to also fit a structurally different
+  validator.
+- **Never writes anything**, same as `content` — no filesystem write path, no
+  review-state write, no `pages/*.js` mutation. Every successful audit
+  result carries the same `disclosure` string `content` results do, for the
+  same reason: standards manual §1.11 forbids automated approval, and
+  SF.gov's published AI guidelines require disclosing generative-AI use.
+- See `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md` for
+  the full design rationale, including what was deliberately left out (a
+  corpus-wide embedding-model/version table, a task-dispatching registry
+  refactor of `generateContent()`) and why.
+
 ### Build outputs
 
 - **`vite build --mode singlefile`** (`bun run build:singlefile`) inlines
@@ -1560,6 +1679,11 @@ that stub globals must restore them, or they pollute sibling test files.
   `<script>` and imported directly by `server.ts` — the only place a `history`
   entry should ever be constructed). Optional sync backend → `server.ts` (API
   routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+- RAG knowledge base → `build_scripts/knowledge-chunking.js`,
+  `build_scripts/knowledge-search.js`, `build_scripts/knowledge-schema.js`,
+  `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
+  `build_scripts/ai/compliance-audit.js`, and
+  `build_scripts/ai/validate-compliance-audit.js`.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - Any new file under `pages/` needs an `import` in `js/page-data.js` (enforced
   by `build_scripts/page-import-checks.js`, so `bun run validate` fails without
