@@ -350,6 +350,11 @@ function getEmbeddingModel() {
  * @param {string[]} texts
  * @param {'DOCUMENT'|'QUERY'} taskType
  * @returns {Promise<Float32Array[]>} One embedding per input text, same order.
+ * @throws {Error} if the API returns a different number of embeddings than
+ *   texts requested — callers zip the result back onto their input array by
+ *   index (ingest-knowledge.js onto chunks, compliance-audit.js onto the
+ *   page text), and a silent length mismatch would misassign an embedding to
+ *   the wrong chunk rather than fail loudly.
  */
 async function embedContent(texts, taskType) {
   const client = createClient()
@@ -358,7 +363,13 @@ async function embedContent(texts, taskType) {
     contents: texts,
     config: { taskType: EMBEDDING_TASK_TYPES[taskType] },
   })
-  return (response.embeddings || []).map((embedding) => Float32Array.from(embedding.values || []))
+  const embeddings = response.embeddings || []
+  if (embeddings.length !== texts.length) {
+    throw new Error(
+      `Gemini embedContent returned ${embeddings.length} embeddings for ${texts.length} texts.`
+    )
+  }
+  return embeddings.map((embedding) => Float32Array.from(embedding.values || []))
 }
 
 module.exports = {

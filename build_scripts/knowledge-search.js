@@ -11,9 +11,14 @@
  * @param {Float32Array} a
  * @param {Float32Array} b
  * @returns {number} Cosine similarity in [-1, 1], or 0 if either vector has
- *   zero magnitude (rather than dividing by zero).
+ *   zero magnitude, or if the vectors have different lengths (rather than
+ *   reading past one array's end as undefined and producing NaN — callers
+ *   should never mix embeddings from two different models in the same
+ *   ranking, since the vector spaces aren't comparable, but this guard makes
+ *   that mistake return an inert 0 instead of corrupting the whole sort).
  */
 function cosineSimilarity(a, b) {
+  if (a.length !== b.length) return 0
   let dot = 0
   let normA = 0
   let normB = 0

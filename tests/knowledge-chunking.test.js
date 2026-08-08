@@ -59,4 +59,26 @@ describe('chunkMarkdown', () => {
     expect(chunks).toHaveLength(1)
     expect(chunks[0].headingPath).toBe('Has text')
   })
+
+  test('a single paragraph over 500 words is split into multiple word-bounded chunks', () => {
+    const oneHugeParagraph = 'word '.repeat(650).trim()
+    const markdown = `## Huge paragraph\n\n${oneHugeParagraph}`
+    const chunks = chunkMarkdown(markdown, 'huge.md')
+
+    expect(chunks.length).toBeGreaterThan(1)
+    chunks.forEach((chunk) => {
+      const wordCount = chunk.content
+        .replace('Huge paragraph', '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+      expect(wordCount).toBeLessThanOrEqual(500)
+    })
+    const totalWords = chunks.reduce((sum, chunk) => {
+      return (
+        sum + chunk.content.replace('Huge paragraph', '').trim().split(/\s+/).filter(Boolean).length
+      )
+    }, 0)
+    expect(totalWords).toBe(650)
+  })
 })

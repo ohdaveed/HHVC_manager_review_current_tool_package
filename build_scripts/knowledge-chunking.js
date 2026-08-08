@@ -55,6 +55,25 @@ function parseSections(markdown) {
 }
 
 /**
+ * Split a single paragraph that alone exceeds `maxWords` into maxWords-sized
+ * word-bounded pieces. Only reached when one paragraph is too large to fit
+ * in a chunk by itself — the normal accumulate-then-flush loop in
+ * splitIntoWordChunks only ever flushes BEFORE adding a paragraph, so a lone
+ * oversized paragraph would otherwise become one unbounded chunk.
+ * @param {string} paragraph
+ * @param {number} maxWords
+ * @returns {string[]}
+ */
+function splitOversizedParagraph(paragraph, maxWords) {
+  const words = paragraph.split(/\s+/).filter(Boolean)
+  const pieces = []
+  for (let i = 0; i < words.length; i += maxWords) {
+    pieces.push(words.slice(i, i + maxWords).join(' '))
+  }
+  return pieces
+}
+
+/**
  * Split one section's body into paragraph-aligned chunks of at most
  * `maxWords`, carrying `overlapWords` of the previous chunk's tail forward.
  * @param {string} body
@@ -74,6 +93,17 @@ function splitIntoWordChunks(body, maxWords, overlapWords) {
 
   for (const paragraph of paragraphs) {
     const wordCount = paragraph.split(/\s+/).filter(Boolean).length
+
+    if (wordCount > maxWords) {
+      if (current.length) {
+        chunks.push(current.join('\n\n'))
+        current = []
+        currentWords = 0
+      }
+      chunks.push(...splitOversizedParagraph(paragraph, maxWords))
+      continue
+    }
+
     if (currentWords + wordCount > maxWords && current.length) {
       chunks.push(current.join('\n\n'))
       const tailWords = current.join(' ').split(/\s+/).filter(Boolean).slice(-overlapWords)

@@ -114,6 +114,31 @@ async function main() {
     // from the count above.
     console.log(`Files with no chunks after parsing: ${emptyFiles.join(', ')}`)
   }
+
+  // Prune rows for files that no longer exist in docs/source/, were renamed,
+  // or now parse to zero chunks. The per-file DELETE above only fires for a
+  // file actually reached by this run's loop with real content, so a file
+  // removed (or emptied) between runs would otherwise leave its old chunks
+  // in the table forever, citable by compliance-audit even though nothing on
+  // disk backs them anymore.
+  const keptFiles = files.filter((file) => !emptyFiles.includes(file))
+  const placeholders = keptFiles.map(() => '?').join(',')
+  const staleCount = keptFiles.length
+    ? db
+        .query(
+          `SELECT COUNT(*) as count FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
+        )
+        .get(...keptFiles).count
+    : db.query('SELECT COUNT(*) as count FROM knowledge_chunks').get().count
+  if (staleCount > 0) {
+    db.run(
+      keptFiles.length
+        ? `DELETE FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
+        : 'DELETE FROM knowledge_chunks',
+      keptFiles
+    )
+    console.log(`Pruned ${staleCount} chunks from files no longer in the corpus.`)
+  }
 }
 
 main()

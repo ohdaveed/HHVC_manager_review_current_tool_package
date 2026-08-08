@@ -868,6 +868,13 @@ describe('AI assist API (server.ts)', () => {
      */
     function seedChunk({ id, sourceFile, headingPath, content, embedding }) {
       const { Database } = require('bun:sqlite')
+      // The running server filters knowledge_chunks by the CURRENTLY
+      // configured embedding model (see knowledge-retrieval.js's
+      // loadChunks), so a seeded row has to carry that same model string or
+      // it is silently excluded from retrieval, not just "an arbitrary
+      // label" — reading it from the real provider module keeps this in
+      // sync with whatever the default actually is.
+      const { getEmbeddingModel } = require('../build_scripts/ai/provider-gemini')
       const db = new Database(path.join(dbDir, 'review-state.db'), { create: true })
       db.run(`
         CREATE TABLE IF NOT EXISTS knowledge_chunks (
@@ -886,8 +893,16 @@ describe('AI assist API (server.ts)', () => {
       db.run(
         `INSERT OR REPLACE INTO knowledge_chunks
          (id, source_file, category, heading_path, content, chunk_index, embedding, embedding_model, created_at)
-         VALUES (?, ?, 'hhvc-policy', ?, ?, 0, ?, 'test-model', ?)`,
-        [id, sourceFile, headingPath, content, buffer, new Date().toISOString()]
+         VALUES (?, ?, 'hhvc-policy', ?, ?, 0, ?, ?, ?)`,
+        [
+          id,
+          sourceFile,
+          headingPath,
+          content,
+          buffer,
+          getEmbeddingModel(),
+          new Date().toISOString(),
+        ]
       )
       db.close()
     }

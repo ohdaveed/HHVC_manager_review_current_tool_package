@@ -39,9 +39,21 @@ function getKnowledgeDb() {
 let cache = null
 
 /**
- * All chunks, cached until DATA_DB_PATH's mtime moves — i.e. until a fresh
- * `bun run ingest` writes to it — so a running server picks up new content
- * without a restart and without re-querying SQLite on every audit request.
+ * All chunks embedded with the CURRENTLY configured model, cached until
+ * DATA_DB_PATH's mtime moves — i.e. until a fresh `bun run ingest` writes to
+ * it — so a running server picks up new content without a restart and
+ * without re-querying SQLite on every audit request.
+ *
+ * Rows whose `embedding_model` does not match `gemini.getEmbeddingModel()`
+ * are excluded, not just tolerated: `bun run ingest` always re-embeds the
+ * whole corpus in one run, but a run that crashes partway through (or a
+ * `GEMINI_EMBEDDING_MODEL` change between runs) can otherwise leave rows
+ * from two different embedding spaces in the table at once. Cosine
+ * similarity between vectors from different models is meaningless, so
+ * mixing them in would produce a plausible-looking but wrong ranking rather
+ * than a visible failure. Filtering here means a partially-stale table
+ * degrades to "fewer chunks available" (still correct rankings, just over a
+ * smaller corpus) instead of silently blending two vector spaces.
  * @returns {Array<{id: string, sourceFile: string, category: string,
  *   headingPath: string|null, content: string, embedding: Float32Array}>}
  */
@@ -57,26 +69,29 @@ function loadChunks() {
 
   const rows = instance
     .query(
-      'SELECT id, source_file, category, heading_path, content, embedding FROM knowledge_chunks'
+      'SELECT id, source_file, category, heading_path, content, embedding, embedding_model FROM knowledge_chunks'
     )
     .all()
-  const chunks = rows.map((row) => ({
-    id: row.id,
-    sourceFile: row.source_file,
-    category: row.category,
-    headingPath: row.heading_path,
-    content: row.content,
-    // .slice() on the underlying ArrayBuffer copies the exact byte range into
-    // a fresh buffer, so this does not depend on the BLOB's byteOffset being
-    // 4-byte aligned the way a raw `new Float32Array(row.embedding.buffer)`
-    // view would.
-    embedding: new Float32Array(
-      row.embedding.buffer.slice(
-        row.embedding.byteOffset,
-        row.embedding.byteOffset + row.embedding.byteLength
-      )
-    ),
-  }))
+  const currentModel = gemini.getEmbeddingModel()
+  const chunks = rows
+    .filter((row) => row.embedding_model === currentModel)
+    .map((row) => ({
+      id: row.id,
+      sourceFile: row.source_file,
+      category: row.category,
+      headingPath: row.heading_path,
+      content: row.content,
+      // .slice() on the underlying ArrayBuffer copies the exact byte range into
+      // a fresh buffer, so this does not depend on the BLOB's byteOffset being
+      // 4-byte aligned the way a raw `new Float32Array(row.embedding.buffer)`
+      // view would.
+      embedding: new Float32Array(
+        row.embedding.buffer.slice(
+          row.embedding.byteOffset,
+          row.embedding.byteOffset + row.embedding.byteLength
+        )
+      ),
+    }))
   cache = { mtimeMs, chunks }
   return chunks
 }
