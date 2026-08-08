@@ -19,6 +19,7 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
+const realInlineEditData = require('../js/inline-content-edit-data.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
 
@@ -107,6 +108,83 @@ function flushMicroAndMacroTasks() {
   return new Promise((resolve) => setTimeout(resolve, 10))
 }
 
+/**
+ * Mount a fresh instance against the REAL js/inline-content-edit-data.js
+ * (not the applyReturns stub above), so applyContentEditsToPageData actually
+ * mutates the shared page object — required to prove what a "paint" reads at
+ * the moment a triggered render fires, rather than just counting calls.
+ *
+ * Exposes `page` (the single shared object DATA.pages.pestsTopic holds
+ * throughout — the same object every applySavedPageState call reads and
+ * writes, matching the real DATA = window.HHVC_DATA closure) and a mutable
+ * `setSavedSectionEdits` so a test can change what the next
+ * applySavedPageState call will read as "saved," simulating a second,
+ * more-current write (e.g. a sync pull) landing between two calls.
+ * @returns {Promise<{applySavedPageState: Function, page: object, renderPaints: Array, setSavedSectionEdits: Function}>}
+ */
+async function mountStateSyncWithRealReapply() {
+  const page = { title: 'T', sections: [{ heading: 'Original', paragraphs: [] }] }
+  let state = {
+    version: 1,
+    updated_at: '',
+    ui: {},
+    globals: {},
+    pages: { pestsTopic: { section_edits: {} } },
+  }
+
+  // What a render call would actually paint, captured at the moment it
+  // fires — the live heading value on the shared page object right then.
+  // This is the concrete evidence for the "never stale, only possibly
+  // redundant" invariant: if a suppressed call's data were the one that
+  // "should" have painted, this array would show the earlier value at some
+  // point; if the invariant holds, every entry is the latest write.
+  const renderPaints = []
+
+  function stubRenderPage(key) {
+    renderPaints.push(page.sections[0].heading)
+    setTimeout(() => {
+      global.window.ReviewUx.stateSync.applySavedPageState(key)
+    }, 0)
+  }
+
+  global.window = {
+    HHVC_DATA: { pages: { pestsTopic: page }, order: [['pestsTopic', 'Test']] },
+    ORIGINAL_DATA: {
+      pages: { pestsTopic: { title: 'T', sections: [{ heading: 'Original', paragraphs: [] }] } },
+    },
+    reviewState: {
+      read: () => state,
+      update: (updater) => {
+        state = updater(state)
+        return state
+      },
+    },
+    reviewMerge: {
+      mergeReviewRecord: (existing) => existing,
+      combineHistory: (a) => a,
+      reviewContentEquals: () => true,
+    },
+    utils: realUtils,
+    inlineEditData: realInlineEditData,
+    renderPage: stubRenderPage,
+  }
+
+  const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+  await import(modUrl)
+
+  return {
+    applySavedPageState: global.window.ReviewUx.stateSync.applySavedPageState,
+    page,
+    renderPaints,
+    setSavedSectionEdits: (heading) => {
+      state = {
+        ...state,
+        pages: { pestsTopic: { section_edits: { 'sections.0.heading': heading } } },
+      }
+    },
+  }
+}
+
 describe('applySavedPageState section_edits follow-up render', () => {
   test('triggers exactly one follow-up render when a saved section edit was reapplied', async () => {
     const { applySavedPageState, renderPageCalls } = await mountStateSync({
@@ -165,5 +243,62 @@ describe('applySavedPageState section_edits follow-up render', () => {
     await flushMicroAndMacroTasks()
 
     expect(renderPageCalls).toEqual([])
+  })
+
+  // Closes out a reviewer-flagged concern: the guard is keyed only by
+  // pageKey, not a call-identity token, so a second external
+  // applySavedPageState call for the same key landing while a first call's
+  // deferred render is still pending sees the guard already set and
+  // suppresses its own render trigger. The worry was that the FIRST call's
+  // eventually-firing render could then paint stale data, superseding the
+  // second call's more-current write. This test proves it does not: it uses
+  // the REAL applyContentEditsToPageData (not the applyReturns stub above),
+  // so the mutation actually lands on the shared page object, and it
+  // records what a render would actually paint at the moment it fires.
+  test('a suppressed follow-up render never paints stale data: the later of two interleaved section_edits wins', async () => {
+    const { applySavedPageState, page, renderPaints, setSavedSectionEdits } =
+      await mountStateSyncWithRealReapply()
+
+    // Call X: saved section_edits says 'First'. Reapply mutates the shared
+    // page synchronously; the guard is set and a render triggered — the
+    // stub's render paints synchronously (matching the real wrapper's
+    // synchronous originalRenderPage.call()) and separately schedules a
+    // DEFERRED follow-up applySavedPageState call for later.
+    setSavedSectionEdits('First')
+    applySavedPageState('pestsTopic')
+    expect(page.sections[0].heading).toBe('First')
+    // X's render already fired (synchronously) and painted the data that
+    // was live at that moment — 'First' is correct here, not stale: Y
+    // hasn't run yet, so this is the only current data that exists so far.
+    expect(renderPaints).toEqual(['First'])
+
+    // Before X's deferred follow-up call fires, a second external call (Y)
+    // runs for the SAME key with DIFFERENT, more-current data — e.g. a sync
+    // pull landing between the two. Y's synchronous reapply overwrites the
+    // shared page with 'Second'. Y sees refreshInFlightForKey already set
+    // (by X) and suppresses its own render trigger — it does NOT clear the
+    // guard until it reads it as its own at the top of applySavedPageState,
+    // which it does here, since X's guard is still pointing at this key.
+    setSavedSectionEdits('Second')
+    applySavedPageState('pestsTopic')
+    expect(page.sections[0].heading).toBe('Second')
+    // Y triggered no new render (its own render-check saw isOwnTriggeredRefresh).
+    expect(renderPaints).toEqual(['First'])
+
+    // Let X's deferred follow-up call fire. Y already cleared the guard
+    // when IT ran (isOwnTriggeredRefresh was true for Y, so Y cleared
+    // refreshInFlightForKey back to null) — so when X's deferred call now
+    // runs applySavedPageState again, the guard is null, this call is NOT
+    // read as "its own triggered refresh," and it triggers one more render.
+    await flushMicroAndMacroTasks()
+
+    // That final render reads the LIVE shared page object at the moment it
+    // actually fires — which by then holds Y's write, because Y's
+    // synchronous reapply happened well before this deferred callback could
+    // run. This is the concrete proof of the invariant: the LAST paint
+    // always reflects the most current data, regardless of which call's
+    // guard-check was the one that originally triggered the render chain.
+    expect(page.sections[0].heading).toBe('Second')
+    expect(renderPaints.at(-1)).toBe('Second')
   })
 })

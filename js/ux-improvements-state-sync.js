@@ -33,6 +33,33 @@ import { hasValidPageData } from './utils.js'
   // asynchronously (setTimeout(0) or a View Transitions promise), so the
   // corresponding applySavedPageState call for the render this triggered
   // hasn't happened yet at that point.
+  //
+  // A suppressed follow-up render is never a STALE render, only a possibly
+  // REDUNDANT one — this is the invariant that makes suppressing it safe.
+  // Two calls to applySavedPageState(pageKey) can interleave (call X sets
+  // this guard and triggers a deferred render; before that render fires,
+  // call Y runs for the same key and, seeing the guard set, suppresses its
+  // own trigger). That is safe only because of what applySavedPageState
+  // does immediately above this guard, in the same synchronous turn:
+  // `const page = DATA.pages[pageKey]` reads the LIVE object DATA already
+  // holds — never a clone or snapshot — and
+  // `applyContentEditsToPageData(page, saved)` mutates that same shared
+  // object in place, synchronously, before either call reaches this guard
+  // check. JavaScript is single-threaded and run-to-completion: whichever
+  // call's applySavedPageState body runs second (Y, in the scenario above)
+  // finishes its synchronous write to `page` before X's deferred render
+  // callback can fire. So by the time ANY triggered render actually reads
+  // `DATA.pages[pageKey]` to paint the DOM, it always sees the most recent
+  // write, regardless of which call's guard check was the one that
+  // triggered it. A suppressed render is therefore redundant (something
+  // else's render will paint the same current data) rather than wrong.
+  //
+  // This safety argument breaks silently if applySavedPageState is ever
+  // changed to operate on a cloned/snapshotted page object instead of the
+  // live one held in DATA.pages — do not make that change without also
+  // reworking this guard (e.g. keying it by a call-generation token and
+  // re-validating that the data a suppressed call would have painted is
+  // still current before suppressing).
   let refreshInFlightForKey = null
 
   const {
