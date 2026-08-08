@@ -155,6 +155,7 @@ function zeroDecisionTally() {
 
   window.utils = {
     escapeHtml,
+    getByPath,
     safeUrl,
     getPrimaryCta,
     setPrimaryCta,
@@ -190,6 +191,7 @@ function zeroDecisionTally() {
     buildPageRows,
     isWorkspacePanelOpen,
     mountWorkspacePanelIfOpen,
+    setByPath,
   }
 
   installGlobalErrorHandlers()
@@ -270,6 +272,53 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;')
+}
+
+/**
+ * Resolve a dot-path against an object, e.g. 'sections.2.paragraphs.1'.
+ *
+ * Deliberately total: any unresolvable segment yields `undefined` rather than
+ * throwing, because callers resolve paths that came out of the DOM, where a
+ * stale attribute after a re-render is a normal race rather than a bug.
+ * @param {object} root
+ * @param {string} path
+ * @returns {unknown}
+ */
+function getByPath(root, path) {
+  if (!root || typeof path !== 'string' || !path) return undefined
+  let current = root
+  for (const key of path.split('.')) {
+    if (current === null || typeof current !== 'object') return undefined
+    current = current[key]
+  }
+  return current
+}
+
+/**
+ * Write a value at a dot-path, but only where the whole path already resolves.
+ *
+ * Never creates intermediate objects. Auto-vivifying `sections.9.paragraphs.0`
+ * on a page with three sections would silently invent page structure that no
+ * schema validated and no reviewer authored — a wrong write is worse here than
+ * a refused one, so a missing segment is a reported failure the caller can
+ * surface instead.
+ * @param {object} root
+ * @param {string} path
+ * @param {unknown} value
+ * @returns {boolean} True when the write happened.
+ */
+function setByPath(root, path, value) {
+  if (!root || typeof path !== 'string' || !path) return false
+  const keys = path.split('.')
+  const last = keys.pop()
+  let current = root
+  for (const key of keys) {
+    if (current === null || typeof current !== 'object') return false
+    current = current[key]
+  }
+  if (current === null || typeof current !== 'object') return false
+  current[last] = value
+  return true
 }
 
 /**
@@ -823,6 +872,7 @@ export {
   downloadBlob,
   downloadFile,
   escapeHtml,
+  getByPath,
   getCurrentKey,
   getPrimaryCta,
   getDecisionChipClass,
@@ -842,6 +892,7 @@ export {
   resolvePageKey,
   SAFE_URL_SCHEMES,
   safeUrl,
+  setByPath,
   setPrimaryCta,
   setText,
   setValue,

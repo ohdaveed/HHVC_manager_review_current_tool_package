@@ -5,6 +5,7 @@ import { describe, test, expect } from 'bun:test'
 // harness. `ctx` is kept as the local name so the assertions below read
 // unchanged.
 import * as ctx from '../js/utils.js'
+import { getByPath, setByPath } from '../js/utils.js'
 
 describe('safeUrl', () => {
   test('passes through absolute http and https URLs unchanged', () => {
@@ -343,5 +344,50 @@ describe('getDecisionChipClass', () => {
     expect(ctx.getDecisionChipClass('Escalated')).toBe('decision-pending')
     expect(ctx.getDecisionChipClass('')).toBe('decision-pending')
     expect(ctx.getDecisionChipClass(undefined)).toBe('decision-pending')
+  })
+})
+
+describe('getByPath', () => {
+  const page = {
+    sections: [{ paragraphs: ['first', { text: 'second' }], steps: [{ text: ['step text'] }] }],
+  }
+
+  test('resolves a nested array index to its value', () => {
+    expect(getByPath(page, 'sections.0.paragraphs.0')).toBe('first')
+  })
+
+  test('resolves a path ending at an object item', () => {
+    expect(getByPath(page, 'sections.0.paragraphs.1')).toEqual({ text: 'second' })
+  })
+
+  test('resolves through a step text array', () => {
+    expect(getByPath(page, 'sections.0.steps.0.text.0')).toBe('step text')
+  })
+
+  test('returns undefined for a missing intermediate segment', () => {
+    expect(getByPath(page, 'sections.9.paragraphs.0')).toBeUndefined()
+  })
+
+  test('returns undefined for an empty path', () => {
+    expect(getByPath(page, '')).toBeUndefined()
+  })
+})
+
+describe('setByPath', () => {
+  test('writes a value at a resolvable path and reports success', () => {
+    const page = { sections: [{ paragraphs: ['old'] }] }
+    expect(setByPath(page, 'sections.0.paragraphs.0', 'new')).toBe(true)
+    expect(page.sections[0].paragraphs[0]).toBe('new')
+  })
+
+  test('refuses an unresolvable path without creating intermediates', () => {
+    const page = { sections: [] }
+    expect(setByPath(page, 'sections.0.paragraphs.0', 'new')).toBe(false)
+    expect(page.sections[0]).toBeUndefined()
+  })
+
+  test('returns false for an empty path', () => {
+    const page = { sections: [] }
+    expect(setByPath(page, '', 'new')).toBe(false)
   })
 })
