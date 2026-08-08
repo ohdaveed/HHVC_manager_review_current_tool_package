@@ -1,0 +1,30 @@
+CORRECTION TO THIS COMMIT MESSAGE.
+
+The message above describes only the getByPath/setByPath prototype-pollution
+fix. That fix is real and is the two-file change to js/utils.js and
+tests/utils.test.js. But this commit actually contains 23 files.
+
+The other 21 came from a concurrent session sharing the same working
+directory; an automated 'git add' swept them in. They are NOT part of the
+security fix and were never described by this message:
+
+  - pages/respond-to-notice-of-violation.js (129 -> 81 lines) and eight other
+    pages/*.js retitle edits, which belong to the deliberate content redesign
+    landed in 106013d ('feat: redesign HHVC review content'). The page was
+    retitled 'How to respond to a notice of violation' ->
+    'Fix your Healthy Housing and Vector Control violation', with all eight
+    inbound card links updated to match. This was intentional work, not loss.
+  - review/manager_decision_log.csv, review/mockup_tracking_sheet.csv and
+    review/page_approval_checklist.csv (review tracking state).
+  - AGENTS.md, CLAUDE.md, README.md and three .claude/skills/*.md files
+    (Prettier reformatting only).
+
+One change here still deserves a human decision, because no commit message
+announces it: pages/respond-to-notice-of-violation.js had its editorStatus
+downgraded from 'blocked' to 'needs-review'. That is an editorial gate, and
+this repo's rules put that call with a person.
+
+No revert is recommended: the page changes are part of intentional work, and
+reverting them would reintroduce the old title into eight cross-references
+while the page itself keeps the new one — an inconsistency validate.js cannot
+catch, since both titles are valid strings.
