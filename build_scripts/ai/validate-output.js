@@ -163,8 +163,76 @@ function validateGeneratedPage(page, existingPages = {}) {
   return { valid: issues.length === 0, issues, schemaValid: true }
 }
 
+/**
+ * Matches a markdown inline link, capturing its label and its target.
+ *
+ * `matchAll` requires the /g flag but does not mutate the regex's `lastIndex`,
+ * which is what makes one shared module-scope literal safe for the two
+ * independent scans below. A bare `.exec` loop over this would not be.
+ */
+const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g
+
+/**
+ * Validate a `rewrite-field` result against the text it was asked to rewrite.
+ *
+ * Narrow by design — this is prose, so there is no object shape to check
+ * beyond "is it a non-empty string". The two checks that carry real weight are
+ * the ones a reviewer would otherwise have to catch by eye:
+ *
+ *   1. HTML. Field text renders through `formatMarkdown()`, which escapes
+ *      everything before it reaches innerHTML — so a model that helpfully
+ *      returns `<strong>` produces visible angle brackets on the page rather
+ *      than bold text. It reads as a rendering bug and is actually bad input.
+ *   2. A dropped link. Rewording a link's visible LABEL is the entire point of
+ *      the feature, so the check is on the TARGET: losing one silently removes
+ *      navigation the page previously had, and nothing else in the pipeline
+ *      would notice.
+ *
+ * Returns the same `{valid, issues, schemaValid}` shape `validateGeneratedPage`
+ * does, so the caller's retry loop can treat both tasks identically.
+ * @param {object} result The model's parsed output.
+ * @param {string} fieldText The original field text.
+ * @returns {{valid: boolean, issues: string[], schemaValid: boolean}}
+ */
+function validateRewrite(result, fieldText) {
+  const text = result?.rewrittenText
+  // `schemaValid: false` is reserved for "not even the right shape", matching
+  // validateGeneratedPage's convention of stopping before the content checks
+  // when there is nothing coherent left to check.
+  if (typeof text !== 'string' || !text.trim()) {
+    return {
+      valid: false,
+      issues: ['rewrittenText must be a non-empty string.'],
+      schemaValid: false,
+    }
+  }
+
+  const issues = []
+  if (/<[a-z][\s\S]*?>/i.test(text)) {
+    issues.push('rewrittenText must be plain prose with no HTML tags.')
+  }
+
+  const originalTargets = [...String(fieldText).matchAll(MARKDOWN_LINK_PATTERN)].map(
+    (match) => match[2]
+  )
+  const rewrittenTargets = new Set(
+    [...text.matchAll(MARKDOWN_LINK_PATTERN)].map((match) => match[2])
+  )
+  // Every dropped target is reported, not just the first. The retry prompt is
+  // only actionable if it names the whole set — fixing them one round trip at a
+  // time would exhaust the single retry this feature allows.
+  for (const target of originalTargets) {
+    if (!rewrittenTargets.has(target)) {
+      issues.push(`The link target "${target}" was dropped. Keep every [label](target) link.`)
+    }
+  }
+
+  return { valid: issues.length === 0, issues, schemaValid: true }
+}
+
 module.exports = {
   validateGeneratedPage,
+  validateRewrite,
   findBrokenTargets,
   BANNED_TERMS,
   CANDIDATE_KEY,
