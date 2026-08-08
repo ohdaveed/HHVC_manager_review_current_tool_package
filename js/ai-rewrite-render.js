@@ -123,21 +123,47 @@
    * space this function positions into — no scroll-offset math needed, which
    * is also why both elements are `position: fixed` rather than `absolute`.
    *
-   * Horizontal clamping needs the element's own width
-   * (`el.offsetWidth`), which only exists once the element is in the DOM and
-   * unhidden — callers unhide before calling this, never after. Vertical
-   * clamping is simpler (a fixed 40px floor from the bottom edge) because
-   * only the button is short enough that its own height rarely matters here;
-   * the popover's much larger footprint is why it also gets `max-height: 70vh`
-   * plus internal scrolling in css/ai-rewrite.css rather than relying on this
-   * clamp alone.
+   * Both clamps need the element's own measured box (`offsetWidth` /
+   * `offsetHeight`), which only exists once it is in the DOM and unhidden —
+   * callers unhide before calling this, never after.
+   *
+   * **The vertical rule uses the element's real height, and that is not
+   * optional.** An earlier version pinned the top edge at
+   * `min(rect.bottom + 8, innerHeight - 40)`, reasoning that the popover's
+   * `max-height: 70vh` and internal scrolling would keep it usable. They do
+   * not: `max-height` bounds how TALL the popover is, not WHERE it sits, so a
+   * selection anywhere in the lower viewport put its top 40px from the bottom
+   * and pushed the Rewrite/Apply buttons — which live at its foot — clean off
+   * screen, unclickable. Playwright caught it as "element is outside of the
+   * viewport"; nothing in the unit suite could have. So: prefer below the
+   * selection, flip above when it would overflow, and clamp into the viewport
+   * if neither side fits.
    * @param {HTMLElement} el
    * @param {DOMRect} rect
    * @returns {void}
    */
   function position(el, rect) {
-    el.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - 40)}px`
-    el.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - el.offsetWidth - 8))}px`
+    const margin = 8
+    const width = el.offsetWidth
+    const height = el.offsetHeight
+
+    let top = rect.bottom + margin
+    if (top + height > window.innerHeight - margin) {
+      // Flip above the selection, which is where the room usually is.
+      const above = rect.top - margin - height
+      top = above >= margin ? above : window.innerHeight - height - margin
+    }
+
+    // Final, UNCONDITIONAL clamp — the anchor logic above is a preference, not
+    // a guarantee. `rect` is in viewport coordinates and the mockup runs to
+    // roughly 8,800px, so a selection can sit entirely below the fold: then
+    // `rect.bottom` exceeds the viewport, flipping above lands off screen too,
+    // and both anchors are useless. Without this line the button rendered as
+    // "visible, enabled and stable" while being unclickable — Playwright's
+    // "element is outside of the viewport", which is exactly how it was found.
+    // A fixed-position affordance must always be reachable.
+    el.style.top = `${Math.max(margin, Math.min(top, window.innerHeight - height - margin))}px`
+    el.style.left = `${Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin))}px`
   }
 
   /**
