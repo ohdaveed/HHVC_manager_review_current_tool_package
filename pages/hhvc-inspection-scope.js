@@ -29,8 +29,21 @@ window.HHVC_PAGES['scopeInfo'] = {
       ],
     },
     {
+      heading: 'Have this ready when you report',
+      karl: 'Maps to a second Title and text block: Title = this heading, Text = the paragraph plus three bullets. Adapted from the live Citywide "Report a health nuisance or hazards" service so HHVC reporters know what 311 needs without leaving this triage page.',
+      kind: 'body',
+      paragraphs: [
+        'You can make an HHVC report through 311. Having these details ready helps 311 send it to the right program.',
+      ],
+      bullets: [
+        'The address and type of property, such as an apartment, SRO, business, or shared area',
+        'What you saw, where it is, and how long it has been happening',
+        'Your contact information if you want an inspector to contact you with questions',
+      ],
+    },
+    {
       heading: 'Problems HHVC may inspect',
-      karl: 'Maps to a second Title and text block: Title = this heading, Text = the bulleted list below (bullets render as a bulleted list inside the rich text field; no paragraphs precede it here).',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the bulleted list below (bullets render as a bulleted list inside the rich text field; no paragraphs precede it here).',
       kind: 'body',
       bullets: [
         'Rats or mice',
@@ -52,7 +65,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'How to choose the right page',
-      karl: 'Resolved schema gap: unstructured tabular content converted to bulleted list.',
+      karl: 'Maps to a fourth Title and text block. Resolved schema gap: unstructured tabular content converted to bulleted list.',
       kind: 'body',
       bullets: [
         '**Rats, mice, raccoons, or other four-legged pests:** [Report rats, mice, and other four-legged problems](rodentsReport)',
@@ -64,7 +77,7 @@ window.HHVC_PAGES['scopeInfo'] = {
     },
     {
       heading: 'If your problem is not listed',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the bulleted list below.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the bulleted list below. The Citywide health-nuisance route is an inline external link rather than an HHVC report page so this mockup does not claim responsibility for services other programs own.',
       kind: 'body',
       bullets: [
         {
@@ -74,6 +87,7 @@ window.HHVC_PAGES['scopeInfo'] = {
             'The "San Francisco Housing Code (2025)" citation has zero tier-1 support (source-of-truth audit 2026-07-06, cross-cutting finding #1) — the DBI routing split looks intentional, but the statutory citation and "(2025)" edition tag trace only to tier-3 NotebookLM material. Source a real Housing Code citation or soften to "may be routed to DBI" before publication.',
         },
         'If your problem is not on this list, you can still start with 311, which can help send your report to the right place.',
+        'For lead, pesticides, water quality, sewage, food sanitation, or business hygiene concerns, use the [Citywide health nuisance and hazards reporting service](https://www.sf.gov/report-health-nuisance-or-hazards).',
         'If you are not sure whether HHVC can review your problem, it is still okay to report it. HHVC will review whether it may involve a housing or pest-related public health concern.',
       ],
     },

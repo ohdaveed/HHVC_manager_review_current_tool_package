@@ -1,0 +1,181 @@
+window.HHVC_PAGES = window.HHVC_PAGES || {}
+window.HHVC_PAGES['verminResources'] = {
+  slug: 'sf.gov/resource--healthy-housing-and-vermin-information',
+  type: 'Resource Collection',
+  title: 'Healthy housing and pest resources',
+  summary:
+    'Find guides, forms, and videos for reporting, preventing, and managing pests in a home or building.',
+  audience: [
+    'A tenant looking for help with pests or preparing for treatment',
+    'A property owner or manager preventing or managing pest problems',
+    'A building worker who needs forms, guidance, or training materials',
+    'A community member looking for healthy-home information to share',
+  ],
+  reading: 'Grade 6',
+  editorNote:
+    'Redesign of the live "Healthy housing and vermin information" Resource Collection previewed 2026-08-07. The source page is a long document dump that combines reporting, tenant preparation, owner compliance, forms, regulations, translated materials, and videos. This mockup routes people by task and audience first, retains the most useful source documents as explicit links, and routes remaining specialized material to focused City or trusted partner pages. Verify document titles, language versions, and replacement URLs before publication.',
+  sections: [
+    {
+      heading: 'Start with the problem',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. Each card becomes an SF.gov page link. Reporting routes come first so a resident does not need to identify the correct document before getting help.',
+      kind: 'body',
+      paragraphs: [
+        'Report an active problem first. Use the guides below when you need more detail or are preparing for treatment.',
+      ],
+      cards: [
+        {
+          title: 'Report rats, mice, and other four-legged problems',
+          text: 'Report rats, mice, raccoons, burrows, droppings, or another four-legged pest problem.',
+          target: 'rodentsReport',
+          karl: 'Resource section -> SF.gov page link to the rodents-report Transaction.',
+        },
+        {
+          title: 'Report cockroaches, mosquitoes, and other insects',
+          text: 'Report cockroaches, bed bugs, mosquitoes, flies, wasps, mites, or standing water.',
+          target: 'insectsReport',
+          karl: 'Resource section -> SF.gov page link to the insects-report Transaction.',
+        },
+        {
+          title: 'Report garbage, filth, and overgrown vegetation',
+          text: 'Report garbage, clutter, animal waste, pigeon problems, overgrown plants, or mold from humidity.',
+          target: 'filthReport',
+          karl: 'Resource section -> SF.gov page link to the filth-report Transaction.',
+        },
+      ],
+    },
+    {
+      heading: 'If you rent',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. The bed-bug preparation guide is a Document Picker upload in Karl; its live URL is a mockup stand-in until the document is attached in the CMS.',
+      kind: 'body',
+      paragraphs: [
+        'Use these resources to understand your rights, prepare for pest treatment, and keep a record of the problem.',
+      ],
+      cards: [
+        {
+          title: 'Tenant rights when reporting housing conditions',
+          text: 'Learn about tenant protections and where to get help if you are worried about retaliation.',
+          target: 'tenantRights',
+          karl: 'Resource section -> SF.gov page link to the tenant-rights Information page.',
+        },
+        {
+          title: 'Prepare your unit for bed bug treatment',
+          text: 'Follow these steps before bed bug treatment in your home.',
+          url: 'https://api.sf.gov/documents/23140/GuidelinesforUnitPreparation_dP56n7G.pdf',
+          karl: 'Resource section -> Document Picker upload. Source-page document: "Tenant guidelines for unit preparation prior to bed bug treatment - English." Confirm the current document and linked language versions before publication.',
+        },
+        {
+          title: 'What happens after you report',
+          text: 'Learn how a report is reviewed and when an inspector may contact you.',
+          target: 'afterReport',
+          karl: 'Resource section -> SF.gov page link to the after-report Information page.',
+        },
+      ],
+    },
+    {
+      heading: 'If you own or manage a building',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. The owner-operator guide is a Document Picker upload in Karl; its live URL is a mockup stand-in until attached in the CMS.',
+      kind: 'body',
+      paragraphs: [
+        'Use these resources to prevent pests, document your work, and meet Article 11 responsibilities.',
+      ],
+      cards: [
+        {
+          title: 'Property owner responsibilities',
+          text: 'See Article 11 responsibilities, fees, pest prevention, and enforcement resources.',
+          target: 'ownerHub',
+          karl: 'Resource section -> SF.gov page link to the owner Resource Collection.',
+        },
+        {
+          title: 'Integrated pest management for property owners and managers',
+          text: 'Use prevention, monitoring, and resident outreach tools for your building.',
+          target: 'ownerGuidance',
+          karl: 'Resource section -> SF.gov page link to the owner-guidance Information page.',
+        },
+        {
+          title: 'Residential building owner-operator guidelines for vector control',
+          text: 'Understand owner and operator responsibilities for maintaining healthy housing and preventing pests.',
+          url: 'https://api.sf.gov/documents/52936/R_Residential_Bldg_Owner-Operator_Guidelines_for_Vector_Control_2026_0SYmmSc.html',
+          karl: 'Resource section -> Document Picker upload. Source-page document published March 25, 2026; confirm the file, title, and publication date before attaching it in Karl.',
+        },
+      ],
+    },
+    {
+      heading: 'Find forms, records, and rules',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. Put occasional reference tasks after active reporting and audience-specific guidance.',
+      kind: 'body',
+      cards: [
+        {
+          title: 'Look up building records',
+          text: 'Find complaints, inspections, violations, and public records for a building.',
+          target: 'recordsHub',
+          karl: 'Resource section -> SF.gov page link to the records Resource Collection.',
+        },
+        {
+          title: 'Health Code Article 11 in plain language',
+          text: 'Read the City rules about pests, nuisances, violations, and enforcement.',
+          target: 'article11Guide',
+          karl: 'Resource section -> SF.gov page link to the Article 11 Report page.',
+        },
+        {
+          title: 'Pest control reporting form',
+          text: 'Use this spreadsheet to keep track of pest control reports and work.',
+          url: 'https://api.sf.gov/documents/23712/PCOReportingForm_2.xls',
+          karl: 'Resource section -> Document Picker upload. Source-page document: "Pest Control Reporting Form." Confirm whether an accessible web or spreadsheet version should replace this legacy XLS file.',
+        },
+      ],
+    },
+    {
+      heading: 'Learn and share healthy-home information',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. These materials support prevention and education after the visitor has found an action route.',
+      kind: 'body',
+      cards: [
+        {
+          title: '16 Steps to a Healthy Home',
+          text: 'Use practical steps to keep pests away by removing food, water, and shelter.',
+          url: 'https://api.sf.gov/documents/52246/16_Steps_to_a_Healthy_Home.html',
+          karl: 'Resource section -> Document Picker upload. Source-page document published March 12, 2026; confirm the document and publication date before attaching it in Karl.',
+        },
+        {
+          title: 'Mosquito Control Program',
+          text: 'Learn about mosquito prevention, surveillance, and West Nile virus resources.',
+          target: 'mosquitoControl',
+          karl: 'Resource section -> SF.gov page link to the mosquito-control Information page.',
+        },
+        {
+          title: 'Watch a roach-prevention video',
+          text: 'Learn five simple steps for preventing cockroaches at home.',
+          url: 'https://www.youtube.com/watch?v=S-aJzCk-rNQ',
+          karl: 'Resource section -> External link. Source-page video: "Video: Roach Prevention - English." Add translated versions only after confirming their active media links.',
+        },
+      ],
+    },
+    {
+      heading: 'More trusted pest guidance',
+      karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. Use partner guidance instead of recreating a long, difficult-to-maintain species-by-species document catalog.',
+      kind: 'body',
+      cards: [
+        {
+          title: 'UC IPM resources for homes and buildings',
+          text: 'Find practical pest notes, prevention guides, and multi-unit housing resources.',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/',
+          karl: 'Resource section -> External link to the University of California Statewide IPM Program.',
+        },
+        {
+          title: 'Environmental health branch fee schedule',
+          text: 'See the current Environmental Health fee schedule.',
+          url: 'https://api.sf.gov/documents/17453/Website_Fees_FY25-26_fgM2WjX.pdf',
+          karl: 'Resource section -> Document Picker upload. The source-page file is FY25-26; do not publish it as current without checking for a newer certified schedule.',
+        },
+        {
+          title: 'Healthy Housing and Vector Control',
+          text: 'Return to reporting, tenant help, owner resources, and City service referrals.',
+          target: 'pestsTopic',
+          karl: 'Resource section -> SF.gov page link to the HHVC Agency page.',
+        },
+      ],
+    },
+  ],
+  seoTitle: 'Healthy housing and pest resources | SF.gov',
+  metaDescription:
+    'Find healthy-home guides, pest-treatment resources, forms, and prevention information for San Francisco homes and buildings.',
+}

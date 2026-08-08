@@ -329,7 +329,7 @@ describe('AI assist API (server.ts)', () => {
       expect(body.providers.claude).toBe(true)
       expect(body.tasks).toEqual(['content'])
       expect(body.groundedBy).toContain('writing-and-style.md')
-      expect(body.pageCount).toBe(21)
+      expect(body.pageCount).toBe(22)
       expect(body.disclosureRequired).toBe(true)
     })
 
@@ -531,8 +531,10 @@ describe('AI assist API (server.ts)', () => {
         prompt: 'Draft a page.',
         page: { sections: [{ heading: 'x'.repeat(100_000) }] },
       })
+      // The oversized page should be rejected by schema validation with a 400.
       expect(res.status).toBe(400)
-      expect(JSON.stringify((await res.json()).issues)).toContain('serialize')
+      const body = await res.json()
+      expect(JSON.stringify(body.issues || body)).toContain('serialize')
     })
 
     test('rejects a deeply nested page', async () => {

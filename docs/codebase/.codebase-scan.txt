@@ -1,0 +1,365 @@
+
+=== DIRECTORY TREE (max depth 3, source files only) ===
+.agents
+.agents/skills
+.agents/skills/HHVC_manager_review_current_tool_package
+.agents/skills/HHVC_manager_review_current_tool_package/SKILL.md
+.agents/skills/HHVC_manager_review_current_tool_package/agents
+.claude
+.claude/ecc-tools.json
+.claude/identity.json
+.claude/settings.local.json
+.claude/skills
+.claude/skills/HHVC_manager_review_current_tool_package
+.claude/skills/HHVC_manager_review_current_tool_package/SKILL.md
+.claude/skills/karl-notes-drift-check
+.claude/skills/karl-notes-drift-check/SKILL.md
+.claude/skills/remove-ai-slop
+.claude/skills/remove-ai-slop/SKILL.md
+.claude/skills/remove-ai-slop/evals
+.claude/skills/remove-ai-slop/references
+.claude/skills/remove-ai-slop/scripts
+.claude/skills/verify-netlify-deploy
+.claude/skills/verify-netlify-deploy/SKILL.md
+.claude/skills/verify-railway-backend
+.claude/skills/verify-railway-backend/SKILL.md
+.claude/worktrees
+.codex
+.codex/AGENTS.md
+.codex/agents
+.codex/agents/docs-researcher.toml
+.codex/agents/explorer.toml
+.codex/agents/reviewer.toml
+.codex/config.toml
+.cursor
+.cursor/rules
+.cursor/rules/repo-context.mdc
+.cursor/settings.json
+.env.local
+.github
+.github/copilot-instructions.md
+.github/workflows
+.github/workflows/ci.yml
+.gitignore
+.impeccable
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/live
+.impeccable/live/annotations
+.impeccable/live/sessions
+.netlify
+.netlify/functions-internal
+.netlify/netlify.toml
+.netlify/plugins
+.netlify/plugins/package-lock.json
+.netlify/plugins/package.json
+.netlify/state.json
+.netlify/v1
+.netlify/v1/functions
+.playwright-mcp
+.playwright-mcp/console-2026-07-01T20-47-04-739Z.log
+.playwright-mcp/console-2026-07-01T21-43-48-444Z.log
+.playwright-mcp/console-2026-07-02T04-10-00-395Z.log
+.playwright-mcp/console-2026-07-02T04-16-06-530Z.log
+.playwright-mcp/console-2026-07-02T04-17-46-921Z.log
+.playwright-mcp/console-2026-07-08T05-43-49-645Z.log
+.playwright-mcp/console-2026-07-15T20-14-27-990Z.log
+.playwright-mcp/console-2026-07-15T20-14-46-743Z.log
+.playwright-mcp/console-2026-07-15T20-48-17-365Z.log
+.playwright-mcp/console-2026-08-06T09-58-15-837Z.log
+.playwright-mcp/console-2026-08-06T10-05-20-224Z.log
+.playwright-mcp/console-2026-08-07T02-06-37-061Z.log
+.playwright-mcp/console-2026-08-07T02-08-36-798Z.log
+.playwright-mcp/console-2026-08-07T06-01-37-146Z.log
+.playwright-mcp/console-2026-08-07T06-14-38-257Z.log
+.playwright-mcp/page-2026-07-01T20-47-05-263Z.yml
+.playwright-mcp/page-2026-07-01T20-48-07-581Z.yml
+.playwright-mcp/page-2026-07-01T20-48-44-393Z.png
+.playwright-mcp/page-2026-07-01T21-07-48-582Z.yml
+.playwright-mcp/page-2026-07-01T21-09-47-413Z.yml
+.playwright-mcp/page-2026-07-01T21-10-47-553Z.yml
+.playwright-mcp/page-2026-07-01T21-10-57-911Z.yml
+.playwright-mcp/page-2026-07-01T21-11-52-245Z.yml
+.playwright-mcp/page-2026-07-01T21-11-56-975Z.yml
+.playwright-mcp/page-2026-07-01T21-43-48-870Z.yml
+.playwright-mcp/page-2026-07-01T21-54-03-280Z.yml
+.playwright-mcp/page-2026-07-01T21-54-21-663Z.yml
+.playwright-mcp/page-2026-07-01T21-54-54-009Z.yml
+.playwright-mcp/page-2026-07-02T04-10-01-101Z.yml
+.playwright-mcp/page-2026-07-02T04-16-07-134Z.yml
+.playwright-mcp/page-2026-07-02T04-17-47-360Z.yml
+.playwright-mcp/page-2026-07-02T04-18-54-587Z.yml
+.playwright-mcp/page-2026-07-08T05-43-50-420Z.yml
+.playwright-mcp/page-2026-07-08T05-47-01-698Z.yml
+.playwright-mcp/page-2026-07-15T20-14-28-749Z.yml
+.playwright-mcp/page-2026-07-15T20-14-47-166Z.yml
+.playwright-mcp/page-2026-08-06T09-58-17-058Z.yml
+.playwright-mcp/page-2026-08-06T10-05-20-954Z.yml
+.playwright-mcp/page-2026-08-07T02-06-37-420Z.yml
+.playwright-mcp/page-2026-08-07T02-08-36-992Z.yml
+.playwright-mcp/page-2026-08-07T06-01-37-823Z.yml
+.playwright-mcp/page-2026-08-07T06-10-37-462Z.yml
+.playwright-mcp/page-2026-08-07T06-10-46-978Z.yml
+.playwright-mcp/page-2026-08-07T06-10-51-914Z.png
+.playwright-mcp/page-2026-08-07T06-11-01-645Z.yml
+.playwright-mcp/page-2026-08-07T06-14-39-251Z.yml
+.playwright-mcp/page-2026-08-07T06-15-01-860Z.yml
+.poolside
+.poolside/settings.local.yaml
+.prettierignore
+.prettierrc.json
+.superpowers
+.superpowers/brainstorm
+.superpowers/brainstorm/.last-port
+.superpowers/brainstorm/.last-token
+.superpowers/brainstorm/10471-1783344437
+.superpowers/brainstorm/10471-1783344437/content
+.superpowers/brainstorm/10471-1783344437/state
+.superpowers/brainstorm/12797-1783344466
+.superpowers/brainstorm/12797-1783344466/content
+.superpowers/brainstorm/12797-1783344466/state
+.superpowers/brainstorm/23885-1783343308
+.superpowers/brainstorm/23885-1783343308/content
+.superpowers/brainstorm/23885-1783343308/state
+.superpowers/brainstorm/4064-1782954057
+.superpowers/brainstorm/4064-1782954057/content
+.superpowers/brainstorm/4064-1782954057/state
+.superpowers/sdd
+.superpowers/sdd/.gitignore
+.superpowers/sdd/task-8-brief.md
+.vscode
+.vscode/settings.json
+.windsurfrules
+.worktrees
+.worktrees/fix-page-count-docs
+.worktrees/fix-page-count-docs/.agents
+.worktrees/fix-page-count-docs/.agents/skills
+.worktrees/fix-page-count-docs/.claude
+.worktrees/fix-page-count-docs/.claude/ecc-tools.json
+.worktrees/fix-page-count-docs/.claude/identity.json
+.worktrees/fix-page-count-docs/.claude/skills
+.worktrees/fix-page-count-docs/.codex
+.worktrees/fix-page-count-docs/.codex/AGENTS.md
+.worktrees/fix-page-count-docs/.codex/agents
+.worktrees/fix-page-count-docs/.codex/config.toml
+.worktrees/fix-page-count-docs/.cursor
+.worktrees/fix-page-count-docs/.cursor/rules
+.worktrees/fix-page-count-docs/.cursor/settings.json
+.worktrees/fix-page-count-docs/.github
+.worktrees/fix-page-count-docs/.github/copilot-instructions.md
+.worktrees/fix-page-count-docs/.github/workflows
+.worktrees/fix-page-count-docs/.gitignore
+.worktrees/fix-page-count-docs/.playwright-mcp
+.worktrees/fix-page-count-docs/.playwright-mcp/console-2026-07-01T20-47-04-739Z.log
+.worktrees/fix-page-count-docs/.playwright-mcp/console-2026-07-01T21-43-48-444Z.log
+.worktrees/fix-page-count-docs/.playwright-mcp/console-2026-07-02T04-10-00-395Z.log
+.worktrees/fix-page-count-docs/.playwright-mcp/console-2026-07-02T04-16-06-530Z.log
+.worktrees/fix-page-count-docs/.playwright-mcp/console-2026-07-02T04-17-46-921Z.log
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T20-47-05-263Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T20-48-07-581Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T20-48-44-393Z.png
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-07-48-582Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-09-47-413Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-10-47-553Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-10-57-911Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-11-52-245Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-11-56-975Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-43-48-870Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-54-03-280Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-54-21-663Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-01T21-54-54-009Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-02T04-10-01-101Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-02T04-16-07-134Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-02T04-17-47-360Z.yml
+.worktrees/fix-page-count-docs/.playwright-mcp/page-2026-07-02T04-18-54-587Z.yml
+.worktrees/fix-page-count-docs/.prettierignore
+.worktrees/fix-page-count-docs/.prettierrc.json
+.worktrees/fix-page-count-docs/.superpowers
+.worktrees/fix-page-count-docs/.superpowers/brainstorm
+.worktrees/fix-page-count-docs/.vscode
+.worktrees/fix-page-count-docs/.vscode/settings.json
+.worktrees/fix-page-count-docs/.windsurfrules
+.worktrees/fix-page-count-docs/AGENTS.md
+.worktrees/fix-page-count-docs/CLAUDE.md
+.worktrees/fix-page-count-docs/README.md
+.worktrees/fix-page-count-docs/README_current_source.md
+.worktrees/fix-page-count-docs/archive
+.worktrees/fix-page-count-docs/archive/pages
+.worktrees/fix-page-count-docs/audit_karl_components.py
+.worktrees/fix-page-count-docs/audit_pages.py
+.worktrees/fix-page-count-docs/build_scripts
+.worktrees/fix-page-count-docs/build_scripts/ai
+.worktrees/fix-page-count-docs/build_scripts/copy-workshop-form.js
+.worktrees/fix-page-count-docs/build_scripts/csv.js
+.worktrees/fix-page-count-docs/build_scripts/data-checks.js
+.worktrees/fix-page-count-docs/build_scripts/extract-pages.js
+.worktrees/fix-page-count-docs/build_scripts/load-pages.js
+.worktrees/fix-page-count-docs/build_scripts/make-demo-review-state.js
+.worktrees/fix-page-count-docs/build_scripts/page-import-checks.js
+.worktrees/fix-page-count-docs/build_scripts/push-tracking-sheet.js
+.worktrees/fix-page-count-docs/build_scripts/review-state-schema.js
+.worktrees/fix-page-count-docs/build_scripts/schema.js
+.worktrees/fix-page-count-docs/build_scripts/sheet-config.json
+
+=== STACK DETECTION (manifest files) ===
+
+--- package.json ---
+{
+  "name": "hhvc-manager-review-mockup-tool",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@google/genai": "^2.15.0",
+    "text-readability": "^1.1.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@happy-dom/global-registrator": "^20.11.1",
+    "@playwright/test": "^1.61.1",
+    "@sfgov/design-system": "0.0.1",
+    "csv-writer": "^1.6.0",
+    "defu": "^6.1.7",
+    "echarts": "^6.1.0",
+    "fast-glob": "^3.3.3",
+    "fuse.js": "^7.4.2",
+    "googleapis": "^144.0.0",
+    "modern-screenshot": "^4.7.0",
+    "papaparse": "^5.5.4",
+    "prettier": "^3.5.1",
+    "vite": "^8",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "scripts": {
+    "// dev": "Vite dev server with HMR at http://127.0.0.1:8080 (kills stale listeners first). /api is proxied to the optional sync backend; run `bun run dev:api` alongside if you need it",
+    "dev": "bash start-dev.sh",
+    "// dev:api": "Runs only the review-state sync API (server.ts) on :8081, for the Vite dev server to proxy /api to",
+    "dev:api": "PORT=8081 bun run --watch server.ts",
+    "// start": "Production-like: assembles the SAME dist/ bundle Netlify deploys (build:netlify), then serves it plus the sync API from server.ts",
+    "start": "bun run build:netlify && bun run serve",
+    "// serve": "Serves an already-built dist/ plus the sync API, without rebuilding",
+    "serve": "bun run server.ts",
+    "// validate": "Zod-validates pages/*.js and js/page-data.js for schema shape and business invariants",
+    "validate": "bun build_scripts/validate.js",
+    "// export": "Generates data/page_inventory.{json,csv} and syncs the local tracking sheet",
+    "export": "bun build_scripts/extract-pages.js && bun build_scripts/sync-tracking-sheet.js",
+    "// sync-tracking": "Re-generates the local mockup tracking CSV sheets",
+    "sync-tracking": "bun build_scripts/sync-tracking-sheet.js",
+    "// push-tracking": "Pushes the local page review status to the Google Sheets tracker",
+    "push-tracking": "bun build_scripts/push-tracking-sheet.js",
+    "// build": "Full pipeline: validate -> export -> build workshop form -> bundle the app -> publish the form into dist/ -> emit the self-contained single-file page",
+    "build": "bun run validate && bun run export && bun run build:workshop-form && bun run build:app && node build_scripts/copy-workshop-form.js && bun run build:singlefile",
+    "// build:app": "Vite production bundle into dist/ (what server.ts and Netlify serve)",
+    "build:app": "vite build",
+    "// build:singlefile": "Inlines every script and stylesheet into one portable dist-singlefile/index.html",
+    "build:singlefile": "vite build --mode singlefile",
+    "// build:workshop-form": "Installs dependencies and runs Vite production build for the embedded mosquito request sub-form",
+    "build:workshop-form": "bun install --cwd forms/mosquito-workshop-request && bun run --cwd forms/mosquito-workshop-request build",
+    "// build:netlify": "Validates page data, bundles the app into dist/, and publishes the committed workshop form into it",
+    "build:netlify": "bun run validate && bun run build:app && node build_scripts/copy-workshop-form.js",
+    "// format": "Runs Prettier to automatically format all files in place",
+    "format": "prettier --write .",
+    "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
+    "format:check": "prettier --check .",
+    "// test": "Runs the test suite using Bun's test runner",
+    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/review-merge.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/decision-vocabulary.test.js tests/doc-counts.test.js tests/mockup-image-export.test.js tests/review-insights-data.test.js tests/review-insights-charts.test.js tests/review-insights-render.test.js tests/review-ops-data.test.js tests/ai-assist-schema.test.js tests/ai-assist-env.test.js tests/ai-assist-providers.test.js tests/ai-assist-server.test.js",
+    "// test:e2e": "Playwright end-to-end tests (builds, then serves dist/ on :8080)",
+    "test:e2e": "playwright test"
+  }
+}
+
+
+=== ENTRY POINTS ===
+No common entry points found. Check 'main' or 'scripts.start' in manifest files above.
+
+=== LINTING AND FORMATTING CONFIG ===
+Found: .prettierrc.json
+
+=== ENVIRONMENT VARIABLE TEMPLATES ===
+No .env.example or .env.template found. Identify required environment variables by searching the code and config for environment variable reads.
+
+=== TODO / FIXME / HACK (production code only, test dirs excluded) ===
+None found.
+
+=== GIT RECENT COMMITS (last 20) ===
+e0f7ddf fix: Prettier-format the Article 11 compliance page, fix page-count tests
+8aa382b content: register the Article 11 compliance page for property owners
+07f0a03 fix: address manager review UX gaps
+ae7a07f content: design a compliance-overview page for Article 11
+8b7d720 chore: add a verify-railway-backend health-check skill
+7211124 content: note Karl's 2-item guidance on the things_to_know karl notes
+8c727b0 chore: add a karl-notes-drift-check skill
+def18e7 chore: add a post-merge Netlify deploy verification skill
+0b41c89 chore: ignore the two orphaned root single-file exports
+507e258 Pre-demo review: fix a layout overlap, four a11y failures, and seed a demo state (#95)
+7660f81 Collapse sync settings into a disclosure; fix dev-mode boot crash (#97)
+3ccbe5f Tech debt: fix what was wrong, delete what could not fail (#94)
+9caf998 Dock the review workspace and cut the dashboard down to what earns its place (#93)
+37f0909 fix: settle the badge fade in both directions before an axe scan (#92)
+c747eb3 Add a remove-ai-slop skill, and fix two claims #90 shipped wrong (#91)
+f01144a Consolidate duplicated code, remove orphaned tooling, unify the design system (#90)
+0b93db1 content: use an SF apartment row for the Agency spotlight (#89)
+0710b80 content: vendor the Agency spotlight photo instead of hotlinking it (#88)
+d342a9f feat: add a Tool status tab for review-data health (#87)
+cd1368d feat: distinct decision chips and one-step undo for queue actions (#86)
+
+=== HIGH-CHURN FILES (last 90 days, top 20) ===
+  54 index.html
+  40 js/ux-improvements.js
+  37 css/styles.css
+  36 CLAUDE.md
+  35 js/page-render.js
+  28 AGENTS.md
+  28 package.json
+  25 css/ux-improvements.css
+  25 pages/agency-service-grouping.js
+  25 README.md
+  24 js/utils.js
+  23 js/interactive-sitemap.js
+  22 build_scripts/validate.js
+  21 js/dashboard-guidance.js
+  21 pages/what-happens-after-report.js
+  20 js/page-data.js
+  20 pages/hhvc-inspection-scope.js
+  20 pages/report-mold-humidity-condensation.js
+  19 pages/report-bed-bugs.js
+  18 js/app.js
+
+=== MONOREPO SIGNALS ===
+No monorepo signals detected.
+
+=== CODE METRICS ===
+Total files scanned: 816
+Total lines of code: 80504
+
+Files by language:
+  Other: 521
+  JavaScript: 287
+  Python: 6
+  TypeScript: 2
+
+Top 10 largest files:
+.worktrees/fix-page-count-docs/docs/source/hhvc-policy/2026-07-07-renter-rodent-playbook.pptx: 9400.4KB
+docs/source/hhvc-policy/2026-07-07-renter-rodent-playbook.pptx: 9400.4KB
+.worktrees/fix-page-count-docs/docs/source/hhvc-policy/2026-07-07-directors-rules-legacy-copy.pdf: 2795.2KB
+docs/source/hhvc-policy/2026-07-07-directors-rules-legacy-copy.pdf: 2795.2KB
+.worktrees/fix-page-count-docs/docs/source/hhvc-policy/2026-07-07-pest-prevention-by-design.pdf: 2466.4KB
+docs/source/hhvc-policy/2026-07-07-pest-prevention-by-design.pdf: 2466.4KB
+.worktrees/fix-page-count-docs/docs/source/hhvc-policy/2026-07-02-ipm-pests-flies.pdf: 2418.6KB
+docs/source/hhvc-policy/2026-07-02-ipm-pests-flies.pdf: 2418.6KB
+.worktrees/fix-page-count-docs/docs/source/hhvc-policy/2026-07-02-ipm-pests-cockroaches.pdf: 1970.8KB
+docs/source/hhvc-policy/2026-07-02-ipm-pests-cockroaches.pdf: 1970.8KB
+
+=== CI/CD PIPELINES ===
+CI/CD: GitHub Actions
+
+=== CONTAINERS & ORCHESTRATION ===
+No containerization configs detected.
+
+=== SECURITY & COMPLIANCE ===
+No security configs detected.
+
+=== PERFORMANCE & TESTING ===
+No performance testing configs detected.
+
+=== SCAN COMPLETE ===

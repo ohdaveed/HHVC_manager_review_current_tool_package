@@ -13,7 +13,7 @@ window.HHVC_PAGES['filthReport'] = {
   ],
   reading: 'Grade 6',
   editorNote:
-    'Consolidated Transaction page. Replaces the separate "Report garbage or clutter", "Report overgrown vegetation", and "Report pigeons" pages, and carries the mold-from-humidity 311 pointer from the deleted mold report page. One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager.',
+    'Consolidated Transaction page. Replaces the separate "Report garbage or clutter", "Report overgrown vegetation", "Report pigeons", and "Report mold in my home" pages. The mold integration keeps one primary 311 CTA, adds leak-versus-condensation guidance and the SFDPH 10-square-foot walls/ceiling review threshold, and does not restate the source page’s unsupported assignment of all condensation-caused mold to a tenant. The "While you wait" section is the Supporting information block requested by the manager.',
   sections: [
     {
       heading: 'What to do',
@@ -44,11 +44,28 @@ window.HHVC_PAGES['filthReport'] = {
           karl: 'what_to_do -> Section. Section title: "If you rent, give 72 hours when possible". Section specifics: one Text block containing the intro sentence plus the bulleted list below. Conditional 72-hour tenant notice + timeline expectation.',
         },
         {
+          title: 'For mold, identify the moisture source',
+          text: [
+            'Mold needs excess moisture to grow. Look for leaks from plumbing, roofs, windows, or wet spots, and for condensation from humid indoor air.',
+            'Tell the property owner or manager in writing as soon as you find a leak. Include the date, where the mold is, and where you think the moisture is coming from. Keep a copy of your message.',
+          ],
+          bullets: [
+            'For mold on a wall or ceiling, describe the size of the affected area and whether it is growing or spreading.',
+            {
+              text: 'Do not rely on a third-party mold test kit when you report. Describe the visible condition and moisture source instead.',
+              unverified: true,
+              unverifiedReason:
+                'This instruction appears on the live draft "Report mold in my home" page but is not established by the available SFDPH mold source documents. Confirm it with HHVC before publication.',
+            },
+          ],
+          karl: 'what_to_do -> Section. Section title: "For mold, identify the moisture source". Section specifics: one Text block containing two paragraphs and two bullets. Integrates the live "Report mold in my home" guidance without creating a duplicate transaction. The leak/condensation distinction and prompt written leak notice are supported by SFDPH mold guidance; confirm the third-party test-kit instruction with HHVC before publication.',
+        },
+        {
           title: 'Describe the condition',
           text: ['Include only the details that apply:'],
           bullets: [
             'The address or location',
-            'Whether the condition is garbage, debris, clutter, stored items, animal waste, pigeon droppings or roosting, or overgrown plants and brush',
+            'Whether the condition is garbage, debris, clutter, stored items, animal waste, pigeon droppings or roosting, overgrown plants and brush, or mold',
             'Whether it is inside, outside, or in a shared area',
             'How long it has been happening',
             'Whether you told the property owner or manager, if you rent',
@@ -56,10 +73,10 @@ window.HHVC_PAGES['filthReport'] = {
             'Your contact information, if you want an inspector to contact you',
           ],
           callout: {
-            karl: 'Callout block inside the "Describe the condition" Section specifics: single rich text field, no separate title field. Text: photo guidance plus the reporter-identity disclosure note.',
-            text: "Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
+            karl: 'Callout block inside the "Describe the condition" Section specifics: single rich text field, no separate title field. Text: the documented mold-review threshold, photo guidance, and the reporter-identity disclosure note.',
+            text: "For mold on walls or ceilings, HHVC can act when the affected area totals at least 10 square feet. Photos are not required. Describe the location and condition clearly. Reporter identities are only shared with the City Attorney's Office and are not shared in response to public records requests.",
           },
-          karl: 'what_to_do -> Section. Section title: "Describe the condition". Section specifics: Text block (intro sentence + bulleted checklist) + Callout block below. Checklist names the garbage, filth, pigeon, and vegetation scope this consolidated page covers.',
+          karl: 'what_to_do -> Section. Section title: "Describe the condition". Section specifics: Text block (intro sentence + bulleted checklist) + Callout block below. Checklist names the garbage, filth, pigeon, vegetation, and mold scope this consolidated page covers.',
         },
       ],
     },
@@ -78,8 +95,8 @@ window.HHVC_PAGES['filthReport'] = {
       ],
       callout: {
         title: 'Mold from humidity or condensation',
-        text: 'You can also use 311 to report mold caused by humidity or condensation inside a building. Describe where the mold is and how large the area is.',
-        karl: 'Callout block. Carries the mold-reporting path from the deleted standalone mold report page — mold from humidity or condensation stays reportable through the same 311 flow (manager decision at plan review).',
+        text: 'You can use 311 to report mold caused by humidity or condensation inside a building. Describe where the mold is, how large the affected wall or ceiling area is, and what is causing moisture.',
+        karl: 'Callout block. Carries the mold-reporting path from the deleted standalone mold report page — mold from humidity or condensation stays reportable through the same 311 flow. The source page’s leak-versus-condensation responsibility language is intentionally not repeated because the SFDPH guidance says responsibility depends on the moisture cause.',
       },
     },
     {

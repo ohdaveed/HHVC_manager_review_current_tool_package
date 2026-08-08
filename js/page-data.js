@@ -22,6 +22,7 @@ import '../pages/property-owner-responsibilities.js'
 import '../pages/respond-to-notice-of-violation.js'
 import '../pages/hhvc-inspection-scope.js'
 import '../pages/integrated-pest-management-property-managers.js'
+import '../pages/healthy-housing-vermin-resources.js'
 import '../pages/what-happens-after-report.js'
 import '../pages/tenant-rights-reporting.js'
 import '../pages/mosquito-control-program.js'
@@ -51,6 +52,7 @@ window.HHVC_DATA = {
     ['article11Compliance', 'Information: Article 11 compliance for property owners'],
     ['article11Guide', 'Report: Health Code Article 11 in plain language'],
     ['ownerGuidance', 'Information: Integrated pest management for property owners and managers'],
+    ['verminResources', 'Resource collection: Healthy housing and pest resources'],
     ['afterReport', 'Information: What happens after you report'],
     ['tenantRights', 'Information: Tenant rights and reporting'],
     ['mosquitoControl', 'Information: Mosquito Control Program'],

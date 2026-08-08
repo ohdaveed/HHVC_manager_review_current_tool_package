@@ -30,7 +30,7 @@ window.HHVC_PAGES['ownerHub'] = {
       cards: [
         {
           title: 'Pay your Healthy Housing fee',
-          text: 'Pay the program fee for residential buildings with 3 or more units.',
+          text: 'Pay the annual program fee for apartment buildings with 3 or more rental units.',
           target: 'payFee',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },

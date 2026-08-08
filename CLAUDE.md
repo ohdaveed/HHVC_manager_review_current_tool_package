@@ -22,7 +22,7 @@ the tool is unaffected if it's never used.
 A separate Vite sub-app lives at `forms/mosquito-workshop-request/` (a real
 build step, built independently — see Build outputs below).
 
-The repo currently holds **21 pages** under `pages/`. If `bun` isn't on
+The repo currently holds **22 pages** under `pages/`. If `bun` isn't on
 `PATH` it installs to `~/.bun/bin`; run `export PATH="$HOME/.bun/bin:$PATH"`.
 
 ## Commands
@@ -274,7 +274,7 @@ re-monolith them.**
   file carried a hand-rolled formula from the no-build-step era while
   `build_scripts/reading-level.js` wrapped the library for Node — and only the
   Node copy had tests, while only this one shipped. They disagreed by 1.14
-  grades on average across the 21 pages, always in the direction of "easier
+  grades on average across the 22 pages, always in the direction of "easier
   than it is", so nine pages reported hitting a reading target they miss. The
   Node copy is deleted; `tests/reading-level.test.js` now imports this one.
 - **`js/review-state-validation.js`** — browser-side validation of the
@@ -362,7 +362,7 @@ never referenced from `pages/*.js` or outside its own module's files):
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 20 pages, drawing a
+**Sitemap** was removed outright (a fourth way to navigate 22 pages, drawing a
 hierarchy one level deep — most hubs rendered as `HUB 0/0` above "No child pages
 assigned"), and **AI assist** and **Tool status** became collapsed `<details>`
 at the end of Help. Both of those depend on `server.ts`, which the Netlify
@@ -498,7 +498,7 @@ a ready-to-render `citation`:
 - **`severity: 'error'`** are the standards manual's mandates. They join the
   scored rule list behind the Overview tab's "checks passed" ratio, and their
   citation renders on the Checks tab alongside the rule.
-- **`severity: 'warning'`** are advisory, run to ~115 across the 21 pages, and
+- **`severity: 'warning'`** are advisory, run to ~115 across the 22 pages, and
   render separately — folding them into the ratio would make every page look
   broken.
 - A scored rule must always be **pushed**, passing or failing, never omitted

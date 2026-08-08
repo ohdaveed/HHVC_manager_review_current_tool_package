@@ -4,118 +4,130 @@ window.HHVC_PAGES['payFee'] = {
   type: 'Transaction',
   title: 'Pay your annual Healthy Housing fee for apartment buildings',
   summary:
-    'Pay or learn about the annual Healthy Housing fee for apartment buildings with 3 or more units.',
+    'Pay your annual Healthy Housing fee if you own an apartment building with 3 or more rental units.',
   audience: [
-    'People who own a residential building in San Francisco',
-    'Property managers and billing contacts helping an owner pay or understand the fee',
+    'A property owner responsible for an apartment building',
+    'A property manager or billing contact paying or reviewing an invoice',
   ],
   reading: 'Grade 7',
-  whatToKnow: {
-    cost: 'Fee applies to apartment buildings with 3 or more rental units',
-    thingsToKnow: [
-      'Check your invoice for the exact amount and due date.',
-      'Have your invoice or property address ready before you start.',
-    ],
-  },
+  editorNote:
+    'Transaction redesign based on the live FY 2026-27 payment page and fee schedule. It puts the payment action first, then separates eligibility, annual fee tiers, invoice corrections, and late-payment consequences. The annual apartment-building fee and a reinspection fee are distinct charges; do not present reinspection rates as part of the annual bill.',
   sections: [
     {
-      heading: 'Before you pay',
-      karl: 'Best real-schema fit: a things_to_know entry (Title = this heading, Text = the two paragraphs plus the bulleted list below).',
+      heading: 'What to do',
+      karl: 'Maps to the Transaction editor’s repeatable Steps field. Each mockup step becomes one Step with type "number", a Title, and a rich-text Step description. Optional, Cost, Time, and Transaction link remain blank unless Environmental Health supplies a case-independent value. The confirmed external payment URL is carried by the mockup button; confirm the production Transaction editor’s external-link treatment before publishing.',
       kind: 'body',
-      paragraphs: [
-        'Have your invoice, property address, or account information ready before you start.',
-        'Use the payment method listed on your annual invoice when one is provided.',
-      ],
-      bullets: [
-        'Your invoice or account information, if you received one',
-        'The property address',
-        'The name and contact information for the billing contact',
-        'The payment method allowed on your invoice',
-      ],
-    },
-    {
-      heading: 'Who may need to pay',
-      karl: 'Best real-schema fit: a second things_to_know entry (Title = this heading, Text = the bulleted list below). Table removed — Transaction pages do not support a table block in Karl (only Report does; see docs/karl-help-center-research-2026-07-06.md item 2), so the fee tiers are listed as bullets instead. Amounts verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md) — the current fiscal year\'s certified schedule. Re-verify against a newer certification before publishing if one has since been issued.',
-      kind: 'body',
-      bullets: [
-        'You need to pay this fee if you own an apartment building with 3 or more rental units.',
-        'If fewer than 3 units are rented during the billing year, you do not need to pay the fee.',
-        'The number of rental units determines your fee. Current certified rates (effective 7/1/26-6/30/27):',
-        '3 units: $103',
-        '4-6 units: $129',
-        '7-10 units: $174',
-        '11-15 units: $350',
-        '16-20 units: $485',
-        '21-30 units: $688',
-        'Over 30 units: $808',
-        'See the full fee schedule, including reinspection hourly rates, in the property owner resource collection.',
-      ],
-      paragraphs: [
-        'Reinspections are billed hourly (Sec. 609 cost recovery): $256/hour for an Environmental Health Inspector ($128 per additional half hour) and $234/hour for an Environmental Health Technician ($115 per additional half hour).',
-      ],
-    },
-    {
-      heading: 'Pay your fee',
-      karl: 'what_to_do -> Section. Section title: "Pay your fee". Section specifics: Text block (this paragraph) + Button link block — target still pending a confirmed SF.gov online payment URL, so the CTA is non-functional until added. Separately: this page\'s fee tiers are listed in the "Who may need to pay" section above rather than the dedicated `cost` panel (radio Free/Flat fee/Range/Minimum and up/None + a 120-char-capped Cost description), since the cost radio has no "varies by unit count, see the fee schedule" option. Flag for Digital Services which radio option (likely Range or Minimum and up) best represents that.',
-      kind: 'body',
-      paragraphs: [
-        'Pay online, in person at City Hall Room 1401, or by mail using the instructions on your invoice.',
-      ],
-      button: 'Pay program fee',
-    },
-    {
-      heading: 'If you need help',
-      karl: 'Best real-schema fit: get_help panel\'s Phone number block (Owner = "Environmental Health" or left blank, Phone number = "415-252-3800"). This mockup embeds the phone number in prose rather than a structured field — recommend extracting it to the real Phone number fields rather than keeping it as free text.',
-      kind: 'body',
-      paragraphs: [
-        'Use the contact information on your invoice or call Environmental Health at 415-252-3800.',
-      ],
-    },
-    {
-      heading: 'Questions about your fee and late payments',
-      karl: 'Best real-schema fit: a second get_help entry — "Additional info" block (Title = this heading, Text = the bulleted list below). Late-payment penalty and lien-interest figures verified against San Francisco Health Code Sec. 609(d)-(e) (docs/source/hhvc-policy/2026-07-02-health-code-sec-609-healthy-housing-fee.md) -- corrected from a prior karl note that miscited an AI-drafted "Master Guidelines Chapter 8.3," which does not exist as a numbered section in either notebooklm source doc and does not cover fee penalties in the latter.',
-      kind: 'body',
-      bullets: [
-        'If you are not sure whether the fee applies to your building, use the contact information on your invoice or call Environmental Health at 415-252-3800.',
-        'Keep your invoice or account information in case you need to ask a question or confirm a payment.',
-        'Invoice payments are due within 30 days. Late payments trigger a standard penalty progression: a $10 late penalty applies for payments up to 30 days overdue, and a $30 late penalty applies for payments up to 60 days overdue.',
-        'For continued non-payment, a special assessment property lien is recorded, and interest accrues at a rate of 1.5% per month (compounded monthly) until the balance is paid in full.',
+      steps: [
+        {
+          title: 'Check your invoice and whether the fee applies',
+          text: [
+            'Environmental Health mails an invoice each year. Check the property address, the number of rental units, the amount due, and the due date.',
+            'You need to pay if you own an apartment building with 3 or more rental units during the billing year.',
+          ],
+          bullets: [
+            'If you own and live in the building, count the rental units. If you rent 3 or more units, you still need to pay.',
+            'If you rent fewer than 3 units, complete, sign, and return the certification on your invoice.',
+            'Vacant units and units occupied by relatives still count as rental units.',
+            'Condominium, commercial, and tenancy-in-common buildings do not pay this fee. Send the proof requested on your invoice.',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Check your invoice and whether the fee applies". Step description: two paragraphs plus four bullets. Optional, Cost, Time, and Transaction link: blank. Leads with the decision that prevents an owner from starting a payment before knowing whether the annual program fee applies.',
+        },
+        {
+          title: 'Confirm your annual fee',
+          text: [
+            'Your annual fee is based on the number of rental units. Check your invoice for the exact amount and due date.',
+          ],
+          bullets: [
+            '3 units: $103',
+            '4-6 units: $129',
+            '7-10 units: $175',
+            '11-15 units: $350',
+            '16-20 units: $485',
+            '21-30 units: $688',
+            'More than 30 units: $808',
+          ],
+          callout: {
+            title: 'Annual fee and reinspection fees are different',
+            text: 'The annual fee supports Healthy Housing inspections. If an inspection finds an uncorrected violation, a separate reinspection fee may apply: $256 per hour for an Environmental Health Inspector or $234 per hour for an Environmental Health Technician. Additional half-hours cost $128 and $115.',
+            karl: 'Callout inside the Transaction Step rich-text description. Keep the reinspection rates separate from the annual tier list so a reviewer does not mistake a potential enforcement cost for the amount due on the annual invoice. Rates are from the FY 2026-27 Environmental Health Branch fee schedule.',
+          },
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Confirm your annual fee". Step description: the intro, seven fee-tier bullets, and annual-versus-reinspection callout. Optional, Cost, Time, and Transaction link: blank. The tier rates are from the FY 2026-27 Environmental Health Branch fee schedule; recheck against a newly certified schedule before publication.',
+        },
+        {
+          title: 'Pay online, in person, or by mail',
+          text: [
+            'Pay online with your invoice information, or use the payment instructions on your invoice.',
+          ],
+          bullets: [
+            'In person: pay by check, cash, or money order at City Hall, Room 140, 1 Dr. Carlton B. Goodlett Place.',
+            'By mail: make a check or money order payable to "Department of Public Health." Write your invoice number on it and mail it to P.O. Box 7429, San Francisco, CA 94120.',
+          ],
+          button: 'Pay your Healthy Housing fee online',
+          buttonUrl: 'https://services.paysf.co/service/healthy-housing-fee',
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Pay online, in person, or by mail". Step description: intro plus two payment-method bullets. Button: "Pay your Healthy Housing fee online", linking to the live PaySF Healthy Housing fee service. Optional, Cost, Time, and Transaction link: blank. Payment is the primary action, so it follows eligibility and amount confirmation without burying the live payment route.',
+        },
+        {
+          title: 'Correct an invoice or update your information',
+          text: [
+            'Contact Environmental Health before you pay if the property address, mailing address, owner, building type, or number of rental units on your invoice is wrong.',
+          ],
+          bullets: [
+            'For a unit-count correction, tell us the correct number of rental units and pay the fee for that number.',
+            'If the count is wrong because you live in a unit, include a copy of your most recent PG&E bill.',
+            'For an ownership change, provide the escrow date and the new owner’s name and mailing address.',
+            'For a mailing-address change, include the property address and block and lot number, or the invoice number.',
+            'Email healthyhousing@sfdph.org or call 415-252-3800. Also report ownership changes to the Assessor-Recorder’s Office.',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Correct an invoice or update your information". Step description: one intro paragraph and five bullets. Optional, Cost, Time, and Transaction link: blank. Consolidates the live page’s scattered owner-occupied, unit-count, building-type, ownership, and mailing-address exceptions into one correction path.',
+        },
+        {
+          title: 'Pay by the due date or contact us',
+          text: [
+            'Pay within 30 days of the invoice due date. Keep your invoice number or property address if you need help with your account.',
+          ],
+          bullets: [
+            'A $10 late penalty applies after 30 days.',
+            'A $30 late penalty applies after 60 days.',
+            'Unpaid balances may accrue 1.5% interest per month and may become a property lien.',
+          ],
+          callout: {
+            title: 'What the annual fee supports',
+            text: 'Healthy Housing uses these fees to support inspections of apartment buildings. Inspectors look at common areas, yards, garbage storage areas, and lobbies for conditions that may support pests or create housing health hazards.',
+            karl: 'Callout inside the Transaction Step rich-text description. This is the live page’s program-context copy, moved to the end so it explains the fee without delaying the payment decision.',
+          },
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Pay by the due date or contact us". Step description: intro, late-payment bullets, and program-context callout. Optional, Cost, Time, and Transaction link: blank. Penalty timing is presented after the normal payment path rather than competing with it at the top of the page.',
+        },
       ],
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. Resolved schema gap: related has no custom title/text per item.',
+      karl: 'Maps to the related panel: repeatable "Page" chooser entries. Related pages give owners a next step without reprinting compliance or enforcement guidance on this payment Transaction.',
       kind: 'placement',
       cards: [
         {
-          title: 'Learn what Healthy Housing and Vector Control can inspect',
-          target: 'scopeInfo',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
-        },
-        {
-          title: 'What happens after you report a housing or pest problem',
-          target: 'afterReport',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
-        },
-        {
-          title: 'Healthy Housing and Vector Control',
-          target: 'pestsTopic',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
-        },
-        {
-          title: 'Integrated pest management for property owners and managers',
-          target: 'ownerGuidance',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
-        },
-        {
           title: 'Property owner responsibilities',
           target: 'ownerHub',
-          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above). Links to the Resource Collection page hosting the fee schedule document.',
+          karl: 'Related panel page chooser entry.',
+        },
+        {
+          title: 'Fix your Healthy Housing and Vector Control violation',
+          target: 'noticeOfViolation',
+          karl: 'Related panel page chooser entry. This is the appropriate route for a Notice of Violation, not the annual-fee payment path.',
+        },
+        {
+          title: 'Look up building records',
+          target: 'recordsHub',
+          karl: 'Related panel page chooser entry.',
+        },
+        {
+          title: 'Healthy Housing and pest resources',
+          target: 'verminResources',
+          karl: 'Related panel page chooser entry.',
         },
       ],
     },
   ],
   seoTitle: 'Pay your Healthy Housing fee | SF.gov',
   metaDescription:
-    'Pay or learn about the Healthy Housing fee for San Francisco apartment buildings with 3 or more rental units.',
+    'Pay your annual Healthy Housing fee for a San Francisco apartment building with 3 or more rental units.',
 }

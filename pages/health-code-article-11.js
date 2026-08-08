@@ -4,518 +4,255 @@ window.HHVC_PAGES['article11Guide'] = {
   type: 'Report',
   title: 'Health Code Article 11 in plain language',
   summary:
-    'See what San Francisco Health Code Article 11 requires and what it means in everyday language.',
+    'Read the Healthy Housing and Vector Control rules most often cited for pests, mold, garbage, and other public health nuisances.',
   audience: [
-    'A tenant trying to understand what housing health rules apply to their building',
-    'A property owner or manager reviewing Article 11 responsibilities',
-    'A neighbor or advocate helping someone understand HHVC enforcement',
-    'Anyone who wants the legal text and a plain-language explanation side by side',
+    'A tenant trying to understand a housing health condition',
+    'A property owner or manager reviewing an HHVC notice',
+    'A neighbor or advocate helping someone understand an inspection',
+    'Anyone who wants a plain-language guide before reading the legal code',
   ],
   reading: 'Grade 7',
-  reportDate: 'July 8, 2026',
+  reportDate: 'August 7, 2026',
+  editorStatus: 'needs-review',
   seoTitle: 'Health Code Article 11 in plain language',
   metaDescription:
-    'Article 11 nuisance rules with plain-language translations for mold, rodents, animal limits, and more.',
+    'Plain-language explanations of San Francisco Health Code Article 11 rules for garbage, pests, mold, rodents, and other public health nuisances.',
   editorNote:
-    "Report content type. Side-by-side tables map to Karl Report Content → Tables (2 columns). Spotlight button links to municode Article 11. Verify municode URL, wasp routing nuance, and Director's Rules citations before publish. Sections updated from the Article 11 Interpretation Guide v1.0 (2026-07-08) with tenant/owner/PCO responsibilities, content standards by topic, and reusable content blocks.",
+    'Draft Report content for the Article 11 sections and violation types HHVC cites most often. It deliberately separates the legal citation from the plain-language translation, links each condition to the existing reporting route, and does not invent deadlines, fines, or case outcomes. Citations are based on the repository’s Article 11 interpretation guide and violation-content source; confirm every excerpt against the official municipal code and obtain legal review before publishing.',
   spotlight: {
-    title: 'View the full municipal code',
+    title: 'Read the full Health Code',
     paragraphs: [
-      'This report summarizes key Article 11 provisions. Open the municipal code for the complete legal text.',
+      'This guide is a plain-language summary, not the legal code. Use the municipal code for the complete and current text.',
     ],
     button: 'View Health Code Article 11',
     buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
-    karl: 'Maps to Report Spotlight → Button link (external URL). Report is the Karl content type that supports tables and Spotlight buttons.',
+    karl: 'Report Spotlight -> external Button link. The report points to the official municipal code rather than reproducing every Article 11 provision.',
   },
   sections: [
     {
-      heading: 'About this guide',
-      karl: 'Maps to Report Content → Title and text block for intro paragraphs, then a Table block for the 581(a) row.',
+      heading: 'How to use this guide',
+      karl: 'Report Content -> Title and text block. Keep this disclaimer before the reference tables so a reader understands that the page translates, but does not replace, the legal code.',
       kind: 'body',
       paragraphs: [
-        'Healthy Housing and Vector Control (HHVC) enforces **Health Code Article 11** — the City rules about public health nuisances in housing and on property. Each section below shows a short excerpt from the law next to a plain-language explanation.',
-        'Use the links at the top of the page to jump to a topic like mold, rodents, animal limits, or wasps. This report covers the nuisance rules HHVC inspects (Section 581). For what happens after a violation is found, see the summary at the end.',
+        'Healthy Housing and Vector Control enforces Health Code Article 11, the City rules about public health nuisances. This guide explains the sections most often used for housing, pest, mold, garbage, and animal-related conditions.',
+        'The left column names the code section. The right column explains what that rule means in everyday language. A condition may involve more than one section, and an inspector reviews the facts of each case.',
       ],
+      callout: {
+        title: 'This is not legal advice',
+        text: 'The municipal code controls if this guide and the code differ. The City will identify the applicable sections and required corrections in a Notice of Violation.',
+        karl: 'Report Content -> Callout-style rich-text block. Karl’s Report editor does not have a dedicated legal-disclaimer component; retain the bold lead-in in the rich text if a visual callout is unavailable.',
+      },
+    },
+    {
+      heading: 'Article 11 sections at a glance',
+      karl: 'Report Content -> Table block. This is a navigation table, not a complete table of contents for all Article 11 provisions. It names the sections used in the common-violation translations below and keeps fee and enforcement references distinct from nuisance conditions.',
+      kind: 'body',
       table: [
-        ['Health code', 'In plain language'],
+        ['Section', 'What it covers', 'In plain language'],
         [
-          '**Sec. 581(a):** No person shall have upon any premises or real property owned, occupied, or controlled by him, her, or it any public nuisance.',
-          'You must not allow a public health nuisance on property you own, rent, or control. A nuisance is a condition that threatens health or safety.',
+          '**Sec. 581(a)**',
+          'General responsibility for public nuisances',
+          'Do not allow a public health nuisance on property you own, occupy, or control.',
+        ],
+        [
+          '**Sec. 581(b)**',
+          'Specific conditions that are public health nuisances',
+          'This subsection lists conditions such as garbage, mold, pests, insects, and overgrown vegetation.',
+        ],
+        [
+          '**Sec. 596**',
+          'Complaints, notices, hearings, orders, and abatement procedures',
+          'HHVC can use a formal process to require correction after it finds a nuisance.',
+        ],
+        [
+          '**Sec. 600**',
+          'Penalties for Article 11 violations',
+          'A person who does not correct a violation may face penalties under the code.',
+        ],
+        [
+          '**Sec. 605**',
+          'Poison oak and poison ivy removal',
+          'An owner may be ordered to remove poisonous plants from their property.',
+        ],
+        [
+          '**Sec. 609**',
+          'Healthy Housing inspection program fee',
+          'Owners of eligible apartment buildings pay an annual program fee based on rental units.',
         ],
       ],
     },
     {
       heading: 'Garbage, filth, and waste',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(1), (3), (5).',
+      karl: 'Report Content -> Table block. Covers the most common sanitation citations: Sec. 581(b)(1), (3), and (5). Pair each translation with the consolidated garbage, filth, and mold reporting Transaction rather than adding a new reporting page.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
         [
-          '**Sec. 581(b)(1):** Any accumulation of filth, garbage, decayed or spoiled food, unsanitary debris or waste material, or decaying animal or vegetable matter unless set out for collection.',
-          'You must not let trash, rotting food, or filth build up inside or outside a building — unless it is properly set out for City collection. Example: bags piled in a shared hallway or rotting food in a bin. [Report garbage, filth, and overgrown vegetation](filthReport)',
+          '**Sec. 581(b)(1):** Accumulations of filth, garbage, spoiled food, unsanitary debris, waste, or decaying animal or vegetable matter.',
+          'Do not let trash, rotting food, or filth build up inside or outside a building. Put waste out properly for collection and keep shared garbage areas sanitary.',
         ],
         [
-          '**Sec. 581(b)(3):** Any accumulation of waste paper, litter, or combustible trash unless such materials are set out for collection.',
-          'You must not let paper, litter, or flammable trash pile up unless it is set out correctly for pickup.',
+          '**Sec. 581(b)(3):** Accumulations of waste paper, litter, or combustible trash.',
+          'Do not let litter, paper, or flammable trash pile up. Remove it or set it out correctly for collection.',
         ],
         [
-          '**Sec. 581(b)(5):** Any matter or material which constitutes, or is contaminated by, animal or human excrement, urine, or other biological fluids.',
-          'You must remove human or animal waste and anything contaminated by it. Example: pet waste left in a yard or hallway.',
+          '**Sec. 581(b)(5):** Material contaminated by animal or human waste, urine, or other biological fluids.',
+          'Remove animal or human waste and clean contaminated materials. Waste left in a yard, hallway, or other shared area can be a health nuisance.',
         ],
       ],
+      button: 'Report garbage, mold, or trash',
+      buttonTarget: 'filthReport',
     },
     {
-      heading: 'Overgrown vegetation',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(2).',
+      heading: 'Overgrown vegetation and poisonous plants',
+      karl: 'Report Content -> Table block. Covers Sec. 581(b)(2), (11), and 605. Keep vegetation and poison-plant duties distinct: overgrowth is a nuisance condition; Sec. 605 concerns an order to remove poison oak or ivy.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
         [
-          '**Sec. 581(b)(2):** Any accumulation of hay, grass, straw, weeds, or vegetation overgrowth.',
-          'You must keep grass, weeds, and plants from overgrowing in a way that can shelter pests or create a health hazard. [Report garbage, filth, and overgrown vegetation](filthReport)',
+          '**Sec. 581(b)(2):** Accumulations of hay, grass, straw, weeds, or vegetation overgrowth.',
+          'Keep weeds, grass, and plants from overgrowing in ways that can shelter pests or create a health hazard.',
+        ],
+        [
+          '**Sec. 581(b)(11):** Properties infested with poison oak or poison ivy.',
+          'Do not allow poison oak or poison ivy to grow where people may be exposed to it.',
+        ],
+        [
+          '**Sec. 605:** Removal of poison oak or poison ivy when ordered by the Director.',
+          'If the City orders removal, the owner must remove the poisonous plants as directed.',
         ],
       ],
+      button: 'Report vegetation or a sanitation problem',
+      buttonTarget: 'filthReport',
     },
     {
-      heading: 'Mold and mildew',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(6). Include 10 sq ft threshold per SFDPH mold guidance.',
+      heading: 'Mold and lead hazards',
+      karl: 'Report Content -> Table block. Covers Sec. 581(b)(6) and (10). The mold row links to the consolidated HHVC report path. Lead stays linked to Citywide services because it is not handled as an HHVC Article 11 reporting Transaction in this mockup.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
         [
-          '**Sec. 581(b)(6):** Any visible or otherwise demonstrable mold or mildew in the interiors of any buildings or facilities.',
-          'You must fix visible mold or mildew inside a building. HHVC may inspect when mold from humidity or condensation covers about **10 square feet** or more. [Report garbage, filth, and overgrown vegetation](filthReport) · [EPA: Mold cleanup in your home](https://www.epa.gov/mold)',
+          '**Sec. 581(b)(6):** Visible or otherwise demonstrable mold or mildew inside a building or facility.',
+          'Visible mold or mildew inside a building can be a public health nuisance. Address the moisture source as well as the visible condition.',
         ],
+        [
+          '**Sec. 581(b)(10):** Lead hazards under an owner’s control in a building built before 1979.',
+          'Owners must address lead hazards they control in older buildings. Lead concerns may be handled through another City program.',
+        ],
+      ],
+      cards: [
+        {
+          title: 'Report mold from humidity or condensation',
+          text: 'Use 311 to report mold and describe the moisture source and affected area.',
+          target: 'filthReport',
+          karl: 'Report Content -> inline page link. The Card is mockup presentation; use a text link in Karl if Report has no page-card block.',
+        },
+        {
+          title: 'Find Citywide healthy housing services',
+          text: 'Find lead safety and other services outside HHVC.',
+          url: 'https://www.sf.gov/topics--healthy-housing-conditions',
+          karl: 'Report Content -> external text link. This keeps lead-service routing out of the HHVC-only content model.',
+        },
       ],
     },
     {
-      heading: 'Rodents and exclusion',
-      karl: "Maps to Report Content → Table block. Sec. 581(b)(13) and Article 2 Sec. 92. The 1/4-inch exclusion row cites Director's Rules — label for legal review.",
+      heading: 'Pests, rodents, and noxious insects',
+      karl: 'Report Content -> Table block. Covers Sec. 581(b)(7), (8), and (13), plus the related Article 2 rodent-control rule. The rows are organized by the condition a reader sees, not in statutory order.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
         [
-          '**Sec. 581(b)(13):** Any violation of Section 92 of this Code [Article 2 — Rodent Control].',
-          'Article 11 treats rodent-control violations as a public health nuisance. If a building breaks Section 92, it can be cited under Article 11. [Report rats, mice, and other four-legged problems](rodentsReport) · [UC IPM Pest Notes: Rats](https://ipm.ucanr.edu/home-and-landscape/rats/pest-notes/)',
+          '**Sec. 581(b)(7):** Pest harborage or infestation, including pigeons and certain wildlife.',
+          'Do not allow animals to nest, roost, or live on a property in ways that create a health hazard. Pigeon droppings and nesting materials can be signs of a problem.',
         ],
         [
-          '**Sec. 92(b):** All buildings, places and premises in the City and County shall immediately and continuously be kept in a clean and sanitary condition, and free from rodents by the owner and/or the occupant.',
-          'Owners and occupants must keep buildings and yards clean and free of rats and mice at all times — not just after a complaint.',
+          '**Sec. 581(b)(8):** Noxious insect harborage or infestation, including cockroaches, bed bugs, fleas, flies, wasps, and mosquitoes.',
+          'Insect infestations and places where insects breed can be a public health nuisance. Remove the food, water, shelter, or standing water that supports them.',
         ],
         [
-          '**Sec. 92(c):** All building and basement walls … shall be so constructed or repaired as to prevent rodents from being harbored … and all food products … shall be so protected … as to prevent rodents from gaining access.',
-          'Walls, basements, and food storage areas must be built or repaired so rodents cannot live inside them or reach food. Seal gaps and protect stored goods.',
+          '**Sec. 581(b)(13):** A violation of Health Code Sec. 92, the rodent-control rule.',
+          'Article 11 treats rodent-control violations as public health nuisances. Owners and occupants must keep buildings clean, sanitary, and free from rodents.',
         ],
         [
-          '**Sec. 92(g)(3):** No rubbish, waste or manure shall be placed … so that the same shall or may afford food or a harboring or breeding place for rodents.',
-          'You must not let trash, waste, or stored materials pile up in ways that feed rodents or give them places to nest and breed.',
+          '**Sec. 92(c):** Building areas that hold food, goods, or materials must prevent rodent access.',
+          'Maintain walls, basements, storage, and food areas so rats and mice cannot get inside, nest, or reach food.',
         ],
-        [
-          "**Director's Rules (vector exclusion):** Seal structural openings larger than **1/4 inch** (0.25 inches) using metal, hardware cloth, or concrete — not caulk or foam alone.",
-          'Close holes and gaps around pipes, doors, and walls that are bigger than a quarter. Use rodent-proof materials. Repair gaps around exterior doors and windows, and screen attic or crawl-space openings.',
-        ],
+      ],
+      cards: [
+        {
+          title: 'Report rats, mice, and other four-legged problems',
+          text: 'Report rodents, burrows, droppings, and related pest concerns.',
+          target: 'rodentsReport',
+          karl: 'Report Content -> inline page link.',
+        },
+        {
+          title: 'Report cockroaches, mosquitoes, and other insects',
+          text: 'Report insect infestations and standing-water concerns.',
+          target: 'insectsReport',
+          karl: 'Report Content -> inline page link.',
+        },
       ],
     },
     {
-      heading: 'Number of animals',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(12) and Article 1 Sec. 37. Verify Sec. 37(a) against municode before publication.',
+      heading: 'Animals, clutter, and other health threats',
+      karl: 'Report Content -> Table block. Covers Sec. 581(b)(12) and (18). Both citations need a case-specific inspection finding, so the plain-language column intentionally avoids declaring that a particular animal count or stored item is automatically a violation.',
       kind: 'body',
       table: [
         ['Health code', 'In plain language'],
         [
-          '**Sec. 581(b)(12):** Any violation of Section 37 of this Code [Article 1 — Animals].',
-          'Keeping too many animals, or keeping them in unapproved enclosures, can be a public health nuisance under Article 11.',
+          '**Sec. 581(b)(12):** A violation of Health Code Sec. 37, the animal-control rule.',
+          'Keeping more animals than the code allows, or keeping them in an unapproved enclosure, can be a public health nuisance.',
         ],
         [
-          '**Sec. 37(a) — dogs:** It shall be unlawful … to keep … more than **three dogs** of age six months or older … without obtaining a proper permit and license to operate a dog kennel.',
-          'In residential areas, you may keep up to **three dogs** age 6 months or older without a kennel permit. More than three requires a licensed kennel.',
-        ],
-        [
-          '**Sec. 37(a) — combined limit:** … more than a total of **four** of the following in any combination: dogs of age six months or older (unless part of a kennel), hares, rabbits, guinea pigs, rats, mice, gerbils, chickens, turkeys, geese, ducks, doves, pigeons, game birds, or cats.',
-          'You may keep no more than **four** total among dogs (non-kennel), cats, rabbits, pigeons, chickens, and the other small animals listed — in any mix. Example: two dogs and two cats is the maximum; a fifth animal requires a permit.',
-        ],
-        [
-          '**Sec. 37(b):** Animals listed in Sec. 37(a) must be kept in coops or enclosures approved by the Director. Outdoor coops must be at least **20 feet** from any door or window of a home.',
-          'Approved enclosures are required. Outdoor animal housing must sit at least 20 feet from doors or windows of any residence.',
+          '**Sec. 581(b)(18):** Another condition the Director determines threatens public health and safety.',
+          'A dangerous condition not named elsewhere can still be a nuisance. Excessive stored materials may be a problem when they block inspection, create a hazard, or shelter pests.',
         ],
       ],
+      button: 'Find out if HHVC can inspect the problem',
+      buttonTarget: 'scopeInfo',
     },
     {
-      heading: 'Excessive materials and pest harborage',
-      karl: "Maps to Report Content → Table block. Sec. 581(b)(18), Sec. 92(g)(3), and Director's Rules storage guidance.",
-      kind: 'body',
-      table: [
-        ['Health code', 'In plain language'],
-        [
-          '**Sec. 581(b)(18):** Anything else that the Director deems to be a threat to public health and safety.',
-          'The Director can treat other dangerous conditions as nuisances. Excessive stored materials that block inspection or shelter pests can qualify.',
-        ],
-        [
-          '**Sec. 92(g)(3):** No rubbish, waste or manure shall … afford food or a harboring or breeding place for rodents.',
-          'Stored clutter — cardboard, furniture, lumber, tires, or scrap — must not pile up where rodents can nest or find food.',
-        ],
-        [
-          "**Director's Rules (storage):** Items such as crates, pallets, lumber, tires, firewood, or scrap metal must be stored to allow pest monitoring and prevent harborage. Stored items must be stacked neatly, elevated at least **6 inches** off the ground, with **6 inches** of clearance from exterior walls.",
-          'Store materials off the ground and away from walls so inspectors and pest control can see activity. Remove unneeded items. Do not let storage block pathways or hide infestations. [Report garbage, filth, and overgrown vegetation](filthReport)',
-        ],
-      ],
-    },
-    {
-      heading: 'Cockroaches and bed bugs',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(8) and Article 11A — note 11 vs 11A citation for legal review.',
-      kind: 'body',
-      table: [
-        ['Health code', 'In plain language'],
-        [
-          '**Sec. 581(b)(8):** Any noxious insect harborage or infestation including cockroaches, bed bugs, fleas, scabies, lice, spiders, houseflies, wasps, and mosquitoes.',
-          'You must eliminate insect infestations such as cockroaches and bed bugs. Property owners must investigate bed bug complaints promptly and coordinate treatment. [Report cockroaches, mosquitoes, and other insects](insectsReport) · [UC IPM Pest Notes: Bed bugs](https://ipm.ucanr.edu/home-and-landscape/bed-bugs/pest-notes/)',
-        ],
-        [
-          '**Article 11A (bed bugs):** Owners must investigate complaints within two working days and provide infestation history to prospective tenants.',
-          'If you report bed bugs, the owner must start investigating within about two working days. Bed bug rules have extra requirements beyond general insect nuisances.',
-        ],
-      ],
-    },
-    {
-      heading: 'Flies, mosquitoes, and wasps',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(8). Note wasp routing nuance per policy README.',
-      kind: 'body',
-      table: [
-        ['Health code', 'In plain language'],
-        [
-          '**Sec. 581(b)(8):** …houseflies, wasps, and mosquitoes.',
-          'You must eliminate places where flies and mosquitoes breed — such as garbage, standing water, or organic waste. [Report cockroaches, mosquitoes, and other insects](insectsReport)',
-        ],
-        [
-          '**Sec. 581(b)(8) — wasps:** Listed among noxious insects when they create a harborage or infestation.',
-          'Ground-nesting wasps near housing may be a health concern when nests are disturbed. HHVC may review some cases; others may be referred to vector control or a licensed pest control operator. [Report cockroaches, mosquitoes, and other insects](insectsReport)',
-        ],
-      ],
-    },
-    {
-      heading: 'Pigeons and pest harborage',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(7).',
-      kind: 'body',
-      table: [
-        ['Health code', 'In plain language'],
-        [
-          '**Sec. 581(b)(7):** Any pest harborage or infestation including but not limited to pigeons, skunks, raccoons, opossums, and snakes, except lawful pigeon harborages.',
-          'You must prevent animals from living or nesting on property in ways that create a health hazard. Example: pigeon droppings accumulating on a roof or balcony. [Report garbage, filth, and overgrown vegetation](filthReport) · [UC IPM Pest Notes: Pigeons](https://ipm.ucanr.edu/home-and-landscape/pigeons/pest-notes/)',
-        ],
-      ],
-    },
-    {
-      heading: 'Poison oak and ivy',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(11) and Sec. 605.',
-      kind: 'body',
-      table: [
-        ['Health code', 'In plain language'],
-        [
-          '**Sec. 581(b)(11):** Any vacant lots, open spaces, and other properties which become infested with poison oak or poison ivy shrub.',
-          'Owners must prevent poison oak and poison ivy from growing on vacant lots and open spaces where people could be exposed.',
-        ],
-        [
-          '**Sec. 605:** Owners shall remove poison oak or poison ivy growth on their property when ordered by the Director.',
-          'If the City orders removal, the owner must remove and destroy the poisonous plants as directed.',
-        ],
-      ],
-    },
-    {
-      heading: 'Lead hazards',
-      karl: 'Maps to Report Content → Table block. Sec. 581(b)(10).',
-      kind: 'body',
-      table: [
-        ['Health code', 'In plain language'],
-        [
-          '**Sec. 581(b)(10):** Lead hazards within the control of the owner in any building or portion thereof built before 1979 (presumed to contain lead-based paint).',
-          'Owners must fix lead hazards in buildings built before 1979. Paint in these buildings is presumed to contain lead unless tested otherwise. Severe lead hazards can lead to an order to vacate for safety.',
-        ],
-      ],
-    },
-    {
-      heading: 'What happens if there is a violation',
-      karl: 'Maps to Report Content → Title and text, Table, and bulleted links. Sec. 596 and 600 summarized. Report has no Related field — use inline links.',
+      heading: 'What happens after HHVC finds a violation',
+      karl: 'Report Content -> Title and text plus a two-column Table. Covers Sec. 596 and 600 without assigning a generic correction deadline, repeating a fine amount, or promising a particular outcome. Case-specific requirements belong in the Notice of Violation.',
       kind: 'body',
       paragraphs: [
-        'If HHVC finds a nuisance, the City follows an administrative process. Penalties can apply if the problem is not fixed on time.',
+        'If HHVC confirms a public health nuisance, the City may use the Article 11 enforcement process to require correction. The notice for a specific case identifies the condition, responsible party, required work, and deadline.',
       ],
       table: [
         ['Health code', 'In plain language'],
         [
-          '**Sec. 596:** Complaint, inspection, Notice of Violation (NOV), and abatement procedures.',
-          'After a complaint, HHVC may inspect the property. If a nuisance is confirmed, the person responsible gets an official **notice of violation** describing the problem and a deadline to fix it — usually not more than 30 days. [What happens after you report](afterReport)',
+          '**Sec. 596:** Complaint, notice, hearing, order, and abatement procedures.',
+          'HHVC may inspect after a complaint and issue a Notice of Violation when it finds a nuisance. Further steps may include follow-up inspection and enforcement if the condition is not corrected.',
         ],
         [
-          '**Sec. 600:** Criminal, civil, and administrative penalties up to $1,000 per violation per day.',
-          'Failing to fix a violation on time can lead to fines up to $1,000 per day. Fixing the problem within the notice period can avoid some penalties if the same violation has not been cited more than twice in 12 months.',
+          '**Sec. 600:** Penalties for Article 11 violations.',
+          'Not correcting a violation can lead to penalties under the code. Follow the directions and deadlines in the notice you receive.',
         ],
       ],
-      bullets: [
-        '**Respond to a notice:** [Fix your Healthy Housing and Vector Control violation](noticeOfViolation)',
-        '**Annual program fee:** [Pay your Healthy Housing fee](payFee) for buildings with 3 or more rental units',
+      cards: [
+        {
+          title: 'Fix your Healthy Housing and Vector Control violation',
+          text: 'Understand the next steps after you receive a Notice of Violation.',
+          target: 'noticeOfViolation',
+          karl: 'Report Content -> inline page link.',
+        },
+        {
+          title: 'What happens after you report',
+          text: 'Learn how a report may be reviewed and assigned for inspection.',
+          target: 'afterReport',
+          karl: 'Report Content -> inline page link.',
+        },
       ],
     },
     {
-      heading: 'Vector prevention standards',
-      karl: 'Maps to Report Content → Table block. Prevention topic from the Interpretation Guide content standards. Added from the Article 11 Interpretation Guide v1.0.',
+      heading: 'Annual Healthy Housing fee',
+      karl: 'Report Content -> short Title and text block. Covers Sec. 609 as an Article 11 reference, but keeps the current fiscal-year rates and payment instructions on the dedicated fee Transaction so they cannot drift in this legal-reference report.',
       kind: 'body',
       paragraphs: [
-        'Prevention is the most effective approach to pest and vector management. These standards apply across all properties.',
+        'Section 609 establishes the Healthy Housing inspection program fee for eligible apartment buildings. The fee is based on rental units, and the current rate schedule can change each fiscal year.',
       ],
-      table: [
-        ['Standard', 'In plain language'],
-        [
-          'Sanitation, storage, landscape management, eliminating standing water, routine inspections, monitoring, and recordkeeping.',
-          'Prevent pest problems by removing food, water, shelter, and entry points. Regular inspections help catch problems early.',
-        ],
-      ],
-    },
-    {
-      heading: 'Sanitation and storage standards',
-      karl: 'Maps to Report Content → Table block. Sanitation topic from the Interpretation Guide.',
-      kind: 'body',
-      paragraphs: ['Proper sanitation and storage are the foundation of pest prevention.'],
-      table: [
-        ['Standard', 'In plain language'],
-        [
-          'Garbage must be stored in sanitary containers. Stored materials must be organized to allow monitoring and prevent harborage.',
-          'Store garbage and materials so pests cannot feed, hide, or breed. Keep storage areas organized and accessible for inspection.',
-        ],
-      ],
-    },
-    {
-      heading: 'Landscape management standards',
-      karl: 'Maps to Report Content → Table block. Landscape management topic from the Interpretation Guide.',
-      kind: 'body',
-      paragraphs: ['Vegetation management is critical for reducing rodent and vector harborage.'],
-      table: [
-        ['Standard', 'In plain language'],
-        [
-          'When rodent activity is identified, vegetation should be managed to reduce climbing, nesting, burrowing, and harborage.',
-          'Trim vegetation and remove groundcover conditions that hide rodent activity. Keep plants away from building foundations.',
-        ],
-      ],
-    },
-    {
-      heading: 'Standing water and mosquito prevention',
-      karl: 'Maps to Report Content → Table block. Mosquito prevention topic from the Interpretation Guide.',
-      kind: 'body',
-      paragraphs: [
-        'Mosquitoes need standing water to develop. Removing standing water is the most effective prevention step.',
-      ],
-      table: [
-        ['Standard', 'In plain language'],
-        [
-          'Owners and managers must eliminate standing water that supports mosquitoes. Standing water also attracts wildlife and other pests.',
-          'Mosquitoes need standing water. Empty, drain, cover, or maintain items that can collect water. [Report cockroaches, mosquitoes, and other insects](insectsReport) · [CDC: Preventing mosquito bites](https://www.cdc.gov/mosquitoes/prevention/index.html)',
-        ],
-      ],
-    },
-    {
-      heading: 'Vector exclusion standards',
-      karl: 'Maps to Report Content → Table block. Exclusion topic from the Interpretation Guide.',
-      kind: 'body',
-      paragraphs: ['Buildings must be maintained to prevent pests from entering.'],
-      table: [
-        ['Standard', 'In plain language'],
-        [
-          'Buildings must be maintained to prevent pests from entering, including sealing gaps, screening openings, clearing brush, and maintaining screens.',
-          'Seal openings and maintain buildings so pests cannot enter or nest. [CDC: Preventing rodent infestations](https://www.cdc.gov/rodents/prevention/index.html)',
-        ],
-      ],
-    },
-    {
-      heading: 'Rodent activity signs',
-      karl: 'Maps to Report Content → Table block. Rodent signs topic from the Interpretation Guide v1.0.',
-      kind: 'body',
-      paragraphs: ['Look for indirect signs of rodent activity — not just live sightings.'],
-      table: [
-        ['Sign', 'In plain language'],
-        [
-          'Droppings, damaged containers, rub marks, gnaw marks, burrows, footprints, damaged fruit, night noises, and pet behavior.',
-          'Look for droppings, gnawed packages, rub marks along walls, burrows in soil, footprints in dusty areas, or pets acting interested in walls or cabinets.',
-        ],
-      ],
-    },
-    {
-      heading: 'Pigeon roosting and waste',
-      karl: 'Maps to Report Content → Table block. Pigeon topic from the Interpretation Guide v1.0.',
-      kind: 'body',
-      paragraphs: [
-        'Pigeon droppings, feathers, and nesting materials can create public health concerns.',
-      ],
-      table: [
-        ['Standard', 'In plain language'],
-        [
-          'Pigeon droppings, feathers, and nesting materials can contain mites, lice, allergens, bacteria, and fungal spores. Accumulated waste is a nuisance.',
-          'Pigeon waste and nesting can create public health concerns where people may contact droppings or feathers. [Report garbage, filth, and overgrown vegetation](filthReport) · [UC IPM Pest Notes: Pigeons](https://ipm.ucanr.edu/home-and-landscape/pigeons/pest-notes/)',
-        ],
-      ],
-    },
-    {
-      heading: 'Safe cleanup guidelines',
-      karl: 'Maps to Report Content → Table block. Safe cleanup topic from the Interpretation Guide v1.0.',
-      kind: 'body',
-      paragraphs: [
-        'Follow these safe cleanup steps when dealing with rodent droppings or contaminated materials.',
-      ],
-      table: [
-        ['Guideline', 'In plain language'],
-        [
-          'Disinfect droppings before removal. Do not vacuum or sweep until disinfected. Use gloves and dispose of contaminated materials in covered outdoor garbage.',
-          'Wet contaminated material with disinfectant before removing it. Do not dry sweep or vacuum rodent droppings — this can spread dust and disease.',
-        ],
-      ],
-    },
-    {
-      heading: 'Approved reusable content blocks',
-      karl: 'Maps to Report Content → Title and text block for each reusable content item. Standardized blocks for use across SF.gov pages. Added from the Article 11 Interpretation Guide v1.0.',
-      kind: 'body',
-      paragraphs: [
-        'The following content blocks are approved for reuse across HHVC pages on SF.gov. Each block is designed to be used as-is for consistent messaging.',
-      ],
-      bullets: [
-        '**Tenant notification:** If you rent your home, notify your property owner or property manager about the problem first. Allow at least 72 hours for them to begin addressing the issue. If the problem continues or the owner does not respond, report the issue through 311.',
-        '**311 reporting:** Use 311 to report housing and pest concerns. 311 sends your report to the appropriate City department for review. You can submit a report online, through the 311 mobile app, or by calling 311.',
-        '**Owner response:** Property owners and managers should investigate tenant reports of pest activity within 72 hours and keep records of complaints, inspections, and pest control services.',
-        '**Rodent cleanup:** Do not sweep or vacuum rodent droppings until the area has been disinfected. Wear disposable gloves, wet droppings with disinfectant, and dispose of contaminated material in a covered outdoor garbage container.',
-        '**Mosquito prevention:** Mosquitoes need standing water to develop. Empty, drain, cover, or maintain items that can collect water.',
-        '**Pigeon concern:** Pigeon droppings, feathers, and nesting materials can create public health concerns when they accumulate where people may come into contact with them.',
-        '**Enforcement transparency:** If violations are found, the Department may issue a Notice of Violation and require correction. If violations are not corrected, additional enforcement may follow.',
-      ],
-    },
-    {
-      heading: 'Rental property owner and manager responsibilities',
-      karl: "Maps to Report Content → Table block. Owner/manager duties from the Director's Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.",
-      kind: 'body',
-      paragraphs: [
-        "Property owners and managers have specific duties under Article 11 and the Director's Rules for preventing and addressing pest problems.",
-      ],
-      table: [
-        ['Responsibility', 'In plain language'],
-        [
-          'Train staff on pest prevention and reporting.',
-          'Make sure building staff know how to spot pest signs and how to respond to tenant reports.',
-        ],
-        [
-          'Investigate tenant reports within 72 hours.',
-          'When a tenant reports a pest problem, the owner or manager must begin investigating within 72 hours.',
-        ],
-        [
-          'Keep records for at least two years.',
-          'Maintain records of complaints, inspections, pest control services, and tenant notifications for at least two years.',
-        ],
-        [
-          'Hire licensed pest control operators (PCOs).',
-          'When treatment is needed, hire a licensed structural pest control operator — do not use unlicensed staff or over-the-counter pesticides for significant infestations.',
-        ],
-        [
-          'Maintain garbage service.',
-          'Provide adequate, sanitary garbage storage and regular collection service for the building.',
-        ],
-        [
-          'Ensure complete pest inspections.',
-          'When a unit has a pest problem, inspect adjacent and connected units to find and treat the full extent of the infestation.',
-        ],
-        [
-          'Provide pesticide notification.',
-          'Notify tenants before pesticide applications as required by law, including the product name, date, and safety information.',
-        ],
-        [
-          'Complete training for repeat violations.',
-          'If violations are repeated, the Director may require the owner or manager to complete pest management training.',
-        ],
-      ],
-    },
-    {
-      heading: 'Licensed pest control operator requirements',
-      karl: "Maps to Report Content → Table block. PCO requirements from the Director's Rules. Added from the Article 11 Interpretation Guide v1.0.",
-      kind: 'body',
-      paragraphs: [
-        'Only licensed structural pest control operators may apply pesticides in regulated settings.',
-      ],
-      table: [
-        ['Requirement', 'In plain language'],
-        [
-          'Only licensed PCOs may apply pesticides.',
-          'Pesticide application must be done by a licensed structural pest control operator — not by unlicensed building staff or tenants.',
-        ],
-        [
-          'Inspect thoroughly before treatment.',
-          'The PCO must inspect the affected area and adjacent units to understand the full scope of the problem before starting treatment.',
-        ],
-        [
-          'Provide advance notice.',
-          'Tenants and occupants must receive advance notice of treatment dates, times, and preparation steps.',
-        ],
-        [
-          'Give preparation instructions.',
-          'The PCO must tell tenants how to prepare their unit — move furniture, cover or store food, clear access.',
-        ],
-        [
-          'Use least-toxic methods when possible.',
-          'When effective, the PCO should use the least-toxic treatment methods available for the pest and situation.',
-        ],
-        [
-          'Inspect adjacent units when necessary.',
-          'For infestations like bed bugs or cockroaches, the PCO must inspect and, if needed, treat adjacent and connected units.',
-        ],
-        [
-          'Follow pesticide laws.',
-          'All pesticide use must follow state and local laws, including labeling, application, and disposal requirements.',
-        ],
-        [
-          'Provide disposal instructions for infested materials.',
-          'If infested furniture or materials must be discarded, the PCO must provide instructions for safe disposal.',
-        ],
-      ],
-    },
-    {
-      heading: 'Tenant responsibilities',
-      karl: "Maps to Report Content → Table block. Tenant duties interpreted from the Director's Rules and Article 11. Added from the Article 11 Interpretation Guide v1.0.",
-      kind: 'body',
-      paragraphs: [
-        "Tenants also have responsibilities under Article 11 and the Director's Rules for keeping their home free of pests.",
-      ],
-      table: [
-        ['Responsibility', 'In plain language'],
-        [
-          'Keep your home reasonably clean.',
-          'Regular cleaning, taking out trash, and not letting food or garbage build up helps prevent pests.',
-        ],
-        [
-          'Report pest signs to your landlord early.',
-          'Tell the property owner or manager in writing as soon as you see signs of pests — droppings, gnaw marks, live pests, or damage.',
-        ],
-        [
-          'Cooperate with inspections and treatments.',
-          'Allow reasonable access for pest control professionals, inspectors, and maintenance workers when scheduled.',
-        ],
-        [
-          'Prepare your unit for treatment.',
-          'Follow preparation instructions from the pest control operator before treatment — move furniture, cover food, and clear access areas.',
-        ],
-        [
-          'Reduce clutter.',
-          'Clutter gives pests places to hide and makes inspections and treatments less effective.',
-        ],
-      ],
-      callout: {
-        title: '72-hour reporting pattern',
-        text: 'Tenants should notify the owner or manager first, allow at least 72 hours for them to begin addressing the issue, and then report through 311 if unresolved. Do not delay reporting immediate health or safety hazards, severe conditions, sewage exposure, or urgent hotel/SRO health hazards.',
-        karl: 'Callout block: standard 72-hour tenant notification and reporting pattern across all tenant-facing pages.',
-      },
-    },
-    {
-      heading: 'More help',
-      karl: 'Maps to Report Content → Title and text with inline page links. Report has no Related panel — link out manually from body content.',
-      kind: 'body',
-      bullets: [
-        '[Pests and housing problems](pestsTopic)',
-        '[Learn what HHVC can inspect](scopeInfo)',
-        '[What happens after you report](afterReport)',
-        '[Tenant rights and reporting](tenantRights)',
-      ],
+      button: 'Pay your Healthy Housing fee',
+      buttonTarget: 'payFee',
     },
   ],
 }
