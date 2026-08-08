@@ -192,9 +192,11 @@ const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)]+)\)/g
  * does, so the caller's retry loop can treat both tasks identically.
  * @param {object} result The model's parsed output.
  * @param {string} fieldText The original field text.
+ * @param {string} [pageType] The source page's `type`, so page-type-scoped
+ *   plain-language rules apply the same way they would on the real page.
  * @returns {{valid: boolean, issues: string[], schemaValid: boolean}}
  */
-function validateRewrite(result, fieldText) {
+function validateRewrite(result, fieldText, pageType) {
   const text = result?.rewrittenText
   // `schemaValid: false` is reserved for "not even the right shape", matching
   // validateGeneratedPage's convention of stopping before the content checks
@@ -212,19 +214,45 @@ function validateRewrite(result, fieldText) {
     issues.push('rewrittenText must be plain prose with no HTML tags.')
   }
 
-  const originalTargets = [...String(fieldText).matchAll(MARKDOWN_LINK_PATTERN)].map(
-    (match) => match[2]
-  )
-  const rewrittenTargets = new Set(
-    [...text.matchAll(MARKDOWN_LINK_PATTERN)].map((match) => match[2])
-  )
+  // Counted per target, not deduplicated into a Set: two independent links to
+  // the same target in the original both have to survive. A Set-membership
+  // check reports "target present" as long as at least one occurrence
+  // remains, so a rewrite that merges two `[a](x)` mentions into one silently
+  // drops a navigation path while still validating clean.
+  const countTargets = (source) => {
+    const counts = new Map()
+    for (const match of source.matchAll(MARKDOWN_LINK_PATTERN)) {
+      counts.set(match[2], (counts.get(match[2]) || 0) + 1)
+    }
+    return counts
+  }
+  const originalCounts = countTargets(String(fieldText))
+  const rewrittenCounts = countTargets(text)
   // Every dropped target is reported, not just the first. The retry prompt is
   // only actionable if it names the whole set — fixing them one round trip at a
   // time would exhaust the single retry this feature allows.
-  for (const target of originalTargets) {
-    if (!rewrittenTargets.has(target)) {
-      issues.push(`The link target "${target}" was dropped. Keep every [label](target) link.`)
+  for (const [target, originalCount] of originalCounts) {
+    const remaining = rewrittenCounts.get(target) || 0
+    if (remaining < originalCount) {
+      issues.push(
+        originalCount > 1
+          ? `The link target "${target}" appeared ${originalCount} times and only ${remaining} survived. Keep every [label](target) link.`
+          : `The link target "${target}" was dropped. Keep every [label](target) link.`
+      )
     }
+  }
+
+  // Run the same content-standards mandates a full page draft is held to
+  // (js/plain-language.js), scoped to just this field's text via a
+  // single-paragraph synthetic page — a rewrite that adds a contraction, a
+  // prohibited term, or an overlong sentence previously validated clean
+  // because nothing here checked prose quality at all, only shape.
+  const syntheticPath = 'sections[0].paragraphs[0]'
+  const synthetic = { type: pageType, sections: [{ heading: 'Rewrite', paragraphs: [text] }] }
+  for (const check of analyzePlainLanguage(synthetic).checks) {
+    if (check.severity !== 'error' || check.pass) continue
+    if (!check.offenders.some((offender) => offender.path === syntheticPath)) continue
+    issues.push(`${check.label}: ${check.detail}`)
   }
 
   return { valid: issues.length === 0, issues, schemaValid: true }

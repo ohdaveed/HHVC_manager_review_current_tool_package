@@ -19,6 +19,14 @@
   let anchorRect = null
   /** Whether this deployment has an AI backend at all. */
   let available = false
+  /**
+   * True from `openForCurrentField()` until the popover closes. The popover
+   * is non-modal, so `selectionchange` keeps firing while it is open — without
+   * this guard, `handleSelection()` retargets `state.fieldPath` to whatever
+   * the reviewer selects next while `state.fieldText`/`state.result` still
+   * describe the field the popover actually opened for.
+   */
+  let popoverOpen = false
 
   /**
    * The page object currently open in the mockup.
@@ -57,7 +65,7 @@
    * @returns {void}
    */
   function handleSelection() {
-    if (!available) return
+    if (!available || popoverOpen) return
     const resolved = resolveSelection()
     if (!resolved) {
       render.hideButton()
@@ -93,6 +101,8 @@
    * @returns {void}
    */
   function openForCurrentField() {
+    popoverOpen = true
+    state.pageKey = window.utils?.getCurrentKey?.() || ''
     state.fieldText = readFieldText()
     state.instruction = ''
     state.result = null
@@ -144,7 +154,8 @@
     // which rule it broke and decide — matching how the content panel treats
     // an invalid page draft rather than hiding it.
     if (!response.result.valid) {
-      state.error = `Check before applying: ${response.result.issues.join(' ')}`
+      const issues = Array.isArray(response.result.issues) ? response.result.issues : []
+      state.error = `Check before applying: ${issues.join(' ') || 'the draft failed validation.'}`
     }
     render.renderPopover()
   }
@@ -162,6 +173,11 @@
     const page = getCurrentPage()
     const text = state.result?.rewrittenText
     if (!page || !text) return
+    if (window.utils?.getCurrentKey?.() !== state.pageKey) {
+      state.error = 'You switched pages while this was open. Nothing was changed.'
+      render.renderPopover()
+      return
+    }
 
     state.previousValue = window.utils.getByPath(page, state.fieldPath)
     const wrote = window.utils.setByPath(page, state.fieldPath, {
@@ -190,10 +206,16 @@
   function undoApply() {
     const page = getCurrentPage()
     if (!page || state.previousValue === undefined) return
+    if (window.utils?.getCurrentKey?.() !== state.pageKey) {
+      state.error = 'You switched pages while this was open. Nothing was changed.'
+      render.renderPopover()
+      return
+    }
     window.utils.setByPath(page, state.fieldPath, state.previousValue)
     state.previousValue = undefined
     state.applied = false
     state.result = null
+    popoverOpen = false
     window.renderPage?.(window.utils?.getCurrentKey?.())
     render.closePopover()
     window.showToast?.('Rewrite undone.', 'success')
@@ -217,6 +239,7 @@
     if (target.closest('#aiRewriteDiscard') || target.closest('#aiRewriteClose')) {
       state.result = null
       state.error = ''
+      popoverOpen = false
       return render.closePopover()
     }
     return undefined
@@ -234,6 +257,12 @@
     if (!client.isConfigured()) return
     const result = await client.fetchCapabilities()
     available = Boolean(result.ok && result.capabilities?.tasks?.includes('rewrite-field'))
+    // A reviewer can select text before this async check resolves. Without
+    // this, `available` flips true but the button stays hidden until the
+    // selection changes again — re-run the check against whatever is
+    // currently selected so an existing selection's affordance appears
+    // immediately instead of waiting for the next selectionchange event.
+    if (available) handleSelection()
   }
 
   /** @returns {void} */

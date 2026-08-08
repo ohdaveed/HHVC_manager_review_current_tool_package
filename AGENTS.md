@@ -72,9 +72,11 @@ decision list against the canonical table in `js/utils.js`), `knowledge-chunking
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
 normalization, varying the provider keys directly — which the server tests
-cannot, since a spawn only ever sees the environment it was given), and
+cannot, since a spawn only ever sees the environment it was given),
 `ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
-endpoints, so both AI paths are covered without a key or a paid call). **The list in
+endpoints, so both AI paths are covered without a key or a paid call), and
+`ai-assist-validate-rewrite` (the plain-language mandate and link-target
+checks a `rewrite-field` draft is held to). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
@@ -82,8 +84,9 @@ nothing
 (Playwright, in `tests/e2e/`:
 seventeen spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
-keyboard shortcuts, workspace panels, accessibility, AI assist, mockup PNG
-export, the Overview insight cards, and workshop-form submission handling — sharing plain helper functions in
+keyboard shortcuts, workspace panels, accessibility, AI assist, the
+selection-driven AI rewrite, mockup PNG export, the Overview insight cards,
+and workshop-form submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
 round-trip tests hand-rolled the merge inside `page.evaluate()` rather than

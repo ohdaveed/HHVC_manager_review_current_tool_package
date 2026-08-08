@@ -110,6 +110,12 @@ test.describe('AI rewrite', () => {
   test('offers no rewrite button when the AI backend is unconfigured', async ({ page }) => {
     await gotoFresh(page)
     await selectFirstField(page)
+    // `toBeHidden()` also passes the instant the button doesn't exist in the
+    // DOM yet, which is true at t=0 regardless of outcome — the button is
+    // created lazily and `handleSelection` is debounced 150ms. Waiting past
+    // that window first means this actually confirms the debounced handler
+    // ran and chose not to show it, not just that nothing has happened yet.
+    await page.waitForTimeout(250)
     // A static deploy has no /api/ai/* runtime at all. An affordance that
     // always fails is worse than no affordance.
     await expect(page.locator('#aiRewriteButton')).toBeHidden()
@@ -120,6 +126,10 @@ test.describe('AI rewrite', () => {
     await gotoFresh(page)
     await configureAi(page)
     await selectFirstField(page)
+    // See the sibling test above: wait past the 150ms selection debounce so
+    // this asserts the handler ran and stayed hidden, not that it hasn't
+    // fired yet.
+    await page.waitForTimeout(250)
     await expect(page.locator('#aiRewriteButton')).toBeHidden()
   })
 

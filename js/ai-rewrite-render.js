@@ -41,6 +41,12 @@
    * - `fieldPath` — the `data-rewrite-field` path of the selected element
    *   (e.g. `sections.2.paragraphs.0`), which is what the orchestrator will
    *   eventually pass to `window.utils.setByPath` to apply a result.
+   * - `pageKey` — the page key the popover was opened for, captured once at
+   *   open time. The reviewer can switch pages while the popover is still
+   *   open (it is a non-modal element), and `fieldPath` alone does not say
+   *   which page it belongs to — Apply/Undo compare this against the
+   *   currently open page before writing, and refuse rather than write a
+   *   stale field path into whatever page happens to be open now.
    * - `fieldText` — the full text of that field, not just the highlighted
    *   substring. The popover says so via the scope note in `renderPopover`,
    *   because rewriting only the highlighted fragment would leave the
@@ -64,6 +70,7 @@
    */
   const state = {
     fieldPath: '',
+    pageKey: '',
     fieldText: '',
     instruction: '',
     busy: false,

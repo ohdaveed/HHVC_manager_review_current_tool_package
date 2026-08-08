@@ -132,10 +132,10 @@
 .ai-rewrite-error {
   margin: var(--ds-space-3) 0 0;
   padding: var(--ds-space-2) var(--ds-space-3);
-  border: 1px solid var(--sfds-danger-border);
+  border: 1px solid var(--status-blocked-border);
   border-radius: var(--ds-radius-sm);
-  background: var(--sfds-danger-bg);
-  color: var(--sfds-danger-text);
+  background: var(--status-blocked-bg);
+  color: var(--status-blocked-fg);
   font-size: var(--ds-text-label);
 }
 

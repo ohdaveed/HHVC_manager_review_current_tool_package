@@ -82,14 +82,18 @@ function getCapabilities() {
     providerLabels: labels,
     defaultProvider: configuredProviders()[0]?.name || null,
     // Every task this deployment can actually run, composed from BOTH gates.
-    // `rewrite-field` needs only a configured provider, which getting here
-    // already implies; `compliance-audit` additionally needs an ingested
-    // knowledge base. The browser reads this list to decide whether to mount
-    // the selection-rewrite affordance at all — a deploy with no /api/ai/*
-    // runtime must show no button rather than one that always fails.
-    tasks: knowledgeBaseReady
-      ? ['content', 'compliance-audit', 'rewrite-field']
-      : ['content', 'rewrite-field'],
+    // `content`/`rewrite-field` need a configured provider — this used to be
+    // asserted in a comment rather than checked, so a deployment with zero
+    // configured providers still advertised both, and a click reached the
+    // provider gate and got a 501. `compliance-audit` additionally needs an
+    // ingested knowledge base. The browser reads this list to decide whether
+    // to mount an affordance at all — a deploy with no /api/ai/* runtime (or
+    // no provider key) must show no button rather than one that always fails.
+    tasks: configuredProviders().length
+      ? knowledgeBaseReady
+        ? ['content', 'compliance-audit', 'rewrite-field']
+        : ['content', 'rewrite-field']
+      : [],
     groundedBy: corpus.files,
     pageCount: Object.keys(getPages()).length,
     disclosureRequired: true,
@@ -278,7 +282,7 @@ async function generateRewrite({ fieldText, instruction, page, provider, signal 
     addUsage(usage, generated.usage)
     usageByAttempt.push(generated.rawUsage || {})
 
-    const validation = validateRewrite(generated.object, fieldText)
+    const validation = validateRewrite(generated.object, fieldText, page?.type)
     issues = validation.issues
     if (validation.valid) break
   }
