@@ -310,9 +310,46 @@ describe('data-rewrite-field annotation', () => {
     expect(ctx.renderSteps([{ title: 'S', text: ['t'] }])).not.toContain('data-rewrite-field')
   })
 
-  // The regression this whole addressing scheme exists to prevent. 'related'
-  // sections are rendered LAST regardless of source order, so a path built
-  // from render order would point at the wrong section entirely.
+  // The regression this whole addressing scheme exists to prevent.
+  // partitionSections() buckets sections by inferred role (body/resources/
+  // related/etc.) and renderPageMain() for an Information page renders those
+  // buckets in a FIXED layout order — all 'body'-role sections, then all
+  // 'resources'-role sections, then 'related' last — which is not the same
+  // as page.sections source order. data-rewrite-field must carry the SOURCE
+  // index (section.__sectionIndex, stamped in partitionSections before the
+  // bucketing) so an AI rewrite lands on the section the reviewer actually
+  // saw, not on whatever happens to occupy that position in the rendered
+  // output.
+  //
+  // The previous version of this test used a 'related'-role section (with
+  // `cards`, no `paragraphs`) as its reordered section, on the theory that a
+  // render-order implementation would misattribute paths onto it. That
+  // fixture was vacuous: 'related' sections carry no `paragraphs`/`bullets`
+  // and cards are deliberately out of the v1 rewrite-field scope (see
+  // js/page-render.js's renderCards — it emits no data-rewrite-field at
+  // all), so section 0 in that fixture NEVER emitted a data-rewrite-field
+  // path under EITHER implementation. The assertion
+  // `expect(html).not.toContain('data-rewrite-field="sections.0.paragraphs.0"')`
+  // therefore passed trivially, with or without the __sectionIndex fix — it
+  // proved nothing about which index scheme was in use.
+  //
+  // This fixture instead reorders two sections that both emit real
+  // data-rewrite-field paths: a 'resources'-role section placed FIRST in
+  // source order, and a plain body-role section placed SECOND. For an
+  // Information page, renderPageMain() renders all body-role sections before
+  // any resources-role section (see the `infoBody`/`resources.forEach` split
+  // below the partitionSections() call), so the resources section (source
+  // index 0) renders in HTML AFTER the body section (source index 1) — a
+  // genuine, verified disagreement between source index and render position.
+  //
+  // Content-binding is deliberate, not decorative: a bare pair of
+  // `toContain` checks for 'sections.0...' and 'sections.1...' would pass
+  // under a BROKEN render-order implementation too, because swapping which
+  // section is called "0" and which is "1" still produces both strings
+  // somewhere in the document — only the pairing between an index and its
+  // section's actual text content flips. Asserting the index immediately
+  // followed by that section's distinctive paragraph text is what makes a
+  // render-order regression fail this test instead of sailing through it.
   test('uses the original page.sections index, not the rendered order', () => {
     const page = {
       slug: 'x',
@@ -322,14 +359,29 @@ describe('data-rewrite-field annotation', () => {
       audience: ['a'],
       reading: 'Grade 6',
       sections: [
-        { heading: 'Related things', component: 'related', karl: 'k', cards: [] },
-        { heading: 'Body', karl: 'k', paragraphs: ['body copy'] },
+        {
+          heading: 'Resources first',
+          component: 'resources',
+          karl: 'k',
+          paragraphs: ['resources copy'],
+        },
+        { heading: 'Body second', karl: 'k', paragraphs: ['body copy'] },
       ],
     }
     const html = ctx.renderPageMain(page)
-    // The body section is index 1 in source even though it renders before the
-    // related section.
-    expect(html).toContain('data-rewrite-field="sections.1.paragraphs.0"')
-    expect(html).not.toContain('data-rewrite-field="sections.0.paragraphs.0"')
+    // Source index 0 (the resources section) renders LAST in this page type,
+    // but its data-rewrite-field must still read "sections.0" and must still
+    // be paired with ITS OWN text, "resources copy" — not the other
+    // section's.
+    expect(html).toContain('data-rewrite-field="sections.0.paragraphs.0">resources copy')
+    // Source index 1 (the body section) renders FIRST, but its
+    // data-rewrite-field must still read "sections.1" paired with "body
+    // copy".
+    expect(html).toContain('data-rewrite-field="sections.1.paragraphs.0">body copy')
+    // And the render-order-implied (wrong) pairings must be absent: source
+    // index 0's attribute must never precede "body copy", and source index
+    // 1's attribute must never precede "resources copy".
+    expect(html).not.toContain('data-rewrite-field="sections.0.paragraphs.0">body copy')
+    expect(html).not.toContain('data-rewrite-field="sections.1.paragraphs.0">resources copy')
   })
 })
