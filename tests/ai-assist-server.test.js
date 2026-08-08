@@ -338,7 +338,7 @@ describe('AI assist API (server.ts)', () => {
       const body = await res.json()
       expect(body.providers).toEqual({ claude: true, gemini: true })
       expect(body.models.claude).toBe('claude-opus-5')
-      expect(body.models.gemini).toBe('gemini-2.5-pro')
+      expect(body.models.gemini).toBe('gemini-pro-latest')
       // Labels drive the browser's picker. Without them it would have to map
       // registry keys to display names itself, which is the sort of duplicated
       // table that goes stale the first time a provider is added.
