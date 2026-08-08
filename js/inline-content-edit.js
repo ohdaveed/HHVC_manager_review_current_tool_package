@@ -115,14 +115,336 @@
   }
 
   /**
-   * Re-render the mockup for the current page, then re-bind (delegated
-   * listeners survive re-render since they're attached to a stable
-   * ancestor, but any transient editing-widget DOM does not).
-   * @returns {void}
+   * Re-render the mockup for the current page. Decoration (add/remove
+   * controls, Edited badges) is NOT done here directly — it happens inside
+   * wrapRenderPageForDecoration()'s wrapper around window.renderPage below,
+   * so every render this module didn't itself trigger (page-picker
+   * navigation, js/ux-improvements.js's restoreInitialPage(), the async
+   * section_edits follow-up render) gets decorated too, not just the ones
+   * this function causes.
+   *
+   * Returns whatever window.renderPage returns — in a real browser with
+   * View Transitions support that is a pending promise, not a completed
+   * paint (see js/page-render.js's renderPage(), which routes through
+   * document.startViewTransition()). Most callers here don't need to know
+   * that (they do nothing DOM-dependent afterward), but addListItem() does
+   * — see its use of this return value below.
+   * @returns {Promise<void>|undefined}
    */
   function rerender() {
     const key = window.utils.getCurrentKey()
-    window.renderPage?.(key, true)
+    return window.renderPage?.(key, true)
+  }
+
+  /**
+   * Wrap window.renderPage so every render — regardless of who triggers it —
+   * is followed by decorateListControls()/decorateEditedFields(). This is
+   * the same "wrap window.renderPage, run extra work after" pattern
+   * js/ux-improvements.js's wrapRenderPage() and
+   * js/manager-review-export.js's (removed) wrapper used; see CLAUDE.md's
+   * "Some functions are deliberately published onto window" section.
+   *
+   * Required because renderPageMain()'s output carries neither the add/
+   * remove controls nor the Edited-badge/reset decorations (Task 1 kept the
+   * renderer itself untouched beyond data-rewrite-field attributes — see
+   * Step 1's rationale), and this module is not the only caller of
+   * window.renderPage: js/app.js's initial render, js/ux-improvements.js's
+   * restoreInitialPage() (both a synchronous call and, for a page carrying
+   * saved section_edits, an async setTimeout(0) follow-up call — see
+   * js/ux-improvements-state-sync.js's refreshInFlightForKey guard), and
+   * page-picker navigation all call window.renderPage without going through
+   * this module's own rerender(). A one-time decoration call from init()
+   * alone only ever catches whichever render happened to be current at
+   * module-load time — every later render (including that async follow-up,
+   * which by construction happens AFTER this module has already loaded and
+   * decorated once) would otherwise leave #mockPage completely undecorated
+   * with nothing left to re-trigger it.
+   *
+   * This module loads after js/ux-improvements.js in js/main.js, so by the
+   * time this wrapper installs, window.renderPage is already
+   * js/ux-improvements.js's own wrapper around the original — this wraps
+   * that, keeping decoration outermost (runs after every render in the
+   * chain, including that wrapper's own deferred section_edits reapply,
+   * which calls window.renderPage — the live, wrapped reference — rather
+   * than a captured original).
+   *
+   * Decoration must wait for the ACTUAL DOM mutation, not just for
+   * original.apply() to return. js/page-render.js's renderPage() uses
+   * document.startViewTransition() when the browser supports it (real
+   * Chromium does; happy-dom does not), and in that case the DOM update
+   * happens asynchronously inside the transition's callback — renderPage()
+   * returns a promise (transition.updateCallbackDone) rather than having
+   * already painted by the time it returns. Decorating synchronously right
+   * after original.apply() would then run against the PREVIOUS page's
+   * stale DOM (or, on the very first render, an empty #mockPage), which is
+   * exactly the bug this wrapper exists to prevent — mirrors
+   * js/ux-improvements.js's own wrapRenderPage(), which defers its
+   * post-render work the same way for the same reason.
+   * @returns {void}
+   */
+  function wrapRenderPageForDecoration() {
+    const original = window.renderPage
+    if (typeof original !== 'function' || original.__inlineEditWrapped) return
+    window.renderPage = function (...args) {
+      const result = original.apply(this, args)
+      const decorate = () => {
+        decorateListControls()
+        decorateEditedFields()
+      }
+      if (result && typeof result.then === 'function') result.then(decorate, decorate)
+      else decorate()
+      return result
+    }
+    window.renderPage.__inlineEditWrapped = true
+  }
+
+  /**
+   * Given any element carrying a data-rewrite-field path shaped
+   * 'sections.N.bullets.M' or 'sections.N.paragraphs.M', return the array's
+   * container path ('sections.N.bullets') and the DOM elements that
+   * currently render its items, in order.
+   *
+   * Paragraphs and bullets render differently (bulletList wraps every item
+   * in one shared <ul>; paragraphList renders bare sibling <p> elements with
+   * no wrapper), so the two need different DOM-walking strategies to find
+   * "every rendered item in this array" — but both return the same shape so
+   * the add/remove logic above them can stay one implementation.
+   * @param {string} itemPath e.g. 'sections.2.bullets.1'
+   * @returns {{containerPath: string, itemElements: HTMLElement[]}|null}
+   */
+  function locateListContainer(itemPath) {
+    const match = itemPath.match(/^(sections\.\d+\.(?:paragraphs|bullets))\.\d+$/)
+    if (!match) return null
+    const containerPath = match[1]
+    const escapedPath = CSS.escape(containerPath)
+    const itemElements = Array.from(
+      document.querySelectorAll(`#mockPage [data-rewrite-field^="${escapedPath}."]`)
+    ).filter((el) =>
+      new RegExp(`^${escapedPath}\\.\\d+$`).test(el.getAttribute('data-rewrite-field'))
+    )
+    return { containerPath, itemElements }
+  }
+
+  /**
+   * Append a new, empty item to a paragraphs/bullets array and open it
+   * immediately in edit mode. The whole resulting array is written back
+   * (never a per-index patch) — see the Global Constraints on why deletes
+   * make per-index addressing unsafe, which applies symmetrically to adds
+   * kept consistent with the same array-replace approach.
+   * @param {string} containerPath e.g. 'sections.2.bullets'
+   * @returns {void}
+   */
+  function addListItem(containerPath) {
+    const key = window.utils.getCurrentKey()
+    const page = window.HHVC_DATA.pages[key]
+    if (!page) return
+    const current = getByPath(page, containerPath)
+    const array = Array.isArray(current) ? current : []
+    const nextArray = [
+      ...array,
+      { text: '', unverified: true, unverifiedReason: 'Manually edited during review' },
+    ]
+    setByPath(page, containerPath, nextArray)
+    persist()
+    // Open the newly added (last) item in edit mode immediately, matching
+    // the design spec's "already open in edit mode, at the next index" —
+    // but only once the render rerender() just triggered has actually
+    // repainted #mockPage. In a real browser with View Transitions support,
+    // rerender()'s return value is a pending promise (the DOM mutation
+    // happens asynchronously inside the transition's callback — see
+    // js/page-render.js's renderPage()), so querying for the new field
+    // synchronously right after calling rerender() would run against the
+    // PREVIOUS paint, before the new item exists at all. Without View
+    // Transitions (including happy-dom, which has none — see the unit
+    // tests for this path), rerender() is fully synchronous and openNew()
+    // runs immediately, exactly as before.
+    const newIndex = nextArray.length - 1
+    const openNew = () => {
+      const newField = document.querySelector(
+        `#mockPage [data-rewrite-field="${CSS.escape(`${containerPath}.${newIndex}`)}"]`
+      )
+      if (newField) openScalarEditor(newField)
+    }
+    const renderResult = rerender()
+    if (renderResult && typeof renderResult.then === 'function') {
+      renderResult.then(openNew, openNew)
+    } else {
+      openNew()
+    }
+  }
+
+  /**
+   * Remove one item from a paragraphs/bullets array, show a one-step-undo
+   * toast (matching js/review-queue-undo.js's precedent), and persist the
+   * reduced array as a whole-field replace.
+   *
+   * The undo affordance is built through the existing showToast()'s
+   * {label, callback} action parameter (js/ui-controls.js) rather than
+   * render.undoToastMarkup()'s raw-HTML button: showToast renders `message`
+   * via textContent, and several existing callers pass externally-supplied
+   * strings straight into that parameter (e.g. js/review-state-sync.js's
+   * sync-failure toasts), so switching it to innerHTML to accommodate an
+   * embedded <button> would break that invariant tool-wide. showToast's
+   * action.className/action.dataset (added alongside this function) still
+   * let the generated button carry the same data-inline-edit-undo marker
+   * and inline-edit-undo-action class Task 8's e2e coverage and CSS expect,
+   * with zero HTML injection.
+   * @param {string} containerPath
+   * @param {number} index
+   * @returns {void}
+   */
+  function removeListItem(containerPath, index) {
+    const key = window.utils.getCurrentKey()
+    const page = window.HHVC_DATA.pages[key]
+    if (!page) return
+    const current = getByPath(page, containerPath)
+    const array = Array.isArray(current) ? current : []
+    if (index < 0 || index >= array.length) return
+
+    const removedItem = array[index]
+    const nextArray = array.filter((_, i) => i !== index)
+    setByPath(page, containerPath, nextArray)
+    persist()
+    rerender()
+
+    const label = /bullets$/.test(containerPath) ? 'bullet' : 'paragraph'
+    window.showToast?.(`Removed ${label}.`, 'info', {
+      label: 'Undo',
+      className: 'inline-edit-undo-action',
+      dataset: { inlineEditUndo: '' },
+      callback: () => {
+        const restoreCurrent = getByPath(page, containerPath)
+        const restoreArray = Array.isArray(restoreCurrent) ? [...restoreCurrent] : []
+        restoreArray.splice(index, 0, removedItem)
+        setByPath(page, containerPath, restoreArray)
+        persist()
+        rerender()
+      },
+    })
+  }
+
+  /**
+   * Reset one field to its ORIGINAL_DATA value and re-render. Modeled on
+   * js/review-state-sync.js's restorePageContentFromOriginal, which resets
+   * an entire page's title/summary/SEO/CTA — this is the per-field
+   * equivalent this design calls for, since that function's granularity
+   * (whole page) is too coarse for "undo just this one heading edit".
+   * @param {string} path
+   * @returns {void}
+   */
+  function resetFieldToOriginal(path) {
+    const key = window.utils.getCurrentKey()
+    const page = window.HHVC_DATA.pages[key]
+    const originalPage = window.ORIGINAL_DATA?.pages?.[key]
+    if (!page || !originalPage) return
+
+    if (path === 'title') {
+      page.title = originalPage.title
+    } else if (path === 'summary') {
+      page.summary = originalPage.summary
+    } else if (path === 'primaryCta') {
+      const originalCta = getPrimaryCta(originalPage) || ''
+      setPrimaryCta(page, originalCta)
+    } else {
+      const originalValue = getByPath(originalPage, path)
+      if (originalValue !== undefined) setByPath(page, path, originalValue)
+    }
+    persist()
+    rerender()
+  }
+
+  /**
+   * Append a remove control to every rendered paragraph/bullet item, and an
+   * add control after the last item in each section's paragraphs/bullets
+   * list. Runs after every mockup render (rerender() above, and the initial
+   * page load), since renderPageMain()'s output carries no such controls —
+   * see Task 1's scope note on why the renderer itself stays untouched
+   * beyond the data-rewrite-field attributes.
+   *
+   * Idempotent per item/container: init() can call this twice for the same
+   * painted DOM (a synchronous catch-up call, then a deferred
+   * requestAnimationFrame one guarding against a View-Transitions-async
+   * initial render — see init() below), and wrapRenderPageForDecoration()
+   * adds a third call site. Guarding here, rather than trying to make those
+   * call sites mutually exclusive, keeps each call site simple and correct
+   * on its own regardless of how many times it fires against the same DOM.
+   * @returns {void}
+   */
+  function decorateListControls() {
+    const seenContainers = new Set()
+    const itemFields = document.querySelectorAll('#mockPage [data-rewrite-field^="sections."]')
+    itemFields.forEach((el) => {
+      const path = el.getAttribute('data-rewrite-field')
+      const match = path.match(/^(sections\.\d+\.(?:paragraphs|bullets))\.(\d+)$/)
+      if (!match) return
+      const [, containerPath, indexStr] = match
+      const index = Number(indexStr)
+      seenContainers.add(containerPath)
+      if (el.querySelector('[data-inline-edit-remove]')) return // already decorated
+      const removeHtml = render.listRemoveControlHtml(containerPath, index)
+      const wrapper = document.createElement('span')
+      wrapper.innerHTML = removeHtml
+      el.appendChild(wrapper.firstElementChild)
+    })
+
+    seenContainers.forEach((containerPath) => {
+      const existingAdd = document.querySelector(
+        `#mockPage [data-inline-edit-add="${CSS.escape(containerPath)}"]`
+      )
+      if (existingAdd) return // already decorated
+      const located = locateListContainer(`${containerPath}.0`)
+      if (!located || !located.itemElements.length) return
+      const lastItem = located.itemElements[located.itemElements.length - 1]
+      const addHtml = render.listAddControlHtml(containerPath)
+      const wrapper = document.createElement('span')
+      wrapper.innerHTML = addHtml
+      // Bullets share one <ul> parent; paragraphs are bare siblings with a
+      // shared parent too (the section's own container element in both
+      // cases), so inserting after the last item's parentNode position
+      // works uniformly for both shapes.
+      lastItem.parentNode.insertBefore(wrapper.firstElementChild, lastItem.nextSibling)
+    })
+  }
+
+  /**
+   * Apply the "Edited" badge and a "Reset to original" control next to
+   * title, summary, heading, and CTA fields whose current value differs
+   * from ORIGINAL_DATA. Paragraphs/bullets are excluded: they already carry
+   * the Unverified pill (set at write time in writeScalarValue), which is
+   * their edited signal, and adding a second one would be a duplicate cue
+   * for the same fact.
+   * @returns {void}
+   */
+  function decorateEditedFields() {
+    const key = window.utils.getCurrentKey()
+    const page = window.HHVC_DATA.pages[key]
+    const originalPage = window.ORIGINAL_DATA?.pages?.[key]
+    if (!page || !originalPage) return
+
+    const scalarPaths = ['title', 'summary', 'primaryCta']
+    document.querySelectorAll('#mockPage [data-rewrite-field]').forEach((el) => {
+      const path = el.getAttribute('data-rewrite-field')
+      const isHeading = /\.heading$/.test(path)
+      if (!scalarPaths.includes(path) && !isHeading) return
+
+      const currentValue =
+        path === 'primaryCta' ? getPrimaryCta(page) || '' : readScalarValue(page, path)
+      const originalValue =
+        path === 'title'
+          ? originalPage.title || ''
+          : path === 'summary'
+            ? originalPage.summary || ''
+            : path === 'primaryCta'
+              ? getPrimaryCta(originalPage) || ''
+              : getByPath(originalPage, path) || ''
+
+      if (currentValue === originalValue) return
+      if (el.querySelector('.inline-edit-badge')) return // already decorated
+
+      const badgeWrapper = document.createElement('span')
+      badgeWrapper.innerHTML = render.editedBadgeHtml() + render.resetControlHtml(path)
+      while (badgeWrapper.firstChild) el.appendChild(badgeWrapper.firstChild)
+    })
   }
 
   /**
@@ -191,22 +513,46 @@
 
   /**
    * Delegated click handler on #mockPage. Walks up from the click target to
-   * the nearest [data-rewrite-field] ancestor. List add/remove controls
-   * (Task 7) are matched first since they can sit inside a
-   * [data-rewrite-field] element's subtree (e.g. a remove "×" inside a
-   * <li> that itself carries the attribute) and must not also open a
-   * scalar editor on the same click.
+   * the nearest [data-rewrite-field] ancestor. List add/remove controls and
+   * the per-field reset control (Task 7) are matched first since they can
+   * sit inside a [data-rewrite-field] element's subtree (e.g. a remove "×"
+   * inside a <li> that itself carries the attribute, or a reset button
+   * appended inside an edited heading) and must not also open a scalar
+   * editor on the same click.
+   *
+   * The one-step-undo control is deliberately NOT matched here: it lives
+   * inside the toast rendered by showToast() (js/ui-controls.js), which is
+   * appended to #toastContainer, outside #mockPage entirely — showToast's
+   * own action.callback click listener owns that click, and this handler
+   * never sees it.
    * @param {MouseEvent} event
    * @returns {void}
    */
   function handleMockPageClick(event) {
     const target = event.target
     if (!(target instanceof Element)) return
-    if (
-      target.closest('[data-inline-edit-add], [data-inline-edit-remove], [data-inline-edit-undo]')
-    ) {
-      return // handled by Task 7's listeners
+
+    const resetControl = target.closest('[data-inline-edit-reset]')
+    if (resetControl) {
+      event.preventDefault()
+      resetFieldToOriginal(resetControl.getAttribute('data-inline-edit-reset'))
+      return
     }
+    const addControl = target.closest('[data-inline-edit-add]')
+    if (addControl) {
+      event.preventDefault()
+      addListItem(addControl.getAttribute('data-inline-edit-add'))
+      return
+    }
+    const removeControl = target.closest('[data-inline-edit-remove]')
+    if (removeControl) {
+      event.preventDefault()
+      const containerPath = removeControl.getAttribute('data-inline-edit-remove')
+      const index = Number(removeControl.getAttribute('data-inline-edit-index'))
+      removeListItem(containerPath, index)
+      return
+    }
+
     if (editingPath) return // already editing something; let blur/Enter/Escape resolve it first
     const field = target.closest('[data-rewrite-field]')
     if (!field) return
@@ -267,8 +613,44 @@
     mockPage.addEventListener('click', handleMockPageClick)
   }
 
+  /**
+   * @returns {void}
+   */
   function init() {
     ensureBound()
+    wrapRenderPageForDecoration()
+    const decorate = () => {
+      decorateListControls()
+      decorateEditedFields()
+    }
+    // Decorate once here for the render that already happened before this
+    // module loaded (js/app.js's initial renderPage() call, which predates
+    // this module in js/main.js's import order and therefore predates the
+    // wrapper installed just above — every render from this point on goes
+    // through that wrapper instead).
+    decorate()
+    // The call above is enough UNLESS js/page-render.js's renderPage()
+    // routed through document.startViewTransition() for that initial
+    // render: in a real browser that supports it, the actual DOM mutation
+    // happens asynchronously inside the transition's callback, so the
+    // renderPage() call js/app.js already made had returned a pending
+    // promise by the time this function runs, with #mockPage not yet
+    // repainted — the decorate() call above then ran against stale
+    // (possibly empty) DOM and found nothing to decorate. There's no handle
+    // to that specific promise to await (js/app.js never exposed it), so
+    // this schedules a second, deferred pass via a double
+    // requestAnimationFrame — the standard "wait for the next real paint"
+    // idiom — gated on View Transitions support existing at all: without
+    // it, renderPage() is fully synchronous, the sync decorate() above
+    // already caught everything, and scheduling a redundant deferred pass
+    // would only cost a wasted rAF round-trip (harmless, but pointless).
+    // happy-dom has no startViewTransition, so this branch never schedules
+    // under the unit test suite — the async race is real-browser-only, and
+    // is instead verified live (see the Playwright smoke test in Task 7's
+    // report).
+    if (typeof document.startViewTransition === 'function') {
+      requestAnimationFrame(() => requestAnimationFrame(decorate))
+    }
   }
 
   if (document.readyState === 'loading') {

@@ -22,6 +22,17 @@ const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
 require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
+// Imported once at file scope, not inside a test: js/ui-controls.js statically
+// imports js/state.js, which side-effect-loads the REAL js/page-data.js (all
+// 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
+// real dataset the moment it first runs. Importing it here, before any test's
+// beforeEach/mountInlineContentEdit stub assigns the test-scoped
+// window.HHVC_DATA, means that one-time real-data clobber happens up front and
+// every test's own stub assignment (which always runs after this point) wins.
+// Requiring it again inside a test returns the cached module with no further
+// side effect, so this also documents why later `require('../js/ui-controls.js')`
+// calls in the tests below are safe.
+const { showToast: realShowToast } = require('../js/ui-controls.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/inline-content-edit.js')
 
@@ -486,5 +497,417 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
 
     expect(mockPage.querySelector('[data-inline-edit-input]')).toBeNull()
     expect(renderPageCalls).toEqual([])
+  })
+})
+
+// Task 7: add/remove for paragraph/bullet arrays, one-step undo, and
+// per-field "Reset to original". These tests reuse mountInlineContentEdit's
+// stubbed window.renderPage (which does not actually repaint #mockPage), so
+// each test rebuilds mockPage.innerHTML by hand after a mutating action to
+// simulate what the real renderPage would have painted, then calls the
+// module's decoration entry points directly through a real click/DOM path
+// wherever the assertion is about click behavior, and through init()/rerender
+// side effects wherever it's about decoration. This mirrors how
+// tests/inline-content-edit-refresh.test.js drives IIFE-internal behavior
+// through its published seams rather than reaching into the closure.
+describe('inline content edit: add/remove/undo for paragraph and bullet arrays', () => {
+  test('clicking an Add control appends an empty tagged item and opens it in edit mode', async () => {
+    const { mockPage, page } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">Original bullet text.</li>' +
+      '<button type="button" data-inline-edit-add="sections.0.bullets">+ Add</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-add]'))
+
+    expect(page.sections[0].bullets.length).toBe(2)
+    expect(page.sections[0].bullets[1]).toEqual({
+      text: '',
+      unverified: true,
+      unverifiedReason: 'Manually edited during review',
+    })
+  })
+
+  test('Add control click does not open a scalar editor on the same click', async () => {
+    const { mockPage, inlineEdit } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">Original bullet text.</li>' +
+      '<button type="button" data-inline-edit-add="sections.0.bullets">+ Add</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-add]'))
+
+    // The click landed on the Add button, not on a [data-rewrite-field]
+    // element, so no scalar editor opens as a side effect of this click.
+    expect(inlineEdit.isEditing()).toBe(false)
+  })
+
+  test('clicking a Remove control deletes exactly that item via a whole-array replace', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second', 'Third'] }],
+      },
+    })
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '<li data-rewrite-field="sections.0.bullets.2">Third</li>' +
+      '<button type="button" data-inline-edit-remove="sections.0.bullets" data-inline-edit-index="1">×</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+
+    // Whole-array-replace: the resulting array has the middle item gone,
+    // written back as a fresh array, not a per-index splice against
+    // whatever the live array happened to be at click time.
+    expect(page.sections[0].bullets).toEqual(['First', 'Third'])
+  })
+
+  test('removing an item persists and re-renders', async () => {
+    const { mockPage, getPersistCalls, renderPageCalls } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second'] }],
+      },
+    })
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '<button type="button" data-inline-edit-remove="sections.0.bullets" data-inline-edit-index="0">×</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+
+    expect(getPersistCalls()).toBe(1)
+    expect(renderPageCalls).toEqual([{ key: 'testPage', skipHistory: true }])
+  })
+
+  test('removing an item shows a toast whose action button carries the undo marker', async () => {
+    const { mockPage } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second'] }],
+      },
+    })
+    document.body.insertAdjacentHTML('beforeend', '<div id="toastContainer"></div>')
+    window.showToast = realShowToast
+
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '<button type="button" data-inline-edit-remove="sections.0.bullets" data-inline-edit-index="0">×</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+
+    const toast = document.querySelector('#toastContainer .toast')
+    expect(toast).not.toBeNull()
+    expect(toast.textContent).toContain('Removed bullet.')
+    const undoButton = toast.querySelector('[data-inline-edit-undo]')
+    expect(undoButton).not.toBeNull()
+    expect(undoButton.textContent).toBe('Undo')
+  })
+
+  test('clicking the toast Undo button restores the removed item at its original position', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second', 'Third'] }],
+      },
+    })
+    document.body.insertAdjacentHTML('beforeend', '<div id="toastContainer"></div>')
+    window.showToast = realShowToast
+
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '<li data-rewrite-field="sections.0.bullets.2">Third</li>' +
+      '<button type="button" data-inline-edit-remove="sections.0.bullets" data-inline-edit-index="1">×</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+    expect(page.sections[0].bullets).toEqual(['First', 'Third'])
+
+    click(document.querySelector('#toastContainer [data-inline-edit-undo]'))
+
+    expect(page.sections[0].bullets).toEqual(['First', 'Second', 'Third'])
+  })
+
+  test('undo is consumed on use: undo is only offered once per removal', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second'] }],
+      },
+    })
+    document.body.insertAdjacentHTML('beforeend', '<div id="toastContainer"></div>')
+    window.showToast = realShowToast
+
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '<button type="button" data-inline-edit-remove="sections.0.bullets" data-inline-edit-index="0">×</button>'
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+    expect(page.sections[0].bullets).toEqual(['Second'])
+
+    const undoButton = document.querySelector('#toastContainer [data-inline-edit-undo]')
+    click(undoButton)
+    expect(page.sections[0].bullets).toEqual(['First', 'Second'])
+
+    // The toast (and its undo button) is gone after being clicked once —
+    // showToast's own close-on-action behavior — so a second click has
+    // nothing left to act on.
+    expect(document.querySelector('#toastContainer [data-inline-edit-undo]')).toBeNull()
+  })
+
+  test('removing a paragraph reports the singular label "paragraph" in the toast', async () => {
+    const { mockPage } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: ['Only one.'], bullets: [] }],
+      },
+    })
+    document.body.insertAdjacentHTML('beforeend', '<div id="toastContainer"></div>')
+    window.showToast = realShowToast
+
+    mockPage.innerHTML =
+      '<p data-rewrite-field="sections.0.paragraphs.0">Only one.</p>' +
+      '<button type="button" data-inline-edit-remove="sections.0.paragraphs" data-inline-edit-index="0">×</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+
+    const toast = document.querySelector('#toastContainer .toast')
+    expect(toast.textContent).toContain('Removed paragraph.')
+  })
+})
+
+describe('inline content edit: per-field reset to original', () => {
+  test('resetting a heading restores its ORIGINAL_DATA value, persists, and re-renders', async () => {
+    const { mockPage, page, getPersistCalls, renderPageCalls } = await mountInlineContentEdit()
+    window.ORIGINAL_DATA = {
+      pages: {
+        testPage: {
+          title: 'Original Title',
+          sections: [{ heading: 'Original Heading' }],
+        },
+      },
+    }
+    page.sections[0].heading = 'Edited Heading'
+    mockPage.innerHTML =
+      '<h2 data-rewrite-field="sections.0.heading">' +
+      'Edited Heading<button type="button" data-inline-edit-reset="sections.0.heading">Reset to original</button>' +
+      '</h2>'
+
+    click(mockPage.querySelector('[data-inline-edit-reset]'))
+
+    expect(page.sections[0].heading).toBe('Original Heading')
+    expect(getPersistCalls()).toBe(1)
+    expect(renderPageCalls).toEqual([{ key: 'testPage', skipHistory: true }])
+  })
+
+  test('resetting title restores page.title directly', async () => {
+    const { mockPage, page } = await mountInlineContentEdit()
+    window.ORIGINAL_DATA = { pages: { testPage: { title: 'Original Title' } } }
+    page.title = 'Edited Title'
+    mockPage.innerHTML =
+      '<h1 data-rewrite-field="title">Edited Title' +
+      '<button type="button" data-inline-edit-reset="title">Reset to original</button></h1>'
+
+    click(mockPage.querySelector('[data-inline-edit-reset]'))
+
+    expect(page.title).toBe('Original Title')
+  })
+
+  test('resetting summary restores page.summary directly', async () => {
+    const { mockPage, page } = await mountInlineContentEdit()
+    window.ORIGINAL_DATA = { pages: { testPage: { summary: 'Original summary text.' } } }
+    page.summary = 'Edited summary.'
+    mockPage.innerHTML =
+      '<p data-rewrite-field="summary">Edited summary.' +
+      '<button type="button" data-inline-edit-reset="summary">Reset to original</button></p>'
+
+    click(mockPage.querySelector('[data-inline-edit-reset]'))
+
+    expect(page.summary).toBe('Original summary text.')
+  })
+
+  test('resetting primaryCta restores the CTA label via setPrimaryCta', async () => {
+    const { mockPage, page } = await mountInlineContentEdit()
+    window.ORIGINAL_DATA = { pages: { testPage: { primaryCta: 'Original CTA' } } }
+    realUtils.setPrimaryCta(page, 'Edited CTA')
+    mockPage.innerHTML =
+      '<a data-rewrite-field="primaryCta">Edited CTA' +
+      '<button type="button" data-inline-edit-reset="primaryCta">Reset to original</button></a>'
+
+    click(mockPage.querySelector('[data-inline-edit-reset]'))
+
+    expect(realUtils.getPrimaryCta(page)).toBe('Original CTA')
+  })
+
+  test('a click outside any reset/add/remove control is unaffected (regression guard)', async () => {
+    const { mockPage, page } = await mountInlineContentEdit()
+    mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
+    click(mockPage.querySelector('[data-rewrite-field="title"]'))
+
+    // Normal scalar editing still opens as before; reset/add/remove wiring
+    // must not have broken the plain click-to-edit path from Task 6.
+    expect(mockPage.querySelector('[data-inline-edit-input]')).not.toBeNull()
+    expect(page.title).toBe('Original Title')
+  })
+})
+
+describe('inline content edit: decorateListControls appends add/remove controls after render', () => {
+  test('init() decorates a bullet list already present at mount with a remove control per item and one add control', async () => {
+    document.body.innerHTML =
+      '<div id="mockPage">' +
+      '<ul>' +
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '</ul>' +
+      '</div>'
+    const mockPage = document.getElementById('mockPage')
+
+    window.HHVC_DATA = {
+      pages: {
+        testPage: {
+          title: 'T',
+          summary: 'S',
+          sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second'] }],
+        },
+      },
+      order: [['testPage', 'Test']],
+    }
+    window.ORIGINAL_DATA = { pages: {} }
+    window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+    window.renderPage = () => {}
+    window.ReviewUx = { stateSync: { saveCurrentPageToLocalStorage: () => {} } }
+    window.showToast = () => {}
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const removeControls = mockPage.querySelectorAll('[data-inline-edit-remove]')
+    expect(removeControls.length).toBe(2)
+    const addControls = mockPage.querySelectorAll('[data-inline-edit-add]')
+    expect(addControls.length).toBe(1)
+    expect(addControls[0].getAttribute('data-inline-edit-add')).toBe('sections.0.bullets')
+  })
+
+  test('the add control is placed after the last bullet item', async () => {
+    document.body.innerHTML =
+      '<div id="mockPage">' +
+      '<ul>' +
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '</ul>' +
+      '</div>'
+    const mockPage = document.getElementById('mockPage')
+
+    window.HHVC_DATA = {
+      pages: {
+        testPage: {
+          title: 'T',
+          summary: 'S',
+          sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second'] }],
+        },
+      },
+      order: [['testPage', 'Test']],
+    }
+    window.ORIGINAL_DATA = { pages: {} }
+    window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+    window.renderPage = () => {}
+    window.ReviewUx = { stateSync: { saveCurrentPageToLocalStorage: () => {} } }
+    window.showToast = () => {}
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const items = Array.from(mockPage.querySelectorAll('ul > *'))
+    const lastItemIndex = items.findIndex((el) => el.matches('[data-inline-edit-add]'))
+    expect(lastItemIndex).toBe(items.length - 1)
+  })
+})
+
+describe('inline content edit: decorateEditedFields applies the Edited badge and reset control', () => {
+  test('a heading that differs from ORIGINAL_DATA is decorated with the badge and a reset control', async () => {
+    document.body.innerHTML =
+      '<div id="mockPage"><h2 data-rewrite-field="sections.0.heading">Edited Heading</h2></div>'
+    const mockPage = document.getElementById('mockPage')
+
+    window.HHVC_DATA = {
+      pages: {
+        testPage: { title: 'T', summary: 'S', sections: [{ heading: 'Edited Heading' }] },
+      },
+      order: [['testPage', 'Test']],
+    }
+    window.ORIGINAL_DATA = {
+      pages: {
+        testPage: { title: 'T', summary: 'S', sections: [{ heading: 'Original Heading' }] },
+      },
+    }
+    window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+    window.renderPage = () => {}
+    window.ReviewUx = { stateSync: { saveCurrentPageToLocalStorage: () => {} } }
+    window.showToast = () => {}
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const heading = mockPage.querySelector('[data-rewrite-field="sections.0.heading"]')
+    expect(heading.querySelector('.inline-edit-badge')).not.toBeNull()
+    const reset = heading.querySelector('.inline-edit-reset')
+    expect(reset).not.toBeNull()
+    expect(reset.getAttribute('data-inline-edit-reset')).toBe('sections.0.heading')
+  })
+
+  test('a heading matching ORIGINAL_DATA gets no badge', async () => {
+    document.body.innerHTML =
+      '<div id="mockPage"><h2 data-rewrite-field="sections.0.heading">Same Heading</h2></div>'
+    const mockPage = document.getElementById('mockPage')
+
+    window.HHVC_DATA = {
+      pages: { testPage: { title: 'T', summary: 'S', sections: [{ heading: 'Same Heading' }] } },
+      order: [['testPage', 'Test']],
+    }
+    window.ORIGINAL_DATA = {
+      pages: { testPage: { title: 'T', summary: 'S', sections: [{ heading: 'Same Heading' }] } },
+    }
+    window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+    window.renderPage = () => {}
+    window.ReviewUx = { stateSync: { saveCurrentPageToLocalStorage: () => {} } }
+    window.showToast = () => {}
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const heading = mockPage.querySelector('[data-rewrite-field="sections.0.heading"]')
+    expect(heading.querySelector('.inline-edit-badge')).toBeNull()
+  })
+
+  test('a paragraph is NOT decorated with the Edited badge, even when edited (it already carries the Unverified pill)', async () => {
+    document.body.innerHTML =
+      '<div id="mockPage"><p data-rewrite-field="sections.0.paragraphs.0">Edited text.</p></div>'
+    const mockPage = document.getElementById('mockPage')
+
+    window.HHVC_DATA = {
+      pages: {
+        testPage: { title: 'T', summary: 'S', sections: [{ paragraphs: ['Edited text.'] }] },
+      },
+      order: [['testPage', 'Test']],
+    }
+    window.ORIGINAL_DATA = {
+      pages: { testPage: { title: 'T', summary: 'S', sections: [{ paragraphs: ['Original.'] }] } },
+    }
+    window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+    window.renderPage = () => {}
+    window.ReviewUx = { stateSync: { saveCurrentPageToLocalStorage: () => {} } }
+    window.showToast = () => {}
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const p = mockPage.querySelector('[data-rewrite-field="sections.0.paragraphs.0"]')
+    expect(p.querySelector('.inline-edit-badge')).toBeNull()
   })
 })

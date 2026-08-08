@@ -17,9 +17,18 @@ import { escapeHtml } from './utils.js'
  * Deliberately ONE action, not a list: the toast self-dismisses after 4s, and
  * anything a reviewer needs longer than that to decide on does not belong here
  * (which is why queue undo lives in the bulk bar instead).
+ * `action.className`/`action.dataset` are an additive extension for
+ * js/inline-content-edit.js's one-step-undo toast (Task 7): its e2e coverage
+ * and its own CSS both need to find/style the generated button by a specific
+ * marker (`data-inline-edit-undo` / `.inline-edit-undo-action`), and DOM APIs
+ * make that safe to add without touching how `message` itself is rendered.
+ * `message` still always goes through `el.textContent`, never `innerHTML` —
+ * several existing callers (e.g. js/review-state-sync.js's sync-failure
+ * toasts) interpolate externally-supplied strings straight into it, and this
+ * function must keep treating that text as inert.
  * @param {string} message
  * @param {string} [type] extra class, e.g. 'success' | 'error'
- * @param {{label: string, callback: () => void}} [action]
+ * @param {{label: string, callback: () => void, className?: string, dataset?: Record<string, string>}} [action]
  */
 function showToast(message, type, action) {
   const container = document.getElementById('toastContainer')
@@ -39,9 +48,14 @@ function showToast(message, type, action) {
   ) {
     const actionBtn = document.createElement('button')
     actionBtn.type = 'button'
-    actionBtn.className = 'toast-action'
+    actionBtn.className = 'toast-action' + (action.className ? ' ' + action.className : '')
     // textContent, not innerHTML \u2014 the label is caller-supplied.
     actionBtn.textContent = action.label
+    if (action.dataset && typeof action.dataset === 'object') {
+      for (const [key, value] of Object.entries(action.dataset)) {
+        actionBtn.dataset[key] = value
+      }
+    }
     actionBtn.addEventListener('click', () => {
       // Dismiss first: the callback usually navigates, and a toast left behind
       // describes the page the reviewer just left.

@@ -74,11 +74,23 @@
     return `Removed ${escapeHtml(label)}. <button type="button" class="inline-edit-undo-action" data-inline-edit-undo>Undo</button>`
   }
 
+  /**
+   * The "Reset to original" control shown next to a field currently
+   * displaying the Edited badge.
+   * @param {string} path
+   * @returns {string}
+   */
+  function resetControlHtml(path) {
+    const escapedPath = escapeHtml(path)
+    return `<button type="button" class="inline-edit-reset" data-inline-edit-reset="${escapedPath}">Reset to original</button>`
+  }
+
   window.InlineEdit.render = {
     scalarEditorHtml,
     listAddControlHtml,
     listRemoveControlHtml,
     editedBadgeHtml,
     undoToastMarkup,
+    resetControlHtml,
   }
 })()

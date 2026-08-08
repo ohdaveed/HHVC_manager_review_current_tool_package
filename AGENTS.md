@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 28 unit-test files in tests/
+bun run test                  # Bun test runner over the 29 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 28 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 29 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -76,7 +76,12 @@ DOM up after a reapply; mounts a fresh instance of the IIFE-only
 `import()`, since that file has no `module.exports` tail),
 `inline-content-edit` (the click-to-edit orchestrator for scalar fields,
 driven with real DOM click/keydown/blur events against the real happy-dom
-`window`/`document`),
+`window`/`document`; also covers add/remove-with-undo for paragraph/bullet
+arrays and per-field reset-to-original),
+`inline-content-edit-roundtrip` (add/remove/reset verified through the real
+`saveCurrentPageToLocalStorage`/`applySavedPageState` path rather than
+counting stubs, proving a `section_edits` round trip and that a reset drops
+its path from the next recompute),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
