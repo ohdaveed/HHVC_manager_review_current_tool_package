@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 25 unit-test files in tests/ (567 tests)
-bun run test:e2e              # playwright test (123 specs across 16 files in tests/e2e/)
+bun run test                  # bun test over the 26 unit-test files in tests/ (603 tests)
+bun run test:e2e              # playwright test (129 specs across 17 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,7 +65,7 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 25 Bun unit-test files under `tests/`:
+wrong). `bun run test` runs 26 Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -80,9 +80,13 @@ auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and per-provider
 usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
-environment it was given), and `ai-assist-server` (which spawns `server.ts`
+environment it was given), `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 567 tests at time of writing.
+without a key or a paid call), and `ai-assist-validate-rewrite` (the
+`rewrite-field` task's output validator — that a rewrite preserves every
+`[label](target)` link's TARGET while its label stays free to change, and that
+it introduces no HTML into copy that renders through `formatMarkdown`) — 603
+tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -96,7 +100,7 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — sixteen spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — seventeen spec files
 (123 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and

@@ -251,7 +251,13 @@ function buildComplianceAuditUserPrompt({ page, retrieved, issues, previousDraft
         `every item below fixed, and change nothing else.\n\n${issues
           .map((issue) => `- ${issue}`)
           .join('\n')}\n</validation_failures>`
+    )
+  }
 
+  return parts.join('\n\n')
+}
+
+/**
  * The `rewrite-field` system prompt.
  *
  * Built from the same cached corpus as the content prompt, and byte-stable for
@@ -353,10 +359,10 @@ function buildRewriteUserPrompt({ fieldText, instruction, page, issues, previous
 module.exports = {
   buildContentSystemPrompt,
   buildContentUserPrompt,
-  buildComplianceAuditSystemPrompt,
-  buildComplianceAuditUserPrompt,
   buildRewriteSystemPrompt,
   buildRewriteUserPrompt,
+  buildComplianceAuditSystemPrompt,
+  buildComplianceAuditUserPrompt,
   loadStyleCorpus,
   GUARDRAILS,
 }
