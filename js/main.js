@@ -124,6 +124,7 @@ import './ai-assist-client.js'
 import './ai-assist-render.js'
 import './ai-assist.js'
 import './ai-rewrite-render.js'
+import './ai-rewrite.js'
 
 // PNG export of the mockups. Imported after the review layers because it uses
 // window.showToast for progress and window.renderPage to step through pages.
