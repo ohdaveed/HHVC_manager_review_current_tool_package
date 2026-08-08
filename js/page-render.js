@@ -59,11 +59,19 @@ function formatMarkdown(text) {
   )
   return html
 }
-function paragraphList(paragraphs = []) {
+/**
+ * @param {Array<string|object>} paragraphs
+ * @param {string} [pathPrefix] Dot-path of the array, e.g. 'sections.2.paragraphs'.
+ *   Omitted at call sites that are out of the AI-rewrite scope, which is how
+ *   that scope boundary is expressed — the renderer itself has no opinion.
+ * @returns {string}
+ */
+function paragraphList(paragraphs = [], pathPrefix = '') {
   return paragraphs
-    .map((p) => {
+    .map((p, index) => {
       const item = normalizeTextItem(p)
-      return `<p>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</p>`
+      const attr = pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}`)}"` : ''
+      return `<p${attr}>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</p>`
     })
     .join('')
 }
@@ -76,12 +84,18 @@ function renderAudience(audience = []) {
   if (!Array.isArray(audience)) return ''
   return audience.map((item) => `<li>${escapeHtml(item)}</li>`).join('')
 }
-function bulletList(bullets = []) {
+/**
+ * @param {Array<string|object>} bullets
+ * @param {string} [pathPrefix] Dot-path of the array, e.g. 'sections.2.bullets'.
+ * @returns {string}
+ */
+function bulletList(bullets = [], pathPrefix = '') {
   if (!bullets.length) return ''
   return `<ul>${bullets
-    .map((b) => {
+    .map((b, index) => {
       const item = normalizeTextItem(b)
-      return `<li>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</li>`
+      const attr = pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}`)}"` : ''
+      return `<li${attr}>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</li>`
     })
     .join('')}</ul>`
 }
@@ -143,15 +157,19 @@ function partitionSections(page) {
   const whatToDo = []
   const supporting = []
   const body = []
-  for (const section of page.sections || []) {
+  for (const [index, section] of (page.sections || []).entries()) {
+    // The ORIGINAL index, attached to a copy rather than to page data. Buckets
+    // are rendered in a fixed layout order that is not source order, so this is
+    // the only surviving link back to where the section actually lives.
+    const withIndex = { ...section, __sectionIndex: index }
     const role = inferSectionRole(section, pageType)
-    if (role === 'related') related.push(section)
-    else if (role === 'services') services.push(section)
-    else if (role === 'resources') resources.push(section)
-    else if (role === 'intro') intro.push(section)
-    else if (role === 'what-to-do') whatToDo.push(section)
-    else if (role === 'supporting') supporting.push(section)
-    else body.push(section)
+    if (role === 'related') related.push(withIndex)
+    else if (role === 'services') services.push(withIndex)
+    else if (role === 'resources') resources.push(withIndex)
+    else if (role === 'intro') intro.push(withIndex)
+    else if (role === 'what-to-do') whatToDo.push(withIndex)
+    else if (role === 'supporting') supporting.push(withIndex)
+    else body.push(withIndex)
   }
   return { pageType, intro, services, resources, related, whatToDo, supporting, body }
 }
@@ -289,11 +307,18 @@ function renderRelatedRail(sections = []) {
     })
     .join('')}</ul></aside>`
 }
-function renderSteps(steps = []) {
+/**
+ * @param {Array<object>} steps
+ * @param {string} [pathPrefix] Dot-path of the steps array, e.g. 'sections.2.steps'.
+ *   Threaded down to each step's own text/bullets arrays as
+ *   '<pathPrefix>.<stepIndex>.text' / '.bullets'.
+ * @returns {string}
+ */
+function renderSteps(steps = [], pathPrefix = '') {
   return `<ol class="step-list">${steps
     .map(
-      (s) =>
-        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [])}${bulletList(s.bullets || [])}${s.cards ? renderCards(s.cards) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout) : ''}</div></li>`
+      (s, index) =>
+        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout) : ''}</div></li>`
     )
     .join('')}</ol>`
 }
@@ -400,9 +425,16 @@ function renderAccordionSection(section, pageType) {
 }
 function renderSectionInner(section, pageType = 'generic') {
   let inner = ''
-  inner += paragraphList(section.paragraphs || [])
-  inner += section.steps ? renderSteps(section.steps) : ''
-  inner += bulletList(section.bullets || [])
+  // section.__sectionIndex is the source-order index partitionSections()
+  // stamped onto its render-time copy. It is absent for anything that didn't
+  // pass through that partition loop (e.g. a bare section object built by a
+  // test or a future caller), so the path prefix — and the attribute it
+  // enables — degrades to nothing rather than guessing at a position.
+  const base =
+    typeof section.__sectionIndex === 'number' ? `sections.${section.__sectionIndex}` : ''
+  inner += paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')
+  inner += section.steps ? renderSteps(section.steps, base ? `${base}.steps` : '') : ''
+  inner += bulletList(section.bullets || [], base ? `${base}.bullets` : '')
   inner += section.image ? renderImage(section.image) : ''
   inner += section.table ? renderTable(section.table, pageType, section.heading || '') : ''
   if (section.callout) inner += renderCallout(section.callout)

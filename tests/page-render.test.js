@@ -275,3 +275,61 @@ describe('page-render.js URL scheme guarding', () => {
     expect(html).toContain('href="/forms/mosquito-workshop-request/"')
   })
 })
+
+// The AI-rewrite-selection feature needs a DOM node to trace back to the
+// page-data field it came from. `data-rewrite-field` carries that dot-path.
+// The delicate part is the index: partitionSections() redistributes
+// page.sections into fixed-order layout buckets that are NOT source order
+// (see the last test below), so the attribute must always be built from the
+// section's original position in page.sections, never from render order.
+describe('data-rewrite-field annotation', () => {
+  test('annotates section paragraphs with their source index', () => {
+    const html = ctx.paragraphList(['one', 'two'], 'sections.0.paragraphs')
+    expect(html).toContain('data-rewrite-field="sections.0.paragraphs.0"')
+    expect(html).toContain('data-rewrite-field="sections.0.paragraphs.1"')
+  })
+
+  test('annotates bullets with their source index', () => {
+    const html = ctx.bulletList(['a', 'b'], 'sections.3.bullets')
+    expect(html).toContain('data-rewrite-field="sections.3.bullets.0"')
+    expect(html).toContain('data-rewrite-field="sections.3.bullets.1"')
+  })
+
+  test('annotates step text and step bullets under the step index', () => {
+    const html = ctx.renderSteps(
+      [{ title: 'Step', text: ['t'], bullets: ['b'] }],
+      'sections.1.steps'
+    )
+    expect(html).toContain('data-rewrite-field="sections.1.steps.0.text.0"')
+    expect(html).toContain('data-rewrite-field="sections.1.steps.0.bullets.0"')
+  })
+
+  test('emits no attribute when no path prefix is passed', () => {
+    expect(ctx.paragraphList(['one'])).not.toContain('data-rewrite-field')
+    expect(ctx.bulletList(['one'])).not.toContain('data-rewrite-field')
+    expect(ctx.renderSteps([{ title: 'S', text: ['t'] }])).not.toContain('data-rewrite-field')
+  })
+
+  // The regression this whole addressing scheme exists to prevent. 'related'
+  // sections are rendered LAST regardless of source order, so a path built
+  // from render order would point at the wrong section entirely.
+  test('uses the original page.sections index, not the rendered order', () => {
+    const page = {
+      slug: 'x',
+      type: 'Information',
+      title: 'X',
+      summary: 'S',
+      audience: ['a'],
+      reading: 'Grade 6',
+      sections: [
+        { heading: 'Related things', component: 'related', karl: 'k', cards: [] },
+        { heading: 'Body', karl: 'k', paragraphs: ['body copy'] },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    // The body section is index 1 in source even though it renders before the
+    // related section.
+    expect(html).toContain('data-rewrite-field="sections.1.paragraphs.0"')
+    expect(html).not.toContain('data-rewrite-field="sections.0.paragraphs.0"')
+  })
+})
