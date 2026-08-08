@@ -1111,8 +1111,11 @@ never writes anything, and every result carries the same `disclosure` string.
   location with no join back to the source file needed.
 - **Embeddings are Gemini-only** — Anthropic has no embeddings API — so
   `compliance-audit` needs `GEMINI_API_KEY` even on a deployment generating
-  with Claude. Default model `text-embedding-004`, overridable via
-  `GEMINI_EMBEDDING_MODEL`.
+  with Claude. Default model `gemini-embedding-001`, overridable via
+  `GEMINI_EMBEDDING_MODEL`. (Was `text-embedding-004` until a real `bun run
+ingest` run 404'd on it — retired; verify against `client.models.list()`
+  filtered to `embedContent` support, not a doc example, before trusting any
+  hardcoded id here again.)
 - **Retrieval is brute-force cosine similarity in JS, not a vector-index
   extension.** `build_scripts/knowledge-search.js` ranks the full corpus
   (~150-200 chunks) by cosine similarity in microseconds at this size; a

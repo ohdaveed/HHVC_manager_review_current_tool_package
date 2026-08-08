@@ -326,12 +326,25 @@ async function generateObject({ system, userPrompt, jsonSchema, signal }) {
 const EMBEDDING_TASK_TYPES = { DOCUMENT: 'RETRIEVAL_DOCUMENT', QUERY: 'RETRIEVAL_QUERY' }
 
 /**
- * Default embedding model id. `text-embedding-004` per the confirmed
- * @google/genai example (client.models.embedContent({model:
- * 'text-embedding-004', ...})). `GEMINI_EMBEDDING_MODEL` overrides it, for
- * the same reason DEFAULT_MODEL is overridable: Gemini's lineup moves.
+ * Default embedding model id.
+ *
+ * NOT `text-embedding-004` — that was the model this constant shipped with
+ * originally (per a live @google/genai doc example at the time), but the
+ * first real `bun run ingest` run against a real key returned 404 `NOT_FOUND`
+ * for it on `embedContent`. `client.models.list()` filtered to models
+ * supporting `embedContent`, run against the actual configured key, returned
+ * exactly `gemini-embedding-001`, `gemini-embedding-2-preview`, and
+ * `gemini-embedding-2` — `text-embedding-004` isn't in that list at all
+ * anymore. `gemini-embedding-001` is the non-preview, conservative choice
+ * (see the same reasoning on `DEFAULT_MODEL` above) and the one multiple
+ * sources describe as the direct replacement path for the retired
+ * `text-embedding-004`. `GEMINI_EMBEDDING_MODEL` overrides it, for the same
+ * reason `DEFAULT_MODEL` is overridable: Gemini's lineup moves, and a
+ * hardcoded id here becomes a silent 404 the moment it moves again — check
+ * `client.models.list()` against a real key before assuming this constant is
+ * still current.
  */
-const DEFAULT_EMBEDDING_MODEL = 'text-embedding-004'
+const DEFAULT_EMBEDDING_MODEL = 'gemini-embedding-001'
 
 /** @returns {string} the configured embedding model id. */
 function getEmbeddingModel() {

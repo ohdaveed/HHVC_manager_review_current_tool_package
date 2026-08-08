@@ -1415,8 +1415,12 @@ result carries the same `disclosure` string `content` does.
   deployment.** Anthropic has no embeddings API, so `provider-gemini.js`'s
   `embedContent` is the only path to a vector in this codebase — regardless
   of which provider actually _generates_ the audit text. Default model id is
-  `text-embedding-004`; `GEMINI_EMBEDDING_MODEL` overrides it. A deployment
-  that only ever configured `ANTHROPIC_API_KEY` for drafting pages will find
+  `gemini-embedding-001`; `GEMINI_EMBEDDING_MODEL` overrides it. (This was
+  `text-embedding-004` until the first real `bun run ingest` against a real
+  key came back 404 — that id had been retired; `client.models.list()`
+  filtered to `embedContent` support is the authoritative way to check what a
+  given key can actually use, not the doc example it originally came from.)
+  A deployment that only ever configured `ANTHROPIC_API_KEY` for drafting pages will find
   `compliance-audit` unavailable until a Gemini key is added, even though
   Claude is perfectly capable of writing the audit itself.
 - **Retrieval is brute-force cosine similarity in plain JS, not a vector-index
