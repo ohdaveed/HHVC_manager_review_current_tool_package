@@ -12,6 +12,29 @@ import { hasValidPageData } from './utils.js'
 
   let isRestoringState = false
 
+  // Re-entrancy guard for the section_edits follow-up render triggered by
+  // applySavedPageState below. window.renderPage is always the WRAPPED
+  // version by the time applySavedPageState can run (js/ux-improvements.js's
+  // wrapRenderPage() installs it before restoreInitialPage()/any navigation
+  // calls this), so calling it from inside applySavedPageState re-enters
+  // that wrapper: originalRenderPage runs synchronously (this is what
+  // actually repaints the DOM — good), but the wrapper then schedules
+  // ANOTHER deferred applyAndRefresh -> applySavedPageState(pageKey) call of
+  // its own. Without this guard, that second call would see the same
+  // still-true "wrote something" signal from applyContentEditsToPageData
+  // (the data hasn't changed) and trigger a THIRD render, which would
+  // trigger a fourth applySavedPageState call, forever.
+  //
+  // Holds the pageKey of an in-flight self-triggered render, or null when
+  // none is pending. Set immediately before calling window.renderPage from
+  // here; cleared at the very top of the NEXT applySavedPageState call for
+  // that same key — not right after the synchronous renderPage() call
+  // returns, since the reapply this guard is protecting against happens
+  // asynchronously (setTimeout(0) or a View Transitions promise), so the
+  // corresponding applySavedPageState call for the render this triggered
+  // hasn't happened yet at that point.
+  let refreshInFlightForKey = null
+
   const {
     escapeHtml,
     getPrimaryCta,
@@ -384,6 +407,18 @@ import { hasValidPageData } from './utils.js'
   }
 
   function applySavedPageState(pageKey) {
+    // If this call is the one a prior call in this same function triggered
+    // (see the follow-up-render block below), clear the guard now — this is
+    // the guaranteed next invocation for that key, regardless of whether the
+    // render that got us here settled via setTimeout(0) or a View
+    // Transitions promise .then(). Clearing here, rather than right after
+    // window.renderPage() returns below, is what makes the guard correct:
+    // that call is synchronous only up to the DOM repaint, but the deferred
+    // applyAndRefresh (and thus the next applySavedPageState call for this
+    // key) hasn't happened yet at that point.
+    const isOwnTriggeredRefresh = refreshInFlightForKey === pageKey
+    if (isOwnTriggeredRefresh) refreshInFlightForKey = null
+
     const state = window.reviewState.read()
     const page = DATA.pages[pageKey]
     if (!page) return
@@ -407,7 +442,25 @@ import { hasValidPageData } from './utils.js'
       // separately from the three page-level fields above:
       // updateMockupTextFromSavedState already owns edited_title/
       // edited_summary/primary_cta, and this must not duplicate that.
-      window.inlineEditData?.applyContentEditsToPageData(page, saved)
+      // applyContentEditsToPageData is DOM-free (see js/inline-content-edit-
+      // data.js) — it only mutates page.sections in memory. The page was
+      // already rendered from its PRISTINE shape before this function ever
+      // ran (js/app.js's initial render is unwrapped, and every wrapped
+      // render calls the real DOM-producing render before this reapply
+      // step), so a true return here means the DOM the reviewer is looking
+      // at is now stale and needs exactly one follow-up render to catch up.
+      const appliedSectionEdits = window.inlineEditData?.applyContentEditsToPageData(page, saved)
+      if (
+        appliedSectionEdits &&
+        !isOwnTriggeredRefresh &&
+        typeof window.renderPage === 'function'
+      ) {
+        refreshInFlightForKey = pageKey
+        // skipHistory=true: this is an internal refresh to reflect a reapply
+        // that already happened, not a user navigation — it must not push a
+        // history entry or disturb the back button.
+        window.renderPage(pageKey, true)
+      }
     } else {
       clearReviewFieldsForNewPage(state)
     }

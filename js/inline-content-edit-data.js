@@ -81,17 +81,25 @@ function computeSectionEdits(page, originalPage) {
  * edited in pages/*.js since the saved edit was recorded, for instance) are
  * all silently skipped rather than thrown. A stale saved edit failing to
  * reapply is a normal, expected outcome — not a bug to surface as an error.
+ *
+ * Returns whether it actually wrote anything, so callers can tell "there was
+ * nothing to reapply" apart from "there was, and the live page object no
+ * longer matches it" — the caller (applySavedPageState) uses that signal to
+ * decide whether the just-rendered DOM is now stale and needs a follow-up
+ * render. This function itself stays DOM-free; it only reports the fact.
  * @param {object} page the live page object to mutate
  * @param {object|null|undefined} savedRecord a stored review record, or none
- * @returns {void}
+ * @returns {boolean} true if at least one path was written via setByPath
  */
 function applyContentEditsToPageData(page, savedRecord) {
-  if (!page || typeof page !== 'object') return
+  if (!page || typeof page !== 'object') return false
   const sectionEdits = savedRecord?.section_edits
-  if (!sectionEdits || typeof sectionEdits !== 'object' || Array.isArray(sectionEdits)) return
+  if (!sectionEdits || typeof sectionEdits !== 'object' || Array.isArray(sectionEdits)) return false
+  let wroteAny = false
   for (const [path, value] of Object.entries(sectionEdits)) {
-    setByPath(page, path, value)
+    if (setByPath(page, path, value)) wroteAny = true
   }
+  return wroteAny
 }
 
 // setByPath is resolved differently depending on execution context: under
