@@ -49,6 +49,7 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 | `2026-07-02-controller-fee-certification-fy25-26.md` | Fee Certification — FY 2025–26 (Healthy Housing excerpt) | Phase 1 supplementary | Superseded pre-round FY 2025–26 estimate; see `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` for the final rounded figures |
 | `2026-07-06-dph-ehb-fee-schedule-fy25-26.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/25–6/30/26) | Phase 1 supplementary | Superseded — kept for historical comparison; see `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` for the fee figures now in effect |
 | `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` | SFDPH Environmental Health Branch Fee Schedule (rates effective 7/1/26–6/30/27) | Phase 1 | **Current fee authority** for `payFee`/`noticeOfViolation`/`afterReport`; confirms the apartment-building tiers and $256/$234 hourly reinspection rates that a same-day FY25-26 export had incorrectly flagged as an "unsourced FY27 table" |
+| `2026-08-07-controllers-office-fy26-27-fee-adjustment-healthy-housing.png` / `.md` | Controller's Office FY 2026–27 Fee Adjustment — Healthy Housing (screenshot) | Phase 1 supplementary | **Corroborating source** for the 7-10 unit apartment tier ($175, vs. the DPH-EHB worksheet's $174) — see reconciliation note in `2026-07-06-dph-ehb-fee-schedule-fy26-27.md`; source URL unconfirmed |
 
 ### 2026-07-02-bed-bug-directors-rules-tenant-guidelines.pdf
 
@@ -298,6 +299,16 @@ Use this folder for exported Google Drive source/legal/policy documents that gov
 - **Format:** md (PDF extract)
 - **Reviewer:** CA
 - **Note:** Final rounded FY 2025–26 fee sheet (revised 7/3/2025), effective through 6/30/26 — supersedes the FY24-25 estimate and the Aug 2025 Controller pre-round for `payFee`/`noticeOfViolation` amounts (3 rental units = $101; reinspection $251/hr inspector, $229/hr technician). No FY 2026–27 schedule was found published as of export; corrects a previously-published, unsourced "FY27" table that didn't match any certified schedule.
+
+### 2026-08-07-controllers-office-fy26-27-fee-adjustment-healthy-housing.png
+
+- **Original file:** `Screenshot 2026-08-07 203201.png`, provided directly by the manager reviewer (not a Drive export)
+- **Source title:** unconfirmed — see the companion `.md` for the full transcription and reasoning
+- **Authority:** San Francisco Office of the Controller (same annual series as `2026-07-02-controller-fee-certification-fy25-26.md`, inferred from table format and code-section labels; not independently confirmed for FY26-27)
+- **Export date:** 2026-08-07 (screenshot timestamp)
+- **Format:** png (+ `.md` transcription)
+- **Reviewer:** unconfirmed
+- **Note:** Every apartment-building tier on this table matches `2026-07-06-dph-ehb-fee-schedule-fy26-27.md` except 7-10 units, where this table's unrounded-to-rounded math ($174.50 → $175.00) disagrees with that PDF's flat $174. Kept as a supplementary corroborating source for the $175 figure now used in `pages/pay-healthy-housing-fee.js` (flagged `unverified` there pending confirmation), not a replacement for the DPH-EHB worksheet as the primary fee authority.
 
 ## Documents still expected for Phase 1
 

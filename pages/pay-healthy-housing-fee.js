@@ -40,7 +40,12 @@ window.HHVC_PAGES['payFee'] = {
           bullets: [
             '3 units: $103',
             '4-6 units: $129',
-            '7-10 units: $175',
+            {
+              text: '7-10 units: $175',
+              unverified: true,
+              unverifiedReason:
+                "DPH-EHB's own posted fee worksheet (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.pdf / 2026-07-07-fy27-website-fees.pdf, same file exported twice) states $174 for this tier. A Controller's Office FY26-27 fee-adjustment table (docs/source/hhvc-policy/2026-08-07-controllers-office-fy26-27-fee-adjustment-healthy-housing.png) shows unrounded $174.50 rounding to $175, consistent with the same-series FY25-26 Controller certification this repo already trusts. $175 is kept here as the better-supported figure, but confirm with HHVC/DPH-EHB before publication — the worksheet PDF may simply not yet reflect this cycle's Controller adjustment.",
+            },
             '11-15 units: $350',
             '16-20 units: $485',
             '21-30 units: $688',
