@@ -62,6 +62,14 @@ const reviewRecordSchema = z
     // every local edit. Used as the conflict-detection baseline in
     // server.ts's putReviewPage; see js/review-state-sync.js.
     synced_at: z.string().optional(),
+    // Flat map of field path -> current full value for section-level manual
+    // edits (headings, paragraphs, bullets). Keyed at the array/scalar field
+    // level, not the individual item level — see CLAUDE.md's "Inline content
+    // editing" section for why. z.record's value type is z.unknown() because
+    // a value here can be a string (a heading) or an array of strings/objects
+    // (paragraphs/bullets each accept the string-or-{text,unverified,...}
+    // shape already defined elsewhere in this schema for section content).
+    section_edits: z.record(z.string(), z.unknown()).optional(),
     // Whether this browser holds edits it has not pushed. A real boolean,
     // not a timestamp, precisely so conflict detection never has to compare
     // a browser-clock value against a server-clock one — see

@@ -44,6 +44,33 @@ describe('review-state-schema', () => {
       false
     )
   })
+
+  test('accepts a section_edits map of field paths to arbitrary JSON values', () => {
+    const result = validateReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: {
+        'sections.2.heading': 'New heading',
+        'sections.2.paragraphs': ['p1', 'p2'],
+        'sections.2.bullets': [{ text: 'b1' }, { text: 'b2', unverified: true }],
+      },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('accepts an empty section_edits map', () => {
+    const result = validateReviewRecord({ page_key: 'pestsTopic', section_edits: {} })
+    expect(result.success).toBe(true)
+  })
+
+  test('rejects a non-object section_edits value', () => {
+    const result = validateReviewRecord({ page_key: 'pestsTopic', section_edits: 'not an object' })
+    expect(result.success).toBe(false)
+  })
+
+  test('rejects a section_edits value that is an array', () => {
+    const result = validateReviewRecord({ page_key: 'pestsTopic', section_edits: ['x'] })
+    expect(result.success).toBe(false)
+  })
 })
 
 // The browser has no Zod, so js/review-state-validation.js hand-rolls the
@@ -77,5 +104,26 @@ describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', ()
     })
     expect(clean.synced_at).toBe('2026-01-01T00:00:00.000Z')
     expect(clean).not.toHaveProperty('sync_api_token')
+  })
+
+  test('preserves section_edits as a real object rather than stringifying it', () => {
+    const clean = sanitizeReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: { 'sections.2.heading': 'New heading', 'sections.2.bullets': [{ text: 'b' }] },
+    })
+    expect(clean.section_edits).toEqual({
+      'sections.2.heading': 'New heading',
+      'sections.2.bullets': [{ text: 'b' }],
+    })
+  })
+
+  test('drops a non-object section_edits value rather than passing it through', () => {
+    const clean = sanitizeReviewRecord({ page_key: 'pestsTopic', section_edits: 'not an object' })
+    expect(clean).not.toHaveProperty('section_edits')
+  })
+
+  test('keeps an empty section_edits map rather than dropping it', () => {
+    const clean = sanitizeReviewRecord({ page_key: 'pestsTopic', section_edits: {} })
+    expect(clean.section_edits).toEqual({})
   })
 })

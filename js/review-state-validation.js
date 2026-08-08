@@ -35,6 +35,7 @@ import { DECISION_LABELS } from './utils.js'
     'reading_target',
     'edited_title',
     'edited_summary',
+    'section_edits',
     'updated_at',
     'synced_at',
     'local_dirty',
@@ -84,6 +85,18 @@ import { DECISION_LABELS } from './utils.js'
         if (Array.isArray(value)) {
           clean.history = value.map(sanitizeHistoryEntry).filter(Boolean)
         }
+        continue
+      }
+      // section_edits is a flat map of field-path -> current value (a
+      // string, or an array of strings/objects for paragraphs/bullets), not
+      // a string field itself. Same reasoning as history: the generic
+      // String() coercion below would turn the whole map into the literal
+      // string "[object Object]", silently destroying every section-level
+      // edit on the next read. A non-object value is dropped rather than
+      // kept, matching how a malformed history entry is dropped rather than
+      // kept malformed.
+      if (key === 'section_edits') {
+        if (isPlainObject(value)) clean.section_edits = { ...value }
         continue
       }
       // local_dirty is a real boolean, and the generic String() coercion
