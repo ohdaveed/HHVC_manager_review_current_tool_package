@@ -310,6 +310,31 @@ describe('data-rewrite-field annotation', () => {
     expect(ctx.renderSteps([{ title: 'S', text: ['t'] }])).not.toContain('data-rewrite-field')
   })
 
+  test('annotates a section heading with its source index', () => {
+    const section = { heading: 'Test Heading', karl: 'k', __sectionIndex: 2, paragraphs: [] }
+    const html = ctx.renderSection(section, 'information')
+    expect(html).toContain('data-rewrite-field="sections.2.heading"')
+    expect(html).toContain(
+      '<h2 id="section-test-heading" data-rewrite-field="sections.2.heading">Test Heading</h2>'
+    )
+  })
+
+  test('emits no heading data-rewrite-field when __sectionIndex is absent', () => {
+    const section = { heading: 'No Index', karl: 'k', paragraphs: [] }
+    const html = ctx.renderSection(section, 'information')
+    expect(html).not.toContain('data-rewrite-field')
+  })
+
+  test('escapes a heading value carrying HTML', () => {
+    const section = {
+      heading: PAYLOAD,
+      karl: 'k',
+      __sectionIndex: 0,
+      paragraphs: [],
+    }
+    assertEscaped(ctx.renderSection(section, 'information'))
+  })
+
   // The regression this whole addressing scheme exists to prevent.
   // partitionSections() buckets sections by inferred role (body/resources/
   // related/etc.) and renderPageMain() for an Information page renders those
@@ -383,5 +408,62 @@ describe('data-rewrite-field annotation', () => {
     // 1's attribute must never precede "resources copy".
     expect(html).not.toContain('data-rewrite-field="sections.0.paragraphs.0">body copy')
     expect(html).not.toContain('data-rewrite-field="sections.1.paragraphs.0">resources copy')
+  })
+})
+
+describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
+  const transactionPage = {
+    slug: 'x',
+    type: 'Transaction',
+    title: 'Test Title',
+    summary: 'Test summary text.',
+    audience: ['a'],
+    reading: 'Grade 6',
+    sections: [
+      {
+        heading: 'What to do',
+        karl: 'k',
+        steps: [{ title: 'Step one', text: ['do it'], button: 'Start now', buttonTarget: 'x' }],
+      },
+    ],
+  }
+
+  test('annotates the title with data-rewrite-field="title"', () => {
+    const html = ctx.renderPageMain(transactionPage)
+    expect(html).toContain('data-rewrite-field="title"')
+    expect(html).toContain('<h1 tabindex="-1" data-rewrite-field="title">Test Title</h1>')
+  })
+
+  test('annotates the summary with data-rewrite-field="summary"', () => {
+    const html = ctx.renderPageMain(transactionPage)
+    expect(html).toContain('<p class="summary" data-rewrite-field="summary">Test summary text.</p>')
+  })
+
+  test('annotates the primary CTA button with data-rewrite-field="primaryCta"', () => {
+    const html = ctx.renderPageMain(transactionPage)
+    expect(html).toContain('data-rewrite-field="primaryCta"')
+  })
+
+  test('emits no CTA attribute when the page has no resolvable hero CTA', () => {
+    const infoPage = {
+      slug: 'y',
+      type: 'Information',
+      title: 'Info Title',
+      summary: 'Info summary.',
+      audience: ['a'],
+      reading: 'Grade 6',
+      sections: [{ heading: 'Body', karl: 'k', paragraphs: ['text'] }],
+    }
+    const html = ctx.renderPageMain(infoPage)
+    expect(html).not.toContain('data-rewrite-field="primaryCta"')
+  })
+
+  test('escapes the title and summary', () => {
+    const page = {
+      ...transactionPage,
+      title: PAYLOAD,
+      summary: PAYLOAD,
+    }
+    assertEscaped(ctx.renderPageMain(page))
   })
 })
