@@ -47,6 +47,7 @@ import './../css/ai-assist.css'
 import './../css/dashboard.css'
 import './../css/review-insights.css'
 import './../css/review-ops.css'
+import './../css/ai-rewrite.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
@@ -122,6 +123,8 @@ import './plain-language.js'
 import './ai-assist-client.js'
 import './ai-assist-render.js'
 import './ai-assist.js'
+import './ai-rewrite-render.js'
+import './ai-rewrite.js'
 
 // PNG export of the mockups. Imported after the review layers because it uses
 // window.showToast for progress and window.renderPage to step through pages.

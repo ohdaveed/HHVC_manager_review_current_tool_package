@@ -298,7 +298,7 @@ const UNSAFE_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor'])
 function getByPath(root, path) {
   if (!root || typeof path !== 'string' || !path) return undefined
   const keys = path.split('.')
-  if (keys.some((key) => UNSAFE_PATH_SEGMENTS.has(key))) return undefined
+  if (keys.some((key) => key === '' || UNSAFE_PATH_SEGMENTS.has(key))) return undefined
   let current = root
   for (const key of keys) {
     if (current === null || typeof current !== 'object') return undefined
@@ -323,7 +323,7 @@ function getByPath(root, path) {
 function setByPath(root, path, value) {
   if (!root || typeof path !== 'string' || !path) return false
   const keys = path.split('.')
-  if (keys.some((key) => UNSAFE_PATH_SEGMENTS.has(key))) return false
+  if (keys.some((key) => key === '' || UNSAFE_PATH_SEGMENTS.has(key))) return false
   const last = keys.pop()
   let current = root
   for (const key of keys) {

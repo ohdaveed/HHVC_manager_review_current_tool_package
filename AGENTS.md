@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 25 unit-test files in tests/
+bun run test                  # Bun test runner over the 26 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 25 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 26 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -72,18 +72,21 @@ decision list against the canonical table in `js/utils.js`), `knowledge-chunking
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
 normalization, varying the provider keys directly — which the server tests
-cannot, since a spawn only ever sees the environment it was given), and
+cannot, since a spawn only ever sees the environment it was given),
 `ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
-endpoints, so both AI paths are covered without a key or a paid call). **The list in
+endpoints, so both AI paths are covered without a key or a paid call), and
+`ai-assist-validate-rewrite` (the plain-language mandate and link-target
+checks a `rewrite-field` draft is held to). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-sixteen spec files, all UI-driven — navigation, editor panel, review
+seventeen spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
-keyboard shortcuts, workspace panels, accessibility, AI assist, mockup PNG
-export, the Overview insight cards, and workshop-form submission handling — sharing plain helper functions in
+keyboard shortcuts, workspace panels, accessibility, AI assist, the
+selection-driven AI rewrite, mockup PNG export, the Overview insight cards,
+and workshop-form submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
 round-trip tests hand-rolled the merge inside `page.evaluate()` rather than
@@ -1162,6 +1165,58 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
   `generateContent()`), is in
   `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md`.
 
+### AI rewrite (optional)
+
+A floating button that appears when a reviewer selects body copy in the mockup,
+offering an AI rewrite of the containing field. `js/ai-rewrite.js` is the
+orchestrator (selection, request lifecycle, apply/undo), `js/ai-rewrite-render.js`
+the view (button, popover, positioning), and both ride the existing
+`window.AiAssist.client`. Additive, invisible unless `/api/ai/*` is configured,
+and it never writes to `pages/*.js`.
+
+- **The selection picks the FIELD, not the substring.** `formatMarkdown()`
+  escapes HTML and rewrites `[label](target)` into elements, so a DOM offset does
+  not map back to an offset in the source markdown, and a selection spanning two
+  elements has no coherent splice. The whole containing paragraph/bullet is sent
+  and replaced; the popover shows it in full. Field text is read from page data
+  via `getByPath`, never from `textContent` — the latter is rendered output.
+- **`data-rewrite-field` paths use the ORIGINAL `page.sections` index.**
+  `partitionSections()` redistributes sections into seven role buckets rendered
+  in a fixed layout order, so render order is not source order. The index rides
+  on a render-time shallow copy (`__sectionIndex`); a path built from render
+  order rewrites the wrong section, silently. Its regression test is
+  mutation-proven — confirmed to FAIL against a deliberately broken renderer,
+  because the first version's negative assertion passed trivially.
+- **Annotation is opt-in per call site.** `paragraphList`/`bulletList`/
+  `renderSteps` emit nothing without a path prefix, which is how the v1 scope
+  (paragraphs, bullets, step text — not cards, tables, callouts, `whatToKnow` or
+  spotlight) is expressed.
+- **`getByPath`/`setByPath` reject `__proto__`/`prototype`/`constructor`.**
+  Without it, `setByPath(obj, '__proto__.x', v)` wrote through `Object.prototype`
+  and polluted every plain object in the app — confirmed by exploit probe. These
+  take paths straight from DOM attributes, which devtools can edit. `setByPath`
+  also never creates intermediates; it returns `false` rather than inventing page
+  structure no schema validated.
+- **An applied rewrite is flagged `unverified: true`** ("AI-rewritten draft —
+  verify before publishing"), reusing the existing pill rather than a new
+  AI-specific flag, so AI-touched copy is distinguishable at a glance. Undo is
+  one step, consumed on use.
+- **The popover's position is clamped unconditionally.** Anchoring below the
+  selection (flipping above) is a preference, not a guarantee: the mockup runs
+  ~8,800px, so a selection below the fold puts both anchors off screen.
+  `max-height: 70vh` bounds how tall it is, not where it sits — the buttons
+  rendered unclickable until the clamp was added.
+- **`generateRewrite()` is a SIBLING of `generateContent()`**, and
+  `generateRequestSchema` is a discriminated union on `task`: `content` requires
+  `prompt`, `rewrite-field` requires `fieldText` and declares none. Zod's
+  `z.object` strips unknown keys, so a stray `prompt` on a rewrite is dropped,
+  not rejected.
+- **The validator checks link TARGETS, not whole links** — rewording a label is
+  the point; dropping a target is a content regression nothing else catches.
+- **`tests/e2e/ai-rewrite.spec.js` is the only layer that can cover this**: both
+  modules are browser-only IIFEs with no `module.exports`, so there is no unit
+  layer beneath it.
+
 ### Build outputs
 
 - **`bun run build:singlefile`** (`vite build --mode singlefile`, via
@@ -1267,7 +1322,7 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The seven stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
 the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
@@ -1276,6 +1331,7 @@ the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 | `css/styles.css`          | the mockup itself, plus the raw `--sfds-*` primitives                                          |
 | `css/ux-improvements.css` | the review layer's own chrome — the designated `!important` override sheet                     |
 | `css/ai-assist.css`       | the AI assist panel                                                                            |
+| `css/ai-rewrite.css`      | the floating selection button and the rewrite popover                                          |
 | `css/dashboard.css`       | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
 | `css/review-insights.css` | the Overview cards and the failing-checks ranking                                              |
 | `css/review-ops.css`      | the stored-review-data panel                                                                   |
