@@ -392,7 +392,7 @@ describe('request schema provider enum', () => {
     // Asserted structurally, so the test keeps its meaning when a third
     // provider lands: whatever REGISTRY holds is exactly what the enum accepts.
     // generateRequestSchema is a discriminated union; extract provider enum from
-    // the first union branch (they're identical in both).
+    // the first union branch (they're identical across all branches).
     const contentBranch = generateRequestSchema.options[0]
     const accepted = contentBranch.shape.provider.unwrap().options
     expect([...accepted].sort()).toEqual([...providers.allProviderNames()].sort())

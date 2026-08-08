@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 22 unit-test files in tests/
+bun run test                  # Bun test runner over the 25 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,13 +59,13 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs twenty-two Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 25 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `doc-counts`
+decision list against the canonical table in `js/utils.js`), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
 `review-merge`,
 `review-api-server` (which spawns `server.ts` as a subprocess
@@ -667,23 +667,33 @@ round-trip logic lives in `js/review-queue-import.js` (CSV import) and
 through the same `mergeReviewRecord` per-page-key path the sync backend uses;
 `js/review-queue.js` wires the handlers and `js/manager-review-export.js`
 exports current-page snapshots. **Any change to any of these review
-import/export modules, or to `js/review-merge.js`, must be manually
-verified**: export a snapshot, re-import it, and confirm existing
+import/export modules, or to `js/review-merge.js`, must be verified against
+the round trip itself**: export a snapshot, re-import it, and confirm existing
 decisions/notes survive rather than being wiped.
-**`tests/e2e/import-export.spec.js` is the only automated coverage, and there
-is no API-level or unit layer beneath it.** It drives both directions through
-the real UI — export button clicks, file-input imports — and asserts
-`history.at(-1).updated_by === 'import'`, which is what proves merge rather
-than wipe. The file that used to be described here as the API-level half,
-`review-import-export.spec.js`, was deleted precisely because it did not
-provide that: it hand-rolled the merge inside `page.evaluate` instead of
-calling `importReviewStateBackup()`, so it stayed green against the wholesale
-replace that destroyed reviews once already.
+
+**Two e2e specs cover this, and the split between them is the interesting
+part** — both drive the real UI (export button clicks, file-input imports),
+because the file that used to be described here as the API-level half,
+`review-import-export.spec.js`, was deleted precisely for not doing so: it
+hand-rolled the merge inside `page.evaluate` instead of calling
+`importReviewStateBackup()`, so it stayed green against the wholesale replace
+that destroyed reviews once already.
+
+- **`tests/e2e/import-export.spec.js`** — both directions end to end, asserting
+  `history.at(-1).updated_by === 'import'`, which is what proves merge rather
+  than wipe. Its merge tests seed state through `seedState()` (a direct
+  `localStorage` write, so the export path never runs), and its round-trip test
+  clears state before re-importing, so nothing is left for a wipe to destroy.
+- **`tests/e2e/merge-verification.spec.js`** — the shape that misses, and the
+  one the warning is actually about: re-importing an **older snapshot on top of
+  live state that has moved on**. A page reviewed after the export is absent
+  from the file, so a wholesale replace drops it. Everything goes through the
+  sidebar fields and the real buttons; nothing touches review state directly.
 
 Nothing can unit-test this path today: both modules are browser-only, with no
-`module.exports` to import from Bun. **That gap is why the manual check above
-is mandatory rather than advisory** — on this one path, a green CI run is not
-evidence the round-trip still merges.
+`module.exports` to import from Bun. **A green CI run is evidence for those two
+scenarios and nothing else on this path** — anything a change puts at risk
+outside them is still yours to verify by hand.
 
 ### Optional API access hardening
 
@@ -1072,6 +1082,83 @@ by default, failing closed.
   `tests/ai-assist-schema.test.js` (guards the structured-output schema against
   drifting from the Zod page schema).
 
+### RAG knowledge base (optional)
+
+`compliance-audit` is a second `/api/ai/generate` task alongside `content`: a
+grounded compliance audit of the open page, citing this repo's own
+`docs/source/` corpus instead of the model's unaided judgment. Same posture as
+the rest of the AI backend — additive, off unless configured, fails closed,
+never writes anything, and every result carries the same `disclosure` string.
+
+- **Corpus is `docs/source/**/*.md`, `README.md` excluded, publication status
+  not filtered.** `build_scripts/ingest-knowledge.js` globs the whole tree
+  except folder-index `README.md` files — including the one file named
+  `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
+  alternative was the ingestion script silently deciding what counts as
+  citable, which is the failure mode this feature exists to avoid.
+- **One new table, same database as `review_pages`.** `knowledge_chunks`
+  lives in the same `DATA_DB_PATH` SQLite file — one connection, one volume —
+  rather than a second DB to configure. `build_scripts/knowledge-schema.js` is
+  the single table definition shared by the write path
+  (`build_scripts/ingest-knowledge.js`) and the read path
+  (`build_scripts/ai/knowledge-retrieval.js`), so the two processes cannot
+  disagree on the schema, and ingestion never assumes the server ran first.
+- **Chunking splits on headings, then on size.**
+  `build_scripts/knowledge-chunking.js` splits on `##`/`###` headings, then
+  sub-splits anything over 500 words at paragraph boundaries with a 50-word
+  overlap, and prefixes every chunk with its heading path before embedding —
+  so a boundary fact keeps its context and a chunk carries its own section
+  location with no join back to the source file needed.
+- **Embeddings are Gemini-only** — Anthropic has no embeddings API — so
+  `compliance-audit` needs `GEMINI_API_KEY` even on a deployment generating
+  with Claude. Default model `text-embedding-004`, overridable via
+  `GEMINI_EMBEDDING_MODEL`.
+- **Retrieval is brute-force cosine similarity in JS, not a vector-index
+  extension.** `build_scripts/knowledge-search.js` ranks the full corpus
+  (~150-200 chunks) by cosine similarity in microseconds at this size; a
+  loadable extension like `sqlite-vec` would buy nothing here and adds a
+  native-binary deployment risk against Railway for no benefit. Dual-exported
+  like `js/review-merge.js`, so ranking is tested against synthetic embeddings
+  with no live Gemini call and no live DB.
+- **Re-ingestion is idempotent per file, and always full.** `bun run ingest`
+  deletes and reinserts each file's rows in one transaction, reprocessing
+  every file on every run rather than diffing — so a re-run after editing
+  `docs/source/` or changing `GEMINI_EMBEDDING_MODEL` is always safe, and no
+  stale mix of two embedding models can accumulate. Manual, like
+  `bun run export` — not part of `bun run build`, since it needs a real
+  (billed) Gemini call CI must not make.
+- **`GET /api/ai/capabilities` reports `knowledgeBase: {ready, chunkCount}`**
+  so the browser can distinguish "no Gemini key" from "key present, nobody's
+  run `bun run ingest` yet" — different states, different copy.
+- **Citations are checked against the retrieved set, not accepted as free
+  text.** Findings cite chunk ids (`${source_file}#${chunk_index}`), not a
+  restated source/heading — the failure mode this guards against is a
+  plausible-sounding citation that was never actually retrieved.
+  `build_scripts/ai/validate-compliance-audit.js`'s `findInvalidCitations()`
+  checks every cited id against what was retrieved for that request, and
+  rejects an empty `citedChunkIds` too. A bad citation triggers one retry
+  naming the specific finding and id; a finding still bad after that retry is
+  returned anyway (same "always resolves with the draft" rule as `content`)
+  but flagged `valid: false` with the bad id in `issues`. The
+  `source_file`/`heading_path` shown to a reviewer is resolved server-side
+  from the matched row, never echoed from the model.
+- **The route gates on knowledge-base readiness separately from the generic
+  no-provider gate.** `hasConfiguredProvider()` still gates first, same as
+  `content`; past that, `compliance-audit` checks Gemini-configured **and**
+  `knowledge_chunks` non-empty, answering 501 with which half is missing.
+  `generateComplianceAudit()` (`build_scripts/ai/compliance-audit.js`) is a
+  sibling to `generateContent()`, not a generalization of it — its own retry
+  loop, rather than bending the existing task's machinery to fit a second,
+  structurally different validator.
+- **Never writes anything**, same as `content` — no filesystem, no
+  review-state write, no `pages/*.js` mutation, and every successful audit
+  carries the same `disclosure` string for the same §1.11/AI-disclosure
+  reasons.
+- Full design rationale, including what was deliberately left out (a
+  corpus-wide embedding-model table, a task-dispatching registry refactor of
+  `generateContent()`), is in
+  `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md`.
+
 ### Build outputs
 
 - **`bun run build:singlefile`** (`vite build --mode singlefile`, via
@@ -1246,6 +1333,11 @@ known-but-unfixed bug rather than asserting wrong behavior.
   `history` entry should be constructed; loaded both as a browser `<script>`
   and imported directly by `server.ts`). Optional sync backend → `server.ts`
   (API routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+- RAG knowledge base → `build_scripts/knowledge-chunking.js`,
+  `build_scripts/knowledge-search.js`, `build_scripts/knowledge-schema.js`,
+  `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
+  `build_scripts/ai/compliance-audit.js`, and
+  `build_scripts/ai/validate-compliance-audit.js`.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

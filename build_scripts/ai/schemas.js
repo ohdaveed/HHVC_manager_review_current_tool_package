@@ -155,6 +155,42 @@ const PAGE_OUTPUT_SCHEMA = {
 }
 
 /**
+ * One compliance-audit finding: an issue grounded in one or more cited chunk
+ * ids. Citation identity is an id, resolved against the actually-retrieved
+ * set server-side in compliance-audit.js — a free-text citedSource/
+ * citedHeading would let the model invent a plausible-sounding citation
+ * nothing retrieved actually supports.
+ */
+const complianceFindingSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    issue: { type: 'string', description: 'One sentence naming the compliance gap or risk.' },
+    severity: { type: 'string', enum: ['error', 'warning', 'note'] },
+    citedChunkIds: {
+      type: 'array',
+      items: { type: 'string' },
+      description:
+        'The id attribute(s) of the <source> elements in <cited_sources> that ground this ' +
+        'finding. At least one is required. Never invent an id that was not given to you.',
+    },
+    recommendation: { type: 'string', description: 'One concrete, actionable fix.' },
+  },
+  required: ['issue', 'severity', 'citedChunkIds', 'recommendation'],
+}
+
+/** The `compliance-audit` task's output. */
+const COMPLIANCE_AUDIT_OUTPUT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    findings: { type: 'array', items: complianceFindingSchema },
+    summary: { type: 'string', description: 'Two or three sentences summarizing the audit.' },
+  },
+  required: ['findings', 'summary'],
+}
+
+/**
  * Caps on the `page` grounding object.
  *
  * `prompt` is capped at 8000 characters, but `page` used to be an unbounded
@@ -299,11 +335,21 @@ const generateRequestSchema = z.discriminatedUnion('task', [
     instruction: z.string().max(2000).optional(),
     page: groundingPageSchema.optional(),
   }),
+  z.object({
+    task: z.literal('compliance-audit'),
+    provider: z.enum(allProviderNames()).optional(),
+    // No `prompt` field: this task's grounding comes from retrieval, not
+    // free text. A plain (non-.strict()) z.object() silently drops an
+    // unrecognized field, so a client that sends one anyway is simply
+    // ignored, matching every other field's existing behavior on this schema.
+    page: groundingPageSchema,
+  }),
 ])
 
 module.exports = {
   PAGE_OUTPUT_SCHEMA,
   REWRITE_OUTPUT_SCHEMA,
+  COMPLIANCE_AUDIT_OUTPUT_SCHEMA,
   PAGE_TYPES,
   SECTION_COMPONENTS,
   generateRequestSchema,

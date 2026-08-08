@@ -12,6 +12,7 @@ const { describe, test, expect } = require('bun:test')
 const { pageSchema, sectionSchema } = require('../build_scripts/schema')
 const {
   PAGE_OUTPUT_SCHEMA,
+  COMPLIANCE_AUDIT_OUTPUT_SCHEMA,
   PAGE_TYPES,
   SECTION_COMPONENTS,
   generateRequestSchema,
@@ -400,5 +401,47 @@ describe('REWRITE_OUTPUT_SCHEMA', () => {
     expect(REWRITE_OUTPUT_SCHEMA.required).toEqual(['rewrittenText'])
     expect(REWRITE_OUTPUT_SCHEMA.additionalProperties).toBe(false)
     expect(REWRITE_OUTPUT_SCHEMA.properties.rewrittenText.type).toBe('string')
+  })
+})
+
+describe('COMPLIANCE_AUDIT_OUTPUT_SCHEMA', () => {
+  test('every finding requires issue, severity, citedChunkIds, and recommendation', () => {
+    const findingSchema = COMPLIANCE_AUDIT_OUTPUT_SCHEMA.properties.findings.items
+    expect(findingSchema.required).toEqual(['issue', 'severity', 'citedChunkIds', 'recommendation'])
+  })
+
+  test('severity is constrained to error, warning, or note', () => {
+    const findingSchema = COMPLIANCE_AUDIT_OUTPUT_SCHEMA.properties.findings.items
+    expect(findingSchema.properties.severity.enum).toEqual(['error', 'warning', 'note'])
+  })
+})
+
+describe('generateRequestSchema (discriminated union)', () => {
+  const VALID_PAGE_STUB = {
+    slug: 'x',
+    type: 'Information',
+    title: 'X',
+    summary: 'X',
+    audience: ['a'],
+    reading: 'Grade 6',
+    sections: [],
+  }
+
+  test('rejects a compliance-audit request with no page', () => {
+    expect(generateRequestSchema.safeParse({ task: 'compliance-audit' }).success).toBe(false)
+  })
+
+  test('accepts a compliance-audit request with only task and page', () => {
+    const result = generateRequestSchema.safeParse({
+      task: 'compliance-audit',
+      page: VALID_PAGE_STUB,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('still rejects a content request with no prompt (with a page present)', () => {
+    expect(
+      generateRequestSchema.safeParse({ task: 'content', page: VALID_PAGE_STUB }).success
+    ).toBe(false)
   })
 })

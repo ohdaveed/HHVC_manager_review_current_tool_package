@@ -37,6 +37,8 @@
     "validate": "bun build_scripts/validate.js",
     "// export": "Generates data/page_inventory.{json,csv} and syncs the local tracking sheet",
     "export": "bun build_scripts/extract-pages.js && bun build_scripts/sync-tracking-sheet.js",
+    "// ingest": "Chunks docs/source/**/*.md, embeds via Gemini, and upserts into knowledge_chunks. Needs GEMINI_API_KEY. Manual, not part of the build pipeline.",
+    "ingest": "bun build_scripts/ingest-knowledge.js",
     "// sync-tracking": "Re-generates the local mockup tracking CSV sheets",
     "sync-tracking": "bun build_scripts/sync-tracking-sheet.js",
     "// push-tracking": "Pushes the local page review status to the Google Sheets tracker",
@@ -56,7 +58,7 @@
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
     "// test": "Runs the test suite using Bun's test runner",
-    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/review-merge.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/decision-vocabulary.test.js tests/doc-counts.test.js tests/mockup-image-export.test.js tests/review-insights-data.test.js tests/review-insights-charts.test.js tests/review-insights-render.test.js tests/review-ops-data.test.js tests/ai-assist-schema.test.js tests/ai-assist-env.test.js tests/ai-assist-providers.test.js tests/ai-assist-server.test.js",
+    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/review-merge.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/decision-vocabulary.test.js tests/knowledge-chunking.test.js tests/knowledge-search.test.js tests/validate-compliance-audit.test.js tests/doc-counts.test.js tests/mockup-image-export.test.js tests/review-insights-data.test.js tests/review-insights-charts.test.js tests/review-insights-render.test.js tests/review-ops-data.test.js tests/ai-assist-schema.test.js tests/ai-assist-env.test.js tests/ai-assist-providers.test.js tests/ai-assist-server.test.js",
     "// test:e2e": "Playwright end-to-end tests (builds, then serves dist/ on :8080)",
     "test:e2e": "playwright test"
   }
