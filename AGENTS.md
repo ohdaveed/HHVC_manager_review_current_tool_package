@@ -1159,6 +1159,58 @@ never writes anything, and every result carries the same `disclosure` string.
   `generateContent()`), is in
   `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md`.
 
+### AI rewrite (optional)
+
+A floating button that appears when a reviewer selects body copy in the mockup,
+offering an AI rewrite of the containing field. `js/ai-rewrite.js` is the
+orchestrator (selection, request lifecycle, apply/undo), `js/ai-rewrite-render.js`
+the view (button, popover, positioning), and both ride the existing
+`window.AiAssist.client`. Additive, invisible unless `/api/ai/*` is configured,
+and it never writes to `pages/*.js`.
+
+- **The selection picks the FIELD, not the substring.** `formatMarkdown()`
+  escapes HTML and rewrites `[label](target)` into elements, so a DOM offset does
+  not map back to an offset in the source markdown, and a selection spanning two
+  elements has no coherent splice. The whole containing paragraph/bullet is sent
+  and replaced; the popover shows it in full. Field text is read from page data
+  via `getByPath`, never from `textContent` — the latter is rendered output.
+- **`data-rewrite-field` paths use the ORIGINAL `page.sections` index.**
+  `partitionSections()` redistributes sections into seven role buckets rendered
+  in a fixed layout order, so render order is not source order. The index rides
+  on a render-time shallow copy (`__sectionIndex`); a path built from render
+  order rewrites the wrong section, silently. Its regression test is
+  mutation-proven — confirmed to FAIL against a deliberately broken renderer,
+  because the first version's negative assertion passed trivially.
+- **Annotation is opt-in per call site.** `paragraphList`/`bulletList`/
+  `renderSteps` emit nothing without a path prefix, which is how the v1 scope
+  (paragraphs, bullets, step text — not cards, tables, callouts, `whatToKnow` or
+  spotlight) is expressed.
+- **`getByPath`/`setByPath` reject `__proto__`/`prototype`/`constructor`.**
+  Without it, `setByPath(obj, '__proto__.x', v)` wrote through `Object.prototype`
+  and polluted every plain object in the app — confirmed by exploit probe. These
+  take paths straight from DOM attributes, which devtools can edit. `setByPath`
+  also never creates intermediates; it returns `false` rather than inventing page
+  structure no schema validated.
+- **An applied rewrite is flagged `unverified: true`** ("AI-rewritten draft —
+  verify before publishing"), reusing the existing pill rather than a new
+  AI-specific flag, so AI-touched copy is distinguishable at a glance. Undo is
+  one step, consumed on use.
+- **The popover's position is clamped unconditionally.** Anchoring below the
+  selection (flipping above) is a preference, not a guarantee: the mockup runs
+  ~8,800px, so a selection below the fold puts both anchors off screen.
+  `max-height: 70vh` bounds how tall it is, not where it sits — the buttons
+  rendered unclickable until the clamp was added.
+- **`generateRewrite()` is a SIBLING of `generateContent()`**, and
+  `generateRequestSchema` is a discriminated union on `task`: `content` requires
+  `prompt`, `rewrite-field` requires `fieldText` and declares none. Zod's
+  `z.object` strips unknown keys, so a stray `prompt` on a rewrite is dropped,
+  not rejected.
+- **The validator checks link TARGETS, not whole links** — rewording a label is
+  the point; dropping a target is a content regression nothing else catches.
+- **`tests/e2e/ai-rewrite.spec.js` is the only layer that can cover this**: both
+  modules are browser-only IIFEs with no `module.exports`, so there is no unit
+  layer beneath it.
+
 ### Build outputs
 
 - **`bun run build:singlefile`** (`vite build --mode singlefile`, via
@@ -1264,7 +1316,7 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The seven stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
 the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
@@ -1273,6 +1325,7 @@ the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 | `css/styles.css`          | the mockup itself, plus the raw `--sfds-*` primitives                                          |
 | `css/ux-improvements.css` | the review layer's own chrome — the designated `!important` override sheet                     |
 | `css/ai-assist.css`       | the AI assist panel                                                                            |
+| `css/ai-rewrite.css`      | the floating selection button and the rewrite popover                                          |
 | `css/dashboard.css`       | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
 | `css/review-insights.css` | the Overview cards and the failing-checks ranking                                              |
 | `css/review-ops.css`      | the stored-review-data panel                                                                   |
