@@ -267,6 +267,37 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     expect(event.defaultPrevented).toBe(false)
   })
 
+  test('clicking an inline reference link inside a paragraph opens that paragraph editor and prevents navigation', async () => {
+    // The hero CTA isn't the only place a navigating anchor sits inside a
+    // [data-rewrite-field] element. formatMarkdown() (js/page-render.js)
+    // turns a [label](https://...) markdown link in body copy into
+    // <a class="inline-link" href="..." target="_blank" rel="noopener
+    // noreferrer">, rendered directly inside the <p data-rewrite-field=
+    // "sections.N.paragraphs.M"> the text belongs to — reachable wherever a
+    // paragraph or bullet cites an external source. By design, clicking that
+    // link opens the paragraph's editor rather than following the citation:
+    // editing the field takes priority over navigating away from the review
+    // tool while a reviewer is trying to edit the very text the link sits
+    // in. This mirrors the hero-CTA case one level deeper in the DOM.
+    const { mockPage } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<p data-rewrite-field="sections.0.paragraphs.0">' +
+      'See the ' +
+      '<a class="inline-link" href="https://example.com/source" target="_blank" rel="noopener noreferrer">' +
+      'source document <span aria-hidden="true">↗</span></a> for details.' +
+      '</p>'
+    const inlineLink = mockPage.querySelector('a.inline-link')
+
+    const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
+    inlineLink.dispatchEvent(event)
+
+    const widget = mockPage.querySelector('[data-inline-edit-input]')
+    expect(widget).not.toBeNull()
+    expect(widget.tagName).toBe('TEXTAREA')
+    expect(widget.value).toBe('Original paragraph text.')
+    expect(event.defaultPrevented).toBe(true)
+  })
+
   test('committing a title edit via Enter writes page.title, persists, and re-renders', async () => {
     const { mockPage, page, renderPageCalls, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'

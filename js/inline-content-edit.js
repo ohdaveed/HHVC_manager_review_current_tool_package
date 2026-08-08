@@ -210,19 +210,41 @@
     if (editingPath) return // already editing something; let blur/Enter/Escape resolve it first
     const field = target.closest('[data-rewrite-field]')
     if (!field) return
-    // A data-rewrite-field target can wrap a real navigating <a href> —
-    // e.g. the hero CTA: data-rewrite-field="primaryCta" sits on the
-    // wrapping <div class="hero-cta"> (js/page-render.js's renderHero()),
-    // not on the anchor itself, and button() renders a real
-    // <a href target="_blank"> for a CTA with a buttonUrl. Left alone, a
-    // click there both opens this editor (delegated click bubbling to the
-    // ancestor) AND navigates in a new tab (native anchor behavior).
-    // Prevent that navigation, but ONLY when the click actually landed on
-    // (or inside) a navigating anchor — this must not become a blanket
-    // preventDefault(), which could interfere with normal focus/selection
-    // behavior once the editor widget itself is open. The internal-target
-    // CTA variant renders as a <button>, which has no href and does not
-    // navigate on click by default, so this guard is a no-op for it.
+    // By design: clicking any link — CTA or an inline body-text link —
+    // inside an editable field opens that field's editor instead of
+    // following the link. Editing takes priority over navigating away from
+    // the review tool while a reviewer is trying to edit the very field the
+    // link sits in.
+    //
+    // A [data-rewrite-field] element can contain a real navigating
+    // <a href>, and its position in the DOM doesn't matter — this rule
+    // applies wherever the anchor sits relative to the field boundary, not
+    // just at the field's own root. Two real cases hit this today:
+    //   - The hero CTA: data-rewrite-field="primaryCta" sits on the
+    //     wrapping <div class="hero-cta"> (renderHero() in
+    //     js/page-render.js), not on the interactive element itself, and
+    //     button() renders a real <a href target="_blank"> when the CTA has
+    //     a buttonUrl (confirmed live on the payFee page).
+    //   - An inline citation/reference link inside paragraph or bullet body
+    //     text: formatMarkdown() (js/page-render.js) turns a
+    //     [label](https://...) markdown link into
+    //     <a class="inline-link" href="..." target="_blank">, rendered
+    //     directly inside the <p data-rewrite-field="sections.N.paragraphs.M">
+    //     or <li data-rewrite-field="sections.N.bullets.M"> the text belongs
+    //     to — reachable on multiple pages wherever body copy cites a
+    //     source.
+    // Without this guard, clicking either kind of link both opened this
+    // editor (the delegated click bubbling to the ancestor
+    // [data-rewrite-field]) AND navigated in a new tab (native anchor
+    // behavior) at once.
+    //
+    // Scoped to "the click landed on or inside a navigating anchor" rather
+    // than a blanket preventDefault() on every click, since a blanket call
+    // could interfere with normal focus/selection behavior once the editor
+    // widget itself is open. The internal-target CTA variant renders as a
+    // <button> (no href, no default navigation), so this guard is a
+    // documented no-op for it — verified by a regression test below rather
+    // than left as an implicit assumption.
     const navigatingAnchor = target.closest('a[href]')
     if (navigatingAnchor) event.preventDefault()
     // Only open on scalar-shaped targets in this task's scope: title,
