@@ -210,6 +210,21 @@
     if (editingPath) return // already editing something; let blur/Enter/Escape resolve it first
     const field = target.closest('[data-rewrite-field]')
     if (!field) return
+    // A data-rewrite-field target can wrap a real navigating <a href> —
+    // e.g. the hero CTA: data-rewrite-field="primaryCta" sits on the
+    // wrapping <div class="hero-cta"> (js/page-render.js's renderHero()),
+    // not on the anchor itself, and button() renders a real
+    // <a href target="_blank"> for a CTA with a buttonUrl. Left alone, a
+    // click there both opens this editor (delegated click bubbling to the
+    // ancestor) AND navigates in a new tab (native anchor behavior).
+    // Prevent that navigation, but ONLY when the click actually landed on
+    // (or inside) a navigating anchor — this must not become a blanket
+    // preventDefault(), which could interfere with normal focus/selection
+    // behavior once the editor widget itself is open. The internal-target
+    // CTA variant renders as a <button>, which has no href and does not
+    // navigate on click by default, so this guard is a no-op for it.
+    const navigatingAnchor = target.closest('a[href]')
+    if (navigatingAnchor) event.preventDefault()
     // Only open on scalar-shaped targets in this task's scope: title,
     // summary, primaryCta, a heading, or a single paragraph/bullet item
     // (the numeric-suffixed paths). A bare container path like

@@ -216,6 +216,57 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     expect(widget.value).toBe('Original CTA')
   })
 
+  test('clicking a hero CTA rendered as an external <a href> opens the editor and prevents navigation', async () => {
+    // Matches what js/page-render.js actually produces: data-rewrite-field
+    // sits on the WRAPPING <div class="hero-cta">, not on the anchor, and
+    // button() renders a real navigating <a href target="_blank"> for a CTA
+    // with a buttonUrl (e.g. mosquito-education-workshop.js). Without a
+    // scoped event.preventDefault(), clicking this anchor both opens the
+    // inline editor (delegated click bubbling to the ancestor
+    // [data-rewrite-field] div) AND navigates in a new tab (native anchor
+    // behavior) — this test proves only the former happens.
+    const { mockPage } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<div class="hero-cta" data-rewrite-field="primaryCta">' +
+      '<a class="btn" href="https://example.com" target="_blank" rel="noopener noreferrer">Original CTA</a>' +
+      '</div>'
+    const anchor = mockPage.querySelector('a[href]')
+
+    const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
+    anchor.dispatchEvent(event)
+
+    const widget = mockPage.querySelector('[data-inline-edit-input]')
+    expect(widget).not.toBeNull()
+    expect(widget.tagName).toBe('INPUT')
+    expect(widget.value).toBe('Original CTA')
+    expect(event.defaultPrevented).toBe(true)
+  })
+
+  test('clicking a hero CTA rendered as an internal-target <button> still opens the editor (regression guard)', async () => {
+    // The internal-target CTA variant has no href to prevent — button()
+    // renders a bare <button type="button" data-render-target="...">, which
+    // does not navigate on click by default. This proves the anchor-scoped
+    // preventDefault() fix does not change behavior for this variant: the
+    // editor still opens normally.
+    const { mockPage } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<div class="hero-cta" data-rewrite-field="primaryCta">' +
+      '<button type="button" class="btn" data-render-target="pestsTopic">Original CTA</button>' +
+      '</div>'
+    const button = mockPage.querySelector('button[data-render-target]')
+
+    const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
+    button.dispatchEvent(event)
+
+    const widget = mockPage.querySelector('[data-inline-edit-input]')
+    expect(widget).not.toBeNull()
+    expect(widget.tagName).toBe('INPUT')
+    expect(widget.value).toBe('Original CTA')
+    // Buttons have no default navigation action, so this is a no-op either
+    // way — asserted for clarity of intent, not because it's load-bearing.
+    expect(event.defaultPrevented).toBe(false)
+  })
+
   test('committing a title edit via Enter writes page.title, persists, and re-renders', async () => {
     const { mockPage, page, renderPageCalls, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
