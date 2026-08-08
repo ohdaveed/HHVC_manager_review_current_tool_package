@@ -20,6 +20,7 @@ const REVIEW_RECORD_FIELDS = [
   'reading_target',
   'edited_title',
   'edited_summary',
+  'section_edits',
   'updated_at',
   'history',
   'synced_at',
@@ -860,6 +861,7 @@ function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD
     reading_target: page.reading || '',
     edited_title: '',
     edited_summary: '',
+    section_edits: {},
     updated_at: '',
     history: [],
     // Distinct from updated_at (bumped on every local edit): synced_at only

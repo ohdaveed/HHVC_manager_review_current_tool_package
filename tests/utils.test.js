@@ -5,7 +5,7 @@ import { describe, test, expect } from 'bun:test'
 // harness. `ctx` is kept as the local name so the assertions below read
 // unchanged.
 import * as ctx from '../js/utils.js'
-import { getByPath, setByPath } from '../js/utils.js'
+import { getByPath, setByPath, REVIEW_RECORD_FIELDS, buildReviewRecord } from '../js/utils.js'
 
 describe('safeUrl', () => {
   test('passes through absolute http and https URLs unchanged', () => {
@@ -443,5 +443,25 @@ describe('getByPath / setByPath — prototype pollution protection', () => {
   test('getByPath still works for normal, safe paths', () => {
     const obj = { sections: [{ paragraphs: ['text'] }] }
     expect(ctx.getByPath(obj, 'sections.0.paragraphs.0')).toBe('text')
+  })
+})
+
+describe('REVIEW_RECORD_FIELDS', () => {
+  test('includes section_edits', () => {
+    expect(REVIEW_RECORD_FIELDS).toContain('section_edits')
+  })
+})
+
+describe('buildReviewRecord', () => {
+  test('defaults section_edits to an empty object', () => {
+    const record = buildReviewRecord({ title: 'T', slug: 's' }, 'pestsTopic')
+    expect(record.section_edits).toEqual({})
+  })
+
+  test('accepts a section_edits override', () => {
+    const record = buildReviewRecord({ title: 'T', slug: 's' }, 'pestsTopic', {
+      section_edits: { 'sections.0.heading': 'Edited' },
+    })
+    expect(record.section_edits).toEqual({ 'sections.0.heading': 'Edited' })
   })
 })

@@ -195,6 +195,7 @@ import { hasValidPageData } from './utils.js'
   function collectCurrentPageReviewState(pageKeyOverride) {
     const pageKey = typeof pageKeyOverride === 'string' ? pageKeyOverride : getCurrentKey()
     const page = DATA.pages[pageKey] || {}
+    const originalPage = window.ORIGINAL_DATA?.pages?.[pageKey]
 
     return buildReviewRecord(page, pageKey, {
       page_title: page.title || '',
@@ -202,6 +203,14 @@ import { hasValidPageData } from './utils.js'
       edited_title: page.title || '',
       edited_summary: page.summary || '',
       primary_cta: getPrimaryCta(page) || '',
+      // Derived fresh from live page state on every save, same as the three
+      // fields above — never accumulated as a stored diff that could drift
+      // from what page.sections actually contains. See
+      // js/inline-content-edit-data.js for why this makes "reset to
+      // original" correct by construction. originalPage can be undefined in
+      // a context with no ORIGINAL_DATA (e.g. a future non-browser caller);
+      // computeSectionEdits() itself returns {} rather than throwing.
+      section_edits: window.inlineEditData?.computeSectionEdits(page, originalPage) || {},
       seo_title: getSeoTitle(page),
       meta_description: getMetaDescription(page),
       reviewer: getValue('reviewerInput'),
@@ -394,6 +403,11 @@ import { hasValidPageData } from './utils.js'
       setValue('reviewRisks', saved.risks_or_blockers || '')
       setValue('reviewOwner', saved.follow_up_owner || state.globals.owner || 'David')
       updateMockupTextFromSavedState(page, saved)
+      // Section-level edits (heading/paragraphs/bullets) are reapplied
+      // separately from the three page-level fields above:
+      // updateMockupTextFromSavedState already owns edited_title/
+      // edited_summary/primary_cta, and this must not duplicate that.
+      window.inlineEditData?.applyContentEditsToPageData(page, saved)
     } else {
       clearReviewFieldsForNewPage(state)
     }

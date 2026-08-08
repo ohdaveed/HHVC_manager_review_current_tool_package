@@ -83,6 +83,7 @@ import './review-state-validation.js'
 import './reading-level.js'
 import './review-state-store.js'
 import './review-merge.js'
+import './inline-content-edit-data.js'
 import './review-state-sync.js'
 
 // ---------------------------------------------------------------------------
