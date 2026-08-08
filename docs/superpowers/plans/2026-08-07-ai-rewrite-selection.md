@@ -94,6 +94,16 @@ Expected: FAIL — `getByPath is not a function`.
 
 - [ ] **Step 3: Implement both helpers in `js/utils.js`**
 
+> **Security correction (applied in commit `50af2f0`).** The reference code below is
+> vulnerable to prototype pollution as written: `setByPath(obj, '__proto__.polluted', 'x')`
+> walks onto `Object.prototype`, which is a genuine object, so the intermediate-object guard
+> writes straight through it and every plain object in the app inherits the value. Confirmed
+> by direct exploit probe, not inferred. Both functions MUST additionally reject any path
+> segment in `UNSAFE_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor'])` —
+> `getByPath` returning `undefined`, `setByPath` returning `false` and writing nothing. This
+> matters concretely rather than theoretically: Task 8 feeds these functions strings read
+> straight out of DOM `data-rewrite-field` attributes, which are editable via devtools.
+
 Add near the other cross-cutting helpers:
 
 ```js
