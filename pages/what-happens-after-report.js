@@ -140,7 +140,7 @@ window.HHVC_PAGES['afterReport'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'How to respond to a notice of violation',
+          title: 'Fix your Healthy Housing and Vector Control violation',
           target: 'noticeOfViolation',
         },
         {

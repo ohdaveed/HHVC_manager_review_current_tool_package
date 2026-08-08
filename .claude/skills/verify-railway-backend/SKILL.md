@@ -70,7 +70,7 @@ curl -sI https://<the-actual-domain>/api/review-state
 Read the status code against what step 3 found, not in isolation:
 
 - **501** — consistent with `REVIEW_API_TOKEN` unset. If step 3 found the
-  token *is* set, this is a real bug (the route should be live) — report it
+  token _is_ set, this is a real bug (the route should be live) — report it
   as one, don't paper over the mismatch.
 - **401** — consistent with `REVIEW_API_TOKEN` set and this request
   correctly lacking a valid `Authorization: Bearer` header (which it does,

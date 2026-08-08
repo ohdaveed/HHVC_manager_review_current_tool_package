@@ -219,7 +219,7 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Resources subsection entry — an "SF.gov page" link to an Information page.',
         },
         {
-          title: 'How to respond to a notice of violation',
+          title: 'Fix your Healthy Housing and Vector Control violation',
           text: 'Learn what tenants and owners each need to do when HHVC issues a notice of violation.',
           target: 'noticeOfViolation',
           karl: 'Resources subsection entry — an "SF.gov page" link to an Information page.',

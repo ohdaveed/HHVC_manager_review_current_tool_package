@@ -251,7 +251,7 @@ window.HHVC_PAGES['article11Guide'] = {
         ],
       ],
       bullets: [
-        '**Respond to a notice:** [How to respond to a notice of violation](noticeOfViolation)',
+        '**Respond to a notice:** [Fix your Healthy Housing and Vector Control violation](noticeOfViolation)',
         '**Annual program fee:** [Pay your Healthy Housing fee](payFee) for buildings with 3 or more rental units',
       ],
     },

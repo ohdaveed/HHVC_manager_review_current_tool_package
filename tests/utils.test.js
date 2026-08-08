@@ -391,3 +391,57 @@ describe('setByPath', () => {
     expect(setByPath(page, '', 'new')).toBe(false)
   })
 })
+
+describe('getByPath / setByPath — prototype pollution protection', () => {
+  test('getByPath returns undefined when any segment is __proto__', () => {
+    const obj = { sections: [] }
+    expect(ctx.getByPath(obj, '__proto__')).toBe(undefined)
+    expect(ctx.getByPath(obj, '__proto__.polluted')).toBe(undefined)
+  })
+
+  test('getByPath returns undefined when any segment is prototype', () => {
+    const obj = { sections: [] }
+    expect(ctx.getByPath(obj, 'prototype')).toBe(undefined)
+    expect(ctx.getByPath(obj, 'prototype.x')).toBe(undefined)
+  })
+
+  test('getByPath returns undefined when any segment is constructor', () => {
+    const obj = { sections: [] }
+    expect(ctx.getByPath(obj, 'constructor')).toBe(undefined)
+    expect(ctx.getByPath(obj, 'constructor.prototype')).toBe(undefined)
+  })
+
+  test('setByPath returns false and writes nothing when path contains __proto__', () => {
+    const obj = { sections: [] }
+    const result = ctx.setByPath(obj, '__proto__.polluted', 'PWNED')
+    expect(result).toBe(false)
+    expect({}.polluted).toBe(undefined)
+    expect(obj.polluted).toBe(undefined)
+  })
+
+  test('setByPath returns false and writes nothing when path contains prototype', () => {
+    const obj = { sections: [] }
+    const result = ctx.setByPath(obj, 'prototype.x', 'PWNED')
+    expect(result).toBe(false)
+    expect({}.x).toBe(undefined)
+  })
+
+  test('setByPath returns false and writes nothing when path contains constructor', () => {
+    const obj = { sections: [] }
+    const result = ctx.setByPath(obj, 'constructor.prototype.y', 'PWNED')
+    expect(result).toBe(false)
+    expect({}.y).toBe(undefined)
+  })
+
+  test('setByPath still works for normal, safe paths', () => {
+    const obj = { sections: [{ title: 'Test' }] }
+    const result = ctx.setByPath(obj, 'sections.0.title', 'Updated')
+    expect(result).toBe(true)
+    expect(obj.sections[0].title).toBe('Updated')
+  })
+
+  test('getByPath still works for normal, safe paths', () => {
+    const obj = { sections: [{ paragraphs: ['text'] }] }
+    expect(ctx.getByPath(obj, 'sections.0.paragraphs.0')).toBe('text')
+  })
+})

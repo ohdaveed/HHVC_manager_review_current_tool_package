@@ -1,129 +1,81 @@
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_PAGES['noticeOfViolation'] = {
-  slug: 'sf.gov/information/how-to-respond-to-notice-of-violation',
-  type: 'Information',
-  title: 'How to respond to a notice of violation',
+  slug: 'sf.gov/step-by-step--fix-healthy-housing-and-vector-control-violation',
+  type: 'Transaction',
+  title: 'Fix your Healthy Housing and Vector Control violation',
   summary:
-    'Learn what a notice of violation means and what tenants and owners each need to do to comply.',
+    'Follow your Notice of Violation and work with Healthy Housing and Vector Control to correct a housing or pest problem.',
   audience: [
-    'A tenant who received or is affected by a notice of violation',
-    'A property owner or manager responsible for building-wide corrections',
+    'A property owner or manager who received a Notice of Violation',
+    'A tenant with corrective actions listed on a Notice of Violation',
     'A building operator coordinating repairs, pest treatment, or cleanup',
-    'A tenant representative helping someone understand their responsibilities',
+    'A tenant representative helping someone understand their next steps',
   ],
   reading: 'Grade 7',
   editorNote:
-    'Information page for tenants and property owners/managers. BLOCKED — confirm NOV templates, tenant-specific orders, appeal windows, and contact routes before publication. The initial notice itself carries no fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free; a fee applies only starting with the third visit (the second reinspection), per reviewer-supplied sequencing — confirm this sequencing with HHVC before publication (still open). Fee amounts below are verified against the SFDPH Environmental Health Branch Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md) — the current fiscal year\'s certified schedule; re-check for a newer certification before publishing. Verify that examples of split responsibilities match current HHVC enforcement practice.',
-  editorStatus: 'blocked',
+    'Transaction page modeled on the live Karl Transaction editor: Primary agency, Description, Intro, then repeatable Steps. Each Step has a number/or type, title, optional flag, cost, time, rich-text description, and optional Transaction link. This HHVC page uses sequential numbered steps and deliberately leaves the optional, cost, time, and Transaction-link fields blank. The workflow is supported by the Article 11 Interpretation Guide v1.0 and the Vegetation Overgrowth Notice. Do not add DBI permit, appeal, or abatement-order requirements here without HHVC and legal review; those processes belong to DBI and are not established for this HHVC flow.',
+  editorStatus: 'needs-review',
   sections: [
     {
-      heading: 'What a notice of violation means',
-      karl: 'Maps to an "Information section" → Title and text block: Title = this heading, Text = the two paragraphs below.',
+      heading: 'What to do',
+      karl: 'Maps to the Transaction editor’s repeatable Steps field, not an Information-section stream. Each mockup step below becomes one Step with type "number", a Title, and a rich-text Step description. Optional, Cost, Time, and Transaction link remain blank unless HHVC supplies case-independent values or a confirmed related Transaction.',
       kind: 'body',
-      paragraphs: [
-        'A notice of violation (NOV) means Environmental Health found a housing or pest-related health condition that must be corrected.',
-        'The notice lists the cited problems, required corrections, responsible parties when known, and a compliance deadline based on the severity of the violation.',
-      ],
-      callout: {
-        karl: 'Maps to its own Callout stream item (a sibling of the Title and text item above, not nested inside it — Information section\'s three block types are top-level stream siblings). Single rich text field only, no separate title field, which this mockup callout already lacks, so no mismatch here. Enforcement escalation — reinspection fee figures verified against the SFDPH EHB Fee Schedule, "Rates effective 7/1/26-6/30/27" (docs/source/hhvc-policy/2026-07-06-dph-ehb-fee-schedule-fy26-27.md), the current fiscal year\'s certified schedule; free-visit sequencing (initial inspection + first reinspection free, fee starts at the third visit) supplied by reviewer — confirm the sequencing with HHVC before publication (fee amounts are now confirmed; sequencing is still open).',
-        text: 'The initial notice does not charge a fee — it states which health code violations were observed and what must be abated by the compliance deadline. The first reinspection is also free. If a second reinspection is needed because the violation still is not corrected, a per-hour fee can apply starting with that third visit (SFDPH bills $256/hour for an inspector and $234/hour for a technician, plus a per-half-hour rate beyond the first hour). Payments are due within 30 days, with $10 or $30 late penalties and 1.5% interest added for late payments. Persistent violations can also lead to citations, administrative fines, or a Director’s Hearing. Meet the deadline listed on your notice unless HHVC approves another plan.',
-      },
-    },
-    {
-      heading: 'Both tenants and owners may need to take action',
-      karl: 'Maps to a second Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below (bullets render as a bulleted list inside the same rich text field).',
-      kind: 'body',
-      paragraphs: [
-        'It is common for both a property owner or manager and one or more tenants to receive corrective actions on the same notice, or on related notices for the same building.',
-        'Owners are usually responsible for building systems, common areas, and conditions they control. Tenants are usually responsible for conditions inside their unit when those conditions are tied to tenant duties under Article 11, such as keeping the unit reasonably clean and cooperating with inspections and treatment. When both parties have corrective actions, progress depends on everyone completing their part before the compliance deadline.',
-      ],
-      bullets: [
-        'Owner or manager actions may include repairs, pest treatment, garbage removal, or fixing shared-area conditions',
-        'Tenant actions may include cleaning, preparing a unit for treatment, removing clutter, or allowing access for inspection',
-        'One party finishing their work does not automatically close the notice if the other cited conditions remain',
-      ],
-    },
-    {
-      heading: 'If you are a property owner or manager',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Resolved schema gap: converted inline linked cards to paragraph links.',
-      kind: 'body',
-      paragraphs: [
-        'Read the notice for every condition assigned to the owner, manager, or building.',
-      ],
-      bullets: [
-        'Start repairs, pest treatment, cleaning, or other building corrections right away',
-        'Hire a licensed pest control operator when the notice requires professional treatment',
-        'Communicate access needs and treatment dates to affected tenants',
-        'Document completed work in case Environmental Health requests proof of correction',
-        'Contact HHVC using the information on the notice if you need clarification about deadlines or scope',
-        '[Property owner responsibilities](ownerHub)',
-        '[Integrated pest management for property owners and managers](ownerGuidance)',
-      ],
-    },
-    {
-      heading: 'If you are a tenant',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Resolved schema gap: the verified Information form has no confirmed button/CTA block type (button converted to inline link) — folded into this block’s rich text (Internal link → the tenantRights page); flag for Digital Services rather than assuming it.',
-      kind: 'body',
-      paragraphs: [
-        'Tenants have rights to safe and habitable housing. A notice of violation does not mean you lose those rights.',
-      ],
-      bullets: [
-        'If the notice lists tenant corrective actions, you are responsible for completing the parts assigned to your unit unless HHVC or the owner tells you otherwise.',
-        '[Tenant rights when reporting housing conditions](tenantRights)',
-        'Keep your unit reasonably clean and orderly to help prevent pests from spreading',
-        'Prepare for bed bug or pest treatment when required, including laundering, bagging items, or clearing access paths as instructed',
-        'Allow scheduled inspections and treatment access when HHVC or the owner gives proper notice',
-        'Report new or worsening conditions if the owner does not correct building-wide problems by the deadline',
-        'Get tenant help if you are worried about retaliation, eviction, or an unfair share of the work',
-      ],
-      callout: {
-        karl: 'Maps to its own Callout stream item (sibling of the Title and text item above, not nested inside it). Single rich text field, no title — this callout has no title already, so no mismatch.',
-        text: 'This page gives general information, not legal advice. Contact the Rent Board or a tenant support organization if you need help with your situation.',
-      },
-    },
-    {
-      heading: 'How to work together to fix the violation',
-      karl: 'Resolved schema gap: unstructured steps converted to a numbered bulleted list (Title and text block: Title = this heading, Text = the intro paragraph plus the numbered bullets below).',
-      kind: 'body',
-      paragraphs: [
-        'Often, a notice of violation requires cooperation between the owner and the tenant to resolve.',
-      ],
-      bullets: [
-        '1. **Read the full notice**: Check which conditions apply to the building, common areas, and individual units. Note the compliance deadline and any reinspection date.',
-        '2. **Confirm who is responsible for each item**: Owners and tenants should compare the notice with the actual conditions in the unit and building. If responsibility is unclear, contact Environmental Health using the information on the notice.',
-        '3. **Complete your corrective actions on time**: Owners should not wait for tenant actions before starting building repairs they control. Tenants should complete unit-level actions needed for treatment or reinspection to succeed.',
-        '4. **Keep records and prepare for reinspection**: Save photos, receipts, treatment reports, or other proof of completed work when possible. Be ready for HHVC to verify that all cited conditions were corrected.',
-      ],
-    },
-    {
-      heading: 'Related pages',
-      karl: 'Maps to the Related field: a generic unrestricted "Page" chooser, repeatable.',
-      kind: 'placement',
-      cards: [
+      steps: [
         {
-          title: 'What happens after you report',
-          target: 'afterReport',
+          title: 'Read your Notice of Violation',
+          text: [
+            'Read the full notice as soon as you receive it. It identifies the conditions that must be corrected and gives a deadline for completing the work.',
+            'Check which actions apply to the building, shared areas, or a specific unit. A notice may list actions for an owner, manager, tenant, or more than one responsible party.',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Read your Notice of Violation". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. This is first because the notice controls the scope and deadline for the specific case.',
         },
         {
-          title: 'Look up residential health code violations',
-          target: 'findViolations',
+          title: 'Make a plan to correct the conditions',
+          text: ['Complete the actions assigned to you before the deadline on the notice.'],
+          bullets: [
+            'Owners and managers may need to arrange repairs, pest treatment, garbage removal, or corrections in shared areas.',
+            'Tenants may need to clean or prepare a unit for treatment and allow access for scheduled inspections or work.',
+            'If professional pest treatment is required, use a licensed pest control operator.',
+            'One person finishing their work does not close the violation if other cited conditions remain.',
+            'Owners and managers should not wait for tenant actions before starting work they control.',
+            'Tenants should follow unit-preparation instructions and allow properly noticed access for treatment or inspection.',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Make a plan to correct the conditions". Step description: the lead paragraph and six bullets. Optional, Cost, Time, and Transaction link: blank. Responsibilities stay conditional because the notice, rather than this page, assigns the work for each case.',
         },
         {
-          title: 'Tenant rights when reporting housing conditions',
-          target: 'tenantRights',
+          title: 'Contact the investigator if you need help',
+          text: [
+            'Contact the investigator named on the notice if you have questions about the cited conditions, the deadline, or what proof of correction is needed.',
+            'Ask before the deadline if you need clarification or more time. Do not assume that work by another person closes the violation.',
+          ],
+          bullets: [
+            'A Notice of Violation does not change a tenant’s right to safe and habitable housing.',
+            '[Tenant rights and reporting](tenantRights)',
+            '[Property owner responsibilities](ownerHub)',
+            '[Integrated pest management for property owners and managers](ownerGuidance)',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Contact the investigator if you need help". Step description: the two paragraphs plus the four bullets, including rich-text links to the three related HHVC pages. Optional, Cost, Time, and Transaction link: blank. The contact direction is supported by the HHVC Vegetation Overgrowth Notice; the language avoids promising an extension.',
         },
         {
-          title: 'Property owner responsibilities',
-          target: 'ownerHub',
+          title: 'Prepare for follow-up inspection',
+          text: [
+            'Keep records of the work you complete, such as photos, receipts, or pest treatment reports.',
+            'Be ready for HHVC to check whether the cited conditions were corrected. Follow-up inspection may be needed before the case can close.',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Prepare for follow-up inspection". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. The Article 11 workflow explicitly includes follow-up inspection after the compliance period; this does not promise a particular inspection date.',
         },
         {
-          title: 'Integrated pest management for property owners and managers',
-          target: 'ownerGuidance',
+          title: 'Finish the work or respond to further enforcement',
+          text: [
+            'If the violation is not corrected, HHVC may take additional enforcement action. This can include a reinspection fee when applicable, a citation, or a Director’s Hearing.',
+            'Follow the instructions and deadlines in any later notice you receive.',
+          ],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Finish the work or respond to further enforcement". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. This uses the Article 11 Interpretation Guide’s high-level enforcement workflow only; it intentionally omits unverified fee timing, hearing, appeal, and abatement details.',
         },
       ],
     },
   ],
-  seoTitle: 'How to respond to a notice of violation | SF.gov',
+  seoTitle: 'Fix your Healthy Housing and Vector Control violation | SF.gov',
   metaDescription:
-    'How tenants and owners respond to an Environmental Health notice of violation and take corrective action.',
+    'Follow a Healthy Housing and Vector Control Notice of Violation to correct housing or pest conditions.',
 }

@@ -307,7 +307,7 @@ Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) an
 | 8   | `findHotelRecords`  | Find residential hotel and shelter records                  | Transaction         |
 | 9   | `publicRecords`     | Make a public records request                               | Transaction         |
 | 10  | `ownerHub`          | Property owner responsibilities                             | Resource Collection |
-| 11  | `noticeOfViolation` | How to respond to a notice of violation                     | Information         |
+| 11  | `noticeOfViolation` | Fix your Healthy Housing and Vector Control violation       | Transaction         |
 | 12  | `payFee`            | Pay your annual Healthy Housing fee for apartment buildings | Transaction         |
 | 13  | `scopeInfo`         | Learn what Healthy Housing and Vector Control can inspect   | Information         |
 | 14  | `article11Guide`    | Health Code Article 11 in plain language                    | Report              |

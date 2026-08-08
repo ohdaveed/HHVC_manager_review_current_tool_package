@@ -196,7 +196,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
           target: 'ownerHub',
         },
         {
-          title: 'How to respond to a notice of violation',
+          title: 'Fix your Healthy Housing and Vector Control violation',
           target: 'noticeOfViolation',
         },
         {

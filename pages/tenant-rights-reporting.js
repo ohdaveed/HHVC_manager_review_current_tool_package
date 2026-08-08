@@ -104,7 +104,7 @@ window.HHVC_PAGES['tenantRights'] = {
           target: 'afterReport',
         },
         {
-          title: 'How to respond to a notice of violation',
+          title: 'Fix your Healthy Housing and Vector Control violation',
           target: 'noticeOfViolation',
         },
         {

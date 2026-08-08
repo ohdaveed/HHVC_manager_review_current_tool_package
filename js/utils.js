@@ -156,6 +156,7 @@ function zeroDecisionTally() {
   window.utils = {
     escapeHtml,
     getByPath,
+    setByPath,
     safeUrl,
     getPrimaryCta,
     setPrimaryCta,
@@ -191,7 +192,6 @@ function zeroDecisionTally() {
     buildPageRows,
     isWorkspacePanelOpen,
     mountWorkspacePanelIfOpen,
-    setByPath,
   }
 
   installGlobalErrorHandlers()
@@ -275,6 +275,17 @@ function escapeHtml(value) {
 }
 
 /**
+ * Path segments that must never be traversed.
+ *
+ * `__proto__` is the live hole: walking it lands on Object.prototype, which is
+ * a genuine object, so the intermediate-object guard below happily writes
+ * through it and every plain object in the app inherits the result.
+ * `prototype`/`constructor` are blocked alongside it rather than relying on
+ * `typeof Object === 'function'` to reject them by accident.
+ */
+const UNSAFE_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor'])
+
+/**
  * Resolve a dot-path against an object, e.g. 'sections.2.paragraphs.1'.
  *
  * Deliberately total: any unresolvable segment yields `undefined` rather than
@@ -286,8 +297,10 @@ function escapeHtml(value) {
  */
 function getByPath(root, path) {
   if (!root || typeof path !== 'string' || !path) return undefined
+  const keys = path.split('.')
+  if (keys.some((key) => UNSAFE_PATH_SEGMENTS.has(key))) return undefined
   let current = root
-  for (const key of path.split('.')) {
+  for (const key of keys) {
     if (current === null || typeof current !== 'object') return undefined
     current = current[key]
   }
@@ -310,6 +323,7 @@ function getByPath(root, path) {
 function setByPath(root, path, value) {
   if (!root || typeof path !== 'string' || !path) return false
   const keys = path.split('.')
+  if (keys.some((key) => UNSAFE_PATH_SEGMENTS.has(key))) return false
   const last = keys.pop()
   let current = root
   for (const key of keys) {

@@ -42,7 +42,7 @@ window.HHVC_PAGES['findViolations'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
-          title: 'How to respond to a notice of violation',
+          title: 'Fix your Healthy Housing and Vector Control violation',
           target: 'noticeOfViolation',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },

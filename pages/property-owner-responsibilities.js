@@ -35,8 +35,8 @@ window.HHVC_PAGES['ownerHub'] = {
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
-          title: 'Respond to a notice of violation',
-          text: 'Learn what tenants and owners each need to do when HHVC issues a notice of violation.',
+          title: 'Fix your Healthy Housing and Vector Control violation',
+          text: 'Follow a Notice of Violation and take the required steps to correct the conditions.',
           target: 'noticeOfViolation',
           karl: "SF.gov page link block, links to an existing Information page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },

@@ -26,6 +26,7 @@ import '../pages/what-happens-after-report.js'
 import '../pages/tenant-rights-reporting.js'
 import '../pages/mosquito-control-program.js'
 import '../pages/mosquito-education-workshop.js'
+import '../pages/integrated-pest-management-education.js'
 import '../pages/pay-healthy-housing-fee.js'
 import '../pages/article-11-compliance-for-property-owners.js'
 import '../pages/health-code-article-11.js'
@@ -44,7 +45,7 @@ window.HHVC_DATA = {
     ['findHotelRecords', 'Transaction: Find residential hotel and shelter records'],
     ['publicRecords', 'Transaction: Make a public records request'],
     ['ownerHub', 'Resource collection: Property owner responsibilities'],
-    ['noticeOfViolation', 'Information: How to respond to a notice of violation'],
+    ['noticeOfViolation', 'Transaction: Fix your Healthy Housing and Vector Control violation'],
     ['payFee', 'Transaction: Pay your Healthy Housing fee'],
     ['scopeInfo', 'Information: Learn what HHVC can inspect'],
     ['article11Compliance', 'Information: Article 11 compliance for property owners'],
@@ -54,6 +55,7 @@ window.HHVC_DATA = {
     ['tenantRights', 'Information: Tenant rights and reporting'],
     ['mosquitoControl', 'Information: Mosquito Control Program'],
     ['mosquitoWorkshop', 'Campaign: Free mosquito education workshop'],
+    ['ipmEducation', 'Campaign: Free IPM education workshop'],
   ],
 }
 

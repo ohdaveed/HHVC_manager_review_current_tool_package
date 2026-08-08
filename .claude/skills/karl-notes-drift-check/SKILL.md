@@ -19,7 +19,7 @@ a wrong assumption:** `mcp__claude_ai_Karl__getPage` and `searchDocumentation`
 query the **public Karl Editor Help Center** (a GitBook documentation site,
 `sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`) — not a live
 API into this project's actual Karl CMS instance. There is no tool here that
-reads real, currently-published SF.gov page content. What you *can* verify is
+reads real, currently-published SF.gov page content. What you _can_ verify is
 whether a `karl` note's claim about Karl's **documented** capabilities and
 constraints (block types, field limits, which content types support which
 component) matches what the Help Center actually says.
@@ -81,7 +81,7 @@ component) matches what the Help Center actually says.
 are phrased as open product/design questions **for Digital Services** — the
 client team that owns this project, e.g. "flag for Digital Services if a
 distinct heading is actually needed." `sendFeedback` reports issues in the
-Help Center's *documentation* to the people who maintain those docs — a
+Help Center's _documentation_ to the people who maintain those docs — a
 different audience entirely, with no channel to the client team. Don't
 route these through `sendFeedback`; they have no automated outlet through
 this MCP connection and need a human to actually raise them with Digital

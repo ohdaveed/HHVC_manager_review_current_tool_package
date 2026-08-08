@@ -53,7 +53,7 @@ window.HHVC_PAGES['article11Compliance'] = {
         'If Environmental Health finds a violation, they issue a notice of violation (NOV) listing the required corrections and a compliance deadline.',
       ],
       bullets: [
-        '[How to respond to a notice of violation](noticeOfViolation)',
+        '[Fix your Healthy Housing and Vector Control violation](noticeOfViolation)',
         '[What happens after you report](afterReport)',
       ],
     },
