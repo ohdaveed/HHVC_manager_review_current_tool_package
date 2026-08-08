@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 27 unit-test files in tests/
+bun run test                  # Bun test runner over the 28 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 27 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 28 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -74,6 +74,9 @@ logic — no DOM, dual-exported like `review-merge`/`plain-language`),
 DOM up after a reapply; mounts a fresh instance of the IIFE-only
 `js/ux-improvements-state-sync.js` per test via a cache-busting dynamic
 `import()`, since that file has no `module.exports` tail),
+`inline-content-edit` (the click-to-edit orchestrator for scalar fields,
+driven with real DOM click/keydown/blur events against the real happy-dom
+`window`/`document`),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage

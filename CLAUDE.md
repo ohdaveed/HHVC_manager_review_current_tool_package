@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 27 unit-test files in tests/ (632 tests)
+bun run test                  # bun test over the 28 unit-test files in tests/ (658 tests)
 bun run test:e2e              # playwright test (123 specs across 16 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,7 +65,7 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 27 Bun unit-test files under `tests/`:
+wrong). `bun run test` runs 28 Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -84,6 +84,12 @@ reapplied section edit leaves the just-rendered DOM stale — see
 fresh instance of the IIFE-only `js/ux-improvements-state-sync.js` per test
 via a cache-busting dynamic `import()`, since that file has no
 `module.exports` tail to `require()` directly),
+`inline-content-edit` (the click-to-edit orchestrator for scalar fields —
+title, summary, CTA, heading, a single paragraph or bullet — driven with real
+DOM click/keydown/blur events against the real happy-dom `window`/`document`
+rather than a stubbed one, since it exercises actual `Element.replaceWith()`
+and focus/selection behavior; e2e coverage in Task 8 layers on top of this
+for the full add/remove/undo surface),
 `review-api-server` (which spawns
 `server.ts` as a subprocess against a temp SQLite DB and exercises
 auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
@@ -92,7 +98,7 @@ usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
 environment it was given), and `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 632 tests at time of writing.
+without a key or a paid call) — 658 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
