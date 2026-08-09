@@ -602,3 +602,68 @@ describe('card description inheritance', () => {
     expect(html).toContain('<p>Step card copy.</p>')
   })
 })
+
+// Both INHERITS and TITLE_ONLY are page-picker blocks with no label field, so
+// Karl publishes the destination page's own Title for every internal card in
+// either bucket — not just the ones that also carry a description. Before
+// cardTitle() existed, only cardDescription() resolved through the
+// destination; the title stayed the card's own authored `c.title` in every
+// case, so a card whose title happened to match its destination's title at
+// write time silently drifted the moment a reviewer retitled that
+// destination and nothing here ever re-read it.
+describe('card title inheritance', () => {
+  const inheritsSection = { heading: 'Services', karl: 'Services subsection: page chooser' }
+  const titleOnlySection = { heading: 'Related', karl: 'Related panel: linked pages' }
+  const authoredSection = { heading: 'Rules', karl: 'Table block: body table' }
+  const scopeInfoTitle = 'Learn what Healthy Housing and Vector Control can inspect'
+
+  test('resolves the destination title for an inheriting internal card', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
+      inheritsSection
+    )
+    expect(html).toContain(`>${scopeInfoTitle}<`)
+    expect(html).not.toContain('>Inspection scope<')
+  })
+
+  test('resolves the destination title for a title-only internal card', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
+      titleOnlySection
+    )
+    expect(html).toContain(`>${scopeInfoTitle}<`)
+    expect(html).not.toContain('>Inspection scope<')
+  })
+
+  test('keeps an authored card own title unchanged', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Authored table copy.' }],
+      authoredSection
+    )
+    expect(html).toContain('>Inspection scope<')
+    expect(html).not.toContain(`>${scopeInfoTitle}<`)
+  })
+
+  test('keeps an external card own title, even inside an inheriting section', () => {
+    const html = ctx.renderCards(
+      [{ title: 'CDC rodents', url: 'https://www.cdc.gov/rodents/', text: 'Authored copy.' }],
+      inheritsSection
+    )
+    expect(html).toContain('CDC rodents')
+  })
+
+  test('falls back to the authored title when an inheriting card target resolves to nothing', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Gone', target: 'noSuchPageKey', text: 'Authored fallback copy.' }],
+      inheritsSection
+    )
+    expect(html).toContain('>Gone<')
+  })
+
+  test('resolves through renderServiceTiles, renderResourcesList and renderRelatedRail too', () => {
+    const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
+    expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(scopeInfoTitle)
+    expect(ctx.renderResourcesList([card], 'Resources', inheritsSection)).toContain(scopeInfoTitle)
+    expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(scopeInfoTitle)
+  })
+})

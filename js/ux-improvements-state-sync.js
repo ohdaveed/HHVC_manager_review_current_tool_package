@@ -453,6 +453,51 @@ import { hasValidPageData } from './utils.js'
     return ctaChanged
   }
 
+  /**
+   * Reapply every saved edited_title/edited_summary onto EVERY page in
+   * DATA.pages, not just the one about to render.
+   *
+   * applySavedPageState(pageKey) only ever runs for the page a reviewer is
+   * actually opening, which is correct for that page's own hero — but
+   * cardTitle()/cardDescription() in js/page-render.js resolve an inheriting
+   * card's title and description from `pageData[card.target]`, and a card's
+   * target is very often a page the reviewer hasn't opened in this session.
+   * Without this, a saved edit to a destination page's title or summary is
+   * invisible on every OTHER page whose card inherits from it, until the
+   * reviewer happens to visit that destination directly — including the
+   * default `pestsTopic` landing page, whose Services/Resources cards
+   * inherit from six different destinations.
+   *
+   * Deliberately narrower than applySavedPageState: it calls
+   * updateMockupTextFromSavedState() directly rather than the full function,
+   * so it never touches the review-form sidebar fields (reviewer/date/
+   * decision/notes), never reapplies section_edits, and never triggers a
+   * render — those all belong to the ONE page actually being opened.
+   * updateMockupTextFromSavedState()'s own DOM writes
+   * (`document.querySelector('#mockPage .hero h1')` etc.) are safe no-ops
+   * for every page except whichever one is currently painted, so calling it
+   * for all of them here does not risk patching the wrong page's DOM.
+   *
+   * Cannot run before EVERY render of the session — js/app.js's own initial
+   * render happens synchronously at module-import time, before this file (or
+   * any of the review layer) has even loaded, so the very first paint is
+   * always from pristine pageData no matter where this is called from. That
+   * first paint already gets corrected for its OWN hero title/summary by
+   * applySavedPageState()'s existing DOM patch; the gap this function closes
+   * is everything else on the page — its inherited cards — which is why
+   * restoreInitialPage() must force one repaint of the current page
+   * immediately after calling this, in the branches that don't already
+   * re-render (see that function's comment for which branches those are).
+   */
+  function hydrateAllPageTextFromSavedState() {
+    const state = window.reviewState.read()
+    for (const pageKey of Object.keys(state.pages || {})) {
+      const page = DATA.pages[pageKey]
+      const saved = state.pages[pageKey]
+      if (page && saved) updateMockupTextFromSavedState(page, saved)
+    }
+  }
+
   function applySavedPageState(pageKey) {
     // If this call is the one a prior call in this same function triggered
     // (see the follow-up-render block below), clear the guard now — this is
@@ -707,6 +752,7 @@ import { hasValidPageData } from './utils.js'
     saveCurrentPageToLocalStorage,
     clearReviewFieldsForNewPage,
     updateMockupTextFromSavedState,
+    hydrateAllPageTextFromSavedState,
     applySavedPageState,
     applySavedUiPreferences,
     updateLocalStorageStatus,

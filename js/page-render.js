@@ -280,6 +280,33 @@ function cardDescription(section, card) {
   }
   return card.text ?? ''
 }
+/**
+ * Resolve what a card's TITLE should actually say on the published page —
+ * the same question cardDescription() answers for the description, and for
+ * the same reason. Both `title-only` and `inherits` are page-picker blocks
+ * with no label field, so Karl renders the destination page's own Title for
+ * every internal entry in either bucket, not just the ones that also carry a
+ * description. Before this, only the description half of inheritance was
+ * resolved — a card whose authored `title` still matched its destination's
+ * title at write time silently drifted the moment a reviewer edited that
+ * destination's title through the editor, since nothing here ever re-read it.
+ *
+ * External (`url`) and `authored`/`unknown` cards keep their own `title`:
+ * an external card has no SF.gov page to inherit a title from, and an
+ * authored block's title is exactly what the block is for.
+ *
+ * @param {{karl?: string}|null|undefined} section Same contract as cardDescription().
+ * @param {{title: string, target?: string, url?: string}} card
+ * @returns {string} The title to render.
+ */
+function cardTitle(section, card) {
+  const classify = window.cardInheritance?.classifySection
+  const kind = section && typeof classify === 'function' ? classify(section) : 'unknown'
+  if ((kind === 'inherits' || kind === 'title-only') && card.target && pageData[card.target]) {
+    return pageData[card.target].title ?? card.title
+  }
+  return card.title
+}
 // NO `data-rewrite-field` ON CARD DESCRIPTIONS — deliberately, and this is
 // where it must stay decided. The inline-content-editing feature turns any
 // element carrying that attribute into a click-to-edit field whose keystrokes
@@ -293,6 +320,7 @@ function cardDescription(section, card) {
 function renderCards(cards = [], section = null) {
   return `<div class="cards">${cards
     .map((c) => {
+      const title = cardTitle(section, c)
       const attr = c.url
         ? ' target="_blank" rel="noopener"'
         : c.target
@@ -300,8 +328,8 @@ function renderCards(cards = [], section = null) {
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
       const action = c.url
-        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
-        : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
+        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(title)}${externalMark}</a>`
+        : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
       const desc = cardDescription(section, c)
       return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${desc ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
     })
@@ -310,6 +338,7 @@ function renderCards(cards = [], section = null) {
 function renderServiceTiles(cards = [], section = null) {
   return `<div class="service-tiles">${cards
     .map((c) => {
+      const title = cardTitle(section, c)
       const attr = c.url
         ? ' target="_blank" rel="noopener"'
         : c.target
@@ -324,9 +353,9 @@ function renderServiceTiles(cards = [], section = null) {
         ? `<span class="service-tile-text">${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span>`
         : ''
       if (c.url) {
-        return `<a class="service-tile" href="${escapeHtml(safeUrl(c.url))}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span>${text}</a>`
+        return `<a class="service-tile" href="${escapeHtml(safeUrl(c.url))}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(title)}${externalMark}</span>${text}</a>`
       }
-      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span>${text}</button>`
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(title)}</span>${text}</button>`
     })
     .join('')}</div>`
 }
@@ -334,6 +363,7 @@ function renderResourcesList(cards = [], heading = 'Resources', section = null) 
   if (!cards.length) return ''
   return `<div class="resources-list">${karlTag('Body: Resources links', 'placement')}<h3 class="resources-list-heading">${escapeHtml(heading)}</h3><ul>${cards
     .map((c) => {
+      const title = cardTitle(section, c)
       const attr = c.url
         ? ' target="_blank" rel="noopener noreferrer"'
         : c.target
@@ -344,8 +374,8 @@ function renderResourcesList(cards = [], heading = 'Resources', section = null) 
         ? `<span class="file-badge">${escapeHtml(c.fileType)}</span>`
         : ''
       const action = c.url
-        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
-        : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
+        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(title)}${externalMark}</a>`
+        : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
       const desc = cardDescription(section, c)
       const text = desc
         ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`
@@ -369,14 +399,15 @@ function renderRelatedRail(sections = []) {
   if (!entries.length) return ''
   return `<aside class="related-rail" aria-label="Related pages">${karlTag('Related section: right-panel linked pages', 'placement')}<h2 class="related-rail-title">Related</h2><ul class="related-rail-list">${entries
     .map(({ section, card: c }) => {
+      const title = cardTitle(section, c)
       const attr = c.url
         ? ' target="_blank" rel="noopener noreferrer"'
         : c.target
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const action = c.url
-        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}</a>`
-        : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
+        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(title)}</a>`
+        : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
       const desc = cardDescription(section, c)
       const text = desc
         ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`

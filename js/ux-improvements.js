@@ -180,6 +180,16 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
   }
 
   function restoreInitialPage() {
+    // Reapply every saved edited_title/edited_summary onto EVERY page's
+    // in-memory data — not just the one about to (re)render below — before
+    // anything here reads pageData for a card that might inherit its title
+    // or description from a page the reviewer hasn't opened yet this
+    // session. See hydrateAllPageTextFromSavedState()'s own comment for why
+    // this can't reach js/app.js's already-completed initial render, which
+    // is exactly why the branches below that don't otherwise re-render force
+    // one after this call.
+    window.ReviewUx?.stateSync?.hydrateAllPageTextFromSavedState?.()
+
     // An explicit ?page= URL param (a deep link, bookmark, or shared/review-
     // queue link) already drove js/app.js's initial render before this ran.
     // That takes priority over "reopen the page I was last viewing" — without
@@ -204,6 +214,13 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
           : window.utils?.getCurrentKey?.()
       window.ReviewUx?.stateSync?.applySavedPageState(deepLinkKey)
       reviewFormPageKey = deepLinkKey ?? reviewFormPageKey
+      // js/app.js already painted this page from PRISTINE data, before the
+      // hydration above ever ran. That paint's own hero title/summary get
+      // patched by applySavedPageState's direct DOM writes, but any card
+      // this page renders that inherits from a DIFFERENT, hydrated page
+      // needs a full repaint to pick that up — skipHistory=true since this
+      // reflects a reapply that already happened, not a new navigation.
+      if (typeof window.renderPage === 'function') window.renderPage(deepLinkKey, true)
       refreshUx()
       return
     }
@@ -221,21 +238,26 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
       // under the incoming page. The deep-link and default branches below
       // assign reviewFormPageKey for the same reason.
       reviewFormPageKey = savedKey
+      // Already a full repaint (unlike the other two branches), so it reads
+      // the hydration above with no extra render needed.
       window.renderPage(savedKey)
       return
     }
 
     // No deep link and no saved page: js/app.js's initial render already
-    // showed the default page. Recompute that key the same way app.js did
-    // instead of reading getCurrentKey() — under View Transitions the initial
-    // applyPageContent runs asynchronously, so #pageSelect may still be on
-    // its first <option> (an arbitrary page) at this point.
+    // showed the default page, from pristine data, before hydration above
+    // ever ran — same gap as the deep-link branch, same fix.
+    // Recompute that key the same way app.js did instead of reading
+    // getCurrentKey() — under View Transitions the initial applyPageContent
+    // runs asynchronously, so #pageSelect may still be on its first
+    // <option> (an arbitrary page) at this point.
     const initialKey =
       typeof resolvePageKey === 'function'
         ? resolvePageKey(null, DATA.pages, window.HHVC_DELETED_PAGE_ALIASES, 'pestsTopic').key
         : getCurrentKey()
     window.ReviewUx.stateSync.applySavedPageState(initialKey)
     reviewFormPageKey = initialKey
+    if (typeof window.renderPage === 'function') window.renderPage(initialKey, true)
     refreshUx()
   }
 
