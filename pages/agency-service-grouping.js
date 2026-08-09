@@ -35,31 +35,26 @@ window.HHVC_PAGES['pestsTopic'] = {
         },
         {
           title: 'Report rats, mice, and other four-legged problems',
-          text: 'Report rats, mice, raccoons, burrows, droppings, or another four-legged pest problem.',
           target: 'rodentsReport',
           karl: 'Services subsection entry -> SF.gov page link to the rodents-report Transaction. The description is a copy of the destination page Description, which is what Karl renders here; see the page-level note.',
         },
         {
           title: 'Report cockroaches, mosquitoes, and other insects',
-          text: 'Report cockroaches, bed bugs, mosquitoes, flies, wasps, mites, or standing water.',
           target: 'insectsReport',
           karl: 'Services subsection entry -> SF.gov page link to the insects-report Transaction. The description is a copy of the destination page Description, which is what Karl renders here; see the page-level note.',
         },
         {
           title: 'Report garbage, filth, and overgrown vegetation',
-          text: 'Report garbage, clutter, animal waste, pigeon problems, overgrown plants, or mold from humidity.',
           target: 'filthReport',
           karl: 'Services subsection entry -> SF.gov page link to the consolidated filth-report Transaction. This is the focused report route for the current live topic’s mold and trash scope; the description is a copy of the destination page Description, which is what Karl renders here.',
         },
         {
           title: 'Healthy housing and pest resources',
-          text: 'Find guides, forms, and videos for reporting, preventing, and managing pests in a home or building.',
           target: 'verminResources',
           karl: 'Services subsection entry -> SF.gov page link to the healthy-housing resources Resource Collection. Mirrors the live "Get help with vermin in your building" service, which sf.gov files under Services (General housing issues) rather than Resources — this card was previously the last entry under "Look up records and rules", where a tenant looking for self-help would not think to look. It briefly carried the task-shaped title "Get help with pests in your building"; that was reverted because a Karl subsection entry is only a page or external-link picker with NO label or description field, so the card renders the DESTINATION page\'s title and Description. Title and text here are therefore copied from `verminResources` verbatim and must be kept in sync with it — changing them here changes nothing in Karl. Getting a task-shaped label means retitling the destination page.',
         },
         {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
-          text: 'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.',
           target: 'scopeInfo',
           karl: 'Services subsection entry -> SF.gov page link to the inspection-scope Information page. This integrates the live topic’s "Healthy housing inspection programs" service and is also the safe route for a visitor who cannot identify their condition.',
         },
@@ -76,19 +71,16 @@ window.HHVC_PAGES['pestsTopic'] = {
       cards: [
         {
           title: 'Tenant rights when reporting housing conditions',
-          text: 'Learn about tenant protections and where to get help if you are worried about retaliation.',
           target: 'tenantRights',
           karl: 'Resources subsection entry -> SF.gov page link to the tenant-rights Information page.',
         },
         {
           title: 'What happens after you report a housing or pest problem',
-          text: 'Learn how a report is reviewed and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'Resources subsection entry -> SF.gov page link to the after-report Information page.',
         },
         {
           title: 'Fix your Healthy Housing and Vector Control violation',
-          text: 'Follow a Notice of Violation and understand the next steps for a tenant or owner.',
           target: 'noticeOfViolation',
           karl: 'Resources subsection entry -> SF.gov page link to the notice-of-violation Transaction.',
         },
@@ -105,19 +97,16 @@ window.HHVC_PAGES['pestsTopic'] = {
       cards: [
         {
           title: 'Property owner responsibilities',
-          text: 'See Article 11 responsibilities, fees, pest prevention, and enforcement resources.',
           target: 'ownerHub',
           karl: 'Resources subsection entry -> SF.gov page link to the owner Resource Collection.',
         },
         {
           title: 'Integrated pest management for property owners and managers',
-          text: 'Use prevention, monitoring, and resident outreach tools for your building.',
           target: 'ownerGuidance',
           karl: 'Resources subsection entry -> SF.gov page link to the owner-guidance Information page.',
         },
         {
           title: 'Pay your annual Healthy Housing fee for apartment buildings',
-          text: 'Pay the annual Healthy Housing fee for an apartment building with 3 or more rental units.',
           target: 'payFee',
           karl: 'Resources subsection entry -> SF.gov page link to the fee-payment Transaction.',
         },
@@ -131,13 +120,11 @@ window.HHVC_PAGES['pestsTopic'] = {
       cards: [
         {
           title: 'Look up building records',
-          text: 'Find complaints, inspections, violations, and public records for a building.',
           target: 'recordsHub',
           karl: 'Resources subsection entry -> SF.gov page link to the records Resource Collection.',
         },
         {
           title: 'Health Code Article 11 in plain language',
-          text: 'Read the City rules about pests, nuisances, violations, and enforcement.',
           target: 'article11Guide',
           karl: 'Resources subsection entry -> SF.gov page link to the Article 11 Report page.',
         },
@@ -155,7 +142,6 @@ window.HHVC_PAGES['pestsTopic'] = {
         },
         {
           title: 'Make a public records request',
-          text: 'Request Environmental Health records that are not available in the online lookups.',
           target: 'publicRecords',
           karl: 'Resources subsection entry -> SF.gov page link to the public-records Transaction.',
         },

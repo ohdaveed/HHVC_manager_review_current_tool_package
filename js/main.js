@@ -78,6 +78,14 @@ import './page-data.js'
 import './state.js'
 import './ui-controls.js'
 import './editor-panel.js'
+// BEFORE page-render.js: js/card-inheritance.js publishes window.cardInheritance
+// and exports nothing, so a consumer cannot import a binding from it and the
+// graph has no name to order by. js/page-render.js reads that global to decide
+// whether a card renders its own text or the destination page's summary, and
+// side-effect-imports this file itself so the ordering is genuinely enforced —
+// this line is the same belt-and-braces documentation of the sequence that
+// page-data.js above is, not what makes it work.
+import './card-inheritance.js'
 import './page-render.js'
 import './app.js'
 import './manager-review-export.js'

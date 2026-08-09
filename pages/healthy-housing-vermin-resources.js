@@ -55,7 +55,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'Prepare your unit for bed bug treatment',
-          text: 'Follow these steps before bed bug treatment in your home.',
           url: 'https://api.sf.gov/documents/23140/GuidelinesforUnitPreparation_dP56n7G.pdf',
           karl: 'Resource section -> Document Picker upload. Source-page document: "Tenant guidelines for unit preparation prior to bed bug treatment - English." Confirm the current document and linked language versions before publication.',
         },
@@ -86,7 +85,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'Residential building owner-operator guidelines for vector control',
-          text: 'Understand owner and operator responsibilities for maintaining healthy housing and preventing pests.',
           url: 'https://api.sf.gov/documents/52936/R_Residential_Bldg_Owner-Operator_Guidelines_for_Vector_Control_2026_0SYmmSc.html',
           karl: 'Resource section -> Document Picker upload. Source-page document published March 25, 2026; confirm the file, title, and publication date before attaching it in Karl.',
         },
@@ -109,7 +107,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'Pest control reporting form',
-          text: 'Use this spreadsheet to keep track of pest control reports and work.',
           url: 'https://api.sf.gov/documents/23712/PCOReportingForm_2.xls',
           karl: 'Resource section -> Document Picker upload. Source-page document: "Pest Control Reporting Form." Confirm whether an accessible web or spreadsheet version should replace this legacy XLS file.',
         },
@@ -122,7 +119,6 @@ window.HHVC_PAGES['verminResources'] = {
       cards: [
         {
           title: '16 Steps to a Healthy Home',
-          text: 'Use practical steps to keep pests away by removing food, water, and shelter.',
           url: 'https://api.sf.gov/documents/52246/16_Steps_to_a_Healthy_Home.html',
           karl: 'Resource section -> Document Picker upload. Source-page document published March 12, 2026; confirm the document and publication date before attaching it in Karl.',
         },
@@ -133,7 +129,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'Watch a roach-prevention video',
-          text: 'Learn five simple steps for preventing cockroaches at home.',
           url: 'https://www.youtube.com/watch?v=S-aJzCk-rNQ',
           karl: 'Resource section -> External link. Source-page video: "Video: Roach Prevention - English." Add translated versions only after confirming their active media links.',
         },
@@ -146,13 +141,11 @@ window.HHVC_PAGES['verminResources'] = {
       cards: [
         {
           title: 'UC IPM resources for homes and buildings',
-          text: 'Find practical pest notes, prevention guides, and multi-unit housing resources.',
           url: 'https://ipm.ucanr.edu/home-and-landscape/',
           karl: 'Resource section -> External link to the University of California Statewide IPM Program.',
         },
         {
           title: 'Environmental health branch fee schedule',
-          text: 'See the current Environmental Health fee schedule.',
           url: 'https://api.sf.gov/documents/17453/Website_Fees_FY25-26_fgM2WjX.pdf',
           karl: 'Resource section -> Document Picker upload. The source-page file is FY25-26; do not publish it as current without checking for a newer certified schedule.',
         },

@@ -141,6 +141,50 @@ live page rather than inferred:
   summary is "Pay your annual Healthy Housing fee if you own an apartment
   building with 3 or more rental units".
 
+## External entries in a subsection DO render a description (verified 2026-08-09)
+
+The work above checked only entries pointing at an SF.gov page, and left open
+what a Services/Resources subsection does with an entry pointing at an
+**external link** — there is no destination page to inherit from, so the
+description had to come from somewhere else or not at all. That gap is now
+closed, and the answer is that **an external entry carries and renders its own
+authored description.**
+
+- **Method: a census, not a spot check.** All 332 `departments--*` URLs were
+  taken from `sf.gov/sitemap.xml`, fetched, and every `data-testid="tile-link"`
+  and `"quick-link"` anchor was matched to its own closing `</a>` so each
+  entry's description could be attributed to that entry rather than to the one
+  beside it. 103 of those pages carry at least one entry whose `href` leaves
+  `sf.gov`. This is a DOM-level check of rendered output, the same standard the
+  2026-08-08 findings were held to — not a reading of the editor docs, which
+  have already been wrong once here (see the Related-panel note above).
+- **The result: 333 of 363 true off-domain entries render a
+  `tile-description`.** The 30 that do not are consistent with an editor
+  leaving the field blank, which is the same shape as the 90 SF.gov entries
+  rendering none because their destination page has no summary. Examples span
+  many departments and hosts, so this is not one team's local habit:
+  `sfgov.org/adultprobation/contact` ("Contact us for any questions…"),
+  `baywoof.org/commission-tails` ("Columns authored by members of the
+  Council."), `sfplanninggis.org/pim`, `capropeforms.org`, a YouTube channel
+  ("Explore our informative tutorials and presentations."),
+  `sfmta.com/maps/san-francisco-bike-network-map`, and `app.box.com`.
+- **`api.sf.gov` and `media.api.sf.gov` were counted separately and excluded
+  from that figure**, and the distinction is the one thing a naive sweep gets
+  wrong. Those hosts are SF.gov's own document store, so an entry pointing at
+  one is a **Document Picker** upload whose title and description come from the
+  Document object — a third mechanism, neither page inheritance nor an authored
+  external link. Folding them in would have inflated the count with evidence
+  for a different question. Counted on their own they run 69 with a description
+  to 29 without.
+- **What this means for the mockup:** the six external entries in
+  `pestsTopic`'s Services/Resources subsections are **not** dead data. Their
+  `text` is the field Karl publishes, `js/page-render.js` is already correct to
+  print it, and it must not be deleted. That is the opposite of the conclusion
+  reached for external entries in a **title-only** component (a Related panel,
+  a Resource section), which renders no description for any entry — the
+  difference being a fact about the component, which is why the two cases
+  needed separate evidence rather than one inference from the other.
+
 ## Re-ingesting
 
 This file is corpus content. It is not retrievable by the `compliance-audit`

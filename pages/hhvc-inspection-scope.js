@@ -4,7 +4,7 @@ window.HHVC_PAGES['scopeInfo'] = {
   type: 'Information',
   title: 'Learn what Healthy Housing and Vector Control can inspect',
   summary:
-    'Check whether Environmental Health may review a pest, vector, or housing health condition.',
+    'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.',
   audience: [
     'A tenant or tenant representative deciding whether to report a problem',
     'An employee deciding whether to report a pest or vector concern at work',

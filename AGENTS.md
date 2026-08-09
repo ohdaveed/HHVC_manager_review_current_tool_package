@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 31 unit-test files in tests/
+bun run test                  # Bun test runner over the 32 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 31 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 32 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -202,6 +202,65 @@ the page just disappears. Import _order_ isn't checked; it's irrelevant, since
 each page module only writes into `window.HHVC_PAGES` and navigation order comes
 from the `order` array.
 
+### Card descriptions are inherited, not printed
+
+A Karl Services/Resources subsection entry — and a Related-panel entry, and a
+Resource Collection's Resource-section entry — is only a page picker: "add an
+SF.gov page or External link". There is no label field and no description field
+on the entry, so what publishes is the DESTINATION page's own title and summary.
+A card in this mockup carrying its own `text` was therefore showing reviewers
+copy that can never appear on SF.gov, in a tool whose entire purpose is
+approving that copy — and the inline-editing feature then made those dead fields
+click-to-edit.
+
+So `js/page-render.js` resolves every card description through one helper,
+`cardDescription(section, card)`, rather than printing `card.text`. Syncing the
+duplicated strings was the other option and was rejected: two copies drift again
+on the next edit to either side, whereas inheritance leaves them unable to
+disagree at all.
+
+- **Three buckets, and they key on the `karl` note — NOT on `section.component`.**
+  `inherits` (an Agency Services/Resources subsection) renders the destination's
+  title and summary. `title-only` (a Related panel, a Resource Collection's
+  Resource section) renders a title and a link and nothing else — verified
+  separately at DOM level against live pages on 2026-08-08, and the editor help
+  center contradicts itself here, so do not re-widen it from the docs. `authored`
+  (a Table block, a Title-and-text block) writes its own words and is left alone.
+  The first version of the classifier keyed on `section.component` and would have
+  corrupted table blocks and title-and-text blocks: 74 of its 98 findings sat in
+  sections with no `component` at all, and those were not one kind of thing. The
+  `karl` note names the Karl block a section maps to, so it is the authority. The
+  full history lives in `build_scripts/audit-card-inheritance.js`'s header rather
+  than being re-derived here.
+- **`js/card-inheritance.js` is dual-exported like `js/review-merge.js`, for the
+  same reason.** `js/page-render.js` reads it off `window.cardInheritance` and
+  `build_scripts/audit-card-inheritance.js` `require`s it, so the browser
+  renderer and the Node audit share one classifier and cannot come to disagree
+  about what inherits. A second copy of those regexes would let the mockup show
+  one thing while the audit asserted another, invisibly, until a reviewer
+  approved copy that cannot ship.
+- **`bun run audit-cards` is a report, not a CI gate**, and exits 0 even with
+  findings. A title mismatch is safe to sync mechanically; a description is a
+  content judgement per card, and the right fix is sometimes to the destination
+  page rather than to the card.
+- **An external-URL entry inside an inheriting subsection keeps its own text,
+  and that was measured rather than assumed.** There is no destination page to
+  inherit from, so for a day this was an open question the audit reported and
+  refused to assert on. It was settled on 2026-08-09 by a census of all 332
+  `departments--*` pages in `sf.gov/sitemap.xml`: 333 of the 363 entries whose
+  `href` leaves sf.gov render a description of their own. An external entry
+  therefore has a description field, authored on the entry, and the renderer
+  printing `card.text` for one is correct. Two details of that census are
+  load-bearing — `api.sf.gov`/`media.api.sf.gov` were counted separately,
+  because those are Document Picker uploads reading their text off the Document
+  object rather than external links; and each anchor was matched to its own
+  closing `</a>` before its description was read, since attributing a
+  neighbour's description to an entry is how a sweep like this confirms whatever
+  it set out to find. External entries in a `title-only` section are the
+  opposite case and needed their own evidence: that component renders no
+  description for any entry, which is a fact about the component rather than
+  about the destination, so those report as dead text and have been deleted.
+
 ### Core module split (formerly one `app.js`)
 
 The old monolithic `app.js` was split into focused modules — **do not re-monolith
@@ -227,6 +286,14 @@ them.**
   indicators, search-result preview, per-field reset.
 - **`js/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
+- **`js/card-inheritance.js`** — the shared classifier deciding whether a
+  section's cards publish the destination page's title and summary, its title
+  alone, or their own authored words. Imports nothing and reads no global, so it
+  has no load-order dependency of its own. Dual-exported
+  (`window.cardInheritance` plus `module.exports`) exactly like
+  `js/review-merge.js`, and for the same reason — see "Card descriptions are
+  inherited, not printed" above: the browser renderer and the Node audit must
+  share one classifier rather than two copies that can silently drift apart.
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
   first page (`pestsTopic`).
 - **`js/manager-review-export.js`** — manager review CSV/JSON snapshot,
@@ -559,6 +626,16 @@ wiring into the existing autosave path).
   hand-edited in source. Add/remove is supported on exactly two fields —
   section `paragraphs` and `bullets` — and only of individual items, never
   whole sections/cards/steps, and never reordering.
+- **Card descriptions carry no `data-rewrite-field`, and cards' absence from
+  that scope list is load-bearing rather than incidental.** An inheriting card's
+  description IS the destination page's `summary` (see "Card descriptions are
+  inherited, not printed"), so the editable text lives on a different page
+  entirely. An inline edit here would address the card's own `text` — the field
+  that renders nowhere — and would appear to work, autosave, and then vanish on
+  the next paint, because the paint reads the destination's summary. A
+  `title-only` card has no description to edit at all. The summary a reviewer
+  actually wants to change is already inline-editable where it lives, so keep
+  cards out of scope; the missing attribute is the whole enforcement.
 - **Addressing is reused, not reinvented.** `js/page-render.js` already
   emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
   attributes (added for the in-flight AI-rewrite-selection feature) via
@@ -1181,7 +1258,16 @@ by default, failing closed.
   and stops at the first byte past 128 KB. `await req.text()` is the wrong
   tool: it buffers everything before anything can measure it, so a chunked or
   Content-Length-lying client allocates freely and a later 413 does not give
-  that back. The Content-Length pre-check stays as a cheap first pass. The count
+  that back. The Content-Length pre-check stays as a cheap first pass, but **it
+  triggers at the DRAIN limit (8× the cap), not at the cap** — answering from it
+  means never touching `req.body`, leaving the client's payload unread in the
+  socket and corrupting the very next request on that keep-alive connection.
+  That is the same failure the drain branch below prevents, reached from the
+  other direction; it surfaced as a 431 (Bun reading leftover body bytes as a
+  header block) on whichever test ran next, and it is why the pre-check must
+  stop short of the range `readBodyWithLimit` handles cleanly. Between the cap
+  and the drain limit, falling through costs one drain and returns the identical
+  413 with the connection intact. The count
   is in **bytes, not characters** — `String#length` against a byte limit lets
   multi-byte UTF-8 through at ~3× the cap. Depth is measured iteratively, never
   recursively: a recursive walk over attacker-supplied nesting is itself the
