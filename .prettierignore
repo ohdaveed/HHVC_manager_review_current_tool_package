@@ -13,3 +13,13 @@ docs/superpowers/
 .playwright-mcp/
 review/
 forms/mosquito-workshop-request/dist/
+
+# Git worktrees live inside the repo, so Prettier walks a second checkout of the
+# whole tree and reports its files as unformatted. Both paths are gitignored, so
+# CI never sees them — but `bun run format:check` fails locally for anyone with a
+# worktree open, which reads as a red lint step on an otherwise clean tree.
+.claude/worktrees/
+.worktrees/
+
+# Impeccable design-hook cache, rewritten on every edit it inspects.
+.impeccable/
