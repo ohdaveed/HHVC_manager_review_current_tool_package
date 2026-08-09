@@ -14,6 +14,14 @@ window.HHVC_PAGES['rodentsReport'] = {
   reading: 'Grade 6',
   editorNote:
     'Consolidated Transaction page. Replaces the separate "Report rats or mice" page and absorbs the raccoon reporting path from the deleted raccoon Information page. Bats are in scope too — Article 11 policy source groups bats with raccoons/skunks/squirrels under "Wildlife (Public Health Importance)" and applies the same exclusion/prevention rules (docs/source/hhvc-policy/2026-07-07-directors-rules-ai-export-DRAFT-NOT-FOR-PUBLICATION.md). One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager: set expectations on response time, then give simple IPM tips so people can start addressing the problem themselves.',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
+      'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
+      'It can take a few weekdays for 311 to assign an inspector after you report.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

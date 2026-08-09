@@ -14,6 +14,14 @@ window.HHVC_PAGES['insectsReport'] = {
   reading: 'Grade 6',
   editorNote:
     'Consolidated Transaction page. Replaces the separate "Report cockroaches", "Report bed bugs", and "Report mosquitoes" pages, absorbs the fly, wasp, and mite reporting paths from the deleted species Information pages, and routes dead-bird reports to the State West Nile virus program (manager decision at plan review). One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager.',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
+      'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
+      'See a dead bird? Report it to the State West Nile virus program instead of 311.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

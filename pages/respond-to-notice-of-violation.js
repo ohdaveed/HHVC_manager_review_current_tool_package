@@ -15,6 +15,14 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   editorNote:
     'Transaction page modeled on the live Karl Transaction editor: Primary agency, Description, Intro, then repeatable Steps. Each Step has a number/or type, title, optional flag, cost, time, rich-text description, and optional Transaction link. This HHVC page uses sequential numbered steps and deliberately leaves the optional, cost, time, and Transaction-link fields blank. The workflow is supported by the Article 11 Interpretation Guide v1.0 and the Vegetation Overgrowth Notice. Do not add DBI permit, appeal, or abatement-order requirements here without HHVC and legal review; those processes belong to DBI and are not established for this HHVC flow.',
   editorStatus: 'needs-review',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'Your Notice of Violation lists the specific conditions to correct and the deadline for completing the work.',
+      'Contact the investigator named on your notice before the deadline if you have questions or need more time.',
+      'If the violation is not corrected, HHVC may take further enforcement action, which can include a reinspection fee.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

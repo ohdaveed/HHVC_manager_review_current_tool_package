@@ -12,6 +12,14 @@ window.HHVC_PAGES['payFee'] = {
   reading: 'Grade 7',
   editorNote:
     'Transaction redesign based on the live FY 2026-27 payment page and fee schedule. It puts the payment action first, then separates eligibility, annual fee tiers, invoice corrections, and late-payment consequences. The annual apartment-building fee and a reinspection fee are distinct charges; do not present reinspection rates as part of the annual bill.',
+  whatToKnow: {
+    cost: 'Annual fee based on rental unit count — $103 (3 units) up to $808 (more than 30 units). Check your invoice for the exact amount.',
+    thingsToKnow: [
+      'You must pay if you own an apartment building with 3 or more rental units, even if you also live there.',
+      'The annual fee is separate from reinspection fees, which only apply if an inspection finds an uncorrected violation.',
+      'Late penalties apply: $10 after 30 days, $30 after 60 days, plus 1.5% monthly interest on unpaid balances.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

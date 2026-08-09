@@ -15,6 +15,13 @@ window.HHVC_PAGES['findHotelRecords'] = {
   editorNote:
     'SF.gov landing page for a separate external lookup from the general complaint search. SME placeholder — the button below links to the public Residential Hotel Program context page as an illustrative interim destination for mockup review; confirm the final xnet lookup entry point with HHVC before publication.',
   editorStatus: 'placeholder',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'This lookup covers residential hotels, SROs, and shelters — a separate dataset from the general complaints and inspection lookup.',
+      'The link opens on the Department of Public Health website. You will leave SF.gov.',
+    ],
+  },
   sections: [
     {
       heading: 'What this tool covers',

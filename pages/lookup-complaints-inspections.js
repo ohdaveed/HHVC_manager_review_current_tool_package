@@ -13,6 +13,14 @@ window.HHVC_PAGES['findRecords'] = {
   reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for an external lookup tool. Primary CTA opens xnet.sfdph.org (Residential Health Code Violations). Verify the external URL before publication.',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'The tool shows about five years of investigated complaint and inspection activity.',
+      'Complaint records are public. Environmental Health generally does not share the name of the person who filed a complaint.',
+      'The link opens on the Department of Public Health website. You will leave SF.gov.',
+    ],
+  },
   sections: [
     {
       heading: 'What you can look up',

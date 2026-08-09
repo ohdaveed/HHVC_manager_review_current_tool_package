@@ -14,6 +14,14 @@ window.HHVC_PAGES['filthReport'] = {
   reading: 'Grade 6',
   editorNote:
     'Consolidated Transaction page. Replaces the separate "Report garbage or clutter", "Report overgrown vegetation", "Report pigeons", and "Report mold in my home" pages. The mold integration keeps one primary 311 CTA, adds leak-versus-condensation guidance and the SFDPH 10-square-foot walls/ceiling review threshold, and does not restate the source page’s unsupported assignment of all condensation-caused mold to a tenant. The "While you wait" section is the Supporting information block requested by the manager.',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
+      'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
+      'For mold on a wall or ceiling, HHVC can act when the affected area totals at least 10 square feet.',
+    ],
+  },
   sections: [
     {
       heading: 'What to do',

@@ -13,6 +13,14 @@ window.HHVC_PAGES['findViolations'] = {
   reading: 'Grade 7',
   editorNote:
     'Alias-style lookup page focused on violations language. Primary CTA uses the same verified xnet Residential Health Code Violations tool as findRecords. Consider merging with findRecords if editors prefer one combined lookup page.',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'This is the same Environmental Health lookup tool used for complaint and inspection history.',
+      'Search by address or record ID to see investigated complaints, inspections, and violations.',
+      'The link opens on the Department of Public Health website. You will leave SF.gov.',
+    ],
+  },
   sections: [
     {
       heading: 'What you can search',

@@ -13,6 +13,13 @@ window.HHVC_PAGES['publicRecords'] = {
   reading: 'Grade 7',
   editorNote:
     'SF.gov landing page for the citywide public records service (NextRequest). Primary CTA is external. Verify whether HHVC needs a program-specific intro or routes entirely to the citywide portal.',
+  whatToKnow: {
+    cost: 'Free',
+    thingsToKnow: [
+      'Many complaint and inspection records are already available through the online lookup tools — check there first.',
+      'Requests are handled through the citywide San Francisco NextRequest portal. You will leave SF.gov.',
+    ],
+  },
   sections: [
     {
       heading: 'Before you request records',
