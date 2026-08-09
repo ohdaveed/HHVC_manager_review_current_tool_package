@@ -163,11 +163,12 @@ function auditCards(pages) {
       const kind = classifySection(section)
       for (const card of section.cards || []) {
         if (!card.target) {
-          auditExternalCard({ pageKey, section, kind, card, externalAuthored, findings })
+          auditExternalCard({ pageKey, section, kind, card, externalAuthored, findings, unknown })
           // Counted separately from `total` on purpose: `total` is the number
           // the renderer's inheritance behaviour is judged by, and folding in a
           // second population would make a change in one look like a change in
-          // the other.
+          // the other. Deliberately NOT counting 'unknown' here either — see
+          // the log line below, which names this exact population.
           if (kind === 'title-only' || kind === 'inherits') externalTotal++
           continue
         }
@@ -232,20 +233,18 @@ function auditCards(pages) {
  * bucket's filter without that filter needing to learn about external cards.
  *
  * @param {{pageKey: string, section: object, kind: string, card: object,
- *   externalAuthored: object[], findings: object[]}} args
+ *   externalAuthored: object[], findings: object[], unknown: object[]}} args
  */
-function auditExternalCard({ pageKey, section, kind, card, externalAuthored, findings }) {
+function auditExternalCard({ pageKey, section, kind, card, externalAuthored, findings, unknown }) {
   const cardText = card.text ?? ''
   // An external card with no text of its own is correct in every bucket:
   // title-only renders none, and the open question about inheriting
   // subsections only arises when there is copy that might or might not show.
   if (cardText === '') return
-  // 'authored' and 'unknown' sections keep their external card text untouched.
-  // A table row or a rich-text block writes its own words whatever it links to,
-  // and an unrecognized `karl` note is reported through the internal UNKNOWN
-  // path already — guessing at an external card inside one would be the
-  // component-keyed mistake this file's second WHY block exists to remember.
-  if (kind !== 'title-only' && kind !== 'inherits') return
+  // 'authored' sections keep their external card text untouched — a table row
+  // or a rich-text block writes its own words whatever it links to, and that
+  // is expected, not a finding worth a row anywhere.
+  if (kind === 'authored') return
 
   const row = {
     pageKey,
@@ -261,7 +260,14 @@ function auditExternalCard({ pageKey, section, kind, card, externalAuthored, fin
     destText: '',
   }
   if (kind === 'title-only') findings.push(row)
-  else externalAuthored.push(row)
+  else if (kind === 'inherits') externalAuthored.push(row)
+  // An unrecognized `karl` note (kind === 'unknown') used to fall through
+  // this function silently, appearing in neither `unknown` nor
+  // `externalAuthored` — the exact silence this audit exists to close for
+  // internal cards, reopened for external ones. Filing it alongside the
+  // internal UNKNOWN rows means a new, unclassified Karl block cannot bypass
+  // the audit just because its card happens to hold an external `url`.
+  else unknown.push(row)
 }
 
 /**
@@ -300,7 +306,14 @@ function main() {
   )
 
   console.log(`internal card links checked: ${total}`)
-  console.log(`external card links checked: ${externalTotal}`)
+  // Named for exactly what externalTotal counts — title-only/inherits external
+  // cards with authored text — not every external card in the corpus. It used
+  // to read "external card links checked", which read like a total; an
+  // 'authored' external card (a table row, a rich-text block) is correct by
+  // definition and was never in this count, and now an 'unknown' one goes to
+  // the UNKNOWN bucket below instead, so this line names only the classified
+  // population it actually measures.
+  console.log(`external cards in classified sections: ${externalTotal}`)
   console.log(`will not render as written:  ${findings.length}`)
   console.log(`  title mismatches: ${titleIssues.length} (safe to sync to the destination)`)
   console.log(

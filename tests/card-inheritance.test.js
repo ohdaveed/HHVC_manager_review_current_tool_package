@@ -275,13 +275,31 @@ describe('auditCards — external-URL cards', () => {
     expect(result.externalTotal).toBe(2)
   })
 
-  test('leaves external cards in authored and unknown sections untouched', () => {
+  test('leaves an external card in an authored section untouched', () => {
     const pages = corpus([
       {
         heading: 'Mold and lead hazards',
         karl: AUTHORED_KARL,
         cards: [{ title: 'Lead safety', text: 'Authored words.', url: 'https://sf.gov/lead' }],
       },
+    ])
+    const result = auditCards(pages)
+
+    expect(result.findings).toEqual([])
+    expect(result.externalAuthored).toEqual([])
+    expect(result.unknown).toEqual([])
+    // Not counted either: `externalTotal` is the population this audit can say
+    // something about, and an authored card is not in it.
+    expect(result.externalTotal).toBe(0)
+  })
+
+  test('reports an external card with text in an unclassified section, rather than dropping it', () => {
+    // This card used to fall through auditExternalCard silently — appearing in
+    // neither `unknown` nor `externalAuthored` — because that function only
+    // ever filed 'title-only' and 'inherits' rows. A new, unclassified Karl
+    // block should not be able to bypass the audit just because its card
+    // happens to hold an external `url` instead of an internal `target`.
+    const pages = corpus([
       {
         heading: 'Something new',
         karl: 'A block nobody has classified.',
@@ -292,9 +310,12 @@ describe('auditCards — external-URL cards', () => {
 
     expect(result.findings).toEqual([])
     expect(result.externalAuthored).toEqual([])
-    expect(result.unknown).toEqual([])
-    // Not counted either: `externalTotal` is the population this audit can say
-    // something about, and these two are not in it.
+    expect(result.unknown).toHaveLength(1)
+    expect(result.unknown[0].kind).toBe('unknown')
+    expect(result.unknown[0].external).toBe(true)
+    expect(result.unknown[0].target).toBe('https://sf.gov/x')
+    // Not counted in externalTotal: that count is scoped to the classified
+    // (title-only/inherits) population this audit can assert something about.
     expect(result.externalTotal).toBe(0)
   })
 

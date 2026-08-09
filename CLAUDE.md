@@ -290,10 +290,14 @@ express the same dependency.
 
 A Karl Services/Resources subsection entry — and a Related-panel entry, and a
 Resource Collection's Resource-section entry — is only a page picker: "add an
-SF.gov page or External link". It carries no label field and no description
-field, so what actually publishes is the **destination** page's own title and
-summary. A card in `pages/*.js` carrying its own `text` was therefore showing
-reviewers copy that can never appear on SF.gov, which matters more here than in
+SF.gov page or External link". It carries no label field, so its title always
+publishes as the **destination** page's own title; only the Agency
+Services/Resources subsection also lacks a description field, so only that
+bucket additionally publishes the destination's summary — a Related panel and
+a Resource Collection's Resource section render a title and a link and
+**nothing else** (see the three-bucket breakdown below). A card in
+`pages/*.js` carrying its own `text` was therefore showing reviewers copy that
+can never appear on SF.gov, which matters more here than in
 most codebases because approving that copy is the entire point of the tool —
 and the inline-content-editing feature then made those dead fields
 click-to-edit.

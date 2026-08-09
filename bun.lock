@@ -6,6 +6,8 @@
       "name": "hhvc-manager-review-mockup-tool",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.115.0",
+        "@fontsource/roboto-flex": "^5.3.0",
+        "@fontsource/roboto-slab": "^5.3.0",
         "@google/genai": "^2.15.0",
         "text-readability": "^1.1.1",
         "zod": "^3.24.1",
@@ -41,6 +43,10 @@
     "@emnapi/runtime": ["@emnapi/runtime@2.0.0-alpha.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-hFPAhMUjJD9BSyCANEISPOogeXC9Zo9ZQl7L6vKnaVsMkCtzznaW/naYypeyl0Gv5rYfWYsZbpixTMpjDJzQeA=="],
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@2.0.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-9DsSk+o5NBX0CCJT8s0EROGSGxjR/tKu6aBTaVyq+SjAEQH4XcdcRxPBRzsBLizTTJ49MJjF+jgu3qnO9GLQcQ=="],
+
+    "@fontsource/roboto-flex": ["@fontsource/roboto-flex@5.3.0", "", {}, "sha512-FzmARYZm9kZJ5OilGxlT8okfzn/skrXMLwkXSKqYmrL9TVZkgeX339nbK1M/fzNcqWCJ0NOv6g3Pp7bAjfiG+A=="],
+
+    "@fontsource/roboto-slab": ["@fontsource/roboto-slab@5.3.0", "", {}, "sha512-nrl4sOt5OIoMV3VecGVOnNAADU/8vz6+CLtLr4cCAf106hVtSLCTObPN8Z2KdZ03U01UDvgIp3hsu2TX3jen6w=="],
 
     "@google/genai": ["@google/genai@2.15.0", "", { "dependencies": { "google-auth-library": "^10.3.0", "p-retry": "^4.6.2", "protobufjs": "^7.5.4", "ws": "^8.18.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.25.2" }, "optionalPeers": ["@modelcontextprotocol/sdk"] }, "sha512-Q41TvqwBQ9NcmWdh6qxY5qrpg+0FaVHD7febQoH007pykxzco4ohScBUP4BBBy+Q8j5D8euIBSRIBDfWuNVCKA=="],
 

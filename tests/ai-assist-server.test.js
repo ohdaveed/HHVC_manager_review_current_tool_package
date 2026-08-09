@@ -702,6 +702,60 @@ describe('AI assist API (server.ts)', () => {
       expect((await after.json()).valid).toBe(true)
     })
 
+    test('closes the connection when the pre-check itself rejects an honestly declared oversized body', async () => {
+      // The sibling test above proves the pre-check's threshold (the 8x drain
+      // limit, 1 MiB here) leaves the connection usable for a body BELOW that
+      // threshold — because such a body falls through into readBodyWithLimit,
+      // whose streaming drain branch is what actually keeps the socket clean.
+      // A body genuinely ABOVE the drain limit never reaches that branch: the
+      // pre-check answers 413 on Content-Length alone, before touching
+      // req.body at all, so the client's payload is left unread in the
+      // socket — the exact keep-alive corruption this whole pre-check exists
+      // to prevent, just moved to a higher bar. The fix is Connection: close
+      // on that specific response, verified here rather than assumed: a
+      // Content-Length declaring more than the drain limit, with only a
+      // trickle actually sent, must get back a response that says so.
+      const declaredLength = 2_000_000 // well past MAX_REQUEST_BODY_BYTES (128 KB) * 8
+      const chunk = new TextEncoder().encode('x'.repeat(32 * 1024))
+      let sent = 0
+      const body = new ReadableStream({
+        async pull(controller) {
+          if (sent >= 2) return controller.close()
+          sent += 1
+          await new Promise((resolve) => setTimeout(resolve, 15))
+          controller.enqueue(chunk)
+        },
+      })
+      const rejected = await fetch(`${base}/api/ai/generate`, {
+        method: 'POST',
+        headers: { ...authed(), 'content-length': String(declaredLength) },
+        body,
+        duplex: 'half',
+      })
+      expect(rejected.status).toBe(413)
+      expect(rejected.headers.get('connection')).toBe('close')
+
+      // A fresh request must still succeed — this response closing ITS OWN
+      // connection must not take down the server or any other connection.
+      // Unlike the sibling drain test above, this one genuinely tears down
+      // the socket rather than leaving it open for reuse, and fetch()'s own
+      // connection pool does not always notice a Connection: close in time to
+      // evict that socket before immediately handing it back out — a real
+      // client-side race (an ECONNRESET, not a server bug) with no server-side
+      // fix, so one retry on exactly that error is what a real client would
+      // also do rather than treat a torn-down pooled socket as a failure.
+      stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      let after
+      try {
+        after = await post({ task: 'content', prompt: 'Draft a page.' })
+      } catch (error) {
+        if (!/ECONNRESET|socket connection was closed/i.test(String(error))) throw error
+        after = await post({ task: 'content', prompt: 'Draft a page.' })
+      }
+      expect(after.status).toBe(200)
+      expect((await after.json()).valid).toBe(true)
+    })
+
     test('measures the body in bytes, not characters', async () => {
       // '€' is 3 bytes of UTF-8 but one JS character, so a cap compared against
       // String#length would let roughly three times the intended payload
