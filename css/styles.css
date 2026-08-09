@@ -592,32 +592,22 @@ a:focus {
 .step-list {
   counter-reset: steps;
   display: grid;
-  gap: 2.5rem;
+  gap: 1.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .step {
   counter-increment: steps;
-  display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  gap: 1rem;
-  padding: 1.15rem;
-  border: 1px solid var(--sfds-border);
-  border-radius: var(--radius);
-  background: var(--sfds-white);
 }
-.step::before {
-  content: counter(steps);
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  background: var(--sfds-action-blue);
-  color: var(--sfds-white);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
+/* Real sf.gov renders "1. Check if your issue is..." as a plain numbered
+   heading — no border, no filled circular badge (confirmed against
+   report-mold-in-my-home and report-a-health-nuisance-or-hazards). The
+   number stays a CSS counter rather than moving into renderSteps()'s HTML:
+   it's presentation, and keeping it in CSS means this step needed no JS or
+   test changes. */
+.step h3::before {
+  content: counter(steps) '. ';
 }
 .btn {
   display: inline-flex;
