@@ -773,5 +773,5 @@
     init()
   }
 
-  window.inlineEdit = { ensureBound, isEditing }
+  window.inlineEdit = { ensureBound, isEditing, decorateEditedFields, decorateListControls }
 })()
