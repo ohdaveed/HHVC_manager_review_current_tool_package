@@ -764,3 +764,21 @@ describe('hero eyebrow', () => {
     expect(html).not.toContain('class="eyebrow')
   })
 })
+
+describe('renderWhatToKnow', () => {
+  test('does not print a generic "Things to know" wrapper heading', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['A tenant'],
+      reading: 'Grade 6',
+      whatToKnow: { cost: 'Free', thingsToKnow: ['Call 311 for help.'] },
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).not.toContain('<strong>Things to know</strong>')
+    expect(html).toContain('Call 311 for help.')
+    expect(html).toContain('<strong>Cost:</strong> Free')
+  })
+})

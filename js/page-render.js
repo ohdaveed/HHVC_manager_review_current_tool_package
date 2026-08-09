@@ -480,7 +480,7 @@ function renderWhatToKnow(whatToKnow, page) {
     ? `<p><strong>Who this is for:</strong></p><ul>${renderAudience(audienceItems)}</ul>`
     : ''
   if (!cost && !thingItems.length && !audienceHtml) return ''
-  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body')}<h2 class="visually-hidden">What to know before you start</h2>${cost ? `<p class="what-to-know-cost"><strong>Cost:</strong> ${escapeHtml(cost)}</p>` : ''}${thingItems.length || audienceHtml ? `<div class="what-to-know-things"><strong>Things to know</strong>${audienceHtml}${renderTextItems(thingItems)}</div>` : ''}</section>`
+  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body')}<h2 class="visually-hidden">What to know before you start</h2>${cost ? `<p class="what-to-know-cost"><strong>Cost:</strong> ${escapeHtml(cost)}</p>` : ''}${thingItems.length || audienceHtml ? `<div class="what-to-know-things">${audienceHtml}${renderTextItems(thingItems)}</div>` : ''}</section>`
 }
 function renderContactSection(contact, page) {
   const data = contact || resolveContact(page)
