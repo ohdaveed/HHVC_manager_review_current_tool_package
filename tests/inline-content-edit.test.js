@@ -273,9 +273,19 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     expect(widget).not.toBeNull()
     expect(widget.tagName).toBe('INPUT')
     expect(widget.value).toBe('Original CTA')
-    // Buttons have no default navigation action, so this is a no-op either
-    // way — asserted for clarity of intent, not because it's load-bearing.
-    expect(event.defaultPrevented).toBe(false)
+    // Deliberately NOT asserting event.defaultPrevented here. This module's
+    // own guard is `if (navigatingAnchor) event.preventDefault()`, scoped to
+    // an `a[href]` ancestor — a no-op for this button, which has none — so it
+    // never calls preventDefault() itself either way. But defaultPrevented is
+    // a property of the shared event object, not of this module: in the real
+    // app, js/page-render.js's own document-level click listener ALSO
+    // matches `button[data-render-target]` and unconditionally calls
+    // preventDefault() on it, for entirely unrelated SPA-navigation reasons.
+    // Whether that listener happens to be registered in this Bun process
+    // depends on which other test files ran first and imported it — CI
+    // caught this failing intermittently for exactly that reason. What this
+    // regression guard actually verifies is that the editor still opens for
+    // a button-rendered CTA, asserted above.
   })
 
   test('clicking an inline reference link inside a paragraph opens that paragraph editor and prevents navigation', async () => {
