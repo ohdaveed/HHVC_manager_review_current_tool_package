@@ -444,6 +444,32 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
     expect(html).toContain('data-rewrite-field="primaryCta"')
   })
 
+  // The hero's metadata row carries only REAL page fields. It used to open with
+  // three pills that were not page data at all: 'Environmental Health' and
+  // 'HHVC' were string literals in the renderer, identical on all 22 pages, and
+  // the third printed `page.reading` — a property OF the copy rather than part
+  // of it, and one no Karl page publishes. A mockup that prints reviewer chrome
+  // above the fold misrepresents the page a manager is being asked to approve.
+  //
+  // These assertions exist because nothing covered that row, which is exactly
+  // how all three came to be removed in an unrelated change without a single
+  // test noticing either the removal or the behaviour it changed.
+  test('renders no hardcoded agency pills in the hero metadata row', () => {
+    const html = ctx.renderPageMain(transactionPage)
+    expect(html).not.toContain('<span class="pill">Environmental Health</span>')
+    expect(html).not.toContain('<span class="pill">HHVC</span>')
+  })
+
+  test('does not print the reading grade as a hero pill', () => {
+    const html = ctx.renderPageMain(transactionPage)
+    expect(html).not.toContain('<span class="pill">Grade 6</span>')
+  })
+
+  test('still renders the topic tag, which is a real page field', () => {
+    const html = ctx.renderPageMain({ ...transactionPage, topicTag: 'Pests' })
+    expect(html).toContain('Pests')
+  })
+
   test('emits no CTA attribute when the page has no resolvable hero CTA', () => {
     const infoPage = {
       slug: 'y',

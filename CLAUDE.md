@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 31 unit-test files in tests/ (726 tests)
+bun run test                  # bun test over the 31 unit-test files in tests/ (738 tests)
 bun run test:e2e              # playwright test (138 specs across 18 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -119,7 +119,7 @@ against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
 without a key or a paid call), and `ai-assist-validate-rewrite` (the
 `rewrite-field` task's output validator — that a rewrite preserves every
 `[label](target)` link's TARGET while its label stays free to change, and that
-it introduces no HTML into copy that renders through `formatMarkdown`) — 726
+it introduces no HTML into copy that renders through `formatMarkdown`) — 738
 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
@@ -273,6 +273,66 @@ deliberately incomplete page set. `runPageScripts()` strips the side-effect
 has already executed every page file by then — the imports and the loop
 express the same dependency.
 
+### Card descriptions are inherited, not printed
+
+A Karl Services/Resources subsection entry — and a Related-panel entry, and a
+Resource Collection's Resource-section entry — is only a page picker: "add an
+SF.gov page or External link". It carries no label field and no description
+field, so what actually publishes is the **destination** page's own title and
+summary. A card in `pages/*.js` carrying its own `text` was therefore showing
+reviewers copy that can never appear on SF.gov, which matters more here than in
+most codebases because approving that copy is the entire point of the tool —
+and the inline-content-editing feature then made those dead fields
+click-to-edit.
+
+`js/page-render.js` therefore resolves **every** card description through one
+helper, `cardDescription(section, card)`, instead of printing `card.text`.
+Syncing the two duplicated strings was the other option and was rejected: they
+drift again on the next edit to either side, whereas inheritance leaves them
+unable to disagree at all. An empty resolved description renders no element,
+not an empty one — a blank `<p>` still occupies its row and reads as copy that
+failed to load.
+
+- **There are three buckets, and they key on the section's `karl` note — NOT
+  on `section.component`.** `inherits` (an Agency Services/Resources
+  subsection) renders the destination's title AND summary. `title-only` (a
+  Related panel, a Resource Collection's Resource section) renders a title and
+  a link and **nothing else**, each verified separately at DOM level against
+  live pages on 2026-08-08 — the editor help center contradicts itself on this,
+  so do not re-widen it from the docs alone. `authored` (a Table block, a
+  Title-and-text block) writes its own words and is left untouched. The first
+  version of the classifier keyed on `component` and would have corrupted table
+  blocks and title-and-text blocks: 74 of its 98 findings sat in sections
+  carrying no `component` at all, and those were not one kind of thing
+  (`article11Guide`'s "Mold and lead hazards" is a table). The `karl` note
+  names the Karl block a section maps to, so it is the real authority. That
+  history is written up in `build_scripts/audit-card-inheritance.js`'s header;
+  read it there rather than re-deriving it.
+- **`js/card-inheritance.js` is dual-exported for the same reason
+  `js/review-merge.js` is.** `js/page-render.js` reads it off
+  `window.cardInheritance` (side-effect-importing the file so the module graph
+  guarantees it) and `build_scripts/audit-card-inheritance.js` `require`s it,
+  so the browser renderer and the Node audit share exactly one classifier and
+  cannot come to disagree about what inherits. A second copy of those regexes
+  would let the mockup show one thing while the audit asserted another, and the
+  drift would stay invisible until a reviewer approved copy that cannot ship.
+- **`bun run audit-cards` is a report, not a CI gate**, and exits 0 even with
+  findings on purpose. A title mismatch is safe to sync mechanically; a
+  description is a content judgement per card, and the right direction of the
+  fix is sometimes the destination page rather than the card.
+- **Known open question — external-URL cards inside an inheriting subsection.**
+  Only the internal case was verified live. Whether Karl renders a description
+  for an **external** entry in a Services/Resources subsection, and where it
+  would come from if it did, nobody has looked at. The audit reports those
+  cards under "awaiting live verification" and deliberately asserts nothing
+  about them, and the renderer keeps printing their authored text. A live
+  check — open one of those subsections on sf.gov and read whether its external
+  entry shows a description — would settle it; until then, do not delete that
+  text on the strength of the internal finding. External cards in a
+  `title-only` section are **not** open in the same way: that component renders
+  no description for any entry, which is a fact about the component rather than
+  about the destination, so those report as dead text and have been deleted.
+
 ### Core module split (formerly one `app.js`)
 
 The old monolithic `app.js` was split into focused modules — **do not
@@ -300,6 +360,16 @@ re-monolith them.**
 - **`js/page-render.js`** — turns `pages/*.js` page objects into the `#mockPage`
   HTML, including `karlTag()` for Karl CMS placement annotations and the
   `unverifiedPill()` warning badge.
+- **`js/card-inheritance.js`** — the shared classifier deciding whether a
+  section's cards publish the destination page's title and summary
+  (`inherits`), its title alone (`title-only`), or their own authored words
+  (`authored`). It imports nothing and reads no global, so it has no load-order
+  dependency of its own — it must simply be evaluated before anything calls
+  `window.cardInheritance`, which `js/page-render.js`'s own import of it
+  enforces. Dual-exported (`window.cardInheritance` plus `module.exports`)
+  exactly like `js/review-merge.js`, and for the same reason: see "Card
+  descriptions are inherited, not printed" above — the browser renderer and the
+  Node audit must share one classifier rather than two copies free to drift.
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and kicks off
   the first `renderPage('pestsTopic')`.
 - **`js/manager-review-export.js`** — manager review CSV/JSON export
@@ -707,6 +777,21 @@ wiring into the existing autosave path).
   hand-edited in source. Add/remove is supported on exactly two fields —
   section `paragraphs` and `bullets` — and only of individual items, never
   whole sections/cards/steps, and never reordering.
+- **Card descriptions carry no `data-rewrite-field`, and cards being listed
+  out of scope above is load-bearing rather than incidental — it must stay
+  true.** That attribute is what turns an element into a click-to-edit field
+  whose keystrokes are written back onto the addressed path of the **current**
+  page's object. For an inheriting card the description on screen is the
+  **destination** page's `summary` (see "Card descriptions are inherited, not
+  printed"), so the path here would address the card's own `text` — precisely
+  the field the inheritance change exists to prove renders nowhere. The edit
+  would appear to work, autosave, and then vanish on the next paint, because
+  the paint reads the destination's summary. A `title-only` card has no
+  description to edit at all. The text a reviewer actually wants to change
+  lives on the destination page, where inline editing already reaches it, so
+  the absent attribute is the whole enforcement — do not "complete" the
+  feature by adding it. The decision is restated at its site in
+  `js/page-render.js`, immediately above `renderCards`.
 - **Addressing is reused, not reinvented.** `js/page-render.js` already
   emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
   attributes (added for the in-flight AI-rewrite-selection feature) via

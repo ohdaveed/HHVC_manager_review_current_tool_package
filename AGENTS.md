@@ -202,6 +202,60 @@ the page just disappears. Import _order_ isn't checked; it's irrelevant, since
 each page module only writes into `window.HHVC_PAGES` and navigation order comes
 from the `order` array.
 
+### Card descriptions are inherited, not printed
+
+A Karl Services/Resources subsection entry — and a Related-panel entry, and a
+Resource Collection's Resource-section entry — is only a page picker: "add an
+SF.gov page or External link". There is no label field and no description field
+on the entry, so what publishes is the DESTINATION page's own title and summary.
+A card in this mockup carrying its own `text` was therefore showing reviewers
+copy that can never appear on SF.gov, in a tool whose entire purpose is
+approving that copy — and the inline-editing feature then made those dead fields
+click-to-edit.
+
+So `js/page-render.js` resolves every card description through one helper,
+`cardDescription(section, card)`, rather than printing `card.text`. Syncing the
+duplicated strings was the other option and was rejected: two copies drift again
+on the next edit to either side, whereas inheritance leaves them unable to
+disagree at all.
+
+- **Three buckets, and they key on the `karl` note — NOT on `section.component`.**
+  `inherits` (an Agency Services/Resources subsection) renders the destination's
+  title and summary. `title-only` (a Related panel, a Resource Collection's
+  Resource section) renders a title and a link and nothing else — verified
+  separately at DOM level against live pages on 2026-08-08, and the editor help
+  center contradicts itself here, so do not re-widen it from the docs. `authored`
+  (a Table block, a Title-and-text block) writes its own words and is left alone.
+  The first version of the classifier keyed on `section.component` and would have
+  corrupted table blocks and title-and-text blocks: 74 of its 98 findings sat in
+  sections with no `component` at all, and those were not one kind of thing. The
+  `karl` note names the Karl block a section maps to, so it is the authority. The
+  full history lives in `build_scripts/audit-card-inheritance.js`'s header rather
+  than being re-derived here.
+- **`js/card-inheritance.js` is dual-exported like `js/review-merge.js`, for the
+  same reason.** `js/page-render.js` reads it off `window.cardInheritance` and
+  `build_scripts/audit-card-inheritance.js` `require`s it, so the browser
+  renderer and the Node audit share one classifier and cannot come to disagree
+  about what inherits. A second copy of those regexes would let the mockup show
+  one thing while the audit asserted another, invisibly, until a reviewer
+  approved copy that cannot ship.
+- **`bun run audit-cards` is a report, not a CI gate**, and exits 0 even with
+  findings. A title mismatch is safe to sync mechanically; a description is a
+  content judgement per card, and the right fix is sometimes to the destination
+  page rather than to the card.
+- **Known open question — external-URL cards inside an inheriting subsection.**
+  Only the internal case was verified live. Whether Karl renders a description
+  for an EXTERNAL entry in a Services/Resources subsection, and where it would
+  come from if it did, nobody has checked. The audit reports those cards under
+  "awaiting live verification" and asserts nothing about them, and the renderer
+  keeps printing their authored text. Opening one of those subsections on a live
+  sf.gov page and reading whether its external entry shows a description would
+  settle it; until someone does, do not delete that text on the strength of the
+  internal finding. External cards in a `title-only` section are **not** open in
+  the same way — that component renders no description for any entry, which is a
+  fact about the component rather than about the destination — so they report as
+  dead text and have been deleted.
+
 ### Core module split (formerly one `app.js`)
 
 The old monolithic `app.js` was split into focused modules — **do not re-monolith
@@ -227,6 +281,14 @@ them.**
   indicators, search-result preview, per-field reset.
 - **`js/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
+- **`js/card-inheritance.js`** — the shared classifier deciding whether a
+  section's cards publish the destination page's title and summary, its title
+  alone, or their own authored words. Imports nothing and reads no global, so it
+  has no load-order dependency of its own. Dual-exported
+  (`window.cardInheritance` plus `module.exports`) exactly like
+  `js/review-merge.js`, and for the same reason — see "Card descriptions are
+  inherited, not printed" above: the browser renderer and the Node audit must
+  share one classifier rather than two copies that can silently drift apart.
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
   first page (`pestsTopic`).
 - **`js/manager-review-export.js`** — manager review CSV/JSON snapshot,
@@ -559,6 +621,16 @@ wiring into the existing autosave path).
   hand-edited in source. Add/remove is supported on exactly two fields —
   section `paragraphs` and `bullets` — and only of individual items, never
   whole sections/cards/steps, and never reordering.
+- **Card descriptions carry no `data-rewrite-field`, and cards' absence from
+  that scope list is load-bearing rather than incidental.** An inheriting card's
+  description IS the destination page's `summary` (see "Card descriptions are
+  inherited, not printed"), so the editable text lives on a different page
+  entirely. An inline edit here would address the card's own `text` — the field
+  that renders nowhere — and would appear to work, autosave, and then vanish on
+  the next paint, because the paint reads the destination's summary. A
+  `title-only` card has no description to edit at all. The summary a reviewer
+  actually wants to change is already inline-editable where it lives, so keep
+  cards out of scope; the missing attribute is the whole enforcement.
 - **Addressing is reused, not reinvented.** `js/page-render.js` already
   emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
   attributes (added for the in-flight AI-rewrite-selection feature) via

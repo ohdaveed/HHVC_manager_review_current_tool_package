@@ -135,13 +135,11 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
         },
         {
           title: 'CDC: Preventing mosquito bites',
-          text: 'Classroom-friendly prevention tips to share after the workshop.',
           url: 'https://www.cdc.gov/mosquitoes/prevention/index.html',
           karl: 'Maps to a related_links entry (Link to = External URL, Link text = this title). Third-party CDC reference replaces the retired City prevention page (manager directive: do not reinvent the wheel).',
         },
         {
           title: 'Report a dead bird to the State',
-          text: 'Teach students how community dead bird reports support West Nile virus tracking.',
           url: 'https://westnile.ca.gov/report',
           karl: 'Maps to a related_links entry (Link to = External URL, Link text = this title). Replaces the retired City dead-bird transaction page — the State runs this reporting line.',
         },
