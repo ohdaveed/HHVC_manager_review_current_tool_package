@@ -389,34 +389,6 @@ function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
   return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
 }
-function renderRelatedRail(sections = []) {
-  // Kept as (section, card) pairs rather than flattened to cards alone: the
-  // description each entry renders depends on the `karl` note of the section it
-  // came from, so flattening would throw away the only thing that can answer
-  // the question. The rail's own heading is fixed, so the sections are
-  // otherwise interchangeable here — which is exactly why the association was
-  // easy to drop.
-  const entries = sections.flatMap((s) => (s.cards || []).map((c) => ({ section: s, card: c })))
-  if (!entries.length) return ''
-  return `<aside class="related-rail" aria-label="Related pages">${karlTag('Related section: right-panel linked pages', 'placement')}<h2 class="related-rail-title">Related</h2><ul class="related-rail-list">${entries
-    .map(({ section, card: c }) => {
-      const title = cardTitle(section, c)
-      const attr = c.url
-        ? ' target="_blank" rel="noopener noreferrer"'
-        : c.target
-          ? ` data-render-target="${escapeHtml(c.target)}"`
-          : ' data-render-inert=""'
-      const action = c.url
-        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(title)}</a>`
-        : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
-      const desc = cardDescription(section, c)
-      const text = desc
-        ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`
-        : ''
-      return `<li>${action}${text}</li>`
-    })
-    .join('')}</ul></aside>`
-}
 /**
  * Step cards pass `null` for the section on purpose. A step's cards live inside
  * a Step List block, not in the section's own card list, so the section's
@@ -682,7 +654,6 @@ function renderPageMain(page) {
   }
   if (pageType === 'transaction') {
     html += renderWhatToKnow(page.whatToKnow, page)
-    html += `<div class="page-layout page-layout--transaction"><div class="page-layout-main">`
     whatToDo.forEach((s) => {
       html += renderSection(s, pageType)
     })
@@ -696,7 +667,9 @@ function renderPageMain(page) {
     body.forEach((s) => {
       html += renderSection(s, pageType)
     })
-    html += `</div>${renderRelatedRail(related)}</div>`
+    related.forEach((s) => {
+      html += renderRelatedList(s.cards || [], s.heading || 'Related', s)
+    })
     html += renderContactSection(page.contact, page)
   } else if (pageType === 'information' || pageType === 'report') {
     const infoBody = [
@@ -947,7 +920,6 @@ export {
   renderCards,
   renderPage,
   renderRelatedList,
-  renderRelatedRail,
   renderResourcesList,
   renderSection,
   renderServiceTiles,

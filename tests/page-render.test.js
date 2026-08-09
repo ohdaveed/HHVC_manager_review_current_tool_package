@@ -140,13 +140,6 @@ describe('page-render.js escaping', () => {
     expect(html).toContain('<p>Claim<span class="unverified-pill">')
   })
 
-  test('renderRelatedRail appends an unverified pill when card.unverified is true', () => {
-    const html = ctx.renderRelatedRail([
-      { cards: [{ title: 'Related', text: 'Claim', unverified: true }] },
-    ])
-    expect(html).toContain('<p>Claim<span class="unverified-pill">')
-  })
-
   test('renderRelatedList uses the same plain divided-list layout as Resources', () => {
     const html = ctx.renderRelatedList(
       [{ title: 'Report mold', target: 'moldReport' }],
@@ -227,6 +220,30 @@ describe('page-render.js escaping', () => {
   test('renderSection escapes a section-level button label', () => {
     const html = ctx.renderSection({ heading: 'Heading', button: PAYLOAD, karl: 'Body section' })
     assertEscaped(html)
+  })
+})
+
+describe('Transaction page layout', () => {
+  test('renders Related as a plain bottom section, not a sidebar rail', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['Someone'],
+      reading: 'Grade 6',
+      sections: [
+        {
+          heading: 'Related',
+          karl: 'Related panel: linked pages',
+          component: 'related',
+          cards: [{ title: 'Other page', target: 'scopeInfo' }],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="section section--related"')
+    expect(html).not.toContain('related-rail')
+    expect(html).not.toContain('page-layout--transaction')
   })
 })
 
@@ -585,14 +602,13 @@ describe('card description inheritance', () => {
     expect(html).not.toContain('data-rewrite-field')
   })
 
-  test('inherits through renderServiceTiles, renderResourcesList and renderRelatedRail', () => {
+  test('inherits through renderServiceTiles and renderResourcesList', () => {
     const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
     // Live fixture value, same reasoning as the test above: a copy edit to
     // scopeInfo should not fail this test while inheritance still works.
     const expected = escapeHtml(pageData.scopeInfo.summary)
     expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(expected)
     expect(ctx.renderResourcesList([card], inheritsSection)).toContain(expected)
-    expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(expected)
   })
 
   test('renders no description paragraph when the description resolves empty', () => {
@@ -676,10 +692,9 @@ describe('card title inheritance', () => {
     expect(html).toContain('>Gone<')
   })
 
-  test('resolves through renderServiceTiles, renderResourcesList and renderRelatedRail too', () => {
+  test('resolves through renderServiceTiles and renderResourcesList too', () => {
     const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
     expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(scopeInfoTitle)
     expect(ctx.renderResourcesList([card], inheritsSection)).toContain(scopeInfoTitle)
-    expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(scopeInfoTitle)
   })
 })

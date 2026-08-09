@@ -848,47 +848,6 @@ a:focus {
 .page-body--transaction .contact-section {
   margin-left: 0;
 }
-.page-layout--transaction {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-  gap: 1.5rem;
-  align-items: start;
-  max-width: calc(var(--content-max) + 300px);
-  margin: 0 auto;
-}
-.page-layout-main {
-  min-width: 0;
-}
-.related-rail {
-  position: sticky;
-  top: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--sfds-border);
-  border-radius: var(--radius);
-  background: var(--sfds-white);
-}
-.related-rail-title {
-  font-size: 1rem;
-  margin: 0 0 0.75rem;
-}
-.related-rail-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.related-rail-list li {
-  margin: 0 0 0.85rem;
-}
-.related-rail-list a {
-  font-weight: 700;
-  color: var(--sfds-action-blue);
-  text-decoration: none;
-}
-.related-rail-list p {
-  margin: 0.2rem 0 0;
-  font-size: 0.88rem;
-  color: var(--sfds-slate-2);
-}
 .section--related {
   border-top: 1px solid var(--sfds-border);
   padding-top: 1rem;
@@ -1087,12 +1046,6 @@ a:focus {
   }
   .hero--transaction .hero-inner {
     max-width: calc(var(--content-max) - 4rem);
-  }
-  .page-layout--transaction {
-    grid-template-columns: 1fr;
-  }
-  .related-rail {
-    position: static;
   }
   .spotlight-inner {
     grid-template-columns: 1fr;
