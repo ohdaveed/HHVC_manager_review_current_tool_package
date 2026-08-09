@@ -4,7 +4,7 @@ window.HHVC_PAGES['publicRecords'] = {
   type: 'Transaction',
   title: 'Make a public records request',
   summary:
-    'Request copies of City records related to Environmental Health inspections, complaints, or enforcement.',
+    'Request Environmental Health inspection, complaint, or enforcement records that are not in the online lookups.',
   audience: [
     'A tenant or advocate requesting formal copies of inspection records',
     'A property owner requesting records for a building they manage',

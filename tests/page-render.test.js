@@ -467,3 +467,112 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
     assertEscaped(ctx.renderPageMain(page))
   })
 })
+
+// A Karl Services/Resources subsection entry, and a Related-panel entry, is
+// only a page picker — there is no description field on the card, so what
+// publishes comes from the DESTINATION page. Before this, js/page-render.js
+// printed `card.text` verbatim, showing reviewers 12 descriptions that could
+// never appear on SF.gov. These pin the resolution rules in
+// js/card-inheritance.js against the renderer that now consumes them, since a
+// silent regression here would put unpublishable copy back in front of a
+// manager with nothing to report it.
+describe('card description inheritance', () => {
+  // Matches INHERITS in js/card-inheritance.js. `scopeInfo` is a real page key,
+  // so pageData resolves it and its own summary is what must render.
+  const inheritsSection = { heading: 'Services', karl: 'Services subsection: page chooser' }
+  const titleOnlySection = { heading: 'Related', karl: 'Related panel: linked pages' }
+  const authoredSection = { heading: 'Rules', karl: 'Table block: body table' }
+
+  test('renders the destination summary instead of an inheriting card own text', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy that cannot publish.' }],
+      inheritsSection
+    )
+    expect(html).toContain(
+      '<p>See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.</p>'
+    )
+    expect(html).not.toContain('Card copy that cannot publish.')
+  })
+
+  test('renders no description element at all for a title-only card', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy that cannot publish.' }],
+      titleOnlySection
+    )
+    expect(html).not.toContain('<p>')
+    expect(html).not.toContain('Card copy that cannot publish.')
+  })
+
+  test('renders an authored card own text unchanged', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Authored table copy.' }],
+      authoredSection
+    )
+    expect(html).toContain('<p>Authored table copy.</p>')
+  })
+
+  test('renders an external-url card own text inside an inheriting section', () => {
+    // An external link has no SF.gov page to inherit from, so its description
+    // is genuinely authored whatever block holds it.
+    const html = ctx.renderCards(
+      [
+        {
+          title: 'CDC rodents',
+          url: 'https://www.cdc.gov/rodents/',
+          text: 'Authored external copy.',
+        },
+      ],
+      inheritsSection
+    )
+    expect(html).toContain('<p>Authored external copy.</p>')
+  })
+
+  test('falls back to authored text when an inheriting card target resolves to nothing', () => {
+    // Blanking the card would hide copy over what is really a broken link —
+    // findBrokenCardTargets' job, and it reports it as one.
+    const html = ctx.renderCards(
+      [{ title: 'Gone', target: 'noSuchPageKey', text: 'Authored fallback copy.' }],
+      inheritsSection
+    )
+    expect(html).toContain('<p>Authored fallback copy.</p>')
+  })
+
+  test('emits no data-rewrite-field on an inherited card description', () => {
+    // Editing here would write the destination page's words into this card's
+    // own `text`, which renders nowhere — the exact bug inheritance removes.
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
+      inheritsSection
+    )
+    expect(html).not.toContain('data-rewrite-field')
+  })
+
+  test('inherits through renderServiceTiles, renderResourcesList and renderRelatedRail', () => {
+    const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
+    const expected =
+      'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.'
+    expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(expected)
+    expect(ctx.renderResourcesList([card], 'Resources', inheritsSection)).toContain(expected)
+    expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(expected)
+  })
+
+  test('renders no service-tile text span when the description resolves empty', () => {
+    const html = ctx.renderServiceTiles(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
+      titleOnlySection
+    )
+    expect(html).not.toContain('class="service-tile-text"')
+  })
+
+  test('keeps step card text authored, since a step card is not a section card', () => {
+    // renderSteps passes null for the section: a step's cards live in a Step
+    // List block, which no live-site check has classified either way.
+    const html = ctx.renderSteps([
+      {
+        title: 'Step one',
+        cards: [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Step card copy.' }],
+      },
+    ])
+    expect(html).toContain('<p>Step card copy.</p>')
+  })
+})

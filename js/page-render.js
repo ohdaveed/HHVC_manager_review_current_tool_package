@@ -14,6 +14,11 @@ import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
 import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
 import { karlKindMeta } from './karl-tag-meta.js'
 import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
+// Side-effect import: js/card-inheritance.js publishes window.cardInheritance
+// and exports nothing, so this is what guarantees the classifier exists before
+// any card renders. js/main.js lists it ahead of this file too, but that list
+// is documentation — this import is the enforcement.
+import './card-inheritance.js'
 function karlTag(label, kind = 'body') {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
   // Karl tags are visual reviewer annotations, not part of the public-page
@@ -234,7 +239,58 @@ function renderImage(image) {
   if (!image?.src) return ''
   return `<figure class="content-image">${karlTag(image.karl || 'Information section: Image', 'body')}<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt || '')}" loading="lazy" />${image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ''}</figure>`
 }
-function renderCards(cards = []) {
+/**
+ * Resolve what a card's description should actually SAY on the published page.
+ *
+ * A Karl Services/Resources subsection entry, and a Related-panel entry, is
+ * only a page picker — "add an SF.gov page or External link". There is no
+ * description field on the card, so whatever a `pages/*.js` card writes into
+ * `text` is invisible on SF.gov. The mockup printed it anyway, which meant
+ * reviewers were being asked to approve 12 card descriptions that could never
+ * publish. Resolving through the shared classifier instead makes the mockup
+ * show exactly what Karl will render, and — because the string now comes from
+ * the destination page rather than from a second copy on the card — removes
+ * the possibility of the two drifting apart at all.
+ *
+ * The three outcomes, checked in this order:
+ *
+ * - **title-only** — the Related panel and a Resource Collection's Resource
+ *   section render a title and a link and NOTHING else, so there is no
+ *   description to resolve for any entry, internal or external.
+ * - **inherits** with a resolvable internal target — the destination page's
+ *   own `summary`, which is the field Karl reads.
+ * - **everything else** — the card's authored `text`. That covers authored
+ *   blocks (a table row, a rich-text block), external `url` cards inside an
+ *   inheriting section (there is no SF.gov page to inherit from), unclassified
+ *   blocks, and a `target` that resolves to nothing. Falling back to authored
+ *   text is the safe direction: showing a reviewer copy that exists beats
+ *   blanking a card because a `karl` note was worded unfamiliarly.
+ *
+ * @param {{karl?: string}|null|undefined} section The section holding the card,
+ *   or null where the caller cannot supply one (see renderSteps).
+ * @param {{text?: string, target?: string, url?: string}} card
+ * @returns {string} The description to render, or '' to render none at all.
+ */
+function cardDescription(section, card) {
+  const classify = window.cardInheritance?.classifySection
+  const kind = section && typeof classify === 'function' ? classify(section) : 'unknown'
+  if (kind === 'title-only') return ''
+  if (kind === 'inherits' && card.target && pageData[card.target]) {
+    return pageData[card.target].summary ?? ''
+  }
+  return card.text ?? ''
+}
+// NO `data-rewrite-field` ON CARD DESCRIPTIONS — deliberately, and this is
+// where it must stay decided. The inline-content-editing feature turns any
+// element carrying that attribute into a click-to-edit field whose keystrokes
+// are written back onto the addressed path of the CURRENT page's object. For
+// an inherited description that path would be this card's own `text` — the
+// exact field this change exists to prove renders nowhere. The edit would
+// appear to work, autosave, and then vanish on the next paint, because the
+// paint reads the destination's `summary`. The text a reviewer actually wants
+// to change lives on the destination page, where inline editing already
+// reaches it. A title-only card has no description to edit at all.
+function renderCards(cards = [], section = null) {
   return `<div class="cards">${cards
     .map((c) => {
       const attr = c.url
@@ -246,11 +302,12 @@ function renderCards(cards = []) {
       const action = c.url
         ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${c.text ? `<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
+      const desc = cardDescription(section, c)
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${desc ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
-function renderServiceTiles(cards = []) {
+function renderServiceTiles(cards = [], section = null) {
   return `<div class="service-tiles">${cards
     .map((c) => {
       const attr = c.url
@@ -259,14 +316,21 @@ function renderServiceTiles(cards = []) {
           ? ` data-render-target="${escapeHtml(c.target)}"`
           : ' data-render-inert=""'
       const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
+      const desc = cardDescription(section, c)
+      // An empty description renders no element rather than an empty one: a
+      // bare <span class="service-tile-text"></span> still occupies its grid
+      // row and reads to a reviewer as copy that failed to load.
+      const text = desc
+        ? `<span class="service-tile-text">${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span>`
+        : ''
       if (c.url) {
-        return `<a class="service-tile" href="${escapeHtml(safeUrl(c.url))}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></a>`
+        return `<a class="service-tile" href="${escapeHtml(safeUrl(c.url))}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}${externalMark}</span>${text}</a>`
       }
-      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span><span class="service-tile-text">${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span></button>`
+      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(c.title)}</span>${text}</button>`
     })
     .join('')}</div>`
 }
-function renderResourcesList(cards = [], heading = 'Resources') {
+function renderResourcesList(cards = [], heading = 'Resources', section = null) {
   if (!cards.length) return ''
   return `<div class="resources-list">${karlTag('Body: Resources links', 'placement')}<h3 class="resources-list-heading">${escapeHtml(heading)}</h3><ul>${cards
     .map((c) => {
@@ -282,19 +346,29 @@ function renderResourcesList(cards = [], heading = 'Resources') {
       const action = c.url
         ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}${externalMark}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
+      const desc = cardDescription(section, c)
+      const text = desc
+        ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`
+        : ''
+      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}${text}</li>`
     })
     .join('')}</ul></div>`
 }
-function renderRelatedList(cards = [], heading = 'Related') {
+function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
-  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2>${renderCards(cards)}</section>`
+  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2>${renderCards(cards, section)}</section>`
 }
 function renderRelatedRail(sections = []) {
-  const cards = sections.flatMap((s) => s.cards || [])
-  if (!cards.length) return ''
-  return `<aside class="related-rail" aria-label="Related pages">${karlTag('Related section: right-panel linked pages', 'placement')}<h2 class="related-rail-title">Related</h2><ul class="related-rail-list">${cards
-    .map((c) => {
+  // Kept as (section, card) pairs rather than flattened to cards alone: the
+  // description each entry renders depends on the `karl` note of the section it
+  // came from, so flattening would throw away the only thing that can answer
+  // the question. The rail's own heading is fixed, so the sections are
+  // otherwise interchangeable here — which is exactly why the association was
+  // easy to drop.
+  const entries = sections.flatMap((s) => (s.cards || []).map((c) => ({ section: s, card: c })))
+  if (!entries.length) return ''
+  return `<aside class="related-rail" aria-label="Related pages">${karlTag('Related section: right-panel linked pages', 'placement')}<h2 class="related-rail-title">Related</h2><ul class="related-rail-list">${entries
+    .map(({ section, card: c }) => {
       const attr = c.url
         ? ' target="_blank" rel="noopener noreferrer"'
         : c.target
@@ -303,11 +377,22 @@ function renderRelatedRail(sections = []) {
       const action = c.url
         ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(c.title)}</a>`
         : `<button type="button" class="inline-link"${attr}>${escapeHtml(c.title)}</button>`
-      return `<li>${action}<p>${escapeHtml(c.text)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p></li>`
+      const desc = cardDescription(section, c)
+      const text = desc
+        ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`
+        : ''
+      return `<li>${action}${text}</li>`
     })
     .join('')}</ul></aside>`
 }
 /**
+ * Step cards pass `null` for the section on purpose. A step's cards live inside
+ * a Step List block, not in the section's own card list, so the section's
+ * `karl` note describes a component they are not part of — and
+ * build_scripts/audit-card-inheritance.js walks `section.cards` only, so no
+ * live-site verification covers step cards either way. `null` classifies as
+ * 'unknown', which keeps their authored text exactly as it renders today.
+ *
  * @param {Array<object>} steps
  * @param {string} [pathPrefix] Dot-path of the steps array, e.g. 'sections.2.steps'.
  *   Threaded down to each step's own text/bullets arrays as
@@ -318,7 +403,7 @@ function renderSteps(steps = [], pathPrefix = '') {
   return `<ol class="step-list">${steps
     .map(
       (s, index) =>
-        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout) : ''}</div></li>`
+        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout) : ''}</div></li>`
     )
     .join('')}</ol>`
 }
@@ -445,10 +530,13 @@ function renderSectionInner(section, pageType = 'generic') {
       section.buttonTarget || null,
       section.buttonUrl || null
     )
-  if (section.cards && section.component === 'services') inner += renderServiceTiles(section.cards)
+  // The section travels with its cards so cardDescription() can ask its `karl`
+  // note whether each description is inherited from the destination page.
+  if (section.cards && section.component === 'services')
+    inner += renderServiceTiles(section.cards, section)
   else if (section.cards && (section.component === 'resources' || section.cards.some((c) => c.url)))
-    inner += renderResourcesList(section.cards, section.heading)
-  else if (section.cards) inner += renderCards(section.cards)
+    inner += renderResourcesList(section.cards, section.heading, section)
+  else if (section.cards) inner += renderCards(section.cards, section)
   return inner
 }
 function renderSection(section, pageType = 'generic', options = {}) {
@@ -533,7 +621,7 @@ function renderHero(page, heroCta) {
       : ''
   const heroClass =
     normalizePageType(page.type) === 'transaction' ? 'hero hero--transaction' : 'hero'
-  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${reportDatePill}${topicChip}</div></div></section>`
+  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: report date, topic tag', 'meta')}<div class="metadata">${reportDatePill}${topicChip}</div></div></section>`
 }
 function renderPrintVersion(url) {
   if (!url) return ''
@@ -632,13 +720,13 @@ function renderPageMain(page) {
   }
   if (pageType === 'information') {
     related.forEach((s) => {
-      html += renderRelatedList(s.cards || [], s.heading || 'Related')
+      html += renderRelatedList(s.cards || [], s.heading || 'Related', s)
     })
     html += renderContactSection(page.contact, page)
   }
   if (pageType === 'topic' || pageType === 'agency' || pageType === 'resource-collection') {
     related.forEach((s) => {
-      html += renderRelatedList(s.cards || [], s.heading || 'Related')
+      html += renderRelatedList(s.cards || [], s.heading || 'Related', s)
     })
   }
   if (pageType === 'agency') {

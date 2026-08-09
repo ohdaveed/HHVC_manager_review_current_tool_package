@@ -3,8 +3,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
   slug: 'sf.gov/information/integrated-pest-management-for-property-owners-and-managers',
   type: 'Information',
   title: 'Integrated pest management for property owners and managers',
-  summary:
-    'IPM for SF property owners and managers. UC ANR templates for prevention, monitoring, and outreach.',
+  summary: 'Use prevention, monitoring, and resident outreach tools for your building.',
   audience: [
     'A property owner responsible for a residential building',
     'A property manager or building operator',

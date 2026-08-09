@@ -65,84 +65,36 @@
  * a content judgement per card, so this prints the list and stops. It is a
  * report, not a CI gate, and deliberately exits 0 even with findings.
  *
+ * WHAT CHANGED WHEN THE RENDERER STARTED INHERITING (2026-08-09)
+ *
+ * The paragraph above describes the state this audit was born into, where
+ * `js/page-render.js` printed `card.text` verbatim and the only way to close a
+ * finding was a per-card editorial decision. That decision has been made once,
+ * globally: the renderer now resolves an inheriting card's description through
+ * `classifySection()` and prints the DESTINATION page's summary, so a card's
+ * own `text` in an inheriting section renders nowhere at all — exactly the
+ * condition this file already described for the title-only bucket.
+ *
+ * So the assertion for BOTH inheriting buckets is now the same one, and it is
+ * the title-only bucket's assertion: the card must carry no text of its own.
+ * See the `textMatches` comment in `auditCards` for why that had to change
+ * rather than stay "does the card text equal the destination summary?" — the
+ * four destination summaries that were worth improving were improved in the
+ * same change, on the destination pages, which is where the copy now lives.
+ *
  * Anything it cannot classify is reported under UNKNOWN rather than assumed
  * safe, so a new section with an unfamiliar `karl` note surfaces instead of
  * being silently skipped.
  */
 
 const { loadPageData } = require('./load-pages')
-
-/**
- * Karl blocks that render the destination's Title AND its Description. An
- * Agency Services/Resources subsection entry is only "add an SF.gov page or
- * External link", so both fields come from the page it points at.
- *
- * Checked third, so a section naming an authored block or a Related panel wins.
- */
-const INHERITS = /services subsection|resources subsection|page.{0,3} chooser/i
-
-/**
- * Karl blocks that render the destination's Title and a link — and NOTHING
- * else. Two components live here, verified separately on 2026-08-08. Full
- * write-up in
- * `docs/source/hhvc-policy/2026-08-08-karl-card-inheritance-verification.md`.
- *
- * The **Related panel**: checked at DOM level against the live Transaction page
- * sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings, whose Related
- * entries each hold link text and no other text node.
- *
- * A **Resource Collection's Resource section**: checked across three live
- * sf.ResourceCollection pages. The decisive one is
- * sf.gov/vacancy-notice-local-agency-formation-commission, whose entry for
- * `bos-boards-commissions-and-task-forces-application-instruction` rendered
- * that page's Title and nothing else — while the destination demonstrably has
- * a Description. So the blank is Karl declining to render one, not a
- * destination with none to give. That control matters: two sibling pages
- * looked like evidence and were not, one holding only PDFs (whose in-entry
- * "Published <date>" is Document metadata) and one whose single internal link
- * could not be told apart from an inline body link.
- *
- * Resource section sat in INHERITS first, on the reasoning that it resembles a
- * Resources subsection and that keeping card text was the conservative
- * default. Conservative is not the same as correct: it left 19 cards of
- * unrenderable copy in the mockup and dressed them up as decisions a reviewer
- * would spend judgement on.
- *
- * This is a SEPARATE bucket from INHERITS rather than a member of it, because
- * the correct assertion is the opposite one: a Related card's text must be
- * EMPTY. Lumping the two together asked whether the card text equalled the
- * destination summary, which reported 49 correctly-blank cards as findings —
- * and would have had someone "fix" them by pasting in copy that cannot render.
- *
- * Note the editor help center contradicts itself here: the Transaction
- * content-type page claims the right-side bar shows "title and description".
- * The live page disproves it. Do not re-widen this from the docs alone.
- *
- * Checked BEFORE INHERITS: the Related karl notes also contain the phrase
- * 'a generic unrestricted "Page" chooser', which INHERITS would otherwise claim.
- */
-const TITLE_ONLY = /related field|related panel|related_links|resource section/i
-
-/**
- * Karl blocks that hold authored card content. A table row or a rich-text
- * block writes its own words, so a difference from the destination page is
- * expected and correct. Checked first.
- */
-const AUTHORED = /table block|title and text/i
-
-/**
- * Decide how a section's cards reach the page.
- *
- * @param {{karl?: string}} section
- * @returns {'authored'|'title-only'|'inherits'|'unknown'}
- */
-function classifySection(section) {
-  const karl = section.karl || ''
-  if (AUTHORED.test(karl)) return 'authored'
-  if (TITLE_ONLY.test(karl)) return 'title-only'
-  if (INHERITS.test(karl)) return 'inherits'
-  return 'unknown'
-}
+// The classifier itself lives in js/card-inheritance.js so the renderer and
+// this audit read one copy of it. A second set of regexes here would let the
+// mockup show one thing while the audit asserted another, and nothing would
+// report the disagreement. See that file's header for the WHY behind each
+// bucket's regex; the WHY behind the three-bucket SPLIT stays above, because
+// it is this audit's own history.
+const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/card-inheritance')
 
 /**
  * Compare every internal card link against the page it points at.
@@ -175,10 +127,22 @@ function auditCards(pages) {
           section: section.heading,
           target: card.target,
           titleMatches: card.title === dest.title,
-          // What "correct" means depends on the component. A Related card is
-          // right when it carries NO text; a subsection card is right when its
-          // text is the destination's summary verbatim.
-          textMatches: kind === 'title-only' ? cardText === '' : cardText === destText,
+          // "Correct" is now the same assertion for both inheriting buckets:
+          // the card carries NO text of its own. A title-only component
+          // renders no description at all, and since js/page-render.js started
+          // resolving descriptions through classifySection(), an inheriting
+          // component renders the DESTINATION's summary — so in both cases a
+          // card's own `text` is a field that reaches no reader.
+          //
+          // This used to ask whether an inheriting card's text equalled the
+          // destination summary, which was the right question only while the
+          // renderer printed card text verbatim: back then the two strings had
+          // to be kept manually identical, and the audit's job was to find
+          // where they had drifted. Keeping that comparison after the renderer
+          // began inheriting would have demanded a duplicate of the summary on
+          // every card purely to satisfy this check — re-creating the drift
+          // the inheritance was introduced to make impossible.
+          textMatches: cardText === '',
           cardTitle: card.title,
           destTitle: dest.title,
           cardText,
@@ -232,7 +196,9 @@ function main() {
   console.log(`internal card links checked: ${total}`)
   console.log(`will not render as written:  ${findings.length}`)
   console.log(`  title mismatches: ${titleIssues.length} (safe to sync to the destination)`)
-  console.log(`  text mismatches:  ${textIssues.length} (needs a per-card decision)`)
+  console.log(
+    `  text mismatches:  ${textIssues.length} (the renderer inherits the destination summary — delete it)`
+  )
   console.log(
     `  dead card text:   ${deadText.length} (the component renders none — safe to delete)`
   )
@@ -243,7 +209,7 @@ function main() {
     titleIssues.forEach(printRow)
   }
   if (textIssues.length) {
-    console.log('\nTEXT — decide per card whether to sync down or improve the destination:')
+    console.log('\nTEXT — the destination summary below is what renders. Delete the card text:')
     textIssues.forEach(printRow)
   }
   if (deadText.length) {
