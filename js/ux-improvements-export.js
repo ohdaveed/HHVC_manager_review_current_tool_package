@@ -119,6 +119,8 @@ import { hasValidPageData } from './utils.js'
       'seo_title',
       'meta_description',
       'primary_cta',
+      'edited_title',
+      'edited_summary',
       'reading_target',
       'updated_at',
     ]
@@ -143,6 +145,8 @@ import { hasValidPageData } from './utils.js'
         saved.seo_title || defaultSeoTitle(page),
         saved.meta_description || defaultMetaDescription(page),
         saved.primary_cta || getPrimaryCta(page),
+        saved.edited_title || '',
+        saved.edited_summary || '',
         saved.reading_target || page.reading || '',
         saved.updated_at || '',
       ])
