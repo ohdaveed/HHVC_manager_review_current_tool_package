@@ -247,6 +247,46 @@ describe('Transaction page layout', () => {
   })
 })
 
+describe('renderParentLink', () => {
+  test('links every non-Agency page back to the Agency page', () => {
+    const page = { title: 'Some Transaction page' }
+    const html = ctx.renderParentLink(page, 'insectsReport')
+    expect(html).toContain(`>${escapeHtml(pageData.pestsTopic.title)}<`)
+    expect(html).toContain('data-render-target="pestsTopic"')
+  })
+
+  test('renders nothing on the Agency page itself', () => {
+    const page = { title: pageData.pestsTopic.title }
+    expect(ctx.renderParentLink(page, 'pestsTopic')).toBe('')
+  })
+
+  // renderParentLink emits an <a data-render-target="pestsTopic">, not a
+  // <button> — the shape every other internal-nav element in this file
+  // uses. The mockup-internal click delegation in this module (the
+  // document-level 'click' listener above renderCards) originally matched
+  // only 'button[data-render-target]', so this <a> rendered correctly but
+  // was inert: a click hit the a[href="#"] preventDefault branch and never
+  // reached window.renderPage. A pure string assertion on the HTML markup
+  // can't catch that — only a real dispatched click can, which is what this
+  // test is for.
+  test('clicking the rendered link navigates to the Agency page', () => {
+    document.body.innerHTML = ctx.renderParentLink({ title: 'Some page' }, 'insectsReport')
+    const originalRenderPage = window.renderPage
+    let calledWith = null
+    window.renderPage = (key) => {
+      calledWith = key
+    }
+    try {
+      const anchor = document.querySelector('[data-render-target="pestsTopic"]')
+      anchor.dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }))
+      expect(calledWith).toBe('pestsTopic')
+    } finally {
+      window.renderPage = originalRenderPage
+      document.body.innerHTML = ''
+    }
+  })
+})
+
 // escapeHtml does not neutralize a URL scheme — `javascript:alert(1)` contains
 // none of the five characters it escapes — so every href the renderer emits
 // runs through safeUrl first. The AI assist preview renders model-generated

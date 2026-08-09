@@ -200,7 +200,7 @@ document.addEventListener('click', (event) => {
     event.preventDefault()
   }
   const link = event.target.closest(
-    'button[data-render-target], button[data-render-inert], button[data-accordion-toggle]'
+    'button[data-render-target], a[data-render-target], button[data-render-inert], button[data-accordion-toggle]'
   )
   if (!link) return
   if (link.matches('button[data-accordion-toggle]')) {
@@ -627,6 +627,19 @@ function renderHero(page, heroCta) {
     normalizePageType(page.type) === 'transaction' ? 'hero hero--transaction' : 'hero'
   return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}</div></section>`
 }
+// Every one of the 7 sf.gov reference pages audited for this pass shows one
+// link back to its owning program (e.g. "Environmental Health"), never a
+// breadcrumb trail. Rather than a new per-page schema field authored across
+// 22 files for a link that reads the same on 21 of them, this derives it:
+// every page except the Agency page is a child of HHVC in this site's actual
+// structure, so it always links there. Reads the Agency page's live title
+// from pageData rather than a literal, so an inline title edit to pestsTopic
+// stays in sync with this link's label without a second place to update it.
+function renderParentLink(page, key) {
+  if (key === 'pestsTopic') return ''
+  const label = pageData.pestsTopic?.title || 'Healthy Housing and Vector Control'
+  return `<nav class="page-parent-link" aria-label="Parent program"><a href="#" data-render-target="pestsTopic">${escapeHtml(label)}</a></nav>`
+}
 function renderPrintVersion(url) {
   if (!url) return ''
   return `<p class="print-version-link">${karlTag('Report Print version field', 'placement')}<a href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
@@ -775,7 +788,7 @@ function applyPageContent(key) {
             </nav>
           </div>
         </header>
-        <nav class="page-breadcrumbs" aria-label="Breadcrumbs"><div class="page-breadcrumbs-inner"><a href="#" class="back-link">Back</a><ol><li><a href="#">Home</a></li><li><a href="#">Services</a></li><li><span aria-current="page">${escapeHtml(page.title)}</span></li></ol></div></nav>
+        ${renderParentLink(page, key)}
         ${pageHtml}
         <div class="mockup-banner">This is a design mockup for HHVC content review, not a live SF.gov page.</div>
         <footer class="footer">
@@ -919,6 +932,7 @@ export {
   renderAudience,
   renderCards,
   renderPage,
+  renderParentLink,
   renderRelatedList,
   renderResourcesList,
   renderSection,
