@@ -74,19 +74,16 @@ window.HHVC_PAGES['recordsHub'] = {
       cards: [
         {
           title: 'Healthy Housing and Vector Control',
-          text: 'Return to the HHVC agency page for pest, vector, and housing health issues.',
           target: 'pestsTopic',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },
         {
           title: 'What happens after you report a housing or pest problem',
-          text: 'Learn how reports are reviewed and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },
         {
           title: 'Property owner responsibilities',
-          text: 'See owner obligations under Health Code Article 11.',
           target: 'ownerHub',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },

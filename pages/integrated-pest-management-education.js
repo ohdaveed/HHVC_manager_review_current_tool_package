@@ -138,25 +138,21 @@ window.HHVC_PAGES['ipmEducation'] = {
       cards: [
         {
           title: 'Integrated pest management for property owners and managers',
-          text: 'The compliance-focused version of this guidance for owners, managers, and building staff.',
           target: 'ownerGuidance',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {
           title: 'Free mosquito education workshop',
-          text: 'HHVC also offers a hands-on mosquito science workshop for schools, camps, and youth groups.',
           target: 'mosquitoWorkshop',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {
           title: 'Report rats, mice, and other four-legged problems',
-          text: 'Report an active pest problem to the City.',
           target: 'rodentsReport',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
         {
           title: 'Healthy Housing and Vector Control',
-          text: 'Return to the HHVC agency page for pest and vector resources.',
           target: 'pestsTopic',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },

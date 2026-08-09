@@ -130,7 +130,6 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
       cards: [
         {
           title: 'Mosquito Control Program',
-          text: 'Learn about mosquito surveillance, catch-basin treatment, and program contacts.',
           target: 'mosquitoControl',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
@@ -148,7 +147,6 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
         },
         {
           title: 'Healthy Housing and Vector Control',
-          text: 'Return to the HHVC agency page for pest and vector resources.',
           target: 'pestsTopic',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
