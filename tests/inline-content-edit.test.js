@@ -859,9 +859,15 @@ describe('inline content edit: decorateListControls appends add/remove controls 
     const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
     await import(modUrl)
 
+    // The add control is wrapped in its own <li> when appended to a <ul> —
+    // a <ul>'s only valid children are <li> elements (axe's "list" rule
+    // flags a bare sibling <button>, confirmed live on the scopeInfo page),
+    // so the direct ul > * child to look for is the <li> containing the
+    // control, not the control itself.
     const items = Array.from(mockPage.querySelectorAll('ul > *'))
-    const lastItemIndex = items.findIndex((el) => el.matches('[data-inline-edit-add]'))
+    const lastItemIndex = items.findIndex((el) => el.querySelector('[data-inline-edit-add]'))
     expect(lastItemIndex).toBe(items.length - 1)
+    expect(items[lastItemIndex].tagName).toBe('LI')
   })
 
   test('a bullets array with zero items still gets an add control, anchored to the section heading (no dead end)', async () => {

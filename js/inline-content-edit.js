@@ -457,8 +457,19 @@
         // Bullets share one <ul> parent; paragraphs are bare siblings with a
         // shared parent too (the section's own container element in both
         // cases), so inserting after the last item's parentNode position
-        // works uniformly for both shapes.
-        lastItem.parentNode.insertBefore(wrapper.firstElementChild, lastItem.nextSibling)
+        // works uniformly for both shapes — EXCEPT a <ul>'s only valid
+        // children are <li> (axe's "list" rule flags a bare <button> sibling
+        // of <li>s as a serious violation, confirmed live on scopeInfo).
+        // Paragraphs have no such wrapper to respect, so only bullets need
+        // this extra <li>.
+        const addNode = /\.bullets$/.test(containerPath)
+          ? (() => {
+              const li = document.createElement('li')
+              li.appendChild(wrapper.firstElementChild)
+              return li
+            })()
+          : wrapper.firstElementChild
+        lastItem.parentNode.insertBefore(addNode, lastItem.nextSibling)
         return
       }
       // Zero items: no item element to anchor near, so fall back to the
