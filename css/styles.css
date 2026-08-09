@@ -995,13 +995,14 @@ a:focus {
   font-size: 0.75rem;
   font-weight: 700;
 }
+/* Both Transaction reference screenshots (report-mold-in-my-home,
+   report-a-health-nuisance-or-hazards) render "Contact us" plain — no
+   background, no border. */
 .contact-section {
   max-width: var(--content-max);
   margin: 2rem auto 0;
-  padding: 1.25rem;
-  border: 1px solid var(--sfds-border);
-  border-radius: var(--radius);
-  background: var(--sfds-slate-5);
+  padding-top: 1rem;
+  border-top: 1px solid var(--sfds-border);
 }
 .callout--warning {
   border-left-color: var(--sfds-warning-text);
