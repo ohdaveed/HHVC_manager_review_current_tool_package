@@ -243,18 +243,23 @@ disagree at all.
   findings. A title mismatch is safe to sync mechanically; a description is a
   content judgement per card, and the right fix is sometimes to the destination
   page rather than to the card.
-- **Known open question — external-URL cards inside an inheriting subsection.**
-  Only the internal case was verified live. Whether Karl renders a description
-  for an EXTERNAL entry in a Services/Resources subsection, and where it would
-  come from if it did, nobody has checked. The audit reports those cards under
-  "awaiting live verification" and asserts nothing about them, and the renderer
-  keeps printing their authored text. Opening one of those subsections on a live
-  sf.gov page and reading whether its external entry shows a description would
-  settle it; until someone does, do not delete that text on the strength of the
-  internal finding. External cards in a `title-only` section are **not** open in
-  the same way — that component renders no description for any entry, which is a
-  fact about the component rather than about the destination — so they report as
-  dead text and have been deleted.
+- **An external-URL entry inside an inheriting subsection keeps its own text,
+  and that was measured rather than assumed.** There is no destination page to
+  inherit from, so for a day this was an open question the audit reported and
+  refused to assert on. It was settled on 2026-08-09 by a census of all 332
+  `departments--*` pages in `sf.gov/sitemap.xml`: 333 of the 363 entries whose
+  `href` leaves sf.gov render a description of their own. An external entry
+  therefore has a description field, authored on the entry, and the renderer
+  printing `card.text` for one is correct. Two details of that census are
+  load-bearing — `api.sf.gov`/`media.api.sf.gov` were counted separately,
+  because those are Document Picker uploads reading their text off the Document
+  object rather than external links; and each anchor was matched to its own
+  closing `</a>` before its description was read, since attributing a
+  neighbour's description to an entry is how a sweep like this confirms whatever
+  it set out to find. External entries in a `title-only` section are the
+  opposite case and needed their own evidence: that component renders no
+  description for any entry, which is a fact about the component rather than
+  about the destination, so those report as dead text and have been deleted.
 
 ### Core module split (formerly one `app.js`)
 

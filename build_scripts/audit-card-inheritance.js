@@ -82,7 +82,8 @@
  * four destination summaries that were worth improving were improved in the
  * same change, on the destination pages, which is where the copy now lives.
  *
- * WHY EXTERNAL-URL CARDS ARE NOW REPORTED, IN TWO BUCKETS (2026-08-09)
+ * WHY EXTERNAL-URL CARDS ARE CHECKED, AND WHY ONLY ONE OF THE TWO CASES
+ * PRODUCES A FINDING (2026-08-09)
  *
  * Until this date the loop opened with `if (!card.target) continue`, so a card
  * pointing at an external URL was invisible here. The reasoning was that an
@@ -99,17 +100,29 @@
  * either way, and it now reports in the same DEAD TEXT bucket the internal ones
  * always did.
  *
- * **An inheriting subsection's external entry is a genuinely open question**,
- * and gets a bucket of its own that is reported and NOT asserted. Only the
- * INTERNAL case was checked live — the Environmental Health Agency page, whose
- * subsection cards show each destination's own summary. Whether Karl renders a
- * description for an EXTERNAL entry in a Services/Resources subsection, and
- * where it would come from if it did, nobody has looked at. The TITLE_ONLY
- * comment in `js/card-inheritance.js` warns "Do not re-widen this from the docs
- * alone" for exactly this class of guess, and deleting these texts on the
- * strength of the internal finding would be the same mistake pointed the other
- * way. So this bucket exists to put the question in front of whoever next has a
- * live page open — not to answer it.
+ * **An inheriting subsection's external entry KEEPS its authored text**, so it
+ * produces no finding — and that is measured, not assumed. It was an open
+ * question for a day: only the INTERNAL case had been checked live, and
+ * deleting an external card's text on the strength of an internal finding would
+ * have been the same mistake the TITLE_ONLY comment in
+ * `js/card-inheritance.js` warns about ("Do not re-widen this from the docs
+ * alone"), merely pointed the other way. It was settled by a census of all 332
+ * `departments--*` pages in `sf.gov/sitemap.xml`: 333 of the 363 entries whose
+ * `href` leaves sf.gov render a `tile-description` of their own. An external
+ * entry therefore HAS a description field, authored on the entry rather than
+ * inherited from anywhere, and `js/page-render.js` printing `card.text` for one
+ * is correct. They are skipped here exactly like an `authored` section's cards.
+ *
+ * Two details of that census matter, because a repeat that misses either gets a
+ * different answer. `api.sf.gov`/`media.api.sf.gov` hosts were counted
+ * SEPARATELY (69 with a description to 29 without): those are SF.gov's own
+ * document store, so such an entry is a Document Picker upload whose text comes
+ * off the Document object — a third mechanism, and folding it in would answer a
+ * different question with the same number. And each anchor was matched to its
+ * own closing `</a>` before its description was read, since attributing a
+ * neighbour's description to an entry is how a sweep like this quietly confirms
+ * whatever it set out to find. Full write-up in
+ * `docs/source/hhvc-policy/2026-08-08-karl-card-inheritance-verification.md`.
  *
  * Nothing about internal cards changed with this widening: they are still
  * counted, asserted and bucketed exactly as before, and the external rows carry
@@ -136,21 +149,21 @@ const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/card-
  *
  * @param {Record<string, any>} pages keyed by page key
  * @returns {{total: number, externalTotal: number, findings: object[],
- *   unknown: object[], externalUnverified: object[]}}
+ *   unknown: object[], externalAuthored: object[]}}
  */
 function auditCards(pages) {
   let total = 0
   let externalTotal = 0
   const findings = []
   const unknown = []
-  const externalUnverified = []
+  const externalAuthored = []
 
   for (const [pageKey, page] of Object.entries(pages)) {
     for (const section of page.sections || []) {
       const kind = classifySection(section)
       for (const card of section.cards || []) {
         if (!card.target) {
-          auditExternalCard({ pageKey, section, kind, card, externalUnverified, findings })
+          auditExternalCard({ pageKey, section, kind, card, externalAuthored, findings })
           // Counted separately from `total` on purpose: `total` is the number
           // the renderer's inheritance behaviour is judged by, and folding in a
           // second population would make a change in one look like a change in
@@ -199,7 +212,7 @@ function auditCards(pages) {
       }
     }
   }
-  return { total, externalTotal, findings, unknown, externalUnverified }
+  return { total, externalTotal, findings, unknown, externalAuthored }
 }
 
 /**
@@ -219,9 +232,9 @@ function auditCards(pages) {
  * bucket's filter without that filter needing to learn about external cards.
  *
  * @param {{pageKey: string, section: object, kind: string, card: object,
- *   externalUnverified: object[], findings: object[]}} args
+ *   externalAuthored: object[], findings: object[]}} args
  */
-function auditExternalCard({ pageKey, section, kind, card, externalUnverified, findings }) {
+function auditExternalCard({ pageKey, section, kind, card, externalAuthored, findings }) {
   const cardText = card.text ?? ''
   // An external card with no text of its own is correct in every bucket:
   // title-only renders none, and the open question about inheriting
@@ -248,7 +261,7 @@ function auditExternalCard({ pageKey, section, kind, card, externalUnverified, f
     destText: '',
   }
   if (kind === 'title-only') findings.push(row)
-  else externalUnverified.push(row)
+  else externalAuthored.push(row)
 }
 
 /**
@@ -270,19 +283,13 @@ function printRow(row) {
     // toward, which is the exact mistake this bucket exists to prevent.
     if (row.kind === 'title-only')
       console.log('     text  dest: (none — this component renders no description)')
-    // An external card in an inheriting subsection has no destination text
-    // either, but for a different reason, and the difference is the whole point
-    // of its bucket: the panel above is known to render none, while here nobody
-    // has looked. Printing "(none)" would read as the same settled fact.
-    else if (row.external)
-      console.log('     text  dest: (unknown — no destination page, and never checked live)')
     else console.log(`     text  dest: ${row.destText.slice(0, 96)}`)
   }
 }
 
 function main() {
   const { pages } = loadPageData()
-  const { total, externalTotal, findings, unknown, externalUnverified } = auditCards(pages)
+  const { total, externalTotal, findings, unknown, externalAuthored } = auditCards(pages)
 
   const titleIssues = findings.filter((r) => !r.titleMatches)
   const textIssues = findings.filter(
@@ -303,13 +310,14 @@ function main() {
     `  dead card text:   ${deadText.length} (the component renders none — safe to delete)`
   )
   console.log(`unclassified sections:       ${unknown.length}`)
-  // Deliberately printed OUTSIDE the "will not render as written" total. Every
-  // number above it is a claim this audit is prepared to defend; this one is a
-  // question it is raising. Folding the two together would let a reviewer read
-  // six open questions as six confirmed defects and go delete copy that may
-  // well publish.
+  // Printed OUTSIDE the "will not render as written" total, because these are
+  // correct rather than broken: an external entry in a subsection authors its
+  // own description and Karl renders it (census of 2026-08-09, see the header).
+  // The line stays even though it can never be a finding, because "the audit
+  // said nothing about them" is indistinguishable from "the audit does not look
+  // at them" — which is exactly the silence that hid this class for a day.
   console.log(
-    `awaiting live verification:  ${externalUnverified.length} (external entries in an inheriting subsection)`
+    `external authored text:      ${externalAuthored.length} (renders as written — verified live 2026-08-09)`
   )
 
   if (titleIssues.length) {
@@ -324,14 +332,8 @@ function main() {
     console.log('\nDEAD TEXT — a title-only card carrying copy that cannot render. Delete it:')
     deadText.forEach(printRow)
   }
-  if (externalUnverified.length) {
-    console.log('\nAWAITING LIVE VERIFICATION — an external entry inside a Services/Resources')
-    console.log('subsection, carrying text. There is no destination page to inherit from, and')
-    console.log('whether Karl renders a description for an external entry here was never')
-    console.log('checked against a live page. Do NOT delete these on the strength of the')
-    console.log('internal finding — open one of these subsections on sf.gov and look:')
-    externalUnverified.forEach(printRow)
-  }
+  // Not listed per row. They are correct, and a list of correct things under a
+  // heading is read as a to-do list by whoever skims this next.
   if (unknown.length) {
     console.log('\nUNKNOWN — the section karl note names no recognized Karl block.')
     console.log('Classify it, or extend AUTHORED/INHERITS in this file:')

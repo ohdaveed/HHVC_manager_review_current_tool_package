@@ -333,18 +333,31 @@ failed to load.
   findings on purpose. A title mismatch is safe to sync mechanically; a
   description is a content judgement per card, and the right direction of the
   fix is sometimes the destination page rather than the card.
-- **Known open question — external-URL cards inside an inheriting subsection.**
-  Only the internal case was verified live. Whether Karl renders a description
-  for an **external** entry in a Services/Resources subsection, and where it
-  would come from if it did, nobody has looked at. The audit reports those
-  cards under "awaiting live verification" and deliberately asserts nothing
-  about them, and the renderer keeps printing their authored text. A live
-  check — open one of those subsections on sf.gov and read whether its external
-  entry shows a description — would settle it; until then, do not delete that
-  text on the strength of the internal finding. External cards in a
-  `title-only` section are **not** open in the same way: that component renders
-  no description for any entry, which is a fact about the component rather than
-  about the destination, so those report as dead text and have been deleted.
+- **An external-URL entry inside an inheriting subsection keeps its own
+  authored text — measured, not assumed.** There is no destination page to
+  inherit from, so this was an open question the audit reported and refused to
+  assert on. It was settled on 2026-08-09 by a census of all 332
+  `departments--*` pages in `sf.gov/sitemap.xml`: **333 of the 363** entries
+  whose `href` leaves sf.gov render a description of their own (the 30 that do
+  not match the shape of an editor leaving the field blank, the same way 90
+  SF.gov entries render none because their destination has no summary). An
+  external entry therefore HAS a description field, authored on the entry
+  rather than inherited, and `js/page-render.js` printing `card.text` for one
+  is correct — so the audit counts them and reports no finding. **Two details
+  of that census are load-bearing, because a repeat that misses either gets a
+  different answer.** `api.sf.gov`/`media.api.sf.gov` hosts were counted
+  separately (69 with a description to 29 without): those are SF.gov's own
+  document store, so such an entry is a **Document Picker** upload reading its
+  text off the Document object — a third mechanism, and folding it in answers a
+  different question with the same number. And each anchor was matched to its
+  own closing `</a>` before its description was read, since attributing a
+  neighbour's description to an entry is how a sweep like this quietly confirms
+  whatever it set out to find. External entries in a `title-only` section are
+  the opposite case and needed their own evidence: that component renders no
+  description for **any** entry, which is a fact about the component rather
+  than about the destination, so those report as dead text and were deleted.
+  Full write-up in
+  `docs/source/hhvc-policy/2026-08-08-karl-card-inheritance-verification.md`.
 
 ### Core module split (formerly one `app.js`)
 

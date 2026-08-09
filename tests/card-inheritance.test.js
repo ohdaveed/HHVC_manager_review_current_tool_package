@@ -229,14 +229,15 @@ describe('auditCards — external-URL cards', () => {
     // authored link label, so it keeps these rows out of the TITLE bucket
     // without that filter needing to learn about external cards.
     expect(result.findings[0].titleMatches).toBe(true)
-    expect(result.externalUnverified).toEqual([])
+    expect(result.externalAuthored).toEqual([])
   })
 
   test('holds an external card in an inheriting section separately, not as a finding', () => {
-    // Whether Karl renders a description for an EXTERNAL entry in a
-    // Services/Resources subsection was never checked live. This bucket raises
-    // the question; folding it into `findings` would let a reviewer read six
-    // open questions as six confirmed defects and delete copy that may publish.
+    // An external entry in a Services/Resources subsection authors its own
+    // description and Karl renders it — a census of all 332 sf.gov Agency pages
+    // on 2026-08-09 found 333 of 363 off-domain entries carrying one. So this
+    // text is correct, and must never land in `findings`, where every other row
+    // is something to go and delete.
     const pages = corpus([
       {
         heading: 'Services',
@@ -247,9 +248,9 @@ describe('auditCards — external-URL cards', () => {
     const result = auditCards(pages)
 
     expect(result.findings).toEqual([])
-    expect(result.externalUnverified).toHaveLength(1)
-    expect(result.externalUnverified[0].kind).toBe('inherits')
-    expect(result.externalUnverified[0].external).toBe(true)
+    expect(result.externalAuthored).toHaveLength(1)
+    expect(result.externalAuthored[0].kind).toBe('inherits')
+    expect(result.externalAuthored[0].external).toBe(true)
   })
 
   test('says nothing about an external card that carries no text', () => {
@@ -268,7 +269,7 @@ describe('auditCards — external-URL cards', () => {
     const result = auditCards(pages)
 
     expect(result.findings).toEqual([])
-    expect(result.externalUnverified).toEqual([])
+    expect(result.externalAuthored).toEqual([])
     // Still counted: they were checked and found correct, and a bucket whose
     // denominator excludes its passes cannot be read as a ratio.
     expect(result.externalTotal).toBe(2)
@@ -290,7 +291,7 @@ describe('auditCards — external-URL cards', () => {
     const result = auditCards(pages)
 
     expect(result.findings).toEqual([])
-    expect(result.externalUnverified).toEqual([])
+    expect(result.externalAuthored).toEqual([])
     expect(result.unknown).toEqual([])
     // Not counted either: `externalTotal` is the population this audit can say
     // something about, and these two are not in it.
