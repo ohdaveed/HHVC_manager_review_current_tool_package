@@ -660,6 +660,42 @@ describe('inline content edit: add/remove/undo for paragraph and bullet arrays',
     expect(document.querySelector('#toastContainer [data-inline-edit-undo]')).toBeNull()
   })
 
+  test('undo is a no-op if the reviewer navigated to a different page before clicking it', async () => {
+    const { mockPage, page, getPersistCalls } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: ['First', 'Second'] }],
+      },
+    })
+    document.body.insertAdjacentHTML('beforeend', '<div id="toastContainer"></div>')
+    window.showToast = realShowToast
+
+    mockPage.innerHTML =
+      '<li data-rewrite-field="sections.0.bullets.0">First</li>' +
+      '<li data-rewrite-field="sections.0.bullets.1">Second</li>' +
+      '<button type="button" data-inline-edit-remove="sections.0.bullets" data-inline-edit-index="0">×</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-remove]'))
+    expect(page.sections[0].bullets).toEqual(['Second'])
+    const persistCallsAfterRemove = getPersistCalls()
+
+    // Simulate navigating to a different page before the undo toast is
+    // clicked — getCurrentKey() is the seam js/ux-improvements.js's real
+    // navigation flips.
+    window.utils.getCurrentKey = () => 'otherPage'
+
+    const undoButton = document.querySelector('#toastContainer [data-inline-edit-undo]')
+    click(undoButton)
+
+    // Must not silently restore-and-save under the wrong page: the removed
+    // item stays removed (no in-memory restore either — restoring the data
+    // without a matching save would just move the bug, not fix it) and no
+    // extra persist() call fires.
+    expect(page.sections[0].bullets).toEqual(['Second'])
+    expect(getPersistCalls()).toBe(persistCallsAfterRemove)
+  })
+
   test('removing a paragraph reports the singular label "paragraph" in the toast', async () => {
     const { mockPage } = await mountInlineContentEdit({
       page: {
@@ -826,6 +862,58 @@ describe('inline content edit: decorateListControls appends add/remove controls 
     const items = Array.from(mockPage.querySelectorAll('ul > *'))
     const lastItemIndex = items.findIndex((el) => el.matches('[data-inline-edit-add]'))
     expect(lastItemIndex).toBe(items.length - 1)
+  })
+
+  test('a bullets array with zero items still gets an add control, anchored to the section heading (no dead end)', async () => {
+    // No <ul> at all: bulletList() in js/page-render.js renders '' for an
+    // empty array, whether the list was just emptied via the remove control
+    // or authored empty — both cases produce the same DOM shape this test
+    // exercises.
+    document.body.innerHTML =
+      '<div id="mockPage"><h2 data-rewrite-field="sections.0.heading">H</h2></div>'
+    const mockPage = document.getElementById('mockPage')
+
+    window.HHVC_DATA = {
+      pages: {
+        // No `paragraphs` key at all, so only `bullets` is an eligible empty
+        // container — keeps the assertion below unambiguous about ordering.
+        testPage: { title: 'T', summary: 'S', sections: [{ heading: 'H', bullets: [] }] },
+      },
+      order: [['testPage', 'Test']],
+    }
+    window.ORIGINAL_DATA = { pages: {} }
+    window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+    window.renderPage = () => {}
+    window.ReviewUx = { stateSync: { saveCurrentPageToLocalStorage: () => {} } }
+    window.showToast = () => {}
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const addControl = mockPage.querySelector('[data-inline-edit-add="sections.0.bullets"]')
+    expect(addControl).not.toBeNull()
+    expect(addControl.previousElementSibling).toBe(
+      mockPage.querySelector('[data-rewrite-field="sections.0.heading"]')
+    )
+  })
+
+  test('clicking Add on an emptied bullets list appends the first item (whole-array-replace from empty)', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', paragraphs: [], bullets: [] }],
+      },
+    })
+    mockPage.innerHTML =
+      '<h2 data-rewrite-field="sections.0.heading">H</h2>' +
+      '<button type="button" data-inline-edit-add="sections.0.bullets">+ Add</button>'
+
+    click(mockPage.querySelector('[data-inline-edit-add]'))
+
+    expect(page.sections[0].bullets).toEqual([
+      { text: '', unverified: true, unverifiedReason: 'Manually edited during review' },
+    ])
   })
 })
 

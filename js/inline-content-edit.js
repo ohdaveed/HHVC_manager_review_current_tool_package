@@ -313,6 +313,19 @@
       className: 'inline-edit-undo-action',
       dataset: { inlineEditUndo: '' },
       callback: () => {
+        // Undo is scoped to the page it happened on. persist()/rerender()
+        // both resolve "which page" via getCurrentKey() at call time, not
+        // via a key captured when the removal happened — so restoring onto
+        // `page` (still the correct in-memory object) and then saving would
+        // silently write THIS page's restored section_edits under whatever
+        // page the reviewer has since navigated to, corrupting that page's
+        // save. Worse, navigating back to the original page later would
+        // reapply its still-stale (pre-undo) saved section_edits, silently
+        // re-removing the item the reviewer just undid. Treating the undo
+        // as expired once the reviewer has moved on is simpler and safer
+        // than threading an explicit page-key parameter through persist()/
+        // rerender() to make a non-current-page save correct.
+        if (window.utils.getCurrentKey() !== key) return
         const restoreCurrent = getByPath(page, containerPath)
         const restoreArray = Array.isArray(restoreCurrent) ? [...restoreCurrent] : []
         restoreArray.splice(index, 0, removedItem)
@@ -387,22 +400,60 @@
       el.appendChild(wrapper.firstElementChild)
     })
 
+    // A paragraphs/bullets array that currently has ZERO items — because
+    // the reviewer just removed its last item, or because the page was
+    // authored with an empty array — renders no elements at all
+    // (paragraphList()/bulletList() in js/page-render.js both return '' for
+    // an empty array), so the DOM walk above never discovers it and
+    // seenContainers would otherwise never gain its containerPath. Without
+    // this pass, emptying a list is a one-way door: nothing left in the DOM
+    // to hang an Add control off of, and no other code path ever adds one
+    // back. Walk the live page data directly instead, so every container
+    // that CAN hold paragraphs/bullets is considered regardless of its
+    // current item count.
+    const key = window.utils.getCurrentKey()
+    const page = window.HHVC_DATA.pages[key]
+    if (page && Array.isArray(page.sections)) {
+      page.sections.forEach((section, sectionIndex) => {
+        ;['paragraphs', 'bullets'].forEach((field) => {
+          if (Array.isArray(section[field])) seenContainers.add(`sections.${sectionIndex}.${field}`)
+        })
+      })
+    }
+
     seenContainers.forEach((containerPath) => {
       const existingAdd = document.querySelector(
         `#mockPage [data-inline-edit-add="${CSS.escape(containerPath)}"]`
       )
       if (existingAdd) return // already decorated
       const located = locateListContainer(`${containerPath}.0`)
-      if (!located || !located.itemElements.length) return
-      const lastItem = located.itemElements[located.itemElements.length - 1]
       const addHtml = render.listAddControlHtml(containerPath)
       const wrapper = document.createElement('span')
       wrapper.innerHTML = addHtml
-      // Bullets share one <ul> parent; paragraphs are bare siblings with a
-      // shared parent too (the section's own container element in both
-      // cases), so inserting after the last item's parentNode position
-      // works uniformly for both shapes.
-      lastItem.parentNode.insertBefore(wrapper.firstElementChild, lastItem.nextSibling)
+      if (located && located.itemElements.length) {
+        const lastItem = located.itemElements[located.itemElements.length - 1]
+        // Bullets share one <ul> parent; paragraphs are bare siblings with a
+        // shared parent too (the section's own container element in both
+        // cases), so inserting after the last item's parentNode position
+        // works uniformly for both shapes.
+        lastItem.parentNode.insertBefore(wrapper.firstElementChild, lastItem.nextSibling)
+        return
+      }
+      // Zero items: no item element to anchor near, so fall back to the
+      // section's own heading — every section carries a required heading
+      // (build_scripts/schema.js), and renderSection() (Task 1) tags it
+      // data-rewrite-field="sections.N.heading" for every section that went
+      // through partitionSections(), which is all of them except the
+      // hardcoded "What to do" transaction-flow heading (js/page-render.js),
+      // which carries no such attribute and is skipped below rather than
+      // guessed at.
+      const sectionIndexMatch = containerPath.match(/^sections\.(\d+)\./)
+      if (!sectionIndexMatch) return
+      const headingEl = document.querySelector(
+        `#mockPage [data-rewrite-field="sections.${sectionIndexMatch[1]}.heading"]`
+      )
+      if (!headingEl) return
+      headingEl.parentNode.insertBefore(wrapper.firstElementChild, headingEl.nextSibling)
     })
   }
 

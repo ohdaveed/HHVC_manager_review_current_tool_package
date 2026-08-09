@@ -62,19 +62,6 @@
   }
 
   /**
-   * Message text for the one-step-undo toast shown after a paragraph/bullet
-   * removal. The literal "Undo" text is a marker Task 6's click handler
-   * binds to (via a data attribute on the toast's action element), not a
-   * real link — the toast itself is rendered by the existing showToast()
-   * in js/ui-controls.js.
-   * @param {string} label human-readable name of what was removed, e.g. "bullet"
-   * @returns {string}
-   */
-  function undoToastMarkup(label) {
-    return `Removed ${escapeHtml(label)}. <button type="button" class="inline-edit-undo-action" data-inline-edit-undo>Undo</button>`
-  }
-
-  /**
    * The "Reset to original" control shown next to a field currently
    * displaying the Edited badge.
    * @param {string} path
@@ -90,7 +77,6 @@
     listAddControlHtml,
     listRemoveControlHtml,
     editedBadgeHtml,
-    undoToastMarkup,
     resetControlHtml,
   }
 })()
