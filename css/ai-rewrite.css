@@ -1,0 +1,178 @@
+/* AI rewrite: the floating selection button and its popover.
+
+   Its own sheet rather than an extension of css/ai-assist.css, per the
+   "a selector should be declared in exactly one file" rule — that file owns
+   the workspace tab panel, this one owns two elements appended straight to
+   `document.body` and positioned relative to a text selection, which is a
+   different layout problem with its own z-index stack.
+
+   Tokens only, per the repo rule that a component reaching for a raw
+   --sfds-* value (or worse, a literal) is how every dark-mode contrast bug
+   here started. `--brand-primary`, `--brand-on-primary`, `--surface-raised`,
+   `--surface-sunken`, `--text-primary`, `--border-default`, `--radius` and
+   the `--ds-*` scale are the real names declared in css/theme.css — verified
+   against that file rather than assumed, since a token invented here would
+   silently fall back to nothing rather than fail loudly. */
+
+/* =====================================================================
+   Floating "AI rewrite" button
+   ===================================================================== */
+
+/* Fixed positioning (not absolute) because the button is appended to
+   document.body, outside any scrolling container, and its top/left are
+   computed in viewport coordinates by ai-rewrite-render.js's position()
+   helper — the same coordinate space getBoundingClientRect() returns. */
+.ai-rewrite-button {
+  position: fixed;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  font-size: var(--ds-text-label);
+  font-weight: 700;
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+  border: 1px solid var(--brand-primary);
+  border-radius: var(--ds-radius-sm);
+  cursor: pointer;
+  box-shadow: var(--ds-shadow-1);
+}
+
+.ai-rewrite-button:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+}
+
+/* Paired with the [hidden] attribute. The rule above sets `display: flex`
+   (via `inline-flex`), and a class selector outranks the UA stylesheet's
+   `[hidden] { display: none }`, which is where that attribute's entire
+   effect lives — without this pairing, hiding the button would appear to do
+   nothing. Same trap as .review-workspace[hidden] in css/dashboard.css. */
+.ai-rewrite-button[hidden] {
+  display: none;
+}
+
+/* =====================================================================
+   Popover
+   ===================================================================== */
+
+.ai-rewrite-popover {
+  position: fixed;
+  z-index: 61;
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--ds-space-4);
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-2);
+}
+
+/* Same load-bearing pairing as the button above. */
+.ai-rewrite-popover[hidden] {
+  display: none;
+}
+
+.ai-rewrite-title {
+  margin: 0 0 var(--ds-space-2);
+  font-size: var(--ds-text-panel);
+  color: var(--text-primary);
+}
+
+.ai-rewrite-scope-note {
+  margin: 0 0 var(--ds-space-3);
+  font-size: var(--ds-text-label);
+  color: var(--text-secondary);
+}
+
+.ai-rewrite-instruction-label {
+  display: block;
+  font-size: var(--ds-text-label);
+  color: var(--text-secondary);
+}
+
+/* The current field text and the model's suggestion share one look — a
+   quiet, readable block — so a reviewer's eye is drawn to the ACTIONS below
+   rather than to which one is "more important" typographically. */
+.ai-rewrite-field-text,
+.ai-rewrite-suggestion {
+  padding: var(--ds-space-3);
+  margin-top: var(--ds-space-1);
+  border-radius: var(--ds-radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font-size: var(--ds-text-card);
+  line-height: 1.5;
+  /* The field text and the model's rewrite are both plain multi-line
+     copy, not markup — preserve the line breaks the reviewer already sees
+     in the mockup instead of collapsing them to one run-on line. */
+  white-space: pre-wrap;
+}
+
+.ai-rewrite-instruction {
+  width: 100%;
+  padding: 0.4rem var(--ds-space-2);
+  margin-top: var(--ds-space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-sm);
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--ds-text-card);
+}
+
+/* Same danger triad css/theme.css uses for --status-blocked-* — a light
+   fill with dark, readable text, not --banner-danger-* (a solid-fill banner
+   token meant to be paired with a light-on-dark foreground; using it here
+   would put near-white text on this light background in light mode). */
+.ai-rewrite-error {
+  margin: var(--ds-space-3) 0 0;
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border: 1px solid var(--status-blocked-border);
+  border-radius: var(--ds-radius-sm);
+  background: var(--status-blocked-bg);
+  color: var(--status-blocked-fg);
+  font-size: var(--ds-text-label);
+}
+
+.ai-rewrite-status {
+  margin: var(--ds-space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--ds-text-label);
+}
+
+.ai-rewrite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+  margin-top: var(--ds-space-3);
+}
+
+.ai-rewrite-actions button {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-sm);
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: var(--ds-text-label);
+  cursor: pointer;
+}
+
+/* The primary action in each state — Rewrite, Apply — is the first button
+   rendered by renderPopover(); :first-child keys off structure rather than a
+   name so it stays correct if a button's id ever changes. */
+.ai-rewrite-actions button:first-child {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--brand-on-primary);
+}
+
+.ai-rewrite-actions button:first-child:hover {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+}

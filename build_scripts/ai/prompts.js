@@ -257,9 +257,110 @@ function buildComplianceAuditUserPrompt({ page, retrieved, issues, previousDraft
   return parts.join('\n\n')
 }
 
+/**
+ * The `rewrite-field` system prompt.
+ *
+ * Built from the same cached corpus as the content prompt, and byte-stable for
+ * the same reason: caching is a prefix match, so anything variable in here
+ * would invalidate it on every call. Everything request-specific — the field
+ * text, the reviewer's optional instruction, the retry failures — goes in the
+ * user turn.
+ *
+ * The standing instruction lives HERE rather than in the browser on purpose.
+ * If the panel sent the house rules, the rules a rewrite is held to could
+ * drift away from the rules js/plain-language.js scores the page against, and
+ * the two would disagree with no single source of truth.
+ * @returns {{system: string, groundedBy: string[]}}
+ */
+function buildRewriteSystemPrompt() {
+  const corpus = loadStyleCorpus()
+  const system = `You rewrite one field of body copy for a San Francisco government web page.
+
+Return ONLY the rewritten text for that one field. Do not add a heading, do not
+explain your changes, and do not return more than the one field you were given.
+
+<house_rules>
+- Plain language at roughly a Grade 6 reading level. Tenant-facing, empathetic.
+- Preserve the meaning. Never introduce a fact, number, phone number, deadline,
+  or obligation that is not already in the original text.
+- Preserve every [label](target) markdown link. You may reword the label; never
+  change or drop the target.
+- Plain prose only. No HTML tags.
+- Active voice. Address the reader as "you"; call the department "we".
+- No contractions. Write "do not", not "don't".
+- Never use the word "shall". Use "must" for obligations, "should" for
+  recommendations, "may" for options, "will" for what the City will do.
+- No dashes, no ellipses, no "&", no "i.e." / "e.g." / "etc.", no "please".
+- Everyday words: "help" not "assistance", "need" not "require", "start" not
+  "commence", "stop" not "cease", "to" not "in order to".
+- Write out dates as "January 28, 2026". Format phone numbers as 415-555-1212.
+</house_rules>
+
+<reference_material>
+${corpus.text}
+</reference_material>`
+
+  return { system, groundedBy: corpus.files }
+}
+
+/**
+ * Build the user turn for a rewrite request.
+ * @param {object} options
+ * @param {string} options.fieldText The whole field being rewritten.
+ * @param {string} [options.instruction] The reviewer's optional steer.
+ * @param {object} [options.page] The page open in the mockup, as context.
+ * @param {string[]} [options.issues] Validation failures from a previous attempt.
+ * @param {string} [options.previousDraft] The rewrite those failures came from.
+ * @returns {string}
+ */
+function buildRewriteUserPrompt({ fieldText, instruction, page, issues, previousDraft }) {
+  const parts = []
+
+  if (page && Object.keys(page).length) {
+    // serializePageForPrompt for the same reason the content prompt uses it:
+    // the size cap in schemas.js measures this exact string, and measuring one
+    // string while sending another is what let an oversized page through once.
+    parts.push(
+      `<page_context>\nThis field appears on the page below. Use it for context only. Rewrite the single field, not the page.\n\n${serializePageForPrompt(
+        page
+      )}\n</page_context>`
+    )
+  }
+
+  parts.push(`<field_to_rewrite>\n${fieldText}\n</field_to_rewrite>`)
+
+  // An empty instruction is the common case — the reviewer clicked the button
+  // without typing anything. The standing instruction is spelled out rather
+  // than left implicit, so the model is never asked to rewrite with no goal.
+  parts.push(
+    instruction
+      ? `<instruction>\n${instruction}\n</instruction>`
+      : '<instruction>\nTighten this up and bring it in line with the house rules. Keep every fact.\n</instruction>'
+  )
+
+  if (issues && issues.length) {
+    // The rejected rewrite travels with its failures, for the same reason it
+    // does on the content path: each call is stateless, so "fix these and
+    // change nothing else" is unfollowable without the thing to change, and
+    // the retry would regenerate from scratch and lose what was already right.
+    if (previousDraft) {
+      parts.push(`<previous_attempt>\n${previousDraft}\n</previous_attempt>`)
+    }
+    parts.push(
+      `<validation_failures>\nThe rewrite above failed validation. Return the field again with every item below fixed, and change nothing else.\n\n${issues
+        .map((issue) => `- ${issue}`)
+        .join('\n')}\n</validation_failures>`
+    )
+  }
+
+  return parts.join('\n\n')
+}
+
 module.exports = {
   buildContentSystemPrompt,
   buildContentUserPrompt,
+  buildRewriteSystemPrompt,
+  buildRewriteUserPrompt,
   buildComplianceAuditSystemPrompt,
   buildComplianceAuditUserPrompt,
   loadStyleCorpus,

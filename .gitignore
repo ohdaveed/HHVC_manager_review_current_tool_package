@@ -63,6 +63,12 @@ google-service-account.json
 # Playwright MCP scratch console logs/snapshots (not part of source, see CLAUDE.md)
 .playwright-mcp/
 
+# Firecrawl CLI per-repo scrape cache. The CLI writes fetched pages here the
+# first time `firecrawl scrape`/`search` runs from this directory — third-party
+# web content, not source, and it grows without bound across sessions.
+# (Credentials live in ~/.config/firecrawl-cli, not here.)
+.firecrawl/
+
 # Local tool settings/credentials
 .poolside/
 

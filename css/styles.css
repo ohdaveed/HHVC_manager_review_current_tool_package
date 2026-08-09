@@ -87,6 +87,23 @@ ol {
 li {
   margin-bottom: 0.35rem;
 }
+/* =====================================================================
+   Mockup type scale — deliberately literal, not tokenized
+   =====================================================================
+   Every other size step in this tool takes a semantic token, and the
+   rule of thumb is that a component "must never hardcode a literal."
+   The four heading rules below are the documented exception, and the
+   exception is the point: these sizes mirror what SF.gov actually
+   renders, so they describe the page under review rather than this
+   tool's chrome. Routing them through a retunable token would let a
+   reviewer change the apparent size of the very thing they are being
+   asked to judge — the same reason the workspace docks at 1700px
+   instead of squeezing the mockup into a narrower column.
+
+   Tool chrome has its own scale and should use it: --ds-text-panel /
+   --ds-text-card / --ds-text-label / --ds-text-micro in css/theme.css.
+   If you are reaching for a heading size here for anything outside
+   the mockup itself, you almost certainly want one of those instead. */
 h1,
 h2,
 h3,

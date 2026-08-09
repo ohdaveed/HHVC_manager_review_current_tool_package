@@ -36,8 +36,8 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 30 unit-test files in tests/ (692 tests)
-bun run test:e2e              # playwright test (131 specs across 17 files in tests/e2e/)
+bun run test                  # bun test over the 31 unit-test files in tests/ (725 tests)
+bun run test:e2e              # playwright test (138 specs across 18 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -65,7 +65,7 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 30 Bun unit-test files under `tests/`:
+wrong). `bun run test` runs 31 Bun unit-test files under `tests/`:
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature — see "Local persistence" below;
@@ -114,9 +114,13 @@ auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and per-provider
 usage normalization, varying the provider API keys directly — which the server
 tests structurally cannot, since a spawned subprocess only ever sees the
-environment it was given), and `ai-assist-server` (which spawns `server.ts`
+environment it was given), `ai-assist-server` (which spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call) — 692 tests at time of writing.
+without a key or a paid call), and `ai-assist-validate-rewrite` (the
+`rewrite-field` task's output validator — that a rewrite preserves every
+`[label](target)` link's TARGET while its label stays free to change, and that
+it introduces no HTML into copy that renders through `formatMarkdown`) — 725
+tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -130,11 +134,11 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — seventeen spec files
-(131 specs), all UI-driven: navigation, editor panel, review workflow, review
+`bun run test:e2e` drives Playwright over `tests/e2e/` — eighteen spec files
+(138 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
-shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
-Overview insight cards, and workshop-form submission handling. They share plain helper functions in
+shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
+export and Overview insight cards, and workshop-form submission handling. They share plain helper functions in
 `tests/e2e/helpers.js` (no fixture framework).
 A fourteenth file, `review-import-export.spec.js`, was deleted rather than
 repaired. Its two round-trip tests hand-rolled the merge inside
@@ -1705,6 +1709,72 @@ result carries the same `disclosure` string `content` does.
   corpus-wide embedding-model/version table, a task-dispatching registry
   refactor of `generateContent()`) and why.
 
+### AI rewrite (optional)
+
+A floating button that appears when a reviewer selects body copy in the mockup,
+offering an AI rewrite of the containing field. `js/ai-rewrite.js` is the
+orchestrator (selection, request lifecycle, apply/undo), `js/ai-rewrite-render.js`
+the view (button, popover, positioning), and both ride the existing
+`window.AiAssist.client`. Same posture as the rest of the AI surface: additive,
+invisible unless `/api/ai/*` is configured, and it never writes to `pages/*.js`.
+
+- **The selection picks the FIELD, not the substring.** `formatMarkdown()`
+  escapes HTML and rewrites `[label](target)` into elements, so a DOM offset
+  does not map back to an offset in the source markdown, and a selection
+  spanning two elements has no coherent splice. The whole containing
+  paragraph/bullet is sent and replaced; the popover shows it in full so the
+  scope of the change is visible before the request, not after. The field text
+  is read from page data via `getByPath`, never from `textContent` — the latter
+  is rendered output.
+- **`data-rewrite-field` paths use the ORIGINAL `page.sections` index.**
+  `partitionSections()` redistributes sections into seven role buckets rendered
+  in a fixed layout order, so render order is not source order. The index is
+  captured onto a render-time shallow copy (`__sectionIndex`) inside that loop;
+  a path built from render order rewrites the wrong section, silently. The
+  regression test for this is mutation-proven — it was confirmed to FAIL against
+  a deliberately render-order-broken renderer, because its first version's
+  negative assertion passed trivially and proved nothing.
+- **Annotation is opt-in per call site.** `paragraphList`/`bulletList`/
+  `renderSteps` emit nothing without a path prefix, which is how the v1 scope
+  (paragraphs, bullets, step text — not cards, tables, callouts, `whatToKnow`
+  or spotlight) is expressed. Widening it is passing a prefix at one more call
+  site, not editing the renderers.
+- **`getByPath`/`setByPath` reject `__proto__`/`prototype`/`constructor`.**
+  Without that, `setByPath(obj, '__proto__.x', v)` walked onto `Object.prototype`
+  and wrote through it, polluting every plain object in the app — confirmed by
+  exploit probe. These take paths straight from DOM attributes, which devtools
+  can edit, so this is not hypothetical. `setByPath` also never creates
+  intermediate objects: it returns `false` rather than inventing page structure
+  no schema validated.
+- **An applied rewrite is flagged `unverified: true`** with the reason
+  "AI-rewritten draft — verify before publishing", reusing the schema's existing
+  pill rather than a new AI-specific flag, so AI-touched copy is distinguishable
+  from human-authored copy at a glance in the mockup itself. Undo is one step
+  and consumed on use, matching `js/review-queue-undo.js`.
+- **The popover's position is clamped unconditionally.** Anchoring below the
+  selection (and flipping above) is a preference, not a guarantee: the mockup
+  runs ~8,800px, so a selection below the fold yields a `rect` outside the
+  viewport and BOTH anchors land off screen. An earlier version relied on
+  `max-height: 70vh` plus internal scrolling, which bounds how tall the popover
+  is and not where it sits — the Rewrite/Apply buttons rendered unclickable,
+  reported by Playwright as simultaneously "visible, enabled and stable" and
+  "outside of the viewport".
+- **`generateRewrite()` is a SIBLING of `generateContent()`, not a
+  generalization of it.** `generateRequestSchema` is a discriminated union on
+  `task` because the branches genuinely differ — `content` requires `prompt`,
+  `rewrite-field` requires `fieldText` and declares none. Folding the two into
+  one dispatcher would risk the page-draft path for no gain. Note Zod's
+  `z.object` STRIPS unknown keys rather than rejecting, so a stray `prompt` on a
+  rewrite request is dropped, not a 400.
+- **The validator checks link TARGETS, not whole links.** Rewording a link's
+  visible label is the point of the feature; changing or dropping its target is
+  a content regression nothing else would catch, so every dropped target is
+  named back to the model for the existing one-retry loop.
+- **`tests/e2e/ai-rewrite.spec.js` is the only layer that can cover this.**
+  Both modules are browser-only IIFEs with no `module.exports`, so there is no
+  unit layer beneath the e2e spec — the same structural gap the CSV/JSON import
+  round-trip has.
+
 ### Build outputs
 
 - **`vite build --mode singlefile`** (`bun run build:singlefile`) inlines
@@ -1840,7 +1910,7 @@ used liberally **only** in the self-aware override layer
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+**The nine stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
 the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
@@ -1852,6 +1922,7 @@ the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 | `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
 | `css/review-insights.css`     | the Overview cards and the failing-checks ranking                                              |
 | `css/review-ops.css`          | the stored-review-data panel                                                                   |
+| `css/ai-rewrite.css`          | the floating selection button and the rewrite popover                                          |
 | `css/inline-content-edit.css` | the inline click-to-edit widgets, Edited badge, add/remove/reset controls                      |
 | `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
 
@@ -1860,6 +1931,18 @@ a colour, a size step or a radius takes a semantic token; it should not reach
 for a raw `--sfds-*` value, and it must never hardcode a literal — every
 dark-mode contrast bug this repo has had came from a literal sitting where a
 token belonged.
+
+**The mockup's own type scale is the documented exception to that rule.**
+`h1`–`h4` in `css/styles.css` carry literal sizes (`clamp(2.2rem, 4vw, 4rem)`,
+`clamp(1.6rem, 2.6vw, 2.25rem)`, `1.25rem`) rather than tokens, and should stay
+that way: they mirror what SF.gov actually renders, so they describe the page
+under review rather than this tool's chrome. A retunable token would let a
+reviewer change the apparent size of the thing they are being asked to judge —
+the same argument that docks the workspace at 1700px instead of squeezing the
+mockup. Tool chrome has its own scale in `css/theme.css` (`--ds-text-panel`,
+`--ds-text-card`, `--ds-text-label`, `--ds-text-micro`) and should use it. Note
+those are named `--ds-text-*`, not `--*-size-*`; grepping for "size" or "scale"
+misses them and makes the type scale look absent when it is not.
 
 **A selector should be declared in exactly one file.** `.review-workspace`,
 its tabs, the KPI tiles and `.status-chip` were each split across

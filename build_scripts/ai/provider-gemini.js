@@ -24,13 +24,22 @@ const LABEL = 'Gemini'
 /**
  * Default model id.
  *
- * A deliberately conservative GA id rather than the newest preview. Gemini's
- * lineup moves faster than this repo does, and a preview id that ages out
- * becomes a 404 on every generation. `GEMINI_MODEL` overrides it, and
- * `GET /api/ai/models` lists what the configured key can actually see — check
- * there before assuming this constant is still the best choice.
+ * NOT a dated GA id (`gemini-2.5-pro`, what this constant shipped with) —
+ * verifying `compliance-audit` end to end against a real key hit a 404:
+ * `"This model models/gemini-2.5-pro is no longer available to new users."`
+ * The model is still returned by `client.models.list()` (so `GET
+ * /api/ai/models` would have shown it as available), but isn't actually
+ * usable — apparently Google restricts some dated ids to accounts that
+ * already had access before a cutoff, a distinction listing doesn't surface.
+ * `gemini-2.5-flash` and `gemini-2.0-flash` failed the same way against the
+ * same key; `gemini-pro-latest` and `gemini-flash-latest` did not. Using the
+ * `-latest` alias here is a deliberate reversal of the "pin a dated GA id,
+ * not an alias" instinct: an alias Google keeps pointed at whatever's
+ * currently accessible sidesteps this exact failure mode, where a dated id
+ * that used to be conservative becomes unusable out from under any account
+ * created after some cutoff. `GEMINI_MODEL` overrides it.
  */
-const DEFAULT_MODEL = 'gemini-2.5-pro'
+const DEFAULT_MODEL = 'gemini-pro-latest'
 const MAX_OUTPUT_TOKENS = 16000
 
 /**

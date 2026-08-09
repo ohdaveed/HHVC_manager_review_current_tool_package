@@ -327,7 +327,10 @@ describe('AI assist API (server.ts)', () => {
       expect(res.status).toBe(200)
       const body = await res.json()
       expect(body.providers.claude).toBe(true)
-      expect(body.tasks).toEqual(['content'])
+      // The browser reads this list to decide whether to mount the
+      // selection-rewrite affordance at all, so a task missing here is the
+      // difference between a working button and no button.
+      expect(body.tasks).toEqual(['content', 'rewrite-field'])
       expect(body.groundedBy).toContain('writing-and-style.md')
       expect(body.pageCount).toBe(22)
       expect(body.disclosureRequired).toBe(true)
@@ -338,7 +341,7 @@ describe('AI assist API (server.ts)', () => {
       const body = await res.json()
       expect(body.providers).toEqual({ claude: true, gemini: true })
       expect(body.models.claude).toBe('claude-opus-5')
-      expect(body.models.gemini).toBe('gemini-2.5-pro')
+      expect(body.models.gemini).toBe('gemini-pro-latest')
       // Labels drive the browser's picker. Without them it would have to map
       // registry keys to display names itself, which is the sort of duplicated
       // table that goes stale the first time a provider is added.
@@ -453,6 +456,75 @@ describe('AI assist API (server.ts)', () => {
       const res = await post({ task: 'content', prompt: 'Draft a page.', provider: 'gpt-9' })
       // Caught by the Zod enum before any provider work happens.
       expect(res.status).toBe(400)
+    })
+
+    test('rewrites one field and carries the mandatory disclosure', async () => {
+      stub.queue = [{ body: messageResponse({ rewrittenText: 'Report the problem to [us](x).' }) }]
+      const res = await post({
+        task: 'rewrite-field',
+        fieldText: 'You are required to report the problem to [us](x).',
+      })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.task).toBe('rewrite-field')
+      expect(body.result.rewrittenText).toBe('Report the problem to [us](x).')
+      expect(body.valid).toBe(true)
+      expect(body.attempts).toBe(1)
+      // Standards manual §1.11 and SF.gov's AI guidelines both require the
+      // label to travel with generated content, on every task.
+      expect(body.disclosure).toContain('AI-assisted')
+    })
+
+    test('sends the rewrite system prompt, not the page-drafting one', async () => {
+      stub.queue = [{ body: messageResponse({ rewrittenText: 'Short copy.' }) }]
+      await post({ task: 'rewrite-field', fieldText: 'Some long copy.' })
+      const system = stub.requests[0].system.map((block) => block.text).join('\n')
+      // Proves the route actually dispatched on task rather than falling
+      // through to generateContent, which no status code would reveal.
+      expect(system).toContain('You rewrite one field of body copy')
+      expect(system).not.toContain('<karl_field_notes>')
+    })
+
+    test('retries once and names the dropped link target', async () => {
+      // Both attempts drop the link, so the retry is exhausted and the result
+      // comes back invalid rather than being hidden from the reviewer.
+      stub.queue = [
+        { body: messageResponse({ rewrittenText: 'See the guide.' }) },
+        { body: messageResponse({ rewrittenText: 'Read the guide.' }) },
+      ]
+      const res = await post({
+        task: 'rewrite-field',
+        fieldText: 'See [the guide](pestsTopic).',
+      })
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.attempts).toBe(2)
+      expect(body.valid).toBe(false)
+      expect(body.issues.join(' ')).toContain('pestsTopic')
+      // The rejected attempt must travel with the failures, or "fix this and
+      // change nothing else" is an instruction the model cannot follow.
+      expect(JSON.stringify(stub.requests[1].messages)).toContain('See the guide.')
+    })
+
+    test('rejects a rewrite request with no fieldText', async () => {
+      const res = await post({ task: 'rewrite-field' })
+      // The discriminated union requires fieldText on this branch, so this
+      // fails validation before any provider call is made.
+      expect(res.status).toBe(400)
+      expect(stub.requests).toHaveLength(0)
+    })
+
+    test('ignores a stray prompt on a rewrite request rather than failing it', async () => {
+      stub.queue = [{ body: messageResponse({ rewrittenText: 'Short copy.' }) }]
+      const res = await post({ task: 'rewrite-field', fieldText: 'x', prompt: 'do a thing' })
+      // Zod's z.object STRIPS unknown keys rather than rejecting them, and the
+      // rewrite branch declares no `prompt`. Documented rather than tightened
+      // with .strict(): the content branch is not strict either, and making
+      // only one branch reject extra fields would be an inconsistency a future
+      // reader would have to rediscover. The stray value is dropped, never
+      // forwarded to the provider.
+      expect(res.status).toBe(200)
+      expect(JSON.stringify(stub.requests[0])).not.toContain('do a thing')
     })
 
     test('validates and retries on gemini exactly as it does on claude', async () => {

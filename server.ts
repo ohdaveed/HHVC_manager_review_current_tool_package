@@ -9,7 +9,7 @@ import { mergeReviewRecord } from "./js/review-merge.js"
 // @ts-ignore - plain JS module (CJS via Zod), no .d.ts; same interop as above.
 import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 // @ts-ignore - plain JS modules, CommonJS; the AI assist service (see below).
-import { generateContent, getCapabilities, listModels } from "./build_scripts/ai/index.js"
+import { generateContent, generateRewrite, getCapabilities, listModels } from "./build_scripts/ai/index.js"
 // @ts-ignore - plain JS module, CommonJS. The compliance-audit task's
 // orchestration — kept out of index.js because its Gemini-only embedding
 // dependency has nothing to do with the page-drafting path.
@@ -1064,10 +1064,16 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     const signal = AbortSignal.any([req.signal, timeout])
 
     try {
+      // Dispatch on the validated task. The request schema is a discriminated
+      // union, so each branch is already guaranteed to carry the fields its
+      // generator needs — `content` a prompt, `compliance-audit` a page,
+      // `rewrite-field` the field text.
       const result =
         parsed.data.task === "compliance-audit"
           ? await generateComplianceAudit({ ...parsed.data, signal })
-          : await generateContent({ ...parsed.data, signal })
+          : parsed.data.task === "rewrite-field"
+            ? await generateRewrite({ ...parsed.data, signal })
+            : await generateContent({ ...parsed.data, signal })
       return jsonResponse(result, 200, context.corsHeaders)
     } catch (error) {
       return aiErrorResponse(error, context, { client: req.signal, timeout })

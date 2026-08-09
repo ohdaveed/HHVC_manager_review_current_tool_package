@@ -162,11 +162,13 @@
    * The server reads a missing provider as "use this deployment's default",
    * which is what a single-provider server should do and what every caller did
    * before the picker existed; an empty string would fail the enum instead.
-   * @param {{task: string, prompt: string, page?: object, provider?: string,
-   *   signal?: AbortSignal}} request
+   * @param {{task: string, prompt?: string, fieldText?: string,
+   *   instruction?: string, page?: object, provider?: string,
+   *   signal?: AbortSignal}} request `prompt` belongs to the `content` task;
+   *   `fieldText` (required) and `instruction` (optional) to `rewrite-field`.
    * @returns {Promise<{ok: boolean, result?: object, error?: string, status?: number}>}
    */
-  async function generate({ task, prompt, page, provider, signal }) {
+  async function generate({ task, prompt, fieldText, instruction, page, provider, signal }) {
     if (!isConfigured()) return { ok: false, error: 'AI assist is not configured.' }
     const requestApiUrl = readConfig().apiUrl
     try {
@@ -175,7 +177,15 @@
         signal,
         body: JSON.stringify({
           task,
-          prompt,
+          // The server's request schema is a discriminated union on `task`:
+          // `content` carries a prompt, `rewrite-field` carries the field text
+          // instead and declares no prompt at all. This branch OMITS the other
+          // task's field rather than sending it empty — an empty `prompt`
+          // would fail min(1) exactly as a missing one does, so sending `''`
+          // buys nothing and only muddies which task the body describes.
+          ...(task === 'rewrite-field'
+            ? { fieldText, ...(instruction ? { instruction } : {}) }
+            : { prompt }),
           ...(page ? { page } : {}),
           ...(provider ? { provider } : {}),
         }),
