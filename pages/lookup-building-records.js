@@ -30,19 +30,16 @@ window.HHVC_PAGES['recordsHub'] = {
       cards: [
         {
           title: 'Find complaints and inspection records',
-          text: 'Search by street address, complaint ID, or location ID. Shows investigated complaints and inspections from the last five years.',
           target: 'findRecords',
           karl: "SF.gov page link block, links to an existing Transaction page (an SF.gov landing page that itself CTAs out to an external xnet lookup). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
           title: 'Look up residential health code violations',
-          text: 'Search violation and inspection history for residential buildings.',
           target: 'findViolations',
           karl: "SF.gov page link block, links to another existing Transaction page (violation-focused external lookup landing page). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
           title: 'Find residential hotel and shelter records',
-          text: 'Look up inspection and program records for SROs, residential hotels, and shelters.',
           target: 'findHotelRecords',
           karl: "SF.gov page link block, links to an existing Transaction page (an SF.gov landing page that itself CTAs out to an external hotel-program lookup). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
@@ -55,13 +52,11 @@ window.HHVC_PAGES['recordsHub'] = {
       cards: [
         {
           title: 'Make a public records request',
-          text: 'Request copies of City records through the citywide public records service.',
           target: 'publicRecords',
           karl: "SF.gov page link block, links to an existing Transaction page (an SF.gov landing page that itself CTAs out to the external NextRequest tool). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
           title: 'Pay your annual Healthy Housing fee for apartment buildings',
-          text: 'Pay the program fee for residential buildings with 3 or more units.',
           target: 'payFee',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },

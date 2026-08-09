@@ -109,13 +109,17 @@ is whatever matches what Karl publishes.
   in Related and in subsections alike. Repo commits `845ba34` (7 cards) and
   `09a74b7` (22 cards) synced all of them; `bun run audit-cards` reports zero
   title mismatches.
-- **`build_scripts/audit-card-inheritance.js` now classifies three ways**
-  (`authored` / `title-only` / `inherits`), added in commit `7b8ddca` along
-  with the deletion of 12 dead Related descriptions. **Its `resource section`
-  pattern is still in the wrong bucket** as of that commit: the finding above
-  moves it from `INHERITS` to `TITLE_ONLY`, which reclassifies 19 remaining
-  findings from "needs a per-card decision" to "delete the card text". That
-  edit and those deletions are still outstanding.
+- **`build_scripts/audit-card-inheritance.js` classifies three ways**
+  (`authored` / `title-only` / `inherits`). The split landed in `7b8ddca` with
+  12 dead Related descriptions deleted; `resource section` moved into
+  `TITLE_ONLY` afterwards, with 20 more deleted.
+- **It was 20, not the 19 predicted, and the extra one is the interesting
+  case.** Reclassifying changes the question asked of a Resource-section card
+  from "does its text equal the destination summary?" to "does it have text at
+  all?" One card's text already matched its summary verbatim, so the old rule
+  scored it as PASSING — while the text renders nowhere and should not exist.
+  The wrong classification was not merely over-reporting; it was also silently
+  blessing a card it should have flagged.
 - **Only 12 genuine editorial decisions remain**, all in the Agency page's
   Services and Resources subsections — the one component confirmed to render a
   description.

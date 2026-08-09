@@ -16,9 +16,10 @@
  * A subsection renders the destination's Title AND Description — confirmed in
  * the Karl editor docs ("Services on an Agency page", "Resources on an Agency
  * page") and against the live Environmental Health Agency page, whose card text
- * is verbatim each destination's own summary. The Related panel renders the
- * Title and a link and no description at all — confirmed 2026-08-08 against a
- * live Transaction page. See WHY THERE ARE THREE BUCKETS below.
+ * is verbatim each destination's own summary. The Related panel and a Resource
+ * Collection's Resource section render the Title and a link and no description
+ * at all — each confirmed separately against live pages on 2026-08-08. See WHY
+ * THERE ARE THREE BUCKETS below.
  *
  * A card in this mockup that says something different is therefore showing a
  * reviewer copy that will never appear on SF.gov — which matters more here than
@@ -41,13 +42,19 @@
  * WHY THERE ARE THREE BUCKETS AND NOT TWO
  *
  * Inheritance is not one behaviour. An Agency Services/Resources subsection
- * renders the destination's Title AND Description; the Related panel renders
- * its Title and a link and NOTHING else (verified live 2026-08-08). Treating
- * them alike asked one question — "does the card text equal the destination
- * summary?" — that is simply the wrong question for Related, where the answer
- * should be that there is no card text at all. It reported 49 correctly-empty
- * Related cards as findings, an over-report that invited someone to "fix" them
- * by pasting in copy the panel cannot show.
+ * renders the destination's Title AND Description; the Related panel and a
+ * Resource Collection's Resource section render the Title and a link and
+ * NOTHING else (each verified live 2026-08-08). Treating them alike asked one
+ * question — "does the card text equal the destination summary?" — which is
+ * simply the wrong question for the title-only pair, where the answer should
+ * be that there is no card text at all.
+ *
+ * It went wrong in both directions at once, which is why the split is worth
+ * the extra bucket. It reported 49 correctly-empty Related cards as findings,
+ * an over-report inviting someone to "fix" them by pasting in copy the panel
+ * cannot show. And it stayed SILENT on a Resource-section card whose text
+ * already matched its destination summary verbatim — scored as passing, when
+ * the text renders nowhere and should not be there at all.
  *
  * WHY IT REPORTS AND DOES NOT FIX
  *
@@ -72,14 +79,34 @@ const { loadPageData } = require('./load-pages')
  *
  * Checked third, so a section naming an authored block or a Related panel wins.
  */
-const INHERITS = /resource section|services subsection|resources subsection|page.{0,3} chooser/i
+const INHERITS = /services subsection|resources subsection|page.{0,3} chooser/i
 
 /**
- * The Related panel renders the destination's Title and a link — and NOTHING
- * else. Verified 2026-08-08 at DOM level against the live Transaction page
- * sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings, whose Related
- * entries each hold link text and no other text node. Full write-up in
+ * Karl blocks that render the destination's Title and a link — and NOTHING
+ * else. Two components live here, verified separately on 2026-08-08. Full
+ * write-up in
  * `docs/source/hhvc-policy/2026-08-08-karl-card-inheritance-verification.md`.
+ *
+ * The **Related panel**: checked at DOM level against the live Transaction page
+ * sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings, whose Related
+ * entries each hold link text and no other text node.
+ *
+ * A **Resource Collection's Resource section**: checked across three live
+ * sf.ResourceCollection pages. The decisive one is
+ * sf.gov/vacancy-notice-local-agency-formation-commission, whose entry for
+ * `bos-boards-commissions-and-task-forces-application-instruction` rendered
+ * that page's Title and nothing else — while the destination demonstrably has
+ * a Description. So the blank is Karl declining to render one, not a
+ * destination with none to give. That control matters: two sibling pages
+ * looked like evidence and were not, one holding only PDFs (whose in-entry
+ * "Published <date>" is Document metadata) and one whose single internal link
+ * could not be told apart from an inline body link.
+ *
+ * Resource section sat in INHERITS first, on the reasoning that it resembles a
+ * Resources subsection and that keeping card text was the conservative
+ * default. Conservative is not the same as correct: it left 19 cards of
+ * unrenderable copy in the mockup and dressed them up as decisions a reviewer
+ * would spend judgement on.
  *
  * This is a SEPARATE bucket from INHERITS rather than a member of it, because
  * the correct assertion is the opposite one: a Related card's text must be
@@ -94,7 +121,7 @@ const INHERITS = /resource section|services subsection|resources subsection|page
  * Checked BEFORE INHERITS: the Related karl notes also contain the phrase
  * 'a generic unrestricted "Page" chooser', which INHERITS would otherwise claim.
  */
-const TITLE_ONLY = /related field|related panel|related_links/i
+const TITLE_ONLY = /related field|related panel|related_links|resource section/i
 
 /**
  * Karl blocks that hold authored card content. A table row or a rich-text
@@ -185,7 +212,7 @@ function printRow(row) {
     // renders none — so printing the summary here would imply a target to sync
     // toward, which is the exact mistake this bucket exists to prevent.
     if (row.kind === 'title-only')
-      console.log('     text  dest: (none — Related renders no description)')
+      console.log('     text  dest: (none — this component renders no description)')
     else console.log(`     text  dest: ${row.destText.slice(0, 96)}`)
   }
 }
@@ -206,7 +233,9 @@ function main() {
   console.log(`will not render as written:  ${findings.length}`)
   console.log(`  title mismatches: ${titleIssues.length} (safe to sync to the destination)`)
   console.log(`  text mismatches:  ${textIssues.length} (needs a per-card decision)`)
-  console.log(`  dead card text:   ${deadText.length} (Related renders none — safe to delete)`)
+  console.log(
+    `  dead card text:   ${deadText.length} (the component renders none — safe to delete)`
+  )
   console.log(`unclassified sections:       ${unknown.length}`)
 
   if (titleIssues.length) {
@@ -218,7 +247,7 @@ function main() {
     textIssues.forEach(printRow)
   }
   if (deadText.length) {
-    console.log('\nDEAD TEXT — a Related card carrying copy that cannot render. Delete it:')
+    console.log('\nDEAD TEXT — a title-only card carrying copy that cannot render. Delete it:')
     deadText.forEach(printRow)
   }
   if (unknown.length) {

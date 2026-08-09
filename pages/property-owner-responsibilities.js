@@ -30,25 +30,21 @@ window.HHVC_PAGES['ownerHub'] = {
       cards: [
         {
           title: 'Pay your annual Healthy Housing fee for apartment buildings',
-          text: 'Pay the annual program fee for apartment buildings with 3 or more rental units.',
           target: 'payFee',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
           title: 'Fix your Healthy Housing and Vector Control violation',
-          text: 'Follow a Notice of Violation and take the required steps to correct the conditions.',
           target: 'noticeOfViolation',
           karl: "SF.gov page link block, links to an existing Information page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
           title: 'Integrated pest management for property owners and managers',
-          text: 'Use UC IPM templates for prevention, monitoring, and resident outreach.',
           target: 'ownerGuidance',
           karl: "SF.gov page link block, links to an existing Information page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
           title: 'Look up building records',
-          text: 'Find complaints, violations, inspector assignment, and public records for a building.',
           target: 'recordsHub',
           karl: "SF.gov page link block, links to another Resource Collection page (recordsHub). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },

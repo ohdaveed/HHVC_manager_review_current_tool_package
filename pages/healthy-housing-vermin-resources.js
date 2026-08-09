@@ -25,19 +25,16 @@ window.HHVC_PAGES['verminResources'] = {
       cards: [
         {
           title: 'Report rats, mice, and other four-legged problems',
-          text: 'Report rats, mice, raccoons, burrows, droppings, or another four-legged pest problem.',
           target: 'rodentsReport',
           karl: 'Resource section -> SF.gov page link to the rodents-report Transaction.',
         },
         {
           title: 'Report cockroaches, mosquitoes, and other insects',
-          text: 'Report cockroaches, bed bugs, mosquitoes, flies, wasps, mites, or standing water.',
           target: 'insectsReport',
           karl: 'Resource section -> SF.gov page link to the insects-report Transaction.',
         },
         {
           title: 'Report garbage, filth, and overgrown vegetation',
-          text: 'Report garbage, clutter, animal waste, pigeon problems, overgrown plants, or mold from humidity.',
           target: 'filthReport',
           karl: 'Resource section -> SF.gov page link to the filth-report Transaction.',
         },
@@ -53,7 +50,6 @@ window.HHVC_PAGES['verminResources'] = {
       cards: [
         {
           title: 'Tenant rights when reporting housing conditions',
-          text: 'Learn about tenant protections and where to get help if you are worried about retaliation.',
           target: 'tenantRights',
           karl: 'Resource section -> SF.gov page link to the tenant-rights Information page.',
         },
@@ -65,7 +61,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'What happens after you report a housing or pest problem',
-          text: 'Learn how a report is reviewed and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'Resource section -> SF.gov page link to the after-report Information page.',
         },
@@ -81,13 +76,11 @@ window.HHVC_PAGES['verminResources'] = {
       cards: [
         {
           title: 'Property owner responsibilities',
-          text: 'See Article 11 responsibilities, fees, pest prevention, and enforcement resources.',
           target: 'ownerHub',
           karl: 'Resource section -> SF.gov page link to the owner Resource Collection.',
         },
         {
           title: 'Integrated pest management for property owners and managers',
-          text: 'Use prevention, monitoring, and resident outreach tools for your building.',
           target: 'ownerGuidance',
           karl: 'Resource section -> SF.gov page link to the owner-guidance Information page.',
         },
@@ -106,13 +99,11 @@ window.HHVC_PAGES['verminResources'] = {
       cards: [
         {
           title: 'Look up building records',
-          text: 'Find complaints, inspections, violations, and public records for a building.',
           target: 'recordsHub',
           karl: 'Resource section -> SF.gov page link to the records Resource Collection.',
         },
         {
           title: 'Health Code Article 11 in plain language',
-          text: 'Read the City rules about pests, nuisances, violations, and enforcement.',
           target: 'article11Guide',
           karl: 'Resource section -> SF.gov page link to the Article 11 Report page.',
         },
@@ -137,7 +128,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'Mosquito Control Program',
-          text: 'Learn about mosquito prevention, surveillance, and West Nile virus resources.',
           target: 'mosquitoControl',
           karl: 'Resource section -> SF.gov page link to the mosquito-control Information page.',
         },
@@ -168,7 +158,6 @@ window.HHVC_PAGES['verminResources'] = {
         },
         {
           title: 'Healthy Housing and Vector Control',
-          text: 'Return to reporting, tenant help, owner resources, and City service referrals.',
           target: 'pestsTopic',
           karl: 'Resource section -> SF.gov page link to the HHVC Agency page.',
         },
