@@ -536,6 +536,183 @@ so it is the only place a snapshot is recorded.
   self-dismiss after 4s — far too short to notice a wrong bulk action and
   reverse it. Keyboard shortcut `z`.
 
+### Inline content editing (`js/inline-content-edit*.js`)
+
+Click-to-edit directly on the rendered mockup — title, summary, primary CTA
+label, a section heading, a paragraph, a bullet — with the mockup
+re-rendering immediately and the edit persisting through the same
+browser-first `localStorage` review-state model every other field in this
+tool uses. `pages/*.js` is never touched; this is a review aid, same as
+every other review/UX layer. Three files, mirroring the AI-assist split:
+`js/inline-content-edit-render.js` (widget markup — inputs, textareas,
+add/remove/reset controls, the Edited badge), `js/inline-content-edit-data.js`
+(pure `section_edits` diff/reapply, no DOM, dual-exported like
+`js/review-merge.js`), and `js/inline-content-edit.js` (the orchestrator —
+delegated click handling, the open/commit/cancel widget lifecycle, and
+wiring into the existing autosave path).
+
+- **Scope is deliberately narrow.** Title, summary, primary CTA, section
+  heading, section paragraphs, section bullets — that's it. Cards, callouts,
+  table cells, step text/bullets, `whatToKnow` items, and contact info stay
+  hand-edited in source. Add/remove is supported on exactly two fields —
+  section `paragraphs` and `bullets` — and only of individual items, never
+  whole sections/cards/steps, and never reordering.
+- **Addressing is reused, not reinvented.** `js/page-render.js` already
+  emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
+  attributes (added for the in-flight AI-rewrite-selection feature) via
+  `paragraphList()`/`bulletList()`'s `pathPrefix` parameter, plus
+  `data-rewrite-field="sections.N.heading"` on section `<h2>`s and
+  `"title"`/`"summary"`/`"primaryCta"` on the hero's elements, both added by
+  this feature. The path always uses each section's **original**
+  `page.sections` index (`__sectionIndex`, stamped by `partitionSections()`),
+  never its position in the reshuffled render layout — see the
+  "Field addressing" section of
+  `docs/superpowers/specs/2026-08-08-inline-content-editing-design.md` for
+  why render-position addressing would silently target the wrong section.
+  Every write goes through the existing guarded `getByPath`/`setByPath`
+  (`js/utils.js`) — never a hand-rolled path walker — except title, summary,
+  and CTA, which are page-level (not inside `sections[]`) and already have
+  dedicated accessors (`getPrimaryCta`/`setPrimaryCta`, direct
+  `page.title =`/`page.summary =`).
+- **Array edits are always a whole-field replace, never a per-index
+  patch.** Adding or removing one bullet writes the entire resulting array
+  under `sections.N.bullets`, never a single index — a delete shifts every
+  later index, so a per-item key would either go stale or need renumbering
+  logic on every removal. This mirrors how `edited_title` has always been
+  the whole new title, never a diff.
+- **`edited_title`/`edited_summary`/`primary_cta` were unused fields before
+  this feature, not new ones.** `REVIEW_RECORD_FIELDS` and the review-record
+  schema already had all three slots, and
+  `collectCurrentPageReviewState()`/`updateMockupTextFromSavedState()`
+  (`js/ux-improvements-state-sync.js`) already wrote and reapplied them —
+  there was simply no UI that ever changed `page.title`/`page.summary`/the
+  CTA to give them a non-empty value. This feature is that UI; it added no
+  new persistence code for these three fields, only the click-to-edit
+  interaction that mutates the in-memory page object the existing autosave
+  already reads from.
+- **`section_edits` is new, and it's derived, not accumulated.** A flat map
+  on the review record, `field path -> current full value` (e.g.
+  `{"sections.2.bullets": [...]}`). `computeSectionEdits()`
+  (`js/inline-content-edit-data.js`) recomputes it from scratch on every
+  autosave by diffing the live page object's `heading`/`paragraphs`/`bullets`
+  against `window.ORIGINAL_DATA`, the same "read live state fresh every
+  save" approach `edited_title` has always used — not an accumulated diff
+  that a delete or a manual reset would have to separately reconcile. This is
+  what makes "reset to original" correct by construction: once a field
+  matches `ORIGINAL_DATA` again, the next `computeSectionEdits()` call simply
+  omits its path from the map, with no deletion logic required anywhere.
+- **Reapply reports rather than renders, and the caller owns the one
+  follow-up paint.** `applyContentEditsToPageData()` — called once, from
+  `applySavedPageState()` in `js/ux-improvements-state-sync.js`, alongside
+  the pre-existing `updateMockupTextFromSavedState()` call — replays
+  `section_edits` back onto the in-memory page object on every
+  load/navigation/sync-pull/conflict-resolution path (all of which already
+  funnel through that one function). It deliberately does NOT touch
+  `edited_title`/`edited_summary`/`primary_cta` — those are
+  `updateMockupTextFromSavedState()`'s job, and reapplying them twice would
+  race two functions writing the same fields on every load. It also does not
+  re-render: staying DOM-free is why it's dual-exported and Bun-importable
+  with no browser, same as `js/review-merge.js`, so it returns a boolean —
+  whether it actually wrote a path via `setByPath` — rather than reaching for
+  `window.renderPage` itself. **That boolean exists because the obvious
+  alternative (re-render unconditionally whenever reapply runs) is a live
+  infinite loop, not a hypothetical one.** `window.renderPage` is already
+  `js/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
+  run, so a follow-up render re-enters that wrapper, which schedules its own
+  deferred `applySavedPageState` call for the same page — which would see
+  the same still-true "wrote something" signal and trigger a second render,
+  forever (disabling the guard that prevents this produced 17 renders before
+  a test's own teardown interrupted it). The fix is the boolean plus a
+  `refreshInFlightForKey` re-entrancy guard in
+  `js/ux-improvements-state-sync.js`: at most one follow-up render per
+  reapply, and the guard clears at the top of the very next
+  `applySavedPageState` call for that key rather than immediately after the
+  synchronous `renderPage()` call returns, since the reapply it's guarding
+  against happens asynchronously (a View Transition or `setTimeout(0)`). The
+  original design spec's persistence section did not anticipate this render
+  lag at all — it assumed reapplying the data was sufficient — so this
+  mechanism is a real fix discovered during implementation, not a restatement
+  of the design.
+- **No history entry per edit, same rule as every other keystroke-level
+  field.** Every commit — a scalar edit, an add, a remove, a reset — folds
+  into the existing debounced autosave (`saveCurrentPageToLocalStorage`),
+  never `mergeReviewRecord`. The mockup re-renders immediately regardless;
+  only the _recorded review round_ stays untouched.
+- **Edited-field visibility uses two different mechanisms, deliberately.**
+  A manually edited paragraph or bullet is stored as
+  `{text, unverified: true, unverifiedReason: 'Manually edited during
+review'}` — the existing object form `normalizeTextItem()` already handles,
+  rendering the existing Unverified pill with zero renderer changes. Title,
+  summary, heading, and CTA have no such schema slot (they're plain strings),
+  so they get a separate CSS-only "Edited" badge
+  (`css/inline-content-edit.css`) instead, applied as post-render DOM
+  decoration by comparing the live value against `window.ORIGINAL_DATA` —
+  never threaded into `renderHero()`/`renderSection()` as a parameter, which
+  would put a reviewer-only annotation inside the escaping-audited render
+  functions the AI-assist preview path also depends on staying pure.
+- **Clicking a link inside an editable field opens the editor, and never
+  navigates.** A `[data-rewrite-field]` element can contain a real
+  navigating `<a href>` — the hero CTA when it renders as a link rather than
+  an internal-target `<button>`, and any inline citation link
+  `formatMarkdown()` turns a `[label](https://...)` markdown reference into,
+  directly inside the paragraph/bullet text it belongs to. Without a guard,
+  a click on either kind of link both opened the field's editor (the
+  delegated click bubbling to the ancestor `[data-rewrite-field]`) **and**
+  navigated in a new tab at once. `handleMockPageClick()` calls
+  `event.preventDefault()` whenever the click target is inside a
+  navigating anchor, scoped to that condition rather than a blanket
+  `preventDefault()` on every click (which could interfere with normal
+  focus/selection once the editor widget itself is open) — editing takes
+  priority over leaving the review tool while the reviewer is trying to
+  edit the very field the link sits in.
+- **Per-field "Reset to original" is new, not a mirror of an existing
+  pattern.** The only prior precedent is `restorePageContentFromOriginal()`
+  (`js/review-state-sync.js`), and it's whole-page (title, summary, SEO
+  fields, CTA all at once, via direct assignment) — there was no per-field
+  reset anywhere in the tool before this feature. This feature's version is
+  scoped to one field via `getByPath`(`ORIGINAL_DATA`)/`setByPath`, modeled
+  on that function's shape but not calling it.
+- **One-step undo on delete, mirroring `js/review-queue-undo.js`'s
+  precedent** — not a confirm dialog, since that would interrupt the editing
+  flow for what is usually an accidental click. Deleting a paragraph or
+  bullet shows a toast with an Undo affordance; pressing it re-inserts the
+  removed item at its original index and re-persists. One level, consumed on
+  use — same reasoning as the queue's own undo: a stack would imply a
+  reconstructable history the review state doesn't have. **Undo is scoped to
+  the page it happened on, not carried across navigation:** the undo callback
+  resolves "which page" via `getCurrentKey()` at click time, and no-ops if
+  the reviewer has since navigated away — restoring onto the captured page
+  object but persisting under whatever page is now current would silently
+  corrupt that other page's save, and navigating back later would reapply
+  the original page's still-stale saved `section_edits`, silently
+  re-removing the item the reviewer thought they'd undone.
+- **Emptying a list doesn't strand it.** `decorateListControls()` originally
+  discovered "+ Add" anchor points only by walking already-rendered list
+  items, so a `paragraphs`/`bullets` array reduced to zero items (via remove,
+  or authored empty) rendered nothing and never regained an add control — a
+  one-way door. It now also walks the live page's section arrays directly,
+  anchoring the control to the section's heading (always present, per the
+  schema) when there are no items left to anchor near.
+- **CSV carries `edited_title`/`edited_summary`/`primary_cta`; it does NOT
+  carry `section_edits`.** This is a real, documented limitation, not an
+  oversight: the three page-level fields are flat strings and fit the
+  existing CSV row model the same way `notes`/`decision` do
+  (`js/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
+  `js/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
+  `js/review-queue-import.js`'s CSV import field list all carry them).
+  `section_edits` is a nested object keyed by dot-path and does not fit a
+  flat CSV row — it round-trips through the JSON backup path
+  (`importReviewStateBackup` in `js/ux-improvements-export.js`) only, for
+  free, since that path already merges through `mergeReviewRecord` with
+  whatever fields a saved record happens to carry. **A CSV export/import
+  cycle therefore preserves title/summary/CTA edits but silently drops
+  section-level (heading/paragraph/bullet) edits.** Choose the JSON backup
+  format when section-level edits matter to the round trip.
+- **No AI, no backend, no capability gating.** Unlike AI assist and the sync
+  backend, this feature has no `server.ts` dependency and needs no
+  configuration — the click-to-edit affordance is present on every deploy,
+  including the static Netlify build, the moment the page has loaded.
+
 ### Stored review data (`js/review-ops*.js`)
 
 A collapsed section at the end of the **Help** tab reporting what this browser
@@ -1286,19 +1463,20 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The seven stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
+**The eight stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
 the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
-| File                      | Owns                                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/styles.css`          | the mockup itself, plus the raw `--sfds-*` primitives                                          |
-| `css/ux-improvements.css` | the review layer's own chrome — the designated `!important` override sheet                     |
-| `css/ai-assist.css`       | the AI assist panel                                                                            |
-| `css/dashboard.css`       | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
-| `css/review-insights.css` | the Overview cards and the failing-checks ranking                                              |
-| `css/review-ops.css`      | the stored-review-data panel                                                                   |
-| `css/theme.css`           | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+| File                          | Owns                                                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
+| `css/ai-assist.css`           | the AI assist panel                                                                            |
+| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
+| `css/review-insights.css`     | the Overview cards and the failing-checks ranking                                              |
+| `css/review-ops.css`          | the stored-review-data panel                                                                   |
+| `css/inline-content-edit.css` | the inline click-to-edit widgets, Edited badge, add/remove/reset controls                      |
+| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
