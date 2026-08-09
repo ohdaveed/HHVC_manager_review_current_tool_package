@@ -216,10 +216,10 @@ h3 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  /* WCAG AA: --sfds-slate-2 (#383939) on white is ~11.4:1.
-     Previous --sfds-slate-3 (#6e7070) was ~4.2:1 and sat under the 4.5:1 floor. */
-  color: var(--sfds-slate-2);
   margin-bottom: 0.75rem;
+}
+.eyebrow--agency {
+  color: var(--eyebrow-agency);
 }
 .control-group {
   margin-top: 1.25rem;

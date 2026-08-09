@@ -155,6 +155,13 @@
   --border-default: var(--sfds-border, #e9eaea);
   --border-strong: var(--sfds-slate-4, #c9caca);
 
+  /* Sampled directly from the healthy-housing-conditions reference
+     screenshot's "TOPIC" eyebrow pixel data (darkest/most-saturated pixel
+     in its bounding box): #A84B00. WCAG AA text floor is 4.5:1 against
+     --surface-panel; verify with the accessibility.spec.js axe scan below
+     and adjust if flagged. */
+  --eyebrow-agency: #a84b00;
+
   /* ===================================================================
      Notification chrome — the one family that must NOT follow the ramp
      ===================================================================
@@ -341,6 +348,18 @@
     --sfds-white: #16181d; /* panel surface */
     --sfds-border: #2b2f37; /* hairline separator */
 
+    /* Lightened from the light-mode #a84b00 for contrast against the dark
+       panel surface — verify with the accessibility.spec.js axe scan (dark
+       mode) and adjust if flagged; this is a starting value, not a measured
+       final one. Note this value never actually reaches the mockup: the
+       `.browser-shell` re-pin below overrides it back to the light-mode
+       #a84b00, since the eyebrow only renders inside the always-light
+       mockup preview (see that block's header comment). It's kept here for
+       correctness/completeness of the token's own dark-mode definition, and
+       so it does the right thing if some future tool-chrome (non-mockup)
+       consumer ever adopts --eyebrow-agency outside `.browser-shell`. */
+    --eyebrow-agency: #d97d3d;
+
     /* Brand lightens. --sfds-action-blue (#2a60af) manages only 2.2:1 on
        the dark panel — far under the 4.5:1 a link needs — so links take
        step 70 of the ramp and hover goes lighter still, preserving the
@@ -498,6 +517,18 @@
     --brand-95: #ecf2fb;
     --brand-90: #dbe6f7;
     --status-pending-border: #c9caca;
+
+    /* Same reasoning as the trio above: --eyebrow-agency is overridden in
+       the dark :root block, so it has to be restored here too, or the
+       Agency eyebrow — which only ever renders inside this always-light
+       mockup — would inherit the dark-mode-tuned #d97d3d instead. That
+       value was chosen for contrast against the dark PANEL surface
+       (--sfds-white above, #16181d); against this shell's light background
+       it reads at roughly 2.3:1, failing the same 4.5:1 AA floor the
+       light-mode value was sampled to clear. The eyebrow has exactly one
+       correct color regardless of OS theme, because the page it previews
+       has exactly one (light) rendering. */
+    --eyebrow-agency: #a84b00;
 
     --surface-sunken: #f8fafc;
     --surface-raised: #fcfcfc;

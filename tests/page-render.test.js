@@ -738,3 +738,29 @@ describe('card title inheritance', () => {
     expect(ctx.renderResourcesList([card], inheritsSection)).toContain(scopeInfoTitle)
   })
 })
+
+describe('hero eyebrow', () => {
+  const base = {
+    title: 'A page',
+    summary: 'Summary.',
+    audience: ['Someone'],
+    reading: 'Grade 6',
+    sections: [],
+  }
+
+  test('shows an orange eyebrow on the Agency page', () => {
+    const html = ctx.renderPageMain({ ...base, type: 'Agency' })
+    expect(html).toContain('class="eyebrow eyebrow--agency"')
+    expect(html).toContain('>Agency<')
+  })
+
+  test('shows no eyebrow on a Transaction page', () => {
+    const html = ctx.renderPageMain({ ...base, type: 'Transaction' })
+    expect(html).not.toContain('class="eyebrow')
+  })
+
+  test('shows no eyebrow on an Information page', () => {
+    const html = ctx.renderPageMain({ ...base, type: 'Information' })
+    expect(html).not.toContain('class="eyebrow')
+  })
+})

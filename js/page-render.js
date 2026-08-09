@@ -625,7 +625,16 @@ function renderHero(page, heroCta) {
     : ''
   const heroClass =
     normalizePageType(page.type) === 'transaction' ? 'hero hero--transaction' : 'hero'
-  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}</div></section>`
+  // Only the Agency/Topic-shaped reference page (healthy-housing-conditions)
+  // showed a "TOPIC" eyebrow at all — the Transaction and Information
+  // references show none. Rather than one gray label on every page type,
+  // this now matches per-type: colored and present on Agency, absent
+  // elsewhere.
+  const eyebrowHtml =
+    normalizePageType(page.type) === 'agency'
+      ? `${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow eyebrow--agency">${escapeHtml(page.type)}</div>`
+      : ''
+  return `<section class="${heroClass}"><div class="hero-inner">${eyebrowHtml}${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}</div></section>`
 }
 // Every one of the 7 sf.gov reference pages audited for this pass shows one
 // link back to its owning program (e.g. "Environmental Health"), never a
