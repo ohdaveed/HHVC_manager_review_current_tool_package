@@ -163,7 +163,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
         '[UC IPM: Pest monitoring and recordkeeping](https://ipm.ucanr.edu/home-and-landscape/guide-for-property-managers/pest-monitoring-and-recordkeeping/)',
       ],
       bullets: [
-        'Use one system to log complaints, repairs, sanitation work, and contractor visits.',
+        'Use one system to log complaints, repairs, sanitation work, and contractor visits. Keeping a written log of vermin reports is required, not just good practice — see [Article 11 compliance for property owners](article11Compliance).',
         'Ensure the PCO conducts a complete inspection and identifies the type and level of infestation.',
         "Inspect adjacent units: When an infestation is reported, the PCO must inspect all adjacent units and treat them if necessary (Director's Rules §VI.6).",
         'Use least-toxic methods: Prioritize non-chemical methods (vacuuming, heat, steam, freezing) and gel baits over chemical sprays.',

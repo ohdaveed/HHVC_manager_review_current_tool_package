@@ -161,12 +161,30 @@ those actively contradict published guidance rather than omitting it.
 ### Absent (5)
 
 - **The written-log mandate.** Live: owners "must keep a written log" of vermin
-  signs and reports, with a log-template link. The closest line is
+  signs and reports, with a log-template link. The closest line was
   `integrated-pest-management-property-managers.js:166` ("Use one system to log
   complaints, repairs, sanitation work, and contractor visits"), which is IPM
   best-practice framing rather than a stated obligation. This is the strongest
   genuine gap: it sits in the same paragraph as the 72-hour rule the mockups do
   carry, so the transcription stopped halfway through.
+  **Fixed — and it turned out not to be an sf.gov-only claim.** Chasing it back
+  found the same requirement in a tier-1 source already vendored here:
+  `docs/source/hhvc-policy/2026-07-08-residential-building-owner-operator-guidelines-vector-control.md`,
+  item 2 — _"Owner or manager shall investigate reports of pest activity within
+  72 hours. All reports of rodents, fleas, flies, bedbugs, spiders, cockroaches,
+  wasps, and mosquitoes will be recorded in a logbook made available to the pest
+  control professional."_ One sentence, of which the mockups carried the first
+  half. So the Article 11 scope caveat above does **not** excuse this one, and
+  it lands on `article-11-compliance-for-property-owners.js` where the 72-hour
+  half already lives (checklist bullet plus a full bullet carrying the verbatim
+  pest list, the give-it-to-the-PCO duty, and the live log-template link). The
+  IPM page's line now says the log is required and links across rather than
+  restating it.
+  **Method note for the remaining items:** this one was classified "absent —
+  sf.gov only" on the strength of a grep across `pages/`. The grep was right that
+  no page said it; the inference that it was therefore outside Article 11 scope
+  was not, and only checking `docs/source/` disproved it. Any remaining item
+  below should get the same treatment before it is dismissed as out of scope.
 - **Pigeon prohibition.** Poisoning, trapping, or shooting pigeons is not
   allowed. Pigeons appear on six pages, every time as a reportable nuisance and
   never as a restricted action.

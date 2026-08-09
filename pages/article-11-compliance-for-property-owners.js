@@ -12,7 +12,7 @@ window.HHVC_PAGES['article11Compliance'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Information page modeled on the SF.gov minimum wage ordinance pattern (sf.gov/information--minimum-wage-ordinance): a short compliance-first front door, not a replacement for the deep-dive `article11Guide` Report page it links out to. Every fact here (fee tiers, 72-hour window, 2-year records, PCO licensing, pesticide notice, training) is pulled from `article11Guide` and `payFee`, not re-derived — see each section\'s karl note for which source page to cross-check. Two open questions carried from the design spec, not blocking: (1) whether Karl\'s Information content type has a distinct checklist/callout-with-list block, or whether the bulleted list used below (see "What Article 11 requires" section) is the closest real-schema fit; (2) the same `cost` panel radio-option gap already flagged on `payFee` — no "varies by unit count" option, so Range or Minimum-and-up is Digital Services\' call.',
+    "Information page modeled on the SF.gov minimum wage ordinance pattern (sf.gov/information--minimum-wage-ordinance): a short compliance-first front door, not a replacement for the deep-dive `article11Guide` Report page it links out to. Every fact here (fee tiers, 72-hour window, 2-year records, PCO licensing, pesticide notice, training) is pulled from `article11Guide` and `payFee`, not re-derived — see each section's karl note for which source page to cross-check. The one exception is the vermin-log requirement, which no other mockup page carries: it comes straight from the Director's Rules excerpt at `docs/source/hhvc-policy/2026-07-08-residential-building-owner-operator-guidelines-vector-control.md` (item 2), the same sentence the 72-hour window is quoted from. Worth adding to `article11Guide`'s owner-responsibility table as well, so this page keeps summarizing rather than becoming the sole source for it. Two open questions carried from the design spec, not blocking: (1) whether Karl's Information content type has a distinct checklist/callout-with-list block, or whether the bulleted list used below (see \"What Article 11 requires\" section) is the closest real-schema fit; (2) the same `cost` panel radio-option gap already flagged on `payFee` — no \"varies by unit count\" option, so Range or Minimum-and-up is Digital Services' call.",
   editorStatus: 'needs-review',
   topicTag: 'Agency: Healthy Housing and Vector Control',
   whatToKnow: {
@@ -37,7 +37,7 @@ window.HHVC_PAGES['article11Compliance'] = {
       ],
       bullets: [
         'Pay your annual Healthy Housing fee if your building has 3 or more rental units',
-        'Investigate tenant pest reports within 72 hours',
+        'Investigate tenant pest reports within 72 hours, and write every report down in a log',
         'Hire a licensed pest control operator (PCO) for treatment — never unlicensed staff',
         'Keep records of complaints, inspections, and treatments for at least 2 years',
         'Notify tenants in writing before pesticide application',
@@ -59,13 +59,14 @@ window.HHVC_PAGES['article11Compliance'] = {
     },
     {
       heading: "What you're required to do",
-      karl: "Maps to a third Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below. Condensed from the owner-responsibility and PCO-requirement content in `article11Guide` (Director's Rules §V.2 and related citations) — not a full restatement; links out to the complete table.",
+      karl: "Maps to a third Title and text block: Title = this heading, Text = the intro paragraph plus the bulleted list below. Condensed from the owner-responsibility and PCO-requirement content in `article11Guide` (Director's Rules §V.2 and related citations) — not a full restatement; links out to the complete table. The vermin-log bullet and the 72-hour bullet above it are the two halves of ONE Director's Rules sentence (Residential Building Owner/Operator Guidelines for Vector Control, item 2) — the pest list is quoted from it verbatim, so do not trim it to a shorter set. It is deliberately separate from the 2-year records bullet that follows: that one is retention of complaints/inspections/treatments for DPH, this one is a running log handed to the PCO. Flag for Digital Services: the log-template link points at the live SF.gov resource page rather than a mockup page key, because no equivalent page exists in this set.",
       kind: 'body',
       paragraphs: [
         "These requirements come from Article 11 and the SFDPH Director's Rules and Regulations.",
       ],
       bullets: [
         'Investigate tenant pest reports within 72 hours of receiving them.',
+        "Keep a written log of every report or sign of vermin: rodents, fleas, flies, bedbugs, spiders, cockroaches, wasps, and mosquitoes. Give the log to your pest control operator. You can use the City's [complaint forms and log template](https://www.sf.gov/resource/2024/healthy-housing-and-pest-information).",
         'Keep records of complaints, inspections, and pest control services for at least 2 years, and make them available to DPH on request.',
         'Hire only licensed pest control operators (PCOs) to apply pesticides or trap rats — never unlicensed staff or over-the-counter treatments for significant infestations.',
         'Give tenants written notice before pesticide application, including the product name, date, and safety information.',
