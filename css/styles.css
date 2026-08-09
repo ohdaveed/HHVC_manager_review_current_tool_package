@@ -903,7 +903,7 @@ a:focus {
   border-top: 1px solid var(--sfds-border);
   padding-top: 1rem;
 }
-.section--related .cards {
+.section--related .resources-list {
   margin-top: 0.75rem;
 }
 .on-this-page {

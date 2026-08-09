@@ -147,16 +147,16 @@ describe('page-render.js escaping', () => {
     expect(html).toContain('<p>Claim<span class="unverified-pill">')
   })
 
-  test('renderRelatedList uses the cards grid layout', () => {
+  test('renderRelatedList uses the same plain divided-list layout as Resources', () => {
     const html = ctx.renderRelatedList(
       [{ title: 'Report mold', target: 'moldReport' }],
       'Related pages'
     )
     expect(html).toContain('class="section section--related"')
-    expect(html).toContain('class="cards"')
-    expect(html).toContain('class="card"')
+    expect(html).toContain('class="resources-list"')
     expect(html).toContain('data-render-target="moldReport"')
-    expect(html).not.toContain('class="related-list"')
+    expect(html).not.toContain('class="cards"')
+    expect(html).not.toContain('class="card"')
   })
 
   test('renderTable escapes header and body cells', () => {

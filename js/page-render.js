@@ -387,7 +387,7 @@ function renderServiceTiles(cards = [], section = null) {
 }
 function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
-  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2>${renderCards(cards, section)}</section>`
+  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
 }
 function renderRelatedRail(sections = []) {
   // Kept as (section, card) pairs rather than flattened to cards alone: the
