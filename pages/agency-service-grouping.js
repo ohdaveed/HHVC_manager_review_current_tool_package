@@ -52,6 +52,12 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Services subsection entry -> SF.gov page link to the consolidated filth-report Transaction. This is the focused report route for the current live topic’s mold and trash scope; the description is mockup context, so confirm whether the live Services card displays it.',
         },
         {
+          title: 'Get help with pests in your building',
+          text: 'Find guides, forms, videos, and prevention steps for rodents, bed bugs, mosquitoes, and pigeons.',
+          target: 'verminResources',
+          karl: 'Services subsection entry -> SF.gov page link to the healthy-housing resources Resource Collection. Mirrors the live "Get help with vermin in your building" service, which sf.gov files under Services (General housing issues) rather than Resources — this card was previously the last entry under "Look up records and rules", where a tenant looking for self-help would not think to look. Flag for Digital Services: the card title is task-shaped and does not match the destination page title ("Healthy housing and pest resources"); confirm whether a Services card may set its own label or must inherit the page title.',
+        },
+        {
           title: 'Learn about Healthy Housing inspection programs',
           text: 'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.',
           target: 'scopeInfo',
@@ -153,18 +159,12 @@ window.HHVC_PAGES['pestsTopic'] = {
           target: 'publicRecords',
           karl: 'Resources subsection entry -> SF.gov page link to the public-records Transaction.',
         },
-        {
-          title: 'Healthy housing and pest resources',
-          text: 'Find guides, forms, videos, and prevention information for renters and building managers.',
-          target: 'verminResources',
-          karl: 'Resources subsection entry -> SF.gov page link to the healthy-housing resources Resource Collection.',
-        },
       ],
     },
     {
       heading: 'Need another City housing service?',
       component: 'resources',
-      karl: 'Agency -> Resources. Use a final Resources subsection for out-of-scope referrals. This is one external link rather than a parallel directory, so the HHVC page remains limited to Article 11 while still giving a visitor a clear next destination.',
+      karl: 'Agency -> Resources. Use a final Resources subsection for out-of-scope referrals. These are a few external links rather than a parallel directory, so the HHVC page remains limited to Article 11 while still giving a visitor a clear next destination. Keep it that way: each addition here is a scope claim in reverse, and a section that grows past a handful stops reading as "not us, try here" and starts reading as a second, worse copy of the Citywide topic.',
       kind: 'body',
       paragraphs: [
         'Lead safety, water service, noise, asbestos, and structural construction concerns may be handled by another City program.',
@@ -181,6 +181,12 @@ window.HHVC_PAGES['pestsTopic'] = {
           text: 'Use the Citywide 311 service for lead, water, sewage, food, pesticide, or business hygiene concerns.',
           url: 'https://www.sf.gov/report-health-nuisance-or-hazards',
           karl: 'Resources subsection entry -> External link to the Citywide Environmental Health reporting service. This integrates the broad 311 intake without duplicating its non-HHVC services in the Article 11 page model.',
+        },
+        {
+          title: 'Report a residential building concern',
+          text: 'Report problems with a building or living conditions in a residential building or single room occupancy (SRO) hotel.',
+          url: 'https://www.sf.gov/report-residential-building-concern',
+          karl: 'Resources subsection entry -> External link to the Citywide residential-building reporting service. This is the FIRST service on the live "Healthy housing conditions" topic and the only one covering SRO habitability, but it spans structural and habitability problems well beyond Article 11, so it is a referral rather than an HHVC reporting path. It belongs here rather than in the Services section for that reason: a visitor whose problem is the building itself needs the door, and the HHVC page should not appear to own it.',
         },
       ],
     },

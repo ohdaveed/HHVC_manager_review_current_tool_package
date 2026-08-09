@@ -167,6 +167,20 @@ Partner agencies: Department of Public Health · Environmental Health.
 3. If not repeatable — fall back to the Services-subsection split described
    above.
 4. Independent of the schema answer: add doors for the two missing services.
+   **Done — and only one was an add.** "Report a residential building concern"
+   was genuinely absent and is now an external referral under "Need another
+   City housing service?", not under Services: it spans structural and
+   habitability problems well past Article 11, so the HHVC page should offer
+   the door without appearing to own it. The vermin self-help route was **not**
+   missing — `verminResources` was already on the page, filed last under "Look
+   up records and rules", which is not where a tenant looking for self-help
+   would ever look. Live sf.gov files the same content under Services (General
+   housing issues), so it moved there and was retitled task-first: "Get help
+   with pests in your building". It was moved rather than copied; a second
+   printing is what this tool has spent its UX review budget removing.
+   Note the follow-on flag: that card's title no longer matches its
+   destination page title, which Digital Services needs to confirm a Services
+   card may do.
 
 ## Rerun inputs
 
