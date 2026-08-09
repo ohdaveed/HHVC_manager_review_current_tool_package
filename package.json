@@ -35,6 +35,8 @@
     "serve": "bun run server.ts",
     "// validate": "Zod-validates pages/*.js and js/page-data.js for schema shape and business invariants",
     "validate": "bun build_scripts/validate.js",
+    "// audit-cards": "Reports card titles/text that differ from the destination page Karl actually renders. Read-only report, never a gate — the text half needs a per-card human decision. Manual, not part of build or CI.",
+    "audit-cards": "bun build_scripts/audit-card-inheritance.js",
     "// export": "Generates data/page_inventory.{json,csv} and syncs the local tracking sheet",
     "export": "bun build_scripts/extract-pages.js && bun build_scripts/sync-tracking-sheet.js",
     "// ingest": "Chunks docs/source/**/*.md, embeds via Gemini, and upserts into knowledge_chunks. Needs GEMINI_API_KEY. Manual, not part of the build pipeline.",
