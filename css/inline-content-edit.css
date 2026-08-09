@@ -120,3 +120,11 @@ textarea.inline-edit-input {
   border: none;
   cursor: pointer;
 }
+
+/* Wraps the "+ Add" control when it's appended inside a <ul> (a list's only
+   valid children are <li> — see js/inline-content-edit.js's
+   decorateListControls()). This <li> exists purely for valid list
+   structure, not to be a visible list item, so it gets no bullet marker. */
+.inline-edit-add-li {
+  list-style: none;
+}

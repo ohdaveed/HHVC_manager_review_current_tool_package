@@ -465,6 +465,11 @@
         const addNode = /\.bullets$/.test(containerPath)
           ? (() => {
               const li = document.createElement('li')
+              // A plain <li> inherits the list's bullet marker, which would
+              // render a stray • next to "+ Add" — this <li> exists only to
+              // satisfy list-structure rules (a <ul>'s only valid children
+              // are <li>), not to be a visible list item itself.
+              li.className = 'inline-edit-add-li'
               li.appendChild(wrapper.firstElementChild)
               return li
             })()
