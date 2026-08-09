@@ -206,11 +206,15 @@ from the `order` array.
 
 A Karl Services/Resources subsection entry — and a Related-panel entry, and a
 Resource Collection's Resource-section entry — is only a page picker: "add an
-SF.gov page or External link". There is no label field and no description field
-on the entry, so what publishes is the DESTINATION page's own title and summary.
-A card in this mockup carrying its own `text` was therefore showing reviewers
-copy that can never appear on SF.gov, in a tool whose entire purpose is
-approving that copy — and the inline-editing feature then made those dead fields
+SF.gov page or External link". There is no label field on the entry, so its
+title always publishes as the DESTINATION page's own title; only the Agency
+Services/Resources subsection also lacks a description field, so only THAT
+bucket additionally publishes the destination's summary — the Related panel and
+a Resource Collection's Resource section render a title and a link and nothing
+else (see the three-bucket breakdown below for the exact split). A card in
+this mockup carrying its own `text` was therefore showing reviewers copy that
+can never appear on SF.gov, in a tool whose entire purpose is approving that
+copy — and the inline-editing feature then made those dead fields
 click-to-edit.
 
 So `js/page-render.js` resolves every card description through one helper,

@@ -1010,9 +1010,18 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     // stop short of the cases that function can already handle cleanly.
     //
     // Between the cap and the drain limit, falling through costs one drain and
-    // returns the identical 413 with the connection still usable. Past the drain
-    // limit readBodyWithLimit would give up on the connection anyway, so
-    // refusing here concedes nothing it was going to preserve.
+    // returns the identical 413 with the connection still usable — draining is
+    // cheaper than closing a connection a well-behaved client would just reopen.
+    // PAST the drain limit there is no such option: readBodyWithLimit would give
+    // up on the connection anyway once it started reading, so there is nothing
+    // to preserve by falling through, and refusing here still leaves the body
+    // unread. `Connection: close` on the response is what actually prevents the
+    // corruption in that case — without it, an HONEST client whose declared
+    // size clears this threshold reproduces the exact keep-alive poisoning this
+    // whole pre-check exists to avoid, just at a higher bar to trigger it.
+    // Verified against a raw socket: Bun honors the header and answers nothing
+    // further on that connection, rather than parsing the unread bytes as the
+    // next request's framing.
     const declaredLength = Number(req.headers.get("content-length") ?? Number.NaN)
     if (
       Number.isFinite(declaredLength) &&
@@ -1021,7 +1030,8 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
       return jsonResponse(
         { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
         413,
-        context.corsHeaders
+        context.corsHeaders,
+        { Connection: "close" }
       )
     }
 

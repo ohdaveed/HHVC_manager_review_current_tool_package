@@ -10,6 +10,8 @@ import { describe, test, expect } from 'bun:test'
 // happy-dom environment preloaded via bunfig.toml is what lets that chain
 // evaluate here, since js/state.js reads window.HHVC_DATA on import.
 import * as ctx from '../js/page-render.js'
+import { pageData } from '../js/state.js'
+import { escapeHtml } from '../js/utils.js'
 
 const PAYLOAD = `<script>alert('xss')</script>`
 const ESCAPED = `&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;`
@@ -444,30 +446,37 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
     expect(html).toContain('data-rewrite-field="primaryCta"')
   })
 
-  // The hero's metadata row carries only REAL page fields. It used to open with
-  // three pills that were not page data at all: 'Environmental Health' and
-  // 'HHVC' were string literals in the renderer, identical on all 22 pages, and
-  // the third printed `page.reading` — a property OF the copy rather than part
-  // of it, and one no Karl page publishes. A mockup that prints reviewer chrome
-  // above the fold misrepresents the page a manager is being asked to approve.
+  // The hero renders no pills of any kind after the CTA. It used to close
+  // with a metadata row of up to three: 'Environmental Health' and 'HHVC'
+  // were string literals in the renderer, identical on all 22 pages;
+  // `page.reading` is a property OF the copy rather than part of it, and one
+  // no Karl page publishes; and `topicTag`/`reportDate`, while real page
+  // fields, still duplicated chrome that added nothing above the fold. A
+  // mockup that prints reviewer chrome above the fold misrepresents the page
+  // a manager is being asked to approve.
   //
-  // These assertions exist because nothing covered that row, which is exactly
-  // how all three came to be removed in an unrelated change without a single
-  // test noticing either the removal or the behaviour it changed.
-  test('renders no hardcoded agency pills in the hero metadata row', () => {
-    const html = ctx.renderPageMain(transactionPage)
-    expect(html).not.toContain('<span class="pill">Environmental Health</span>')
-    expect(html).not.toContain('<span class="pill">HHVC</span>')
+  // These assertions exist because nothing covered that row, which is
+  // exactly how the first three came to be removed in an unrelated change
+  // without a single test noticing either the removal or the behaviour it
+  // changed.
+  test('renders no pills in the hero after the CTA', () => {
+    const html = ctx.renderPageMain({
+      ...transactionPage,
+      topicTag: 'Pests',
+      reportDate: '2026-01-01',
+    })
+    expect(html).not.toContain('<span class="pill')
+    expect(html).not.toContain('<div class="metadata">')
   })
 
   test('does not print the reading grade as a hero pill', () => {
     const html = ctx.renderPageMain(transactionPage)
-    expect(html).not.toContain('<span class="pill">Grade 6</span>')
-  })
-
-  test('still renders the topic tag, which is a real page field', () => {
-    const html = ctx.renderPageMain({ ...transactionPage, topicTag: 'Pests' })
-    expect(html).toContain('Pests')
+    // Reads the fixture's own `reading` value rather than a hardcoded
+    // 'Grade 6' literal: a hardcoded string only catches the renderer
+    // reintroducing the pill if it happens to also say 'Grade 6' — pinning
+    // against the fixture data catches the regression regardless of what
+    // `transactionPage.reading` is set to.
+    expect(html).not.toContain(`<span class="pill">${transactionPage.reading}</span>`)
   })
 
   test('emits no CTA attribute when the page has no resolvable hero CTA', () => {
@@ -514,9 +523,12 @@ describe('card description inheritance', () => {
       [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy that cannot publish.' }],
       inheritsSection
     )
-    expect(html).toContain(
-      '<p>See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.</p>'
-    )
+    // Reads pageData['scopeInfo'].summary rather than pinning a copy of its
+    // wording as a literal: a future copy edit to that page should not fail
+    // this test just because inheritance kept working correctly — the literal
+    // would drift from the fixture and start asserting the wrong thing rather
+    // than catching a real regression.
+    expect(html).toContain(`<p>${escapeHtml(pageData.scopeInfo.summary)}</p>`)
     expect(html).not.toContain('Card copy that cannot publish.')
   })
 
@@ -575,8 +587,9 @@ describe('card description inheritance', () => {
 
   test('inherits through renderServiceTiles, renderResourcesList and renderRelatedRail', () => {
     const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
-    const expected =
-      'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.'
+    // Live fixture value, same reasoning as the test above: a copy edit to
+    // scopeInfo should not fail this test while inheritance still works.
+    const expected = escapeHtml(pageData.scopeInfo.summary)
     expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(expected)
     expect(ctx.renderResourcesList([card], 'Resources', inheritsSection)).toContain(expected)
     expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(expected)
@@ -615,7 +628,10 @@ describe('card title inheritance', () => {
   const inheritsSection = { heading: 'Services', karl: 'Services subsection: page chooser' }
   const titleOnlySection = { heading: 'Related', karl: 'Related panel: linked pages' }
   const authoredSection = { heading: 'Rules', karl: 'Table block: body table' }
-  const scopeInfoTitle = 'Learn what Healthy Housing and Vector Control can inspect'
+  // Live fixture value rather than a copy of its wording as a literal — same
+  // reasoning as the description-inheritance tests above: a future title edit
+  // to scopeInfo should not fail this test while inheritance still works.
+  const scopeInfoTitle = escapeHtml(pageData.scopeInfo.title)
 
   test('resolves the destination title for an inheriting internal card', () => {
     const html = ctx.renderCards(

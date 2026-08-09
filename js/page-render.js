@@ -643,16 +643,9 @@ function renderHero(page, heroCta) {
   const ctaHtml = heroCta
     ? `<div class="hero-cta"${ctaAttr}>${button(heroCta.label, 'primary', heroCta.target, heroCta.url)}</div>`
     : ''
-  const topicChip = page.topicTag
-    ? `<span class="pill pill--topic">${escapeHtml(page.topicTag)}</span>`
-    : ''
-  const reportDatePill =
-    normalizePageType(page.type) === 'report' && page.reportDate
-      ? `<span class="pill">Updated ${escapeHtml(page.reportDate)}</span>`
-      : ''
   const heroClass =
     normalizePageType(page.type) === 'transaction' ? 'hero hero--transaction' : 'hero'
-  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: report date, topic tag', 'meta')}<div class="metadata">${reportDatePill}${topicChip}</div></div></section>`
+  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}</div></section>`
 }
 function renderPrintVersion(url) {
   if (!url) return ''

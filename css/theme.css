@@ -65,12 +65,19 @@
   --brand-primary-hover: var(--sfds-action-blue-hover, #001d4e);
   --brand-on-primary: var(--sfds-white, #fcfcfc);
 
-  /* Typography — SF.gov system stack */
+  /* Typography — real SF.gov typefaces, self-hosted via @fontsource (see
+     js/main.js's font imports). Confirmed against 7 live sf.gov pages: body
+     copy renders in Roboto Flex, headings in Roboto Slab (a serif face) —
+     this was previously a generic system-font stack under a comment
+     claiming it was already "the SF.gov system stack", which measurement
+     against the live site showed was not true. The system-font fallback
+     chain stays after the web font in case a build ever ships without the
+     @fontsource CSS loaded. */
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-display: var(--font-sans);
-  --font-body: var(--font-sans);
-  --font-caption: var(--font-sans);
+  --font-display: 'Roboto Slab', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-body: 'Roboto Flex', var(--font-sans);
+  --font-caption: 'Roboto Flex', var(--font-sans);
 
   /* ===================================================================
      Spacing scale

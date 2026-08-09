@@ -38,6 +38,17 @@
 // (as it was) meant styles.css re-declared every --sfds-* afterwards and the
 // entire dark theme silently did nothing.
 // ---------------------------------------------------------------------------
+// Self-hosted @font-face declarations for the two typefaces the real
+// www.sf.gov site renders (Roboto Flex for body, Roboto Slab for headings —
+// confirmed against 7 live sf.gov pages, see css/theme.css's --font-body/
+// --font-display comment). Latin-only subset, weight 400 only: this repo
+// works fully offline (including the build:singlefile export), so the fonts
+// must be bundled rather than pulled from a CDN, and @fontsource/roboto-flex
+// only ships a static weight-400 build (Roboto Flex is inherently a
+// variable font; the full weight range lives in the separate, much heavier
+// @fontsource-variable/roboto-flex package this tool doesn't need).
+import '@fontsource/roboto-flex/latin-400.css'
+import '@fontsource/roboto-slab/latin-400.css'
 import '@sfgov/design-system/dist/css/base.css'
 import '@sfgov/design-system/dist/css/typography.css'
 import '@sfgov/design-system/dist/css/components.css'
