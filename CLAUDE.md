@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 31 unit-test files in tests/ (738 tests)
+bun run test                  # bun test over the 32 unit-test files in tests/ (757 tests)
 bun run test:e2e              # playwright test (138 specs across 18 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -65,15 +65,28 @@ API and now serves `dist/` rather than the repo root (override with
 `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 31 Bun unit-test files under `tests/`:
-`utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
+wrong). `bun run test` runs 32 Bun unit-test files under `tests/`:
+`utils`, `data-validation`, `page-render`, `card-inheritance` (the shared
+`inherits`/`title-only`/`authored` classifier plus the audit built on it —
+including the bucket-ordering rules, which are the part that silently corrupts
+content when wrong: `authored` must beat everything so a Table block is never
+blanked, and `title-only` must beat `inherits` because the Related notes also
+contain the phrase `page chooser`. Mutation-proven against three deliberate
+breakages — skipping external cards entirely, misrouting a title-only external
+into the unverified bucket, and folding the external count into the internal
+total. It drives `auditCards()` with hand-built page objects rather than the
+real corpus on purpose: asserting "there are 101 internal cards" would fail
+every time someone legitimately adds one, which trains people to update the
+number without reading it), `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature — see "Local persistence" below;
 mounts the REAL `manager-review-export`/`ux-improvements-export`/
 `review-queue-state`/`review-queue-import` IIFEs, since a stubbed merge would
 not prove the export and import field-name enumerations actually agree),
 `review-state-schema`,
-`reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
+`reading-level`, `plain-language`, `page-import-checks`, `card-inheritance`
+(the shared classifier plus the audit built on it, asserted against synthetic
+pages so a legitimate new card does not fail the suite), `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
 `decision-vocabulary` (pins the two module-boundary restatements of the
@@ -119,7 +132,7 @@ against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
 without a key or a paid call), and `ai-assist-validate-rewrite` (the
 `rewrite-field` task's output validator — that a rewrite preserves every
 `[label](target)` link's TARGET while its label stays free to change, and that
-it introduces no HTML into copy that renders through `formatMarkdown`) — 738
+it introduces no HTML into copy that renders through `formatMarkdown`) — 757
 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
