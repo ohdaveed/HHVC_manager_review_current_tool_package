@@ -82,10 +82,62 @@ questions the `article11Compliance` page's editorNote does flag.
 
 If the Agency Resources field is **not** repeatable, the four grouped sections
 collapse into one undifferentiated grid, which is precisely the failure the
-redesign exists to prevent. **Verify with Digital Services before building
-anything else described here.** Fallback if it is not repeatable: use Services
-subsections for the action groups (Get help / If you rent / If you own) and a
-single Resources subsection for reference material.
+redesign exists to prevent.
+
+**RESOLVED — it is repeatable, and the IA is buildable as designed.** The Karl
+editor docs say so directly for both fields: _"You can create more subsections"_
+([Resources on an Agency page]) and _"You can create multiple subsections"_
+([Services on an Agency page]). Both section headings are renameable as well —
+Services is "Section title 1", Resources is "Section title 2" — so the mockup's
+custom band titles are legitimate. No fallback needed.
+
+## Answers from the Karl editor docs
+
+Checked against
+`https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/`.
+
+- **Cards have no author-set title or description, and this is the finding with
+  the widest blast radius.** A subsection entry is only "add an SF.gov page or
+  External link" — no label field, no description field. The card renders the
+  **destination page's** own Title and Description. Confirmed against the live
+  Environmental Health Agency page, whose card text is verbatim each
+  destination's summary. Every `title`/`text` pair on every card in
+  `agency-service-grouping.js` is therefore a copy of its destination, not
+  authored copy, and editing one changes nothing in Karl. The page-level
+  editorNote now says this. **Unswept:** the same pattern almost certainly
+  affects card text on the other 21 pages, which nobody has checked.
+- **Highlights takes exactly 2 or 3 entries — "no more or less" — and each
+  REQUIRES an image** of at least 350x200, plus a link title (~40 chars, 50
+  max), a screenreader ARIA label, and a description (80-100 ideal, 120 max).
+  Adopting Highlights is not "fill an empty field": on this tool an image means
+  another inline WebP data URI, for the single-file build reason documented in
+  CLAUDE.md.
+- **Agency allows up to 2 Spotlights.** Both are currently unused, so the 311
+  route can have one without displacing anything.
+- **Callout is supported on Transaction, Information and Data story only — not
+  Agency.** `article11Compliance` is an Information page, so it is available
+  there. **No "checklist block" exists anywhere in the docs**, which settles
+  that page's open question #1: the bulleted list is the correct fit, not a
+  stopgap. Whether a callout supports lists internally is still unstated; it is
+  inserted from the text-section menu and text sections do support bulleted
+  lists, so probably, but unconfirmed.
+- **Accordions have no documented open-by-default flag, and the guidance is
+  stronger than the workaround anyway:** _"Do not use an accordion for content
+  that all users need to see."_ So the mockup-only `open: true` on the
+  while-you-wait rodent tips is pointing at the wrong fix — the content should
+  not be in an accordion at all. (Campaign guidance also caps accordions at
+  about 5.)
+- **Cost has a free-text "cost description" field** for restrictions and
+  eligibility alongside the cost-type selector, so the $103-$808+ tiering has a
+  home regardless. The selector's own options are only legible in a screenshot,
+  so whether a "varies by unit count" type exists is still unconfirmed.
+- **Still unanswered:** whether a Karl page exists for the complaint forms and
+  vermin log template. That needs a page lookup in Karl itself, not the docs.
+- **Also learned:** the docs carry the authoritative Agency field inventory
+  ("How an Agency page works"), and the mockup's editorNote was missing four
+  real fields — Quick links, Call to action, Public records, Topics. Corrected.
+  And _"Digital and Data Services must create Agency pages for you"_ — this
+  page cannot be self-served.
 
 ## Where the live content should change the mockup
 
@@ -158,14 +210,16 @@ Partner agencies: Department of Public Health · Environmental Health.
 
 ## Recommended sequence
 
-1. Resolve the repeatable-Resources-subsection question with Digital Services.
-   Everything below is contingent on it.
-2. If repeatable — keep the audience grouping. It is the mockup's genuine
-   value-add and it beats the live Topic page's subject grouping for a
-   single-agency landing page. Then add Highlights and a Spotlight, and settle
-   the summary voice.
-3. If not repeatable — fall back to the Services-subsection split described
-   above.
+1. ~~Resolve the repeatable-Resources-subsection question.~~ **Done — yes.**
+   Keep the audience grouping: it is the mockup's genuine value-add and it beats
+   the live Topic page's subject grouping for a single-agency landing page.
+2. **Sweep card `title`/`text` across the other 21 pages.** Now that cards are
+   known to inherit from their destination, any card whose text differs from its
+   destination page's Description is showing reviewers copy that will never
+   render. Only `agency-service-grouping.js` has been checked.
+3. Decide on Spotlight (2 available, both unused) and Highlights (2 or 3
+   entries, each needing an image — cost it before committing). Settle the
+   summary voice.
 4. Independent of the schema answer: add doors for the two missing services.
    **Done — and only one was an add.** "Report a residential building concern"
    was genuinely absent and is now an external referral under "Need another
