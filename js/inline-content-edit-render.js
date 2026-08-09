@@ -38,7 +38,7 @@
    */
   function listAddControlHtml(path) {
     const escapedPath = escapeHtml(path)
-    return `<button type="button" class="inline-edit-add" data-inline-edit-add="${escapedPath}" aria-label="Add item">+ Add</button>`
+    return `<button type="button" class="inline-edit-add" data-inline-edit-add="${escapedPath}" data-export-exclude aria-label="Add item">+ Add</button>`
   }
 
   /**
@@ -49,7 +49,7 @@
    */
   function listRemoveControlHtml(path, index) {
     const escapedPath = escapeHtml(path)
-    return `<button type="button" class="inline-edit-remove" data-inline-edit-remove="${escapedPath}" data-inline-edit-index="${index}" aria-label="Remove this item">×</button>`
+    return `<button type="button" class="inline-edit-remove" data-inline-edit-remove="${escapedPath}" data-inline-edit-index="${index}" data-export-exclude aria-label="Remove this item">×</button>`
   }
 
   /**
@@ -58,7 +58,7 @@
    * @returns {string}
    */
   function editedBadgeHtml() {
-    return `<span class="inline-edit-badge">Edited</span>`
+    return `<span class="inline-edit-badge" data-export-exclude>Edited</span>`
   }
 
   /**
@@ -69,7 +69,7 @@
    */
   function resetControlHtml(path) {
     const escapedPath = escapeHtml(path)
-    return `<button type="button" class="inline-edit-reset" data-inline-edit-reset="${escapedPath}">Reset to original</button>`
+    return `<button type="button" class="inline-edit-reset" data-inline-edit-reset="${escapedPath}" data-export-exclude>Reset to original</button>`
   }
 
   window.InlineEdit.render = {

@@ -1005,3 +1005,20 @@ describe('inline content edit: decorateEditedFields applies the Edited badge and
     expect(p.querySelector('.inline-edit-badge')).toBeNull()
   })
 })
+
+describe('inline content edit: decoration controls are excluded from PNG export', () => {
+  test('add, remove, edited-badge, and reset controls all carry data-export-exclude', () => {
+    // js/mockup-image-export.js's capture filter skips any node carrying
+    // data-export-exclude — every persistent decoration control this module
+    // renders must carry it, or it leaks into a reviewer's exported PNG
+    // (which is meant to represent the page under review, not this tool's
+    // own review-time chrome). The transient edit widget (scalarEditorHtml)
+    // is deliberately NOT included here: excluding it would drop the field's
+    // live text from an export taken mid-edit, not just strip chrome around it.
+    const render = window.InlineEdit.render
+    expect(render.listAddControlHtml('sections.0.bullets')).toContain('data-export-exclude')
+    expect(render.listRemoveControlHtml('sections.0.bullets', 0)).toContain('data-export-exclude')
+    expect(render.editedBadgeHtml()).toContain('data-export-exclude')
+    expect(render.resetControlHtml('title')).toContain('data-export-exclude')
+  })
+})
