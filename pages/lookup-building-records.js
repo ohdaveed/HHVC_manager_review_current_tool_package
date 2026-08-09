@@ -60,7 +60,7 @@ window.HHVC_PAGES['recordsHub'] = {
           karl: "SF.gov page link block, links to an existing Transaction page (an SF.gov landing page that itself CTAs out to the external NextRequest tool). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
         {
-          title: 'Pay your Healthy Housing fee',
+          title: 'Pay your annual Healthy Housing fee for apartment buildings',
           text: 'Pay the program fee for residential buildings with 3 or more units.',
           target: 'payFee',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
@@ -79,7 +79,7 @@ window.HHVC_PAGES['recordsHub'] = {
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           text: 'Learn how reports are reviewed and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',

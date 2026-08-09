@@ -59,7 +59,7 @@ window.HHVC_PAGES['findRecords'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           target: 'afterReport',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },

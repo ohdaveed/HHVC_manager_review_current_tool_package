@@ -156,11 +156,11 @@ window.HHVC_PAGES['insectsReport'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'Learn what HHVC can inspect',
+          title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           target: 'afterReport',
         },
         {
@@ -168,7 +168,7 @@ window.HHVC_PAGES['insectsReport'] = {
           target: 'mosquitoControl',
         },
         {
-          title: 'Tenant rights and reporting',
+          title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
         },
       ],

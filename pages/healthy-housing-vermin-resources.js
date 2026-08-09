@@ -64,7 +64,7 @@ window.HHVC_PAGES['verminResources'] = {
           karl: 'Resource section -> Document Picker upload. Source-page document: "Tenant guidelines for unit preparation prior to bed bug treatment - English." Confirm the current document and linked language versions before publication.',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           text: 'Learn how a report is reviewed and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'Resource section -> SF.gov page link to the after-report Information page.',

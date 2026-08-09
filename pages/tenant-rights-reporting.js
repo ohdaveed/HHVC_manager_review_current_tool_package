@@ -100,7 +100,7 @@ window.HHVC_PAGES['tenantRights'] = {
       kind: 'placement',
       cards: [
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           target: 'afterReport',
         },
         {
@@ -108,7 +108,7 @@ window.HHVC_PAGES['tenantRights'] = {
           target: 'noticeOfViolation',
         },
         {
-          title: 'Learn what HHVC can inspect',
+          title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
         },
       ],

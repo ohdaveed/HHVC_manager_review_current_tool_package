@@ -125,7 +125,7 @@ window.HHVC_PAGES['payFee'] = {
           karl: 'Related panel page chooser entry.',
         },
         {
-          title: 'Healthy Housing and pest resources',
+          title: 'Healthy housing and pest resources',
           target: 'verminResources',
           karl: 'Related panel page chooser entry.',
         },

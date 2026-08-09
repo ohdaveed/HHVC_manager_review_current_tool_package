@@ -29,7 +29,7 @@ window.HHVC_PAGES['ownerHub'] = {
       kind: 'body',
       cards: [
         {
-          title: 'Pay your Healthy Housing fee',
+          title: 'Pay your annual Healthy Housing fee for apartment buildings',
           text: 'Pay the annual program fee for apartment buildings with 3 or more rental units.',
           target: 'payFee',
           karl: "SF.gov page link block, links to an existing Transaction page. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
@@ -85,7 +85,7 @@ window.HHVC_PAGES['ownerHub'] = {
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           text: 'Learn how complaints are reviewed and when inspections may occur.',
           target: 'afterReport',
           karl: 'SF.gov page link block within the "Related pages" Resource section (Body → Resources). No custom title/text field, so this card\'s `text` description has no home in Karl.',

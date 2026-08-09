@@ -101,11 +101,11 @@ window.HHVC_PAGES['scopeInfo'] = {
           target: 'pestsTopic',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           target: 'afterReport',
         },
         {
-          title: 'Tenant rights and reporting',
+          title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
         },
       ],

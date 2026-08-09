@@ -144,11 +144,11 @@ window.HHVC_PAGES['afterReport'] = {
           target: 'noticeOfViolation',
         },
         {
-          title: 'Learn what HHVC can inspect',
+          title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
         },
         {
-          title: 'Tenant rights and reporting',
+          title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
         },
       ],
