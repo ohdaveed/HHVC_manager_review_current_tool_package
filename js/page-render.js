@@ -499,8 +499,15 @@ function renderWhatToKnow(whatToKnow, page) {
         typeof item === 'string' ? item : `${item.label ? item.label + ': ' : ''}${item.text || ''}`
       )
     : []
-  if (!cost && !thingItems.length) return ''
-  return `<section class="what-to-know">${karlTag('What to know before you start: Cost and Things to know', 'body')}<h2 class="visually-hidden">What to know before you start</h2>${cost ? `<p class="what-to-know-cost"><strong>Cost:</strong> ${escapeHtml(cost)}</p>` : ''}${thingItems.length ? `<div class="what-to-know-things"><strong>Things to know</strong>${renderTextItems(thingItems)}</div>` : ''}</section>`
+  // "Who this page is for" is folded in here from page.audience rather than
+  // duplicated as authored thingsToKnow text, so the audience list has one
+  // source of truth and can't drift between the two.
+  const audienceItems = Array.isArray(page.audience) ? page.audience : []
+  const audienceHtml = audienceItems.length
+    ? `<p><strong>Who this is for:</strong></p><ul>${renderAudience(audienceItems)}</ul>`
+    : ''
+  if (!cost && !thingItems.length && !audienceHtml) return ''
+  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body')}<h2 class="visually-hidden">What to know before you start</h2>${cost ? `<p class="what-to-know-cost"><strong>Cost:</strong> ${escapeHtml(cost)}</p>` : ''}${thingItems.length || audienceHtml ? `<div class="what-to-know-things"><strong>Things to know</strong>${audienceHtml}${renderTextItems(thingItems)}</div>` : ''}</section>`
 }
 function renderContactSection(contact, page) {
   const data = contact || resolveContact(page)
@@ -661,7 +668,12 @@ function renderPageMain(page) {
   if (page.spotlight && normalizePageType(page.type) === 'report') {
     html += renderSpotlight(page.spotlight)
   }
-  html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
+  // Transaction pages fold "who this page is for" into the What to know
+  // block's Things to know list instead of a standalone section — see
+  // renderWhatToKnow() below.
+  if (pageType !== 'transaction') {
+    html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
+  }
   // Agency pages render their spotlight mid-page (between Section title 1 and
   // 2, matching the real Karl field order), so skip the early placement here.
   if (page.spotlight && !['report', 'agency'].includes(normalizePageType(page.type))) {
