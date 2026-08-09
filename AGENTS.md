@@ -1181,7 +1181,16 @@ by default, failing closed.
   and stops at the first byte past 128 KB. `await req.text()` is the wrong
   tool: it buffers everything before anything can measure it, so a chunked or
   Content-Length-lying client allocates freely and a later 413 does not give
-  that back. The Content-Length pre-check stays as a cheap first pass. The count
+  that back. The Content-Length pre-check stays as a cheap first pass, but **it
+  triggers at the DRAIN limit (8× the cap), not at the cap** — answering from it
+  means never touching `req.body`, leaving the client's payload unread in the
+  socket and corrupting the very next request on that keep-alive connection.
+  That is the same failure the drain branch below prevents, reached from the
+  other direction; it surfaced as a 431 (Bun reading leftover body bytes as a
+  header block) on whichever test ran next, and it is why the pre-check must
+  stop short of the range `readBodyWithLimit` handles cleanly. Between the cap
+  and the drain limit, falling through costs one drain and returns the identical
+  413 with the connection intact. The count
   is in **bytes, not characters** — `String#length` against a byte limit lets
   multi-byte UTF-8 through at ~3× the cap. Depth is measured iteratively, never
   recursively: a recursive walk over attacker-supplied nesting is itself the

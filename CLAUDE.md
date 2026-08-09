@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 31 unit-test files in tests/ (725 tests)
+bun run test                  # bun test over the 31 unit-test files in tests/ (726 tests)
 bun run test:e2e              # playwright test (138 specs across 18 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -119,7 +119,7 @@ against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
 without a key or a paid call), and `ai-assist-validate-rewrite` (the
 `rewrite-field` task's output validator — that a rewrite preserves every
 `[label](target)` link's TARGET while its label stays free to change, and that
-it introduces no HTML into copy that renders through `formatMarkdown`) — 725
+it introduces no HTML into copy that renders through `formatMarkdown`) — 726
 tests at time of writing.
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
@@ -1432,7 +1432,16 @@ it, and it fails closed rather than open.
   wrong tool: it buffers the whole payload before anything can measure it, so a
   chunked request (or one that simply lies in Content-Length) allocates
   whatever it likes and a 413 afterwards does not give the memory back. The
-  Content-Length pre-check stays as a cheap first pass for the honest case. The
+  Content-Length pre-check stays as a cheap first pass for the honest case, but
+  **it triggers at the DRAIN limit (8× the cap), not at the cap** — answering
+  from it means never touching `req.body`, which leaves the client's payload
+  unread in the socket and corrupts the very next request on that keep-alive
+  connection. That is the same failure the drain branch below exists to prevent,
+  reached from the other direction; it surfaced as a 431 (Bun reading leftover
+  body bytes as a header block) on whichever test ran next, and it is why the
+  pre-check has to stop short of the range `readBodyWithLimit` handles cleanly.
+  Between the cap and the drain limit, falling through costs one drain and
+  returns the identical 413 with the connection intact. The
   count is in **bytes, not characters** — comparing `String#length` (UTF-16 code
   units) against a byte limit lets multi-byte UTF-8 through at roughly three
   times the cap. Depth is measured iteratively, never recursively: a recursive

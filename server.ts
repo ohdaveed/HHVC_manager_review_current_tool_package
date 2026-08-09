@@ -994,12 +994,30 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     if (roleResponse) return roleResponse
     if (!hasConfiguredProvider()) return noProvider()
 
-    // Refuse an oversized body BEFORE reading it. The Zod schema bounds `page`,
-    // but only after req.json() has already buffered and parsed the whole
-    // payload — so without this the cheapest way to burn server memory is a
-    // request the validator was always going to reject.
+    // Refuse a body BEFORE reading it when the client has honestly declared one
+    // so large that draining it is not worth the bandwidth. The Zod schema
+    // bounds `page`, but only after req.json() has already buffered and parsed
+    // the whole payload — so without a cap of some kind the cheapest way to burn
+    // server memory is a request the validator was always going to reject.
+    //
+    // The threshold is deliberately the DRAIN limit, not the body cap. Answering
+    // here means never touching `req.body`, which leaves the client's payload
+    // sitting unread in the socket: the next request on that keep-alive
+    // connection starts parsing mid-body, and Bun reads the leftover bytes as a
+    // header block and answers 431 — or never answers at all. That is the same
+    // connection corruption the drain branch in readBodyWithLimit exists to
+    // avoid, reached from the other direction, and it is why this check has to
+    // stop short of the cases that function can already handle cleanly.
+    //
+    // Between the cap and the drain limit, falling through costs one drain and
+    // returns the identical 413 with the connection still usable. Past the drain
+    // limit readBodyWithLimit would give up on the connection anyway, so
+    // refusing here concedes nothing it was going to preserve.
     const declaredLength = Number(req.headers.get("content-length") ?? Number.NaN)
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+    if (
+      Number.isFinite(declaredLength) &&
+      declaredLength > MAX_REQUEST_BODY_BYTES * DRAIN_LIMIT_MULTIPLIER
+    ) {
       return jsonResponse(
         { error: `Request body must be ${MAX_REQUEST_BODY_BYTES} bytes or fewer.` },
         413,

@@ -675,6 +675,33 @@ describe('AI assist API (server.ts)', () => {
       expect((await after.json()).valid).toBe(true)
     })
 
+    test('leaves the connection usable after the Content-Length pre-check rejects a body', async () => {
+      // The sibling test above covers the STREAMING path, where the cap trips
+      // while `readBodyWithLimit` is already reading and the drain branch keeps
+      // the socket clean. This covers the other path: an honest Content-Length
+      // is refused by the pre-check, which answers 413 without ever touching
+      // `req.body`. The client's body is still in the socket, so the next
+      // request on that keep-alive connection starts parsing mid-body and Bun
+      // reads the leftover bytes as a header block — answering 431 to a
+      // perfectly valid request.
+      //
+      // This is the long-standing "flaky" failure in this file. Whichever test
+      // happened to be declared next collected the 431 and looked like an
+      // unrelated validation bug, which is why it always passed when run alone.
+      const rejected = await post({
+        task: 'content',
+        prompt: 'Draft a page.',
+        page: { filler: 'x'.repeat(200_000) },
+      })
+      expect(rejected.status).toBe(413)
+
+      // Immediately reuse the connection with a request that must succeed.
+      stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      const after = await post({ task: 'content', prompt: 'Draft a page.' })
+      expect(after.status).toBe(200)
+      expect((await after.json()).valid).toBe(true)
+    })
+
     test('measures the body in bytes, not characters', async () => {
       // '€' is 3 bytes of UTF-8 but one JS character, so a cap compared against
       // String#length would let roughly three times the intended payload
