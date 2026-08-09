@@ -20,7 +20,7 @@ different behaviours:
 | **Related** (right panel / bottom of page) | Yes | **No** |
 | **Agency → Services subsection** | Yes | Yes |
 | **Agency → Resources subsection** | Yes | Yes |
-| **Resource Collection → Resource section** | Yes | Yes (assumed, see below) |
+| **Resource Collection → Resource section** | Yes | **No** |
 
 ## Related renders a title and a link. Nothing else.
 
@@ -65,11 +65,36 @@ Health Agency page, whose card text is verbatim each destination's summary. A
 subsection entry is only "add an SF.gov page or External link" — no label
 field, no description field.
 
-**Resource Collection "Resource section" is grouped with these but was not
-separately verified.** It behaves like a Resources subsection and is treated
-as title-and-description, which is the conservative assumption for the mockup
-(it keeps card text visible rather than deleting it). If it ever matters, it
-needs its own live check.
+## Resource Collection "Resource section" renders title only — like Related
+
+**Checked 2026-08-08 across three live `sf.ResourceCollection` pages**
+(`vacancy-notice-local-agency-formation-commission`,
+`best-communication-practice-guidelines`, `2025-exceptions-order-layoff`). No
+Resource-section entry on any of them rendered an inherited description.
+
+**The control that makes this decisive** rather than merely suggestive: the
+vacancy-notice page has a standalone entry linking to the internal page
+`bos-boards-commissions-and-task-forces-application-instruction`. That
+destination has a title ("Application Instructions") AND a description ("San
+Francisco is a diverse city with a wide range of people and issues affecting
+it."). The rendered entry showed the title and nothing else. So the absence is
+Karl declining to render a description, not a destination that had none to
+give.
+
+The first two pages could not settle it and are recorded so nobody re-runs
+them expecting an answer: `2025-exceptions-order-layoff` holds only PDF
+documents, whose in-entry "Published <date>" is Document metadata rather than
+an inherited page description; `best-communication-practice-guidelines` has a
+single internal page link that could not be distinguished from an inline
+rich-text link in the body.
+
+**This was assumed the other way first, and the assumption was chosen for
+being conservative.** Grouping Resource section with the Agency subsections
+kept card text visible rather than deleting it, which felt like the safe
+default. It was the expensive one: it left 19 cards of dead copy in the mockup
+and framed them as editorial decisions a reviewer would spend judgement on.
+"Conservative" is not the same as "correct", and for this tool the safe default
+is whatever matches what Karl publishes.
 
 ## What this means for the mockup
 
@@ -84,11 +109,16 @@ needs its own live check.
   in Related and in subsections alike. Repo commits `845ba34` (7 cards) and
   `09a74b7` (22 cards) synced all of them; `bun run audit-cards` reports zero
   title mismatches.
-- **`build_scripts/audit-card-inheritance.js` classifies two ways and needs
-  three.** Its `INHERITS` pattern lumps Related in with the subsections and
-  then asks whether the card text equals the destination summary. For Related
-  the correct assertion is the opposite: the card text must be **empty**. Until
-  that split exists, the audit over-reports Related blanks as findings.
+- **`build_scripts/audit-card-inheritance.js` now classifies three ways**
+  (`authored` / `title-only` / `inherits`), added in commit `7b8ddca` along
+  with the deletion of 12 dead Related descriptions. **Its `resource section`
+  pattern is still in the wrong bucket** as of that commit: the finding above
+  moves it from `INHERITS` to `TITLE_ONLY`, which reclassifies 19 remaining
+  findings from "needs a per-card decision" to "delete the card text". That
+  edit and those deletions are still outstanding.
+- **Only 12 genuine editorial decisions remain**, all in the Agency page's
+  Services and Resources subsections — the one component confirmed to render a
+  description.
 - **Inline page links inside rich text are a third case and are authored.**
   `health-code-article-11`'s cards sit in a Title-and-text block with
   `karl: 'Report Content -> inline page link.'`. In Wagtail rich text the
