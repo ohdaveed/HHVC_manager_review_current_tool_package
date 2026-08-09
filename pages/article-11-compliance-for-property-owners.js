@@ -102,11 +102,11 @@ window.HHVC_PAGES['article11Compliance'] = {
           target: 'ownerGuidance',
         },
         {
-          title: 'Learn what HHVC can inspect',
+          title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
         },
         {
-          title: 'Pay your Healthy Housing fee',
+          title: 'Pay your annual Healthy Housing fee for apartment buildings',
           target: 'payFee',
         },
       ],

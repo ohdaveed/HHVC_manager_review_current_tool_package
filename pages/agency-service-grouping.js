@@ -37,19 +37,19 @@ window.HHVC_PAGES['pestsTopic'] = {
           title: 'Report rats, mice, and other four-legged problems',
           text: 'Report rats, mice, raccoons, burrows, droppings, or another four-legged pest problem.',
           target: 'rodentsReport',
-          karl: 'Services subsection entry -> SF.gov page link to the rodents-report Transaction. The description is mockup context; confirm whether the live Services card displays it.',
+          karl: 'Services subsection entry -> SF.gov page link to the rodents-report Transaction. The description is a copy of the destination page Description, which is what Karl renders here; see the page-level note.',
         },
         {
           title: 'Report cockroaches, mosquitoes, and other insects',
           text: 'Report cockroaches, bed bugs, mosquitoes, flies, wasps, mites, or standing water.',
           target: 'insectsReport',
-          karl: 'Services subsection entry -> SF.gov page link to the insects-report Transaction. The description is mockup context; confirm whether the live Services card displays it.',
+          karl: 'Services subsection entry -> SF.gov page link to the insects-report Transaction. The description is a copy of the destination page Description, which is what Karl renders here; see the page-level note.',
         },
         {
-          title: 'Report garbage, mold, trash, or overgrown vegetation',
+          title: 'Report garbage, filth, and overgrown vegetation',
           text: 'Report garbage, clutter, animal waste, pigeon problems, overgrown plants, or mold from humidity.',
           target: 'filthReport',
-          karl: 'Services subsection entry -> SF.gov page link to the consolidated filth-report Transaction. This is the focused report route for the current live topic’s mold and trash scope; the description is mockup context, so confirm whether the live Services card displays it.',
+          karl: 'Services subsection entry -> SF.gov page link to the consolidated filth-report Transaction. This is the focused report route for the current live topic’s mold and trash scope; the description is a copy of the destination page Description, which is what Karl renders here.',
         },
         {
           title: 'Healthy housing and pest resources',
@@ -58,7 +58,7 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Services subsection entry -> SF.gov page link to the healthy-housing resources Resource Collection. Mirrors the live "Get help with vermin in your building" service, which sf.gov files under Services (General housing issues) rather than Resources — this card was previously the last entry under "Look up records and rules", where a tenant looking for self-help would not think to look. It briefly carried the task-shaped title "Get help with pests in your building"; that was reverted because a Karl subsection entry is only a page or external-link picker with NO label or description field, so the card renders the DESTINATION page\'s title and Description. Title and text here are therefore copied from `verminResources` verbatim and must be kept in sync with it — changing them here changes nothing in Karl. Getting a task-shaped label means retitling the destination page.',
         },
         {
-          title: 'Learn about Healthy Housing inspection programs',
+          title: 'Learn what Healthy Housing and Vector Control can inspect',
           text: 'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.',
           target: 'scopeInfo',
           karl: 'Services subsection entry -> SF.gov page link to the inspection-scope Information page. This integrates the live topic’s "Healthy housing inspection programs" service and is also the safe route for a visitor who cannot identify their condition.',
@@ -81,7 +81,7 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Resources subsection entry -> SF.gov page link to the tenant-rights Information page.',
         },
         {
-          title: 'What happens after you report',
+          title: 'What happens after you report a housing or pest problem',
           text: 'Learn how a report is reviewed and when an inspector may contact you.',
           target: 'afterReport',
           karl: 'Resources subsection entry -> SF.gov page link to the after-report Information page.',
@@ -116,7 +116,7 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Resources subsection entry -> SF.gov page link to the owner-guidance Information page.',
         },
         {
-          title: 'Pay your Healthy Housing fee',
+          title: 'Pay your annual Healthy Housing fee for apartment buildings',
           text: 'Pay the annual Healthy Housing fee for an apartment building with 3 or more rental units.',
           target: 'payFee',
           karl: 'Resources subsection entry -> SF.gov page link to the fee-payment Transaction.',

@@ -204,7 +204,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
           target: 'rodentsReport',
         },
         {
-          title: 'Learn what HHVC can inspect',
+          title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
         },
       ],
