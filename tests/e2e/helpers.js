@@ -188,7 +188,15 @@ async function settleDebounce(page) {
  * @param {import('@playwright/test').Page} page
  */
 async function focusMockPage(page) {
-  await page.locator('#mockPage h1').first().click()
+  // .focus(), not .click(): the mockup's <h1> now carries
+  // data-rewrite-field="title" (inline content editing), so a real click
+  // opens that field's inline editor instead of merely moving keyboard
+  // focus — swallowing every subsequent shortcut press, since the editor's
+  // <input> matches js/keyboard-shortcuts.js's isTypingContext() guard.
+  // .focus() sets DOM focus directly with no click event, so it still lands
+  // focus inside #mockPage (satisfying isShortcutContext()) without
+  // triggering the click-to-edit handler at all.
+  await page.locator('#mockPage h1').first().focus()
 }
 
 // Switch pages via the sidebar picker and wait for the render to land.

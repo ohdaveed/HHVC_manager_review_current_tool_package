@@ -62,6 +62,8 @@
         'seo_title',
         'meta_description',
         'primary_cta',
+        'edited_title',
+        'edited_summary',
         'reading_target',
       ]
 

@@ -97,6 +97,36 @@ async function selectFirstField(page) {
   })
 }
 
+/**
+ * Same as selectFirstField, but scoped to a paragraph/bullet ITEM path
+ * rather than whichever field is first in the DOM.
+ *
+ * js/page-render.js's renderHero()/renderSection() also emit
+ * data-rewrite-field="title"/"summary"/"primaryCta"/"sections.N.heading"
+ * (added for the inline-content-editing feature), and the hero sits before
+ * any section in the DOM — so a plain querySelector('[data-rewrite-field]')
+ * now finds a page-level scalar or a heading first. All of those are written
+ * back as bare strings, never the tagged {text, unverified, ...} object form
+ * (see js/ai-rewrite.js's isPlainStringField), so a test asserting the
+ * Unverified pill needs a paragraph/bullet ITEM specifically — matched by
+ * ".paragraphs." or ".bullets." with a trailing index, not just any path
+ * starting with "sections.", which a heading path also does.
+ */
+async function selectFirstParagraphField(page) {
+  return page.evaluate(() => {
+    const field = document.querySelector(
+      '#mockPage [data-rewrite-field*=".paragraphs."], #mockPage [data-rewrite-field*=".bullets."]'
+    )
+    const range = document.createRange()
+    range.selectNodeContents(field)
+    const selection = window.getSelection()
+    selection.removeAllRanges()
+    selection.addRange(range)
+    document.dispatchEvent(new Event('selectionchange'))
+    return field.getAttribute('data-rewrite-field')
+  })
+}
+
 /** Read a field's current text out of the in-memory page data. */
 function readField(page, fieldPath) {
   return page.evaluate((path) => {
@@ -138,7 +168,7 @@ test.describe('AI rewrite', () => {
     await gotoFresh(page)
     await configureAi(page)
 
-    const path = await selectFirstField(page)
+    const path = await selectFirstParagraphField(page)
     await expect(page.locator('#aiRewriteButton')).toBeVisible()
 
     await page.click('#aiRewriteButton')
@@ -196,6 +226,49 @@ test.describe('AI rewrite', () => {
 
     await expect(page.locator('#aiRewritePopover')).toBeHidden()
     expect(await page.locator('#mockPage').innerText()).toBe(before)
+  })
+
+  test('rewriting the page title writes a plain string, not an unverified pill', async ({
+    page,
+  }) => {
+    // Regression coverage: js/page-render.js's renderHero() emits
+    // data-rewrite-field="title" on the hero <h1> for the inline-content-
+    // editing feature. Before this fix, applyResult() unconditionally wrote
+    // the {text, unverified, ...} object form paragraphs/bullets accept —
+    // writing that into page.title corrupted it to "[object Object]" the
+    // moment anything rendered it as a string.
+    await stubAi(page)
+    await gotoFresh(page)
+    await configureAi(page)
+
+    const path = await page.evaluate(() => {
+      const field = document.querySelector('#mockPage [data-rewrite-field="title"]')
+      const range = document.createRange()
+      range.selectNodeContents(field)
+      const selection = window.getSelection()
+      selection.removeAllRanges()
+      selection.addRange(range)
+      document.dispatchEvent(new Event('selectionchange'))
+      return field.getAttribute('data-rewrite-field')
+    })
+    expect(path).toBe('title')
+    await expect(page.locator('#aiRewriteButton')).toBeVisible()
+
+    await page.click('#aiRewriteButton')
+    await page.click('#aiRewriteRun')
+    await page.click('#aiRewriteApply')
+
+    // decorateEditedFields() (js/inline-content-edit.js) also appends the
+    // "Edited"/"Reset to original" badge markup inside this <h1> once it
+    // differs from ORIGINAL_DATA, so the full text is not JUST the rewrite.
+    await expect(page.locator('#mockPage h1')).toContainText(REWRITTEN)
+    await expect(page.locator('#mockPage')).not.toContainText('[object Object]')
+
+    const titleValue = await page.evaluate(() => {
+      const key = window.utils.getCurrentKey()
+      return window.HHVC_DATA.pages[key].title
+    })
+    expect(titleValue).toBe(REWRITTEN)
   })
 
   test('surfaces a validation issue instead of hiding the suggestion', async ({ page }) => {

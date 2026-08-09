@@ -44,6 +44,70 @@ describe('review-state-schema', () => {
       false
     )
   })
+
+  test('accepts a section_edits map of valid field paths and shapes', () => {
+    const result = validateReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: {
+        'sections.2.heading': 'New heading',
+        'sections.2.paragraphs': ['p1', 'p2'],
+        'sections.2.bullets': [{ text: 'b1' }, { text: 'b2', unverified: true }],
+      },
+    })
+    expect(result.success).toBe(true)
+    expect(result.data.section_edits).toEqual({
+      'sections.2.heading': 'New heading',
+      'sections.2.paragraphs': ['p1', 'p2'],
+      'sections.2.bullets': [{ text: 'b1' }, { text: 'b2', unverified: true }],
+    })
+  })
+
+  test('drops section_edits entries with an unsupported path, not the whole record', () => {
+    // A per-index path and an unsupported suffix are both outside the
+    // path/value contract — computeSectionEdits() never produces either.
+    const result = validateReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: {
+        'sections.2.heading': 'Kept',
+        'sections.2.bullets.0': 'per-index path, not the whole array',
+        'sections.2.kind': 'placement',
+      },
+    })
+    expect(result.success).toBe(true)
+    expect(result.data.section_edits).toEqual({ 'sections.2.heading': 'Kept' })
+  })
+
+  test('drops section_edits entries whose value shape does not match their path suffix', () => {
+    const result = validateReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: {
+        'sections.0.heading': 123, // must be a string
+        'sections.1.paragraphs': 'broken', // must be an array
+        'sections.2.bullets': ['ok', { text: 'also ok' }, { missing: 'text field' }],
+      },
+    })
+    expect(result.success).toBe(true)
+    // The whole sections.2.bullets array is dropped, not filtered item by
+    // item — a mixed-validity array is itself malformed, and section_edits
+    // always writes the whole field (see js/inline-content-edit-data.js's
+    // "Array edits are always a whole-field replace" note in CLAUDE.md).
+    expect(result.data.section_edits).toEqual({})
+  })
+
+  test('accepts an empty section_edits map', () => {
+    const result = validateReviewRecord({ page_key: 'pestsTopic', section_edits: {} })
+    expect(result.success).toBe(true)
+  })
+
+  test('rejects a non-object section_edits value', () => {
+    const result = validateReviewRecord({ page_key: 'pestsTopic', section_edits: 'not an object' })
+    expect(result.success).toBe(false)
+  })
+
+  test('rejects a section_edits value that is an array', () => {
+    const result = validateReviewRecord({ page_key: 'pestsTopic', section_edits: ['x'] })
+    expect(result.success).toBe(false)
+  })
 })
 
 // The browser has no Zod, so js/review-state-validation.js hand-rolls the
@@ -77,5 +141,69 @@ describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', ()
     })
     expect(clean.synced_at).toBe('2026-01-01T00:00:00.000Z')
     expect(clean).not.toHaveProperty('sync_api_token')
+  })
+
+  test('preserves section_edits as a real object rather than stringifying it', () => {
+    const clean = sanitizeReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: { 'sections.2.heading': 'New heading', 'sections.2.bullets': [{ text: 'b' }] },
+    })
+    expect(clean.section_edits).toEqual({
+      'sections.2.heading': 'New heading',
+      'sections.2.bullets': [{ text: 'b' }],
+    })
+  })
+
+  test('drops a non-object section_edits value rather than passing it through', () => {
+    const clean = sanitizeReviewRecord({ page_key: 'pestsTopic', section_edits: 'not an object' })
+    expect(clean).not.toHaveProperty('section_edits')
+  })
+
+  test('keeps an empty section_edits map rather than dropping it', () => {
+    const clean = sanitizeReviewRecord({ page_key: 'pestsTopic', section_edits: {} })
+    expect(clean.section_edits).toEqual({})
+  })
+
+  test('drops unsupported section_edits paths and shape-mismatched values, same as the Zod schema', () => {
+    const clean = sanitizeReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: {
+        'sections.2.heading': 'Kept',
+        'sections.2.bullets.0': 'per-index path',
+        'sections.2.kind': 'placement',
+        'sections.0.heading': 123,
+        'sections.1.paragraphs': 'broken',
+      },
+    })
+    expect(clean.section_edits).toEqual({ 'sections.2.heading': 'Kept' })
+  })
+})
+
+// A malformed section_edits map must be filtered THE SAME WAY on both sides
+// of the CJS/browser split — a case the Zod schema drops but the browser
+// validator keeps (or vice versa) would let a JSON backup pass one gate and
+// fail the other, or worse, silently disagree about what a synced record
+// contains. tests/decision-vocabulary.test.js pins VALID_DECISIONS the same
+// way, for the same reason.
+describe('section_edits whitelist agrees between the Zod schema and the browser validator', () => {
+  const { sanitizeSectionEdits } = window.reviewStateValidation
+
+  test.each([
+    [
+      'all valid paths/shapes',
+      {
+        'sections.0.heading': 'H',
+        'sections.0.paragraphs': ['p', { text: 'q', unverified: true }],
+      },
+    ],
+    ['unsupported suffix', { 'sections.0.kind': 'placement' }],
+    ['per-index path', { 'sections.0.bullets.0': 'x' }],
+    ['heading as a non-string', { 'sections.0.heading': 123 }],
+    ['paragraphs as a non-array', { 'sections.0.paragraphs': 'not an array' }],
+    ['bullets with one malformed item', { 'sections.0.bullets': ['ok', { missing: 'text' }] }],
+  ])('%s', (_label, sectionEdits) => {
+    const zodResult = validateReviewRecord({ page_key: 'pestsTopic', section_edits: sectionEdits })
+    expect(zodResult.success).toBe(true)
+    expect(zodResult.data.section_edits).toEqual(sanitizeSectionEdits(sectionEdits))
   })
 })

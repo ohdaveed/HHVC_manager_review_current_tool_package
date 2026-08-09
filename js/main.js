@@ -48,6 +48,7 @@ import './../css/dashboard.css'
 import './../css/review-insights.css'
 import './../css/review-ops.css'
 import './../css/ai-rewrite.css'
+import './../css/inline-content-edit.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
@@ -84,6 +85,7 @@ import './review-state-validation.js'
 import './reading-level.js'
 import './review-state-store.js'
 import './review-merge.js'
+import './inline-content-edit-data.js'
 import './review-state-sync.js'
 
 // ---------------------------------------------------------------------------
@@ -125,6 +127,8 @@ import './ai-assist-render.js'
 import './ai-assist.js'
 import './ai-rewrite-render.js'
 import './ai-rewrite.js'
+import './inline-content-edit-render.js'
+import './inline-content-edit.js'
 
 // PNG export of the mockups. Imported after the review layers because it uses
 // window.showToast for progress and window.renderPage to step through pages.

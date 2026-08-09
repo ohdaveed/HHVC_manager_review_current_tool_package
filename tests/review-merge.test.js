@@ -194,4 +194,23 @@ describe('reviewContentEquals', () => {
     expect(reviewContentEquals(null, undefined)).toBe(true)
     expect(reviewContentEquals(null, { notes: 'x' })).toBe(false)
   })
+
+  test('deep-compares object-valued fields like section_edits instead of stringifying them', () => {
+    // A naive String(...) comparison collapses any two non-null objects to
+    // the same "[object Object]" literal, so two records with genuinely
+    // different section edits would wrongly compare equal.
+    expect(
+      reviewContentEquals(
+        { section_edits: { 'sections.0.heading': 'A' } },
+        { section_edits: { 'sections.0.heading': 'B' } }
+      )
+    ).toBe(false)
+    expect(
+      reviewContentEquals(
+        { section_edits: { 'sections.0.heading': 'Same' } },
+        { section_edits: { 'sections.0.heading': 'Same' } }
+      )
+    ).toBe(true)
+    expect(reviewContentEquals({ section_edits: {} }, { section_edits: undefined })).toBe(true)
+  })
 })

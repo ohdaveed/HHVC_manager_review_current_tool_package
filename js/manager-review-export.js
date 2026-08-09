@@ -30,6 +30,8 @@ import { showToast } from './ui-controls.js'
     'seo_title',
     'meta_description',
     'primary_cta',
+    'edited_title',
+    'edited_summary',
     'reading_target',
   ]
   function getManagerReviewSnapshot() {
@@ -49,6 +51,8 @@ import { showToast } from './ui-controls.js'
         seo_title: document.getElementById('seoTitleInput')?.value || defaultSeoTitle(page),
         meta_description:
           document.getElementById('metaDescriptionInput')?.value || defaultMetaDescription(page),
+        edited_title: page.title || '',
+        edited_summary: page.summary || '',
       },
       MANAGER_REVIEW_RECORD_FIELDS
     )

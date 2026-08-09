@@ -987,4 +987,39 @@ describe('restorePageContentFromOriginal', () => {
     // The structural button is restored to the original label, not blanked.
     expect(page.sections[0].steps[0].button).toBe('Report a problem')
   })
+
+  test('resets locally-edited section content, not just title/summary/SEO/CTA', () => {
+    // Regression coverage: the reset used to skip page.sections entirely.
+    // applyContentEditsToPageData() only OVERLAYS paths present in an
+    // adopted section_edits map, so a local edit absent from that map (an
+    // empty/narrower server record, or "Use server version") stayed in
+    // memory and was resurrected by the next autosave's computeSectionEdits
+    // diff — silently undoing the reset the reviewer just asked for.
+    const { mod } = loadReviewStateSync()
+    global.window.utils = utilsModule
+    const page = {
+      title: 'T',
+      sections: [{ heading: 'Locally edited heading', paragraphs: ['locally edited p'] }],
+    }
+    global.window.HHVC_DATA.pages.pestsTopic = page
+    global.window.ORIGINAL_DATA = {
+      pages: {
+        pestsTopic: {
+          title: 'T',
+          sections: [{ heading: 'Original heading', paragraphs: ['original p'] }],
+        },
+      },
+    }
+
+    mod.restorePageContentFromOriginal('pestsTopic')
+
+    expect(page.sections[0].heading).toBe('Original heading')
+    expect(page.sections[0].paragraphs).toEqual(['original p'])
+    // Mutating the reset result must not reach back into ORIGINAL_DATA — it
+    // has to be a deep clone, not a shared reference to the pristine copy.
+    page.sections[0].heading = 'Mutated after reset'
+    expect(global.window.ORIGINAL_DATA.pages.pestsTopic.sections[0].heading).toBe(
+      'Original heading'
+    )
+  })
 })
