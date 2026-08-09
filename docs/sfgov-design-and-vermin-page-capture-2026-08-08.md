@@ -139,16 +139,24 @@ those actively contradict published guidance rather than omitting it.
 | ¼ inch gap sealing           | `integrated-pest-management-property-managers.js:150` ("larger than 1/4 inch")                                                    |
 | Pesticide notice to tenants  | `article-11-compliance-for-property-owners.js:43,71` — stronger than live (written notice, product name, date, safety info)       |
 
-### Divergent — present, but says something different (2)
+### Divergent — present, but says something different (2, both since fixed)
 
 - **Rodent poisons.** Live SF.gov is flat: "Do not use poisons." The mockup
-  (`report-rats-mice-four-legged-problems.js:109`) says "Do not scatter loose
+  (`report-rats-mice-four-legged-problems.js:109`) said "Do not scatter loose
   poison — it can harm children, pets, and wildlife," which permits poison used
   properly. That is softer than published guidance on a child-safety claim.
+  **Fixed:** the bullet now reads "Do not use poisons — they can harm children,
+  pets, and wildlife," matching the published directive while keeping the reason,
+  which live SF.gov omits.
 - **6-inch clearance.** Live states two clearances: 6 in. off the ground **and**
   6 in. from any wall or fence. `integrated-pest-management-property-managers.js:153`
-  carries only the ground half. The wall/fence gap is what makes rub marks and
+  carried only the ground half. The wall/fence gap is what makes rub marks and
   runways visible during an inspection, so the missing half is the load-bearing one.
+  **Fixed:** the bullet now states both clearances and says why the wall/fence one
+  exists. It sits two bullets below an unrelated 24-inch clear-space line from
+  Pest Prevention by Design — those measure different things (a patrol/visibility
+  aisle vs. how stored materials are stacked), so do not "reconcile" them into one
+  number.
 
 ### Absent (5)
 

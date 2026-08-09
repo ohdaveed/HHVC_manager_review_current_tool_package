@@ -106,7 +106,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         '**Close off entry points:** Seal any gap bigger than a pencil with rodent-proof materials like hardware cloth, copper mesh, or sheet metal.',
         '**Cut off food:** Store food and garbage in bins with tight-fitting lids. Do not leave pet food out overnight.',
         '**Remove hiding places:** Clear clutter and trim overgrown plants where rats, mice, and raccoons hide or nest.',
-        '**Trap safely:** Use snap traps indoors. Do not scatter loose poison — it can harm children, pets, and wildlife.',
+        '**Trap safely:** Use snap traps indoors. Do not use poisons — they can harm children, pets, and wildlife.',
         '**Clean up safely:** Wet down droppings with a disinfectant and wear gloves. Never dry-sweep or vacuum droppings.',
       ],
       cards: [
