@@ -130,8 +130,8 @@ client breaks `review-api-server`'s real requests, and redefines
 `window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
 can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — sixteen spec files
-(123 specs), all UI-driven: navigation, editor panel, review workflow, review
+`bun run test:e2e` drives Playwright over `tests/e2e/` — seventeen spec files
+(131 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, mockup PNG export and
 Overview insight cards, and workshop-form submission handling. They share plain helper functions in

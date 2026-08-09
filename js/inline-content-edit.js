@@ -265,11 +265,33 @@
       )
       if (newField) openScalarEditor(newField)
     }
+    // persist() just wrote this page's section_edits to localStorage, which
+    // now includes the item being added here — so the SAME render this
+    // function triggers below can itself cause js/ux-improvements.js's
+    // applyAndRefresh to run applySavedPageState, find that saved
+    // section_edits, and (depending on what it finds) kick off a SECOND,
+    // independent View Transition to reapply it. That follow-up is a
+    // separate async paint that resolves later than this render's own
+    // promise, so opening the editor immediately once THIS render settles
+    // can win the race, get shown, and then be wiped out moments later when
+    // the follow-up paint replaces #mockPage's DOM again — confirmed live
+    // via Playwright (the widget was momentarily visible, then gone).
+    // Waiting two real animation frames — the same "wait for the next real
+    // paint" idiom init() already uses below for a structurally similar
+    // problem — gives that follow-up time to land first, so openNew() runs
+    // against the DOM's actually-settled state instead of a transient one.
+    // Gated on View Transitions support existing at all, matching init():
+    // happy-dom (every unit test here) has none, so this keeps the exact
+    // prior synchronous behavior in tests; the race is real-browser-only.
+    const scheduleOpenNew =
+      typeof document.startViewTransition === 'function'
+        ? () => requestAnimationFrame(() => requestAnimationFrame(openNew))
+        : openNew
     const renderResult = rerender()
     if (renderResult && typeof renderResult.then === 'function') {
-      renderResult.then(openNew, openNew)
+      renderResult.then(scheduleOpenNew, scheduleOpenNew)
     } else {
-      openNew()
+      scheduleOpenNew()
     }
   }
 
