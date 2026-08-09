@@ -568,6 +568,31 @@
       if (editingPath !== path) return // already committed/cancelled once
       const newValue = widget.value
       editingPath = null
+      if (newValue === value) {
+        // Nothing actually changed. Writing it anyway would still run
+        // through writeScalarValue's paragraph/bullet branch, which tags a
+        // plain string as {text, unverified: true, ...} — showing an
+        // "Unverified" pill on copy the reviewer never touched.
+        rerender()
+        return
+      }
+      // title/summary/primaryCta have no schema slot to distinguish
+      // "explicitly cleared" from "never edited": updateMockupTextFromSaved-
+      // State (js/ux-improvements-state-sync.js) and
+      // collectCurrentPageReviewState's own snapshot of these same three
+      // fields both guard on truthiness, so a blank commit would appear to
+      // save for this session and then silently revert to the authored
+      // value on the next reload or navigation. Refuse rather than accept a
+      // save that can't reliably persist.
+      const isPageLevelScalar = path === 'title' || path === 'summary' || path === 'primaryCta'
+      if (isPageLevelScalar && newValue.trim() === '') {
+        window.showToast?.(
+          "Title, summary, and the primary CTA can't be cleared to blank — edit the text instead of deleting it.",
+          'warn'
+        )
+        rerender()
+        return
+      }
       writeScalarValue(page, path, newValue)
       persist()
       rerender()

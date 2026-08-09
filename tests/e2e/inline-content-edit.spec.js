@@ -181,7 +181,16 @@ test.describe('inline content editing', () => {
     )
   })
 
-  test('a section edit survives export, clear, and JSON backup re-import (merge, not wipe)', async ({
+  // This proves section_edits round-trips through the JSON backup path
+  // specifically (CLAUDE.md documents that the CSV export path does NOT
+  // carry section_edits, only edited_title/edited_summary/primary_cta) —
+  // NOT that the import path merges rather than wipes. Local state is
+  // cleared before re-importing, so nothing survives here for a wholesale
+  // replace to destroy; that distinction is covered separately by
+  // tests/e2e/merge-verification.spec.js, which re-imports an older backup
+  // ON TOP OF live state that has moved on. See CLAUDE.md's "Local
+  // persistence" section for why the two shapes are not interchangeable.
+  test('a section edit survives an export, clear, and JSON backup re-import cycle', async ({
     page,
   }) => {
     await gotoFresh(page)

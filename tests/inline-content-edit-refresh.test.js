@@ -245,6 +245,37 @@ describe('applySavedPageState section_edits follow-up render', () => {
     expect(renderPageCalls).toEqual([])
   })
 
+  test('a CTA-only saved edit triggers a follow-up render too, not just section_edits', async () => {
+    // Regression coverage: updateMockupTextFromSavedState writes a saved
+    // primary_cta into page data (via setPrimaryCta) but, unlike title/
+    // summary, has no single DOM node it can patch directly — so before this
+    // fix, a CTA-only save (no section_edits at all) never triggered the
+    // follow-up render and the mockup kept showing the bundled CTA label.
+    const { applySavedPageState, renderPageCalls } = await mountStateSync({
+      page: { title: 'T', sections: [], primaryCta: 'Original CTA' },
+      savedRecord: { primary_cta: 'Edited CTA' }, // no section_edits
+      applyReturns: false, // matches the real contract for absent section_edits
+    })
+
+    applySavedPageState('pestsTopic')
+    await flushMicroAndMacroTasks()
+
+    expect(renderPageCalls).toEqual([{ key: 'pestsTopic', skipHistory: true }])
+  })
+
+  test('a saved CTA identical to the current one triggers zero follow-up renders', async () => {
+    const { applySavedPageState, renderPageCalls } = await mountStateSync({
+      page: { title: 'T', sections: [], primaryCta: 'Same CTA' },
+      savedRecord: { primary_cta: 'Same CTA' },
+      applyReturns: false,
+    })
+
+    applySavedPageState('pestsTopic')
+    await flushMicroAndMacroTasks()
+
+    expect(renderPageCalls).toEqual([])
+  })
+
   // Closes out a reviewer-flagged concern: the guard is keyed only by
   // pageKey, not a call-identity token, so a second external
   // applySavedPageState call for the same key landing while a first call's

@@ -1,7 +1,7 @@
 // Unit tests for js/inline-content-edit.js — the click-to-edit orchestrator
 // for SCALAR fields (title, summary, primaryCta, section heading, a single
-// paragraph, a single bullet). Add/remove/undo/reset are Task 7's scope and
-// are not exercised here.
+// paragraph, a single bullet), plus Task 7's add/remove/undo/reset controls
+// and the post-render decoration entry points.
 //
 // Unlike tests/inline-content-edit-refresh.test.js's module under test, this
 // one needs real DOM behavior — real click/keydown/blur events bubbling up
@@ -9,7 +9,7 @@
 // <input>/<textarea> focus and value handling — so this file uses the real
 // happy-dom `window`/`document` that tests/helpers/browser-env.js already
 // registers globally, rather than replacing global.window wholesale the way
-// the refresh test does for its DOM-free module. It only ATTACHS the mock
+// the refresh test does for its DOM-free module. It only ATTACHES the mock
 // dependencies (window.HHVC_DATA, window.ReviewUx.stateSync, etc.) onto that
 // real window.
 //
@@ -389,6 +389,62 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
 
     expect(page.sections[0].bullets[0]).toEqual({
       text: 'New bullet text.',
+      unverified: true,
+      unverifiedReason: 'Manually edited during review',
+    })
+  })
+
+  test('committing a paragraph with the value unchanged does not write or persist', async () => {
+    // Regression coverage: a blur used to commit unconditionally, so an
+    // untouched paragraph got tagged into the {text, unverified: true, ...}
+    // object form and showed a false "Unverified" pill for copy the
+    // reviewer never changed.
+    const { mockPage, page, getPersistCalls, renderPageCalls } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<p data-rewrite-field="sections.0.paragraphs.0">Original paragraph text.</p>'
+    click(mockPage.querySelector('[data-rewrite-field="sections.0.paragraphs.0"]'))
+
+    const widget = mockPage.querySelector('[data-inline-edit-input]')
+    // No change to widget.value — commit via blur with the same text the
+    // editor opened with.
+    widget.dispatchEvent(new window.Event('blur'))
+
+    expect(page.sections[0].paragraphs[0]).toBe('Original paragraph text.')
+    expect(getPersistCalls()).toBe(0)
+    // Still re-renders to close the editor widget, same as a cancel.
+    expect(renderPageCalls).toEqual([{ key: 'testPage', skipHistory: true }])
+  })
+
+  test('committing title/summary/primaryCta as blank is refused and the field keeps its value', async () => {
+    // Regression coverage: writeScalarValue accepted an empty string for
+    // these three fields, but updateMockupTextFromSavedState
+    // (js/ux-improvements-state-sync.js) only reapplies a TRUTHY saved
+    // value, so a cleared field looked saved for the session and then
+    // silently reverted to the authored value on the next reload.
+    const { mockPage, page, getPersistCalls } = await mountInlineContentEdit()
+    mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
+    click(mockPage.querySelector('[data-rewrite-field="title"]'))
+
+    const widget = mockPage.querySelector('[data-inline-edit-input]')
+    widget.value = '   '
+    keydown(widget, 'Enter')
+
+    expect(page.title).toBe('Original Title')
+    expect(getPersistCalls()).toBe(0)
+  })
+
+  test('committing a paragraph as blank IS allowed (only page-level scalars are guarded)', async () => {
+    const { mockPage, page } = await mountInlineContentEdit()
+    mockPage.innerHTML =
+      '<p data-rewrite-field="sections.0.paragraphs.0">Original paragraph text.</p>'
+    click(mockPage.querySelector('[data-rewrite-field="sections.0.paragraphs.0"]'))
+
+    const widget = mockPage.querySelector('[data-inline-edit-input]')
+    widget.value = ''
+    widget.dispatchEvent(new window.Event('blur'))
+
+    expect(page.sections[0].paragraphs[0]).toEqual({
+      text: '',
       unverified: true,
       unverifiedReason: 'Manually edited during review',
     })

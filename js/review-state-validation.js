@@ -50,8 +50,47 @@ import { DECISION_LABELS } from './utils.js'
     'updated_by',
   ])
 
+  // The path/value contract for a section_edits entry — a restatement of
+  // build_scripts/review-state-schema.js's SECTION_EDIT_PATH_PATTERN and
+  // sectionEditTextItemSchema, for the same CJS/browser-Zod split reason
+  // VALID_DECISIONS above is restated rather than imported. Restated again
+  // as defense-in-depth in js/inline-content-edit-data.js#applyContentEdits-
+  // ToPageData, which has no ESM `export` surface either side can import
+  // from. tests/review-state-schema.test.js pins all three together.
+  const SECTION_EDIT_PATH_PATTERN = /^sections\.\d+\.(heading|paragraphs|bullets)$/
+
   function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+  }
+
+  function isValidSectionEditItem(item) {
+    if (typeof item === 'string') return true
+    return isPlainObject(item) && typeof item.text === 'string'
+  }
+
+  /**
+   * Filter a section_edits map down to entries whose path matches
+   * SECTION_EDIT_PATH_PATTERN and whose value shape matches that path's
+   * suffix (heading -> string; paragraphs/bullets -> array of
+   * string|{text,...}), dropping the rest — matching how a malformed
+   * history entry above is dropped rather than kept malformed, rather than
+   * failing the whole record over one bad nested value.
+   * @param {unknown} sectionEdits
+   * @returns {Record<string, unknown>|undefined}
+   */
+  function sanitizeSectionEdits(sectionEdits) {
+    if (!isPlainObject(sectionEdits)) return undefined
+    const clean = {}
+    for (const [path, value] of Object.entries(sectionEdits)) {
+      const match = SECTION_EDIT_PATH_PATTERN.exec(path)
+      if (!match) continue
+      if (match[1] === 'heading') {
+        if (typeof value === 'string') clean[path] = value
+        continue
+      }
+      if (Array.isArray(value) && value.every(isValidSectionEditItem)) clean[path] = value
+    }
+    return clean
   }
 
   function sanitizeHistoryEntry(entry) {
@@ -92,11 +131,14 @@ import { DECISION_LABELS } from './utils.js'
       // a string field itself. Same reasoning as history: the generic
       // String() coercion below would turn the whole map into the literal
       // string "[object Object]", silently destroying every section-level
-      // edit on the next read. A non-object value is dropped rather than
-      // kept, matching how a malformed history entry is dropped rather than
-      // kept malformed.
+      // edit on the next read. sanitizeSectionEdits both requires an object
+      // AND filters its entries to the supported path/value contract, so an
+      // imported backup or sync response can't smuggle in an unsupported
+      // field or a malformed paragraphs/bullets value that would corrupt
+      // page.sections when reapplied.
       if (key === 'section_edits') {
-        if (isPlainObject(value)) clean.section_edits = { ...value }
+        const sanitized = sanitizeSectionEdits(value)
+        if (sanitized) clean.section_edits = sanitized
         continue
       }
       // local_dirty is a real boolean, and the generic String() coercion
@@ -164,6 +206,8 @@ import { DECISION_LABELS } from './utils.js'
   window.reviewStateValidation = {
     STORAGE_VERSION,
     VALID_DECISIONS,
+    SECTION_EDIT_PATH_PATTERN,
+    sanitizeSectionEdits,
     validateReviewState,
     sanitizeReviewRecord,
   }

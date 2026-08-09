@@ -71,7 +71,7 @@ at the page object, on every paragraph, bullet, and step-text item, via `paragra
 `bulletList()`'s optional `pathPrefix` parameter (added for the in-flight AI-rewrite-selection
 feature, already merged to `main`):
 
-```
+```text
 sections.2.paragraphs.1          a paragraph in the third section
 sections.2.bullets.0             a bullet in the same section
 ```

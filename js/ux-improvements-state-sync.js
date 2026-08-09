@@ -396,6 +396,12 @@ import { hasValidPageData } from './utils.js'
     setValue('reviewOwner', state?.globals?.owner || 'David')
   }
 
+  /**
+   * @param {object} page
+   * @param {object} saved
+   * @returns {boolean} true if the CTA changed and still needs a DOM
+   *   repaint — see the comment on the `primary_cta` branch below.
+   */
   function updateMockupTextFromSavedState(page, saved) {
     if (saved.edited_title) {
       page.title = saved.edited_title
@@ -409,8 +415,21 @@ import { hasValidPageData } from './utils.js'
       if (summary) summary.textContent = saved.edited_summary
     }
 
+    // Unlike title/summary above, there's no single DOM node to patch
+    // directly: setPrimaryCta() can write to a step's button, a section's
+    // button, the spotlight's button, or the page-level fallback, depending
+    // on what the page structurally has — and button() (js/page-render.js)
+    // wraps whichever one renders in a karlTag() placement annotation plus,
+    // for an external link, a trailing arrow glyph, so a plain textContent
+    // write here would also clobber that markup. Report whether the value
+    // actually changed instead, so the caller can fold it into the same
+    // "does this page need a follow-up render" decision it already makes
+    // for section_edits — see applySavedPageState below.
+    let ctaChanged = false
     if (saved.primary_cta) {
+      const beforeCta = getPrimaryCta(page)
       setPrimaryCta(page, saved.primary_cta)
+      ctaChanged = getPrimaryCta(page) !== beforeCta
     }
 
     if (saved.seo_title) {
@@ -431,6 +450,7 @@ import { hasValidPageData } from './utils.js'
     }
 
     if (typeof window.updateSearchPreview === 'function') window.updateSearchPreview()
+    return ctaChanged
   }
 
   function applySavedPageState(pageKey) {
@@ -464,7 +484,13 @@ import { hasValidPageData } from './utils.js'
       setValue('reviewNotes', saved.notes || '')
       setValue('reviewRisks', saved.risks_or_blockers || '')
       setValue('reviewOwner', saved.follow_up_owner || state.globals.owner || 'David')
-      updateMockupTextFromSavedState(page, saved)
+      // Title and summary patch their own DOM node directly above; the CTA
+      // cannot (see updateMockupTextFromSavedState's comment on that branch)
+      // and reports whether it changed instead, so a CTA-only save still
+      // gets the same follow-up render section_edits triggers below —
+      // otherwise the mockup keeps showing the bundled CTA label while
+      // storage holds the edited one until something else repaints the page.
+      const ctaChanged = updateMockupTextFromSavedState(page, saved)
       // Section-level edits (heading/paragraphs/bullets) are reapplied
       // separately from the three page-level fields above:
       // updateMockupTextFromSavedState already owns edited_title/
@@ -478,7 +504,7 @@ import { hasValidPageData } from './utils.js'
       // at is now stale and needs exactly one follow-up render to catch up.
       const appliedSectionEdits = window.inlineEditData?.applyContentEditsToPageData(page, saved)
       if (
-        appliedSectionEdits &&
+        (appliedSectionEdits || ctaChanged) &&
         !isOwnTriggeredRefresh &&
         typeof window.renderPage === 'function'
       ) {

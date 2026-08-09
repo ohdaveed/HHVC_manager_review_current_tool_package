@@ -92,7 +92,7 @@ describe('computeSectionEdits', () => {
     expect(computeSectionEdits(undefined, undefined)).toEqual({})
   })
 
-  test('returns an empty object when a section exists in page but not in original (no crash)', () => {
+  test('reports every in-scope field of a section with no original counterpart as an edit (no crash)', () => {
     const page = JSON.parse(JSON.stringify(original))
     page.sections.push({ heading: 'New Section', paragraphs: ['new'] })
     // The third section has no original counterpart to diff against, so its
@@ -176,5 +176,47 @@ describe('applyContentEditsToPageData', () => {
     const savedEdits = { 'sections.0.heading': 'Round Tripped' }
     applyContentEditsToPageData(page, { section_edits: savedEdits })
     expect(computeSectionEdits(page, original)).toEqual(savedEdits)
+  })
+
+  test('skips an entry whose path is outside the heading/paragraphs/bullets contract', () => {
+    // Defense-in-depth: build_scripts/review-state-schema.js and
+    // js/review-state-validation.js already filter these before a record
+    // reaches here, but this function must not trust that unconditionally.
+    const page = freshPage()
+    applyContentEditsToPageData(page, {
+      section_edits: {
+        'sections.0.kind': 'placement', // unsupported suffix
+        'sections.0.bullets.0': 'per-index path, not the whole array',
+      },
+    })
+    expect(page.sections[0].kind).toBeUndefined()
+    expect(page.sections[0].bullets).toEqual(['b1'])
+  })
+
+  test('skips an entry whose value shape does not match its path suffix', () => {
+    const page = freshPage()
+    applyContentEditsToPageData(page, {
+      section_edits: {
+        'sections.0.heading': 123, // must be a string
+        'sections.0.paragraphs': 'not an array',
+        'sections.0.bullets': ['ok', { missing: 'text field' }],
+      },
+    })
+    expect(page.sections[0].heading).toBe('Original Heading')
+    expect(page.sections[0].paragraphs).toEqual(['p1'])
+    expect(page.sections[0].bullets).toEqual(['b1'])
+  })
+
+  test('a mix of valid and invalid entries applies only the valid ones', () => {
+    const page = freshPage()
+    const wroteAny = applyContentEditsToPageData(page, {
+      section_edits: {
+        'sections.0.heading': 'Valid new heading',
+        'sections.1.kind': 'placement', // dropped
+      },
+    })
+    expect(page.sections[0].heading).toBe('Valid new heading')
+    expect(page.sections[1].kind).toBeUndefined()
+    expect(wroteAny).toBe(true)
   })
 })

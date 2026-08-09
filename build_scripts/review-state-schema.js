@@ -24,6 +24,87 @@ const VALID_DECISIONS = [
   'Needs review',
 ]
 
+/**
+ * The path/value contract for a section_edits entry — see CLAUDE.md's
+ * "Inline content editing" section. js/inline-content-edit-data.js's
+ * computeSectionEdits() only ever writes a section's heading (a string) or
+ * its paragraphs/bullets (an array of strings and/or
+ * {text, unverified?, unverifiedReason?} objects), keyed at the whole-array
+ * level rather than per item. Anything else — an unsupported suffix like
+ * `sections.0.kind`, a per-index path, or a value of the wrong shape for its
+ * suffix — is not something this feature ever produces, but a JSON backup or
+ * a sync response is an external file/service this browser did not write:
+ * an entry that doesn't match gets dropped rather than trusted, since
+ * js/inline-content-edit-data.js's applyContentEditsToPageData() would
+ * otherwise pass it straight to the generic setByPath() and corrupt
+ * page.sections (e.g. replacing a paragraphs array with a bare string, which
+ * breaks the next render when it iterates the array).
+ *
+ * Restated (not imported) in js/review-state-validation.js for the same
+ * CJS/browser-Zod split reason VALID_DECISIONS above is restated, and
+ * restated again as defense-in-depth in
+ * js/inline-content-edit-data.js#applyContentEditsToPageData, which is a
+ * dual CJS/browser file with no ESM `export` surface either side can import
+ * from. tests/review-state-schema.test.js pins the three together.
+ */
+const SECTION_EDIT_PATH_PATTERN = /^sections\.\d+\.(heading|paragraphs|bullets)$/
+
+/**
+ * The string-or-tagged-object shape a single paragraph/bullet item accepts.
+ * Deliberately its OWN schema rather than a reuse of build_scripts/schema.js's
+ * unverifiedItemSchema: that one requires `text.min(1)` for AUTHORED page
+ * copy, but an inline edit can legitimately clear a paragraph to an empty
+ * string (see tests/inline-content-edit.test.js's "committing a paragraph as
+ * blank IS allowed" case) — reusing the stricter schema here would reject
+ * exactly what this feature itself produces.
+ */
+const sectionEditTextItemSchema = z.union([
+  z.string(),
+  z
+    .object({
+      text: z.string(),
+      unverified: z.boolean().optional(),
+      unverifiedReason: z.string().optional(),
+    })
+    .passthrough(),
+])
+
+/**
+ * Validate one section_edits entry against the contract above.
+ * @param {string} path
+ * @param {unknown} value
+ * @returns {{ ok: true, value: unknown } | { ok: false }}
+ */
+function validateSectionEditEntry(path, value) {
+  const match = SECTION_EDIT_PATH_PATTERN.exec(path)
+  if (!match) return { ok: false }
+  if (match[1] === 'heading') {
+    return typeof value === 'string' ? { ok: true, value } : { ok: false }
+  }
+  const parsed = z.array(sectionEditTextItemSchema).safeParse(value)
+  return parsed.success ? { ok: true, value: parsed.data } : { ok: false }
+}
+
+/**
+ * Filter a section_edits map down to entries that satisfy the path/value
+ * contract, dropping the rest. A drop rather than a whole-record rejection,
+ * matching how every other malformed field in this schema (an invalid
+ * decision, a malformed history entry) is already handled in
+ * js/review-state-validation.js: one bad nested value should not cost the
+ * reviewer the rest of an imported record.
+ * @param {Record<string, unknown>|undefined} sectionEdits
+ * @returns {Record<string, unknown>|undefined}
+ */
+function filterSectionEdits(sectionEdits) {
+  if (!sectionEdits) return sectionEdits
+  const clean = {}
+  for (const [path, raw] of Object.entries(sectionEdits)) {
+    const result = validateSectionEditEntry(path, raw)
+    if (result.ok) clean[path] = result.value
+  }
+  return clean
+}
+
 const historyEntrySchema = z
   .object({
     timestamp: z.string().optional(),
@@ -67,9 +148,13 @@ const reviewRecordSchema = z
     // level, not the individual item level — see CLAUDE.md's "Inline content
     // editing" section for why. z.record's value type is z.unknown() because
     // a value here can be a string (a heading) or an array of strings/objects
-    // (paragraphs/bullets each accept the string-or-{text,unverified,...}
-    // shape already defined elsewhere in this schema for section content).
-    section_edits: z.record(z.string(), z.unknown()).optional(),
+    // — the base check just requires an object; filterSectionEdits (above)
+    // does the actual per-entry path/value validation, dropping anything
+    // that doesn't match rather than failing the whole record.
+    section_edits: z
+      .record(z.string(), z.unknown())
+      .optional()
+      .transform((value) => filterSectionEdits(value)),
     // Whether this browser holds edits it has not pushed. A real boolean,
     // not a timestamp, precisely so conflict detection never has to compare
     // a browser-clock value against a server-clock one — see
@@ -111,6 +196,8 @@ function validateReviewRecord(input) {
 module.exports = {
   STORAGE_VERSION,
   VALID_DECISIONS,
+  SECTION_EDIT_PATH_PATTERN,
+  validateSectionEditEntry,
   historyEntrySchema,
   reviewRecordSchema,
   reviewStateSchema,

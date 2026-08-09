@@ -20,6 +20,47 @@
 const IN_SCOPE_SECTION_FIELD_SUFFIXES = ['heading', 'paragraphs', 'bullets']
 
 /**
+ * Path pattern for a section_edits key, built from the canonical suffix list
+ * above rather than a separate literal. build_scripts/review-state-schema.js
+ * and js/review-state-validation.js each restate this same pattern (they
+ * can't import it — see their own comments for why), and validate the SAME
+ * record before it ever reaches applyContentEditsToPageData below. This
+ * check exists anyway as defense-in-depth: a value that predates those
+ * schemas, or reaches this function through some future caller that
+ * bypasses them, must not corrupt page.sections just because it matched a
+ * looser check upstream.
+ */
+const SECTION_EDIT_PATH_PATTERN = new RegExp(
+  `^sections\\.\\d+\\.(${IN_SCOPE_SECTION_FIELD_SUFFIXES.join('|')})$`
+)
+
+/**
+ * Whether a single paragraph/bullet item has the shape
+ * applyContentEditsToPageData/computeSectionEdits agree on: a plain string,
+ * or a {text, unverified?, unverifiedReason?} object. Mirrors
+ * js/review-state-validation.js's isValidSectionEditItem.
+ * @param {unknown} item
+ * @returns {boolean}
+ */
+function isValidSectionEditItem(item) {
+  if (typeof item === 'string') return true
+  return Boolean(item) && typeof item === 'object' && typeof item.text === 'string'
+}
+
+/**
+ * Whether a section_edits value matches the shape its path's suffix
+ * requires: a string for `heading`, or an array of isValidSectionEditItem
+ * entries for `paragraphs`/`bullets`.
+ * @param {string} suffix one of IN_SCOPE_SECTION_FIELD_SUFFIXES
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function isValidSectionEditValue(suffix, value) {
+  if (suffix === 'heading') return typeof value === 'string'
+  return Array.isArray(value) && value.every(isValidSectionEditItem)
+}
+
+/**
  * Deep-equality check via JSON serialization. Section field values here are
  * always JSON-safe (strings, or arrays of strings/{text,unverified,...}
  * objects), so this is equivalent to a real deep-equal without pulling in a
@@ -97,6 +138,8 @@ function applyContentEditsToPageData(page, savedRecord) {
   if (!sectionEdits || typeof sectionEdits !== 'object' || Array.isArray(sectionEdits)) return false
   let wroteAny = false
   for (const [path, value] of Object.entries(sectionEdits)) {
+    const match = SECTION_EDIT_PATH_PATTERN.exec(path)
+    if (!match || !isValidSectionEditValue(match[1], value)) continue
     if (setByPath(page, path, value)) wroteAny = true
   }
   return wroteAny
@@ -118,6 +161,8 @@ if (typeof window !== 'undefined') {
     computeSectionEdits,
     applyContentEditsToPageData,
     IN_SCOPE_SECTION_FIELD_SUFFIXES,
+    SECTION_EDIT_PATH_PATTERN,
+    isValidSectionEditValue,
   }
 }
 if (typeof module !== 'undefined' && module.exports) {
@@ -125,5 +170,7 @@ if (typeof module !== 'undefined' && module.exports) {
     computeSectionEdits,
     applyContentEditsToPageData,
     IN_SCOPE_SECTION_FIELD_SUFFIXES,
+    SECTION_EDIT_PATH_PATTERN,
+    isValidSectionEditValue,
   }
 }

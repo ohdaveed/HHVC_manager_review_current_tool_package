@@ -15,7 +15,7 @@
 // same pattern as tests/inline-content-edit-refresh.test.js's
 // mountStateSyncWithRealReapply, extended here to also mount the inline-edit
 // orchestrator on top of it so a real click can drive a real save.
-const { describe, test, expect } = require('bun:test')
+const { describe, test, expect, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
 const realInlineEditData = require('../js/inline-content-edit-data.js')
@@ -25,6 +25,19 @@ const STATE_SYNC_PATH = path.resolve(__dirname, '../js/ux-improvements-state-syn
 const INLINE_EDIT_PATH = path.resolve(__dirname, '../js/inline-content-edit.js')
 
 let originalWindow
+
+// mountRoundTrip stubs the shared happy-dom window in place — window.HHVC_DATA,
+// window.ORIGINAL_DATA, window.utils, window.inlineEditData, window.reviewState,
+// window.reviewMerge, window.renderPage, window.showToast, plus window.ReviewUx
+// and window.inlineEdit published by the two mounted IIFEs. None of it was ever
+// removed. package.json runs this file before tests/review-api-server.test.js
+// and tests/review-state-sync.test.js in the same Bun process, so those files
+// inherited the stubs — an order-dependent leak that surfaces as a failure in
+// an unrelated file. Restore the pre-test window after every test so these
+// stubs cannot outlive the test that installed them.
+afterEach(() => {
+  global.window = originalWindow
+})
 
 /**
  * Mount real js/ux-improvements-state-sync.js (for a real
