@@ -491,6 +491,25 @@ import { hasValidPageData } from './utils.js'
       // otherwise the mockup keeps showing the bundled CTA label while
       // storage holds the edited one until something else repaints the page.
       const ctaChanged = updateMockupTextFromSavedState(page, saved)
+      // updateMockupTextFromSavedState (title/summary) and setPrimaryCta
+      // (CTA, inside it) already made page.title/page.summary/the CTA
+      // correct at this exact point — but nothing has re-run inline
+      // content editing's "Edited" badge/reset-control decoration against
+      // that freshly-correct data yet. That decoration normally happens as
+      // a side effect of js/inline-content-edit.js's own render wrapper,
+      // chained off THIS SAME render's promise — but that wrapper's
+      // callback and this function's callback are two independent .then()s
+      // on the same promise, and this one can resolve first, leaving
+      // inline content editing's decorate() pass to run against whatever
+      // it happened to catch (sometimes before this patch, sometimes
+      // after, depending on real network/paint timing) — confirmed live on
+      // the deployed production build: the badge reappeared on 3 of 4
+      // reloads and silently didn't on the 4th, with no console error and
+      // the underlying data correct every time. Calling decoration
+      // directly, right here, removes the dependency on that ordering
+      // entirely: by the time this line runs, the data it reads is
+      // guaranteed current, so there is nothing left to race.
+      window.inlineEdit?.decorateEditedFields?.()
       // Section-level edits (heading/paragraphs/bullets) are reapplied
       // separately from the three page-level fields above:
       // updateMockupTextFromSavedState already owns edited_title/

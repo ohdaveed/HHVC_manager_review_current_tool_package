@@ -94,12 +94,19 @@ async function mountStateSync({
     renderPage: stubRenderPage,
   }
 
+  const decorateEditedFieldsCalls = []
+  global.window.inlineEdit = {
+    decorateEditedFields: () => decorateEditedFieldsCalls.push(true),
+    decorateListControls: () => {},
+  }
+
   const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
   await import(modUrl)
 
   return {
     applySavedPageState: global.window.ReviewUx.stateSync.applySavedPageState,
     renderPageCalls,
+    decorateEditedFieldsCalls,
   }
 }
 
@@ -184,6 +191,37 @@ async function mountStateSyncWithRealReapply() {
     },
   }
 }
+
+describe('applySavedPageState decorates the Edited badge synchronously', () => {
+  test('calls window.inlineEdit.decorateEditedFields directly, not just via the render wrapper', async () => {
+    // Confirmed live on the deployed production build: the "Edited" badge
+    // intermittently failed to reappear after a reload even though the
+    // underlying title/summary/CTA data was always correctly reapplied —
+    // js/inline-content-edit.js's own decorate() pass (chained off the
+    // SAME render promise as this function's own applyAndRefresh callback)
+    // could resolve before or after this function's data patches depending
+    // on real network/paint timing. applySavedPageState must call
+    // decoration itself, synchronously, right after the data it depends on
+    // is known-correct — not rely on a separately-scheduled callback that
+    // may run too early.
+    const { applySavedPageState, decorateEditedFieldsCalls } = await mountStateSync({
+      savedRecord: { edited_title: 'Edited Title' },
+    })
+
+    applySavedPageState('pestsTopic')
+
+    expect(decorateEditedFieldsCalls.length).toBeGreaterThanOrEqual(1)
+  })
+
+  test('is a no-op (not an error) when window.inlineEdit is not yet mounted', async () => {
+    const { applySavedPageState } = await mountStateSync({
+      savedRecord: { edited_title: 'Edited Title' },
+    })
+    global.window.inlineEdit = undefined
+
+    expect(() => applySavedPageState('pestsTopic')).not.toThrow()
+  })
+})
 
 describe('applySavedPageState section_edits follow-up render', () => {
   test('triggers exactly one follow-up render when a saved section edit was reapplied', async () => {
