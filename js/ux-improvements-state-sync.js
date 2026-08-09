@@ -12,6 +12,56 @@ import { hasValidPageData } from './utils.js'
 
   let isRestoringState = false
 
+  // Re-entrancy guard for the section_edits follow-up render triggered by
+  // applySavedPageState below. window.renderPage is always the WRAPPED
+  // version by the time applySavedPageState can run (js/ux-improvements.js's
+  // wrapRenderPage() installs it before restoreInitialPage()/any navigation
+  // calls this), so calling it from inside applySavedPageState re-enters
+  // that wrapper: originalRenderPage runs synchronously (this is what
+  // actually repaints the DOM — good), but the wrapper then schedules
+  // ANOTHER deferred applyAndRefresh -> applySavedPageState(pageKey) call of
+  // its own. Without this guard, that second call would see the same
+  // still-true "wrote something" signal from applyContentEditsToPageData
+  // (the data hasn't changed) and trigger a THIRD render, which would
+  // trigger a fourth applySavedPageState call, forever.
+  //
+  // Holds the pageKey of an in-flight self-triggered render, or null when
+  // none is pending. Set immediately before calling window.renderPage from
+  // here; cleared at the very top of the NEXT applySavedPageState call for
+  // that same key — not right after the synchronous renderPage() call
+  // returns, since the reapply this guard is protecting against happens
+  // asynchronously (setTimeout(0) or a View Transitions promise), so the
+  // corresponding applySavedPageState call for the render this triggered
+  // hasn't happened yet at that point.
+  //
+  // A suppressed follow-up render is never a STALE render, only a possibly
+  // REDUNDANT one — this is the invariant that makes suppressing it safe.
+  // Two calls to applySavedPageState(pageKey) can interleave (call X sets
+  // this guard and triggers a deferred render; before that render fires,
+  // call Y runs for the same key and, seeing the guard set, suppresses its
+  // own trigger). That is safe only because of what applySavedPageState
+  // does immediately above this guard, in the same synchronous turn:
+  // `const page = DATA.pages[pageKey]` reads the LIVE object DATA already
+  // holds — never a clone or snapshot — and
+  // `applyContentEditsToPageData(page, saved)` mutates that same shared
+  // object in place, synchronously, before either call reaches this guard
+  // check. JavaScript is single-threaded and run-to-completion: whichever
+  // call's applySavedPageState body runs second (Y, in the scenario above)
+  // finishes its synchronous write to `page` before X's deferred render
+  // callback can fire. So by the time ANY triggered render actually reads
+  // `DATA.pages[pageKey]` to paint the DOM, it always sees the most recent
+  // write, regardless of which call's guard check was the one that
+  // triggered it. A suppressed render is therefore redundant (something
+  // else's render will paint the same current data) rather than wrong.
+  //
+  // This safety argument breaks silently if applySavedPageState is ever
+  // changed to operate on a cloned/snapshotted page object instead of the
+  // live one held in DATA.pages — do not make that change without also
+  // reworking this guard (e.g. keying it by a call-generation token and
+  // re-validating that the data a suppressed call would have painted is
+  // still current before suppressing).
+  let refreshInFlightForKey = null
+
   const {
     escapeHtml,
     getPrimaryCta,
@@ -195,6 +245,7 @@ import { hasValidPageData } from './utils.js'
   function collectCurrentPageReviewState(pageKeyOverride) {
     const pageKey = typeof pageKeyOverride === 'string' ? pageKeyOverride : getCurrentKey()
     const page = DATA.pages[pageKey] || {}
+    const originalPage = window.ORIGINAL_DATA?.pages?.[pageKey]
 
     return buildReviewRecord(page, pageKey, {
       page_title: page.title || '',
@@ -202,6 +253,14 @@ import { hasValidPageData } from './utils.js'
       edited_title: page.title || '',
       edited_summary: page.summary || '',
       primary_cta: getPrimaryCta(page) || '',
+      // Derived fresh from live page state on every save, same as the three
+      // fields above — never accumulated as a stored diff that could drift
+      // from what page.sections actually contains. See
+      // js/inline-content-edit-data.js for why this makes "reset to
+      // original" correct by construction. originalPage can be undefined in
+      // a context with no ORIGINAL_DATA (e.g. a future non-browser caller);
+      // computeSectionEdits() itself returns {} rather than throwing.
+      section_edits: window.inlineEditData?.computeSectionEdits(page, originalPage) || {},
       seo_title: getSeoTitle(page),
       meta_description: getMetaDescription(page),
       reviewer: getValue('reviewerInput'),
@@ -337,6 +396,12 @@ import { hasValidPageData } from './utils.js'
     setValue('reviewOwner', state?.globals?.owner || 'David')
   }
 
+  /**
+   * @param {object} page
+   * @param {object} saved
+   * @returns {boolean} true if the CTA changed and still needs a DOM
+   *   repaint — see the comment on the `primary_cta` branch below.
+   */
   function updateMockupTextFromSavedState(page, saved) {
     if (saved.edited_title) {
       page.title = saved.edited_title
@@ -350,8 +415,21 @@ import { hasValidPageData } from './utils.js'
       if (summary) summary.textContent = saved.edited_summary
     }
 
+    // Unlike title/summary above, there's no single DOM node to patch
+    // directly: setPrimaryCta() can write to a step's button, a section's
+    // button, the spotlight's button, or the page-level fallback, depending
+    // on what the page structurally has — and button() (js/page-render.js)
+    // wraps whichever one renders in a karlTag() placement annotation plus,
+    // for an external link, a trailing arrow glyph, so a plain textContent
+    // write here would also clobber that markup. Report whether the value
+    // actually changed instead, so the caller can fold it into the same
+    // "does this page need a follow-up render" decision it already makes
+    // for section_edits — see applySavedPageState below.
+    let ctaChanged = false
     if (saved.primary_cta) {
+      const beforeCta = getPrimaryCta(page)
       setPrimaryCta(page, saved.primary_cta)
+      ctaChanged = getPrimaryCta(page) !== beforeCta
     }
 
     if (saved.seo_title) {
@@ -372,9 +450,22 @@ import { hasValidPageData } from './utils.js'
     }
 
     if (typeof window.updateSearchPreview === 'function') window.updateSearchPreview()
+    return ctaChanged
   }
 
   function applySavedPageState(pageKey) {
+    // If this call is the one a prior call in this same function triggered
+    // (see the follow-up-render block below), clear the guard now — this is
+    // the guaranteed next invocation for that key, regardless of whether the
+    // render that got us here settled via setTimeout(0) or a View
+    // Transitions promise .then(). Clearing here, rather than right after
+    // window.renderPage() returns below, is what makes the guard correct:
+    // that call is synchronous only up to the DOM repaint, but the deferred
+    // applyAndRefresh (and thus the next applySavedPageState call for this
+    // key) hasn't happened yet at that point.
+    const isOwnTriggeredRefresh = refreshInFlightForKey === pageKey
+    if (isOwnTriggeredRefresh) refreshInFlightForKey = null
+
     const state = window.reviewState.read()
     const page = DATA.pages[pageKey]
     if (!page) return
@@ -393,7 +484,36 @@ import { hasValidPageData } from './utils.js'
       setValue('reviewNotes', saved.notes || '')
       setValue('reviewRisks', saved.risks_or_blockers || '')
       setValue('reviewOwner', saved.follow_up_owner || state.globals.owner || 'David')
-      updateMockupTextFromSavedState(page, saved)
+      // Title and summary patch their own DOM node directly above; the CTA
+      // cannot (see updateMockupTextFromSavedState's comment on that branch)
+      // and reports whether it changed instead, so a CTA-only save still
+      // gets the same follow-up render section_edits triggers below —
+      // otherwise the mockup keeps showing the bundled CTA label while
+      // storage holds the edited one until something else repaints the page.
+      const ctaChanged = updateMockupTextFromSavedState(page, saved)
+      // Section-level edits (heading/paragraphs/bullets) are reapplied
+      // separately from the three page-level fields above:
+      // updateMockupTextFromSavedState already owns edited_title/
+      // edited_summary/primary_cta, and this must not duplicate that.
+      // applyContentEditsToPageData is DOM-free (see js/inline-content-edit-
+      // data.js) — it only mutates page.sections in memory. The page was
+      // already rendered from its PRISTINE shape before this function ever
+      // ran (js/app.js's initial render is unwrapped, and every wrapped
+      // render calls the real DOM-producing render before this reapply
+      // step), so a true return here means the DOM the reviewer is looking
+      // at is now stale and needs exactly one follow-up render to catch up.
+      const appliedSectionEdits = window.inlineEditData?.applyContentEditsToPageData(page, saved)
+      if (
+        (appliedSectionEdits || ctaChanged) &&
+        !isOwnTriggeredRefresh &&
+        typeof window.renderPage === 'function'
+      ) {
+        refreshInFlightForKey = pageKey
+        // skipHistory=true: this is an internal refresh to reflect a reapply
+        // that already happened, not a user navigation — it must not push a
+        // history entry or disturb the back button.
+        window.renderPage(pageKey, true)
+      }
     } else {
       clearReviewFieldsForNewPage(state)
     }

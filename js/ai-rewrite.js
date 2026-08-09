@@ -161,12 +161,41 @@
   }
 
   /**
+   * title/summary/primaryCta and a section heading are all plain-string
+   * fields with no {text, unverified, ...} slot — js/inline-content-edit.js's
+   * writeScalarValue() draws exactly this line, for the same reason: title/
+   * summary/primaryCta are read/reapplied elsewhere
+   * (updateMockupTextFromSavedState, collectCurrentPageReviewState) as bare
+   * strings, and a heading is schema-typed `z.string()`, never the tagged
+   * object form paragraphs/bullets accept. This feature's v1 scope was
+   * originally paragraphs/bullets/step text only, reached exclusively via
+   * paragraphList()/bulletList()/renderSteps()'s pathPrefix — before
+   * js/page-render.js's renderHero()/renderSection() also started emitting
+   * data-rewrite-field="title"/"summary"/"primaryCta"/"sections.N.heading"
+   * for the inline-content-editing feature. Selecting one of those and
+   * applying a rewrite without this guard writes the tagged object form into
+   * a field every other reader expects to be a bare string, corrupting it to
+   * "[object Object]" the moment anything renders it as text.
+   * @param {string} path
+   * @returns {boolean}
+   */
+  function isPlainStringField(path) {
+    return (
+      path === 'title' || path === 'summary' || path === 'primaryCta' || /\.heading$/.test(path)
+    )
+  }
+
+  /**
    * Write the rewrite into in-memory page data.
    *
-   * Written as the object form the text arrays already accept, flagged
-   * unverified so the mockup renders the existing pill — an AI-touched line
-   * must be visually distinguishable from human-authored copy without opening
-   * anything.
+   * Section paragraphs/bullets are written as the object form those arrays
+   * already accept, flagged unverified so the mockup renders the existing
+   * pill — an AI-touched line must be visually distinguishable from
+   * human-authored copy without opening anything. title/summary/primaryCta/
+   * a heading are written as plain strings instead (see isPlainStringField
+   * above); they still pick up the existing CSS-only "Edited" badge from
+   * js/inline-content-edit.js's decorateEditedFields(), which compares
+   * against ORIGINAL_DATA regardless of which feature made the edit.
    * @returns {void}
    */
   function applyResult() {
@@ -180,11 +209,14 @@
     }
 
     state.previousValue = window.utils.getByPath(page, state.fieldPath)
-    const wrote = window.utils.setByPath(page, state.fieldPath, {
-      text,
-      unverified: true,
-      unverifiedReason: 'AI-rewritten draft — verify before publishing',
-    })
+    const newValue = isPlainStringField(state.fieldPath)
+      ? text
+      : {
+          text,
+          unverified: true,
+          unverifiedReason: 'AI-rewritten draft — verify before publishing',
+        }
+    const wrote = window.utils.setByPath(page, state.fieldPath, newValue)
     if (!wrote) {
       state.error = 'That field is no longer on the page. Nothing was changed.'
       render.renderPopover()

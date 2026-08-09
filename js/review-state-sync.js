@@ -529,6 +529,25 @@
    * it against a minimal fake window with no page data at all, and the
    * documented behavior there is that this function no-ops rather than
    * throwing. Reading through `window` keeps that true.
+   *
+   * Resets `page.sections` too, not just the page-level fields above. The
+   * caller adopts a server (or previously-saved) `section_edits` map right
+   * after this returns via applyContentEditsToPageData(), which only
+   * OVERLAYS the paths present in that map — it never resets a field that
+   * isn't in it. Without resetting sections first, a section this browser
+   * edited locally but that the adopted record doesn't mention (an empty or
+   * narrower server section_edits) would keep showing this browser's stray
+   * local edit, and the next autosave's computeSectionEdits() diff would
+   * resurrect it into section_edits as unpushed work — silently undoing
+   * "Use server version" or a pull the reviewer just accepted. This mirrors
+   * the exact reasoning above for title/summary/CTA, just for the field
+   * updateMockupTextFromSavedState doesn't own.
+   *
+   * Deep-cloned via JSON round-trip rather than assigned by reference: a raw
+   * `page.sections = original.sections` would let a later inline edit mutate
+   * ORIGINAL_DATA itself (the same object both sides would then share),
+   * corrupting the pristine baseline every future diff/reset compares
+   * against.
    * @param {string} pageKey
    */
   function restorePageContentFromOriginal(pageKey) {
@@ -544,6 +563,7 @@
     page.metaDescription = original.metaDescription
     page.seoTitleEdited = false
     page.metaDescriptionEdited = false
+    page.sections = JSON.parse(JSON.stringify(original.sections || []))
     const originalCta = window.utils?.getPrimaryCta?.(original) || ''
     if (originalCta) {
       window.utils?.setPrimaryCta?.(page, originalCta)

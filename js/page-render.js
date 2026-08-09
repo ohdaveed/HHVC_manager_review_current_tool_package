@@ -456,11 +456,15 @@ function renderSection(section, pageType = 'generic', options = {}) {
   const role = inferSectionRole(section, pageType)
   const anchor = section.heading ? ` id="${sectionAnchorId(section.heading)}"` : ''
   const tag = options.skipKarl ? '' : karlTag(section.karl || 'Body section', kind)
+  const headingPathAttr =
+    typeof section.__sectionIndex === 'number'
+      ? ` data-rewrite-field="sections.${section.__sectionIndex}.heading"`
+      : ''
   const heading =
     role === 'what-to-do' && pageType === 'transaction'
       ? `<h2 class="what-to-do-heading">What to do</h2>`
       : section.heading
-        ? `<h2${anchor}>${escapeHtml(section.heading)}</h2>`
+        ? `<h2${anchor}${headingPathAttr}>${escapeHtml(section.heading)}</h2>`
         : ''
   const inner = `${tag}${heading}${renderSectionInner(section, pageType)}`
   const cls =
@@ -516,8 +520,9 @@ function resolveHeroCta(page, whatToDoSections) {
   return { label, target, url }
 }
 function renderHero(page, heroCta) {
+  const ctaAttr = heroCta ? ' data-rewrite-field="primaryCta"' : ''
   const ctaHtml = heroCta
-    ? `<div class="hero-cta">${button(heroCta.label, 'primary', heroCta.target, heroCta.url)}</div>`
+    ? `<div class="hero-cta"${ctaAttr}>${button(heroCta.label, 'primary', heroCta.target, heroCta.url)}</div>`
     : ''
   const topicChip = page.topicTag
     ? `<span class="pill pill--topic">${escapeHtml(page.topicTag)}</span>`
@@ -528,7 +533,7 @@ function renderHero(page, heroCta) {
       : ''
   const heroClass =
     normalizePageType(page.type) === 'transaction' ? 'hero hero--transaction' : 'hero'
-  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${reportDatePill}${topicChip}</div></div></section>`
+  return `<section class="${heroClass}"><div class="hero-inner">${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow">${escapeHtml(page.type)}</div>${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}${karlTag('Metadata: Agency, program, reading target', 'meta')}<div class="metadata"><span class="pill">Environmental Health</span><span class="pill">HHVC</span><span class="pill">${escapeHtml(page.reading)}</span>${reportDatePill}${topicChip}</div></div></section>`
 }
 function renderPrintVersion(url) {
   if (!url) return ''

@@ -111,6 +111,40 @@ function mergeReviewRecord(existing, patch, options = {}) {
 const NON_CONTENT_FIELDS = new Set(['updated_at', 'synced_at', 'local_dirty', 'history'])
 
 /**
+ * Whether two field values are equal, for reviewContentEquals below. Most
+ * review-record fields are plain strings and compare fine as `String(...)`
+ * — but `section_edits` is object-valued (a flat map of field path -> current
+ * value), and `String({...})` collapses every non-null object to the literal
+ * "[object Object]" regardless of its contents, so two records with
+ * DIFFERENT section edits would compare equal: a push landing while another
+ * edit is in flight would then treat the newer local record as unchanged and
+ * let the server's response overwrite it, and an edit to a previously-clean
+ * record could leave `local_dirty` false and be silently overwritten by the
+ * next pull. JSON.stringify is used instead for either side that is a
+ * non-null object, matching the technique js/inline-content-edit-data.js's
+ * own deepEqual() already uses for this exact field's values.
+ *
+ * A missing/null object-valued field normalizes to `{}` rather than to
+ * JSON.stringify(null) — buildReviewRecord always writes `section_edits: {}`
+ * (never omits the key) when there are no section edits, but a record saved
+ * before this feature existed has no `section_edits` key at all. Comparing
+ * those two shapes literally would read every untouched legacy page as
+ * content-changed on its first autosave under this fix, which is exactly the
+ * false-dirty regression this function exists to prevent.
+ * @param {unknown} left
+ * @param {unknown} right
+ * @returns {boolean}
+ */
+function fieldContentEquals(left, right) {
+  const isObjectish = (value) => Boolean(value) && typeof value === 'object'
+  if (isObjectish(left) || isObjectish(right)) {
+    const normalize = (value) => JSON.stringify(isObjectish(value) ? value : {})
+    return normalize(left) === normalize(right)
+  }
+  return String(left ?? '') === String(right ?? '')
+}
+
+/**
  * Whether two review records carry the same reviewer-visible content,
  * ignoring bookkeeping fields (timestamps, the sync baseline, the dirty
  * flag, and the append-only history array).
@@ -130,7 +164,7 @@ function reviewContentEquals(a, b) {
   const keys = new Set([...Object.keys(left), ...Object.keys(right)])
   for (const key of keys) {
     if (NON_CONTENT_FIELDS.has(key)) continue
-    if (String(left[key] ?? '') !== String(right[key] ?? '')) return false
+    if (!fieldContentEquals(left[key], right[key])) return false
   }
   return true
 }

@@ -147,7 +147,11 @@ test.describe('accessibility', () => {
 
   test('shortcuts help dialog has no serious violations', async ({ page }) => {
     await gotoFresh(page)
-    await page.locator('#mockPage h1').first().click()
+    // .focus(), not .click() — the mockup's <h1> carries
+    // data-rewrite-field="title" (inline content editing), so a real click
+    // opens that field's inline editor instead of moving keyboard focus.
+    // See tests/e2e/helpers.js's focusMockPage() for the same fix.
+    await page.locator('#mockPage h1').first().focus()
     await page.keyboard.press('?')
     await expect(page.locator('#shortcutsHelpDialog')).toBeVisible()
     await expectNoSeriousViolations(page)
