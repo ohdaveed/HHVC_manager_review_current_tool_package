@@ -47,6 +47,7 @@ import './../css/ai-assist.css'
 import './../css/dashboard.css'
 import './../css/review-insights.css'
 import './../css/review-ops.css'
+import './../css/inline-content-edit.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,122 @@
+/* ==========================================================================
+   Inline content editing
+   ==========================================================================
+   Styling for the click-to-edit widgets (js/inline-content-edit.js /
+   js/inline-content-edit-render.js): the swapped-in input/textarea, the
+   "Edited" badge for title/summary/heading/CTA (fields with no `unverified`
+   schema slot to reuse the existing Unverified-pill mechanism), and the
+   add/remove/reset controls for section paragraphs and bullets.
+
+   Design-token-first, matching every other stylesheet in this tool: no raw
+   --sfds-* values in these rules, no !important (reserved for
+   css/ux-improvements.css's override layer).
+   ========================================================================== */
+
+.inline-edit-input {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-panel);
+  border: 1px solid var(--brand-primary);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 20%, transparent);
+}
+
+.inline-edit-input:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
+textarea.inline-edit-input {
+  resize: vertical;
+  min-height: 4.5em;
+}
+
+/* The "Edited" badge — CSS-only signal for fields with no `unverified`
+   schema slot (title, summary, heading, CTA). Visually related to but
+   distinct from .unverified-pill (css/styles.css): that pill means "this
+   claim needs SME confirmation" and ships with the page; this badge means
+   "a reviewer changed this from what was authored" and is a review-time-only
+   annotation, so the two use different tokens and never render on the same
+   element (paragraphs/bullets get the pill, never this badge — see
+   decorateEditedFields()'s explicit exclusion in js/inline-content-edit.js). */
+.inline-edit-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--status-edits-bg);
+  color: var(--status-edits-fg);
+  border: 1px solid var(--status-edits-border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.inline-edit-reset {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: transparent;
+  border: 1px solid var(--brand-primary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.inline-edit-reset:hover {
+  background: var(--surface-soft);
+}
+
+.inline-edit-add {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: var(--surface-panel);
+  border: 1px dashed var(--brand-primary);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.inline-edit-add:hover {
+  background: var(--surface-soft);
+}
+
+.inline-edit-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.35rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  line-height: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--status-blocked-fg);
+  background: transparent;
+  border: 1px solid var(--status-blocked-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.inline-edit-remove:hover {
+  background: var(--status-blocked-bg);
+}
+
+.inline-edit-undo-action {
+  margin-left: 0.5rem;
+  font-weight: 700;
+  text-decoration: underline;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
