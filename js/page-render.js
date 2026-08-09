@@ -335,33 +335,15 @@ function renderCards(cards = [], section = null) {
     })
     .join('')}</div>`
 }
-function renderServiceTiles(cards = [], section = null) {
-  return `<div class="service-tiles">${cards
-    .map((c) => {
-      const title = cardTitle(section, c)
-      const attr = c.url
-        ? ' target="_blank" rel="noopener"'
-        : c.target
-          ? ` data-render-target="${escapeHtml(c.target)}"`
-          : ' data-render-inert=""'
-      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      const desc = cardDescription(section, c)
-      // An empty description renders no element rather than an empty one: a
-      // bare <span class="service-tile-text"></span> still occupies its grid
-      // row and reads to a reviewer as copy that failed to load.
-      const text = desc
-        ? `<span class="service-tile-text">${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</span>`
-        : ''
-      if (c.url) {
-        return `<a class="service-tile" href="${escapeHtml(safeUrl(c.url))}"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(title)}${externalMark}</span>${text}</a>`
-      }
-      return `<button type="button" class="service-tile"${attr}>${karlTag(c.karl || 'Topic page service item', 'placement')}<span class="service-tile-title">${escapeHtml(title)}</span>${text}</button>`
-    })
-    .join('')}</div>`
-}
-function renderResourcesList(cards = [], heading = 'Resources', section = null) {
-  if (!cards.length) return ''
-  return `<div class="resources-list">${karlTag('Body: Resources links', 'placement')}<h3 class="resources-list-heading">${escapeHtml(heading)}</h3><ul>${cards
+// Shared by renderResourcesList() and (via renderServiceTiles' delegation)
+// every Services subsection, plus renderRelatedList() (Task 2) — one <li>
+// shape for every plain, divided list of linked-page items. Real sf.gov never
+// boxes this content (confirmed against 7 live reference pages spanning
+// Agency/Transaction/Information/Resource-Collection shapes — see the design
+// spec) — renderCards()/.card above is kept only for the one case that isn't
+// a full section of links: a Step List's own inline cards (renderSteps()).
+function renderCardList(cards = [], section = null) {
+  return `<ul>${cards
     .map((c) => {
       const title = cardTitle(section, c)
       const attr = c.url
@@ -380,9 +362,28 @@ function renderResourcesList(cards = [], heading = 'Resources', section = null) 
       const text = desc
         ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`
         : ''
-      return `<li>${karlTag(c.karl || 'Resources section link', 'placement')}${action}${fileBadge}${text}</li>`
+      return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement')}${action}${fileBadge}${text}</li>`
     })
-    .join('')}</ul></div>`
+    .join('')}</ul>`
+}
+// heading is no longer a parameter: the caller (renderSection(), via
+// renderSectionInner()) already prints section.heading as an <h2> before this
+// ever runs, so a second, internal <h3 class="resources-list-heading"> was a
+// duplicate heading on every Resources subsection — visible in a live
+// screenshot of the mockup's own insectsReport Transaction page as "While you
+// wait: tips to help with the problem" printed twice in a row.
+function renderResourcesList(cards = [], section = null) {
+  if (!cards.length) return ''
+  return `<div class="resources-list">${karlTag('Body: Resources links', 'placement')}${renderCardList(cards, section)}</div>`
+}
+// Services subsections render identically to Resources subsections on real
+// sf.gov (a plain divided list, not the boxed 2px-blue-border .service-tile
+// grid this used to render) — kept as its own named function, rather than
+// calling renderResourcesList directly from renderSectionInner, because
+// tests/page-render.test.js and tests/e2e/accessibility.spec.js call it by
+// name.
+function renderServiceTiles(cards = [], section = null) {
+  return renderResourcesList(cards, section)
 }
 function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
@@ -570,11 +571,11 @@ function renderSectionInner(section, pageType = 'generic') {
     )
   // The section travels with its cards so cardDescription() can ask its `karl`
   // note whether each description is inherited from the destination page.
-  if (section.cards && section.component === 'services')
-    inner += renderServiceTiles(section.cards, section)
-  else if (section.cards && (section.component === 'resources' || section.cards.some((c) => c.url)))
-    inner += renderResourcesList(section.cards, section.heading, section)
-  else if (section.cards) inner += renderCards(section.cards, section)
+  // Services, Resources, and every other card-bearing section now render
+  // through the same plain-list path — renderCards()/.card is reserved for
+  // a Step List's own inline cards (renderSteps(), a different, smaller
+  // case with no section of its own to duplicate a heading against).
+  if (section.cards) inner += renderResourcesList(section.cards, section)
   return inner
 }
 function renderSection(section, pageType = 'generic', options = {}) {

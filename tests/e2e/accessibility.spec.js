@@ -60,7 +60,9 @@ test.describe('accessibility', () => {
     await gotoFresh(page)
 
     await expect(page.locator('#tagToggle')).not.toBeChecked()
-    await expect(page.locator('.service-tile').first()).not.toHaveAccessibleName(/Karl:/)
+    await expect(
+      page.locator('.services-region a, .services-region button').first()
+    ).not.toHaveAccessibleName(/Karl:/)
 
     await page.locator('.karl-switch').click()
     await page.reload()

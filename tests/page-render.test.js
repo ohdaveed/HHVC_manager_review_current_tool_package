@@ -125,14 +125,14 @@ describe('page-render.js escaping', () => {
 
   test('renderServiceTiles appends an unverified pill when card.unverified is true (button branch, no url)', () => {
     const html = ctx.renderServiceTiles([{ title: 'Tile', text: 'Claim', unverified: true }])
-    expect(html).toContain('<span class="service-tile-text">Claim<span class="unverified-pill">')
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
   })
 
   test('renderServiceTiles appends an unverified pill when card.unverified is true (anchor branch, with url)', () => {
     const html = ctx.renderServiceTiles([
       { title: 'Tile', text: 'Claim', url: 'https://example.com', unverified: true },
     ])
-    expect(html).toContain('<span class="service-tile-text">Claim<span class="unverified-pill">')
+    expect(html).toContain('<p>Claim<span class="unverified-pill">')
   })
 
   test('renderResourcesList appends an unverified pill when card.unverified is true', () => {
@@ -591,16 +591,16 @@ describe('card description inheritance', () => {
     // scopeInfo should not fail this test while inheritance still works.
     const expected = escapeHtml(pageData.scopeInfo.summary)
     expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(expected)
-    expect(ctx.renderResourcesList([card], 'Resources', inheritsSection)).toContain(expected)
+    expect(ctx.renderResourcesList([card], inheritsSection)).toContain(expected)
     expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(expected)
   })
 
-  test('renders no service-tile text span when the description resolves empty', () => {
+  test('renders no description paragraph when the description resolves empty', () => {
     const html = ctx.renderServiceTiles(
       [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
       titleOnlySection
     )
-    expect(html).not.toContain('class="service-tile-text"')
+    expect(html).not.toContain('<p>')
   })
 
   test('keeps step card text authored, since a step card is not a section card', () => {
@@ -679,7 +679,7 @@ describe('card title inheritance', () => {
   test('resolves through renderServiceTiles, renderResourcesList and renderRelatedRail too', () => {
     const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
     expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(scopeInfoTitle)
-    expect(ctx.renderResourcesList([card], 'Resources', inheritsSection)).toContain(scopeInfoTitle)
+    expect(ctx.renderResourcesList([card], inheritsSection)).toContain(scopeInfoTitle)
     expect(ctx.renderRelatedRail([{ ...inheritsSection, cards: [card] }])).toContain(scopeInfoTitle)
   })
 })
