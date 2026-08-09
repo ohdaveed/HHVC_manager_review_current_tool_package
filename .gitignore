@@ -77,3 +77,13 @@ google-service-account.json
 # created verbatim as a literal directory name since WSL doesn't parse
 # backslashes as path separators). Not real repo content if it recurs.
 /C:*
+
+# Project-local SQLite scratch dirs created by the server integration tests
+# (tests/review-api-server.test.js, tests/ai-assist-server.test.js). Both call
+# mkdtempSync against the REPO ROOT rather than the host temp dir, deliberately,
+# so a failed run's database is still there to investigate. The cost of that
+# choice is that git can see them, and a `git add -A` while a suite is running
+# will commit one — which is exactly how a 6 MB review-state.db reached a
+# feature branch. Anchored so they only match at the root, where they are made.
+/.review-api-*/
+/.ai-api-*/
