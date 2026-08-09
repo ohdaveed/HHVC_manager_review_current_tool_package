@@ -47,6 +47,13 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
   // behind the 3 e2e navigation failures introduced by fba9ef5).
   let pendingPersist = false
 
+  // Set once, inside wrapRenderPage(), to the pre-wrap render function.
+  // restoreInitialPage()'s hydration-only repaints call this directly rather
+  // than the wrapped window.renderPage — see the comment at those call sites
+  // for why going through the wrapper's applyAndRefresh is actively wrong
+  // there, not just redundant.
+  let unwrappedRenderPage = null
+
   // The page key whose review-form values are currently loaded in the
   // sidebar. getCurrentKey() (which reads #pageSelect.value) is NOT a safe
   // stand-in mid-navigation: when the reviewer switches pages via the page
@@ -130,6 +137,7 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
   function wrapRenderPage() {
     if (typeof window.renderPage !== 'function' || window.renderPage.__uxWrapped) return
     const originalRenderPage = window.renderPage
+    unwrappedRenderPage = originalRenderPage
     // Forward skipHistory so wrapped popstate renders don't push history
     // entries (which would clear the browser's forward stack).
     window.renderPage = function renderPageWithUxRefresh(key, skipHistory) {
@@ -220,7 +228,19 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
       // this page renders that inherits from a DIFFERENT, hydrated page
       // needs a full repaint to pick that up — skipHistory=true since this
       // reflects a reapply that already happened, not a new navigation.
-      if (typeof window.renderPage === 'function') window.renderPage(deepLinkKey, true)
+      // Calls the UNWRAPPED render function directly, not window.renderPage:
+      // applySavedPageState(deepLinkKey) already ran, synchronously, on the
+      // line above, so the wrapper's own applyAndRefresh would just repeat
+      // that call for no reason — and worse, it would also stamp the
+      // reviewer's CURRENT (possibly still-default, untouched) Karl-tags
+      // toggle state into state.ui.show_karl_tags as though this were a real
+      // page navigation. On a session where the reviewer has never touched
+      // that toggle, that premature write turns an unset preference into a
+      // persisted "false", which a later reload then wrongly treats as a
+      // deliberate choice and hides Karl annotations that should still be
+      // showing. This repaint is bookkeeping, not navigation, so it must not
+      // carry navigation's side effects.
+      if (unwrappedRenderPage) unwrappedRenderPage(deepLinkKey, true)
       refreshUx()
       return
     }
@@ -257,7 +277,12 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
         : getCurrentKey()
     window.ReviewUx.stateSync.applySavedPageState(initialKey)
     reviewFormPageKey = initialKey
-    if (typeof window.renderPage === 'function') window.renderPage(initialKey, true)
+    // Unwrapped, same reasoning as the deep-link branch above: applySavedPageState
+    // already ran on the line above, so this is a bookkeeping repaint, not a
+    // navigation, and must not carry the wrapper's applyAndRefresh side effects
+    // (most importantly, must not stamp an untouched Karl-tags toggle into storage
+    // as though the reviewer had made a real choice).
+    if (unwrappedRenderPage) unwrappedRenderPage(initialKey, true)
     refreshUx()
   }
 
