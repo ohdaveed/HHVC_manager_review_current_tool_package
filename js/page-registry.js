@@ -54,6 +54,7 @@ import './page-registry-data.js'
     emptyRegistry,
     menuLabelFor,
     readRegistry,
+    restoreOrderIndex,
     validateNewPage,
   } = registryData
 
@@ -67,6 +68,14 @@ import './page-registry-data.js'
      needs to persist, which is why globals.page_registry.hidden stores a
      timestamp and nothing else. */
   const hiddenStash = {}
+
+  /* Every page key in canonical site order, maintained across calls by
+     applyRegistryToData(). This is what restore positions against, rather than
+     the numeric index recorded at hide time: that index is measured against an
+     already-shortened order, so two hides can record the same number and
+     restoring them permutes the site. See restoreOrderIndex()'s comment in
+     js/page-registry-data.js for the worked example. */
+  const canonicalOrder = []
 
   /**
    * Read the registry out of saved review state.
@@ -138,21 +147,44 @@ import './page-registry-data.js'
   }
 
   /**
-   * Seed or drop the pristine snapshot for one page.
+   * Record the pristine snapshot for a page that has none.
    *
    * A deep clone, never the live object: ORIGINAL_DATA is what
    * computeSectionEdits() diffs the live page against, so an alias would make
    * every inline edit diff clean and quietly stop section edits from
    * persisting. It is also what the per-field "reset to original" control and
    * the Edited badge read, both of which early-return without it.
+   *
+   * ONLY WHEN MISSING, which is the whole correctness argument on the restore
+   * path. An existing entry is by definition the pristine copy — either cloned
+   * by js/state.js at boot or written here when the page was created — and
+   * overwriting it with whatever is live now would replace "original" with
+   * "edited". The damage from that is silent and total: computeSectionEdits()
+   * would then find no difference, the next autosave would recompute
+   * `section_edits` as empty, and every heading, paragraph and bullet edit the
+   * reviewer had made would be dropped from storage. "Reset to original" would
+   * reset to the edit. This is why deletePage() no longer removes the entry at
+   * all: leaving it in place is what makes restore correct, and a snapshot for a
+   * page that is temporarily absent costs nothing.
    * @param {string} key
-   * @param {object|null} page the page to snapshot, or null to remove it
+   * @param {object|null} page the page to snapshot when none is recorded yet
    */
-  function syncOriginalData(key, page) {
+  function seedOriginalDataIfMissing(key, page) {
+    const original = window.ORIGINAL_DATA
+    if (!original || !original.pages || !page) return
+    if (original.pages[key]) return
+    original.pages[key] = deepClone(page)
+  }
+
+  /**
+   * Forget a page's pristine snapshot. Only for a page that is gone for good —
+   * a hidden page keeps its snapshot so restore can hand back the edits.
+   * @param {string} key
+   */
+  function dropOriginalData(key) {
     const original = window.ORIGINAL_DATA
     if (!original || !original.pages) return
-    if (page) original.pages[key] = deepClone(page)
-    else delete original.pages[key]
+    delete original.pages[key]
   }
 
   /**
@@ -162,7 +194,7 @@ import './page-registry-data.js'
    */
   function applySavedRegistry() {
     try {
-      const result = applyRegistryToData(DATA, currentRegistry(), hiddenStash)
+      const result = applyRegistryToData(DATA, currentRegistry(), hiddenStash, canonicalOrder)
       if (result.dropped.length) {
         // Reported rather than silently swallowed: a dropped entry means saved
         // state the reviewer cannot see and this tool will not honour.
@@ -196,7 +228,7 @@ import './page-registry-data.js'
       delete registry.hidden[key]
     })
     applySavedRegistry()
-    syncOriginalData(key, DATA.pages[key])
+    seedOriginalDataIfMissing(key, DATA.pages[key])
     refreshDerivedViews(key)
     // Through window.renderPage, not the import: the js/ux-improvements.js
     // wrapper is what reassigns reviewFormPageKey and runs applySavedPageState
@@ -239,7 +271,13 @@ import './page-registry-data.js'
       registry.hidden[key] = { hidden_at: new Date().toISOString() }
     })
     applySavedRegistry()
-    syncOriginalData(key, null)
+    /* The pristine snapshot in ORIGINAL_DATA is deliberately LEFT IN PLACE. It
+       is what restore hands back: drop it here and the reviewer's inline
+       heading/paragraph/bullet edits on this page are lost the moment they
+       restore it, because seeding a fresh snapshot from the (already edited)
+       live object makes computeSectionEdits() see no difference and the next
+       autosave recompute `section_edits` as empty. Only removeAddedPage()
+       forgets a snapshot, because only there is the page gone for good. */
 
     /* The queue's one-step undo is the only queue path that does NOT filter on
        DATA.pages, so a snapshot taken before this hide would still offer
@@ -254,40 +292,62 @@ import './page-registry-data.js'
   }
 
   /**
-   * Put a hidden page back at its original position in `order`.
+   * Put a hidden page back where it belongs in `order`.
    *
-   * The original index, not the end: `order` is the reviewer's reading order
-   * and drives j/k navigation, the queue's row order, the picker and batch PNG
-   * export, so appending on restore would silently permute the site.
+   * Positioned against the canonical sequence, not the index recorded at hide
+   * time: `order` is the reviewer's reading order and drives j/k navigation, the
+   * queue, the picker and batch PNG export, and a remembered index permutes it
+   * as soon as two pages are hidden and restored. See restoreOrderIndex().
+   *
+   * The persisted `hidden` flag is cleared LAST, only once the page is actually
+   * back. Clearing it first — which this did — means a restore that cannot
+   * materialise the page returns an error having already recorded the page as
+   * not hidden: it vanishes from the Help list's deleted section while still
+   * being absent from the mockup, so the reviewer is left with no control for it
+   * at all. addPage() states the same ordering rule for the same reason.
    * @param {string} key
    * @returns {{ok: boolean, error: string|null}}
    */
   function restorePage(key) {
     const stashed = hiddenStash[key]
-    updateRegistry((registry) => {
-      delete registry.hidden[key]
-    })
 
     if (stashed && !DATA.pages[key]) {
       DATA.pages[key] = stashed.page
-      const index = Math.min(Math.max(stashed.index, 0), DATA.order.length)
+      const index = restoreOrderIndex(
+        canonicalOrder,
+        DATA.order.map(([orderKey]) => orderKey),
+        key
+      )
       DATA.order.splice(index, 0, stashed.entry)
       delete hiddenStash[key]
-      syncOriginalData(key, DATA.pages[key])
-    } else {
-      // No stash — the page was hidden in an earlier session and its source
-      // module has not run this session either (an added page). Re-apply the
-      // registry, which will materialise it from registry.added.
+    } else if (!DATA.pages[key]) {
+      /* No stash — the page was hidden in an earlier session and its source
+         module has not run this session either, so it can only be a
+         reviewer-added page held in registry.added. applySavedRegistry() reads
+         the PERSISTED registry, so the hidden flag has to come off first here;
+         the guard below then puts nothing back if it still failed to appear. */
+      updateRegistry((registry) => {
+        delete registry.hidden[key]
+      })
       applySavedRegistry()
-      syncOriginalData(key, DATA.pages[key])
     }
 
     if (!DATA.pages[key]) {
+      // Put the flag back, so the row stays in the Help list and the reviewer
+      // can retry after a reload rather than losing sight of the page entirely.
+      updateRegistry((registry) => {
+        registry.hidden[key] = registry.hidden[key] || { hidden_at: new Date().toISOString() }
+      })
       return {
         ok: false,
         error: 'That page could not be restored in this session. Reload the page.',
       }
     }
+
+    updateRegistry((registry) => {
+      delete registry.hidden[key]
+    })
+    seedOriginalDataIfMissing(key, DATA.pages[key])
     refreshDerivedViews(key)
     return { ok: true, error: null }
   }
@@ -321,7 +381,7 @@ import './page-registry-data.js'
     if (index !== -1) DATA.order.splice(index, 1)
     delete DATA.pages[key]
     delete hiddenStash[key]
-    syncOriginalData(key, null)
+    dropOriginalData(key)
     window.ReviewQueueInternal?.undo?.clearAction?.()
 
     const nextKey = DATA.order[0]?.[0]
@@ -351,14 +411,33 @@ import './page-registry-data.js'
     try {
       const imported = readRegistry(importedState)
       if (!Object.keys(imported.added).length && !Object.keys(imported.hidden).length) return empty
+
+      /* Captured before the mutation, because an import can hide the page that
+         is currently on screen and that has to be navigated away from — not
+         merely dropped from the picker. Leaving it means #mockPage still shows
+         the deleted page while #pageSelect has moved to another key, and the
+         caller's own applySavedPageState(getCurrentKey()) then patches that
+         stale DOM and files later edits under the replacement key. Same hazard
+         deletePage() handles, reached through import instead of a button. */
+      const keyBefore = window.utils?.getCurrentKey?.()
+      window.ReviewUx?.flushPendingPersist?.()
+
       updateRegistry((registry) => {
         registry.added = { ...imported.added, ...registry.added }
         registry.hidden = { ...imported.hidden, ...registry.hidden }
       })
       const result = applySavedRegistry()
-      for (const key of result.added) syncOriginalData(key, DATA.pages[key])
-      for (const key of result.hidden) syncOriginalData(key, null)
-      refreshDerivedViews(window.utils?.getCurrentKey?.())
+      // Only ever SEEDS, never drops: a hidden page keeps its pristine snapshot
+      // so a later restore can hand the reviewer their edits back.
+      for (const key of result.added) seedOriginalDataIfMissing(key, DATA.pages[key])
+
+      const lostCurrent = Boolean(keyBefore) && !DATA.pages[keyBefore]
+      const nextKey = DATA.order[0]?.[0]
+      refreshDerivedViews(lostCurrent ? nextKey : keyBefore)
+      if (lostCurrent && nextKey) {
+        window.ReviewQueueInternal?.undo?.clearAction?.()
+        window.renderPage?.(nextKey)
+      }
       return result
     } catch (err) {
       console.error('HHVC page registry: failed to apply an imported registry.', err)
@@ -420,6 +499,14 @@ import './page-registry-data.js'
     existingKeys,
     hiddenKeys: () => Object.keys(currentRegistry().hidden),
     isHidden,
+    /* Every key the registry knows about, present in the mockup or not. The
+       JSON import path needs this: a deleted page is absent from DATA.pages but
+       its review record must still be merged, or restoring the page later hands
+       back the mockup without the review the backup was taken to preserve. */
+    knownKeys: () => {
+      const registry = currentRegistry()
+      return [...new Set([...Object.keys(registry.added), ...Object.keys(registry.hidden)])]
+    },
     listAdded,
     listHidden,
     removeAddedPage,

@@ -211,6 +211,89 @@ function post(body, headers = authed()) {
   })
 }
 
+/**
+ * Send one POST over a raw TCP socket, bypassing Bun's fetch client entirely.
+ *
+ * Needed by exactly one test, and the reason is the whole point of it. The
+ * Content-Length pre-check answers 413 with `Connection: close` while the
+ * client's declared body is still unsent. That is correct: the socket genuinely
+ * cannot be reused, which is what the header says. But Bun's `fetch` puts that
+ * socket back in its keep-alive pool regardless, so the next same-origin
+ * request that happens to draw it hangs forever.
+ *
+ * That is what made this file fail as a whole rather than in one place. The
+ * poisoned pool entry outlives the test that created it, so every later
+ * `post()` could hang, and the first one that did took the 5s test timeout and
+ * left 21 downstream tests reporting ConnectionRefused — reading exactly like a
+ * dead server. It is not one: measured against this same process, a raw socket
+ * and a request to the `localhost` spelling (a different pool key, same server)
+ * both answer 200 immediately after the 413. The server was healthy the whole
+ * time and the client's pool was the casualty.
+ *
+ * Owning the socket keeps that entry out of the pool, so the fetch-based tests
+ * that follow are unaffected. It also happens to be the more honest tool here:
+ * this test is about HTTP framing, which is what a socket speaks.
+ *
+ * @param {Record<string, string>} headers request headers, sent verbatim
+ * @param {string[]} chunks body pieces, written with a small gap between them
+ * @returns {Promise<{status: number, headers: Record<string, string>, raw: string}>}
+ */
+async function rawPost(headers, chunks) {
+  const received = []
+  let signalData
+  const gotData = new Promise((resolve) => (signalData = resolve))
+  const socket = await Bun.connect({
+    hostname: '127.0.0.1',
+    port: PORT,
+    socket: {
+      data(_socket, data) {
+        received.push(Buffer.from(data))
+        signalData()
+      },
+      // A close or error still ends the wait: the assertions below report an
+      // empty response far more usefully than a hang would.
+      error: () => signalData(),
+      close: () => signalData(),
+    },
+  })
+
+  const requestLine = ['POST /api/ai/generate HTTP/1.1', `Host: 127.0.0.1:${PORT}`]
+  for (const [name, value] of Object.entries(headers)) requestLine.push(`${name}: ${value}`)
+  socket.write(`${requestLine.join('\r\n')}\r\n\r\n`)
+
+  for (const chunk of chunks) {
+    // A gap, so the server is answering from Content-Length alone rather than
+    // because the whole body happened to arrive in one packet.
+    await new Promise((resolve) => setTimeout(resolve, 15))
+    try {
+      socket.write(chunk)
+    } catch {
+      break // The server closed on us, which is the behaviour under test.
+    }
+  }
+
+  // Bounded, so a regression here fails on an assertion rather than on the
+  // suite-wide timeout that made this failure so hard to attribute.
+  await Promise.race([gotData, new Promise((resolve) => setTimeout(resolve, 2000))])
+  // The status line can arrive in a packet of its own; give the headers a beat.
+  await new Promise((resolve) => setTimeout(resolve, 250))
+  try {
+    socket.end()
+  } catch {
+    /* already closed by the server */
+  }
+
+  const raw = Buffer.concat(received).toString('latin1')
+  const [statusLine, ...headerLines] = raw.split('\r\n')
+  const parsed = {}
+  for (const line of headerLines) {
+    if (!line) break
+    const colon = line.indexOf(':')
+    if (colon > 0) parsed[line.slice(0, colon).trim().toLowerCase()] = line.slice(colon + 1).trim()
+  }
+  return { status: Number(statusLine.split(' ')[1]), headers: parsed, raw }
+}
+
 describe('AI assist API (server.ts)', () => {
   let proc
   let stubServer
@@ -715,43 +798,28 @@ describe('AI assist API (server.ts)', () => {
       // on that specific response, verified here rather than assumed: a
       // Content-Length declaring more than the drain limit, with only a
       // trickle actually sent, must get back a response that says so.
+      // Driven over a raw socket rather than fetch(). See rawPost()'s own
+      // comment: fetch() returns the deliberately-closed socket to its
+      // keep-alive pool, and the next same-origin request that draws it hangs —
+      // which is how this one test used to time out and leave the other 21 in
+      // this file reporting ConnectionRefused against a server that was fine.
+      // The earlier attempt to absorb that with a retry-on-ECONNRESET could not
+      // work: the pooled socket does not error, it stalls.
       const declaredLength = 2_000_000 // well past MAX_REQUEST_BODY_BYTES (128 KB) * 8
-      const chunk = new TextEncoder().encode('x'.repeat(32 * 1024))
-      let sent = 0
-      const body = new ReadableStream({
-        async pull(controller) {
-          if (sent >= 2) return controller.close()
-          sent += 1
-          await new Promise((resolve) => setTimeout(resolve, 15))
-          controller.enqueue(chunk)
-        },
-      })
-      const rejected = await fetch(`${base}/api/ai/generate`, {
-        method: 'POST',
-        headers: { ...authed(), 'content-length': String(declaredLength) },
-        body,
-        duplex: 'half',
-      })
+      const chunk = 'x'.repeat(32 * 1024)
+      const rejected = await rawPost({ ...authed(), 'content-length': String(declaredLength) }, [
+        chunk,
+        chunk,
+      ])
       expect(rejected.status).toBe(413)
-      expect(rejected.headers.get('connection')).toBe('close')
+      expect(rejected.headers.connection).toBe('close')
 
       // A fresh request must still succeed — this response closing ITS OWN
-      // connection must not take down the server or any other connection.
-      // Unlike the sibling drain test above, this one genuinely tears down
-      // the socket rather than leaving it open for reuse, and fetch()'s own
-      // connection pool does not always notice a Connection: close in time to
-      // evict that socket before immediately handing it back out — a real
-      // client-side race (an ECONNRESET, not a server bug) with no server-side
-      // fix, so one retry on exactly that error is what a real client would
-      // also do rather than treat a torn-down pooled socket as a failure.
+      // connection must not take down the server or any other connection. This
+      // goes through the pooled client on purpose: it is the assertion that the
+      // 413 above cost one socket and nothing more.
       stub.queue = [{ body: messageResponse(VALID_PAGE) }]
-      let after
-      try {
-        after = await post({ task: 'content', prompt: 'Draft a page.' })
-      } catch (error) {
-        if (!/ECONNRESET|socket connection was closed/i.test(String(error))) throw error
-        after = await post({ task: 'content', prompt: 'Draft a page.' })
-      }
+      const after = await post({ task: 'content', prompt: 'Draft a page.' })
       expect(after.status).toBe(200)
       expect((await after.json()).valid).toBe(true)
     })

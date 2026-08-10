@@ -457,3 +457,142 @@ test.describe('the Help tab’s pages panel', () => {
     await expect(group).toContainText('No pages have been deleted.')
   })
 })
+
+test.describe('regressions found in review', () => {
+  // Codex, P1. Restore used to re-seed ORIGINAL_DATA from the stashed LIVE page,
+  // which by then holds the reviewer's edits — so "original" became "edited",
+  // computeSectionEdits() found no difference, and the next autosave recomputed
+  // section_edits as empty. The reviewer's inline edits were gone after a
+  // reload, with nothing erroring at any point.
+  test('an inline edit survives delete and restore of the same page', async ({ page }) => {
+    await acceptDialogs(page)
+    await gotoFresh(page)
+    await selectPage(page, 'tenantRights')
+
+    const paragraph = page
+      .locator('#mockPage p[data-rewrite-field^="sections."][data-rewrite-field$=".paragraphs.0"]')
+      .first()
+    await paragraph.click()
+    const textarea = page.locator('#mockPage textarea[data-inline-edit-input]')
+    await textarea.fill('Edited before the delete.')
+    await textarea.blur()
+    await expect(
+      page.locator('#mockPage p', { hasText: 'Edited before the delete.' })
+    ).toBeVisible()
+    await settleDebounce(page)
+
+    const editedPath = Object.keys((await readState(page)).pages.tenantRights.section_edits)[0]
+    expect(editedPath).toBeTruthy()
+
+    await page.click('#deletePageButton')
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+    await openPagesPanel(page)
+    await page.click('[data-page-admin="restore"][data-page-key="tenantRights"]')
+    await page.waitForFunction(() => Boolean(window.HHVC_DATA.pages.tenantRights))
+
+    await selectPage(page, 'tenantRights')
+    await expect(page.locator('#mockPage')).toContainText('Edited before the delete.')
+    // The stored diff must still be there: an ORIGINAL_DATA overwritten with the
+    // edited copy makes this recompute to {} on the very next autosave.
+    await page.fill('#reviewNotes', 'touch to force an autosave')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+    const after = await readState(page)
+    expect(after.pages.tenantRights.section_edits[editedPath]).toBeTruthy()
+
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+    await selectPage(page, 'tenantRights')
+    await expect(page.locator('#mockPage')).toContainText('Edited before the delete.')
+  })
+
+  // Codex, P2. The stashed index was measured against an already-shortened
+  // order, so deleting two pages recorded overlapping indexes and restoring them
+  // reordered the site.
+  test('restoring two deleted pages preserves the canonical page order', async ({ page }) => {
+    await acceptDialogs(page)
+    await gotoFresh(page)
+
+    const before = await page.evaluate(() => window.HHVC_DATA.order.map(([key]) => key))
+
+    for (const key of ['ownerHub', 'tenantRights']) {
+      await selectPage(page, key)
+      await page.click('#deletePageButton')
+      await page.waitForFunction((k) => !window.HHVC_DATA.pages[k], key)
+    }
+
+    // Restored in the REVERSE order of deletion — the case a remembered index
+    // gets wrong.
+    await openPagesPanel(page)
+    for (const key of ['tenantRights', 'ownerHub']) {
+      await page.click(`[data-page-admin="restore"][data-page-key="${key}"]`)
+      await page.waitForFunction((k) => Boolean(window.HHVC_DATA.pages[k]), key)
+    }
+
+    const after = await page.evaluate(() => window.HHVC_DATA.order.map(([key]) => key))
+    expect(after).toEqual(before)
+  })
+
+  // Codex, P1. An import that hides the page on screen used to rebuild the
+  // picker without navigating, leaving #mockPage showing a deleted page while
+  // #pageSelect had moved on — and later edits filed under the replacement key.
+  test('an import that deletes the open page navigates away from it', async ({ page }) => {
+    await acceptDialogs(page)
+    await gotoFresh(page)
+
+    // Build a backup in which tenantRights is deleted.
+    await selectPage(page, 'tenantRights')
+    await page.click('#deletePageButton')
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+    await page.selectOption('#exportScope', 'backup-json')
+    const backup = await downloadToText(page, () => page.click('#exportReviews'))
+    expect(JSON.parse(backup).globals.page_registry.hidden.tenantRights).toBeTruthy()
+
+    // Fresh browser, sitting ON tenantRights, then import.
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+    await selectPage(page, 'tenantRights')
+    await page.setInputFiles('#reviewImportFile', writeTempFile('hides-current.json', backup))
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+
+    // The picker and the mockup must agree — a mismatch is what misfiles writes.
+    await expect(page.locator('#pageSelect')).not.toHaveValue('tenantRights')
+    const shownKey = await page.locator('#pageSelect').inputValue()
+    const shownTitle = await page.evaluate((k) => window.HHVC_PAGES[k].title, shownKey)
+    await expect(page.locator('#mockPage h1')).toHaveText(shownTitle)
+  })
+
+  // Codex, P1. applyImportedRegistry() removes deleted pages from DATA.pages
+  // before the import filter runs, so filtering on presence alone dropped
+  // exactly the reviews the reviewer deleted the page WITHOUT losing.
+  test('imports the review of a page the same backup deletes', async ({ page }) => {
+    await acceptDialogs(page)
+    await gotoFresh(page)
+
+    await selectPage(page, 'tenantRights')
+    await setDecision(page, DECISIONS.blocked)
+    await page.fill('#reviewNotes', 'Reviewed, then deleted')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+    await page.click('#deletePageButton')
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+
+    await page.selectOption('#exportScope', 'backup-json')
+    const backup = await downloadToText(page, () => page.click('#exportReviews'))
+
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+    await page.waitForSelector('#mockPage h1')
+    await page.setInputFiles('#reviewImportFile', writeTempFile('deleted-review.json', backup))
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+
+    // Restoring must hand back the review the backup carried, not a blank page.
+    await openPagesPanel(page)
+    await page.click('[data-page-admin="restore"][data-page-key="tenantRights"]')
+    await page.waitForFunction(() => Boolean(window.HHVC_DATA.pages.tenantRights))
+    await selectPage(page, 'tenantRights')
+    await expect(page.locator('#reviewDecision')).toHaveValue(DECISIONS.blocked)
+    await expect(page.locator('#reviewNotes')).toHaveValue('Reviewed, then deleted')
+  })
+})

@@ -222,8 +222,18 @@ import { hasValidPageData } from './utils.js'
         }
         const pageChanges = registryResult.added.length + registryResult.hidden.length
 
+        /* A DELETED page's review is imported too, which `DATA.pages[key]`
+           alone cannot express: applyImportedRegistry() has just removed those
+           pages from DATA.pages, so filtering on presence would drop exactly the
+           records the reviewer deleted the page WITHOUT losing. Restoring such a
+           page afterwards would then hand back the mockup and none of the
+           review it was exported with. A key the registry knows about — added or
+           hidden — is a real page for import purposes even when it is not
+           currently in the mockup. */
+        const registryKeys = new Set(window.pageRegistry?.knownKeys?.() || [])
         const entries = Object.entries(validated.data.pages).filter(
-          ([key, value]) => DATA.pages[key] && value && typeof value === 'object'
+          ([key, value]) =>
+            (DATA.pages[key] || registryKeys.has(key)) && value && typeof value === 'object'
         )
         /* A backup can legitimately carry pages and no matching reviews — for
            instance one exported before any of the added pages had been reviewed.
@@ -231,6 +241,24 @@ import { hasValidPageData } from './utils.js'
            when several pages had just appeared. */
         if (!entries.length) {
           if (pageChanges) {
+            /* Still merge `ui` and `globals`. This branch returns before the
+               update below, so without this a backup carrying pages and a
+               reviewer name but no matching reviews would import the pages and
+               silently drop the name, making the reviewer retype it. Same
+               precedence as the main path: local wins. */
+            window.reviewState.update((state) => {
+              const merge = typeof window.defu === 'function' ? window.defu : null
+              state.ui = merge
+                ? merge({}, state.ui, validated.data.ui || {})
+                : { ...state.ui, ...(validated.data.ui || {}) }
+              if (validated.data.globals?.reviewer && !state.globals.reviewer) {
+                state.globals.reviewer = validated.data.globals.reviewer
+              }
+              if (validated.data.globals?.owner && !state.globals.owner) {
+                state.globals.owner = validated.data.globals.owner
+              }
+              return state
+            })
             setText(
               'reviewExportStatus',
               `Imported ${pageChanges} added or deleted page(s) from backup. It carried no reviews for the current page list.`

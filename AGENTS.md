@@ -370,8 +370,9 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 - **Three lazily-mounted panels publish a mount hook rather than rendering at
   init:** `window.__mountAiAssistOnTabOpen`, `window.__mountReviewOpsOnTabOpen`
   and `window.__mountPageRegistryOnTabOpen`.
-  Both are collapsed `<details>` at the end of the Help panel now rather than
-  tabs of their own, so `setWorkspaceTab` calls **both** when Help opens — a
+  All three are collapsed `<details>` at the end of the Help panel now rather
+  than tabs of their own, so `setWorkspaceTab` calls **all three** when Help
+  opens — a
   reviewer expanding one must never find an empty box. Each panel ALSO catches
   an already-open tab at its own `init()` via `mountWorkspacePanelIfOpen('help')`
   in `js/utils.js` — `js/ux-improvements.js` initializes earlier and restores a
@@ -954,6 +955,51 @@ surface so each selector is still declared in exactly one file.
   shadowing a retired one is harmless to `resolvePageKey` (it checks `pageData`
   first), but it silently redirects a legacy shared link to content its author
   never wrote — worse than the consolidation redirect it replaced.
+- **A deleted page KEEPS its `ORIGINAL_DATA` snapshot, and restore never
+  re-seeds one that exists.** This is the sharpest edge in the feature and it was
+  wrong first time round. Restore used to re-seed the pristine snapshot from the
+  stashed page object — which for a mid-session delete is the _already edited_
+  live object. That makes "original" equal "edited", so `computeSectionEdits()`
+  finds no difference, the next autosave recomputes `section_edits` as empty, and
+  every heading, paragraph and bullet edit the reviewer made is dropped from
+  storage. "Reset to original" resets to the edit. Nothing errors at any point.
+  So `deletePage()` leaves the snapshot alone (a snapshot for a temporarily
+  absent page costs nothing) and `seedOriginalDataIfMissing()` only ever fills a
+  gap — the gap being a page hidden in an _earlier_ session, whose stashed copy
+  is pristine because no edits had been applied when the boot-time hide captured
+  it. Only `removeAddedPage()` drops a snapshot, because only there is the page
+  gone for good. Mutation-proven by
+  `tests/e2e/page-registry.spec.js`'s "an inline edit survives delete and restore
+  of the same page", which was confirmed to fail against the overwrite.
+- **Restore positions against a canonical key sequence, not a remembered
+  index.** The index recorded at hide time is measured against an order that
+  earlier hides have already shortened, so two hides can record the _same_
+  number: delete B then C from `[A,B,C,D]` and both stash index 1. Restoring them
+  yields `[A,C,B,D]` — the reviewer's reading order silently permuted, which is
+  what drives `j`/`k`, the queue, the picker and batch PNG export.
+  `restoreOrderIndex()` instead inserts before the first canonical successor
+  currently present, which is order-independent; `applyRegistryToData()` learns
+  that sequence between its add and hide passes so it describes the whole site
+  rather than what is left of it.
+- **The JSON import admits a key the registry knows, not just one in
+  `DATA.pages`.** `applyImportedRegistry()` runs first and removes the backup's
+  deleted pages, so a presence-only filter drops exactly the reviews a reviewer
+  deleted a page _without_ losing — and restoring it afterwards hands back the
+  mockup with no review attached. `window.pageRegistry.knownKeys()` is what
+  widens the filter.
+- **An import that deletes the open page has to navigate, not just repaint the
+  picker.** Otherwise `#mockPage` still shows the deleted page while
+  `#pageSelect` has moved on, and the import's own
+  `applySavedPageState(getCurrentKey())` patches that stale DOM and files later
+  edits under the replacement key — the same mismatch `deletePage()` guards,
+  reached through import instead of a button.
+- **`restorePage()` clears the persisted `hidden` flag last.** Clearing it first
+  means a restore that cannot materialise the page returns an error having
+  already recorded the page as not hidden: the row disappears from the Help
+  list while the page is still absent from the mockup, leaving the reviewer no
+  control for it at all. The one exception is the no-stash branch, which must
+  clear the flag before `applySavedRegistry()` because that reads the persisted
+  registry — and it puts the flag back if the page still fails to appear.
 - **Limitations, documented rather than fixed.** An added page travels in the
   **JSON backup only**; CSV has no column for a page object, mirroring the
   existing `section_edits` limitation. Sync is subtler: `pushAllPages` iterates

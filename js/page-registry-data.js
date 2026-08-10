@@ -72,9 +72,10 @@ const PAGE_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/
 /* The same three segments js/utils.js's getByPath/setByPath reject. A key
    named `__proto__` would not merely be odd: `pages[key] = value` walks onto
    Object.prototype and writes through it, polluting every plain object in the
-   app. PAGE_KEY_PATTERN already excludes all three (they contain underscores,
-   and `constructor`/`prototype` are lowercase words that DO match the
-   pattern), so this set is what actually stops the latter two. */
+   app. PAGE_KEY_PATTERN excludes `__proto__` alone, and only because of the
+   underscores — `constructor` and `prototype` are lowercase letter-only words
+   that DO match it. So this set is not redundant with the pattern: it is the
+   only thing stopping those two, and removing it lets them through. */
 const UNSAFE_PAGE_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
 
 /** Maximum characters accepted in any single free-text field on the form. */
@@ -254,8 +255,16 @@ function validateNewPage(input, options) {
   const audience = parseAudienceList(source.audience)
   if (!audience.length) errors.push('Add at least one audience, one per line.')
 
-  const slug = String(source.slug ?? '').trim() || `sf.gov/${slugify(title)}`
-  if (!slug) errors.push('Slug is required.')
+  /* The slugified TITLE is what gets validated, not the assembled slug. Testing
+     the assembled string is vacuous — `sf.gov/${...}` is never empty, so the
+     branch never fired — and it let a title with no letters or digits ("!!!")
+     through as the address `sf.gov/`, which a reviewer would read as a broken
+     page rather than as a prompt to supply a slug. */
+  const derivedSlug = slugify(title)
+  const slug = String(source.slug ?? '').trim() || (derivedSlug ? `sf.gov/${derivedSlug}` : '')
+  if (!slug) {
+    errors.push('Slug is required — add one, or use a title containing letters or numbers.')
+  }
 
   for (const [label, value] of [
     ['Title', title],
@@ -380,10 +389,14 @@ function isValidAddedEntry(key, entry) {
  * @param {{pages: object, order: Array<[string, string]>}} data usually window.HHVC_DATA
  * @param {{added?: object, hidden?: object}} registry
  * @param {object} [stash] filled with `{index, entry, page}` per hidden key so
- *   restore can splice the original tuple back at its original position
+ *   restore can put the original tuple back
+ * @param {string[]} [canonicalOrder] extended in place with every key present
+ *   after the add pass, in order. This is the reference sequence
+ *   `restoreOrderIndex()` restores against; see its own comment for why a
+ *   remembered numeric index is not enough.
  * @returns {{added: string[], hidden: string[], dropped: string[]}} what actually happened
  */
-function applyRegistryToData(data, registry, stash) {
+function applyRegistryToData(data, registry, stash, canonicalOrder) {
   const result = { added: [], hidden: [], dropped: [] }
   if (!isPlainObject(data) || !isPlainObject(data.pages) || !Array.isArray(data.order)) {
     return result
@@ -423,6 +436,17 @@ function applyRegistryToData(data, registry, stash) {
     result.added.push(key)
   }
 
+  /* Learn the canonical sequence BETWEEN the two passes: after adds (so a
+     reviewer-created page takes its place in it) and before hides (so it still
+     describes the full site rather than whatever is left). The caller keeps the
+     same array across calls, so a mid-session hide extends it rather than
+     rebuilding it from an already-shortened order. */
+  if (Array.isArray(canonicalOrder)) {
+    for (const [key] of data.order) {
+      if (!canonicalOrder.includes(key)) canonicalOrder.push(key)
+    }
+  }
+
   for (const key of Object.keys(normalized.hidden)) {
     if (findPageKeyShapeErrors(key).length) {
       result.dropped.push(key)
@@ -447,6 +471,41 @@ function applyRegistryToData(data, registry, stash) {
   }
 
   return result
+}
+
+/**
+ * Where a restored page belongs in the CURRENT order.
+ *
+ * A remembered numeric index is not enough, and the failure is easy to miss
+ * because a single delete-then-restore looks right. The index is recorded
+ * against an order that earlier hides have already shortened, so two hides can
+ * record the same number: delete B then C from `[A,B,C,D]` and both stash index
+ * 1 (C really is at index 1 of `[A,C,D]`). Restoring in that order splices B at
+ * 1 to give `[A,B,D]`, then C at 1 to give `[A,C,B,D]` — the reviewer's reading
+ * order silently permuted, which is what drives j/k navigation, the queue, the
+ * picker and batch PNG export.
+ *
+ * Positioning against the canonical sequence instead is order-independent: the
+ * page goes immediately before its first canonical successor that is currently
+ * present. Restoring B in that example finds D (C is still hidden) and lands
+ * `[A,B,D]`; restoring C then finds D and lands `[A,B,C,D]`, whichever order
+ * the reviewer clicks them in.
+ *
+ * @param {string[]} canonicalOrder every key in canonical sequence
+ * @param {string[]} currentKeys the keys currently in `order`, in order
+ * @param {string} key the key being restored
+ * @returns {number} the index to splice at; the end when nothing anchors it
+ */
+function restoreOrderIndex(canonicalOrder, currentKeys, key) {
+  const canonical = Array.isArray(canonicalOrder) ? canonicalOrder : []
+  const current = Array.isArray(currentKeys) ? currentKeys : []
+  const position = canonical.indexOf(key)
+  if (position === -1) return current.length
+  for (let i = position + 1; i < canonical.length; i += 1) {
+    const index = current.indexOf(canonical[i])
+    if (index !== -1) return index
+  }
+  return current.length
 }
 
 /**
@@ -516,6 +575,7 @@ if (typeof window !== 'undefined') {
     menuLabelFor,
     parseAudienceList,
     readRegistry,
+    restoreOrderIndex,
     slugify,
     validateNewPage,
   }
@@ -535,6 +595,7 @@ if (typeof module !== 'undefined' && module.exports) {
     menuLabelFor,
     parseAudienceList,
     readRegistry,
+    restoreOrderIndex,
     slugify,
     validateNewPage,
   }

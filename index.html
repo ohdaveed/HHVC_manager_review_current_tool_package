@@ -63,11 +63,21 @@
                  js/page-registry-ui.js; the buttons are authored here so the
                  markup a reviewer sees does not depend on that module having
                  mounted. -->
-            <div class="page-admin-actions" aria-label="Add or delete page mockups">
-              <button type="button" class="tool-btn secondary-tool" id="addPageButton">
+            <div class="page-admin-actions" role="group" aria-label="Add or delete page mockups">
+              <button
+                type="button"
+                class="tool-btn secondary-tool"
+                id="addPageButton"
+                aria-describedby="pageAdminStatus"
+              >
                 Add page…
               </button>
-              <button type="button" class="tool-btn danger-tool" id="deletePageButton">
+              <button
+                type="button"
+                class="tool-btn danger-tool"
+                id="deletePageButton"
+                aria-describedby="pageAdminStatus"
+              >
                 Delete this page
               </button>
             </div>

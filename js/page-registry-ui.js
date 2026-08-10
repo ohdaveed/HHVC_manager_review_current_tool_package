@@ -252,8 +252,8 @@
    */
   function deleteCurrentPage() {
     const key = currentKey()
-    const title = window.HHVC_DATA?.pages?.[key]?.title || key
     if (!key) return
+    const title = window.HHVC_DATA?.pages?.[key]?.title || key
     if (typeof window.confirm !== 'function') return
     if (!window.confirm(deleteMessage(key, title))) return
 

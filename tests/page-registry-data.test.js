@@ -30,6 +30,7 @@ const {
   validateNewPage,
 } = require('../js/page-registry-data.js')
 const { pageSchema } = require('../build_scripts/schema.js')
+const { restoreOrderIndex } = require('../js/page-registry-data.js')
 
 /** A minimal valid form submission, spread-and-overridden per test. */
 function formInput(overrides) {
@@ -597,5 +598,95 @@ describe('countInboundLinks', () => {
     expect(countInboundLinks(null, 'ownerHub')).toEqual({ cards: 0, buttons: 0, pages: [] })
     expect(countInboundLinks({ pages: { a: null } }, 'ownerHub').cards).toBe(0)
     expect(countInboundLinks(linkedData(), '')).toEqual({ cards: 0, buttons: 0, pages: [] })
+  })
+})
+
+describe('restoreOrderIndex', () => {
+  // The regression this exists for: a remembered numeric index is measured
+  // against an order that earlier hides already shortened, so two hides can
+  // record the same number and restoring them permutes the reviewer's reading
+  // order — which drives j/k navigation, the queue, the picker and PNG export.
+  const canonical = ['A', 'B', 'C', 'D']
+
+  test('inserts before the first canonical successor that is present', () => {
+    expect(restoreOrderIndex(canonical, ['A', 'D'], 'B')).toBe(1)
+    expect(restoreOrderIndex(canonical, ['A', 'B', 'D'], 'C')).toBe(2)
+  })
+
+  test('restores two hidden pages to canonical order in EITHER click order', () => {
+    // B then C.
+    let order = ['A', 'D']
+    order.splice(restoreOrderIndex(canonical, order, 'B'), 0, 'B')
+    order.splice(restoreOrderIndex(canonical, order, 'C'), 0, 'C')
+    expect(order).toEqual(['A', 'B', 'C', 'D'])
+
+    // C then B — the order that a remembered index gets wrong.
+    order = ['A', 'D']
+    order.splice(restoreOrderIndex(canonical, order, 'C'), 0, 'C')
+    order.splice(restoreOrderIndex(canonical, order, 'B'), 0, 'B')
+    expect(order).toEqual(['A', 'B', 'C', 'D'])
+  })
+
+  test('appends when no canonical successor is present', () => {
+    expect(restoreOrderIndex(canonical, ['A', 'B'], 'D')).toBe(2)
+  })
+
+  test('appends a key the canonical sequence has never seen', () => {
+    expect(restoreOrderIndex(canonical, ['A', 'B'], 'Z')).toBe(2)
+  })
+
+  test('puts a first-position page back at the front', () => {
+    expect(restoreOrderIndex(canonical, ['B', 'C'], 'A')).toBe(0)
+  })
+
+  test('does not throw on malformed input', () => {
+    expect(restoreOrderIndex(null, null, 'A')).toBe(0)
+    expect(restoreOrderIndex(canonical, undefined, 'A')).toBe(0)
+  })
+})
+
+describe('applyRegistryToData: canonical order tracking', () => {
+  test('records the full site order before hiding anything', () => {
+    const data = liveData()
+    const canonicalOrder = []
+    applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, canonicalOrder)
+    // ownerHub is in the canonical list even though it was just removed from
+    // `order` — that is what lets restore position it again.
+    expect(canonicalOrder).toEqual(['pestsTopic', 'ownerHub', 'tenantRights'])
+  })
+
+  test('extends the canonical list with a page added later, without rebuilding it', () => {
+    const data = liveData()
+    const canonicalOrder = []
+    applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, canonicalOrder)
+    // A mid-session add: the same array is reused, so the earlier hidden key
+    // must survive rather than being recomputed from the shortened order.
+    applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {}, canonicalOrder)
+    expect(canonicalOrder).toEqual(['pestsTopic', 'ownerHub', 'tenantRights', 'noiseComplaints'])
+  })
+
+  test('tolerates a missing canonical array', () => {
+    const data = liveData()
+    expect(() => applyRegistryToData(data, { hidden: { ownerHub: {} } }, {})).not.toThrow()
+  })
+})
+
+describe('validateNewPage: slug derivation', () => {
+  // The old check tested the ASSEMBLED slug, which is never empty because of the
+  // `sf.gov/` prefix — so the branch was dead and a title with no alphanumerics
+  // shipped `sf.gov/` as the page address.
+  test('rejects a title that slugifies to nothing, rather than yielding "sf.gov/"', () => {
+    const result = validateNewPage(formInput({ title: '!!!' }), { existingKeys: [] })
+    expect(result.ok).toBe(false)
+    expect(result.errors.join(' ')).toContain('Slug is required')
+  })
+
+  test('accepts an explicit slug even when the title slugifies to nothing', () => {
+    const result = validateNewPage(formInput({ title: '!!!', slug: 'sf.gov/noise' }), {
+      existingKeys: [],
+    })
+    // The title itself is still required to be non-empty, which '!!!' satisfies.
+    expect(result.ok).toBe(true)
+    expect(result.page.slug).toBe('sf.gov/noise')
   })
 })
