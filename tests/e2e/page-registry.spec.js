@@ -596,3 +596,62 @@ test.describe('regressions found in review', () => {
     await expect(page.locator('#reviewNotes')).toHaveValue('Reviewed, then deleted')
   })
 })
+
+test.describe('regressions found in the second review round', () => {
+  // Codex, P1. refreshDerivedViews(key) selected the restored page in the picker
+  // without rendering it, so getCurrentKey() returned the restored key while
+  // #mockPage still showed the previous page — and the next note edit was filed
+  // under the restored page. The reviewer also could not navigate to it, because
+  // the picker already claimed it was current.
+  test('restoring a page leaves the picker on the page actually being shown', async ({ page }) => {
+    await acceptDialogs(page)
+    await gotoFresh(page)
+
+    await selectPage(page, 'tenantRights')
+    await page.click('#deletePageButton')
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+    await expect(page.locator('#pageSelect')).not.toHaveValue('tenantRights')
+
+    const shownKey = await page.locator('#pageSelect').inputValue()
+    await openPagesPanel(page)
+    await page.click('[data-page-admin="restore"][data-page-key="tenantRights"]')
+    await page.waitForFunction(() => Boolean(window.HHVC_DATA.pages.tenantRights))
+
+    // The picker must still agree with the mockup.
+    await expect(page.locator('#pageSelect')).toHaveValue(shownKey)
+    const shownTitle = await page.evaluate((k) => window.HHVC_PAGES[k].title, shownKey)
+    await expect(page.locator('#mockPage h1')).toHaveText(shownTitle)
+
+    // And a note typed now belongs to the page on screen, not the restored one.
+    await page.fill('#reviewNotes', 'Belongs to the visible page')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+    const saved = await readState(page)
+    expect(saved.pages[shownKey].notes).toBe('Belongs to the visible page')
+    expect(saved.pages.tenantRights?.notes ?? '').not.toBe('Belongs to the visible page')
+  })
+
+  // Codex, P2. exportSavedLocalReviewsCsv() iterated DATA.order only, so a
+  // deleted page's retained review silently vanished from the CSV — review data
+  // lost from an export the reviewer never asked to narrow.
+  test('the saved-reviews CSV still carries a deleted page’s review', async ({ page }) => {
+    await acceptDialogs(page)
+    await gotoFresh(page)
+
+    await selectPage(page, 'tenantRights')
+    await setDecision(page, DECISIONS.blocked)
+    await page.fill('#reviewNotes', 'Kept after deletion')
+    await page.dispatchEvent('#reviewNotes', 'change')
+    await settleDebounce(page)
+    await page.click('#deletePageButton')
+    await page.waitForFunction(() => !window.HHVC_DATA.pages.tenantRights)
+
+    await page.selectOption('#exportScope', 'all-csv')
+    const csv = await downloadToText(page, () => page.click('#exportReviews'))
+    expect(csv).toContain('tenantRights')
+    expect(csv).toContain('Kept after deletion')
+    // And the page metadata falls back to the record rather than emitting
+    // "undefined | San Francisco" from an empty page object.
+    expect(csv).not.toContain('undefined')
+  })
+})

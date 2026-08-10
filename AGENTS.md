@@ -1000,6 +1000,27 @@ surface so each selector is still declared in exactly one file.
   control for it at all. The one exception is the no-stash branch, which must
   clear the flag before `applySavedRegistry()` because that reads the persisted
   registry — and it puts the flag back if the page still fails to appear.
+- **A page key may not be any name inherited from `Object.prototype`, and
+  presence checks use `hasOwn`.** `toString`, `valueOf` and `hasOwnProperty` all
+  satisfy the key pattern and are invisible to `Object.keys()`, so the collision
+  check called them free — and then `data.pages.toString` resolved to the
+  inherited _function_, which is truthy, so the "already present, skip" branch
+  fired, the page was never inserted, and `addPage()` reported success and asked
+  `renderPage()` to display a function. Measured, not theorised. The unsafe-key
+  set is derived from `Object.getOwnPropertyNames(Object.prototype)` rather than
+  written out so it cannot fall behind the runtime.
+- **Restore leaves the picker on the page actually being shown.** Selecting the
+  restored key without rendering it is `deletePage()`'s mismatch pointing the
+  other way: `getCurrentKey()` returns the restored key while `#mockPage` still
+  shows the previous page, so the next note is filed under the restored page —
+  and the reviewer cannot navigate to it, because the picker already claims it is
+  current. Restoring from a panel in Help should not yank the mockup either.
+- **`exportSavedLocalReviewsCsv()` iterates `order` PLUS the registry's known
+  keys.** A deleted page keeps its review — that is what Restore hands back — but
+  it leaves `order`, so iterating `order` alone silently dropped those reviews
+  from the CSV. Its page metadata falls back to the record's own
+  `page_title`/`page_type`/`url_slug` rather than `{}`, which would have made
+  `defaultSeoTitle()` emit the literal "undefined | San Francisco".
 - **Limitations, documented rather than fixed.** An added page travels in the
   **JSON backup only**; CSV has no column for a page object, mirroring the
   existing `section_edits` limitation. Sync is subtler: `pushAllPages` iterates

@@ -348,7 +348,16 @@ import './page-registry-data.js'
       delete registry.hidden[key]
     })
     seedOriginalDataIfMissing(key, DATA.pages[key])
-    refreshDerivedViews(key)
+    /* The picker keeps the page the reviewer is actually LOOKING AT selected,
+       not the one just restored. Selecting the restored key without rendering it
+       is the same mismatch deletePage() guards against, pointing the other way:
+       getCurrentKey() would return the restored key while #mockPage still showed
+       the previous page, so the next note or content edit would be filed under
+       the restored page — and the reviewer could not navigate to it by picking an
+       option the picker already claimed was current. Restoring from a panel in
+       Help should not yank the mockup either, so the fix is to leave the
+       selection alone; the restored page is in the picker to be chosen normally. */
+    refreshDerivedViews(window.utils?.getCurrentKey?.())
     return { ok: true, error: null }
   }
 

@@ -69,14 +69,47 @@ const REQUIRED_PAGE_FIELDS = ['slug', 'type', 'title', 'summary', 'audience', 'r
    keys that arrive through this module). */
 const PAGE_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/
 
-/* The same three segments js/utils.js's getByPath/setByPath reject. A key
-   named `__proto__` would not merely be odd: `pages[key] = value` walks onto
+/* The three segments js/utils.js's getByPath/setByPath reject, plus every other
+   name inherited from Object.prototype.
+
+   `__proto__` would not merely be odd: `pages[key] = value` walks onto
    Object.prototype and writes through it, polluting every plain object in the
-   app. PAGE_KEY_PATTERN excludes `__proto__` alone, and only because of the
+   app. PAGE_KEY_PATTERN excludes that one alone, and only because of the
    underscores — `constructor` and `prototype` are lowercase letter-only words
-   that DO match it. So this set is not redundant with the pattern: it is the
-   only thing stopping those two, and removing it lets them through. */
-const UNSAFE_PAGE_KEYS = new Set(['__proto__', 'prototype', 'constructor'])
+   that DO match it, so this set is what actually stops them.
+
+   The INHERITED names are a second, quieter hole and the reason this is not a
+   fixed list of three. `toString`, `valueOf` and `hasOwnProperty` all satisfy
+   PAGE_KEY_PATTERN, and `Object.keys()` never reports them, so a collision
+   check built on either one says the key is free. `data.pages.toString` then
+   resolves to the inherited FUNCTION, which is truthy — so applyRegistryToData's
+   "already present, skip" branch fires, the page is never inserted, and
+   addPage() reports success and asks renderPage() to display a function.
+   Measured, not theorised: `toString` validated clean and applied as
+   `{added: [], dropped: []}` with an unchanged order.
+
+   Derived from Object.prototype rather than written out, so it cannot fall
+   behind the runtime. The own-property checks in applyRegistryToData are the
+   other half of the fix — this list stops the key being accepted, `hasOwn`
+   stops an inherited name being mistaken for an existing page. */
+const UNSAFE_PAGE_KEYS = new Set([
+  '__proto__',
+  'prototype',
+  'constructor',
+  ...Object.getOwnPropertyNames(Object.prototype),
+])
+
+/**
+ * Own-property presence, never `key in obj` or a bare truthiness test.
+ * `pages.toString` is truthy on every plain object; `hasOwn(pages, 'toString')`
+ * is not.
+ * @param {object} target
+ * @param {string} key
+ * @returns {boolean}
+ */
+function hasOwn(target, key) {
+  return Boolean(target) && Object.prototype.hasOwnProperty.call(target, key)
+}
 
 /** Maximum characters accepted in any single free-text field on the form. */
 const MAX_FIELD_LENGTH = 2000
@@ -418,8 +451,10 @@ function applyRegistryToData(data, registry, stash, canonicalOrder) {
       continue
     }
     // Idempotent: re-applying a registry over data that already carries the
-    // page must not duplicate its order row.
-    if (data.pages[key]) continue
+    // page must not duplicate its order row. hasOwn, not truthiness — an
+    // inherited name like `toString` is truthy here and would silently skip
+    // the insert while addPage() reported success.
+    if (hasOwn(data.pages, key)) continue
     const clone = deepClone(entry.page)
     if (!clone) {
       result.dropped.push(key)

@@ -690,3 +690,49 @@ describe('validateNewPage: slug derivation', () => {
     expect(result.page.slug).toBe('sf.gov/noise')
   })
 })
+
+describe('validateNewPage: inherited Object.prototype names', () => {
+  // Found in review. These satisfy PAGE_KEY_PATTERN and Object.keys() never
+  // reports them, so a collision check built on either says the key is free —
+  // and then `data.pages.toString` resolves to the inherited FUNCTION, which is
+  // truthy, so applyRegistryToData's "already present, skip" branch fires, the
+  // page is never inserted, and addPage() reports success and asks renderPage()
+  // to display a function.
+  test('rejects toString, valueOf and hasOwnProperty as page keys', () => {
+    for (const key of ['toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf']) {
+      const result = validateNewPage(formInput({ key }), { existingKeys: [] })
+      expect(result.ok).toBe(false)
+      expect(result.errors.join(' ')).toContain('reserved')
+    }
+  })
+
+  test('still accepts an ordinary identifier', () => {
+    expect(validateNewPage(formInput(), { existingKeys: [] }).ok).toBe(true)
+  })
+
+  test('applyRegistryToData drops an inherited-name entry instead of skipping it', () => {
+    const data = liveData()
+    const added = {}
+    Object.defineProperty(added, 'toString', {
+      value: { page: addedEntry().page },
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    })
+    const result = applyRegistryToData(data, { added }, {}, [])
+    // Dropped as invalid, NOT silently treated as already present.
+    expect(result.dropped).toEqual(['toString'])
+    expect(result.added).toEqual([])
+    expect(data.order).toHaveLength(3)
+  })
+
+  test('an own-property presence check still makes a real re-apply idempotent', () => {
+    const data = liveData()
+    const registry = { added: { noiseComplaints: addedEntry() } }
+    const canonical = []
+    applyRegistryToData(data, registry, {}, canonical)
+    const second = applyRegistryToData(data, registry, {}, canonical)
+    expect(second.added).toEqual([])
+    expect(data.order.filter(([key]) => key === 'noiseComplaints')).toHaveLength(1)
+  })
+})

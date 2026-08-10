@@ -126,10 +126,31 @@ import { hasValidPageData } from './utils.js'
     ]
 
     const rows = [headers]
-    for (const [pageKey] of DATA.order) {
-      const page = DATA.pages[pageKey] || {}
+    /* Deleted pages are included, which `DATA.order` alone cannot express.
+       Deleting a page keeps its review — that is the whole point of Restore —
+       but the page leaves `order`, so iterating only `order` silently dropped
+       those retained reviews from this export. The record is still in
+       state.pages and a browser that has never deleted the page can import it,
+       so omitting it loses review data the reviewer never asked to lose. */
+    const exportKeys = [
+      ...DATA.order.map(([pageKey]) => pageKey),
+      ...(window.pageRegistry?.knownKeys?.() || []),
+    ]
+    const seenKeys = new Set()
+    for (const pageKey of exportKeys) {
+      if (seenKeys.has(pageKey)) continue
+      seenKeys.add(pageKey)
       const saved = state.pages[pageKey]
       if (!saved) continue
+      /* A deleted page has no entry in DATA.pages, so the record's own copies of
+         these fields are the fallback rather than `{}` — which would have made
+         defaultSeoTitle() emit the literal "undefined | San Francisco". */
+      const page = DATA.pages[pageKey] || {
+        title: saved.page_title || '',
+        type: saved.page_type || '',
+        slug: saved.url_slug || '',
+        reading: saved.reading_target || '',
+      }
 
       rows.push([
         saved.review_date || '',
