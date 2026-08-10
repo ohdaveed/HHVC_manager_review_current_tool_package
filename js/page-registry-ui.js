@@ -219,6 +219,7 @@
     const links = window.pageRegistry?.countInboundLinks?.(key) || {
       cards: 0,
       buttons: 0,
+      links: 0,
       pages: [],
     }
     const lines = [
@@ -227,7 +228,7 @@
       'It leaves the page list, the mockup and the review queue. Your decision and notes for it ' +
         'are kept, and you can restore it from "Pages added and deleted" in the Help tab.',
     ]
-    const total = links.cards + links.buttons
+    const total = links.cards + links.buttons + links.links
     if (total) {
       lines.push(
         '',

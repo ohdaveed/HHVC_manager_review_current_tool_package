@@ -361,6 +361,8 @@ import './page-registry-data.js'
   function restorePage(key) {
     const stashed = hiddenStash[key]
 
+    let restoredFromStash = false
+
     if (stashed && !DATA.pages[key]) {
       DATA.pages[key] = stashed.page
       const index = restoreOrderIndex(
@@ -370,15 +372,20 @@ import './page-registry-data.js'
       )
       DATA.order.splice(index, 0, stashed.entry)
       delete hiddenStash[key]
+      restoredFromStash = true
     } else if (!DATA.pages[key]) {
       /* No stash — the page was hidden in an earlier session and its source
          module has not run this session either, so it can only be a
          reviewer-added page held in registry.added. applySavedRegistry() reads
          the PERSISTED registry, so the hidden flag has to come off first here;
          the guard below then puts nothing back if it still failed to appear. */
-      updateRegistry((registry) => {
-        delete registry.hidden[key]
-      })
+      if (
+        !updateRegistry((registry) => {
+          delete registry.hidden[key]
+        })
+      ) {
+        return { ok: false, error: STORAGE_FAILED }
+      }
       applySavedRegistry()
     }
 
@@ -394,9 +401,24 @@ import './page-registry-data.js'
       }
     }
 
-    updateRegistry((registry) => {
-      delete registry.hidden[key]
-    })
+    /* The live restore is ROLLED BACK if this write fails. Reporting success
+       here while the persisted registry still says "hidden" is the worst of both
+       worlds: the page is in the mockup now and gone again after a reload, with
+       the reviewer told it was restored. Better to leave the page deleted —
+       which is at least the state that survives — and say the save failed. */
+    if (
+      !updateRegistry((registry) => {
+        delete registry.hidden[key]
+      })
+    ) {
+      if (restoredFromStash) {
+        const at = DATA.order.findIndex(([orderKey]) => orderKey === key)
+        if (at !== -1) DATA.order.splice(at, 1)
+        delete DATA.pages[key]
+        hiddenStash[key] = stashed
+      }
+      return { ok: false, error: STORAGE_FAILED }
+    }
     seedOriginalDataIfMissing(key, DATA.pages[key])
     /* The picker keeps the page the reviewer is actually LOOKING AT selected,
        not the one just restored. Selecting the restored key without rendering it

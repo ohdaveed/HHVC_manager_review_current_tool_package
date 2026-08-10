@@ -111,6 +111,11 @@ function hasOwn(target, key) {
   return Boolean(target) && Object.prototype.hasOwnProperty.call(target, key)
 }
 
+/* Section fields the schema types as arrays. Anything here that arrives as an
+   object or a string reaches a `.map()`/`.entries()` in js/page-render.js and
+   throws at render time — the boot-path throw this module exists to prevent. */
+const SECTION_ARRAY_FIELDS = ['paragraphs', 'bullets', 'cards', 'table', 'steps']
+
 /** Maximum characters accepted in any single free-text field on the form. */
 const MAX_FIELD_LENGTH = 2000
 
@@ -399,6 +404,15 @@ function isValidPageObject(page) {
       if (!isPlainObject(section)) return false
       if (typeof section.heading !== 'string' || !section.heading.trim()) return false
       if (typeof section.karl !== 'string' || !section.karl.trim()) return false
+      /* One level deeper, for the same reason and the same failure. The section
+         guard above stopped at its two required fields, so `paragraphs: {}` still
+         got through — and paragraphList() maps over it, which throws exactly like
+         partitionSections() did. Every one of these is an array in
+         build_scripts/schema.js, so requiring that here rejects nothing CI
+         accepts. */
+      for (const field of SECTION_ARRAY_FIELDS) {
+        if (section[field] !== undefined && !Array.isArray(section[field])) return false
+      }
     }
   }
   return true
@@ -594,15 +608,54 @@ function restoreOrderIndex(canonicalOrder, currentKeys, key) {
  * @returns {{cards: number, buttons: number, pages: string[]}}
  */
 function countInboundLinks(data, targetKey) {
-  const summary = { cards: 0, buttons: 0, pages: [] }
+  const summary = { cards: 0, buttons: 0, links: 0, pages: [] }
   if (!isPlainObject(data) || !isPlainObject(data.pages) || !targetKey) return summary
   const referring = new Set()
+
+  /* Matches an inline markdown link whose TARGET is this page key.
+     `formatMarkdown()` turns `[label](article11Guide)` into a real
+     data-render-target navigation control, so a page can be linked to entirely
+     through prose — and counting only cards and buttons reported "nothing links
+     here" for exactly those pages, which is the confirmation dialog failing at
+     the one job it has. The key is a bare identifier by construction, so it
+     needs no regex escaping. */
+  const inlineLink = new RegExp(`\\[[^\\]]*\\]\\(${targetKey}\\)`)
+
+  /** Every string a section can carry that formatMarkdown() runs over. */
+  const sectionText = (section) => {
+    const out = []
+    const push = (item) => {
+      if (typeof item === 'string') out.push(item)
+      else if (isPlainObject(item) && typeof item.text === 'string') out.push(item.text)
+    }
+    for (const field of ['paragraphs', 'bullets']) {
+      for (const item of Array.isArray(section[field]) ? section[field] : []) push(item)
+    }
+    for (const row of Array.isArray(section.table) ? section.table : []) {
+      for (const cell of Array.isArray(row) ? row : []) push(cell)
+    }
+    if (isPlainObject(section.callout)) push(section.callout.text)
+    for (const step of Array.isArray(section.steps) ? section.steps : []) {
+      if (!isPlainObject(step)) continue
+      for (const field of ['text', 'bullets']) {
+        for (const item of Array.isArray(step[field]) ? step[field] : []) push(item)
+      }
+      if (isPlainObject(step.callout)) push(step.callout.text)
+    }
+    return out
+  }
 
   for (const [pageKey, page] of Object.entries(data.pages)) {
     if (pageKey === targetKey || !isPlainObject(page)) continue
     const sections = Array.isArray(page.sections) ? page.sections : []
     for (const section of sections) {
       if (!isPlainObject(section)) continue
+      for (const text of sectionText(section)) {
+        if (inlineLink.test(text)) {
+          summary.links += 1
+          referring.add(pageKey)
+        }
+      }
       for (const card of Array.isArray(section.cards) ? section.cards : []) {
         if (isPlainObject(card) && card.target === targetKey) {
           summary.cards += 1

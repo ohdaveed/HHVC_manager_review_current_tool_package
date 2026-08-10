@@ -590,14 +590,25 @@ describe('countInboundLinks', () => {
     expect(countInboundLinks(linkedData(), 'tenantRights')).toEqual({
       cards: 0,
       buttons: 0,
+      links: 0,
       pages: [],
     })
   })
 
   test('does not throw on malformed input', () => {
-    expect(countInboundLinks(null, 'ownerHub')).toEqual({ cards: 0, buttons: 0, pages: [] })
+    expect(countInboundLinks(null, 'ownerHub')).toEqual({
+      cards: 0,
+      buttons: 0,
+      links: 0,
+      pages: [],
+    })
     expect(countInboundLinks({ pages: { a: null } }, 'ownerHub').cards).toBe(0)
-    expect(countInboundLinks(linkedData(), '')).toEqual({ cards: 0, buttons: 0, pages: [] })
+    expect(countInboundLinks(linkedData(), '')).toEqual({
+      cards: 0,
+      buttons: 0,
+      links: 0,
+      pages: [],
+    })
   })
 })
 
@@ -826,5 +837,102 @@ describe('applyRegistryToData: reporting key collisions', () => {
 
   test('always returns the collided array, even on malformed input', () => {
     expect(applyRegistryToData(null, {}, {}, []).collided).toEqual([])
+  })
+})
+
+describe('nested optional section fields', () => {
+  // Found in review, one level deeper than the previous fix reached. The section
+  // guard stopped at its two required fields, so `paragraphs: {}` still got
+  // through — and paragraphList() maps over it, throwing exactly like
+  // partitionSections() did on a non-array `sections`.
+  const base = {
+    slug: 'sf.gov/x',
+    type: 'Information',
+    title: 'T',
+    summary: 'S',
+    audience: ['A tenant'],
+    reading: 'Grade 6',
+  }
+  const withSection = (extra) => ({ ...base, sections: [{ heading: 'H', karl: 'K', ...extra }] })
+
+  test('rejects a non-array paragraphs, bullets, cards, table or steps', () => {
+    for (const field of ['paragraphs', 'bullets', 'cards', 'table', 'steps']) {
+      expect(isValidPageObject(withSection({ [field]: {} }))).toBe(false)
+      expect(isValidPageObject(withSection({ [field]: 'text' }))).toBe(false)
+    }
+  })
+
+  test('accepts arrays and absent fields', () => {
+    expect(isValidPageObject(withSection({ paragraphs: ['p'], bullets: [] }))).toBe(true)
+    expect(isValidPageObject(withSection({}))).toBe(true)
+  })
+
+  test('applyRegistryToData drops an entry with a malformed nested field', () => {
+    const data = liveData()
+    const registry = { added: { noiseComplaints: { page: withSection({ paragraphs: {} }) } } }
+    expect(applyRegistryToData(data, registry, {}, []).dropped).toEqual(['noiseComplaints'])
+    expect(data.order).toHaveLength(3)
+  })
+})
+
+describe('countInboundLinks: inline markdown links', () => {
+  // Found in review. formatMarkdown() turns `[label](pageKey)` into a real
+  // data-render-target navigation control, so a page can be linked to entirely
+  // through prose — and counting only cards and buttons reported "nothing links
+  // here" for exactly those pages, which is the delete confirmation failing at
+  // the one job it has.
+  const linked = (section) => ({
+    pages: { pestsTopic: { sections: [{ heading: 'H', karl: 'K', ...section }] } },
+  })
+
+  test('counts a link in a paragraph', () => {
+    const summary = countInboundLinks(
+      linked({ paragraphs: ['See [the guide](ownerHub).'] }),
+      'ownerHub'
+    )
+    expect(summary.links).toBe(1)
+    expect(summary.pages).toEqual(['pestsTopic'])
+  })
+
+  test('counts links in bullets, table cells, callouts and step text', () => {
+    expect(countInboundLinks(linked({ bullets: ['[a](ownerHub)'] }), 'ownerHub').links).toBe(1)
+    expect(countInboundLinks(linked({ table: [['[a](ownerHub)']] }), 'ownerHub').links).toBe(1)
+    expect(
+      countInboundLinks(linked({ callout: { text: '[a](ownerHub)' } }), 'ownerHub').links
+    ).toBe(1)
+    expect(
+      countInboundLinks(linked({ steps: [{ title: 'S', text: ['[a](ownerHub)'] }] }), 'ownerHub')
+        .links
+    ).toBe(1)
+  })
+
+  test('reads the object form of a text item, not just a bare string', () => {
+    const summary = countInboundLinks(
+      linked({ paragraphs: [{ text: '[a](ownerHub)', unverified: true }] }),
+      'ownerHub'
+    )
+    expect(summary.links).toBe(1)
+  })
+
+  test('does not match a link to a DIFFERENT page whose key shares a prefix', () => {
+    expect(countInboundLinks(linked({ paragraphs: ['[a](ownerHubTwo)'] }), 'ownerHub').links).toBe(
+      0
+    )
+  })
+
+  test('counts cards, buttons and inline links independently', () => {
+    const data = {
+      pages: {
+        pestsTopic: {
+          sections: [
+            { heading: 'H', karl: 'K', cards: [{ title: 'C', target: 'ownerHub' }] },
+            { heading: 'H2', karl: 'K', buttonTarget: 'ownerHub' },
+            { heading: 'H3', karl: 'K', paragraphs: ['[a](ownerHub)'] },
+          ],
+        },
+      },
+    }
+    const summary = countInboundLinks(data, 'ownerHub')
+    expect(summary).toEqual({ cards: 1, buttons: 1, links: 1, pages: ['pestsTopic'] })
   })
 })

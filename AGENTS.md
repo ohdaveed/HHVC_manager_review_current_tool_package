@@ -1046,6 +1046,25 @@ surface so each selector is still declared in exactly one file.
   drop-don't-throw posture exists to avoid. The added checks match
   `build_scripts/schema.js` exactly (a section requires `heading` and `karl`
   there), so they cannot reject a page CI would accept.
+- **The delete confirmation counts INLINE markdown links too, not just cards and
+  buttons.** `formatMarkdown()` turns `[label](pageKey)` into a real
+  `data-render-target` navigation control, so a page can be linked to entirely
+  through prose — and counting only structured targets reported "nothing links
+  here" for exactly those pages, which is the dialog failing at the one job it
+  has. `countInboundLinks()` scans paragraphs, bullets, table cells, callouts and
+  step text, in both the bare-string and `{text}` forms.
+- **`restorePage()` rolls the live restore back when the persist fails.**
+  Reporting success while the stored registry still says "hidden" is the worst
+  available outcome: the page is in the mockup now and gone again after a reload,
+  with the reviewer told it was restored. Leaving it deleted is at least the state
+  that survives, so a failed write undoes the `order`/`pages` mutation, puts the
+  stash entry back, and returns the storage-failure message.
+- **`isValidPageObject()` validates the ARRAY-typed section fields too.** The
+  section guard originally stopped at `heading`/`karl`, so `paragraphs: {}` still
+  passed and `paragraphList()` mapped over it — the same render-time throw a
+  non-array `sections` caused, one level deeper. `SECTION_ARRAY_FIELDS` names the
+  five (`paragraphs`, `bullets`, `cards`, `table`, `steps`); all five are arrays
+  in `build_scripts/schema.js`, so requiring it rejects nothing CI accepts.
 - **Limitations, documented rather than fixed.** An added page travels in the
   **JSON backup only**; CSV has no column for a page object, mirroring the
   existing `section_edits` limitation. Sync is subtler: `pushAllPages` iterates
