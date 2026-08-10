@@ -617,8 +617,8 @@ a:focus {
      mockup's shared 8px --radius — confirmed identical across all 7 live
      pages checked. --ds-radius-sm already names this exact value
      (css/theme.css); reusing it here rather than touching the shared
-     --radius token, which ~29 other selectors (cards, panels, steps) still
-     rely on and are intentionally left untouched by this pass. */
+     --radius token, which ~29 other selectors (cards, panels) still rely on
+     and are intentionally left untouched by this pass. */
   border-radius: var(--ds-radius-sm, 4px);
   border: 2px solid var(--sfds-action-blue);
   background: var(--sfds-action-blue);

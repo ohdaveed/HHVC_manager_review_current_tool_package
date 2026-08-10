@@ -189,12 +189,6 @@ function sectionAnchorId(heading) {
 }
 // Mockup-internal navigation for buttons/cards rendered from page data.
 document.addEventListener('click', (event) => {
-  const backLink = event.target.closest('.back-link')
-  if (backLink) {
-    event.preventDefault()
-    window.history.back()
-    return
-  }
   const inertAnchor = event.target.closest('a[href="#"]')
   if (inertAnchor) {
     event.preventDefault()
