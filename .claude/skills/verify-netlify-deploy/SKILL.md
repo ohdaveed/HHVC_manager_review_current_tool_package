@@ -54,11 +54,34 @@ runs a secret scan on every deploy; a non-empty `secretsScanMatches` array
 here is a real, separate incident (a credential got bundled and shipped),
 distinct from a build failure.
 
+**The Netlify MCP tools are not in every session.** Confirm with ToolSearch
+before planning around them; a session without them cannot answer this
+question at all, and the `netlify` CLI installed in the sandbox is
+unauthenticated (`NETLIFY_AUTH_TOKEN` unset, no `.netlify/state.json`) — a
+`netlify login` on the user's own machine does not reach this container. When
+that happens, say so rather than reporting question 1 as failed, then **skip
+to question 3**, which is the stronger check anyway: matching content hashes
+prove the deployed bytes, where `commit_ref` only asserts what Netlify
+believes it built. Hand the user these to run locally if they want the
+metadata too:
+
+```bash
+netlify deploys:list --prod    # top entry's state and commit
+netlify status                 # confirms which site the repo is linked to
+```
+
 ## 2. Is the live site actually reachable?
 
 ```bash
-curl -sI https://hhvc.netlify.app/
+curl -sS -o /dev/null -w '%{http_code}\n' https://hhvc.netlify.app/
 ```
+
+**Ask for the status code; do not read headers with `-sI`.** Agent sessions
+here reach the internet through an HTTPS proxy, and the first line `-sI`
+prints is the proxy's own `HTTP/1.1 200 Connection Established` — the CONNECT
+tunnel, not the site. A gated site that answers `401` still shows a `200` on
+line one, so `curl -sI … | head -1` reports a **false pass**. `-w
+'%{http_code}'` reports the response Netlify actually sent.
 
 Expect `200`. If you get **401 or 403 instead of a build error**, don't
 report that as a broken deploy — it's Netlify's visitor access control
@@ -68,11 +91,17 @@ separate from whether the build succeeded. Report it as its own finding:
 _the deploy is correct, but the live URL currently requires Netlify team SSO
 to view_ — worth flagging on its own, since this tool's whole purpose is a
 mockup manager-review reviewers open directly, and a team-SSO gate means
-reviewers without Netlify org access can't. (Confirmed present as of
-2026-08-07 — checked the primary URL, the `main--hhvc.netlify.app` branch
-alias, and the specific deploy's permalink; all three 401.) Don't silently
-"fix" this by changing the site's access control — it may be deliberate
-(the tool mocks up unreleased content); surface it and let the user decide.
+reviewers without Netlify org access can't. Don't silently "fix" this by
+changing the site's access control — it may be deliberate (the tool mocks up
+unreleased content); surface it and let the user decide.
+
+**The gate's state is not fixed, so check it rather than assuming.** It was
+on across all three URLs on 2026-08-07 and off on both the primary URL and the
+`main--hhvc.netlify.app` alias on 2026-08-06 — an earlier revision of this
+file asserted the 401 as standing fact, which would have had a later run
+report a gate that was no longer there. The inverse is worth a word too: with
+the gate off, a mockup of unreleased content is publicly reachable. That may
+well be intended; note it, don't change it.
 
 ## 3. Does the live bundle actually reflect the new commit?
 
@@ -100,3 +129,14 @@ failure rather than speculating about the ones after it — a stale deploy
 (question 1) makes questions 2 and 3 moot until it re-deploys. When
 everything passes, say so in one line; this is meant to be a fast
 confirmation, not a report that needs reading closely every time it's clean.
+
+Distinguish **failed** from **could not run**. A question skipped for want of
+the Netlify MCP tools is unanswered, not answered "no", and reporting it as a
+failure invents a deploy problem out of a missing credential.
+
+One local trap that is not a deploy problem either: if `bun run build:app`
+fails to resolve an import, check whether the package is in `package.json`
+and the lockfile before concluding `main` is broken. A sandbox's
+`node_modules` goes stale as soon as a merged PR adds a dependency — this
+happened with `@fontsource/roboto-flex` on 2026-08-06, which looked exactly
+like a broken build and was fixed by `bun install`.

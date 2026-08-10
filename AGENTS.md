@@ -1607,22 +1607,27 @@ by default, failing closed.
   `tests/ai-assist-schema.test.js` (guards the structured-output schema against
   drifting from the Zod page schema).
 
-  **One test in that file drives its request over a raw socket, and it has to.**
-  The Content-Length pre-check answers 413 with `Connection: close` while the
-  client's declared body is still unsent — correct, since the socket genuinely
-  cannot be reused — but Bun's `fetch` returns that socket to its keep-alive pool
-  anyway, and the next same-origin request that draws it stalls rather than
-  erroring. That poisoned entry outlives the test that created it, so it cost the
-  whole file: one 5s timeout followed by 21 downstream tests reporting
-  `ConnectionRefused`, which reads exactly like a dead server and kept `main` red
-  for four consecutive runs. It was never a dead server — measured against the
-  same wedged process, a raw socket and a request to the `localhost` spelling (a
-  different pool key, same server) both answered 200 immediately. A retry on
-  `ECONNRESET` cannot paper over it, which was the earlier attempt: the pooled
-  socket does not error, it hangs. `rawPost()` owns its socket so nothing enters
-  the pool, and the follow-up "the server is still healthy" assertion
-  deliberately goes back through the pooled client to prove the 413 cost one
-  connection and no more.
+  **One test in that file carries a bounded retry and a 20s budget, and both are
+  load-bearing** (fixed on `main` in #106). The Content-Length pre-check answers
+  413 with `Connection: close` while the client's declared body is still
+  unsent — correct, since the socket genuinely cannot be reused — but Bun's
+  `fetch` returns that socket to its keep-alive pool anyway, and the next
+  same-origin request that draws it **stalls rather than erroring**. That is why
+  a catch matching only `ECONNRESET` never fired: there is no error to catch, so
+  the request never settled, the test burned its whole default 5s budget, and
+  bun tore down the spawned server — cascading `ConnectionRefused` into the other
+  21 tests in the file. One root cause, 21 collateral failures, and the whole
+  thing read as a dead server for four consecutive red runs on `main`.
+
+  It was never a dead server. Measured against the same wedged process: a raw
+  socket gets `HTTP/1.1 413` with `Connection: close` and the server serves the
+  next connection normally, and a request to the `localhost` spelling (a
+  different pool key, same server) answers 200 immediately. So the fix belongs on
+  the client side of the test — `AbortSignal.timeout()` bounds the poisoned
+  attempt, the catch matches a hang as well as a reset, and the test's own budget
+  has to exceed that timeout or it dies mid-retry and still looks like a server
+  failure. Do not restore the default 5s budget, and do not narrow the catch back
+  to `ECONNRESET`.
 
 ### RAG knowledge base (optional)
 
