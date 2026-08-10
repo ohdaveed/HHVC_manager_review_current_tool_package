@@ -576,3 +576,55 @@
   padding: var(--ds-space-3);
   background: var(--surface-panel);
 }
+
+/* -------------------------------------------------------------------------
+   "Pages added and deleted" (js/page-registry-ui.js)
+   -------------------------------------------------------------------------
+   The Help-tab half of the add/delete-page feature. Its sidebar half is styled
+   in css/ux-improvements.css; the split is by surface rather than by feature,
+   so each selector is declared in exactly one file.
+
+   Built from the primitives already here — .ds-section-header, .ds-section-title
+   and .ds-empty — plus .review-queue-action for the row buttons, which is the
+   pill this panel's siblings already use for a row-level action. */
+
+.page-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+  margin: 0 0 var(--ds-space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.page-admin-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-md);
+  background: var(--surface-panel);
+  font-size: var(--ds-text-card);
+}
+
+/* The page key, shown beside the title because it is what appears in the URL,
+   in every CSV export and in the confirm dialog — a reviewer comparing a backup
+   against what is on screen needs it, and it is not derivable from the title. */
+.page-admin-key {
+  margin-left: var(--ds-space-2);
+  font-family: var(--font-caption);
+  font-size: var(--ds-text-label);
+  color: var(--text-secondary);
+}
+
+.page-admin-row .field-help {
+  margin: var(--ds-space-1) 0 0;
+}
+
+.page-admin-row-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--ds-space-1);
+}

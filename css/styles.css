@@ -1537,6 +1537,41 @@ a:focus {
   border-color: var(--sfds-danger-border);
 }
 
+/* Added for "Delete this page" (js/page-registry-ui.js), which disables itself
+   on the HHVC agency page and on the last remaining page rather than letting a
+   reviewer click it and then be told no in a dialog. Without this rule a
+   disabled `.tool-btn` kept its full solid-blue treatment and looked available
+   — the same gap `.danger-tool` had before its rule above was written.
+
+   Follows `.review-queue-action:disabled` (css/ux-improvements.css) in using
+   the slate fill, but NOT its `--sfds-border` hairline. That hairline is tuned
+   for a button sitting on the workspace panel; here the button sits on the
+   sidebar, which is --sfds-white — the same value the fill is barely distinct
+   from. Measured, the queue's combination would have rendered this button
+   effectively shapeless:
+
+     fill --sfds-slate-6 on the sidebar   light 1.02:1   dark 1.09:1
+     border --sfds-border on the sidebar  light 1.17:1   dark 1.32:1
+
+   A disabled control with no visible edge reads as missing rather than
+   unavailable, which is the opposite of what disabling it is for. So the border
+   steps up to --sfds-slate-3, which clears the 3:1 non-text threshold in both
+   themes, and the label stays on --sfds-slate-2:
+
+     border --sfds-slate-3 on the sidebar light 4.86:1   dark 7.88:1
+     label  --sfds-slate-2 on the fill    light 11.07:1  dark 9.61:1
+
+   WCAG 1.4.3 exempts inactive controls from the text minimum, so the label is
+   this readable by choice: a reviewer who cannot read a disabled button cannot
+   learn from it either, and the `title` attribute explains why it is off. */
+.tool-btn:disabled,
+.tool-btn:disabled:hover {
+  cursor: not-allowed;
+  background: var(--sfds-slate-6);
+  border-color: var(--sfds-slate-3);
+  color: var(--sfds-slate-2);
+}
+
 /* WCAG contrast fix — use darker gray for better accessibility
    Original #6e7070 had 4.2:1 ratio; using #5a5c5c achieves 5.7:1 against white */
 .field-help,

@@ -987,3 +987,93 @@ ol li {
     scroll-behavior: auto !important;
   }
 }
+
+/* =========================================================================
+   Add / delete page controls (sidebar)
+   =========================================================================
+   Chrome for js/page-registry-ui.js's half that lives in the sidebar, under
+   the page picker: the two action buttons and the new-page form.
+
+   The Help tab's "Pages added and deleted" list is styled in css/dashboard.css
+   instead, with the other workspace-panel surfaces — one selector, one file, so
+   what renders is never a merge of two blocks neither of which describes it.
+
+   No `!important` here despite this being the override layer: none of these
+   selectors exists anywhere else, so there is nothing to override. */
+
+.page-admin-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+/* The buttons are `.tool-btn`, which is width: 100% for the stacked controls
+   elsewhere in the sidebar. Side by side they need to share the row instead —
+   Add and Delete are a pair, and stacking them puts a destructive button
+   directly under the safe one at full width, which is the arrangement the
+   export group's own comment warns about. */
+.page-admin-actions .tool-btn {
+  width: 100%;
+  padding: 0.6rem 0.5rem;
+}
+
+.page-admin-form {
+  margin-top: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-md);
+  background: var(--surface-soft);
+}
+
+.page-admin-form label {
+  display: block;
+  margin-top: 0.6rem;
+}
+
+.page-admin-form label:first-of-type {
+  margin-top: 0;
+}
+
+/* The field-help under an input belongs to the input above it, so it loses the
+   default paragraph gap that would otherwise attach it to the NEXT label. */
+.page-admin-form .field-help {
+  margin: 0.2rem 0 0;
+}
+
+.page-admin-form textarea {
+  resize: vertical;
+}
+
+.page-admin-form-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+}
+
+/* Validation failures. `role="alert"` in the markup, so this only has to make
+   the region visible — the announcement is already handled. Uses the danger
+   tokens rather than a literal, the same pair `.danger-tool` uses, so both
+   themes track each other: --sfds-danger-text measures 8.69:1 on
+   --sfds-danger-bg in light and 8.71:1 in dark (see the .danger-tool comment in
+   css/styles.css, where those two values are worked out). */
+.page-admin-errors {
+  margin: 0 0 var(--ds-space-3);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border: 1px solid var(--sfds-danger-border);
+  border-radius: var(--ds-radius-sm);
+  background: var(--sfds-danger-bg);
+  color: var(--sfds-danger-text);
+  font-size: var(--ds-text-label);
+}
+
+.page-admin-errors p {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+}
+
+.page-admin-errors ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}

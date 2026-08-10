@@ -303,6 +303,22 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
 
   window.ReviewUx.refreshUx = refreshUx
 
+  /* Published for js/page-registry.js, which has to flush before it mutates.
+     Hiding a page removes it from DATA.pages, and reviewFormPageKey stays
+     pinned to that key until the follow-up navigation settles — so a debounced
+     keystroke landing in between would call collectCurrentPageReviewState()
+     for a page that no longer exists, where `DATA.pages[key] || {}` makes
+     page_title, edited_title, edited_summary and section_edits all resolve
+     empty and rewrites the record with the reviewer's content blanked. That
+     record is the thing Restore brings back, so the loss would be permanent.
+
+     Flushing rather than discarding, deliberately: the pending keystrokes are
+     real edits to the page being hidden, and at flush time that page still
+     exists, so the save is well formed and lands under the right key. It also
+     leaves pendingPersist false, which makes the wrapper's own pre-navigation
+     flush a no-op instead of a second write. */
+  window.ReviewUx.flushPendingPersist = flushPendingPersist
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init)
   } else {

@@ -125,7 +125,18 @@ function buildPageSelect() {
         '<optgroup label="' +
         escapeHtml(type) +
         ' pages">' +
-        items.map(([k, l]) => '<option value="' + k + '">' + escapeHtml(l) + '</option>').join('') +
+        /* The KEY is escaped too, not just the label. This used to be the one
+           place in the codebase that interpolated a page key into innerHTML
+           raw, which was safe only while every key was a hardcoded identifier
+           in a pages/*.js file. Reviewer-added pages (js/page-registry.js) put
+           keys in localStorage, where a hand-edited or imported blob can carry
+           anything — so this now matches js/review-queue-render.js, which
+           escapes its row keys at all three of its interpolation sites.
+           js/page-registry-data.js additionally constrains an added key to a
+           bare identifier; this is the braces to that belt. */
+        items
+          .map(([k, l]) => '<option value="' + escapeHtml(k) + '">' + escapeHtml(l) + '</option>')
+          .join('') +
         '</optgroup>'
     )
     .join('')
@@ -176,9 +187,17 @@ function applyChecklistState(key) {
      each is designed to degrade to silence rather than throw if the core
      failed to load, which an import would turn into a hard load-time failure.
 
+   `buildPageSelect` joins them for a different reason: js/page-registry.js has
+   to rebuild the picker after adding or deleting a page, and cannot import it.
+   This module imports js/state.js, which imports js/page-registry.js, so an
+   import there would close the cycle. Reaching it through `window` keeps the
+   dependency one-directional, and the optional call there degrades to "the
+   picker is stale until the next load" rather than throwing.
+
    Assigning them here preserves both behaviors exactly. */
 window.toggleSidebar = toggleSidebar
 window.showToast = showToast
+window.buildPageSelect = buildPageSelect
 
 export {
   applyChecklistState,

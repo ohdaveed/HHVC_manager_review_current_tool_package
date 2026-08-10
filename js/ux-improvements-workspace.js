@@ -130,6 +130,7 @@ import { hasValidPageData } from './utils.js'
       // (mountWorkspacePanelIfOpen) working unchanged.
       window.__mountAiAssistOnTabOpen?.()
       window.__mountReviewOpsOnTabOpen?.()
+      window.__mountPageRegistryOnTabOpen?.()
     }
 
     window.reviewState.update((state) => {

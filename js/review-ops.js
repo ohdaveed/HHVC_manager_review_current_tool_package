@@ -39,10 +39,28 @@ import { escapeHtml as escape } from './utils.js'
 
   /**
    * The page keys the site currently has, for the orphan check.
-   * @returns {Set<string>} every key in HHVC_DATA.order, empty if data has not loaded
+   *
+   * A page the reviewer deleted during review is counted as still known, even
+   * though js/page-registry.js has removed it from `order`. Its record is not
+   * orphaned — it is the thing Restore brings back — so listing it under
+   * "Records for pages that no longer exist" would offer the reviewer a button
+   * that destroys the review they are one click away from recovering.
+   *
+   * Deliberately NOT extended to include reviewer-added pages that were removed
+   * for good: once the page object is gone there is nothing to restore, and its
+   * record genuinely is an orphan that this panel should collect.
+   * @returns {Set<string>} every key in HHVC_DATA.order plus every deleted key,
+   *   empty if data has not loaded
    */
   function siteKeys() {
-    return new Set((window.HHVC_DATA?.order || []).map(([key]) => key))
+    const keys = new Set((window.HHVC_DATA?.order || []).map(([key]) => key))
+    // Only widen a NON-empty set. An empty one means page data has not loaded,
+    // and findOrphanedRecords() reads that as "report nothing" — the guard that
+    // stops this panel offering to delete a reviewer's entire history. Adding
+    // keys to an empty set would defeat it.
+    if (!keys.size) return keys
+    for (const key of window.pageRegistry?.hiddenKeys?.() || []) keys.add(key)
+    return keys
   }
 
   /**
