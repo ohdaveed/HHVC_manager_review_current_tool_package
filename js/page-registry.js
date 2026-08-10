@@ -77,6 +77,19 @@ import './page-registry-data.js'
      js/page-registry-data.js for the worked example. */
   const canonicalOrder = []
 
+  /* The keys that come from pages/*.js, captured NOW — before applySavedRegistry()
+     has run even once, so `DATA.pages` still holds exactly the authored set.
+
+     This is what tells an idempotent re-apply apart from a genuine collision. An
+     old backup can carry `added.foo` for a key that has since become a real
+     authored page; applyRegistryToData() then reports `foo` in `collided`
+     because a page already occupies it, and without this set that is
+     indistinguishable from re-applying a page the registry itself added earlier.
+     Treating it as reviewer-added is actively harmful: the Help panel would
+     present an authored page as one the reviewer created, and Remove would
+     delete it from the live mockup until the next reload. */
+  const authoredKeys = new Set(Object.keys(DATA.pages))
+
   /**
    * Read the registry out of saved review state.
    * @returns {{added: object, hidden: object}}
@@ -95,14 +108,35 @@ import './page-registry-data.js'
    * @param {(registry: {added: object, hidden: object}) => void} mutate
    */
   function updateRegistry(mutate) {
+    let intended = null
     window.reviewState.update((state) => {
       if (!state.globals || typeof state.globals !== 'object') state.globals = {}
       const registry = readRegistry(state)
       mutate(registry)
       state.globals.page_registry = registry
+      intended = registry
       return state
     })
+
+    /* Verified by re-reading, because reviewState.update() cannot fail loudly.
+       writeLocalState() catches the setItem exception itself (localStorage
+       disabled, or quota exhausted) and returns normally after showing the global
+       error banner — so a caller that trusts it would mutate live page data,
+       report success and show an "Added" toast for a page that is gone on the
+       next reload. Comparing what we meant to store against what actually came
+       back is the only honest check available from here. */
+    try {
+      const stored = currentRegistry()
+      return JSON.stringify(stored) === JSON.stringify(intended)
+    } catch {
+      return false
+    }
   }
+
+  /** The message shown when the registry could not be written to localStorage. */
+  const STORAGE_FAILED =
+    'That change could not be saved in this browser — local storage may be full or disabled. ' +
+    'Nothing was changed.'
 
   /**
    * Every page key a new page could collide with.
@@ -200,6 +234,14 @@ import './page-registry-data.js'
         // state the reviewer cannot see and this tool will not honour.
         console.warn('HHVC page registry: ignored unusable entries for', result.dropped.join(', '))
       }
+      const collisions = result.collided.filter((key) => authoredKeys.has(key))
+      if (collisions.length) {
+        console.warn(
+          'HHVC page registry: these added pages collide with real pages in pages/*.js and are ' +
+            'being ignored — the authored page wins:',
+          collisions.join(', ')
+        )
+      }
       return result
     } catch (err) {
       console.error('HHVC page registry: failed to apply saved pages.', err)
@@ -221,12 +263,16 @@ import './page-registry-data.js'
     if (!validation.ok) return { ok: false, errors: validation.errors, key: '' }
 
     const { key, page, label } = validation
-    updateRegistry((registry) => {
+    const persisted = updateRegistry((registry) => {
       registry.added[key] = { page: deepClone(page), label, created_at: new Date().toISOString() }
       // An added key can never also be hidden — the two halves would disagree
       // about whether the page exists.
       delete registry.hidden[key]
     })
+    // Nothing is mutated on a failed write. applySavedRegistry() reads the
+    // PERSISTED registry, so it would find nothing to add and the page would
+    // never appear — while this function reported success.
+    if (!persisted) return { ok: false, errors: [STORAGE_FAILED], key: '' }
     applySavedRegistry()
     seedOriginalDataIfMissing(key, DATA.pages[key])
     refreshDerivedViews(key)
@@ -267,9 +313,13 @@ import './page-registry-data.js'
        wrapper's own pre-navigation flush a no-op rather than a second write. */
     window.ReviewUx?.flushPendingPersist?.()
 
-    updateRegistry((registry) => {
-      registry.hidden[key] = { hidden_at: new Date().toISOString() }
-    })
+    if (
+      !updateRegistry((registry) => {
+        registry.hidden[key] = { hidden_at: new Date().toISOString() }
+      })
+    ) {
+      return { ok: false, error: STORAGE_FAILED }
+    }
     applySavedRegistry()
     /* The pristine snapshot in ORIGINAL_DATA is deliberately LEFT IN PLACE. It
        is what restore hands back: drop it here and the reviewer's inline
@@ -378,6 +428,19 @@ import './page-registry-data.js'
     if (!registry.added[key]) {
       return { ok: false, error: 'That page was not added during review.' }
     }
+    /* Refused for a key that is really an authored page. An old backup can carry
+       `added.foo` for a key that has since shipped in pages/*.js, and without
+       this the reviewer's "Remove" would delete that authored page out of the
+       live mockup — which the registry has no business doing and which would
+       silently come back on the next reload anyway. */
+    if (authoredKeys.has(key)) {
+      return {
+        ok: false,
+        error:
+          'That page now exists in the mockup’s own source files, so it cannot be removed here. ' +
+          'Delete it instead if you want it out of the review.',
+      }
+    }
     const wasCurrent = window.utils?.getCurrentKey?.() === key
     window.ReviewUx?.flushPendingPersist?.()
 
@@ -460,15 +523,22 @@ import './page-registry-data.js'
    */
   function listAdded() {
     const registry = currentRegistry()
-    return Object.entries(registry.added)
-      .map(([key, entry]) => ({
-        key,
-        label: typeof entry?.label === 'string' ? entry.label : menuLabelFor(entry?.page),
-        title: String(entry?.page?.title ?? key),
-        hidden: Boolean(registry.hidden[key]),
-        createdAt: String(entry?.created_at ?? ''),
-      }))
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    return (
+      Object.entries(registry.added)
+        /* An authored page is never listed as reviewer-added, however stale the
+         registry entry claiming otherwise is. Presenting a real pages/*.js page
+         as something the reviewer created is a lie about where content came
+         from, and it is the lie that made Remove look applicable to it. */
+        .filter(([key]) => !authoredKeys.has(key))
+        .map(([key, entry]) => ({
+          key,
+          label: typeof entry?.label === 'string' ? entry.label : menuLabelFor(entry?.page),
+          title: String(entry?.page?.title ?? key),
+          hidden: Boolean(registry.hidden[key]),
+          createdAt: String(entry?.created_at ?? ''),
+        }))
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    )
   }
 
   /**

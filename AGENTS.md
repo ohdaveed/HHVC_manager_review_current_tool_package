@@ -1021,6 +1021,31 @@ surface so each selector is still declared in exactly one file.
   from the CSV. Its page metadata falls back to the record's own
   `page_title`/`page_type`/`url_slug` rather than `{}`, which would have made
   `defaultSeoTitle()` emit the literal "undefined | San Francisco".
+- **An added key that is really an authored page is refused, not adopted.** An old
+  backup can carry `added.foo` for a key that has since shipped in `pages/*.js`.
+  `applyRegistryToData()` reports it in `collided` rather than passing over it,
+  because the same "a page already occupies this key" condition also covers a
+  harmless idempotent re-apply — only the caller can tell them apart, which is why
+  `js/page-registry.js` captures the authored-key set from `DATA.pages` BEFORE the
+  registry has ever run. Without that distinction the Help panel presents an
+  authored page as reviewer-created and Remove deletes it from the live mockup, so
+  `listAdded()` filters authored keys out and `removeAddedPage()` refuses them.
+- **`updateRegistry()` verifies the write by re-reading it.** `reviewState.update()`
+  cannot fail loudly: `writeLocalState()` catches the `setItem` exception itself
+  (storage disabled or quota exhausted), shows the global error banner, and
+  returns normally. A caller trusting it would mutate live page data, report
+  success and toast "Added" for a page that is gone on the next reload — so
+  `addPage()`/`deletePage()` abort before touching anything when the write did not
+  land.
+- **`isValidPageObject()` checks the optional structure too, not just the required
+  six.** `sections: {}` satisfied every required-field rule, and
+  `partitionSections()` does `(page.sections || []).entries()` — a plain object is
+  truthy, so the `|| []` never fires and `.entries` is undefined. That is a
+  TypeError at render time, reachable at startup from a saved `last_page_key` or a
+  `?page=` deep link, which is precisely the fatal-throw-on-the-boot-path the
+  drop-don't-throw posture exists to avoid. The added checks match
+  `build_scripts/schema.js` exactly (a section requires `heading` and `karl`
+  there), so they cannot reject a page CI would accept.
 - **Limitations, documented rather than fixed.** An added page travels in the
   **JSON backup only**; CSV has no column for a page object, mirroring the
   existing `section_edits` limitation. Sync is subtler: `pushAllPages` iterates

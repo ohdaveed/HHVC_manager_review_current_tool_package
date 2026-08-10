@@ -381,6 +381,26 @@ function isValidPageObject(page) {
     }
     if (typeof value !== 'string' || !value.trim()) return false
   }
+
+  /* The OPTIONAL structure matters too, and checking only the required six was
+     not enough. `sections: {}` satisfies every rule above, and then
+     partitionSections() does `(page.sections || []).entries()` — a plain object
+     is truthy, so the `|| []` never fires and `.entries` is undefined. That is a
+     TypeError at render time, reachable at startup from a saved last_page_key or
+     a ?page= deep link, i.e. exactly the fatal-throw-on-the-boot-path this
+     module's DROP-don't-throw posture exists to avoid.
+
+     Deliberately no stricter than build_scripts/schema.js: sections is optional,
+     but a section that exists requires a non-empty `heading` AND `karl` there, so
+     requiring them here cannot reject a page that CI would accept. */
+  if (page.sections !== undefined) {
+    if (!Array.isArray(page.sections)) return false
+    for (const section of page.sections) {
+      if (!isPlainObject(section)) return false
+      if (typeof section.heading !== 'string' || !section.heading.trim()) return false
+      if (typeof section.karl !== 'string' || !section.karl.trim()) return false
+    }
+  }
   return true
 }
 
@@ -430,7 +450,7 @@ function isValidAddedEntry(key, entry) {
  * @returns {{added: string[], hidden: string[], dropped: string[]}} what actually happened
  */
 function applyRegistryToData(data, registry, stash, canonicalOrder) {
-  const result = { added: [], hidden: [], dropped: [] }
+  const result = { added: [], hidden: [], dropped: [], collided: [] }
   if (!isPlainObject(data) || !isPlainObject(data.pages) || !Array.isArray(data.order)) {
     return result
   }
@@ -450,11 +470,22 @@ function applyRegistryToData(data, registry, stash, canonicalOrder) {
       result.dropped.push(key)
       continue
     }
-    // Idempotent: re-applying a registry over data that already carries the
-    // page must not duplicate its order row. hasOwn, not truthiness — an
-    // inherited name like `toString` is truthy here and would silently skip
-    // the insert while addPage() reported success.
-    if (hasOwn(data.pages, key)) continue
+    /* A page already occupies this key, so nothing is inserted. Reported in
+       `collided` rather than passed over in silence, because the same condition
+       covers two very different situations and only the CALLER can tell them
+       apart: a harmless idempotent re-apply of a page this registry added
+       earlier, or an added key that has since become a real authored page in
+       pages/*.js. The second is not harmless — the Help panel would present the
+       authored page as reviewer-added, and Remove would delete it from the live
+       mockup. js/page-registry.js holds the authored-key set captured at boot
+       and decides; see its handling of result.collided.
+
+       hasOwn, not truthiness — an inherited name like `toString` is truthy here
+       and would silently skip the insert while addPage() reported success. */
+    if (hasOwn(data.pages, key)) {
+      result.collided.push(key)
+      continue
+    }
     const clone = deepClone(entry.page)
     if (!clone) {
       result.dropped.push(key)

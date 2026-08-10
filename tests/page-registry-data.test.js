@@ -736,3 +736,95 @@ describe('validateNewPage: inherited Object.prototype names', () => {
     expect(data.order.filter(([key]) => key === 'noiseComplaints')).toHaveLength(1)
   })
 })
+
+describe('isValidPageObject: malformed OPTIONAL fields', () => {
+  // Found in review. Checking only the six required fields let `sections: {}`
+  // through, and partitionSections() does `(page.sections || []).entries()` — a
+  // plain object is truthy so the `|| []` never fires and `.entries` is
+  // undefined. That is a TypeError at render time, reachable at startup from a
+  // saved last_page_key or a ?page= deep link, which is exactly the
+  // fatal-throw-on-the-boot-path this module exists to avoid.
+  const base = {
+    slug: 'sf.gov/x',
+    type: 'Information',
+    title: 'T',
+    summary: 'S',
+    audience: ['A tenant'],
+    reading: 'Grade 6',
+  }
+
+  test('rejects a non-array sections field', () => {
+    expect(isValidPageObject({ ...base, sections: {} })).toBe(false)
+    expect(isValidPageObject({ ...base, sections: 'body' })).toBe(false)
+  })
+
+  test('rejects a section that is not an object', () => {
+    expect(isValidPageObject({ ...base, sections: ['a heading'] })).toBe(false)
+  })
+
+  // Not stricter than build_scripts/schema.js: heading and karl are REQUIRED on
+  // a section there, so requiring them cannot reject a page CI would accept.
+  test('rejects a section missing the schema-required heading or karl', () => {
+    expect(isValidPageObject({ ...base, sections: [{ karl: 'K' }] })).toBe(false)
+    expect(isValidPageObject({ ...base, sections: [{ heading: 'H' }] })).toBe(false)
+    expect(isValidPageObject({ ...base, sections: [{ heading: ' ', karl: 'K' }] })).toBe(false)
+  })
+
+  test('accepts a well-formed section, an empty array, and an absent field', () => {
+    expect(isValidPageObject({ ...base, sections: [{ heading: 'H', karl: 'K' }] })).toBe(true)
+    expect(isValidPageObject({ ...base, sections: [] })).toBe(true)
+    expect(isValidPageObject(base)).toBe(true)
+  })
+
+  test('a page built by the form still validates', () => {
+    const built = buildPageFromForm({
+      title: 'T',
+      summary: 'S',
+      type: 'Information',
+      reading: 'Grade 6',
+      audience: ['A tenant'],
+      slug: 'sf.gov/t',
+    })
+    expect(isValidPageObject(built)).toBe(true)
+  })
+
+  test('applyRegistryToData drops an entry whose sections are malformed', () => {
+    const data = liveData()
+    const registry = { added: { noiseComplaints: { page: { ...base, sections: {} } } } }
+    const result = applyRegistryToData(data, registry, {}, [])
+    expect(result.dropped).toEqual(['noiseComplaints'])
+    expect(data.order).toHaveLength(3)
+  })
+})
+
+describe('applyRegistryToData: reporting key collisions', () => {
+  // Found in review. The same "a page already occupies this key" condition covers
+  // a harmless idempotent re-apply AND an added key that has since become a real
+  // authored page. Only the caller can tell them apart, so the result reports the
+  // keys rather than passing over them silently — js/page-registry.js filters
+  // them against the authored-key set it captured at boot.
+  test('reports a key already occupied by a page in `collided`, not `added`', () => {
+    const data = liveData()
+    const entry = addedEntry({ key: 'ownerHub' })
+    const result = applyRegistryToData(data, { added: { ownerHub: entry } }, {}, [])
+    expect(result.collided).toEqual(['ownerHub'])
+    expect(result.added).toEqual([])
+    // The existing page is untouched — the authored one wins.
+    expect(data.pages.ownerHub.title).toBe('Owners')
+    expect(data.order).toHaveLength(3)
+  })
+
+  test('an idempotent re-apply lands in `collided` too, since only the caller can judge', () => {
+    const data = liveData()
+    const registry = { added: { noiseComplaints: addedEntry() } }
+    const canonical = []
+    expect(applyRegistryToData(data, registry, {}, canonical).added).toEqual(['noiseComplaints'])
+    const second = applyRegistryToData(data, registry, {}, canonical)
+    expect(second.added).toEqual([])
+    expect(second.collided).toEqual(['noiseComplaints'])
+  })
+
+  test('always returns the collided array, even on malformed input', () => {
+    expect(applyRegistryToData(null, {}, {}, []).collided).toEqual([])
+  })
+})
