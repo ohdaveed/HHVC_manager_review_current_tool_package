@@ -206,10 +206,39 @@ import { hasValidPageData } from './utils.js'
           return
         }
 
+        /* Materialise the backup's added pages BEFORE the filter below.
+           That filter requires DATA.pages[key], so without this every imported
+           review record belonging to a reviewer-created page would be dropped
+           silently — the reviewer would see "imported N reviews" and simply not
+           get the pages they exported.
+
+           This persists through its own reviewState.update, which is what keeps
+           the globals merge further down safe to leave alone: updateLocalState
+           re-reads state, so the `...state.globals` spread there carries the
+           merged registry forward rather than overwriting it. */
+        const registryResult = window.pageRegistry?.applyImportedRegistry?.(validated.data) || {
+          added: [],
+          hidden: [],
+        }
+        const pageChanges = registryResult.added.length + registryResult.hidden.length
+
         const entries = Object.entries(validated.data.pages).filter(
           ([key, value]) => DATA.pages[key] && value && typeof value === 'object'
         )
+        /* A backup can legitimately carry pages and no matching reviews — for
+           instance one exported before any of the added pages had been reviewed.
+           Reporting that as a failure would tell the reviewer nothing happened
+           when several pages had just appeared. */
         if (!entries.length) {
+          if (pageChanges) {
+            setText(
+              'reviewExportStatus',
+              `Imported ${pageChanges} added or deleted page(s) from backup. It carried no reviews for the current page list.`
+            )
+            if (typeof window.showToast === 'function')
+              window.showToast(`Imported ${pageChanges} page change(s)`, 'success')
+            return
+          }
           fail('Import finished: the backup has no reviews matching the current page list.')
           return
         }
@@ -244,7 +273,11 @@ import { hasValidPageData } from './utils.js'
 
         window.ReviewUx.stateSync.applySavedPageState(getCurrentKey())
         window.ReviewUx.refreshUx()
-        setText('reviewExportStatus', `Imported ${entries.length} saved page reviews from backup.`)
+        const pageNote = pageChanges ? `, plus ${pageChanges} added or deleted page(s)` : ''
+        setText(
+          'reviewExportStatus',
+          `Imported ${entries.length} saved page reviews from backup${pageNote}.`
+        )
         if (typeof window.showToast === 'function')
           window.showToast(`Imported ${entries.length} page reviews`, 'success')
       })
@@ -354,18 +387,41 @@ import { hasValidPageData } from './utils.js'
     actions.insertAdjacentElement('afterend', status)
   }
 
+  /* Clears the storage key outright — the one place in this tool that deletes
+     rather than merges, alongside the orphan prune.
+
+     It RELOADS afterwards, which it did not need to before pages could be added
+     or deleted in the browser. The storage key holds globals.page_registry, and
+     js/page-registry.js has already mutated window.HHVC_DATA from it: added
+     pages are in `order` and the picker, deleted ones are gone. Removing the key
+     without reloading would leave both of those mutations in place with nothing
+     left to explain them — the Help list empty, Restore impossible, and the
+     added pages silently vanishing on the next load. The reload is what
+     un-mutates HHVC_DATA, and it is also what makes this button the recovery
+     path for a page registry so malformed that js/page-registry.js could not
+     apply it. */
   function clearSavedLocalReviews() {
     const confirmed = window.confirm(
-      'Clear all locally saved HHVC review data in this browser? This does not change source files or exported CSVs.'
+      'Clear all locally saved HHVC review data in this browser?\n\n' +
+        'This deletes your decisions and notes, any content edits you made, and any pages you ' +
+        'added or deleted during review. It does not change the mockup source files or exported ' +
+        'CSVs. The page will reload.'
     )
     if (!confirmed) return
 
     localStorage.removeItem(window.reviewState.STORAGE_KEY)
+    setText('reviewExportStatus', 'Cleared locally saved review data in this browser.')
+    // Guarded so the unit/e2e environments that stub location keep working, and
+    // so a browser that refuses the reload still lands in the old, consistent-
+    // enough state rather than throwing on the way out.
+    if (typeof window.location?.reload === 'function') {
+      window.location.reload()
+      return
+    }
     window.ReviewUx.stateSync.clearReviewFieldsForNewPage()
     window.utils.setValue('reviewerInput', '')
     window.ReviewUx.stateSync.updateLocalStorageStatus()
     window.ReviewUx.refreshUx()
-    setText('reviewExportStatus', 'Cleared locally saved review data in this browser.')
     if (typeof window.showToast === 'function')
       window.showToast('Local review data cleared', 'info')
   }

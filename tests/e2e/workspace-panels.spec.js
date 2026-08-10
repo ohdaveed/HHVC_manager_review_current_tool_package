@@ -218,7 +218,7 @@ test.describe('workspace panels', () => {
       return help?.lastElementChild?.id === 'reviewWorkspaceAdvanced'
     })
     expect(isLast).toBe(true)
-    await expect(page.locator('.review-advanced-group')).toHaveCount(3)
+    await expect(page.locator('.review-advanced-group')).toHaveCount(4)
   })
 
   test('sidebar toggle collapses and expands the sidebar', async ({ page }) => {

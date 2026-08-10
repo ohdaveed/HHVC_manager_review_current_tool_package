@@ -77,15 +77,25 @@ import './third-party-globals.js'
 // ---------------------------------------------------------------------------
 // Core modules, in dependency order.
 //
-// js/page-data.js imports all 19 pages/*.js files (each registering itself
+// js/page-data.js imports all 22 pages/*.js files (each registering itself
 // onto window.HHVC_PAGES) and then assembles window.HHVC_DATA. js/state.js
-// side-effect-imports it for exactly that reason, so the ordering is already
-// guaranteed by the module graph; listing page-data.js here as well is
-// belt-and-braces documentation of the sequence, not what makes it work.
+// reaches it through js/page-registry.js, which imports it first, so the
+// ordering is already guaranteed by the module graph; listing these here as
+// well is belt-and-braces documentation of the sequence, not what makes it work.
+//
+// js/page-registry.js sits between them because it must run BEFORE js/state.js
+// takes its one-time ORIGINAL_DATA clone — see that file's header for why a
+// page added after the clone silently loses its inline edits. To do its work it
+// needs window.reviewState, so it also pulls js/review-state-validation.js and
+// js/review-state-store.js forward; both import only js/utils.js, so hoisting
+// them is safe, and their later lines below are already-evaluated no-ops kept
+// as documentation of where they sit in the sequence.
 // ---------------------------------------------------------------------------
 import './utils.js'
 import './karl-tag-meta.js'
 import './page-data.js'
+import './page-registry-data.js'
+import './page-registry.js'
 import './state.js'
 import './ui-controls.js'
 import './editor-panel.js'
@@ -135,6 +145,10 @@ import './review-insights.js'
 import './review-ops-data.js'
 import './review-ops.js'
 import './dashboard-guidance.js'
+// Add/delete page controls. After dashboard-guidance.js, which owns the Help
+// panel's layout, and after review-queue*.js, whose one-step undo this consumes
+// when a page is deleted (window.ReviewQueueInternal.undo.clearAction).
+import './page-registry-ui.js'
 
 // Plain-language scoring and the AI-assist workspace tab. Same IIFE pattern as
 // the layers above: no imports, mounted on window, so they must run after the

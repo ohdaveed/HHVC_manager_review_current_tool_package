@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 32 unit-test files in tests/
+bun run test                  # Bun test runner over the 33 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 32 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 33 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -100,11 +100,12 @@ checks a `rewrite-field` draft is held to). **The list in
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-eighteen spec files, all UI-driven — navigation, editor panel, review
+nineteen spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
-Overview insight cards, and workshop-form submission handling — sharing plain helper functions in
+Overview insight cards, adding and deleting page mockups, and workshop-form
+submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
 round-trip tests hand-rolled the merge inside `page.evaluate()` rather than
@@ -161,9 +162,11 @@ tags sharing one global lexical scope) and the committed `js/vendor/` IIFE
 bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
 Order is enforced two ways. **Core modules enforce it themselves** — a module
-that needs `escapeHtml` imports it, and `js/state.js` imports `js/page-data.js`,
-which imports all 19 `pages/*.js`, so `window.HHVC_DATA` is always populated
-before anything reads it. **The self-mounting IIFE subsystems still depend on
+that needs `escapeHtml` imports it, and `js/state.js` imports
+`js/page-registry.js`, which imports `js/page-data.js` first, which imports all
+22 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
+cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
 `js/dashboard-guidance.js` and
 `js/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
@@ -290,6 +293,16 @@ them.**
   indicators, search-result preview, per-field reset.
 - **`js/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
+- **`js/page-registry-data.js`** — pure validation for a page a reviewer
+  authored in the browser, plus `applyRegistryToData()`, the only function that
+  mutates `order`/`pages` for the add/delete feature. Dual-exported and
+  import-free; it is evaluated far earlier than the other dual-export modules
+  (through `js/page-registry.js`, before `js/state.js`), so unlike
+  `js/inline-content-edit-data.js` it must not resolve anything off `window` at
+  module scope — `js/utils.js` is not guaranteed to have run yet.
+- **`js/page-registry.js`** — applies that registry onto `window.HHVC_DATA` and
+  publishes `window.pageRegistry`. Must run before `js/state.js`'s
+  `ORIGINAL_DATA` clone; see "Adding and deleting pages" below.
 - **`js/card-inheritance.js`** — the shared classifier deciding whether a
   section's cards publish the destination page's title and summary, its title
   alone, or their own authored words. Imports nothing and reads no global, so it
@@ -354,8 +367,9 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 - **`window.MockupImageExport`** (`js/mockup-image-export.js`) — PNG export of
   the mockups, standing on its own.
 
-- **Two lazily-mounted panels publish a mount hook rather than rendering at
-  init:** `window.__mountAiAssistOnTabOpen` and `window.__mountReviewOpsOnTabOpen`.
+- **Three lazily-mounted panels publish a mount hook rather than rendering at
+  init:** `window.__mountAiAssistOnTabOpen`, `window.__mountReviewOpsOnTabOpen`
+  and `window.__mountPageRegistryOnTabOpen`.
   Both are collapsed `<details>` at the end of the Help panel now rather than
   tabs of their own, so `setWorkspaceTab` calls **both** when Help opens — a
   reviewer expanding one must never find an empty box. Each panel ALSO catches
@@ -795,6 +809,162 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   backend, this feature has no `server.ts` dependency and needs no
   configuration — the click-to-edit affordance is present on every deploy,
   including the static Netlify build, the moment the page has loaded.
+
+### Adding and deleting pages (`js/page-registry*.js`)
+
+A reviewer can create a page mockup and delete an existing one from the browser.
+Same posture as every other layer here: `pages/*.js` is never written, no backend
+is involved, and it works on the static Netlify build. Three files, mirroring the
+inline-content-edit split — `js/page-registry-data.js` (pure validation and the
+in-place mutation, dual-exported like `js/review-merge.js`),
+`js/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
+`window.pageRegistry`), and `js/page-registry-ui.js` (the sidebar controls and
+the Help list). No new stylesheet: the sidebar chrome lives in
+`css/ux-improvements.css` and the Help list in `css/dashboard.css`, split by
+surface so each selector is still declared in exactly one file.
+
+- **`js/page-registry.js` runs BEFORE `js/state.js`, and that is the load-order
+  fact the whole feature rests on.** `js/state.js` imports it in place of
+  `js/page-data.js` (which it imports first itself), so the module graph enforces
+  the order rather than `js/main.js` doing it by convention. `ORIGINAL_DATA` is a
+  one-time deep clone taken in `js/state.js`, and `computeSectionEdits()` returns
+  `{}` when a page has no entry in it — so a page added after that clone would
+  accept an inline paragraph edit, autosave it, and silently lose it on the next
+  load. Applying the registry first puts added pages inside the clone for free;
+  a page added mid-session gets `window.ORIGINAL_DATA.pages[key]` seeded
+  explicitly, from a **deep clone**, because an alias would make every later
+  diff come back clean. Running early also means `js/app.js`'s import-time
+  `init()` resolves a `?page=` deep link to an added page instead of toasting
+  "not a page in this mockup".
+- **Storage is `state.globals.page_registry`, as keyed objects rather than
+  arrays.** `globals` is the one slot both review-state validators copy through
+  untouched (a shallow spread in `js/review-state-validation.js`,
+  `.passthrough()` in `build_scripts/review-state-schema.js`), so the feature
+  needs no validator change and **no storage-version bump** — a bump makes
+  `readLocalState()` discard every reviewer's local state. Not `state.pages[key]`:
+  `sanitizeReviewRecord` drops anything outside its closed field whitelist, so a
+  page object stored there would vanish on the next read. Keyed maps rather than
+  arrays because merging two of them is a spread that unions keys, where two
+  arrays would concatenate and duplicate every entry on the first import.
+- **The corollary is that nothing upstream validates the blob**, so
+  `applyRegistryToData()` re-validates every entry itself and **drops what fails
+  rather than throwing**. This is not defensive habit: the function runs at the
+  root of the module graph, so a throw takes every later module with it and
+  leaves the reviewer looking at `index.html`'s static "Loading…" placeholder —
+  with no UI left to remove the entry that broke it. Recovery is the sidebar's
+  **Clear saved reviews** button, which is why that button now clears the
+  registry and reloads (see below).
+- **Delete means hide, and it is reversible.** Uniform across both kinds of page:
+  an added page keeps its object in `registry.added`, an authored one comes back
+  from its own source module on the next load. The review record is never
+  touched, which is what makes Restore worth having. `pestsTopic` is refused
+  outright — `bun run validate` requires it to exist and be first, and it is the
+  fallback key in `resolvePageKey`, `getCurrentKey`, `js/state.js`, `js/app.js`
+  and the hardcoded parent link on every other page. Emptying `order` is refused
+  too.
+- **A hidden page leaves `order` AND `HHVC_PAGES`.** Leaving it in `pages` is the
+  subtler bug: with no `<option>` in the picker, `getCurrentKey()` falls back to
+  `'pestsTopic'`, so every later review write for that page is filed under the
+  wrong key. Removing it also makes the queue's selection paths self-heal, since
+  `getSelectedKeys`/`pruneSelection`/`toggleSelected`/`getActionTargets` all
+  already gate on `DATA.pages[key]`. Restore splices the stashed `[key, label]`
+  tuple back at its **original index** — `order` is the reviewer's reading order
+  and drives `j`/`k` navigation, the queue, the picker and batch PNG export, so
+  appending would silently permute the site.
+- **Deleting the page on screen needs an explicit sequence, and the failure it
+  avoids is review-data loss.** `reviewFormPageKey` (`js/ux-improvements.js`)
+  stays pinned to the deleted key until the follow-up navigation settles, so an
+  autosave landing in that window calls `collectCurrentPageReviewState(key)`
+  where `DATA.pages[key] || {}` makes `page_title`, `edited_title`,
+  `edited_summary` and `section_edits` all resolve empty — rewriting the record
+  with exactly the content Restore exists to bring back, blanked. So
+  `deletePage()` flushes first (via the newly published
+  `window.ReviewUx.flushPendingPersist`), then mutates, then rebuilds the picker,
+  then navigates through the **wrapped** `window.renderPage`. Flushing rather
+  than discarding: those keystrokes are real edits to the page being deleted, and
+  at flush time that page still exists, so the save is well formed — and it
+  leaves `pendingPersist` false, making the wrapper's own pre-navigation flush a
+  no-op instead of a second write.
+- **It also consumes the queue's one-step undo.** `undoLastAction` is the only
+  queue path that does NOT filter on `DATA.pages`, so a snapshot taken before a
+  delete would still offer "Undo Approved · N pages" and then write a record for
+  a page that is gone, with a count that is a lie.
+- **The delete confirmation counts inbound links, because the consequence is
+  otherwise invisible.** Once `pageData[card.target]` stops resolving,
+  `cardDescription()` falls through to `return card.text ?? ''` — so every
+  inheriting card pointing at the deleted page starts printing the authored text
+  that the whole card-inheritance change exists to prove can never publish.
+  Nothing errors; a plausible paragraph simply appears on a page the reviewer was
+  not looking at. `cardTitle()` reverts to the stale authored title the same way,
+  and clicking such a card raises a red "Unknown page key" banner that reads as
+  corruption for a state the reviewer created on purpose. `countInboundLinks()`
+  counts `card.target` and section/step `buttonTarget` references and the dialog
+  names them.
+- **`js/review-ops.js`'s `siteKeys()` counts a deleted page as still known.** Its
+  record is not orphaned — it is what Restore returns — so listing it under
+  "Records for pages that no longer exist" would put a delete button in front of
+  a review one click from recovery. The widening is skipped when the key set is
+  empty, because empty means page data has not loaded and
+  `findOrphanedRecords()` reads that as "report nothing"; adding keys to an empty
+  set would defeat that guard.
+- **The import path applies the registry BEFORE its `entries` filter.** That
+  filter requires `DATA.pages[key]`, so otherwise every imported review record
+  belonging to an added page is dropped silently and the reviewer is told
+  "imported N reviews" with no pages to show. The apply persists through its own
+  `reviewState.update`, which is what keeps the existing `reviewer`/`owner`
+  `globals` allowlist safe to leave alone: `updateLocalState` re-reads state, so
+  the `...state.globals` spread carries the merged registry forward. Local wins
+  on a key collision. The "no reviews matching the current page list" early
+  return is also relaxed, since a backup can legitimately carry pages and no
+  matching reviews.
+- **Clear saved reviews now reloads.** It removes the storage key, and
+  `js/page-registry.js` has already mutated `window.HHVC_DATA` from that key —
+  so without a reload the added pages stay in `order` and the picker while the
+  registry explaining them is gone, leaving the Help list empty and Restore
+  impossible, and the added pages vanishing silently on the next load. The reload
+  is what un-mutates `HHVC_DATA`, and it is also what makes this button the
+  recovery path for an unusable registry.
+- **No undo toast, deliberately.** `showToast` self-dismisses after 4s and its own
+  docblock argues that anything needing longer belongs in a persistent control —
+  which is why the queue's undo sits in the bulk bar. The Help list's Restore
+  **is** that control, and a second printing of the same affordance is what the
+  UX-review notes above say to resist.
+- **The new-page form asks only for the six fields the schema requires**, plus
+  the key and an optional slug. Everything else is filled in afterwards with the
+  click-to-edit inline editing that already exists; duplicating that here would
+  be a second, worse editor. The starter section carries a non-empty `karl` note
+  saying no Karl block has been chosen — required on every section by
+  `build_scripts/schema.js`, and the one section field that is optional on cards,
+  callouts and images, so it is exactly the one a generated section forgets. It
+  also carries `open: true`, because a Transaction page renders its body sections
+  as accordions and a brand-new page whose only content is collapsed reads as an
+  empty page.
+- **`type` is constrained to the five the picker groups by**, which is
+  deliberately narrower than `build_scripts/schema.js` (bare `min(1)`). Authored
+  pages legitimately use `Agency` and `Report` and land in the Information
+  optgroup; a reviewer choosing from a `<select>` should not be able to create
+  that mismatch by accident.
+- **A page key is constrained to `/^[A-Za-z][A-Za-z0-9]*$/` and rejects
+  `__proto__`/`prototype`/`constructor`.** The key becomes an object property on
+  `window.HHVC_PAGES`, an `<option>` value and a `?page=` parameter.
+  `js/ui-controls.js:128` also now escapes it — that was the one place in the
+  codebase interpolating a page key into `innerHTML` raw, safe only while every
+  key was hardcoded in a source file.
+- **Uniqueness is checked against `HHVC_DELETED_PAGE_ALIASES` too.** An added key
+  shadowing a retired one is harmless to `resolvePageKey` (it checks `pageData`
+  first), but it silently redirects a legacy shared link to content its author
+  never wrote — worse than the consolidation redirect it replaced.
+- **Limitations, documented rather than fixed.** An added page travels in the
+  **JSON backup only**; CSV has no column for a page object, mirroring the
+  existing `section_edits` limitation. Sync is subtler: `pushAllPages` iterates
+  `Object.keys(state.pages)` unfiltered, so an added or deleted page's review
+  **record does get pushed**, but `pullFromServer` skips keys with no live page
+  and `server.ts` always returns `globals: {}` — so the **registry itself never
+  syncs**, and the receiving browser gets a record with no page to attach it to.
+  `bun run validate` never sees any of this; the browser-side check stands in
+  for it. Not in v1: emitting a committable `pages/<key>.js` source module (the
+  AI-assist panel's `buildPageModuleSource()` is the thing to model it on), and
+  reordering `order` from the UI.
 
 ### Stored review data (`js/review-ops*.js`)
 
@@ -1690,6 +1860,10 @@ known-but-unfixed bug rather than asserting wrong behavior.
   `history` entry should be constructed; loaded both as a browser `<script>`
   and imported directly by `server.ts`). Optional sync backend → `server.ts`
   (API routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+- Adding/deleting page mockups → `js/page-registry-data.js` (pure validation +
+  the in-place `order`/`pages` mutation), `js/page-registry.js` (the bootstrap,
+  which MUST stay imported by `js/state.js` so it runs before the `ORIGINAL_DATA`
+  clone), `js/page-registry-ui.js`.
 - RAG knowledge base → `build_scripts/knowledge-chunking.js`,
   `build_scripts/knowledge-search.js`, `build_scripts/knowledge-schema.js`,
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,

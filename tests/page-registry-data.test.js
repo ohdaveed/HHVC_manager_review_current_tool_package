@@ -1,0 +1,601 @@
+// Pure logic for the reviewer-managed page registry (js/page-registry-data.js):
+// validating a page a reviewer authored in the browser, and applying a stored
+// registry onto live page data.
+//
+// No DOM and no localStorage — the module is dual-exported like
+// js/review-merge.js and js/plain-language.js, so it is require()'d directly.
+//
+// The bucket that matters most here is applyRegistryToData. It runs on the boot
+// path at the root of the module graph, reading a blob that NOTHING upstream has
+// validated (state.globals is copied through untouched by both review-state
+// validators, which is what lets the feature ship without a storage-version
+// bump). So "drops a bad entry instead of throwing" is not defensive
+// programming for its own sake: a throw there takes every later module with it
+// and leaves the reviewer at index.html's static "Loading…" placeholder, with no
+// UI left to remove the entry that broke it.
+const { describe, test, expect } = require('bun:test')
+const {
+  ALLOWED_PAGE_TYPES,
+  PROTECTED_PAGE_KEYS,
+  REQUIRED_PAGE_FIELDS,
+  applyRegistryToData,
+  buildPageFromForm,
+  countInboundLinks,
+  emptyRegistry,
+  isValidPageObject,
+  menuLabelFor,
+  parseAudienceList,
+  readRegistry,
+  slugify,
+  validateNewPage,
+} = require('../js/page-registry-data.js')
+const { pageSchema } = require('../build_scripts/schema.js')
+
+/** A minimal valid form submission, spread-and-overridden per test. */
+function formInput(overrides) {
+  return {
+    key: 'noiseComplaints',
+    title: 'Report a noise complaint',
+    type: 'Transaction',
+    summary: 'Tell us about ongoing noise from a neighbouring property.',
+    reading: 'Grade 6',
+    audience: 'A tenant kept awake by a neighbour\nA property manager fielding complaints',
+    ...overrides,
+  }
+}
+
+/** A live `{pages, order}` object, fresh per test so mutation cannot leak. */
+function liveData() {
+  return {
+    pages: {
+      pestsTopic: { title: 'HHVC', slug: 'sf.gov/hhvc', type: 'Topic' },
+      ownerHub: { title: 'Owners', slug: 'sf.gov/owners', type: 'Resource Collection' },
+      tenantRights: { title: 'Tenants', slug: 'sf.gov/tenants', type: 'Information' },
+    },
+    order: [
+      ['pestsTopic', 'Agency page: Healthy Housing and Vector Control'],
+      ['ownerHub', 'Resource collection: Property owner responsibilities'],
+      ['tenantRights', 'Information: Tenant rights and reporting'],
+    ],
+  }
+}
+
+/** A registry `added` entry built the way addPage() builds one. */
+function addedEntry(overrides) {
+  const validation = validateNewPage(formInput(overrides), { existingKeys: [] })
+  return { page: validation.page, label: validation.label, created_at: '2026-08-10T00:00:00.000Z' }
+}
+
+describe('REQUIRED_PAGE_FIELDS', () => {
+  // The drift guard. build_scripts/schema.js is CommonJS and needs Zod, so the
+  // browser restates its required-field list rather than importing it — the
+  // same trade js/review-state-validation.js makes for the review-record rules.
+  // This is what makes the restatement safe: add a seventh required field to
+  // pageSchema without mirroring it and CI fails here, instead of the tool
+  // happily creating pages that would be rejected by `bun run validate`.
+  test('matches every required field of pageSchema in build_scripts/schema.js', () => {
+    const schemaRequired = Object.entries(pageSchema.shape)
+      .filter(([, field]) => !field.isOptional())
+      .map(([name]) => name)
+      .sort()
+    expect([...REQUIRED_PAGE_FIELDS].sort()).toEqual(schemaRequired)
+  })
+})
+
+describe('ALLOWED_PAGE_TYPES', () => {
+  // Deliberately NARROWER than the schema, which only enforces min(1). These
+  // are the five the page picker groups by; authored pages also use `Agency`
+  // and `Report`, which land in the Information optgroup. A reviewer choosing
+  // from a <select> should not be able to create that mismatch by accident.
+  test('lists exactly the five types the page picker groups by', () => {
+    expect(ALLOWED_PAGE_TYPES).toEqual([
+      'Topic',
+      'Transaction',
+      'Resource Collection',
+      'Campaign',
+      'Information',
+    ])
+  })
+
+  test('is not the same as what the schema permits, on purpose', () => {
+    expect(pageSchema.shape.type.safeParse('Agency').success).toBe(true)
+    expect(ALLOWED_PAGE_TYPES).not.toContain('Agency')
+  })
+})
+
+describe('slugify', () => {
+  test('lowercases and hyphenates a title', () => {
+    expect(slugify('Report a Noise Complaint')).toBe('report-a-noise-complaint')
+  })
+
+  test('collapses runs of punctuation into a single hyphen', () => {
+    expect(slugify('Rats, mice & other  problems!')).toBe('rats-mice-other-problems')
+  })
+
+  test('trims leading and trailing hyphens', () => {
+    expect(slugify('  --Hello--  ')).toBe('hello')
+  })
+
+  test('returns an empty string for input with no alphanumerics', () => {
+    expect(slugify('!!!')).toBe('')
+    expect(slugify('')).toBe('')
+    expect(slugify(null)).toBe('')
+  })
+})
+
+describe('menuLabelFor', () => {
+  // The prefix is load-bearing, not decoration: buildPageSelect() strips a
+  // type prefix from the ORDER LABEL, not from the page title, so a label
+  // without one renders the type name inside an optgroup already headed by it.
+  test('prefixes the title with the page type', () => {
+    expect(menuLabelFor({ type: 'Transaction', title: 'Pay your fee' })).toBe(
+      'Transaction: Pay your fee'
+    )
+  })
+
+  test('falls back to the bare title when there is no type', () => {
+    expect(menuLabelFor({ title: 'Pay your fee' })).toBe('Pay your fee')
+  })
+
+  test('does not throw on null', () => {
+    expect(menuLabelFor(null)).toBe('')
+  })
+})
+
+describe('parseAudienceList', () => {
+  test('splits a textarea into one entry per line', () => {
+    expect(parseAudienceList('A tenant\nA property owner')).toEqual([
+      'A tenant',
+      'A property owner',
+    ])
+  })
+
+  test('drops blank lines and trims each entry', () => {
+    expect(parseAudienceList('  A tenant  \n\n\n  An owner ')).toEqual(['A tenant', 'An owner'])
+  })
+
+  test('accepts an array unchanged apart from trimming and blanks', () => {
+    expect(parseAudienceList([' A tenant ', '', 'An owner'])).toEqual(['A tenant', 'An owner'])
+  })
+
+  test('returns an empty array for empty input', () => {
+    expect(parseAudienceList('')).toEqual([])
+    expect(parseAudienceList(undefined)).toEqual([])
+  })
+})
+
+describe('validateNewPage', () => {
+  test('accepts a complete submission and returns a schema-valid page', () => {
+    const result = validateNewPage(formInput(), { existingKeys: ['pestsTopic'] })
+    expect(result.ok).toBe(true)
+    expect(result.errors).toEqual([])
+    expect(result.key).toBe('noiseComplaints')
+    expect(pageSchema.safeParse(result.page).success).toBe(true)
+  })
+
+  test('derives a slug from the title when none is supplied', () => {
+    const result = validateNewPage(formInput(), { existingKeys: [] })
+    expect(result.page.slug).toBe('sf.gov/report-a-noise-complaint')
+  })
+
+  test('keeps an explicitly supplied slug', () => {
+    const result = validateNewPage(formInput({ slug: 'sf.gov/noise' }), { existingKeys: [] })
+    expect(result.page.slug).toBe('sf.gov/noise')
+  })
+
+  test('rejects a key already in use', () => {
+    const result = validateNewPage(formInput({ key: 'ownerHub' }), {
+      existingKeys: ['pestsTopic', 'ownerHub'],
+    })
+    expect(result.ok).toBe(false)
+    expect(result.errors).toContain('Page key "ownerHub" is already in use. Choose another.')
+  })
+
+  test('accepts a Set of existing keys as readily as an array', () => {
+    const result = validateNewPage(formInput({ key: 'ownerHub' }), {
+      existingKeys: new Set(['ownerHub']),
+    })
+    expect(result.ok).toBe(false)
+  })
+
+  test('rejects a key that is not a bare identifier', () => {
+    for (const key of ['noise complaints', 'noise-complaints', '2ndPage', 'noise.key', 'a/b']) {
+      const result = validateNewPage(formInput({ key }), { existingKeys: [] })
+      expect(result.ok).toBe(false)
+    }
+  })
+
+  // A key becomes an object property on window.HHVC_PAGES. `pages.__proto__ =
+  // value` walks onto Object.prototype and writes through it, polluting every
+  // plain object in the app — the same reason getByPath/setByPath reject these
+  // three segments.
+  test('rejects the prototype-pollution key names', () => {
+    for (const key of ['__proto__', 'prototype', 'constructor']) {
+      const result = validateNewPage(formInput({ key }), { existingKeys: [] })
+      expect(result.ok).toBe(false)
+      expect(result.errors.join(' ')).toContain('reserved')
+    }
+  })
+
+  test('requires a title, a summary, and a reading target', () => {
+    expect(validateNewPage(formInput({ title: '  ' }), {}).errors).toContain('Title is required.')
+    expect(validateNewPage(formInput({ summary: '' }), {}).errors).toContain('Summary is required.')
+    expect(validateNewPage(formInput({ reading: '' }), {}).errors).toContain(
+      'Reading target is required (for example "Grade 6").'
+    )
+  })
+
+  test('requires at least one audience line', () => {
+    const result = validateNewPage(formInput({ audience: '   \n  ' }), {})
+    expect(result.ok).toBe(false)
+    expect(result.errors).toContain('Add at least one audience, one per line.')
+  })
+
+  test('rejects a page type outside the allowed set', () => {
+    const result = validateNewPage(formInput({ type: 'Agency' }), {})
+    expect(result.ok).toBe(false)
+    expect(result.errors.join(' ')).toContain('Page type must be one of')
+  })
+
+  test('reports every problem at once rather than stopping at the first', () => {
+    const result = validateNewPage({ key: '', title: '', summary: '' }, {})
+    expect(result.errors.length).toBeGreaterThan(3)
+  })
+
+  test('does not throw on a null submission', () => {
+    expect(validateNewPage(null, {}).ok).toBe(false)
+    expect(validateNewPage(undefined, undefined).ok).toBe(false)
+  })
+})
+
+describe('buildPageFromForm', () => {
+  const page = buildPageFromForm({
+    title: 'Report a noise complaint',
+    summary: 'Tell us about noise.',
+    type: 'Transaction',
+    reading: 'Grade 6',
+    audience: ['A tenant'],
+    slug: 'sf.gov/noise',
+  })
+
+  test('produces a page that satisfies the real page schema', () => {
+    expect(pageSchema.safeParse(page).success).toBe(true)
+  })
+
+  test('marks the page as a placeholder', () => {
+    expect(page.editorStatus).toBe('placeholder')
+  })
+
+  // `karl` is the one field required on a section but optional on a card, a
+  // callout and an image — so it is exactly the one a starter section forgets.
+  test('gives the starter section a non-empty karl note', () => {
+    expect(page.sections).toHaveLength(1)
+    expect(typeof page.sections[0].karl).toBe('string')
+    expect(page.sections[0].karl.trim().length).toBeGreaterThan(0)
+  })
+
+  test('says plainly that no Karl block has been chosen rather than guessing one', () => {
+    expect(page.sections[0].karl).toContain('NO KARL BLOCK ASSIGNED YET')
+  })
+
+  test('copies the audience array rather than aliasing the caller’s', () => {
+    const audience = ['A tenant']
+    const built = buildPageFromForm({
+      title: 'T',
+      summary: 'S',
+      type: 'Information',
+      reading: 'Grade 6',
+      audience,
+      slug: 'sf.gov/t',
+    })
+    audience.push('Someone else')
+    expect(built.audience).toEqual(['A tenant'])
+  })
+})
+
+describe('isValidPageObject', () => {
+  const valid = buildPageFromForm({
+    title: 'T',
+    summary: 'S',
+    type: 'Information',
+    reading: 'Grade 6',
+    audience: ['A tenant'],
+    slug: 'sf.gov/t',
+  })
+
+  test('accepts a page carrying all six required fields', () => {
+    expect(isValidPageObject(valid)).toBe(true)
+  })
+
+  test('rejects a page missing any one required field', () => {
+    for (const field of REQUIRED_PAGE_FIELDS) {
+      const copy = { ...valid }
+      delete copy[field]
+      expect(isValidPageObject(copy)).toBe(false)
+    }
+  })
+
+  test('rejects an empty or non-string audience', () => {
+    expect(isValidPageObject({ ...valid, audience: [] })).toBe(false)
+    expect(isValidPageObject({ ...valid, audience: 'A tenant' })).toBe(false)
+    expect(isValidPageObject({ ...valid, audience: [''] })).toBe(false)
+  })
+
+  test('rejects non-objects', () => {
+    expect(isValidPageObject(null)).toBe(false)
+    expect(isValidPageObject('a page')).toBe(false)
+    expect(isValidPageObject([valid])).toBe(false)
+  })
+})
+
+describe('readRegistry', () => {
+  test('returns both halves from a state blob that has one', () => {
+    const registry = readRegistry({
+      globals: { page_registry: { added: { a: {} }, hidden: { b: {} } } },
+    })
+    expect(Object.keys(registry.added)).toEqual(['a'])
+    expect(Object.keys(registry.hidden)).toEqual(['b'])
+  })
+
+  test('reads an absent, null or malformed registry as empty rather than throwing', () => {
+    for (const state of [null, undefined, {}, { globals: {} }, { globals: { page_registry: 7 } }]) {
+      expect(readRegistry(state)).toEqual(emptyRegistry())
+    }
+  })
+
+  // Keyed objects, never arrays — the whole reason the storage shape is what it
+  // is. Merging two arrays concatenates and duplicates every entry on the first
+  // import; merging two keyed maps is a spread that unions keys.
+  test('reads an array-valued half as empty, since the halves are keyed maps', () => {
+    const registry = readRegistry({ globals: { page_registry: { added: [{ key: 'a' }] } } })
+    expect(registry.added).toEqual({})
+  })
+})
+
+describe('applyRegistryToData', () => {
+  test('appends an added page to pages and order', () => {
+    const data = liveData()
+    const result = applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {})
+    expect(result.added).toEqual(['noiseComplaints'])
+    expect(data.pages.noiseComplaints.title).toBe('Report a noise complaint')
+    expect(data.order.at(-1)).toEqual(['noiseComplaints', 'Transaction: Report a noise complaint'])
+  })
+
+  // Never unshifts. build_scripts/validate.js requires pestsTopic to be first
+  // in `order`, and while that check never runs against a browser registry, the
+  // invariant is what the parent link on every page and every fallback key
+  // assume.
+  test('never displaces pestsTopic from the front of order', () => {
+    const data = liveData()
+    applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {})
+    expect(data.order[0][0]).toBe('pestsTopic')
+  })
+
+  test('mutates the given objects in place rather than replacing them', () => {
+    const data = liveData()
+    const pages = data.pages
+    const order = data.order
+    applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {})
+    // js/state.js exports these by reference and three other modules hold the
+    // same references, so only in-place mutation propagates.
+    expect(data.pages).toBe(pages)
+    expect(data.order).toBe(order)
+  })
+
+  test('is idempotent — re-applying does not duplicate an order row', () => {
+    const data = liveData()
+    const registry = { added: { noiseComplaints: addedEntry() } }
+    applyRegistryToData(data, registry, {})
+    applyRegistryToData(data, registry, {})
+    expect(data.order.filter(([key]) => key === 'noiseComplaints')).toHaveLength(1)
+  })
+
+  // The single most consequential aliasing rule in the feature.
+  // registry.added[k].page is the pristine original computeSectionEdits()
+  // diffs the live page against; if the two were the same object every inline
+  // edit would diff clean and section edits would silently stop persisting.
+  test('never aliases the registry’s page object into data.pages', () => {
+    const data = liveData()
+    const entry = addedEntry()
+    applyRegistryToData(data, { added: { noiseComplaints: entry } }, {})
+    expect(data.pages.noiseComplaints).not.toBe(entry.page)
+    data.pages.noiseComplaints.title = 'Edited live'
+    expect(entry.page.title).toBe('Report a noise complaint')
+  })
+
+  test('removes a hidden page from both order and pages', () => {
+    const data = liveData()
+    const result = applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {})
+    expect(result.hidden).toEqual(['ownerHub'])
+    expect(data.pages.ownerHub).toBeUndefined()
+    expect(data.order.map(([key]) => key)).toEqual(['pestsTopic', 'tenantRights'])
+  })
+
+  test('stashes a hidden page’s original index, order tuple, and page object', () => {
+    const data = liveData()
+    const stash = {}
+    applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, stash)
+    expect(stash.ownerHub.index).toBe(1)
+    expect(stash.ownerHub.entry).toEqual([
+      'ownerHub',
+      'Resource collection: Property owner responsibilities',
+    ])
+    expect(stash.ownerHub.page.title).toBe('Owners')
+  })
+
+  test('refuses to hide a protected page', () => {
+    const data = liveData()
+    const result = applyRegistryToData(data, { hidden: { pestsTopic: { hidden_at: 'x' } } }, {})
+    expect(result.hidden).toEqual([])
+    expect(result.dropped).toEqual(['pestsTopic'])
+    expect(data.pages.pestsTopic).toBeDefined()
+  })
+
+  test('protects exactly pestsTopic and nothing else', () => {
+    expect(PROTECTED_PAGE_KEYS).toEqual(['pestsTopic'])
+  })
+
+  // An empty `order` makes buildPageSelect() render five empty optgroups and
+  // getCurrentKey() return a key with no page behind it.
+  test('refuses to empty order', () => {
+    const data = { pages: { onlyPage: { title: 'T' } }, order: [['onlyPage', 'Only']] }
+    const result = applyRegistryToData(data, { hidden: { onlyPage: { hidden_at: 'x' } } }, {})
+    expect(result.hidden).toEqual([])
+    expect(data.order).toHaveLength(1)
+  })
+
+  test('adds before it hides, so a page added and then hidden ends up absent', () => {
+    const data = liveData()
+    const result = applyRegistryToData(
+      data,
+      { added: { noiseComplaints: addedEntry() }, hidden: { noiseComplaints: { hidden_at: 'x' } } },
+      {}
+    )
+    expect(result.added).toEqual(['noiseComplaints'])
+    expect(result.hidden).toEqual(['noiseComplaints'])
+    expect(data.pages.noiseComplaints).toBeUndefined()
+    expect(data.order.map(([key]) => key)).not.toContain('noiseComplaints')
+  })
+
+  test('ignores a hidden key that names no live page', () => {
+    const data = liveData()
+    const result = applyRegistryToData(data, { hidden: { neverExisted: { hidden_at: 'x' } } }, {})
+    expect(result.hidden).toEqual([])
+    expect(result.dropped).toEqual([])
+    expect(data.order).toHaveLength(3)
+  })
+
+  // The read-path contract. Anything here is reachable from a hand-edited
+  // localStorage blob or another reviewer's backup, and a throw on this code
+  // path takes the whole app down.
+  test('drops an added entry with an unusable page instead of throwing', () => {
+    const data = liveData()
+    const registry = {
+      added: {
+        missingFields: { page: { title: 'Only a title' } },
+        notAnObject: { page: 'a page' },
+        nullEntry: null,
+        'bad key': { page: addedEntry().page },
+      },
+    }
+    const result = applyRegistryToData(data, registry, {})
+    expect(result.added).toEqual([])
+    expect(result.dropped.sort()).toEqual(['bad key', 'missingFields', 'notAnObject', 'nullEntry'])
+    expect(data.order).toHaveLength(3)
+  })
+
+  // Asserted through Object.defineProperty rather than an object literal: a
+  // literal's `__proto__:` key sets the prototype instead of creating an own
+  // property, so it never reaches the Object.keys() loop and a test written
+  // that way passes without exercising anything. The hazard being guarded is
+  // real — `data.pages['__proto__'] = clone` writes through Object.prototype
+  // and pollutes every plain object in the app.
+  test('drops a prototype-polluting key without touching Object.prototype', () => {
+    const data = liveData()
+    const added = {}
+    for (const key of ['__proto__', 'prototype', 'constructor']) {
+      Object.defineProperty(added, key, {
+        value: { page: addedEntry().page },
+        enumerable: true,
+        configurable: true,
+        writable: true,
+      })
+    }
+    const result = applyRegistryToData(data, { added }, {})
+    expect(result.added).toEqual([])
+    expect(result.dropped.sort()).toEqual(['__proto__', 'constructor', 'prototype'])
+    expect({}.title).toBeUndefined()
+    expect(data.order).toHaveLength(3)
+  })
+
+  test('does not throw on malformed data or a malformed registry', () => {
+    for (const data of [
+      null,
+      undefined,
+      {},
+      { pages: {} },
+      { order: [] },
+      { pages: 1, order: 1 },
+    ]) {
+      expect(() => applyRegistryToData(data, { added: {} }, {})).not.toThrow()
+    }
+    const data = liveData()
+    for (const registry of [null, undefined, 7, 'x', [], { added: 1, hidden: 'x' }]) {
+      expect(() => applyRegistryToData(data, registry, {})).not.toThrow()
+    }
+    expect(data.order).toHaveLength(3)
+  })
+
+  test('tolerates a missing stash argument', () => {
+    const data = liveData()
+    expect(() => applyRegistryToData(data, { hidden: { ownerHub: {} } })).not.toThrow()
+    expect(data.pages.ownerHub).toBeUndefined()
+  })
+
+  test('falls back to a derived label when the stored one is missing or blank', () => {
+    const data = liveData()
+    const entry = addedEntry()
+    delete entry.label
+    applyRegistryToData(data, { added: { noiseComplaints: entry } }, {})
+    expect(data.order.at(-1)[1]).toBe('Transaction: Report a noise complaint')
+  })
+})
+
+describe('countInboundLinks', () => {
+  // This exists because the consequence is otherwise invisible. Once
+  // pageData[card.target] stops resolving, cardDescription() in
+  // js/page-render.js falls through to the card's own authored `text` — exactly
+  // the copy the card-inheritance work exists to prove can never publish. No
+  // error, just a plausible paragraph appearing.
+  function linkedData() {
+    return {
+      pages: {
+        pestsTopic: {
+          sections: [
+            { heading: 'Services', cards: [{ title: 'Owners', target: 'ownerHub' }] },
+            { heading: 'Go', buttonTarget: 'ownerHub' },
+          ],
+        },
+        tenantRights: {
+          sections: [
+            {
+              heading: 'Related',
+              cards: [
+                { title: 'Owners', target: 'ownerHub' },
+                { title: 'Elsewhere', url: 'https://example.gov' },
+              ],
+            },
+            { heading: 'Steps', steps: [{ title: 'One', buttonTarget: 'ownerHub' }] },
+          ],
+        },
+        ownerHub: { sections: [{ heading: 'Self', cards: [{ title: 'Me', target: 'ownerHub' }] }] },
+      },
+    }
+  }
+
+  test('counts inbound cards and buttons and names the referring pages', () => {
+    const summary = countInboundLinks(linkedData(), 'ownerHub')
+    expect(summary.cards).toBe(2)
+    expect(summary.buttons).toBe(2)
+    expect(summary.pages).toEqual(['pestsTopic', 'tenantRights'])
+  })
+
+  test('ignores self-references, since hiding a page cannot dangle its own links', () => {
+    const summary = countInboundLinks(linkedData(), 'ownerHub')
+    expect(summary.pages).not.toContain('ownerHub')
+  })
+
+  test('reports nothing for a page nobody links to', () => {
+    expect(countInboundLinks(linkedData(), 'tenantRights')).toEqual({
+      cards: 0,
+      buttons: 0,
+      pages: [],
+    })
+  })
+
+  test('does not throw on malformed input', () => {
+    expect(countInboundLinks(null, 'ownerHub')).toEqual({ cards: 0, buttons: 0, pages: [] })
+    expect(countInboundLinks({ pages: { a: null } }, 'ownerHub').cards).toBe(0)
+    expect(countInboundLinks(linkedData(), '')).toEqual({ cards: 0, buttons: 0, pages: [] })
+  })
+})
