@@ -741,20 +741,47 @@ describe('AI assist API (server.ts)', () => {
       // the socket rather than leaving it open for reuse, and fetch()'s own
       // connection pool does not always notice a Connection: close in time to
       // evict that socket before immediately handing it back out — a real
-      // client-side race (an ECONNRESET, not a server bug) with no server-side
-      // fix, so one retry on exactly that error is what a real client would
-      // also do rather than treat a torn-down pooled socket as a failure.
+      // client-side race with no server-side fix, so one retry is what a real
+      // client would also do rather than treat a torn-down pooled socket as a
+      // failure.
+      //
+      // That retry MUST be bounded by a timeout, and this is the whole reason
+      // the test needs one. The poisoned socket does not always surface as an
+      // ECONNRESET the way an earlier revision assumed: on Bun 1.3.11 the first
+      // follow-up simply HANGS, so a catch that only matches ECONNRESET never
+      // runs, the request never settles, and the test burns its full 5s budget
+      // and times out. That took the spawned server down with it and cascaded
+      // ConnectionRefused into the other 21 tests in this file — which is how
+      // it read as a server bug rather than a client-pool artifact. The server
+      // is fine: measured directly against a raw socket, it answers 413 with
+      // Connection: close, stays up, and serves the next connection normally.
+      // Measured recovery is exactly one bad attempt, so one bounded retry is
+      // enough; a hang and a reset both mean the same thing here.
       stub.queue = [{ body: messageResponse(VALID_PAGE) }]
+      const POOL_RECOVERY_TIMEOUT_MS = 2_000
+      const postBounded = () =>
+        fetch(`${base}/api/ai/generate`, {
+          method: 'POST',
+          headers: authed(),
+          body: JSON.stringify({ task: 'content', prompt: 'Draft a page.' }),
+          signal: AbortSignal.timeout(POOL_RECOVERY_TIMEOUT_MS),
+        })
       let after
       try {
-        after = await post({ task: 'content', prompt: 'Draft a page.' })
+        after = await postBounded()
       } catch (error) {
-        if (!/ECONNRESET|socket connection was closed/i.test(String(error))) throw error
-        after = await post({ task: 'content', prompt: 'Draft a page.' })
+        if (!/ECONNRESET|socket connection was closed|timed out|aborted/i.test(String(error)))
+          throw error
+        after = await postBounded()
       }
       expect(after.status).toBe(200)
       expect((await after.json()).valid).toBe(true)
-    })
+      // Explicit budget: bun's default is 5s, and this test can legitimately
+      // spend one full POOL_RECOVERY_TIMEOUT_MS on the hung socket before the
+      // retry even starts. Leaving it on the default made the bounded retry
+      // useless — the test died at 5s mid-retry and still looked like a server
+      // failure, which is the same misread this whole block exists to prevent.
+    }, 20_000)
 
     test('measures the body in bytes, not characters', async () => {
       // '€' is 3 bytes of UTF-8 but one JS character, so a cap compared against
