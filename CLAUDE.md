@@ -1937,6 +1937,24 @@ it, and it fails closed rather than open.
   retry loop, and the error mapping are covered with no API key and CI never
   makes a paid call. `tests/ai-assist-schema.test.js` guards the hand-authored
   structured-output JSON Schema against drifting from the Zod page schema.
+
+  **One test in that file drives its request over a raw socket, and it has to.**
+  The Content-Length pre-check answers 413 with `Connection: close` while the
+  client's declared body is still unsent — correct, since the socket genuinely
+  cannot be reused — but Bun's `fetch` returns that socket to its keep-alive
+  pool anyway, and the next same-origin request that draws it stalls rather than
+  erroring. That poisoned entry outlives the test that created it, so this cost
+  the whole file: one 5s timeout followed by 21 downstream tests reporting
+  `ConnectionRefused`, which reads exactly like a dead server and kept `main`
+  red for four consecutive runs. It was never a dead server — measured against
+  the same wedged process, a raw socket and a request to the `localhost`
+  spelling (a different pool key, same server) both answered 200 immediately.
+  A retry on `ECONNRESET` cannot paper over it, which was the earlier attempt:
+  the pooled socket does not error, it hangs. `rawPost()` owns its socket so
+  nothing enters the pool, and the follow-up "the server is still healthy"
+  assertion deliberately goes back through the pooled client to prove the 413
+  cost one connection and no more.
+
 - **Netlify** (`build:netlify`) has no server runtime, so the static deploy
   simply has no AI — the same way it has no sync.
 
