@@ -1,8 +1,11 @@
 {
   "mcpServers": {
     "hhvc-sqlite": {
-      "command": "npx",
-      "args": ["-y", "@executeautomation/database-server", ".data/review-state.local.db"]
+      "command": "node",
+      "args": [
+        "node_modules/@executeautomation/database-server/dist/src/index.js",
+        ".data/review-state.local.db"
+      ]
     },
     "heyclaude": {
       "command": "node",
