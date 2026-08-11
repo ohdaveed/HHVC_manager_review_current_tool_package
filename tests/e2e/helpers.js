@@ -199,6 +199,191 @@ async function focusMockPage(page) {
   await page.locator('#mockPage h1').first().focus()
 }
 
+// Locate the live Editor.js contenteditable block for whichever field is
+// currently open, and wait for it to actually hold focus. openEditorJsEditor
+// (js/inline-content-edit.js) sets autofocus: true, but that only lands once
+// editor.isReady resolves — a real async gap, since @editorjs/editorjs is
+// dynamically imported on first use (js/inline-content-edit.js's
+// loadEditorJs()) — so waiting on toBeFocused() rather than just visibility
+// is what actually proves the editor mounted rather than racing it.
+async function editorJsBlock(page) {
+  const block = page.locator('.inline-edit-editorjs-holder [contenteditable="true"]')
+  await expect(block).toBeFocused()
+  return block
+}
+
+// Replace the open Editor.js field's entire text: select all, then type.
+// Mirrors the old <input>/<textarea> widget's .fill() semantics — a
+// contenteditable block has no single-call equivalent.
+async function replaceEditorJsFieldText(page, block, text) {
+  await block.press('ControlOrMeta+a')
+  await block.pressSequentially(text)
+}
+
+// Commit the open Editor.js field the way a reviewer actually does: blur it.
+// Every field in this widget commits on focusout (openEditorJsEditor's own
+// `holder.addEventListener('focusout', commit)`) — unlike the old widget,
+// there is no Enter-to-commit path even for single-line fields (title,
+// heading, the CTA), since Enter inside Editor.js's contenteditable is
+// trapped by the single-block guard (onChange) rather than left to bubble.
+async function commitEditorJsField(page) {
+  await page.locator('.inline-edit-editorjs-holder [contenteditable="true"]').blur()
+}
+
+// Select `word` inside the open Editor.js block and click the resulting
+// Link inline-toolbar button (js/inline-content-edit-link-tool.js), all
+// inside ONE page.evaluate() call. This has to happen in a single browser-
+// side round trip, not as separate Playwright locator actions: Editor.js's
+// inline toolbar visibility is driven by the native 'selectionchange'
+// event, which fires asynchronously relative to the synthetic 'mouseup'
+// this dispatches on the selected word — and the real wall-clock gap
+// between two separate page.evaluate() calls (each its own CDP round trip)
+// is enough time for that async handling to invalidate Editor.js's captured
+// selection before a follow-up click ever reaches it. Measured live: doing
+// the select-then-click as two separate Playwright actions reproducibly
+// left document.activeElement on <body> post-click (no button, no input,
+// nothing focused) even though the button was visibly present a moment
+// before — moving the click inside the same synchronous call this function
+// makes is what fixed it.
+//
+// expectActionsPanel: false is for the unwrap (remove-link) case: clicking
+// the button on text already inside a link removes it directly and opens
+// no target-entry input, so "no actions panel appeared" must not be treated
+// as a retry signal there the way it is for the add-link path.
+async function selectWordAndClickLinkButton(page, word, { expectActionsPanel = true } = {}) {
+  return page.evaluate(
+    async ({ word, expectActionsPanel }) => {
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+      const holder = document.querySelector('.inline-edit-editorjs-holder')
+      const block = holder?.querySelector('[contenteditable="true"]')
+      if (!block) return { ok: false, reason: 'no editable block' }
+      const editor = holder.__inlineEditEditor
+
+      const selectWord = () => {
+        const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
+        let node
+        let target = null
+        let offset = -1
+        while ((node = walker.nextNode())) {
+          const idx = node.textContent.indexOf(word)
+          if (idx !== -1) {
+            target = node
+            offset = idx
+            break
+          }
+        }
+        if (!target) return false
+        const range = document.createRange()
+        range.setStart(target, offset)
+        range.setEnd(target, offset + word.length)
+        block.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+        const selection = window.getSelection()
+        selection.removeAllRanges()
+        selection.addRange(range)
+        block.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+        document.dispatchEvent(new Event('selectionchange'))
+        // Editor.js only populates the inline toolbar's tool buttons after
+        // its own mousedown-driven BlockManager.currentBlock tracking has
+        // run — a synthetic selection with no real user click leaves that
+        // unset even after the events above, so the toolbar element exists
+        // but renders zero buttons. editor.inlineToolbar.open() is Editor.js's
+        // own public API for opening it directly against the current
+        // selection, sidestepping that internal tracking entirely.
+        editor?.inlineToolbar?.open()
+        return true
+      }
+
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (!selectWord()) return { ok: false, reason: `word "${word}" not found` }
+        const linkButton = document.querySelector('.inline-edit-link-button')
+        if (linkButton) {
+          linkButton.click()
+          if (!expectActionsPanel) return { ok: true }
+          const input = document.querySelector('.inline-edit-link-input')
+          const actions = input?.closest('.inline-edit-link-actions')
+          if (input && actions && !actions.hidden && document.activeElement === input) {
+            return { ok: true }
+          }
+        }
+        await wait(150)
+      }
+      return { ok: false, reason: 'link button/input never settled after retries' }
+    },
+    { word, expectActionsPanel }
+  )
+}
+
+// Select `word`, open the Link tool, type `target` into its input and press
+// Enter — all inside one evaluate() call, for the same reason
+// selectWordAndClickLinkButton's own header comment gives: splitting this
+// across separate Playwright round trips (an earlier version of this helper
+// returned a Locator for a later pressSequentially() call to type into) left
+// a real, reproducible gap for the target-entry input to close in between —
+// confirmed live, the input was open and focused at the end of one
+// evaluate() call and gone by the time the next Playwright action reached
+// it. Only valid when `word` is NOT already inside a link; see
+// selectWordAndClickLinkButton directly (with expectActionsPanel: false)
+// for the unwrap/remove-link case, which opens no input to type into.
+async function addInlineLink(page, word, target) {
+  return page.evaluate(
+    async ({ word, target }) => {
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+      const holder = document.querySelector('.inline-edit-editorjs-holder')
+      const block = holder?.querySelector('[contenteditable="true"]')
+      if (!block) return { ok: false, reason: 'no editable block' }
+      const editor = holder.__inlineEditEditor
+
+      const selectWord = () => {
+        const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT)
+        let node
+        let start = null
+        let offset = -1
+        while ((node = walker.nextNode())) {
+          const idx = node.textContent.indexOf(word)
+          if (idx !== -1) {
+            start = node
+            offset = idx
+            break
+          }
+        }
+        if (!start) return false
+        const range = document.createRange()
+        range.setStart(start, offset)
+        range.setEnd(start, offset + word.length)
+        block.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+        const selection = window.getSelection()
+        selection.removeAllRanges()
+        selection.addRange(range)
+        block.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+        document.dispatchEvent(new Event('selectionchange'))
+        editor?.inlineToolbar?.open()
+        return true
+      }
+
+      for (let attempt = 0; attempt < 20; attempt++) {
+        if (!selectWord()) return { ok: false, reason: `word "${word}" not found` }
+        const linkButton = document.querySelector('.inline-edit-link-button')
+        if (linkButton) {
+          linkButton.click()
+          const input = document.querySelector('.inline-edit-link-input')
+          const actions = input?.closest('.inline-edit-link-actions')
+          if (input && actions && !actions.hidden && document.activeElement === input) {
+            input.value = target
+            input.dispatchEvent(new Event('input', { bubbles: true }))
+            input.dispatchEvent(
+              new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+            )
+            return { ok: true }
+          }
+        }
+        await wait(150)
+      }
+      return { ok: false, reason: 'link button/input never settled after retries' }
+    },
+    { word, target }
+  )
+}
+
 // Switch pages via the sidebar picker and wait for the render to land.
 // renderPage() pushes ?page=<key> immediately but applies content inside a
 // View Transition, so wait for #browserUrl to show the target page's slug —
@@ -233,4 +418,9 @@ module.exports = {
   settleDebounce,
   selectPage,
   focusMockPage,
+  editorJsBlock,
+  replaceEditorJsFieldText,
+  commitEditorJsField,
+  selectWordAndClickLinkButton,
+  addInlineLink,
 }

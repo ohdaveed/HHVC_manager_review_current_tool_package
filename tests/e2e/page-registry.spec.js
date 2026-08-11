@@ -33,6 +33,9 @@ const {
   setDecision,
   settleDebounce,
   DECISIONS,
+  editorJsBlock,
+  replaceEditorJsFieldText,
+  commitEditorJsField,
 } = require('./helpers')
 
 const NEW_PAGE = {
@@ -157,14 +160,9 @@ test.describe('adding a page mockup', () => {
     await expect(paragraph).toBeVisible()
     await paragraph.click()
 
-    // The data-inline-edit-* attributes are the feature's intentional hook
-    // points, per tests/e2e/inline-content-edit.spec.js — a bare
-    // `textarea, input[type=text]` .first() can resolve to some other control
-    // that happens to sit earlier in the mockup.
-    const textarea = page.locator('#mockPage textarea[data-inline-edit-input]')
-    await expect(textarea).toBeVisible()
-    await textarea.fill('Edited on the added page.')
-    await textarea.blur()
+    const block = await editorJsBlock(page)
+    await replaceEditorJsFieldText(page, block, 'Edited on the added page.')
+    await commitEditorJsField(page)
     await expect(
       page.locator('#mockPage p', { hasText: 'Edited on the added page.' })
     ).toBeVisible()
@@ -473,9 +471,9 @@ test.describe('regressions found in review', () => {
       .locator('#mockPage p[data-rewrite-field^="sections."][data-rewrite-field$=".paragraphs.0"]')
       .first()
     await paragraph.click()
-    const textarea = page.locator('#mockPage textarea[data-inline-edit-input]')
-    await textarea.fill('Edited before the delete.')
-    await textarea.blur()
+    const block = await editorJsBlock(page)
+    await replaceEditorJsFieldText(page, block, 'Edited before the delete.')
+    await commitEditorJsField(page)
     await expect(
       page.locator('#mockPage p', { hasText: 'Edited before the delete.' })
     ).toBeVisible()

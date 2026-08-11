@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 33 unit-test files in tests/ (864 tests)
+bun run test                  # bun test over the 34 unit-test files in tests/ (1,378 tests)
 bun run test:e2e              # playwright test (161 specs across 19 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -58,130 +58,90 @@ bind (`vite.config.mjs` reads `HOST`/`PORT`, defaulting to `127.0.0.1:8080`).
 **There is a build step now.** The app is bundled by **Vite 8**
 (`vite.config.mjs`) from a single ES-module entry point, `js/main.js`. The old
 model — ~47 hand-maintained classic `<script>` tags in `index.html` sharing one
-global lexical scope — is gone, along with the `js/vendor/` IIFE bundles and
-the `vendor:browser` script that rebuilt them. Third-party libraries are
-imported from npm and tree-shaken. `server.ts` still owns the optional sync
-API and now serves `dist/` rather than the repo root (override with
-`STATIC_ROOT`).
+global lexical scope — is gone, along with the `js/vendor/` IIFE bundles.
+Third-party libraries are imported from npm and tree-shaken. `server.ts` still
+owns the optional sync API and now serves `dist/` rather than the repo root
+(override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 33 Bun unit-test files under `tests/`:
-`utils`, `data-validation`, `page-render`, `card-inheritance` (the shared
-`inherits`/`title-only`/`authored` classifier plus the audit built on it —
-including the bucket-ordering rules, which are the part that silently corrupts
-content when wrong: `authored` must beat everything so a Table block is never
-blanked, and `title-only` must beat `inherits` because the Related notes also
-contain the phrase `page chooser`. Mutation-proven against three deliberate
-breakages — skipping external cards entirely, misrouting a title-only external
-into the unverified bucket, and folding the external count into the internal
-total. It drives `auditCards()` with hand-built page objects rather than the
-real corpus on purpose: asserting "there are 101 internal cards" would fail
-every time someone legitimately adds one, which trains people to update the
-number without reading it), `csv`, `csv-edited-fields-roundtrip`
-(the `edited_title`/`edited_summary` CSV export/import round trip added in
-Task 9 of the inline-content-editing feature — see "Local persistence" below;
-mounts the REAL `manager-review-export`/`ux-improvements-export`/
-`review-queue-state`/`review-queue-import` IIFEs, since a stubbed merge would
-not prove the export and import field-name enumerations actually agree),
-`review-state-schema`,
-`reading-level`, `plain-language`, `page-import-checks`, `card-inheritance`
-(the shared classifier plus the audit built on it, asserted against synthetic
-pages so a legitimate new card does not fail the suite), `mockup-image-export`,
+wrong). `bun run test` runs 34 Bun unit-test files under `tests/`: `utils`,
+`data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
+`plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
-`review-ops-data`,
-`decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
-(reads the counts back out of these docs and compares them to the filesystem),
-`review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
-logic diffing a page's in-scope section fields — heading, paragraphs, bullets
-— against `ORIGINAL_DATA`, and reapplying a saved diff back onto a page
-object; no DOM, dual-exported like `review-merge`/`plain-language`),
-`inline-content-edit-refresh` (the re-entrancy guard around the
-`section_edits` follow-up render `applySavedPageState` triggers when a
-reapplied section edit leaves the just-rendered DOM stale — see
-`js/ux-improvements-state-sync.js`'s `refreshInFlightForKey` guard; mounts a
-fresh instance of the IIFE-only `js/ux-improvements-state-sync.js` per test
-via a cache-busting dynamic `import()`, since that file has no
-`module.exports` tail to `require()` directly),
-`inline-content-edit` (the click-to-edit orchestrator for scalar fields —
-title, summary, CTA, heading, a single paragraph or bullet — driven with real
-DOM click/keydown/blur events against the real happy-dom `window`/`document`
-rather than a stubbed one, since it exercises actual `Element.replaceWith()`
-and focus/selection behavior; also covers add/remove-with-undo for
-paragraph/bullet arrays and per-field reset-to-original, added alongside the
-orchestrator's own add/remove/reset/undo logic — e2e coverage in Task 8 layers
-on top of this for the full surface),
+`review-ops-data`, `knowledge-chunking`, `knowledge-search`,
+`validate-compliance-audit`, `review-merge`, `review-state-sync`,
+`ai-assist-schema`, `ai-assist-env` — self-explanatory by name — plus a handful
+whose non-obvious "why" is worth keeping:
+`card-inheritance` (the shared `inherits`/`title-only`/`authored` classifier
+plus the audit built on it — `authored` must beat everything so a Table block
+is never blanked, and `title-only` must beat `inherits` since Related notes
+also contain the phrase "page chooser"; mutation-proven against three
+deliberate breakages, and driven with hand-built pages rather than the real
+corpus so a legitimately added card never fails the suite),
+`csv-edited-fields-roundtrip` (mounts the REAL export/import IIFEs rather than
+stubbing the merge, since only that proves the export and import field-name
+enumerations actually agree), `decision-vocabulary` (pins the two
+module-boundary restatements of the decision list against the canonical table
+in `js/utils.js`), `doc-counts` (reads the counts back out of these docs and
+compares them to the filesystem — this very list is what it checks),
+`inline-content-edit-data` (pure `section_edits` diff/reapply logic against
+`ORIGINAL_DATA`, no DOM, dual-exported like `review-merge`),
+`inline-content-edit-adapter` (the pure markdown/HTML serialization boundary
+between stored page-value strings and `@editorjs/editorjs`'s block-JSON
+`OutputData`, dual-exported the same way; its fixed-point round-trip test
+sweeps every string in the real page corpus, not a handful of hand-picked
+cases, since a non-idempotent adapter would silently corrupt content on a
+no-op open/close with no schema violation to catch it),
+`inline-content-edit-refresh` (the re-entrancy guard around the follow-up
+render a reapplied section edit triggers — `js/ux-improvements-state-sync.js`'s
+`refreshInFlightForKey` guard), `inline-content-edit` (the click-to-edit
+orchestrator, driven with real DOM events against real happy-dom, since it
+exercises actual `Element.replaceWith()` and focus/selection behavior),
 `inline-content-edit-roundtrip` (add/remove/reset verified through the REAL
-save/reapply path — `js/ux-improvements-state-sync.js`'s
-`saveCurrentPageToLocalStorage`/`applySavedPageState` backed by the real
-`computeSectionEdits`/`applyContentEditsToPageData` — rather than the counting
-stubs `inline-content-edit`'s own tests use for click-behavior assertions;
-proves a removed/added bullet round-trips through a real
-`section_edits` recompute and reapply, and that resetting a field to its
-original value drops it from the next recompute entirely, matching
-`js/inline-content-edit-data.js`'s "reset to original is correct by
-construction" design premise),
-`page-registry-data` (the pure half of reviewer-added and reviewer-deleted
-pages — key/field validation, and `applyRegistryToData`'s in-place mutation of
-`order`/`pages`. Two of its buckets are the ones that matter: it pins
-`REQUIRED_PAGE_FIELDS` against the real `pageSchema` in
-`build_scripts/schema.js`, so adding a seventh required field there without
-mirroring it fails here rather than shipping a browser that creates pages
-`bun run validate` would reject; and it asserts that a malformed entry is
-**dropped rather than thrown on**, because that code path runs at the root of
-the module graph where a throw takes every later module with it and leaves the
-reviewer at the static "Loading…" placeholder with no UI left to delete the bad
-entry. Its prototype-pollution case is built with `Object.defineProperty`, not
-an object literal — a literal's `__proto__:` key sets the prototype instead of
-creating an own property, so the obvious version of that test never reaches the
-loop it means to exercise and passes while proving nothing),
-`review-api-server` (which spawns
-`server.ts` as a subprocess against a temp SQLite DB and exercises
-auth/merge/isolation over real HTTP), `review-state-sync`, `ai-assist-schema`,
-`ai-assist-env`, `ai-assist-providers` (the provider registry and per-provider
-usage normalization, varying the provider API keys directly — which the server
-tests structurally cannot, since a spawned subprocess only ever sees the
-environment it was given), `ai-assist-server` (which spawns `server.ts`
+save/reapply path rather than the counting stubs the sibling file uses, proving
+a `section_edits` round trip and that reset drops a field from the next
+recompute), `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
+schema so a mismatched required field fails here rather than shipping; asserts
+a malformed registry entry is **dropped rather than thrown on**, since a throw
+at the root of the module graph strands the reviewer with no UI to fix it; its
+prototype-pollution case uses `Object.defineProperty` rather than an object
+literal, whose `__proto__:` key would set the prototype instead of creating an
+own property and pass while proving nothing), `review-api-server` (spawns
+`server.ts` as a subprocess against a temp SQLite DB, over real HTTP),
+`ai-assist-providers` (varies provider API keys directly, which a spawned
+server subprocess structurally cannot), `ai-assist-server` (spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-without a key or a paid call), and `ai-assist-validate-rewrite` (the
-`rewrite-field` task's output validator — that a rewrite preserves every
-`[label](target)` link's TARGET while its label stays free to change, and that
-it introduces no HTML into copy that renders through `formatMarkdown`) — 757
-tests at time of writing.
+with no key and no paid call), and `ai-assist-validate-rewrite` (that a
+rewrite preserves every link's TARGET while its label stays free to change,
+and introduces no HTML into copy rendered through `formatMarkdown`).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
-CI. Tests import the
-modules under test directly. `tests/helpers/browser-env.js`, preloaded via
-`bunfig.toml`, registers a **happy-dom** global environment first — the module
-graph does real work at import time (`js/state.js` reads `window.HHVC_DATA`),
-so the browser globals have to exist before the loader runs. It also restores
-Bun's native `fetch`/`Request`/`Response` afterwards, because happy-dom's HTTP
-client breaks `review-api-server`'s real requests, and redefines
-`window`/`document`/`localStorage` as writable so `review-state-sync`'s tests
-can still stub them.
+CI. `tests/helpers/browser-env.js`, preloaded via `bunfig.toml`, registers a
+**happy-dom** global environment before the loader runs (the module graph does
+real work at import time), restores Bun's native `fetch`/`Request`/`Response`
+afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
+requests, and redefines `window`/`document`/`localStorage` as writable so
+`review-state-sync`'s tests can still stub them.
 
 `bun run test:e2e` drives Playwright over `tests/e2e/` — nineteen spec files
 (161 specs), all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, and
-workshop-form submission handling. They share plain helper functions in
-`tests/e2e/helpers.js` (no fixture framework).
-A fourteenth file, `review-import-export.spec.js`, was deleted rather than
-repaired. Its two round-trip tests hand-rolled the merge inside
-`page.evaluate()` instead of calling `importReviewStateBackup()`, so reverting
-that function to the wholesale replace that once destroyed reviews left them
-green — and its other two tests duplicated `keyboard-shortcuts.spec.js` and a
-**weaker** copy of `accessibility.spec.js`'s scan with `color-contrast`
-disabled. The real coverage is `import-export.spec.js`, which drives both
-paths through the file input and asserts `history.at(-1).updated_by`.
+workshop-form submission handling, sharing plain helper functions in
+`tests/e2e/helpers.js` (no fixture framework). A fourteenth file,
+`review-import-export.spec.js`, was deleted rather than repaired: its
+round-trip tests hand-rolled the merge inside `page.evaluate()` instead of
+calling `importReviewStateBackup()`, so it stayed green against the wholesale
+replace that once destroyed reviews, and its other two tests duplicated
+existing coverage. `import-export.spec.js` is the real coverage.
 **`gotoFresh()` waits on `window.reviewKeyboardShortcuts.ready`**, not just the
-sticky bar: the bar is mounted early by `js/ux-improvements.js`, so waiting on
-it alone let a test press a global shortcut before `js/keyboard-shortcuts.js`
-had attached its `keydown` listener. Playwright's
-`webServer` block starts `bun run start` on `:8080` itself. In a sandbox with
-a pre-installed Chromium, point Playwright at it instead of downloading:
+sticky bar — the bar mounts early, so waiting on it alone let a test press a
+global shortcut before `js/keyboard-shortcuts.js` had attached its `keydown`
+listener. Playwright's `webServer` block starts `bun run start` on `:8080`
+itself. In a sandbox with a pre-installed Chromium, point Playwright at it
+instead of downloading:
 
 ```bash
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e
@@ -224,85 +184,56 @@ Each file in `pages/*.js` assigns a page object onto the global
 `window.HHVC_DATA = { pages, order }`, where `order` is the array of
 `[pageKey, menuLabel]` pairs driving navigation/menu order.
 
-**Load order now lives in `js/main.js`, not `index.html`.** `index.html` has
-exactly one script tag — `<script type="module" src="/js/main.js">` — and
-`js/main.js` is the root of the module graph: it imports the CSS, the three
-third-party libraries, then the core modules and the review/UX layers in
-sequence. The old model (~47 classic `<script>` tags sharing one global
-lexical scope, where a `const` in an earlier file was visible to later ones)
-is gone.
+**Load order lives in `js/main.js`, not `index.html`.** `index.html` has exactly
+one script tag — `<script type="module" src="/js/main.js">` — and `js/main.js` is
+the root of the module graph: CSS, then the three third-party libraries, then the
+core modules, then the review/UX layers. The old model (~47 classic `<script>`
+tags sharing one global lexical scope) and the committed `js/vendor/` IIFE
+bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
-Order still matters, but it is now enforced in two different ways:
+Order is enforced two ways. **Core modules enforce it themselves** — a module
+that needs `escapeHtml` imports it, and `js/state.js` imports
+`js/page-registry.js`, which imports `js/page-data.js` first, which imports all
+22 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
+cloned. **The self-mounting IIFE subsystems still depend on
+listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
+`js/dashboard-guidance.js` and
+`js/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
+objects rather than imports, so their sequence in `js/main.js` is load-bearing
+and hand-reviewed.
 
-- **Core modules enforce it themselves.** A module that needs `escapeHtml`
-  imports it, so it cannot run too early no matter what `js/main.js` says.
-  `js/state.js` imports `js/page-registry.js`, which imports `js/page-data.js`
-  first, which imports all 22 `pages/*.js` files — so `window.HHVC_DATA` is
-  guaranteed populated before anything reads it, and `js/state.js`'s throw now
-  only fires on genuinely malformed data. `js/page-registry.js` sits in that
-  chain rather than beside it so the reviewer's added/deleted pages are applied
-  before `ORIGINAL_DATA` is cloned.
-- **The self-mounting IIFE subsystems still depend on listed order.**
-  `js/ux-improvements*.js`, `js/review-queue*.js`,
-  `js/dashboard-guidance.js` and `js/keyboard-shortcuts.js` talk to each other
-  through `window.<Namespace>` objects rather than imports, so they must run
-  after the core modules that create those namespaces. Their sequence in
-  `js/main.js` is load-bearing and is still reviewed by hand.
-  **Not "no imports"** — that was the old wording and only
-  `js/review-queue*.js` actually takes none; the rest import `js/utils.js`
-  helpers, `js/dashboard-guidance.js` four of them. The graph therefore orders
-  them against the core already. What it cannot see is a `window.<Namespace>`
-  a sibling assigns at mount time, and that is the edge this list enforces.
+Note that "no imports" would be too strong, and used to be written that way:
+only `js/review-queue*.js` takes none. The others do import — `js/utils.js`
+helpers, and four imports in `js/dashboard-guidance.js` — so the module graph
+already orders them against the _core_. What it cannot order is the part that
+matters here: a `window.<Namespace>` a sibling IIFE assigns at mount time is
+invisible to the graph, so that edge is still enforced only by this list.
 
-**Some functions are deliberately published onto `window`.** Under the old
-shared scope every top-level function was implicitly a `window` property, and
-several callers still rely on that rather than importing:
+A few functions are deliberately republished onto `window`, because callers
+depend on the implicit globals the old shared scope provided: `window.renderPage`
+(`js/ux-improvements.js` wraps it to refresh after navigation — the decorator
+only forms if the original is on `window`; it is the last of three, the other
+two having been the deleted `js/interactive-sitemap.js` and
+`js/manager-review-export.js`, whose decorator went with the sidebar label it
+refreshed), `window.toggleSidebar` (an inline
+`onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
+(called optionally by the IIFE layers, which degrade to silence rather than
+throw), and `window.ORIGINAL_DATA` (read by `js/review-state-sync.js`).
 
-- `window.renderPage` (`js/page-render.js`) — wrapped to refresh after
-  navigation by `js/ux-improvements.js`. (There were three wrappers;
-  `js/interactive-sitemap.js` is gone, and `js/manager-review-export.js`'s
-  existed only to refresh a "Current page:" sidebar label that has been cut.)
-  The decorator chain only forms if the original
-  is on `window`; otherwise each wrapper's `typeof` guard returns early and
-  every wrapper silently no-ops while the page still renders.
-- `window.toggleSidebar` (`js/ui-controls.js`) — called from an inline
-  `onclick` in `index.html`, which has no way to reach a module scope.
-- `window.showToast` (`js/ui-controls.js`) and `window.updateSearchPreview`
-  (`js/editor-panel.js`) — called optionally (`window.showToast?.(…)`) by the
-  IIFE layers, which are designed to degrade to silence rather than throw.
-- `window.ORIGINAL_DATA` (`js/state.js`) — read by
-  `js/review-state-sync.js`'s `restorePageContentFromOriginal`, which stays
-  free of this module's page-data dependency chain on purpose.
-
-**`bun run validate` enforces page-import membership.**
-`build_scripts/page-import-checks.js` diffs `pages/*.js` on disk against the
-side-effect imports in `js/page-data.js`. Vite turns "an import naming a file
-that does not exist" into a build error, but the opposite case still fails
-silently: a page file nobody imports simply never registers onto
-`window.HHVC_PAGES`, so the page vanishes with no error anywhere. That is what
-this check catches, and why it survived the migration.
-
-- **Adding a new page file:** add `import '../pages/<file>.js'` to
-  `js/page-data.js`, and a `[pageKey, menuLabel]` entry to its `order` array
-  so it appears in navigation.
-- **Adding a new `js/*.js` module:** import it from whoever needs it. If it is
-  a self-mounting IIFE with no importer, add it to `js/main.js` in the right
-  position for its `window.<Namespace>` dependencies.
-
-Import _order_ isn't checked for pages — it genuinely doesn't matter, since
-each page module only writes into `window.HHVC_PAGES`; navigation order comes
-from the `order` array, validated separately by `findMissingOrderKeys`.
-
-Node-side scripts (`build_scripts/`, `tests/`) hardcode no file lists — they
-discover files dynamically via `build_scripts/load-pages.js`
-(`getPageScriptPaths()` globs `pages/*.js` sorted, with `js/page-data.js`
-always last). Those scripts still evaluate pages in a Node VM context rather
-than importing them, which keeps `validate`/`export`/tracking-sheet paths
-synchronous and preserves the `exclude` option tests use to load a
-deliberately incomplete page set. `runPageScripts()` strips the side-effect
-`import` lines from `js/page-data.js` before evaluating it, because the loop
-has already executed every page file by then — the imports and the loop
-express the same dependency.
+When adding a new page file: add `import '../pages/<file>.js'` to
+`js/page-data.js` and a `[pageKey, menuLabel]` entry to its `order` array. A new
+`js/*.js` module just needs an importer; if it is a self-mounting IIFE with no
+importer, add it to `js/main.js` in the right position. Node-side scripts
+(`build_scripts/`, `tests/`) hardcode no file lists — they discover `pages/*.js`
+dynamically via `build_scripts/load-pages.js`. If you forget the page import,
+`bun run validate` catches it: `build_scripts/page-import-checks.js` diffs
+`pages/*.js` on disk against `js/page-data.js`'s imports. Vite already turns the
+reverse case (an import naming a missing file) into a build error, but a page
+nobody imports fails silently — it never registers onto `window.HHVC_PAGES`, so
+the page just disappears. Import _order_ isn't checked; it's irrelevant, since
+each page module only writes into `window.HHVC_PAGES` and navigation order comes
+from the `order` array.
 
 ### Card descriptions are inherited, not printed
 
@@ -450,42 +381,30 @@ re-monolith them.**
 
 ### Review/UX layers are additive, on top of the core
 
-`js/ux-improvements.js` (sticky review bar, workspace tabs, Karl compliance
-scorecard), `js/review-queue.js` (cross-page review queue/progress),
-`js/dashboard-guidance.js` (consolidates sidebar helper copy into the Help
-workspace tab, hiding duplicated sidebar text at runtime without deleting
-HTML), and `js/keyboard-shortcuts.js` (global shortcuts, ignored while typing in form
-fields) are each self-contained IIFEs that read `window.HHVC_DATA` and
-`localStorage`. Some (e.g. `js/ux-improvements.js`, when restoring saved
-edits) do write edited title/summary/CTA/SEO fields back onto the **in-memory**
-`pageData` objects — but **must never write back to the `pages/*.js` source
-files or publish content**; they are review aids only, not publishing tools.
+`js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`,
+and `js/keyboard-shortcuts.js` are self-contained
+IIFEs that read `window.HHVC_DATA` and `localStorage`. Some write edited
+title/summary/CTA/SEO fields back onto the **in-memory** `pageData` objects when
+restoring saved edits — but **must never write back to the `pages/*.js` source
+files or publish content.** They are review aids only, not publishing tools.
 
-`js/ux-improvements.js` and `js/review-queue.js`
-are thin orchestrators (event wiring + `init()` + public API assembly) over
-sibling files that do the actual work, mirroring the existing
-`window.utils`/`window.reviewState` pattern — each sibling attaches its
-functions to an internal `window.<Namespace>` object (implementation detail,
-never referenced from `pages/*.js` or outside its own module's files):
+`js/ux-improvements.js` and `js/review-queue.js` are
+thin orchestrators (event wiring + `init()` + public API) over sibling files that
+do the work, each attaching functions to an internal `window.<Namespace>` object
+(implementation detail — never referenced from `pages/*.js`):
 
-- **`window.ReviewUx`** (`js/ux-improvements.js`'s orchestrator) ←
-  `js/review-state-store.js` (shared `window.reviewState` read/write/update,
-  also consumed directly by `js/review-queue*.js`),
-  `js/ux-improvements-state-sync.js` (per-page field sync/dirty-state),
-  `js/ux-improvements-workspace.js` (sticky bar, workspace tabs, Karl
-  scorecard), and `js/ux-improvements-export.js` (review summary copy,
-  CSV/JSON backup export/import, clear-local-reviews).
+- **`window.ReviewUx`** ← `js/review-state-store.js` (shared `window.reviewState`
+  read/write/update), `js/ux-improvements-state-sync.js`,
+  `js/ux-improvements-workspace.js`, `js/ux-improvements-export.js`.
   `js/review-merge.js` (`window.reviewMerge`) and `js/review-state-sync.js`
   (`window.reviewStateSync`) sit alongside these as their own small globals —
-  deliberately **not** under `window.ReviewUx` — since `js/review-merge.js` is
-  also imported directly by `server.ts` and must stay free of any browser-only
-  namespace or DOM dependency.
-- **`window.ReviewQueueInternal`** (`js/review-queue.js`'s orchestrator) ←
-  `js/review-queue-state.js` (shared state + UI-persistence helpers),
-  `js/review-queue-rows.js` (row building, filter/sort/selection, bulk
-  actions, Fuse.js search), `js/review-queue-render.js` (table/stats/bulk-bar
-  rendering), and `js/review-queue-import.js` (CSV import — kept isolated as
-  the highest-regression-risk area; see "Local persistence" below).
+  not under `window.ReviewUx` — since `js/review-merge.js` is also imported
+  directly by `server.ts` (no DOM dependency) and needs no browser-only
+  namespace.
+- **`window.ReviewQueueInternal`** ← `js/review-queue-state.js`,
+  `js/review-queue-rows.js`, `js/review-queue-render.js`, and
+  `js/review-queue-import.js` (CSV import — kept isolated as the
+  highest-regression-risk area; see [Local persistence](#local-persistence)).
 - **`window.ReviewInsights`** (`js/review-insights.js`) ←
   `js/review-insights-data.js`, which attaches `.data`. The Overview cards;
   `js/review-queue-render.js` calls `window.ReviewInsights.render()` at the end
@@ -498,57 +417,42 @@ never referenced from `pages/*.js` or outside its own module's files):
 - **Three lazily-mounted panels publish a mount hook rather than rendering at
   init:** `window.__mountAiAssistOnTabOpen`, `window.__mountReviewOpsOnTabOpen`
   and `window.__mountPageRegistryOnTabOpen`.
-  All are collapsed `<details>` at the end of Help rather than tabs of their
-  own, so `setWorkspaceTab` calls **all three** when Help opens — a reviewer
-  expanding one must never find an empty box. Each panel
-  ALSO catches an already-open tab at its own `init()` via
-  `mountWorkspacePanelIfOpen('help')` in `js/utils.js` — `js/ux-improvements.js`
-  initializes earlier and restores a persisted `workspace_tab` before these
-  hooks exist, so without the catch-up a reviewer who left one of these tabs
-  open came back to an empty panel.
+  All three are collapsed `<details>` at the end of the Help panel now rather
+  than tabs of their own, so `setWorkspaceTab` calls **all three** when Help
+  opens — a
+  reviewer expanding one must never find an empty box. Each panel ALSO catches
+  an already-open tab at its own `init()` via `mountWorkspacePanelIfOpen('help')`
+  in `js/utils.js` — `js/ux-improvements.js` initializes earlier and restores a
+  persisted `workspace_tab` before these hooks exist, so without the catch-up a
+  reviewer who left Help open came back to an empty panel.
 
-- **AI assist breaks the naming pattern above — mind the case.**
-  `window.AiAssist` is the **internal** namespace: `js/ai-assist-client.js`
-  attaches `.client` (the browser half of the optional `/api/ai/*` routes, a
-  no-op unless configured) and `js/ai-assist-render.js` attaches `.render`
-  (panel rendering, styles in `css/ai-assist.css`). `js/ai-assist.js` consumes
-  both, owns the request lifecycle and cancel, and publishes its public API on
-  the separate lowercase **`window.aiAssist`** (`ensureRendered`,
-  `refreshCapabilities`, `getCurrentPage`, `captureForm`). The orchestrator does **not** own
-  the capitalized namespace here — `window.AiAssist.ensureRendered` does not
-  exist.
-
-  `js/ai-assist-render.js` renders model output, which is text nobody in this
-  repo wrote, so it escapes everything before `innerHTML` (the exception being
-  the page preview, which routes through the escaping-audited
-  `renderPageMain()`). **That is not a security boundary, though** — imported
-  CSV/JSON backups and records pulled from the sync server also carry
-  externally-supplied reviewer names, notes, and edited fields into the sticky
-  bar, queue, and preview. Those are safe because they already use
-  `escapeHtml`/`textContent`, and must stay that way.
+- **AI assist breaks that naming pattern — mind the case.** `window.AiAssist` is
+  the **internal** namespace (`js/ai-assist-client.js` attaches `.client`, the
+  browser half of the optional `/api/ai/*` routes and a no-op unless configured;
+  `js/ai-assist-render.js` attaches `.render`). `js/ai-assist.js` consumes both,
+  owns the request lifecycle and cancel, and publishes its public API on the
+  separate lowercase **`window.aiAssist`** (`ensureRendered`,
+  `refreshCapabilities`, `getCurrentPage`, `captureForm`). `window.AiAssist.ensureRendered`
+  does not exist.
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
 **Sitemap** was removed outright (a fourth way to navigate 22 pages, drawing a
-hierarchy one level deep — most hubs rendered as `HUB 0/0` above "No child pages
-assigned"), and **AI assist** and **Tool status** became collapsed `<details>`
-at the end of Help. Both of those depend on `server.ts`, which the Netlify
-deploy has no runtime for, so on the build managers actually open they were two
-permanently-empty panels holding two of six slots. Help stays last, so it is the
-digit that moves whenever the strip changes; `WORKSPACE_TABS`
+hierarchy one level deep), and **AI assist** and **Tool status** became
+collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
+Netlify deploy has no runtime for, so on the build managers actually open they
+were two permanently-empty panels holding two of six slots. Help stays last, so
+it is the digit that moves whenever the strip changes; `WORKSPACE_TABS`
 (`js/ux-improvements-workspace.js`), the tab markup in `index.html` and the
-`1`–`3` cases in `js/keyboard-shortcuts.js` must change together.
-
-The three lazy panels **also catch an already-open Help tab at their own
-`init()`** (`mountWorkspacePanelIfOpen`): `js/ux-improvements.js` initializes earlier
-and restores a persisted `workspace_tab` before those hooks exist, so without
-the catch-up a reviewer who left Help open saw an empty panel until switching
-tabs and back.
-
-Relatedly, `js/keyboard-shortcuts.js` dispatches `hhvc:shortcuts-ready` and
-sets `window.reviewKeyboardShortcuts.ready` **from `init()`, after** the
-`keydown` listener is attached. It used to fire at module scope, announcing a
-capability that did not exist yet.
+`1`–`3` cases in `js/keyboard-shortcuts.js` must change together. The two
+surviving lazy panels **also catch an already-open Help tab at their own
+`init()`** — `js/ux-improvements.js` initializes earlier and restores a
+persisted `workspace_tab` before those hooks exist, so without the catch-up a
+restored tab painted empty until the reviewer switched away and back.
+Relatedly, `hhvc:shortcuts-ready` and
+`window.reviewKeyboardShortcuts.ready` are set **from `init()`, after** the
+`keydown` listener is attached; firing at module scope announced a capability
+that did not exist yet.
 
 ### The workspace is docked, not stacked
 
@@ -1315,109 +1219,76 @@ and the orphan pruning, which a reviewer opens deliberately.
 
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 `build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
-has coverage independent of whatever `pages/*.js` currently contains).
-
-A page carries `slug`, `type` (a free-form string — only `min(1)` is checked,
-not an enum; values in use across `pages/*.js` are `Agency`, `Transaction`,
-`Information`, `Resource Collection`, `Campaign`, and `Report`, matching
-Karl's real content-type names — see `docs/wagtail-content-mapping.md`),
-`title`, `summary`, `audience[]` (non-empty), `reading` (grade-level string),
-and `sections[]`. Optional page-level fields: `seoTitle`, `metaDescription`,
-`primaryCta`, `editorNote`, `topicTag`, `whatToKnow` (`cost`,
-`thingsToKnow[]`, `items[]`), `contact` (`address`, `phone[]`, `email[]`,
-`hours`, `other[]`), `spotlight`, `reportDate`, `printVersionUrl`, and
-`editorStatus` (`needs-review` | `blocked` | `placeholder`). For Karl editor
-field mapping by content type, see
-`docs/source/hhvc-policy/karl-content-type-field-reference.md`.
-
-Sections carry a required `heading` and `karl`, plus optional `kind`,
-`component` (an enum: `body`, `services`, `resources`, `related`, `contact`,
-`spotlight`, `what-to-do`, `supporting`, `intro`), `open` (Transaction
-supporting sections render as accordions; `open: true` renders one expanded on
-load), `cards[]`, `bullets[]`, `paragraphs[]`, `table[][]`, `image`, a
-`callout` (`text` plus optional `title`/`variant` of `info`/`warning`/`note`),
-a `button`/`buttonUrl`/`buttonTarget`/`buttonStyle`, and/or `steps[]`. Steps
-carry `title`, `text[]`, `bullets[]`, `callout`, `karl`, and
-`button`/`buttonTarget`/`buttonUrl` (the primary CTA).
-
-Text-bearing arrays (`paragraphs`, `bullets`, step `text`/`bullets`) accept
-either a plain string or an object `{ text, unverified?, unverifiedReason? }`.
-`unverified: true` flags a claim needing SME confirmation; `js/page-render.js`
-renders it as an "Unverified" pill (with `unverifiedReason` as the tooltip),
-and `validate.js` prints the total count in its summary line. Cards support
-the same two fields.
+has coverage independent of current page content). A page has `slug`,
+`type` (a free-form string, only `min(1)` checked — values in use are `Agency`,
+`Transaction`, `Information`, `Resource Collection`, `Campaign`, and `Report`,
+matching Karl content-type names; see `docs/wagtail-content-mapping.md`), `title`,
+`summary`, `audience[]`,
+`reading` (grade-level string), and `sections[]`. For Karl editor field mapping by
+content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
+Sections carry a required `heading` and `karl`, plus optional `kind`, `component`
+(enum: `body`, `services`, `resources`, `related`, `contact`, `spotlight`,
+`what-to-do`, `supporting`, `intro`), `open` (renders a Transaction supporting
+accordion expanded), `cards[]`, `bullets[]`, `paragraphs[]`, `table[][]`,
+`image`, a `callout` (`text` + optional `title`/`variant` of
+`info`/`warning`/`note`), a `button`/`buttonUrl`/`buttonTarget`/`buttonStyle`,
+and/or `steps[]`; steps carry `title`, `text[]`, `bullets[]`, `callout`, `karl`,
+and `button`/`buttonTarget`/`buttonUrl`. Optional page-level fields: `seoTitle`,
+`metaDescription`, `primaryCta`, `editorNote`, `topicTag`, `whatToKnow`,
+`contact`, `spotlight`, `reportDate`, `printVersionUrl`, and `editorStatus`
+(`needs-review` | `blocked` | `placeholder`). Text-bearing arrays
+(`paragraphs`, `bullets`, step `text`/`bullets`) accept either a plain string or
+`{ text, unverified?, unverifiedReason? }` — `unverified: true` flags a claim
+needing SME confirmation, rendered as an "Unverified" pill and counted in
+`validate.js`'s summary line. Cards support the same two fields.
 
 Beyond schema shape, `validate.js` enforces business invariants:
 
-- The `pestsTopic` key must exist and must be **first** in `order`. This is now
-  the HHVC **Agency page** ("Healthy Housing and Vector Control") — the key
-  name is retained from the Topic-page era for invariant/test/review-state
-  stability (`validate.js` only checks the key and ordering, not its `type`
-  or content).
-- The bare `agency` key must **not** be present (nobody should "fix" the key
-  name and break that stability).
+- The `pestsTopic` key must exist and be **first** in `order`. This is now the
+  HHVC **Agency page** ("Healthy Housing and Vector Control") — the key name is
+  retained from the Topic-page era for invariant/test/review-state stability.
+- The bare `agency` key must **not** be present (nobody should "fix" the key name
+  and break that stability).
 - Every page key must appear in `order` (`findMissingOrderKeys`).
-- Every `card.target` **and** every section/step `buttonTarget` must resolve to
-  a real page key (`findBrokenCardTargets`, `findBrokenButtonTargets`), and
-  every inline markdown link `[label](pageKey)` in paragraphs/bullets/table
-  cells/callouts/step text must resolve to a real page key, an `http(s)` URL,
-  or the inert `#` sentinel (`findBrokenInlineLinks`).
+- Every `card.target` **and** every section/step `buttonTarget` must resolve to a
+  real page key, and every inline markdown link `[label](pageKey)` in
+  paragraphs/bullets/table cells/callouts/step text must resolve to a real page
+  key, an `http(s)` URL, or the inert `#` sentinel.
 - The Agency page's content must not contain banned out-of-scope terms
-  (`plumbing`, `dbi`, `roof leak`, `sewer`, `permit issue`,
-  `construction defect`) — HHVC scope is Article 11 only.
+  (`plumbing`, `dbi`, `roof leak`, `sewer`, `permit issue`, `construction
+defect`) — HHVC scope is Article 11 only.
 - **Lists of three or more items must use `bullets[]`**, not `paragraphs[]` or
-  step `text[]` (`findListFormatViolations`). A section with 3+ paragraphs, or
-  a step with 3+ text items, is a hard validation failure.
+  step `text[]` (`findListFormatViolations`) — a hard validation failure.
 - **No image may be loaded from another host** (`findExternalAssetUrls`) —
   absolute `http(s)` or protocol-relative `image.src`, on a section or on the
-  spotlight, fails validation. The tool's central claim is that it works fully
-  offline, and for a long time that was false because of one hotlinked
-  `images.unsplash.com` URL on the Agency page. It hid well precisely because
-  it _worked_: on a connected machine the page looked right, and the only
-  symptoms showed up elsewhere — an air-gapped review with a broken image, and
-  that page's PNG export quietly depending on a third-party host.
-  **`data:` is allowed here, which is deliberately the opposite of
-  `findUnsafeUrls`'s rule.** There a `data:` value is rejected because it
-  becomes a navigation target, where a data URL is a phishing vector; here it
-  becomes an `<img src>`, which renders bytes rather than navigating, and
-  self-contained is exactly the property wanted. The Agency spotlight
-  photo is an inline WebP data URI for that reason, and it has to be one
-  rather than a file under `public/`: it must survive
-  `vite build --mode singlefile`, whose output is a single HTML file meant to
-  be emailed and double-clicked, where a relative path would 404. WebP rather
-  than the source JPEG, at the lowest quality with no visible cost — the
-  string ships inside the bundle, so compare crops at 1:1 on the busiest
-  region and pick from that rather than defaulting to a high number. The
-  current photo (a row of SF apartment buildings, all window mullions and
-  ironwork) is indistinguishable at q78, q70 and q64, so it ships at **q70,
-  48 KB**. **Size is subject-dependent, not a fixed budget**: compared at the
-  same q78, this photo is 57 KB where the model-house photo that preceded it
-  was 17 KB. Quote the quality alongside any size here — the two numbers are
-  meaningless apart.
-  **`findBannedTerms` skips `src` for a related reason.** It asks an editorial
-  question ("does this page discuss plumbing, DBI, sewers?") by substring-
-  matching the serialized page, and base64 is an arbitrary run of letters: the
-  inlined photo contains the sequence `dbi` and failed validation on a page
-  whose copy never mentions DBI.
-  **It tests the browser-normalized string, via the `urlProbe()` helper it
-  shares with `safeUrl`.** Matching the raw value on `/^(https?:)?\/\//` is not
-  enough: `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`
-  all pass that test and all still fetch off-origin — confirmed in Chromium
-  against a live `<img>`, not inferred from the URL spec. The two guards ask
-  different questions (scheme vs. host) but must agree on what a browser will
-  actually do with the string, which is why the normalization lives in one
-  place rather than being restated in each.
+  spotlight, fails validation. The tool claims to work fully offline, and that
+  was false for a long time because of one hotlinked `images.unsplash.com` URL
+  on the Agency page; it hid well because on a connected machine it simply
+  worked, and only an air-gapped review or that page's PNG export showed the
+  problem. **`data:` is allowed here, deliberately the opposite of
+  `findUnsafeUrls`'s rule** — there the value is navigated to, where a data URL
+  is a phishing vector; here it is an `<img src>` that renders bytes, and being
+  self-contained is the point. The Agency spotlight photo is an inline
+  WebP data URI, and has to be one rather than a file under `public/` so it
+  survives `vite build --mode singlefile`, where a relative path would 404.
+  `findBannedTerms` skips `src` for a related reason: it substring-matches the
+  serialized page, and the base64 photo contains the sequence `dbi`, which
+  failed validation on a page whose copy never mentions DBI.
+  It tests the browser-normalized string via the `urlProbe()` helper it shares
+  with `safeUrl`: matching the raw value on `/^(https?:)?\/\//` misses
+  `\\cdn.example.com/a.jpg`, `\/cdn…`, `/\cdn…` and `https:<TAB>//cdn…`, all of
+  which still fetch off-origin (confirmed in Chromium, not inferred).
 
-All of these live in `build_scripts/data-checks.js` as pure functions, so they
-can be unit-tested without the real page data.
+All of these live in `build_scripts/data-checks.js` as pure functions, testable
+without the real page data.
 
-**`karl` fields are first-class content, not comments** — every card, step,
-section, and callout can carry a `karl` string: a precise, CMS-technical
-placement/rationale note mapping mockup content onto real Karl StreamField
-blocks, surfaced to reviewers via `karlTag()` in `js/page-render.js`. They
-routinely embed open questions/flags for the client team and cite governance
-docs by section number. Keep them accurate when editing page copy. Page copy
-itself is plain-language, ~Grade 6, tenant-facing, empathetic civic writing.
+**`karl` fields are first-class content, not comments.** Every card, step,
+section, and callout can carry a `karl` string — a precise, CMS-technical
+placement/rationale note mapping mockup content onto real Karl StreamField blocks,
+surfaced to reviewers via `karlTag()`. They routinely embed open questions/flags
+for the client team and cite governance docs by section number. Keep them accurate
+when editing copy. Page copy itself is plain-language, ~Grade 6, tenant-facing,
+empathetic civic writing.
 
 ### Local persistence (browser-first; optional server sync layered on top)
 
@@ -1539,172 +1410,147 @@ offline static tool.
 
 ### Review-state sync backend (optional)
 
-`server.ts` optionally hosts a small sync API on top of its static file
-serving, backed by SQLite (`bun:sqlite`, no extra dependency). It is
-**entirely additive and off by default** — nothing else in the tool depends
-on it, and it fails closed (501, not open access) if unconfigured.
+`server.ts` optionally serves a small sync API alongside its static file
+serving, backed by SQLite (`bun:sqlite`, no extra dependency) — entirely
+additive, off by default, and fails closed (501) rather than open if
+unconfigured.
 
-- **Routes**: `GET /api/review-state` returns the full `{version, updated_at,
-ui, globals, pages}` state (same shape `window.reviewState.read()`
-  produces). `PUT /api/review-state/pages/:pageKey` accepts one page's patch,
-  merges it server-side via the shared `mergeReviewRecord()`
-  (`js/review-merge.js`, imported directly by `server.ts` — the same file a
-  `<script>` tag loads in the browser, no DOM dependency either side) and
-  returns the merged record. Writes are always scoped to one `page_key` at a
-  time — the server never wholesale-replaces the `review_pages` table — the
-  server-side half of the same "merge, never wipe" invariant the CSV/JSON
-  import path relies on. The PUT body is capped at `MAX_REVIEW_BODY_BYTES`
-  (1 MB) through the same streaming `readBodyWithLimit()` the AI routes use.
-  The check sits **in front of** the parse, so an oversized body never reaches
-  `mergeReviewRecord` and a rejected write is never a partial one.
-  **The cap is deliberately larger than the AI one**, even though a review
-  record is typically far smaller: `history[]` is append-only and the client
-  pushes the whole record, so this bounds a page's entire review life rather
-  than one edit. Set too low it becomes a permanent sync lockout — once a
-  record crosses it every push fails, and shortening the current note cannot
-  remove historical copies. 64 KB was measured at roughly 70 recorded rounds
-  with long notes, which a real review cycle can reach.
+- **Routes**: `GET /api/review-state` (full state, same shape as
+  `window.reviewState.read()`); `PUT /api/review-state/pages/:pageKey` (merges
+  a patch via the shared `mergeReviewRecord()` — `server.ts` imports
+  `js/review-merge.js` directly, the same file a `<script>` tag loads
+  client-side — and returns the merged record). Every write is scoped to one
+  `page_key`; the server never wholesale-replaces the table. The PUT body is
+  capped at `MAX_REVIEW_BODY_BYTES` (1 MB) via the same streaming
+  `readBodyWithLimit()` the AI routes use, in front of the parse — so an
+  oversized body never reaches `mergeReviewRecord` and a rejected write is
+  never partial. **Deliberately larger than the AI cap:** `history[]` is
+  append-only and the client pushes the whole record, so this bounds a page's
+  entire review life, not one edit. Too low and it is a permanent sync lockout
+  — 64 KB measured at ~70 recorded rounds with long notes.
 - **Auth**: see [Optional API access hardening](#optional-api-access-hardening).
   The legacy token remains broad for compatibility; production deployments
   should use per-token principals and grant only `review:read`/`review:write`
   to sync reviewers.
 - **Storage**: SQLite table `review_pages (page_key TEXT PRIMARY KEY, record
-TEXT, updated_at TEXT)` at `DATA_DB_PATH` (defaults to
-  `.data/review-state.local.db`, gitignored, for local dev; point it at a
-  mounted persistent volume in production — see Deployment below).
-- **Client**: `js/review-state-sync.js` is a no-op unless a sync URL/token is
-  configured. Its settings (`syncApiUrl`/`syncApiToken`) live under their own
-  `hhvcReviewSyncConfig` localStorage key, **deliberately separate from**
-  `hhvcManagerReviewState:v1` — the token must never round-trip through the
-  CSV/JSON export/import/backup paths, which are meant to be shareable
-  files. Sync is manual-trigger only (Pull from server / Push all pages
-  buttons, mounted by `mountSyncControls()`), not a background timer — this
-  keeps sync-triggered history entries bounded to explicit actions instead
-  of firing on every debounced keystroke.
-- **Pull vs push semantics differ on purpose**: push sends one page's full
-  local record and treats the server's merged response as authoritative for
-  that page (the server already did the field-level merge). Pull is
-  last-write-wins **per page** and never does a field-level merge on the
-  client side — the server's `history` array is already merged (re-merging
-  it client-side would duplicate entries), and treating a full local
-  snapshot as a "patch" onto the server's record would let this browser's
-  stale copies of fields another reviewer changed silently overwrite them.
+TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
+  `.data/review-state.local.db` for local dev; point at a mounted volume in
+  production).
+- **Client**: `js/review-state-sync.js`, a no-op unless configured. Its
+  settings live under their own `hhvcReviewSyncConfig` localStorage key,
+  separate from `hhvcManagerReviewState:v1` on purpose — the token must never
+  round-trip through the shareable CSV/JSON export/import/backup files. Sync
+  is manual-trigger only (Pull from server / Push all pages), not a
+  background timer, keeping sync-triggered history entries bounded to
+  explicit actions.
+- **Push vs. pull differ on purpose**: push sends one page's full record and
+  accepts the server's merged response as authoritative for that page; pull
+  is last-write-wins **per page**, never a field-level re-merge client-side
+  (the server's `history` is already merged — re-merging it would duplicate
+  entries, and treating a full local snapshot as a "patch" onto the server's
+  record would let stale local copies of fields another reviewer changed
+  silently overwrite them).
 - **Never compare a browser-clock timestamp against a server-clock one.**
   `pullFromServer` decides each page from two clock-independent facts:
-  whether the server holds a revision this browser hasn't observed
+  does the server hold a revision this browser hasn't observed
   (`serverRecord.updated_at > localRecord.synced_at` — _both_ server-issued,
-  since `synced_at` is only ever assigned from a sync response), and whether
-  this browser holds unpushed work (the explicit boolean `local_dirty`).
-  `updated_at` on a local record is written by the browser's own clock, so
-  it must never take part in a sync decision: on a browser running behind
-  the server, a genuine unsynced edit looks older than an untouched server
-  record and used to be silently overwritten by it. `local_dirty` is set by
-  the local write paths (autosave only when content actually changed, per
-  `reviewContentEquals`; every `mergeReviewRecord` call except the server's
-  own `updatedBy: 'sync'`) and cleared only by an actual push/pull. It's a
-  real boolean — note the explicit branch for it in
-  `js/review-state-validation.js`, since the generic `String()` coercion
-  there would turn `false` into the truthy string `'false'`. Only an
-  **explicit `false`** counts as clean: records written before the field
-  existed don't carry it (the storage version was deliberately not bumped,
-  since the field is additive), and reading "missing" as "clean" would let
-  the first pull after an upgrade overwrite reviews that were never pushed.
-  That absence must also _survive_ — `nextLocalDirty()` in
-  `js/ux-improvements-state-sync.js` returns `undefined` for an unchanged
-  legacy record rather than collapsing it to a boolean, because an autosave
-  with content equal to what's stored (typing and undoing, or a navigation
-  flush) would otherwise stamp an explicit `false` and hand the pull path
-  exactly the permission the rule above withholds.
+  since `synced_at` is only ever assigned from a sync response), and does
+  this browser hold unpushed work (the explicit boolean `local_dirty`)? A
+  local record's `updated_at` comes from the browser's own clock and must
+  never take part: on a browser running behind the server, a genuine
+  unsynced edit looks older than an untouched server record and used to be
+  silently overwritten by it. `local_dirty` is set by the local write paths
+  (autosave only when content actually changed, per `reviewContentEquals`;
+  every `mergeReviewRecord` call except the server's own
+  `updatedBy: 'sync'`) and cleared only by a real push/pull. It is a genuine
+  boolean, hence the explicit branch in `js/review-state-validation.js` —
+  the generic `String()` coercion there would turn `false` into the truthy
+  string `'false'`. Only an **explicit `false`** means clean: records
+  written before the field existed don't carry it (the storage version was
+  deliberately not bumped, the field being additive), and treating
+  "missing" as "clean" would let the first pull after an upgrade overwrite
+  reviews that were never pushed. The absence has to survive autosave too:
+  `nextLocalDirty()` (`js/ux-improvements-state-sync.js`) returns
+  `undefined` for an unchanged legacy record instead of collapsing it to a
+  boolean, since a content-neutral save would otherwise write an explicit
+  `false` and grant the pull path the very permission this rule withholds.
 - **A divergence is surfaced, never guessed.** A new server revision _and_
-  unpushed local edits means neither side has seen the other's work.
-  `pullFromServer` leaves the record completely untouched (notably without
-  advancing `synced_at`, which would let the next push sail through
-  `server.ts`'s staleness check) and returns the page key in `conflicts`
-  plus the server's copy in `conflictRecords`.
-  `resolveConflict(pageKey, 'server'|'local', serverRecord)` is the only way
-  out, one page at a time: `'server'` adopts the server copy and clears
-  `local_dirty`; `'local'` keeps local content but records the server's
-  revision as observed, so the next push stops being rejected. The sync
-  controls render a button pair per conflicted page. A resolution is bound
-  to the endpoint that produced it (`pullFromServer` returns `apiUrl`;
-  `resolveConflict` refuses a mismatch, and saving new settings clears the
-  panel) — otherwise a stale row could import a different deployment's
-  content, and its `'local'` branch would re-mint the very `synced_at`
-  baseline `writeConfig` had just cleared.
-- **A resolution is bound to the _divergence_ as well as the endpoint.** A
-  row asserts "the server holds a revision this browser hasn't observed",
-  and that can stop being true underneath it: a push whose PUT reaches the
-  server before an overlapping pull's GET, but whose response lands after
-  it, makes the pull report a conflict against this browser's **own**
-  content and then quietly reconciles the record. `resolveConflict`
-  therefore refuses when `serverRecord.updated_at <= localRecord.synced_at`
-  — both server-issued, so the no-cross-clock rule holds — since acting on
-  such a row would adopt a revision the page has already moved past,
-  discarding anything edited since the push. It can't misfire on a real
-  conflict: `pullFromServer` only reports one when the server revision is
-  _newer_ than `synced_at`, and deliberately leaves `synced_at` alone for
-  conflicted pages. `pruneReconciledConflicts()` (run after a push settles)
-  and the mutually-disabled Push/Pull buttons are UI hygiene on top of
-  this, not the mechanism — both calls can be made programmatically.
-- **The endpoint binding starts at _request_ time, not response time.**
-  `pullFromServer` and `pushPage` each capture `readConfig().apiUrl` before
-  calling `apiFetch` and re-check it via `assertEndpointUnchanged()` before
-  touching state; a response that outlived its configuration is rejected
-  outright rather than applied. Capturing it in the `.then()` instead is
-  the bug, not a simplification: a pull from server X landing after the
-  reviewer saved server Y would be labelled `Y`, sail through
-  `resolveConflict`'s guard, and write X's revision into `synced_at` under
-  Y — the exact hole the guard exists to close.
-- Switching the configured sync server URL (`writeConfig`) clears every
-  local page's `synced_at` **and deletes its `local_dirty` flag**, since
-  both are only meaningful relative to the deployment that issued them. A
-  baseline is obvious; the dirty flag is the same thing in disguise —
-  `local_dirty: false` asserts "matches what the server has", and that
-  judgement was made against the _old_ server. Carrying it over lets the
-  first pull from the new server see a new revision plus an explicitly
-  clean record and replace the local decision/notes wholesale, losing a
-  review on a server this browser never synced with. It's `delete`d rather
-  than forced to `true` because absent is the honest state (unknown
-  provenance) and is already the value `pullFromServer` treats as
-  possibly-unpushed. The comparison has **no "both non-empty" guard on
-  purpose** — clearing the settings and then pointing at a different server
-  is two transitions (`X` → `''` → `Y`), and requiring both sides to be
-  non-empty would skip the clear on both, carrying `X`'s baselines all the
-  way to `Y`.
+  unpushed local edits means neither side has seen the other's work; the
+  record is left completely untouched (no content change, and no `synced_at`
+  bump, which would let the next push sail through the server's staleness
+  check) and reported in `conflicts`, with the server's copy in
+  `conflictRecords`. `resolveConflict(pageKey, 'server'|'local',
+serverRecord)` is the only way out, one page at a time — `'server'` adopts
+  the server copy and clears `local_dirty`; `'local'` keeps local content
+  but records the server's revision as observed so the next push stops being
+  rejected. The sync controls render a button pair per conflicted page. Each
+  resolution is bound to the endpoint that produced it (`pullFromServer`
+  returns `apiUrl`, `resolveConflict` refuses a mismatch, and saving new
+  settings clears the panel): a stale row would otherwise import another
+  deployment's content, and its `'local'` branch would re-mint the exact
+  `synced_at` baseline `writeConfig` had just cleared.
+- **A resolution is bound to the _divergence_ too.** A row asserts "the
+  server holds a revision this browser hasn't observed", and that can stop
+  being true underneath it: a push whose PUT reaches the server before an
+  overlapping pull's GET, but whose response lands after, makes the pull
+  report a conflict against this browser's **own** content and then quietly
+  reconcile the record. `resolveConflict` refuses when
+  `serverRecord.updated_at <= localRecord.synced_at` (both server-issued,
+  so the no-cross-clock rule holds) — acting on such a row adopts a revision
+  the page already moved past, discarding anything edited since the push.
+  No misfire on a genuine conflict: `pullFromServer` reports one only when
+  the server revision is _newer_ than `synced_at`, and leaves `synced_at`
+  alone for conflicted pages. `pruneReconciledConflicts()` after a push and
+  the mutually-disabled Push/Pull buttons are hygiene on top, not the
+  mechanism — either call can be made programmatically.
+- **That binding starts at _request_ time.** `pullFromServer` and
+  `pushPage` capture `readConfig().apiUrl` before calling `apiFetch` and
+  re-check it (`assertEndpointUnchanged()`) before touching state, so a
+  response that outlived its configuration is rejected rather than applied.
+  Reading the endpoint in the `.then()` instead is the bug it fixes: a pull
+  from X landing after the reviewer saved Y gets labelled `Y`, passes
+  `resolveConflict`'s guard, and writes X's revision into `synced_at`
+  under Y.
+- Switching the sync server URL (`writeConfig`) clears every local page's
+  `synced_at` **and deletes its `local_dirty` flag**, since both only mean
+  something relative to the deployment that issued them. A `false` dirty
+  flag asserts "matches what the server has" — a judgement made against
+  the _old_ server, so carrying it over lets the first pull from the new
+  one see a new revision plus an explicitly clean record and overwrite the
+  local decision/notes. It's `delete`d rather than forced to `true`:
+  absent is the honest state (unknown provenance) and is already what
+  `pullFromServer` treats as possibly-unpushed. There is deliberately **no
+  "both non-empty" guard** on that comparison: clearing settings then
+  pointing at a different server is two transitions (`X` → `''` → `Y`), and
+  requiring both sides to be non-empty would skip the clear on both,
+  carrying `X`'s baselines to `Y`.
 - **A superseded pull must not drive the conflict UI.** Two Pull clicks put
   two GETs in flight with no ordering guarantee, and
   `assertEndpointUnchanged` can't help — both go to the _same_ endpoint. A
-  module-level generation counter stamps each `pullFromServer()` call and
-  the result carries `stale: true` if a later pull started while it was in
-  flight. Applying either response's _state_ is fine (last-write-wins per
-  page either way); the conflict panel is not, since an older response
-  reporting no conflicts would erase resolution controls a newer one
-  correctly populated, stranding a page that is still dirty and still
-  diverged. The guard lives in `pullFromServer` rather than the click
-  handler so it's unit-testable and any future caller inherits it; the
-  button is also disabled for the duration, as feedback and to make the
-  race harder to reach at all.
-- **Deployment (e.g. Railway)**: run `server.ts` (`bun run start`) with a
-  persistent volume mounted, `DATA_DB_PATH` pointed at that volume, and
-  either a generated `REVIEW_API_TOKEN` or the documented
-  `REVIEW_API_PRINCIPALS` secret configuration — none of this is committed.
-  Apply the reverse-proxy/identity-aware edge control described above for
-  public or replicated deployments. Local `bun run dev`/`bun run start` keep
-  working fully offline with sync simply disabled when unconfigured; Netlify's
-  static-only deploy (`build:netlify`) has no server runtime for these routes
-  and stays a read-only/no-sync deployment target.
-- **Tests**: `tests/review-merge.test.js` (unit tests for
-  `mergeReviewRecord`), `tests/review-state-sync.test.js` (the client
-  pull/push/conflict logic), and `tests/review-api-server.test.js` (spawns
-  `server.ts` as a subprocess with a temp SQLite DB and exercises auth,
-  merge-not-wipe, and per-page isolation over real HTTP).
+  module-level generation counter stamps each `pullFromServer()` call, and
+  its result carries `stale: true` when a later pull started while it was
+  in flight. Applying either response's _state_ is safe (last-write-wins
+  per page regardless); the conflict panel is not, since a stale empty
+  conflict list would erase resolution controls a newer pull correctly
+  populated. The guard lives in `pullFromServer`, not the click handler, so
+  it's unit-testable and inherited by any caller; the button is disabled
+  for the duration as well.
+- **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
+  mounted, `DATA_DB_PATH` pointed at it, and either a generated
+  `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
+  configuration (never committed). Apply the reverse-proxy/identity-aware edge
+  control described above for public or replicated deployments. Local dev and
+  Netlify's static-only deploy (`build:netlify`, no server runtime for these
+  routes) are unaffected either way.
+- **Tests**: `tests/review-merge.test.js` (unit) and
+  `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
+  DB, exercises auth/merge/isolation over real HTTP).
 
 ### AI assist backend (optional)
 
 `server.ts` also hosts an optional content-drafting API under `/api/ai/*`,
-backed by `build_scripts/ai/`. Same posture as the sync backend above:
-**entirely additive and off by default**, nothing else in the tool depends on
-it, and it fails closed rather than open.
+backed by `build_scripts/ai/`. Same posture as the sync backend: additive, off
+by default, failing closed.
 
 - **Two independent gates.** The shared optional API authorization
   configuration described above (legacy `REVIEW_API_TOKEN` or
@@ -1713,295 +1559,204 @@ it, and it fails closed rather than open.
   unauthenticated because browsers cannot attach the bearer header to it, but
   it must pass the exact-origin policy and grants no role. `ai:generate` is
   required for every AI route. `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` decides
-  whether generation is possible; unset makes `generate` and `models` 501
-  while `capabilities` still answers. That asymmetry is deliberate:
-  `capabilities` is the discovery endpoint the browser uses for its empty
-  state, and a 501 there cannot be told apart from "no server at all".
-- **The provider gate is checked inside each route, not before routing.**
-  Hoisting it would make every unmatched path answer 501 "no provider
-  configured" instead of 404 — telling a client a route exists when it does not.
-  The condition is "no provider **at all**", read from the registry per request
-  rather than from a start-time constant: a deployment holding only a Gemini key
-  is fully working.
+  whether generation works; unset makes `generate` and `models` 501 while
+  `capabilities` still answers. That asymmetry is deliberate — `capabilities`
+  is the browser's discovery endpoint, and a 501 there cannot be told apart
+  from "no server at all".
+- **The provider gate lives inside each route, not before routing**, so an
+  unknown path answers 404 rather than 501 claiming the route exists.
 - **Two providers, behind a registry.** `build_scripts/ai/providers.js` holds
-  `provider-anthropic.js` and `provider-gemini.js` behind one list, and nothing
-  in `index.js` or `server.ts` names a provider — a third is a `require` plus a
-  line in `REGISTRY`. Every entry exports the same surface: `name`, `label`,
+  `provider-anthropic.js` and `provider-gemini.js` behind one list; nothing in
+  `index.js` or `server.ts` names a provider. A third is a require plus a line
+  there. Every entry exports the same surface: `name`, `label`,
   `isConfigured()`, `getModel()`, `listModelIds()`, `normalizeUsage()`, and
-  `generateObject({system, userPrompt, jsonSchema, signal})` resolving to
-  `{object, model, usage, rawUsage, stopReason}`. Configuration is read from the
-  environment **on every call**, never snapshot at require time: the registry is
-  a module singleton `server.ts` imports once at startup, so caching
-  `isConfigured()` would freeze whatever the environment looked like during that
-  first import — and would still pass every server test, since a spawned
-  subprocess only ever sees one environment anyway.
-- **Registration order is the preference order.** A request that names no
-  provider runs on the first _configured_ one (Claude, then Gemini), reported
-  back as the resolved `provider` so a draft is never unattributed. A request
-  naming an **unconfigured** provider is a **400** carrying the list of what is
-  available — never a silent fallback, because running a Gemini request on
-  Claude would attribute one model's output to another in the panel's meta line
-  and in the downloaded module. In practice a 400 here means a panel still
-  holding a picker built from a different endpoint's capabilities, which the
-  client can recover from; "nothing configured at all" stays a 501, because
-  then the server genuinely cannot rather than merely lacking what was asked for.
+  `generateObject({system, userPrompt, jsonSchema, signal})`. Configuration is
+  read from the environment **per call**, not snapshot at require time — the
+  registry is a module singleton `server.ts` imports once at startup, so caching
+  it would freeze the first environment it ever saw.
+- **Registration order is the preference order.** An unnamed request runs on the
+  first _configured_ provider (Claude, then Gemini). A request naming an
+  unconfigured provider is a **400**, never a silent fallback — running a Gemini
+  request on Claude would attribute one model's output to another in the panel's
+  meta line and in the downloaded module. "Nothing configured at all" stays a
+  501: the server genuinely cannot, rather than merely lacking what was asked for.
 - **Shared error types live in `build_scripts/ai/errors.js`**, not in a provider
-  module. `RefusalError` used to be defined in and imported from
-  `provider-anthropic.js`, which made `server.ts` reach into an Anthropic module
-  for a concept belonging to no provider: both raise it, from entirely different
-  signals (Claude's `stop_reason: 'refusal'`; Gemini's
-  `promptFeedback.blockReason`, or a `finishReason` of
-  `SAFETY`/`PROHIBITED_CONTENT`/`BLOCKLIST`/`SPII`). Normalizing there is what
-  keeps `aiErrorResponse`'s 422 mapping a single `instanceof` instead of a
-  per-provider branch that rots the day a provider is added and nobody extends
-  it. `provider-anthropic.js` re-exports it, since that was the documented
-  import site. `UnknownProviderError` lives alongside it and maps to the 400 above.
+  module. `RefusalError` is raised by both providers from entirely different
+  signals — Claude's `stop_reason: 'refusal'`, Gemini's `promptFeedback.blockReason`
+  or a `finishReason` of `SAFETY`/`PROHIBITED_CONTENT`/`BLOCKLIST`/`SPII` — so
+  `server.ts` maps 422 with one `instanceof` instead of a per-provider branch
+  that rots the day a provider is added. `provider-anthropic.js` re-exports it,
+  since that was the documented import site.
 - **Usage is normalized at the provider boundary** to
-  `{inputTokens, outputTokens, totalTokens}`. `addUsage()` sums usage across the
-  validation retry field by field, and Anthropic's `input_tokens` against
-  Gemini's `promptTokenCount` would sum into something not merely incomplete but
-  meaningless — while forcing every consumer to know who answered. Gemini's
-  `totalTokenCount` is trusted over `input + output`: thinking tokens are billed
-  on top of prompt+candidates, so recomputing understates exactly the
-  thinking-heavy requests this feature makes. The provider-native counters ride
-  alongside as `usageByAttempt[]` rather than inside the sum, because `addUsage`
-  keeps the **first** attempt's value for non-numeric fields — a nested raw
-  object folded into the total would claim attempt one's numbers covered every
-  attempt.
-- **Anthropic's input total is all three counters**, per the API's own
+  `{inputTokens, outputTokens, totalTokens}`, because `addUsage()` sums usage
+  across the validation retry field by field and Anthropic's `input_tokens` and
+  Gemini's `promptTokenCount` would otherwise sum into something meaningless.
+  Gemini's `totalTokenCount` is trusted over input+output: thinking tokens are
+  billed on top, so recomputing understates exactly the thinking-heavy requests
+  this feature makes. Provider-native counters ride alongside as
+  `usageByAttempt[]` rather than inside the sum — `addUsage` keeps the _first_
+  attempt's value for non-numeric fields, so a nested raw object in the total
+  would claim attempt one's numbers covered every attempt.
+- **Anthropic's input total is all THREE counters**, per the API's own
   definition: `input_tokens` **+** `cache_creation_input_tokens` **+**
-  `cache_read_input_tokens`, which are reported separately rather than folded
-  into the first. That distinction is load-bearing here rather than pedantic:
-  `prompts.js` inlines the entire vendored style corpus into the system prompt
-  and marks it `cache_control` precisely so it is cached, so on every warm
-  request virtually the whole prompt is billed through `cache_read_input_tokens`
-  while `input_tokens` is a small remainder. Reading only `input_tokens`
-  reported **42** input tokens for a request that actually used **18042** —
-  understating usage by most of the prompt on exactly the requests the caching
-  was added to make cheap. The creation-vs-read split is not lost; it still
-  travels per attempt in `rawUsage`/`usageByAttempt[]`.
-- **The `provider` enum is derived from the registry, never written out.**
-  `build_scripts/ai/schemas.js` builds it from `allProviderNames()` rather than
-  listing names. `providers.js` promises that adding a provider is "a require
-  plus a line in `REGISTRY`; nothing downstream of here mentions a provider by
-  name" — and a second hardcoded list breaks that quietly: `capabilities` would
-  advertise the new provider and the browser's picker would send its name, but
-  this schema would reject the request as malformed before `resolveProvider`
-  ever ran. The symptom would look like a client bug rather than a missed
-  registration. Safe to import: no provider module requires `schemas.js` back,
-  so there is no cycle.
+  `cache_read_input_tokens`. They are reported separately, not folded in. This
+  is not a rounding detail here: `prompts.js` inlines the whole vendored style
+  corpus and marks it `cache_control` precisely so it is cached, so on a warm
+  request nearly the entire prompt is billed through `cache_read_input_tokens`
+  and `input_tokens` is a small remainder. Reading only that counter reported
+  **42** input tokens for a request that really used **18042** — understating
+  usage by most of the prompt on exactly the requests the caching exists to
+  make cheap.
+- **The `provider` enum is read from the registry, never written out.**
+  `schemas.js` builds it from `allProviderNames()`. A second hardcoded list
+  silently breaks the "a require plus a line in `REGISTRY`" contract:
+  `capabilities` would advertise the new provider and the browser picker would
+  send its name, but the schema would reject the request as malformed before
+  `resolveProvider` ever ran — a failure that reads as a client bug rather than
+  a missed registration.
 - **Routes**: `GET /api/ai/capabilities` (per-provider `providers`, `models`,
-  `providerLabels` and `defaultProvider`, plus grounding files and page count),
-  `GET /api/ai/models` (queried live, since model lineups move and a hardcoded
-  id becomes a 404 nobody notices), and `POST /api/ai/generate`
-  (`{task, prompt, page?, provider?}`, Zod-validated). `capabilities` reports
-  every **registered** provider including the unconfigured ones (`false`/`null`),
-  so the panel can say "this server has no Gemini key" as distinct from "Gemini
-  does not exist here" — those want different copy. `models` is settled per
-  provider rather than awaited together, so one bad key does not blank the
-  other's list on the very endpoint a reviewer uses to find a working model id.
+  `providerLabels`, and `defaultProvider` — every _registered_ provider, including
+  unconfigured ones, so the panel can tell "no key for Gemini" from "no Gemini
+  here"), `GET /api/ai/models` (queried live, never hardcoded; settled per
+  provider so one bad key does not blank the other's list),
+  `POST /api/ai/generate` (`{task, prompt, page?, provider?}`, Zod-validated).
 - **Env**: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (default `claude-opus-5`),
-  `AI_EFFORT` (default `high`), and `ANTHROPIC_BASE_URL` (only used to point the
-  test suite at a stub); `GEMINI_API_KEY`, `GEMINI_MODEL` (default
-  `gemini-2.5-pro`), `GEMINI_MAX_ATTEMPTS` (default 2), `GEMINI_TIMEOUT_MS`
-  (default 150s), and `GEMINI_BASE_URL` (test stub only). Put them in
-  `.env.local`, which is gitignored and must stay that way.
-- **Gemini specifics a naive port gets wrong.** Use `responseJsonSchema`, **not**
-  `responseSchema`: the latter takes a narrow OpenAPI 3.0 subset, and the wider
-  one is what lets `PAGE_OUTPUT_SCHEMA` be shared byte-for-byte with the Claude
-  path rather than forked into a second copy `tests/ai-assist-schema.test.js`
-  would then have to guard twice. Check `promptFeedback.blockReason` **and**
-  `candidates[0].finishReason` — the first is set when the _input_ was blocked
-  and no candidate exists at all, so checking only the second makes every
-  prompt-level block surface as the generic "returned no text content" and read
-  to a reviewer as an outage rather than a refusal. Both are checked **before**
-  touching content, for the same reason the Claude path checks `stop_reason`
-  first: on a block the candidate carries no parts, and reaching for the text
-  throws a confusing `TypeError` over the real cause. `finishMessage` looks like
-  the refusal explanation and is empty on every request this tool makes — it is
-  Vertex-only and the SDK's response converter drops it on the Gemini Developer
-  API path (verified against a stub, not assumed) — so the explanation is built
-  from the **blocked** `safetyRatings` entries, which do survive and name the
-  category that actually stopped it. `httpOptions.retryOptions.attempts`
-  defaults to **5** and is pinned to 2: it composes exactly as badly as the
-  Anthropic SDK default did, since two validation attempts times five retries is
-  up to ten upstream calls for one click on a provider already failing. Note the
-  off-by-one — Google counts the original request in `attempts`, Anthropic's
-  `maxRetries` does not. There is no `cache_control` equivalent and `prompts.js`
-  needs no change: Gemini caches implicitly on a prefix match, which is precisely
-  what that file's byte-stability rule already guarantees; there is simply no
-  breakpoint to place. API-key auth against the Gemini Developer API only —
-  `@google/genai` also speaks to Vertex AI, but that means service-account
-  credentials, a project id, and a region, a different credential story than the
-  single `GEMINI_API_KEY` the rest of this feature's env handling assumes.
+  `AI_EFFORT` (default `high`), `ANTHROPIC_BASE_URL` (tests only);
+  `GEMINI_API_KEY`, `GEMINI_MODEL` (default `gemini-2.5-pro`),
+  `GEMINI_MAX_ATTEMPTS` (default 2), `GEMINI_TIMEOUT_MS`, `GEMINI_BASE_URL`
+  (tests only). Keep them in the gitignored `.env.local`.
+- **Gemini specifics that a naive port gets wrong.** Use `responseJsonSchema`,
+  not `responseSchema` — the latter takes a narrower OpenAPI subset, and the
+  wider one is what lets `PAGE_OUTPUT_SCHEMA` be shared byte-for-byte instead of
+  forked into a second copy `tests/ai-assist-schema.test.js` would have to guard
+  twice. Check `promptFeedback.blockReason` **and** `candidates[0].finishReason`:
+  the first covers a blocked _input_ where no candidate exists at all, and
+  checking only the second makes those surface as "returned no text" and read as
+  an outage. Both are checked before touching content, for the same reason the
+  Claude path checks `stop_reason` first. `finishMessage` looks like the refusal
+  explanation and is always absent — it is Vertex-only and the SDK's converter
+  drops it on the Developer API path — so the explanation is built from the
+  blocked `safetyRatings` entries instead. `httpOptions.retryOptions.attempts`
+  defaults to **5**, which composes as badly as the Anthropic default did: two
+  validation attempts times five is ten upstream calls per click, so it is
+  pinned to 2. There is no `cache_control` equivalent; Gemini caches implicitly
+  on a prefix match, which is exactly what `prompts.js`'s byte-stability rule
+  already provides. API-key auth only — `@google/genai` also speaks to Vertex,
+  but that is a different credential story than a single `GEMINI_API_KEY`.
 - **Every input is bounded, and the bound is enforced while reading.** `prompt`
   caps at 8000 characters, but `page` is serialized into the provider prompt
   just the same — so it carries its own limits (96 KB serialized, 12 levels
-  deep). The body itself goes through `readBodyWithLimit()`, which streams
-  `req.body` and stops at the first byte past 128 KB. `await req.text()` is the
-  wrong tool: it buffers the whole payload before anything can measure it, so a
-  chunked request (or one that simply lies in Content-Length) allocates
-  whatever it likes and a 413 afterwards does not give the memory back. The
-  Content-Length pre-check stays as a cheap first pass for the honest case, but
-  **it triggers at the DRAIN limit (8× the cap), not at the cap** — answering
-  from it means never touching `req.body`, which leaves the client's payload
-  unread in the socket and corrupts the very next request on that keep-alive
-  connection. That is the same failure the drain branch below exists to prevent,
-  reached from the other direction; it surfaced as a 431 (Bun reading leftover
-  body bytes as a header block) on whichever test ran next, and it is why the
-  pre-check has to stop short of the range `readBodyWithLimit` handles cleanly.
-  Between the cap and the drain limit, falling through costs one drain and
-  returns the identical 413 with the connection intact. The
-  count is in **bytes, not characters** — comparing `String#length` (UTF-16 code
-  units) against a byte limit lets multi-byte UTF-8 through at roughly three
-  times the cap. Depth is measured iteratively, never recursively: a recursive
-  walk over attacker-supplied nesting is itself the denial of service it is
-  meant to detect.
+  deep). The body goes through `readBodyWithLimit()`, which streams `req.body`
+  and stops at the first byte past 128 KB. `await req.text()` is the wrong
+  tool: it buffers everything before anything can measure it, so a chunked or
+  Content-Length-lying client allocates freely and a later 413 does not give
+  that back. The Content-Length pre-check stays as a cheap first pass, but **it
+  triggers at the DRAIN limit (8× the cap), not at the cap** — answering from it
+  means never touching `req.body`, leaving the client's payload unread in the
+  socket and corrupting the very next request on that keep-alive connection.
+  That is the same failure the drain branch below prevents, reached from the
+  other direction; it surfaced as a 431 (Bun reading leftover body bytes as a
+  header block) on whichever test ran next, and it is why the pre-check must
+  stop short of the range `readBodyWithLimit` handles cleanly. Between the cap
+  and the drain limit, falling through costs one drain and returns the identical
+  413 with the connection intact. The count
+  is in **bytes, not characters** — `String#length` against a byte limit lets
+  multi-byte UTF-8 through at ~3× the cap. Depth is measured iteratively, never
+  recursively: a recursive walk over attacker-supplied nesting is itself the
+  denial of service it exists to detect.
 - **Past the cap it stops accumulating but keeps draining.** Cancelling the
-  request-body reader is the obvious move and it is wrong: the client is still
-  sending, so the connection is left framed mid-request and its _next_ request
-  is read as garbage — Bun answers that with an empty-bodied protocol-level 400. A real client would see a 413 followed by an inexplicable 400 on a
-  perfectly valid follow-up. It first showed up as a flaky unit-test failure in
-  whichever test happened to run next. Dropping the accumulated text is what
-  actually bounds memory; draining the rest costs only bandwidth the sender is
-  transmitting anyway. `DRAIN_LIMIT_MULTIPLIER` (8×) caps even that, trading
-  the connection away only for a sender who ignores the 413 entirely. The
-  regression test trickles chunks on a timer — enqueuing them all up front lets
-  the client finish before the server reads, so the bug hides.
-- **The `page` cap measures the string that is actually sent.**
-  `serializePageForPrompt()` in `build_scripts/ai/schemas.js` is used by both
-  the size refinement and `buildContentUserPrompt`. They used to differ — the
-  cap measured compact `JSON.stringify(page)` while the prompt sent the
-  pretty-printed form — so indentation was free and an object of many small
-  nested entries could measure ~100 KB and arrive upstream ~4x larger, past the
-  very limit meant to bound tokenization. Measuring one string and sending
-  another is the bug; one shared function is the fix. Real pages expand only
-  ~1.2x, so the tighter measurement rejects nothing the tool itself sends.
-- **Cancellation is decided by signal state, not by the error's shape.**
-  Upstream, the SDK client sets `maxRetries: 1` and a 150s per-call timeout, and
-  the route combines `req.signal` with
-  `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default 240s) — otherwise two
-  validation attempts times the SDK's default two retries times its ~10-minute
-  default timeout leaves one click able to hold a request open far longer than
-  anyone waits. `aiErrorResponse` then takes **both signals** and maps
-  `client.aborted` → **499** and `timeout.aborted` → **504**, so the log answers
-  "who gave up first?" rather than collapsing both into one code. Matching on
-  the error instead does not work and was a real bug: the SDK throws
-  `APIUserAbortError` / `APIConnectionTimeoutError`, which inherit `name`
-  `"Error"` and carry no `status`, so a `name === 'AbortError'` test never fired
-  and every cancelled generation was logged as a 500. `AbortSignal.timeout()`
-  also reports `"TimeoutError"`, not `"AbortError"`. Asking the signal is also
-  provider-agnostic, which matters the moment a second provider lands.
-  `tests/ai-assist-server.test.js` pins the 504 path against a deliberately slow
-  stub — the 499 path is not observable from a test, since the client that
-  aborts is the one that cannot read the answer.
-- **The fallback arm matches `constructor.name`, never `instanceof`, and splits
-  504 out of it.** The fallback is not a safety net for exotic cases; it is a
-  routine path. The SDK enforces its own per-call `ANTHROPIC_TIMEOUT_MS` inside
-  `AI_REQUEST_TIMEOUT_MS`, so any configuration where it gives up first — a
-  short per-call timeout, or the explicitly supported `ANTHROPIC_MAX_RETRIES=0`
-  removing the retries that would otherwise carry the call past the route's
-  budget — throws `APIConnectionTimeoutError` with **neither** signal aborted.
-  That arm was dead for a second reason beyond the `name` problem above:
-  `@anthropic-ai/sdk` publishes separate `require` (`index.js`) and `import`
-  (`index.mjs`) builds, and `server.ts` imported the SDK while
-  `build_scripts/ai/provider-anthropic.js` requires it — the classic dual
-  package hazard. The two halves held different objects for the same class, so
-  every `error instanceof Anthropic.*` compared against a constructor the
-  thrown error had never been built from. Measured before the fix, an SDK
-  timeout came back **500** — not even the 499 the code reads as.
-  `constructor.name` is a single string on a single object, survives that
-  boundary, and removes the need for the SDK import in `server.ts` at all. The
-  two errors then split like the signal branches do: `APIUserAbortError` → 499,
-  `APIConnectionTimeoutError` → **504**, since a provider that ran out of time
-  is not a reviewer who walked away, and folding them together hides a slow
-  upstream behind a status that reads as "nobody was listening".
-- **Gemini's own timeout is normalized at the provider, because the route
-  cannot recognize it.** The trick that works for Anthropic does not transfer.
-  `@google/genai` implements `httpOptions.timeout` as a bare
-  `abortController.abort()` with no reason, and `abort()` with no reason
-  rejects with a `DOMException` whose `name` is `"AbortError"` — the exact
-  shape a reviewer pressing Cancel produces, and its `constructor.name` is
-  `"DOMException"`, so neither the name check nor the constructor check can
-  separate them. The result was a Gemini request that ran out of time telling
-  the reviewer **499 "Generation was cancelled."** — the same class of
-  misreporting the `constructor.name` fix above was written to end, reappearing
-  through a second provider. The one thing that still distinguishes the two is
-  whether the **caller's** signal aborted, and that is in scope only inside the
-  provider: `classifyAbort()` in `provider-gemini.js` raises a
-  `ProviderTimeoutError` when the SDK aborted and the caller's signal did not,
-  and rethrows the original untouched when it did, so a real cancellation still
-  reaches the signal branches that own 499/504. `ProviderTimeoutError` lives in
-  `errors.js` for exactly the reason `RefusalError` does — it is a concept no
-  single provider owns, and normalizing it there keeps `aiErrorResponse` a
-  single `instanceof` rather than a per-provider branch that rots. Split out as
-  a pure function so it is testable without an SDK client or a real 150s wait.
+  reader leaves the connection framed mid-request, so the client's _next_
+  request is read as garbage and gets an empty-bodied protocol-level 400 from
+  Bun — a 413 followed by an inexplicable failure on a valid follow-up.
+  Dropping the accumulated text is what bounds memory; draining costs only
+  bandwidth already in flight. `DRAIN_LIMIT_MULTIPLIER` (8×) bounds that too.
+  The regression test must trickle chunks on a timer, or the client finishes
+  sending before the server reads and the bug hides.
+- **The `page` cap measures the string actually sent.**
+  `serializePageForPrompt()` is shared by the size refinement and
+  `buildContentUserPrompt`. They used to differ (compact measured,
+  pretty-printed sent), so a page could measure ~100 KB and arrive ~4x larger.
+  Real pages expand only ~1.2x, so nothing legitimate is rejected.
+- **Cancellation is decided by signal state, not the error's shape.** The SDK
+  client sets `maxRetries: 1` and a 150s per-call timeout; the route combines
+  `req.signal` with `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` (default 240s)
+  and hands **both** to `aiErrorResponse`, which maps `client.aborted` → **499**
+  and `timeout.aborted` → **504**. Matching on the error does not work: the SDK
+  throws `APIUserAbortError` / `APIConnectionTimeoutError`, both inheriting
+  `name` `"Error"` with no `status`, so a `name === 'AbortError'` test never
+  fired and every cancellation was logged as a 500. `AbortSignal.timeout()`
+  reports `"TimeoutError"` besides. Signal state is also provider-agnostic.
+  The 504 path is tested against a slow stub — 499 is not observable, since the
+  client that aborts cannot read the response.
+- **The fallback arm matches `constructor.name`, never `instanceof`.** Neither
+  signal is aborted when the SDK's own per-call timeout fires first — which a
+  short `ANTHROPIC_TIMEOUT_MS`, or `ANTHROPIC_MAX_RETRIES=0` removing the
+  retries that would carry the call past the route budget, makes routine — so
+  the fallback is a live path, not a safety net. It was dead for a **second**
+  reason on top of the `name` one above: `@anthropic-ai/sdk` ships separate
+  `require` and `import` builds, and `server.ts` imported it while
+  `build_scripts/ai/provider-anthropic.js` requires it, so `instanceof` compared
+  the thrown error against a different copy of the same class and was
+  permanently false. Measured: an SDK timeout returned **500**, not the 499 the
+  code read as. `constructor.name` is one string on one object, crosses that
+  boundary intact, and lets `server.ts` drop the SDK import entirely. The two
+  cases split the same way the signal branches do —
+  `APIUserAbortError` → 499, `APIConnectionTimeoutError` → **504** — because an
+  upstream that ran out of time is not a client that hung up.
+- **Gemini's timeout has to be normalized at the provider, because its SDK
+  makes it unrecognizable at the route.** `@google/genai` implements
+  `httpOptions.timeout` as a bare `abortController.abort()` — no reason — which
+  rejects with a `DOMException` whose `name` is `"AbortError"`: byte-identical
+  to a reviewer pressing Cancel, and so answered **499 "Generation was
+  cancelled."** for a request nobody cancelled. `constructor.name` cannot help
+  here the way it does for Anthropic; it is `"DOMException"`. The caller's
+  signal is the only thing that still distinguishes the two, and it is in scope
+  only inside the provider, so `classifyAbort()` in `provider-gemini.js` raises
+  a `ProviderTimeoutError` when the SDK aborted and the caller's signal did
+  **not** — and rethrows untouched when it did, so a genuine cancel still
+  reaches the signal branches. `ProviderTimeoutError` lives in `errors.js` for
+  the reason `RefusalError` does: it belongs to no provider, and normalizing it
+  keeps `aiErrorResponse` one `instanceof` instead of a per-provider branch.
 - **Numeric env tunables are range-checked, not merely parsed.**
   `numberFromEnv` (`build_scripts/ai/env.js`) rejects NaN, Infinity, negatives,
   fractions, and anything outside `[min, max]` (default max
   `Number.MAX_SAFE_INTEGER`), warning and falling back rather than throwing.
-  `Number.isFinite` is **not** a sufficient test: `AI_REQUEST_TIMEOUT_MS=1e20`
-  is finite, and `AbortSignal.timeout()` rejects it outright — that call sits
-  _outside_ the generate route's `try`, so an accepted-but-unusable value is an
-  unmapped 500 on every generation rather than an over-generous budget, which
-  is the exact failure this helper exists to prevent. Both timeouts additionally
-  cap at one hour and `ANTHROPIC_MAX_RETRIES` at 10: a reviewer is watching a
-  spinner, so larger values are typos, and a retry count in the thousands is not
-  a slow request but one that never returns.
+  `Number.isFinite` is not sufficient: `AI_REQUEST_TIMEOUT_MS=1e20` is finite
+  and `AbortSignal.timeout()` rejects it, and that call sits outside the
+  generate route's `try` — so the value becomes an unmapped 500 on every
+  generation, the very failure the helper exists to prevent. Both timeouts also
+  cap at one hour and `ANTHROPIC_MAX_RETRIES` at 10.
 - **The retry carries the rejected draft, not just the failures.** Each API
   call is stateless, so "fix these and change nothing else" is only followable
-  if the thing to change travels with the instruction; without it the retry
-  regenerates from scratch and loses whatever the first attempt got right.
-  Usage is summed across attempts for the same reason it matters at all —
-  reporting only the last call understates exactly the requests that cost most.
-- **The draft is filed under a sentinel key twice, under two different
-  sentinels.** The link checks in `data-checks.js` take one `pages` object and
-  use it both for what to walk and for which targets resolve, so filing the
-  draft under `__generated__` made that string a resolvable target — a card
-  pointing at it passed every check while being inert in the downloaded module.
-  Running each check under `__generated__` and `__generated_probe__` and
-  unioning the broken targets closes that without duplicating any traversal: a
-  link to either sentinel resolves in one pass and breaks in the other.
-- **Validation is the point of the feature.** `build_scripts/ai/validate-output.js`
-  runs a generated page through `build_scripts/schema.js`, the
-  `build_scripts/data-checks.js` invariants (link targets resolved against the
-  real page-key universe, lists of 3+ using bullets, unsafe URL schemes, the
-  Agency page staying inside Article 11), and `js/plain-language.js`'s
-  mandates. **Neither this nor CI contains the other, so a passing draft does
-  not mean "this would pass CI".** It is tighter on content: `validate.js`
-  never calls `analyzePlainLanguage()`, and the only CI-side plain-language
-  gate is a set of budgets in `tests/plain-language.test.js` — at most 15
-  mandatory failures corpus-wide, 3 per page, and any one rule failing at most
-  8 pages — so authored copy can carry a
-  mandate failure that would get a generated draft rejected. It is looser on
-  wiring, because it only ever sees one page object: dropping a passing draft
-  into `pages/` still needs the `import` in `js/page-data.js` and its
-  `[pageKey, menuLabel]` entry, which `bun run validate` checks and this does
-  not. On failure the specific issues are named
-  back to the model for **exactly one** retry; a bare "try again" reproduces the
-  same violation. Results always return 200 with their issues attached even
-  when invalid, because a draft failing one rule is still useful to a reviewer
-  who can see which rule.
-- **The system prompt must stay byte-stable.** `build_scripts/ai/prompts.js`
-  inlines the vendored `docs/source/sfgov-style/` corpus and carries a
-  `cache_control` breakpoint. Caching is a prefix match, so anything variable
-  in it — a timestamp, an unsorted page-key list — invalidates the cache on
-  every call. Request-specific material goes in the user turn.
-- **Never writes anything.** No filesystem write path, no review-state write,
-  no `pages/*.js` mutation. Standards manual §1.11 forbids automated approval,
-  and SF.gov's published AI guidelines require disclosing generative-AI use, so
-  every successful `generate` result carries a `disclosure` string. Scoped to
-  that response shape only — `capabilities` advertises the requirement as
-  `disclosureRequired: true`, `models` returns bare ids, and errors carry
-  none, so a client must not use the field's presence as its test for whether
-  a payload holds generated content. Both browser export paths do carry it:
-  _Download pages module_ and _Copy pages module_ emit the same
-  `buildPageModuleSource()` output, disclosure comment included.
-- **Tests**: `tests/ai-assist-server.test.js` spawns `server.ts` with
-  `ANTHROPIC_BASE_URL` pointed at a stub Anthropic endpoint, so the gates, the
-  retry loop, and the error mapping are covered with no API key and CI never
-  makes a paid call. `tests/ai-assist-schema.test.js` guards the hand-authored
-  structured-output JSON Schema against drifting from the Zod page schema.
+  if the draft travels with the instruction. Usage is summed across attempts
+  for the same reason: reporting only the last call understates exactly the
+  requests that cost the most.
+- **The draft is checked under two different sentinel keys.** `data-checks.js`
+  uses one `pages` object both for what to walk and for which targets resolve,
+  so filing the draft under `__generated__` made that string a resolvable
+  target. Running each check under `__generated__` and `__generated_probe__`
+  and unioning the broken targets closes that with no duplicated traversal.
+- **Validation is the feature.** `build_scripts/ai/validate-output.js` runs a
+  generated page through `build_scripts/schema.js`,
+  the `data-checks.js` invariants, and `js/plain-language.js`'s mandates — then
+  names the failures back to the model for exactly one retry. Results always
+  return 200 with issues attached, since a draft failing one rule still helps a
+  reviewer who can see which rule.
+- **The system prompt must stay byte-stable.** It inlines the vendored
+  `docs/source/sfgov-style/` corpus behind a `cache_control` breakpoint;
+  caching is a prefix match, so anything variable in it kills the cache.
+- **Never writes anything** — no filesystem, no review state, no `pages/*.js`.
+  Standards manual §1.11 forbids automated approval and SF.gov's AI guidelines
+  require disclosing generative-AI use, so every successful `generate` result
+  carries a `disclosure` string — scoped to that shape only (`capabilities`
+  advertises `disclosureRequired: true`, `models` returns bare ids, errors
+  carry none). Both browser export paths carry it: Download and Copy emit the
+  same `buildPageModuleSource()` output. So the field's presence is not a test
+  for whether a payload holds generated content.
+- **Tests**: `tests/ai-assist-server.test.js` (spawns `server.ts` against a stub
+  Anthropic endpoint — no API key, CI never makes a paid call) and
+  `tests/ai-assist-schema.test.js` (guards the structured-output schema against
+  drifting from the Zod page schema).
 
   **One test in that file carries a bounded retry and a 20s budget, and both are
   load-bearing** (fixed on `main` in #106). The Content-Length pre-check answers
@@ -2025,131 +1780,85 @@ it, and it fails closed rather than open.
   failure. Do not restore the default 5s budget, and do not narrow the catch back
   to `ECONNRESET`.
 
-- **Netlify** (`build:netlify`) has no server runtime, so the static deploy
-  simply has no AI — the same way it has no sync.
-
 ### RAG knowledge base (optional)
 
-`compliance-audit` is a second task on `/api/ai/generate`, sitting alongside
-`content` — a reviewer can ask for an AI-drafted compliance audit of the
-currently-open page, grounded in this repo's actual policy/style corpus
-rather than the model's unaided judgment. It reuses the same posture as the
-rest of the AI assist backend it's layered onto: additive, off unless
-configured, fails closed rather than open, never writes anything, and every
-result carries the same `disclosure` string `content` does.
+`compliance-audit` is a second `/api/ai/generate` task alongside `content`: a
+grounded compliance audit of the open page, citing this repo's own
+`docs/source/` corpus instead of the model's unaided judgment. Same posture as
+the rest of the AI backend — additive, off unless configured, fails closed,
+never writes anything, and every result carries the same `disclosure` string.
 
-- **The corpus lives in `docs/source/**/*.md`, and it is not filtered by
-  publication status.** `build_scripts/ingest-knowledge.js` globs every
-  markdown file under `docs/source/` except `README.md` files (folder-level
-  indexes, not corpus content) — including the one file named
-  `DRAFT-NOT-FOR-PUBLICATION`. That inclusion is a deliberate reviewer
-  decision, not an oversight: the alternative was an ingestion script quietly
-  applying its own editorial judgment about what counts as citable, which is
-  exactly the kind of unaccountable filtering this feature exists to avoid.
-  A draft can therefore surface as a cited source in an audit finding, same
-  as any other file in the corpus.
-- **Storage is one new table in the same SQLite file the sync backend
-  already uses**, not a second database. `knowledge_chunks` lives at the same
-  `DATA_DB_PATH` that holds `review_pages` — one connection, one file, one
-  volume to back up in production, rather than a second DB path to configure
-  and mount. The table definition lives in one shared helper,
-  `build_scripts/knowledge-schema.js`, used by both the write path
+- **Corpus is `docs/source/**/*.md`, `README.md` excluded, publication status
+  not filtered.** `build_scripts/ingest-knowledge.js` globs the whole tree
+  except folder-index `README.md` files — including the one file named
+  `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
+  alternative was the ingestion script silently deciding what counts as
+  citable, which is the failure mode this feature exists to avoid.
+- **One new table, same database as `review_pages`.** `knowledge_chunks`
+  lives in the same `DATA_DB_PATH` SQLite file — one connection, one volume —
+  rather than a second DB to configure. `build_scripts/knowledge-schema.js` is
+  the single table definition shared by the write path
   (`build_scripts/ingest-knowledge.js`) and the read path
-  (`build_scripts/ai/knowledge-retrieval.js`, opened by the running server),
-  so the two processes cannot define the table differently, and ingestion
-  never has to assume the server has run first.
-- **Chunking splits on headings first, then on size.**
-  `build_scripts/knowledge-chunking.js` splits each file on `##`/`###`
-  headings, keeping a section's ideas together, then further splits any
-  section over 500 words at paragraph boundaries with a 50-word overlap
-  between adjacent chunks — so a fact sitting near a chunk boundary doesn't
-  lose the context on either side of it. Every chunk is prefixed with its
-  heading path before it's embedded, so the embedded text and what's later
-  shown to the model both carry section context on their own, with no join
-  back to the source document needed to explain where a chunk came from.
-- **Embeddings are Gemini-only, and that constraint is why
-  `compliance-audit` needs `GEMINI_API_KEY` even on an Anthropic-only
-  deployment.** Anthropic has no embeddings API, so `provider-gemini.js`'s
-  `embedContent` is the only path to a vector in this codebase — regardless
-  of which provider actually _generates_ the audit text. Default model id is
-  `gemini-embedding-001`; `GEMINI_EMBEDDING_MODEL` overrides it. (This was
-  `text-embedding-004` until the first real `bun run ingest` against a real
-  key came back 404 — that id had been retired; `client.models.list()`
-  filtered to `embedContent` support is the authoritative way to check what a
-  given key can actually use, not the doc example it originally came from.)
-  A deployment that only ever configured `ANTHROPIC_API_KEY` for drafting pages will find
-  `compliance-audit` unavailable until a Gemini key is added, even though
-  Claude is perfectly capable of writing the audit itself.
-- **Retrieval is brute-force cosine similarity in plain JS, not a vector-index
-  extension.** `build_scripts/knowledge-search.js` ranks the whole corpus by
-  cosine similarity against the query embedding and takes the top matches.
-  At this corpus's size — an estimated 150-200 chunks — that's microseconds
-  of work, and a loadable extension like `sqlite-vec` would buy nothing here
-  while adding a native-binary deployment risk against Railway's runtime for
-  no measurable benefit. The function is dual-exported
-  (`window`/`module.exports`) like `js/review-merge.js` and
-  `js/plain-language.js`, so the ranking logic is unit-tested against
-  synthetic embeddings with no real Gemini call and no live database.
-- **Re-ingestion is idempotent per file, and always full, never
-  incremental.** `bun run ingest` deletes and reinserts a file's rows in one
-  transaction, and it reprocesses every file in the corpus on every run
-  rather than diffing for changes — so the whole table is rebuilt from
-  current `docs/source/` content and the current embedding model every time.
-  That makes `bun run ingest` always safe to re-run after editing
-  `docs/source/`, or after changing `GEMINI_EMBEDDING_MODEL`: there's no
-  stale mix of two embedding models to worry about, because a run either
-  finishes and replaces everything, or it doesn't run at all. Manual,
-  developer-triggered — like `bun run export` — not part of `bun run build`,
-  since `docs/source/` changes rarely and a real ingest needs a real
-  (billed) `GEMINI_API_KEY` call that has no place in CI.
+  (`build_scripts/ai/knowledge-retrieval.js`), so the two processes cannot
+  disagree on the schema, and ingestion never assumes the server ran first.
+- **Chunking splits on headings, then on size.**
+  `build_scripts/knowledge-chunking.js` splits on `##`/`###` headings, then
+  sub-splits anything over 500 words at paragraph boundaries with a 50-word
+  overlap, and prefixes every chunk with its heading path before embedding —
+  so a boundary fact keeps its context and a chunk carries its own section
+  location with no join back to the source file needed.
+- **Embeddings are Gemini-only** — Anthropic has no embeddings API — so
+  `compliance-audit` needs `GEMINI_API_KEY` even on a deployment generating
+  with Claude. Default model `gemini-embedding-001`, overridable via
+  `GEMINI_EMBEDDING_MODEL`. (Was `text-embedding-004` until a real `bun run
+ingest` run 404'd on it — retired; verify against `client.models.list()`
+  filtered to `embedContent` support, not a doc example, before trusting any
+  hardcoded id here again.)
+- **Retrieval is brute-force cosine similarity in JS, not a vector-index
+  extension.** `build_scripts/knowledge-search.js` ranks the full corpus
+  (~150-200 chunks) by cosine similarity in microseconds at this size; a
+  loadable extension like `sqlite-vec` would buy nothing here and adds a
+  native-binary deployment risk against Railway for no benefit. Dual-exported
+  like `js/review-merge.js`, so ranking is tested against synthetic embeddings
+  with no live Gemini call and no live DB.
+- **Re-ingestion is idempotent per file, and always full.** `bun run ingest`
+  deletes and reinserts each file's rows in one transaction, reprocessing
+  every file on every run rather than diffing — so a re-run after editing
+  `docs/source/` or changing `GEMINI_EMBEDDING_MODEL` is always safe, and no
+  stale mix of two embedding models can accumulate. Manual, like
+  `bun run export` — not part of `bun run build`, since it needs a real
+  (billed) Gemini call CI must not make.
 - **`GET /api/ai/capabilities` reports `knowledgeBase: {ready, chunkCount}`**
-  so the browser's empty state can tell apart two genuinely different
-  reasons `compliance-audit` might be unavailable: no `GEMINI_API_KEY` at
-  all, versus a key that's present but nobody has run `bun run ingest` yet.
-  Those want different copy, and collapsing them into one generic "not
-  available" would leave a reviewer who already has a working key unable to
-  tell whether they're missing configuration or just missing a command.
-- **Citations are checked against what was actually retrieved for that
-  request, not accepted as free text.** A finding's `citedChunkIds` names
-  chunk ids by their stable `${source_file}#${chunk_index}` form rather than
-  having the model restate a source or heading from memory — the one place
-  this feature could quietly fail at its own job is a citation that sounds
-  plausible but was never retrieved, or that misquotes what a real chunk
-  says. `build_scripts/ai/validate-compliance-audit.js`'s
-  `findInvalidCitations()` checks every cited id against the retrieved set
-  held for that request (not the whole table), and an empty `citedChunkIds`
-  array is rejected too — citing nothing is not a valid finding. A bad
-  citation feeds back into one retry turn naming exactly which finding cited
-  an unknown or missing id, mirroring `content`'s retry-with-named-issues
-  pattern; a finding that still carries a bad citation after that retry is
-  still returned (per this feature's "always resolves with the draft, valid
-  or not" rule) but flagged `valid: false` with the bad id named in `issues`,
-  so a reviewer sees exactly which finding not to trust rather than an audit
-  that silently omits it. The `source_file`/`heading_path` a reviewer
-  actually reads is resolved server-side from the matched chunk row, never
-  echoed back from the model, so the rendered citation is always real corpus
-  metadata even when the model's own citation attempt failed.
-- **The route gates on knowledge-base readiness specifically, separately
-  from the generic no-provider gate.** `hasConfiguredProvider()` still gates
-  every `/api/ai/generate` request first, same as `content`; past that,
-  `compliance-audit` has its own check — Gemini configured _and_
-  `knowledge_chunks` holding at least one row — and answers 501 with a
-  message naming which half is missing (no Gemini key at all, versus a key
-  but an empty table) rather than one undifferentiated failure.
-  `generateComplianceAudit()` itself (`build_scripts/ai/compliance-audit.js`)
-  is a sibling function to `generateContent()`, not a generalization of it:
-  it owns its own retry loop, structured the same way, rather than forcing
-  the one existing task's machinery to also fit a structurally different
-  validator.
-- **Never writes anything**, same as `content` — no filesystem write path, no
-  review-state write, no `pages/*.js` mutation. Every successful audit
-  result carries the same `disclosure` string `content` results do, for the
-  same reason: standards manual §1.11 forbids automated approval, and
-  SF.gov's published AI guidelines require disclosing generative-AI use.
-- See `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md` for
-  the full design rationale, including what was deliberately left out (a
-  corpus-wide embedding-model/version table, a task-dispatching registry
-  refactor of `generateContent()`) and why.
+  so the browser can distinguish "no Gemini key" from "key present, nobody's
+  run `bun run ingest` yet" — different states, different copy.
+- **Citations are checked against the retrieved set, not accepted as free
+  text.** Findings cite chunk ids (`${source_file}#${chunk_index}`), not a
+  restated source/heading — the failure mode this guards against is a
+  plausible-sounding citation that was never actually retrieved.
+  `build_scripts/ai/validate-compliance-audit.js`'s `findInvalidCitations()`
+  checks every cited id against what was retrieved for that request, and
+  rejects an empty `citedChunkIds` too. A bad citation triggers one retry
+  naming the specific finding and id; a finding still bad after that retry is
+  returned anyway (same "always resolves with the draft" rule as `content`)
+  but flagged `valid: false` with the bad id in `issues`. The
+  `source_file`/`heading_path` shown to a reviewer is resolved server-side
+  from the matched row, never echoed from the model.
+- **The route gates on knowledge-base readiness separately from the generic
+  no-provider gate.** `hasConfiguredProvider()` still gates first, same as
+  `content`; past that, `compliance-audit` checks Gemini-configured **and**
+  `knowledge_chunks` non-empty, answering 501 with which half is missing.
+  `generateComplianceAudit()` (`build_scripts/ai/compliance-audit.js`) is a
+  sibling to `generateContent()`, not a generalization of it — its own retry
+  loop, rather than bending the existing task's machinery to fit a second,
+  structurally different validator.
+- **Never writes anything**, same as `content` — no filesystem, no
+  review-state write, no `pages/*.js` mutation, and every successful audit
+  carries the same `disclosure` string for the same §1.11/AI-disclosure
+  reasons.
+- Full design rationale, including what was deliberately left out (a
+  corpus-wide embedding-model table, a task-dispatching registry refactor of
+  `generateContent()`), is in
+  `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md`.
 
 ### AI rewrite (optional)
 

@@ -4,14 +4,32 @@
 // and the post-render decoration entry points.
 //
 // Unlike tests/inline-content-edit-refresh.test.js's module under test, this
-// one needs real DOM behavior — real click/keydown/blur events bubbling up
-// to a delegated #mockPage listener, real Element.replaceWith(), real
-// <input>/<textarea> focus and value handling — so this file uses the real
-// happy-dom `window`/`document` that tests/helpers/browser-env.js already
-// registers globally, rather than replacing global.window wholesale the way
-// the refresh test does for its DOM-free module. It only ATTACHES the mock
-// dependencies (window.HHVC_DATA, window.ReviewUx.stateSync, etc.) onto that
-// real window.
+// one needs real DOM behavior — real click/keydown/focusout events bubbling
+// up to a delegated #mockPage listener, real Element.replaceWith(), a real
+// @editorjs/editorjs instance mounted into a contenteditable div — so this
+// file uses the real happy-dom `window`/`document` that
+// tests/helpers/browser-env.js already registers globally, rather than
+// replacing global.window wholesale the way the refresh test does for its
+// DOM-free module. It only ATTACHES the mock dependencies (window.HHVC_DATA,
+// window.ReviewUx.stateSync, etc.) onto that real window.
+//
+// This file used to drive a plain <input>/<textarea> widget synchronously
+// (widget.value = x; keydown(widget, 'Enter')). Phase 6 of the Editor.js
+// integration removed that widget entirely — openEditorJsEditor() is now the
+// only path — which makes every open/commit/cancel here asynchronous: a
+// click sets editingPath and inserts the (still-empty) holder <div>
+// synchronously, but @editorjs/editorjs itself is dynamically imported and
+// only fills the contenteditable in once editor.isReady resolves, and commit
+// only runs once editor.save() resolves. A throwaway probe confirmed
+// happy-dom CAN host a real Editor.js instance (mount, render prefilled
+// text, save) before this rewrite was attempted — see
+// waitForEditorBlock()/commitOpenField()/cancelOpenField() below, which poll
+// rather than assume synchronous completion. There is also no Enter-to-
+// commit path anymore for any field, single-line or not — Editor.js traps
+// Enter inside its own single-block guard — so every commit test uses a
+// focusout, matching openEditorJsEditor's holder-level 'focusout' listener
+// (js/inline-content-edit.js) rather than a 'blur' dispatched directly on a
+// widget the way the old tests did.
 //
 // js/inline-content-edit.js is a self-mounting IIFE (no module.exports), so
 // each test imports it via a cache-busting dynamic import() to get a fresh
@@ -22,6 +40,8 @@ const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
 require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
+require('../js/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
+require('../js/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
 // Imported once at file scope, not inside a test: js/ui-controls.js statically
 // imports js/state.js, which side-effect-loads the REAL js/page-data.js (all
 // 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
@@ -135,9 +155,73 @@ function click(el) {
   el.dispatchEvent(new window.MouseEvent('click', { bubbles: true }))
 }
 
-/** Dispatch a keydown event with the given key at an element. */
-function keydown(el, key) {
-  el.dispatchEvent(new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+/** Poll for the open field's contenteditable block. Measured, not assumed:
+    the block and its pre-filled text are already in the DOM well before
+    openEditorJsEditor's `await editor.isReady` resolves — existence alone is
+    therefore not proof the field is ready to receive input; see
+    setEditorBlockText's comment for what that gap actually breaks. */
+async function waitForEditorBlock(mockPage, { timeout = 1000, interval = 5 } = {}) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    const block = mockPage.querySelector('.inline-edit-editorjs-holder [contenteditable="true"]')
+    if (block) return block
+    await new Promise((resolve) => setTimeout(resolve, interval))
+  }
+  throw new Error('Editor.js block never appeared')
+}
+
+/** Replace the open field's entire text (mirrors the old widget's
+    `widget.value = x` — a contenteditable has no .value to set) and give
+    openEditorJsEditor's post-`editor.isReady` continuation — which attaches
+    the holder's 'focusout' commit listener used by
+    commitOpenField()/cancelOpenField() below — time to actually finish. This
+    settle delay is an empirical buffer, not a proven ordering guarantee: a
+    helper that dispatched the instant the block appeared reliably dispatched
+    before that listener was attached, and commit() then silently never ran —
+    no write, no error, no signal anything was wrong — for every field except
+    whichever one happened to win the race in a given run. `activeElement`
+    was tried as a more precise readiness signal first and rejected:
+    happy-dom never reflects Editor.js's own `.focus()` call on the
+    contenteditable, so that check simply timed out every time. No
+    deterministic readiness signal was found, so this remains a sleep tuned
+    against this machine's timing rather than a hard guarantee — the e2e
+    equivalent in tests/e2e/inline-content-edit.spec.js uses Playwright's
+    auto-retrying assertions instead and doesn't have this limitation. */
+async function setEditorBlockText(mockPage, text, { settle = 100 } = {}) {
+  const block = await waitForEditorBlock(mockPage)
+  await new Promise((resolve) => setTimeout(resolve, settle))
+  block.textContent = text
+  return block
+}
+
+/** Commit the open field via focusout — openEditorJsEditor's holder-level
+    'focusout' listener is what calls commit(), same as a reviewer blurring
+    away in a real browser. No relatedTarget means "focus left the editor
+    entirely", which is what a genuine commit needs (js/inline-content-
+    edit.js's holder.contains(nextFocus) guard). Waits for the same
+    post-isReady settle setEditorBlockText does (see its comment) before
+    dispatching — this is also the only wait point for tests that open a
+    field and commit it WITHOUT calling setEditorBlockText in between (e.g.
+    the unchanged-value case) — then waits again for commit()'s own async
+    work (editor.save() -> the adapter -> persist()/rerender()) to finish. */
+async function commitOpenField(mockPage, { settle = 100, wait = 100 } = {}) {
+  const block = await waitForEditorBlock(mockPage)
+  await new Promise((resolve) => setTimeout(resolve, settle))
+  block.dispatchEvent(new window.Event('focusout', { bubbles: true }))
+  await new Promise((resolve) => setTimeout(resolve, wait))
+}
+
+/** Cancel the open field via Escape — synchronous in openEditorJsEditor
+    (editor.destroy() has no async step) once the keydown listener is
+    actually attached, which needs the same post-isReady settle as
+    commitOpenField above. */
+async function cancelOpenField(mockPage, { settle = 100, wait = 10 } = {}) {
+  const block = await waitForEditorBlock(mockPage)
+  await new Promise((resolve) => setTimeout(resolve, settle))
+  block.dispatchEvent(
+    new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+  )
+  await new Promise((resolve) => setTimeout(resolve, wait))
 }
 
 describe('inline content edit: click-to-edit for scalar fields', () => {
@@ -152,45 +236,47 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     expect(inlineEdit.isEditing()).toBe(false)
   })
 
-  test('clicking a title field swaps it for a pre-filled <input>', async () => {
+  test('clicking a title field opens the Editor.js widget, pre-filled, synchronously marking isEditing', async () => {
     const { mockPage, inlineEdit } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     const h1 = mockPage.querySelector('[data-rewrite-field="title"]')
 
     click(h1)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget).not.toBeNull()
-    expect(widget.tagName).toBe('INPUT')
-    expect(widget.value).toBe('Original Title')
+    // openEditorJsEditor sets editingPath and inserts the (still-empty)
+    // holder synchronously, before the dynamic import of @editorjs/editorjs
+    // resolves — both are true immediately, with no wait needed.
+    const holder = mockPage.querySelector('[data-inline-edit-input]')
+    expect(holder).not.toBeNull()
     expect(inlineEdit.isEditing()).toBe(true)
+
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original Title')
   })
 
-  test('clicking a summary field swaps it for a pre-filled <textarea>', async () => {
+  test('clicking a summary field opens it pre-filled with the summary text', async () => {
     const { mockPage } = await mountInlineContentEdit()
     mockPage.innerHTML = '<p data-rewrite-field="summary">Original summary text.</p>'
     const p = mockPage.querySelector('[data-rewrite-field="summary"]')
 
     click(p)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget.tagName).toBe('TEXTAREA')
-    expect(widget.value).toBe('Original summary text.')
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original summary text.')
   })
 
-  test('clicking a section heading swaps it for a pre-filled <input>', async () => {
+  test('clicking a section heading opens it pre-filled with the heading text', async () => {
     const { mockPage } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h2 data-rewrite-field="sections.0.heading">Original Heading</h2>'
     const h2 = mockPage.querySelector('[data-rewrite-field="sections.0.heading"]')
 
     click(h2)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget.tagName).toBe('INPUT')
-    expect(widget.value).toBe('Original Heading')
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original Heading')
   })
 
-  test('clicking a paragraph swaps it for a pre-filled <textarea>', async () => {
+  test('clicking a paragraph opens it pre-filled with the paragraph text', async () => {
     const { mockPage } = await mountInlineContentEdit()
     mockPage.innerHTML =
       '<p data-rewrite-field="sections.0.paragraphs.0">Original paragraph text.</p>'
@@ -198,33 +284,30 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
 
     click(p)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget.tagName).toBe('TEXTAREA')
-    expect(widget.value).toBe('Original paragraph text.')
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original paragraph text.')
   })
 
-  test('clicking a bullet swaps it for a pre-filled <textarea>', async () => {
+  test('clicking a bullet opens it pre-filled with the bullet text', async () => {
     const { mockPage } = await mountInlineContentEdit()
     mockPage.innerHTML = '<li data-rewrite-field="sections.0.bullets.0">Original bullet text.</li>'
     const li = mockPage.querySelector('[data-rewrite-field="sections.0.bullets.0"]')
 
     click(li)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget.tagName).toBe('TEXTAREA')
-    expect(widget.value).toBe('Original bullet text.')
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original bullet text.')
   })
 
-  test('clicking a primaryCta field swaps it for a pre-filled <input>', async () => {
+  test('clicking a primaryCta field opens it pre-filled with the CTA label', async () => {
     const { mockPage } = await mountInlineContentEdit()
     mockPage.innerHTML = '<a data-rewrite-field="primaryCta">Original CTA</a>'
     const a = mockPage.querySelector('[data-rewrite-field="primaryCta"]')
 
     click(a)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget.tagName).toBe('INPUT')
-    expect(widget.value).toBe('Original CTA')
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original CTA')
   })
 
   test('clicking a hero CTA rendered as an external <a href> opens the editor and prevents navigation', async () => {
@@ -246,11 +329,11 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
     anchor.dispatchEvent(event)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget).not.toBeNull()
-    expect(widget.tagName).toBe('INPUT')
-    expect(widget.value).toBe('Original CTA')
+    const holder = mockPage.querySelector('[data-inline-edit-input]')
+    expect(holder).not.toBeNull()
     expect(event.defaultPrevented).toBe(true)
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original CTA')
   })
 
   test('clicking a hero CTA rendered as an internal-target <button> still opens the editor (regression guard)', async () => {
@@ -269,10 +352,10 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
     button.dispatchEvent(event)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget).not.toBeNull()
-    expect(widget.tagName).toBe('INPUT')
-    expect(widget.value).toBe('Original CTA')
+    const holder = mockPage.querySelector('[data-inline-edit-input]')
+    expect(holder).not.toBeNull()
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original CTA')
     // Deliberately NOT asserting event.defaultPrevented here. This module's
     // own guard is `if (navigatingAnchor) event.preventDefault()`, scoped to
     // an `a[href]` ancestor — a no-op for this button, which has none — so it
@@ -312,35 +395,33 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const event = new window.MouseEvent('click', { bubbles: true, cancelable: true })
     inlineLink.dispatchEvent(event)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    expect(widget).not.toBeNull()
-    expect(widget.tagName).toBe('TEXTAREA')
-    expect(widget.value).toBe('Original paragraph text.')
+    const holder = mockPage.querySelector('[data-inline-edit-input]')
+    expect(holder).not.toBeNull()
     expect(event.defaultPrevented).toBe(true)
+    const block = await waitForEditorBlock(mockPage)
+    expect(block.textContent).toBe('Original paragraph text.')
   })
 
-  test('committing a title edit via Enter writes page.title, persists, and re-renders', async () => {
+  test('committing a title edit writes page.title, persists, and re-renders', async () => {
     const { mockPage, page, renderPageCalls, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
+    await setEditorBlockText(mockPage, 'New Title')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New Title'
-    keydown(widget, 'Enter')
+    await commitOpenField(mockPage)
 
     expect(page.title).toBe('New Title')
     expect(getPersistCalls()).toBe(1)
     expect(renderPageCalls).toEqual([{ key: 'testPage', skipHistory: true }])
   })
 
-  test('committing a summary edit via blur writes page.summary, persists, and re-renders', async () => {
+  test('committing a summary edit writes page.summary, persists, and re-renders', async () => {
     const { mockPage, page, renderPageCalls, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<p data-rewrite-field="summary">Original summary text.</p>'
     click(mockPage.querySelector('[data-rewrite-field="summary"]'))
+    await setEditorBlockText(mockPage, 'New summary text.')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New summary text.'
-    widget.dispatchEvent(new window.Event('blur'))
+    await commitOpenField(mockPage)
 
     expect(page.summary).toBe('New summary text.')
     expect(getPersistCalls()).toBe(1)
@@ -351,10 +432,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const { mockPage, page } = await mountInlineContentEdit()
     mockPage.innerHTML = '<a data-rewrite-field="primaryCta">Original CTA</a>'
     click(mockPage.querySelector('[data-rewrite-field="primaryCta"]'))
+    await setEditorBlockText(mockPage, 'New CTA')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New CTA'
-    keydown(widget, 'Enter')
+    await commitOpenField(mockPage)
 
     expect(realUtils.getPrimaryCta(page)).toBe('New CTA')
   })
@@ -363,10 +443,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const { mockPage, page } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h2 data-rewrite-field="sections.0.heading">Original Heading</h2>'
     click(mockPage.querySelector('[data-rewrite-field="sections.0.heading"]'))
+    await setEditorBlockText(mockPage, 'New Heading')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New Heading'
-    keydown(widget, 'Enter')
+    await commitOpenField(mockPage)
 
     expect(page.sections[0].heading).toBe('New Heading')
   })
@@ -376,10 +455,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     mockPage.innerHTML =
       '<p data-rewrite-field="sections.0.paragraphs.0">Original paragraph text.</p>'
     click(mockPage.querySelector('[data-rewrite-field="sections.0.paragraphs.0"]'))
+    await setEditorBlockText(mockPage, 'New paragraph text.')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New paragraph text.'
-    widget.dispatchEvent(new window.Event('blur'))
+    await commitOpenField(mockPage)
 
     expect(page.sections[0].paragraphs[0]).toEqual({
       text: 'New paragraph text.',
@@ -392,10 +470,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const { mockPage, page } = await mountInlineContentEdit()
     mockPage.innerHTML = '<li data-rewrite-field="sections.0.bullets.0">Original bullet text.</li>'
     click(mockPage.querySelector('[data-rewrite-field="sections.0.bullets.0"]'))
+    await setEditorBlockText(mockPage, 'New bullet text.')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New bullet text.'
-    widget.dispatchEvent(new window.Event('blur'))
+    await commitOpenField(mockPage)
 
     expect(page.sections[0].bullets[0]).toEqual({
       text: 'New bullet text.',
@@ -413,11 +490,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     mockPage.innerHTML =
       '<p data-rewrite-field="sections.0.paragraphs.0">Original paragraph text.</p>'
     click(mockPage.querySelector('[data-rewrite-field="sections.0.paragraphs.0"]'))
+    await waitForEditorBlock(mockPage) // opened, but never edited
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    // No change to widget.value — commit via blur with the same text the
-    // editor opened with.
-    widget.dispatchEvent(new window.Event('blur'))
+    await commitOpenField(mockPage)
 
     expect(page.sections[0].paragraphs[0]).toBe('Original paragraph text.')
     expect(getPersistCalls()).toBe(0)
@@ -430,14 +505,20 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     // these three fields, but updateMockupTextFromSavedState
     // (js/ux-improvements-state-sync.js) only reapplies a TRUTHY saved
     // value, so a cleared field looked saved for the session and then
-    // silently reverted to the authored value on the next reload.
+    // silently reverted to the authored value on the next reload. This
+    // guard is exercised end to end in tests/e2e/inline-content-edit.spec.js
+    // too, but only against the real browser; this is the unit-level check
+    // of openEditorJsEditor's own isPageLevelScalar branch. The console
+    // warning this test (and the blank-paragraph test below) prints —
+    // `Block «paragraph» skipped because saved data is invalid` — is
+    // Editor.js's own validation reacting to the emptied block; it's
+    // expected here, not a sign anything is wrong.
     const { mockPage, page, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
+    await setEditorBlockText(mockPage, '   ')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = '   '
-    keydown(widget, 'Enter')
+    await commitOpenField(mockPage)
 
     expect(page.title).toBe('Original Title')
     expect(getPersistCalls()).toBe(0)
@@ -448,10 +529,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     mockPage.innerHTML =
       '<p data-rewrite-field="sections.0.paragraphs.0">Original paragraph text.</p>'
     click(mockPage.querySelector('[data-rewrite-field="sections.0.paragraphs.0"]'))
+    await setEditorBlockText(mockPage, '')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = ''
-    widget.dispatchEvent(new window.Event('blur'))
+    await commitOpenField(mockPage)
 
     expect(page.sections[0].paragraphs[0]).toEqual({
       text: '',
@@ -464,24 +544,22 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const { mockPage, page, renderPageCalls, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<p data-rewrite-field="summary">Original summary text.</p>'
     click(mockPage.querySelector('[data-rewrite-field="summary"]'))
+    await setEditorBlockText(mockPage, 'Should not be saved.')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'Should not be saved.'
-    keydown(widget, 'Escape')
+    await cancelOpenField(mockPage)
 
     expect(page.summary).toBe('Original summary text.')
     expect(getPersistCalls()).toBe(0)
     expect(renderPageCalls).toEqual([{ key: 'testPage', skipHistory: true }])
   })
 
-  test('Escape on an <input>-backed field also cancels without writing', async () => {
+  test('Escape on a title field also cancels without writing', async () => {
     const { mockPage, page, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
+    await setEditorBlockText(mockPage, 'Should not be saved.')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'Should not be saved.'
-    keydown(widget, 'Escape')
+    await cancelOpenField(mockPage)
 
     expect(page.title).toBe('Original Title')
     expect(getPersistCalls()).toBe(0)
@@ -492,9 +570,9 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
     expect(inlineEdit.isEditing()).toBe(true)
+    await waitForEditorBlock(mockPage)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    keydown(widget, 'Enter')
+    await commitOpenField(mockPage)
 
     expect(inlineEdit.isEditing()).toBe(false)
   })
@@ -503,24 +581,30 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     const { mockPage, inlineEdit } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
+    await waitForEditorBlock(mockPage)
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    keydown(widget, 'Escape')
+    await cancelOpenField(mockPage)
 
     expect(inlineEdit.isEditing()).toBe(false)
   })
 
-  test('Enter then blur on the same input commits only once (no double-save)', async () => {
+  test('a second focusout on the same field commits only once (no double-save)', async () => {
+    // The old widget's version of this guard was "Enter then blur don't
+    // double-fire" — there's no Enter-commit anymore, so the equivalent
+    // race here is two focusout events reaching the same field (e.g. a
+    // stray event after the holder's own listener already ran once).
+    // openEditorJsEditor's `settled` flag inside commit() is what this
+    // proves: it's checked and set before any async work starts, so a
+    // second call is a no-op even though editor.save() from the first call
+    // may still be in flight.
     const { mockPage, page, renderPageCalls, getPersistCalls } = await mountInlineContentEdit()
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
+    const block = await setEditorBlockText(mockPage, 'New Title')
 
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New Title'
-    keydown(widget, 'Enter')
-    // Enter's commit already replaced `widget` in the DOM via target.replaceWith();
-    // simulate the blur a real browser would still fire on the detached node.
-    widget.dispatchEvent(new window.Event('blur'))
+    block.dispatchEvent(new window.Event('focusout', { bubbles: true }))
+    block.dispatchEvent(new window.Event('focusout', { bubbles: true }))
+    await new Promise((resolve) => setTimeout(resolve, 30))
 
     expect(page.title).toBe('New Title')
     expect(getPersistCalls()).toBe(1)
@@ -535,8 +619,11 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
     click(mockPage.querySelector('[data-rewrite-field="summary"]'))
 
-    const widgets = mockPage.querySelectorAll('[data-inline-edit-input]')
-    expect(widgets.length).toBe(1)
+    // editingPath is set synchronously by the FIRST click, before Editor.js's
+    // own async mount even starts — so the second click's `if (editingPath)
+    // return` guard fires immediately too, with no wait needed.
+    const holders = mockPage.querySelectorAll('[data-inline-edit-input]')
+    expect(holders.length).toBe(1)
   })
 
   test('ensureBound is idempotent: calling it twice does not double-bind the click listener', async () => {
@@ -546,12 +633,12 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
 
     mockPage.innerHTML = '<h1 data-rewrite-field="title">Original Title</h1>'
     click(mockPage.querySelector('[data-rewrite-field="title"]'))
-    const widget = mockPage.querySelector('[data-inline-edit-input]')
-    widget.value = 'New Title'
-    keydown(widget, 'Enter')
+    await setEditorBlockText(mockPage, 'New Title')
 
-    // A double-bound listener would run openScalarEditor/commit twice per
-    // click, which would show up as two render calls for one Enter commit.
+    await commitOpenField(mockPage)
+
+    // A double-bound listener would run openEditorJsEditor/commit twice per
+    // click, which would show up as two render calls for one commit.
     expect(renderPageCalls.length).toBe(1)
     expect(page.title).toBe('New Title')
   })
@@ -1078,7 +1165,7 @@ describe('inline content edit: decoration controls are excluded from PNG export'
     // data-export-exclude — every persistent decoration control this module
     // renders must carry it, or it leaks into a reviewer's exported PNG
     // (which is meant to represent the page under review, not this tool's
-    // own review-time chrome). The transient edit widget (scalarEditorHtml)
+    // own review-time chrome). The transient Editor.js holder (editorJsHolderHtml)
     // is deliberately NOT included here: excluding it would drop the field's
     // live text from an export taken mid-edit, not just strip chrome around it.
     const render = window.InlineEdit.render

@@ -115,6 +115,7 @@ import './reading-level.js'
 import './review-state-store.js'
 import './review-merge.js'
 import './inline-content-edit-data.js'
+import './inline-content-edit-adapter.js'
 import './review-state-sync.js'
 
 // ---------------------------------------------------------------------------
@@ -161,6 +162,7 @@ import './ai-assist.js'
 import './ai-rewrite-render.js'
 import './ai-rewrite.js'
 import './inline-content-edit-render.js'
+import './inline-content-edit-link-tool.js'
 import './inline-content-edit.js'
 
 // PNG export of the mockups. Imported after the review layers because it uses

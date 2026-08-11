@@ -32,18 +32,44 @@
     return editingPath !== null
   }
 
+  let editorJsModulePromise = null
   /**
-   * Multi-line fields get a <textarea> (Enter would fight normal multi-line
-   * typing); everything else gets a single-line <input> committed on Enter.
-   * @param {string} path
-   * @returns {'input'|'textarea'}
+   * Dynamically import @editorjs/editorjs on first use, mirroring
+   * js/review-insights-charts.js's ECharts precedent — kept out of the
+   * initial bundle since most reviewers never open an editor, and Editor.js
+   * is real weight against a tool whose initial-load budget is protected.
+   * @returns {Promise<Function>} the EditorJS class
    */
-  function widgetTagFor(path) {
-    if (path === 'summary') return 'textarea'
-    if (path === 'title' || path === 'primaryCta') return 'input'
-    if (/\.heading$/.test(path)) return 'input'
-    // A single paragraph or bullet item path, e.g. 'sections.2.paragraphs.1'.
-    return 'textarea'
+  function loadEditorJs() {
+    if (!editorJsModulePromise) {
+      editorJsModulePromise = import('@editorjs/editorjs').then((mod) => mod.default)
+    }
+    return editorJsModulePromise
+  }
+
+  /**
+   * Map a data-rewrite-field path to js/inline-content-edit-adapter.js's
+   * FIELD_TYPES vocabulary: 'paragraph'/'bullet' for a numeric-suffixed
+   * array item path, otherwise the page-level field name itself.
+   * @param {string} path
+   * @returns {string}
+   */
+  function editorFieldTypeFor(path) {
+    if (path === 'title' || path === 'summary' || path === 'primaryCta') return path
+    if (/\.heading$/.test(path)) return 'heading'
+    return /\.bullets\.\d+$/.test(path) ? 'bullet' : 'paragraph'
+  }
+
+  /**
+   * Whether a fieldType (per editorFieldTypeFor above) resolves to the
+   * {text, unverified, unverifiedReason} tagged-object shape rather than a
+   * plain string — mirrors js/inline-content-edit-adapter.js's own
+   * ITEM_FIELD_TYPES split.
+   * @param {string} fieldType
+   * @returns {boolean}
+   */
+  function isItemFieldType(fieldType) {
+    return fieldType === 'paragraph' || fieldType === 'bullet'
   }
 
   /**
@@ -263,7 +289,8 @@
       const newField = document.querySelector(
         `#mockPage [data-rewrite-field="${CSS.escape(`${containerPath}.${newIndex}`)}"]`
       )
-      if (newField) openScalarEditor(newField)
+      if (!newField) return
+      openEditorJsEditor(newField)
     }
     // persist() just wrote this page's section_edits to localStorage, which
     // now includes the item being added here — so the SAME render this
@@ -536,12 +563,19 @@
     })
   }
 
+  let editorJsHolderCounter = 0
+
   /**
-   * Open a scalar field's editor in place of its rendered element.
+   * Open a scalar field's editor using @editorjs/editorjs.
+   * js/inline-content-edit-adapter.js is the serialization boundary this
+   * function is built around: Editor.js's block-JSON output never becomes
+   * the storage format, only a transient editing representation, so every
+   * value this function ends up writing is exactly the shape
+   * writeScalarValue already writes for the plain-widget path.
    * @param {HTMLElement} target the element carrying data-rewrite-field
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  function openScalarEditor(target) {
+  async function openEditorJsEditor(target) {
     const path = target.getAttribute('data-rewrite-field')
     if (!path || editingPath) return
     const key = window.utils.getCurrentKey()
@@ -550,42 +584,154 @@
 
     editingPath = path
     const value = readScalarValue(page, path)
-    const tag = widgetTagFor(path)
-    const widgetHtml = render.scalarEditorHtml({ tag, value, path })
+    const adapter = window.inlineEditAdapter
+    const fieldType = editorFieldTypeFor(path)
+    const outputData = adapter.pageValueToEditorData(fieldType, value)
+
+    const holderId = `inline-edit-editorjs-${++editorJsHolderCounter}`
+    const widgetHtml = render.editorJsHolderHtml({ path, id: holderId })
     const wrapper = document.createElement('span')
     wrapper.innerHTML = widgetHtml
-    const widget = wrapper.firstElementChild
-    target.replaceWith(widget)
-    widget.focus()
-    // Move the caret to the end rather than selecting-all, so a reviewer
-    // fixing a typo at the end of a long paragraph doesn't have to retype
-    // it entirely because their first keystroke replaced a selection.
-    if (typeof widget.setSelectionRange === 'function') {
-      widget.setSelectionRange(widget.value.length, widget.value.length)
+    const holder = wrapper.firstElementChild
+    target.replaceWith(holder)
+
+    const EditorJS = await loadEditorJs()
+    // The click that opened this editor may have been followed by a second
+    // click, a navigation, or a page delete while the import above was in
+    // flight — editingPath !== path means someone else already resolved
+    // this edit, and the holder built above may already be detached from
+    // the live #mockPage. Continuing past this point would mount a live
+    // Editor.js instance into stale DOM.
+    if (editingPath !== path || !document.body.contains(holder)) return
+
+    let blockGuardActive = false
+    const editor = new EditorJS({
+      holder: holderId,
+      data: outputData,
+      autofocus: true,
+      // Only paragraph/bullet items get bold/link formatting — title,
+      // summary, primaryCta, and heading render through a bare escapeHtml()
+      // with no formatMarkdown() call (js/page-render.js:216,219,560,631),
+      // so offering Bold or Link there would visibly format text while
+      // editing and then silently revert to plain on commit (js/inline-
+      // content-edit-adapter.js's editingHtmlToPlainText strips both,
+      // correctly, since the renderer could never show them anyway) —
+      // confusing rather than useful. The explicit ['bold', 'hhvcLink']
+      // array (rather than Editor.js's boolean `true`, which would also
+      // enable its own built-in 'link' — a block-level preview card, not an
+      // inline anchor) is what keeps js/inline-content-edit-link-tool.js's
+      // custom tool the only link affordance offered; registering it in
+      // `tools` below with `inlineToolbar: false` for scalar fields is
+      // harmless, since a tool never referenced in the toolbar array is
+      // never shown regardless of being registered.
+      inlineToolbar: isItemFieldType(fieldType) ? ['bold', 'hhvcLink'] : false,
+      minHeight: 0,
+      tools: { hhvcLink: window.InlineEdit.LinkTool },
+      onChange: (api) => {
+        // Enforce the single-block constraint every field this feature
+        // edits requires (see the integration plan's "Instance
+        // granularity" design: a plain string/tagged-object has no home
+        // for a second block). Editor.js has no built-in cap on block
+        // count, so a paste or an Enter keypress is trimmed back down here.
+        // Re-entrancy guarded, since deleting a block itself fires
+        // onChange again.
+        if (blockGuardActive) return
+        const count = api.blocks.getBlocksCount()
+        if (count <= 1) return
+        blockGuardActive = true
+        for (let i = count - 1; i >= 1; i--) api.blocks.delete(i)
+        blockGuardActive = false
+      },
+    })
+
+    // e2e-only hook: exposes the live instance on its own holder (never a
+    // shared/global slot, so nothing to go stale across separate open
+    // editors) so tests can trigger Editor.js's OWN inline-toolbar open path
+    // (editor.inlineToolbar.open()) directly. Editor.js only populates the
+    // toolbar's tool buttons after its own mousedown-driven
+    // BlockManager.setCurrentBlockByChildNode has run (UI.documentTouched) —
+    // a synthetic Playwright selection with no real mousedown on the
+    // redactor leaves that unset, so the toolbar element appears with zero
+    // buttons. No production code path reads this property.
+    holder.__inlineEditEditor = editor
+
+    try {
+      await editor.isReady
+    } catch (err) {
+      // A real failure mode per Editor.js's own isReady contract, not
+      // hypothetical — fall back to cancelling this edit rather than
+      // leaving the reviewer looking at a dead holder with nothing to type
+      // into.
+      editingPath = null
+      rerender()
+      return
+    }
+    if (editingPath !== path || !document.body.contains(holder)) {
+      editor.destroy()
+      return
     }
 
-    const commit = () => {
-      if (editingPath !== path) return // already committed/cancelled once
-      const newValue = widget.value
-      editingPath = null
-      if (newValue === value) {
-        // Nothing actually changed. Writing it anyway would still run
-        // through writeScalarValue's paragraph/bullet branch, which tags a
-        // plain string as {text, unverified: true, ...} — showing an
-        // "Unverified" pill on copy the reviewer never touched.
+    let settled = false
+    const commit = async () => {
+      if (settled) return
+      settled = true
+      if (editingPath !== path) {
+        editor.destroy()
+        return
+      }
+      let outputValue
+      try {
+        outputValue = await editor.save()
+      } catch (err) {
+        editingPath = null
+        editor.destroy()
         rerender()
         return
       }
-      // title/summary/primaryCta have no schema slot to distinguish
-      // "explicitly cleared" from "never edited": updateMockupTextFromSaved-
-      // State (js/ux-improvements-state-sync.js) and
-      // collectCurrentPageReviewState's own snapshot of these same three
-      // fields both guard on truthiness, so a blank commit would appear to
-      // save for this session and then silently revert to the authored
-      // value on the next reload or navigation. Refuse rather than accept a
-      // save that can't reliably persist.
+      // Editor.js's own blur-triggered internal cleanup on the
+      // contenteditable runs BEFORE this async commit() ever starts (it
+      // fires as part of the same native blur that triggers the holder's
+      // 'focusout' listener below, in the target phase, ahead of any
+      // ancestor-level bubble-phase listener) — and it strips a link
+      // js/inline-content-edit-link-tool.js just inserted, using a
+      // narrower rule set than editor.save()'s own sanitizer: measured live
+      // via Playwright, calling editor.save() directly immediately after
+      // insertion preserves the anchor perfectly (proving this feature's
+      // sanitize() config is correct), while the SAME save() call made
+      // after a real blur has already occurred returns it silently
+      // stripped to plain text — no thrown error, no sanitizer-config
+      // fix available on this side of the library. commitLink() therefore
+      // captures the block's HTML itself at insertion time, before that
+      // blur can run, and stashes it on the holder; prefer that snapshot
+      // here over whatever editor.save() returned. Known gap: further
+      // edits made after a link commit but before the field is blurred
+      // aren't reflected in this stash — acceptable for now given the
+      // primary add-link-then-leave-the-field flow this exists for.
+      const pendingLinkHtml = holder.dataset.hhvcPendingLinkHtml
+      if (pendingLinkHtml !== undefined) {
+        delete holder.dataset.hhvcPendingLinkHtml
+        outputValue = { blocks: [{ type: 'paragraph', data: { text: pendingLinkHtml } }] }
+      }
+      // Re-check after the async save — the reviewer may have navigated to
+      // a different page while save() was pending, the same race
+      // removeListItem's undo callback already guards against above.
+      const stillCurrentPage = window.utils.getCurrentKey() === key
+      const newValue = adapter.editorDataToPageValue(fieldType, outputValue)
+      editingPath = null
+      editor.destroy()
+      if (!stillCurrentPage) return
+
+      const newText = isItemFieldType(fieldType) ? newValue.text : newValue
+      if (newText === value) {
+        // Nothing actually changed — compare the adapter's serialized text
+        // against the value captured at open, not the raw OutputData,
+        // since Editor.js's own block metadata can differ block-for-block
+        // even on a true no-op open/close.
+        rerender()
+        return
+      }
       const isPageLevelScalar = path === 'title' || path === 'summary' || path === 'primaryCta'
-      if (isPageLevelScalar && newValue.trim() === '') {
+      if (isPageLevelScalar && newText.trim() === '') {
         window.showToast?.(
           "Title, summary, and the primary CTA can't be cleared to blank — edit the text instead of deleting it.",
           'warn'
@@ -593,36 +739,57 @@
         rerender()
         return
       }
-      writeScalarValue(page, path, newValue)
+      if (isItemFieldType(fieldType)) {
+        setByPath(page, path, newValue)
+      } else {
+        writeScalarValue(page, path, newValue)
+      }
       persist()
       rerender()
     }
     const cancel = () => {
-      if (editingPath !== path) return
+      if (settled) return
+      settled = true
+      if (editingPath !== path) {
+        editor.destroy()
+        return
+      }
       editingPath = null
+      editor.destroy()
       rerender()
     }
 
-    if (tag === 'input') {
-      widget.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault()
-          commit()
-        } else if (event.key === 'Escape') {
-          event.preventDefault()
-          cancel()
-        }
-      })
-      widget.addEventListener('blur', commit)
-    } else {
-      widget.addEventListener('blur', commit)
-      widget.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-          event.preventDefault()
-          cancel()
-        }
-      })
-    }
+    holder.addEventListener('focusout', (event) => {
+      // Editor.js's inline-formatting toolbar and any tool popover render as
+      // a DESCENDANT of this holder — Editor.js nests its own .codex-editor
+      // wrapper INSIDE the element it's given as `holder`, with the toolbar
+      // and any tool popover nested further inside that — not as a sibling
+      // outside holder's subtree. A plain blur/focusout with no containment
+      // check would commit the instant a reviewer clicked a toolbar tool
+      // (Bold, or js/inline-content-edit-link-tool.js's Link), since that
+      // click moves focus off the contenteditable block and onto the tool's
+      // own button/input, still within the same holder.
+      //
+      // holder.contains(nextFocus) is the correct check for that. An earlier
+      // version instead walked UP from holder via .closest('.codex-editor')
+      // — which can never match, since .codex-editor is a DESCENDANT of
+      // holder, never an ancestor, so ownRoot was always null and the check
+      // unconditionally committed on every focusout. Measured live with real
+      // (non-synthetic) Playwright clicks: clicking the Link tool's button
+      // destroyed the whole field before its target-entry input ever
+      // appeared, every time — a real Phase 4 bug, not a test-harness
+      // artifact, and one Bold had already been carrying silently with zero
+      // e2e coverage of any toolbar-tool click.
+      const nextFocus = event.relatedTarget
+      if (nextFocus instanceof Element && holder.contains(nextFocus)) return
+      commit()
+    })
+    holder.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        cancel()
+      }
+    })
   }
 
   /**
@@ -713,7 +880,7 @@
     // 'sections.2.paragraphs' (Task 7's add-target) is never itself a
     // data-rewrite-field attribute value — only individual items and the
     // three page-level fields are — so no extra guard is needed here.
-    openScalarEditor(field)
+    openEditorJsEditor(field)
   }
 
   /**
@@ -773,5 +940,10 @@
     init()
   }
 
-  window.inlineEdit = { ensureBound, isEditing, decorateEditedFields, decorateListControls }
+  window.inlineEdit = {
+    ensureBound,
+    isEditing,
+    decorateEditedFields,
+    decorateListControls,
+  }
 })()

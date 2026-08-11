@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@editorjs/editorjs": "^2.31.6",
     "@happy-dom/global-registrator": "^20.11.1",
     "@playwright/test": "^1.61.1",
     "@sfgov/design-system": "0.0.1",
@@ -64,7 +65,7 @@
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
     "// test": "Runs the test suite using Bun's test runner",
-    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/csv-edited-fields-roundtrip.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/card-inheritance.test.js tests/review-merge.test.js tests/page-registry-data.test.js tests/inline-content-edit-data.test.js tests/inline-content-edit-refresh.test.js tests/inline-content-edit.test.js tests/inline-content-edit-roundtrip.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/decision-vocabulary.test.js tests/knowledge-chunking.test.js tests/knowledge-search.test.js tests/validate-compliance-audit.test.js tests/doc-counts.test.js tests/mockup-image-export.test.js tests/review-insights-data.test.js tests/review-insights-charts.test.js tests/review-insights-render.test.js tests/review-ops-data.test.js tests/ai-assist-schema.test.js tests/ai-assist-env.test.js tests/ai-assist-providers.test.js tests/ai-assist-server.test.js tests/ai-assist-validate-rewrite.test.js",
+    "test": "bun test tests/utils.test.js tests/data-validation.test.js tests/page-render.test.js tests/csv.test.js tests/csv-edited-fields-roundtrip.test.js tests/review-state-schema.test.js tests/reading-level.test.js tests/plain-language.test.js tests/page-import-checks.test.js tests/card-inheritance.test.js tests/review-merge.test.js tests/page-registry-data.test.js tests/inline-content-edit-data.test.js tests/inline-content-edit-adapter.test.js tests/inline-content-edit-refresh.test.js tests/inline-content-edit.test.js tests/inline-content-edit-roundtrip.test.js tests/review-api-server.test.js tests/review-state-sync.test.js tests/decision-vocabulary.test.js tests/knowledge-chunking.test.js tests/knowledge-search.test.js tests/validate-compliance-audit.test.js tests/doc-counts.test.js tests/mockup-image-export.test.js tests/review-insights-data.test.js tests/review-insights-charts.test.js tests/review-insights-render.test.js tests/review-ops-data.test.js tests/ai-assist-schema.test.js tests/ai-assist-env.test.js tests/ai-assist-providers.test.js tests/ai-assist-server.test.js tests/ai-assist-validate-rewrite.test.js",
     "// test:e2e": "Playwright end-to-end tests (builds, then serves dist/ on :8080)",
     "test:e2e": "playwright test"
   }

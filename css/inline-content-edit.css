@@ -2,8 +2,8 @@
    Inline content editing
    ==========================================================================
    Styling for the click-to-edit widgets (js/inline-content-edit.js /
-   js/inline-content-edit-render.js): the swapped-in input/textarea, the
-   "Edited" badge for title/summary/heading/CTA (fields with no `unverified`
+   js/inline-content-edit-render.js): the swapped-in @editorjs/editorjs
+   holder, the "Edited" badge for title/summary/heading/CTA (fields with no `unverified`
    schema slot to reuse the existing Unverified-pill mechanism), and the
    add/remove/reset controls for section paragraphs and bullets.
 
@@ -27,11 +27,6 @@
 .inline-edit-input:focus {
   outline: 2px solid var(--brand-primary);
   outline-offset: 1px;
-}
-
-textarea.inline-edit-input {
-  resize: vertical;
-  min-height: 4.5em;
 }
 
 /* The "Edited" badge — CSS-only signal for fields with no `unverified`
@@ -121,10 +116,76 @@ textarea.inline-edit-input {
   cursor: pointer;
 }
 
+/* The @editorjs/editorjs holder (js/inline-content-edit-render.js's
+   editorJsHolderHtml, mounted by js/inline-content-edit.js's
+   openEditorJsEditor — the rollout-toggle-gated Phase 2 path). It already
+   carries .inline-edit-input for the shared border/background/focus rules
+   above; these rules reset Editor.js's own default block padding/margins so
+   the mounted editor visually converges on the same look as the plain
+   <input>/<textarea> widget it replaces, and hide the block-level "+"/
+   settings/drag-handle chrome every instance this feature opens has no use
+   for — every field here is constrained to a single block (see
+   openEditorJsEditor's onChange guard), so Editor.js's multi-block
+   affordances would offer a control that does nothing useful. */
+.inline-edit-editorjs-holder .codex-editor {
+  font: inherit;
+  color: inherit;
+}
+
+.inline-edit-editorjs-holder .ce-block__content,
+.inline-edit-editorjs-holder .ce-toolbar__content {
+  max-width: none;
+  margin: 0;
+}
+
+.inline-edit-editorjs-holder .ce-paragraph {
+  padding: 0;
+  font: inherit;
+  color: var(--text-primary);
+}
+
+.inline-edit-editorjs-holder .ce-toolbar__plus,
+.inline-edit-editorjs-holder .ce-toolbar__settings-btn {
+  display: none;
+}
+
+.inline-edit-editorjs-holder .ce-inline-toolbar {
+  background: var(--surface-panel);
+  border: 1px solid var(--brand-primary);
+  color: var(--text-primary);
+}
+
 /* Wraps the "+ Add" control when it's appended inside a <ul> (a list's only
    valid children are <li> — see js/inline-content-edit.js's
    decorateListControls()). This <li> exists purely for valid list
    structure, not to be a visible list item, so it gets no bullet marker. */
 .inline-edit-add-li {
   list-style: none;
+}
+
+/* js/inline-content-edit-link-tool.js's custom inline Link tool — the
+   toolbar button and its target-entry input (renderActions()). Text rather
+   than an icon, matching this button against Editor.js's own default Bold
+   button (also unstyled text/glyph at this size) with the least risk of a
+   malformed hand-drawn SVG. */
+.inline-edit-editorjs-holder .ce-inline-tool.inline-edit-link-button {
+  width: auto;
+  padding: 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.inline-edit-editorjs-holder .inline-edit-link-actions {
+  padding: 0.4rem;
+}
+
+.inline-edit-editorjs-holder .inline-edit-link-input {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-panel);
+  border: 1px solid var(--brand-primary);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
 }

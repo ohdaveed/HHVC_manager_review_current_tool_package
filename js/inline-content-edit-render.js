@@ -16,18 +16,22 @@
   const { escapeHtml } = window.utils
 
   /**
-   * Build a scalar field's edit widget: an <input> for single-line fields
-   * (title, heading, CTA label) or a <textarea> for fields that can run
-   * long (summary, a paragraph, a bullet).
-   * @param {{tag: 'input'|'textarea', value: string, path: string}} options
+   * Build a scalar field's Editor.js holder: an empty <div> Editor.js will
+   * mount into, carrying the same data-rewrite-field the plain <input>/
+   * <textarea> widget carries so decorateListControls()/decorateEditedFields()
+   * and the click-delegation guards in js/inline-content-edit.js need no
+   * changes to find it. `id` must be unique per open editor instance —
+   * Editor.js's `holder` config takes an element id, and a stale id left
+   * over from a previous edit on the same field would mount into a detached
+   * node. `data-inline-edit-editorjs-holder` marks it for the single-block
+   * chrome-suppression CSS in css/inline-content-edit.css.
+   * @param {{path: string, id: string}} options
    * @returns {string}
    */
-  function scalarEditorHtml({ tag, value, path }) {
+  function editorJsHolderHtml({ path, id }) {
     const escapedPath = escapeHtml(path)
-    if (tag === 'textarea') {
-      return `<textarea class="inline-edit-input" data-rewrite-field="${escapedPath}" data-inline-edit-input rows="3">${escapeHtml(value)}</textarea>`
-    }
-    return `<input type="text" class="inline-edit-input" data-rewrite-field="${escapedPath}" data-inline-edit-input value="${escapeHtml(value)}" />`
+    const escapedId = escapeHtml(id)
+    return `<div class="inline-edit-input inline-edit-editorjs-holder" id="${escapedId}" data-rewrite-field="${escapedPath}" data-inline-edit-editorjs-holder data-inline-edit-input></div>`
   }
 
   /**
@@ -73,7 +77,7 @@
   }
 
   window.InlineEdit.render = {
-    scalarEditorHtml,
+    editorJsHolderHtml,
     listAddControlHtml,
     listRemoveControlHtml,
     editedBadgeHtml,
