@@ -6,7 +6,7 @@
     },
     "heyclaude": {
       "command": "npx",
-      "args": ["-y", "@heyclaude/mcp"]
+      "args": ["-y", "@heyclaude/mcp@0.5.3"]
     }
   }
 }
