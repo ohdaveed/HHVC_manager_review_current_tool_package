@@ -5,8 +5,8 @@
       "args": ["-y", "@executeautomation/database-server", ".data/review-state.local.db"]
     },
     "heyclaude": {
-      "command": "npx",
-      "args": ["-y", "@heyclaude/mcp@0.5.3"]
+      "command": "node",
+      "args": ["node_modules/@heyclaude/mcp/src/cli.js"]
     }
   }
 }
