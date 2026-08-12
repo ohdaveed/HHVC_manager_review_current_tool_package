@@ -56,7 +56,6 @@ const NUMBER_WORDS = {
   fourteen: 14,
   fifteen: 15,
   sixteen: 16,
-  sixteen: 16,
   seventeen: 17,
   eighteen: 18,
   nineteen: 19,
@@ -64,11 +63,49 @@ const NUMBER_WORDS = {
   'twenty-one': 21,
   'twenty-two': 22,
   'twenty-three': 23,
+  'twenty-four': 24,
+  'twenty-five': 25,
+  'twenty-six': 26,
+  'twenty-seven': 27,
+  'twenty-eight': 28,
+  'twenty-nine': 29,
+  thirty: 30,
+  'thirty-one': 31,
+  'thirty-two': 32,
+  'thirty-three': 33,
+  'thirty-four': 34,
+  'thirty-five': 35,
+  'thirty-six': 36,
+  'thirty-seven': 37,
+  'thirty-eight': 38,
+  'thirty-nine': 39,
+  forty: 40,
 }
 
 /**
  * Pull every count matching a pattern out of a doc, accepting digits or the
  * spelled-out form — both spellings appear, sometimes in the same paragraph.
+ *
+ * Two things a pattern here must tolerate, because this is prose in wrapped
+ * markdown and BOTH of them hid a wrong count that this very file was supposed
+ * to be checking:
+ *
+ *   - **Separate words with `\s+`, never a literal space.** Any two words in a
+ *     phrase can be split across a line break at any time by an unrelated edit
+ *     upstream rewrapping the paragraph. `.github/copilot-instructions.md` kept
+ *     a spelled-out "thirty-three" claim straight through the change that added
+ *     it to this file's coverage, because the phrase had wrapped between
+ *     "unit-test" and "files".
+ *   - **Allow `**` around the number.** The same claim then survived the `\s+`
+ *     fix too: it reads `**thirty-six** Bun unit-test files`, and `[\w-]+`
+ *     cannot end on `*`, so the capture slid forward and matched the literal
+ *     word "Bun" instead of the count.
+ *
+ * The shared failure mode is that a pattern which stops matching does not fail
+ * — it silently stops checking, and every remaining assertion passes. The
+ * `expect(claims.length).toBeGreaterThan(0)` guard in each test below is what
+ * catches the total-miss case; these two rules are what catch the partial one,
+ * where some claims in a file still match and the wrong one does not.
  */
 function countsIn(text, pattern) {
   const found = []
@@ -105,7 +142,7 @@ describe('counts quoted in the instruction docs', () => {
     ['AGENTS.md', AGENTS_MD],
     ['.github/copilot-instructions.md', COPILOT_MD],
   ])('%s states the real number of unit-test files', (_name, text) => {
-    const claims = countsIn(text, /([\w-]+) (?:Bun )?unit-test files/gi)
+    const claims = countsIn(text, /\*{0,2}([\w-]+)\*{0,2}\s+(?:Bun\s+)?unit-test\s+files/gi)
     expect(claims.length).toBeGreaterThan(0)
     for (const claim of claims) expect(claim).toBe(unitTestFiles.length)
   })
@@ -114,7 +151,7 @@ describe('counts quoted in the instruction docs', () => {
     ['CLAUDE.md', CLAUDE_MD],
     ['AGENTS.md', AGENTS_MD],
   ])('%s states the real number of e2e spec files', (_name, text) => {
-    const claims = countsIn(text, /([\w-]+) spec files/gi)
+    const claims = countsIn(text, /\*{0,2}([\w-]+)\*{0,2}\s+spec\s+files/gi)
     expect(claims.length).toBeGreaterThan(0)
     for (const claim of claims) expect(claim).toBe(e2eSpecFiles.length)
   })
@@ -127,7 +164,7 @@ describe('counts quoted in the instruction docs', () => {
     // "across the 19 pages". Deliberately narrow: a bare /(\d+) pages/ also
     // matches the plain-language budget ("any one rule failing at most 8
     // pages"), which is a threshold, not a count of what is on disk.
-    const claims = countsIn(text, /\*\*(\d+) pages\*\*|the (\d+) pages/g)
+    const claims = countsIn(text, /\*\*(\d+)\s+pages\*\*|the (\d+)\s+pages/g)
     expect(claims.length).toBeGreaterThan(0)
     for (const claim of claims) expect(claim).toBe(pageFiles.length)
   })

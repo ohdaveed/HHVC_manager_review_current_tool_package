@@ -45,7 +45,7 @@ bun run format        # prettier --write on everything
 bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```
 
-**There is a real test suite.** `bun run test` runs **thirty-three** Bun unit-test
+**There is a real test suite.** `bun run test` runs **thirty-six** Bun unit-test
 files, plus nineteen Playwright e2e spec files. **The list in `package.json`'s `test`
 script is explicit, not a glob** — a new `tests/*.test.js` that is not named
 there never runs and reports nothing. A happy-dom environment is preloaded
