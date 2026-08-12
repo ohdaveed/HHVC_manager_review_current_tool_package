@@ -188,6 +188,7 @@ function zeroDecisionTally() {
     buildReviewRecord,
     REVIEW_RECORD_FIELDS,
     getCurrentKey,
+    getCurrentPage,
     countRelatedLinks,
     hasValidPageData,
     buildPageRows,
@@ -815,6 +816,21 @@ function getCurrentKey(fallback) {
 }
 
 /**
+ * Get the page OBJECT currently open in the mockup, or null when the key does
+ * not resolve — which is a normal state for a page the reviewer has deleted
+ * from the registry, not an error.
+ *
+ * Lives here rather than in each caller because js/ai-assist.js and
+ * js/ai-rewrite.js are self-mounting IIFEs with no shared namespace between
+ * them, so the byte-identical copies they each carried had nothing structural
+ * stopping the next edit from landing on only one of them.
+ * @returns {object|null}
+ */
+function getCurrentPage() {
+  return (window.HHVC_DATA?.pages || {})[getCurrentKey()] || null
+}
+
+/**
  * Count outbound "related link" affordances on a page: card links, section
  * buttons, and step buttons. Used for portfolio-wide link-density checks.
  * @param {object} page
@@ -890,6 +906,7 @@ export {
   escapeHtml,
   getByPath,
   getCurrentKey,
+  getCurrentPage,
   getPrimaryCta,
   getDecisionChipClass,
   DECISIONS,

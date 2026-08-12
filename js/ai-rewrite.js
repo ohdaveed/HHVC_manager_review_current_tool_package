@@ -30,11 +30,13 @@
 
   /**
    * The page object currently open in the mockup.
+   *
+   * Delegates to js/utils.js rather than carrying its own copy — see the
+   * matching note in js/ai-assist.js, which needed the identical lookup.
    * @returns {object|null}
    */
   function getCurrentPage() {
-    const key = window.utils?.getCurrentKey?.()
-    return (window.HHVC_DATA?.pages || {})[key] || null
+    return window.utils?.getCurrentPage?.() || null
   }
 
   /**

@@ -32,6 +32,22 @@
     return editingPath !== null
   }
 
+  /**
+   * The `unverifiedReason` written onto a manually edited paragraph or bullet.
+   *
+   * Resolved from js/inline-content-edit-adapter.js, which declares it, rather
+   * than restated here: it is a persisted value inside `section_edits`, and
+   * two literals of a stored string means two classes of edited item that stop
+   * comparing equal. Read off `window` — this file has no import of the
+   * adapter, matching how it already reaches it in EditorSession.open — with
+   * the literal as a fallback so an adapter that has not mounted degrades to
+   * the historical value rather than writing `undefined` into the review
+   * record. js/main.js loads the adapter first, so the fallback is a guard,
+   * not the expected path.
+   */
+  const MANUAL_EDIT_UNVERIFIED_REASON =
+    window.inlineEditAdapter?.MANUAL_EDIT_UNVERIFIED_REASON || 'Manually edited during review'
+
   let editorJsModulePromise = null
   /**
    * Dynamically import @editorjs/editorjs on first use, mirroring
@@ -114,7 +130,7 @@
     setByPath(page, path, {
       text: value,
       unverified: true,
-      unverifiedReason: 'Manually edited during review',
+      unverifiedReason: MANUAL_EDIT_UNVERIFIED_REASON,
     })
   }
 
@@ -256,7 +272,7 @@
     const array = Array.isArray(current) ? current : []
     const nextArray = [
       ...array,
-      { text: '', unverified: true, unverifiedReason: 'Manually edited during review' },
+      { text: '', unverified: true, unverifiedReason: MANUAL_EDIT_UNVERIFIED_REASON },
     ]
     setByPath(page, containerPath, nextArray)
     persist()

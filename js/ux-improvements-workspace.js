@@ -18,15 +18,20 @@ import { hasValidPageData } from './utils.js'
   // keep this array, the tab markup in index.html and the 1-3 shortcut cases in
   // js/keyboard-shortcuts.js in step with each other.
   const WORKSPACE_TABS = ['overview', 'checks', 'help']
-  const REVIEWER_REQUIRED_DECISIONS = new Set([
-    'Approved',
-    'Approved with edits',
-    'Revise and resubmit',
-    'Blocked',
-  ])
   let workspaceTriggerButton = null
 
-  const { getValue, getDecisionChipClass, escapeHtml } = window.utils
+  const { getValue, getDecisionChipClass, escapeHtml, DECISION_LABELS, DECISION_UNDECIDED } =
+    window.utils
+
+  /* Every decision EXCEPT the undecided default needs a reviewer name against
+     it — a recorded judgement with nobody attached to it is the one state the
+     record cannot explain later. Derived from the canonical table in
+     js/utils.js rather than listing the other four, which is the same list
+     under a different name and goes stale the moment a decision is added: a
+     new label would silently be treated as not needing a reviewer. */
+  const REVIEWER_REQUIRED_DECISIONS = new Set(
+    DECISION_LABELS.filter((label) => label !== DECISION_UNDECIDED)
+  )
 
   /**
    * Paint the sticky review bar.

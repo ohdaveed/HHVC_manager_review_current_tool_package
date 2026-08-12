@@ -37,14 +37,30 @@ const SECTION_EDIT_PATH_PATTERN = new RegExp(
 /**
  * Whether a single paragraph/bullet item has the shape
  * applyContentEditsToPageData/computeSectionEdits agree on: a plain string,
- * or a {text, unverified?, unverifiedReason?} object. Mirrors
- * js/review-state-validation.js's isValidSectionEditItem.
+ * or a {text, unverified?, unverifiedReason?} object.
+ *
+ * Mirrors js/review-state-validation.js's isValidSectionEditItem, and is kept
+ * textually identical to it on purpose — the two sit on either side of the
+ * same value (this one on the write side computing the diff, that one on the
+ * read side validating the stored blob), so a shape one accepts and the other
+ * rejects is how a reviewer's inline edits get dropped on the next load with
+ * nothing erroring. The array exclusion is the half this copy used to lack:
+ * `typeof [] === 'object'`, so an array carrying an own `.text` property
+ * passed here and failed there. Neither can import the other (this module is
+ * require()'d by its tests and so cannot gain an ES import; that one is a
+ * window-only IIFE), so tests/inline-content-edit-data.test.js pins the
+ * accept/reject boundary of both together.
  * @param {unknown} item
  * @returns {boolean}
  */
 function isValidSectionEditItem(item) {
   if (typeof item === 'string') return true
-  return Boolean(item) && typeof item === 'object' && typeof item.text === 'string'
+  return (
+    Boolean(item) &&
+    typeof item === 'object' &&
+    !Array.isArray(item) &&
+    typeof item.text === 'string'
+  )
 }
 
 /**

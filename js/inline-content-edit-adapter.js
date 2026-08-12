@@ -33,6 +33,18 @@ const SCALAR_FIELD_TYPES = ['title', 'summary', 'primaryCta', 'heading']
 const ITEM_FIELD_TYPES = ['paragraph', 'bullet']
 const FIELD_TYPES = [...SCALAR_FIELD_TYPES, ...ITEM_FIELD_TYPES]
 
+/**
+ * The `unverifiedReason` stamped on a manually edited paragraph or bullet.
+ *
+ * Declared once and read by js/inline-content-edit.js off
+ * `window.inlineEditAdapter` rather than restated there, because this is a
+ * PERSISTED data value, not a label: it is written into `section_edits` under
+ * hhvcManagerReviewState:v1 and rendered as the Unverified pill's reason. Two
+ * literals of a stored string means two classes of edited item that no longer
+ * compare equal, with nothing on screen to show why.
+ */
+const MANUAL_EDIT_UNVERIFIED_REASON = 'Manually edited during review'
+
 const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
 const HTML_UNESCAPES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" }
 
@@ -235,7 +247,7 @@ function editorDataToPageValue(fieldType, outputData) {
   const isItem = isItemFieldType(fieldType)
   const text = isItem ? editingHtmlToMarkdown(html) : editingHtmlToPlainText(html)
   if (isItem) {
-    return { text, unverified: true, unverifiedReason: 'Manually edited during review' }
+    return { text, unverified: true, unverifiedReason: MANUAL_EDIT_UNVERIFIED_REASON }
   }
   return text
 }
@@ -252,6 +264,7 @@ if (typeof window !== 'undefined') {
     FIELD_TYPES,
     SCALAR_FIELD_TYPES,
     ITEM_FIELD_TYPES,
+    MANUAL_EDIT_UNVERIFIED_REASON,
   }
 }
 if (typeof module !== 'undefined' && module.exports) {
@@ -266,5 +279,6 @@ if (typeof module !== 'undefined' && module.exports) {
     FIELD_TYPES,
     SCALAR_FIELD_TYPES,
     ITEM_FIELD_TYPES,
+    MANUAL_EDIT_UNVERIFIED_REASON,
   }
 }

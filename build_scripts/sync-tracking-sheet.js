@@ -5,6 +5,19 @@ const path = require('path')
 const { execSync } = require('child_process')
 const { toCsv } = require('./csv')
 const { loadPageData, getPageScriptPaths } = require('./load-pages')
+// Canonical page-metadata helpers and the canonical undecided decision label,
+// shared with build_scripts/extract-pages.js and the browser rather than
+// restated here — see that file's own note for why, and for the drift this
+// replaced. The copy of primaryCta that used to live here was the stale one:
+// it never carried getPrimaryCta's rule that a section button marked
+// `buttonStyle: 'secondary'` is not the page's primary CTA, so this sheet
+// could name a CTA the mockup does not render.
+const {
+  defaultSeoTitle,
+  defaultMetaDescription,
+  getPrimaryCta,
+  DECISION_UNDECIDED,
+} = require('../js/utils.js')
 
 const root = path.resolve(__dirname, '..')
 const reviewDir = path.join(root, 'review')
@@ -58,24 +71,6 @@ function buildPageKeyToSourceFile() {
     if (match) map[match[1]] = file
   }
   return map
-}
-
-function primaryCta(page) {
-  for (const section of page.sections || []) {
-    for (const step of section.steps || []) {
-      if (step.button) return step.button
-    }
-  }
-  if (page.spotlight && page.spotlight.button) return page.spotlight.button
-  return page.primaryCta || ''
-}
-
-function defaultSeoTitle(page) {
-  return page.seoTitle || `${page.title || ''} | San Francisco`
-}
-
-function defaultMetaDescription(page) {
-  return page.metaDescription || page.summary || ''
 }
 
 function gitLastChanged(relativePath) {
@@ -255,13 +250,13 @@ function writeManagerDecisionLog(data) {
       page.title || '',
       page.type || '',
       page.slug || '',
-      'Needs review',
+      DECISION_UNDECIDED,
       '',
       CONTENT_REVIEW_FLAGS[key] || '',
       '',
       defaultSeoTitle(page),
       defaultMetaDescription(page),
-      primaryCta(page),
+      getPrimaryCta(page),
       page.reading || '',
     ])
   }

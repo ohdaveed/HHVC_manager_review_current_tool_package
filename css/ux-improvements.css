@@ -1,12 +1,13 @@
 /* Manager review UX/UI enhancements.
    These styles layer on top of the existing mockup tool without changing page content. */
 
-.canvas-toolbar {
-  align-items: center;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
+/* `.canvas-toolbar` is declared in css/styles.css only. The block that used to
+   open this file restated that rule's own `align-items: center` and
+   `gap: 0.75rem`, added `flex-direction: row` (already the flex default), and
+   contributed exactly one real property, `flex-wrap: wrap` — which now lives
+   with the rest of the rule. Two blocks neither of which described what
+   rendered is the split the one-selector-one-file standard exists to
+   prevent. */
 
 .review-sticky-bar {
   display: flex;
@@ -932,11 +933,16 @@
    Editorial Reading Column & Visual Hierarchy Updates
    ========================================================================== */
 
-/* Vertical Rhythm */
-.section {
-  margin-bottom: 1.5rem !important;
-  padding: 1rem 0 !important;
-}
+/* Vertical Rhythm — `.section` is declared in css/styles.css only.
+
+   The block that used to sit here set `margin-bottom: 1.5rem !important` and
+   `padding: 1rem 0 !important`: the SAME two values css/styles.css already
+   sets on `.section`, restated with `!important` and nothing else. It changed
+   nothing on screen, while making the mockup's own section rhythm look like it
+   was owned by the review layer's override sheet — and `.section` belongs to
+   the page under review, not to this tool's chrome. Adjust the rhythm in
+   css/styles.css, where the rest of the rule (including its `border-bottom`
+   and `:last-child` exception) lives. */
 
 /* Digestible Data (Gestalt Principles) */
 ul li,

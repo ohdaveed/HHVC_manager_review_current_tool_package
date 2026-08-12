@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 35 unit-test files in tests/ (1,450 tests)
+bun run test                  # bun test over the 36 unit-test files in tests/ (1,567 tests)
 bun run test:e2e              # playwright test (161 specs across 19 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -64,7 +64,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 35 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 36 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -81,8 +81,11 @@ corpus so a legitimately added card never fails the suite),
 `csv-edited-fields-roundtrip` (mounts the REAL export/import IIFEs rather than
 stubbing the merge, since only that proves the export and import field-name
 enumerations actually agree), `decision-vocabulary` (pins the two
-module-boundary restatements of the decision list against the canonical table
-in `js/utils.js`), `doc-counts` (reads the counts back out of these docs and
+whole-list module-boundary restatements of the decision list against the
+canonical table in `js/utils.js` — and, separately, every file that spells out
+an INDIVIDUAL label as a literal, which is most of the queue: those are string
+comparisons, so a renamed decision leaves the chip rendering and silently stops
+matching), `doc-counts` (reads the counts back out of these docs and
 compares them to the filesystem — this very list is what it checks),
 `inline-content-edit-data` (pure `section_edits` diff/reapply logic against
 `ORIGINAL_DATA`, no DOM, dual-exported like `review-merge`),
@@ -111,7 +114,14 @@ own property and pass while proving nothing), `review-api-server` (spawns
 `ai-assist-providers` (varies provider API keys directly, which a spawned
 server subprocess structurally cannot), `ai-assist-server` (spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
-with no key and no paid call), and `ai-assist-validate-rewrite` (that a
+with no key and no paid call), `ai-assist-client` (the browser client's config
+and HTTP surface — added because `js/ai-assist-client.js` and
+`js/review-state-sync.js` carry five near-identical functions and only the sync
+copy was tested, so the most similar pair in the repo was also the least
+covered and an edit to one could not fail CI; it pins the two DIFFERENCES too,
+since near-identical is exactly the condition under which the sync copy's extra
+`synced_at`/`local_dirty` clearing gets "helpfully" copied across), and
+`ai-assist-validate-rewrite` (that a
 rewrite preserves every link's TARGET while its label stays free to change,
 and introduces no HTML into copy rendered through `formatMarkdown`).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
@@ -456,18 +466,17 @@ that did not exist yet.
 
 ### The workspace is docked, not stacked
 
-`#reviewWorkspace` is a **third grid column in `.app`**, sticky to the viewport
-— not the last child of `.canvas`, which is where it used to live. The numbers
-are the whole argument: the mockup runs about 8,766px, so the panel began around
-y=9,413 in a 10,348px document, more than nine screenfuls down. A reviewer could
-never see the page and the instruments judging it at the same time, which was
-sharpest on **Page checks** — a panel that scores _the page currently open in
-the mockup_ and rendered that score nine screens away from it.
+`#reviewWorkspace` is a **third grid column in `.app`**, sticky to the viewport,
+not the last child of `.canvas`. It used to be the latter, and the numbers are
+the argument: the mockup runs about 8,766px, so the panel began around y=9,413
+in a 10,348px document — more than nine screenfuls down. A reviewer could never
+see the page and the instruments judging it at once, which was sharpest on
+**Page checks**, a panel that scores _the page currently in the mockup_ and
+rendered that score nine screens away from it.
 
-Most of the redundancy this tool accumulated followed from that one placement:
-the same fact had to be repeated wherever the reviewer might be looking.
-Co-visibility is what makes a single copy sufficient, so resist re-adding a
-second printing of anything.
+Most of the redundancy this layout accumulated followed from that: the same fact
+had to be repeated wherever the reviewer might be looking. Co-visibility is what
+makes one copy enough, so resist re-adding a second printing of anything.
 
 - **`.app.workspace-docked` is what grows the third column**, toggled alongside
   the panel's `hidden` attribute. `applyWorkspaceVisibility()` in
@@ -740,21 +749,20 @@ wiring into the existing autosave path).
   hand-edited in source. Add/remove is supported on exactly two fields —
   section `paragraphs` and `bullets` — and only of individual items, never
   whole sections/cards/steps, and never reordering.
-- **Card descriptions carry no `data-rewrite-field`, and cards being listed
-  out of scope above is load-bearing rather than incidental — it must stay
-  true.** That attribute is what turns an element into a click-to-edit field
-  whose keystrokes are written back onto the addressed path of the **current**
-  page's object. For an inheriting card the description on screen is the
-  **destination** page's `summary` (see "Card descriptions are inherited, not
-  printed"), so the path here would address the card's own `text` — precisely
-  the field the inheritance change exists to prove renders nowhere. The edit
-  would appear to work, autosave, and then vanish on the next paint, because
-  the paint reads the destination's summary. A `title-only` card has no
-  description to edit at all. The text a reviewer actually wants to change
-  lives on the destination page, where inline editing already reaches it, so
-  the absent attribute is the whole enforcement — do not "complete" the
-  feature by adding it. The decision is restated at its site in
-  `js/page-render.js`, immediately above `renderCards`.
+- **Card descriptions carry no `data-rewrite-field`, and cards' absence from
+  that scope list is load-bearing rather than incidental — it must stay true.**
+  That attribute is what turns an element into a click-to-edit field whose
+  keystrokes are written back onto the addressed path of the **current** page's
+  object. An inheriting card's description IS the destination page's `summary`
+  (see "Card descriptions are inherited, not printed"), so the editable text
+  lives on a different page entirely. An inline edit here would address the
+  card's own `text` — the field that renders nowhere — and would appear to work,
+  autosave, and then vanish on the next paint, because the paint reads the
+  destination's summary. A `title-only` card has no description to edit at all.
+  The summary a reviewer actually wants to change is already inline-editable
+  where it lives, so keep cards out of scope; the missing attribute is the whole
+  enforcement — do not "complete" the feature by adding it. The decision is
+  restated at its site in `js/page-render.js`, immediately above `renderCards`.
 - **Every renderer that builds its own heading has to stamp
   `data-rewrite-field` itself, and five of them silently did not.** Only
   `renderSection()` reads `__sectionIndex`, so any section shape rendered
@@ -2186,8 +2194,6 @@ that stub globals must restore them, or they pollute sibling test files.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate`
   **and** `bun run test`. After touching the import/export round-trip,
   manually verify it (export → re-import → decisions survive).
-- Review exports (`review/*.csv`, saved local-review CSV/JSON) are for
-  manager decisions only — never treat them as automatic publication approval.
 
 ## Commits & pull requests
 
@@ -2203,6 +2209,9 @@ that stub globals must restore them, or they pollute sibling test files.
   reduces merge conflicts and keeps review focused.
 - **Never hand-edit generated files** (single-file HTML exports,
   `data/page_inventory.*`) — edit sources and rebuild.
+- **Review exports** (`review/*.csv`, saved local-review CSV/JSON) are for
+  manager decisions only — **never treat them as automatic publication
+  approval.**
 
 ## Karl CMS
 
