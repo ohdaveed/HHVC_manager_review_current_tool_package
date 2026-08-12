@@ -22,7 +22,7 @@ import './card-inheritance.js'
 // Maps cardInheritanceFact()'s three outcomes to the badge text a reviewer
 // sees on a card's tag — the only place this vocabulary is spelled out.
 const INHERIT_BADGE_TEXT = {
-  'title-and-text': "Card title + text inherited from linked page",
+  'title-and-text': 'Card title + text inherited from linked page',
   text: "Card text field won't publish",
   title: 'Card title inherited from linked page',
 }

@@ -13,9 +13,7 @@ import { parseKarlLabel } from '../js/karl-tag-meta.js'
  *  which is structural, not content) so two strings can be compared for the
  *  same CONTENT regardless of how parseKarlLabel re-joined/re-trimmed it. */
 function contentOf(s) {
-  return s
-    .toLowerCase()
-    .replace(/[\s.!?,;:'"()<>\-–—→]/g, '')
+  return s.toLowerCase().replace(/[\s.!?,;:'"()<>\-–—→]/g, '')
 }
 
 /** Assert nothing was dropped: every character of the original survives in
@@ -98,9 +96,9 @@ describe('parseKarlLabel', () => {
   })
 
   test('flags an explicit editorial hold', () => {
-    expect(
-      parseKarlLabel('BLOCKED — pending SME confirmation of the fee schedule.').flagged
-    ).toBe(true)
+    expect(parseKarlLabel('BLOCKED — pending SME confirmation of the fee schedule.').flagged).toBe(
+      true
+    )
   })
 
   test('flags a note asking to route to Digital Services', () => {
@@ -116,7 +114,12 @@ describe('parseKarlLabel', () => {
   })
 
   test('returns empty parts for an empty or non-string label', () => {
-    expect(parseKarlLabel('')).toEqual({ breadcrumb: [], headline: '', rationale: '', flagged: false })
+    expect(parseKarlLabel('')).toEqual({
+      breadcrumb: [],
+      headline: '',
+      rationale: '',
+      flagged: false,
+    })
     expect(parseKarlLabel(undefined)).toEqual({
       breadcrumb: [],
       headline: '',
