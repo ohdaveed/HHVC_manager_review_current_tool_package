@@ -6,6 +6,7 @@ const {
   readState,
   makeReviewRecord,
   settleDebounce,
+  waitForShortcuts,
   DECISIONS,
   setDecision,
 } = require('./helpers')
@@ -161,6 +162,20 @@ test.describe('review import/export through the UI', () => {
 
     page.on('dialog', (dialog) => dialog.accept())
     await page.click('#clearSavedLocalReviews')
+    /* Clearing RELOADS the page (js/ux-improvements-export.js), so everything
+       after this click runs against a document being rebuilt from scratch.
+       Wait for the app to actually boot before reading anything.
+
+       This is not belt-and-braces. The assertion below used to sit directly
+       after the click and passed without proving anything: `#reviewDecision`
+       is static markup in index.html carrying value="Needs review", so it is
+       already correct in the freshly parsed document before a line of JS has
+       run. The test then called readState() into a window with no
+       `reviewState` on it and died on "Cannot read properties of undefined".
+       waitForShortcuts resolves only once the last module in the graph has
+       initialized — the same reason gotoFresh uses it rather than trusting
+       the sticky bar. */
+    await waitForShortcuts(page)
     await expect(page.locator('#reviewDecision')).toHaveValue(DECISIONS.needsReview)
     const cleared = await readState(page)
     expect(cleared.pages.pestsTopic).toBeUndefined()
