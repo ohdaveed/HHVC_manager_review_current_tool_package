@@ -659,6 +659,35 @@ wiring into the existing autosave path).
   `title-only` card has no description to edit at all. The summary a reviewer
   actually wants to change is already inline-editable where it lives, so keep
   cards out of scope; the missing attribute is the whole enforcement.
+- **Every renderer that builds its own heading has to stamp
+  `data-rewrite-field` itself, and five of them silently did not.** Only
+  `renderSection()` reads `__sectionIndex`, so any section shape rendered
+  through a different function — `renderSpotlightSection()`,
+  `renderTopFacts()`, `renderCustomSection()` (a `flat` Supporting section),
+  `renderServiceGroup()` (a Services/Resources H3 sub-group) and
+  `renderAccordionSection()` — produced a heading with no click-to-edit
+  affordance at all. Nothing errored and no test failed: the section rendered
+  correctly, it just quietly could not be edited, on Topic, Agency, Campaign
+  and Transaction pages alike. That is the failure mode to watch for when
+  adding a sixth heading renderer; `tests/page-render.test.js`'s
+  `data-rewrite-field annotation` block now pins one case per renderer.
+- **The accordion's toggle and heading are separate sibling elements, and
+  that is a deliberate deviation from the standard ARIA accordion pattern.**
+  The heading text used to sit inside the `<button data-accordion-toggle>`
+  itself, which made it the one heading that could not simply be annotated in
+  place: `EditorSession.open()` mounts the editor via
+  `target.replaceWith(holder)` and that holder is a `<div>`, so annotating it
+  there would have dropped a block-level Editor.js instance inside a native
+  button (invalid content model, unreliable focus/caret) **and** handed one
+  click to two listeners — the document-level toggle in `js/page-render.js`
+  and the `#mockPage` editor handler, neither of which calls
+  `stopPropagation()`. The panel would open while the heading flipped into an
+  edit box. So a chevron button owns the toggle and a sibling `<h3>` owns the
+  text. Two consequences worth keeping: the chevron is sized 44x44 in
+  `css/styles.css` because it is now the only way to expand the panel (the old
+  trigger spanned the whole row, so target size was never a question), and its
+  accessible name is restated with `aria-label` since it has no text of its
+  own — the old button took its name from the heading text it contained.
 - **Addressing is reused, not reinvented.** `js/page-render.js` already
   emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
   attributes (added for the in-flight AI-rewrite-selection feature) via

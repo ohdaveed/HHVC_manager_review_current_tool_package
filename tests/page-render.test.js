@@ -805,6 +805,36 @@ describe('data-rewrite-field annotation', () => {
     expect(html).toContain('data-rewrite-field="sections.7.heading"')
   })
 
+  // An accordion's heading is the one editable field that cannot simply take
+  // the attribute where it already sits. EditorSession.open()
+  // (js/inline-content-edit.js) does target.replaceWith() with a <div> holder,
+  // and the heading text used to live inside the <button data-accordion-toggle>
+  // itself — so annotating it in place would have put a block-level Editor.js
+  // instance inside a native button AND routed one click to both the toggle
+  // and the editor. The chevron button and the heading are siblings now; these
+  // two tests pin both halves of that split.
+  test('annotates an accordion heading, kept outside the toggle button', () => {
+    const section = { heading: 'Accordion heading', karl: 'k', __sectionIndex: 8 }
+    const html = ctx.renderAccordionSection(section, 'transaction')
+    expect(html).toContain('data-rewrite-field="sections.8.heading"')
+    // The editable element must not be nested inside the toggle button: that
+    // is what would hand a single click to two different handlers.
+    const buttonMarkup = html.slice(html.indexOf('<button'), html.indexOf('</button>'))
+    expect(buttonMarkup).not.toContain('data-rewrite-field')
+  })
+
+  test('keeps the accordion toggle working and named after its heading', () => {
+    const section = { heading: 'Accordion heading', karl: 'k', __sectionIndex: 8 }
+    const html = ctx.renderAccordionSection(section, 'transaction')
+    expect(html).toContain('data-accordion-toggle')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).toContain('aria-controls="section-accordion-heading"')
+    // The old full-row button took its accessible name from the heading text
+    // it contained. The chevron has no text of its own, so the name has to be
+    // restated explicitly or the control announces as a bare "button".
+    expect(html).toContain('aria-label="Accordion heading"')
+  })
+
   test('escapes a heading value carrying HTML', () => {
     const section = {
       heading: PAYLOAD,

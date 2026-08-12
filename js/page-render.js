@@ -698,23 +698,42 @@ function renderOnThisPage(sections = []) {
     .map((h) => `<li><a href="#${sectionAnchorId(h)}">${escapeHtml(h)}</a></li>`)
     .join('')}</ul></nav>`
 }
-// NO `data-rewrite-field` ON THE TRIGGER HEADING — deliberately, mirroring
-// the card-description exclusion below. The heading text lives inside the
-// same <button data-accordion-toggle> that expands/collapses the panel, and
-// js/inline-content-edit.js's click handler never calls stopPropagation():
-// clicking the button would both toggle the panel (the document-level
-// listener in this file) AND flip the heading into an edit widget (the
-// #mockPage listener) on the same click. renderSectionInner()'s body still
-// gets the usual paragraph/bullet wiring; only the trigger text itself is
-// out of reach until the toggle and the edit affordance stop sharing one
-// clickable element.
+// THE TOGGLE AND THE HEADING ARE SEPARATE ELEMENTS, and that split is the
+// whole reason this function does not look like the standard ARIA accordion
+// pattern (a heading wrapping a full-width button).
+//
+// Every other editable field carries `data-rewrite-field` on the element that
+// already renders it, because EditorSession.open()
+// (js/inline-content-edit.js) mounts the editor by calling
+// `target.replaceWith(holder)` — and that holder is a <div>. Annotating the
+// heading text where it used to live, inside the trigger <button>, would
+// therefore have done two broken things at once: dropped a block-level
+// Editor.js instance inside a native button (invalid content model, and
+// unreliable focus/caret behaviour), and handed a single click to two
+// different listeners — the document-level accordion toggle below and the
+// #mockPage editor handler, neither of which calls stopPropagation(). The
+// panel would open while the heading flipped into an edit box.
+//
+// So the chevron owns the toggle and the <h3> owns the text, as siblings
+// inside .accordion-header. The cost is a smaller pointer target than the old
+// full-row button: the chevron is sized to 44x44 in css/styles.css to stay
+// well clear of WCAG 2.5.8's 24x24 minimum. The accessible name is restated
+// with aria-label because the chevron has no text of its own — the old button
+// took its name from the heading text it contained, and dropping that would
+// have left screen-reader users with an unlabeled "button".
 function renderAccordionSection(section, pageType) {
   const panelId = sectionAnchorId(section.heading)
   // `open: true` renders the accordion expanded on load — used for content the
   // reviewer must see without a click (e.g. the report pages' "While you wait"
   // IPM tips); the toggle still works normally afterwards.
   const expanded = section.open === true
-  return `<div class="accordion-item"><button type="button" class="accordion-trigger" data-accordion-toggle aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${panelId}">${escapeHtml(section.heading)}</button><div class="accordion-panel" id="${panelId}"${expanded ? '' : ' hidden'}>${renderSectionInner(section, pageType)}</div></div>`
+  const headingPathAttr =
+    typeof section.__sectionIndex === 'number'
+      ? ` data-rewrite-field="sections.${section.__sectionIndex}.heading"`
+      : ''
+  const trigger = `<button type="button" class="accordion-trigger" data-accordion-toggle aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${panelId}" aria-label="${escapeHtml(section.heading)}"></button>`
+  const heading = `<h3 class="accordion-heading"${headingPathAttr}>${escapeHtml(section.heading)}</h3>`
+  return `<div class="accordion-item"><div class="accordion-header">${trigger}${heading}</div><div class="accordion-panel" id="${panelId}"${expanded ? '' : ' hidden'}>${renderSectionInner(section, pageType)}</div></div>`
 }
 // Karl's Supporting information block also allows a plain "Custom section"
 // (Body, Main body, Text and title) alongside Accordion blocks — same H3
@@ -1271,6 +1290,7 @@ export {
   renderParentLink,
   renderRelatedList,
   renderResourcesList,
+  renderAccordionSection,
   renderCustomSection,
   renderSection,
   renderServiceGroup,

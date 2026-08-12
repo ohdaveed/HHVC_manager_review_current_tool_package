@@ -1106,15 +1106,68 @@ a:focus {
   margin: 0 0 0.5rem;
   background: var(--sfds-white);
 }
+/* The toggle and the heading text are separate sibling elements rather than
+   the usual heading-wrapping-a-full-width-button, because the heading has to
+   stay independently replaceable by the inline editor — see the block comment
+   above renderAccordionSection() in js/page-render.js for the full reasoning.
+   This row is what keeps them reading as one control visually. */
+.accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.5rem;
+}
 .accordion-trigger {
-  width: 100%;
-  text-align: left;
-  padding: 0.85rem 1rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 44x44. The old trigger spanned the whole row, so target size was never a
+     question; now that the chevron is the only way to expand the panel, it
+     needs to clear WCAG 2.5.8's 24x24 minimum on its own — 44 is the AAA
+     (2.5.5) figure, taken here because a reviewer hits these repeatedly. */
+  width: 2.75rem;
+  height: 2.75rem;
   border: 0;
+  border-radius: var(--radius);
   background: transparent;
-  font: inherit;
-  font-weight: 700;
+  color: var(--sfds-slate-1);
   cursor: pointer;
+}
+.accordion-trigger:hover {
+  background: var(--sfds-slate-5);
+  color: var(--sfds-action-blue);
+}
+.accordion-trigger:focus-visible {
+  outline: 3px solid var(--sfds-focus-ring);
+  outline-offset: 2px;
+}
+/* A bare two-border square rotated into a chevron, painted in currentColor so
+   the :hover colour change above carries it with no second declaration, and
+   so theme.css's dark-mode primitive swap reaches it for free — the same
+   reasoning as the <select> arrow further up this file. */
+.accordion-trigger::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  /* Collapsed points right, expanded points down. */
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.accordion-trigger[aria-expanded='true']::before {
+  transform: rotate(45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .accordion-trigger::before {
+    transition: none;
+  }
+}
+.accordion-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
 }
 .accordion-panel {
   padding: 0 1rem 1rem;
