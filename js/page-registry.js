@@ -227,7 +227,8 @@ import './page-registry-data.js'
   /**
    * Apply the saved registry onto live page data. Called once at boot, and
    * again after an import merges another browser's registry in.
-   * @returns {{added: string[], hidden: string[], dropped: string[]}}
+   * @returns {{added: string[], hidden: string[], dropped: string[], collided: string[],
+   *   canonicalOrder: string[]}}
    */
   function applySavedRegistry() {
     try {
@@ -502,7 +503,11 @@ import './page-registry-data.js'
    * reviewState.update, so the caller's later update — which re-reads state and
    * spreads ...state.globals — carries the merged registry forward untouched.
    * @param {object} importedState a validated review-state blob
-   * @returns {{added: string[], hidden: string[], dropped: string[]}}
+   * @returns {{added: string[], hidden: string[], dropped: string[], collided?: string[],
+   *   canonicalOrder?: string[]}} the narrower `{added: [], hidden: [], dropped: []}` shape
+   *   on the nothing-to-import/error paths (this function's own `empty` fallback), or
+   *   applySavedRegistry()'s full result (including `collided`/`canonicalOrder`) once
+   *   something was actually merged in.
    */
   function applyImportedRegistry(importedState) {
     const empty = { added: [], hidden: [], dropped: [] }

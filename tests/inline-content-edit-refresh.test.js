@@ -24,6 +24,13 @@ const realInlineEditData = require('../js/inline-content-edit-data.js')
 const MODULE_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
 
 let originalWindow
+// Tracks the current test's console.assert spy, if any, so afterEach can
+// restore it unconditionally — a bare `assertSpy.mockRestore()` at the end
+// of a test body never runs if an expect() above it throws, leaving the spy
+// installed and polluting every later test in this file (and any other file
+// that runs in the same process afterward). See CLAUDE.md: "Tests that stub
+// globals must restore them, or they pollute sibling test files."
+let currentAssertSpy = null
 
 beforeEach(() => {
   originalWindow = global.window
@@ -31,6 +38,10 @@ beforeEach(() => {
 
 afterEach(() => {
   global.window = originalWindow
+  if (currentAssertSpy) {
+    currentAssertSpy.mockRestore()
+    currentAssertSpy = null
+  }
 })
 
 /**
@@ -374,7 +385,7 @@ describe('applySavedPageState section_edits follow-up render', () => {
 
 describe('applySavedPageState asserts page identity before reapplying', () => {
   test('does not fire the identity assertion in normal operation', async () => {
-    const assertSpy = spyOn(console, 'assert')
+    const assertSpy = (currentAssertSpy = spyOn(console, 'assert'))
     const { applySavedPageState } = await mountStateSyncWithRealReapply()
 
     applySavedPageState('pestsTopic')
@@ -387,7 +398,6 @@ describe('applySavedPageState asserts page identity before reapplying', () => {
     // called with a falsy condition.
     const falsyCalls = assertSpy.mock.calls.filter(([condition]) => !condition)
     expect(falsyCalls).toEqual([])
-    assertSpy.mockRestore()
   })
 
   test('fires the identity assertion when DATA.pages[pageKey] no longer matches the object read at the top of the call', async () => {
@@ -449,12 +459,11 @@ describe('applySavedPageState asserts page identity before reapplying', () => {
     const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
     await import(modUrl)
 
-    const assertSpy = spyOn(console, 'assert')
+    const assertSpy = (currentAssertSpy = spyOn(console, 'assert'))
     global.window.ReviewUx.stateSync.applySavedPageState('pestsTopic')
 
     const falsyCalls = assertSpy.mock.calls.filter(([condition]) => !condition)
     expect(falsyCalls.length).toBeGreaterThanOrEqual(1)
     expect(falsyCalls[0][1]).toContain('identity')
-    assertSpy.mockRestore()
   })
 })
