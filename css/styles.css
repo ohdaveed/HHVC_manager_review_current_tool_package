@@ -1510,26 +1510,20 @@ a:focus {
   color: var(--sfds-info-dark);
   border: 1px solid var(--sfds-info-border);
 }
-.karl-tag[data-kind='meta'] {
-  background: var(--sfds-info-light);
-  color: var(--sfds-info-dark);
-  border-color: var(--sfds-info-border);
-}
-.karl-tag[data-kind='body'] {
-  background: var(--sfds-purple-bg);
-  color: var(--sfds-purple-text);
-  border-color: var(--sfds-purple-border);
-}
-.karl-tag[data-kind='placement'] {
-  background: var(--sfds-warning-bg);
-  color: var(--sfds-warning-text);
-  border-color: var(--sfds-warning-border);
-}
-.karl-tag[data-kind='editor'] {
-  background: var(--sfds-success-bg);
-  color: var(--sfds-success-text);
-  border-color: var(--sfds-success-border);
-}
+/* The four `.karl-tag[data-kind='…']` colour blocks used to sit here, and they
+   were dead: css/ux-improvements.css declares the same four selectors and sets
+   `background`, `color` and `border: none` with `!important`, so every property
+   these declared was overridden and none of it reached the screen. What
+   rendered was a merge of two files in which this half contributed nothing —
+   the same failure documented for `.review-workspace` and `.status-chip`, and
+   the reason the standard is one selector, one file.
+
+   The whole tag colour system now lives in css/ux-improvements.css, beside the
+   WCAG contrast note explaining why the kinds are flattened to one background
+   and re-separated by a 4px border-left strip that carries no text. Do not
+   restore per-kind `background`/`color` here: that argument is a contrast
+   judgement, and splitting it back across two files is how it gets half
+   revised. */
 .unverified-pill {
   display: inline-flex;
   align-items: center;
@@ -1860,9 +1854,16 @@ a:focus {
   flex-direction: column;
   padding: 1rem 1.25rem;
 }
+/* The single declaration of this selector. css/ux-improvements.css used to
+   declare it too, and its block was almost entirely a restatement — the same
+   `align-items: center` and `gap: 0.75rem` set here, plus `flex-direction: row`,
+   which is already the flex default. `flex-wrap: wrap` was the one property it
+   actually contributed, so it moved here and that block is gone; the toolbar's
+   controls still wrap rather than overflow at a narrow canvas. */
 .canvas-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
   min-height: 2rem;
