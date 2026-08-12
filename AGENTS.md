@@ -328,7 +328,7 @@ them.**
   hand-rolled formula from the no-build-step era, and `build_scripts/reading-level.js`
   wrapped the library for Node — but only the Node copy had tests and only this
   one shipped, which is how they drifted 1.14 grades apart on average across
-  the 27 pages without a red test anywhere. The drift ran toward "easier than
+  the 29 pages without a red test anywhere. The drift ran toward "easier than
   it is" in aggregate, so nine pages reported hitting a reading target they
   miss — a check biased in exactly the direction that makes it useless. The
   Node copy is deleted and `tests/reading-level.test.js` imports this one. Do
@@ -394,7 +394,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 22 pages, drawing a
+**Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
 hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
 Netlify deploy has no runtime for, so on the build managers actually open they
@@ -505,7 +505,7 @@ a "Page facts" subheading, and the scored list orders **failures first**.
 carries `severity` plus a `source`/`section` pair and a ready-to-render
 `citation`. `severity: 'error'` mandates join the scored rule list behind the
 "checks passed" ratio and render their citation on the Checks tab;
-`severity: 'warning'` findings are advisory, run to ~115 across the 27 pages,
+`severity: 'warning'` findings are advisory, run to ~115 across the 29 pages,
 and render separately so they cannot swamp the ratio. A scored rule must always
 be pushed, pass or fail — dropping one shrinks the denominator and flatters the
 thinnest pages. `source` exists because not every rule comes from the manual:

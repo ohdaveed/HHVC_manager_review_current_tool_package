@@ -16,10 +16,18 @@ window.HHVC_PAGES['filthReport'] = {
     'Consolidated Transaction page. Replaces the separate "Report garbage or clutter", "Report overgrown vegetation", "Report pigeons", and "Report mold in my home" pages. The mold integration keeps one primary 311 CTA, adds leak-versus-condensation guidance and the SFDPH 10-square-foot walls/ceiling review threshold, and does not restate the source page’s unsupported assignment of all condensation-caused mold to a tenant. The "While you wait" section is the Supporting information block requested by the manager.',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list.
     thingsToKnow: [
-      'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
-      'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
-      'For mold on a wall or ceiling, HHVC can act when the affected area totals at least 10 square feet.',
+      {
+        label: 'Reporting anonymously',
+        text: 'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
+      },
+      {
+        label: 'Mold review threshold',
+        text: 'For mold on a wall or ceiling, HHVC can act when the affected area totals at least 10 square feet.',
+      },
     ],
   },
   sections: [
@@ -189,6 +197,20 @@ window.HHVC_PAGES['filthReport'] = {
           target: 'tenantRights',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — the two departments this
+  // report actually routes through, matching the pattern confirmed live on
+  // sf.gov/report-health-nuisance-or-hazards.
+  partnerAgencies: [
+    {
+      title: '311 Customer Service Center',
+      url: 'https://www.sf.gov/departments--311-customer-service-center',
+    },
+    {
+      title: 'Environmental Health',
+      url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
   seoTitle: 'Report garbage, filth, and overgrown vegetation | SF.gov',

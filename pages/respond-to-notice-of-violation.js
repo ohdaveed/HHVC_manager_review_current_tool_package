@@ -17,10 +17,21 @@ window.HHVC_PAGES['noticeOfViolation'] = {
   editorStatus: 'needs-review',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list. The
+    // enforcement-consequence fact that used to be a third bullet here is
+    // dropped as a duplicate: Step 5 ("Finish the work or respond to further
+    // enforcement") already covers it.
     thingsToKnow: [
-      'Your Notice of Violation lists the specific conditions to correct and the deadline for completing the work.',
-      'Contact the investigator named on your notice before the deadline if you have questions or need more time.',
-      'If the violation is not corrected, HHVC may take further enforcement action, which can include a reinspection fee.',
+      {
+        label: 'What your notice covers',
+        text: 'Your Notice of Violation lists the specific conditions to correct and the deadline for completing the work.',
+      },
+      {
+        label: 'If you need help or more time',
+        text: 'Contact the investigator named on your notice before the deadline if you have questions or need more time.',
+      },
     ],
   },
   sections: [
@@ -83,6 +94,15 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Finish the work or respond to further enforcement". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. This uses the Article 11 Interpretation Guide’s high-level enforcement workflow only; it intentionally omits unverified fee timing, hearing, appeal, and abatement details.',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents). No 311 routing here —
+  // this is a post-violation compliance page, not an initial report.
+  partnerAgencies: [
+    {
+      title: 'Environmental Health',
+      url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
   seoTitle: 'Fix your Healthy Housing and Vector Control violation | SF.gov',

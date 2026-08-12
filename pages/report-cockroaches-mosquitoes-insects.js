@@ -16,10 +16,18 @@ window.HHVC_PAGES['insectsReport'] = {
     'Consolidated Transaction page. Replaces the separate "Report cockroaches", "Report bed bugs", and "Report mosquitoes" pages, absorbs the fly, wasp, and mite reporting paths from the deleted species Information pages, and routes dead-bird reports to the State West Nile virus program (manager decision at plan review). One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager.',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list.
     thingsToKnow: [
-      'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
-      'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
-      'See a dead bird? Report it to the State West Nile virus program instead of 311.',
+      {
+        label: 'Reporting anonymously',
+        text: 'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
+      },
+      {
+        label: 'Seeing a dead bird',
+        text: 'Report it to the State West Nile virus program instead of 311 — dead birds help track West Nile virus.',
+      },
     ],
   },
   sections: [
@@ -180,6 +188,20 @@ window.HHVC_PAGES['insectsReport'] = {
           target: 'tenantRights',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — the two departments this
+  // report actually routes through, matching the pattern confirmed live on
+  // sf.gov/report-health-nuisance-or-hazards.
+  partnerAgencies: [
+    {
+      title: '311 Customer Service Center',
+      url: 'https://www.sf.gov/departments--311-customer-service-center',
+    },
+    {
+      title: 'Environmental Health',
+      url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
   seoTitle: 'Report cockroaches, mosquitoes, and other insects | SF.gov',

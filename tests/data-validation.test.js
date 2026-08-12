@@ -87,6 +87,92 @@ describe('dataSchema', () => {
     data.order = [['pestsTopic']]
     expect(dataSchema.safeParse(data).success).toBe(false)
   })
+
+  test('accepts a page with partnerAgencies entries', () => {
+    const data = validData({
+      partnerAgencies: [
+        { title: '311 Customer Service Center', url: 'https://www.sf.gov/departments--311' },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('rejects a partnerAgencies entry missing its required title', () => {
+    const data = validData({
+      partnerAgencies: [{ url: 'https://www.sf.gov/departments--311' }],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(false)
+  })
+
+  test('accepts a supporting section marked flat', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Other ways to report',
+          karl: 'Supporting info',
+          component: 'supporting',
+          flat: true,
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('rejects a non-boolean flat value on a section', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Other ways to report',
+          karl: 'Supporting info',
+          component: 'supporting',
+          flat: 'yes',
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(false)
+  })
+
+  test('accepts a top-facts section with labeled facts', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Questions before you apply',
+          karl: 'Top facts',
+          component: 'top-facts',
+          facts: [{ label: 'Contact', text: 'Call 311.' }],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('rejects a fact missing its required label', () => {
+    const data = validData({
+      sections: [
+        {
+          heading: 'Questions before you apply',
+          karl: 'Top facts',
+          component: 'top-facts',
+          facts: [{ text: 'Call 311.' }],
+        },
+      ],
+    })
+    expect(dataSchema.safeParse(data).success).toBe(false)
+  })
+
+  test('accepts a page with a Contact us social media entry', () => {
+    const data = validData({
+      contact: { social: [{ platform: 'Facebook', url: 'https://www.facebook.com/shopdinesf' }] },
+    })
+    expect(dataSchema.safeParse(data).success).toBe(true)
+  })
+
+  test('rejects a social media entry missing its required url', () => {
+    const data = validData({
+      contact: { social: [{ platform: 'Facebook' }] },
+    })
+    expect(dataSchema.safeParse(data).success).toBe(false)
+  })
 })
 
 describe('isTopicPageFirst', () => {

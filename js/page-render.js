@@ -141,6 +141,7 @@ function normalizePageType(type = '') {
   if (t.includes('resource collection')) return 'resource-collection'
   if (t.includes('campaign')) return 'campaign'
   if (t.includes('report')) return 'report'
+  if (t.includes('about')) return 'about'
   return 'generic'
 }
 function inferSectionRole(section, pageType) {
@@ -179,6 +180,13 @@ function inferSectionRole(section, pageType) {
     if (k.includes('external') && section.cards) return 'resources'
     return 'body'
   }
+  if (pageType === 'campaign') {
+    // Campaign sections always carry an explicit `component` in this
+    // mockup's content — this fallback exists only for parity with every
+    // other type's explicit handling above, mirroring the Transaction
+    // branch's own always-set-explicitly posture for its 'supporting' role.
+    return 'body'
+  }
   return 'body'
 }
 function partitionSections(page) {
@@ -189,6 +197,8 @@ function partitionSections(page) {
   const related = []
   const whatToDo = []
   const supporting = []
+  const spotlight = []
+  const topFacts = []
   const body = []
   for (const [index, section] of (page.sections || []).entries()) {
     // The ORIGINAL index, attached to a copy rather than to page data. Buckets
@@ -202,9 +212,22 @@ function partitionSections(page) {
     else if (role === 'intro') intro.push(withIndex)
     else if (role === 'what-to-do') whatToDo.push(withIndex)
     else if (role === 'supporting') supporting.push(withIndex)
+    else if (role === 'spotlight') spotlight.push(withIndex)
+    else if (role === 'top-facts') topFacts.push(withIndex)
     else body.push(withIndex)
   }
-  return { pageType, intro, services, resources, related, whatToDo, supporting, body }
+  return {
+    pageType,
+    intro,
+    services,
+    resources,
+    related,
+    whatToDo,
+    supporting,
+    spotlight,
+    topFacts,
+    body,
+  }
 }
 function sectionAnchorId(heading) {
   return (
@@ -481,6 +504,16 @@ function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
   return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
 }
+// Karl's "Partner agencies" field on a Transaction page — a separate H2
+// section from the Primary-Agency parent link (renderParentLink()) and from
+// Related. Entries point at real sf.gov department pages outside this
+// mockup's page set, so `section` is always null here: there is no local
+// page to classify title/description inheritance against, matching a plain
+// external card (see cardActionAndDescription()).
+function renderPartnerAgencies(cards = []) {
+  if (!cards.length) return ''
+  return `<section class="section section--partner-agencies">${karlTag('Partner agencies: linked departments', 'placement')}<h2>Partner agencies</h2><div class="resources-list">${renderCardList(cards, null)}</div></section>`
+}
 /**
  * Step cards pass `null` for the section on purpose. A step's cards live inside
  * a Step List block, not in the section's own card list, so the section's
@@ -559,9 +592,11 @@ function renderWhatToKnow(whatToKnow, page) {
   if (!data) return ''
   const cost = data.cost || (normalizePageType(page.type) === 'transaction' ? 'Free' : '')
   const things = data.thingsToKnow || data.items || []
-  const thingItems = Array.isArray(things)
+  const normalizedThings = Array.isArray(things)
     ? things.map((item) =>
-        typeof item === 'string' ? item : `${item.label ? item.label + ': ' : ''}${item.text || ''}`
+        typeof item === 'string'
+          ? { label: '', text: item }
+          : { label: item.label || '', text: item.text || '' }
       )
     : []
   // "Who this page is for" is folded in here from page.audience rather than
@@ -569,30 +604,84 @@ function renderWhatToKnow(whatToKnow, page) {
   // source of truth and can't drift between the two.
   const audienceItems = Array.isArray(page.audience) ? page.audience : []
   const audienceHtml = audienceItems.length
-    ? `<p><strong>Who this is for:</strong></p><ul>${renderAudience(audienceItems)}</ul>`
+    ? `<div class="what-to-know-subsection"><h3>Who this is for</h3><ul>${renderAudience(audienceItems)}</ul></div>`
     : ''
-  if (!cost && !thingItems.length && !audienceHtml) return ''
-  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body')}<h2 class="visually-hidden">What to know before you start</h2>${cost ? `<p class="what-to-know-cost"><strong>Cost:</strong> ${escapeHtml(cost)}</p>` : ''}${thingItems.length || audienceHtml ? `<div class="what-to-know-things">${audienceHtml}${renderTextItems(thingItems)}</div>` : ''}</section>`
+  const costHtml = cost
+    ? `<div class="what-to-know-subsection what-to-know-cost"><h3>Cost</h3><p>${escapeHtml(cost)}</p></div>`
+    : ''
+  // Real sf.gov renders each "Things to know" entry as its own named H3
+  // subsection (e.g. "What to report", "Response time varies" — confirmed
+  // against 4 live Transaction pages). A labeled entry gets that treatment;
+  // an unlabeled one has no name to give its own heading, so those fall back
+  // to one shared "Things to know" list, same as before this change.
+  const labeledHtml = normalizedThings
+    .filter((t) => t.label)
+    .map(
+      (t) =>
+        `<div class="what-to-know-subsection"><h3>${escapeHtml(t.label)}</h3><p>${formatMarkdown(t.text)}</p></div>`
+    )
+    .join('')
+  const unlabeled = normalizedThings.filter((t) => !t.label).map((t) => t.text)
+  const unlabeledHtml = unlabeled.length
+    ? `<div class="what-to-know-subsection"><h3>Things to know</h3>${renderTextItems(unlabeled)}</div>`
+    : ''
+  const body = `${audienceHtml}${costHtml}${labeledHtml}${unlabeledHtml}`
+  if (!body) return ''
+  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body')}<h2 class="what-to-know-heading"><span class="what-to-know-icon" aria-hidden="true">ⓘ</span>What to know</h2>${body}</section>`
 }
 function renderContactSection(contact, page) {
   const data = contact || resolveContact(page)
   if (!data) return ''
   const blocks = []
-  if (data.address) blocks.push(`<p><strong>Address</strong><br>${escapeHtml(data.address)}</p>`)
+  if (data.address) blocks.push(`<h3>Address</h3><p>${escapeHtml(data.address)}</p>`)
   if (data.phone?.length)
-    blocks.push(
-      `<p><strong>Phone</strong><br>${data.phone.map((p) => escapeHtml(p)).join('<br>')}</p>`
-    )
+    blocks.push(`<h3>Phone</h3><p>${data.phone.map((p) => escapeHtml(p)).join('<br>')}</p>`)
   if (data.email?.length)
-    blocks.push(
-      `<p><strong>Email</strong><br>${data.email.map((e) => escapeHtml(e)).join('<br>')}</p>`
-    )
-  if (data.hours) blocks.push(`<p><strong>Hours</strong><br>${escapeHtml(data.hours)}</p>`)
+    blocks.push(`<h3>Email</h3><p>${data.email.map((e) => escapeHtml(e)).join('<br>')}</p>`)
+  if (data.hours) blocks.push(`<h3>Hours</h3><p>${escapeHtml(data.hours)}</p>`)
   if (data.other?.length)
-    blocks.push(
-      `<p><strong>Other</strong><br>${data.other.map((o) => escapeHtml(o)).join('<br>')}</p>`
-    )
+    blocks.push(`<h3>Other</h3><p>${data.other.map((o) => escapeHtml(o)).join('<br>')}</p>`)
+  if (data.social?.length) {
+    const links = data.social
+      .map(
+        (s) =>
+          `<a href="${escapeHtml(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.platform)}</a>`
+      )
+      .join(' ')
+    blocks.push(`<h3>Social media</h3><p>${links}</p>`)
+  }
   return `<section class="contact-section section">${karlTag('Contact section', 'placement')}<h2>Contact us</h2>${blocks.join('')}</section>`
+}
+// A boxed "Spotlight" block: light-blue box, title + description + optional
+// button, built from a mockup section object rather than the dedicated
+// top-level `page.spotlight` field renderSpotlight() reads. Originally built
+// for Campaign's Spotlight 1/Spotlight 2 (each independently repeatable —
+// confirmed live: sf.gov/shop-dine-sf uses 2 instances) and reused as-is for
+// Topic's own Spotlight block, confirmed the identical shape live
+// (sf.gov/topics--healthy-housing-conditions). Both types represent this as
+// an ordinary section tagged `component: 'spotlight'` rather than a
+// dedicated top-level array field.
+function renderSpotlightSection(section) {
+  const cta = section.button
+    ? button(section.button, 'primary', section.buttonTarget || null, section.buttonUrl || null)
+    : ''
+  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement')}<div class="spotlight-section-inner"><h2>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [])}${section.callout ? renderCallout(section.callout) : ''}${cta}</div></section>`
+}
+// Karl's Campaign "Top facts" widget: a boxed panel of named facts, reusing
+// the exact `what-to-know-subsection` H3-per-item markup/CSS
+// renderWhatToKnow() established for Transaction's "What to know" box —
+// visually and structurally the same shape, just keyed off a section's own
+// `facts` array instead of `page.whatToKnow`.
+function renderTopFacts(section) {
+  const facts = Array.isArray(section.facts) ? section.facts : []
+  if (!facts.length) return ''
+  const factsHtml = facts
+    .map(
+      (f) =>
+        `<div class="what-to-know-subsection"><h3>${escapeHtml(f.label)}</h3><p>${formatMarkdown(f.text)}${f.unverified ? unverifiedPill(f.unverifiedReason) : ''}</p></div>`
+    )
+    .join('')
+  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body')}<h2>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [])}${factsHtml}</section>`
 }
 function renderOnThisPage(sections = []) {
   const headings = sections
@@ -610,6 +699,17 @@ function renderAccordionSection(section, pageType) {
   // IPM tips); the toggle still works normally afterwards.
   const expanded = section.open === true
   return `<div class="accordion-item"><button type="button" class="accordion-trigger" data-accordion-toggle aria-expanded="${expanded ? 'true' : 'false'}" aria-controls="${panelId}">${escapeHtml(section.heading)}</button><div class="accordion-panel" id="${panelId}"${expanded ? '' : ' hidden'}>${renderSectionInner(section, pageType)}</div></div>`
+}
+// Karl's Supporting information block also allows a plain "Custom section"
+// (Body, Main body, Text and title) alongside Accordion blocks — same H3
+// visual level as an accordion trigger, but no toggle/ARIA-expanded chrome
+// (confirmed live: sf.gov/report-health-nuisance-or-hazards's "Other ways to
+// report" sits flat next to two real accordions). renderSection() renders a
+// section.heading as h2, so this is its own small function rather than
+// reusing renderSection() directly.
+function renderCustomSection(section, pageType) {
+  const anchor = section.heading ? ` id="${sectionAnchorId(section.heading)}"` : ''
+  return `<div class="custom-section"><h3${anchor}>${escapeHtml(section.heading)}</h3>${renderSectionInner(section, pageType)}</div>`
 }
 function renderSectionInner(section, pageType = 'generic') {
   let inner = ''
@@ -670,13 +770,26 @@ function renderSection(section, pageType = 'generic', options = {}) {
             : 'section'
   return `<section class="${cls}">${inner}</section>`
 }
+// Karl's Services/Resources block is Title + Links, repeatable — a Topic or
+// Agency page can carry more than one, each becoming its own named
+// sub-group (e.g. "General housing issues", "Lead poisoning issues" —
+// confirmed live on sf.gov/topics--healthy-housing-conditions, 2 and 3
+// sub-groups respectively). Their heading renders as H3 here rather than
+// through renderSection()'s always-H2 default, since it nests one level
+// under the region's own H2 "Services"/"Resources" wrapper. Matches
+// renderCustomSection()'s established no-karl-tag-badge pattern for the
+// same reason: renderSectionInner() never adds one itself.
+function renderServiceGroup(section, pageType) {
+  const anchor = section.heading ? ` id="${sectionAnchorId(section.heading)}"` : ''
+  return `<div class="service-group"><h3${anchor}>${escapeHtml(section.heading)}</h3>${renderSectionInner(section, pageType)}</div>`
+}
 function renderServicesRegion(sections, pageType, karlLabel = 'Topic page Services section') {
   if (!sections.length) return ''
-  return `<div class="services-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Services</h2>${sections.map((s) => renderSection(s, pageType)).join('')}</div>`
+  return `<div class="services-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Services</h2>${sections.map((s) => renderServiceGroup(s, pageType)).join('')}</div>`
 }
 function renderResourcesRegion(sections, pageType, karlLabel = 'Topic page Resources section') {
   if (!sections.length) return ''
-  return `<div class="resources-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Resources</h2>${sections.map((s) => renderSection(s, pageType)).join('')}</div>`
+  return `<div class="resources-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Resources</h2>${sections.map((s) => renderServiceGroup(s, pageType)).join('')}</div>`
 }
 function renderSpotlight(spotlight) {
   if (!spotlight) return ''
@@ -722,11 +835,40 @@ function renderHero(page, heroCta) {
   // references show none. Rather than one gray label on every page type,
   // this now matches per-type: colored and present on Agency, absent
   // elsewhere.
+  // Every sampled live Transaction page shows a plain "Service" label above
+  // the H1 — literal text, not page.type: Karl's front-end label for this
+  // content type reads "Service" even though the type itself is "Transaction"
+  // (confirmed against 4 live pages, including sf.gov/report-health-nuisance-or-hazards).
+  const pageTypeNormalized = normalizePageType(page.type)
   const eyebrowHtml =
-    normalizePageType(page.type) === 'agency'
-      ? `${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow eyebrow--agency">${escapeHtml(page.type)}</div>`
-      : ''
-  return `<section class="${heroClass}"><div class="hero-inner">${eyebrowHtml}${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>${ctaHtml}</div></section>`
+    pageTypeNormalized === 'agency' || pageTypeNormalized === 'topic'
+      ? // Agency and Topic share this exact visible, colored eyebrow —
+        // confirmed live on sf.gov/topics--housing and
+        // sf.gov/topics--healthy-housing-conditions (orange "TOPIC" above
+        // the H1), matching the treatment already built for Agency.
+        `${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow eyebrow--agency">${escapeHtml(page.type)}</div>`
+      : pageTypeNormalized === 'transaction'
+        ? `${karlTag('Metadata: Karl page type (renders as "Service")', 'meta')}<div class="eyebrow eyebrow--service">Service</div>`
+        : pageTypeNormalized === 'campaign'
+          ? // Confirmed via 2 live Campaign pages (sf.gov/shop-dine-sf,
+            // sf.gov/1865-til-infinity): no visible eyebrow text renders
+            // above the H1, unlike Transaction's visible "Service" label.
+            `${karlTag('Metadata: Karl page type (screen-reader-only)', 'meta')}<p class="visually-hidden">Campaign</p>`
+          : pageTypeNormalized === 'about'
+            ? // Confirmed live (sf.gov/departments--controllers-office--about):
+              // no visible eyebrow above "About {name}" either.
+              `${karlTag('Metadata: Karl page type (screen-reader-only)', 'meta')}<p class="visually-hidden">About us</p>`
+            : ''
+  // Campaign and About us both show no visible summary/description in the
+  // hero (confirmed live for About us against the Controller's Office page:
+  // just the H1 and the "Back to main page" link — renderParentLink()
+  // already provides that link for every non-Agency page, unchanged).
+  // `page.summary` stays required in the schema for SEO/list-preview use.
+  const summaryHtml =
+    pageTypeNormalized === 'campaign' || pageTypeNormalized === 'about'
+      ? ''
+      : `${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>`
+  return `<section class="${heroClass}"><div class="hero-inner">${eyebrowHtml}${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${summaryHtml}${ctaHtml}</div></section>`
 }
 // Every one of the 7 sf.gov reference pages audited for this pass shows one
 // link back to its owning program (e.g. "Environmental Health"), never a
@@ -747,7 +889,18 @@ function renderPrintVersion(url) {
 }
 function renderPageMain(page) {
   const parts = partitionSections(page)
-  const { pageType, intro, services, resources, related, whatToDo, supporting, body } = parts
+  const {
+    pageType,
+    intro,
+    services,
+    resources,
+    related,
+    whatToDo,
+    supporting,
+    spotlight,
+    topFacts,
+    body,
+  } = parts
   const heroCta = resolveHeroCta(page, whatToDo)
   let html = renderHero(page, heroCta)
   html += `<main class="page-body page-body--${pageType}">`
@@ -774,7 +927,7 @@ function renderPageMain(page) {
     if (supporting.length) {
       html += `<div class="supporting-info">${karlTag('Supporting information: Accordions and custom sections', 'body')}<h2 class="visually-hidden">Supporting information</h2>`
       supporting.forEach((s) => {
-        html += renderAccordionSection(s, pageType)
+        html += s.flat ? renderCustomSection(s, pageType) : renderAccordionSection(s, pageType)
       })
       html += `</div>`
     }
@@ -784,6 +937,7 @@ function renderPageMain(page) {
     related.forEach((s) => {
       html += renderRelatedList(s.cards || [], s.heading || 'Related', s)
     })
+    html += renderPartnerAgencies(page.partnerAgencies || [])
     html += renderContactSection(page.contact, page)
   } else if (pageType === 'information' || pageType === 'report') {
     const infoBody = [
@@ -803,11 +957,20 @@ function renderPageMain(page) {
       html += renderPrintVersion(page.printVersionUrl)
     }
   } else if (pageType === 'topic') {
+    // Matches the real Karl Topic field order confirmed live
+    // (sf.gov/topics--healthy-housing-conditions): Spotlight, then Services
+    // and Resources (each possibly carrying multiple named sub-groups via
+    // renderServicesRegion()/renderResourcesRegion()'s own H3 handling),
+    // then Partner agencies. Related renders in the shared tail below.
+    spotlight.forEach((s) => {
+      html += renderSpotlightSection(s)
+    })
     intro.forEach((s) => {
       html += renderSection(s, pageType)
     })
     html += renderServicesRegion(services, pageType)
     html += renderResourcesRegion(resources, pageType)
+    html += renderPartnerAgencies(page.partnerAgencies || [])
   } else if (pageType === 'agency') {
     // Mirrors the real Karl Agency field order: Description/Quick links intro,
     // Section title 1 (Services), Spotlight 1, Section title 2 (Resources),
@@ -837,6 +1000,47 @@ function renderPageMain(page) {
     resources.forEach((s) => {
       html += renderSection({ ...s, component: 'resources' }, pageType)
     })
+  } else if (pageType === 'about') {
+    // Karl's "About us" type is genuinely simple (Title, Primary agency,
+    // Information, Resources — live-admin-confirmed, no Related/Partner
+    // agencies/Contact us fields). Confirmed live
+    // (sf.gov/departments--controllers-office--about): Information renders
+    // as plain top-level H2 sections ("Who we are", "What we do", "Our
+    // divisions" — no wrapping region heading, unlike Services/Resources),
+    // so the body bucket's default renderSection() already matches with no
+    // extra component needed. Resources reuses the exact H3-sub-group
+    // component built for Topic.
+    body.forEach((s) => {
+      html += renderSection(s, pageType)
+    })
+    html += renderResourcesRegion(resources, pageType, 'About us page Resources section')
+  } else if (pageType === 'campaign') {
+    // Mirrors the real Karl Campaign field order confirmed live
+    // (sf.gov/shop-dine-sf): Spotlight(s), Additional-content Accordions,
+    // Top facts, About/other body content, Related, Partner agencies,
+    // Contact us last. Accordion rendering reuses the exact code path
+    // Transaction's Supporting information already uses — same component.
+    spotlight.forEach((s) => {
+      html += renderSpotlightSection(s)
+    })
+    if (supporting.length) {
+      html += `<div class="supporting-info">${karlTag('Additional content: Accordion sections', 'body')}<h2 class="visually-hidden">Additional content</h2>`
+      supporting.forEach((s) => {
+        html += s.flat ? renderCustomSection(s, pageType) : renderAccordionSection(s, pageType)
+      })
+      html += `</div>`
+    }
+    topFacts.forEach((s) => {
+      html += renderTopFacts(s)
+    })
+    body.forEach((s) => {
+      html += renderSection(s, pageType)
+    })
+    related.forEach((s) => {
+      html += renderRelatedList(s.cards || [], s.heading || 'Related', s)
+    })
+    html += renderPartnerAgencies(page.partnerAgencies || [])
+    html += renderContactSection(page.contact, page)
   } else {
     ;[...body, ...whatToDo, ...supporting, ...intro, ...services, ...resources].forEach((s) => {
       html += renderSection(s, pageType)

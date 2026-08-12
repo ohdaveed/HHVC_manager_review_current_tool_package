@@ -198,6 +198,7 @@ function countUnverifiedClaims(pages) {
     for (const section of page.sections || []) {
       count += countFlagged(section.paragraphs)
       count += countFlagged(section.bullets)
+      count += countFlagged(section.facts)
       count += (section.cards || []).filter((card) => card.unverified).length
       for (const step of section.steps || []) {
         count += countFlagged(step.text)

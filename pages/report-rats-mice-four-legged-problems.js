@@ -16,10 +16,21 @@ window.HHVC_PAGES['rodentsReport'] = {
     'Consolidated Transaction page. Replaces the separate "Report rats or mice" page and absorbs the raccoon reporting path from the deleted raccoon Information page. Bats are in scope too — Article 11 policy source groups bats with raccoons/skunks/squirrels under "Wildlife (Public Health Importance)" and applies the same exclusion/prevention rules (docs/source/hhvc-policy/2026-07-07-directors-rules-ai-export-DRAFT-NOT-FOR-PUBLICATION.md). One primary 311 CTA. The "While you wait" section is the Supporting information block requested by the manager: set expectations on response time, then give simple IPM tips so people can start addressing the problem themselves.',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list. The
+    // response-time fact that used to be a third bullet here is dropped as a
+    // duplicate: "How your report is processed" below already states it
+    // ("It can take a few weekdays for 311 to send your report...").
     thingsToKnow: [
-      'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
-      'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
-      'It can take a few weekdays for 311 to assign an inspector after you report.',
+      {
+        label: 'Reporting anonymously',
+        text: 'You can report anonymously — 311 does not require your name, and HHVC does not share your identity with the property owner or manager.',
+      },
+      {
+        label: 'Notify your landlord first',
+        text: 'If you rent, tell your landlord first and give them 72 hours to start fixing the problem, unless it is an urgent health or safety risk.',
+      },
     ],
   },
   sections: [
@@ -172,6 +183,20 @@ window.HHVC_PAGES['rodentsReport'] = {
           target: 'tenantRights',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — the two departments this
+  // report actually routes through, matching the pattern confirmed live on
+  // sf.gov/report-health-nuisance-or-hazards.
+  partnerAgencies: [
+    {
+      title: '311 Customer Service Center',
+      url: 'https://www.sf.gov/departments--311-customer-service-center',
+    },
+    {
+      title: 'Environmental Health',
+      url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
   seoTitle: 'Report rats, mice, and other four-legged problems | SF.gov',

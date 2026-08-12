@@ -45,7 +45,7 @@ The manager-review interface uses a **mockup-first layout**:
 - The page preview loads above the fold
 - Review tools sit in a workspace docked beside the preview, sticky to the viewport
 - A sticky review bar shows the current page title, decision chip, queue progress, and navigation shortcuts
-- A review queue tracks all 27 pages with filters, progress, and one-click navigation
+- A review queue tracks all 29 pages with filters, progress, and one-click navigation
 - Workspace tabs hold the Overview, Page checks, and Help panels (shortcuts `1`–`3`)
 
 Additional review aids:

@@ -15,10 +15,21 @@ window.HHVC_PAGES['findRecords'] = {
     'SF.gov landing page for an external lookup tool. Primary CTA opens xnet.sfdph.org (Residential Health Code Violations). Verify the external URL before publication.',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list. The
+    // "five years of activity" fact that used to be a first bullet here is
+    // dropped as a duplicate: "What you can look up" below already states it
+    // almost verbatim.
     thingsToKnow: [
-      'The tool shows about five years of investigated complaint and inspection activity.',
-      'Complaint records are public. Environmental Health generally does not share the name of the person who filed a complaint.',
-      'The link opens on the Department of Public Health website. You will leave SF.gov.',
+      {
+        label: 'Complaint privacy',
+        text: 'Complaint records are public. Environmental Health generally does not share the name of the person who filed a complaint.',
+      },
+      {
+        label: 'Leaving SF.gov',
+        text: 'The link opens on the Department of Public Health website. You will leave SF.gov.',
+      },
     ],
   },
   sections: [
@@ -89,6 +100,15 @@ window.HHVC_PAGES['findRecords'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — the lookup tool this
+  // page links to is hosted on the Department of Public Health's own site.
+  partnerAgencies: [
+    {
+      title: 'Department of Public Health',
+      url: 'https://www.sf.gov/departments--department-public-health',
     },
   ],
   seoTitle: 'Find complaints and inspection records | SF.gov',

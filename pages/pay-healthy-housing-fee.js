@@ -14,10 +14,21 @@ window.HHVC_PAGES['payFee'] = {
     'Transaction redesign based on the live FY 2026-27 payment page and fee schedule. It puts the payment action first, then separates eligibility, annual fee tiers, invoice corrections, and late-payment consequences. The annual apartment-building fee and a reinspection fee are distinct charges; do not present reinspection rates as part of the annual bill.',
   whatToKnow: {
     cost: 'Annual fee based on rental unit count — $103 (3 units) up to $808 (more than 30 units). Check your invoice for the exact amount.',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list. The
+    // late-penalty fact that used to be a third bullet here is dropped as a
+    // duplicate: Step 5 ("Pay by the due date or contact us") already states
+    // it, and none of these dollar figures are touched/reworded.
     thingsToKnow: [
-      'You must pay if you own an apartment building with 3 or more rental units, even if you also live there.',
-      'The annual fee is separate from reinspection fees, which only apply if an inspection finds an uncorrected violation.',
-      'Late penalties apply: $10 after 30 days, $30 after 60 days, plus 1.5% monthly interest on unpaid balances.',
+      {
+        label: 'Who must pay',
+        text: 'You must pay if you own an apartment building with 3 or more rental units, even if you also live there.',
+      },
+      {
+        label: 'Annual fee vs. reinspection fees',
+        text: 'The annual fee is separate from reinspection fees, which only apply if an inspection finds an uncorrected violation.',
+      },
     ],
   },
   sections: [
@@ -138,6 +149,15 @@ window.HHVC_PAGES['payFee'] = {
           karl: 'Related panel page chooser entry.',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — Environmental Health
+  // issues the invoice this page's payment action settles.
+  partnerAgencies: [
+    {
+      title: 'Environmental Health',
+      url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
   seoTitle: 'Pay your Healthy Housing fee | SF.gov',

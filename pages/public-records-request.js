@@ -15,9 +15,18 @@ window.HHVC_PAGES['publicRecords'] = {
     'SF.gov landing page for the citywide public records service (NextRequest). Primary CTA is external. Verify whether HHVC needs a program-specific intro or routes entirely to the citywide portal.',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into named subsections (Karl's own "no more than 2, if you
+    // can" guidance) to match how real sf.gov Things to know entries render
+    // — each with its own H3, not one joined bullet list.
     thingsToKnow: [
-      'Many complaint and inspection records are already available through the online lookup tools — check there first.',
-      'Requests are handled through the citywide San Francisco NextRequest portal. You will leave SF.gov.',
+      {
+        label: 'Check the lookup tools first',
+        text: 'Many complaint and inspection records are already available through the online lookup tools — check there first.',
+      },
+      {
+        label: 'Leaving SF.gov',
+        text: 'Requests are handled through the citywide San Francisco NextRequest portal. You will leave SF.gov.',
+      },
     ],
   },
   sections: [
@@ -61,6 +70,16 @@ window.HHVC_PAGES['publicRecords'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — Environmental Health
+  // holds the records this request would retrieve, even though the request
+  // itself routes through the citywide NextRequest portal.
+  partnerAgencies: [
+    {
+      title: 'Environmental Health',
+      url: 'https://www.sf.gov/departments--department-public-health--environmental-health',
     },
   ],
   seoTitle: 'Make a public records request | SF.gov',

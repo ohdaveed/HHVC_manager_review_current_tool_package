@@ -15,10 +15,21 @@ window.HHVC_PAGES['findViolations'] = {
     'Alias-style lookup page focused on violations language. Primary CTA uses the same verified xnet Residential Health Code Violations tool as findRecords. Consider merging with findRecords if editors prefer one combined lookup page.',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into ~2 named subsections (Karl's own "no more than 2, if
+    // you can" guidance) to match how real sf.gov Things to know entries
+    // render — each with its own H3, not one joined bullet list. The
+    // "search by address or record ID" fact that used to be a middle bullet
+    // here is dropped as a duplicate: "What you can search" below already
+    // states it almost verbatim.
     thingsToKnow: [
-      'This is the same Environmental Health lookup tool used for complaint and inspection history.',
-      'Search by address or record ID to see investigated complaints, inspections, and violations.',
-      'The link opens on the Department of Public Health website. You will leave SF.gov.',
+      {
+        label: 'What this tool covers',
+        text: 'This is the same Environmental Health lookup tool used for complaint and inspection history.',
+      },
+      {
+        label: 'Leaving SF.gov',
+        text: 'The link opens on the Department of Public Health website. You will leave SF.gov.',
+      },
     ],
   },
   sections: [
@@ -60,6 +71,15 @@ window.HHVC_PAGES['findViolations'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — the lookup tool this
+  // page links to is hosted on the Department of Public Health's own site.
+  partnerAgencies: [
+    {
+      title: 'Department of Public Health',
+      url: 'https://www.sf.gov/departments--department-public-health',
     },
   ],
   seoTitle: 'Look up residential health code violations | SF.gov',

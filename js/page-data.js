@@ -10,6 +10,8 @@
    here plus an `order` entry below. */
 
 import '../pages/agency-service-grouping.js'
+import '../pages/healthy-housing-conditions-topic.js'
+import '../pages/about-hhvc-team.js'
 import '../pages/report-rats-mice-four-legged-problems.js'
 import '../pages/report-garbage-filth-vegetation.js'
 import '../pages/report-cockroaches-mosquitoes-insects.js'
@@ -42,6 +44,8 @@ window.HHVC_DATA = {
   pages: window.HHVC_PAGES,
   order: [
     ['pestsTopic', 'Agency page: Healthy Housing and Vector Control'],
+    ['healthyHousingTopic', 'Topic: Healthy housing conditions'],
+    ['aboutHhvcTeam', 'About us: Healthy Housing and Vector Control'],
     ['rodentsReport', 'Transaction: Report rats, mice, and other four-legged problems'],
     ['filthReport', 'Transaction: Report garbage, filth, and overgrown vegetation'],
     ['insectsReport', 'Transaction: Report cockroaches, mosquitoes, and other insects'],

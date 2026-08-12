@@ -10,13 +10,14 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md) using this mockup\'s existing sections[]/cards[]/bullets[] shape — this tool has no Spotlight/Top facts/Logo/Color theme widgets, so the karl notes below describe the intended real-Karl block for each section rather than a literally rendered equivalent. Campaign page-level fields with no mockup equivalent at all: Primary agency, Logo, Background header image, Color theme, Partner agencies. Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
+    'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md). Spotlight, Additional-content Accordion sections, and Top facts now render as their own real-Karl-matching components (verified live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity) — remaining Campaign page-level fields with no mockup equivalent: Primary agency, Logo, Background header image, Color theme (no source image assets exist for this illustrative program). Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   editorStatus: 'placeholder',
   sections: [
     {
       heading: 'Bring mosquito science to your students',
-      karl: 'Maps to Spotlight 1: Spotlight title = this heading, Spotlight description = the paragraphs below. Spotlight requires a Spotlight image (min 1080×350px) with no mockup equivalent — flag for Digital Services. No button set here; the workshop CTA lives in Spotlight 2 ("Request a workshop" section below) instead.',
+      karl: 'Maps to Spotlight 1: Spotlight title = this heading, Spotlight description = the paragraphs below. Spotlight requires a Spotlight image (min 1080×350px) with no mockup equivalent — flag for Digital Services. No button set here; the workshop CTA lives in Spotlight 2 ("Request a workshop" section below) instead. Renders as a light-blue Spotlight box, confirmed live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity.',
       kind: 'body',
+      component: 'spotlight',
       paragraphs: [
         'Healthy Housing and Vector Control offers a free mosquito education workshop for youth audiences in San Francisco.',
         'Our team sets up interactive science stations where students can explore mosquito biology, breeding habitats, and disease prevention through hands-on learning.',
@@ -28,8 +29,9 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Who can request a workshop',
-      karl: "Maps to an Additional content → Accordion section block: Title = this heading, Accordion sidebar (rich text) = the paragraph below, and each bullet below becomes one Accordion item (Title = audience type, Body = elaboration — this mockup's bullets are single-line, so item bodies would need light rewriting to fit the Title+Body shape).",
+      karl: "Maps to an Additional content → Accordion section block: Title = this heading, Accordion sidebar (rich text) = the paragraph below, and each bullet below becomes one Accordion item (Title = audience type, Body = elaboration — this mockup's bullets are single-line, so item bodies would need light rewriting to fit the Title+Body shape). Renders as a collapsible accordion, reusing the same component Transaction's Supporting information already uses.",
       kind: 'body',
+      component: 'supporting',
       bullets: [
         'Public and private schools',
         'Summer camps and after-school programs',
@@ -42,8 +44,9 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'What students experience',
-      karl: 'Maps to a second Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet below becomes one Accordion item (station name as Title, elaboration as Body).',
+      karl: 'Maps to a second Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet below becomes one Accordion item (station name as Title, elaboration as Body). Renders as a collapsible accordion.',
       kind: 'body',
+      component: 'supporting',
       paragraphs: [
         'Each workshop uses mobile science stations that let students observe mosquitoes up close and learn how small changes at home can prevent breeding.',
       ],
@@ -57,8 +60,9 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Aligned with California education standards',
-      karl: 'Maps to a third Additional content → Accordion section block: Title = this heading, Accordion sidebar = the two paragraphs below, each bullet becomes one Accordion item.',
+      karl: 'Maps to a third Additional content → Accordion section block: Title = this heading, Accordion sidebar = the two paragraphs below, each bullet becomes one Accordion item. Renders as a collapsible accordion.',
       kind: 'body',
+      component: 'supporting',
       paragraphs: [
         'Workshop activities are designed to support California classroom learning goals in life science, public health, and scientific inquiry.',
         'Stations emphasize observation, evidence-based reasoning, and understanding how organisms interact with their environment—skills reflected in California educational standards for science.',
@@ -76,43 +80,45 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Request a workshop',
-      karl: 'Maps to Spotlight 2: Spotlight title = this heading, Spotlight description = the paragraphs below, and the "Request a workshop online" button becomes Spotlight 2\'s nested Button link (Link text = button label, target = buttonUrl). Spotlight also needs a Spotlight image with no mockup equivalent — flag for Digital Services.',
+      karl: 'Maps to Spotlight 2: Spotlight title = this heading, Spotlight description = the paragraphs below, and "Request a workshop online" becomes Spotlight 2\'s nested Button link (Link text = button label, target = buttonUrl). Spotlight also needs a Spotlight image with no mockup equivalent — flag for Digital Services.',
       kind: 'body',
+      component: 'spotlight',
       paragraphs: [
         'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability. Submitted requests currently route to the Mosquito Control Program for scheduling (illustrative — confirm the actual intake backend with HHVC before publication).',
         'You can also contact the Mosquito Control Program directly if you have questions before submitting the form.',
       ],
-      cards: [
-        {
-          title: 'Request a workshop online',
-          text: 'Submit organization details, audience size, preferred dates, and space needs.',
-          url: '/forms/mosquito-workshop-request/',
-          karl: 'This card duplicates the section-level CTA above; Spotlight has no nested card/list field, so this restatement has no separate home in the real schema — likely mockup-only scaffolding, not a distinct Campaign block.',
-        },
-      ],
+      button: 'Request a workshop online',
+      buttonUrl: '/forms/mosquito-workshop-request/',
     },
     {
       heading: 'Questions before you apply',
-      karl: 'Best real-schema fit: Top facts. Facts title = this heading (or a shorter variant like "Workshop essentials"), and each bullet below becomes one Fact item (Fact title = a short label like "Contact"/"Service area"/"Group size"/"Lead time", Fact text = the full bullet). The phone number could alternatively live in the dedicated Contact us panel\'s Phone block (Owner = "Mosquito Control Program", Phone number = the confirmed program line) instead — Top facts is the closer fit for the other three logistics bullets, so Contact us isn\'t used here to avoid splitting this content across two panels. FLAG: the 415-252-3806 number shown in the bullet is unverified (no tier-1/2/3 source; tier-1 cites 415-252-3800) — confirm with HHVC before entering it in any Karl phone field.',
+      karl: 'Maps to Top facts: Facts title = this heading, and each fact below is one Fact item (Fact title = the short label, Fact text = the full detail). The phone number could alternatively live in the dedicated Contact us panel\'s Phone block (Owner = "Mosquito Control Program", Phone number = the confirmed program line) instead — Top facts is the closer fit for the other three logistics facts, so Contact us isn\'t used here to avoid splitting this content across two panels. FLAG: the 415-252-3806 number shown below is unverified (no tier-1/2/3 source; tier-1 cites 415-252-3800) — confirm with HHVC before entering it in any Karl phone field. Renders as a boxed Top facts panel.',
       kind: 'body',
+      component: 'top-facts',
       paragraphs: [
         'Call or email the Mosquito Control Program if you need help deciding whether the workshop is right for your group.',
       ],
-      bullets: [
+      facts: [
         {
+          label: 'Contact',
           text: 'Contact the Mosquito Control Program at 415-252-3806',
           unverified: true,
           unverifiedReason:
             'Phone number 415-252-3806 appears in no tier-1/2/3 source doc (source-of-truth audit 2026-07-06, cross-cutting finding #2). The tier-1-confirmed DPH number is 415-252-3800 — this reads as a digit swap. Confirm the real program line with HHVC before publication.',
         },
-        'Available to schools, camps, museums, and youth groups located within San Francisco',
         {
+          label: 'Service area',
+          text: 'Available to schools, camps, museums, and youth groups located within San Francisco',
+        },
+        {
+          label: 'Group size',
           text: 'Fits groups up to about 60 students per session; larger groups can be split into multiple sessions',
           unverified: true,
           unverifiedReason:
             'SME placeholder — capacity is illustrative example content for mockup review; confirm actual value with HHVC before publication (see page editorNote).',
         },
         {
+          label: 'Lead time',
           text: 'Request at least 3 weeks before your event date to allow time for scheduling, setup, and equipment transport',
           unverified: true,
           unverifiedReason:

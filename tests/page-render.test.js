@@ -258,6 +258,361 @@ describe('Transaction page layout', () => {
     expect(html).not.toContain('related-rail')
     expect(html).not.toContain('page-layout--transaction')
   })
+
+  test('Contact us renders H3 sub-headings, not bold inline labels', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['Someone'],
+      reading: 'Grade 6',
+      contact: { phone: ['311'], email: ['ehb@sfdph.org'] },
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h3>Phone</h3><p>311</p>')
+    expect(html).toContain('<h3>Email</h3><p>ehb@sfdph.org</p>')
+    expect(html).not.toContain('<strong>Phone</strong>')
+  })
+
+  test('renders a Partner agencies section after Related when partnerAgencies is set', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['Someone'],
+      reading: 'Grade 6',
+      partnerAgencies: [
+        { title: '311 Customer Service Center', url: 'https://www.sf.gov/departments--311' },
+      ],
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="section section--partner-agencies"')
+    expect(html).toContain('>Partner agencies<')
+    expect(html).toContain('311 Customer Service Center')
+    const partnerIndex = html.indexOf('section--partner-agencies')
+    const contactIndex = html.indexOf('class="contact-section')
+    expect(partnerIndex).toBeGreaterThan(-1)
+    expect(contactIndex).toBeGreaterThan(partnerIndex)
+  })
+
+  test('renders no Partner agencies section when partnerAgencies is unset', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['Someone'],
+      reading: 'Grade 6',
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).not.toContain('section--partner-agencies')
+  })
+
+  test('a Supporting information section renders as an accordion by default', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['Someone'],
+      reading: 'Grade 6',
+      sections: [
+        { heading: 'Other ways to report', karl: 'Supporting info', component: 'supporting' },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('accordion-trigger')
+    expect(html).toContain('data-accordion-toggle')
+    expect(html).not.toContain('class="custom-section"')
+  })
+
+  test('a Supporting information section marked flat renders as a plain Custom section', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['Someone'],
+      reading: 'Grade 6',
+      sections: [
+        {
+          heading: 'Other ways to report',
+          karl: 'Supporting info',
+          component: 'supporting',
+          flat: true,
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="custom-section"')
+    expect(html).toContain('<h3 id="section-other-ways-to-report">Other ways to report</h3>')
+    expect(html).not.toContain('accordion-trigger')
+    expect(html).not.toContain('data-accordion-toggle')
+  })
+})
+
+describe('campaign page layout', () => {
+  const base = {
+    type: 'Campaign',
+    title: 'Free workshop',
+    summary: 'Summary.',
+    audience: ['Someone'],
+    reading: 'Grade 6',
+  }
+
+  test('shows a screen-reader-only "Campaign" eyebrow and no visible summary', () => {
+    const html = ctx.renderPageMain({ ...base, sections: [] })
+    expect(html).toContain('<p class="visually-hidden">Campaign</p>')
+    expect(html).not.toContain('class="eyebrow')
+    expect(html).not.toContain('class="summary"')
+  })
+
+  test('a component: spotlight section renders inside a blue Spotlight box with a button', () => {
+    const page = {
+      ...base,
+      sections: [
+        {
+          heading: 'Request a workshop',
+          karl: 'Spotlight 2',
+          component: 'spotlight',
+          paragraphs: ['Use the form to request a session.'],
+          button: 'Request a workshop online',
+          buttonUrl: '/forms/mosquito-workshop-request/',
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="spotlight-section"')
+    expect(html).toContain('class="spotlight-section-inner"')
+    expect(html).toContain('>Request a workshop<')
+    expect(html).toContain('Request a workshop online')
+  })
+
+  test('a component: supporting section renders as an accordion, same as Transaction', () => {
+    const page = {
+      ...base,
+      sections: [
+        { heading: 'Who can request', karl: 'Accordion section', component: 'supporting' },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('accordion-trigger')
+    expect(html).toContain('data-accordion-toggle')
+  })
+
+  test('a component: top-facts section renders each labeled fact as its own H3', () => {
+    const page = {
+      ...base,
+      sections: [
+        {
+          heading: 'Questions before you apply',
+          karl: 'Top facts',
+          component: 'top-facts',
+          facts: [
+            { label: 'Contact', text: 'Call 311.' },
+            {
+              label: 'Group size',
+              text: 'Up to 60 students.',
+              unverified: true,
+              unverifiedReason: 'Placeholder.',
+            },
+          ],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="top-facts"')
+    expect(html).toContain('<h3>Contact</h3><p>Call 311.</p>')
+    expect(html).toContain('<h3>Group size</h3>')
+    expect(html).toContain('unverified-pill')
+  })
+
+  test('renders Related, Partner agencies, and Contact us with a Social media block', () => {
+    const page = {
+      ...base,
+      partnerAgencies: [{ title: 'Mosquito Control Program', target: 'mosquitoControl' }],
+      contact: {
+        email: ['shopdinesf@sfgov.org'],
+        social: [{ platform: 'Facebook', url: 'https://www.facebook.com/shopdinesf' }],
+      },
+      sections: [
+        {
+          heading: 'Related',
+          karl: 'Related links',
+          component: 'related',
+          cards: [{ title: 'CDC: Preventing mosquito bites', url: 'https://www.cdc.gov/' }],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="section section--related"')
+    expect(html).toContain('class="section section--partner-agencies"')
+    expect(html).toContain('<h3>Social media</h3>')
+    expect(html).toContain('>Facebook<')
+  })
+})
+
+describe('topic page layout', () => {
+  const base = {
+    type: 'Topic',
+    title: 'Healthy housing conditions',
+    summary: 'Summary.',
+    audience: ['Someone'],
+    reading: 'Grade 6',
+  }
+
+  test('shows a visible orange "Topic" eyebrow, same treatment as Agency', () => {
+    const html = ctx.renderPageMain({ ...base, sections: [] })
+    expect(html).toContain('class="eyebrow eyebrow--agency"')
+    expect(html).toContain('>Topic<')
+  })
+
+  test('a component: spotlight section renders inside the shared blue Spotlight box', () => {
+    const page = {
+      ...base,
+      sections: [
+        {
+          heading: 'Report a housing health issue',
+          karl: 'Spotlight',
+          component: 'spotlight',
+          paragraphs: ['Contact 311.'],
+          button: 'Start a report',
+          buttonTarget: 'rodentsReport',
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="spotlight-section"')
+    expect(html).toContain('>Report a housing health issue<')
+    expect(html).toContain('Start a report')
+  })
+
+  test('multiple component: services sections render as named H3 sub-groups inside one Services region', () => {
+    const page = {
+      ...base,
+      sections: [
+        {
+          heading: 'General housing issues',
+          karl: 'Services block 1',
+          component: 'services',
+          cards: [
+            { title: 'Report rats, mice, and other four-legged problems', target: 'rodentsReport' },
+          ],
+        },
+        {
+          heading: 'Look up records',
+          karl: 'Services block 2',
+          component: 'services',
+          cards: [{ title: 'Find complaints and inspection records', target: 'findRecords' }],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h2 class="region-title">Services</h2>')
+    expect(html).toContain(
+      'class="service-group"><h3 id="section-general-housing-issues">General housing issues</h3>'
+    )
+    expect(html).toContain(
+      'class="service-group"><h3 id="section-look-up-records">Look up records</h3>'
+    )
+    const servicesIndex = html.indexOf('region-title">Services')
+    const firstGroupIndex = html.indexOf('General housing issues')
+    expect(firstGroupIndex).toBeGreaterThan(servicesIndex)
+  })
+
+  test('a component: resources section renders as an H3 sub-group inside one Resources region', () => {
+    const page = {
+      ...base,
+      sections: [
+        {
+          heading: 'Guidance and resources',
+          karl: 'Resources block',
+          component: 'resources',
+          cards: [
+            {
+              title: 'Learn what Healthy Housing and Vector Control can inspect',
+              target: 'scopeInfo',
+            },
+          ],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h2 class="region-title">Resources</h2>')
+    expect(html).toContain(
+      'class="service-group"><h3 id="section-guidance-and-resources">Guidance and resources</h3>'
+    )
+  })
+
+  test('renders Partner agencies and Related', () => {
+    const page = {
+      ...base,
+      partnerAgencies: [
+        {
+          title: 'Department of Public Health',
+          url: 'https://www.sf.gov/departments--department-public-health',
+        },
+      ],
+      sections: [
+        {
+          heading: 'Related',
+          karl: 'Related links',
+          component: 'related',
+          cards: [{ title: 'Free mosquito education workshop', target: 'mosquitoWorkshop' }],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('class="section section--partner-agencies"')
+    expect(html).toContain('class="section section--related"')
+  })
+})
+
+describe('about page layout', () => {
+  const base = {
+    type: 'About us',
+    title: 'Healthy Housing and Vector Control',
+    summary: 'Summary.',
+    audience: ['Someone'],
+    reading: 'Grade 6',
+  }
+
+  test('shows no visible eyebrow or summary, matching the live reference', () => {
+    const html = ctx.renderPageMain({ ...base, sections: [] })
+    expect(html).toContain('<p class="visually-hidden">About us</p>')
+    expect(html).not.toContain('class="eyebrow')
+    expect(html).not.toContain('class="summary"')
+  })
+
+  test('an Information section renders as a plain top-level H2, no wrapping region', () => {
+    const page = {
+      ...base,
+      sections: [{ heading: 'Who we are', karl: 'Information block', paragraphs: ['We inspect.'] }],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h2 id="section-who-we-are"')
+    expect(html).toContain('>Who we are<')
+    expect(html).not.toContain('class="services-region"')
+  })
+
+  test('a component: resources section renders as an H3 sub-group inside one Resources region', () => {
+    const page = {
+      ...base,
+      sections: [
+        {
+          heading: 'Program information',
+          karl: 'Resources block',
+          component: 'resources',
+          cards: [{ title: 'Mosquito Control Program', target: 'mosquitoControl' }],
+        },
+      ],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h2 class="region-title">Resources</h2>')
+    expect(html).toContain(
+      'class="service-group"><h3 id="section-program-information">Program information</h3>'
+    )
+  })
 })
 
 describe('renderParentLink', () => {
@@ -518,7 +873,7 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
 
   // The hero renders no pills of any kind after the CTA. It used to close
   // with a metadata row of up to three: 'Environmental Health' and 'HHVC'
-  // were string literals in the renderer, identical on all 27 pages;
+  // were string literals in the renderer, identical on all 29 pages;
   // `page.reading` is a property OF the copy rather than part of it, and one
   // no Karl page publishes; and `topicTag`/`reportDate`, while real page
   // fields, still duplicated chrome that added nothing above the fold. A
@@ -887,9 +1242,10 @@ describe('hero eyebrow', () => {
     expect(html).toContain('>Agency<')
   })
 
-  test('shows no eyebrow on a Transaction page', () => {
+  test('shows a plain "Service" eyebrow on a Transaction page', () => {
     const html = ctx.renderPageMain({ ...base, type: 'Transaction' })
-    expect(html).not.toContain('class="eyebrow')
+    expect(html).toContain('class="eyebrow eyebrow--service"')
+    expect(html).toContain('>Service<')
   })
 
   test('shows no eyebrow on an Information page', () => {
@@ -899,7 +1255,7 @@ describe('hero eyebrow', () => {
 })
 
 describe('renderWhatToKnow', () => {
-  test('does not print a generic "Things to know" wrapper heading', () => {
+  test('shows a visible "What to know" H2 with an icon', () => {
     const page = {
       type: 'Transaction',
       title: 'Report a thing',
@@ -910,8 +1266,56 @@ describe('renderWhatToKnow', () => {
       sections: [],
     }
     const html = ctx.renderPageMain(page)
-    expect(html).not.toContain('<strong>Things to know</strong>')
+    expect(html).toContain('<h2 class="what-to-know-heading">')
+    expect(html).toContain('what-to-know-icon')
+    expect(html).toContain('>What to know<')
+  })
+
+  test('renders Cost as its own H3, not an inline label', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['A tenant'],
+      reading: 'Grade 6',
+      whatToKnow: { cost: 'Free', thingsToKnow: ['Call 311 for help.'] },
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).not.toContain('<strong>Cost:</strong>')
+    expect(html).toContain('<h3>Cost</h3><p>Free</p>')
+  })
+
+  test('an unlabeled thingsToKnow entry falls back to one shared "Things to know" subsection', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['A tenant'],
+      reading: 'Grade 6',
+      whatToKnow: { cost: 'Free', thingsToKnow: ['Call 311 for help.'] },
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h3>Things to know</h3>')
     expect(html).toContain('Call 311 for help.')
-    expect(html).toContain('<strong>Cost:</strong> Free')
+  })
+
+  test('a labeled thingsToKnow entry renders as its own named H3 subsection', () => {
+    const page = {
+      type: 'Transaction',
+      title: 'Report a thing',
+      summary: 'Summary.',
+      audience: ['A tenant'],
+      reading: 'Grade 6',
+      whatToKnow: {
+        cost: 'Free',
+        thingsToKnow: [{ label: 'What to report', text: 'Call 311 for help.' }],
+      },
+      sections: [],
+    }
+    const html = ctx.renderPageMain(page)
+    expect(html).toContain('<h3>What to report</h3><p>Call 311 for help.</p>')
+    expect(html).not.toContain('<h3>Things to know</h3>')
   })
 })

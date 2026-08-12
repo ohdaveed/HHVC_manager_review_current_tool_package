@@ -17,9 +17,18 @@ window.HHVC_PAGES['findHotelRecords'] = {
   editorStatus: 'placeholder',
   whatToKnow: {
     cost: 'Free',
+    // Reorganized into named subsections (Karl's own "no more than 2, if you
+    // can" guidance) to match how real sf.gov Things to know entries render
+    // — each with its own H3, not one joined bullet list.
     thingsToKnow: [
-      'This lookup covers residential hotels, SROs, and shelters — a separate dataset from the general complaints and inspection lookup.',
-      'The link opens on the Department of Public Health website. You will leave SF.gov.',
+      {
+        label: 'What this tool covers',
+        text: 'This lookup covers residential hotels, SROs, and shelters — a separate dataset from the general complaints and inspection lookup.',
+      },
+      {
+        label: 'Leaving SF.gov',
+        text: 'The link opens on the Department of Public Health website. You will leave SF.gov.',
+      },
     ],
   },
   sections: [
@@ -76,6 +85,15 @@ window.HHVC_PAGES['findHotelRecords'] = {
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
         },
       ],
+    },
+  ],
+  // Karl's Partner agencies field (distinct from Primary Agency, which the
+  // parent-program link above already represents) — the lookup tool this
+  // page links to is hosted on the Department of Public Health's own site.
+  partnerAgencies: [
+    {
+      title: 'Department of Public Health',
+      url: 'https://www.sf.gov/departments--department-public-health',
     },
   ],
   seoTitle: 'Find residential hotel and shelter records | SF.gov',

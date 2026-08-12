@@ -44,6 +44,7 @@ const SECTION_COMPONENTS = [
   'what-to-do',
   'supporting',
   'intro',
+  'top-facts',
 ]
 
 const calloutSchema = {

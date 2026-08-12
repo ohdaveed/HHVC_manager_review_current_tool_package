@@ -221,6 +221,16 @@ h3 {
 .eyebrow--agency {
   color: var(--eyebrow-agency);
 }
+/* Real sf.gov Transaction pages show a plain, un-emphasized "Service" label
+   (confirmed against 4 live pages) — not the bold uppercase colored pill
+   .eyebrow--agency uses, so this overrides those base .eyebrow properties
+   rather than composing with them. */
+.eyebrow--service {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: var(--sfds-slate-3);
+}
 .control-group {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
@@ -820,12 +830,46 @@ a:focus {
   background: var(--sfds-slate-5);
   border: 1px solid var(--sfds-border);
 }
-.what-to-know-cost {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
+.what-to-know-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  margin: 0 0 0.85rem;
 }
-.what-to-know-things {
+.what-to-know-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+.what-to-know-subsection {
+  margin: 0 0 0.85rem;
+}
+.what-to-know-subsection:last-child {
+  margin-bottom: 0;
+}
+.what-to-know-subsection h3 {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+.what-to-know-subsection p,
+.what-to-know-subsection ul {
+  margin: 0;
   font-size: 0.95rem;
+}
+/* Campaign's "Top facts" widget — same boxed treatment as .what-to-know,
+   and its facts reuse .what-to-know-subsection directly (see renderTopFacts()
+   in js/page-render.js), so this is the only new ruleset the component needs. */
+.top-facts {
+  max-width: var(--content-max);
+  margin: 0 auto 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius);
+  background: var(--sfds-slate-5);
+  border: 1px solid var(--sfds-border);
+}
+.top-facts h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.85rem;
 }
 /* Transaction pages carry a right-hand related rail, so their body must be
    wider than the base reading column or the rail squeezes the main column.
@@ -850,6 +894,13 @@ a:focus {
   padding-top: 1rem;
 }
 .section--related .resources-list {
+  margin-top: 0.75rem;
+}
+.section--partner-agencies {
+  border-top: 1px solid var(--sfds-border);
+  padding-top: 1rem;
+}
+.section--partner-agencies .resources-list {
   margin-top: 0.75rem;
 }
 .on-this-page {
@@ -919,6 +970,16 @@ a:focus {
   font-size: 1.35rem;
   margin: 0 0 1rem;
 }
+.service-group {
+  margin: 0 0 1.25rem;
+}
+.service-group:last-child {
+  margin-bottom: 0;
+}
+.service-group h3 {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem;
+}
 .section--services .resources-list {
   margin-top: 0.5rem;
 }
@@ -960,6 +1021,13 @@ a:focus {
   padding-top: 1rem;
   border-top: 1px solid var(--sfds-border);
 }
+.contact-section h3 {
+  font-size: 1rem;
+  margin: 1rem 0 0.35rem;
+}
+.contact-section h3:first-of-type {
+  margin-top: 0;
+}
 .callout--warning {
   border-left-color: var(--sfds-warning-text);
   background: var(--sfds-warning-bg);
@@ -994,6 +1062,25 @@ a:focus {
   border-radius: var(--radius);
   background: var(--sfds-purple-bg);
   border: 1px solid var(--sfds-purple-border);
+}
+/* Campaign/Topic's "Spotlight" block — light-blue box, confirmed live on
+   both types (sf.gov/shop-dine-sf, sf.gov/1865-til-infinity,
+   sf.gov/topics--healthy-housing-conditions). Reuses the same --sfds-info-*
+   tokens .callout's info variant and .on-this-page already use rather than
+   introducing a new blue. No image column: no existing page using this
+   component has a source image asset for its illustrative program. */
+.spotlight-section {
+  max-width: var(--content-max);
+  margin: 0 auto 1.5rem;
+}
+.spotlight-section-inner {
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--sfds-info-light);
+  border: 1px solid var(--sfds-info-border);
+}
+.spotlight-section-inner h2 {
+  margin-top: 0;
 }
 .spotlight-media img {
   width: 100%;
@@ -1031,6 +1118,17 @@ a:focus {
 }
 .accordion-panel {
   padding: 0 1rem 1rem;
+}
+/* Karl's Custom section: a plain, non-collapsible sibling to Accordion
+   blocks inside Supporting information — same H3 visual weight as
+   .accordion-trigger, no border/background/toggle chrome. */
+.custom-section {
+  margin: 0 0 1.5rem;
+}
+.custom-section h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
 }
 .pill--topic {
   background: var(--sfds-purple-bg);

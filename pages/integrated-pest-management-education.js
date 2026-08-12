@@ -10,7 +10,7 @@ window.HHVC_PAGES['ipmEducation'] = {
   ],
   reading: 'Grade 6',
   editorNote:
-    'Campaign page mock, modeled directly on mosquito-education-workshop.js\'s structure and karl-annotation style (see docs/wagtail-content-mapping.md, "Verified against the real Karl Campaign add-page form"). Deliberately distinct from the existing Information-type ownerGuidance page ("Integrated pest management for property owners and managers"): that page is compliance guidance for owners/managers/staff citing Director\'s Rules obligations; this page is a free educational program for tenants, resident groups, and community organizations, with no compliance-obligation framing. This mockup has no Spotlight/Top facts/Logo/Color theme widgets, so the karl notes below describe the intended real-Karl block for each section rather than a literally rendered equivalent. Campaign page-level fields with no mockup equivalent at all: Primary agency, Logo, Background header image, Color theme, Partner agencies. Unlike mosquitoWorkshop, this program has no dedicated request form in forms/ — the CTA below routes through 311 (https://www.sf311.org/) as an illustrative placeholder; confirm the actual intake channel (311, a direct program line, email, or a future dedicated form) with HHVC before publication. Session capacity and lead-time figures are illustrative example content for mockup review; confirm actual values with HHVC before publication.',
+    'Campaign page mock, modeled directly on mosquito-education-workshop.js\'s structure and karl-annotation style (see docs/wagtail-content-mapping.md, "Verified against the real Karl Campaign add-page form"). Deliberately distinct from the existing Information-type ownerGuidance page ("Integrated pest management for property owners and managers"): that page is compliance guidance for owners/managers/staff citing Director\'s Rules obligations; this page is a free educational program for tenants, resident groups, and community organizations, with no compliance-obligation framing. Spotlight, Additional-content Accordion sections, and Top facts now render as their own real-Karl-matching components (verified live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity) — remaining Campaign page-level fields with no mockup equivalent: Primary agency, Logo, Background header image, Color theme (no source image assets exist for this illustrative program). Unlike mosquitoWorkshop, this program has no dedicated request form in forms/ — the CTA below routes through 311 (https://www.sf311.org/) as an illustrative placeholder; confirm the actual intake channel (311, a direct program line, email, or a future dedicated form) with HHVC before publication. Session capacity and lead-time figures are illustrative example content for mockup review; confirm actual values with HHVC before publication.',
   editorStatus: 'placeholder',
   topicTag: 'Agency: Healthy Housing and Vector Control',
   contact: {
@@ -21,8 +21,9 @@ window.HHVC_PAGES['ipmEducation'] = {
   sections: [
     {
       heading: 'Learn how to prevent pests without heavy pesticide use',
-      karl: 'Maps to Spotlight 1: Spotlight title = this heading, Spotlight description = the paragraphs below. Spotlight requires a Spotlight image (min 1080×350px) with no mockup equivalent — flag for Digital Services. No button set here; the request CTA lives in Spotlight 2 ("Request a session" section below) instead.',
+      karl: 'Maps to Spotlight 1: Spotlight title = this heading, Spotlight description = the paragraphs below. Spotlight requires a Spotlight image (min 1080×350px) with no mockup equivalent — flag for Digital Services. No button set here; the request CTA lives in Spotlight 2 ("Request a session" section below) instead. Renders as a light-blue Spotlight box, confirmed live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity.',
       kind: 'body',
+      component: 'spotlight',
       paragraphs: [
         'Healthy Housing and Vector Control offers free integrated pest management (IPM) education sessions for tenants, resident groups, and community organizations in San Francisco.',
         'IPM is a prevention-first approach. Instead of relying on heavy pesticide use, it focuses on sealing entry points, removing food and water sources, and catching problems early.',
@@ -34,8 +35,9 @@ window.HHVC_PAGES['ipmEducation'] = {
     },
     {
       heading: 'Who can request a session',
-      karl: "Maps to an Additional content → Accordion section block: Title = this heading, Accordion sidebar (rich text) = the paragraph below, and each bullet below becomes one Accordion item (Title = group type, Body = elaboration — this mockup's bullets are single-line, so item bodies would need light rewriting to fit the Title+Body shape).",
+      karl: "Maps to an Additional content → Accordion section block: Title = this heading, Accordion sidebar (rich text) = the paragraph below, and each bullet below becomes one Accordion item (Title = group type, Body = elaboration — this mockup's bullets are single-line, so item bodies would need light rewriting to fit the Title+Body shape). Renders as a collapsible accordion, reusing the same component Transaction's Supporting information already uses.",
       kind: 'body',
+      component: 'supporting',
       bullets: [
         'Tenant associations and resident councils',
         'Community centers, senior centers, and nonprofits',
@@ -48,8 +50,9 @@ window.HHVC_PAGES['ipmEducation'] = {
     },
     {
       heading: "What you'll learn",
-      karl: 'Maps to a second Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet below becomes one Accordion item (topic name as Title, elaboration as Body).',
+      karl: 'Maps to a second Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet below becomes one Accordion item (topic name as Title, elaboration as Body). Renders as a collapsible accordion.',
       kind: 'body',
+      component: 'supporting',
       paragraphs: [
         'Sessions cover practical, low-cost steps residents can take themselves, and when to ask a landlord or the City for help.',
       ],
@@ -63,8 +66,9 @@ window.HHVC_PAGES['ipmEducation'] = {
     },
     {
       heading: 'Grounded in San Francisco health code and UC IPM guidance',
-      karl: 'Maps to a third Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet becomes one Accordion item.',
+      karl: 'Maps to a third Additional content → Accordion section block: Title = this heading, Accordion sidebar = the paragraph below, each bullet becomes one Accordion item. Renders as a collapsible accordion.',
       kind: 'body',
+      component: 'supporting',
       paragraphs: [
         'Session content follows the same integrated pest management guidance HHVC recommends to property owners and managers under Article 11 of the San Francisco Health Code.',
       ],
@@ -80,8 +84,9 @@ window.HHVC_PAGES['ipmEducation'] = {
     },
     {
       heading: 'Request a session',
-      karl: 'Maps to Spotlight 2: Spotlight title = this heading, Spotlight description = the paragraphs below, and the "Request a session through 311" card becomes Spotlight 2\'s nested Button link (Link text = card title, target = card url). Spotlight also needs a Spotlight image with no mockup equivalent — flag for Digital Services.',
+      karl: 'Maps to Spotlight 2: Spotlight title = this heading, Spotlight description = the paragraphs below, and "Request through 311" becomes Spotlight 2\'s nested Button link (Link text = button label, target = buttonUrl). Spotlight also needs a Spotlight image with no mockup equivalent — flag for Digital Services. SME placeholder: routing session requests through 311 is illustrative; confirm the actual intake channel with HHVC before publication (sectionSchema has no top-level unverified flag, so this caveat lives here rather than on the button itself).',
       kind: 'body',
+      component: 'spotlight',
       paragraphs: [
         {
           text: 'Contact 311 to request a free IPM education session for your tenant group, resident council, or community organization. Tell them your group type, size, preferred dates, and meeting location.',
@@ -91,35 +96,35 @@ window.HHVC_PAGES['ipmEducation'] = {
         },
         'You can also reach the Healthy Housing and Vector Control program directly with questions before requesting a session.',
       ],
-      cards: [
-        {
-          title: 'Request a session through 311',
-          text: 'Tell 311 your group type, size, preferred dates, and meeting location.',
-          url: 'https://www.sf311.org/',
-          karl: "This card is Spotlight 2's nested Button link; Spotlight has no separate card/list field, so this is the CTA itself, not a restatement of a section-level button.",
-          unverified: true,
-          unverifiedReason:
-            'SME placeholder — routing session requests through 311 is illustrative; confirm the actual intake channel with HHVC before publication.',
-        },
-      ],
+      button: 'Request through 311',
+      buttonUrl: 'https://www.sf311.org/',
     },
     {
       heading: 'Questions before you request',
-      karl: 'Best real-schema fit: Top facts. Facts title = this heading (or a shorter variant like "Session essentials"), and each bullet below becomes one Fact item (Fact title = a short label like "Contact"/"Service area"/"Group size"/"Lead time", Fact text = the full bullet).',
+      karl: 'Maps to Top facts: Facts title = this heading, and each fact below is one Fact item (Fact title = the short label, Fact text = the full detail). Renders as a boxed Top facts panel.',
       kind: 'body',
+      component: 'top-facts',
       paragraphs: [
         'Contact Healthy Housing and Vector Control if you need help deciding whether a session is right for your group.',
       ],
-      bullets: [
-        'Contact Healthy Housing and Vector Control by calling or texting 311, or by email at ehb@sfdph.org',
-        'Available to tenant groups, resident councils, and community organizations located within San Francisco',
+      facts: [
         {
+          label: 'Contact',
+          text: 'Contact Healthy Housing and Vector Control by calling or texting 311, or by email at ehb@sfdph.org',
+        },
+        {
+          label: 'Service area',
+          text: 'Available to tenant groups, resident councils, and community organizations located within San Francisco',
+        },
+        {
+          label: 'Group size',
           text: 'Fits groups up to about 40 residents per session; larger groups can be split into multiple sessions',
           unverified: true,
           unverifiedReason:
             'SME placeholder — capacity is illustrative example content for mockup review; confirm actual value with HHVC before publication (see page editorNote).',
         },
         {
+          label: 'Lead time',
           text: 'Request at least 2 weeks before your event date to allow time for scheduling and materials preparation',
           unverified: true,
           unverifiedReason:

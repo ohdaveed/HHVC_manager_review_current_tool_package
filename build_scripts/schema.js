@@ -55,6 +55,7 @@ const sectionComponentSchema = z.enum([
   'what-to-do',
   'supporting',
   'intro',
+  'top-facts',
 ])
 
 const sectionSchema = z.object({
@@ -64,10 +65,29 @@ const sectionSchema = z.object({
   // Transaction supporting sections render as accordions; `open: true` makes
   // one render expanded on load (e.g. the report pages' "While you wait" tips).
   open: z.boolean().optional(),
+  // Karl's Supporting information block mixes two kinds: Accordion title and
+  // text (collapsible, the default here) and Custom section (plain
+  // heading+text, no toggle). `flat: true` renders this section as the
+  // latter. Orthogonal to `open`, which only has meaning for an accordion.
+  flat: z.boolean().optional(),
   karl: z.string().min(1),
   paragraphs: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
   steps: z.array(stepSchema).optional(),
   bullets: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
+  // Karl's Campaign "Top facts" widget: a repeatable list of labeled facts
+  // (Fact title + Fact text), distinct from `bullets` — a plain bullet has
+  // no title of its own, and widening `bullets` to carry one would change
+  // its shape for every other section type that already uses it.
+  facts: z
+    .array(
+      z.object({
+        label: z.string().min(1),
+        text: z.string().min(1),
+        unverified: z.boolean().optional(),
+        unverifiedReason: z.string().optional(),
+      })
+    )
+    .optional(),
   table: z.array(z.array(z.string())).optional(),
   cards: z.array(cardSchema).optional(),
   image: imageSchema.optional(),
@@ -94,6 +114,10 @@ const contactSchema = z.object({
   email: z.array(z.string()).optional(),
   hours: z.string().optional(),
   other: z.array(z.string()).optional(),
+  // Karl's Campaign Contact-us block has a dedicated "Social media / other"
+  // sub-stream (Facebook/X/Instagram URLs) alongside Address/Phone/Email —
+  // no other content type's Contact-us has this, so it's optional here.
+  social: z.array(z.object({ platform: z.string().min(1), url: z.string().min(1) })).optional(),
 })
 
 const spotlightSchema = z.object({
@@ -119,6 +143,11 @@ const pageSchema = z.object({
   editorNote: z.string().optional(),
   topicTag: z.string().optional(),
   whatToKnow: whatToKnowSchema.optional(),
+  // Karl's "Partner agencies" field on a Transaction page — separate from
+  // Primary Agency (the parent-program link every non-agency page already
+  // renders). These point at real sf.gov department pages outside this
+  // mockup's page set, so entries use `url`, never `target`.
+  partnerAgencies: z.array(cardSchema).optional(),
   contact: contactSchema.optional(),
   spotlight: spotlightSchema.optional(),
   reportDate: z.string().optional(),

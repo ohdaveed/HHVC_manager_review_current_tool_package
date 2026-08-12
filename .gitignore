@@ -88,6 +88,11 @@ google-service-account.json
 /.review-api-*/
 /.ai-api-*/
 agent-evals-regression-gate.zip
+
+# Locally-installed agent skills (skill-manager tooling), the whole
+# directory rather than the itemized file list below — new skills installed
+# after that list was generated otherwise show up as untracked.
+.agents/
 .agents/skills/ask-matt/PHASE-BOUNDARIES.md
 .agents/skills/tdd/mocking.md
 .agents/skills/tdd/SKILL.md
