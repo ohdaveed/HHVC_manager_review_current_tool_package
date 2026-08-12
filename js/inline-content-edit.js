@@ -695,9 +695,8 @@
       // edits made after a link commit but before the field is blurred
       // aren't reflected in this stash — acceptable for now given the
       // primary add-link-then-leave-the-field flow this exists for.
-      const pendingLinkHtml = holder.dataset.hhvcPendingLinkHtml
+      const pendingLinkHtml = window.InlineEdit.LinkCommitBridge.take(holder)
       if (pendingLinkHtml !== undefined) {
-        delete holder.dataset.hhvcPendingLinkHtml
         outputValue = { blocks: [{ type: 'paragraph', data: { text: pendingLinkHtml } }] }
       }
       // Re-check after the async save — the reviewer may have navigated to

@@ -1175,3 +1175,43 @@ describe('inline content edit: decoration controls are excluded from PNG export'
     expect(render.resetControlHtml('title')).toContain('data-export-exclude')
   })
 })
+
+describe('InlineEdit.LinkCommitBridge', () => {
+  // window.InlineEdit.LinkCommitBridge is populated once, at file-load time,
+  // by the top-of-file `require('../js/inline-content-edit-link-tool.js')`
+  // side effect — it is not per-test state and needs no cache-busting import
+  // the way the orchestrator itself does.
+  test('take() returns the HTML stash()ed for the same holder element', () => {
+    const holder = document.createElement('div')
+    window.InlineEdit.LinkCommitBridge.stash(holder, '<a data-render-target="foo">bar</a>')
+    expect(window.InlineEdit.LinkCommitBridge.take(holder)).toBe(
+      '<a data-render-target="foo">bar</a>'
+    )
+  })
+
+  test('take() clears the stash, so a second call on the same element returns undefined', () => {
+    const holder = document.createElement('div')
+    window.InlineEdit.LinkCommitBridge.stash(holder, 'x')
+    window.InlineEdit.LinkCommitBridge.take(holder)
+    expect(window.InlineEdit.LinkCommitBridge.take(holder)).toBeUndefined()
+  })
+
+  test('take() on a holder nothing was stashed for returns undefined without throwing', () => {
+    const holder = document.createElement('div')
+    expect(() => window.InlineEdit.LinkCommitBridge.take(holder)).not.toThrow()
+    expect(window.InlineEdit.LinkCommitBridge.take(holder)).toBeUndefined()
+  })
+
+  test('stash() on a null holder is a no-op, not a throw', () => {
+    expect(() => window.InlineEdit.LinkCommitBridge.stash(null, 'x')).not.toThrow()
+  })
+
+  test('two different holders keep independent stashes', () => {
+    const a = document.createElement('div')
+    const b = document.createElement('div')
+    window.InlineEdit.LinkCommitBridge.stash(a, 'A')
+    window.InlineEdit.LinkCommitBridge.stash(b, 'B')
+    expect(window.InlineEdit.LinkCommitBridge.take(a)).toBe('A')
+    expect(window.InlineEdit.LinkCommitBridge.take(b)).toBe('B')
+  })
+})

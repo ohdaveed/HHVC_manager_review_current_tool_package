@@ -34,6 +34,42 @@
 
   const { safeUrl } = window.utils
 
+  /**
+   * Owns the one hand-off point between this file and js/inline-content-
+   * edit.js's commit() — the dataset key both sides used to independently
+   * spell out as a bare string literal (`holderEl.dataset.hhvcPendingLinkHtml`
+   * in both places, agreeing only by convention). See commitLink()'s own
+   * comment below for WHY the hand-off exists (an Editor.js blur-cleanup bug
+   * that strips a just-inserted anchor before commit() can read it); this
+   * object exists so the two files agree on HOW without either retyping the
+   * key, and a third caller (or a future rename) has one place to look.
+   */
+  const PENDING_LINK_ATTR = 'hhvcPendingLinkHtml'
+  const LinkCommitBridge = {
+    /**
+     * @param {HTMLElement|null|undefined} holderEl
+     * @param {string} html
+     * @returns {void}
+     */
+    stash(holderEl, html) {
+      if (!holderEl) return
+      holderEl.dataset[PENDING_LINK_ATTR] = html
+    },
+    /**
+     * @param {HTMLElement|null|undefined} holderEl
+     * @returns {string|undefined} the stashed HTML, or undefined if none was
+     *   stashed for this element. Always clears the stash it finds, so a
+     *   second call on the same element returns undefined.
+     */
+    take(holderEl) {
+      if (!holderEl) return undefined
+      const html = holderEl.dataset[PENDING_LINK_ATTR]
+      delete holderEl.dataset[PENDING_LINK_ATTR]
+      return html
+    },
+  }
+  window.InlineEdit.LinkCommitBridge = LinkCommitBridge
+
   class InlineEditLinkTool {
     static get isInline() {
       return true
@@ -216,7 +252,7 @@
       const editableEl = startEl?.closest('.ce-paragraph')
       const holderEl = editableEl?.closest('[data-inline-edit-editorjs-holder]')
       if (holderEl && editableEl) {
-        holderEl.dataset.hhvcPendingLinkHtml = editableEl.innerHTML
+        LinkCommitBridge.stash(holderEl, editableEl.innerHTML)
       }
 
       this.api.inlineToolbar.close()
