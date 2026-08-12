@@ -7,7 +7,7 @@
 // producing output near the cap.
 const Anthropic = require('@anthropic-ai/sdk')
 const { numberFromEnv } = require('./env')
-const { RefusalError } = require('./errors')
+const { RefusalError, ProviderTimeoutError } = require('./errors')
 
 /** Registry key and the label the browser's provider picker shows. */
 const NAME = 'claude'
@@ -133,6 +133,31 @@ function normalizeUsage(usage) {
 }
 
 /**
+ * Normalize the SDK's own per-call deadline into ProviderTimeoutError — the
+ * error-classification half of the provider contract provider-gemini.js's
+ * classifyAbort also implements, so server.ts needs to know neither SDK's
+ * class names to answer 504 rather than a generic 500.
+ *
+ * Unlike Gemini's SDK, Anthropic's throws a distinctly-named
+ * `APIConnectionTimeoutError` for its own deadline (and a separate
+ * `APIUserAbortError` when the CALLER's signal aborted it) — so the class
+ * name itself already carries the distinction Gemini's classifyAbort has to
+ * infer from `signal` alone. `signal` is still consulted here as the same
+ * defense-in-depth check, consistent with the SDK's own classification
+ * rather than the sole source of truth.
+ * @param {unknown} error The error the SDK threw.
+ * @param {AbortSignal} [signal] The caller's signal, if any.
+ * @throws {ProviderTimeoutError} when the SDK's own deadline aborted the call.
+ * @throws {unknown} the original error in every other case.
+ * @returns {never}
+ */
+function classifyAbort(error, signal) {
+  const isOwnTimeout = error?.constructor?.name === 'APIConnectionTimeoutError'
+  if (isOwnTimeout && !signal?.aborted) throw new ProviderTimeoutError(NAME)
+  throw error
+}
+
+/**
  * Ask Claude for a JSON object matching `jsonSchema`.
  *
  * @param {object} options
@@ -146,33 +171,38 @@ function normalizeUsage(usage) {
 async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   const client = createClient()
 
-  const response = await client.beta.messages.create(
-    {
-      model: getModel(),
-      max_tokens: MAX_TOKENS,
-      betas: [FALLBACK_BETA],
-      fallbacks: 'default',
-      // Adaptive thinking is the only on-mode on current models; `budget_tokens`
-      // is removed and returns a 400. Effort is the depth control.
-      thinking: { type: 'adaptive' },
-      output_config: {
-        effort: process.env.AI_EFFORT || DEFAULT_EFFORT,
-        format: { type: 'json_schema', schema: jsonSchema },
-      },
-      system: [
-        {
-          type: 'text',
-          text: system,
-          // The system prompt inlines the whole vendored style corpus and does
-          // not vary between requests, so it is worth caching. Placed on the
-          // last system block, which caches everything before it too.
-          cache_control: { type: 'ephemeral' },
+  let response
+  try {
+    response = await client.beta.messages.create(
+      {
+        model: getModel(),
+        max_tokens: MAX_TOKENS,
+        betas: [FALLBACK_BETA],
+        fallbacks: 'default',
+        // Adaptive thinking is the only on-mode on current models; `budget_tokens`
+        // is removed and returns a 400. Effort is the depth control.
+        thinking: { type: 'adaptive' },
+        output_config: {
+          effort: process.env.AI_EFFORT || DEFAULT_EFFORT,
+          format: { type: 'json_schema', schema: jsonSchema },
         },
-      ],
-      messages: [{ role: 'user', content: userPrompt }],
-    },
-    signal ? { signal } : undefined
-  )
+        system: [
+          {
+            type: 'text',
+            text: system,
+            // The system prompt inlines the whole vendored style corpus and does
+            // not vary between requests, so it is worth caching. Placed on the
+            // last system block, which caches everything before it too.
+            cache_control: { type: 'ephemeral' },
+          },
+        ],
+        messages: [{ role: 'user', content: userPrompt }],
+      },
+      signal ? { signal } : undefined
+    )
+  } catch (error) {
+    classifyAbort(error, signal)
+  }
 
   // Check stop_reason BEFORE touching content. On a refusal `content` is empty
   // or partial, so indexing into it throws a confusing TypeError instead of
@@ -212,6 +242,7 @@ module.exports = {
   name: NAME,
   label: LABEL,
   generateObject,
+  classifyAbort,
   isConfigured,
   getModel,
   listModelIds,
