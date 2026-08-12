@@ -193,7 +193,7 @@ Example: [`pages/bed-bug-rules-prevention.js`](../../../pages/bed-bug-rules-prev
 | `title` | Title |
 | `summary` | Description |
 | `slug` | URL (auto-derived from title) |
-| `audience[]` | Mockup-only "Who this page is for" (HHVC editorial metadata, not a Karl field) |
+| `audience[]` | Mockup-only "Who this is for" framing (HHVC editorial metadata, not a Karl field) — rendered as a blue info Callout, a real Information-type component (see Component availability matrix below). Other non-Transaction types differ: Resource Collection has no Callout and gets a plain paragraph instead; Campaign nests it under Additional content. Transaction pages fold it into the "What to know before you start" box instead of using this path at all. |
 | `reading` | Mockup-only grade-level target |
 | `sections[].heading` | Information section → Title and text (title field = H2) |
 | `sections[].paragraphs` | Title and text body |

@@ -11,6 +11,15 @@
 
   const CONFIG_KEY = 'hhvcReviewSyncConfig'
   const API_TIMEOUT_MS = 15000
+  // Baked into the production bundle so every reviewer's browser defaults
+  // to the real deployment without anyone having to know or type it — a
+  // URL is not a secret, unlike the bearer token below it. The token is
+  // deliberately NOT given a default here: this file ships in a public,
+  // static bundle (Netlify serves it to every visitor's browser), so a
+  // hardcoded token would be extractable by anyone via devtools. Sync
+  // therefore stays a no-op (see isConfigured()) until each reviewer pastes
+  // in their own token — the one piece of setup that must stay manual.
+  const DEFAULT_API_URL = 'https://sync-api-production-3097.up.railway.app'
 
   // Monotonic stamp for in-flight pulls; see pullFromServer's `stale`.
   let pullGeneration = 0
@@ -25,14 +34,19 @@
   function readConfig() {
     try {
       const raw = localStorage.getItem(CONFIG_KEY)
-      if (!raw) return { apiUrl: '', apiToken: '' }
+      // A browser that has never saved sync settings gets the hardcoded
+      // production URL by default. Once a reviewer explicitly saves
+      // settings — even clearing the URL to point nowhere, or pointing it
+      // at a local/teammate server — that saved choice is respected as-is
+      // and never silently overridden back to the default.
+      if (!raw) return { apiUrl: DEFAULT_API_URL, apiToken: '' }
       const parsed = JSON.parse(raw)
       return {
-        apiUrl: typeof parsed.apiUrl === 'string' ? parsed.apiUrl : '',
+        apiUrl: typeof parsed.apiUrl === 'string' ? parsed.apiUrl : DEFAULT_API_URL,
         apiToken: typeof parsed.apiToken === 'string' ? parsed.apiToken : '',
       }
     } catch {
-      return { apiUrl: '', apiToken: '' }
+      return { apiUrl: DEFAULT_API_URL, apiToken: '' }
     }
   }
 

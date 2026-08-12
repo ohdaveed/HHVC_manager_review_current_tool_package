@@ -6,10 +6,7 @@ window.HHVC_PAGES['scopeInfo'] = {
   summary:
     'See what Environmental Health may inspect in apartments, residential hotels, and emergency shelters.',
   audience: [
-    'A tenant or tenant representative deciding whether to report a problem',
-    'An employee deciding whether to report a pest or vector concern at work',
-    'A person unsure whether HHVC may review a pest or housing health problem',
-    'A property owner, property manager, or building staff member looking for prevention guidance or best practices',
+    'This page is for anyone deciding whether to report a pest or housing health problem to HHVC.',
   ],
   reading: 'Grade 7',
   seoTitle: 'Learn what HHVC can inspect',

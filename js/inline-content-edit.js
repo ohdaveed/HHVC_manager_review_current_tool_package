@@ -723,6 +723,28 @@
           this.cancel()
         }
       })
+      this.holder.addEventListener('input', (event) => {
+        // Keep js/inline-content-edit-link-tool.js's commitLink() pre-blur
+        // HTML stash (LinkCommitBridge, read in commit() below) in sync
+        // with any typing that happens after a link is inserted but before
+        // the field is blurred. Without this, commit() always preferred
+        // the ONE-TIME snapshot commitLink() took at link-insertion time,
+        // so any text typed afterward — a completely normal add-link-then-
+        // keep-typing flow — was silently discarded: not an error, just
+        // missing from the saved value. Re-capturing on every 'input'
+        // event (which fires synchronously, ahead of any later blur) means
+        // the stash always reflects the latest DOM, including the still-
+        // intact anchor, right up until the blur that later strips it — so
+        // commit() never reads a stale copy. Guarded on the stash already
+        // existing: with no pending link, editor.save()'s own output is
+        // authoritative and this must not invent a stash for it to prefer
+        // instead.
+        const bridge = window.InlineEdit.LinkCommitBridge
+        if (!bridge.has(this.holder)) return
+        const target = event.target
+        const editableEl = target instanceof Element ? target.closest('.ce-paragraph') : null
+        if (editableEl) bridge.stash(this.holder, editableEl.innerHTML)
+      })
     }
 
     /**
@@ -762,10 +784,9 @@
       // fix available on this side of the library. commitLink() therefore
       // captures the block's HTML itself at insertion time, before that
       // blur can run, and stashes it via LinkCommitBridge; prefer that
-      // snapshot here over whatever editor.save() returned. Known gap:
-      // further edits made after a link commit but before the field is
-      // blurred aren't reflected in this stash — acceptable for now given
-      // the primary add-link-then-leave-the-field flow this exists for.
+      // snapshot here over whatever editor.save() returned. The holder's
+      // 'input' listener above keeps that stash in sync with any further
+      // typing, so it is never stale by the time this reads it.
       const pendingLinkHtml = window.InlineEdit.LinkCommitBridge.take(this.holder)
       if (pendingLinkHtml !== undefined) {
         outputValue = { blocks: [{ type: 'paragraph', data: { text: pendingLinkHtml } }] }

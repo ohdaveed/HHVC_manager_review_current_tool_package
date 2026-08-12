@@ -6,9 +6,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
   summary:
     'Learn about mosquito surveillance, catch-basin treatment, and how to report standing water.',
   audience: [
-    'A resident reporting standing water or unusual mosquito activity',
-    'A property owner or manager maintaining yards, gutters, or catch basins',
-    'A building worker who can remove standing water around a property',
+    'This page is for residents and property owners or managers dealing with standing water or mosquitoes.',
   ],
   reading: 'Grade 7',
   editorNote:

@@ -5,12 +5,7 @@ window.HHVC_PAGES['article11Guide'] = {
   title: 'Health Code Article 11 in plain language',
   summary:
     'Read the Healthy Housing and Vector Control rules most often cited for pests, mold, garbage, and other public health nuisances.',
-  audience: [
-    'A tenant trying to understand a housing health condition',
-    'A property owner or manager reviewing an HHVC notice',
-    'A neighbor or advocate helping someone understand an inspection',
-    'Anyone who wants a plain-language guide before reading the legal code',
-  ],
+  audience: ['This page is for anyone who wants a plain-language guide to Health Code Article 11.'],
   reading: 'Grade 7',
   reportDate: 'August 7, 2026',
   editorStatus: 'needs-review',

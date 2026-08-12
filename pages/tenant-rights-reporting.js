@@ -6,9 +6,7 @@ window.HHVC_PAGES['tenantRights'] = {
   summary:
     'Learn about tenant protections and where to get help if you are worried about retaliation.',
   audience: [
-    'A tenant worried about reporting a housing, pest, or vector problem',
-    'A friend, family member, advocate, or helper reporting for a tenant',
-    'A person living in an SRO or residential hotel who is worried about retaliation',
+    'This page is for tenants, and anyone helping a tenant, worried about retaliation for reporting a housing problem.',
   ],
   reading: 'Grade 7',
   sections: [

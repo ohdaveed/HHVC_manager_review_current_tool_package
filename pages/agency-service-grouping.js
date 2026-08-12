@@ -6,10 +6,7 @@ window.HHVC_PAGES['pestsTopic'] = {
   summary:
     'Report a housing health issue, get help with pests, or find the right next step for your building.',
   audience: [
-    'A tenant with a pest or housing health problem',
-    'A friend, family member, advocate, or helper reporting for a tenant',
-    'A property owner or manager trying to prevent pests',
-    'A building worker who handles pest or housing health issues',
+    'This page is for tenants, property owners and managers, and anyone reporting a pest or housing health problem.',
   ],
   reading: 'Grade 6',
   seoTitle: 'Healthy Housing and Vector Control | SF.gov',

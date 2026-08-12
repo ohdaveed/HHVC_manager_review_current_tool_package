@@ -586,9 +586,6 @@ a:focus {
   margin-top: 0.75rem;
   margin-bottom: 1rem;
 }
-.audience-section h2 {
-  font-size: 1.75rem;
-}
 .step-list {
   counter-reset: steps;
   display: grid;
@@ -1269,13 +1266,13 @@ a:focus {
 }
 .karl-tag {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.35rem;
-  width: fit-content;
+  width: auto;
   max-width: 100%;
   margin: 0 0 0.55rem;
   padding: 0.22rem 0.48rem;
-  border-radius: 999px;
+  border-radius: 10px;
   background: var(--sfds-purple-bg);
   color: var(--sfds-purple-text);
   border: 1px solid var(--sfds-purple-border);
@@ -1293,13 +1290,74 @@ a:focus {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+/* Structured, not a flat pill of prose: a leading CMS breadcrumb (only when
+   the karl note's own first sentence names one), a bold headline naming the
+   field/block, then any flag/inherit badges and the reviewer's rationale —
+   each its own line so the one fact that matters (where this goes in Karl)
+   is scannable without reading the whole note. parseKarlLabel() in
+   js/karl-tag-meta.js is what produces these parts; see its header comment
+   for why only a leading `->`/`→` chain is trusted as structure. */
 .karl-tag-text {
+  display: block;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.karl-tag-text > strong {
   text-transform: uppercase;
   letter-spacing: 0.045em;
 }
 .karl-tag strong {
   color: inherit;
   font-weight: 800;
+}
+.karl-tag-breadcrumb {
+  display: block;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.karl-tag-crumb-sep {
+  margin: 0 0.2rem;
+  opacity: 0.6;
+}
+.karl-tag-headline {
+  display: inline;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.karl-tag-rationale {
+  display: block;
+  margin-top: 0.2rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0.92;
+}
+.karl-tag-flag,
+.karl-tag-inherit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.2rem 0.3rem 0 0;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.karl-tag-flag {
+  background: var(--sfds-warning-bg);
+  color: var(--sfds-warning-text);
+  border: 1px solid var(--sfds-warning-border);
+}
+.karl-tag-inherit {
+  background: var(--sfds-info-light);
+  color: var(--sfds-info-dark);
+  border: 1px solid var(--sfds-info-border);
 }
 .karl-tag[data-kind='meta'] {
   background: var(--sfds-info-light);
@@ -1446,13 +1504,6 @@ a:focus {
   }
 }
 
-.audience-section ul {
-  margin: 10px 0 0 22px;
-  color: var(--sfds-slate-1);
-}
-.audience-section li {
-  margin: 6px 0;
-}
 #mockPage {
   view-transition-name: mock-page-content;
 }

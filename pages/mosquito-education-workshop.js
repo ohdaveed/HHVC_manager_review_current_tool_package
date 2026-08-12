@@ -6,10 +6,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   summary:
     'Request a free mosquito science workshop for schools, camps, museums, and science fairs.',
   audience: [
-    'A teacher or school administrator planning a classroom or campus science activity',
-    'A summer camp director or youth program coordinator',
-    'A museum educator or science fair organizer',
-    'A parent or community group leader hosting a youth science event in San Francisco',
+    'This page is for teachers, youth program leaders, and families who want to host a free mosquito science workshop.',
   ],
   reading: 'Grade 7',
   editorNote:

@@ -6,10 +6,7 @@ window.HHVC_PAGES['verminResources'] = {
   summary:
     'Find guides, forms, and videos for reporting, preventing, and managing pests in a home or building.',
   audience: [
-    'A tenant looking for help with pests or preparing for treatment',
-    'A property owner or manager preventing or managing pest problems',
-    'A building worker who needs forms, guidance, or training materials',
-    'A community member looking for healthy-home information to share',
+    'This page is for tenants, property owners and managers, and anyone looking for pest and healthy-home resources.',
   ],
   reading: 'Grade 6',
   editorNote:

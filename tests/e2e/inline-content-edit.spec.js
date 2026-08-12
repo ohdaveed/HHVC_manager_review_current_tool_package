@@ -46,6 +46,7 @@ const {
   commitEditorJsField,
   selectWordAndClickLinkButton,
   addInlineLink,
+  typeAfterLinkCommit,
 } = require('./helpers.js')
 
 // The default landing page (pestsTopic, the Agency page) has paragraph
@@ -293,14 +294,19 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await expect(page.locator('#mockPage h2', { hasText: 'Round Trip Heading' })).toBeVisible()
   })
 
-  // The three cases below cover js/inline-content-edit-link-tool.js (Phase 4
+  // The four cases below cover js/inline-content-edit-link-tool.js (Phase 4
   // of the Editor.js integration), which had no e2e coverage before this
-  // rewrite. Each is mutation-proven: reverting js/inline-content-edit.js's
-  // commit()-prefers-the-stash fix (deleting the `pendingLinkHtml` override
-  // and falling back to raw editor.save() output) was confirmed to fail the
-  // internal- and external-link cases specifically, with the plain-text
-  // paragraph edit case above still passing — proving these two are the
-  // ones actually exercising that fix, not incidentally passing alongside it.
+  // rewrite. The first three are mutation-proven: reverting js/inline-
+  // content-edit.js's commit()-prefers-the-stash fix (deleting the
+  // `pendingLinkHtml` override and falling back to raw editor.save()
+  // output) was confirmed to fail the internal- and external-link cases
+  // specifically, with the plain-text paragraph edit case above still
+  // passing — proving these two are the ones actually exercising that fix,
+  // not incidentally passing alongside it. The "typing after inserting a
+  // link" case immediately below the first covers a narrower regression in
+  // that same stash: reverting the holder-level 'input' listener that keeps
+  // it in sync with further typing (js/inline-content-edit.js) reproduces
+  // the silent-data-loss bug this test exists to catch.
   test('adding an internal link renders as an internal-page control', async ({ page }) => {
     await gotoFresh(page)
     const paragraph = page
@@ -320,6 +326,46 @@ test.describe('inline content editing (Editor.js widget)', () => {
     )
     await expect(internalLink).toHaveText(selectedWord)
     await expect(page.locator('#mockPage p .unverified-pill').first()).toBeVisible()
+  })
+
+  test('typing after inserting a link is not silently discarded on blur', async ({ page }) => {
+    // Regression test for the bug this fixes: js/inline-content-edit-link-
+    // tool.js's commitLink() stashes the block's HTML at link-insertion time
+    // (Editor.js's own blur cleanup strips the anchor before commit() can
+    // read editor.save()'s output faithfully), and js/inline-content-edit.js's
+    // commit() always preferred that ONE-TIME stash over live editor state —
+    // so any text typed after inserting a link but before blurring the field
+    // (a completely normal add-link-then-keep-typing flow) vanished with no
+    // error, no warning, nothing. js/inline-content-edit.js's holder-level
+    // 'input' listener now keeps the stash in sync with further typing.
+    await gotoFresh(page)
+    const paragraph = page
+      .locator('#mockPage p[data-rewrite-field^="sections."][data-rewrite-field$=".paragraphs.0"]')
+      .first()
+    const paragraphText = (await paragraph.textContent()) || ''
+    const selectedWord = paragraphText.trim().split(/\s+/)[0]
+    await paragraph.click()
+    await editorJsBlock(page)
+
+    const result = await addInlineLink(page, selectedWord, 'rodentsProblem')
+    expect(result.ok).toBe(true)
+
+    const typeResult = await typeAfterLinkCommit(page, ' EXTRA TYPED TEXT AFTER LINK')
+    expect(typeResult.ok).toBe(true)
+    // Asserting on the stash directly (not just the eventual commit) proves
+    // the holder's 'input' listener actually re-synced it, rather than the
+    // final assertions below passing for some other reason.
+    expect(typeResult.pendingStash).toContain('EXTRA TYPED TEXT AFTER LINK')
+
+    await commitEditorJsField(page)
+
+    const internalLink = page.locator(
+      '#mockPage button.inline-link[data-render-target="rodentsProblem"]'
+    )
+    await expect(internalLink).toHaveText(selectedWord)
+    await expect(
+      page.locator('#mockPage p', { hasText: 'EXTRA TYPED TEXT AFTER LINK' })
+    ).toBeVisible()
   })
 
   test('adding an external link renders with target=_blank and the external glyph', async ({

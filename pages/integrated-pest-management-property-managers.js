@@ -5,10 +5,7 @@ window.HHVC_PAGES['ownerGuidance'] = {
   title: 'Integrated pest management for property owners and managers',
   summary: 'Use prevention, monitoring, and resident outreach tools for your building.',
   audience: [
-    'A property owner responsible for a residential building',
-    'A property manager or building operator',
-    'Building maintenance staff or janitorial staff',
-    'A housing provider looking for pest prevention best practices',
+    'This page is for property owners, managers, and maintenance staff looking for pest prevention best practices.',
   ],
   reading: 'Grade 7',
   editorNote:
