@@ -883,12 +883,16 @@ function aiErrorResponse(
   // Fallback for aborts raised where NO signal was threaded through, so the
   // mapping degrades to something sane instead of back to a logged 500.
   //
-  // Anthropic's own per-call deadline (APIConnectionTimeoutError) and its
-  // caller-abort error (APIUserAbortError) are both normalized at the
-  // provider boundary — see provider-anthropic.js's classifyAbort, which
-  // mirrors provider-gemini.js's — and get caught above by the
+  // Anthropic's own per-call deadline (APIConnectionTimeoutError, thrown
+  // when the caller's signal was NOT the one that aborted) is normalized at
+  // the provider boundary — see provider-anthropic.js's classifyAbort, which
+  // mirrors provider-gemini.js's — and gets caught above by the
   // ProviderTimeoutError branch, so that exact case (the SDK's own timeout
   // firing inside our longer budget) never reaches this fallback anymore.
+  // APIUserAbortError is NOT normalized there — classifyAbort rethrows it
+  // untouched, since it only ever fires when the caller's own signal aborted
+  // the call, and that case is already caught by the signals?.client?.aborted
+  // branch above, before classifyAbort even runs.
   // What's left here is a provider-agnostic backstop: a real DOMException
   // named "AbortError"/"TimeoutError" raised somewhere outside a provider's
   // own normalization (e.g. AbortSignal.timeout() firing directly, or a
