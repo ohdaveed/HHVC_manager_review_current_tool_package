@@ -71,6 +71,7 @@ window.HHVC_PAGES['scopeInfo'] = {
         '**Rats, mice, raccoons, or other four-legged pests:** [Report rats, mice, and other four-legged problems](rodentsReport)',
         '**Cockroaches, bed bugs, mosquitoes, flies, wasps, or mites:** [Report cockroaches, mosquitoes, and other insects](insectsReport)',
         '**Garbage, clutter, animal waste, pigeon droppings or roosting, overgrown plants, or mold from humidity:** [Report garbage, filth, and overgrown vegetation](filthReport)',
+        '**A problem in an SRO or residential hotel:** [Report a problem in an SRO or hotel](sroHotelReport)',
         '**Dead birds:** [Report a dead bird to the State West Nile virus program](https://westnile.ca.gov/report)',
         '**Health Code Article 11:** [Read Article 11 in plain language](article11Guide)',
       ],

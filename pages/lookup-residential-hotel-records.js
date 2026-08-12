@@ -51,6 +51,11 @@ window.HHVC_PAGES['findHotelRecords'] = {
       kind: 'placement',
       cards: [
         {
+          title: 'Report a problem in an SRO or hotel',
+          target: 'sroHotelReport',
+          karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
+        },
+        {
           title: 'Find complaints and inspection records',
           target: 'findRecords',
           karl: 'related panel entry — page chooser only; this description text is not supported in the real schema (see section-level karl note above).',
