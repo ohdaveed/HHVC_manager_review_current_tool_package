@@ -12,21 +12,49 @@ import {
 } from './ui-controls.js'
 import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
 import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
-import { karlKindMeta } from './karl-tag-meta.js'
+import { karlKindMeta, parseKarlLabel } from './karl-tag-meta.js'
 import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
 // Side-effect import: js/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so this is what guarantees the classifier exists before
 // any card renders. js/main.js lists it ahead of this file too, but that list
 // is documentation — this import is the enforcement.
 import './card-inheritance.js'
-function karlTag(label, kind = 'body') {
+// Maps cardInheritanceFact()'s three outcomes to the badge text a reviewer
+// sees on a card's tag — the only place this vocabulary is spelled out.
+const INHERIT_BADGE_TEXT = {
+  'title-and-text': "Card title + text inherited from linked page",
+  text: "Card text field won't publish",
+  title: 'Card title inherited from linked page',
+}
+
+function karlTag(label, kind = 'body', opts = {}) {
   const meta = typeof karlKindMeta === 'function' ? karlKindMeta(kind) : { label: 'Body' }
+  const parsed =
+    typeof parseKarlLabel === 'function'
+      ? parseKarlLabel(label)
+      : { breadcrumb: [], headline: String(label ?? ''), rationale: '', flagged: false }
+
+  const breadcrumbHtml = parsed.breadcrumb.length
+    ? `<span class="karl-tag-breadcrumb">${parsed.breadcrumb
+        .map((seg) => `<span class="karl-tag-crumb">${escapeHtml(seg)}</span>`)
+        .join('<span class="karl-tag-crumb-sep" aria-hidden="true">›</span>')}</span>`
+    : ''
+  const flagHtml = parsed.flagged
+    ? `<span class="karl-tag-flag">${escapeHtml('Unresolved mapping')}</span>`
+    : ''
+  const inheritHtml = INHERIT_BADGE_TEXT[opts.inheritanceFact]
+    ? `<span class="karl-tag-inherit" data-inherit="${escapeHtml(opts.inheritanceFact)}">${escapeHtml(INHERIT_BADGE_TEXT[opts.inheritanceFact])}</span>`
+    : ''
+  const rationaleHtml = parsed.rationale
+    ? `<span class="karl-tag-rationale">${escapeHtml(parsed.rationale)}</span>`
+    : ''
+
   // Karl tags are visual reviewer annotations, not part of the public-page
   // control they precede. Leaving their long placement notes in the
   // accessibility tree made a card button announce the entire CMS rationale
   // before its actual destination; the toolbar toggle is the discoverable
   // control for showing that visual layer.
-  return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${escapeHtml(label)}</span></mark>`
+  return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${breadcrumbHtml}<span class="karl-tag-headline">${escapeHtml(parsed.headline)}</span>${flagHtml}${inheritHtml}${rationaleHtml}</span></mark>`
 }
 const EDITOR_QA_STATUS = {
   'needs-review': { icon: '⚠', label: 'Needs review' },
@@ -329,6 +357,29 @@ function cardTitle(section, card) {
   }
   return card.title
 }
+/**
+ * What actually happened to THIS card's own fields, derived by diffing
+ * cardTitle()/cardDescription()'s already-resolved output against the card's
+ * own `title`/`text` — not a second classification. Because it diffs values
+ * those two functions already computed for rendering, it cannot disagree
+ * with what actually renders: an external `url` card inside an `inherits` or
+ * `title-only` section whose own title/text genuinely render (they have no
+ * `target`, so neither resolver substitutes anything) correctly gets no fact
+ * here, with no special-casing needed — the diff is simply empty.
+ *
+ * @param {{title?: string, text?: string}} card
+ * @param {string} renderedTitle cardTitle(section, card)'s return value
+ * @param {string} renderedDesc cardDescription(section, card)'s return value
+ * @returns {'title-and-text'|'title'|'text'|null} null when nothing was replaced.
+ */
+function cardInheritanceFact(card, renderedTitle, renderedDesc) {
+  const titleReplaced = Boolean(card.title) && renderedTitle !== card.title
+  const textSuppressed = Boolean(card.text) && renderedDesc !== card.text
+  if (titleReplaced && textSuppressed) return 'title-and-text'
+  if (textSuppressed) return 'text'
+  if (titleReplaced) return 'title'
+  return null
+}
 // NO `data-rewrite-field` ON CARD DESCRIPTIONS — deliberately, and this is
 // where it must stay decided. The inline-content-editing feature turns any
 // element carrying that attribute into a click-to-edit field whose keystrokes
@@ -348,11 +399,13 @@ function cardTitle(section, card) {
  * @param {{karl?: string}|null|undefined} section Same contract as cardDescription().
  * @param {{title: string, target?: string, url?: string, unverified?: boolean, unverifiedReason?: string}} card
  * @param {{relNoreferrer?: boolean, externalMarkClass?: string}} [opts]
- * @returns {{action: string, desc: string}} desc is '' when there is nothing
- *   to show — callers decide whether an empty desc means no <p> at all. Both
- *   `action` and `desc` are ALREADY escaped, ready-to-interpolate HTML (desc
- *   via escapeHtml(), with the unverified pill already appended) — never
- *   pass either through escapeHtml() again, or the markup double-escapes.
+ * @returns {{action: string, desc: string, inheritanceFact: 'title-and-text'|'title'|'text'|null}}
+ *   desc is '' when there is nothing to show — callers decide whether an
+ *   empty desc means no <p> at all. Both `action` and `desc` are ALREADY
+ *   escaped, ready-to-interpolate HTML (desc via escapeHtml(), with the
+ *   unverified pill already appended) — never pass either through
+ *   escapeHtml() again, or the markup double-escapes. `inheritanceFact` is
+ *   raw (not HTML) — see cardInheritanceFact().
  */
 function cardActionAndDescription(section, card, opts = {}) {
   const { relNoreferrer = false, externalMarkClass = '' } = opts
@@ -372,13 +425,14 @@ function cardActionAndDescription(section, card, opts = {}) {
   const desc = descText
     ? `${escapeHtml(descText)}${card.unverified ? unverifiedPill(card.unverifiedReason) : ''}`
     : ''
-  return { action, desc }
+  const inheritanceFact = cardInheritanceFact(card, title, descText)
+  return { action, desc, inheritanceFact }
 }
 function renderCards(cards = [], section = null) {
   return `<div class="cards">${cards
     .map((c) => {
-      const { action, desc } = cardActionAndDescription(section, c)
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${desc ? `<p>${desc}</p>` : ''}</article>`
+      const { action, desc, inheritanceFact } = cardActionAndDescription(section, c)
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement', { inheritanceFact })}<h3>${action}</h3>${desc ? `<p>${desc}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
@@ -392,7 +446,7 @@ function renderCards(cards = [], section = null) {
 function renderCardList(cards = [], section = null) {
   return `<ul>${cards
     .map((c) => {
-      const { action, desc } = cardActionAndDescription(section, c, {
+      const { action, desc, inheritanceFact } = cardActionAndDescription(section, c, {
         relNoreferrer: true,
         externalMarkClass: 'external-mark',
       })
@@ -400,7 +454,7 @@ function renderCardList(cards = [], section = null) {
         ? `<span class="file-badge">${escapeHtml(c.fileType)}</span>`
         : ''
       const text = desc ? `<p>${desc}</p>` : ''
-      return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement')}${action}${fileBadge}${text}</li>`
+      return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement', { inheritanceFact })}${action}${fileBadge}${text}</li>`
     })
     .join('')}</ul>`
 }

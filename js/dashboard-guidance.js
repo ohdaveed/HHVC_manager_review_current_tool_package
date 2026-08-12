@@ -35,7 +35,7 @@ import { updateReadingTarget } from './editor-panel.js'
     },
     {
       title: 'Karl tags',
-      html: `${renderKarlTagLegend('full')}<span>Tags mark where each block is entered in Karl CMS. Placement follows the tag text, not the shape of the mockup box around it. Toggle them with the switch in the toolbar.</span>`,
+      html: `${renderKarlTagLegend('full')}<span>Tags mark where each block is entered in Karl CMS — a bold headline names the field or block, lighter text below is the reviewer's rationale. Placement follows the tag text, not the shape of the mockup box around it. Toggle them with the switch in the toolbar.</span>`,
     },
     {
       title: 'Reviews live in this browser',

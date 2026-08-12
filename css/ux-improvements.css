@@ -962,6 +962,24 @@ ol li {
   margin: 0.2rem 0;
   border-radius: 0 4px 4px 0 !important;
 }
+/* Per-kind border-left color, restored on top of the flat AA-contrast fix
+   above: a 4px border strip carries no text and needs no separate contrast
+   check, so this can safely bring kind-color back — including making the
+   Help-tab legend swatches distinguishable again, which otherwise render
+   identically under the "Tag colors" heading since the block above flattens
+   every kind to the same purple strip. */
+.karl-tag[data-kind='meta'] {
+  border-left-color: var(--sfds-info-border) !important;
+}
+.karl-tag[data-kind='body'] {
+  border-left-color: var(--sfds-purple-border) !important;
+}
+.karl-tag[data-kind='placement'] {
+  border-left-color: var(--sfds-warning-border) !important;
+}
+.karl-tag[data-kind='editor'] {
+  border-left-color: var(--sfds-success-border) !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .review-queue-progress-fill,

@@ -33,6 +33,19 @@ describe('page-render.js escaping', () => {
     expect(html).toContain('data-kind="body"')
   })
 
+  test('karlTag escapes an XSS payload split across the headline and rationale spans', () => {
+    // parseKarlLabel() (js/karl-tag-meta.js) divides a note into separate
+    // headline/rationale spans, each escaped independently — this proves
+    // neither half leaks the raw payload and each renders its own escaped
+    // fragment, not just that the whole markup string happens to contain one.
+    const html = ctx.karlTag(`Body: ${PAYLOAD}. Trailing rationale text.`, 'body')
+    expect(html).not.toContain(PAYLOAD)
+    const headlineMatch = html.match(/<span class="karl-tag-headline">(.*?)<\/span>/)
+    const rationaleMatch = html.match(/<span class="karl-tag-rationale">(.*?)<\/span>/)
+    expect(headlineMatch[1]).toContain(ESCAPED)
+    expect(rationaleMatch[1]).toBe('Trailing rationale text.')
+  })
+
   test('paragraphList escapes every paragraph', () => {
     assertEscaped(ctx.paragraphList([PAYLOAD]))
   })
@@ -736,6 +749,69 @@ describe('card title inheritance', () => {
     const card = { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }
     expect(ctx.renderServiceTiles([card], inheritsSection)).toContain(scopeInfoTitle)
     expect(ctx.renderResourcesList([card], inheritsSection)).toContain(scopeInfoTitle)
+  })
+})
+
+// cardInheritanceFact() (js/page-render.js) is a DIFF of values cardTitle()/
+// cardDescription() already resolved against the card's own title/text, not
+// a second classifier — so it structurally cannot disagree with what
+// actually renders. These tests exist because a badge that disagrees with
+// the render is worse than no badge: it would tell a reviewer their edit is
+// dead when it isn't, or vice versa.
+describe('card inheritance fact badge on the tag', () => {
+  const inheritsSection = { heading: 'Services', karl: 'Services subsection: page chooser' }
+  const titleOnlySection = { heading: 'Related', karl: 'Related panel: linked pages' }
+  const authoredSection = { heading: 'Rules', karl: 'Table block: body table' }
+
+  test('badges an inheriting internal card whose own title and text both get replaced', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
+      inheritsSection
+    )
+    expect(html).toContain('class="karl-tag-inherit"')
+    expect(html).toContain('data-inherit="title-and-text"')
+  })
+
+  test('badges a title-only internal card the same way, since its title also inherits', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' }],
+      titleOnlySection
+    )
+    expect(html).toContain('class="karl-tag-inherit"')
+    expect(html).toContain('data-inherit="title-and-text"')
+  })
+
+  test('does not badge an authored card whose own fields render unchanged', () => {
+    const html = ctx.renderCards(
+      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Authored table copy.' }],
+      authoredSection
+    )
+    expect(html).not.toContain('class="karl-tag-inherit"')
+  })
+
+  test('does not badge an external-url card inside an inheriting section, since its own fields really render', () => {
+    // The regression case a bad diff-vs-classify implementation gets wrong:
+    // this card has no `target`, so neither cardTitle() nor
+    // cardDescription() substitutes anything, even though the section itself
+    // classifies as `inherits`.
+    const html = ctx.renderCards(
+      [
+        {
+          title: 'CDC rodents',
+          url: 'https://www.cdc.gov/rodents/',
+          text: 'Authored external copy.',
+        },
+      ],
+      inheritsSection
+    )
+    expect(html).not.toContain('class="karl-tag-inherit"')
+  })
+
+  test('does not badge a card with no section context (unknown classification)', () => {
+    const html = ctx.renderCards([
+      { title: 'Inspection scope', target: 'scopeInfo', text: 'Card copy.' },
+    ])
+    expect(html).not.toContain('class="karl-tag-inherit"')
   })
 })
 
