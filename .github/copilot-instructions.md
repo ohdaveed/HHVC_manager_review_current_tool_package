@@ -37,7 +37,7 @@ bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run start         # production-like: assemble dist/ (build:netlify), then serve it
 bun run validate      # Zod-validate pages/*.js and js/page-data.js (schema + invariants)
-bun run test          # Bun test runner over the 33 unit-test files in tests/
+bun run test          # Bun test runner over the 36 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run build         # validate -> export -> workshop form -> dist/ -> single-file HTML

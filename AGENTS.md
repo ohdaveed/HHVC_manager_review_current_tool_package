@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 35 unit-test files in tests/
+bun run test                  # Bun test runner over the 36 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 35 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 36 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -68,8 +68,11 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
-`decision-vocabulary` (pins the two module-boundary restatements of the
-decision list against the canonical table in `js/utils.js`), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
+`decision-vocabulary` (pins the two whole-list module-boundary restatements of
+the decision list against the canonical table in `js/utils.js` — and,
+separately, every file that spells out an INDIVIDUAL label as a literal, which
+is most of the queue: those are string comparisons, so a renamed decision
+leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
@@ -96,9 +99,16 @@ against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 normalization, varying the provider keys directly — which the server tests
 cannot, since a spawn only ever sees the environment it was given),
 `ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
-endpoints, so both AI paths are covered without a key or a paid call), and
-`ai-assist-validate-rewrite` (the plain-language mandate and link-target
-checks a `rewrite-field` draft is held to). **The list in
+endpoints, so both AI paths are covered without a key or a paid call),
+`ai-assist-client` (the browser client's config and HTTP surface — added
+because `js/ai-assist-client.js` and `js/review-state-sync.js` carry five
+near-identical functions and only the sync copy was tested, so the most
+similar pair in the repo was also the least covered and an edit to one could
+not fail CI; it pins the two DIFFERENCES too, since near-identical is exactly
+the condition under which the sync copy's extra `synced_at`/`local_dirty`
+clearing gets "helpfully" copied across), and `ai-assist-validate-rewrite`
+(the plain-language mandate and link-target checks a `rewrite-field` draft is
+held to). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
@@ -650,15 +660,17 @@ wiring into the existing autosave path).
   section `paragraphs` and `bullets` — and only of individual items, never
   whole sections/cards/steps, and never reordering.
 - **Card descriptions carry no `data-rewrite-field`, and cards' absence from
-  that scope list is load-bearing rather than incidental.** An inheriting card's
-  description IS the destination page's `summary` (see "Card descriptions are
-  inherited, not printed"), so the editable text lives on a different page
-  entirely. An inline edit here would address the card's own `text` — the field
-  that renders nowhere — and would appear to work, autosave, and then vanish on
-  the next paint, because the paint reads the destination's summary. A
-  `title-only` card has no description to edit at all. The summary a reviewer
-  actually wants to change is already inline-editable where it lives, so keep
-  cards out of scope; the missing attribute is the whole enforcement.
+  that scope list is load-bearing rather than incidental — it must stay true.**
+  An inheriting card's description IS the destination page's `summary` (see
+  "Card descriptions are inherited, not printed"), so the editable text lives on
+  a different page entirely. An inline edit here would address the card's own
+  `text` — the field that renders nowhere — and would appear to work, autosave,
+  and then vanish on the next paint, because the paint reads the destination's
+  summary. A `title-only` card has no description to edit at all. The summary a
+  reviewer actually wants to change is already inline-editable where it lives,
+  so keep cards out of scope; the missing attribute is the whole enforcement —
+  do not "complete" the feature by adding it. The decision is restated at its
+  site in `js/page-render.js`, immediately above `renderCards`.
 - **Every renderer that builds its own heading has to stamp
   `data-rewrite-field` itself, and five of them silently did not.** Only
   `renderSection()` reads `__sectionIndex`, so any section shape rendered
@@ -1940,7 +1952,8 @@ product rationale, trade-offs, and exact WCAG contrast math in CSS — not
 restatements of the code. Prose docs use plain-English framing with
 `**Bold label:**` bullets that state a non-obvious fact _and why it matters_, and
 annotate config inline (e.g. the `"// script": "description"` keys in
-`package.json`). Match this voice.
+`package.json`, and the explanatory comments throughout `.gitignore` and
+`ci.yml`). Match this voice.
 
 ### CSS
 
@@ -2006,7 +2019,8 @@ into a shared context, which ES modules made impossible. `describe` blocks are n
 characters"). Prefer exact-string assertions over loose matching. The XSS/escaping
 surface (`page-render.test.js`) is exhaustively covered — one assertion per render
 function. Use `test.todo` (with a reasoning comment) to document a
-known-but-unfixed bug rather than asserting wrong behavior.
+known-but-unfixed bug rather than asserting wrong behavior. Tests that stub
+globals must restore them, or they pollute sibling test files.
 
 ## Commits & pull requests
 

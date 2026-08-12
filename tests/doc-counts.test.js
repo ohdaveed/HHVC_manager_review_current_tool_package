@@ -24,6 +24,13 @@ const read = (name) => readFileSync(join(ROOT, name), 'utf8')
 const pkg = JSON.parse(read('package.json'))
 const CLAUDE_MD = read('CLAUDE.md')
 const AGENTS_MD = read('AGENTS.md')
+/* The THIRD mirror. It is deliberately a pointer — no file inventories, no
+   architecture summary — but it does quote one count, and until this file read
+   it nothing did: it sat claiming 33 unit-test files against a real 36, which
+   is exactly the rot the pointer convention exists to avoid and which two
+   checked mirrors cannot catch on its behalf. Only its counts are pinned here;
+   re-expanding it into a summary is what the canon section forbids. */
+const COPILOT_MD = read('.github/copilot-instructions.md')
 
 /** Test files actually on disk. */
 const unitTestFiles = readdirSync(join(ROOT, 'tests'))
@@ -96,6 +103,7 @@ describe('counts quoted in the instruction docs', () => {
   test.each([
     ['CLAUDE.md', CLAUDE_MD],
     ['AGENTS.md', AGENTS_MD],
+    ['.github/copilot-instructions.md', COPILOT_MD],
   ])('%s states the real number of unit-test files', (_name, text) => {
     const claims = countsIn(text, /([\w-]+) (?:Bun )?unit-test files/gi)
     expect(claims.length).toBeGreaterThan(0)
