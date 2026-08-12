@@ -739,6 +739,63 @@ describe('card title inheritance', () => {
   })
 })
 
+describe('renderCards / renderCardList: shared assembly does not change output', () => {
+  // Both already have coverage elsewhere (renderCards directly by name;
+  // renderCardList indirectly through renderResourcesList, since it is not
+  // itself exported). This block pins the exact current output for cases
+  // that differ between the two callers — url vs target vs inert, unverified,
+  // and fileType — so extracting their shared logic into
+  // cardActionAndDescription() cannot silently change what either renders.
+  const CARDS = [
+    { title: 'External', url: 'https://example.gov/page', text: 'An external link.' },
+    { title: 'Internal', target: 'pestsTopic', text: 'An internal link.' },
+    { title: 'Inert', text: 'No target or url at all.' },
+    {
+      title: 'Unverified',
+      target: 'pestsTopic',
+      text: 'Needs confirming.',
+      unverified: true,
+      unverifiedReason: 'Pending SME review',
+    },
+    { title: 'With file badge', url: 'https://example.gov/doc.pdf', fileType: 'PDF' },
+  ]
+
+  test('renderCards output for a representative card set', () => {
+    expect(ctx.renderCards(CARDS)).toMatchSnapshot()
+  })
+
+  test('renderResourcesList (wraps renderCardList) output for the same card set', () => {
+    expect(ctx.renderResourcesList(CARDS)).toMatchSnapshot()
+  })
+
+  test('renderCards external link uses rel="noopener" (not noreferrer)', () => {
+    const html = ctx.renderCards([CARDS[0]])
+    expect(html).toContain('rel="noopener"')
+    expect(html).not.toContain('noreferrer')
+  })
+
+  test('renderResourcesList external link uses rel="noopener noreferrer"', () => {
+    const html = ctx.renderResourcesList([CARDS[0]])
+    expect(html).toContain('rel="noopener noreferrer"')
+  })
+
+  test('renderCards external-link mark carries no class', () => {
+    const html = ctx.renderCards([CARDS[0]])
+    expect(html).toContain('<span aria-hidden="true">↗</span>')
+  })
+
+  test('renderResourcesList external-link mark carries the external-mark class', () => {
+    const html = ctx.renderResourcesList([CARDS[0]])
+    expect(html).toContain('<span class="external-mark" aria-hidden="true">↗</span>')
+  })
+
+  test('renderResourcesList renders a file-type badge; renderCards does not', () => {
+    const fileCard = [CARDS[4]]
+    expect(ctx.renderResourcesList(fileCard)).toContain('<span class="file-badge">PDF</span>')
+    expect(ctx.renderCards(fileCard)).not.toContain('file-badge')
+  })
+})
+
 describe('hero eyebrow', () => {
   const base = {
     title: 'A page',
