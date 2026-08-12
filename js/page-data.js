@@ -23,6 +23,7 @@ import '../pages/public-records-request.js'
 import '../pages/property-owner-responsibilities.js'
 import '../pages/respond-to-notice-of-violation.js'
 import '../pages/tenant-steps-after-notice-of-violation.js'
+import '../pages/get-ready-for-followup-inspection.js'
 import '../pages/hhvc-inspection-scope.js'
 import '../pages/integrated-pest-management-property-managers.js'
 import '../pages/healthy-housing-vermin-resources.js'
@@ -53,6 +54,7 @@ window.HHVC_DATA = {
     ['ownerHub', 'Resource collection: Property owner responsibilities'],
     ['noticeOfViolation', 'Transaction: Fix your Healthy Housing and Vector Control violation'],
     ['tenantNoticeSteps', 'Transaction: What tenants need to do after a Notice of Violation'],
+    ['inspectionPrepFollowup', 'Transaction: Get ready for a follow-up inspection'],
     ['payFee', 'Transaction: Pay your Healthy Housing fee'],
     ['scopeInfo', 'Information: Learn what HHVC can inspect'],
     ['article11Compliance', 'Information: Article 11 compliance for property owners'],
