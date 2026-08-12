@@ -18,6 +18,7 @@ import '../pages/lookup-building-records.js'
 import '../pages/lookup-complaints-inspections.js'
 import '../pages/lookup-residential-violations.js'
 import '../pages/lookup-residential-hotel-records.js'
+import '../pages/find-inspector-by-neighborhood.js'
 import '../pages/public-records-request.js'
 import '../pages/property-owner-responsibilities.js'
 import '../pages/respond-to-notice-of-violation.js'
@@ -46,6 +47,7 @@ window.HHVC_DATA = {
     ['findRecords', 'Transaction: Find complaints and inspection records'],
     ['findViolations', 'Transaction: Look up residential health code violations'],
     ['findHotelRecords', 'Transaction: Find residential hotel and shelter records'],
+    ['inspectorLookup', 'Transaction: Find your Healthy Housing inspector by neighborhood'],
     ['publicRecords', 'Transaction: Make a public records request'],
     ['ownerHub', 'Resource collection: Property owner responsibilities'],
     ['noticeOfViolation', 'Transaction: Fix your Healthy Housing and Vector Control violation'],
