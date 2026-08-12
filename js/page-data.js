@@ -13,6 +13,7 @@ import '../pages/agency-service-grouping.js'
 import '../pages/report-rats-mice-four-legged-problems.js'
 import '../pages/report-garbage-filth-vegetation.js'
 import '../pages/report-cockroaches-mosquitoes-insects.js'
+import '../pages/report-sro-hotel-problem.js'
 import '../pages/lookup-building-records.js'
 import '../pages/lookup-complaints-inspections.js'
 import '../pages/lookup-residential-violations.js'
@@ -40,6 +41,7 @@ window.HHVC_DATA = {
     ['rodentsReport', 'Transaction: Report rats, mice, and other four-legged problems'],
     ['filthReport', 'Transaction: Report garbage, filth, and overgrown vegetation'],
     ['insectsReport', 'Transaction: Report cockroaches, mosquitoes, and other insects'],
+    ['sroHotelReport', 'Transaction: Report a problem in an SRO or hotel'],
     ['recordsHub', 'Resource collection: Look up building records'],
     ['findRecords', 'Transaction: Find complaints and inspection records'],
     ['findViolations', 'Transaction: Look up residential health code violations'],
