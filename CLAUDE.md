@@ -2172,6 +2172,20 @@ Login URL for the Karl (Wagtail-based) CMS admin:
 and private MCP config out of the repo (in `~/.codex/config.toml` or
 equivalent).
 
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues via the `gh` CLI (`origin` is
+`github.com/ohdaveed/HHVC_manager_review_current_tool_package`). See
+`docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root (neither
+exists yet; created lazily by `/domain-modeling`). See
+`docs/agents/domain.md`.
+
 ## Session pitfalls to avoid
 
 - **Establish the repo root before guessing paths.** Run `pwd` (or use the

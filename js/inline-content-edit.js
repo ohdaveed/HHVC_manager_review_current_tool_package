@@ -61,18 +61,6 @@
   }
 
   /**
-   * Whether a fieldType (per editorFieldTypeFor above) resolves to the
-   * {text, unverified, unverifiedReason} tagged-object shape rather than a
-   * plain string — mirrors js/inline-content-edit-adapter.js's own
-   * ITEM_FIELD_TYPES split.
-   * @param {string} fieldType
-   * @returns {boolean}
-   */
-  function isItemFieldType(fieldType) {
-    return fieldType === 'paragraph' || fieldType === 'bullet'
-  }
-
-  /**
    * Read a scalar field's current text value, given its data-rewrite-field
    * path. Title/summary/CTA are page-level and read directly (they predate
    * getByPath's section-path scope); everything else is a getByPath lookup
