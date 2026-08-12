@@ -505,7 +505,7 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
 
   // The hero renders no pills of any kind after the CTA. It used to close
   // with a metadata row of up to three: 'Environmental Health' and 'HHVC'
-  // were string literals in the renderer, identical on all 22 pages;
+  // were string literals in the renderer, identical on all 27 pages;
   // `page.reading` is a property OF the copy rather than part of it, and one
   // no Karl page publishes; and `topicTag`/`reportDate`, while real page
   // fields, still duplicated chrome that added nothing above the fold. A

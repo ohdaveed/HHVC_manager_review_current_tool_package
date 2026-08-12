@@ -17,7 +17,7 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
     cost: 'Free',
     thingsToKnow: [
       'Your Notice of Violation lists which actions apply to your unit.',
-      'A property owner or manager cannot retaliate against you for reporting a condition or for actions listed on a notice.',
+      'A property owner or manager cannot retaliate against you for reporting a condition.',
     ],
   },
   sections: [
@@ -72,7 +72,7 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
       paragraphs: [
         'A Notice of Violation does not change your right to safe and habitable housing.',
       ],
-      bullets: ['[Tenant rights and reporting](tenantRights)'],
+      bullets: ['[Tenant rights when reporting housing conditions](tenantRights)'],
     },
     {
       heading: 'If nothing happens by the deadline',

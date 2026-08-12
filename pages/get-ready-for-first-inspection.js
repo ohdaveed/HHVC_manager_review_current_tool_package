@@ -19,7 +19,7 @@ window.HHVC_PAGES['inspectionPrepInitial'] = {
     cost: 'Free',
     thingsToKnow: [
       'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
-      'An inspection may happen without advance notice when the reported problem can be seen from an accessible area.',
+      'An inspection may happen without advance notice when areas can be accessed.',
     ],
   },
   sections: [

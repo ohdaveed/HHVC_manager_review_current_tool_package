@@ -195,7 +195,7 @@ function slugify(value) {
  * `Topic|Transaction|Resource Collection|Campaign|Information:` prefix from the
  * ORDER LABEL (js/ui-controls.js), not from the page title — so a label without
  * one renders the type name inside the option text, inside an optgroup already
- * headed by that same type. All 22 authored entries carry it; so must these.
+ * headed by that same type. All 27 authored entries carry it; so must these.
  * @param {{type?: string, title?: string}} page
  * @returns {string}
  */
