@@ -321,7 +321,10 @@ function cardTitle(section, card) {
  * @param {{title: string, target?: string, url?: string, unverified?: boolean, unverifiedReason?: string}} card
  * @param {{relNoreferrer?: boolean, externalMarkClass?: string}} [opts]
  * @returns {{action: string, desc: string}} desc is '' when there is nothing
- *   to show — callers decide whether an empty desc means no <p> at all.
+ *   to show — callers decide whether an empty desc means no <p> at all. Both
+ *   `action` and `desc` are ALREADY escaped, ready-to-interpolate HTML (desc
+ *   via escapeHtml(), with the unverified pill already appended) — never
+ *   pass either through escapeHtml() again, or the markup double-escapes.
  */
 function cardActionAndDescription(section, card, opts = {}) {
   const { relNoreferrer = false, externalMarkClass = '' } = opts

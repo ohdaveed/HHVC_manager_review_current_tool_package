@@ -69,12 +69,15 @@ import './page-registry-data.js'
      timestamp and nothing else. */
   const hiddenStash = {}
 
-  /* Every page key in canonical site order, maintained across calls by
-     applyRegistryToData(). This is what restore positions against, rather than
-     the numeric index recorded at hide time: that index is measured against an
-     already-shortened order, so two hides can record the same number and
-     restoring them permutes the site. See restoreOrderIndex()'s comment in
-     js/page-registry-data.js for the worked example. */
+  /* Every page key in canonical site order. `applyRegistryToData()` does not
+     mutate this array in place — it returns a new `canonicalOrder` alongside
+     its other results, and every call site below reassigns this `let`
+     binding from that return value. This is what restore positions against,
+     rather than the numeric index recorded at hide time: that index is
+     measured against an already-shortened order, so two hides can record the
+     same number and restoring them permutes the site. See
+     restoreOrderIndex()'s comment in js/page-registry-data.js for the worked
+     example. */
   let canonicalOrder = []
 
   /* The keys that come from pages/*.js, captured NOW — before applySavedRegistry()

@@ -672,12 +672,7 @@ describe('applyRegistryToData: canonical order tracking', () => {
 
   test('extends the canonical list with a page added later, without rebuilding it', () => {
     const data = liveData()
-    const first = applyRegistryToData(
-      data,
-      { hidden: { ownerHub: { hidden_at: 'x' } } },
-      {},
-      []
-    )
+    const first = applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, [])
     // A mid-session add: the caller passes the PREVIOUS return value back in,
     // so the earlier hidden key must survive rather than being recomputed
     // from the shortened order.

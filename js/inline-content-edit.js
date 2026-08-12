@@ -595,6 +595,9 @@
      * navigation, a page delete) or this session's holder has been detached
      * from the live #mockPage. Checked after every async boundary — see
      * open()'s two call sites below.
+     *
+     * Deliberately NOT used inside commit()/cancel() — they use the narrower
+     * editingPath check; see their own comments.
      * @returns {boolean}
      */
     isStale() {
