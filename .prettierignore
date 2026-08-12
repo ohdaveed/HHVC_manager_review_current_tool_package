@@ -21,5 +21,11 @@ forms/mosquito-workshop-request/dist/
 .claude/worktrees/
 .worktrees/
 
+# Same shape, different file: Claude Code rewrites this one itself as permissions
+# are granted, so its formatting is not ours to own. It is gitignored, so CI on a
+# fresh clone never sees it — but locally it was the single warning standing
+# between a clean tree and a green `bun run format:check`.
+.claude/settings.local.json
+
 # Impeccable design-hook cache, rewritten on every edit it inspects.
 .impeccable/
