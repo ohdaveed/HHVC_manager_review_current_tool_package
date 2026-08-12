@@ -363,6 +363,57 @@ describe('gemini timeout normalization', () => {
   })
 })
 
+describe('anthropic timeout normalization', () => {
+  // Mirrors the gemini block above. Anthropic's SDK, unlike Gemini's, throws
+  // a DISTINCTLY-named error for its own per-call deadline
+  // (APIConnectionTimeoutError) rather than reusing a generic AbortError — so
+  // classifyAbort here matches on constructor.name instead of a bare `name`
+  // check, and the caller's signal is consulted only as the same
+  // defense-in-depth check gemini's version uses, not as the sole
+  // disambiguator. classifyAbort matches the SDK's error by exact
+  // constructor.name (not `instanceof` — the SDK is deliberately not
+  // imported here), so this fixture class is named to match the real SDK
+  // class byte-for-byte rather than "Fake"-prefixed: the whole point under
+  // test is the name string itself, and a prefixed name would never satisfy
+  // the equality check classifyAbort actually performs.
+  class APIConnectionTimeoutError extends Error {}
+  class FakeAPIUserAbortError extends Error {}
+
+  test('raises ProviderTimeoutError when the caller never aborted', () => {
+    const error = new APIConnectionTimeoutError('timed out')
+    const signal = new AbortController().signal // never aborted
+    expect(() => anthropic.classifyAbort(error, signal)).toThrow(ProviderTimeoutError)
+  })
+
+  test('passes the error through untouched when the caller did abort', () => {
+    const error = new APIConnectionTimeoutError('timed out')
+    const controller = new AbortController()
+    controller.abort()
+    expect(() => anthropic.classifyAbort(error, controller.signal)).toThrow(error)
+  })
+
+  test('passes a non-timeout error through untouched', () => {
+    const error = new FakeAPIUserAbortError('user aborted')
+    expect(() => anthropic.classifyAbort(error, new AbortController().signal)).toThrow(error)
+  })
+
+  test('passes a plain Error through untouched', () => {
+    const error = new Error('upstream exploded')
+    expect(() => anthropic.classifyAbort(error, new AbortController().signal)).toThrow(error)
+  })
+
+  test('ProviderTimeoutError names claude as the provider that ran out of time', () => {
+    const error = new APIConnectionTimeoutError('timed out')
+    const signal = new AbortController().signal
+    try {
+      anthropic.classifyAbort(error, signal)
+    } catch (thrown) {
+      expect(thrown).toBeInstanceOf(ProviderTimeoutError)
+      expect(thrown.provider).toBe('claude')
+    }
+  })
+})
+
 describe('request schema provider enum', () => {
   test('accepts every registered provider name', () => {
     // The contract providers.js states: adding a provider is "a require plus a

@@ -566,6 +566,18 @@ import { hasValidPageData } from './utils.js'
       // render calls the real DOM-producing render before this reapply
       // step), so a true return here means the DOM the reviewer is looking
       // at is now stale and needs exactly one follow-up render to catch up.
+      // refreshInFlightForKey's whole safety argument (see its own comment
+      // above) rests on `page` staying reference-equal to DATA.pages[pageKey]
+      // from the read at the top of this function through this exact call —
+      // a future change that reads a clone here instead would silently start
+      // suppressing renders it shouldn't, with no thrown error to catch it.
+      // This turns that invariant loud instead of silent.
+      console.assert(
+        page === DATA.pages[pageKey],
+        'applySavedPageState: page identity drifted from DATA.pages[pageKey] before ' +
+          'applyContentEditsToPageData — refreshInFlightForKey depends on in-place mutation ' +
+          "of the live object (see the comment above refreshInFlightForKey's declaration)."
+      )
       const appliedSectionEdits = window.inlineEditData?.applyContentEditsToPageData(page, saved)
       if (
         (appliedSectionEdits || ctaChanged) &&

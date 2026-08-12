@@ -16,7 +16,7 @@
 // window.renderPage before importing, matching the pattern
 // tests/review-state-sync.test.js uses for its CJS sibling (stub the globals
 // the IIFE reads at mount time, then assert against what it published).
-const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
+const { describe, test, expect, beforeEach, afterEach, spyOn } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
 const realInlineEditData = require('../js/inline-content-edit-data.js')
@@ -24,6 +24,13 @@ const realInlineEditData = require('../js/inline-content-edit-data.js')
 const MODULE_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
 
 let originalWindow
+// Tracks the current test's console.assert spy, if any, so afterEach can
+// restore it unconditionally — a bare `assertSpy.mockRestore()` at the end
+// of a test body never runs if an expect() above it throws, leaving the spy
+// installed and polluting every later test in this file (and any other file
+// that runs in the same process afterward). See CLAUDE.md: "Tests that stub
+// globals must restore them, or they pollute sibling test files."
+let currentAssertSpy = null
 
 beforeEach(() => {
   originalWindow = global.window
@@ -31,6 +38,10 @@ beforeEach(() => {
 
 afterEach(() => {
   global.window = originalWindow
+  if (currentAssertSpy) {
+    currentAssertSpy.mockRestore()
+    currentAssertSpy = null
+  }
 })
 
 /**
@@ -369,5 +380,90 @@ describe('applySavedPageState section_edits follow-up render', () => {
     // guard-check was the one that originally triggered the render chain.
     expect(page.sections[0].heading).toBe('Second')
     expect(renderPaints.at(-1)).toBe('Second')
+  })
+})
+
+describe('applySavedPageState asserts page identity before reapplying', () => {
+  test('does not fire the identity assertion in normal operation', async () => {
+    const assertSpy = (currentAssertSpy = spyOn(console, 'assert'))
+    const { applySavedPageState } = await mountStateSyncWithRealReapply()
+
+    applySavedPageState('pestsTopic')
+
+    // console.assert only logs when its first argument is falsy — so in
+    // normal operation (page === DATA.pages[pageKey], which is always true
+    // today, since applySavedPageState never reassigns DATA.pages[pageKey]
+    // between reading it into `page` and calling
+    // applyContentEditsToPageData(page, saved)), it must never have been
+    // called with a falsy condition.
+    const falsyCalls = assertSpy.mock.calls.filter(([condition]) => !condition)
+    expect(falsyCalls).toEqual([])
+  })
+
+  test('fires the identity assertion when DATA.pages[pageKey] no longer matches the object read at the top of the call', async () => {
+    // Simulates the regression this guard exists to catch: a future change
+    // that reads DATA.pages[pageKey] a second time (instead of reusing the
+    // `page` local) and gets back a clone rather than the live object —
+    // which would silently break refreshInFlightForKey's safety argument
+    // (see that variable's own comment in js/ux-improvements-state-sync.js).
+    // A Proxy simulates this without editing the module under test: the
+    // FIRST access to `pestsTopic` (the `const page = DATA.pages[pageKey]`
+    // read) returns the real object; a SECOND access (the assertion this
+    // task adds, immediately before the reapply call) returns a shallow
+    // clone with the same shape but a different identity.
+    const realPage = { title: 'T', sections: [{ heading: 'Original', paragraphs: [] }] }
+    let accessCount = 0
+    const pagesProxy = new Proxy(
+      { pestsTopic: realPage },
+      {
+        get(target, prop) {
+          if (prop === 'pestsTopic') {
+            accessCount += 1
+            return accessCount === 1 ? target.pestsTopic : { ...target.pestsTopic }
+          }
+          return target[prop]
+        },
+      }
+    )
+
+    let state = {
+      version: 1,
+      updated_at: '',
+      ui: {},
+      globals: {},
+      pages: { pestsTopic: { section_edits: { 'sections.0.heading': 'Edited' } } },
+    }
+
+    global.window = {
+      HHVC_DATA: { pages: pagesProxy, order: [['pestsTopic', 'Test']] },
+      ORIGINAL_DATA: {
+        pages: { pestsTopic: { title: 'T', sections: [{ heading: 'Original', paragraphs: [] }] } },
+      },
+      reviewState: {
+        read: () => state,
+        update: (updater) => {
+          state = updater(state)
+          return state
+        },
+      },
+      reviewMerge: {
+        mergeReviewRecord: (existing) => existing,
+        combineHistory: (a) => a,
+        reviewContentEquals: () => true,
+      },
+      utils: realUtils,
+      inlineEditData: realInlineEditData,
+      renderPage: () => {},
+    }
+
+    const modUrl = `${MODULE_PATH}?t=${Date.now()}-${Math.random()}`
+    await import(modUrl)
+
+    const assertSpy = (currentAssertSpy = spyOn(console, 'assert'))
+    global.window.ReviewUx.stateSync.applySavedPageState('pestsTopic')
+
+    const falsyCalls = assertSpy.mock.calls.filter(([condition]) => !condition)
+    expect(falsyCalls.length).toBeGreaterThanOrEqual(1)
+    expect(falsyCalls[0][1]).toContain('identity')
   })
 })

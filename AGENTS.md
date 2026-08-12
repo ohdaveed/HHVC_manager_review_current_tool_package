@@ -1585,21 +1585,31 @@ by default, failing closed.
   reports `"TimeoutError"` besides. Signal state is also provider-agnostic.
   The 504 path is tested against a slow stub — 499 is not observable, since the
   client that aborts cannot read the response.
-- **The fallback arm matches `constructor.name`, never `instanceof`.** Neither
-  signal is aborted when the SDK's own per-call timeout fires first — which a
-  short `ANTHROPIC_TIMEOUT_MS`, or `ANTHROPIC_MAX_RETRIES=0` removing the
-  retries that would carry the call past the route budget, makes routine — so
-  the fallback is a live path, not a safety net. It was dead for a **second**
-  reason on top of the `name` one above: `@anthropic-ai/sdk` ships separate
-  `require` and `import` builds, and `server.ts` imported it while
-  `build_scripts/ai/provider-anthropic.js` requires it, so `instanceof` compared
-  the thrown error against a different copy of the same class and was
-  permanently false. Measured: an SDK timeout returned **500**, not the 499 the
-  code read as. `constructor.name` is one string on one object, crosses that
-  boundary intact, and lets `server.ts` drop the SDK import entirely. The two
-  cases split the same way the signal branches do —
-  `APIUserAbortError` → 499, `APIConnectionTimeoutError` → **504** — because an
-  upstream that ran out of time is not a client that hung up.
+- **`provider-anthropic.js`'s own `classifyAbort()` matches
+  `constructor.name`, never `instanceof` — and it lives in the provider now,
+  not in `server.ts`'s fallback.** Neither signal is aborted when the SDK's
+  own per-call timeout fires first — which a short `ANTHROPIC_TIMEOUT_MS`, or
+  `ANTHROPIC_MAX_RETRIES=0` removing the retries that would carry the call
+  past the route budget, makes routine — so this is a live path, not a safety
+  net: `classifyAbort()` throws `ProviderTimeoutError`, caught by
+  `aiErrorResponse`'s `ProviderTimeoutError` branch (**504**), mirroring
+  `provider-gemini.js`'s own `classifyAbort()` (see the next bullet). This
+  used to be a `constructor.name` fallback arm inside `server.ts` itself, and
+  was dead there for two reasons: the SDK's `APIUserAbortError`/
+  `APIConnectionTimeoutError` both inherit `name` `"Error"` with no `status`
+  (the same issue the bullet above describes), **and** `@anthropic-ai/sdk`
+  ships separate `require`/`import` builds — `server.ts` imported it while
+  `build_scripts/ai/provider-anthropic.js` requires it, so an `instanceof`
+  check there compared the thrown error against a different copy of the same
+  class and was permanently false. Measured at the time: an SDK timeout
+  returned **500**, not the 499 the code read as. Moving the match into
+  `provider-anthropic.js` — the same module that requires the SDK — closes
+  the dual-package hazard outright rather than working around it with
+  `constructor.name`, and means `server.ts` needs no SDK import and no
+  SDK-specific knowledge at all: its own fallback is now a provider-agnostic
+  DOMException `error.name` check (`"AbortError"`/`"TimeoutError"`) for
+  whatever a provider's own `classifyAbort()` doesn't recognize and rethrows
+  untouched.
 - **Gemini's timeout has to be normalized at the provider, because its SDK
   makes it unrecognizable at the route.** `@google/genai` implements
   `httpOptions.timeout` as a bare `abortController.abort()` — no reason — which

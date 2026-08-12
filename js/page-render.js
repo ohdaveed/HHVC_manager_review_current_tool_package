@@ -339,21 +339,46 @@ function cardTitle(section, card) {
 // paint reads the destination's `summary`. The text a reviewer actually wants
 // to change lives on the destination page, where inline editing already
 // reaches it. A title-only card has no description to edit at all.
+/**
+ * Shared card action + description assembly for renderCards() and
+ * renderCardList() — the two callers differ only in wrapper markup (article
+ * vs li), the external-link rel value, the external-link mark's class, and
+ * whether a file-type badge renders; every other card field resolves
+ * identically, and had already drifted apart once when duplicated by hand.
+ * @param {{karl?: string}|null|undefined} section Same contract as cardDescription().
+ * @param {{title: string, target?: string, url?: string, unverified?: boolean, unverifiedReason?: string}} card
+ * @param {{relNoreferrer?: boolean, externalMarkClass?: string}} [opts]
+ * @returns {{action: string, desc: string}} desc is '' when there is nothing
+ *   to show — callers decide whether an empty desc means no <p> at all. Both
+ *   `action` and `desc` are ALREADY escaped, ready-to-interpolate HTML (desc
+ *   via escapeHtml(), with the unverified pill already appended) — never
+ *   pass either through escapeHtml() again, or the markup double-escapes.
+ */
+function cardActionAndDescription(section, card, opts = {}) {
+  const { relNoreferrer = false, externalMarkClass = '' } = opts
+  const title = cardTitle(section, card)
+  const rel = relNoreferrer ? 'noopener noreferrer' : 'noopener'
+  const attr = card.url
+    ? ` target="_blank" rel="${rel}"`
+    : card.target
+      ? ` data-render-target="${escapeHtml(card.target)}"`
+      : ' data-render-inert=""'
+  const markClass = externalMarkClass ? ` class="${externalMarkClass}"` : ''
+  const externalMark = card.url ? ` <span${markClass} aria-hidden="true">↗</span>` : ''
+  const action = card.url
+    ? `<a href="${escapeHtml(safeUrl(card.url))}"${attr}>${escapeHtml(title)}${externalMark}</a>`
+    : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
+  const descText = cardDescription(section, card)
+  const desc = descText
+    ? `${escapeHtml(descText)}${card.unverified ? unverifiedPill(card.unverifiedReason) : ''}`
+    : ''
+  return { action, desc }
+}
 function renderCards(cards = [], section = null) {
   return `<div class="cards">${cards
     .map((c) => {
-      const title = cardTitle(section, c)
-      const attr = c.url
-        ? ' target="_blank" rel="noopener"'
-        : c.target
-          ? ` data-render-target="${escapeHtml(c.target)}"`
-          : ' data-render-inert=""'
-      const externalMark = c.url ? ' <span aria-hidden="true">↗</span>' : ''
-      const action = c.url
-        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(title)}${externalMark}</a>`
-        : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
-      const desc = cardDescription(section, c)
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${desc ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>` : ''}</article>`
+      const { action, desc } = cardActionAndDescription(section, c)
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement')}<h3>${action}</h3>${desc ? `<p>${desc}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
@@ -367,23 +392,14 @@ function renderCards(cards = [], section = null) {
 function renderCardList(cards = [], section = null) {
   return `<ul>${cards
     .map((c) => {
-      const title = cardTitle(section, c)
-      const attr = c.url
-        ? ' target="_blank" rel="noopener noreferrer"'
-        : c.target
-          ? ` data-render-target="${escapeHtml(c.target)}"`
-          : ' data-render-inert=""'
-      const externalMark = c.url ? ' <span class="external-mark" aria-hidden="true">↗</span>' : ''
+      const { action, desc } = cardActionAndDescription(section, c, {
+        relNoreferrer: true,
+        externalMarkClass: 'external-mark',
+      })
       const fileBadge = c.fileType
         ? `<span class="file-badge">${escapeHtml(c.fileType)}</span>`
         : ''
-      const action = c.url
-        ? `<a href="${escapeHtml(safeUrl(c.url))}"${attr}>${escapeHtml(title)}${externalMark}</a>`
-        : `<button type="button" class="inline-link"${attr}>${escapeHtml(title)}</button>`
-      const desc = cardDescription(section, c)
-      const text = desc
-        ? `<p>${escapeHtml(desc)}${c.unverified ? unverifiedPill(c.unverifiedReason) : ''}</p>`
-        : ''
+      const text = desc ? `<p>${desc}</p>` : ''
       return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement')}${action}${fileBadge}${text}</li>`
     })
     .join('')}</ul>`

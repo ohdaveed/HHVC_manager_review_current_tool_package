@@ -457,14 +457,27 @@ function isValidAddedEntry(key, entry) {
  * @param {{added?: object, hidden?: object}} registry
  * @param {object} [stash] filled with `{index, entry, page}` per hidden key so
  *   restore can put the original tuple back
- * @param {string[]} [canonicalOrder] extended in place with every key present
- *   after the add pass, in order. This is the reference sequence
- *   `restoreOrderIndex()` restores against; see its own comment for why a
- *   remembered numeric index is not enough.
- * @returns {{added: string[], hidden: string[], dropped: string[]}} what actually happened
+ * @param {string[]} [canonicalOrder] the caller's PREVIOUS return value's
+ *   `canonicalOrder` (or `[]` on the first call). Read only — never mutated.
+ *   The reference sequence `restoreOrderIndex()` restores against; see its
+ *   own comment for why a remembered numeric index is not enough.
+ * @returns {{added: string[], hidden: string[], dropped: string[], collided: string[],
+ *   canonicalOrder: string[]}} what actually happened, plus the updated
+ *   canonical order — the caller keeps THIS value and passes it back in on
+ *   the next call, rather than reusing the same array instance across calls.
+ *   Returning it (instead of mutating the 4th argument) is what makes a
+ *   second call site safe to pass a fresh `[]`: it gets back a correct,
+ *   independent order rather than silently sharing state with the first
+ *   call site's array.
  */
 function applyRegistryToData(data, registry, stash, canonicalOrder) {
-  const result = { added: [], hidden: [], dropped: [], collided: [] }
+  const result = {
+    added: [],
+    hidden: [],
+    dropped: [],
+    collided: [],
+    canonicalOrder: Array.isArray(canonicalOrder) ? canonicalOrder.slice() : [],
+  }
   if (!isPlainObject(data) || !isPlainObject(data.pages) || !Array.isArray(data.order)) {
     return result
   }
@@ -518,13 +531,13 @@ function applyRegistryToData(data, registry, stash, canonicalOrder) {
 
   /* Learn the canonical sequence BETWEEN the two passes: after adds (so a
      reviewer-created page takes its place in it) and before hides (so it still
-     describes the full site rather than whatever is left). The caller keeps the
-     same array across calls, so a mid-session hide extends it rather than
-     rebuilding it from an already-shortened order. */
-  if (Array.isArray(canonicalOrder)) {
-    for (const [key] of data.order) {
-      if (!canonicalOrder.includes(key)) canonicalOrder.push(key)
-    }
+     describes the full site rather than whatever is left). result.canonicalOrder
+     starts as a COPY of the input above, so a mid-session hide extends the
+     caller's previous order rather than rebuilding it from an
+     already-shortened one — without ever mutating the array the caller
+     passed in. */
+  for (const [key] of data.order) {
+    if (!result.canonicalOrder.includes(key)) result.canonicalOrder.push(key)
   }
 
   for (const key of Object.keys(normalized.hidden)) {

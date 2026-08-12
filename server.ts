@@ -32,13 +32,16 @@ import {
 import { hasConfiguredProvider, getProvider } from "./build_scripts/ai/providers.js"
 // @ts-ignore - plain JS module, CommonJS.
 import { numberFromEnv } from "./build_scripts/ai/env.js"
-// Deliberately NOT importing @anthropic-ai/sdk here. It was imported for its
-// error classes alone, as the fallback arm of aiErrorResponse's cancellation
-// mapping — but the SDK ships separate require/import builds, so importing it
-// here while build_scripts/ai/provider-anthropic.js requires it produced two
-// unrelated copies of every class and made those `instanceof` checks
-// permanently false. That fallback now matches on `constructor.name`, which
-// needs no import and does not care which build threw.
+// Deliberately NOT importing @anthropic-ai/sdk here. It used to be imported
+// for its error classes alone, as the fallback arm of aiErrorResponse's
+// cancellation mapping — but the SDK ships separate require/import builds, so
+// importing it here while build_scripts/ai/provider-anthropic.js requires it
+// produced two unrelated copies of every class and made those `instanceof`
+// checks permanently false. That whole fallback has since moved into
+// provider-anthropic.js's own classifyAbort (constructor.name matching against
+// the SDK copy IT requires, the same copy that threw), mirroring
+// provider-gemini.js's classifyAbort — so this file needs no SDK import and no
+// SDK-specific knowledge at all anymore.
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10)
@@ -878,39 +881,39 @@ function aiErrorResponse(
     return jsonResponse({ error: "Generation timed out." }, 504, context.corsHeaders)
   }
   // Fallback for aborts raised where NO signal was threaded through, so the
-  // mapping degrades to something sane instead of back to a logged 500. This is
-  // not a hypothetical path: the SDK enforces its own per-call timeout
-  // (ANTHROPIC_TIMEOUT_MS) inside AI_REQUEST_TIMEOUT_MS, so whenever it gives up
-  // first — a short per-call timeout, or ANTHROPIC_MAX_RETRIES=0 removing the
-  // retries that would otherwise carry the call past our budget — the error
-  // arrives here with neither signal aborted.
+  // mapping degrades to something sane instead of back to a logged 500.
   //
-  // Matched on `constructor.name` rather than `instanceof`, because the
-  // instanceof spelling was ALSO dead and for a second, separate reason.
-  // @anthropic-ai/sdk ships two builds (`index.js` for require, `index.mjs` for
-  // import). This file imported it while build_scripts/ai/provider-anthropic.js
-  // requires it, so the two halves held different copies of the same class and
-  // every `error instanceof Anthropic.*` here was comparing against a
-  // constructor the thrown error had never been built from — the classic dual
-  // package hazard. Measured directly: an SDK timeout reached this function and
-  // came back 500, not the 499 the code reads as. `constructor.name` is one
-  // string on one object and crosses that boundary intact, and it lets the SDK
-  // import be dropped from this file altogether.
+  // Anthropic's own per-call deadline (APIConnectionTimeoutError, thrown
+  // when the caller's signal was NOT the one that aborted) is normalized at
+  // the provider boundary — see provider-anthropic.js's classifyAbort, which
+  // mirrors provider-gemini.js's — and gets caught above by the
+  // ProviderTimeoutError branch, so that exact case (the SDK's own timeout
+  // firing inside our longer budget) never reaches this fallback anymore.
+  // APIUserAbortError is NOT normalized there — classifyAbort rethrows it
+  // untouched, since it only ever fires when the caller's own signal aborted
+  // the call, and that case is already caught by the signals?.client?.aborted
+  // branch above, before classifyAbort even runs.
+  // What's left here is a provider-agnostic backstop: a real DOMException
+  // named "AbortError"/"TimeoutError" raised somewhere outside a provider's
+  // own normalization (e.g. AbortSignal.timeout() firing directly, or a
+  // future provider that hasn't grown its own classifyAbort yet), which
+  // every provider's own classifyAbort already rethrows untouched when it
+  // doesn't recognize the shape.
   //
-  // `name` stays "Error" on both SDK classes (which is what defeated the
-  // original check), so the DOM names are tested separately — those are for a
-  // real DOMException raised outside the SDK.
+  // Matched on the DOMException's own `error.name` — a plain string —
+  // rather than `instanceof`. An `instanceof` check against an SDK's error
+  // classes is what this branch used to do, and it was doubly dead: the
+  // relevant SDK errors carry name "Error" with no `status`, and
+  // `@anthropic-ai/sdk` ships separate require/import builds, so a class
+  // imported here would never be the same constructor as the one the
+  // thrown error was actually built from. `error.name` needs no SDK import
+  // and no per-provider class knowledge, so it stays correct as providers
+  // are added.
   const errorName = (error as { name?: string })?.name
-  const constructorName = (error as { constructor?: { name?: string } })?.constructor?.name
-  if (constructorName === "APIUserAbortError" || errorName === "AbortError") {
+  if (errorName === "AbortError") {
     return jsonResponse({ error: "Generation was cancelled." }, 499, context.corsHeaders)
   }
-  if (constructorName === "APIConnectionTimeoutError" || errorName === "TimeoutError") {
-    // Same split as the signal branches above, and for the same reason: the
-    // upstream ran out of time while the client sat there waiting. Folding it
-    // in with the cancellation codes claims the reviewer walked away, which
-    // hides a genuinely slow provider behind a status that reads as "nobody was
-    // listening anyway".
+  if (errorName === "TimeoutError") {
     return jsonResponse({ error: "Generation timed out." }, 504, context.corsHeaders)
   }
 
