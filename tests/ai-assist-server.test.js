@@ -332,7 +332,7 @@ describe('AI assist API (server.ts)', () => {
       // difference between a working button and no button.
       expect(body.tasks).toEqual(['content', 'rewrite-field'])
       expect(body.groundedBy).toContain('writing-and-style.md')
-      expect(body.pageCount).toBe(24)
+      expect(body.pageCount).toBe(25)
       expect(body.disclosureRequired).toBe(true)
     })
 
