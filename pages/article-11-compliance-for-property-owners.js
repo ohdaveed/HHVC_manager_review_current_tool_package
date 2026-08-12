@@ -6,9 +6,7 @@ window.HHVC_PAGES['article11Compliance'] = {
   summary:
     'A compliance-first front door for Health Code Article 11: what owners and managers must do, the fee, and who to call — modeled on the SF.gov minimum wage ordinance page.',
   audience: [
-    'A property owner responsible for a residential building with 3 or more units',
-    'A property manager or building operator handling compliance',
-    'A tenant or advocate who wants the short version of owner requirements',
+    'This page is for property owners and managers responsible for Article 11 compliance.',
   ],
   reading: 'Grade 7',
   editorNote:

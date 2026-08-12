@@ -6,9 +6,7 @@ window.HHVC_PAGES['ownerHub'] = {
   summary:
     'What owners and managers must do under Health Code Article 11 for pests and housing health.',
   audience: [
-    'A property owner responsible for a residential building',
-    'A property manager handling pest prevention and violation response',
-    'A building operator for an SRO or residential hotel',
+    'This page is for property owners, managers, and building operators responsible for pest prevention and Article 11 compliance.',
   ],
   reading: 'Grade 7',
   editorNote:

@@ -5,10 +5,7 @@ window.HHVC_PAGES['recordsHub'] = {
   title: 'Look up building records',
   summary: 'Find inspection reports and violations for a building, or request public records.',
   audience: [
-    'A tenant checking complaint or inspection history for a building',
-    'A property owner or manager reviewing past violations or inspections',
-    'A resident of an SRO, residential hotel, or shelter',
-    'A neighbor or advocate researching building health records',
+    "This page is for tenants, property owners and managers, and anyone looking up a building's inspection or violation history.",
   ],
   reading: 'Grade 7',
   editorNote:

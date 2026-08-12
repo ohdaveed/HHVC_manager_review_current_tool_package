@@ -6,10 +6,7 @@ window.HHVC_PAGES['ipmEducation'] = {
   summary:
     'Request a free integrated pest management (IPM) education session for tenant groups, resident councils, and community organizations in San Francisco.',
   audience: [
-    'A tenant, renter, or resident who wants to learn low-toxicity ways to prevent pests at home',
-    'A tenant association, resident council, or building group organizing a learning session',
-    'A community center, senior center, or nonprofit serving San Francisco residents',
-    'A neighborhood association or community group leader hosting a resident education event',
+    'This page is for tenants, resident groups, and community organizations that want to host a free pest-prevention workshop.',
   ],
   reading: 'Grade 6',
   editorNote:

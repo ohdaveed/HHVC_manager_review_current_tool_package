@@ -586,9 +586,6 @@ a:focus {
   margin-top: 0.75rem;
   margin-bottom: 1rem;
 }
-.audience-section h2 {
-  font-size: 1.75rem;
-}
 .step-list {
   counter-reset: steps;
   display: grid;
@@ -1446,13 +1443,6 @@ a:focus {
   }
 }
 
-.audience-section ul {
-  margin: 10px 0 0 22px;
-  color: var(--sfds-slate-1);
-}
-.audience-section li {
-  margin: 6px 0;
-}
 #mockPage {
   view-transition-name: mock-page-content;
 }

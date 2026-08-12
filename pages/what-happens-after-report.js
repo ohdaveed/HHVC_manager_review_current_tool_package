@@ -5,10 +5,7 @@ window.HHVC_PAGES['afterReport'] = {
   title: 'What happens after you report a housing or pest problem',
   summary: 'Learn how a 311 report is reviewed and when an inspector may contact you.',
   audience: [
-    'A person who filed a 311 report',
-    'A tenant or tenant representative waiting for follow-up',
-    'An employee who reported a pest or vector concern',
-    'A property owner or manager responding to a reported condition',
+    'This page is for anyone who filed a 311 report or is waiting to hear back about a pest or housing problem.',
   ],
   reading: 'Grade 7',
   sections: [

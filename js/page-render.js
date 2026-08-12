@@ -229,6 +229,34 @@ function renderCallout(callout, extraClass = '') {
         : ''
   return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body')}${title}${formatMarkdown(callout.text)}</aside>`
 }
+/**
+ * Non-Transaction pages don't get Karl's "What to know before you start" box
+ * — that's Transaction-only (karl-content-type-field-reference.md:228,
+ * confirmed against 8 real sf.gov pages sampled via Firecrawl: 2 of 3
+ * sampled Information pages carry no audience framing at all, the third
+ * folds it into a plain, page-specific body subheading — never a boxed
+ * "This page can help if you are:" dump). `audience[]` stays mockup-only
+ * editorial metadata (karl-content-type-field-reference.md:196) either way
+ * — only how it's rendered differs by type, per the Component availability
+ * matrix (karl-content-type-field-reference.md:384-400): Resource
+ * Collection has no Callout ("use Custom section" instead), so it gets a
+ * plain paragraph; every other non-Transaction type gets a blue info
+ * Callout via the same renderCallout() the Transaction "What to know" box
+ * and section-level callouts already use.
+ */
+function renderAudienceFraming(page, pageType) {
+  const audience = Array.isArray(page.audience) ? page.audience : []
+  if (!audience.length) return ''
+  const text = audience.join(' ')
+  if (pageType === 'resource-collection') {
+    return `<p>${karlTag('Custom section: Who this is for (audience[] editorial framing, not a literal Karl field)', 'body')}${formatMarkdown(text)}</p>`
+  }
+  const karlNote =
+    pageType === 'campaign'
+      ? 'Additional content callout: Who this is for (audience[] editorial framing, not a literal Karl field)'
+      : 'Body callout: Who this is for (audience[] editorial framing, not a literal Karl field)'
+  return renderCallout({ title: 'Who this is for', variant: 'info', text, karl: karlNote })
+}
 function renderImage(image) {
   if (!image?.src) return ''
   return `<figure class="content-image">${karlTag(image.karl || 'Information section: Image', 'body')}<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt || '')}" loading="lazy" />${image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ''}</figure>`
@@ -661,7 +689,7 @@ function renderPageMain(page) {
   // block's Things to know list instead of a standalone section — see
   // renderWhatToKnow() below.
   if (pageType !== 'transaction') {
-    html += `<section class="section audience-section">${karlTag('Body: Audience section', 'body')}<h2>Who this page is for</h2><p>This page can help if you are:</p><ul>${renderAudience(page.audience)}</ul></section>`
+    html += renderAudienceFraming(page, pageType)
   }
   // Agency pages render their spotlight mid-page (between Section title 1 and
   // 2, matching the real Karl field order), so skip the early placement here.
