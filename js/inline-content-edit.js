@@ -612,7 +612,7 @@
       // `tools` below with `inlineToolbar: false` for scalar fields is
       // harmless, since a tool never referenced in the toolbar array is
       // never shown regardless of being registered.
-      inlineToolbar: isItemFieldType(fieldType) ? ['bold', 'hhvcLink'] : false,
+      inlineToolbar: adapter.isItemFieldType(fieldType) ? ['bold', 'hhvcLink'] : false,
       minHeight: 0,
       tools: { hhvcLink: window.InlineEdit.LinkTool },
       onChange: (api) => {
@@ -709,7 +709,7 @@
       editor.destroy()
       if (!stillCurrentPage) return
 
-      const newText = isItemFieldType(fieldType) ? newValue.text : newValue
+      const newText = adapter.isItemFieldType(fieldType) ? newValue.text : newValue
       if (newText === value) {
         // Nothing actually changed — compare the adapter's serialized text
         // against the value captured at open, not the raw OutputData,
@@ -727,7 +727,7 @@
         rerender()
         return
       }
-      if (isItemFieldType(fieldType)) {
+      if (adapter.isItemFieldType(fieldType)) {
         setByPath(page, path, newValue)
       } else {
         writeScalarValue(page, path, newValue)
