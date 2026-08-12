@@ -25,7 +25,7 @@ Then seed the review state. **Order matters. Importing merges per page, and for
 a page the file names, the file wins** — the seed's decision, notes, risks,
 owner and reviewer replace whatever was there. Pages the file does *not* name
 are left untouched. So on a browser you have used before, importing the seed
-both fails to give you a clean 12 of 20 *and* overwrites real review work on any
+both fails to give you a clean 12 of 29 *and* overwrites real review work on any
 of those 12 pages:
 
 1. If this browser holds review work you care about, export it first
@@ -35,9 +35,9 @@ of those 12 pages:
    actually clears local state.
 3. Import `review/demo-review-state.json` through **Import reviews**.
 
-Without the seed the tool opens at 0 of 20 and every panel that makes the case —
+Without the seed the tool opens at 0 of 29 and every panel that makes the case —
 progress, decision mix, activity over time, history — is empty. With it: 12 of
-20 reviewed, four decision types, and 32 recorded review rounds (the file
+29 reviewed, four decision types, and 32 recorded review rounds (the file
 carries 20; the import records one more per page, by design, so the trail shows
 who loaded them).
 
