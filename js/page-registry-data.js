@@ -38,8 +38,14 @@
    the tool gracefully, it removes the floor everything else falls back to. */
 const PROTECTED_PAGE_KEYS = ['pestsTopic']
 
-/* The five types the page picker groups by, from js/ui-controls.js's `groups`
-   map. build_scripts/schema.js only enforces `type: z.string().min(1)`, so
+/* The five types the page picker groups by, declared HERE and read from here
+   by js/ui-controls.js's buildPageSelect (off `window.pageRegistryData`, since
+   this module is import-free and exports nothing an ES import could reach).
+   The direction used to be the other way round — this list was described as a
+   copy of that function's hardcoded `groups` map, which restated the same five
+   again in a label-stripping regex, so one enum lived at three sites and the
+   picker and this form could come to disagree about which types group
+   correctly. build_scripts/schema.js only enforces `type: z.string().min(1)`, so
    authored pages legitimately carry `Agency` and `Report` too and simply land
    in the Information optgroup. A reviewer picking from a <select> should not be
    able to create that mismatch by accident, so the form is constrained to the

@@ -104,20 +104,33 @@ function restoreSidebarScroll() {
 function buildPageSelect() {
   const select = document.getElementById('pageSelect')
   if (!select) return
-  const groups = {
-    Topic: [],
-    Transaction: [],
-    'Resource Collection': [],
-    Campaign: [],
-    Information: [],
-  }
+  // The optgroups, and the prefix stripped off a menu label, are both derived
+  // from js/page-registry-data.js's ALLOWED_PAGE_TYPES rather than restated
+  // here. That module is the one place the five grouping types are declared —
+  // it constrains the reviewer's new-page form to exactly them — and it loads
+  // at js/main.js:97, before this file. Three copies of one enum is how the
+  // picker and the add-page form come to disagree about which types group
+  // correctly. Read off `window` because that module is deliberately
+  // import-free (see its own header) and publishes no ES export to import.
+  const groupTypes = window.pageRegistryData?.ALLOWED_PAGE_TYPES || [
+    'Topic',
+    'Transaction',
+    'Resource Collection',
+    'Campaign',
+    'Information',
+  ]
+  const groups = Object.fromEntries(groupTypes.map((type) => [type, []]))
+  // Array order decides optgroup order, so the fallback list above is ordered
+  // to match. Anything not in the list lands in Information, which is where
+  // authored `Agency` and `Report` pages have always gone.
+  const fallbackType = groupTypes.includes('Information')
+    ? 'Information'
+    : groupTypes[groupTypes.length - 1]
+  const labelPrefixPattern = new RegExp(`^(${groupTypes.join('|')}):\\s*`)
   pageOrder.forEach(([key, label]) => {
     const pageType = pageData[key]?.type || ''
-    const type = Object.prototype.hasOwnProperty.call(groups, pageType) ? pageType : 'Information'
-    groups[type].push([
-      key,
-      label.replace(/^(Topic|Transaction|Resource Collection|Campaign|Information):\s*/, ''),
-    ])
+    const type = Object.prototype.hasOwnProperty.call(groups, pageType) ? pageType : fallbackType
+    groups[type].push([key, label.replace(labelPrefixPattern, '')])
   })
   select.innerHTML = Object.entries(groups)
     .map(

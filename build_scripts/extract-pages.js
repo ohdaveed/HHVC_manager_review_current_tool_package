@@ -5,34 +5,23 @@ const fs = require('fs')
 const path = require('path')
 const { createObjectCsvWriter } = require('csv-writer')
 const { loadPageData } = require('./load-pages')
+// The page-metadata helpers come from the canonical browser module rather than
+// being restated here, so the exported inventory, the tracking CSVs and the
+// SEO preview the reviewer actually sees cannot come to disagree about a
+// page's title, description or primary CTA. Three copies of these had already
+// drifted: this script's primaryCta carried the buttonStyle rule that
+// sync-tracking-sheet.js's copy lacked, and its defaultSeoTitle omitted the
+// `|| ''` title guard the other two had. Requiring an ES module from CommonJS
+// works because every build script here runs under Bun (see package.json's
+// export/sync-tracking/push-tracking scripts) — the same crossing
+// build_scripts/data-checks.js already makes for safeUrl.
+const { defaultSeoTitle, defaultMetaDescription, getPrimaryCta } = require('../js/utils.js')
 
 const root = path.resolve(__dirname, '..')
 const data = loadPageData()
 
 fs.mkdirSync(path.join(root, 'data'), { recursive: true })
 fs.writeFileSync(path.join(root, 'data/page_inventory.json'), JSON.stringify(data, null, 2))
-
-// Mirrors js/utils.js's getPrimaryCta() (browser-only, not loaded into this
-// script's Node VM), so the exported inventory agrees with the rendered
-// review tool: skip section buttons marked buttonStyle: 'secondary'.
-function primaryCta(page) {
-  for (const section of page.sections || []) {
-    for (const step of section.steps || []) {
-      if (step.button) return step.button
-    }
-    if (section.button && section.buttonStyle !== 'secondary') return section.button
-  }
-  if (page.spotlight && page.spotlight.button) return page.spotlight.button
-  return page.primaryCta || ''
-}
-
-function defaultSeoTitle(page) {
-  return page.seoTitle || `${page.title} | San Francisco`
-}
-
-function defaultMetaDescription(page) {
-  return page.metaDescription || page.summary || ''
-}
 
 const csvWriter = createObjectCsvWriter({
   path: path.join(root, 'data/page_inventory.csv'),
@@ -64,7 +53,7 @@ const records = data.order.map(([key, label]) => {
     readingTarget: page.reading || '',
     seoTitle: defaultSeoTitle(page),
     metaDescription: defaultMetaDescription(page),
-    primaryCta: primaryCta(page),
+    primaryCta: getPrimaryCta(page),
   }
 })
 

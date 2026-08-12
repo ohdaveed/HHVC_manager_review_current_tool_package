@@ -185,8 +185,18 @@ describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', ()
 // fail the other, or worse, silently disagree about what a synced record
 // contains. tests/decision-vocabulary.test.js pins VALID_DECISIONS the same
 // way, for the same reason.
-describe('section_edits whitelist agrees between the Zod schema and the browser validator', () => {
+// There is a THIRD copy of this shape rule, and it is the one that had
+// actually drifted: js/inline-content-edit-data.js's isValidSectionEditItem
+// sits on the WRITE side (computing the diff that gets stored) while the two
+// above sit on the read side (validating what comes back). Its check was
+// `typeof item === 'object'`, which — unlike the read side's isPlainObject —
+// admits an array carrying an own `.text` property. A value the write side
+// stores and the read side then drops is precisely how a reviewer's inline
+// edits disappear on the next load with nothing erroring, so all three are
+// pinned together here rather than two of the three.
+describe('section_edits whitelist agrees between the Zod schema, the browser validator, and the write-side differ', () => {
   const { sanitizeSectionEdits } = window.reviewStateValidation
+  const { isValidSectionEditValue } = require('../js/inline-content-edit-data.js')
 
   test.each([
     [
@@ -201,9 +211,40 @@ describe('section_edits whitelist agrees between the Zod schema and the browser 
     ['heading as a non-string', { 'sections.0.heading': 123 }],
     ['paragraphs as a non-array', { 'sections.0.paragraphs': 'not an array' }],
     ['bullets with one malformed item', { 'sections.0.bullets': ['ok', { missing: 'text' }] }],
+    ['bullets with a null item', { 'sections.0.bullets': ['ok', null] }],
+    // The divergence itself. `typeof [] === 'object'` and this array carries
+    // an own `text` property, so the pre-fix write-side check accepted it
+    // while both read-side checks rejected it. It has to be a real Array
+    // rather than an object literal, or the Array.isArray guard the fix added
+    // never fires and the case proves nothing.
+    ['bullets with an array item carrying .text', { 'sections.0.bullets': [arrayWithText()] }],
   ])('%s', (_label, sectionEdits) => {
     const zodResult = validateReviewRecord({ page_key: 'pestsTopic', section_edits: sectionEdits })
     expect(zodResult.success).toBe(true)
-    expect(zodResult.data.section_edits).toEqual(sanitizeSectionEdits(sectionEdits))
+    const sanitized = sanitizeSectionEdits(sectionEdits)
+    expect(zodResult.data.section_edits).toEqual(sanitized)
+
+    // Same verdict, path by path, from the write side. `kept` is what both
+    // read-side gates concluded; isValidSectionEditValue is asked the same
+    // question about the same value and must answer identically.
+    for (const [path, value] of Object.entries(sectionEdits)) {
+      const suffix = /^sections\.\d+\.(heading|paragraphs|bullets)$/.exec(path)?.[1]
+      if (!suffix) continue
+      const kept = Object.prototype.hasOwnProperty.call(sanitized, path)
+      expect(isValidSectionEditValue(suffix, value)).toBe(kept)
+    }
   })
 })
+
+/**
+ * An Array that also carries an own `text` string property — the one shape the
+ * write-side and read-side item checks used to disagree about. An object
+ * literal cannot stand in for it: the value has to really be an Array for
+ * Array.isArray to fire.
+ * @returns {string[]}
+ */
+function arrayWithText() {
+  const value = ['nested']
+  value.text = 'looks like an item'
+  return value
+}

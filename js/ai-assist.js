@@ -49,11 +49,15 @@
 
   /**
    * The page open in the mockup, sent as grounding when the box is ticked.
+   *
+   * Delegates to js/utils.js rather than carrying its own copy: js/ai-rewrite.js
+   * needs the same lookup and the two IIFEs share no namespace, so two copies
+   * had nothing stopping the next edit from landing on only one. Reached through
+   * `window` rather than an import, so it stays optional-chained.
    * @returns {object|null}
    */
   function getCurrentPage() {
-    const key = window.utils?.getCurrentKey?.()
-    return (window.HHVC_DATA?.pages || {})[key] || null
+    return window.utils?.getCurrentPage?.() || null
   }
 
   /**
