@@ -657,28 +657,57 @@ describe('restoreOrderIndex', () => {
 })
 
 describe('applyRegistryToData: canonical order tracking', () => {
+  // The contract changed from "mutates the passed-in array in place" to
+  // "returns the updated order; the caller keeps it and passes it back in
+  // next time" — a passed-in array the function never touches is what makes
+  // it safe for a second, careless call site to pass a fresh [] without
+  // silently sharing state with the first call site's array.
   test('records the full site order before hiding anything', () => {
     const data = liveData()
-    const canonicalOrder = []
-    applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, canonicalOrder)
+    const result = applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, [])
     // ownerHub is in the canonical list even though it was just removed from
     // `order` — that is what lets restore position it again.
-    expect(canonicalOrder).toEqual(['pestsTopic', 'ownerHub', 'tenantRights'])
+    expect(result.canonicalOrder).toEqual(['pestsTopic', 'ownerHub', 'tenantRights'])
   })
 
   test('extends the canonical list with a page added later, without rebuilding it', () => {
     const data = liveData()
-    const canonicalOrder = []
-    applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, canonicalOrder)
-    // A mid-session add: the same array is reused, so the earlier hidden key
-    // must survive rather than being recomputed from the shortened order.
-    applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {}, canonicalOrder)
-    expect(canonicalOrder).toEqual(['pestsTopic', 'ownerHub', 'tenantRights', 'noiseComplaints'])
+    const first = applyRegistryToData(
+      data,
+      { hidden: { ownerHub: { hidden_at: 'x' } } },
+      {},
+      []
+    )
+    // A mid-session add: the caller passes the PREVIOUS return value back in,
+    // so the earlier hidden key must survive rather than being recomputed
+    // from the shortened order.
+    const second = applyRegistryToData(
+      data,
+      { added: { noiseComplaints: addedEntry() } },
+      {},
+      first.canonicalOrder
+    )
+    expect(second.canonicalOrder).toEqual([
+      'pestsTopic',
+      'ownerHub',
+      'tenantRights',
+      'noiseComplaints',
+    ])
+    // The array passed IN as the 4th argument is never mutated — this is the
+    // whole point of the contract change.
+    expect(first.canonicalOrder).toEqual(['pestsTopic', 'ownerHub', 'tenantRights'])
   })
 
   test('tolerates a missing canonical array', () => {
     const data = liveData()
     expect(() => applyRegistryToData(data, { hidden: { ownerHub: {} } }, {})).not.toThrow()
+  })
+
+  test('does not mutate the array passed in as canonicalOrder', () => {
+    const data = liveData()
+    const input = []
+    applyRegistryToData(data, { hidden: { ownerHub: { hidden_at: 'x' } } }, {}, input)
+    expect(input).toEqual([])
   })
 })
 

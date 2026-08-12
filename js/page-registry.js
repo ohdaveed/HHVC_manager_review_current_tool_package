@@ -75,7 +75,7 @@ import './page-registry-data.js'
      already-shortened order, so two hides can record the same number and
      restoring them permutes the site. See restoreOrderIndex()'s comment in
      js/page-registry-data.js for the worked example. */
-  const canonicalOrder = []
+  let canonicalOrder = []
 
   /* The keys that come from pages/*.js, captured NOW — before applySavedRegistry()
      has run even once, so `DATA.pages` still holds exactly the authored set.
@@ -229,6 +229,7 @@ import './page-registry-data.js'
   function applySavedRegistry() {
     try {
       const result = applyRegistryToData(DATA, currentRegistry(), hiddenStash, canonicalOrder)
+      canonicalOrder = result.canonicalOrder
       if (result.dropped.length) {
         // Reported rather than silently swallowed: a dropped entry means saved
         // state the reviewer cannot see and this tool will not honour.
