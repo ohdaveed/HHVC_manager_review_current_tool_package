@@ -384,6 +384,28 @@ async function addInlineLink(page, word, target) {
   )
 }
 
+// Type additional text into the currently-open Editor.js block right after
+// addInlineLink() has committed a link, but BEFORE the field is blurred —
+// the exact window in which js/inline-content-edit.js's commit() used to
+// silently discard anything typed, since it always preferred the ONE-TIME
+// HTML snapshot js/inline-content-edit-link-tool.js's commitLink() stashed
+// at link-insertion time over the live editor state. Appends extraText as a
+// plain text node at the end of the block and dispatches a real, bubbling
+// 'input' event — the same event js/inline-content-edit.js's holder-level
+// 'input' listener (added to fix that gap) re-syncs the stash on. Returns
+// the stash's live value so a test can assert the fix actually ran, not
+// just that the final commit happened to look right.
+async function typeAfterLinkCommit(page, extraText) {
+  return page.evaluate((extraText) => {
+    const holder = document.querySelector('.inline-edit-editorjs-holder')
+    const block = holder?.querySelector('[contenteditable="true"]')
+    if (!block) return { ok: false, reason: 'no editable block' }
+    block.appendChild(document.createTextNode(extraText))
+    block.dispatchEvent(new Event('input', { bubbles: true }))
+    return { ok: true, pendingStash: holder.dataset.hhvcPendingLinkHtml }
+  }, extraText)
+}
+
 // Switch pages via the sidebar picker and wait for the render to land.
 // renderPage() pushes ?page=<key> immediately but applies content inside a
 // View Transition, so wait for #browserUrl to show the target page's slug —
@@ -423,4 +445,5 @@ module.exports = {
   commitEditorJsField,
   selectWordAndClickLinkButton,
   addInlineLink,
+  typeAfterLinkCommit,
 }

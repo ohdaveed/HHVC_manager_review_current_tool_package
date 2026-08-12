@@ -56,6 +56,18 @@
       holderEl.dataset[PENDING_LINK_ATTR] = html
     },
     /**
+     * Whether a stash currently exists for this element, without consuming
+     * it — unlike take(), a second call still returns the same answer. For
+     * a caller (js/inline-content-edit.js's holder-level 'input' listener)
+     * that needs to know whether to keep the stash in sync with further
+     * typing, not whether to resolve it.
+     * @param {HTMLElement|null|undefined} holderEl
+     * @returns {boolean}
+     */
+    has(holderEl) {
+      return !!holderEl && holderEl.dataset[PENDING_LINK_ATTR] !== undefined
+    },
+    /**
      * @param {HTMLElement|null|undefined} holderEl
      * @returns {string|undefined} the stashed HTML, or undefined if none was
      *   stashed for this element. Always clears the stash it finds, so a
@@ -224,6 +236,10 @@
      * has intervened does not, silently. Capturing the correct HTML here,
      * before that blur can happen, is what js/inline-content-edit.js's
      * commit() prefers over editor.save()'s own (by-then-corrupted) output.
+     * This is only the INITIAL capture — js/inline-content-edit.js's own
+     * holder-level 'input' listener re-stashes via LinkCommitBridge on every
+     * subsequent keystroke, so further typing after the link is inserted
+     * but before the field blurs is not lost.
      * @returns {void}
      */
     commitLink() {
