@@ -46,6 +46,11 @@ window.HHVC_PAGES['pestsTopic'] = {
           karl: 'Services subsection entry -> SF.gov page link to the consolidated filth-report Transaction. This is the focused report route for the current live topic’s mold and trash scope; the description is a copy of the destination page Description, which is what Karl renders here.',
         },
         {
+          title: 'Report a problem in an SRO or hotel',
+          target: 'sroHotelReport',
+          karl: "Services subsection entry -> SF.gov page link to the SRO/hotel-report Transaction, added 2026-08-11 to fill the gap findHotelRecords' lookup-only scope left. The description is a copy of the destination page Description, which is what Karl renders here; see the page-level note.",
+        },
+        {
           title: 'Healthy housing and pest resources',
           target: 'verminResources',
           karl: 'Services subsection entry -> SF.gov page link to the healthy-housing resources Resource Collection. Mirrors the live "Get help with vermin in your building" service, which sf.gov files under Services (General housing issues) rather than Resources — this card was previously the last entry under "Look up records and rules", where a tenant looking for self-help would not think to look. It briefly carried the task-shaped title "Get help with pests in your building"; that was reverted because a Karl subsection entry is only a page or external-link picker with NO label or description field, so the card renders the DESTINATION page\'s title and Description. Title and text here are therefore copied from `verminResources` verbatim and must be kept in sync with it — changing them here changes nothing in Karl. Getting a task-shaped label means retitling the destination page.',

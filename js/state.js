@@ -9,7 +9,7 @@
 //
 // The `./page-registry.js` import is for its side effect and is load-bearing
 // twice over. It pulls in `./page-data.js`, which assigns window.HHVC_DATA
-// (after pulling in all 22 pages/*.js files, which register themselves onto
+// (after pulling in all 27 pages/*.js files, which register themselves onto
 // window.HHVC_PAGES) — so importing it here makes the ordering a property of
 // the module graph rather than of a hand-maintained script-tag list, and the
 // throw below can only ever fire on genuinely malformed page data.

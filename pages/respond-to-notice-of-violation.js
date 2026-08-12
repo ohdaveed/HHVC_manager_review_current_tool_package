@@ -58,11 +58,12 @@ window.HHVC_PAGES['noticeOfViolation'] = {
           ],
           bullets: [
             'A Notice of Violation does not change a tenant’s right to safe and habitable housing.',
+            '[What tenants need to do after a Notice of Violation](tenantNoticeSteps)',
             '[Tenant rights and reporting](tenantRights)',
             '[Property owner responsibilities](ownerHub)',
             '[Integrated pest management for property owners and managers](ownerGuidance)',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Contact the investigator if you need help". Step description: the two paragraphs plus the four bullets, including rich-text links to the three related HHVC pages. Optional, Cost, Time, and Transaction link: blank. The contact direction is supported by the HHVC Vegetation Overgrowth Notice; the language avoids promising an extension.',
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Contact the investigator if you need help". Step description: the two paragraphs plus the five bullets, including rich-text links to the four related HHVC pages (a tenantNoticeSteps link added 2026-08-11). Optional, Cost, Time, and Transaction link: blank. The contact direction is supported by the HHVC Vegetation Overgrowth Notice; the language avoids promising an extension.',
         },
         {
           title: 'Prepare for follow-up inspection',
@@ -70,7 +71,8 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'Keep records of the work you complete, such as photos, receipts, or pest treatment reports.',
             'Be ready for HHVC to check whether the cited conditions were corrected. Follow-up inspection may be needed before the case can close.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Prepare for follow-up inspection". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. The Article 11 workflow explicitly includes follow-up inspection after the compliance period; this does not promise a particular inspection date.',
+          bullets: ['[Get ready for a follow-up inspection](inspectionPrepFollowup)'],
+          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Prepare for follow-up inspection". Step description: the two paragraphs, plus a rich-text link (added 2026-08-11) to the new follow-up-inspection checklist. Optional, Cost, Time, and Transaction link: blank. The Article 11 workflow explicitly includes follow-up inspection after the compliance period; this does not promise a particular inspection date.',
         },
         {
           title: 'Finish the work or respond to further enforcement',

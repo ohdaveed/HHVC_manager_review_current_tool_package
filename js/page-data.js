@@ -13,17 +13,22 @@ import '../pages/agency-service-grouping.js'
 import '../pages/report-rats-mice-four-legged-problems.js'
 import '../pages/report-garbage-filth-vegetation.js'
 import '../pages/report-cockroaches-mosquitoes-insects.js'
+import '../pages/report-sro-hotel-problem.js'
 import '../pages/lookup-building-records.js'
 import '../pages/lookup-complaints-inspections.js'
 import '../pages/lookup-residential-violations.js'
 import '../pages/lookup-residential-hotel-records.js'
+import '../pages/find-inspector-by-neighborhood.js'
 import '../pages/public-records-request.js'
 import '../pages/property-owner-responsibilities.js'
 import '../pages/respond-to-notice-of-violation.js'
+import '../pages/tenant-steps-after-notice-of-violation.js'
+import '../pages/get-ready-for-followup-inspection.js'
 import '../pages/hhvc-inspection-scope.js'
 import '../pages/integrated-pest-management-property-managers.js'
 import '../pages/healthy-housing-vermin-resources.js'
 import '../pages/what-happens-after-report.js'
+import '../pages/get-ready-for-first-inspection.js'
 import '../pages/tenant-rights-reporting.js'
 import '../pages/mosquito-control-program.js'
 import '../pages/mosquito-education-workshop.js'
@@ -40,13 +45,17 @@ window.HHVC_DATA = {
     ['rodentsReport', 'Transaction: Report rats, mice, and other four-legged problems'],
     ['filthReport', 'Transaction: Report garbage, filth, and overgrown vegetation'],
     ['insectsReport', 'Transaction: Report cockroaches, mosquitoes, and other insects'],
+    ['sroHotelReport', 'Transaction: Report a problem in an SRO or hotel'],
     ['recordsHub', 'Resource collection: Look up building records'],
     ['findRecords', 'Transaction: Find complaints and inspection records'],
     ['findViolations', 'Transaction: Look up residential health code violations'],
     ['findHotelRecords', 'Transaction: Find residential hotel and shelter records'],
+    ['inspectorLookup', 'Transaction: Find your Healthy Housing inspector by neighborhood'],
     ['publicRecords', 'Transaction: Make a public records request'],
     ['ownerHub', 'Resource collection: Property owner responsibilities'],
     ['noticeOfViolation', 'Transaction: Fix your Healthy Housing and Vector Control violation'],
+    ['tenantNoticeSteps', 'Transaction: What tenants need to do after a Notice of Violation'],
+    ['inspectionPrepFollowup', 'Transaction: Get ready for a follow-up inspection'],
     ['payFee', 'Transaction: Pay your Healthy Housing fee'],
     ['scopeInfo', 'Information: Learn what HHVC can inspect'],
     ['article11Compliance', 'Information: Article 11 compliance for property owners'],
@@ -54,6 +63,7 @@ window.HHVC_DATA = {
     ['ownerGuidance', 'Information: Integrated pest management for property owners and managers'],
     ['verminResources', 'Resource collection: Healthy housing and pest resources'],
     ['afterReport', 'Information: What happens after you report'],
+    ['inspectionPrepInitial', 'Transaction: Get ready for a housing inspection after you report'],
     ['tenantRights', 'Information: Tenant rights and reporting'],
     ['mosquitoControl', 'Information: Mosquito Control Program'],
     ['mosquitoWorkshop', 'Campaign: Free mosquito education workshop'],

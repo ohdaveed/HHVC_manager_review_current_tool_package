@@ -35,7 +35,7 @@ const SEED = path.resolve(__dirname, '../../review/demo-review-state.json')
    the module-boundary restatements, so a spec spelling out "Approved with edits"
    would be one more copy to keep in step. */
 const EXPECTED_SEEDED_PAGES = 12
-const EXPECTED_TOTAL_PAGES = 22
+const EXPECTED_TOTAL_PAGES = 27
 const EXPECTED_DECISION_MIX = {
   [DECISIONS.approved]: 4,
   [DECISIONS.approvedWithEdits]: 4,

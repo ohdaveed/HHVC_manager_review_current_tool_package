@@ -40,6 +40,11 @@ window.HHVC_PAGES['recordsHub'] = {
           target: 'findHotelRecords',
           karl: "SF.gov page link block, links to an existing Transaction page (an SF.gov landing page that itself CTAs out to an external hotel-program lookup). This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl; flag for Digital Services if the description must survive.",
         },
+        {
+          title: 'Find your Healthy Housing inspector by neighborhood',
+          target: 'inspectorLookup',
+          karl: "SF.gov page link block, links to the inspector-lookup Transaction added 2026-08-11. This block is just an unrestricted page reference — it has no custom title/text field, so this card's `text` description has no home in Karl.",
+        },
       ],
     },
     {

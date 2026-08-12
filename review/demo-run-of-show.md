@@ -49,7 +49,7 @@ recent reviewing. The generator takes a second and keeps the two in step.
 4. **Seed the review state, in this order.** Importing merges *per page*, and
    for the 12 pages the seed names, the seed's values replace whatever was
    there. Pages it does not name are left alone. So skipping the clear step on
-   a browser you have used before will not give you 12/22, and will overwrite
+   a browser you have used before will not give you 12/27, and will overwrite
    any real review work on those 12 pages.
    1. If this browser holds review work you care about, export it first:
       **What to export → "Everything, for another browser — JSON"** →
@@ -63,7 +63,7 @@ recent reviewing. The generator takes a second and keeps the two in step.
       is where Beat 2 starts.
    4. **Import reviews** → `review/demo-review-state.json`.
 
-   The Overview should then read **12/22 reviewed**.
+   The Overview should then read **12/27 reviewed**.
 5. **Click once on the mockup** before trying any keyboard shortcut, then press
    `w` to confirm the workspace opens and closes. Leave it open.
 

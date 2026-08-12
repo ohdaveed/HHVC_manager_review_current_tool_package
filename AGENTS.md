@@ -168,7 +168,7 @@ bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 Order is enforced two ways. **Core modules enforce it themselves** — a module
 that needs `escapeHtml` imports it, and `js/state.js` imports
 `js/page-registry.js`, which imports `js/page-data.js` first, which imports all
-22 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
@@ -328,7 +328,7 @@ them.**
   hand-rolled formula from the no-build-step era, and `build_scripts/reading-level.js`
   wrapped the library for Node — but only the Node copy had tests and only this
   one shipped, which is how they drifted 1.14 grades apart on average across
-  the 22 pages without a red test anywhere. The drift ran toward "easier than
+  the 27 pages without a red test anywhere. The drift ran toward "easier than
   it is" in aggregate, so nine pages reported hitting a reading target they
   miss — a check biased in exactly the direction that makes it useless. The
   Node copy is deleted and `tests/reading-level.test.js` imports this one. Do
@@ -505,7 +505,7 @@ a "Page facts" subheading, and the scored list orders **failures first**.
 carries `severity` plus a `source`/`section` pair and a ready-to-render
 `citation`. `severity: 'error'` mandates join the scored rule list behind the
 "checks passed" ratio and render their citation on the Checks tab;
-`severity: 'warning'` findings are advisory, run to ~115 across the 22 pages,
+`severity: 'warning'` findings are advisory, run to ~115 across the 27 pages,
 and render separately so they cannot swamp the ratio. A scored rule must always
 be pushed, pass or fail — dropping one shrinks the denominator and flatters the
 thinnest pages. `source` exists because not every rule comes from the manual:

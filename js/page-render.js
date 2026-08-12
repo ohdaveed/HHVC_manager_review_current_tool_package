@@ -731,7 +731,7 @@ function renderHero(page, heroCta) {
 // Every one of the 7 sf.gov reference pages audited for this pass shows one
 // link back to its owning program (e.g. "Environmental Health"), never a
 // breadcrumb trail. Rather than a new per-page schema field authored across
-// 22 files for a link that reads the same on 21 of them, this derives it:
+// 27 files for a link that reads the same on 26 of them, this derives it:
 // every page except the Agency page is a child of HHVC in this site's actual
 // structure, so it always links there. Reads the Agency page's live title
 // from pageData rather than a literal, so an inline title edit to pestsTopic

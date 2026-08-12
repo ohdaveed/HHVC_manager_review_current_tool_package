@@ -54,7 +54,8 @@ window.HHVC_PAGES['afterReport'] = {
           text: [
             'If you did not give contact information, an inspection may still happen without notice when areas can be accessed, for example if the report describes an urgent health or safety risk.',
           ],
-          karl: 'Maps to a fourth Title and text block: Title = this step title, Text = the paragraph below.',
+          bullets: ['[Get ready for a housing inspection after you report](inspectionPrepInitial)'],
+          karl: 'Maps to a fourth Title and text block: Title = this step title, Text = the paragraph below, plus a rich-text link (added 2026-08-11) to the new inspection-prep checklist this step previously had nowhere to point to.',
         },
       ],
     },
