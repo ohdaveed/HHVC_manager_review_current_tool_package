@@ -345,7 +345,9 @@ describe('Transaction page layout', () => {
     }
     const html = ctx.renderPageMain(page)
     expect(html).toContain('class="custom-section"')
-    expect(html).toContain('<h3 id="section-other-ways-to-report">Other ways to report</h3>')
+    expect(html).toContain(
+      '<h3 id="section-other-ways-to-report" data-rewrite-field="sections.0.heading">Other ways to report</h3>'
+    )
     expect(html).not.toContain('accordion-trigger')
     expect(html).not.toContain('data-accordion-toggle')
   })
@@ -510,10 +512,10 @@ describe('topic page layout', () => {
     const html = ctx.renderPageMain(page)
     expect(html).toContain('<h2 class="region-title">Services</h2>')
     expect(html).toContain(
-      'class="service-group"><h3 id="section-general-housing-issues">General housing issues</h3>'
+      'class="service-group"><h3 id="section-general-housing-issues" data-rewrite-field="sections.0.heading">General housing issues</h3>'
     )
     expect(html).toContain(
-      'class="service-group"><h3 id="section-look-up-records">Look up records</h3>'
+      'class="service-group"><h3 id="section-look-up-records" data-rewrite-field="sections.1.heading">Look up records</h3>'
     )
     const servicesIndex = html.indexOf('region-title">Services')
     const firstGroupIndex = html.indexOf('General housing issues')
@@ -540,7 +542,7 @@ describe('topic page layout', () => {
     const html = ctx.renderPageMain(page)
     expect(html).toContain('<h2 class="region-title">Resources</h2>')
     expect(html).toContain(
-      'class="service-group"><h3 id="section-guidance-and-resources">Guidance and resources</h3>'
+      'class="service-group"><h3 id="section-guidance-and-resources" data-rewrite-field="sections.0.heading">Guidance and resources</h3>'
     )
   })
 
@@ -610,7 +612,7 @@ describe('about page layout', () => {
     const html = ctx.renderPageMain(page)
     expect(html).toContain('<h2 class="region-title">Resources</h2>')
     expect(html).toContain(
-      'class="service-group"><h3 id="section-program-information">Program information</h3>'
+      'class="service-group"><h3 id="section-program-information" data-rewrite-field="sections.0.heading">Program information</h3>'
     )
   })
 })
@@ -785,6 +787,22 @@ describe('data-rewrite-field annotation', () => {
     const html = ctx.renderTopFacts(section)
     expect(html).toContain('data-rewrite-field="sections.5.heading"')
     expect(html).toContain('data-rewrite-field="sections.5.paragraphs.0"')
+  })
+
+  // renderCustomSection() (a flat Supporting/Additional-content section) and
+  // renderServiceGroup() (a Services/Resources H3 sub-group) both build their
+  // own heading instead of going through renderSection() — same gap as
+  // spotlight/top-facts above, on section shapes that predate that feature.
+  test('annotates a custom (flat) section heading with its source index', () => {
+    const section = { heading: 'Custom heading', karl: 'k', __sectionIndex: 6, flat: true }
+    const html = ctx.renderCustomSection(section, 'transaction')
+    expect(html).toContain('data-rewrite-field="sections.6.heading"')
+  })
+
+  test('annotates a service-group heading with its source index', () => {
+    const section = { heading: 'Group heading', karl: 'k', __sectionIndex: 7 }
+    const html = ctx.renderServiceGroup(section, 'topic')
+    expect(html).toContain('data-rewrite-field="sections.7.heading"')
   })
 
   test('escapes a heading value carrying HTML', () => {

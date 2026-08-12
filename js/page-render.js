@@ -698,6 +698,16 @@ function renderOnThisPage(sections = []) {
     .map((h) => `<li><a href="#${sectionAnchorId(h)}">${escapeHtml(h)}</a></li>`)
     .join('')}</ul></nav>`
 }
+// NO `data-rewrite-field` ON THE TRIGGER HEADING — deliberately, mirroring
+// the card-description exclusion below. The heading text lives inside the
+// same <button data-accordion-toggle> that expands/collapses the panel, and
+// js/inline-content-edit.js's click handler never calls stopPropagation():
+// clicking the button would both toggle the panel (the document-level
+// listener in this file) AND flip the heading into an edit widget (the
+// #mockPage listener) on the same click. renderSectionInner()'s body still
+// gets the usual paragraph/bullet wiring; only the trigger text itself is
+// out of reach until the toggle and the edit affordance stop sharing one
+// clickable element.
 function renderAccordionSection(section, pageType) {
   const panelId = sectionAnchorId(section.heading)
   // `open: true` renders the accordion expanded on load — used for content the
@@ -715,7 +725,11 @@ function renderAccordionSection(section, pageType) {
 // reusing renderSection() directly.
 function renderCustomSection(section, pageType) {
   const anchor = section.heading ? ` id="${sectionAnchorId(section.heading)}"` : ''
-  return `<div class="custom-section"><h3${anchor}>${escapeHtml(section.heading)}</h3>${renderSectionInner(section, pageType)}</div>`
+  const headingPathAttr =
+    typeof section.__sectionIndex === 'number'
+      ? ` data-rewrite-field="sections.${section.__sectionIndex}.heading"`
+      : ''
+  return `<div class="custom-section"><h3${anchor}${headingPathAttr}>${escapeHtml(section.heading)}</h3>${renderSectionInner(section, pageType)}</div>`
 }
 function renderSectionInner(section, pageType = 'generic') {
   let inner = ''
@@ -787,7 +801,11 @@ function renderSection(section, pageType = 'generic', options = {}) {
 // same reason: renderSectionInner() never adds one itself.
 function renderServiceGroup(section, pageType) {
   const anchor = section.heading ? ` id="${sectionAnchorId(section.heading)}"` : ''
-  return `<div class="service-group"><h3${anchor}>${escapeHtml(section.heading)}</h3>${renderSectionInner(section, pageType)}</div>`
+  const headingPathAttr =
+    typeof section.__sectionIndex === 'number'
+      ? ` data-rewrite-field="sections.${section.__sectionIndex}.heading"`
+      : ''
+  return `<div class="service-group"><h3${anchor}${headingPathAttr}>${escapeHtml(section.heading)}</h3>${renderSectionInner(section, pageType)}</div>`
 }
 function renderServicesRegion(sections, pageType, karlLabel = 'Topic page Services section') {
   if (!sections.length) return ''
@@ -1253,7 +1271,9 @@ export {
   renderParentLink,
   renderRelatedList,
   renderResourcesList,
+  renderCustomSection,
   renderSection,
+  renderServiceGroup,
   renderServiceTiles,
   renderSpotlightSection,
   renderSteps,
