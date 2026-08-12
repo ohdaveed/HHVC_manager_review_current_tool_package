@@ -752,6 +752,41 @@ describe('data-rewrite-field annotation', () => {
     expect(html).not.toContain('data-rewrite-field')
   })
 
+  // renderSpotlightSection() and renderTopFacts() build their own <h2> and
+  // call paragraphList() directly instead of going through renderSection()/
+  // renderSectionInner() — the only path that reads __sectionIndex and stamps
+  // the heading/paragraph attributes. That left every component: 'spotlight'
+  // and component: 'top-facts' section (Topic's Spotlight, Campaign's
+  // Spotlight and Top facts) with no click-to-edit affordance at all, despite
+  // being ordinary sections with a heading and paragraphs — squarely inside
+  // the feature's documented scope.
+  test('annotates a component: spotlight section heading and paragraphs', () => {
+    const section = {
+      heading: 'Spotlight heading',
+      karl: 'k',
+      component: 'spotlight',
+      __sectionIndex: 4,
+      paragraphs: ['Spotlight copy.'],
+    }
+    const html = ctx.renderSpotlightSection(section)
+    expect(html).toContain('data-rewrite-field="sections.4.heading"')
+    expect(html).toContain('data-rewrite-field="sections.4.paragraphs.0"')
+  })
+
+  test('annotates a component: top-facts section heading and paragraphs', () => {
+    const section = {
+      heading: 'Top facts heading',
+      karl: 'k',
+      component: 'top-facts',
+      __sectionIndex: 5,
+      paragraphs: ['Top facts intro.'],
+      facts: [{ label: 'Contact', text: 'Call 311.' }],
+    }
+    const html = ctx.renderTopFacts(section)
+    expect(html).toContain('data-rewrite-field="sections.5.heading"')
+    expect(html).toContain('data-rewrite-field="sections.5.paragraphs.0"')
+  })
+
   test('escapes a heading value carrying HTML', () => {
     const section = {
       heading: PAYLOAD,

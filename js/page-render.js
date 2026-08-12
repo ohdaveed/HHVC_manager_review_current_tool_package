@@ -662,10 +662,13 @@ function renderContactSection(contact, page) {
 // an ordinary section tagged `component: 'spotlight'` rather than a
 // dedicated top-level array field.
 function renderSpotlightSection(section) {
+  const base =
+    typeof section.__sectionIndex === 'number' ? `sections.${section.__sectionIndex}` : ''
+  const headingPathAttr = base ? ` data-rewrite-field="${base}.heading"` : ''
   const cta = section.button
     ? button(section.button, 'primary', section.buttonTarget || null, section.buttonUrl || null)
     : ''
-  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement')}<div class="spotlight-section-inner"><h2>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [])}${section.callout ? renderCallout(section.callout) : ''}${cta}</div></section>`
+  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement')}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout) : ''}${cta}</div></section>`
 }
 // Karl's Campaign "Top facts" widget: a boxed panel of named facts, reusing
 // the exact `what-to-know-subsection` H3-per-item markup/CSS
@@ -675,13 +678,16 @@ function renderSpotlightSection(section) {
 function renderTopFacts(section) {
   const facts = Array.isArray(section.facts) ? section.facts : []
   if (!facts.length) return ''
+  const base =
+    typeof section.__sectionIndex === 'number' ? `sections.${section.__sectionIndex}` : ''
+  const headingPathAttr = base ? ` data-rewrite-field="${base}.heading"` : ''
   const factsHtml = facts
     .map(
       (f) =>
         `<div class="what-to-know-subsection"><h3>${escapeHtml(f.label)}</h3><p>${formatMarkdown(f.text)}${f.unverified ? unverifiedPill(f.unverifiedReason) : ''}</p></div>`
     )
     .join('')
-  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body')}<h2>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [])}${factsHtml}</section>`
+  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body')}<h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${factsHtml}</section>`
 }
 function renderOnThisPage(sections = []) {
   const headings = sections
@@ -1249,7 +1255,9 @@ export {
   renderResourcesList,
   renderSection,
   renderServiceTiles,
+  renderSpotlightSection,
   renderSteps,
   renderTable,
   renderTextItems,
+  renderTopFacts,
 }
