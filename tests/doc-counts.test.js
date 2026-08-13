@@ -136,6 +136,22 @@ describe("package.json's explicit test list", () => {
   })
 })
 
+/*
+ * Why only FILE counts are quoted in the docs, and why that is deliberate.
+ *
+ * The docs used to also state totals — "(1,592 tests)", "169 specs" — and
+ * nothing here could check them: counting tests rather than files means
+ * running the suite, which a test inside that suite cannot do, and parsing
+ * `test(` out of the spec files would miscount every `test.skip`,
+ * `test.each` and loop-generated case. So they rotted silently, exactly the
+ * way the counts below would without this file: all four were stale before
+ * anyone noticed, and correcting them by hand three times in one session is
+ * what prompted removing them instead.
+ *
+ * The rule that follows: quote a number in the instruction docs only if
+ * something here can verify it. A number nobody checks is worse than no
+ * number, because it reads as authoritative.
+ */
 describe('counts quoted in the instruction docs', () => {
   test.each([
     ['CLAUDE.md', CLAUDE_MD],
