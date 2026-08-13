@@ -140,38 +140,92 @@ function computeSectionEdits(page, originalPage) {
  * all silently skipped rather than thrown. A stale saved edit failing to
  * reapply is a normal, expected outcome — not a bug to surface as an error.
  *
- * Returns whether it actually wrote anything, so callers can tell "there was
- * nothing to reapply" apart from "there was, and the live page object no
- * longer matches it" — the caller (applySavedPageState) uses that signal to
- * decide whether the just-rendered DOM is now stale and needs a follow-up
- * render. This function itself stays DOM-free; it only reports the fact.
+ * Returns whether reapplying actually CHANGED the page — not whether it
+ * wrote. The caller (applySavedPageState in
+ * js/ux-improvements-state-sync.js) uses this to decide whether the
+ * just-rendered DOM is stale and needs a follow-up render, and a render
+ * there replaces #mockPage wholesale.
+ *
+ * The distinction is issue #118. This used to report whatever setByPath
+ * returned, which is true whenever a path RESOLVES — so for any page that
+ * had ever had a section edit saved, every call reported true and the
+ * follow-up render fired unconditionally, repainting a DOM that already
+ * matched. That waste is not harmless: the repaint removes whatever element
+ * holds focus, an open inline editor's focusout fires as a consequence, and
+ * EditorSession.commit() then runs against a detached editor and loses the
+ * reviewer's in-flight text. Traced live by logging every renderPage caller
+ * during typing — the sequence was addListItem's render, this reapply's
+ * follow-up render, then a commit nobody asked for.
+ *
+ * The write itself stays unconditional. Only the REPORTING narrows: applying
+ * saved state is always correct, repainting for it is only correct when
+ * something moved.
+ *
+ * This function itself stays DOM-free; it only reports the fact.
  * @param {object} page the live page object to mutate
  * @param {object|null|undefined} savedRecord a stored review record, or none
- * @returns {boolean} true if at least one path was written via setByPath
+ * @returns {boolean} true if at least one path's value actually changed
  */
 function applyContentEditsToPageData(page, savedRecord) {
   if (!page || typeof page !== 'object') return false
   const sectionEdits = savedRecord?.section_edits
   if (!sectionEdits || typeof sectionEdits !== 'object' || Array.isArray(sectionEdits)) return false
-  let wroteAny = false
+  let changedAny = false
   for (const [path, value] of Object.entries(sectionEdits)) {
     const match = SECTION_EDIT_PATH_PATTERN.exec(path)
     if (!match || !isValidSectionEditValue(match[1], value)) continue
-    if (setByPath(page, path, value)) wroteAny = true
+    const before = getByPath(page, path)
+    if (!setByPath(page, path, value)) continue
+    if (!sectionEditValuesEqual(before, value)) changedAny = true
   }
-  return wroteAny
+  return changedAny
 }
 
-// setByPath is resolved differently depending on execution context: under
+/**
+ * Whether two section-edit values are the same content.
+ *
+ * The values this compares are exactly what isValidSectionEditValue admits:
+ * a plain string (a heading), or an array of strings and/or
+ * {text, unverified, unverifiedReason} objects (paragraphs, bullets). All of
+ * it is JSON-safe by construction — it round-trips through localStorage as
+ * JSON on every save — so serializing is a sound comparison here rather than
+ * a shortcut, and it is why this needs no deep-equality helper.
+ *
+ * Identity comparison would be wrong: a saved array is a fresh object on
+ * every read of the stored record, so `before === value` is false for every
+ * array on every call, which is the same unconditional-true this change
+ * exists to remove.
+ *
+ * Key order is stable in practice — both sides are produced by
+ * computeSectionEdits from the same field shapes — but a reordered object
+ * would only ever cause a FALSE positive (an unnecessary repaint), which is
+ * the old behaviour and safe, never a missed one.
+ *
+ * @param {unknown} before
+ * @param {unknown} after
+ * @returns {boolean}
+ */
+function sectionEditValuesEqual(before, after) {
+  if (before === after) return true
+  if (typeof before === 'string' || typeof after === 'string') return false
+  try {
+    return JSON.stringify(before) === JSON.stringify(after)
+  } catch {
+    // A value that cannot be serialized cannot be compared this way; report
+    // "not equal" so the caller repaints, which is the pre-#118 behaviour
+    // and never loses data.
+    return false
+  }
+}
+
+// getByPath/setByPath are resolved differently depending on execution context: under
 // Bun (this file's own tests) it's require()'d directly; in the browser
 // bundle it's read off window.utils, since this file is a plain script
 // loaded after js/utils.js in js/main.js's import order, not an ES module
 // importer of it (dual-export files in this repo take no imports — see
 // js/review-merge.js and js/plain-language.js for the same shape).
-const setByPath =
-  typeof module !== 'undefined' && module.exports
-    ? require('./utils.js').setByPath
-    : window.utils.setByPath
+const { getByPath, setByPath } =
+  typeof module !== 'undefined' && module.exports ? require('./utils.js') : window.utils
 
 if (typeof window !== 'undefined') {
   window.inlineEditData = {
