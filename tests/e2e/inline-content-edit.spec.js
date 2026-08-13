@@ -182,7 +182,17 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await expect(activeBlock).toBeFocused()
     // A brand-new item starts empty — no select-all needed before typing.
     await activeBlock.pressSequentially('A brand new item.')
-    await activeBlock.blur()
+    // Assert the text landed BEFORE committing, and assert it on the live
+    // editor rather than on the mockup. This does not make the test pass more
+    // often — it makes its failures legible. The underlying flake is that the
+    // editor is destroyed mid-typing under parallel-worker load, and without
+    // this line that surfaced two assertions later as a missing element in the
+    // rendered mockup, which reads as a render bug rather than as input that
+    // never arrived. See the note above this test.
+    await expect(activeBlock).toHaveText('A brand new item.')
+    // Not activeBlock.blur() — see commitEditorJsField()'s own comment. Acting
+    // through a locator handle here failed ~50% of the time under two workers.
+    await commitEditorJsField(page)
 
     const after = await page.locator(`#mockPage [data-rewrite-field^="${containerPath}."]`).count()
     expect(after).toBe(before + 1)

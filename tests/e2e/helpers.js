@@ -227,7 +227,31 @@ async function replaceEditorJsFieldText(page, block, text) {
 // heading, the CTA), since Enter inside Editor.js's contenteditable is
 // trapped by the single-block guard (onChange) rather than left to bubble.
 async function commitEditorJsField(page) {
-  await page.locator('.inline-edit-editorjs-holder [contenteditable="true"]').blur()
+  // Blur inside a single browser-side evaluate() rather than through a
+  // Playwright locator handle.
+  //
+  // `locator.blur()` resolves the element, then acts on it in a second round
+  // trip, and Editor.js churns its own block DOM freely between those two —
+  // under parallel-worker load that surfaced as "element was detached from the
+  // DOM, retrying" followed by a 60s timeout, at a 50% rate locally with two
+  // workers (measured with --repeat-each=6). It is a handle-staleness problem,
+  // not a product one: probing the live page showed the holder intact, the
+  // contenteditable still focused, and zero #mockPage re-renders across the
+  // typing that precedes the blur.
+  //
+  // Same fix the link-tool helpers already use for the same class of race —
+  // do it in one synchronous browser-side call, where there is no handle to
+  // go stale. Falls back to the holder's own contenteditable if focus has
+  // already moved, so callers that blur an unfocused field still commit.
+  await page.evaluate(() => {
+    const active = document.activeElement
+    if (active instanceof HTMLElement && active.isContentEditable) {
+      active.blur()
+      return
+    }
+    const block = document.querySelector('.inline-edit-editorjs-holder [contenteditable="true"]')
+    if (block instanceof HTMLElement) block.blur()
+  })
 }
 
 // Select `word` inside the open Editor.js block and click the resulting
