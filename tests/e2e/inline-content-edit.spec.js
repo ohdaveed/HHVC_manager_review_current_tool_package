@@ -46,6 +46,9 @@ const {
   commitEditorJsField,
   selectWordAndClickLinkButton,
   addInlineLink,
+  readLinkInputState,
+  pasteAnchorIntoEditor,
+  readBrokenLinkNotice,
   typeAfterLinkCommit,
 } = require('./helpers.js')
 
@@ -317,13 +320,11 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await paragraph.click()
     await editorJsBlock(page)
 
-    const result = await addInlineLink(page, selectedWord, 'rodentsProblem')
+    const result = await addInlineLink(page, selectedWord, 'rodentsReport')
     expect(result.ok).toBe(true)
     await commitEditorJsField(page)
 
-    const internalLink = page.locator(
-      '#mockPage button.inline-link[data-render-target="rodentsProblem"]'
-    )
+    const internalLink = paragraph.locator('button.inline-link[data-render-target="rodentsReport"]')
     await expect(internalLink).toHaveText(selectedWord)
     await expect(page.locator('#mockPage p .unverified-pill').first()).toBeVisible()
   })
@@ -347,7 +348,7 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await paragraph.click()
     await editorJsBlock(page)
 
-    const result = await addInlineLink(page, selectedWord, 'rodentsProblem')
+    const result = await addInlineLink(page, selectedWord, 'rodentsReport')
     expect(result.ok).toBe(true)
 
     const typeResult = await typeAfterLinkCommit(page, ' EXTRA TYPED TEXT AFTER LINK')
@@ -359,9 +360,7 @@ test.describe('inline content editing (Editor.js widget)', () => {
 
     await commitEditorJsField(page)
 
-    const internalLink = page.locator(
-      '#mockPage button.inline-link[data-render-target="rodentsProblem"]'
-    )
+    const internalLink = paragraph.locator('button.inline-link[data-render-target="rodentsReport"]')
     await expect(internalLink).toHaveText(selectedWord)
     await expect(
       page.locator('#mockPage p', { hasText: 'EXTRA TYPED TEXT AFTER LINK' })
@@ -400,19 +399,17 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await paragraph.click()
     await editorJsBlock(page)
 
-    const result = await addInlineLink(page, selectedWord, 'rodentsProblem')
+    const result = await addInlineLink(page, selectedWord, 'rodentsReport')
     expect(result.ok).toBe(true)
     await commitEditorJsField(page)
 
-    const internalLink = page.locator(
-      '#mockPage button.inline-link[data-render-target="rodentsProblem"]'
-    )
+    const internalLink = paragraph.locator('button.inline-link[data-render-target="rodentsReport"]')
     await expect(internalLink).toBeVisible()
 
     // Reopen the same field: pageValueToEditorData/markdownToEditingHtml
     // (js/inline-content-edit-adapter.js) turns the stored
-    // [word](rodentsProblem) markdown back into an
-    // <a data-render-target="rodentsProblem">word</a> for editing, so the
+    // [word](rodentsReport) markdown back into an
+    // <a data-render-target="rodentsReport">word</a> for editing, so the
     // selected text is now INSIDE that anchor. Clicking the Link button on
     // an existing anchor calls surround()'s unwrap() branch directly — no
     // target-entry input ever opens, unlike the add-link case above.
@@ -425,8 +422,124 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await commitEditorJsField(page)
 
     await expect(
-      page.locator('#mockPage button.inline-link[data-render-target="rodentsProblem"]')
+      paragraph.locator('button.inline-link[data-render-target="rodentsReport"]')
     ).toHaveCount(0)
     await expect(page.locator('#mockPage p', { hasText: paragraphText.trim() })).toBeVisible()
+  })
+  // The three cases below cover link-target validation: a target that points
+  // nowhere is REFUSED rather than silently turned into a control that does
+  // nothing when clicked. The rule itself has exhaustive unit coverage in
+  // tests/inline-link-target.test.js; what these add is the two things only a
+  // browser can show — that a typed rejection leaves the input open and
+  // usable, and that a PASTED broken link (which never touches the link tool
+  // at all) blocks the commit and can be cleared from inside the holder.
+  test('a typed target that is not a page key is refused, leaving the input open', async ({
+    page,
+  }) => {
+    await gotoFresh(page)
+    const paragraph = page
+      .locator('#mockPage p[data-rewrite-field^="sections."][data-rewrite-field$=".paragraphs.0"]')
+      .first()
+    const paragraphText = (await paragraph.textContent()) || ''
+    const selectedWord = paragraphText.trim().split(/\s+/)[0]
+    await paragraph.click()
+    await editorJsBlock(page)
+
+    const result = await addInlineLink(page, selectedWord, 'rodentsProbelm')
+    expect(result.ok).toBe(true)
+
+    const state = await readLinkInputState(page)
+    // Still open, still holding what was typed: refusing is not cancelling.
+    expect(state.open).toBe(true)
+    expect(state.invalid).toBe(true)
+    expect(state.value).toBe('rodentsProbelm')
+    expect(state.focused).toBe(true)
+    // The rule is a STANDING description, announced on entering the field
+    // rather than injected at error time.
+    expect(state.describedByText).toContain('page key')
+
+    // Nothing was inserted — the mockup must not carry a control pointing at
+    // a page that does not exist.
+    await commitEditorJsField(page)
+    await expect(
+      page.locator('#mockPage button.inline-link[data-render-target="rodentsProbelm"]')
+    ).toHaveCount(0)
+  })
+
+  test('correcting a refused target and retrying inserts the link', async ({ page }) => {
+    // The refusal has to be recoverable in place. If Enter stopped working
+    // after one rejection, the only way out would be Escape, which discards
+    // the whole edit.
+    await gotoFresh(page)
+    const paragraph = page
+      .locator('#mockPage p[data-rewrite-field^="sections."][data-rewrite-field$=".paragraphs.0"]')
+      .first()
+    const paragraphText = (await paragraph.textContent()) || ''
+    const selectedWord = paragraphText.trim().split(/\s+/)[0]
+    await paragraph.click()
+    await editorJsBlock(page)
+
+    expect((await addInlineLink(page, selectedWord, 'rodentsProbelm')).ok).toBe(true)
+    expect((await readLinkInputState(page)).invalid).toBe(true)
+
+    await page.evaluate(() => {
+      const input = document.querySelector('.inline-edit-link-input')
+      input.value = 'rodentsReport'
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      )
+    })
+    await commitEditorJsField(page)
+
+    await expect(
+      paragraph.locator('button.inline-link[data-render-target="rodentsReport"]')
+    ).toHaveText(selectedWord)
+  })
+
+  test('a pasted broken link blocks the commit until it is removed', async ({ page }) => {
+    await gotoFresh(page)
+    const paragraph = page
+      .locator('#mockPage p[data-rewrite-field^="sections."][data-rewrite-field$=".paragraphs.0"]')
+      .first()
+    const paragraphText = ((await paragraph.textContent()) || '').trim()
+    await paragraph.click()
+    await editorJsBlock(page)
+
+    // Bypasses the link tool entirely, which is exactly what a paste does:
+    // the tool's sanitize() config allows data-render-target, so Editor.js
+    // carries a copied anchor straight through to the adapter.
+    expect((await pasteAnchorIntoEditor(page, { label: 'ghost', target: 'ghostPage' })).ok).toBe(
+      true
+    )
+    await commitEditorJsField(page)
+
+    const notice = await readBrokenLinkNotice(page)
+    expect(notice.holderPresent).toBe(true)
+    expect(notice.holderInvalid).toBe(true)
+    expect(notice.noticeInsideHolder).toBe(true)
+    expect(notice.describedByResolves).toBe(true)
+    // The offending target is quoted so a typo is distinguishable from a page
+    // the reviewer only thought existed.
+    expect(notice.message).toContain('ghostPage')
+    expect(notice.buttonLabel).toBe('Remove broken link')
+
+    // The editor is still open holding the reviewer's text — refusing is not
+    // cancelling — and nothing was written to the mockup.
+    await expect(page.locator('.inline-edit-editorjs-holder')).toHaveCount(1)
+    await expect(
+      page.locator('#mockPage button.inline-link[data-render-target="ghostPage"]')
+    ).toHaveCount(0)
+
+    // The way out. Pressing it strips the anchor to plain text and lets the
+    // same commit through, keeping everything else that was typed.
+    await page.click('[data-inline-edit-remove-broken-links]')
+    await expect(page.locator('.inline-edit-editorjs-holder')).toHaveCount(0)
+    await expect(
+      page.locator('#mockPage button.inline-link[data-render-target="ghostPage"]')
+    ).toHaveCount(0)
+    const committed = page.locator('#mockPage p', { hasText: paragraphText.slice(0, 30) }).first()
+    // The label survives as text: only the linking is lost, not the writing.
+    await expect(committed).toContainText('ghost')
   })
 })

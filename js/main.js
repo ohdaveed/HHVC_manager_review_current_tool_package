@@ -116,6 +116,12 @@ import './review-state-store.js'
 import './review-merge.js'
 import './inline-content-edit-data.js'
 import './inline-content-edit-adapter.js'
+// Publishes window.inlineLinkTarget, read by inline-content-edit-link-tool.js
+// (a reviewer-typed target) and inline-content-edit.js (a pasted one). Listed
+// here rather than imported by either, because it is also require()d from
+// build_scripts/data-checks.js under Node and is deliberately import-free so
+// it carries no load-order dependency of its own.
+import './inline-link-target.js'
 import './review-state-sync.js'
 
 // ---------------------------------------------------------------------------

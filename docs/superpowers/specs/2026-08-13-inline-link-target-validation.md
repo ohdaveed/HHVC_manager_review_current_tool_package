@@ -53,11 +53,22 @@ mockup, so a change there has a far larger blast radius than a review-only widge
 justifies. If those schemes are wanted later, the renderer is the place to start,
 not this predicate.
 
-**The key set is `window.pageRegistry.knownKeys()`, not `DATA.pages`.** A reviewer
-can hide a page (`js/page-registry.js`), and hiding is explicitly reversible —
-Restore is the affordance that makes delete safe. Validating against the visible
-set only would mean deleting one page silently invalidates prose on other pages
-that link to it, turning a reversible action into a destructive one.
+**The key set is the live pages UNIONED with `pageRegistry.knownKeys()`.**
+Corrected during implementation: the first version used `knownKeys()` alone,
+on the assumption it was a superset. It is not — it returns only what the
+registry itself holds (`added` plus `hidden`), so on a browser where the
+reviewer has neither added nor deleted anything it is the empty array, and
+every target was rejected including correct ones. The existing e2e link cases
+caught it by ceasing to insert links at all.
+
+Both halves are needed. `HHVC_DATA.pages` is what is in the mockup; the
+registry's `hidden` keys are pages the reviewer deleted, which stay valid
+targets because hiding is explicitly reversible — Restore is the affordance
+that makes delete safe, and rejecting a link to a hidden page would let
+deleting one page silently invalidate prose on every other page linking to it.
+The union is built once, in `js/inline-content-edit-link-tool.js`'s
+`linkableKeys()`, published on `window.InlineEdit` so the typed and pasted
+paths cannot resolve different sets.
 
 ## Where the check runs
 
@@ -89,31 +100,36 @@ blur — the guarantee would be cosmetic.
 `js/plain-language.js` and `js/inline-content-edit-data.js`.
 
 ```js
-isValidInlineLinkTarget(target, knownKeys, safeUrl) -> boolean
+isValidInlineLinkTarget(target, knownKeys) -> boolean
+findInvalidInlineLinkTargets(value, knownKeys) -> string[]
 ```
 
-**`safeUrl` is injected rather than imported, and that is the repo's existing
-pattern rather than a preference.** Every dual-exported module here is
-import-free: `js/card-inheritance.js` "imports nothing and reads no global", and
-`js/inline-content-edit-adapter.js` reimplements escaping rather than importing
-`js/utils.js` specifically so it carries no load-order dependency. An `import` in
-this file would also add a second `require(esm)` crossing on the Node side —
-`build_scripts/data-checks.js:11` already has one, and CLAUDE.md notes CI never
-exercises that crossing under Node, only Bun. Injection keeps the count at one.
+**`safeUrl` is NOT folded in, reversing the original plan.** Measured rather
+than assumed: `findBrokenInlineLinks`'s existing rule already rejects
+`javascript:`, `data:` and protocol-relative targets, because none of them is a
+page key, `#`, or http(s)-prefixed — and `SAFE_URL_SCHEMES` contains `https:`,
+so no `https://`-prefixed string exists that `safeUrl` rejects. It would have
+been an argument that never changes an answer, and there is consequently no
+`bun run validate` tightening either. Sanitizing the string that reaches an
+`href` is a different job and stays where it already is, at the write site in
+`js/inline-content-edit-link-tool.js` and `js/page-render.js`.
 
-Reimplementing the scheme check inside the predicate was rejected outright. Two
-copies of that rule, free to drift, is the exact condition this consolidation
-exists to remove.
+That also moots the question of how to reach `safeUrl` from a dual-exported
+module. The predicate imports nothing and reads no global, matching
+`js/card-inheritance.js` and `js/plain-language.js`, so it carries no
+load-order dependency and adds no second `require(esm)` crossing on the Node
+side (`build_scripts/data-checks.js:11` already has one, and CI never
+exercises that crossing under Node — only Bun).
 
-**The comparison is `safeUrl(trimmed) !== '#'`, not `safeUrl(value) === value`.**
-The second form asks "did `safeUrl` return the string unchanged", which is
-`findUnsafeUrls`'s shape and reports a whitespace-padded but otherwise safe URL as
-a scheme violation. `findUnsafeUrls` already compensates by comparing against
-`value.trim()` (`build_scripts/data-checks.js:237`); this predicate avoids the
-question entirely by asking the only thing it cares about — was the scheme
-accepted. That matters beyond authored copy, because `data-checks.js`'s invariants
-also run inside the AI output validator, where the looser form is one more way to
-reject a legitimate draft over a stray space.
+Reimplementing the rule inside either caller was rejected outright. Two copies
+free to drift is the exact condition this consolidation exists to remove.
+
+**The target is trimmed before testing.** `formatMarkdown()`'s capture is
+`([^)]+)`, so a padded target arrives with its whitespace and the question the
+rule asks is about the target, not whitespace hygiene. This is the refactor's
+one behaviour change at `findBrokenInlineLinks`, and it reaches beyond authored
+copy: that function also runs inside the AI output validator, where a
+padded-but-valid target was one more way to reject a legitimate draft.
 
 **`findBrokenInlineLinks()` is refactored onto the same predicate**, which tightens
 `bun run validate`: authored inline markdown targets are now checked for scheme,
@@ -208,14 +224,27 @@ can land after the reviewer has navigated (`j`/`k`, a page delete).
 class of problem; the refusal callback needs the same guard, or it focuses a
 detached node and strands the invalid-state markers on a dead holder.
 
-**A `focusout` with `relatedTarget === null` is exempt.** The holder's handler
-returns early only for `nextFocus instanceof Element && holder.contains(nextFocus)`,
-so a tab switch, a devtools open, or a window blur falls through to `commit()`.
-Committing there is fine today; refusing and refocusing there is not — it fights
-the browser on blur and steals focus back when the reviewer returns to the tab. On
-a null `relatedTarget` the refusal skips both the write and the refocus and leaves
-the widget open untouched. The broken link is still there when they come back, so
-the guarantee holds and nothing fights the OS.
+**Refusal is disabled when the DOCUMENT has lost focus, keyed on
+`document.hasFocus()`.** A tab switch, a devtools open or an OS-level window
+blur still reaches `commit()`, and refusing there would fight the browser and
+steal focus back the moment the reviewer returned to the tab — so the commit
+runs with refusal off: it declines to write rather than declining to close.
+
+The original design said to key this on `relatedTarget === null`, and that was
+wrong. A null `relatedTarget` also describes the most ordinary exit there is —
+clicking any non-focusable element, which is most of the mockup — so keying on
+it disables the refusal in exactly the common case. Measured: the paste e2e case
+blurs with no `relatedTarget`, and while it did, the refusal never fired.
+
+**That check is not the only guard, because it could not be verified.** Whether
+`document.hasFocus()` has already flipped to `false` by the time `focusout`
+runs on a window blur is timing-dependent, and headless Chromium reports the
+page as focused even with another tab brought to the front — so the branch is
+unproven rather than measured. The deferred refocus therefore re-checks
+`document.hasFocus()` itself, at the moment focus would actually be taken,
+where the question has an unambiguous answer. Worst case, a window blur shows
+a refusal notice the reviewer finds on return; focus is never stolen either
+way.
 
 ## Explicitly out of scope
 

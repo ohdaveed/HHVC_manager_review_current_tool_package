@@ -76,11 +76,88 @@
     return `<button type="button" class="inline-edit-reset" data-inline-edit-reset="${escapedPath}" data-export-exclude>Reset to original</button>`
   }
 
+  /**
+   * The notice shown when a commit is refused because the field carries a
+   * link pointing nowhere — the message plus the one way out.
+   *
+   * Returns a live element rather than an HTML string, unlike every other
+   * function here, because the orchestrator appends it into the LIVE
+   * Editor.js holder mid-session and attaches a listener to its button.
+   * Building it from `innerHTML` would mean re-parsing a subtree Editor.js is
+   * actively managing, and would hand back no node to bind to.
+   *
+   * The element carries `data-export-exclude` like the other reviewer-only
+   * controls, so it can never leak into a mockup PNG export.
+   *
+   * @param {string} id The id `aria-describedby` on the holder will point at.
+   * @returns {HTMLElement}
+   */
+  function brokenLinkNoticeElement(id) {
+    const wrapper = document.createElement('div')
+    wrapper.id = id
+    wrapper.className = 'inline-edit-broken-links'
+    wrapper.setAttribute('data-export-exclude', '')
+    // Not role="alert": the holder's aria-describedby points here and focus
+    // returns to the field in the same beat, so the text is announced on
+    // arrival. An alert on top of that would say it twice.
+    //
+    // Built with createElement/textContent rather than innerHTML throughout.
+    // The notice quotes link targets, and a pasted target is arbitrary text —
+    // there is no markup in this notice, so there is no reason for an HTML
+    // sink to exist on a path that handles it.
+    const message = document.createElement('p')
+    message.className = 'inline-edit-broken-links-message'
+    message.setAttribute('data-inline-edit-broken-links-message', '')
+
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'inline-edit-broken-links-remove'
+    button.setAttribute('data-inline-edit-remove-broken-links', '')
+
+    wrapper.appendChild(message)
+    wrapper.appendChild(button)
+    return wrapper
+  }
+
+  /**
+   * Update an existing notice for the current set of broken targets.
+   *
+   * Both the message and the button label name the count, because the button
+   * removes ALL of them in one press — a label reading "Remove broken link"
+   * over three links would understate what pressing it does.
+   *
+   * @param {HTMLElement} noticeEl
+   * @param {Array<string>} targets
+   * @returns {void}
+   */
+  function updateBrokenLinkNotice(noticeEl, targets) {
+    if (!noticeEl) return
+    const count = targets.length
+    const messageEl = noticeEl.querySelector('[data-inline-edit-broken-links-message]')
+    const buttonEl = noticeEl.querySelector('[data-inline-edit-remove-broken-links]')
+    if (messageEl) {
+      // The offending targets are quoted so the reviewer can tell a typo from
+      // a page they only thought existed — the count alone would leave them
+      // hunting for which link is wrong.
+      const quoted = targets.map((target) => `“${target}”`).join(', ')
+      const subject = count === 1 ? 'link points' : 'links point'
+      const object = count === 1 ? 'the link' : 'the links'
+      messageEl.textContent =
+        `This edit can't be saved yet: ${count} ${subject} nowhere (${quoted}). ` +
+        `Fix the target, remove ${object}, or press Escape to discard the edit.`
+    }
+    if (buttonEl) {
+      buttonEl.textContent = count === 1 ? 'Remove broken link' : `Remove broken links (${count})`
+    }
+  }
+
   window.InlineEdit.render = {
     editorJsHolderHtml,
     listAddControlHtml,
     listRemoveControlHtml,
     editedBadgeHtml,
     resetControlHtml,
+    brokenLinkNoticeElement,
+    updateBrokenLinkNotice,
   }
 })()
