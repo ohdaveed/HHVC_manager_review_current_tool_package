@@ -36,7 +36,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 36 unit-test files in tests/ (1,567 tests)
+bun run test                  # bun test over the 37 unit-test files in tests/ (1,589 tests)
 bun run test:e2e              # playwright test (161 specs across 19 files in tests/e2e/)
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -64,7 +64,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 36 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 37 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -103,7 +103,13 @@ exercises actual `Element.replaceWith()` and focus/selection behavior),
 `inline-content-edit-roundtrip` (add/remove/reset verified through the REAL
 save/reapply path rather than the counting stubs the sibling file uses, proving
 a `section_edits` round trip and that reset drops a field from the next
-recompute), `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
+recompute), `inline-link-target` (the one definition of what an inline link may
+point at, shared by the browser widget and `build_scripts/data-checks.js`'s
+`findBrokenInlineLinks`; it pins the rejections whose reason is the RENDERER
+rather than the scheme — `mailto:`/`tel:`/root-relative all pass `safeUrl` and
+would still render as dead `data-render-target` buttons, so a later reader
+"fixing" them by widening this predicate would ship exactly the broken control
+it removes), `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
 schema so a mismatched required field fails here rather than shipping; asserts
 a malformed registry entry is **dropped rather than thrown on**, since a throw
 at the root of the module graph strands the reviewer with no UI to fix it; its
