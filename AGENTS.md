@@ -41,7 +41,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 36 unit-test files in tests/
+bun run test                  # Bun test runner over the 37 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -59,7 +59,7 @@ bun run format:check          # prettier --check — THIS IS THE LINT STEP (no E
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 36 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 37 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -93,6 +93,13 @@ arrays and per-field reset-to-original),
 `saveCurrentPageToLocalStorage`/`applySavedPageState` path rather than
 counting stubs, proving a `section_edits` round trip and that a reset drops
 its path from the next recompute),
+`inline-link-target` (the one definition of what an inline link may point at,
+shared by the browser widget and `build_scripts/data-checks.js`'s
+`findBrokenInlineLinks`; it pins the rejections whose reason is the RENDERER
+rather than the scheme — `mailto:`, `tel:` and root-relative targets all pass
+`safeUrl` and would still render as dead `data-render-target` buttons, so a
+later reader "fixing" them by widening this predicate would ship exactly the
+broken control it removes),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage

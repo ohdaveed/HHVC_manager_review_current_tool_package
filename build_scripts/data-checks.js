@@ -9,6 +9,13 @@
 // actually considers safe. That file is browser-first and exports only its URL
 // guard to Node; see the note at its foot.
 const { safeUrl, urlProbe } = require('../js/utils.js')
+// isValidInlineLinkTarget comes from js/inline-link-target.js for the same
+// anti-drift reason: it is also what the browser's inline link widget applies
+// when a reviewer TYPES a target, and a link a reviewer creates must never be
+// something this file would reject if the same text were later moved into
+// source. That module is deliberately import-free and reads no global, so it
+// costs this file no load-order dependency.
+const { isValidInlineLinkTarget } = require('../js/inline-link-target.js')
 
 /**
  * Find order entries that reference a page key missing from `pages`.
@@ -94,9 +101,16 @@ function findBrokenInlineLinks(pages) {
       const text = typeof item === 'string' ? item : item?.text || ''
       for (const match of text.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
         const target = match[1]
-        // `#` is the deliberate inert-link sentinel (kept un-navigable by the
-        // mockup's click handler), so only real keys and URLs are checked.
-        if (target !== '#' && !keys.has(target) && !/^https?:\/\//.test(target)) {
+        // The rule itself (an existing page key, an http(s) URL, or the inert
+        // `#` sentinel) lives in js/inline-link-target.js so this validator and
+        // the browser's inline link widget share one definition rather than two
+        // free to drift. `keys` stays a parameter of this function rather than
+        // something the predicate resolves for itself: the AI output validator
+        // calls findBrokenInlineLinks TWICE, under `__generated__` and
+        // `__generated_probe__`, and unions the results — because `pages`
+        // serves both as the walk target and as the resolvable-key set, which
+        // made a draft's own sentinel key resolvable to itself.
+        if (!isValidInlineLinkTarget(target, keys)) {
           broken.push({ pageKey, target })
         }
       }
