@@ -97,7 +97,8 @@ const STATIC_HEADERS = {
 // It's entirely separate from the mockup's core localStorage-only review
 // state (js/review-state-store.js): reviewers opt in per-browser via
 // js/review-state-sync.js, which is a no-op unless a sync URL/token is
-// configured. See CLAUDE.md's "Review-state sync backend" section for the
+// configured. See the `hhvc-review-sync-backend` skill (extracted from
+// CLAUDE.md; AGENTS.md carries the same section in full) for the
 // deployment/Railway details and the per-page merge safety invariant this
 // code must preserve (never wholesale-replace `pages`, always merge one
 // page_key at a time through the same mergeReviewRecord used client-side).

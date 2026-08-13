@@ -2089,6 +2089,30 @@ Two of the mirrors carry real content and must be updated alongside this file:
 | `CLAUDE.md`                       | Claude Code's mirror — the same facts plus Claude Code–specific notes. |
 | `.github/copilot-instructions.md` | Copilot's mirror — a condensed subset.                                 |
 
+**`CLAUDE.md` is a mirror of the same FACTS, not of the same LENGTH — added
+2026-08-13.** Six subsystem deep-dives that this file carries in full are
+summarized there and extracted into `.claude/skills/hhvc-*/SKILL.md`:
+`hhvc-inline-content-editing`, `hhvc-page-registry`, `hhvc-review-sync-backend`,
+`hhvc-ai-assist-backend`, `hhvc-rag-knowledge-base`, `hhvc-ai-rewrite`. Each is
+loaded on demand, by an agent about to edit the files it covers.
+
+The reason is a cost this file does not pay: `CLAUDE.md` is read into **every**
+Claude Code session in its entirety, and those six sections ran to ~66,000
+characters — roughly 16,000 tokens per session, spent mostly on subsystems the
+session never touches. `AGENTS.md` is opened deliberately, so length costs it
+nothing comparable.
+
+**Do not "restore" those sections to `CLAUDE.md`.** The absence is the design.
+The rule one paragraph up — reconcile toward this file — is about which copy
+wins when two disagree on a FACT; it is not a licence to re-inline content that
+was deliberately moved somewhere a session can still reach. If you correct one
+of those subsystems, the correction lands here and in the matching
+`hhvc-*` skill, which says so in its own header comment.
+
+**These skills are the one exception to the pointer rule below.** They carry
+real content, they are extracts of this file, and they must be updated alongside
+it exactly like `CLAUDE.md` is.
+
 The rest are **pointers on purpose** and must stay that way — no counts, no file
 inventories, no architecture summaries:
 

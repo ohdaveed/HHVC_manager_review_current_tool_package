@@ -15,7 +15,8 @@
 /**
  * The only section-level field kinds this feature ever diffs or writes.
  * Cards, callouts, table cells, step text/bullets, and every other section
- * shape are out of scope — see CLAUDE.md's "Inline content editing" section.
+ * shape are out of scope — see the `hhvc-inline-content-editing` skill
+ * (extracted from CLAUDE.md; AGENTS.md carries the same section in full).
  */
 const IN_SCOPE_SECTION_FIELD_SUFFIXES = ['heading', 'paragraphs', 'bullets']
 
