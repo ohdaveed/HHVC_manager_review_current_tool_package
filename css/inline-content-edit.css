@@ -189,3 +189,66 @@
   border-radius: 4px;
   padding: 0.3rem 0.5rem;
 }
+
+/* ---------------------------------------------------------------------------
+   Refused link targets
+   ---------------------------------------------------------------------------
+   Two surfaces, one condition: the target-entry input when a reviewer TYPES a
+   target that points nowhere, and the whole editor holder when a PASTED link
+   does. Both take --status-blocked-*, the same tokens the Blocked decision
+   chip uses, so "this is wrong" reads the same everywhere in the tool. Those
+   tokens resolve through --sfds-danger-*, which css/theme.css redefines under
+   prefers-color-scheme: dark, so neither rule needs a dark-mode counterpart.
+
+   Colour is never the only signal in either case: the input carries
+   aria-invalid and a standing description naming the rule, and the holder
+   carries aria-invalid plus a described-by notice that states the problem in
+   words and offers the way out. */
+.inline-edit-editorjs-holder .inline-edit-link-input.is-invalid {
+  border-color: var(--status-blocked-border);
+  /* A second ring rather than a thicker border: changing border-width would
+     reflow the input inside an already-cramped inline toolbar, shifting the
+     text under the reviewer's caret at the exact moment they are correcting
+     it. */
+  box-shadow: 0 0 0 2px var(--status-blocked-bg);
+}
+
+.inline-edit-editorjs-holder.has-broken-links {
+  outline: 2px solid var(--status-blocked-border);
+  outline-offset: 2px;
+}
+
+.inline-edit-broken-links {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--status-blocked-bg);
+  border: 1px solid var(--status-blocked-border);
+  border-radius: 4px;
+}
+
+.inline-edit-broken-links-message {
+  margin: 0 0 0.45rem;
+  color: var(--status-blocked-fg);
+  font-size: var(--ds-text-label);
+  line-height: 1.4;
+}
+
+.inline-edit-broken-links-remove {
+  font: inherit;
+  font-size: var(--ds-text-label);
+  color: var(--status-blocked-fg);
+  background: var(--surface-panel);
+  border: 1px solid var(--status-blocked-border);
+  border-radius: 4px;
+  /* 44px min target: this is the only control that resolves the refusal, and
+     the refusal holds the reviewer in the field until it is pressed or the
+     link is fixed — the same reasoning that sized the accordion chevron once
+     it became the only way to expand a panel. */
+  min-height: 44px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
+.inline-edit-broken-links-remove:hover {
+  background: var(--status-blocked-bg);
+}

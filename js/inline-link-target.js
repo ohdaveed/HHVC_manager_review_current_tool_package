@@ -123,9 +123,59 @@ function isValidInlineLinkTarget(target, knownKeys) {
   return /^https?:\/\//i.test(trimmed)
 }
 
+/**
+ * Every invalid target in a committed field value, in the order they appear.
+ *
+ * This is the paste-path half of the feature. A reviewer typing a target goes
+ * through js/inline-content-edit-link-tool.js's own check before an anchor is
+ * ever built — but an anchor PASTED into an open editor never touches that
+ * code: the link tool's `static get sanitize()` allows `href` and
+ * `data-render-target`, so Editor.js's sanitizer carries a copied link
+ * straight through to the adapter with the toolbar closed. Checking the
+ * committed value is what covers both, since
+ * js/inline-content-edit-adapter.js has by then serialized every anchor —
+ * typed, pasted, or authored — back into the same `[label](target)` markdown.
+ *
+ * Results are deliberately NOT deduplicated and NOT sorted: the refusal
+ * notice counts them, so collapsing two broken links into one would
+ * misreport what the reviewer is about to remove.
+ *
+ * Accepts either a bare string (a title/summary/heading commits as one) or
+ * the `{text, unverified, unverifiedReason}` object form a paragraph or
+ * bullet commits as, because commit() hands over whichever the field type
+ * produced without branching first.
+ *
+ * @param {string|{text?: string}|null|undefined} value
+ * @param {Set<string>|Array<string>|Record<string, unknown>|null|undefined} knownKeys
+ * @returns {Array<string>} The offending targets, trimmed.
+ */
+function findInvalidInlineLinkTargets(value, knownKeys) {
+  const text = typeof value === 'string' ? value : (value && value.text) || ''
+  if (typeof text !== 'string' || !text) return []
+
+  const invalid = []
+  // The same pattern build_scripts/data-checks.js walks authored copy with, so
+  // the two paths cannot come to disagree about what counts as a link in the
+  // first place — a rule shared for what a target may BE is only half the
+  // guarantee if the two sides find different links to test.
+  for (const match of text.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+    const target = String(match[1] ?? '').trim()
+    if (!isValidInlineLinkTarget(target, knownKeys)) invalid.push(target)
+  }
+  return invalid
+}
+
 if (typeof window !== 'undefined') {
-  window.inlineLinkTarget = { isValidInlineLinkTarget, INLINE_LINK_TARGET_RULE }
+  window.inlineLinkTarget = {
+    isValidInlineLinkTarget,
+    findInvalidInlineLinkTargets,
+    INLINE_LINK_TARGET_RULE,
+  }
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { isValidInlineLinkTarget, INLINE_LINK_TARGET_RULE }
+  module.exports = {
+    isValidInlineLinkTarget,
+    findInvalidInlineLinkTargets,
+    INLINE_LINK_TARGET_RULE,
+  }
 }

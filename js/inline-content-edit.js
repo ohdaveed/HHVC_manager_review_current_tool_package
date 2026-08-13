@@ -568,6 +568,12 @@
   }
 
   let editorJsHolderCounter = 0
+  /**
+   * Distinguishes the broken-link notice ids between concurrently mounted
+   * holders, so `aria-describedby` on one field's holder can never resolve to
+   * another field's notice.
+   */
+  let brokenLinkNoticeCounter = 0
 
   /**
    * Owns one open Editor.js instance's full lifecycle: the re-entrancy guard
@@ -604,6 +610,7 @@
       this.editor = null
       this.blockGuardActive = false
       this.settled = false
+      this.refusalEl = null
     }
 
     /**
@@ -731,7 +738,28 @@
         // e2e coverage of any toolbar-tool click.
         const nextFocus = event.relatedTarget
         if (nextFocus instanceof Element && this.holder.contains(nextFocus)) return
-        this.commit()
+        // Refusing holds the reviewer in the field by taking focus back, and
+        // doing that when the whole DOCUMENT has lost focus — a tab switch,
+        // devtools opening, an OS-level window blur — would fight the browser
+        // and steal focus the moment they returned to the tab.
+        //
+        // document.hasFocus() is the discriminator, NOT a null relatedTarget.
+        // A null relatedTarget also describes the most ordinary exit there is
+        // — clicking any NON-FOCUSABLE element, which is most of the mockup —
+        // so keying on it disabled the refusal in exactly the common case.
+        // Measured: the e2e paste case blurs with no relatedTarget, and while
+        // it did, the refusal never fired.
+        //
+        // Whether hasFocus() has ALREADY flipped to false by the time
+        // focusout runs on a window blur is timing-dependent and could not be
+        // verified here — headless Chromium reports the page as focused even
+        // with another tab brought to the front, so that branch is unproven
+        // rather than measured. It is therefore not the only guard: the
+        // deferred refocus in showBrokenLinkRefusal() re-checks hasFocus()
+        // itself, where the question does not arise. If this check turns out
+        // to be true during a window blur, the cost is a notice the reviewer
+        // sees on return — not stolen focus.
+        this.commit({ mayRefuse: document.hasFocus() })
       })
       this.holder.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
@@ -769,7 +797,7 @@
      * superseded.
      * @returns {Promise<void>}
      */
-    async commit() {
+    async commit({ mayRefuse = true } = {}) {
       if (this.settled) return
       this.settled = true
       if (editingPath !== this.path) {
@@ -812,6 +840,33 @@
       // removeListItem's undo callback already guards against above.
       const stillCurrentPage = window.utils.getCurrentKey() === this.key
       const newValue = this.adapter.editorDataToPageValue(this.fieldType, outputValue)
+
+      // Refuse a value carrying a link that points nowhere, BEFORE any write.
+      // Ordering this after the write would make the refusal cosmetic: the
+      // loop below re-runs on every blur, so a broken link would be
+      // re-persisted each time round while the reviewer was being told it had
+      // been rejected.
+      //
+      // This is the paste path. A TYPED target never reaches here as an
+      // invalid one — js/inline-content-edit-link-tool.js's commitLink()
+      // refuses before an anchor is built — but a pasted anchor bypasses that
+      // code entirely, since the tool's sanitize() config allows `href` and
+      // `data-render-target` and Editor.js carries a copied link straight
+      // through. By this point the adapter has serialized every anchor back
+      // to `[label](target)` markdown, so one check covers both origins.
+      const brokenTargets = mayRefuse && stillCurrentPage ? this.findBrokenLinks(newValue) : []
+      if (brokenTargets.length) {
+        // Un-settle rather than tear down: the editor stays alive and holds
+        // the reviewer's text, which is the entire point — refusing is not
+        // cancelling. Note `editingPath` is deliberately left pointing at
+        // this path, so a click elsewhere in the mockup still resolves to
+        // this session rather than opening a second editor over it.
+        this.settled = false
+        this.showBrokenLinkRefusal(brokenTargets)
+        return
+      }
+      this.clearBrokenLinkRefusal()
+
       editingPath = null
       this.editor.destroy()
       if (!stillCurrentPage) return
@@ -845,6 +900,133 @@
     }
 
     /**
+     * The invalid link targets in a value this session is about to write.
+     *
+     * The rule lives in js/inline-link-target.js, shared with
+     * build_scripts/data-checks.js; only the key set is resolved here, since
+     * that is a browser concern the predicate deliberately knows nothing
+     * about. window.InlineEdit.linkableKeys() is the live page set UNIONED
+     * with the registry's own keys, so a reviewer-hidden page still counts —
+     * hiding is reversible, and a link to a hidden page must not be destroyed
+     * by a delete the reviewer may undo.
+     *
+     * @param {string|{text?: string}} value
+     * @returns {Array<string>}
+     */
+    findBrokenLinks(value) {
+      return window.inlineLinkTarget.findInvalidInlineLinkTargets(
+        value,
+        window.InlineEdit.linkableKeys()
+      )
+    }
+
+    /**
+     * Mark the open field as refused and offer the one way out.
+     *
+     * The notice is appended INSIDE the holder, and that placement is
+     * load-bearing rather than cosmetic: the holder's own focusout listener
+     * returns early whenever focus moves to a descendant, so focusing this
+     * button cannot re-enter commit() and re-refuse before the reviewer has
+     * pressed it.
+     *
+     * One button for all of them rather than one per link: several buttons
+     * multiply the aria-describedby target problem inside a widget rendered
+     * inline in body copy, and a strip-one-per-press design makes the number
+     * of clicks a function of a count the reviewer cannot see.
+     *
+     * @param {Array<string>} targets
+     * @returns {void}
+     */
+    showBrokenLinkRefusal(targets) {
+      if (!this.refusalEl) {
+        const id = `inline-edit-broken-links-${++brokenLinkNoticeCounter}`
+        this.refusalEl = render.brokenLinkNoticeElement(id)
+        this.refusalEl
+          .querySelector('[data-inline-edit-remove-broken-links]')
+          .addEventListener('click', () => this.removeBrokenLinks())
+        this.holder.appendChild(this.refusalEl)
+        // Points at the notice, which names both the problem and the way out
+        // in one focus event — an aria-invalid with nothing describing it is
+        // compliant-looking and unhelpful, and it matters more here than in
+        // the typed case because this refusal BLOCKS rather than merely
+        // declining to insert.
+        this.holder.setAttribute('aria-describedby', id)
+      }
+      this.holder.setAttribute('aria-invalid', 'true')
+      this.holder.classList.add('has-broken-links')
+      render.updateBrokenLinkNotice(this.refusalEl, targets)
+
+      // Deferred, because .focus() called synchronously inside a focusout
+      // handler is unreliable — focus is mid-transition. Without the refocus
+      // neither the hold-in-field behaviour nor the aria-invalid announcement
+      // happens at all, and the refusal would silently do nothing.
+      //
+      // Deliberately NOT bounded to N attempts: "refuse once, then let it
+      // through" is the silent salvage this design rejected, reached by a
+      // counter the reviewer cannot see. The loop ends when the link is
+      // fixed, removed, or Escape is pressed.
+      window.setTimeout(() => {
+        // The reviewer may have navigated (j/k, a page delete) while this was
+        // queued. isStale() is the same check the session already applies for
+        // this class of race; without it this focuses a detached node and
+        // strands the invalid-state markers on a dead holder.
+        if (this.settled || this.isStale()) return
+        // Re-checked HERE rather than trusted from focusout time: this is the
+        // moment focus would actually be taken, so "does the document have
+        // focus" has an unambiguous answer. If the reviewer has switched tabs
+        // or windows, leave the notice standing and take nothing — they will
+        // find the refused field waiting when they come back, which is the
+        // outcome the focusout-time check is aiming at anyway.
+        if (!document.hasFocus()) return
+        const editable = this.holder.querySelector('[contenteditable="true"]')
+        if (editable instanceof HTMLElement) editable.focus()
+      }, 0)
+    }
+
+    /**
+     * @returns {void}
+     */
+    clearBrokenLinkRefusal() {
+      this.holder?.removeAttribute('aria-invalid')
+      this.holder?.classList.remove('has-broken-links')
+      this.refusalEl?.remove()
+      this.refusalEl = null
+    }
+
+    /**
+     * Unwrap every broken link in the open editor back to plain text, then
+     * retry the commit.
+     *
+     * Unwrapping in the live DOM rather than rewriting the stored value is
+     * what keeps the reviewer's other edits: everything else in the block is
+     * left exactly as they typed it, and only the anchors that cannot resolve
+     * lose their linking. Their visible label survives as text, so nothing
+     * they wrote disappears.
+     * @returns {void}
+     */
+    removeBrokenLinks() {
+      const keys = window.InlineEdit.linkableKeys()
+      const isValid = window.inlineLinkTarget.isValidInlineLinkTarget
+      for (const anchor of this.holder.querySelectorAll('a')) {
+        const target =
+          anchor.getAttribute('data-render-target') ?? anchor.getAttribute('href') ?? ''
+        if (isValid(target, keys)) continue
+        anchor.replaceWith(...anchor.childNodes)
+      }
+      // Keep js/inline-content-edit-link-tool.js's pre-blur HTML stash in
+      // step. commit() prefers that snapshot over editor.save()'s output when
+      // one exists, so leaving it holding the pre-removal HTML would hand the
+      // retry the very anchors just removed.
+      const bridge = window.InlineEdit.LinkCommitBridge
+      if (bridge.has(this.holder)) {
+        const editable = this.holder.querySelector('.ce-paragraph')
+        if (editable) bridge.stash(this.holder, editable.innerHTML)
+      }
+      this.clearBrokenLinkRefusal()
+      this.commit()
+    }
+
+    /**
      * Discard whatever Editor.js currently holds and re-render the original
      * value, or no-op if this session has already settled or been
      * superseded.
@@ -853,6 +1035,13 @@
     cancel() {
       if (this.settled) return
       this.settled = true
+      // Escape stays a full cancel even while a commit is being refused —
+      // that is the whole reason the "remove broken links" button is
+      // ADDITIVE rather than the only way out. Escape discards everything
+      // (rare, deliberate); the button salvages the typing and drops only the
+      // links. Forcing every reviewer through the button to preserve one
+      // guarantee would be the worse trade.
+      this.clearBrokenLinkRefusal()
       if (editingPath !== this.path) {
         this.editor.destroy()
         return

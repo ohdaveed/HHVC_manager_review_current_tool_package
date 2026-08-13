@@ -384,6 +384,97 @@ async function addInlineLink(page, word, target) {
   )
 }
 
+// Read the link tool's target-entry input after an attempted commit.
+//
+// addInlineLink() reports only that it managed to press Enter, which was
+// enough while every target was accepted. Now that a target pointing nowhere
+// is REFUSED (js/inline-content-edit-link-tool.js's commitLink()), a test has
+// to distinguish "the link was inserted" from "the input is still open,
+// holding what was typed, marked invalid" — which is the whole refusal
+// contract in one object.
+async function readLinkInputState(page) {
+  return page.evaluate(() => {
+    const input = document.querySelector('.inline-edit-link-input')
+    if (!input) return { present: false }
+    const actions = input.closest('.inline-edit-link-actions')
+    return {
+      present: true,
+      open: !actions?.hidden,
+      invalid: input.getAttribute('aria-invalid') === 'true',
+      value: input.value,
+      focused: document.activeElement === input,
+      // The rule sentence is a STANDING description, so this id must resolve
+      // whether or not the value is currently rejected.
+      describedByText: document.getElementById(input.getAttribute('aria-describedby'))?.textContent,
+    }
+  })
+}
+
+// Paste an anchor into the open Editor.js block, bypassing the link tool
+// entirely — which is what a reviewer copying linked text actually does.
+//
+// This dispatches a REAL ClipboardEvent carrying text/html, rather than
+// appending the element directly, and the difference is not cosmetic: it was
+// measured. An anchor appended programmatically is stripped by Editor.js's own
+// blur cleanup before commit() ever reads the value (the same cleanup
+// js/inline-content-edit-link-tool.js's LinkCommitBridge exists to work
+// around), so it never reaches the adapter and never exercises the refusal. A
+// pasted one goes through Editor.js's paste pipeline and its sanitizer — which
+// this tool's sanitize() config permits data-render-target through — and
+// survives to the commit. Confirmed live: after a real paste, editor.save()
+// returns the anchor intact.
+async function pasteAnchorIntoEditor(page, { label, target }) {
+  return page.evaluate(
+    async ({ label, target }) => {
+      const holder = document.querySelector('.inline-edit-editorjs-holder')
+      const block = holder?.querySelector('[contenteditable="true"]')
+      if (!block) return { ok: false, reason: 'no editable block' }
+      // Paste at the end of the existing text, the way a reviewer appending a
+      // reference would.
+      const selection = window.getSelection()
+      const range = document.createRange()
+      range.selectNodeContents(block)
+      range.collapse(false)
+      selection.removeAllRanges()
+      selection.addRange(range)
+
+      const data = new DataTransfer()
+      data.setData('text/html', ` <a data-render-target="${target}">${label}</a>`)
+      data.setData('text/plain', ` ${label}`)
+      block.dispatchEvent(
+        new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: data })
+      )
+      // Editor.js handles paste asynchronously; without this the commit that
+      // follows can read the block before the anchor has landed.
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      return { ok: block.innerHTML.includes(target) }
+    },
+    { label, target }
+  )
+}
+
+// The refusal notice appended inside the holder when a commit is rejected for
+// carrying a link that points nowhere.
+async function readBrokenLinkNotice(page) {
+  return page.evaluate(() => {
+    const holder = document.querySelector('.inline-edit-editorjs-holder')
+    if (!holder) return { holderPresent: false }
+    const notice = holder.querySelector('.inline-edit-broken-links')
+    return {
+      holderPresent: true,
+      holderInvalid: holder.getAttribute('aria-invalid') === 'true',
+      // The notice must be INSIDE the holder: the holder's focusout listener
+      // returns early for focus moving to a descendant, which is what stops
+      // pressing the button from re-entering commit() and re-refusing.
+      noticeInsideHolder: !!notice,
+      describedByResolves: holder.getAttribute('aria-describedby') === notice?.id,
+      message: notice?.querySelector('[data-inline-edit-broken-links-message]')?.textContent || '',
+      buttonLabel:
+        notice?.querySelector('[data-inline-edit-remove-broken-links]')?.textContent || '',
+    }
+  })
+}
+
 // Type additional text into the currently-open Editor.js block right after
 // addInlineLink() has committed a link, but BEFORE the field is blurred —
 // the exact window in which js/inline-content-edit.js's commit() used to
@@ -445,5 +536,8 @@ module.exports = {
   commitEditorJsField,
   selectWordAndClickLinkButton,
   addInlineLink,
+  readLinkInputState,
+  pasteAnchorIntoEditor,
+  readBrokenLinkNotice,
   typeAfterLinkCommit,
 }

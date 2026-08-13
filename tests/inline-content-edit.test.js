@@ -39,6 +39,8 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
+require('../js/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
+// which commit() and the link tool both consult before accepting a link target.
 require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
 require('../js/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
 require('../js/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter

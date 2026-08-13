@@ -132,6 +132,59 @@ describe('isValidInlineLinkTarget', () => {
   })
 })
 
+describe('findInvalidInlineLinkTargets', () => {
+  const { findInvalidInlineLinkTargets } = require('../js/inline-link-target.js')
+
+  test('returns nothing for text with no links at all', () => {
+    expect(findInvalidInlineLinkTargets('Plain copy about rodents.', KNOWN)).toEqual([])
+  })
+
+  test('returns nothing when every link is valid', () => {
+    const text = 'See [rodents](rodentsProblem), [311](https://sf.gov/311) and [tbd](#).'
+    expect(findInvalidInlineLinkTargets(text, KNOWN)).toEqual([])
+  })
+
+  test('returns the target of a single broken link', () => {
+    expect(findInvalidInlineLinkTargets('Go to [ghost](ghostPage).', KNOWN)).toEqual(['ghostPage'])
+  })
+
+  test('returns every broken target, in the order they appear', () => {
+    // The refusal notice counts them ("Remove broken links (N)"), so a
+    // deduplicating or unordered result would misreport what the reviewer is
+    // about to remove.
+    const text = '[a](ghostOne) then [b](rodentsProblem) then [c](ghostTwo)'
+    expect(findInvalidInlineLinkTargets(text, KNOWN)).toEqual(['ghostOne', 'ghostTwo'])
+  })
+
+  test('reports the same broken target twice when it appears twice', () => {
+    const text = '[a](ghost) and again [b](ghost)'
+    expect(findInvalidInlineLinkTargets(text, KNOWN)).toEqual(['ghost', 'ghost'])
+  })
+
+  test('returns trimmed targets, so the notice does not quote stray whitespace', () => {
+    expect(findInvalidInlineLinkTargets('[a]( ghost )', KNOWN)).toEqual(['ghost'])
+  })
+
+  test('accepts the item-field object form as well as a bare string', () => {
+    // A paragraph/bullet commits as {text, unverified, unverifiedReason};
+    // title/summary/heading commit as a plain string. commit() hands whichever
+    // the field type produced straight to this function.
+    expect(findInvalidInlineLinkTargets({ text: '[a](ghost)' }, KNOWN)).toEqual(['ghost'])
+  })
+
+  test('returns nothing for a null, undefined, or non-text value', () => {
+    expect(findInvalidInlineLinkTargets(null, KNOWN)).toEqual([])
+    expect(findInvalidInlineLinkTargets(undefined, KNOWN)).toEqual([])
+    expect(findInvalidInlineLinkTargets({}, KNOWN)).toEqual([])
+  })
+
+  test('does not mistake a bracketed phrase with no link for a link', () => {
+    expect(
+      findInvalidInlineLinkTargets('A [bracketed] phrase (and a parenthetical).', KNOWN)
+    ).toEqual([])
+  })
+})
+
 describe('INLINE_LINK_TARGET_RULE', () => {
   test('is a reviewer-facing sentence naming all three accepted forms', () => {
     // Rendered into the link tool's visually-hidden description span, so it is
