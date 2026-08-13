@@ -1,6 +1,7 @@
 /* Optional network sync layer on top of window.reviewState (localStorage).
    Talks to the /api/review-state routes added to server.ts (see
-   CLAUDE.md's "Review-state sync backend" section). Entirely additive: the
+   the `hhvc-review-sync-backend` skill, extracted from CLAUDE.md; AGENTS.md
+   carries the same section in full). Entirely additive: the
    synchronous core window.reviewState API is untouched, and every function
    here is a no-op whenever no sync URL/token is configured, so the app
    keeps working fully offline exactly as it did before this file existed.
