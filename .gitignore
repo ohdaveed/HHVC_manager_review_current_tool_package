@@ -77,6 +77,12 @@ google-service-account.json
 # created verbatim as a literal directory name since WSL doesn't parse
 # backslashes as path separators). Not real repo content if it recurs.
 /C:*
+# The same bug also emits a UNC-shaped variant when the tool resolves an
+# undefined home directory against the WSL share — a literal directory named
+# "\\wsl.localhost\Ubuntu\...\undefined\...\lighthouse.<id>". The /C:* rule
+# above cannot match it, since that name starts with backslashes rather than a
+# drive letter, so it showed up as untracked noise in every `git status`.
+/\\\\*
 
 # Project-local SQLite scratch dirs created by the server integration tests
 # (tests/review-api-server.test.js, tests/ai-assist-server.test.js). Both call
