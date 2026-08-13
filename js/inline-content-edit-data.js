@@ -13,26 +13,155 @@
    them here too would race that existing path on every page load. */
 
 /**
- * The only section-level field kinds this feature ever diffs or writes.
- * Cards, callouts, table cells, step text/bullets, and every other section
- * shape are out of scope — see the `hhvc-inline-content-editing` skill
- * (extracted from CLAUDE.md; AGENTS.md carries the same section in full).
+ * Every field a reviewer can edit on the mockup, as the path shape its
+ * stored section_edits entry uses and the value shape that entry must have.
+ * This list IS the feature's scope, in one place, and four things read it:
+ * computeSectionEdits (which containers to diff), applyContentEditsToPageData
+ * (what a stored value may be), editableItemKind (how one item inside an
+ * array is written back), and js/inline-content-edit.js (which paths its
+ * widgets may open).
+ *
+ * The four kinds:
+ * - `string` — a plain string field (a heading, a step title, a callout's
+ *   text, a contact address).
+ * - `textArray` — an array of body-copy items, each a plain string or the
+ *   tagged {text, unverified?, unverifiedReason?} object the Unverified pill
+ *   already renders.
+ * - `stringArray` — an array of plain strings whose renderer prints them
+ *   directly (a phone number, a spotlight paragraph). A tagged object here
+ *   renders as "[object Object]", which is why it is a separate kind rather
+ *   than a loosening of textArray.
+ * - `table` — an array of row arrays of plain strings.
+ *
+ * **Card fields are absent deliberately and must stay absent.** A card's own
+ * `text` renders nowhere: an inheriting card publishes the DESTINATION page's
+ * summary (see "Card descriptions are inherited, not printed" in AGENTS.md),
+ * so an edit recorded here would persist a value the renderer ignores and
+ * reappear as the old text on the next paint. `karl` notes and `editorNote`
+ * are absent for a different reason — they are CMS annotations about the
+ * content rather than the content itself — and the SEO fields are absent
+ * because the editor panel already owns them.
+ *
+ * `example` exists so tests/inline-content-edit-data.test.js can assert the
+ * whole list by value rather than by spot-check. A shape whose example does
+ * not match its own pattern is a contradiction the test below catches.
  */
-const IN_SCOPE_SECTION_FIELD_SUFFIXES = ['heading', 'paragraphs', 'bullets']
+const EDITABLE_FIELD_SHAPES = [
+  { pattern: /^sections\.\d+\.heading$/, kind: 'string', example: 'sections.0.heading' },
+  { pattern: /^sections\.\d+\.paragraphs$/, kind: 'textArray', example: 'sections.0.paragraphs' },
+  { pattern: /^sections\.\d+\.bullets$/, kind: 'textArray', example: 'sections.0.bullets' },
+  { pattern: /^sections\.\d+\.table$/, kind: 'table', example: 'sections.0.table' },
+  {
+    pattern: /^sections\.\d+\.callout\.title$/,
+    kind: 'string',
+    example: 'sections.0.callout.title',
+  },
+  { pattern: /^sections\.\d+\.callout\.text$/, kind: 'string', example: 'sections.0.callout.text' },
+  {
+    pattern: /^sections\.\d+\.steps\.\d+\.title$/,
+    kind: 'string',
+    example: 'sections.0.steps.0.title',
+  },
+  {
+    pattern: /^sections\.\d+\.steps\.\d+\.text$/,
+    kind: 'textArray',
+    example: 'sections.0.steps.0.text',
+  },
+  {
+    pattern: /^sections\.\d+\.steps\.\d+\.bullets$/,
+    kind: 'textArray',
+    example: 'sections.0.steps.0.bullets',
+  },
+  {
+    pattern: /^sections\.\d+\.steps\.\d+\.callout\.title$/,
+    kind: 'string',
+    example: 'sections.0.steps.0.callout.title',
+  },
+  {
+    pattern: /^sections\.\d+\.steps\.\d+\.callout\.text$/,
+    kind: 'string',
+    example: 'sections.0.steps.0.callout.text',
+  },
+  { pattern: /^whatToKnow\.cost$/, kind: 'string', example: 'whatToKnow.cost' },
+  { pattern: /^whatToKnow\.thingsToKnow$/, kind: 'textArray', example: 'whatToKnow.thingsToKnow' },
+  { pattern: /^whatToKnow\.items$/, kind: 'textArray', example: 'whatToKnow.items' },
+  { pattern: /^spotlight\.title$/, kind: 'string', example: 'spotlight.title' },
+  // textArray rather than stringArray even though build_scripts/schema.js
+  // types the authored field as string[]: this renders through
+  // paragraphList(), the same helper section paragraphs use, so it already
+  // handles the tagged item form and shows the Unverified pill on an edited
+  // entry. That schema types what pages/*.js may CONTAIN; a reviewer's edit
+  // lives in review state and never reaches it.
+  { pattern: /^spotlight\.paragraphs$/, kind: 'textArray', example: 'spotlight.paragraphs' },
+  { pattern: /^contact\.address$/, kind: 'string', example: 'contact.address' },
+  { pattern: /^contact\.hours$/, kind: 'string', example: 'contact.hours' },
+  { pattern: /^contact\.phone$/, kind: 'stringArray', example: 'contact.phone' },
+  { pattern: /^contact\.email$/, kind: 'stringArray', example: 'contact.email' },
+  { pattern: /^contact\.other$/, kind: 'stringArray', example: 'contact.other' },
+]
 
 /**
- * Path pattern for a section_edits key, built from the canonical suffix list
- * above rather than a separate literal. build_scripts/review-state-schema.js
- * and js/review-state-validation.js each restate this same pattern (they
- * can't import it — see their own comments for why), and validate the SAME
- * record before it ever reaches applyContentEditsToPageData below. This
- * check exists anyway as defense-in-depth: a value that predates those
- * schemas, or reaches this function through some future caller that
- * bypasses them, must not corrupt page.sections just because it matched a
- * looser check upstream.
+ * The kind of container a section_edits path addresses, or null when the
+ * path is outside the feature entirely.
+ * @param {string} path
+ * @returns {'string'|'textArray'|'stringArray'|'table'|null}
+ */
+function editableFieldKind(path) {
+  if (typeof path !== 'string') return null
+  const shape = EDITABLE_FIELD_SHAPES.find((entry) => entry.pattern.test(path))
+  return shape ? shape.kind : null
+}
+
+/**
+ * How ONE item a reviewer edits should be written back onto the page object.
+ *
+ * `taggedText` items get the {text, unverified: true, unverifiedReason}
+ * object form, which the existing Unverified pill renders with no renderer
+ * change. `plainString` covers both a whole-field string (a heading, a step
+ * title) and a single item of a stringArray or table, whose renderers print
+ * the value directly — writing the tagged object into one of those renders
+ * the literal "[object Object]" on the mockup.
+ *
+ * A path that addresses neither (a card, a karl note) returns null, and the
+ * caller refuses to open an editor for it.
+ * @param {string} path an item path (`sections.0.bullets.2`) or a whole-field path
+ * @returns {'taggedText'|'plainString'|null}
+ */
+function editableItemKind(path) {
+  if (typeof path !== 'string') return null
+  const ownKind = editableFieldKind(path)
+  if (ownKind) return ownKind === 'string' ? 'plainString' : null
+  // An item path: drop trailing index segments until a registered container
+  // path is left. A table cell needs two (row, then column); every array
+  // item needs one.
+  let container = path
+  for (let depth = 0; depth < 2; depth += 1) {
+    const cut = container.lastIndexOf('.')
+    if (cut === -1) return null
+    const trailing = container.slice(cut + 1)
+    if (!/^\d+$/.test(trailing)) return null
+    container = container.slice(0, cut)
+    const kind = editableFieldKind(container)
+    if (kind === 'textArray') return 'taggedText'
+    if (kind === 'stringArray') return 'plainString'
+    if (kind === 'table') return depth === 1 ? 'plainString' : null
+    if (kind) return null
+  }
+  return null
+}
+
+/**
+ * Path pattern for a section_edits key. Kept as a single regex because
+ * build_scripts/review-state-schema.js and js/review-state-validation.js
+ * each restate this same contract (they can't import it — see their own
+ * comments for why) and validate the SAME record before it ever reaches
+ * applyContentEditsToPageData below. This check exists anyway as
+ * defense-in-depth: a value that predates those schemas, or reaches this
+ * function through some future caller that bypasses them, must not corrupt
+ * page.sections just because it matched a looser check upstream.
  */
 const SECTION_EDIT_PATH_PATTERN = new RegExp(
-  `^sections\\.\\d+\\.(${IN_SCOPE_SECTION_FIELD_SUFFIXES.join('|')})$`
+  `^(?:${EDITABLE_FIELD_SHAPES.map((entry) => entry.pattern.source.replace(/^\^|\$$/g, '')).join('|')})$`
 )
 
 /**
@@ -65,16 +194,27 @@ function isValidSectionEditItem(item) {
 }
 
 /**
- * Whether a section_edits value matches the shape its path's suffix
- * requires: a string for `heading`, or an array of isValidSectionEditItem
- * entries for `paragraphs`/`bullets`.
- * @param {string} suffix one of IN_SCOPE_SECTION_FIELD_SUFFIXES
+ * Whether a section_edits value matches the shape its path's kind requires.
+ *
+ * Takes the KIND rather than the path so the two validator restatements
+ * (build_scripts/review-state-schema.js, js/review-state-validation.js) can
+ * express the same rule against their own path matching. A path with no kind
+ * has already been rejected by the caller.
+ * @param {'string'|'textArray'|'stringArray'|'table'|null} kind
  * @param {unknown} value
  * @returns {boolean}
  */
-function isValidSectionEditValue(suffix, value) {
-  if (suffix === 'heading') return typeof value === 'string'
-  return Array.isArray(value) && value.every(isValidSectionEditItem)
+function isValidSectionEditValue(kind, value) {
+  if (kind === 'string') return typeof value === 'string'
+  if (kind === 'textArray') return Array.isArray(value) && value.every(isValidSectionEditItem)
+  if (kind === 'stringArray')
+    return Array.isArray(value) && value.every((item) => typeof item === 'string')
+  if (kind === 'table')
+    return (
+      Array.isArray(value) &&
+      value.every((row) => Array.isArray(row) && row.every((cell) => typeof cell === 'string'))
+    )
+  return false
 }
 
 /**
@@ -109,21 +249,69 @@ function deepEqual(a, b) {
 function computeSectionEdits(page, originalPage) {
   if (!page || typeof page !== 'object') return {}
   if (!originalPage || typeof originalPage !== 'object') return {}
-  const sections = Array.isArray(page.sections) ? page.sections : []
-  const originalSections = Array.isArray(originalPage.sections) ? originalPage.sections : []
 
   const edits = {}
-  sections.forEach((section, index) => {
-    const originalSection = originalSections[index]
-    for (const suffix of IN_SCOPE_SECTION_FIELD_SUFFIXES) {
-      const current = section?.[suffix]
-      const original = originalSection?.[suffix]
-      if (current === undefined && original === undefined) continue
-      if (deepEqual(current, original)) continue
-      edits[`sections.${index}.${suffix}`] = current
-    }
-  })
+  for (const path of editableContainerPaths(page, originalPage)) {
+    const current = getByPath(page, path)
+    const original = getByPath(originalPage, path)
+    if (current === undefined && original === undefined) continue
+    if (deepEqual(current, original)) continue
+    edits[path] = current
+  }
   return edits
+}
+
+/**
+ * Every concrete container path worth diffing for one page — EDITABLE_FIELD_SHAPES
+ * with its `\d+` placeholders expanded against the real section and step
+ * counts.
+ *
+ * Counts come from the union of the live page and the original, not from the
+ * live page alone: a reviewer can only edit fields that exist, but a page
+ * whose source lost a section since an edit was recorded still needs that
+ * index visited, or the stale saved value would never be reported as a
+ * divergence and would sit in storage forever.
+ * @param {object} page
+ * @param {object} originalPage
+ * @returns {string[]}
+ */
+function editableContainerPaths(page, originalPage) {
+  const paths = []
+  const sectionCount = Math.max(
+    Array.isArray(page.sections) ? page.sections.length : 0,
+    Array.isArray(originalPage.sections) ? originalPage.sections.length : 0
+  )
+  for (let i = 0; i < sectionCount; i += 1) {
+    paths.push(
+      `sections.${i}.heading`,
+      `sections.${i}.paragraphs`,
+      `sections.${i}.bullets`,
+      `sections.${i}.table`,
+      `sections.${i}.callout.title`,
+      `sections.${i}.callout.text`
+    )
+    const steps = page.sections?.[i]?.steps
+    const originalSteps = originalPage.sections?.[i]?.steps
+    const stepCount = Math.max(
+      Array.isArray(steps) ? steps.length : 0,
+      Array.isArray(originalSteps) ? originalSteps.length : 0
+    )
+    for (let j = 0; j < stepCount; j += 1) {
+      paths.push(
+        `sections.${i}.steps.${j}.title`,
+        `sections.${i}.steps.${j}.text`,
+        `sections.${i}.steps.${j}.bullets`,
+        `sections.${i}.steps.${j}.callout.title`,
+        `sections.${i}.steps.${j}.callout.text`
+      )
+    }
+  }
+  // The page-level containers carry no index to expand, so they are listed
+  // once by taking every shape whose pattern contains no `\d`.
+  for (const shape of EDITABLE_FIELD_SHAPES) {
+    if (!shape.pattern.source.includes('\\d')) paths.push(shape.example)
+  }
+  return paths
 }
 
 /**
@@ -172,8 +360,8 @@ function applyContentEditsToPageData(page, savedRecord) {
   if (!sectionEdits || typeof sectionEdits !== 'object' || Array.isArray(sectionEdits)) return false
   let changedAny = false
   for (const [path, value] of Object.entries(sectionEdits)) {
-    const match = SECTION_EDIT_PATH_PATTERN.exec(path)
-    if (!match || !isValidSectionEditValue(match[1], value)) continue
+    const kind = editableFieldKind(path)
+    if (!kind || !isValidSectionEditValue(kind, value)) continue
     const before = getByPath(page, path)
     if (!setByPath(page, path, value)) continue
     if (!sectionEditValuesEqual(before, value)) changedAny = true
@@ -231,7 +419,9 @@ if (typeof window !== 'undefined') {
   window.inlineEditData = {
     computeSectionEdits,
     applyContentEditsToPageData,
-    IN_SCOPE_SECTION_FIELD_SUFFIXES,
+    EDITABLE_FIELD_SHAPES,
+    editableFieldKind,
+    editableItemKind,
     SECTION_EDIT_PATH_PATTERN,
     isValidSectionEditValue,
   }
@@ -240,7 +430,9 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     computeSectionEdits,
     applyContentEditsToPageData,
-    IN_SCOPE_SECTION_FIELD_SUFFIXES,
+    EDITABLE_FIELD_SHAPES,
+    editableFieldKind,
+    editableItemKind,
     SECTION_EDIT_PATH_PATTERN,
     isValidSectionEditValue,
   }

@@ -269,16 +269,33 @@ function button(label, kind = 'primary', target = null, url = null) {
   const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
   return `<button type="button" class="${cls}"${attr}>${karlTag(kind === 'secondary' ? 'Links: Related Transaction page' : 'Button: Primary CTA', 'placement')}${escapeHtml(label)}</button>`
 }
-function renderCallout(callout, extraClass = '') {
+/**
+ * @param {object|null} callout
+ * @param {string} [extraClass]
+ * @param {string} [pathPrefix] Dot-path of the callout object itself, e.g.
+ *   'sections.2.callout' or 'sections.2.steps.0.callout'. Empty for a callout
+ *   the renderer synthesizes rather than reads off the page (the audience
+ *   framing box below), which has no field on the page object to write back
+ *   to and so must not advertise itself as editable.
+ * @returns {string}
+ */
+function renderCallout(callout, extraClass = '', pathPrefix = '') {
   if (!callout) return ''
   const variant = callout.variant || 'info'
+  // The title and the body text carry their own paths on the elements that
+  // already wrap them — a <strong> and a <span>. Both sit directly inside the
+  // <aside>, which is flow content, so the <div> holder EditorSession.open()
+  // swaps in via replaceWith() is valid in either position. Wrapping the body
+  // in a <p> instead would add block spacing the callout never had.
+  const titleAttr = pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.title`)}"` : ''
+  const textAttr = pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.text`)}"` : ''
   const title =
     callout.title === false
       ? ''
       : callout.title
-        ? `<strong>${escapeHtml(callout.title)}:</strong> `
+        ? `<strong${titleAttr}>${escapeHtml(callout.title)}:</strong> `
         : ''
-  return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body')}${title}${formatMarkdown(callout.text)}</aside>`
+  return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body')}${title}<span${textAttr}>${formatMarkdown(callout.text)}</span></aside>`
 }
 /**
  * Non-Transaction pages don't get Karl's "What to know before you start" box
@@ -532,16 +549,33 @@ function renderSteps(steps = [], pathPrefix = '') {
   return `<ol class="step-list">${steps
     .map(
       (s, index) =>
-        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout) : ''}</div></li>`
+        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3${pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}.title`)}"` : ''}>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout, '', pathPrefix ? `${pathPrefix}.${index}.callout` : '') : ''}</div></li>`
     )
     .join('')}</ol>`
 }
 function isCodeTranslationTable(head = []) {
   return head.length === 2 && head[0] === 'Health code' && head[1] === 'In plain language'
 }
-function renderTable(rows = [], pageType = 'generic', caption = '') {
+/**
+ * @param {string[][]} rows
+ * @param {string} [pageType]
+ * @param {string} [caption]
+ * @param {string} [pathPrefix] Dot-path of the table array itself, e.g.
+ *   'sections.3.table'. Each cell is addressed by row and column
+ *   (`sections.3.table.1.0`) and edits store the whole table, the same
+ *   whole-field rule bullets follow — a per-cell key would go stale the
+ *   moment a row is inserted.
+ * @returns {string}
+ */
+function renderTable(rows = [], pageType = 'generic', caption = '', pathPrefix = '') {
   if (!rows.length) return ''
   const [head, ...body] = rows
+  // A cell's editable element is a <span> INSIDE the cell, never the <td>
+  // itself: EditorSession.open() mounts by replacing its target
+  // (target.replaceWith(holder)), and replacing a <td> would tear the row
+  // apart. A <div> holder inside the cell is valid content.
+  const cellAttr = (row, column) =>
+    pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${row}.${column}`)}"` : ''
   const codeTranslation = isCodeTranslationTable(head)
   const previewNote =
     pageType === 'information'
@@ -549,14 +583,16 @@ function renderTable(rows = [], pageType = 'generic', caption = '') {
       : ''
   const tableClass = codeTranslation ? 'table table--code-translation' : 'table'
   const table = `<table class="${tableClass}"><thead><tr>${head
-    .map((h) => `<th scope="col">${formatMarkdown(h)}</th>`)
+    .map((h, i) => `<th scope="col"><span${cellAttr(0, i)}>${formatMarkdown(h)}</span></th>`)
     .join('')}</tr></thead><tbody>${body
     .map(
-      (r) =>
+      (r, rowIndex) =>
         `<tr>${r
           .map((c, i) => {
             const scope = codeTranslation && i === 0 ? ' scope="row"' : ''
-            return `<td${scope}>${formatMarkdown(c)}</td>`
+            // rowIndex + 1: `body` is rows[1..], so the stored path has to
+            // count the header row the destructure above removed.
+            return `<td${scope}><span${cellAttr(rowIndex + 1, i)}>${formatMarkdown(c)}</span></td>`
           })
           .join('')}</tr>`
     )
@@ -590,14 +626,32 @@ function resolveContact(page) {
 function renderWhatToKnow(whatToKnow, page) {
   const data = whatToKnow || resolveWhatToKnow(page)
   if (!data) return ''
+  // Editable only when the box is reading page.whatToKnow. resolveWhatToKnow()
+  // above SYNTHESIZES a default box for a Transaction page that authored none,
+  // and that text lives in this renderer rather than on the page object — an
+  // edit would address whatToKnow.cost on a page with no whatToKnow at all,
+  // where setByPath finds no parent to write into and the reviewer's change
+  // disappears with nothing erroring. No field, no affordance.
+  const editable = Boolean(page.whatToKnow) && data === page.whatToKnow
   const cost = data.cost || (normalizePageType(page.type) === 'transaction' ? 'Free' : '')
+  const costAttr = editable && data.cost ? ' data-rewrite-field="whatToKnow.cost"' : ''
+  // Which of the two array fields this page uses decides the stored path, so
+  // it is resolved once here rather than inferred later: an edit recorded
+  // under whatToKnow.items on a page whose array is thingsToKnow would reapply
+  // onto a field the renderer never reads.
+  const thingsField = data.thingsToKnow ? 'thingsToKnow' : data.items ? 'items' : ''
   const things = data.thingsToKnow || data.items || []
   const normalizedThings = Array.isArray(things)
-    ? things.map((item) =>
-        typeof item === 'string'
-          ? { label: '', text: item }
-          : { label: item.label || '', text: item.text || '' }
-      )
+    ? things.map((item, index) => ({
+        label: typeof item === 'string' ? '' : item.label || '',
+        text: typeof item === 'string' ? item : item.text || '',
+        unverified: typeof item === 'string' ? false : Boolean(item.unverified),
+        unverifiedReason: typeof item === 'string' ? '' : item.unverifiedReason || '',
+        // The path has to carry the SOURCE index: the labeled and unlabeled
+        // entries are rendered as two separate lists below, so an index taken
+        // from either filtered list would address the wrong entry.
+        path: editable && thingsField ? `whatToKnow.${thingsField}.${index}` : '',
+      }))
     : []
   // "Who this page is for" is folded in here from page.audience rather than
   // duplicated as authored thingsToKnow text, so the audience list has one
@@ -607,23 +661,37 @@ function renderWhatToKnow(whatToKnow, page) {
     ? `<div class="what-to-know-subsection"><h3>Who this is for</h3><ul>${renderAudience(audienceItems)}</ul></div>`
     : ''
   const costHtml = cost
-    ? `<div class="what-to-know-subsection what-to-know-cost"><h3>Cost</h3><p>${escapeHtml(cost)}</p></div>`
+    ? `<div class="what-to-know-subsection what-to-know-cost"><h3>Cost</h3><p${costAttr}>${escapeHtml(cost)}</p></div>`
     : ''
   // Real sf.gov renders each "Things to know" entry as its own named H3
   // subsection (e.g. "What to report", "Response time varies" — confirmed
   // against 4 live Transaction pages). A labeled entry gets that treatment;
   // an unlabeled one has no name to give its own heading, so those fall back
   // to one shared "Things to know" list, same as before this change.
+  const itemAttr = (item) => (item.path ? ` data-rewrite-field="${escapeHtml(item.path)}"` : '')
+  const itemPill = (item) => (item.unverified ? unverifiedPill(item.unverifiedReason) : '')
   const labeledHtml = normalizedThings
     .filter((t) => t.label)
     .map(
       (t) =>
-        `<div class="what-to-know-subsection"><h3>${escapeHtml(t.label)}</h3><p>${formatMarkdown(t.text)}</p></div>`
+        `<div class="what-to-know-subsection"><h3>${escapeHtml(t.label)}</h3><p${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</p></div>`
     )
     .join('')
-  const unlabeled = normalizedThings.filter((t) => !t.label).map((t) => t.text)
+  const unlabeled = normalizedThings.filter((t) => !t.label)
+  // Rendered here rather than through renderTextItems() because each entry
+  // needs its own source-index path, which that helper has no parameter for —
+  // and its filtered position is not the index an edit must be stored under.
+  // The two-or-fewer/three-or-more switch it applies is preserved.
+  const unlabeledItemsHtml =
+    unlabeled.length <= 2
+      ? unlabeled
+          .map((t) => `<p${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</p>`)
+          .join('')
+      : `<ul>${unlabeled
+          .map((t) => `<li${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</li>`)
+          .join('')}</ul>`
   const unlabeledHtml = unlabeled.length
-    ? `<div class="what-to-know-subsection"><h3>Things to know</h3>${renderTextItems(unlabeled)}</div>`
+    ? `<div class="what-to-know-subsection"><h3>Things to know</h3>${unlabeledItemsHtml}</div>`
     : ''
   const body = `${audienceHtml}${costHtml}${labeledHtml}${unlabeledHtml}`
   if (!body) return ''
@@ -632,15 +700,27 @@ function renderWhatToKnow(whatToKnow, page) {
 function renderContactSection(contact, page) {
   const data = contact || resolveContact(page)
   if (!data) return ''
+  // Same rule as the What-to-know box: resolveContact() synthesizes a default
+  // block for Transaction and Information pages that authored none, and there
+  // is no page.contact for an edit to be written back into.
+  const editable = Boolean(page.contact) && data === page.contact
+  const attr = (path) => (editable ? ` data-rewrite-field="${escapeHtml(path)}"` : '')
+  // One <p> per entry rather than one <p> holding <br>-separated entries: an
+  // entry has to be its own element to carry its own path, and
+  // EditorSession.open() replaces that element with a <div> holder, which is
+  // not valid inside a <p>. The list reads the same.
+  const list = (field, values) =>
+    values
+      .map((value, index) => `<p${attr(`contact.${field}.${index}`)}>${escapeHtml(value)}</p>`)
+      .join('')
   const blocks = []
-  if (data.address) blocks.push(`<h3>Address</h3><p>${escapeHtml(data.address)}</p>`)
-  if (data.phone?.length)
-    blocks.push(`<h3>Phone</h3><p>${data.phone.map((p) => escapeHtml(p)).join('<br>')}</p>`)
-  if (data.email?.length)
-    blocks.push(`<h3>Email</h3><p>${data.email.map((e) => escapeHtml(e)).join('<br>')}</p>`)
-  if (data.hours) blocks.push(`<h3>Hours</h3><p>${escapeHtml(data.hours)}</p>`)
-  if (data.other?.length)
-    blocks.push(`<h3>Other</h3><p>${data.other.map((o) => escapeHtml(o)).join('<br>')}</p>`)
+  if (data.address)
+    blocks.push(`<h3>Address</h3><p${attr('contact.address')}>${escapeHtml(data.address)}</p>`)
+  if (data.phone?.length) blocks.push(`<h3>Phone</h3>${list('phone', data.phone)}`)
+  if (data.email?.length) blocks.push(`<h3>Email</h3>${list('email', data.email)}`)
+  if (data.hours)
+    blocks.push(`<h3>Hours</h3><p${attr('contact.hours')}>${escapeHtml(data.hours)}</p>`)
+  if (data.other?.length) blocks.push(`<h3>Other</h3>${list('other', data.other)}`)
   if (data.social?.length) {
     const links = data.social
       .map(
@@ -668,7 +748,7 @@ function renderSpotlightSection(section) {
   const cta = section.button
     ? button(section.button, 'primary', section.buttonTarget || null, section.buttonUrl || null)
     : ''
-  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement')}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout) : ''}${cta}</div></section>`
+  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement')}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout, '', base ? `${base}.callout` : '') : ''}${cta}</div></section>`
 }
 // Karl's Campaign "Top facts" widget: a boxed panel of named facts, reusing
 // the exact `what-to-know-subsection` H3-per-item markup/CSS
@@ -763,8 +843,10 @@ function renderSectionInner(section, pageType = 'generic') {
   inner += section.steps ? renderSteps(section.steps, base ? `${base}.steps` : '') : ''
   inner += bulletList(section.bullets || [], base ? `${base}.bullets` : '')
   inner += section.image ? renderImage(section.image) : ''
-  inner += section.table ? renderTable(section.table, pageType, section.heading || '') : ''
-  if (section.callout) inner += renderCallout(section.callout)
+  inner += section.table
+    ? renderTable(section.table, pageType, section.heading || '', base ? `${base}.table` : '')
+    : ''
+  if (section.callout) inner += renderCallout(section.callout, '', base ? `${base}.callout` : '')
   if (section.button)
     inner += button(
       section.button,
@@ -847,7 +929,7 @@ function renderSpotlight(spotlight) {
         spotlight.buttonUrl || null
       )
     : ''
-  return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement')}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2>${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [])}${cta}</div></div></section>`
+  return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement')}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2 data-rewrite-field="spotlight.title">${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [], 'spotlight.paragraphs')}${cta}</div></div></section>`
 }
 function resolveHeroCta(page, whatToDoSections) {
   if (normalizePageType(page.type) !== 'transaction') return null

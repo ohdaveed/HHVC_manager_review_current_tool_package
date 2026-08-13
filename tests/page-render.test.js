@@ -270,8 +270,13 @@ describe('Transaction page layout', () => {
       sections: [],
     }
     const html = ctx.renderPageMain(page)
-    expect(html).toContain('<h3>Phone</h3><p>311</p>')
-    expect(html).toContain('<h3>Email</h3><p>ehb@sfdph.org</p>')
+    // One <p> per entry, each carrying its own edit path: an entry has to be
+    // its own element to be separately editable, and the <div> holder the
+    // editor mounts is not valid inside a <p> shared by several entries.
+    expect(html).toContain('<h3>Phone</h3><p data-rewrite-field="contact.phone.0">311</p>')
+    expect(html).toContain(
+      '<h3>Email</h3><p data-rewrite-field="contact.email.0">ehb@sfdph.org</p>'
+    )
     expect(html).not.toContain('<strong>Phone</strong>')
   })
 
@@ -1366,7 +1371,7 @@ describe('renderWhatToKnow', () => {
     }
     const html = ctx.renderPageMain(page)
     expect(html).not.toContain('<strong>Cost:</strong>')
-    expect(html).toContain('<h3>Cost</h3><p>Free</p>')
+    expect(html).toContain('<h3>Cost</h3><p data-rewrite-field="whatToKnow.cost">Free</p>')
   })
 
   test('an unlabeled thingsToKnow entry falls back to one shared "Things to know" subsection', () => {
@@ -1398,7 +1403,9 @@ describe('renderWhatToKnow', () => {
       sections: [],
     }
     const html = ctx.renderPageMain(page)
-    expect(html).toContain('<h3>What to report</h3><p>Call 311 for help.</p>')
+    expect(html).toContain(
+      '<h3>What to report</h3><p data-rewrite-field="whatToKnow.thingsToKnow.0">Call 311 for help.</p>'
+    )
     expect(html).not.toContain('<h3>Things to know</h3>')
   })
 })

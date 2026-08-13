@@ -26,19 +26,27 @@ const VALID_DECISIONS = [
 
 /**
  * The path/value contract for a section_edits entry — see CLAUDE.md's
- * "Inline content editing" section. js/inline-content-edit-data.js's
- * computeSectionEdits() only ever writes a section's heading (a string) or
- * its paragraphs/bullets (an array of strings and/or
- * {text, unverified?, unverifiedReason?} objects), keyed at the whole-array
- * level rather than per item. Anything else — an unsupported suffix like
- * `sections.0.kind`, a per-index path, or a value of the wrong shape for its
- * suffix — is not something this feature ever produces, but a JSON backup or
- * a sync response is an external file/service this browser did not write:
- * an entry that doesn't match gets dropped rather than trusted, since
+ * "Inline content editing" section, whose canonical list is
+ * js/inline-content-edit-data.js's EDITABLE_FIELD_SHAPES. Every path a
+ * reviewer can edit resolves to one of four value kinds: a plain `string`, a
+ * `textArray` of strings and/or {text, unverified?, unverifiedReason?}
+ * objects, a `stringArray` of plain strings, or a `table` of row arrays of
+ * plain strings — each keyed at the whole-field level rather than per item.
+ * Anything else — an unsupported suffix like `sections.0.kind`, a card path,
+ * a per-index path, or a value of the wrong shape for its kind — is not
+ * something this feature ever produces, but a JSON backup or a sync response
+ * is an external file/service this browser did not write: an entry that
+ * doesn't match gets dropped rather than trusted, since
  * js/inline-content-edit-data.js's applyContentEditsToPageData() would
  * otherwise pass it straight to the generic setByPath() and corrupt
  * page.sections (e.g. replacing a paragraphs array with a bare string, which
  * breaks the next render when it iterates the array).
+ *
+ * The kinds differ in what they permit, and the differences are load-bearing
+ * rather than cosmetic: a tagged object in a `stringArray` (a contact phone
+ * number) or a `table` cell renders as the literal "[object Object]", since
+ * those renderers escape and print the value directly instead of running it
+ * through normalizeTextItem().
  *
  * Restated (not imported) in js/review-state-validation.js for the same
  * CJS/browser-Zod split reason VALID_DECISIONS above is restated, and
@@ -47,7 +55,37 @@ const VALID_DECISIONS = [
  * dual CJS/browser file with no ESM `export` surface either side can import
  * from. tests/review-state-schema.test.js pins the three together.
  */
-const SECTION_EDIT_PATH_PATTERN = /^sections\.\d+\.(heading|paragraphs|bullets)$/
+const SECTION_EDIT_VALUE_KINDS = [
+  [/^sections\.\d+\.heading$/, 'string'],
+  [/^sections\.\d+\.paragraphs$/, 'textArray'],
+  [/^sections\.\d+\.bullets$/, 'textArray'],
+  [/^sections\.\d+\.table$/, 'table'],
+  [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
+  [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
+  [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],
+  [/^sections\.\d+\.steps\.\d+\.callout\.(title|text)$/, 'string'],
+  [/^whatToKnow\.cost$/, 'string'],
+  [/^whatToKnow\.(thingsToKnow|items)$/, 'textArray'],
+  [/^spotlight\.title$/, 'string'],
+  [/^spotlight\.paragraphs$/, 'textArray'],
+  [/^contact\.(address|hours)$/, 'string'],
+  [/^contact\.(phone|email|other)$/, 'stringArray'],
+]
+
+/**
+ * The value kind a section_edits path addresses, or null when the path is
+ * outside the feature.
+ * @param {string} path
+ * @returns {'string'|'textArray'|'stringArray'|'table'|null}
+ */
+function sectionEditValueKind(path) {
+  const entry = SECTION_EDIT_VALUE_KINDS.find(([pattern]) => pattern.test(path))
+  return entry ? entry[1] : null
+}
+
+const SECTION_EDIT_PATH_PATTERN = new RegExp(
+  `^(?:${SECTION_EDIT_VALUE_KINDS.map(([pattern]) => pattern.source.replace(/^\^|\$$/g, '')).join('|')})$`
+)
 
 /**
  * The string-or-tagged-object shape a single paragraph/bullet item accepts.
@@ -76,12 +114,18 @@ const sectionEditTextItemSchema = z.union([
  * @returns {{ ok: true, value: unknown } | { ok: false }}
  */
 function validateSectionEditEntry(path, value) {
-  const match = SECTION_EDIT_PATH_PATTERN.exec(path)
-  if (!match) return { ok: false }
-  if (match[1] === 'heading') {
+  const kind = sectionEditValueKind(path)
+  if (!kind) return { ok: false }
+  if (kind === 'string') {
     return typeof value === 'string' ? { ok: true, value } : { ok: false }
   }
-  const parsed = z.array(sectionEditTextItemSchema).safeParse(value)
+  const schema =
+    kind === 'textArray'
+      ? z.array(sectionEditTextItemSchema)
+      : kind === 'stringArray'
+        ? z.array(z.string())
+        : z.array(z.array(z.string()))
+  const parsed = schema.safeParse(value)
   return parsed.success ? { ok: true, value: parsed.data } : { ok: false }
 }
 

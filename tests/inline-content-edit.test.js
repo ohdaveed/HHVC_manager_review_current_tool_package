@@ -39,6 +39,7 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
+const realInlineEditData = require('../js/inline-content-edit-data.js')
 require('../js/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
 // which commit() and the link tool both consult before accepting a link target.
 require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
@@ -125,6 +126,10 @@ async function mountInlineContentEdit({
   window.HHVC_DATA = { pages: { testPage: page }, order: [['testPage', 'Test']] }
   window.ORIGINAL_DATA = { pages: {} }
   window.utils = { ...realUtils, getCurrentKey: () => 'testPage' }
+  // The real classifier, not a stub: it is what decides whether a committed
+  // edit is written as tagged body copy or as a bare string, so stubbing it
+  // would make every write-shape assertion below test the stub.
+  window.inlineEditData = realInlineEditData
   window.renderPage = (key, skipHistory) => {
     renderPageCalls.push({ key, skipHistory })
   }
@@ -450,6 +455,156 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     await commitOpenField(mockPage)
 
     expect(page.sections[0].heading).toBe('New Heading')
+  })
+
+  // Found live, not by reading the code: a whatToKnow entry is {label, text},
+  // and the item write used to replace the stored item wholesale with the
+  // adapter's {text, unverified, unverifiedReason} object — deleting the label
+  // that renderWhatToKnow() prints as that entry's own H3 heading. The heading
+  // simply vanished from the mockup the moment a reviewer edited the paragraph
+  // underneath it, with nothing erroring.
+  // The Edited badge (and the Reset control that rides with it) used to be
+  // limited to headings and the three page-level scalars, so every other
+  // plain-string field — a step title, a callout, a table cell, a contact
+  // entry — was edited with nothing on the mockup to say so and no way back
+  // to the original. Paragraphs and bullets are unaffected: they carry the
+  // Unverified pill instead.
+  test('an edited step title gets the Edited badge and a reset control', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', steps: [{ title: 'Step one', text: ['do this'] }] }],
+      },
+    })
+    window.ORIGINAL_DATA = {
+      pages: {
+        testPage: {
+          title: 'T',
+          summary: 'S',
+          sections: [{ heading: 'H', steps: [{ title: 'Step one', text: ['do this'] }] }],
+        },
+      },
+    }
+    page.sections[0].steps[0].title = 'Step one, edited'
+    mockPage.innerHTML = '<h3 data-rewrite-field="sections.0.steps.0.title">Step one, edited</h3>'
+
+    window.inlineEdit.decorateEditedFields()
+
+    const field = mockPage.querySelector('[data-rewrite-field="sections.0.steps.0.title"]')
+    expect(field.querySelector('.inline-edit-badge')).not.toBeNull()
+    expect(field.querySelector('[data-inline-edit-reset]')).not.toBeNull()
+  })
+
+  test('an unedited field whose stored value is the tagged object form gets no badge', async () => {
+    // Both sides of the comparison go through readScalarValue, which unwraps
+    // {label, text} to its text. Comparing a raw object against the rendered
+    // string would never match, so every What-to-know entry on an untouched
+    // page would claim to have been edited.
+    const item = { label: 'Reporting anonymously', text: 'Same text.' }
+    const { mockPage } = await mountInlineContentEdit({
+      page: { title: 'T', summary: 'S', whatToKnow: { thingsToKnow: [item] }, sections: [] },
+    })
+    window.ORIGINAL_DATA = {
+      pages: {
+        testPage: {
+          title: 'T',
+          summary: 'S',
+          whatToKnow: { thingsToKnow: [{ ...item }] },
+          sections: [],
+        },
+      },
+    }
+    mockPage.innerHTML = '<p data-rewrite-field="whatToKnow.thingsToKnow.0">Same text.</p>'
+
+    window.inlineEdit.decorateEditedFields()
+
+    expect(mockPage.querySelector('.inline-edit-badge')).toBeNull()
+  })
+
+  test('committing a labeled whatToKnow item keeps its label', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        whatToKnow: {
+          thingsToKnow: [{ label: 'Reporting anonymously', text: 'Original entry text.' }],
+        },
+        sections: [],
+      },
+    })
+    mockPage.innerHTML =
+      '<p data-rewrite-field="whatToKnow.thingsToKnow.0">Original entry text.</p>'
+    click(mockPage.querySelector('[data-rewrite-field="whatToKnow.thingsToKnow.0"]'))
+    await setEditorBlockText(mockPage, 'Edited entry text.')
+
+    await commitOpenField(mockPage)
+
+    expect(page.whatToKnow.thingsToKnow[0]).toEqual({
+      label: 'Reporting anonymously',
+      text: 'Edited entry text.',
+      unverified: true,
+      unverifiedReason: 'Manually edited during review',
+    })
+  })
+
+  // The other half of the same rule: a field whose renderer escapes and prints
+  // the value directly must stay a bare string. The tagged object renders as
+  // the literal "[object Object]" there, which is what made these separate
+  // kinds rather than one loosened check.
+  test('committing a table cell writes a plain string, not the tagged object', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [
+          {
+            heading: 'H',
+            table: [
+              ['Head A', 'Head B'],
+              ['cell 1', 'cell 2'],
+            ],
+          },
+        ],
+      },
+    })
+    mockPage.innerHTML = '<td><span data-rewrite-field="sections.0.table.1.0">cell 1</span></td>'
+    click(mockPage.querySelector('[data-rewrite-field="sections.0.table.1.0"]'))
+    await setEditorBlockText(mockPage, 'edited cell')
+
+    await commitOpenField(mockPage)
+
+    expect(page.sections[0].table[1]).toEqual(['edited cell', 'cell 2'])
+  })
+
+  test('committing a contact phone entry writes a plain string', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: { title: 'T', summary: 'S', contact: { phone: ['311'] }, sections: [] },
+    })
+    mockPage.innerHTML = '<p data-rewrite-field="contact.phone.0">311</p>'
+    click(mockPage.querySelector('[data-rewrite-field="contact.phone.0"]'))
+    await setEditorBlockText(mockPage, '415-555-0100')
+
+    await commitOpenField(mockPage)
+
+    expect(page.contact.phone).toEqual(['415-555-0100'])
+  })
+
+  test('committing a step title writes a plain string', async () => {
+    const { mockPage, page } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        sections: [{ heading: 'H', steps: [{ title: 'Step one', text: ['do this'] }] }],
+      },
+    })
+    mockPage.innerHTML = '<h3 data-rewrite-field="sections.0.steps.0.title">Step one</h3>'
+    click(mockPage.querySelector('[data-rewrite-field="sections.0.steps.0.title"]'))
+    await setEditorBlockText(mockPage, 'Step one, edited')
+
+    await commitOpenField(mockPage)
+
+    expect(page.sections[0].steps[0].title).toBe('Step one, edited')
   })
 
   test('committing a paragraph edit writes the tagged {text, unverified} object form', async () => {

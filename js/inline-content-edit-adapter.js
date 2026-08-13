@@ -23,15 +23,34 @@
    its own. */
 
 /**
- * The six editable field kinds. Scalar fields resolve to a plain string on
+ * The editable field kinds. Scalar fields resolve to a plain string on
  * commit; paragraph/bullet items resolve to the same tagged object form
  * writeScalarValue already writes for a manual edit
  * (js/inline-content-edit.js:100-104) — this module's job is field-shape
  * fidelity, not a new tagging convention.
+ *
+ * `markdownText` is the one kind that splits those two properties apart, and
+ * it exists because a callout's body and a table cell are both: the renderer
+ * runs them through formatMarkdown(), so their `[label](target)` links must
+ * survive a round trip like a paragraph's — but the page schema stores them
+ * as bare strings, so the tagged object a paragraph commits to would render
+ * as the literal "[object Object]". It therefore reads and writes markdown
+ * like an item while resolving to a plain string like a scalar.
  */
-const SCALAR_FIELD_TYPES = ['title', 'summary', 'primaryCta', 'heading']
+const SCALAR_FIELD_TYPES = ['title', 'summary', 'primaryCta', 'heading', 'markdownText']
 const ITEM_FIELD_TYPES = ['paragraph', 'bullet']
 const FIELD_TYPES = [...SCALAR_FIELD_TYPES, ...ITEM_FIELD_TYPES]
+
+/**
+ * Whether a field type's text carries the markdown the renderer interprets
+ * (bold, and the inline links the link tool writes), as opposed to plain text
+ * whose renderer prints it verbatim.
+ * @param {string} fieldType one of FIELD_TYPES
+ * @returns {boolean}
+ */
+function isMarkdownFieldType(fieldType) {
+  return ITEM_FIELD_TYPES.includes(fieldType) || fieldType === 'markdownText'
+}
 
 /**
  * The `unverifiedReason` stamped on a manually edited paragraph or bullet.
@@ -220,7 +239,7 @@ function blocksToEditingHtml(blocks) {
  */
 function pageValueToEditorData(fieldType, value) {
   const text = typeof value === 'string' ? value : ''
-  const html = isItemFieldType(fieldType)
+  const html = isMarkdownFieldType(fieldType)
     ? markdownToEditingHtml(text)
     : plainTextToEditingHtml(text)
   return { blocks: [{ type: 'paragraph', data: { text: html } }] }
@@ -245,7 +264,9 @@ function pageValueToEditorData(fieldType, value) {
 function editorDataToPageValue(fieldType, outputData) {
   const html = blocksToEditingHtml(outputData?.blocks)
   const isItem = isItemFieldType(fieldType)
-  const text = isItem ? editingHtmlToMarkdown(html) : editingHtmlToPlainText(html)
+  const text = isMarkdownFieldType(fieldType)
+    ? editingHtmlToMarkdown(html)
+    : editingHtmlToPlainText(html)
   if (isItem) {
     return { text, unverified: true, unverifiedReason: MANUAL_EDIT_UNVERIFIED_REASON }
   }
@@ -261,6 +282,7 @@ if (typeof window !== 'undefined') {
     plainTextToEditingHtml,
     editingHtmlToPlainText,
     isItemFieldType,
+    isMarkdownFieldType,
     FIELD_TYPES,
     SCALAR_FIELD_TYPES,
     ITEM_FIELD_TYPES,
@@ -276,6 +298,7 @@ if (typeof module !== 'undefined' && module.exports) {
     plainTextToEditingHtml,
     editingHtmlToPlainText,
     isItemFieldType,
+    isMarkdownFieldType,
     FIELD_TYPES,
     SCALAR_FIELD_TYPES,
     ITEM_FIELD_TYPES,
