@@ -4,15 +4,18 @@ This package is the manager-review version of the current HHVC/SF.gov mockup too
 
 ## Current state
 
-The app currently contains **19 page mockups** in `window.HHVC_DATA.order` (consolidated from
-the earlier 33/40-page set in PR #60):
+The app currently contains **29 page mockups** in `window.HHVC_DATA.order` (consolidated from
+the earlier 33/40-page set in PR #60, then expanded again with gap-fill and new pages in later
+PRs):
 
 - 1 Agency page
-- 2 Resource Collection pages
-- 8 Transaction pages
+- 1 Topic page
+- 1 About us page
+- 3 Resource Collection pages
+- 14 Transaction pages
 - 6 Information pages
 - 1 Report page
-- 1 Campaign page
+- 2 Campaign pages
 
 The mockup is a review aid. It does not publish content, change SF.gov, replace source review, or replace legal/SME review.
 
@@ -69,7 +72,7 @@ The sticky bar includes:
 
 - Decision chip and the current page title
 - The active queue filter, when one is set
-- Review progress (`X/19 reviewed`) — counts pages whose decision has moved off
+- Review progress (`X/29 reviewed`) — counts pages whose decision has moved off
   the default `Needs review`
 - **Previous** / **Next** navigation, which follow the active filter
 - **Show workspace** / **Hide workspace** toggle
@@ -295,27 +298,37 @@ Keep **dashboard UX changes** (layout, queue, workspace tabs, review helpers) an
 
 ## Pages included
 
-| #   | Page key            | Page title                                                  | Type                |
-| --- | ------------------- | ----------------------------------------------------------- | ------------------- |
-| 1   | `pestsTopic`        | Healthy Housing and Vector Control                          | Agency              |
-| 2   | `rodentsReport`     | Report rats, mice, and other four-legged problems           | Transaction         |
-| 3   | `filthReport`       | Report garbage, filth, and overgrown vegetation             | Transaction         |
-| 4   | `insectsReport`     | Report cockroaches, mosquitoes, and other insects           | Transaction         |
-| 5   | `recordsHub`        | Look up building records                                    | Resource Collection |
-| 6   | `findRecords`       | Find complaints and inspection records                      | Transaction         |
-| 7   | `findViolations`    | Look up residential health code violations                  | Transaction         |
-| 8   | `findHotelRecords`  | Find residential hotel and shelter records                  | Transaction         |
-| 9   | `publicRecords`     | Make a public records request                               | Transaction         |
-| 10  | `ownerHub`          | Property owner responsibilities                             | Resource Collection |
-| 11  | `noticeOfViolation` | Fix your Healthy Housing and Vector Control violation       | Transaction         |
-| 12  | `payFee`            | Pay your annual Healthy Housing fee for apartment buildings | Transaction         |
-| 13  | `scopeInfo`         | Learn what Healthy Housing and Vector Control can inspect   | Information         |
-| 14  | `article11Guide`    | Health Code Article 11 in plain language                    | Report              |
-| 15  | `ownerGuidance`     | Integrated pest management for property owners and managers | Information         |
-| 16  | `afterReport`       | What happens after you report a housing or pest problem     | Information         |
-| 17  | `tenantRights`      | Tenant rights when reporting housing conditions             | Information         |
-| 18  | `mosquitoControl`   | Mosquito Control Program                                    | Information         |
-| 19  | `mosquitoWorkshop`  | Free mosquito education workshop                            | Campaign            |
+| #   | Page key                 | Page title                                                  | Type                |
+| --- | ------------------------ | ----------------------------------------------------------- | ------------------- |
+| 1   | `pestsTopic`             | Healthy Housing and Vector Control                          | Agency              |
+| 2   | `healthyHousingTopic`    | Healthy housing conditions                                  | Topic               |
+| 3   | `aboutHhvcTeam`          | Healthy Housing and Vector Control                          | About us            |
+| 4   | `rodentsReport`          | Report rats, mice, and other four-legged problems           | Transaction         |
+| 5   | `filthReport`            | Report garbage, filth, and overgrown vegetation             | Transaction         |
+| 6   | `insectsReport`          | Report cockroaches, mosquitoes, and other insects           | Transaction         |
+| 7   | `sroHotelReport`         | Report a problem in an SRO or hotel                         | Transaction         |
+| 8   | `recordsHub`             | Look up building records                                    | Resource Collection |
+| 9   | `findRecords`            | Find complaints and inspection records                      | Transaction         |
+| 10  | `findViolations`         | Look up residential health code violations                  | Transaction         |
+| 11  | `findHotelRecords`       | Find residential hotel and shelter records                  | Transaction         |
+| 12  | `inspectorLookup`        | Find your Healthy Housing inspector by neighborhood         | Transaction         |
+| 13  | `publicRecords`          | Make a public records request                               | Transaction         |
+| 14  | `ownerHub`               | Property owner responsibilities                             | Resource Collection |
+| 15  | `noticeOfViolation`      | Fix your Healthy Housing and Vector Control violation       | Transaction         |
+| 16  | `tenantNoticeSteps`      | What tenants need to do after a Notice of Violation         | Transaction         |
+| 17  | `inspectionPrepFollowup` | Get ready for a follow-up inspection                        | Transaction         |
+| 18  | `payFee`                 | Pay your annual Healthy Housing fee for apartment buildings | Transaction         |
+| 19  | `scopeInfo`              | Learn what Healthy Housing and Vector Control can inspect   | Information         |
+| 20  | `article11Compliance`    | Article 11 compliance for property owners                   | Information         |
+| 21  | `article11Guide`         | Health Code Article 11 in plain language                    | Report              |
+| 22  | `ownerGuidance`          | Integrated pest management for property owners and managers | Information         |
+| 23  | `verminResources`        | Healthy housing and pest resources                          | Resource Collection |
+| 24  | `afterReport`            | What happens after you report a housing or pest problem     | Information         |
+| 25  | `inspectionPrepInitial`  | Get ready for a housing inspection after you report         | Transaction         |
+| 26  | `tenantRights`           | Tenant rights when reporting housing conditions             | Information         |
+| 27  | `mosquitoControl`        | Mosquito Control Program                                    | Information         |
+| 28  | `mosquitoWorkshop`       | Free mosquito education workshop                            | Campaign            |
+| 29  | `ipmEducation`           | Free IPM education workshop                                 | Campaign            |
 
 ## Known content review flags
 
