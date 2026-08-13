@@ -287,6 +287,38 @@ describe('findBrokenInlineLinks', () => {
     expect(findBrokenInlineLinks(pages)).toEqual([{ pageKey: 'a', target: 'ghost' }])
   })
 
+  // The three cases below pin this function at the boundary it shares with
+  // js/inline-link-target.js. The predicate has its own exhaustive unit file;
+  // what these add is coverage of the CALLER, because extracting the rule
+  // changed exactly one thing here — targets are now trimmed before testing —
+  // and a corpus that happens to carry no padded target cannot show that.
+  // `bun run validate` passing is evidence about the 29 real pages, not about
+  // the rule, and this function also runs inside the AI output validator,
+  // where the input is a model-generated draft rather than reviewed copy.
+  test('does not report a URL target padded with whitespace', () => {
+    // Was reported broken before the rule was extracted: the capture in the
+    // markdown regex is `([^)]+)`, so the spaces arrive as part of the target
+    // and the old `/^https?:\/\//` test failed on the leading one. The
+    // question this check asks is about the target, not whitespace hygiene.
+    const pages = { a: { sections: [{ paragraphs: ['See [311]( https://sf.gov/311 ).'] }] } }
+    expect(findBrokenInlineLinks(pages)).toEqual([])
+  })
+
+  test('does not report a page key padded with whitespace', () => {
+    const pages = { a: { sections: [{ paragraphs: ['See [page b]( b ).'] }] }, b: {} }
+    expect(findBrokenInlineLinks(pages)).toEqual([])
+  })
+
+  test('still reports an unsafe scheme, which is neither a key nor http(s)', () => {
+    // The target is captured as `javascript:alert(1` rather than the full
+    // string because `([^)]+)` stops at the first `)`. Pinned as-is: it is
+    // pre-existing behaviour of the capture, unchanged by the extraction, and
+    // asserting the tidier string would make this test fail for a reason that
+    // has nothing to do with the rule under test.
+    const pages = { a: { sections: [{ paragraphs: ['[x](javascript:alert(1))'] }] } }
+    expect(findBrokenInlineLinks(pages)).toEqual([{ pageKey: 'a', target: 'javascript:alert(1' }])
+  })
+
   test('reports broken links inside bullets, step text, and step bullets', () => {
     const pages = {
       a: {
