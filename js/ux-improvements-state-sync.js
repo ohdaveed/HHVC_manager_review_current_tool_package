@@ -62,6 +62,22 @@ import { hasValidPageData } from './utils.js'
   // still current before suppressing).
   let refreshInFlightForKey = null
 
+  /**
+   * A page whose data has moved since the last paint, but whose repaint was
+   * suppressed because the call that moved it was itself the deferred
+   * follow-up of an earlier render (isOwnTriggeredRefresh).
+   *
+   * Needed once applyContentEditsToPageData reports real CHANGES rather than
+   * mere writes (issue #118). Before that, the follow-up call re-reported
+   * true unconditionally and so always painted, which accidentally covered
+   * this case. Now it does not: a second call carrying newer data — a sync
+   * pull landing between a render and its deferred follow-up — changes the
+   * page, suppresses its own render, and would leave the DOM showing the
+   * older value forever. Remembering "something moved and nobody painted it"
+   * is what makes the next call paint anyway.
+   */
+  let dirtySinceLastPaintForKey = null
+
   const {
     escapeHtml,
     getPrimaryCta,
@@ -579,11 +595,25 @@ import { hasValidPageData } from './utils.js'
           "of the live object (see the comment above refreshInFlightForKey's declaration)."
       )
       const appliedSectionEdits = window.inlineEditData?.applyContentEditsToPageData(page, saved)
+      // Note this now means "the page actually changed", not "a path was
+      // written" — see applyContentEditsToPageData's own docblock and issue
+      // #118. A repaint that changes nothing is not free: it replaces
+      // #mockPage wholesale, which removes whatever holds focus, which fires
+      // an open inline editor's focusout, which commits it against a
+      // detached editor and loses the reviewer's in-flight text.
+      const dataMoved = Boolean(appliedSectionEdits || ctaChanged)
+      if (dataMoved && isOwnTriggeredRefresh) {
+        // This call moved data but must not render (it IS the follow-up of a
+        // render already in flight). Record the debt so the next call pays
+        // it even if that call changes nothing itself.
+        dirtySinceLastPaintForKey = pageKey
+      }
       if (
-        (appliedSectionEdits || ctaChanged) &&
+        (dataMoved || dirtySinceLastPaintForKey === pageKey) &&
         !isOwnTriggeredRefresh &&
         typeof window.renderPage === 'function'
       ) {
+        dirtySinceLastPaintForKey = null
         refreshInFlightForKey = pageKey
         // skipHistory=true: this is an internal refresh to reflect a reapply
         // that already happened, not a user navigation — it must not push a

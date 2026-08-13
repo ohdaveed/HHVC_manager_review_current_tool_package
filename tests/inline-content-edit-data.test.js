@@ -122,6 +122,79 @@ describe('applyContentEditsToPageData', () => {
     expect(page.sections[0].heading).toBe('Restored Heading')
   })
 
+  // The return value drives a FOLLOW-UP RENDER in applySavedPageState()
+  // (js/ux-improvements-state-sync.js): true means "the DOM the reviewer is
+  // looking at is now stale". It used to mean "setByPath resolved a path",
+  // which is true on every call for any page that has ever had a section
+  // edit saved — so the render fired unconditionally, and a render replaces
+  // #mockPage wholesale.
+  //
+  // That difference is a real bug, not a tidiness point: the render removes
+  // whatever element has focus, an open inline editor's focusout fires as a
+  // result, and EditorSession.commit() runs against a detached editor and
+  // loses the reviewer's in-flight text (issue #118). The render is only
+  // ever needed when a value actually CHANGED.
+  test('reports false when every saved edit already matches the live page', () => {
+    const page = freshPage()
+    const edits = { section_edits: { 'sections.0.heading': 'Original Heading' } }
+    expect(applyContentEditsToPageData(page, edits)).toBe(false)
+  })
+
+  test('reports false on a second identical reapply, having reported true on the first', () => {
+    const page = freshPage()
+    const edits = { section_edits: { 'sections.0.heading': 'Edited' } }
+    expect(applyContentEditsToPageData(page, edits)).toBe(true)
+    expect(applyContentEditsToPageData(page, edits)).toBe(false)
+  })
+
+  test('reports true when only one of several entries differs', () => {
+    const page = freshPage()
+    expect(
+      applyContentEditsToPageData(page, {
+        section_edits: {
+          'sections.0.heading': 'Original Heading', // unchanged
+          'sections.1.heading': 'Changed', // differs
+        },
+      })
+    ).toBe(true)
+  })
+
+  test('compares array values by content, not by identity', () => {
+    // A saved paragraphs/bullets array is a fresh object every read, so an
+    // identity comparison would report a change on every single call and
+    // defeat the whole point.
+    const page = freshPage()
+    expect(
+      applyContentEditsToPageData(page, { section_edits: { 'sections.0.paragraphs': ['p1'] } })
+    ).toBe(false)
+    expect(
+      applyContentEditsToPageData(page, {
+        section_edits: { 'sections.0.paragraphs': ['p1', 'p2'] },
+      })
+    ).toBe(true)
+  })
+
+  test('compares the tagged item-object form by content too', () => {
+    const page = freshPage()
+    const tagged = [{ text: 'p1', unverified: true, unverifiedReason: 'Manually edited' }]
+    expect(
+      applyContentEditsToPageData(page, { section_edits: { 'sections.0.paragraphs': tagged } })
+    ).toBe(true)
+    expect(
+      applyContentEditsToPageData(page, { section_edits: { 'sections.0.paragraphs': tagged } })
+    ).toBe(false)
+  })
+
+  test('still WRITES an unchanged value, it just does not report it', () => {
+    // The write has to stay unconditional: reporting is about whether a
+    // repaint is needed, not about whether to apply the saved state.
+    const page = freshPage()
+    applyContentEditsToPageData(page, {
+      section_edits: { 'sections.0.heading': 'Original Heading' },
+    })
+    expect(page.sections[0].heading).toBe('Original Heading')
+  })
+
   test('applies multiple entries across different sections and field kinds', () => {
     const page = freshPage()
     applyContentEditsToPageData(page, {

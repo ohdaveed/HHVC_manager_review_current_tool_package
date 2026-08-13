@@ -270,6 +270,23 @@ describe('applySavedPageState section_edits follow-up render', () => {
     expect(renderPageCalls.length).toBeLessThanOrEqual(1)
   })
 
+  test('does not fire a follow-up render when the reapply changed nothing', async () => {
+    // The point of issue #118. applyContentEditsToPageData now reports real
+    // changes rather than writes, so a reapply onto a page that already
+    // matches its saved state paints nothing — and a repaint here removes
+    // whatever holds focus, which commits an open editor against detached
+    // DOM and loses the reviewer's in-flight text.
+    const { applySavedPageState, renderPageCalls } = await mountStateSync({
+      savedRecord: { section_edits: { 'sections.0.heading': 'Edited' } },
+      applyReturns: false,
+    })
+
+    applySavedPageState('pestsTopic')
+    await flushMicroAndMacroTasks()
+
+    expect(renderPageCalls).toEqual([])
+  })
+
   test('a page with no saved section edits triggers zero follow-up renders', async () => {
     const { applySavedPageState, renderPageCalls } = await mountStateSync({
       savedRecord: { decision: 'Approved' }, // no section_edits at all
