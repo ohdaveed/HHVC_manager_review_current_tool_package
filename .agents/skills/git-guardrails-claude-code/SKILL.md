@@ -17,6 +17,22 @@ Sets up a PreToolUse hook that intercepts and blocks dangerous git commands befo
 
 When blocked, Claude sees a message telling it that it does not have authority to access these commands.
 
+## Worktree safety
+
+`git worktree remove` deletes a whole worktree directory, and untracked files
+inside it (recovered plans, briefs, scratch notes) are not protected by git —
+no reflog, stash, or object store brings them back. This is exactly how a
+plan was nearly lost once (recovered from a deleted worktree in #111).
+
+Before removing a worktree:
+
+- Check for untracked files first: `git -C <worktree> status --porcelain` — any
+  `??` row is at risk.
+- Commit or move anything worth keeping into the main checkout before removal.
+- Never pass `--force` to `git worktree remove` to silence its
+  "contains modified or untracked files" refusal — that refusal is the safety
+  net, not an inconvenience.
+
 ## Steps
 
 ### 1. Ask scope
