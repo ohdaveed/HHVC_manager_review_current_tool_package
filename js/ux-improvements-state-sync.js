@@ -353,6 +353,14 @@ import { hasValidPageData } from './utils.js'
     })
 
     updateLocalStorageStatus()
+
+    // Hand the page to the automatic push AFTER localStorage already has it,
+    // never instead of it: localStorage is the synchronous write a keystroke
+    // can rely on, and the network is a follow-up that is allowed to fail.
+    // Optional-chained because sync is an additive layer — a build without it,
+    // or a test environment that never mounted it, degrades to local-only
+    // rather than throwing on every save.
+    window.reviewStateSync?.scheduleAutoPush?.(snapshot.page_key)
   }
 
   /**

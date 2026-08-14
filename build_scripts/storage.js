@@ -213,9 +213,17 @@ async function upsertReviewPageIfUnchanged(sqlitePath, params) {
     // RETURNING rather than a driver-specific "rows affected" field: it means
     // the same expression answers the question on any driver, and it is the
     // only portable way to tell a skipped conflict branch from a real write.
+    // The record is passed as an OBJECT and left for the driver to serialize.
+    // Passing `${JSON.stringify(record)}::jsonb` looks equivalent and is not:
+    // Bun sends the string as a JSON parameter, so the cast wraps it and the
+    // column ends up holding a jsonb *string scalar* rather than an object.
+    // Measured: `jsonb_typeof` returns "string" and `record->>'decision'`
+    // returns NULL. Nothing in the app notices, because the read path parses a
+    // string just as happily — so the only thing that catches it is asserting
+    // the stored type in the database, which the Postgres suite now does.
     const rows = await getPostgres()`
       INSERT INTO review_pages (page_key, record, updated_at)
-      VALUES (${pageKey}, ${JSON.stringify(record)}::jsonb, ${updatedAt})
+      VALUES (${pageKey}, ${record}, ${updatedAt})
       ON CONFLICT (page_key) DO UPDATE
         SET record = excluded.record, updated_at = excluded.updated_at
         WHERE review_pages.updated_at = ${expectedUpdatedAt}

@@ -295,6 +295,13 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
     wrapRenderPage()
     window.ReviewUx.stateSync.applySavedUiPreferences()
     restoreInitialPage()
+    // Pull the server's copy once the UI is standing, not before: the pull
+    // adopts records into window.reviewState and calls renderConflicts, both
+    // of which need the panel this init() just mounted. It resolves to a
+    // no-op when sync is unconfigured, so an offline/local-only browser pays
+    // nothing for this line. Deliberately not awaited — a slow or unreachable
+    // server must not delay first paint of the mockup.
+    window.reviewStateSync?.startAutoSync?.()
     refreshUx()
     window.ReviewUx.workspace.maybeShowWorkspaceOnboarding()
     // Defer one refresh so review-queue.js (loaded next) is ready for sticky bar stats.

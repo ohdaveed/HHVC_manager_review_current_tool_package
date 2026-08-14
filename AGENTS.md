@@ -1494,9 +1494,42 @@ offline static tool.
 ### Review-state sync backend (optional)
 
 `server.ts` optionally serves a small sync API alongside its static file
-serving, backed by SQLite (`bun:sqlite`, no extra dependency) — entirely
-additive, off by default, and fails closed (501) rather than open if
-unconfigured.
+serving, backed by Postgres or SQLite depending on `DATABASE_URL` (see
+"Where review records live" above) — entirely additive, off by default, and
+fails closed (501) rather than open if unconfigured.
+
+**Sync runs automatically now, and that is the change that makes the server the
+record of truth rather than a place a reviewer occasionally remembers to send
+things.** Three rules hold it together, and none of them may be relaxed
+casually:
+
+- **Pull once at init, push per page on a 3s debounce after the autosave.** The
+  autosave still writes localStorage synchronously and the push is a follow-up
+  that is allowed to fail — `scheduleAutoPush()` is called AFTER the write, never
+  instead of it, so a dropped network never costs a keystroke.
+- **No push may precede the first pull.** A push carries the browser's whole
+  snapshot plus its `synced_at` baseline; pushing before pulling means pushing a
+  baseline this browser has never observed, which `putReviewPage` rightly answers
+  with 409 — turning every fresh browser's first edit into a conflict.
+  `startAutoSync()` gates every push behind that one pull and is idempotent.
+- **The client still never merges on the push path.** The server merges with
+  `updatedBy: 'sync'`; doing it here too would append a history entry per
+  debounce, the flood the autosave path exists to avoid.
+
+**Offline recovery is a catch-up push, not an unload handler.**
+`pushDirtyPages()` runs after the initial pull and sends every record with an
+explicit `local_dirty === true`. An unload handler is the obvious thing to reach
+for and the wrong one — `beforeunload` cannot await a promise and `sendBeacon`
+cannot carry the `Authorization` header this API requires. Only an explicit
+`true` is pushed: an ABSENT flag means unknown provenance, and pushing those
+would blast a browser's legacy history at the server as new work.
+
+**The default endpoint is the origin the page was served from**, not a baked-in
+hostname. The old hardcoded URL still named a Railway deployment that no longer
+existed. Same-origin is correct now because `server.ts` serves the app and
+`/api/*` from one port; on a static host with no runtime it resolves to an
+origin that 404s, so sync fails closed and the tool stays local-only. The
+**token** still has no default — the bundle is public.
 
 - **Routes**: `GET /api/review-state` (full state, same shape as
   `window.reviewState.read()`); `PUT /api/review-state/pages/:pageKey` (merges

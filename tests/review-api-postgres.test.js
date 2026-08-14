@@ -136,6 +136,29 @@ describe.skipIf(!DATABASE_URL)('review-state API on Postgres', () => {
     expect(merged.section_edits).toEqual({ 'sections.0.heading': 'Edited heading' })
   })
 
+  test('stores the record as a queryable jsonb object, not a JSON string', async () => {
+    // The read path parses a string just as happily as an object, so a
+    // double-encoded record round-trips through the API looking perfectly
+    // correct while `record->>'decision'` returns NULL and every SQL query
+    // against reviews silently matches nothing. Passing the JSON as
+    // `${JSON.stringify(record)}::jsonb` does exactly that — Bun sends it as a
+    // JSON parameter and the cast wraps it. Asserting the stored TYPE is the
+    // only thing that catches it.
+    await putPage('jsonbShape', {
+      page_key: 'jsonbShape',
+      decision: 'Approved',
+      notes: 'queryable',
+      synced_at: '',
+    })
+
+    const [row] = await sql`
+      SELECT jsonb_typeof(record) AS kind, record->>'decision' AS decision
+      FROM review_pages WHERE page_key = 'jsonbShape'
+    `
+    expect(row.kind).toBe('object')
+    expect(row.decision).toBe('Approved')
+  })
+
   test('rejects a stale push instead of overwriting the newer record', async () => {
     const first = await putPage('staleTest', { page_key: 'staleTest', decision: 'Approved' })
     const stored = await first.json()

@@ -1083,3 +1083,125 @@ describe('restorePageContentFromOriginal', () => {
     expect('contact' in page).toBe(false)
   })
 })
+
+// The automatic layer: pull once on load, debounced push per page, and a
+// catch-up push for work saved while the server was unreachable. These are the
+// three behaviours that make the server the record of truth rather than a
+// place a reviewer occasionally remembers to send things.
+describe('automatic sync', () => {
+  let originalSetTimeout
+
+  beforeEach(() => {
+    // The push is debounced by three seconds in the browser. Collapsing the
+    // timer keeps these tests instant without making the delay itself
+    // configurable, which would be production surface existing only for tests.
+    originalSetTimeout = global.setTimeout
+    global.setTimeout = (fn) => {
+      fn()
+      return 0
+    }
+  })
+
+  afterEach(() => {
+    global.setTimeout = originalSetTimeout
+  })
+
+  test('scheduleAutoPush does nothing when sync is not configured', async () => {
+    const { mod } = loadReviewStateSync({ apiUrl: '' })
+    let called = 0
+    global.fetch = async () => {
+      called += 1
+      return { ok: true, status: 200, json: async () => ({}) }
+    }
+
+    mod.scheduleAutoPush('pestsTopic')
+    await Promise.resolve()
+
+    expect(called).toBe(0)
+  })
+
+  test('an automatic push waits for the first pull, so it carries an observed baseline', async () => {
+    // Pushing before pulling means pushing a synced_at this browser never
+    // observed, which server.ts correctly answers with a 409 — turning every
+    // fresh browser's first edit into a conflict.
+    const calls = []
+    const { mod } = loadReviewStateSync({
+      localPages: { pestsTopic: { page_key: 'pestsTopic', decision: 'Approved', synced_at: '' } },
+    })
+    global.fetch = async (url, options) => {
+      calls.push(`${options?.method || 'GET'} ${String(url).split('/api')[1]}`)
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ version: 1, ui: {}, globals: {}, pages: {}, updated_at: null }),
+      }
+    }
+
+    mod.scheduleAutoPush('pestsTopic')
+    await new Promise((resolve) => originalSetTimeout(resolve, 0))
+
+    expect(calls[0]).toBe('GET /review-state')
+    expect(calls.some((call) => call.startsWith('PUT'))).toBe(true)
+  })
+
+  test('startAutoSync pulls once however many times it is called', async () => {
+    const { mod } = loadReviewStateSync()
+    let pulls = 0
+    global.fetch = async () => {
+      pulls += 1
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ version: 1, ui: {}, globals: {}, pages: {}, updated_at: null }),
+      }
+    }
+
+    await Promise.all([mod.startAutoSync(), mod.startAutoSync(), mod.startAutoSync()])
+
+    expect(pulls).toBe(1)
+  })
+
+  test('pushDirtyPages sends only pages explicitly marked unpushed', async () => {
+    // An ABSENT local_dirty means unknown provenance, not "needs pushing" —
+    // a record written before the field existed. Pushing those would blast a
+    // browser's whole legacy history at the server as if it were new work.
+    const { mod } = loadReviewStateSync({
+      localPages: {
+        dirtyPage: { page_key: 'dirtyPage', decision: 'Approved', local_dirty: true },
+        cleanPage: { page_key: 'cleanPage', decision: 'Approved', local_dirty: false },
+        legacyPage: { page_key: 'legacyPage', decision: 'Approved' },
+      },
+    })
+    const pushed = []
+    global.fetch = async (url, options) => {
+      if (options?.method === 'PUT') pushed.push(String(url).split('/pages/')[1])
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ page_key: 'dirtyPage', updated_at: '2026-01-01T00:00:00.000Z' }),
+      }
+    }
+
+    const result = await mod.pushDirtyPages()
+
+    expect(pushed).toEqual(['dirtyPage'])
+    expect(result.pushedCount).toBe(1)
+  })
+
+  test('a failed automatic push leaves the page marked unpushed', async () => {
+    // The offline guarantee: the network is allowed to fail, and the reviewer
+    // keeps their work plus the flag that gets it sent next time.
+    const { mod, getState } = loadReviewStateSync({
+      localPages: {
+        pestsTopic: { page_key: 'pestsTopic', decision: 'Approved', local_dirty: true },
+      },
+    })
+    global.fetch = async () => {
+      throw new Error('network down')
+    }
+
+    await mod.pushDirtyPages()
+
+    expect(getState().pages.pestsTopic.local_dirty).toBe(true)
+  })
+})

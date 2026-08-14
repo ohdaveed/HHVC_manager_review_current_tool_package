@@ -12,15 +12,35 @@
 
   const CONFIG_KEY = 'hhvcReviewSyncConfig'
   const API_TIMEOUT_MS = 15000
-  // Baked into the production bundle so every reviewer's browser defaults
-  // to the real deployment without anyone having to know or type it — a
-  // URL is not a secret, unlike the bearer token below it. The token is
-  // deliberately NOT given a default here: this file ships in a public,
-  // static bundle (Netlify serves it to every visitor's browser), so a
-  // hardcoded token would be extractable by anyone via devtools. Sync
-  // therefore stays a no-op (see isConfigured()) until each reviewer pastes
-  // in their own token — the one piece of setup that must stay manual.
-  const DEFAULT_API_URL = 'https://sync-api-production-3097.up.railway.app'
+  /**
+   * Default sync endpoint: **the origin this page was served from.**
+   *
+   * It used to be a hardcoded Railway hostname, and it rotted exactly as you
+   * would expect — it still named `sync-api-production-3097`, a deployment
+   * that no longer exists, long after the live host became
+   * `web-production-9bb3b`. A URL written down in a bundle is a fact about
+   * where the app was deployed the day someone typed it.
+   *
+   * Same-origin is correct now in a way it was not before: `server.ts` serves
+   * both the static app and `/api/*` from one port, so on Railway the API is
+   * always exactly where the page came from. On a static host with no runtime
+   * the same default resolves to an origin that answers 404 — sync then fails
+   * closed and the tool stays local-only, which is the honest outcome there.
+   *
+   * The TOKEN still has no default, deliberately: this file ships in a public
+   * bundle, so a hardcoded token would be extractable from devtools by anyone
+   * who can load the page. Sync stays a no-op (see `isConfigured()`) until a
+   * token is present — the one piece of setup that cannot be automated away
+   * while the API is bearer-gated.
+   *
+   * @returns {string}
+   */
+  function defaultApiUrl() {
+    const origin = typeof location !== 'undefined' ? location.origin : ''
+    // A single-file export opened from disk has origin "null", and a file://
+    // page has no API to talk to anyway.
+    return /^https?:/.test(origin) ? origin : ''
+  }
 
   // Monotonic stamp for in-flight pulls; see pullFromServer's `stale`.
   let pullGeneration = 0
@@ -35,19 +55,19 @@
   function readConfig() {
     try {
       const raw = localStorage.getItem(CONFIG_KEY)
-      // A browser that has never saved sync settings gets the hardcoded
-      // production URL by default. Once a reviewer explicitly saves
-      // settings — even clearing the URL to point nowhere, or pointing it
-      // at a local/teammate server — that saved choice is respected as-is
-      // and never silently overridden back to the default.
-      if (!raw) return { apiUrl: DEFAULT_API_URL, apiToken: '' }
+      // A browser that has never saved sync settings talks to the origin it
+      // was served from. Once a reviewer explicitly saves settings — even
+      // clearing the URL to point nowhere, or pointing it at a local/teammate
+      // server — that saved choice is respected as-is and never silently
+      // overridden back to the default.
+      if (!raw) return { apiUrl: defaultApiUrl(), apiToken: '' }
       const parsed = JSON.parse(raw)
       return {
-        apiUrl: typeof parsed.apiUrl === 'string' ? parsed.apiUrl : DEFAULT_API_URL,
+        apiUrl: typeof parsed.apiUrl === 'string' ? parsed.apiUrl : defaultApiUrl(),
         apiToken: typeof parsed.apiToken === 'string' ? parsed.apiToken : '',
       }
     } catch {
-      return { apiUrl: DEFAULT_API_URL, apiToken: '' }
+      return { apiUrl: defaultApiUrl(), apiToken: '' }
     }
   }
 
@@ -518,6 +538,191 @@
       .then(() => ({ ok: !firstError, pushedCount, error: firstError }))
   }
 
+  /* Automatic sync
+     ==============
+     Push and pull used to be two buttons inside a collapsed <details>, which
+     meant the server only ever held what a reviewer remembered to send. The
+     automatic layer below makes the server the record of truth without giving
+     up the offline guarantee: localStorage is still the synchronous write that
+     every keystroke lands in, and the network is a follow-up that may fail.
+
+     Three rules this layer must not break, all of them load-bearing:
+
+     1. **Never push before the first pull resolves.** A push carries the
+        browser's whole local snapshot plus its `synced_at` baseline. Pushing
+        before pulling means pushing with a baseline this browser has never
+        observed, which `putReviewPage` correctly rejects with a 409 — turning
+        every fresh browser's first edit into a conflict.
+     2. **Never push through mergeReviewRecord on this side.** The server
+        merges with `updatedBy: 'sync'`, which is what produces a record clean
+        enough for the client to adopt. Merging here as well would append a
+        history entry per debounce — the flood the autosave path exists to
+        avoid.
+     3. **A failed push must leave `local_dirty` alone.** `pushPage` only
+        clears it on a real 200, so an offline reviewer keeps their work marked
+        unpushed and the next successful push carries it. */
+
+  /** Per-page debounce timers for the automatic push. */
+  const autoPushTimers = new Map()
+
+  /** Resolves once the first automatic pull has settled; gates every push. */
+  let initialPull = null
+
+  /** How long to wait after the last autosave for a page before pushing. */
+  const AUTO_PUSH_DELAY_MS = 3000
+
+  /**
+   * Pull once on load, then let pushes proceed.
+   *
+   * Idempotent: repeated calls return the same promise rather than issuing a
+   * second pull, so a re-mount cannot double-fetch.
+   *
+   * @returns {Promise<object>} The pull result, or a no-op result.
+   */
+  function startAutoSync() {
+    if (initialPull) return initialPull
+    if (!isConfigured()) {
+      initialPull = Promise.resolve({ ok: false, error: 'Sync is not configured.' })
+      return initialPull
+    }
+
+    setSyncStatus('Loading reviews from the server…')
+    initialPull = pullFromServer()
+      .then((result) => {
+        if (result.stale) return result
+        if (result.ok) {
+          const conflictCount = (result.conflicts || []).length
+          setSyncStatus(
+            conflictCount
+              ? `Loaded from server. ${conflictCount} page${conflictCount === 1 ? '' : 's'} need${conflictCount === 1 ? 's' : ''} your attention below.`
+              : 'Up to date with the server.'
+          )
+          renderConflicts(result.conflicts, result.conflictRecords, result.apiUrl)
+          // Send anything this browser still owes the server — work saved
+          // while it was unreachable, or an edit made just before the tab
+          // closed inside the debounce window.
+          return pushDirtyPages().then((pushResult) => {
+            if (pushResult.pushedCount) {
+              setSyncStatus(
+                `Up to date. Sent ${pushResult.pushedCount} page${pushResult.pushedCount === 1 ? '' : 's'} saved while offline.`
+              )
+            }
+            return result
+          })
+        } else {
+          // An unreachable server is a normal state for this tool, not an
+          // error worth a banner: everything still works, it just works in
+          // this browser only until the server comes back.
+          setSyncStatus(`Working offline — saved in this browser only. (${result.error})`)
+        }
+        return result
+      })
+      .catch((error) => ({
+        ok: false,
+        error: String(error && error.message ? error.message : error),
+      }))
+    return initialPull
+  }
+
+  /**
+   * Queue an automatic push for one page after its edits settle.
+   *
+   * Called by the autosave path (js/ux-improvements-state-sync.js) AFTER it
+   * has written localStorage — never instead of it. Debounced per page key so
+   * a reviewer typing a long note produces one PUT rather than one per
+   * keystroke, and coalesced so switching between two pages does not cancel
+   * the other's pending push.
+   *
+   * @param {string} pageKey
+   * @returns {void}
+   */
+  function scheduleAutoPush(pageKey) {
+    if (!pageKey || !isConfigured()) return
+
+    clearTimeout(autoPushTimers.get(pageKey))
+    autoPushTimers.set(
+      pageKey,
+      setTimeout(() => {
+        autoPushTimers.delete(pageKey)
+        // Rule 1: the first pull has to have resolved before any push, or the
+        // push carries a baseline the browser never observed.
+        startAutoSync()
+          .then(() => pushPage(pageKey))
+          .then((result) => {
+            if (result.ok) {
+              setSyncStatus('Saved to the server.')
+              return
+            }
+            // A 409 is not a failure to retry — the reviewer has to choose.
+            // pushPage already phrases it as "pull first"; surface it as-is.
+            setSyncStatus(`Saved in this browser only — ${result.error}`)
+          })
+          .catch((error) => {
+            setSyncStatus(
+              `Saved in this browser only — ${String(error && error.message ? error.message : error)}`
+            )
+          })
+      }, AUTO_PUSH_DELAY_MS)
+    )
+  }
+
+  /**
+   * Flush any pending automatic pushes immediately, in page order.
+   *
+   * Exposed for tests and for any caller that wants the debounce collapsed;
+   * the tool itself does not rely on it at unload time. An unload handler is
+   * the obvious place to reach for and the wrong one: `beforeunload` cannot
+   * await a promise, and `sendBeacon` cannot carry the `Authorization` header
+   * this API requires. The catch-up push below covers the same gap without
+   * depending on the browser finishing anything during teardown.
+   *
+   * @returns {Promise<void>}
+   */
+  function flushAutoPushes() {
+    const keys = [...autoPushTimers.keys()]
+    for (const key of keys) {
+      clearTimeout(autoPushTimers.get(key))
+      autoPushTimers.delete(key)
+    }
+    return keys.reduce((chain, key) => chain.then(() => pushPage(key)), Promise.resolve())
+  }
+
+  /**
+   * Push every page this browser still holds unpushed work for.
+   *
+   * Runs after the initial pull, and is what makes a closed tab safe: a
+   * reviewer who edits and closes inside the debounce window keeps
+   * `local_dirty: true` in localStorage, and this sends it the next time the
+   * tool opens. It is also the recovery path after the server was down.
+   *
+   * Only explicit `true` counts. An ABSENT `local_dirty` means "provenance
+   * unknown" — a record written before the field existed, or one whose
+   * content matched on save — and pushing those would blast a browser's whole
+   * legacy history at the server as if it were new work.
+   *
+   * @returns {Promise<{pushedCount: number, error: string|null}>}
+   */
+  function pushDirtyPages() {
+    const pages = window.reviewState.read().pages || {}
+    const dirty = Object.keys(pages).filter((key) => pages[key]?.local_dirty === true)
+    if (!dirty.length) return Promise.resolve({ pushedCount: 0, error: null })
+
+    let pushedCount = 0
+    let firstError = null
+    return dirty
+      .reduce(
+        (chain, key) =>
+          chain.then(() =>
+            pushPage(key).then((result) => {
+              if (result.ok) pushedCount += 1
+              else firstError = firstError || result.error
+            })
+          ),
+        Promise.resolve()
+      )
+      .then(() => ({ pushedCount, error: firstError }))
+  }
+
   function setSyncStatus(message) {
     const el = document.getElementById('reviewSyncStatus')
     if (el) el.textContent = message
@@ -929,6 +1134,10 @@
     pushPage,
     pushAllPages,
     mountSyncControls,
+    startAutoSync,
+    scheduleAutoPush,
+    flushAutoPushes,
+    pushDirtyPages,
   }
 
   // Node/Bun-side export for unit testing the pull/push conflict-resolution
@@ -944,6 +1153,10 @@
       isConfigured,
       readConfig,
       writeConfig,
+      startAutoSync,
+      scheduleAutoPush,
+      flushAutoPushes,
+      pushDirtyPages,
     }
   }
 })()

@@ -1041,6 +1041,15 @@ offline static tool.
 
 ### Review-state sync backend (optional)
 
+**Sync runs automatically as of 2026-08-14** — `startAutoSync()` pulls once at
+init, `scheduleAutoPush()` pushes a page on a 3s debounce **after** the autosave
+has written localStorage (never instead of it), and `pushDirtyPages()` sends
+work saved while the server was unreachable. No push may precede the first pull,
+or it carries a `synced_at` baseline the browser never observed and earns a 409.
+The client still never merges on the push path — the server does, with
+`updatedBy: 'sync'` — so history stays bounded. The default endpoint is the
+page's own origin now, not a baked-in hostname; the token still has no default.
+
 `server.ts` optionally serves a small SQLite-backed sync API alongside static files, with `js/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
 
 ### AI assist backend (optional)
