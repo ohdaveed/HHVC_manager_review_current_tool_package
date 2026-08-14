@@ -35,4 +35,8 @@ forms/mosquito-workshop-request/dist/
 # reformat. Its own style (tabs, semicolons, double quotes) is the opposite of
 # this repo's, and reformatting it would make every future update conflict.
 # Same reasoning as `server.ts` above: keep two formatters off the same files.
+# The two files we added — `LICENSE` and `NOTICE.md`, which record the upstream
+# project and the exact commit the copy was taken from — sit under the same
+# ignore rather than carving out an exception, since a directory-wide rule is
+# what keeps the byte-identity claim simple to state and to check.
 tools/oxlint/anti-slop/
