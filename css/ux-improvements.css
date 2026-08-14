@@ -950,12 +950,29 @@ ol li {
   margin-bottom: 0.75rem !important;
 }
 
-/* Tame the CMS Tags */
+/* ===================================================================
+   Karl CMS tag redesign
+   ===================================================================
+   Goals: readable typography (no all-caps headline), a visually distinct
+   kind badge per category, subtle per-kind background tint so each tag
+   type is identifiable at a glance — not just by the 4px left strip.
+
+   WCAG note: the kind badge carries visible text so its fg/bg pair must
+   pass 4.5:1. The per-kind token pairs below all exceed 7:1 in light mode
+   and are separately validated in dark mode via css/theme.css overrides.
+   The 4px left border strip carries no text and needs no independent
+   contrast check (it is not the only differentiator — the badge colour is).
+   ================================================================= */
+
+/* Base: all tags share layout and fallback colours. */
 .karl-tag,
 .karl-tag[data-kind='meta'],
 .karl-tag[data-kind='body'],
 .karl-tag[data-kind='placement'],
 .karl-tag[data-kind='editor'] {
+  /* Removed the uniform --sfds-blue-soft-bg that flattened all four kinds
+     to one background — each kind now gets its own tint below. The fallback
+     here covers any unknown kind value. */
   background: var(--sfds-blue-soft-bg) !important;
   border: none !important;
   border-left: 4px solid var(--sfds-purple-border) !important;
@@ -963,28 +980,113 @@ ol li {
      (rgba(0,0,0,.08) over #f1f4ff = #dee0eb). slate-2 (#383939) = 8.81:1. */
   color: var(--sfds-slate-2) !important;
   font-size: 0.85rem !important;
-  padding: 0.2rem 0.5rem !important;
-  display: inline-block;
-  margin: 0.2rem 0;
-  border-radius: 0 4px 4px 0 !important;
+  padding: 0.25rem 0.6rem 0.25rem 0.5rem !important;
+  display: inline-flex !important;
+  align-items: flex-start !important;
+  gap: 0.4rem !important;
+  margin: 0.25rem 0 0.5rem !important;
+  border-radius: 0 6px 6px 0 !important;
+  line-height: 1.4 !important;
 }
-/* Per-kind border-left color, restored on top of the flat AA-contrast fix
-   above: a 4px border strip carries no text and needs no separate contrast
-   check, so this can safely bring kind-color back — including making the
-   Help-tab legend swatches distinguishable again, which otherwise render
-   identically under the "Tag colors" heading since the block above flattens
-   every kind to the same purple strip. */
+
+/* Per-kind border-left AND background tint — both attributes updated together
+   so the visual category signal is clear even when the kind badge is clipped.
+   Background values are the existing -bg tokens, which already carry correct
+   dark-mode overrides in css/theme.css. */
 .karl-tag[data-kind='meta'] {
   border-left-color: var(--sfds-info-border) !important;
+  background: var(--sfds-info-light) !important;
 }
 .karl-tag[data-kind='body'] {
   border-left-color: var(--sfds-purple-border) !important;
+  background: var(--sfds-purple-bg) !important;
 }
 .karl-tag[data-kind='placement'] {
   border-left-color: var(--sfds-warning-border) !important;
+  background: var(--sfds-warning-bg) !important;
 }
 .karl-tag[data-kind='editor'] {
   border-left-color: var(--sfds-success-border) !important;
+  background: var(--sfds-success-bg) !important;
+}
+
+/* Kind badge: use the category's mid-tone border color as badge background so
+   it stands out against the tag's own tinted background. Text uses the
+   category's dark text token.
+
+   The badge is 0.68rem (10.88px) bold — NOT WCAG "large text", so the bar is
+   4.5:1, not 3:1. Measured in the running app with getComputedStyle rather
+   than computed from the token table, because the two disagree:
+
+     meta      — #0046c2 on #c7dae5 = 5.49:1 ✓
+     body      — #4a2a7a on #decdf6 = 7.44:1 ✓
+     placement — #6f4a00 on #f2c94c = 4.98:1 ✓
+     editor    — #075e0a on #a6d8a8 = 4.98:1 ✓
+
+   **These light values are what a tag ON THE MOCKUP renders in BOTH themes.**
+   `.browser-shell` pins the `--sfds-*` primitives back to their light values
+   (css/theme.css) so the simulated public page stays light on a reviewer's
+   dark machine — so a dark-mode contrast figure for these four rules would
+   describe a state that never occurs inside the shell. The one place these
+   tokens DO resolve dark is the Help-tab legend, which sits outside the
+   shell; its dark-mode fix is the block further down.
+
+   Placement and editor sit at 4.98:1, roughly half a point of headroom. If
+   either token moves, re-measure rather than assuming the pair still passes. */
+.karl-tag[data-kind='meta'] .karl-tag-kind {
+  background: var(--sfds-info-border) !important;
+  color: var(--sfds-info-dark) !important;
+  border: none !important;
+}
+.karl-tag[data-kind='body'] .karl-tag-kind {
+  background: var(--sfds-purple-border) !important;
+  color: var(--sfds-purple-text) !important;
+  border: none !important;
+}
+.karl-tag[data-kind='placement'] .karl-tag-kind {
+  background: var(--sfds-warning-border) !important;
+  color: var(--sfds-warning-text) !important;
+  border: none !important;
+}
+.karl-tag[data-kind='editor'] .karl-tag-kind {
+  background: var(--sfds-success-border) !important;
+  color: var(--sfds-success-text) !important;
+  border: none !important;
+}
+
+/* Dark mode, legend swatches only.
+   =================================
+   The Help tab's "Tag colors" key renders real `.karl-tag` markup OUTSIDE
+   `.browser-shell`, so unlike every tag on the mockup its `--sfds-*` tokens
+   resolve to the dark palette. Measured there, three of the four category
+   text-on-border pairs fall under AA:
+
+     meta      — #8db0e6 on #2b3a4a = 5.25:1 ✓
+     body      — #cbb0ef on #725a98 = 3.03:1 ✗
+     placement — #f0cd72 on #7d6220 = 3.76:1 ✗
+     editor    — #8fd694 on #35713a = 3.42:1 ✗
+
+   Those pairs are fine at their intended job — each `-text` token is tuned
+   against its own `-bg` (a near-black panel fill), where it clears 8:1. The
+   badge puts it on the mid-tone `-border` instead, which is a much lighter
+   ground, and the pair was never validated for that.
+
+   The fix keeps the per-kind background — the colour coding is the point —
+   and swaps the foreground to the dark theme's body-text token (#f0f1f2),
+   which clears AA on all four grounds — measured in the running app after the
+   change: meta 10.28:1, body 5.11:1, placement 5.10:1, editor 5.19:1.
+   Scoped to `.karl-tag-legend-swatch` on purpose: a tag
+   on the mockup keeps its coloured badge text, since inside the shell these
+   tokens are pinned light and already pass.
+
+   The selector carries `.karl-tag` and `[data-kind]` as well as the swatch
+   class on purpose: the per-kind rules above are `.karl-tag[data-kind='x']
+   .karl-tag-kind`, three class-level components with `!important`, so a
+   two-component override loses to them however far down the file it sits. */
+@media (prefers-color-scheme: dark) {
+  .karl-tag.karl-tag-legend-swatch[data-kind] .karl-tag-kind {
+    color: var(--sfds-slate-1) !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
