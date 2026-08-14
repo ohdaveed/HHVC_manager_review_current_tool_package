@@ -64,9 +64,9 @@
   --brand-05: #001033; /* on white 18.72:1 | on slate-1  1.05:1 */
 
   /* Brand (SFDS action blue family) */
-  --brand-primary: var(--legacy-action-blue, #2a60af);
-  --brand-primary-hover: var(--legacy-action-blue-hover, #001d4e);
-  --brand-on-primary: var(--legacy-white, #fcfcfc);
+  --brand-primary: var(--sfds-color-action);
+  --brand-primary-hover: var(--sfds-color-blue-dark);
+  --brand-on-primary: var(--sfds-color-white);
 
   /* Typography — real SF.gov typefaces, self-hosted via @fontsource (see
      js/main.js's font imports). Confirmed against 7 live sf.gov pages: body
@@ -157,10 +157,10 @@
   --ds-shadow-3: 0 8px 16px rgba(0, 29, 78, 0.08), 0 16px 32px rgba(0, 29, 78, 0.12);
 
   /* Semantic surfaces */
-  --surface-page: var(--legacy-slate-5, #f0f0f0);
-  --surface-panel: var(--legacy-white, #fcfcfc);
-  --surface-sunken: var(--legacy-slate-6, #f8fafc);
-  --surface-raised: var(--legacy-white, #fcfcfc);
+  --surface-page: var(--sfds-color-grey-l1);
+  --surface-panel: var(--sfds-color-white);
+  --surface-sunken: var(--sfds-color-slate-l1);
+  --surface-raised: var(--sfds-color-white);
   /* A tinted fill INSIDE a panel — toolbar strips, KPI wells, the tab bar.
      Same value as --surface-page, deliberately: a soft area reads as the page
      showing through the panel. It exists as its own name so those rules do not
@@ -172,11 +172,25 @@
      tokens that already had names here — `--ux-panel-bg` and `--surface-panel`
      were the same thing — and having both is how `.status-chip` ended up
      declared twice under two different token families. */
-  --surface-soft: var(--legacy-slate-5, #f0f0f0);
-  --text-primary: var(--legacy-slate-1, #0b0c0c);
-  --text-secondary: var(--legacy-slate-3, #6e7070);
-  --border-default: var(--legacy-border, #e9eaea);
-  --border-strong: var(--legacy-slate-4, #c9caca);
+  --surface-soft: var(--sfds-color-grey-l1);
+  --text-primary: var(--sfds-color-black);
+  /* JUDGEMENT, not a lookup: the brief's table said slate-3 -> slate-l2, but
+     --text-secondary lands on several real chrome surfaces, not just white --
+     --surface-panel (4.53:1), --surface-page/-soft (4.19:1) and
+     --surface-sunken (4.06:1, measured live on the inactive workspace-tab
+     background, #eff3f4). slate-l2 (#5a7a92) only clears the 4.5:1 text
+     floor on the first of those three, so every secondary-text node NOT
+     sitting on a pure white panel failed WCAG 1.4.3 -- confirmed by running
+     tests/e2e/accessibility.spec.js, which is what caught it: 24
+     .compliance-detail/.compliance-citation nodes plus both inactive
+     workspace tabs. slate-l3 (#1d4d70) is the next step in the same SFDS
+     slate family and clears the floor everywhere --text-secondary is
+     actually used (8.01-8.94:1 across the three surfaces above), so it
+     keeps the intended blue-grey hue rather than falling back to a neutral
+     grey. */
+  --text-secondary: var(--sfds-color-slate-l3);
+  --border-default: var(--sfds-color-grey-l2);
+  --border-strong: var(--sfds-color-grey-l3);
 
   /* Sampled directly from the healthy-housing-conditions reference
      screenshot's "TOPIC" eyebrow pixel data (darkest/most-saturated pixel
@@ -232,28 +246,43 @@
      Every `-fg` value clears 4.5:1 against its own `-bg` (WCAG 1.4.3),
      and every `-border` clears 3:1 against the surrounding panel
      (WCAG 1.4.11). */
-  --status-approved-bg: var(--legacy-success-bg, #ecf8ed);
-  --status-approved-border: var(--legacy-success-border, #a6d8a8);
-  --status-approved-fg: var(--legacy-success-text, #075e0a);
+  --status-approved-bg: var(--sfds-color-green-l1);
+  --status-approved-border: var(--sfds-color-green-l2);
+  --status-approved-fg: var(--sfds-color-green-l4);
 
-  --status-edits-bg: var(--legacy-warning-bg, #fff7e6);
-  --status-edits-border: var(--legacy-warning-border, #f2c94c);
-  --status-edits-fg: var(--legacy-warning-text, #6f4a00);
+  --status-edits-bg: var(--sfds-color-yellow-l1);
+  --status-edits-border: var(--sfds-color-yellow-l3);
+  /* JUDGEMENT, not a lookup: the brief's table said warning-text -> yellow-l4,
+     following the same "-l4 is the dark, text-safe step" pattern that holds
+     for green/purple/red (each family's l4 is a genuinely dark colour). SFDS
+     publishes no dark yellow -- yellow-l4 (#e0a81a) is a mid-tone gold, and
+     no step in the yellow ramp clears 4.5:1 against yellow-l1 (l4 itself
+     measures 1.90:1, confirmed both by hand and by
+     tests/e2e/accessibility.spec.js, which is where this was actually
+     caught: 810 .status-chip.warn nodes plus .mockup-banner and
+     .editor-qa-status in the mockup itself). grey-dark clears it at 8.9:1 --
+     the same neutral --status-pending-fg already uses for the same reason
+     (a neutral SFDS's colour ramps don't otherwise provide). */
+  --status-edits-fg: var(--sfds-color-grey-dark);
 
   /* Revise = the author's move. Purple, so it reads as "action needed
      here" without the alarm of the danger red used for Blocked. */
-  --status-revise-bg: var(--legacy-purple-bg, #f5efff);
-  --status-revise-border: var(--legacy-purple-border, #decdf6);
-  --status-revise-fg: var(--legacy-purple-text, #4a2a7a);
+  --status-revise-bg: var(--sfds-color-purple-l1);
+  --status-revise-border: var(--sfds-color-purple-l2);
+  --status-revise-fg: var(--sfds-color-purple-l4);
 
   /* Blocked = waiting on someone outside the review. Danger red. */
-  --status-blocked-bg: var(--legacy-danger-bg, #fff1f0);
-  --status-blocked-border: var(--legacy-danger-border, #d92d20);
-  --status-blocked-fg: var(--legacy-danger-text, #8f1d15);
+  --status-blocked-bg: var(--sfds-color-red-l1);
+  --status-blocked-border: var(--sfds-color-red-l3);
+  --status-blocked-fg: var(--sfds-color-red-l4);
 
-  --status-pending-bg: var(--legacy-slate-5, #f0f0f0);
-  --status-pending-border: var(--legacy-slate-4, #c9caca);
-  --status-pending-fg: var(--legacy-slate-2, #383939);
+  --status-pending-bg: var(--sfds-color-grey-l1);
+  --status-pending-border: var(--sfds-color-grey-l3);
+  /* JUDGEMENT, not a lookup: the legacy value here (#383939) is a neutral
+     grey, and SFDS's slate family is blue-tinted rather than neutral — using
+     a slate would introduce a hue "Needs review" never had. grey-dark is the
+     nearest neutral SFDS actually publishes. */
+  --status-pending-fg: var(--sfds-color-grey-dark);
 
   /* ===================================================================
      Categorical data-visualisation palette
@@ -283,7 +312,7 @@
   --viz-2: #0072b2; /* blue           — light 5.05:1 | dark 3.42:1 */
   --viz-3: #d55e00; /* vermillion     — light 3.77:1 | dark 4.59:1 */
   --viz-4: #ca77a5; /* reddish purple — light 3.06:1 | dark 5.66:1 */
-  --viz-neutral: var(--legacy-slate-4, #c9caca);
+  --viz-neutral: var(--sfds-color-grey-l3);
   --viz-separator: var(--surface-panel);
 
   /* Fills for the five review decisions in the Overview charts.
@@ -435,6 +464,56 @@
        against the panel above. */
     --status-pending-border: #606670;
 
+    /* Task 6 pointed the SEMANTIC layer's light-mode definitions straight at
+       `--sfds-color-*` instead of through `--legacy-*` (see the top of this
+       file), because SFDS is a single, fixed palette with no dark variant of
+       its own — there is no `--sfds-color-*-dark` to invert into. That is
+       correct for `#mockPage`, which must stay light regardless of theme
+       (see `.browser-shell` below), but every one of these semantic tokens
+       ALSO feeds tool chrome that legitimately follows dark mode
+       (`css/ux-improvements.css`, `css/dashboard.css`, `css/ai-assist.css`,
+       `css/ai-rewrite.css`, `css/inline-content-edit.css`, `css/review-insights.css`,
+       `css/review-ops.css`). Before this block existed those reads silently
+       stayed light-pinned in dark mode too — not a hypothetical: it read
+       white-on-white and pale-on-pale across the workspace tabs, the sticky
+       bar and the review queue until `tests/e2e/accessibility.spec.js`'s
+       dark-mode scans caught it.
+
+       The fix is NOT to make `--sfds-color-*` theme-aware (that would betray
+       what "the raw SFDS palette, pinned to its capture" means in
+       css/sfds.css's own header, and this file's own primitive-vs-semantic
+       split says the override belongs at whichever layer the value is free
+       to vary at). Instead, each semantic token gets its OWN dark value here,
+       carrying forward the exact literal this repo's dark palette already
+       used for the equivalent role before Task 6 — the same numbers that
+       used to arrive indirectly through `--legacy-*`, now declared directly.
+       Nothing about dark mode's appearance changes; only which layer defines
+       it does. */
+    --brand-primary: var(--brand-70); /*  8.02:1 on panel */
+    --brand-primary-hover: var(--brand-80); /* 10.74:1 on panel */
+    --surface-page: #101216;
+    --surface-panel: #16181d;
+    --surface-soft: #101216;
+    --text-primary: #f0f1f2; /* 15.70:1 on panel */
+    --text-secondary: #a9adb4; /*  7.88:1 on panel */
+    --border-default: #2b2f37;
+    --border-strong: #606670; /*  3.07:1 on panel */
+    --status-approved-bg: #0e2a12;
+    --status-approved-border: #35713a; /* 3.02:1 on panel */
+    --status-approved-fg: #8fd694; /* 8.99:1 on its bg */
+    --status-edits-bg: #2e2410;
+    --status-edits-border: #7d6220; /* 3.08:1 on panel */
+    --status-edits-fg: #f0cd72; /* 9.94:1 on its bg */
+    --status-revise-bg: #241a33;
+    --status-revise-border: #725a98; /* 3.07:1 on panel */
+    --status-revise-fg: #cbb0ef; /* 8.65:1 on its bg */
+    --status-blocked-bg: #351416;
+    --status-blocked-border: #a84641; /* 3.06:1 on panel */
+    --status-blocked-fg: #f5a8a2; /* 8.71:1 on its bg */
+    --status-pending-bg: #101216;
+    --status-pending-fg: #c3c7ce; /* 10.47:1 on panel */
+    --viz-neutral: #606670;
+
     /* Depth on dark surfaces comes from lighter fills, not darker shadow —
        a light-mode shadow over a dark panel just produces a muddy halo.
        Kept subtle so elevation still separates without dirtying. */
@@ -539,7 +618,46 @@
        chip inside the mockup should not have to rediscover this. */
     --brand-95: #ecf2fb;
     --brand-90: #dbe6f7;
-    --status-pending-border: #c9caca;
+    --status-pending-border: var(--sfds-color-grey-l3);
+
+    /* Task 6's counterpart to the dark :root block above. The semantic
+       tokens repointed onto `--sfds-color-*` are a single fixed palette with
+       no theme of its own, so `#mockPage` gets its always-light behaviour
+       "for free" UNLESS something inside `.browser-shell` reads a semantic
+       token whose dark override above has just made theme-aware — and one
+       real consumer does: `css/inline-content-edit.css`, the click-to-edit
+       widgets that render in place inside the mockup, reads
+       `--text-primary`, `--surface-panel`, `--surface-soft`, `--brand-primary`,
+       `--status-edits-*` and `--status-blocked-*` directly. Without this
+       block a reviewer editing a page's copy in dark mode would see the
+       editing chrome go dark while the mockup around it stayed light — the
+       same "page that does not exist" failure this whole re-pin exists to
+       prevent, just for a widget instead of the page. Values mirror the
+       light-mode :root definitions above exactly. */
+    --brand-primary: var(--sfds-color-action);
+    --brand-primary-hover: var(--sfds-color-blue-dark);
+    --surface-page: var(--sfds-color-grey-l1);
+    --surface-panel: var(--sfds-color-white);
+    --surface-soft: var(--sfds-color-grey-l1);
+    --text-primary: var(--sfds-color-black);
+    --text-secondary: var(--sfds-color-slate-l3);
+    --border-default: var(--sfds-color-grey-l2);
+    --border-strong: var(--sfds-color-grey-l3);
+    --status-approved-bg: var(--sfds-color-green-l1);
+    --status-approved-border: var(--sfds-color-green-l2);
+    --status-approved-fg: var(--sfds-color-green-l4);
+    --status-edits-bg: var(--sfds-color-yellow-l1);
+    --status-edits-border: var(--sfds-color-yellow-l3);
+    --status-edits-fg: var(--sfds-color-grey-dark);
+    --status-revise-bg: var(--sfds-color-purple-l1);
+    --status-revise-border: var(--sfds-color-purple-l2);
+    --status-revise-fg: var(--sfds-color-purple-l4);
+    --status-blocked-bg: var(--sfds-color-red-l1);
+    --status-blocked-border: var(--sfds-color-red-l3);
+    --status-blocked-fg: var(--sfds-color-red-l4);
+    --status-pending-bg: var(--sfds-color-grey-l1);
+    --status-pending-fg: var(--sfds-color-grey-dark);
+    --viz-neutral: var(--sfds-color-grey-l3);
 
     /* Same reasoning as the trio above: --eyebrow-agency is overridden in
        the dark :root block, so it has to be restored here too, or the
@@ -553,9 +671,15 @@
        has exactly one (light) rendering. */
     --eyebrow-agency: #a84b00;
 
-    --surface-sunken: #f8fafc;
-    --surface-raised: #fcfcfc;
-    --brand-on-primary: #fcfcfc;
+    /* These three used to restate the pre-Task-6 literals (#f8fafc, #fcfcfc,
+       #fcfcfc) — the old --legacy-slate-6/-white values. Task 6 moved their
+       light-mode source of truth to --sfds-color-slate-l1/-white (#eff3f4 /
+       #ffffff, see the :root block at the top of this file), so a re-pin
+       still quoting the old numbers would have pinned the mockup to a colour
+       that is no longer this token's actual light value anywhere else. */
+    --surface-sunken: var(--sfds-color-slate-l1);
+    --surface-raised: var(--sfds-color-white);
+    --brand-on-primary: var(--sfds-color-white);
     --ds-shadow-1: 0 1px 2px rgba(0, 29, 78, 0.06), 0 1px 3px rgba(0, 29, 78, 0.08);
     --ds-shadow-2: 0 2px 4px rgba(0, 29, 78, 0.06), 0 4px 12px rgba(0, 29, 78, 0.1);
     --ds-shadow-3: 0 8px 16px rgba(0, 29, 78, 0.08), 0 16px 32px rgba(0, 29, 78, 0.12);

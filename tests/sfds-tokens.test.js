@@ -8,14 +8,21 @@
    someone invented `--sfds-action-blue` and gave it a value SFDS never
    published.
 
-   This file only asserts the second direction — that the namespace is
-   reserved and unused outside its one legitimate file. It exists a task
-   ahead of `css/sfds.css` on purpose (see Task 2's brief): renaming the 30
-   hand-authored primitives to `--legacy-*` first means this test is true
-   from its first commit rather than deferred to the PR that adds the real
-   tokens. The value-pinning half — declared values against
-   `docs/source/sfds/tokens.json` — lands with Task 3, once there is a
-   `css/sfds.css` to check.
+   This file also asserts the second direction — that the namespace's ONLY
+   consumers are the ones that have actually adopted it. Before Task 6 that
+   meant "no file outside css/sfds.css": it existed a task ahead of
+   `css/sfds.css` on purpose (see Task 2's brief), so it was true from its
+   first commit rather than deferred to the PR that added the real tokens.
+   Task 6 is the one that makes `css/theme.css` (the semantic layer) and
+   `css/styles.css` (the mockup's own rules) real consumers, so the allowlist
+   below grew by exactly those two — not to "no file outside sfds.css" but
+   to "no file outside the files that have actually migrated." Widening it
+   further belongs to whichever later task migrates the next file (e.g.
+   `css/ux-improvements.css`, `css/ai-assist.css`, still on `--legacy-*` as
+   of Task 6); this test is what makes that widening a deliberate, reviewed
+   line rather than a silent expansion. The value-pinning half — declared
+   values against `docs/source/sfds/tokens.json` — lands with Task 3, once
+   there is a `css/sfds.css` to check.
 
    Load-order dependency: none. It reads files off disk and parses text. */
 
@@ -24,6 +31,12 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ROOT = join(import.meta.dir, '..')
+
+/** Files that have migrated onto `--sfds-*` and may legitimately consume it,
+ * beyond `css/sfds.css` itself (which declares the namespace). Task 6 added
+ * `css/theme.css` and `css/styles.css`; every other stylesheet still reads
+ * `--legacy-*` and is not yet on this list. */
+const MIGRATED_CONSUMERS = ['css/theme.css', 'css/styles.css']
 
 /**
  * Every file in the repo that may legitimately mention a design token.
@@ -41,9 +54,10 @@ function tokenBearingFiles() {
 }
 
 describe('the --sfds-* namespace', () => {
-  test('is used by no file outside css/sfds.css', () => {
+  test('is used by no file outside css/sfds.css and its migrated consumers', () => {
     const offenders = tokenBearingFiles()
       .filter((path) => !path.endsWith('css/sfds.css'))
+      .filter((path) => !MIGRATED_CONSUMERS.some((rel) => path.endsWith(rel)))
       .filter((path) => readFileSync(path, 'utf8').includes('--sfds-'))
       .map((path) => path.slice(ROOT.length + 1))
     expect(offenders).toEqual([])
