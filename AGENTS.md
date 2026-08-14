@@ -45,7 +45,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 37 unit-test files in tests/
+bun run test                  # Bun test runner over the 38 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -65,7 +65,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 37 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 38 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -107,7 +107,16 @@ rather than the scheme — `mailto:`, `tel:` and root-relative targets all pass
 later reader "fixing" them by widening this predicate would ship exactly the
 broken control it removes),
 `review-api-server` (which spawns `server.ts` as a subprocess
-against a temp SQLite DB), `review-state-sync`, `ai-assist-schema`,
+against a temp SQLite DB),
+`review-api-postgres` (the same routes against a **real Postgres**, and
+**skipped unless one is reachable** — `TEST_DATABASE_URL`, else a local server
+on the default port, so it is a no-op in CI. It exists because the two drivers
+in `build_scripts/storage.js` express the compare-and-swap differently — SQLite
+reports `changes`, Postgres counts rows `RETURNING`ed — and a lost update there
+is silent. Its race test issues two pushes carrying the same baseline and
+asserts exactly one 409, which is the only convincing evidence: reading the SQL
+proves nothing about which writer loses),
+`review-state-sync`, `ai-assist-schema`,
 `ai-assist-env`, `ai-assist-providers` (the provider registry and usage
 normalization, varying the provider keys directly — which the server tests
 cannot, since a spawn only ever sees the environment it was given),
@@ -2024,6 +2033,44 @@ and it never writes to `pages/*.js`.
   never committed (the "form shell that never hydrates" regression).
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
+
+### Where review records live (`build_scripts/storage.js`)
+
+One module decides the store and speaks its dialect; `server.ts` calls functions
+and never sees a driver, a connection or a SQL string.
+
+- **Postgres when `DATABASE_URL` is set** — Railway injects it from the managed
+  Postgres service in `hhvc-manager-review`. **SQLite at `DATA_DB_PATH`
+  otherwise**: local dev, `bun run dev:api`, and every server test.
+- **SQLite is kept deliberately, not left behind.**
+  `tests/review-api-server.test.js` spawns the real `server.ts` against a temp
+  DB and asserts twenty-odd behaviours over real HTTP. Keeping the fallback is
+  what lets that suite run with no service container in CI.
+- **Every function is async, including the SQLite ones.** `bun:sqlite` is
+  synchronous and `Bun.SQL` is not; giving them different shapes would push the
+  difference back into `server.ts`, which is what the seam exists to prevent.
+- **`updated_at` is TEXT in both drivers, never a timestamp type.** Every
+  freshness check in this system is a string compare — the server's
+  `existing.updated_at > patch.synced_at`, the client's
+  `serverRecord.updated_at > localRecord.synced_at` — against ISO strings that
+  only ever come from the server. Letting Postgres parse and reformat them would
+  change those comparisons for values differing only in representation, and the
+  failure mode is a silently lost update.
+- **The compare-and-swap is the load-bearing line.** SQLite gates the conflict
+  branch with `WHERE review_pages.updated_at = ?` and reads `changes`; Postgres
+  does the same and counts rows `RETURNING`ed. `RETURNING` rather than a
+  driver-specific rows-affected field, because it is the portable way to tell a
+  skipped conflict branch from a real write.
+- **DDL runs at boot, not lazily on the first request.** Lazy was fine for a
+  file only one process opens; two Postgres replicas racing the same
+  `CREATE TABLE` on their first requests is not.
+- **`knowledge_chunks` has NOT moved yet.** The RAG table still lives in the
+  SQLite file at `DATA_DB_PATH`, so on a Postgres deployment the knowledge base
+  reads an empty local file and `compliance-audit` reports itself unready — the
+  same state as before, since nobody had run `bun run ingest` on the volume
+  either. Moving it is its own change.
+- **Bun's Postgres client is built in** (`Bun.SQL`, Bun 1.3+), so this added no
+  npm dependency — the same reason `bun:sqlite` was used in the first place.
 
 ### Deploying — Railway is the live host
 

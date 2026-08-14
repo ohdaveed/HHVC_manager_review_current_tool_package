@@ -40,7 +40,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 37 unit-test files in tests/
+bun run test                  # bun test over the 38 unit-test files in tests/
 bun run test:e2e              # playwright test over the 19 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -70,7 +70,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 37 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 38 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -123,6 +123,13 @@ prototype-pollution case uses `Object.defineProperty` rather than an object
 literal, whose `__proto__:` key would set the prototype instead of creating an
 own property and pass while proving nothing), `review-api-server` (spawns
 `server.ts` as a subprocess against a temp SQLite DB, over real HTTP),
+`review-api-postgres` (the same routes against a **real Postgres**, and
+**skipped unless one is reachable** — `TEST_DATABASE_URL`, else a local server
+on the default port, so CI runs it as a no-op. It exists because the two
+drivers in `build_scripts/storage.js` express the compare-and-swap differently
+— SQLite reports `changes`, Postgres counts rows `RETURNING`ed — and a lost
+update there is silent; its race test issues two pushes carrying the same
+baseline and asserts exactly one 409),
 `ai-assist-providers` (varies provider API keys directly, which a spawned
 server subprocess structurally cannot), `ai-assist-server` (spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
@@ -1089,6 +1096,34 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
   also swallow that sub-app's committed `dist/`.
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
+
+### Where review records live (`build_scripts/storage.js`)
+
+One module decides the store and speaks its dialect; `server.ts` calls functions
+and never sees a driver or a SQL string.
+
+- **Postgres when `DATABASE_URL` is set** (Railway injects it from the managed
+  Postgres service); **SQLite at `DATA_DB_PATH` otherwise** — local dev and
+  every server test. The fallback is kept so
+  `tests/review-api-server.test.js` can spawn the real server in CI with no
+  service container.
+- **Every function is async, including the SQLite ones** — `bun:sqlite` is sync
+  and `Bun.SQL` is not, and two shapes would push the difference back into
+  `server.ts`.
+- **`updated_at` is TEXT in both drivers, never a timestamp type.** Every
+  freshness check here is a string compare against ISO strings the server
+  stamps; letting Postgres reformat them would silently change those
+  comparisons, and the failure mode is a lost update.
+- **The compare-and-swap is the load-bearing line** — SQLite reads `changes`,
+  Postgres counts rows `RETURNING`ed. `tests/review-api-postgres.test.js` proves
+  the Postgres half by racing two pushes off one baseline.
+- **DDL runs at boot, not lazily**, so two replicas cannot race the same
+  `CREATE TABLE`.
+- **`knowledge_chunks` has NOT moved yet** — the RAG table still lives in the
+  SQLite file, so on Postgres `compliance-audit` reports itself unready, the
+  same state as before. Moving it is its own change.
+- Bun's Postgres client is built in (`Bun.SQL`), so this added no npm
+  dependency.
 
 ### Deploying — Railway is the live host
 

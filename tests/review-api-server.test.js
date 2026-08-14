@@ -39,6 +39,12 @@ function spawnServer({ port, token, dbDir, staticRoot, extraEnv = {} }) {
     'REVIEW_API_ALLOWED_ORIGINS',
     'REVIEW_API_RATE_LIMIT',
     'REVIEW_API_RATE_WINDOW_MS',
+    // DATABASE_URL is what build_scripts/storage.js switches drivers on, so a
+    // developer with one exported would silently run this whole SQLite suite —
+    // DATA_DB_PATH and all — against their Postgres. Postgres parity has its
+    // own suite (tests/review-api-postgres.test.js); this one must stay the
+    // SQLite one, whatever the shell it inherits.
+    'DATABASE_URL',
   ]) {
     delete env[key]
   }

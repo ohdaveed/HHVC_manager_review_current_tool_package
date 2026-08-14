@@ -1,13 +1,20 @@
 import { serve } from "bun"
-import { Database } from "bun:sqlite"
-import { mkdirSync } from "node:fs"
-import { dirname, resolve } from "node:path"
+import { resolve } from "node:path"
 import { timingSafeEqual } from "node:crypto"
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
 import { mergeReviewRecord } from "./js/review-merge.js"
 // @ts-ignore - plain JS module (CJS via Zod), no .d.ts; same interop as above.
 import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
+// The storage seam. Postgres when DATABASE_URL is set, SQLite otherwise; see
+// build_scripts/storage.js for why both drivers stay supported.
+import {
+  describeStorage,
+  initStorage,
+  readAllReviewPages,
+  readReviewPage,
+  upsertReviewPageIfUnchanged,
+} from "./build_scripts/storage.js"
 // @ts-ignore - plain JS modules, CommonJS; the AI assist service (see below).
 import { generateContent, generateRewrite, getCapabilities, listModels } from "./build_scripts/ai/index.js"
 // @ts-ignore - plain JS module, CommonJS. The compliance-audit task's
@@ -508,23 +515,10 @@ const MAX_REVIEW_BODY_BYTES = 1024 * 1024
  */
 const DRAIN_LIMIT_MULTIPLIER = 8
 
-let db: Database | null = null
-function getDb(): Database {
-  if (db) return db
-  // { create: true } makes bun:sqlite create the DB *file*, but not its
-  // parent directory (the Railway volume mount or local .data/ dir) —
-  // without this, a fresh checkout/volume fails with SQLITE_CANTOPEN.
-  mkdirSync(dirname(DATA_DB_PATH), { recursive: true })
-  db = new Database(DATA_DB_PATH, { create: true })
-  db.run(`
-    CREATE TABLE IF NOT EXISTS review_pages (
-      page_key TEXT PRIMARY KEY,
-      record TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    )
-  `)
-  return db
-}
+// Where review records live is decided by build_scripts/storage.js: Postgres
+// when DATABASE_URL is set (Railway injects it from the managed Postgres
+// service), SQLite at DATA_DB_PATH otherwise — local dev, and every server
+// test. This file no longer knows which, or speaks either dialect.
 
 /**
  * Read a request body as text, refusing it the moment it passes `maxBytes`.
@@ -616,22 +610,19 @@ async function readBodyWithLimit(req: Request, maxBytes: number): Promise<string
 
 /** Reassemble the flattened { version, updated_at, ui, globals, pages } shape
  *  js/review-state-store.js already uses, from the per-page rows table. */
-function getFullReviewState(): object {
-  const rows = getDb()
-    .query("SELECT page_key, record FROM review_pages")
-    .all() as Array<{ page_key: string; record: string }>
+async function getFullReviewState(): Promise<object> {
+  // readAllReviewPages() already drops a row it cannot parse rather than
+  // failing the whole GET — one corrupt record must not cost a reviewer the
+  // other twenty-eight.
+  const rows = await readAllReviewPages(DATA_DB_PATH)
 
   const pages: Record<string, unknown> = {}
   let latestUpdatedAt: string | null = null
   for (const row of rows) {
-    try {
-      const parsed = JSON.parse(row.record)
-      pages[row.page_key] = parsed
-      if (typeof parsed.updated_at === "string" && (!latestUpdatedAt || parsed.updated_at > latestUpdatedAt)) {
-        latestUpdatedAt = parsed.updated_at
-      }
-    } catch {
-      // Skip a corrupted row rather than fail the whole GET.
+    const parsed = row.record as { updated_at?: unknown }
+    pages[row.page_key] = parsed
+    if (typeof parsed.updated_at === "string" && (!latestUpdatedAt || parsed.updated_at > latestUpdatedAt)) {
+      latestUpdatedAt = parsed.updated_at
     }
   }
 
@@ -680,11 +671,9 @@ async function putReviewPage(
   }
   const patch = parsed.data as { updated_at?: string; synced_at?: string; [key: string]: unknown }
 
-  const database = getDb()
-  const existingRow = database
-    .query("SELECT record FROM review_pages WHERE page_key = ?")
-    .get(pageKey) as { record: string } | null
-  const existing = existingRow ? JSON.parse(existingRow.record) : null
+  const existing = (await readReviewPage(DATA_DB_PATH, pageKey)) as
+    | { updated_at?: string; [key: string]: unknown }
+    | null
 
   // Reject a stale full-record push instead of silently overwriting a
   // newer server record with it: pushPage sends the client's entire local
@@ -740,13 +729,13 @@ async function putReviewPage(
   // means the loser's write becomes a no-op (`changes: 0`) instead of
   // silently clobbering the winner's — same "merge, never wipe" invariant,
   // just enforced atomically instead of just checked-then-trusted.
-  const result = database.run(
-    `INSERT INTO review_pages (page_key, record, updated_at) VALUES (?, ?, ?)
-     ON CONFLICT(page_key) DO UPDATE SET record = excluded.record, updated_at = excluded.updated_at
-     WHERE review_pages.updated_at = ?`,
-    [pageKey, JSON.stringify(merged), merged.updated_at, existing?.updated_at ?? null]
-  )
-  if (result.changes === 0) {
+  const written = await upsertReviewPageIfUnchanged(DATA_DB_PATH, {
+    pageKey,
+    record: merged,
+    updatedAt: merged.updated_at,
+    expectedUpdatedAt: existing?.updated_at ?? null,
+  })
+  if (!written) {
     return jsonResponse(
       { error: "Server has a newer version of this page. Pull before pushing again." },
       409,
@@ -771,7 +760,7 @@ async function handleReviewStateApi(req: Request, url: URL): Promise<Response> {
   if (url.pathname === "/api/review-state" && req.method === "GET") {
     const roleResponse = requireApiRole(principal, API_ROLES.reviewRead, context)
     if (roleResponse) return roleResponse
-    return jsonResponse(getFullReviewState(), 200, context.corsHeaders)
+    return jsonResponse(await getFullReviewState(), 200, context.corsHeaders)
   }
 
   const pageMatch = url.pathname.match(/^\/api\/review-state\/pages\/([^/]+)$/)
@@ -1115,6 +1104,14 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
   return jsonResponse({ error: "Not Found" }, 404, context.corsHeaders)
 }
 
+// Create the review-state table before the first request rather than lazily on
+// it. On SQLite that was harmless — one process, one file. On Postgres two
+// replicas racing the same DDL on their first requests is not, and a boot-time
+// CREATE TABLE IF NOT EXISTS removes the race for the cost of one statement.
+// Awaited at module top level, which Bun supports, so `serve()` cannot start
+// listening against a schema that does not exist yet.
+await initStorage(DATA_DB_PATH)
+
 const server = serve({
   hostname: HOST,
   port: PORT,
@@ -1177,6 +1174,9 @@ const server = serve({
   },
 })
 
+// The storage line names the driver but never the connection string — the
+// Postgres URL carries a password, and this log goes to Railway's log stream.
 console.log(`HHVC mockup server running at http://${server.hostname}:${server.port}`)
+console.log(`Review state stored in ${describeStorage(DATA_DB_PATH)}`)
 
 export default server
