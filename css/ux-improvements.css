@@ -458,9 +458,40 @@
   color: var(--text-secondary);
 }
 
+/* De-emphasis used to be a flat `opacity: 0.85` on the whole list — which
+   fades a `<canvas>`-rendered pixel EQUALLY whether it belongs to a
+   background, a border, or a glyph. The MUI `success`-coloured "Pass" chip
+   in this list already sits at a thin 6.28:1 on its own card
+   (--status-approved-fg #1b674d on --surface-soft #f6f6f6, see the
+   .compliance-rule comment above for the same trade under a different
+   token). Composited through 0.85 opacity onto this list's white
+   --surface-panel backdrop, that text renders at an effective #3d7e68 on an
+   effective #f7f7f7 — 4.47:1, under the 4.5:1 floor 13px/normal-weight text
+   needs. tests/e2e/accessibility.spec.js caught it correctly; it was not
+   the axe false positive an earlier pass here recorded it as (verified with
+   `.superpowers/sdd/probe-axe.mjs` against a live build: fgColor #3d7e68,
+   bgColor #f7f7f7, contrastRatio 4.47, expectedContrastRatio 4.5:1 — an
+   exact match for 0.85 * text/bg composited over white, to the pixel).
+   Fading the *card* instead of the *group* keeps every descendant's
+   authored colour — including the chip label — at full opacity, so the
+   text contrast this list actually renders is whatever `.compliance-item`
+   already measures elsewhere (6.28:1 light / see dark-mode note below),
+   comfortably clear of AA either way. */
 .compliance-list--facts {
   margin-top: 0.55rem;
-  opacity: 0.85;
+}
+
+.compliance-list--facts .compliance-item {
+  /* Blends the card into the panel behind it (--surface-panel: white in
+     light mode, the dark-panel colour in dark mode) instead of standing out
+     with its own --surface-soft fill — the same "held back" effect opacity
+     produced, but on a background pixel a screen reader never reads text
+     color out of, so it costs nothing in contrast. Dark mode was measured
+     with 0 axe color-contrast violations both before and after this change
+     (--status-approved-fg is a separate, much lighter dark-mode green,
+     #8fd694, with double-digit ratios on every panel/soft background in
+     this file) — this rule only had bite in light mode. */
+  background: var(--surface-panel);
 }
 
 .compliance-item {
