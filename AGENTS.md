@@ -46,7 +46,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 42 unit-test files in tests/
+bun run test                  # Bun test runner over the 43 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -66,7 +66,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 42 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 43 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -134,10 +134,19 @@ clearing gets "helpfully" copied across), `ai-assist-validate-rewrite`
 held to), `sfds-tokens` (asserts that no file under `css/` or `js/`
 contains the `--sfds-` prefix — the prefix names a design authority, and this
 guard is what stops a hand-authored value from claiming that authority again,
-which is the exact defect this branch exists to fix), and `react-theme`
+which is the exact defect this branch exists to fix), `react-theme`
 (which design tokens the MUI bridge reads, and that each has a fallback — a
 token read with no fallback resolves to `''` before the stylesheets apply,
-and MUI turns an empty palette value into a crash rather than a default).
+and MUI turns an empty palette value into a crash rather than a default), and
+`font-loading` (that both weights of Roboto Slab are imported in
+`js/main.js` — the SFDS heading ladder is weight 700 throughout, and a
+browser asked for 700 with only 400 loaded synthesises bold by smearing the
+400 outlines rather than failing, which has different metrics and reads as a
+rendering fault rather than a design choice; it also pins that
+`@fontsource/roboto-flex` still ships no static 700 face on disk, since the
+only path to one is a different package registering a different font-family
+name — a deliberate deferral, not an oversight, so the test goes red rather
+than stale if a future release changes that).
 **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports

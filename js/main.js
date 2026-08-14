@@ -41,14 +41,35 @@
 // Self-hosted @font-face declarations for the two typefaces the real
 // www.sf.gov site renders (Roboto Flex for body, Roboto Slab for headings —
 // confirmed against 7 live sf.gov pages, see css/theme.css's --font-body/
-// --font-display comment). Latin-only subset, weight 400 only: this repo
-// works fully offline (including the build:singlefile export), so the fonts
-// must be bundled rather than pulled from a CDN, and @fontsource/roboto-flex
-// only ships a static weight-400 build (Roboto Flex is inherently a
-// variable font; the full weight range lives in the separate, much heavier
-// @fontsource-variable/roboto-flex package this tool doesn't need).
+// --font-display comment). Latin-only subset: this repo works fully offline
+// (including the build:singlefile export), so the fonts must be bundled
+// rather than pulled from a CDN.
+//
+// Roboto Slab gets both weight 400 AND 700: SFDS's heading ladder is weight
+// 700 throughout, and a browser asked for 700 with only 400 loaded doesn't
+// fail — it synthesises bold by geometrically smearing the 400 outlines,
+// which has different metrics and stroke contrast from the real face and
+// reads as a rendering fault rather than a type choice (see
+// tests/font-loading.test.js, which guards exactly this).
+//
+// Roboto Flex stays at weight 400 ONLY, and that is not an oversight to
+// "complete" later: @fontsource/roboto-flex is generated from the variable
+// Roboto Flex source and its own README documents exactly one static
+// weight — `Weights: [400]` — so there is no latin-700.css to import here at
+// any version. The full weight range lives in the separate
+// @fontsource-variable/roboto-flex package, which registers a DIFFERENT
+// font-family name ('Roboto Flex Variable', not 'Roboto Flex' — a
+// Fontsource convention that lets both packages coexist) and would need
+// --font-body in css/theme.css and the SFDS font-sans token in css/sfds.css
+// rethreaded to match, on top of its own, much larger bundle cost. That's a
+// deliberate font-family decision belonging to whichever task chooses to
+// make it, not a side effect of loading a weight file that already exists
+// on disk. Until then, bold body copy (.eyebrow, .brand, .table th,
+// .tool-btn, …) keeps rendering synthesised-bold Roboto Flex — a
+// pre-existing condition, not one this change introduces or fixes.
 import '@fontsource/roboto-flex/latin-400.css'
 import '@fontsource/roboto-slab/latin-400.css'
+import '@fontsource/roboto-slab/latin-700.css'
 import '@sfgov/design-system/dist/css/base.css'
 import '@sfgov/design-system/dist/css/typography.css'
 import '@sfgov/design-system/dist/css/components.css'

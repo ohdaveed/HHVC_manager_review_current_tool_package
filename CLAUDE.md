@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 42 unit-test files in tests/
+bun run test                  # bun test over the 43 unit-test files in tests/
 bun run test:e2e              # playwright test over the 19 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 42 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 43 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -147,10 +147,18 @@ and introduces no HTML into copy rendered through `formatMarkdown`),
 `sfds-tokens` (asserts that no file under `css/` or `js/` contains the
 `--sfds-` prefix — the prefix names a design authority, and this guard is what
 stops a hand-authored value from claiming that authority again, which is the
-exact defect this branch exists to fix), and `react-theme` (which design
+exact defect this branch exists to fix), `react-theme` (which design
 tokens the MUI bridge reads, and that each has a fallback — a token read with
 no fallback resolves to `''` before the stylesheets apply, and MUI turns an
-empty palette value into a crash rather than a default).
+empty palette value into a crash rather than a default), and
+`font-loading` (that both weights of Roboto Slab are imported — the
+mockup's headings are weight 700, and importing only 400 leaves the browser
+synthesising bold, which has different metrics and reads as a rendering fault
+rather than a type scale; it also pins that `@fontsource/roboto-flex` still
+ships no static 700 face, since that package's own README documents exactly
+one static weight and the only way to a real 700 instance is a different
+package under a different font-family name — a deferred decision, not an
+oversight, so the test goes red rather than stale if that ever changes).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
