@@ -53,6 +53,8 @@ bun run build:workshop-form   # bun install + vite build inside forms/mosquito-w
 bun run build:netlify         # validate -> build:app -> copy-workshop-form.js (assembles dist/)
 bun run format                # prettier --write on everything
 bun run format:check          # prettier --check — THIS IS THE LINT STEP (no ESLint/tsc)
+bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_scripts/ai/ ONLY
+                              # — a developer-run report, NOT a CI gate (see Formatting below)
 ```
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
@@ -1912,11 +1914,27 @@ and it never writes to `pages/*.js`.
 
 ### Formatting (a hard CI gate)
 
-Prettier is the **only** linter (`.prettierrc.json`): **no semicolons**, single
-quotes, 2-space indentation, `printWidth: 100`, ES5 trailing commas. Code must be
-ASI-safe and semicolon-free. Run `bun run format` before committing;
-`bun run format:check` is the lint step. `.prettierignore` excludes `data/`,
-`server.ts`, the generated single-file HTML exports, and reference/planning dirs.
+Prettier is the **only linter CI enforces** (`.prettierrc.json`): **no
+semicolons**, single quotes, 2-space indentation, `printWidth: 100`, ES5 trailing
+commas. Code must be ASI-safe and semicolon-free. Run `bun run format` before
+committing; `bun run format:check` is the lint step. `.prettierignore` excludes
+`data/`, `server.ts`, the vendored `tools/oxlint/anti-slop/`, the generated
+single-file HTML exports, and reference/planning dirs.
+
+**`bun run lint:anti-slop` is a second linter, and deliberately not a gate.** It
+runs the vendored [anti-slop](https://github.com/dmmulroy/anti-slop) Oxlint
+plugin (`tools/oxlint/anti-slop/`, MIT-licensed, provenance and upstream commit
+in its `NOTICE.md`) over **`server.ts` and `build_scripts/ai/` only** — the two
+places that decode external input, where its rules about widening and unchecked
+assertions are about the code rather than about a style this repo doesn't use.
+The narrow scope is not timidity: pointed at the browser JS the same rules
+reported 280 findings, 254 of them `no-runtime-typeof` firing on the
+`typeof window === 'undefined'` guard this repo's own code style mandates, which
+is a linter arguing with the codebase rather than improving it. `.oxlintrc.json`
+pins the same scope in its `overrides`, so an editor running bare `oxlint` sees
+it too. Nothing in `.github/workflows/ci.yml` invokes it — it is a report to
+read, and adding it to CI would be a decision to make on purpose, not a gap to
+close.
 
 ### JavaScript
 
