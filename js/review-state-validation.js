@@ -57,7 +57,31 @@ import { DECISION_LABELS } from './utils.js'
   // as defense-in-depth in js/inline-content-edit-data.js#applyContentEdits-
   // ToPageData, which has no ESM `export` surface either side can import
   // from. tests/review-state-schema.test.js pins all three together.
-  const SECTION_EDIT_PATH_PATTERN = /^sections\.\d+\.(heading|paragraphs|bullets)$/
+  const SECTION_EDIT_VALUE_KINDS = [
+    [/^sections\.\d+\.heading$/, 'string'],
+    [/^sections\.\d+\.paragraphs$/, 'textArray'],
+    [/^sections\.\d+\.bullets$/, 'textArray'],
+    [/^sections\.\d+\.table$/, 'table'],
+    [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
+    [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
+    [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],
+    [/^sections\.\d+\.steps\.\d+\.callout\.(title|text)$/, 'string'],
+    [/^whatToKnow\.cost$/, 'string'],
+    [/^whatToKnow\.(thingsToKnow|items)$/, 'textArray'],
+    [/^spotlight\.title$/, 'string'],
+    [/^spotlight\.paragraphs$/, 'textArray'],
+    [/^contact\.(address|hours)$/, 'string'],
+    [/^contact\.(phone|email|other)$/, 'stringArray'],
+  ]
+
+  const SECTION_EDIT_PATH_PATTERN = new RegExp(
+    `^(?:${SECTION_EDIT_VALUE_KINDS.map(([pattern]) => pattern.source.replace(/^\^|\$$/g, '')).join('|')})$`
+  )
+
+  function sectionEditValueKind(path) {
+    const entry = SECTION_EDIT_VALUE_KINDS.find(([pattern]) => pattern.test(path))
+    return entry ? entry[1] : null
+  }
 
   function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -82,13 +106,23 @@ import { DECISION_LABELS } from './utils.js'
     if (!isPlainObject(sectionEdits)) return undefined
     const clean = {}
     for (const [path, value] of Object.entries(sectionEdits)) {
-      const match = SECTION_EDIT_PATH_PATTERN.exec(path)
-      if (!match) continue
-      if (match[1] === 'heading') {
+      const kind = sectionEditValueKind(path)
+      if (!kind) continue
+      if (kind === 'string') {
         if (typeof value === 'string') clean[path] = value
         continue
       }
-      if (Array.isArray(value) && value.every(isValidSectionEditItem)) clean[path] = value
+      if (!Array.isArray(value)) continue
+      if (kind === 'textArray' && value.every(isValidSectionEditItem)) clean[path] = value
+      if (kind === 'stringArray' && value.every((item) => typeof item === 'string')) {
+        clean[path] = value
+      }
+      if (
+        kind === 'table' &&
+        value.every((row) => Array.isArray(row) && row.every((cell) => typeof cell === 'string'))
+      ) {
+        clean[path] = value
+      }
     }
     return clean
   }

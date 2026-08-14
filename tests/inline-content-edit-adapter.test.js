@@ -18,13 +18,54 @@ const {
   FIELD_TYPES,
   SCALAR_FIELD_TYPES,
   ITEM_FIELD_TYPES,
+  isItemFieldType,
+  isMarkdownFieldType,
 } = require('../js/inline-content-edit-adapter.js')
 
 describe('FIELD_TYPES', () => {
-  test('splits into exactly the four scalar and two item field kinds', () => {
-    expect(SCALAR_FIELD_TYPES).toEqual(['title', 'summary', 'primaryCta', 'heading'])
+  test('splits into exactly the five scalar and two item field kinds', () => {
+    expect(SCALAR_FIELD_TYPES).toEqual([
+      'title',
+      'summary',
+      'primaryCta',
+      'heading',
+      'markdownText',
+    ])
     expect(ITEM_FIELD_TYPES).toEqual(['paragraph', 'bullet'])
     expect(FIELD_TYPES).toEqual([...SCALAR_FIELD_TYPES, ...ITEM_FIELD_TYPES])
+  })
+
+  // markdownText is the field type that crosses the two groups: it is scalar
+  // (it commits a plain string, so a callout body and a table cell stay the
+  // bare strings their renderers escape and print) while carrying markdown
+  // (so the [label](target) links in them survive a round trip instead of
+  // being flattened into literal text on the first edit).
+  test('markdownText is scalar for committing but markdown-bearing for editing', () => {
+    expect(isItemFieldType('markdownText')).toBe(false)
+    expect(isMarkdownFieldType('markdownText')).toBe(true)
+    expect(isMarkdownFieldType('paragraph')).toBe(true)
+    expect(isMarkdownFieldType('heading')).toBe(false)
+  })
+
+  test('a markdownText round trip preserves an inline link and returns a plain string', () => {
+    const value = 'Read the [tenant guide](tenantGuide) first.'
+    const roundTripped = editorDataToPageValue(
+      'markdownText',
+      pageValueToEditorData('markdownText', value)
+    )
+    expect(roundTripped).toBe(value)
+  })
+
+  test('the same value edited as a heading would lose the link markup', () => {
+    // Why markdownText had to exist rather than reusing 'heading': the plain
+    // -text pair escapes the markdown into literal characters, so committing
+    // a callout body through it would store text the renderer can no longer
+    // turn back into a link.
+    const value = 'Read the [tenant guide](tenantGuide) first.'
+    const asHeading = editorDataToPageValue('heading', pageValueToEditorData('heading', value))
+    expect(asHeading).toBe(value)
+    expect(pageValueToEditorData('heading', value).blocks[0].data.text).not.toContain('<a ')
+    expect(pageValueToEditorData('markdownText', value).blocks[0].data.text).toContain('<a ')
   })
 })
 

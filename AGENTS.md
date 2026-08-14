@@ -649,8 +649,10 @@ so it is the only place a snapshot is recorded.
 
 ### Inline content editing (`js/inline-content-edit*.js`)
 
-Click-to-edit directly on the rendered mockup — title, summary, primary CTA
-label, a section heading, a paragraph, a bullet — with the mockup
+Click-to-edit directly on the rendered mockup — every text field a reviewer
+can see except cards: the title, summary and primary CTA, a section heading,
+paragraph, bullet, table cell or callout, a step's title, text, bullets and
+callout, and the What-to-know, Spotlight and Contact blocks — with the mockup
 re-rendering immediately and the edit persisting through the same
 browser-first `localStorage` review-state model every other field in this
 tool uses. `pages/*.js` is never touched; this is a review aid, same as
@@ -662,12 +664,65 @@ add/remove/reset controls, the Edited badge), `js/inline-content-edit-data.js`
 delegated click handling, the open/commit/cancel widget lifecycle, and
 wiring into the existing autosave path).
 
-- **Scope is deliberately narrow.** Title, summary, primary CTA, section
-  heading, section paragraphs, section bullets — that's it. Cards, callouts,
-  table cells, step text/bullets, `whatToKnow` items, and contact info stay
-  hand-edited in source. Add/remove is supported on exactly two fields —
-  section `paragraphs` and `bullets` — and only of individual items, never
-  whole sections/cards/steps, and never reordering.
+- **Scope is one list, in one place: `EDITABLE_FIELD_SHAPES` in
+  `js/inline-content-edit-data.js`.** It covers a page's title, summary and
+  primary CTA; a section's heading, paragraphs, bullets, table and callout; a
+  step's title, text, bullets and callout; and the page-level `whatToKnow`,
+  `spotlight` and `contact` blocks. Each entry declares the value shape its
+  stored `section_edits` entry takes — `string`, `textArray`, `stringArray` or
+  `table` — and `tests/inline-content-edit-data.test.js` asserts the whole list
+  by value, so widening scope is a deliberate edit to a list rather than a
+  regex loosened in passing. Add/remove is still supported on exactly two
+  fields — section `paragraphs` and `bullets` — and only of individual items,
+  never whole sections/cards/steps, and never reordering.
+- **A field stamped `data-rewrite-field` but absent from that list is the worst
+  state to be in, and it was live.** `js/page-render.js` has stamped
+  `sections.N.steps.M.text.K` since the AI-rewrite work, while
+  `computeSectionEdits` only ever diffed `heading`/`paragraphs`/`bullets` — so
+  a step paragraph opened an editor, accepted the edit, re-rendered with it,
+  and lost it on the next load, with nothing erroring and no test failing.
+  Whenever a renderer starts stamping a new path, the same path has to enter
+  `EDITABLE_FIELD_SHAPES`, or the affordance is a promise the storage layer
+  does not keep.
+- **Two kinds exist only because of how their renderer prints them.** A
+  `stringArray` item (a contact phone number) and a `table` cell are escaped
+  and printed directly, so the tagged
+  `{text, unverified, unverifiedReason}` object every body-copy item commits
+  would render as the literal "[object Object]" there. Conversely
+  `spotlight.paragraphs` renders through `paragraphList()`, so it takes the
+  tagged form and shows the Unverified pill like any other body copy — even
+  though `build_scripts/schema.js` types the AUTHORED field as `string[]`,
+  which constrains `pages/*.js`, not a reviewer's stored edit.
+- **A committed item is merged into what was there, never substituted for
+  it.** A `whatToKnow` entry is `{label, text}`, and `renderWhatToKnow()`
+  prints that label as the entry's own H3 subheading. Writing the tagged object
+  wholesale deleted the label — the heading vanished from the mockup the moment
+  a reviewer edited the paragraph under it. `writeScalarValue` spreads the
+  existing object, and it is now the ONLY write path: `EditorSession.commit()`
+  used to call `setByPath` directly for item field types, which is exactly how
+  it bypassed the merge.
+- **Editable only where there is a field to write back to.**
+  `resolveWhatToKnow()`/`resolveContact()` synthesize a default box for a
+  Transaction or Information page that authored none, and that copy lives in
+  the renderer rather than on the page object — so those two renderers stamp
+  their paths only when the data really came from `page.whatToKnow`/
+  `page.contact`. An edit to a synthesized box would address a parent that does
+  not exist, `setByPath` would find nothing to write into, and the reviewer's
+  change would vanish on the next load.
+- **Three markup details are load-bearing, because `EditorSession.open()`
+  mounts by replacing its target with a `<div>` holder.** A table cell's path
+  sits on a `<span>` inside the `<td>`, never on the `<td>` (replacing the cell
+  tears the row apart); contact entries render one `<p>` each rather than one
+  `<p>` of `<br>`-separated values (a `<div>` inside a `<p>` is invalid, and an
+  entry needs its own element to carry its own path); and a callout's body is
+  wrapped in a `<span>` inside the `<aside>` rather than promoted to a `<p>`,
+  which would add block spacing the callout never had.
+- **`markdownText` is the field type that splits "commits a plain string" from
+  "carries markdown".** A callout body and a table cell are bare strings in the
+  schema but go through `formatMarkdown()` on the page, so editing them as
+  plain text would show the reviewer raw `[label](target)` source and drop the
+  link tool from the toolbar; editing them as items would commit the tagged
+  object their renderers cannot print.
 - **Card descriptions carry no `data-rewrite-field`, and cards' absence from
   that scope list is load-bearing rather than incidental — it must stay true.**
   An inheriting card's description IS the destination page's `summary` (see

@@ -73,8 +73,25 @@
   function editorFieldTypeFor(path) {
     if (path === 'title' || path === 'summary' || path === 'primaryCta') return path
     if (/\.heading$/.test(path)) return 'heading'
+    // A field whose renderer does NOT call formatMarkdown() — a step title, a
+    // contact phone number, the What-to-know cost — is edited as plain text
+    // and written as a plain string. `markdownText` covers the two that are
+    // plain strings in the schema but markdown-bearing on the page (a callout
+    // body, a table cell), so their links survive the round trip.
+    if (itemKindFor(path) === 'plainString') {
+      return MARKDOWN_STRING_PATH_PATTERN.test(path) ? 'markdownText' : 'heading'
+    }
     return /\.bullets\.\d+$/.test(path) ? 'bullet' : 'paragraph'
   }
+
+  /**
+   * The plain-string fields js/page-render.js renders through
+   * formatMarkdown() rather than a bare escapeHtml(): a callout's body (on a
+   * section or a step) and a table cell. Editing one of these as plain text
+   * would show the reviewer raw `[label](target)` source and strip the link
+   * tool from the toolbar, so they take the markdownText field type instead.
+   */
+  const MARKDOWN_STRING_PATH_PATTERN = /(?:\.callout\.text|\.table\.\d+\.\d+)$/
 
   /**
    * Read a scalar field's current text value, given its data-rewrite-field
@@ -122,16 +139,55 @@
       setPrimaryCta(page, value)
       return
     }
-    if (/\.heading$/.test(path)) {
-      setByPath(page, path, value)
+    // Which of the two forms this field takes is decided by one shared
+    // classifier (js/inline-content-edit-data.js's editableItemKind), not by
+    // a regex here. The tagged object is only correct for a body-copy item
+    // whose renderer runs it through normalizeTextItem(); a table cell, a
+    // contact phone number, a spotlight paragraph and every whole-field
+    // string are printed directly, so writing the object into one of those
+    // renders the literal "[object Object]" on the mockup.
+    if (itemKindFor(path) === 'taggedText') {
+      // Spread whatever the item already was, so a field the tagged form does
+      // not name survives the edit. `label` is the live case: a
+      // whatToKnow.thingsToKnow entry carries {label, text} and its label is
+      // what renderWhatToKnow() prints as the entry's own H3 — replacing the
+      // object wholesale would silently delete that heading the moment a
+      // reviewer edited the paragraph under it.
+      const existing = getByPath(page, path)
+      const carried =
+        existing && typeof existing === 'object' && !Array.isArray(existing) ? existing : {}
+      setByPath(page, path, {
+        ...carried,
+        text: value,
+        unverified: true,
+        unverifiedReason: MANUAL_EDIT_UNVERIFIED_REASON,
+      })
       return
     }
-    // A paragraph or bullet item path.
-    setByPath(page, path, {
-      text: value,
-      unverified: true,
-      unverifiedReason: MANUAL_EDIT_UNVERIFIED_REASON,
-    })
+    setByPath(page, path, value)
+  }
+
+  /**
+   * editableItemKind, resolved off the shared data module at call time.
+   *
+   * Read through window rather than captured at module scope for the same
+   * reason js/page-render.js reads window.cardInheritance that way: this file
+   * is an IIFE with no import of the dual-export module, and reading it lazily
+   * keeps the two files' load order from mattering.
+   * @param {string} path
+   * @returns {'taggedText'|'plainString'|null}
+   */
+  function itemKindFor(path) {
+    const kind = window.inlineEditData?.editableItemKind?.(path)
+    if (kind) return kind
+    // The classifier is unavailable (js/inline-content-edit-data.js failed to
+    // evaluate) or does not recognize the path. Fall back to the rule that
+    // predates it — a heading is a plain string, anything else addressed by an
+    // item path is tagged body copy — rather than to one branch of it. The
+    // wrong default here is not cosmetic in either direction: a tagged object
+    // written into a plain-string field renders "[object Object]", and a plain
+    // string written into a paragraph silently drops its Unverified pill.
+    return /\.heading$/.test(path) ? 'plainString' : 'taggedText'
   }
 
   /**
@@ -544,19 +600,22 @@
     const scalarPaths = ['title', 'summary', 'primaryCta']
     document.querySelectorAll('#mockPage [data-rewrite-field]').forEach((el) => {
       const path = el.getAttribute('data-rewrite-field')
-      const isHeading = /\.heading$/.test(path)
-      if (!scalarPaths.includes(path) && !isHeading) return
+      // Every plain-string field, not just headings and the three page-level
+      // scalars: a step title, a callout, a table cell, a contact entry and
+      // the What-to-know cost are all committed as bare strings, so none of
+      // them can carry the Unverified pill that marks an edited paragraph or
+      // bullet. Without this they were the only edited fields on the mockup
+      // showing no sign of having been edited — and, since the reset control
+      // rides along with the badge, no way back to the original short of
+      // clearing the whole review record.
+      if (!scalarPaths.includes(path) && itemKindFor(path) !== 'plainString') return
 
-      const currentValue =
-        path === 'primaryCta' ? getPrimaryCta(page) || '' : readScalarValue(page, path)
-      const originalValue =
-        path === 'title'
-          ? originalPage.title || ''
-          : path === 'summary'
-            ? originalPage.summary || ''
-            : path === 'primaryCta'
-              ? getPrimaryCta(originalPage) || ''
-              : getByPath(originalPage, path) || ''
+      // Both sides through readScalarValue: it resolves the page-level three
+      // and unwraps the {text, ...} object form, so an original stored as an
+      // object is compared as the text it renders rather than as "[object
+      // Object]" against a string, which never matches.
+      const currentValue = readScalarValue(page, path)
+      const originalValue = readScalarValue(originalPage, path)
 
       if (currentValue === originalValue) return
       if (el.querySelector('.inline-edit-badge')) return // already decorated
@@ -653,7 +712,9 @@
         holder: holderId,
         data: outputData,
         autofocus: true,
-        // Only paragraph/bullet items get bold/link formatting — title,
+        // Only markdown-bearing fields get bold/link formatting — paragraph
+        // and bullet items, plus the markdownText fields (a callout body, a
+        // table cell) whose renderer also calls formatMarkdown(). title,
         // summary, primaryCta, and heading render through a bare escapeHtml()
         // with no formatMarkdown() call (js/page-render.js:216,219,560,631),
         // so offering Bold or Link there would visibly format text while
@@ -668,7 +729,9 @@
         // `tools` below with `inlineToolbar: false` for scalar fields is
         // harmless, since a tool never referenced in the toolbar array is
         // never shown regardless of being registered.
-        inlineToolbar: this.adapter.isItemFieldType(this.fieldType) ? ['bold', 'hhvcLink'] : false,
+        inlineToolbar: this.adapter.isMarkdownFieldType(this.fieldType)
+          ? ['bold', 'hhvcLink']
+          : false,
         minHeight: 0,
         tools: { hhvcLink: window.InlineEdit.LinkTool },
         onChange: (api) => {
@@ -909,11 +972,15 @@
         rerender()
         return
       }
-      if (this.adapter.isItemFieldType(this.fieldType)) {
-        setByPath(this.page, this.path, newValue)
-      } else {
-        writeScalarValue(this.page, this.path, newValue)
-      }
+      // One write path for both field shapes. An item used to be written here
+      // as the adapter's tagged object directly, which REPLACED the stored
+      // item wholesale — and a whatToKnow entry is {label, text}, so editing
+      // the paragraph silently deleted the label renderWhatToKnow() prints as
+      // that entry's own H3 heading (seen live before this was unified).
+      // writeScalarValue builds the same tagged object, carrying any key the
+      // tagged form does not name, and it is the one place that decides
+      // tagged-vs-plain — see editableItemKind.
+      writeScalarValue(this.page, this.path, newText)
       persist()
       rerender()
     }

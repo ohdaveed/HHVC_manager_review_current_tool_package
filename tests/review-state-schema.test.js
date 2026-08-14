@@ -196,7 +196,10 @@ describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', ()
 // pinned together here rather than two of the three.
 describe('section_edits whitelist agrees between the Zod schema, the browser validator, and the write-side differ', () => {
   const { sanitizeSectionEdits } = window.reviewStateValidation
-  const { isValidSectionEditValue } = require('../js/inline-content-edit-data.js')
+  const {
+    isValidSectionEditValue,
+    editableFieldKind,
+  } = require('../js/inline-content-edit-data.js')
 
   test.each([
     [
@@ -206,6 +209,48 @@ describe('section_edits whitelist agrees between the Zod schema, the browser val
         'sections.0.paragraphs': ['p', { text: 'q', unverified: true }],
       },
     ],
+    // One case per NEW container kind, since the three lists are three
+    // literals: a path any one of them omits is a path whose edit the write
+    // side stores and a read side silently drops on the next load.
+    [
+      'a step title and its text',
+      {
+        'sections.0.steps.0.title': 'Step one',
+        'sections.0.steps.0.text': ['do this'],
+      },
+    ],
+    [
+      'a callout on a section and on a step',
+      {
+        'sections.0.callout.text': 'note',
+        'sections.0.steps.1.callout.title': 'Heads up',
+      },
+    ],
+    [
+      'a whole table',
+      {
+        'sections.0.table': [
+          ['a', 'b'],
+          ['c', 'd'],
+        ],
+      },
+    ],
+    ['a table with a non-string cell', { 'sections.0.table': [['a', 2]] }],
+    ['a table that is not rows', { 'sections.0.table': ['a', 'b'] }],
+    [
+      'page-level whatToKnow and spotlight',
+      {
+        'whatToKnow.cost': '$25',
+        'whatToKnow.thingsToKnow': [{ label: 'L', text: 't' }],
+        'spotlight.paragraphs': ['first'],
+      },
+    ],
+    ['contact string arrays', { 'contact.phone': ['311'], 'contact.address': '1 Main St' }],
+    // A contact entry renders through a bare escapeHtml(), so the tagged
+    // object every body-copy item takes would print "[object Object]" there.
+    // All three gates have to agree that this one is NOT interchangeable.
+    ['a tagged object in a contact list', { 'contact.phone': [{ text: '311' }] }],
+    ['a card path, which is out of scope entirely', { 'sections.0.cards.0.text': 'x' }],
     ['unsupported suffix', { 'sections.0.kind': 'placement' }],
     ['per-index path', { 'sections.0.bullets.0': 'x' }],
     ['heading as a non-string', { 'sections.0.heading': 123 }],
@@ -228,10 +273,10 @@ describe('section_edits whitelist agrees between the Zod schema, the browser val
     // read-side gates concluded; isValidSectionEditValue is asked the same
     // question about the same value and must answer identically.
     for (const [path, value] of Object.entries(sectionEdits)) {
-      const suffix = /^sections\.\d+\.(heading|paragraphs|bullets)$/.exec(path)?.[1]
-      if (!suffix) continue
+      const kind = editableFieldKind(path)
+      if (!kind) continue
       const kept = Object.prototype.hasOwnProperty.call(sanitized, path)
-      expect(isValidSectionEditValue(suffix, value)).toBe(kept)
+      expect(isValidSectionEditValue(kind, value)).toBe(kept)
     }
   })
 })
