@@ -1,6 +1,10 @@
 {
   "name": "hhvc-manager-review-mockup-tool",
   "private": true,
+  "// engines": "Bun runs the CLI scripts, the test suite and server.ts, so this floor is NOT about the toolchain at large — it governs the handful of places a plain `node` binary is invoked, chiefly `node build_scripts/copy-workshop-form.js` in `build` and `build:netlify`, plus whatever a contributor's editor or a Nixpacks/Netlify image picks up. Declared so those hosts resolve a supported runtime instead of defaulting to whatever their base image ships. See `.nvmrc` for the version development actually targets.",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@emotion/react": "^11.14.0",
