@@ -37,10 +37,19 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
 - **Client**: `js/review-state-sync.js`, a no-op unless configured. Its
   settings live under their own `hhvcReviewSyncConfig` localStorage key,
   separate from `hhvcManagerReviewState:v1` on purpose — the token must never
-  round-trip through the shareable CSV/JSON export/import/backup files. Sync
-  is manual-trigger only (Pull from server / Push all pages), not a
-  background timer, keeping sync-triggered history entries bounded to
-  explicit actions.
+  round-trip through the shareable CSV/JSON export/import/backup files.
+  **Sync is automatic as of 2026-08-14** — `startAutoSync()` pulls once at
+  init, `scheduleAutoPush()` pushes one page on a 3s debounce AFTER the
+  autosave has already written localStorage, and `pushDirtyPages()` sends
+  anything saved while the server was unreachable. History stays bounded
+  because the client still never merges on the push path: the server merges
+  with `updatedBy: 'sync'`, and merging here too would append an entry per
+  debounce. The manual Pull/Push buttons remain for explicit use. **No push
+  may precede the first pull** — a push carries a `synced_at` baseline, and
+  pushing one this browser never observed is a guaranteed 409.
+  The default endpoint is now the page's own origin rather than a baked-in
+  hostname (the old one named a dead deployment); the token still has no
+  default, because the bundle is public.
 - **Push vs. pull differ on purpose**: push sends one page's full record and
   accepts the server's merged response as authoritative for that page; pull
   is last-write-wins **per page**, never a field-level re-merge client-side

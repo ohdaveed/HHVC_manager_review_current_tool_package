@@ -11,27 +11,29 @@
 // pipeline: docs/source/ changes rarely, and running this needs a real
 // GEMINI_API_KEY and makes real (billed) embedding calls, so it must not run
 // in CI or on every `bun run build`.
-const { Database } = require('bun:sqlite')
-const { mkdirSync, readFileSync } = require('node:fs')
-const { dirname, resolve } = require('node:path')
-const fg = require('fast-glob')
+const { resolve } = require('node:path')
 const { chunkMarkdown } = require('./knowledge-chunking')
-const { ensureKnowledgeChunksTable } = require('./knowledge-schema')
+const { collectKnowledgeSources } = require('./knowledge-sources')
+// Storage lives behind the seam, so an ingest run writes wherever the
+// deployment reads: Postgres when DATABASE_URL is set, SQLite otherwise. This
+// script used to open bun:sqlite directly, which meant ingesting into a local
+// file a Postgres deployment would never look at.
+const {
+  describeStorage,
+  initStorage,
+  pruneChunksNotIn,
+  replaceDocumentChunks,
+} = require('./storage.js')
+const { loadPageData } = require('./load-pages')
 const gemini = require('./ai/provider-gemini')
 
 const ROOT = resolve(__dirname, '..')
-const SOURCE_DIR = resolve(ROOT, 'docs/source')
 const DATA_DB_PATH = process.env.DATA_DB_PATH || resolve(ROOT, '.data/review-state.local.db')
 
 // embedContent accepts a batch, but a very large one risks an upstream
 // request-size or timeout limit. This corpus produces roughly 150-200 chunks
 // total, so 20 keeps each call small while still batching most files.
 const EMBED_BATCH_SIZE = 20
-
-/** @param {string} relativePath e.g. "hhvc-policy/foo.md" -> "hhvc-policy" */
-function categoryFor(relativePath) {
-  return relativePath.split('/')[0]
-}
 
 /**
  * @param {string[]} texts
@@ -54,60 +56,54 @@ async function main() {
     return
   }
 
-  mkdirSync(dirname(DATA_DB_PATH), { recursive: true })
-  const db = new Database(DATA_DB_PATH, { create: true })
-  ensureKnowledgeChunksTable(db)
+  await initStorage(DATA_DB_PATH)
+  console.log(`Ingesting into ${describeStorage(DATA_DB_PATH)}\n`)
 
-  const files = fg
-    .sync('**/*.md', { cwd: SOURCE_DIR, onlyFiles: true })
-    .filter((file) => file.split('/').pop() !== 'README.md')
-    .sort((a, b) => a.localeCompare(b))
+  // Which documents make up the corpus — and what category each is filed
+  // under — lives in build_scripts/knowledge-sources.js, so this script stays
+  // the embed-and-upsert half and the corpus definition is testable without a
+  // Gemini key. The mockup pages are projected to markdown there; loading them
+  // here keeps the page loader out of that module's dependencies.
+  const { pages } = loadPageData()
+  const sources = collectKnowledgeSources({ pages })
 
   let totalChunks = 0
   const emptyFiles = []
 
-  for (const relativePath of files) {
-    const markdown = readFileSync(resolve(SOURCE_DIR, relativePath), 'utf8')
-    const chunks = chunkMarkdown(markdown, relativePath)
+  for (const source of sources) {
+    const relativePath = source.sourceFile
+    const chunks = chunkMarkdown(source.markdown, relativePath)
     if (!chunks.length) {
       emptyFiles.push(relativePath)
       continue
     }
 
     const vectors = await embedAll(chunks.map((chunk) => chunk.content))
-    const category = categoryFor(relativePath)
+    const category = source.category
     const embeddingModel = gemini.getEmbeddingModel()
     const now = new Date().toISOString()
 
-    db.transaction(() => {
-      db.run('DELETE FROM knowledge_chunks WHERE source_file = ?', [relativePath])
-      const insert = db.prepare(
-        `INSERT INTO knowledge_chunks
-         (id, source_file, category, heading_path, content, chunk_index, embedding, embedding_model, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      chunks.forEach((chunk, index) => {
-        const id = `${relativePath}#${chunk.chunkIndex}`
-        const embeddingBuffer = Buffer.from(Float32Array.from(vectors[index]).buffer)
-        insert.run(
-          id,
-          relativePath,
-          category,
-          chunk.headingPath,
-          chunk.content,
-          chunk.chunkIndex,
-          embeddingBuffer,
-          embeddingModel,
-          now
-        )
-      })
-    })()
+    await replaceDocumentChunks(
+      DATA_DB_PATH,
+      relativePath,
+      chunks.map((chunk, index) => ({
+        id: `${relativePath}#${chunk.chunkIndex}`,
+        category,
+        headingPath: chunk.headingPath,
+        content: chunk.content,
+        chunkIndex: chunk.chunkIndex,
+        // Raw little-endian Float32 bytes: a BLOB in SQLite, bytea in Postgres.
+        embedding: Buffer.from(Float32Array.from(vectors[index]).buffer),
+        embeddingModel,
+        createdAt: now,
+      }))
+    )
 
     totalChunks += chunks.length
-    console.log(`  ${relativePath}: ${chunks.length} chunks`)
+    console.log(`  [${category}] ${relativePath}: ${chunks.length} chunks`)
   }
 
-  console.log(`\nIngested ${files.length - emptyFiles.length} files, ${totalChunks} chunks.`)
+  console.log(`\nIngested ${sources.length - emptyFiles.length} documents, ${totalChunks} chunks.`)
   if (emptyFiles.length) {
     // No silent drops: a file that globbed as markdown but chunked to
     // nothing (e.g. whitespace-only) is named explicitly, not just missing
@@ -115,29 +111,18 @@ async function main() {
     console.log(`Files with no chunks after parsing: ${emptyFiles.join(', ')}`)
   }
 
-  // Prune rows for files that no longer exist in docs/source/, were renamed,
+  // Prune rows for documents that are no longer in the corpus, were renamed,
   // or now parse to zero chunks. The per-file DELETE above only fires for a
   // file actually reached by this run's loop with real content, so a file
   // removed (or emptied) between runs would otherwise leave its old chunks
   // in the table forever, citable by compliance-audit even though nothing on
   // disk backs them anymore.
-  const keptFiles = files.filter((file) => !emptyFiles.includes(file))
-  const placeholders = keptFiles.map(() => '?').join(',')
-  const staleCount = keptFiles.length
-    ? db
-        .query(
-          `SELECT COUNT(*) as count FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
-        )
-        .get(...keptFiles).count
-    : db.query('SELECT COUNT(*) as count FROM knowledge_chunks').get().count
+  const keptFiles = sources
+    .map((source) => source.sourceFile)
+    .filter((file) => !emptyFiles.includes(file))
+  const staleCount = await pruneChunksNotIn(DATA_DB_PATH, keptFiles)
   if (staleCount > 0) {
-    db.run(
-      keptFiles.length
-        ? `DELETE FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
-        : 'DELETE FROM knowledge_chunks',
-      keptFiles
-    )
-    console.log(`Pruned ${staleCount} chunks from files no longer in the corpus.`)
+    console.log(`Pruned ${staleCount} chunks from documents no longer in the corpus.`)
   }
 }
 

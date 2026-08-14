@@ -19,6 +19,9 @@ const { DISCLOSURE, addUsage } = require('./index')
  * policy document when the page touches more than one topic. */
 const TOP_K = 6
 
+/** Categories withheld from compliance-audit retrieval; see the call site. */
+const DRAFT_CATEGORIES = ['mockup-draft']
+
 // One retry, not a loop — same reasoning as index.js's generateContent:
 // a second attempt with the specific bad citations named fixes most
 // mechanical mistakes, and a third rarely adds anything.
@@ -39,7 +42,24 @@ async function generateComplianceAudit({ page, provider, signal }) {
   const pageText = serializePageForPrompt(page)
 
   const [queryEmbedding] = await gemini.embedContent([pageText], 'QUERY')
-  const retrieved = retrieveRelevantChunks(queryEmbedding, TOP_K)
+  // Draft mockup copy is withheld from THIS task's retrieval, structurally
+  // rather than by instruction. The corpus deliberately contains the mockups
+  // (they are the subject a reviewer asks the AI about elsewhere), but an
+  // audit asks "does this page comply with policy", and a finding grounded in
+  // an unapproved draft answers a different question with the same authority.
+  //
+  // The system prompt already says so in terms. It was not enough: measured
+  // against the real corpus, an audit of a rats page returned three findings
+  // and ALL THREE cited `mockup-draft` — real contradictions, but evidenced by
+  // other proposals rather than by the Director's Rules they should rest on.
+  // Prompt wording is a request; this is a guarantee.
+  //
+  // Nothing is lost by it: the page under audit travels in the prompt verbatim
+  // as <page_under_audit>, so the model can still see exactly what it is
+  // reviewing — it just cannot cite a draft as the rule it breaks.
+  const retrieved = await retrieveRelevantChunks(queryEmbedding, TOP_K, {
+    excludeCategories: DRAFT_CATEGORIES,
+  })
   const retrievedIds = new Set(retrieved.map((entry) => entry.chunk.id))
   const chunksById = new Map(retrieved.map((entry) => [entry.chunk.id, entry.chunk]))
 
@@ -84,7 +104,17 @@ async function generateComplianceAudit({ page, provider, signal }) {
       .filter((id) => chunksById.has(id))
       .map((id) => {
         const chunk = chunksById.get(id)
-        return { id: chunk.id, sourceFile: chunk.sourceFile, headingPath: chunk.headingPath }
+        // `category` travels with the citation for the same reason it is in the
+        // prompt: the corpus now mixes adopted policy with draft mockup copy and
+        // dated snapshots of the live site, and a reviewer deciding whether to
+        // act on a finding needs to know which kind of source it rests on.
+        // Resolved from the row, so the label cannot be model-generated.
+        return {
+          id: chunk.id,
+          sourceFile: chunk.sourceFile,
+          category: chunk.category,
+          headingPath: chunk.headingPath,
+        }
       }),
   }))
 
@@ -105,4 +135,4 @@ async function generateComplianceAudit({ page, provider, signal }) {
   }
 }
 
-module.exports = { generateComplianceAudit, TOP_K, MAX_ATTEMPTS }
+module.exports = { generateComplianceAudit, TOP_K, MAX_ATTEMPTS, DRAFT_CATEGORIES }

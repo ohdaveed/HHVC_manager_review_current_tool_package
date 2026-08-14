@@ -211,7 +211,27 @@ ${GUARDRAILS}
   human's attention but is not itself a compliance issue.
 - This is an audit, not a rewrite. Name the issue and recommend what a human
   editor should check or change — do not draft replacement copy.
-</audit_rules>`
+</audit_rules>
+
+<source_categories>
+Every source carries a category. They do not carry equal authority, and
+confusing them is the most damaging mistake you can make here:
+- "hhvc-policy" — adopted policy, Director's Rules, Health Code extracts and
+  program guidance. This is what a page can be non-compliant WITH.
+- "sfgov-style" — SF.gov's published writing and style guidance. Authoritative
+  for how something is written, not for what is required.
+- "karl" — a measurement of what the Karl CMS can actually publish, taken from
+  the live editor. Authoritative for whether a page is BUILDABLE. A finding
+  grounded here is about the CMS, not about policy.
+- "sfgov-live" — a dated snapshot of what SF.gov publishes today. Useful as
+  evidence of current practice, and it can itself be out of date or wrong. It
+  is not a requirement.
+- "mockup-draft" — the proposed page mockups themselves, including the page you
+  are auditing. This is DRAFT copy nobody has approved. **Never treat it as a
+  requirement, and never cite it as the authority a finding rests on.** Use it
+  only to describe what the proposal currently says — for example when a
+  finding is that two mockup pages contradict each other.
+</source_categories>`
 
   return { system }
 }
@@ -227,10 +247,18 @@ ${GUARDRAILS}
  * @returns {string}
  */
 function buildComplianceAuditUserPrompt({ page, retrieved, issues, previousDraft }) {
+  // `category` is rendered because the corpus is no longer one kind of thing.
+  // It now holds adopted policy, a measurement of the CMS, snapshots of the
+  // live site, and the DRAFT mockups themselves — and the draft is roughly a
+  // third of it. Without the label, a retrieved chunk of the proposal reads to
+  // the model exactly like a requirement, so an audit could cite the page under
+  // audit as authority for itself. The value comes from the matched row, never
+  // from the model, so it cannot be spoofed by a citation.
   const sources = retrieved
     .map(({ chunk }) => {
       const headingAttr = chunk.headingPath ? ` heading="${chunk.headingPath}"` : ''
-      return `<source id="${chunk.id}" file="${chunk.sourceFile}"${headingAttr}>\n${chunk.content}\n</source>`
+      const categoryAttr = chunk.category ? ` category="${chunk.category}"` : ''
+      return `<source id="${chunk.id}" file="${chunk.sourceFile}"${categoryAttr}${headingAttr}>\n${chunk.content}\n</source>`
     })
     .join('\n\n')
 

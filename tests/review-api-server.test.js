@@ -39,6 +39,12 @@ function spawnServer({ port, token, dbDir, staticRoot, extraEnv = {} }) {
     'REVIEW_API_ALLOWED_ORIGINS',
     'REVIEW_API_RATE_LIMIT',
     'REVIEW_API_RATE_WINDOW_MS',
+    // DATABASE_URL is what build_scripts/storage.js switches drivers on, so a
+    // developer with one exported would silently run this whole SQLite suite —
+    // DATA_DB_PATH and all — against their Postgres. Postgres parity has its
+    // own suite (tests/review-api-postgres.test.js); this one must stay the
+    // SQLite one, whatever the shell it inherits.
+    'DATABASE_URL',
   ]) {
     delete env[key]
   }
@@ -641,5 +647,150 @@ describe('optional API invalid CORS configuration', () => {
     expect(res.status).toBe(503)
     expect(res.headers.get('access-control-allow-origin')).toBeNull()
     expect(res.headers.get('x-content-type-options')).toBe('nosniff')
+  })
+})
+
+// Same-origin reviewer sessions. The API is bearer-gated and the browser
+// bundle is public, so a token can never ship in it — a reviewer signs in with
+// a shared password instead and the server hands back a signed cookie. These
+// pin the properties that make that safe to do.
+describe('reviewer session sign-in', () => {
+  const PORT = 8138
+  const TOKEN = 'test-review-api-token'
+  const PASSWORD = 'test-reviewer-password'
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('session')
+    proc = spawnServer({
+      port: PORT,
+      token: TOKEN,
+      dbDir,
+      extraEnv: { REVIEW_SESSION_PASSWORD: PASSWORD },
+    })
+    await waitForServer(`${base}/api/session`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  async function signIn(password) {
+    return fetch(`${base}/api/session`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+  }
+
+  function cookieFrom(response) {
+    const header = response.headers.get('set-cookie') || ''
+    return header.split(';')[0]
+  }
+
+  test('reports whether sign-in is available without requiring a credential', async () => {
+    // Circular otherwise: this is how a browser learns it CAN become a
+    // principal, so it cannot itself demand one.
+    const res = await fetch(`${base}/api/session`)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ active: false, loginAvailable: true })
+  })
+
+  test('rejects the wrong password and issues no cookie', async () => {
+    const res = await signIn('not-the-password')
+    expect(res.status).toBe(401)
+    expect(res.headers.get('set-cookie')).toBeNull()
+  })
+
+  test('a signed-in cookie authenticates the review API', async () => {
+    const login = await signIn(PASSWORD)
+    expect(login.status).toBe(200)
+
+    const cookie = cookieFrom(login)
+    expect(cookie.startsWith('hhvc_session=')).toBe(true)
+    // HttpOnly is what stops any script on the page reading the credential
+    // back out — the property a pasted token can never have.
+    expect(login.headers.get('set-cookie')).toContain('HttpOnly')
+    expect(login.headers.get('set-cookie')).toContain('SameSite=Strict')
+
+    const res = await fetch(`${base}/api/review-state`, { headers: { cookie } })
+    expect(res.status).toBe(200)
+  })
+
+  test('a forged signature is rejected', async () => {
+    const res = await fetch(`${base}/api/review-state`, {
+      headers: { cookie: 'hhvc_session=session-reviewer.99999999999999.forged' },
+    })
+    expect(res.status).toBe(401)
+  })
+
+  test('an expired assertion is rejected even though it is well formed', async () => {
+    const res = await fetch(`${base}/api/review-state`, {
+      headers: { cookie: 'hhvc_session=session-reviewer.1.anything' },
+    })
+    expect(res.status).toBe(401)
+  })
+
+  test('a session cannot reach the paid AI routes', async () => {
+    // A shared password that also unlocked generation would make one leaked
+    // password an unbounded bill, so the session principal holds review roles
+    // only — 403 (role refused), not 401 (not authenticated).
+    const login = await signIn(PASSWORD)
+    const res = await fetch(`${base}/api/ai/generate`, {
+      method: 'POST',
+      headers: { cookie: cookieFrom(login), 'content-type': 'application/json' },
+      body: JSON.stringify({ task: 'content' }),
+    })
+    expect(res.status).toBe(403)
+  })
+
+  test('signing out stops the cookie working', async () => {
+    const login = await signIn(PASSWORD)
+    const cookie = cookieFrom(login)
+    await fetch(`${base}/api/session`, { method: 'DELETE', headers: { cookie } })
+
+    // The server clears it by expiring the cookie in the browser; the assertion
+    // itself stays cryptographically valid until it expires, which is the
+    // documented trade of a stateless session.
+    const cleared = await fetch(`${base}/api/session`, { method: 'DELETE', headers: { cookie } })
+    expect(cleared.headers.get('set-cookie')).toContain('Max-Age=0')
+  })
+
+  test('bearer tokens still authenticate alongside sessions', async () => {
+    const res = await fetch(`${base}/api/review-state`, {
+      headers: { authorization: `Bearer ${TOKEN}` },
+    })
+    expect(res.status).toBe(200)
+  })
+})
+
+describe('reviewer session without a password configured', () => {
+  const PORT = 8139
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('session-off')
+    proc = spawnServer({ port: PORT, token: 'test-review-api-token', dbDir })
+    await waitForServer(`${base}/api/session`)
+  })
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('sign-in fails closed with 501 rather than accepting anything', async () => {
+    const res = await fetch(`${base}/api/session`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: '' }),
+    })
+    expect(res.status).toBe(501)
+    expect(res.headers.get('set-cookie')).toBeNull()
   })
 })

@@ -8,6 +8,8 @@
 // registry that snapshotted its config at require time would pass every server
 // test and still freeze the first environment it ever saw.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
+const { tmpdir } = require('node:os')
+const { join } = require('node:path')
 
 const providers = require('../build_scripts/ai/providers.js')
 const anthropic = require('../build_scripts/ai/provider-anthropic.js')
@@ -26,14 +28,33 @@ const { generateRequestSchema } = require('../build_scripts/ai/schemas.js')
  * file in the run, since Bun shares one process. The keys are `delete`d rather
  * than set to '' when they were absent, so "unset" is restored as unset.
  */
-const KEYS = ['ANTHROPIC_API_KEY', 'GEMINI_API_KEY']
+const KEYS = [
+  'ANTHROPIC_API_KEY',
+  'GEMINI_API_KEY',
+  // Not a key, but it decides the same question. `isConfigured()` counts an
+  // `ant auth login` OAuth profile as a credential, so without pinning the
+  // config directory these tests would report "claude configured" on any
+  // developer machine that had ever run that login — and "not configured" in
+  // CI, which has not. The same class of environment bleed as the spawned
+  // server inheriting DATABASE_URL.
+  'ANTHROPIC_CONFIG_DIR',
+  'ANTHROPIC_PROFILE',
+  'ANTHROPIC_AUTH_TOKEN',
+]
 let saved = {}
+
+/** A directory that does not exist, so no profile can be found under it. */
+const NO_PROFILE_DIR = join(tmpdir(), 'hhvc-no-anthropic-profile')
 
 function setKeys({ claude, gemini: geminiKey }) {
   if (claude) process.env.ANTHROPIC_API_KEY = claude
   else delete process.env.ANTHROPIC_API_KEY
   if (geminiKey) process.env.GEMINI_API_KEY = geminiKey
   else delete process.env.GEMINI_API_KEY
+  // Pinned on every call, so "no Claude key" means "no Claude credential"
+  // regardless of what the machine running the suite has logged in.
+  process.env.ANTHROPIC_CONFIG_DIR = NO_PROFILE_DIR
+  delete process.env.ANTHROPIC_PROFILE
 }
 
 beforeEach(() => {
@@ -97,6 +118,76 @@ describe('provider registry', () => {
     // default" — a Gemini-only deployment is fully working and gets Gemini.
     setKeys({ gemini: 'g' })
     expect(providers.defaultProvider().name).toBe('gemini')
+  })
+})
+
+describe('Claude credential detection', () => {
+  // `ant auth login` writes a profile and sets no environment variable at all,
+  // so an env-only gate reports "not configured" for a deployment holding a
+  // working credential — measured: a bare client with no ANTHROPIC_API_KEY
+  // authenticated fine against the Messages API through exactly such a profile.
+  const fs = require('node:fs')
+
+  let profileDir
+
+  function writeProfile(name) {
+    fs.mkdirSync(join(profileDir, 'credentials'), { recursive: true })
+    fs.writeFileSync(join(profileDir, 'credentials', `${name}.json`), '{}')
+  }
+
+  beforeEach(() => {
+    profileDir = fs.mkdtempSync(join(tmpdir(), 'hhvc-anthropic-config-'))
+  })
+
+  afterEach(() => {
+    fs.rmSync(profileDir, { recursive: true, force: true })
+  })
+
+  test('counts an OAuth profile as a credential when no key is set', () => {
+    setKeys({})
+    expect(anthropic.isConfigured()).toBe(false)
+    process.env.ANTHROPIC_CONFIG_DIR = profileDir
+    writeProfile('default')
+    expect(anthropic.isConfigured()).toBe(true)
+  })
+
+  test('counts ANTHROPIC_AUTH_TOKEN, which the SDK reads before any profile', () => {
+    setKeys({})
+    process.env.ANTHROPIC_AUTH_TOKEN = 'oauth-token'
+    try {
+      expect(anthropic.isConfigured()).toBe(true)
+    } finally {
+      delete process.env.ANTHROPIC_AUTH_TOKEN
+    }
+  })
+
+  test('checks only the named profile when ANTHROPIC_PROFILE is set', () => {
+    // The SDK loads that one profile, so another profile sitting in the same
+    // directory says nothing about whether this request can authenticate.
+    setKeys({})
+    process.env.ANTHROPIC_CONFIG_DIR = profileDir
+    writeProfile('default')
+    process.env.ANTHROPIC_PROFILE = 'work'
+    expect(anthropic.isConfigured()).toBe(false)
+    writeProfile('work')
+    expect(anthropic.isConfigured()).toBe(true)
+  })
+
+  test('reports not configured rather than throwing when the config dir is absent', () => {
+    setKeys({})
+    process.env.ANTHROPIC_CONFIG_DIR = join(profileDir, 'nope')
+    expect(anthropic.isConfigured()).toBe(false)
+  })
+
+  test('makes the provider registry count Claude as configured', () => {
+    // The gate this exists for: hasConfiguredProvider() is what answers 501,
+    // so a profile-only deployment must not report the AI routes unavailable.
+    setKeys({})
+    expect(providers.configuredProviderNames()).toEqual([])
+    process.env.ANTHROPIC_CONFIG_DIR = profileDir
+    writeProfile('default')
+    expect(providers.configuredProviderNames()).toEqual(['claude'])
+    expect(providers.hasConfiguredProvider()).toBe(true)
   })
 })
 

@@ -61,7 +61,7 @@ function getPages() {
  * would run on, so its initial selection matches what the server would do.
  * @returns {object}
  */
-function getCapabilities() {
+async function getCapabilities() {
   const corpus = loadStyleCorpus()
   const providers = {}
   const models = {}
@@ -75,7 +75,10 @@ function getCapabilities() {
   // Read lazily, not at module load: knowledge_chunks can go from empty to
   // populated (a fresh `bun run ingest`) while the server keeps running.
   const { isComplianceAuditAvailable, countKnowledgeChunks } = require('./knowledge-retrieval')
-  const knowledgeBaseReady = isComplianceAuditAvailable()
+  // Async since the knowledge base moved behind the storage seam: on Postgres
+  // these are real queries rather than a synchronous read of a local file.
+  const knowledgeBaseReady = await isComplianceAuditAvailable()
+  const chunkCount = await countKnowledgeChunks()
   return {
     providers,
     models,
@@ -100,7 +103,7 @@ function getCapabilities() {
     // So the browser panel can tell "no Gemini key" apart from "key present,
     // nobody has run `bun run ingest` yet" — both are real, distinct empty
     // states a reviewer could hit, and they want different copy.
-    knowledgeBase: { ready: knowledgeBaseReady, chunkCount: countKnowledgeChunks() },
+    knowledgeBase: { ready: knowledgeBaseReady, chunkCount },
   }
 }
 

@@ -18,8 +18,9 @@ Reviewer state lives in the browser's `localStorage` by default, and the tool
 works fully offline with no server at all beyond serving static files —
 **no backend/database/external service is required.** `server.ts` also hosts
 an **optional**
-review-state sync backend (Bun + SQLite, see "Review-state sync backend"
-below, and the `hhvc-review-sync-backend` skill for the full write-up) that reviewers can opt into per-browser to sync decisions across
+review-state sync backend (Postgres when `DATABASE_URL` is set, SQLite
+otherwise; see "Review-state sync backend" below, and the
+`hhvc-review-sync-backend` skill for the full write-up) that reviewers can opt into per-browser to sync decisions across
 machines; it's off unless deployed and configured, and every other part of
 the tool is unaffected if it's never used.
 
@@ -40,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 37 unit-test files in tests/
+bun run test                  # bun test over the 40 unit-test files in tests/
 bun run test:e2e              # playwright test over the 19 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -70,11 +71,11 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 37 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 40 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
-`review-ops-data`, `knowledge-chunking`, `knowledge-search`,
+`review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
 `ai-assist-schema`, `ai-assist-env`, `karl-tag-meta` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
@@ -123,6 +124,13 @@ prototype-pollution case uses `Object.defineProperty` rather than an object
 literal, whose `__proto__:` key would set the prototype instead of creating an
 own property and pass while proving nothing), `review-api-server` (spawns
 `server.ts` as a subprocess against a temp SQLite DB, over real HTTP),
+`review-api-postgres` (the same routes against a **real Postgres**, and
+**skipped unless one is reachable** — `TEST_DATABASE_URL`, else a local server
+on the default port, so CI runs it as a no-op. It exists because the two
+drivers in `build_scripts/storage.js` express the compare-and-swap differently
+— SQLite reports `changes`, Postgres counts rows `RETURNING`ed — and a lost
+update there is silent; its race test issues two pushes carrying the same
+baseline and asserts exactly one 409),
 `ai-assist-providers` (varies provider API keys directly, which a spawned
 server subprocess structurally cannot), `ai-assist-server` (spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
@@ -1032,9 +1040,62 @@ offline static tool.
   CORS, configuration, and rate-limit errors, retain the server's security
   headers and are `no-store`.
 
+### What the RAG corpus contains (`build_scripts/knowledge-sources.js`)
+
+One glob (`docs/source/**/*.md`) used to define the corpus, which excluded both
+the newest Karl capture and the mockup copy under review.
+`collectKnowledgeSources()` is now the single definition, and every chunk
+carries a `category`: `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated
+snapshots of live SF.gov), `karl` (the 2026-08-14 editor measurement, listed
+explicitly because it lives in `docs/`), and `mockup-draft` (the `pages/*.js`
+mockups, projected to markdown at ingest time and not committed).
+
+- **Category comes from the first path segment under `docs/source/`**, so a new
+  folder files itself with no code change.
+- **`mockup-draft` is about a third of the corpus and is the dangerous one** —
+  draft copy nobody approved, including the page being audited. The prompt's
+  source tag now carries `category`, the system prompt states what each category
+  is worth, and it forbids citing draft copy as the authority a finding rests
+  on. Resolved from the matched row, so the model cannot spoof it; it also
+  travels with the citation the reviewer sees.
+- Folder `README.md` files are excluded, so provenance notes stay uncitable.
+- Measured: **76 documents, 768 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
+  `karl` 53, `sfgov-live` 28, `sfgov-style` 24). Still brute-force cosine.
+- **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
+  writes to Postgres and `compliance-audit` reports ready — verified:
+  `knowledgeBase: {ready: true, chunkCount: 768}`.
+
+### Reviewer sign-in (`/api/session`)
+
+The bundle is public so it can never carry a token; Railway made the app and the
+API same-origin, so it can carry a sign-in form instead.
+
+- **`POST /api/session`** takes `{password}`, compares it constant-time against
+  `REVIEW_SESSION_PASSWORD`, and sets an `HttpOnly; Secure; SameSite=Strict`
+  cookie. `GET` reports `{active, loginAvailable}` and is deliberately ungated —
+  it is how a browser learns it can become a principal. `DELETE` signs out.
+- **The cookie is a signed assertion, not stored state**:
+  `<principal>.<expiry>.<HMAC>`, verified per request, key derived from the API
+  tokens — so rotating `REVIEW_API_TOKEN` invalidates every session.
+- **A session gets `review:read` + `review:write` only, never `ai:generate`** —
+  a shared password that unlocked paid generation would make one leak an
+  unbounded bill. Cookie-authenticated AI requests get 403.
+- **Bearer beats cookie** when both are present, so a scoped token keeps its
+  own roles.
+- Sign-in is throttled globally (10/min); unset password → **501**, token-only.
+
 ### Review-state sync backend (optional)
 
-`server.ts` optionally serves a small SQLite-backed sync API alongside static files, with `js/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
+**Sync runs automatically as of 2026-08-14** — `startAutoSync()` pulls once at
+init, `scheduleAutoPush()` pushes a page on a 3s debounce **after** the autosave
+has written localStorage (never instead of it), and `pushDirtyPages()` sends
+work saved while the server was unreachable. No push may precede the first pull,
+or it carries a `synced_at` baseline the browser never observed and earns a 409.
+The client still never merges on the push path — the server does, with
+`updatedBy: 'sync'` — so history stays bounded. The default endpoint is the
+page's own origin now, not a baked-in hostname; the token still has no default.
+
+`server.ts` optionally serves a small sync API alongside static files, backed by Postgres or SQLite depending on `DATABASE_URL` (see "Where review records live" above), with `js/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
 
 ### AI assist backend (optional)
 
@@ -1089,6 +1150,34 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
   also swallow that sub-app's committed `dist/`.
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
+
+### Where review records live (`build_scripts/storage.js`)
+
+One module decides the store and speaks its dialect; `server.ts` calls functions
+and never sees a driver or a SQL string.
+
+- **Postgres when `DATABASE_URL` is set** (Railway injects it from the managed
+  Postgres service); **SQLite at `DATA_DB_PATH` otherwise** — local dev and
+  every server test. The fallback is kept so
+  `tests/review-api-server.test.js` can spawn the real server in CI with no
+  service container.
+- **Every function is async, including the SQLite ones** — `bun:sqlite` is sync
+  and `Bun.SQL` is not, and two shapes would push the difference back into
+  `server.ts`.
+- **`updated_at` is TEXT in both drivers, never a timestamp type.** Every
+  freshness check here is a string compare against ISO strings the server
+  stamps; letting Postgres reformat them would silently change those
+  comparisons, and the failure mode is a lost update.
+- **The compare-and-swap is the load-bearing line** — SQLite reads `changes`,
+  Postgres counts rows `RETURNING`ed. `tests/review-api-postgres.test.js` proves
+  the Postgres half by racing two pushes off one baseline.
+- **DDL runs at boot, not lazily**, so two replicas cannot race the same
+  `CREATE TABLE`.
+- **`knowledge_chunks` lives behind this seam too**, so `bun run ingest` writes
+  wherever the deployment reads. Embeddings are raw Float32 bytes in both — a
+  BLOB in SQLite, `bytea` in Postgres.
+- Bun's Postgres client is built in (`Bun.SQL`), so this added no npm
+  dependency.
 
 ### Deploying — Railway is the live host
 

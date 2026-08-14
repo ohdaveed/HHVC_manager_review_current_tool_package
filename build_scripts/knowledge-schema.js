@@ -4,7 +4,9 @@
 // (build_scripts/ai/knowledge-retrieval.js, opened by the running server) and
 // the write path (build_scripts/ingest-knowledge.js, run by hand via
 // `bun run ingest`) so the two processes cannot define this table differently.
-// Lives in the same SQLite file server.ts already opens at DATA_DB_PATH
+// The SQLite form of the table. build_scripts/storage.js owns where it lives
+// (Postgres when DATABASE_URL is set) and carries the Postgres equivalent; this
+// stays the SQLite definition, shared with the fallback driver at DATA_DB_PATH
 // (which also holds review_pages) — see
 // docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md.
 

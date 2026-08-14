@@ -72,6 +72,12 @@ google-service-account.json
 # Local tool settings/credentials
 .poolside/
 
+# Serena's per-machine project index and language-server config. It is written
+# on first use by whichever agent has Serena attached, describes that machine's
+# paths, and carries no facts about this repo a reader needs — so it is local
+# tooling state rather than repo content.
+.serena/
+
 # Claude Code rewrites this file itself as permissions are granted, so its
 # formatting is not ours to own. It is already in .prettierignore (added in
 # #111); keep both lists in step so it neither shows in `git status` nor
