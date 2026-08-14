@@ -1012,11 +1012,27 @@ ol li {
 
 /* Kind badge: use the category's mid-tone border color as badge background so
    it stands out against the tag's own tinted background. Text uses the
-   category's dark text token. Contrast values (light / dark mode):
-     meta      — #0046c2 on #c7dae5 ≈ 7.1:1 / #8db0e6 on #2b3a4a ≈ 5.95:1  ✓ AA
-     body      — #4a2a7a on #decdf6 ≈ 11.5:1 / #cbb0ef on #725a98 ≈ 4.76:1 ✓ AA
-     placement — #6f4a00 on #f2c94c ≈ 7.85:1 / #f0cd72 on #7d6220 ≈ 6.25:1 ✓ AA
-     editor    — #075e0a on #a6d8a8 ≈ 8.63:1 / #8fd694 on #35713a ≈ 5.75:1 ✓ AA */
+   category's dark text token.
+
+   The badge is 0.68rem (10.88px) bold — NOT WCAG "large text", so the bar is
+   4.5:1, not 3:1. Measured in the running app with getComputedStyle rather
+   than computed from the token table, because the two disagree:
+
+     meta      — #0046c2 on #c7dae5 = 5.49:1 ✓
+     body      — #4a2a7a on #decdf6 = 7.44:1 ✓
+     placement — #6f4a00 on #f2c94c = 4.98:1 ✓
+     editor    — #075e0a on #a6d8a8 = 4.98:1 ✓
+
+   **These light values are what a tag ON THE MOCKUP renders in BOTH themes.**
+   `.browser-shell` pins the `--sfds-*` primitives back to their light values
+   (css/theme.css) so the simulated public page stays light on a reviewer's
+   dark machine — so a dark-mode contrast figure for these four rules would
+   describe a state that never occurs inside the shell. The one place these
+   tokens DO resolve dark is the Help-tab legend, which sits outside the
+   shell; its dark-mode fix is the block further down.
+
+   Placement and editor sit at 4.98:1, roughly half a point of headroom. If
+   either token moves, re-measure rather than assuming the pair still passes. */
 .karl-tag[data-kind='meta'] .karl-tag-kind {
   background: var(--sfds-info-border) !important;
   color: var(--sfds-info-dark) !important;
@@ -1036,6 +1052,41 @@ ol li {
   background: var(--sfds-success-border) !important;
   color: var(--sfds-success-text) !important;
   border: none !important;
+}
+
+/* Dark mode, legend swatches only.
+   =================================
+   The Help tab's "Tag colors" key renders real `.karl-tag` markup OUTSIDE
+   `.browser-shell`, so unlike every tag on the mockup its `--sfds-*` tokens
+   resolve to the dark palette. Measured there, three of the four category
+   text-on-border pairs fall under AA:
+
+     meta      — #8db0e6 on #2b3a4a = 5.25:1 ✓
+     body      — #cbb0ef on #725a98 = 3.03:1 ✗
+     placement — #f0cd72 on #7d6220 = 3.76:1 ✗
+     editor    — #8fd694 on #35713a = 3.42:1 ✗
+
+   Those pairs are fine at their intended job — each `-text` token is tuned
+   against its own `-bg` (a near-black panel fill), where it clears 8:1. The
+   badge puts it on the mid-tone `-border` instead, which is a much lighter
+   ground, and the pair was never validated for that.
+
+   The fix keeps the per-kind background — the colour coding is the point —
+   and swaps the foreground to the dark theme's body-text token (#f0f1f2),
+   which clears AA on all four grounds — measured in the running app after the
+   change: meta 10.28:1, body 5.11:1, placement 5.10:1, editor 5.19:1.
+   Scoped to `.karl-tag-legend-swatch` on purpose: a tag
+   on the mockup keeps its coloured badge text, since inside the shell these
+   tokens are pinned light and already pass.
+
+   The selector carries `.karl-tag` and `[data-kind]` as well as the swatch
+   class on purpose: the per-kind rules above are `.karl-tag[data-kind='x']
+   .karl-tag-kind`, three class-level components with `!important`, so a
+   two-component override loses to them however far down the file it sits. */
+@media (prefers-color-scheme: dark) {
+  .karl-tag.karl-tag-legend-swatch[data-kind] .karl-tag-kind {
+    color: var(--sfds-slate-1) !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
