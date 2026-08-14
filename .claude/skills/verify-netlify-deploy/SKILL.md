@@ -5,6 +5,19 @@ description: Verify the production Netlify deploy actually matches the current c
 
 # Verify Netlify deploy
 
+> **Netlify is no longer the live host (2026-08-14).** Railway serves the deploy
+> reviewers open — https://web-production-9bb3b.up.railway.app, project
+> `hhvc-manager-review`, service `web`, tracking `main`. `netlify.toml` now sets
+> `build.ignore = "exit 0"`, so Netlify builds nothing and its last deploy stays
+> frozen at `38d152c`. **To verify the live site, verify Railway**, using the
+> same three questions below with the Railway MCP tools (`list_deployments` for
+> the commit and status, `get_logs` for a 502, a browser check for the bundle).
+> Two Railway-specific facts the Netlify version has no equivalent for:
+> `server.ts` binds `127.0.0.1` unless `HOST=0.0.0.0` is set, which produces a
+> **502 behind a SUCCESSFUL build**; and `/api/*` answering **501** is the
+> healthy fail-closed state, not a fault. Keep reading below only when checking
+> the retired Netlify site itself.
+
 This repo (`hhvc-manager-review-mockup-tool`) is a static Vite build deployed to
 Netlify (`netlify.toml`, site name `hhvc`, site id
 `af0a1d95-9b86-4604-8d01-1820c63fd3a6`). CI's `checks`/`e2e` jobs and the PR's
