@@ -13,6 +13,7 @@
 const { describe, test, expect, beforeAll, afterAll, beforeEach } = require('bun:test')
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
 
 const ROOT = path.resolve(__dirname, '..')
 
@@ -177,6 +178,9 @@ function createTestDbDir(name) {
   return fs.mkdtempSync(path.join(ROOT, `.ai-api-${name}-`))
 }
 
+/** A directory that does not exist, so no OAuth profile can be found under it. */
+const NO_PROFILE_DIR = path.join(os.tmpdir(), 'hhvc-no-anthropic-profile')
+
 function isolatedApiEnvironment(overrides) {
   const env = { ...process.env }
   for (const key of [
@@ -184,10 +188,19 @@ function isolatedApiEnvironment(overrides) {
     'REVIEW_API_ALLOWED_ORIGINS',
     'REVIEW_API_RATE_LIMIT',
     'REVIEW_API_RATE_WINDOW_MS',
+    'ANTHROPIC_PROFILE',
   ]) {
     delete env[key]
   }
-  return { ...env, ...overrides }
+  // The spawn inherits this process's environment, so a credential the DEVELOPER
+  // holds decides what the server under test believes about itself. Provider
+  // keys are already set per-test by the callers below; an `ant auth login`
+  // OAuth profile is not an environment variable at all, so it has to be pinned
+  // out here instead. Without this, `isConfigured()` finds the real
+  // ~/.config/anthropic on any machine that has ever logged in, and the
+  // "unconfigured" suite gets 502 (a real upstream call) where it asserts 501.
+  // Same class of leak as the spawned server inheriting DATABASE_URL.
+  return { ...env, ANTHROPIC_CONFIG_DIR: NO_PROFILE_DIR, ...overrides }
 }
 
 function spawnServer(env) {
@@ -847,10 +860,19 @@ describe('AI assist API (server.ts)', () => {
       expect(system).toContain('pestsTopic')
     })
 
-    test('marks the system prompt cacheable, since it never varies', async () => {
+    test('marks the LAST system block cacheable, since every block is byte-stable', async () => {
       stub.queue = [{ body: messageResponse(VALID_PAGE) }]
       await post({ task: 'content', prompt: 'Draft a page.' })
-      expect(stub.requests[0].system[0].cache_control).toEqual({ type: 'ephemeral' })
+      const system = stub.requests[0].system
+      // `content` sends two blocks — the style prompt, then the schema stated as
+      // an instruction, since PAGE_OUTPUT_SCHEMA is one Anthropic's grammar
+      // compiler rejects. A cache breakpoint covers every block BEFORE it too,
+      // so it belongs on the last one; asserting it on `system[0]` would pass
+      // while caching only half of what is cacheable.
+      expect(system).toHaveLength(2)
+      expect(system[0].cache_control).toBeUndefined()
+      expect(system.at(-1).cache_control).toEqual({ type: 'ephemeral' })
+      expect(system.at(-1).text).toContain('"additionalProperties": false')
     })
 
     test('passes the current page through as grounding context', async () => {

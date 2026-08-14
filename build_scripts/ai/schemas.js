@@ -22,6 +22,9 @@ const { z } = require('zod')
 // Safe to require here: no provider module requires this file back, so there is
 // no cycle.
 const { allProviderNames } = require('./providers')
+// A leaf module on purpose — see its header. The provider needs this fact and
+// cannot require this file back without creating a cycle.
+const { ANTHROPIC_GRAMMAR_INCOMPATIBLE } = require('./schema-flags')
 
 /** Karl content types this mockup uses. Matches the values in pages/*.js. */
 const PAGE_TYPES = [
@@ -128,6 +131,40 @@ const sectionSchema = {
   required: ['heading', 'karl'],
 }
 
+/**
+ * Anthropic's ceiling on optional properties in a structured-output schema.
+ *
+ * Taken from the API's own rejection message ("limit: 24"), not a doc page.
+ * Gemini imposes no comparable limit, which is why exceeding it produced a
+ * failure on one provider and not the other.
+ */
+const MAX_OPTIONAL_SCHEMA_PROPERTIES = 24
+
+/**
+ * Count optional properties the way the grammar compiler does: recursively,
+ * through array `items`, and once per *use* of a shared subschema rather than
+ * once per definition. `calloutSchema` is embedded by both sections and steps,
+ * so each optional property it declares counts twice.
+ *
+ * Exported so `tests/ai-assist-schema.test.js` measures what the API measures
+ * instead of restating a number that would drift.
+ * @param {object} node A JSON Schema node.
+ * @returns {number}
+ */
+function countOptionalProperties(node) {
+  if (!node || typeof node !== 'object') return 0
+  let total = 0
+  if (node.type === 'object' && node.properties) {
+    const required = new Set(node.required || [])
+    for (const [key, child] of Object.entries(node.properties)) {
+      if (!required.has(key)) total += 1
+      total += countOptionalProperties(child)
+    }
+  }
+  if (node.type === 'array' && node.items) total += countOptionalProperties(node.items)
+  return total
+}
+
 /** The `content` task's output: one HHVC page object. */
 const PAGE_OUTPUT_SCHEMA = {
   type: 'object',
@@ -154,6 +191,34 @@ const PAGE_OUTPUT_SCHEMA = {
   },
   required: ['slug', 'type', 'title', 'summary', 'audience', 'reading', 'sections'],
 }
+
+/**
+ * `PAGE_OUTPUT_SCHEMA` is one Anthropic's structured-output grammar compiler
+ * cannot accept, so the Claude provider states it in the prompt instead.
+ *
+ * **Measured, not assumed.** `PAGE_OUTPUT_SCHEMA` fails two independent gates:
+ * it declares 28 optional properties against a limit of 24, and once trimmed
+ * under that limit the API still answered `"Schema is too complex."` — as it
+ * did with `sections[].steps` removed entirely, a third of the schema gone. The
+ * failure mode varies between `"Schema is too complex."` and
+ * `"Grammar compilation timed out."` after minutes of compilation, so it is a
+ * budget the page shape simply does not fit, not one bad branch to prune.
+ *
+ * **Nothing is lost by dropping to prompt instructions**, because structured
+ * outputs was never the only guarantee here: `generateContent()` validates every
+ * draft against the real Zod page schema and retries once with the specific
+ * errors named. Measured on the same request that fails as a grammar: the model
+ * returned a page in 21 seconds that parsed cleanly and passed
+ * `validateGeneratedPage` with zero issues.
+ *
+ * Membership is by object identity rather than a flag inside the schema,
+ * because the schema object is serialized straight into an API request and an
+ * unrecognized key there is its own rejection.
+ *
+ * Gemini is unaffected — it compiles this schema fine, and that asymmetry is
+ * exactly why the failure went unnoticed.
+ */
+PAGE_OUTPUT_SCHEMA[ANTHROPIC_GRAMMAR_INCOMPATIBLE] = true
 
 /**
  * One compliance-audit finding: an issue grounded in one or more cited chunk
@@ -348,6 +413,8 @@ const generateRequestSchema = z.discriminatedUnion('task', [
 ])
 
 module.exports = {
+  MAX_OPTIONAL_SCHEMA_PROPERTIES,
+  countOptionalProperties,
   PAGE_OUTPUT_SCHEMA,
   REWRITE_OUTPUT_SCHEMA,
   COMPLIANCE_AUDIT_OUTPUT_SCHEMA,

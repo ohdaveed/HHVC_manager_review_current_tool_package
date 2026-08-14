@@ -424,7 +424,8 @@ function preflightResponse(req: Request, context: ApiRequestContext): Response {
 const SESSION_COOKIE_NAME = "hhvc_session"
 const SESSION_PRINCIPAL_NAME = "session-reviewer"
 const REVIEW_SESSION_PASSWORD = process.env.REVIEW_SESSION_PASSWORD ?? ""
-const SESSION_TTL_MS = numberFromEnv("REVIEW_SESSION_TTL_HOURS", 12, 1, 720) * 60 * 60 * 1000
+const SESSION_TTL_MS =
+  numberFromEnv("REVIEW_SESSION_TTL_HOURS", 12, { min: 1, max: 720 }) * 60 * 60 * 1000
 
 /**
  * Failed sign-in attempts, one fixed window for the whole server.
@@ -1143,6 +1144,16 @@ function aiErrorResponse(
     // An upstream API error (bad key, rate limit, overload). Surface it as a
     // gateway failure with the upstream status attached, so a 429 is not
     // mistaken for a bug in this server.
+    //
+    // The upstream MESSAGE stays out of the response body — it is written by a
+    // third party and may name internal detail the browser has no business
+    // seeing — but it is logged, because withholding it from the operator too
+    // is what makes an upstream failure undiagnosable. A real 400 here read
+    // "Your credit balance is too low to access the Anthropic API", and with
+    // only the bare status reaching anyone it was investigated for a while as
+    // a wrong model id. The 500 branch below has always logged; this one did
+    // not, and the status alone is rarely enough to act on.
+    console.error(`AI provider returned ${status}:`, (error as Error)?.message)
     return jsonResponse(
       { error: `The model provider returned ${status}.`, upstreamStatus: status },
       502,

@@ -5,9 +5,13 @@
 // so streaming would buy nothing but a server-sent-events plumbing problem on
 // both sides. Revisit if a future task (a whole sitemap, a long report) starts
 // producing output near the cap.
+const { existsSync, readdirSync } = require('node:fs')
+const { homedir } = require('node:os')
+const { join } = require('node:path')
 const Anthropic = require('@anthropic-ai/sdk')
 const { numberFromEnv } = require('./env')
 const { RefusalError, ProviderTimeoutError } = require('./errors')
+const { supportsAnthropicStructuredOutput } = require('./schema-flags')
 
 /** Registry key and the label the browser's provider picker shows. */
 const NAME = 'claude'
@@ -27,9 +31,75 @@ const MAX_TOKENS = 16000
 // and pairing either with the other returns a 400.
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01'
 
-/** @returns {boolean} whether a Claude API key is configured. */
+/**
+ * Where `ant auth login` stores its credentials.
+ *
+ * `ANTHROPIC_CONFIG_DIR` is honoured because the SDK honours it — and because
+ * it is the only way a test can pin this to a directory it controls. Without
+ * that, the profile check below would report whatever the machine running the
+ * suite happens to have logged in, and `tests/ai-assist-providers.test.js`
+ * (which varies provider keys directly) would pass or fail by accident.
+ *
+ * Windows' `%APPDATA%\Anthropic` is deliberately not handled: `server.ts` runs
+ * under Bun on Linux locally, in CI, and on Railway, so a second path would be
+ * an untested branch. A Windows deployment sets `ANTHROPIC_CONFIG_DIR`.
+ * @returns {string}
+ */
+function credentialsDir() {
+  const base = process.env.ANTHROPIC_CONFIG_DIR || join(homedir(), '.config', 'anthropic')
+  return join(base, 'credentials')
+}
+
+/**
+ * Whether an `ant auth login` OAuth profile exists on disk.
+ *
+ * Checked because the SDK resolves credentials in the order
+ * `ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile, so a
+ * deployment can hold a perfectly good credential with no environment variable
+ * set at all. Reading the disk rather than an env var is what that costs: the
+ * profile `ant auth login` writes is the *default* one, and it sets neither
+ * `ANTHROPIC_PROFILE` nor `ANTHROPIC_CONFIG_DIR`, so an env-only check would
+ * report "not configured" for the single most common way to be configured.
+ *
+ * `ANTHROPIC_PROFILE` narrows the check to that one file when it is set, since
+ * that is the profile the SDK will actually load — any other profile in the
+ * directory is irrelevant to whether THIS request can authenticate.
+ * @returns {boolean}
+ */
+function hasOAuthProfile() {
+  const dir = credentialsDir()
+  const profile = process.env.ANTHROPIC_PROFILE
+  try {
+    if (profile) return existsSync(join(dir, `${profile}.json`))
+    return readdirSync(dir).some((entry) => entry.endsWith('.json'))
+  } catch {
+    // No config directory, or no permission to read it. Either way there is no
+    // profile this process can use.
+    return false
+  }
+}
+
+/**
+ * Whether a Claude credential of any kind is available.
+ *
+ * **This is a weaker claim than it used to make.** It once meant "an API key
+ * string is present", which was very nearly "a usable credential". A profile
+ * can be present and *expired* — refresh tokens hard-expire rather than
+ * sliding — so this can now report configured and then fail at request time.
+ * That surfaces as a 502 with the upstream message logged (see server.ts's
+ * upstream-error branch) rather than the clean 501 a missing key gives. The
+ * alternative was a network call inside a synchronous gate that runs on every
+ * `/api/ai/capabilities` request, which is worse.
+ *
+ * Re-read on every call, never cached: the registry is a module singleton
+ * required once at server start, and `tests/ai-assist-providers.test.js` pins
+ * that behaviour.
+ * @returns {boolean}
+ */
 function isConfigured() {
-  return Boolean(process.env.ANTHROPIC_API_KEY)
+  return (
+    Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN) || hasOAuthProfile()
+  )
 }
 
 /** @returns {string} the configured model id. */
@@ -68,7 +138,12 @@ const REQUEST_TIMEOUT_MS = numberFromEnv('ANTHROPIC_TIMEOUT_MS', 150_000, { max:
 
 function createClient() {
   return new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
+    // Spread rather than passed unconditionally. An explicitly-passed `apiKey`
+    // takes precedence over every other credential source, so passing the env
+    // var when it is unset would hand the SDK an explicit empty credential on
+    // exactly the deployments that authenticate by profile instead. Omitting
+    // the key entirely is what lets the SDK's own resolution run.
+    ...(process.env.ANTHROPIC_API_KEY ? { apiKey: process.env.ANTHROPIC_API_KEY } : {}),
     maxRetries: MAX_RETRIES,
     timeout: REQUEST_TIMEOUT_MS,
     // Explicit rather than relying on the SDK's env fallback, so the stub
@@ -158,7 +233,46 @@ function classifyAbort(error, signal) {
 }
 
 /**
+ * State the schema as an instruction, for schemas the grammar compiler rejects.
+ *
+ * The schema itself is sent verbatim rather than paraphrased: it is the same
+ * object the validator enforces, so a prose restatement would be a second
+ * description free to drift from the one that actually holds.
+ * @param {object} jsonSchema
+ * @returns {string}
+ */
+function schemaInstruction(jsonSchema) {
+  return [
+    'Reply with a single JSON object and nothing else. No prose before or after,',
+    'and no markdown code fence. It must validate against this JSON Schema exactly,',
+    'honouring "required" and "additionalProperties": false at every level:',
+    JSON.stringify(jsonSchema, null, 2),
+  ].join('\n')
+}
+
+/**
+ * Strip a markdown fence the model was asked not to add.
+ *
+ * Belt and braces for the prompt-instructed path only: with no grammar holding
+ * the output shape, a stray ```json wrapper is the one deviation likely enough
+ * to be worth absorbing rather than spending a whole retry on. Anything else
+ * malformed still falls through to the validator and its retry.
+ * @param {string} text
+ * @returns {string}
+ */
+function stripCodeFence(text) {
+  const fenced = text.trim().match(/^```(?:json)?\s*\n([\s\S]*?)\n?```$/)
+  return fenced ? fenced[1] : text
+}
+
+/**
  * Ask Claude for a JSON object matching `jsonSchema`.
+ *
+ * Two request shapes, chosen by whether Anthropic can compile the schema into a
+ * grammar (see `schema-flags.js`). When it can, `output_config.format`
+ * guarantees the shape. When it cannot — `PAGE_OUTPUT_SCHEMA` is measurably one
+ * such — the schema is stated in the system prompt instead and the shape rests
+ * on the caller's validate-and-retry loop, which runs either way.
  *
  * @param {object} options
  * @param {string} options.system Byte-stable system prompt (see prompts.js).
@@ -170,6 +284,16 @@ function classifyAbort(error, signal) {
  */
 async function generateObject({ system, userPrompt, jsonSchema, signal }) {
   const client = createClient()
+  const structured = supportsAnthropicStructuredOutput(jsonSchema)
+
+  // Two system blocks when the schema cannot be a grammar, one when it can.
+  // Both are byte-stable across requests, so the cache breakpoint still covers
+  // everything — it moves to the LAST block, which caches every block before
+  // it. Putting the schema in its own block rather than concatenating keeps the
+  // style corpus's bytes unchanged either way.
+  const systemBlocks = [{ type: 'text', text: system }]
+  if (!structured) systemBlocks.push({ type: 'text', text: schemaInstruction(jsonSchema) })
+  systemBlocks[systemBlocks.length - 1].cache_control = { type: 'ephemeral' }
 
   let response
   try {
@@ -184,18 +308,9 @@ async function generateObject({ system, userPrompt, jsonSchema, signal }) {
         thinking: { type: 'adaptive' },
         output_config: {
           effort: process.env.AI_EFFORT || DEFAULT_EFFORT,
-          format: { type: 'json_schema', schema: jsonSchema },
+          ...(structured ? { format: { type: 'json_schema', schema: jsonSchema } } : {}),
         },
-        system: [
-          {
-            type: 'text',
-            text: system,
-            // The system prompt inlines the whole vendored style corpus and does
-            // not vary between requests, so it is worth caching. Placed on the
-            // last system block, which caches everything before it too.
-            cache_control: { type: 'ephemeral' },
-          },
-        ],
+        system: systemBlocks,
         messages: [{ role: 'user', content: userPrompt }],
       },
       signal ? { signal } : undefined
@@ -221,11 +336,12 @@ async function generateObject({ system, userPrompt, jsonSchema, signal }) {
 
   let parsed
   try {
-    parsed = JSON.parse(textBlock.text)
+    parsed = JSON.parse(structured ? textBlock.text : stripCodeFence(textBlock.text))
   } catch {
-    // output_config.format is supposed to guarantee parseable JSON, so this
-    // means the schema was rejected or the format was dropped. Say so rather
-    // than surfacing a bare SyntaxError.
+    // On the structured path `output_config.format` is supposed to guarantee
+    // parseable JSON, so this means the schema was rejected or the format was
+    // dropped. On the prompt-instructed path it means the model ignored the
+    // instruction. Either way, say so rather than surfacing a bare SyntaxError.
     throw new Error('The model returned text that was not valid JSON.')
   }
 
@@ -244,6 +360,8 @@ module.exports = {
   generateObject,
   classifyAbort,
   isConfigured,
+  hasOAuthProfile,
+  credentialsDir,
   getModel,
   listModelIds,
   normalizeUsage,

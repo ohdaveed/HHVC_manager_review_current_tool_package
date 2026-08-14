@@ -17,9 +17,12 @@ const {
   SECTION_COMPONENTS,
   generateRequestSchema,
   REWRITE_OUTPUT_SCHEMA,
+  MAX_OPTIONAL_SCHEMA_PROPERTIES,
+  countOptionalProperties,
   measureDepth,
   MAX_PAGE_DEPTH,
 } = require('../build_scripts/ai/schemas')
+const { supportsAnthropicStructuredOutput } = require('../build_scripts/ai/schema-flags')
 const { validateGeneratedPage } = require('../build_scripts/ai/validate-output')
 
 /** Walk every object node in a JSON Schema. */
@@ -413,6 +416,90 @@ describe('COMPLIANCE_AUDIT_OUTPUT_SCHEMA', () => {
   test('severity is constrained to error, warning, or note', () => {
     const findingSchema = COMPLIANCE_AUDIT_OUTPUT_SCHEMA.properties.findings.items
     expect(findingSchema.properties.severity.enum).toEqual(['error', 'warning', 'note'])
+  })
+})
+
+describe('Anthropic structured-output compatibility', () => {
+  // Why any of this is a test rather than a comment: the failure happens at the
+  // PROVIDER, on one provider only, as an HTTP 400 that reached the browser as
+  // a bare `upstreamStatus: 400`. Nothing here could catch it — the schema is
+  // valid JSON Schema, every unit test passed, and Gemini compiled it fine.
+  // `content` requests to Claude were failing outright.
+  test('the schemas sent AS grammars stay within the optional-property limit', () => {
+    // These two are the ones that reach `output_config.format`, so the limit
+    // binds them and only them. Both are at zero today, which is the point:
+    // this fails the moment either grows an optional property, while there is
+    // still headroom to reconsider.
+    expect(countOptionalProperties(REWRITE_OUTPUT_SCHEMA)).toBeLessThanOrEqual(
+      MAX_OPTIONAL_SCHEMA_PROPERTIES
+    )
+    expect(countOptionalProperties(COMPLIANCE_AUDIT_OUTPUT_SCHEMA)).toBeLessThanOrEqual(
+      MAX_OPTIONAL_SCHEMA_PROPERTIES
+    )
+    expect(supportsAnthropicStructuredOutput(REWRITE_OUTPUT_SCHEMA)).toBe(true)
+    expect(supportsAnthropicStructuredOutput(COMPLIANCE_AUDIT_OUTPUT_SCHEMA)).toBe(true)
+  })
+
+  test('PAGE_OUTPUT_SCHEMA is marked incompatible, and exceeds the limit that explains why', () => {
+    // The count is the first of two reasons it cannot be a grammar (the second,
+    // "Schema is too complex.", survived trimming under the limit and is not
+    // measurable from here). Asserting both together is what stops someone
+    // "fixing" the count and quietly removing the marker on that basis.
+    expect(supportsAnthropicStructuredOutput(PAGE_OUTPUT_SCHEMA)).toBe(false)
+    expect(countOptionalProperties(PAGE_OUTPUT_SCHEMA)).toBeGreaterThan(
+      MAX_OPTIONAL_SCHEMA_PROPERTIES
+    )
+  })
+
+  test('the marker never reaches the wire', () => {
+    // A string-keyed flag would be serialized into the request body and
+    // rejected as an unrecognized schema field — the failure this guards is one
+    // an integration test would only catch against a live provider.
+    expect(JSON.stringify(PAGE_OUTPUT_SCHEMA)).not.toContain('anthropicGrammar')
+    expect(Object.keys(PAGE_OUTPUT_SCHEMA)).toEqual([
+      'type',
+      'additionalProperties',
+      'properties',
+      'required',
+    ])
+  })
+
+  test('an unmarked schema is assumed compilable', () => {
+    // Defaulting the other way would silently drop every newly added schema to
+    // prompt instructions with nobody deciding to.
+    expect(supportsAnthropicStructuredOutput({ type: 'object' })).toBe(true)
+  })
+
+  test('counts a shared subschema once per use, not once per definition', () => {
+    // The expensive detail, and the one a reader is most likely to get wrong:
+    // `calloutSchema` is embedded by both sections and steps, so each optional
+    // property it declares costs two. A counter that walked definitions would
+    // report a number the API disagrees with, which is worse than no counter.
+    const shared = {
+      type: 'object',
+      properties: { a: { type: 'string' }, b: { type: 'string' } },
+      required: ['a'],
+    }
+    const doc = {
+      type: 'object',
+      required: ['first', 'second'],
+      properties: { first: shared, second: shared },
+    }
+    expect(countOptionalProperties(doc)).toBe(2)
+  })
+
+  test('counts through array items, where every section and step actually lives', () => {
+    const doc = {
+      type: 'object',
+      required: ['rows'],
+      properties: {
+        rows: {
+          type: 'array',
+          items: { type: 'object', properties: { maybe: { type: 'string' } }, required: [] },
+        },
+      },
+    }
+    expect(countOptionalProperties(doc)).toBe(1)
   })
 })
 
