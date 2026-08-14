@@ -3,7 +3,23 @@
 # into dist/, and copies the committed workshop-form sub-app in alongside it.
 # The optional /api/review-state sync backend has no runtime here, so a Netlify
 # deploy is read-only/no-sync by design.
+#
+# **Netlify is no longer the deploy reviewers open — Railway is** (2026-08-14).
+# See "Deploying" in AGENTS.md and `railway.json`. Railway runs `server.ts`, so
+# the same build ALSO gets the optional sync and AI-assist APIs a static host
+# structurally cannot serve; those still fail closed until they are configured.
+#
+# This file is kept rather than deleted, because it is the only record of how
+# the static build is assembled and of two plugin traps that cost real deploys
+# (see the long note below). `build.ignore` below is what actually stops
+# Netlify building — remove that one line to turn it back on.
 [build]
+  # `ignore` is Netlify's "should I build?" hook: exit 0 means SKIP. Builds are
+  # off rather than the site being deleted, so the last known-good deploy stays
+  # reachable while Railway is the live one — and so a stale second copy of the
+  # tool can never silently diverge from main behind a URL someone bookmarked.
+  ignore = "exit 0"
+
   # Bun, not npm. This said `npm run build:netlify` while the comment above it
   # said `bun`, and the repo commits only bun.lock — no package-lock.json. npm
   # therefore resolved every dependency fresh from the `^` ranges in

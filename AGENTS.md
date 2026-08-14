@@ -2025,6 +2025,36 @@ and it never writes to `pages/*.js`.
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
 
+### Deploying — Railway is the live host
+
+**https://web-production-9bb3b.up.railway.app** is the deploy reviewers open.
+Railway project `hhvc-manager-review`, service `web`, connected to this repo's
+`main` branch, so a merge redeploys. Config lives in `railway.json`: build
+`bun run build:netlify`, start `bun run serve`.
+
+- **`bun run serve`, not `bun run start`.** The `start` script is
+  `build:netlify && serve` — correct locally, wrong on a platform that already
+  ran the build, where it would repeat the whole thing at boot. The bare `build`
+  script is wronger still for a server: it also produces the single-file export
+  and rebuilds the workshop form.
+- **`HOST=0.0.0.0` is required and is a variable, not a code change.**
+  `server.ts` defaults to `process.env.HOST ?? "127.0.0.1"`, which is right for
+  local dev and unreachable inside a container — the first Railway deploy built
+  and started cleanly and still served 502, with the only evidence being one log
+  line: `HHVC mockup server running at http://127.0.0.1:8080`. The service also
+  sets `PORT=8080`, and the generated domain's target port must match; a domain
+  created before the port is known shows `Target port: -` and cannot route.
+- **Railway runs `server.ts`, so the optional APIs finally have a runtime.**
+  On Netlify they were structurally impossible. They still fail closed —
+  `/api/review-state` and `/api/ai/capabilities` both answer **501** until
+  `REVIEW_API_TOKEN` (or `REVIEW_API_PRINCIPALS`) and a provider key are set.
+  501 there is the healthy state, not a broken deploy; 502 is the broken one.
+- **Netlify is retired but not deleted.** `netlify.toml` now carries
+  `build.ignore = "exit 0"`, which tells Netlify to skip every build; the file
+  itself is kept for its record of how the static bundle is assembled and of two
+  plugin traps. Delete that one line to turn Netlify back on. The site's last
+  deploy stopped at `38d152c` and was serving 503 when Railway took over.
+
 ### Other directories
 
 - **`forms/mosquito-workshop-request/`** — independent Vite app (own

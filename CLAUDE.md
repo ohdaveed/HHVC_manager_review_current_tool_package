@@ -1090,6 +1090,29 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
 
+### Deploying — Railway is the live host
+
+**https://web-production-9bb3b.up.railway.app** is the deploy reviewers open.
+Railway project `hhvc-manager-review`, service `web`, connected to `main`, so a
+merge redeploys. Config lives in `railway.json`: build `bun run build:netlify`,
+start `bun run serve`.
+
+- **`bun run serve`, not `bun run start`** — `start` is `build:netlify && serve`,
+  which would repeat the whole build at boot on a platform that already ran it.
+- **`HOST=0.0.0.0` is required, as a variable rather than a code change.**
+  `server.ts` defaults to `127.0.0.1`, which is right locally and unreachable in
+  a container: the first deploy built and started cleanly and still served 502,
+  the only evidence being the log line
+  `HHVC mockup server running at http://127.0.0.1:8080`. `PORT=8080` is set too,
+  and the domain's target port must match it.
+- **Railway runs `server.ts`, so the optional APIs finally have a runtime** —
+  impossible on Netlify. They still fail closed: `/api/review-state` and
+  `/api/ai/capabilities` answer **501** until `REVIEW_API_TOKEN` (or
+  `REVIEW_API_PRINCIPALS`) and a provider key are set. 501 is healthy there;
+  502 is not.
+- **Netlify is retired but not deleted** — `netlify.toml` carries
+  `build.ignore = "exit 0"` (skip every build). Delete that line to re-enable it.
+
 ### Other directories
 
 - **`forms/mosquito-workshop-request/`** — an independent Vite app (own
