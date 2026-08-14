@@ -144,10 +144,10 @@ since near-identical is exactly the condition under which the sync copy's extra
 `ai-assist-validate-rewrite` (that a
 rewrite preserves every link's TARGET while its label stays free to change,
 and introduces no HTML into copy rendered through `formatMarkdown`), and
-`sfds-tokens` (pins `css/sfds.css` against the vendored capture in BOTH
-directions — that no declared value drifts, and that no `--sfds-*` name exists
-outside the capture; the second is the one that catches an invented token, which
-is exactly what `--sfds-action-blue` was).
+`sfds-tokens` (asserts that no file under `css/` or `js/` contains the
+`--sfds-` prefix — the prefix names a design authority, and this guard is what
+stops a hand-authored value from claiming that authority again, which is the
+exact defect this branch exists to fix).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

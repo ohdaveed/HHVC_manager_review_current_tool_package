@@ -131,10 +131,10 @@ not fail CI; it pins the two DIFFERENCES too, since near-identical is exactly
 the condition under which the sync copy's extra `synced_at`/`local_dirty`
 clearing gets "helpfully" copied across), `ai-assist-validate-rewrite`
 (the plain-language mandate and link-target checks a `rewrite-field` draft is
-held to), and `sfds-tokens` (pins `css/sfds.css` against the vendored capture
-in BOTH directions — that no declared value drifts, and that no `--sfds-*`
-name exists outside the capture; the second is the one that catches an
-invented token, which is exactly what `--sfds-action-blue` was). **The list in
+held to), and `sfds-tokens` (asserts that no file under `css/` or `js/`
+contains the `--sfds-` prefix — the prefix names a design authority, and this
+guard is what stops a hand-authored value from claiming that authority again,
+which is the exact defect this branch exists to fix). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing

@@ -660,12 +660,19 @@
   margin-top: 0.75rem;
   padding: 0.75rem;
   border: 1px solid var(--legacy-border);
-  /* --legacy-warning-border, not the undeclared `--legacy-yellow`. That token was
-     never declared anywhere in the repo, so its `#f5c542` fallback was the
-     value that always rendered — a literal no theme could reach, and the one
-     accent in the tool that stayed identical in dark mode. It was within a
-     hair of --legacy-warning-border (#f2c94c), which is a real token and does
-     re-tune for dark. */
+  /* --legacy-warning-border, not the undeclared token this rule used to
+     reference under the pre-rename prefix: two leading hyphens, `sfds`, a
+     hyphen, then `yellow`. Spelled apart like that on purpose — the whole
+     namespace is now guarded by `tests/sfds-tokens.test.js`, which fails on
+     that literal substring appearing anywhere outside css/sfds.css, and a
+     future blanket sweep for it should not silently rewrite this historical
+     reference into a `--legacy-` name too, the same way the sweep that
+     produced this file's other renames once would have. That token was
+     never declared anywhere in the repo under either prefix, so its
+     `#f5c542` fallback was the value that always rendered — a literal no
+     theme could reach, and the one accent in the tool that stayed identical
+     in dark mode. It was within a hair of --legacy-warning-border (#f2c94c),
+     which is a real token and does re-tune for dark. */
   border-left: 4px solid var(--legacy-warning-border);
   border-radius: var(--radius);
   background: var(--legacy-white);

@@ -38,7 +38,12 @@ module.exports = defineConfig({
     command: 'bun run start',
     env: { ...process.env, PORT: port },
     url: origin,
-    reuseExistingServer: !process.env.CI,
+    // Reuse is off whenever HHVC_E2E_PORT is set, not just in CI. Naming a
+    // port is how a second checkout asks for isolation from whatever else is
+    // running — silently reusing a stranger's server on that port is exactly
+    // the footgun the port option exists to prevent, and it would defeat the
+    // isolation just as thoroughly as always reusing on 8080 did.
+    reuseExistingServer: !process.env.CI && !process.env.HHVC_E2E_PORT,
     timeout: 120_000,
   },
 })
