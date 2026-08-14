@@ -1427,4 +1427,18 @@ const server = serve({
 console.log(`HHVC mockup server running at http://${server.hostname}:${server.port}`)
 console.log(`Review state stored in ${describeStorage(DATA_DB_PATH)}`)
 
-export default server
+/* **This file deliberately has no default export, and adding one back would
+   crash the deployment.** `bun run server.ts` auto-serves a module's default
+   export when it carries a `fetch` — so exporting the already-started `Server`
+   made Bun call `Bun.serve()` on it a second time, on a port the same process
+   was already listening on. Railway's Bun 1.3.0 image crash-looped on exactly
+   that, logging `HHVC mockup server running at http://0.0.0.0:8080` and then
+   `error: Failed to start server. Is port 8080 in use? code: "EADDRINUSE"` with
+   the second frame at `bun:main` rather than anywhere in this repo.
+
+   Nothing needed the export: `serve()` above starts the server as a side
+   effect, and every test spawns `bun run server.ts` as a subprocess rather than
+   importing it (see `tests/review-api-server.test.js`'s header, which says so
+   explicitly). Local Bun 1.3.14 tolerated the double-serve, which is why the
+   suite stayed green while the deploy was down — so a passing `bun run test` is
+   not evidence this is safe to re-add. */
