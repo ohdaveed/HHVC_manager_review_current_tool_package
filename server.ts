@@ -1178,7 +1178,7 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
     // token call them would weaken the role boundary even if POST stayed locked.
     const roleResponse = requireApiRole(principal, API_ROLES.aiGenerate, context)
     if (roleResponse) return roleResponse
-    return jsonResponse(getCapabilities(), 200, context.corsHeaders)
+    return jsonResponse(await getCapabilities(), 200, context.corsHeaders)
   }
 
   // The provider gate is checked INSIDE each route that needs it, not before
@@ -1291,7 +1291,7 @@ async function handleAiApi(req: Request, url: URL): Promise<Response> {
       )
     }
 
-    if (parsed.data.task === "compliance-audit" && !isComplianceAuditAvailable()) {
+    if (parsed.data.task === "compliance-audit" && !(await isComplianceAuditAvailable())) {
       const geminiConfigured = Boolean(getProvider("gemini")?.isConfigured())
       return jsonResponse(
         {

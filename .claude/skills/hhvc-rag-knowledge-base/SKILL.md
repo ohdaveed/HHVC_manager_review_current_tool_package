@@ -20,12 +20,15 @@ never writes anything, and every result carries the same `disclosure` string.
   `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
   citable, which is the failure mode this feature exists to avoid.
-- **One new table, same database as `review_pages`.** `knowledge_chunks`
-  lives in the same `DATA_DB_PATH` SQLite file — one connection, one volume —
-  rather than a second DB to configure. `build_scripts/knowledge-schema.js` is
-  the single table definition shared by the write path
-  (`build_scripts/ingest-knowledge.js`) and the read path
-  (`build_scripts/ai/knowledge-retrieval.js`), so the two processes cannot
+- **One new table, same store as `review_pages`.** `knowledge_chunks` lives
+  wherever `build_scripts/storage.js` points — Postgres when `DATABASE_URL` is
+  set, SQLite at `DATA_DB_PATH` otherwise — rather than a second database to
+  configure. Both the write path (`build_scripts/ingest-knowledge.js`) and the
+  read path (`build_scripts/ai/knowledge-retrieval.js`) go through that seam, so
+  an ingest writes where the server reads. They did NOT, briefly, and the
+  failure was silent: on Postgres the read path opened an empty local SQLite
+  file, so `compliance-audit` reported itself unready however many times anyone
+  ingested. The two processes cannot
   disagree on the schema, and ingestion never assumes the server ran first.
 - **Chunking splits on headings, then on size.**
   `build_scripts/knowledge-chunking.js` splits on `##`/`###` headings, then

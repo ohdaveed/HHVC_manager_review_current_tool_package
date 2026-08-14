@@ -11,12 +11,19 @@
 // pipeline: docs/source/ changes rarely, and running this needs a real
 // GEMINI_API_KEY and makes real (billed) embedding calls, so it must not run
 // in CI or on every `bun run build`.
-const { Database } = require('bun:sqlite')
-const { mkdirSync } = require('node:fs')
-const { dirname, resolve } = require('node:path')
+const { resolve } = require('node:path')
 const { chunkMarkdown } = require('./knowledge-chunking')
-const { ensureKnowledgeChunksTable } = require('./knowledge-schema')
 const { collectKnowledgeSources } = require('./knowledge-sources')
+// Storage lives behind the seam, so an ingest run writes wherever the
+// deployment reads: Postgres when DATABASE_URL is set, SQLite otherwise. This
+// script used to open bun:sqlite directly, which meant ingesting into a local
+// file a Postgres deployment would never look at.
+const {
+  describeStorage,
+  initStorage,
+  pruneChunksNotIn,
+  replaceDocumentChunks,
+} = require('./storage.js')
 const { loadPageData } = require('./load-pages')
 const gemini = require('./ai/provider-gemini')
 
@@ -49,9 +56,8 @@ async function main() {
     return
   }
 
-  mkdirSync(dirname(DATA_DB_PATH), { recursive: true })
-  const db = new Database(DATA_DB_PATH, { create: true })
-  ensureKnowledgeChunksTable(db)
+  await initStorage(DATA_DB_PATH)
+  console.log(`Ingesting into ${describeStorage(DATA_DB_PATH)}\n`)
 
   // Which documents make up the corpus — and what category each is filed
   // under — lives in build_scripts/knowledge-sources.js, so this script stays
@@ -77,29 +83,21 @@ async function main() {
     const embeddingModel = gemini.getEmbeddingModel()
     const now = new Date().toISOString()
 
-    db.transaction(() => {
-      db.run('DELETE FROM knowledge_chunks WHERE source_file = ?', [relativePath])
-      const insert = db.prepare(
-        `INSERT INTO knowledge_chunks
-         (id, source_file, category, heading_path, content, chunk_index, embedding, embedding_model, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      chunks.forEach((chunk, index) => {
-        const id = `${relativePath}#${chunk.chunkIndex}`
-        const embeddingBuffer = Buffer.from(Float32Array.from(vectors[index]).buffer)
-        insert.run(
-          id,
-          relativePath,
-          category,
-          chunk.headingPath,
-          chunk.content,
-          chunk.chunkIndex,
-          embeddingBuffer,
-          embeddingModel,
-          now
-        )
-      })
-    })()
+    await replaceDocumentChunks(
+      DATA_DB_PATH,
+      relativePath,
+      chunks.map((chunk, index) => ({
+        id: `${relativePath}#${chunk.chunkIndex}`,
+        category,
+        headingPath: chunk.headingPath,
+        content: chunk.content,
+        chunkIndex: chunk.chunkIndex,
+        // Raw little-endian Float32 bytes: a BLOB in SQLite, bytea in Postgres.
+        embedding: Buffer.from(Float32Array.from(vectors[index]).buffer),
+        embeddingModel,
+        createdAt: now,
+      }))
+    )
 
     totalChunks += chunks.length
     console.log(`  [${category}] ${relativePath}: ${chunks.length} chunks`)
@@ -122,22 +120,9 @@ async function main() {
   const keptFiles = sources
     .map((source) => source.sourceFile)
     .filter((file) => !emptyFiles.includes(file))
-  const placeholders = keptFiles.map(() => '?').join(',')
-  const staleCount = keptFiles.length
-    ? db
-        .query(
-          `SELECT COUNT(*) as count FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
-        )
-        .get(...keptFiles).count
-    : db.query('SELECT COUNT(*) as count FROM knowledge_chunks').get().count
+  const staleCount = await pruneChunksNotIn(DATA_DB_PATH, keptFiles)
   if (staleCount > 0) {
-    db.run(
-      keptFiles.length
-        ? `DELETE FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
-        : 'DELETE FROM knowledge_chunks',
-      keptFiles
-    )
-    console.log(`Pruned ${staleCount} chunks from files no longer in the corpus.`)
+    console.log(`Pruned ${staleCount} chunks from documents no longer in the corpus.`)
   }
 }
 

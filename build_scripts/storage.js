@@ -36,6 +36,9 @@ import { Database } from 'bun:sqlite'
 import { SQL } from 'bun'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
+// The SQLite DDL, shared with the ingest path so the two cannot disagree about
+// the table's shape. The Postgres equivalent lives below, next to it.
+import { ensureKnowledgeChunksTable } from './knowledge-schema.js'
 
 /** @type {import('bun:sqlite').Database|null} */
 let sqliteDb = null
@@ -120,6 +123,7 @@ async function initStorage(sqlitePath) {
         updated_at TEXT NOT NULL
       )
     `
+    await initKnowledgeStorage(sqlitePath)
     return
   }
 
@@ -130,6 +134,7 @@ async function initStorage(sqlitePath) {
       updated_at TEXT NOT NULL
     )
   `)
+  await initKnowledgeStorage(sqlitePath)
 }
 
 /**
@@ -241,11 +246,203 @@ async function upsertReviewPageIfUnchanged(sqlitePath, params) {
   return result.changes > 0
 }
 
+/* The RAG knowledge base
+   ======================
+   `knowledge_chunks` lives in the same store as `review_pages` — one
+   connection, one thing to provision — and it moved behind this seam for the
+   reason the review table did: on a Postgres deployment it was still opening a
+   local SQLite file, which on Railway is empty, so `compliance-audit` reported
+   itself unready no matter how many times anyone ran `bun run ingest`.
+
+   **Embeddings are raw little-endian Float32 bytes in both drivers** — a BLOB
+   in SQLite, `bytea` in Postgres. Verified byte-exact through Bun's client
+   rather than assumed. Storing them as an array of doubles would double the
+   size and lose the "one buffer, one memcpy" read the ranking loop depends on. */
+
+/**
+ * Create the knowledge table. Called by `initStorage`, so a server boot and an
+ * ingest run agree on the schema without either assuming the other ran first.
+ *
+ * @param {string} sqlitePath
+ * @returns {Promise<void>}
+ */
+async function initKnowledgeStorage(sqlitePath) {
+  if (storageDriver() === 'postgres') {
+    await getPostgres()`
+      CREATE TABLE IF NOT EXISTS knowledge_chunks (
+        id TEXT PRIMARY KEY,
+        source_file TEXT NOT NULL,
+        category TEXT NOT NULL,
+        heading_path TEXT,
+        content TEXT NOT NULL,
+        chunk_index INTEGER NOT NULL,
+        embedding BYTEA NOT NULL,
+        embedding_model TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    `
+    return
+  }
+  ensureKnowledgeChunksTable(getSqlite(sqlitePath))
+}
+
+/**
+ * Replace one document's chunks, atomically.
+ *
+ * DELETE-then-insert inside a transaction rather than an upsert: a re-ingest
+ * can produce FEWER chunks than last time (an edit that shortens a document),
+ * and an upsert would leave the surplus rows behind as citable content that no
+ * longer exists in the source.
+ *
+ * @param {string} sqlitePath
+ * @param {string} sourceFile
+ * @param {Array<{id: string, category: string, headingPath: string|null,
+ *   content: string, chunkIndex: number, embedding: Buffer,
+ *   embeddingModel: string, createdAt: string}>} rows
+ * @returns {Promise<void>}
+ */
+async function replaceDocumentChunks(sqlitePath, sourceFile, rows) {
+  if (storageDriver() === 'postgres') {
+    const sql = getPostgres()
+    await sql.begin(async (tx) => {
+      await tx`DELETE FROM knowledge_chunks WHERE source_file = ${sourceFile}`
+      for (const row of rows) {
+        await tx`
+          INSERT INTO knowledge_chunks
+            (id, source_file, category, heading_path, content, chunk_index, embedding, embedding_model, created_at)
+          VALUES (${row.id}, ${sourceFile}, ${row.category}, ${row.headingPath}, ${row.content},
+                  ${row.chunkIndex}, ${row.embedding}, ${row.embeddingModel}, ${row.createdAt})
+        `
+      }
+    })
+    return
+  }
+
+  const db = getSqlite(sqlitePath)
+  db.transaction(() => {
+    db.run('DELETE FROM knowledge_chunks WHERE source_file = ?', [sourceFile])
+    const insert = db.prepare(
+      `INSERT INTO knowledge_chunks
+       (id, source_file, category, heading_path, content, chunk_index, embedding, embedding_model, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    for (const row of rows) {
+      insert.run(
+        row.id,
+        sourceFile,
+        row.category,
+        row.headingPath,
+        row.content,
+        row.chunkIndex,
+        row.embedding,
+        row.embeddingModel,
+        row.createdAt
+      )
+    }
+  })()
+}
+
+/**
+ * Drop chunks for documents that are no longer in the corpus.
+ *
+ * The per-document replace above only fires for documents this run actually
+ * reached, so a file that was renamed, deleted, or now parses to nothing would
+ * otherwise leave its chunks citable forever with nothing on disk behind them.
+ *
+ * @param {string} sqlitePath
+ * @param {string[]} sourceFiles Everything that SHOULD remain.
+ * @returns {Promise<number>} How many rows were removed.
+ */
+async function pruneChunksNotIn(sqlitePath, sourceFiles) {
+  if (storageDriver() === 'postgres') {
+    const sql = getPostgres()
+    if (!sourceFiles.length) return (await sql`DELETE FROM knowledge_chunks RETURNING id`).length
+    // Generated `$1, $2, …` placeholders with the values passed as real
+    // parameters, mirroring the SQLite branch below.
+    //
+    // Three tidier-looking forms were tried against a real Postgres and all
+    // three fail: `= ANY(${array})` and `unnest(${array}::text[])` both make
+    // Bun serialize the JS array as `a,b,c`, which Postgres rejects as a
+    // malformed array literal; and `jsonb_array_elements_text(${json}::jsonb)`
+    // hits the same double-encoding that bit `review_pages.record` — the cast
+    // wraps the string, so the server reports "cannot extract elements from a
+    // scalar". Joining the names into a `{a,b}` literal DOES work and is not
+    // used on purpose: a source file containing a comma, brace, quote or
+    // backslash would corrupt the list, and building SQL by concatenating
+    // values is how injection gets in.
+    const placeholders = sourceFiles.map((_, index) => `$${index + 1}`).join(',')
+    const rows = await sql.unsafe(
+      `DELETE FROM knowledge_chunks WHERE source_file NOT IN (${placeholders}) RETURNING id`,
+      sourceFiles
+    )
+    return rows.length
+  }
+
+  const db = getSqlite(sqlitePath)
+  const placeholders = sourceFiles.map(() => '?').join(',')
+  const count = sourceFiles.length
+    ? db
+        .query(
+          `SELECT COUNT(*) as count FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
+        )
+        .get(...sourceFiles).count
+    : db.query('SELECT COUNT(*) as count FROM knowledge_chunks').get().count
+  if (count > 0) {
+    db.run(
+      sourceFiles.length
+        ? `DELETE FROM knowledge_chunks WHERE source_file NOT IN (${placeholders})`
+        : 'DELETE FROM knowledge_chunks',
+      sourceFiles
+    )
+  }
+  return count
+}
+
+/**
+ * Every chunk, as stored. Filtering by embedding model is the caller's job —
+ * this layer does not know which model is configured.
+ *
+ * @param {string} sqlitePath
+ * @returns {Promise<Array<object>>}
+ */
+async function readKnowledgeChunks(sqlitePath) {
+  const query =
+    'SELECT id, source_file, category, heading_path, content, embedding, embedding_model FROM knowledge_chunks'
+  if (storageDriver() === 'postgres') return getPostgres().unsafe(query)
+  return getSqlite(sqlitePath).query(query).all()
+}
+
+/**
+ * A cheap token that changes whenever the corpus does.
+ *
+ * Replaces the old `statSync(DATA_DB_PATH).mtimeMs` cache key, which is
+ * meaningless once the rows live in Postgres — there is no file to stat, and a
+ * server would have cached the first read forever. Row count plus the newest
+ * `created_at` moves on any ingest, including one that only deletes, and costs
+ * one aggregate over a table of a few hundred rows.
+ *
+ * @param {string} sqlitePath
+ * @returns {Promise<string>}
+ */
+async function knowledgeVersion(sqlitePath) {
+  const query = 'SELECT COUNT(*) AS count, MAX(created_at) AS newest FROM knowledge_chunks'
+  const row =
+    storageDriver() === 'postgres'
+      ? (await getPostgres().unsafe(query))[0]
+      : getSqlite(sqlitePath).query(query).get()
+  return `${row?.count ?? 0}:${row?.newest ?? ''}`
+}
+
 export {
   describeStorage,
+  initKnowledgeStorage,
   initStorage,
+  knowledgeVersion,
+  pruneChunksNotIn,
   readAllReviewPages,
+  readKnowledgeChunks,
   readReviewPage,
+  replaceDocumentChunks,
   storageDriver,
   upsertReviewPageIfUnchanged,
 }

@@ -3,19 +3,19 @@
 // Read-side access to knowledge_chunks: a cached, in-memory view plus
 // cosine-similarity retrieval over it.
 //
-// Opens its OWN bun:sqlite connection to DATA_DB_PATH rather than sharing
-// server.ts's `db` — SQLite supports multiple reader connections alongside
-// one writer on the same file, and this module never writes
-// (build_scripts/ingest-knowledge.js owns every write to this table).
-// Reading its own env var directly, rather than having server.ts thread a
-// `db` handle through generateContent/generateComplianceAudit, matches how
-// every sibling build_scripts/ai/* module already reads its own env
-// configuration (GEMINI_API_KEY, AI_EFFORT, etc.) rather than receiving it as
-// a parameter.
-const { Database } = require('bun:sqlite')
-const { mkdirSync, statSync } = require('node:fs')
-const { dirname, resolve } = require('node:path')
-const { ensureKnowledgeChunksTable } = require('../knowledge-schema')
+// Storage lives behind build_scripts/storage.js, so this module works against
+// whichever store the deployment uses — Postgres when DATABASE_URL is set,
+// SQLite otherwise. It used to open its own bun:sqlite connection to
+// DATA_DB_PATH, which was fine while SQLite was the only store and quietly
+// broken once it was not: on Railway that opened an EMPTY local file, so
+// `compliance-audit` reported itself unready no matter how many times anyone
+// ran `bun run ingest` against the real database.
+//
+// Reading DATA_DB_PATH from the environment here (rather than having server.ts
+// thread a handle through) matches how every sibling build_scripts/ai/* module
+// reads its own configuration.
+const { resolve } = require('node:path')
+const { knowledgeVersion, readKnowledgeChunks } = require('../storage.js')
 const { topKBySimilarity } = require('../knowledge-search')
 // Deliberately named directly rather than via the provider registry: whether
 // the knowledge base is USABLE depends on Gemini specifically (the only
@@ -26,52 +26,39 @@ const gemini = require('./provider-gemini')
 const DATA_DB_PATH =
   process.env.DATA_DB_PATH || resolve(__dirname, '..', '..', '.data', 'review-state.local.db')
 
-let db = null
-function getKnowledgeDb() {
-  if (db) return db
-  mkdirSync(dirname(DATA_DB_PATH), { recursive: true })
-  db = new Database(DATA_DB_PATH, { create: true })
-  ensureKnowledgeChunksTable(db)
-  return db
-}
-
-/** @type {{mtimeMs: number, chunks: object[]} | null} */
+/** @type {{version: string, chunks: object[]} | null} */
 let cache = null
 
 /**
- * All chunks embedded with the CURRENTLY configured model, cached until
- * DATA_DB_PATH's mtime moves — i.e. until a fresh `bun run ingest` writes to
- * it — so a running server picks up new content without a restart and
- * without re-querying SQLite on every audit request.
+ * All chunks embedded with the CURRENTLY configured model, cached until the
+ * corpus changes — so a running server picks up a fresh `bun run ingest`
+ * without a restart and without re-reading every row per audit request.
  *
- * Rows whose `embedding_model` does not match `gemini.getEmbeddingModel()`
- * are excluded, not just tolerated: `bun run ingest` always re-embeds the
- * whole corpus in one run, but a run that crashes partway through (or a
- * `GEMINI_EMBEDDING_MODEL` change between runs) can otherwise leave rows
- * from two different embedding spaces in the table at once. Cosine
- * similarity between vectors from different models is meaningless, so
- * mixing them in would produce a plausible-looking but wrong ranking rather
- * than a visible failure. Filtering here means a partially-stale table
- * degrades to "fewer chunks available" (still correct rankings, just over a
- * smaller corpus) instead of silently blending two vector spaces.
- * @returns {Array<{id: string, sourceFile: string, category: string,
- *   headingPath: string|null, content: string, embedding: Float32Array}>}
+ * **The cache key is a corpus version, not the database file's mtime.** The
+ * mtime worked while the rows were in a local SQLite file and is meaningless
+ * once they are in Postgres — there is no file to stat, so a server would have
+ * cached its first read forever, including an empty one. `knowledgeVersion()`
+ * is a row count plus the newest `created_at`: it moves on any ingest,
+ * including one that only deletes.
+ *
+ * Rows whose `embedding_model` does not match `gemini.getEmbeddingModel()` are
+ * excluded, not just tolerated: `bun run ingest` always re-embeds the whole
+ * corpus in one run, but a run that crashes partway through (or a
+ * `GEMINI_EMBEDDING_MODEL` change between runs) can otherwise leave rows from
+ * two different embedding spaces in the table at once. Cosine similarity
+ * between vectors from different models is meaningless, so mixing them would
+ * produce a plausible-looking but wrong ranking rather than a visible failure.
+ * Filtering here means a partially-stale table degrades to "fewer chunks
+ * available" instead of silently blending two vector spaces.
+ *
+ * @returns {Promise<Array<{id: string, sourceFile: string, category: string,
+ *   headingPath: string|null, content: string, embedding: Float32Array}>>}
  */
-function loadChunks() {
-  const instance = getKnowledgeDb()
-  let mtimeMs = 0
-  try {
-    mtimeMs = statSync(DATA_DB_PATH).mtimeMs
-  } catch {
-    // File does not exist yet. No chunks either way; fall through with 0.
-  }
-  if (cache && cache.mtimeMs === mtimeMs) return cache.chunks
+async function loadChunks() {
+  const version = await knowledgeVersion(DATA_DB_PATH)
+  if (cache && cache.version === version) return cache.chunks
 
-  const rows = instance
-    .query(
-      'SELECT id, source_file, category, heading_path, content, embedding, embedding_model FROM knowledge_chunks'
-    )
-    .all()
+  const rows = await readKnowledgeChunks(DATA_DB_PATH)
   const currentModel = gemini.getEmbeddingModel()
   const chunks = rows
     .filter((row) => row.embedding_model === currentModel)
@@ -82,9 +69,10 @@ function loadChunks() {
       headingPath: row.heading_path,
       content: row.content,
       // .slice() on the underlying ArrayBuffer copies the exact byte range into
-      // a fresh buffer, so this does not depend on the BLOB's byteOffset being
-      // 4-byte aligned the way a raw `new Float32Array(row.embedding.buffer)`
-      // view would.
+      // a fresh buffer, so this does not depend on the stored bytes' byteOffset
+      // being 4-byte aligned the way a raw `new Float32Array(row.embedding.buffer)`
+      // view would. Both drivers hand back a Buffer here — SQLite from a BLOB,
+      // Postgres from a bytea — and the round trip is byte-exact.
       embedding: new Float32Array(
         row.embedding.buffer.slice(
           row.embedding.byteOffset,
@@ -92,32 +80,42 @@ function loadChunks() {
         )
       ),
     }))
-  cache = { mtimeMs, chunks }
+  cache = { version, chunks }
   return chunks
 }
 
-/** @returns {number} rows currently in knowledge_chunks. */
-function countKnowledgeChunks() {
-  return loadChunks().length
+/** @returns {Promise<number>} rows currently usable in knowledge_chunks. */
+async function countKnowledgeChunks() {
+  return (await loadChunks()).length
 }
 
 /**
  * @param {Float32Array} queryEmbedding
  * @param {number} topK
- * @returns {Array<{chunk: object, score: number}>}
+ * @param {object} [options]
+ * @param {string[]} [options.excludeCategories] Categories to withhold from
+ *   this retrieval — see `generateComplianceAudit`, which excludes
+ *   `mockup-draft` so an audit cannot ground a compliance finding in
+ *   unapproved draft copy.
+ * @returns {Promise<Array<{chunk: object, score: number}>>}
  */
-function retrieveRelevantChunks(queryEmbedding, topK) {
-  return topKBySimilarity(queryEmbedding, loadChunks(), topK)
+async function retrieveRelevantChunks(queryEmbedding, topK, options = {}) {
+  const exclude = new Set(options.excludeCategories || [])
+  const chunks = await loadChunks()
+  const eligible = exclude.size ? chunks.filter((chunk) => !exclude.has(chunk.category)) : chunks
+  return topKBySimilarity(queryEmbedding, eligible, topK)
 }
 
 /**
  * Whether the compliance-audit task can run at all: Gemini configured (for
  * embeddings, regardless of which provider will generate the audit) AND at
  * least one chunk ingested.
- * @returns {boolean}
+ *
+ * @returns {Promise<boolean>}
  */
-function isComplianceAuditAvailable() {
-  return gemini.isConfigured() && countKnowledgeChunks() > 0
+async function isComplianceAuditAvailable() {
+  if (!gemini.isConfigured()) return false
+  return (await countKnowledgeChunks()) > 0
 }
 
 module.exports = {
@@ -125,5 +123,4 @@ module.exports = {
   countKnowledgeChunks,
   retrieveRelevantChunks,
   isComplianceAuditAvailable,
-  getKnowledgeDb,
 }

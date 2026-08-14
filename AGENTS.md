@@ -45,7 +45,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 39 unit-test files in tests/
+bun run test                  # Bun test runner over the 40 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -65,7 +65,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 39 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 40 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -78,7 +78,7 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 the decision list against the canonical table in `js/utils.js` — and,
 separately, every file that spells out an INDIVIDUAL label as a literal, which
 is most of the queue: those are string comparisons, so a renamed decision
-leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
+leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
@@ -1535,10 +1535,6 @@ document is filed under.
   `karl` 53, `sfgov-live` 28, `sfgov-style` 24.
 - **Retrieval is still brute-force cosine in JS.** 768 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
-- **`knowledge_chunks` still lives in the SQLite file at `DATA_DB_PATH`**, not in
-  Postgres — so on the Railway deployment the knowledge base reads an empty file
-  and `compliance-audit` reports itself unready. Moving that table behind
-  `build_scripts/storage.js` is the remaining piece.
 
 ### Reviewer sign-in (`/api/session`)
 
@@ -2007,12 +2003,15 @@ never writes anything, and every result carries the same `disclosure` string.
   `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
   citable, which is the failure mode this feature exists to avoid.
-- **One new table, same database as `review_pages`.** `knowledge_chunks`
-  lives in the same `DATA_DB_PATH` SQLite file — one connection, one volume —
-  rather than a second DB to configure. `build_scripts/knowledge-schema.js` is
-  the single table definition shared by the write path
-  (`build_scripts/ingest-knowledge.js`) and the read path
-  (`build_scripts/ai/knowledge-retrieval.js`), so the two processes cannot
+- **One new table, same store as `review_pages`.** `knowledge_chunks` lives
+  wherever `build_scripts/storage.js` points — Postgres when `DATABASE_URL` is
+  set, SQLite at `DATA_DB_PATH` otherwise — rather than a second database to
+  configure. Both the write path (`build_scripts/ingest-knowledge.js`) and the
+  read path (`build_scripts/ai/knowledge-retrieval.js`) go through that seam, so
+  an ingest writes where the server reads. They did NOT, briefly, and the
+  failure was silent: on Postgres the read path opened an empty local SQLite
+  file, so `compliance-audit` reported itself unready however many times anyone
+  ingested. The two processes cannot
   disagree on the schema, and ingestion never assumes the server ran first.
 - **Chunking splits on headings, then on size.**
   `build_scripts/knowledge-chunking.js` splits on `##`/`###` headings, then
@@ -2184,11 +2183,9 @@ and never sees a driver, a connection or a SQL string.
 - **DDL runs at boot, not lazily on the first request.** Lazy was fine for a
   file only one process opens; two Postgres replicas racing the same
   `CREATE TABLE` on their first requests is not.
-- **`knowledge_chunks` has NOT moved yet.** The RAG table still lives in the
-  SQLite file at `DATA_DB_PATH`, so on a Postgres deployment the knowledge base
-  reads an empty local file and `compliance-audit` reports itself unready — the
-  same state as before, since nobody had run `bun run ingest` on the volume
-  either. Moving it is its own change.
+- **`knowledge_chunks` lives behind this seam too**, so `bun run ingest` writes
+  wherever the deployment reads. Embeddings are raw little-endian Float32 bytes
+  in both drivers — a BLOB in SQLite, `bytea` in Postgres.
 - **Bun's Postgres client is built in** (`Bun.SQL`, Bun 1.3+), so this added no
   npm dependency — the same reason `bun:sqlite` was used in the first place.
 
