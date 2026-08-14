@@ -69,8 +69,8 @@ describe('editableItemKind', () => {
   // What ONE item inside an editable array is written back as. A paragraph,
   // bullet, or step text item carries the tagged
   // {text, unverified, unverifiedReason} form so the existing Unverified pill
-  // renders with no renderer change; a table cell, a spotlight paragraph and
-  // a contact phone number are plain strings in the page schema, and writing
+  // renders with no renderer change; a table cell and a contact phone number
+  // are plain strings their renderer escapes and prints directly, and writing
   // the tagged object into one of those renders "[object Object]".
   test('reports taggedText for paragraph, bullet, and step text items', () => {
     expect(editableItemKind('sections.0.paragraphs.1')).toBe('taggedText')
@@ -78,18 +78,21 @@ describe('editableItemKind', () => {
     expect(editableItemKind('sections.0.steps.1.text.0')).toBe('taggedText')
     expect(editableItemKind('sections.0.steps.1.bullets.2')).toBe('taggedText')
     expect(editableItemKind('whatToKnow.items.0')).toBe('taggedText')
+    // The one that reads like an exception and is not: build_scripts/schema.js
+    // types the AUTHORED spotlight.paragraphs as string[], but it renders
+    // through paragraphList() — the same helper section paragraphs use — so a
+    // reviewer's edit takes the tagged form like any other body copy. The
+    // schema constrains pages/*.js, not review state.
+    expect(editableItemKind('spotlight.paragraphs.0')).toBe('taggedText')
   })
 
   test('reports plainString for table cells and string-array items', () => {
     // A contact entry and a table cell go through escapeHtml() directly in
     // js/page-render.js, so the tagged object would print as "[object
-    // Object]". A spotlight paragraph is the opposite case — it renders
-    // through paragraphList(), so it takes the tagged form like any other
-    // body copy.
+    // Object]".
     expect(editableItemKind('sections.0.table.1.2')).toBe('plainString')
     expect(editableItemKind('contact.phone.0')).toBe('plainString')
     expect(editableItemKind('contact.email.1')).toBe('plainString')
-    expect(editableItemKind('spotlight.paragraphs.0')).toBe('taggedText')
   })
 
   test('reports plainString for a whole-field string path', () => {

@@ -496,30 +496,96 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     expect(field.querySelector('[data-inline-edit-reset]')).not.toBeNull()
   })
 
-  test('an unedited field whose stored value is the tagged object form gets no badge', async () => {
-    // Both sides of the comparison go through readScalarValue, which unwraps
-    // {label, text} to its text. Comparing a raw object against the rendered
-    // string would never match, so every What-to-know entry on an untouched
-    // page would claim to have been edited.
-    const item = { label: 'Reporting anonymously', text: 'Same text.' }
+  test('a taggedText item is never badge-decorated, edited or not', async () => {
+    // whatToKnow.thingsToKnow is a textArray, so its items classify as
+    // taggedText and decorateEditedFields returns at the
+    // `itemKindFor(path) !== 'plainString'` guard before comparing anything.
+    // That is the intended split, not an oversight: an edited paragraph-shaped
+    // item already announces itself with the Unverified pill, and adding the
+    // badge as well would mark the same edit twice. Pinned with a value that
+    // HAS changed, so it fails if the guard is dropped rather than passing on
+    // the comparison happening to match.
     const { mockPage } = await mountInlineContentEdit({
-      page: { title: 'T', summary: 'S', whatToKnow: { thingsToKnow: [item] }, sections: [] },
+      page: {
+        title: 'T',
+        summary: 'S',
+        whatToKnow: { thingsToKnow: [{ label: 'Reporting anonymously', text: 'Edited text.' }] },
+        sections: [],
+      },
     })
     window.ORIGINAL_DATA = {
       pages: {
         testPage: {
           title: 'T',
           summary: 'S',
-          whatToKnow: { thingsToKnow: [{ ...item }] },
+          whatToKnow: {
+            thingsToKnow: [{ label: 'Reporting anonymously', text: 'Original text.' }],
+          },
           sections: [],
         },
       },
     }
-    mockPage.innerHTML = '<p data-rewrite-field="whatToKnow.thingsToKnow.0">Same text.</p>'
+    mockPage.innerHTML = '<p data-rewrite-field="whatToKnow.thingsToKnow.0">Edited text.</p>'
 
     window.inlineEdit.decorateEditedFields()
 
     expect(mockPage.querySelector('.inline-edit-badge')).toBeNull()
+  })
+
+  test('an unedited plainString item stored as the tagged object form gets no badge', async () => {
+    // contact.phone is a stringArray, so its items classify as plainString and
+    // the comparison above actually runs — both sides through readScalarValue,
+    // which unwraps {label, text} to its text. Comparing a raw object against
+    // the rendered string would never match, so an untouched entry would claim
+    // to have been edited. Defensive rather than a shape writeScalarValue can
+    // produce (it writes a bare string for this kind), but an imported or
+    // merged record is not bound by that, and the unwrap is one line away from
+    // being deleted as dead code if nothing reaches it.
+    const item = { label: 'Main line', text: '311 (call or text)' }
+    const { mockPage } = await mountInlineContentEdit({
+      page: { title: 'T', summary: 'S', contact: { phone: [item] }, sections: [] },
+    })
+    window.ORIGINAL_DATA = {
+      pages: {
+        testPage: { title: 'T', summary: 'S', contact: { phone: [{ ...item }] }, sections: [] },
+      },
+    }
+    mockPage.innerHTML = '<p data-rewrite-field="contact.phone.0">311 (call or text)</p>'
+
+    window.inlineEdit.decorateEditedFields()
+
+    expect(mockPage.querySelector('.inline-edit-badge')).toBeNull()
+  })
+
+  test('an edited plainString item stored as the tagged object form does get a badge', async () => {
+    // The other direction of the same comparison. Without it, a readScalarValue
+    // that returned a constant would satisfy the test above while decorating
+    // nothing at all.
+    const { mockPage } = await mountInlineContentEdit({
+      page: {
+        title: 'T',
+        summary: 'S',
+        contact: { phone: [{ label: 'Main line', text: '555-0100' }] },
+        sections: [],
+      },
+    })
+    window.ORIGINAL_DATA = {
+      pages: {
+        testPage: {
+          title: 'T',
+          summary: 'S',
+          contact: { phone: [{ label: 'Main line', text: '311 (call or text)' }] },
+          sections: [],
+        },
+      },
+    }
+    mockPage.innerHTML = '<p data-rewrite-field="contact.phone.0">555-0100</p>'
+
+    window.inlineEdit.decorateEditedFields()
+
+    const field = mockPage.querySelector('[data-rewrite-field="contact.phone.0"]')
+    expect(field.querySelector('.inline-edit-badge')).not.toBeNull()
+    expect(field.querySelector('[data-inline-edit-reset]')).not.toBeNull()
   })
 
   test('committing a labeled whatToKnow item keeps its label', async () => {

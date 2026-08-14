@@ -28,9 +28,12 @@
  *   tagged {text, unverified?, unverifiedReason?} object the Unverified pill
  *   already renders.
  * - `stringArray` — an array of plain strings whose renderer prints them
- *   directly (a phone number, a spotlight paragraph). A tagged object here
- *   renders as "[object Object]", which is why it is a separate kind rather
- *   than a loosening of textArray.
+ *   directly through escapeHtml (a contact phone number, email or "other"
+ *   line). A tagged object here renders as the literal "[object Object]",
+ *   which is why it is a separate kind rather than a loosening of textArray.
+ *   Note that `spotlight.paragraphs` is NOT one of these despite being typed
+ *   `string[]` by build_scripts/schema.js — it renders through
+ *   paragraphList(), so it is a textArray; see its entry below.
  * - `table` — an array of row arrays of plain strings.
  *
  * **Card fields are absent deliberately and must stay absent.** A card's own

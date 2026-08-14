@@ -558,6 +558,21 @@
    * the exact reasoning above for title/summary/CTA, just for the field
    * updateMockupTextFromSavedState doesn't own.
    *
+   * The three PAGE-LEVEL containers inline editing reaches — `whatToKnow`,
+   * `spotlight` and `contact` — reset for exactly the same reason, and were
+   * missed when they became editable. They live beside `sections` rather than
+   * inside it, so the reset above does not cover them: a local edit to a
+   * contact phone number or a spotlight paragraph survived adopting a server
+   * record that never mentioned it, and the next computeSectionEdits() diff
+   * put it back into `section_edits` as unpushed work. That is the failure
+   * this whole function exists to prevent, one nesting level up.
+   *
+   * An absent container on the original is `delete`d rather than assigned
+   * `undefined`. The two are indistinguishable to `page.contact?.phone`, but
+   * not to a JSON round trip or an `in` check, and the page objects here are
+   * what the export path serializes — writing an explicit `undefined` would
+   * add a key `pages/*.js` never had.
+   *
    * Deep-cloned via JSON round-trip rather than assigned by reference: a raw
    * `page.sections = original.sections` would let a later inline edit mutate
    * ORIGINAL_DATA itself (the same object both sides would then share),
@@ -579,6 +594,10 @@
     page.seoTitleEdited = false
     page.metaDescriptionEdited = false
     page.sections = JSON.parse(JSON.stringify(original.sections || []))
+    for (const field of ['whatToKnow', 'spotlight', 'contact']) {
+      if (original[field] === undefined) delete page[field]
+      else page[field] = JSON.parse(JSON.stringify(original[field]))
+    }
     const originalCta = window.utils?.getPrimaryCta?.(original) || ''
     if (originalCta) {
       window.utils?.setPrimaryCta?.(page, originalCta)

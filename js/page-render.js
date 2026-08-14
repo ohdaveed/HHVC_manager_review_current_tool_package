@@ -633,7 +633,15 @@ function renderWhatToKnow(whatToKnow, page) {
   // where setByPath finds no parent to write into and the reviewer's change
   // disappears with nothing erroring. No field, no affordance.
   const editable = Boolean(page.whatToKnow) && data === page.whatToKnow
+  const cost = data.cost || (normalizePageType(page.type) === 'transaction' ? 'Free' : '')
+  // Gated on the RESOLVED cost, not on `data.cost`. A Transaction page that
+  // authored a whatToKnow box but left cost empty still renders the "Free"
+  // fallback below, and gating on the authored field would print that visible
+  // line with no click-to-edit affordance — the one shape this feature exists
+  // to remove. `editable` has already established that `page.whatToKnow` is a
+  // real object, so setByPath has a parent to write the reviewer's value into.
   const costAttr = editable && cost ? ' data-rewrite-field="whatToKnow.cost"' : ''
+  // Which of the two array fields this page uses decides the stored path, so
   // it is resolved once here rather than inferred later: an edit recorded
   // under whatToKnow.items on a page whose array is thingsToKnow would reapply
   // onto a field the renderer never reads.

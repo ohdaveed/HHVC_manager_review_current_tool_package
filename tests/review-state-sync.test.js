@@ -1022,4 +1022,64 @@ describe('restorePageContentFromOriginal', () => {
       'Original heading'
     )
   })
+
+  test('resets the page-level whatToKnow, spotlight and contact containers too', () => {
+    // Same failure as the sections case one level up. These three became
+    // inline-editable without joining this reset, so a local edit to a
+    // contact phone number or a spotlight paragraph survived adopting a
+    // server record that never mentioned it, and the next
+    // computeSectionEdits() diff resurrected it as unpushed work.
+    const { mod } = loadReviewStateSync()
+    global.window.utils = utilsModule
+    const page = {
+      title: 'T',
+      sections: [],
+      whatToKnow: { cost: 'Locally edited cost', thingsToKnow: ['locally edited thing'] },
+      spotlight: { title: 'Locally edited spotlight', paragraphs: ['locally edited p'] },
+      contact: { phone: ['555-0000'], address: 'Locally edited address' },
+    }
+    global.window.HHVC_DATA.pages.pestsTopic = page
+    global.window.ORIGINAL_DATA = {
+      pages: {
+        pestsTopic: {
+          title: 'T',
+          sections: [],
+          whatToKnow: { cost: 'Free', thingsToKnow: ['original thing'] },
+          spotlight: { title: 'Original spotlight', paragraphs: ['original p'] },
+          contact: { phone: ['311 (call or text)'], address: 'Original address' },
+        },
+      },
+    }
+
+    mod.restorePageContentFromOriginal('pestsTopic')
+
+    expect(page.whatToKnow).toEqual({ cost: 'Free', thingsToKnow: ['original thing'] })
+    expect(page.spotlight).toEqual({ title: 'Original spotlight', paragraphs: ['original p'] })
+    expect(page.contact).toEqual({
+      phone: ['311 (call or text)'],
+      address: 'Original address',
+    })
+    // Deep clone, not a shared reference — the same guarantee the sections
+    // case above pins, and for the same reason: a later inline edit must not
+    // reach back and corrupt the baseline every future diff compares against.
+    page.contact.phone[0] = 'Mutated after reset'
+    expect(global.window.ORIGINAL_DATA.pages.pestsTopic.contact.phone[0]).toBe('311 (call or text)')
+  })
+
+  test('removes a page-level container the original never had, rather than blanking it', () => {
+    // A reviewer can edit a SYNTHESIZED contact box only when the page really
+    // authored one, but a page registry entry or an import can still leave a
+    // container the pristine copy lacks. Assigning `undefined` would leave the
+    // key present — invisible to `page.contact?.phone`, but not to the JSON
+    // serialization the export path performs.
+    const { mod } = loadReviewStateSync()
+    global.window.utils = utilsModule
+    const page = { title: 'T', sections: [], contact: { phone: ['555-0000'] } }
+    global.window.HHVC_DATA.pages.pestsTopic = page
+    global.window.ORIGINAL_DATA = { pages: { pestsTopic: { title: 'T', sections: [] } } }
+
+    mod.restorePageContentFromOriginal('pestsTopic')
+
+    expect('contact' in page).toBe(false)
+  })
 })
