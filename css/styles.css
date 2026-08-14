@@ -31,7 +31,11 @@
   --legacy-blue-soft-bg: #f1f4ff;
   --page-max: 1120px;
   --content-max: 760px;
-  --radius: 8px;
+  /* Aliased rather than deleted: 29 rules in this file and 17 in the chrome
+     stylesheets read it, so removing it is a visual change and not a
+     relocation. The declaration now lives in css/theme.css as an --ext-*
+     step; Phase 3 repoints the consumers and drops this line. */
+  --radius: var(--ext-radius-8);
   --shadow: 0 10px 24px rgba(0, 43, 72, 0.1);
   --legacy-focus-ring: rgba(42, 96, 175, 0.25);
   --legacy-footer-bg: #001d4e;

@@ -118,12 +118,27 @@
   --ds-text-label: 0.78rem; /* hints, captions, control labels */
   --ds-text-micro: 0.68rem; /* uppercase eyebrow labels only */
 
-  /* Radius. --radius (8px, in css/styles.css) remains the default for
-     existing components; these name the ends of the range. */
-  --ds-radius-sm: 4px;
-  --ds-radius-md: 8px;
+  /* ===================================================================
+     Radius — an EXTENSION, because SFDS publishes no radius scale
+     ===================================================================
+     Derived rather than invented: design-system.sf.gov's own utility
+     classes use `rounded-4`, i.e. radius is drawn off the shared step
+     ladder, so these are that ladder's first four steps plus a pill.
+     The `--ext-` prefix is load-bearing — a grep for it answers "what did
+     we add that SFDS does not publish?", which nothing could answer about
+     the layer this replaced. */
+  --ext-radius-2: 2px;
+  --ext-radius-4: 4px;
+  --ext-radius-8: 8px;
+  --ext-radius-12: 12px;
+  --ext-radius-pill: 999px;
+
+  /* The previous names, kept as aliases so this task moves no pixel. Phase
+     3 repoints their consumers onto the steps above and deletes them. */
+  --ds-radius-sm: var(--ext-radius-4);
+  --ds-radius-md: var(--ext-radius-8);
   --ds-radius-lg: 14px;
-  --ds-radius-pill: 999px;
+  --ds-radius-pill: var(--ext-radius-pill);
 
   /* ===================================================================
      Elevation

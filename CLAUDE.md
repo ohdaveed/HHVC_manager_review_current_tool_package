@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 41 unit-test files in tests/
+bun run test                  # bun test over the 42 unit-test files in tests/
 bun run test:e2e              # playwright test over the 19 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 41 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 42 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -143,11 +143,14 @@ since near-identical is exactly the condition under which the sync copy's extra
 `synced_at`/`local_dirty` clearing gets "helpfully" copied across), and
 `ai-assist-validate-rewrite` (that a
 rewrite preserves every link's TARGET while its label stays free to change,
-and introduces no HTML into copy rendered through `formatMarkdown`), and
+and introduces no HTML into copy rendered through `formatMarkdown`),
 `sfds-tokens` (asserts that no file under `css/` or `js/` contains the
 `--sfds-` prefix — the prefix names a design authority, and this guard is what
 stops a hand-authored value from claiming that authority again, which is the
-exact defect this branch exists to fix).
+exact defect this branch exists to fix), and `react-theme` (which design
+tokens the MUI bridge reads, and that each has a fallback — a token read with
+no fallback resolves to `''` before the stylesheets apply, and MUI turns an
+empty palette value into a crash rather than a default).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

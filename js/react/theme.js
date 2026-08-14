@@ -47,7 +47,7 @@ const TOKEN_FALLBACKS = {
   '--status-approved-fg': '#075e0a',
   '--status-blocked-fg': '#8f1d15',
   '--status-edits-fg': '#6f4a00',
-  '--radius': '6px',
+  '--ext-radius-8': '8px',
 }
 
 /**
@@ -107,7 +107,7 @@ function createWorkspaceTheme() {
     shape: {
       // parseInt because MUI's shape.borderRadius is a number it multiplies;
       // the token is a CSS length.
-      borderRadius: parseInt(token(styles, '--radius'), 10) || 6,
+      borderRadius: parseInt(token(styles, '--ext-radius-8'), 10) || 8,
     },
     typography: {
       // Inherit the page's own stack rather than pulling in MUI's Roboto
