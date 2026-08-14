@@ -633,9 +633,7 @@ function renderWhatToKnow(whatToKnow, page) {
   // where setByPath finds no parent to write into and the reviewer's change
   // disappears with nothing erroring. No field, no affordance.
   const editable = Boolean(page.whatToKnow) && data === page.whatToKnow
-  const cost = data.cost || (normalizePageType(page.type) === 'transaction' ? 'Free' : '')
-  const costAttr = editable && data.cost ? ' data-rewrite-field="whatToKnow.cost"' : ''
-  // Which of the two array fields this page uses decides the stored path, so
+  const costAttr = editable && cost ? ' data-rewrite-field="whatToKnow.cost"' : ''
   // it is resolved once here rather than inferred later: an edit recorded
   // under whatToKnow.items on a page whose array is thingsToKnow would reapply
   // onto a field the renderer never reads.
