@@ -1,6 +1,6 @@
 import { serve } from "bun"
 import { resolve } from "node:path"
-import { timingSafeEqual } from "node:crypto"
+import { createHash, createHmac, timingSafeEqual } from "node:crypto"
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
 import { mergeReviewRecord } from "./js/review-merge.js"
@@ -398,6 +398,153 @@ function preflightResponse(req: Request, context: ApiRequestContext): Response {
   })
 }
 
+/* Same-origin reviewer sessions
+   =============================
+   The API is bearer-gated and the browser bundle is public, so a token can
+   never ship in it — which left every reviewer pasting a token by hand, and is
+   the reason sync went unused. Railway changed the constraint that forced
+   that: `server.ts` serves the app and `/api/*` from ONE origin now, so a
+   cookie set by this server is sent back by the same page automatically.
+
+   A reviewer signs in once per browser with a shared password
+   (`REVIEW_SESSION_PASSWORD`) and gets a cookie. Bearer tokens keep working
+   unchanged, which is what tests and scripts use.
+
+   **The cookie is a signed assertion, not a stored session.** Its value is
+   `<principal>.<expiry>.<HMAC>`, verified on every request — no session table,
+   nothing to replicate between instances, and nothing to lose on restart. The
+   signing key is derived from the configured API tokens, so rotating
+   `REVIEW_API_TOKEN` invalidates every outstanding session, which is the
+   behaviour you want from a rotation.
+
+   **A session gets `review:read` and `review:write` only — never
+   `ai:generate`.** AI calls cost money per request and the AI client has its
+   own configuration; a shared password that also unlocked paid generation
+   would make one leaked password an unbounded bill. */
+const SESSION_COOKIE_NAME = "hhvc_session"
+const SESSION_PRINCIPAL_NAME = "session-reviewer"
+const REVIEW_SESSION_PASSWORD = process.env.REVIEW_SESSION_PASSWORD ?? ""
+const SESSION_TTL_MS = numberFromEnv("REVIEW_SESSION_TTL_HOURS", 12, 1, 720) * 60 * 60 * 1000
+
+/**
+ * Failed sign-in attempts, one fixed window for the whole server.
+ *
+ * The per-principal limiter cannot help here: a sign-in attempt has no
+ * principal yet, which is the whole point of the request. A global window is
+ * blunt — a determined attacker can lock out reviewers — but a shared password
+ * with no throttle at all is worse, and the alternative (keying on client IP)
+ * is not trustworthy behind a proxy this server does not control.
+ */
+const SESSION_ATTEMPT_LIMIT = 10
+const SESSION_ATTEMPT_WINDOW_MS = 60_000
+let sessionAttempts = { count: 0, resetAt: 0 }
+
+/**
+ * Whether sign-in is available at all.
+ *
+ * Requires BOTH a password and a configured API, since a session is only
+ * useful as a way to reach an API that exists.
+ */
+function isSessionLoginConfigured(): boolean {
+  return Boolean(REVIEW_SESSION_PASSWORD) && API_AUTH_CONFIGURATION.state === "configured"
+}
+
+/**
+ * The HMAC key for session cookies.
+ *
+ * Derived from the configured tokens rather than stored separately: it means
+ * there is no extra secret to provision, and rotating the API token
+ * invalidates outstanding sessions. `REVIEW_SESSION_SECRET` overrides it for a
+ * deployment that wants the two lifecycles separated.
+ */
+function sessionSigningKey(): string {
+  if (process.env.REVIEW_SESSION_SECRET) return process.env.REVIEW_SESSION_SECRET
+  const tokens =
+    API_AUTH_CONFIGURATION.state === "configured"
+      ? API_AUTH_CONFIGURATION.principals.map((principal) => principal.token).join(" ")
+      : ""
+  return createHash("sha256").update(`hhvc-session-v1 ${tokens}`).digest("hex")
+}
+
+/**
+ * Sign a session assertion that expires at `expiresAt`.
+ */
+function signSessionValue(expiresAt: number): string {
+  const payload = `${SESSION_PRINCIPAL_NAME}.${expiresAt}`
+  const signature = createHmac("sha256", sessionSigningKey()).update(payload).digest("base64url")
+  return `${payload}.${signature}`
+}
+
+/**
+ * Verify a cookie value, returning true only for an intact, unexpired
+ * signature. Comparison is constant-time so a forged signature cannot be
+ * refined byte by byte from response timing.
+ */
+function verifySessionValue(value: string): boolean {
+  const separator = value.lastIndexOf(".")
+  if (separator <= 0) return false
+  const payload = value.slice(0, separator)
+  const provided = Buffer.from(value.slice(separator + 1))
+  const expected = Buffer.from(
+    createHmac("sha256", sessionSigningKey()).update(payload).digest("base64url")
+  )
+  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) return false
+
+  const [principal, expiresAt] = payload.split(".")
+  if (principal !== SESSION_PRINCIPAL_NAME) return false
+  const expiry = Number.parseInt(expiresAt ?? "", 10)
+  return Number.isFinite(expiry) && Date.now() < expiry
+}
+
+/**
+ * Read one cookie out of a request's Cookie header.
+ */
+function readCookie(req: Request, name: string): string | null {
+  const header = req.headers.get("cookie")
+  if (!header) return null
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=")
+    if (index === -1) continue
+    if (part.slice(0, index).trim() !== name) continue
+    return decodeURIComponent(part.slice(index + 1).trim())
+  }
+  return null
+}
+
+/**
+ * The principal a valid session cookie stands for.
+ *
+ * Built fresh rather than looked up: it holds no token, so it can never be
+ * matched by the bearer path, and its roles are fixed here rather than read
+ * from configuration.
+ */
+function sessionPrincipal(): ApiPrincipal {
+  return {
+    principal: SESSION_PRINCIPAL_NAME,
+    token: "",
+    roles: new Set<ApiRole>([API_ROLES.reviewRead, API_ROLES.reviewWrite]),
+  }
+}
+
+/**
+ * `Secure` is omitted on plain-HTTP localhost only.
+ *
+ * A cookie marked Secure is never sent over http://, which would silently
+ * break `bun run dev:api` and the local verification flow. Everything else —
+ * including any real deployment — gets it.
+ */
+function sessionCookieAttributes(url: URL): string {
+  const isLocalHttp =
+    url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")
+  const secure = isLocalHttp ? "" : " Secure;"
+  // SameSite=Strict is the CSRF control: a cookie-authenticated PUT cannot be
+  // triggered by another site, because the browser will not attach this cookie
+  // to a cross-site request at all. The API also rejects unlisted origins and
+  // requires a JSON content type, so a cross-site form post cannot reach it
+  // either.
+  return `Path=/; HttpOnly;${secure} SameSite=Strict`
+}
+
 function constantTimeBearerMatch(header: string, token: string): boolean {
   const received = Buffer.from(header)
   const expected = Buffer.from(`Bearer ${token}`)
@@ -417,7 +564,91 @@ function authenticatePrincipal(req: Request): ApiPrincipal | null {
   for (const principal of API_AUTH_CONFIGURATION.principals) {
     if (constantTimeBearerMatch(header, principal.token)) matched = principal
   }
-  return matched
+  if (matched) return matched
+
+  // Fall back to a same-origin session cookie. Checked AFTER the bearer loop
+  // so an explicit token always wins — a script running with a scoped token in
+  // a browser that also holds a reviewer session must get the token's roles,
+  // not the session's.
+  const cookie = readCookie(req, SESSION_COOKIE_NAME)
+  if (cookie && verifySessionValue(cookie)) return sessionPrincipal()
+  return null
+}
+
+/**
+ * The `/api/session` routes: sign in, check, sign out.
+ *
+ * Deliberately outside `requireApiPrincipal` — this is how a browser BECOMES a
+ * principal, so gating it on already being one would be circular.
+ */
+async function handleSessionApi(req: Request, url: URL): Promise<Response> {
+  const context = getApiRequestContext(req, url)
+  if (context instanceof Response) return context
+  if (req.method === "OPTIONS") return preflightResponse(req, context)
+
+  if (req.method === "GET") {
+    const cookie = readCookie(req, SESSION_COOKIE_NAME)
+    return jsonResponse(
+      {
+        active: Boolean(cookie && verifySessionValue(cookie)),
+        loginAvailable: isSessionLoginConfigured(),
+      },
+      200,
+      context.corsHeaders
+    )
+  }
+
+  if (req.method === "DELETE") {
+    return jsonResponse({ active: false }, 200, context.corsHeaders, {
+      "set-cookie": `${SESSION_COOKIE_NAME}=; ${sessionCookieAttributes(url)}; Max-Age=0`,
+    })
+  }
+
+  if (req.method !== "POST") return jsonResponse({ error: "Not Found" }, 404, context.corsHeaders)
+
+  if (!isSessionLoginConfigured()) {
+    return jsonResponse(
+      { error: "Reviewer sign-in is not configured on this server (REVIEW_SESSION_PASSWORD unset)." },
+      501,
+      context.corsHeaders
+    )
+  }
+
+  const now = Date.now()
+  if (now >= sessionAttempts.resetAt) {
+    sessionAttempts = { count: 0, resetAt: now + SESSION_ATTEMPT_WINDOW_MS }
+  }
+  if (sessionAttempts.count >= SESSION_ATTEMPT_LIMIT) {
+    return jsonResponse({ error: "Too many sign-in attempts. Try again shortly." }, 429, context.corsHeaders, {
+      "retry-after": String(Math.max(1, Math.ceil((sessionAttempts.resetAt - now) / 1000))),
+    })
+  }
+
+  const raw = await readBodyWithLimit(req, 4096)
+  if (raw === null) return jsonResponse({ error: "Request body is too large." }, 413, context.corsHeaders)
+
+  let password = ""
+  try {
+    const parsed = JSON.parse(raw)
+    password = typeof parsed?.password === "string" ? parsed.password : ""
+  } catch {
+    return jsonResponse({ error: "Request body must be JSON." }, 400, context.corsHeaders)
+  }
+
+  // Length is compared first because timingSafeEqual throws on a mismatch;
+  // the length of a shared password is not the secret worth protecting.
+  const provided = Buffer.from(password)
+  const expected = Buffer.from(REVIEW_SESSION_PASSWORD)
+  const matches = provided.length === expected.length && timingSafeEqual(provided, expected)
+  if (!matches) {
+    sessionAttempts.count += 1
+    return jsonResponse({ error: "Incorrect password." }, 401, context.corsHeaders)
+  }
+
+  const expiresAt = Date.now() + SESSION_TTL_MS
+  return jsonResponse({ active: true }, 200, context.corsHeaders, {
+    "set-cookie": `${SESSION_COOKIE_NAME}=${signSessionValue(expiresAt)}; ${sessionCookieAttributes(url)}; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`,
+  })
 }
 
 function requireApiPrincipal(
@@ -1117,6 +1348,12 @@ const server = serve({
   port: PORT,
   async fetch(req) {
     const url = new URL(req.url)
+
+    // Ahead of the review-state routes because this is how a browser becomes
+    // a principal — gating sign-in on already being one would be circular.
+    if (url.pathname === "/api/session") {
+      return handleSessionApi(req, url)
+    }
 
     if (url.pathname === "/api/review-state" || url.pathname.startsWith("/api/review-state/")) {
       return handleReviewStateApi(req, url)

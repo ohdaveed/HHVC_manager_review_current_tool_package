@@ -1039,6 +1039,25 @@ offline static tool.
   CORS, configuration, and rate-limit errors, retain the server's security
   headers and are `no-store`.
 
+### Reviewer sign-in (`/api/session`)
+
+The bundle is public so it can never carry a token; Railway made the app and the
+API same-origin, so it can carry a sign-in form instead.
+
+- **`POST /api/session`** takes `{password}`, compares it constant-time against
+  `REVIEW_SESSION_PASSWORD`, and sets an `HttpOnly; Secure; SameSite=Strict`
+  cookie. `GET` reports `{active, loginAvailable}` and is deliberately ungated —
+  it is how a browser learns it can become a principal. `DELETE` signs out.
+- **The cookie is a signed assertion, not stored state**:
+  `<principal>.<expiry>.<HMAC>`, verified per request, key derived from the API
+  tokens — so rotating `REVIEW_API_TOKEN` invalidates every session.
+- **A session gets `review:read` + `review:write` only, never `ai:generate`** —
+  a shared password that unlocked paid generation would make one leak an
+  unbounded bill. Cookie-authenticated AI requests get 403.
+- **Bearer beats cookie** when both are present, so a scoped token keeps its
+  own roles.
+- Sign-in is throttled globally (10/min); unset password → **501**, token-only.
+
 ### Review-state sync backend (optional)
 
 **Sync runs automatically as of 2026-08-14** — `startAutoSync()` pulls once at

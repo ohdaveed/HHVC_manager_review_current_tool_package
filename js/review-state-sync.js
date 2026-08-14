@@ -125,9 +125,102 @@
     }
   }
 
+  /**
+   * Whether this browser holds a signed-in session with the API.
+   *
+   * Kept as a module flag rather than re-probed per request: it is refreshed
+   * by `checkSession()` at init and by sign-in/sign-out, and a stale `true`
+   * costs nothing worse than one 401 that the caller already handles.
+   */
+  let sessionActive = false
+
+  /**
+   * Whether sync can talk to the API at all.
+   *
+   * Two credentials satisfy it. A pasted **bearer token** is the original
+   * path, still used by scripts and by anyone pointing at another deployment.
+   * A **same-origin session cookie** is the one reviewers actually use: the
+   * bundle is public so it can never carry a token, but it can carry a sign-in
+   * form. `document.cookie` cannot see the cookie — it is HttpOnly on purpose —
+   * so the flag comes from asking the server.
+   */
   function isConfigured() {
     const config = readConfig()
-    return Boolean(config.apiUrl && config.apiToken)
+    return Boolean(config.apiUrl && (config.apiToken || sessionActive))
+  }
+
+  /**
+   * Ask the server whether this browser is signed in.
+   *
+   * @returns {Promise<{active: boolean, loginAvailable: boolean}>}
+   */
+  function checkSession() {
+    const base = (readConfig().apiUrl || '').replace(/\/+$/, '')
+    if (!base) return Promise.resolve({ active: false, loginAvailable: false })
+    return fetch(`${base}/api/session`, { credentials: 'same-origin' })
+      .then((response) =>
+        response.ok ? response.json() : { active: false, loginAvailable: false }
+      )
+      .then((result) => {
+        sessionActive = Boolean(result.active)
+        return { active: sessionActive, loginAvailable: Boolean(result.loginAvailable) }
+      })
+      .catch(() => ({ active: false, loginAvailable: false }))
+  }
+
+  /**
+   * Exchange the shared reviewer password for a session cookie.
+   *
+   * The password is sent and forgotten — never stored. The cookie the server
+   * sets is HttpOnly, so unlike a pasted token it cannot be read back out of
+   * this browser by any script on the page.
+   *
+   * @param {string} password
+   * @returns {Promise<{ok: boolean, error: string|null}>}
+   */
+  function signIn(password) {
+    const base = (readConfig().apiUrl || '').replace(/\/+$/, '')
+    if (!base) return Promise.resolve({ ok: false, error: 'No server URL configured.' })
+
+    return fetch(`${base}/api/session`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+      .then((response) =>
+        response
+          .json()
+          .catch(() => ({}))
+          .then((body) => {
+            if (response.ok) {
+              sessionActive = true
+              return { ok: true, error: null }
+            }
+            sessionActive = false
+            return { ok: false, error: body.error || `Sign-in failed (${response.status}).` }
+          })
+      )
+      .catch((error) => ({
+        ok: false,
+        error: String(error && error.message ? error.message : error),
+      }))
+  }
+
+  /**
+   * Drop this browser's session.
+   *
+   * @returns {Promise<{ok: boolean}>}
+   */
+  function signOut() {
+    const base = (readConfig().apiUrl || '').replace(/\/+$/, '')
+    if (!base) return Promise.resolve({ ok: false })
+    return fetch(`${base}/api/session`, { method: 'DELETE', credentials: 'same-origin' })
+      .then(() => {
+        sessionActive = false
+        return { ok: true }
+      })
+      .catch(() => ({ ok: false }))
   }
 
   /**
@@ -137,7 +230,10 @@
    */
   function apiFetch(path, options = {}) {
     const config = readConfig()
-    if (!config.apiUrl || !config.apiToken) {
+    // Either credential will do: a pasted bearer token, or a session cookie
+    // this browser holds. Without one of them there is nothing to send and the
+    // request would just earn a 401.
+    if (!config.apiUrl || (!config.apiToken && !sessionActive)) {
       return Promise.reject(new Error('Sync is not configured.'))
     }
     const base = config.apiUrl.replace(/\/+$/, '')
@@ -152,9 +248,17 @@
     return fetch(base + path, {
       ...options,
       signal: controller.signal,
+      // Send the session cookie when there is one. 'same-origin' rather than
+      // 'include' deliberately: the cookie is only ever set by the origin that
+      // served the page, and 'include' would attach credentials to a
+      // cross-origin deployment a reviewer had pointed at by hand.
+      credentials: 'same-origin',
       headers: {
         ...(options.headers || {}),
-        authorization: `Bearer ${config.apiToken}`,
+        // Only send an Authorization header when a token was actually pasted.
+        // Sending `Bearer ` with an empty token would be a credential the
+        // server has to reject, which would mask a perfectly good cookie.
+        ...(config.apiToken ? { authorization: `Bearer ${config.apiToken}` } : {}),
         'content-type': 'application/json',
       },
     }).finally(() => clearTimeout(timeoutId))
@@ -581,13 +685,33 @@
    */
   function startAutoSync() {
     if (initialPull) return initialPull
-    if (!isConfigured()) {
-      initialPull = Promise.resolve({ ok: false, error: 'Sync is not configured.' })
-      return initialPull
-    }
 
+    // Ask about a session BEFORE deciding there is nothing to do: the cookie is
+    // HttpOnly, so a signed-in browser looks identical to an unconfigured one
+    // until the server says otherwise.
+    initialPull = checkSession().then(({ active, loginAvailable }) => {
+      if (!isConfigured()) {
+        setSyncStatus(
+          loginAvailable && !active
+            ? 'Reviews are saved in this browser only. Sign in above to sync them.'
+            : 'Reviews are saved in this browser only.'
+        )
+        return { ok: false, error: 'Sync is not configured.' }
+      }
+      return runInitialPull()
+    })
+    return initialPull
+  }
+
+  /**
+   * The pull half of startAutoSync, split out so the session probe above reads
+   * as one decision rather than a nested chain.
+   *
+   * @returns {Promise<object>}
+   */
+  function runInitialPull() {
     setSyncStatus('Loading reviews from the server…')
-    initialPull = pullFromServer()
+    return pullFromServer()
       .then((result) => {
         if (result.stale) return result
         if (result.ok) {
@@ -621,7 +745,6 @@
         ok: false,
         error: String(error && error.message ? error.message : error),
       }))
-    return initialPull
   }
 
   /**
@@ -944,6 +1067,73 @@
     const summary = document.createElement('summary')
     details.appendChild(summary)
 
+    /* Sign-in comes FIRST because it is what a reviewer is meant to use.
+       The URL and token below it are the advanced path — pointing at another
+       deployment, or scripting against the API — and a reviewer who never
+       touches them still gets sync. The password is sent and forgotten; the
+       cookie the server returns is HttpOnly, so unlike a pasted token nothing
+       on the page can read it back out. */
+    const signInLabel = document.createElement('label')
+    signInLabel.htmlFor = 'reviewSyncPassword'
+    signInLabel.className = 'field-help sync-config-label'
+    signInLabel.textContent = 'Reviewer password'
+    details.appendChild(signInLabel)
+
+    const passwordInput = document.createElement('input')
+    passwordInput.type = 'password'
+    passwordInput.id = 'reviewSyncPassword'
+    passwordInput.placeholder = 'Sign in to sync your reviews'
+    passwordInput.className = 'sync-config-input'
+    passwordInput.autocomplete = 'current-password'
+    details.appendChild(passwordInput)
+
+    const signInButton = document.createElement('button')
+    signInButton.type = 'button'
+    signInButton.id = 'reviewSyncSignIn'
+    signInButton.className = 'tool-btn secondary-tool'
+    signInButton.textContent = 'Sign in'
+    signInButton.addEventListener('click', () => {
+      const password = passwordInput.value
+      if (!password) {
+        setSyncStatus('Enter the reviewer password first.')
+        return
+      }
+      signInButton.disabled = true
+      setSyncStatus('Signing in…')
+      signIn(password)
+        .then((result) => {
+          // Clear it either way: a wrong password should not sit in the field,
+          // and a right one is already spent.
+          passwordInput.value = ''
+          if (!result.ok) {
+            setSyncStatus(result.error)
+            return
+          }
+          // A fresh sign-in is a fresh sync session — reset the one-shot gate
+          // so this browser pulls now rather than at the next reload.
+          initialPull = null
+          updateSyncActionAvailability()
+          return startAutoSync()
+        })
+        .finally(() => {
+          signInButton.disabled = false
+        })
+    })
+    details.appendChild(signInButton)
+
+    const signOutButton = document.createElement('button')
+    signOutButton.type = 'button'
+    signOutButton.id = 'reviewSyncSignOut'
+    signOutButton.className = 'tool-btn secondary-tool'
+    signOutButton.textContent = 'Sign out'
+    signOutButton.addEventListener('click', () => {
+      signOut().then(() => {
+        updateSyncActionAvailability()
+        setSyncStatus('Signed out. Reviews are saved in this browser only.')
+      })
+    })
+    details.appendChild(signOutButton)
+
     // Placeholder text isn't a reliable accessible name (it disappears once
     // typed, and screen readers don't treat it as a persistent label), so
     // each input gets a real <label for="..."> alongside its placeholder.
@@ -1138,6 +1328,9 @@
     scheduleAutoPush,
     flushAutoPushes,
     pushDirtyPages,
+    checkSession,
+    signIn,
+    signOut,
   }
 
   // Node/Bun-side export for unit testing the pull/push conflict-resolution
@@ -1157,6 +1350,9 @@
       scheduleAutoPush,
       flushAutoPushes,
       pushDirtyPages,
+      checkSession,
+      signIn,
+      signOut,
     }
   }
 })()

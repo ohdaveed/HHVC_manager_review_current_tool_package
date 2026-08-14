@@ -1140,15 +1140,19 @@ describe('automatic sync', () => {
     mod.scheduleAutoPush('pestsTopic')
     await new Promise((resolve) => originalSetTimeout(resolve, 0))
 
-    expect(calls[0]).toBe('GET /review-state')
-    expect(calls.some((call) => call.startsWith('PUT'))).toBe(true)
+    // The session probe may come first; what matters is that the state PULL
+    // happens before any push, so the push carries an observed baseline.
+    const pullIndex = calls.indexOf('GET /review-state')
+    const pushIndex = calls.findIndex((call) => call.startsWith('PUT'))
+    expect(pullIndex).toBeGreaterThanOrEqual(0)
+    expect(pushIndex).toBeGreaterThan(pullIndex)
   })
 
   test('startAutoSync pulls once however many times it is called', async () => {
     const { mod } = loadReviewStateSync()
     let pulls = 0
-    global.fetch = async () => {
-      pulls += 1
+    global.fetch = async (url) => {
+      if (String(url).endsWith('/api/review-state')) pulls += 1
       return {
         ok: true,
         status: 200,

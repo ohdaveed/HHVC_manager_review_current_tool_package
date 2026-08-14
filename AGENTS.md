@@ -1491,6 +1491,44 @@ offline static tool.
   CORS, configuration, and rate-limit errors, retain the server's security
   headers and are `no-store`.
 
+### Reviewer sign-in (`/api/session`)
+
+The API is bearer-gated and the browser bundle is public, so a token can never
+ship in it — which left every reviewer pasting one by hand, and is the reason
+sync went unused for months. **Railway removed the constraint that forced
+that**: `server.ts` serves the app and `/api/*` from one origin, so a cookie it
+sets comes back automatically.
+
+- **`POST /api/session`** takes `{password}`, compares it constant-time against
+  `REVIEW_SESSION_PASSWORD`, and sets an `HttpOnly; Secure; SameSite=Strict`
+  cookie. `GET` reports `{active, loginAvailable}` — deliberately ungated, since
+  it is how a browser learns it _can_ become a principal, and gating it would be
+  circular. `DELETE` signs out.
+- **The cookie is a signed assertion, not a stored session**:
+  `<principal>.<expiry>.<HMAC>`, verified per request. No session table, nothing
+  to replicate between instances, nothing lost on restart. The key is derived
+  from the configured API tokens, so **rotating `REVIEW_API_TOKEN` invalidates
+  every outstanding session** — which is what you want from a rotation.
+  `REVIEW_SESSION_SECRET` separates the two lifecycles if a deployment wants
+  that.
+- **A session gets `review:read` and `review:write` only — never
+  `ai:generate`.** AI calls cost money per request, so a shared password that
+  also unlocked generation would make one leaked password an unbounded bill. A
+  cookie-authenticated AI request gets 403, not 401.
+- **Bearer tokens still win when both are present.** A script running with a
+  scoped token in a browser that also holds a session must get the token's
+  roles, so the cookie is only consulted after the bearer loop finds nothing.
+- **Sign-in attempts are throttled globally** (10 per minute), not per
+  principal — a sign-in has no principal yet, and keying on client IP is not
+  trustworthy behind a proxy this server does not control. Blunt on purpose.
+- **CSRF control is `SameSite=Strict`**, plus the existing origin allowlist and
+  the JSON content type the routes require; a cross-site form post cannot reach
+  them.
+- **`Secure` is dropped only on plain-HTTP localhost**, or `bun run dev:api`
+  and local verification would silently stop receiving the cookie.
+- Unset `REVIEW_SESSION_PASSWORD` → `POST` answers **501** and sync stays
+  token-only. Fails closed like everything else here.
+
 ### Review-state sync backend (optional)
 
 `server.ts` optionally serves a small sync API alongside its static file
