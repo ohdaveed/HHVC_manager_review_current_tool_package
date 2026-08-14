@@ -17,18 +17,23 @@ but `js/*.js` are ES modules, so use `import`/`export` with explicit relative
 specifiers including the `.js` extension.
 
 **The tool needs no backend** — reviewer state lives in `localStorage` and it
-works fully offline. But `server.ts` (Bun) exists and hosts **two optional,
+works fully offline. But `server.ts` (Bun) exists and hosts **three optional,
 additive APIs** that are off by default and fail closed with a 501 when
-unconfigured: a **review-state sync backend** (SQLite via `bun:sqlite`, gated on
-the legacy `REVIEW_API_TOKEN` or opt-in per-token role configuration) and an
+unconfigured: a **review-state sync backend** (Postgres when `DATABASE_URL` is
+set, SQLite at `DATA_DB_PATH` otherwise, gated on the legacy `REVIEW_API_TOKEN`
+or opt-in per-token role configuration), an
 **AI assist backend** at `/api/ai/*` (the `ai:generate` role plus a provider key
-— `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`). Cross-origin browser callers are
+— `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`), and **reviewer sign-in** at
+`/api/session` (`REVIEW_SESSION_PASSWORD`, which mints an
+`HttpOnly; Secure; SameSite=Strict` cookie carrying `review:read` and
+`review:write` only — never `ai:generate`, so one leaked password can never run
+up an unbounded generation bill). Cross-origin browser callers are
 denied unless explicitly allowlisted, and process-local limits are only a
 supplement to reverse-proxy/identity-aware-edge controls in public,
 multi-instance production. See `AGENTS.md`'s “Optional API access hardening”
 for the exact environment format and failure behavior. Netlify's static deploy
-has no server runtime, so it simply has neither. Nothing else in the tool
-depends on either one.
+has no server runtime, so it simply has none of them. Nothing else in the tool
+depends on any of them.
 
 ## Commands
 

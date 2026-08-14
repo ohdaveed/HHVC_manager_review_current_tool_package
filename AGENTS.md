@@ -22,8 +22,9 @@ under review. The **review workspace** is a different matter — it now hosts
 React + MUI islands (see [React islands in the workspace](#react-islands-in-the-workspace)),
 scoped to `#reviewWorkspace` and loaded on demand. Reviewer state lives in the browser's `localStorage` by
 default, and the tool works fully offline with **no backend/database/external
-service required.** `server.ts` also hosts an **optional** Bun + SQLite
-review-state sync backend (see [Review-state sync backend](#review-state-sync-backend-optional))
+service required.** `server.ts` also hosts an **optional** review-state sync
+backend (Postgres when `DATABASE_URL` is set, SQLite otherwise — see
+[Review-state sync backend](#review-state-sync-backend-optional))
 that reviewers can opt into per-browser to sync decisions across
 machines/reviewers — it's off unless deployed and configured, and every other
 part of the tool works identically whether or not it's ever used.

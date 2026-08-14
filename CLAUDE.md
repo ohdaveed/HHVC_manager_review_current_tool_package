@@ -18,8 +18,9 @@ Reviewer state lives in the browser's `localStorage` by default, and the tool
 works fully offline with no server at all beyond serving static files —
 **no backend/database/external service is required.** `server.ts` also hosts
 an **optional**
-review-state sync backend (Bun + SQLite, see "Review-state sync backend"
-below, and the `hhvc-review-sync-backend` skill for the full write-up) that reviewers can opt into per-browser to sync decisions across
+review-state sync backend (Postgres when `DATABASE_URL` is set, SQLite
+otherwise; see "Review-state sync backend" below, and the
+`hhvc-review-sync-backend` skill for the full write-up) that reviewers can opt into per-browser to sync decisions across
 machines; it's off unless deployed and configured, and every other part of
 the tool is unaffected if it's never used.
 
@@ -1094,7 +1095,7 @@ The client still never merges on the push path — the server does, with
 `updatedBy: 'sync'` — so history stays bounded. The default endpoint is the
 page's own origin now, not a baked-in hostname; the token still has no default.
 
-`server.ts` optionally serves a small SQLite-backed sync API alongside static files, with `js/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
+`server.ts` optionally serves a small sync API alongside static files, backed by Postgres or SQLite depending on `DATABASE_URL` (see "Where review records live" above), with `js/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
 
 ### AI assist backend (optional)
 
