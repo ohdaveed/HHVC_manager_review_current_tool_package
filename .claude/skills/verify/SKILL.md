@@ -66,7 +66,10 @@ review-queue behavior — seed the state first:
   reacts to `selectionchange` asynchronously, so a selection made in one
   Playwright round trip is frequently stale by the time the next one runs; the
   editor can close between calls and the text is lost. `document.execCommand('insertText', …)`
-  after `focus()` in one evaluation is the reliable way to type.
+  after `focus()` in one evaluation is the reliable way to type. This is the
+  same race `tests/e2e/helpers.js` already works around — its Editor.js helpers
+  do the select-then-click inside a single `page.evaluate()` for exactly this
+  reason, so read those before inventing a different approach.
 - The add/remove controls (`[data-inline-edit-add]`, `[data-inline-edit-remove]`)
   are added by a decoration pass that runs _after_ a render, not by the
   renderer. See the caveat below about when they are missing.
