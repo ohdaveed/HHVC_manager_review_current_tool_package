@@ -45,7 +45,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 38 unit-test files in tests/
+bun run test                  # Bun test runner over the 39 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -65,7 +65,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 38 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 39 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -78,7 +78,7 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 the decision list against the canonical table in `js/utils.js` — and,
 separately, every file that spells out an INDIVIDUAL label as a literal, which
 is most of the queue: those are string comparisons, so a renamed decision
-leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
+leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
@@ -1490,6 +1490,55 @@ offline static tool.
   as coordinated abuse protection. API responses, including authorization,
   CORS, configuration, and rate-limit errors, retain the server's security
   headers and are `no-store`.
+
+### What the RAG corpus contains (`build_scripts/knowledge-sources.js`)
+
+The corpus was one glob — `docs/source/**/*.md` — and that quietly excluded the
+two things a reviewer most often needs the AI to know. `collectKnowledgeSources()`
+is now the single definition of what gets embedded and what `category` each
+document is filed under.
+
+| Category       | What it is                                             | Where it comes from             |
+| -------------- | ------------------------------------------------------ | ------------------------------- |
+| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts | `docs/source/hhvc-policy/`      |
+| `sfgov-style`  | SF.gov's published writing guidance                    | `docs/source/sfgov-style/`      |
+| `sfgov-live`   | dated snapshots of what SF.gov publishes today         | `docs/source/sfgov-live/`       |
+| `karl`         | the 2026-08-14 measurement of the Karl editor          | `docs/karl-mockup-cookbook*.md` |
+| `mockup-draft` | the proposed page mockups themselves                   | `pages/*.js`, projected         |
+
+- **Category is derived from the first path segment under `docs/source/`**, so a
+  new corpus folder files itself with no code change — which is exactly how the
+  scraped SF.gov snapshots work.
+- **The Karl capture is listed explicitly rather than moved.** Both canon files,
+  the copilot mirror and `tests/doc-counts.test.js` name those paths, and a
+  merged PR links them; relocating a document to satisfy an ingestion glob is
+  the tail wagging the dog.
+- **The mockup pages are projected to markdown at ingest time and not
+  committed** — headings become `##`/`###` so the existing chunker splits them
+  the same way, and the `karl` placement notes are included because they carry
+  the CMS rationale a reviewer actually asks about.
+- **`mockup-draft` is the dangerous one, and it is about a third of the corpus.**
+  It is DRAFT copy nobody has approved, including the page being audited. The
+  source tag in the prompt now carries `category`, the system prompt spells out
+  what each one is worth, and it says in terms that draft copy must never be
+  cited as the authority a finding rests on — otherwise an audit can cite the
+  proposal as evidence for itself. The value is resolved from the matched row,
+  never echoed from the model, and it travels with the citation shown to the
+  reviewer.
+- **Folder `README.md` files are excluded**, which is how a folder-level note
+  (like the snapshot provenance in `docs/source/sfgov-live/README.md`) stays out
+  of the citable set.
+- **Corpus definition is separate from ingestion on purpose**:
+  `tests/knowledge-sources.test.js` covers which documents exist and how a page
+  projects, with no Gemini key and no embedding call. Measured after this
+  change: **76 documents, 768 chunks** — `hhvc-policy` 430, `mockup-draft` 233,
+  `karl` 53, `sfgov-live` 28, `sfgov-style` 24.
+- **Retrieval is still brute-force cosine in JS.** 768 chunks ranks in
+  microseconds; pgvector would add an extension dependency for no measured win.
+- **`knowledge_chunks` still lives in the SQLite file at `DATA_DB_PATH`**, not in
+  Postgres — so on the Railway deployment the knowledge base reads an empty file
+  and `compliance-audit` reports itself unready. Moving that table behind
+  `build_scripts/storage.js` is the remaining piece.
 
 ### Reviewer sign-in (`/api/session`)
 

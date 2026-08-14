@@ -40,7 +40,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 38 unit-test files in tests/
+bun run test                  # bun test over the 39 unit-test files in tests/
 bun run test:e2e              # playwright test over the 19 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -70,11 +70,11 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 38 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 39 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
-`review-ops-data`, `knowledge-chunking`, `knowledge-search`,
+`review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
 `ai-assist-schema`, `ai-assist-env`, `karl-tag-meta` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
@@ -1038,6 +1038,31 @@ offline static tool.
   as coordinated abuse protection. API responses, including authorization,
   CORS, configuration, and rate-limit errors, retain the server's security
   headers and are `no-store`.
+
+### What the RAG corpus contains (`build_scripts/knowledge-sources.js`)
+
+One glob (`docs/source/**/*.md`) used to define the corpus, which excluded both
+the newest Karl capture and the mockup copy under review.
+`collectKnowledgeSources()` is now the single definition, and every chunk
+carries a `category`: `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated
+snapshots of live SF.gov), `karl` (the 2026-08-14 editor measurement, listed
+explicitly because it lives in `docs/`), and `mockup-draft` (the `pages/*.js`
+mockups, projected to markdown at ingest time and not committed).
+
+- **Category comes from the first path segment under `docs/source/`**, so a new
+  folder files itself with no code change.
+- **`mockup-draft` is about a third of the corpus and is the dangerous one** —
+  draft copy nobody approved, including the page being audited. The prompt's
+  source tag now carries `category`, the system prompt states what each category
+  is worth, and it forbids citing draft copy as the authority a finding rests
+  on. Resolved from the matched row, so the model cannot spoof it; it also
+  travels with the citation the reviewer sees.
+- Folder `README.md` files are excluded, so provenance notes stay uncitable.
+- Measured: **76 documents, 768 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
+  `karl` 53, `sfgov-live` 28, `sfgov-style` 24). Still brute-force cosine.
+- **`knowledge_chunks` is still in SQLite at `DATA_DB_PATH`**, so on Railway the
+  knowledge base reads an empty file and `compliance-audit` reports unready.
+  Moving it behind `build_scripts/storage.js` is the remaining piece.
 
 ### Reviewer sign-in (`/api/session`)
 

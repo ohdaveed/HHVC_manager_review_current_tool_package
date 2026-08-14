@@ -12,26 +12,21 @@
 // GEMINI_API_KEY and makes real (billed) embedding calls, so it must not run
 // in CI or on every `bun run build`.
 const { Database } = require('bun:sqlite')
-const { mkdirSync, readFileSync } = require('node:fs')
+const { mkdirSync } = require('node:fs')
 const { dirname, resolve } = require('node:path')
-const fg = require('fast-glob')
 const { chunkMarkdown } = require('./knowledge-chunking')
 const { ensureKnowledgeChunksTable } = require('./knowledge-schema')
+const { collectKnowledgeSources } = require('./knowledge-sources')
+const { loadPageData } = require('./load-pages')
 const gemini = require('./ai/provider-gemini')
 
 const ROOT = resolve(__dirname, '..')
-const SOURCE_DIR = resolve(ROOT, 'docs/source')
 const DATA_DB_PATH = process.env.DATA_DB_PATH || resolve(ROOT, '.data/review-state.local.db')
 
 // embedContent accepts a batch, but a very large one risks an upstream
 // request-size or timeout limit. This corpus produces roughly 150-200 chunks
 // total, so 20 keeps each call small while still batching most files.
 const EMBED_BATCH_SIZE = 20
-
-/** @param {string} relativePath e.g. "hhvc-policy/foo.md" -> "hhvc-policy" */
-function categoryFor(relativePath) {
-  return relativePath.split('/')[0]
-}
 
 /**
  * @param {string[]} texts
@@ -58,24 +53,27 @@ async function main() {
   const db = new Database(DATA_DB_PATH, { create: true })
   ensureKnowledgeChunksTable(db)
 
-  const files = fg
-    .sync('**/*.md', { cwd: SOURCE_DIR, onlyFiles: true })
-    .filter((file) => file.split('/').pop() !== 'README.md')
-    .sort((a, b) => a.localeCompare(b))
+  // Which documents make up the corpus — and what category each is filed
+  // under — lives in build_scripts/knowledge-sources.js, so this script stays
+  // the embed-and-upsert half and the corpus definition is testable without a
+  // Gemini key. The mockup pages are projected to markdown there; loading them
+  // here keeps the page loader out of that module's dependencies.
+  const { pages } = loadPageData()
+  const sources = collectKnowledgeSources({ pages })
 
   let totalChunks = 0
   const emptyFiles = []
 
-  for (const relativePath of files) {
-    const markdown = readFileSync(resolve(SOURCE_DIR, relativePath), 'utf8')
-    const chunks = chunkMarkdown(markdown, relativePath)
+  for (const source of sources) {
+    const relativePath = source.sourceFile
+    const chunks = chunkMarkdown(source.markdown, relativePath)
     if (!chunks.length) {
       emptyFiles.push(relativePath)
       continue
     }
 
     const vectors = await embedAll(chunks.map((chunk) => chunk.content))
-    const category = categoryFor(relativePath)
+    const category = source.category
     const embeddingModel = gemini.getEmbeddingModel()
     const now = new Date().toISOString()
 
@@ -104,10 +102,10 @@ async function main() {
     })()
 
     totalChunks += chunks.length
-    console.log(`  ${relativePath}: ${chunks.length} chunks`)
+    console.log(`  [${category}] ${relativePath}: ${chunks.length} chunks`)
   }
 
-  console.log(`\nIngested ${files.length - emptyFiles.length} files, ${totalChunks} chunks.`)
+  console.log(`\nIngested ${sources.length - emptyFiles.length} documents, ${totalChunks} chunks.`)
   if (emptyFiles.length) {
     // No silent drops: a file that globbed as markdown but chunked to
     // nothing (e.g. whitespace-only) is named explicitly, not just missing
@@ -115,13 +113,15 @@ async function main() {
     console.log(`Files with no chunks after parsing: ${emptyFiles.join(', ')}`)
   }
 
-  // Prune rows for files that no longer exist in docs/source/, were renamed,
+  // Prune rows for documents that are no longer in the corpus, were renamed,
   // or now parse to zero chunks. The per-file DELETE above only fires for a
   // file actually reached by this run's loop with real content, so a file
   // removed (or emptied) between runs would otherwise leave its old chunks
   // in the table forever, citable by compliance-audit even though nothing on
   // disk backs them anymore.
-  const keptFiles = files.filter((file) => !emptyFiles.includes(file))
+  const keptFiles = sources
+    .map((source) => source.sourceFile)
+    .filter((file) => !emptyFiles.includes(file))
   const placeholders = keptFiles.map(() => '?').join(',')
   const staleCount = keptFiles.length
     ? db

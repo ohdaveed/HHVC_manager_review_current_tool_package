@@ -84,7 +84,17 @@ async function generateComplianceAudit({ page, provider, signal }) {
       .filter((id) => chunksById.has(id))
       .map((id) => {
         const chunk = chunksById.get(id)
-        return { id: chunk.id, sourceFile: chunk.sourceFile, headingPath: chunk.headingPath }
+        // `category` travels with the citation for the same reason it is in the
+        // prompt: the corpus now mixes adopted policy with draft mockup copy and
+        // dated snapshots of the live site, and a reviewer deciding whether to
+        // act on a finding needs to know which kind of source it rests on.
+        // Resolved from the row, so the label cannot be model-generated.
+        return {
+          id: chunk.id,
+          sourceFile: chunk.sourceFile,
+          category: chunk.category,
+          headingPath: chunk.headingPath,
+        }
       }),
   }))
 
