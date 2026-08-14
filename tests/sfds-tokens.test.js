@@ -49,3 +49,32 @@ describe('the --sfds-* namespace', () => {
     expect(offenders).toEqual([])
   })
 })
+
+/**
+ * Parse the custom properties declared in one CSS block.
+ *
+ * @param {string} block Raw CSS text.
+ * @returns {Record<string, string>} Token name (with dashes) to value.
+ */
+function parseTokens(block) {
+  const out = {}
+  for (const match of block.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
+    out[match[1]] = match[2].trim()
+  }
+  return out
+}
+
+const source = readFileSync(join(ROOT, 'css/sfds.css'), 'utf8')
+const capture = JSON.parse(readFileSync(join(ROOT, 'docs/source/sfds/tokens.json'), 'utf8'))
+const desktopBlock = source.slice(source.indexOf('@media (min-width: 768px)'))
+const baseBlock = source.slice(0, source.indexOf('@media (min-width: 768px)'))
+
+describe('css/sfds.css against the vendored capture', () => {
+  test('declares every base token at the captured value', () => {
+    expect(parseTokens(baseBlock)).toEqual(capture.base)
+  })
+
+  test('redeclares every desktop token at the captured value', () => {
+    expect(parseTokens(desktopBlock)).toEqual(capture.desktop)
+  })
+})

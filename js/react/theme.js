@@ -121,7 +121,7 @@ function createWorkspaceTheme() {
     },
     components: {
       // MUI's own baseline is deliberately absent: `CssBaseline` writes
-      // element-level rules on html/body/*, and Emotion injects after the nine
+      // element-level rules on html/body/*, and Emotion injects after the ten
       // stylesheets, so it would win ties INSIDE `.browser-shell` — the one
       // surface that has to keep rendering as SF.gov does. Measured before any
       // of this landed: a ThemeProvider plus a Button changes zero computed

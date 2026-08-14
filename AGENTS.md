@@ -262,7 +262,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets to the
   document. It holds because MUI emits scoped `.css-*` classes and **no
   `CssBaseline`**. `CssBaseline` writes element-level rules on `html`/`body`/`*`,
-  and Emotion injects after the nine stylesheets, so it would win ties inside the
+  and Emotion injects after the ten stylesheets, so it would win ties inside the
   shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed; do not
   add the global one.
 - **`js/react/theme.js` is the only bridge to the design tokens.** It reads the
@@ -2322,12 +2322,15 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The nine stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
-stay last — it is the semantic token layer, and its dark-mode block overrides
+**The ten stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
+stay first — it is the raw-primitive layer everything downstream reads, keyed
+to SFDS's own published token names; `css/theme.css` MUST stay last — it is
+the semantic token layer, and its dark-mode block overrides
 the `--legacy-*` primitives `css/styles.css` declares on `:root`):
 
 | File                          | Owns                                                                                           |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- |
+| `css/sfds.css`                | the SFDS primitives, keyed to SFDS's own published token names                                 |
 | `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
 | `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
 | `css/ai-assist.css`           | the AI assist panel                                                                            |
