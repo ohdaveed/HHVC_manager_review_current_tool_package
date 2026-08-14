@@ -1237,14 +1237,21 @@ matching Karl content-type names; see `docs/wagtail-content-mapping.md`), `title
 content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
 Sections carry a required `heading` and `karl`, plus optional `kind`, `component`
 (enum: `body`, `services`, `resources`, `related`, `contact`, `spotlight`,
-`what-to-do`, `supporting`, `intro`), `open` (renders a Transaction supporting
-accordion expanded), `cards[]`, `bullets[]`, `paragraphs[]`, `table[][]`,
+`what-to-do`, `supporting`, `intro`, `top-facts`), `open` (renders a Transaction
+supporting accordion expanded), `flat` (renders a Supporting section as Karl's
+plain Custom section — heading and text, no toggle — instead of an accordion;
+orthogonal to `open`, which only has meaning for an accordion), `cards[]`,
+`bullets[]`, `paragraphs[]`, `facts[]` (`{ label, text }` pairs behind a
+`top-facts` section, kept separate from `bullets[]` because a plain bullet has
+no title of its own and widening `bullets` would change its shape for every
+other section type), `table[][]`,
 `image`, a `callout` (`text` + optional `title`/`variant` of
 `info`/`warning`/`note`), a `button`/`buttonUrl`/`buttonTarget`/`buttonStyle`,
 and/or `steps[]`; steps carry `title`, `text[]`, `bullets[]`, `callout`, `karl`,
 and `button`/`buttonTarget`/`buttonUrl`. Optional page-level fields: `seoTitle`,
 `metaDescription`, `primaryCta`, `editorNote`, `topicTag`, `whatToKnow`,
-`contact`, `spotlight`, `reportDate`, `printVersionUrl`, and `editorStatus`
+`partnerAgencies` (an array of cards, same shape as a section's), `contact`,
+`spotlight`, `reportDate`, `printVersionUrl`, and `editorStatus`
 (`needs-review` | `blocked` | `placeholder`). Text-bearing arrays
 (`paragraphs`, `bullets`, step `text`/`bullets`) accept either a plain string or
 `{ text, unverified?, unverifiedReason? }` — `unverified: true` flags a claim
@@ -1960,6 +1967,10 @@ and it never writes to `pages/*.js`.
 - **`review/`** — reference/output for the manager review process
   (`manager_review_packet.md`, `manager_decision_log.csv`, etc.), distinct from
   the in-browser `localStorage` review state.
+- **`docs/`** — `wagtail-content-mapping.md` (page type → Karl content type),
+  `karl-mockup-cookbook.md` (the section-by-section build procedure for authors,
+  and its dated capture record `karl-mockup-cookbook-plan-2026-08-14.md`), plus
+  dated research/audit notes.
 - **`docs/source/hhvc-policy/`** — source policy documents (PDFs + markdown
   extracts) page copy is based on; not code.
 - **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning/design
