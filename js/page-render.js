@@ -1309,6 +1309,19 @@ function renderPage(key, skipHistory = false) {
     window.history.pushState({ key }, '', url)
   }
   function focusRenderedPageHeading() {
+    // When js/inline-content-edit.js's addListItem() opens a new item, it
+    // triggers this same render and then, two rAFs later, calls
+    // openEditorJsEditor() — which sets editingPath synchronously before
+    // the async open() runs. transition.finished fires after the animation
+    // completes, which under load can be AFTER those two rAFs: focusing the
+    // h1 then steals focus from the editor's contenteditable, fires a
+    // focusout that commits with empty text, and collapses the editor before
+    // the reviewer can type. Skip the focus entirely when an editor is open.
+    //
+    // window.inlineEdit is the public API js/inline-content-edit.js mounts
+    // on window; the optional chain degrades gracefully to "always focus" on
+    // any page where that module hasn't loaded yet.
+    if (window.inlineEdit?.isEditing?.()) return
     document.querySelector('#mockPage h1')?.focus()
   }
   if (!document.startViewTransition) {
