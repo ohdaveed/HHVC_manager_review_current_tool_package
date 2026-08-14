@@ -1499,13 +1499,14 @@ two things a reviewer most often needs the AI to know. `collectKnowledgeSources(
 is now the single definition of what gets embedded and what `category` each
 document is filed under.
 
-| Category       | What it is                                             | Where it comes from             |
-| -------------- | ------------------------------------------------------ | ------------------------------- |
-| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts | `docs/source/hhvc-policy/`      |
-| `sfgov-style`  | SF.gov's published writing guidance                    | `docs/source/sfgov-style/`      |
-| `sfgov-live`   | dated snapshots of what SF.gov publishes today         | `docs/source/sfgov-live/`       |
-| `karl`         | the 2026-08-14 measurement of the Karl editor          | `docs/karl-mockup-cookbook*.md` |
-| `mockup-draft` | the proposed page mockups themselves                   | `pages/*.js`, projected         |
+| Category       | What it is                                                                 | Where it comes from             |
+| -------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts                     | `docs/source/hhvc-policy/`      |
+| `sfgov-style`  | SF.gov's published writing guidance                                        | `docs/source/sfgov-style/`      |
+| `sfgov-live`   | dated snapshots of what SF.gov publishes today                             | `docs/source/sfgov-live/`       |
+| `karl`         | the 2026-08-14 measurement of the Karl editor                              | `docs/karl-mockup-cookbook*.md` |
+| `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected         |
+| `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`             |
 
 - **Category is derived from the first path segment under `docs/source/`**, so a
   new corpus folder files itself with no code change — which is exactly how the
@@ -1532,9 +1533,9 @@ document is filed under.
 - **Corpus definition is separate from ingestion on purpose**:
   `tests/knowledge-sources.test.js` covers which documents exist and how a page
   projects, with no Gemini key and no embedding call. Measured after this
-  change: **76 documents, 768 chunks** — `hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24.
-- **Retrieval is still brute-force cosine in JS.** 768 chunks ranks in
+  change: **77 documents, 769 chunks** — `hhvc-policy` 430, `mockup-draft` 233,
+  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1.
+- **Retrieval is still brute-force cosine in JS.** 769 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
 
 ### Reviewer sign-in (`/api/session`)

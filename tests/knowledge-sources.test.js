@@ -132,3 +132,17 @@ describe('projectPageToMarkdown', () => {
     expect(markdown).toContain('sf.gov/report-rats')
   })
 })
+
+describe('the sfds category', () => {
+  test('files the vendored SFDS capture under its own category', () => {
+    const sources = collectKnowledgeSources()
+    const sfds = sources.filter((s) => s.category === 'sfds')
+    expect(sfds.map((s) => s.sourceFile.split('/').at(-1))).toEqual(['disagreements.md'])
+  })
+
+  test('excludes the folder README from the corpus', () => {
+    const sources = collectKnowledgeSources()
+    const readmes = sources.filter((s) => s.sourceFile.endsWith('sfds/README.md'))
+    expect(readmes.length).toBe(0)
+  })
+})

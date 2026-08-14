@@ -11,7 +11,7 @@ chrome — both
 The tool has two visual surfaces and neither has a design authority it actually
 follows.
 
-The mockup surface claims one. `css/styles.css` declares 24 primitives under an
+The mockup surface claims one. `css/styles.css` declares 30 primitives under an
 `--sfds-*` prefix, and CLAUDE.md documents the mockup's heading literals as a
 deliberate exception because they "mirror what SF.gov actually renders." Both
 claims turn out to be false, and they are false in different ways.
@@ -182,6 +182,13 @@ can answer against the current codebase.
 - `--ext-radius-{2,4,8,12,pill}` — derived from SFDS's own step ladder, since
   SFDS publishes no radius scale but its site uses `rounded-4` off that ladder.
 
+**The `--brand-*` ramp is downstream of this and must be re-derived.**
+`css/theme.css` interpolates eleven brand steps in OKLCH, pinned at step 40 to
+the old action blue and step 10 to its hover, with a measured contrast ratio in
+a comment on every step. Repointing the brand to SFDS invalidates all eleven
+values and all twenty-two figures; re-interpolating and re-measuring them is
+Phase 3 work, not a find-and-replace.
+
 ### Units
 
 Type and space convert px → rem at ÷16: identical rendering at a default root
@@ -205,7 +212,7 @@ happily on a repo where someone invented `--sfds-action-blue`; only the second
 catches a token that claims a provenance it does not have.
 
 **Which is why the legacy names cannot stay under `--sfds-*` even for one PR.**
-PR1 renames the 24 existing primitives to `--legacy-*` — a mechanical rename
+PR1 renames the 30 existing primitives to `--legacy-*` — a mechanical rename
 across `css/styles.css` and `css/theme.css` that moves no pixel — so the pinning
 test can land in PR1 and be true from its first commit rather than being
 deferred to PR2. That rename also buys a useful property for free: after PR1,
@@ -232,6 +239,13 @@ part of the change, not a follow-up.
 | h3 | 1.25rem, Roboto **Slab** | `titleXs` 1.25rem/1.5rem, Roboto **Flex**, w700 |
 | slates | neutral greys | SFDS blue-tinted slates |
 | letter-spacing | `-0.04em` / `-0.025em` | `-1px` on the title steps |
+
+**Only the 400 weight of each webfont is loaded today.** `js/main.js` imports
+`@fontsource/roboto-flex/latin-400.css` and `@fontsource/roboto-slab/latin-400.css`.
+The `title` ladder is weight 700 throughout, so the 700 faces have to be added
+in the same PR — otherwise every heading renders as browser-synthesised faux
+bold, which is a different shape from the real face and would make the whole
+type change read as a rendering bug.
 
 Two consequences that belong in the open, not in a diff.
 
@@ -349,7 +363,7 @@ the documented reason: a `var(--x)` string breaks `alpha()`, `lighten()` and
 
 **PR1 — foundation, no pixel moves.** `docs/source/sfds/tokens.json` and its
 dated README, `css/sfds.css` declaring the SFDS primitives, and
-`tests/sfds-tokens.test.js`. The 24 existing primitives are renamed
+`tests/sfds-tokens.test.js`. The 30 existing primitives are renamed
 `--sfds-*` → `--legacy-*`, keeping their **current** values, so the pinning test
 is true from its first commit and nothing renders differently. `--radius` stays
 readable but its declaration moves out of the mockup stylesheet as

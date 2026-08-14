@@ -1047,8 +1047,9 @@ the newest Karl capture and the mockup copy under review.
 `collectKnowledgeSources()` is now the single definition, and every chunk
 carries a `category`: `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated
 snapshots of live SF.gov), `karl` (the 2026-08-14 editor measurement, listed
-explicitly because it lives in `docs/`), and `mockup-draft` (the `pages/*.js`
-mockups, projected to markdown at ingest time and not committed).
+explicitly because it lives in `docs/`), `mockup-draft` (the `pages/*.js`
+mockups, projected to markdown at ingest time and not committed), and `sfds`
+(the vendored SF Design System token capture and its recorded disagreements).
 
 - **Category comes from the first path segment under `docs/source/`**, so a new
   folder files itself with no code change.
@@ -1059,8 +1060,8 @@ mockups, projected to markdown at ingest time and not committed).
   on. Resolved from the matched row, so the model cannot spoof it; it also
   travels with the citation the reviewer sees.
 - Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured: **76 documents, 768 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24). Still brute-force cosine.
+- Measured: **77 documents, 769 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
+  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1). Still brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
   writes to Postgres and `compliance-audit` reports ready — verified:
   `knowledgeBase: {ready: true, chunkCount: 768}`.
