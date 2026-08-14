@@ -15,8 +15,12 @@ A static, no-framework mockup tool for **manager review** of a redesigned HHVC
 (Healthy Housing and Vector Control) section of SF.gov. It is **bundled by Vite**
 from a single ES-module entry point (`js/main.js`), and `server.ts` serves the
 build output plus the optional sync API. **Bun** powers the CLI scripts
-(validate/export/build) and the test runner. There is still **no UI framework** —
-rendering is data-driven string templates, not components. Reviewer state lives in the browser's `localStorage` by
+(validate/export/build) and the test runner. **The mockup has no UI framework** —
+it renders through data-driven string templates, not components, and that is a
+constraint rather than an accident: `#mockPage` has to look like the SF.gov page
+under review. The **review workspace** is a different matter — it now hosts
+React + MUI islands (see [React islands in the workspace](#react-islands-in-the-workspace)),
+scoped to `#reviewWorkspace` and loaded on demand. Reviewer state lives in the browser's `localStorage` by
 default, and the tool works fully offline with **no backend/database/external
 service required.** `server.ts` also hosts an **optional** Bun + SQLite
 review-state sync backend (see [Review-state sync backend](#review-state-sync-backend-optional))
@@ -227,6 +231,67 @@ nobody imports fails silently — it never registers onto `window.HHVC_PAGES`, s
 the page just disappears. Import _order_ isn't checked; it's irrelevant, since
 each page module only writes into `window.HHVC_PAGES` and navigation order comes
 from the `order` array.
+
+### React islands in the workspace
+
+The review workspace renders through **React 19 + MUI**, mounted as islands
+inside `#reviewWorkspace`. Everything else — the sidebar, the toolbar, and above
+all `#mockPage` — is untouched plain JS and string templates.
+
+- **The boundary is the point, not an implementation detail.** The mockup is a
+  preview of a real SF.gov page: a reviewer approving it is approving what the
+  public will see. Material styling on that surface would misrepresent the thing
+  under review, the same argument that docks the workspace at 1700px rather than
+  squeezing the mockup. Tool chrome is fair game; `.browser-shell` is not.
+- **That isolation is measured, not assumed.** A `ThemeProvider` plus one MUI
+  `Button` mounted into the Checks panel changed **zero** computed properties
+  across `body`, `.browser-shell`, the mockup's `h1`/`h2`/`p`/`a`/`ul`/`li`,
+  `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets to the
+  document. It holds because MUI emits scoped `.css-*` classes and **no
+  `CssBaseline`**. `CssBaseline` writes element-level rules on `html`/`body`/`*`,
+  and Emotion injects after the nine stylesheets, so it would win ties inside the
+  shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed; do not
+  add the global one.
+- **`js/react/theme.js` is the only bridge to the design tokens.** It reads the
+  semantic tokens off `document.documentElement` with `getComputedStyle` when a
+  theme is built, so retheming still means editing `css/theme.css` only. It
+  resolves them to literal values on purpose: a `var(--x)` string survives a
+  plain `background` and then breaks `alpha()`, `lighten()` and the automatic
+  `contrastText` computation, all of which run values through
+  `decomposeColor()` — a failure that surfaces at hover time, in one component,
+  long after the theme looks right.
+- **Dark mode follows `prefers-color-scheme`, never a MUI toggle.**
+  `css/theme.css` has exactly one dark media block and no `data-theme` selector,
+  so a `mode` the island owned independently would let the workspace go light
+  inside a dark panel. `subscribeToColorScheme()` rebuilds the theme on the flip
+  and `js/react/mount.js` replays each island's last render.
+- **Islands load on demand.** `js/ux-improvements-state-sync.js` reaches the
+  Checks panel component through a dynamic `import()`, so React, React DOM,
+  Emotion and MUI land in their own chunk — 318 kB raw / **103 kB gzip** — that a
+  reviewer who never opens the tab never downloads. The initial chunk did not
+  grow (163.1 kB gzip against 163.7 kB before). Same reasoning as ECharts.
+- **A React root and `innerHTML` cannot share a host element.** The panels
+  replace `innerHTML` wholesale, which would tear a root out from under itself,
+  so each island gets its own child `<div>` (`#reviewChecksIsland`) beside the
+  string-rendered section (`#reviewChecksAdvice`).
+- **Data is passed in, never read from a global on mount.** The page being
+  scored is resolved by the caller as `(pageKey && DATA.pages[pageKey]) ||
+getCurrentPage()`, in that order, because `#pageSelect.value` is stale while the
+  initial View Transition is in flight. A component that read the current page
+  itself would reintroduce exactly that bug.
+- **Legacy class names stay.** `.compliance-item`, `.compliance-rule`,
+  `.compliance-citation` and friends are styled by `css/dashboard.css` and
+  asserted on by `tests/e2e/review-workflow.spec.js`. Renaming them in the same
+  change that introduces MUI would make a styling regression and a test failure
+  indistinguishable.
+- **`.jsx` is a new extension here**, and files carrying it live under
+  `js/react/` so the boundary is visible in the tree rather than only in the
+  suffix. They need `@vitejs/plugin-react` in `vite.config.mjs` to compile at
+  all. Prettier formats them like everything else, so `format:check` still gates.
+
+Ported so far: the Checks tab's scored rule list. The plain-language advisory
+section beside it, the Overview queue and the Help tab are still string
+templates.
 
 ### Card descriptions are inherited, not printed
 

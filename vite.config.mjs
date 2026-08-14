@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { viteSingleFile } from 'vite-plugin-singlefile'
+import react from '@vitejs/plugin-react'
 
 /* Build config for the manager-review tool.
 
@@ -24,7 +25,7 @@ export default defineConfig(({ mode }) => ({
   // single-file export in particular is meant to be emailed around and
   // double-clicked.
   base: './',
-  plugins: mode === 'singlefile' ? [viteSingleFile()] : [],
+  plugins: [react(), ...(mode === 'singlefile' ? [viteSingleFile()] : [])],
   build: {
     outDir: mode === 'singlefile' ? 'dist-singlefile' : 'dist',
     emptyOutDir: true,

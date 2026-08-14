@@ -56,7 +56,8 @@ validate one page in isolation. Run both after editing anything under `pages/` o
 
 ## Architecture (essentials — full detail in `AGENTS.md`)
 
-- **Data-driven, no framework.** Each `pages/*.js` file assigns onto
+- **Data-driven; the mockup has no framework** (the review workspace does — see
+  "React islands in the workspace" in `AGENTS.md`). Each `pages/*.js` file assigns onto
   `window.HHVC_PAGES['<pageKey>']`; `js/page-data.js` builds
   `window.HHVC_DATA = { pages, order }`. **The app is bundled by Vite from one
   ES-module entry point, `js/main.js`** — `index.html` has a single

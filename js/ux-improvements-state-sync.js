@@ -682,48 +682,73 @@ import { hasValidPageData } from './utils.js'
     const ordered = [...scored.filter((rule) => !rule.pass), ...scored.filter((rule) => rule.pass)]
     const passed = scored.filter((rule) => rule.pass).length
 
-    const ruleItem = (rule) => `
-      <li class="compliance-item ${rule.pass ? 'pass' : 'warn'}">
-        <span>
-          <span class="compliance-rule">${escapeHtml(rule.label)}</span>
-          ${
-            rule.citation
-              ? `<span class="compliance-citation">${escapeHtml(rule.citation)}</span>`
-              : ''
-          }
-          <span class="compliance-detail">${escapeHtml(rule.detail)}</span>
-        </span>
-      </li>
-    `
+    // The advisory section is still a template string, so it gets its own
+    // child element: writing innerHTML on the panel itself would tear out the
+    // React root next to it. Both hosts are created once and then updated in
+    // place, in DOM order — scored list first, advice below it.
+    const islandHost = ensureChecksHost(panel, 'reviewChecksIsland')
+    const adviceHost = ensureChecksHost(panel, 'reviewChecksAdvice')
+    adviceHost.innerHTML = renderPlainLanguageAdvice(page)
 
-    panel.innerHTML = `
-      <section class="compliance-panel">
-        <h3>Checks for this page</h3>
-        <p class="review-decision-note">
-          <strong>${escapeHtml(page.title || pageKey || getCurrentKey())}</strong> —
-          ${passed} of ${scored.length} checks passing. For every page at once, use the
-          <strong>Overview</strong> tab. Search metadata values update as you edit them in the
-          sidebar.
-        </p>
-        <ul class="compliance-list">
-          ${ordered.map(ruleItem).join('')}
-        </ul>
-        ${
-          facts.length
-            ? `
-        <h4 class="compliance-subhead">Page facts</h4>
-        <p class="review-decision-note">
-          Required by the page schema, so they cannot fail here — shown for reference, not scored.
-        </p>
-        <ul class="compliance-list compliance-list--facts">
-          ${facts.map(ruleItem).join('')}
-        </ul>
-        `
-            : ''
-        }
-      </section>
-      ${renderPlainLanguageAdvice(page)}
-    `
+    // A generation counter, for the same reason js/review-insights.js keeps
+    // one: the island arrives over a dynamic import, and a reviewer can change
+    // page again while that promise is in flight. Without this, a slow first
+    // load repaints the previous page's scores over the current ones.
+    const generation = ++checksIslandGeneration
+    loadChecksIsland().then((mountChecksPanel) => {
+      if (!mountChecksPanel || generation !== checksIslandGeneration) return
+      mountChecksPanel(panel, {
+        pageTitle: page.title || pageKey || getCurrentKey(),
+        rules: ordered,
+        facts,
+        passed,
+      })
+    })
+  }
+
+  /** Bumped per render; a resolved import older than this one is discarded. */
+  let checksIslandGeneration = 0
+
+  /** @type {Promise<Function|null>|null} Cached module load, see below. */
+  let checksIslandPromise = null
+
+  /**
+   * Load the React + MUI island on first use.
+   *
+   * Dynamic, not a static import, and for the same reason ECharts is: React,
+   * React DOM, Emotion and MUI are far larger than the rest of the app, and a
+   * reviewer who never opens the Checks tab should never download them. Vite
+   * emits them as their own chunk because this import is dynamic.
+   *
+   * A failed load resolves to `null` rather than rejecting — the panel's
+   * advisory section has already rendered by then, and an unhandled rejection
+   * in a review aid should not surface as a broken tab.
+   *
+   * @returns {Promise<Function|null>} `mountChecksPanel`, or null if it failed.
+   */
+  function loadChecksIsland() {
+    if (!checksIslandPromise) {
+      checksIslandPromise = import('./react/checks-panel.jsx')
+        .then((module) => module.mountChecksPanel)
+        .catch(() => null)
+    }
+    return checksIslandPromise
+  }
+
+  /**
+   * Find or create one of the Checks panel's two host elements.
+   *
+   * @param {Element} panel
+   * @param {string} id
+   * @returns {Element}
+   */
+  function ensureChecksHost(panel, id) {
+    const existing = panel.querySelector(`#${id}`)
+    if (existing) return existing
+    const host = document.createElement('div')
+    host.id = id
+    panel.appendChild(host)
+    return host
   }
 
   // How many offending sentences to show per suggestion. A reviewer needs
