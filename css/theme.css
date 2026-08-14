@@ -243,9 +243,35 @@
      and the other is waiting on the author. Naming all five here lets the
      UI distinguish them without inventing colours at each call site.
 
-     Every `-fg` value clears 4.5:1 against its own `-bg` (WCAG 1.4.3),
-     and every `-border` clears 3:1 against the surrounding panel
-     (WCAG 1.4.11). */
+     Every `-fg` value clears 4.5:1 against its own `-bg` (WCAG 1.4.3).
+
+     In LIGHT MODE, the `-border` tokens do NOT all clear 3:1 (WCAG 1.4.11),
+     and this is a known, deferred finding rather than an oversight — do not
+     "fix" the text below without re-picking the colours, which is a
+     chip-visual-system decision belonging to whoever owns this token family
+     next (see below). The old hand-authored palette's `-border` steps were
+     mid-tones; SFDS's `l2`/`l3` steps at this position in each family are
+     pale tints instead, and four of the five land under the floor when
+     measured against WHITE (light mode's panel colour):
+     `--status-approved-border` 1.41:1, `--status-edits-border` 1.64:1,
+     `--status-revise-border` 1.56:1, `--status-pending-border` 1.78:1. Only
+     `--status-blocked-border` (red-l3) clears, at 4.53:1. The DARK-mode
+     `-border` steps below are unaffected — they are separately chosen
+     literals (not SFDS `l2`/`l3` steps) and each already clears 3:1 against
+     the dark panel (3.02–3.08:1, see their own inline comments); this
+     finding is a light-mode-only regression from the SFDS remap. Not
+     axe-flagged —
+     axe's `color-contrast` rule checks text, not border colour — so this
+     will not show up again in a routine accessibility-suite run; it was
+     found by hand computation during the SFDS migration (Task 6) and is
+     recorded in `.superpowers/sdd/task-6-report.md` under "What could not be
+     completed" for the fix to land against. Re-picking is deferred because
+     it fans out into dark mode and the `--viz-decision-*` palette below,
+     both scoped to Task 11 ("Re-derive the brand ramp and the dark palette")
+     in `docs/superpowers/plans/2026-08-14-sfds-design-consistency.md` — an
+     asserted contrast ratio nobody re-measures after the surface moves is
+     worse than none, which is exactly the state the old unconditional claim
+     here left this comment in. */
   --status-approved-bg: var(--sfds-color-green-l1);
   --status-approved-border: var(--sfds-color-green-l2);
   --status-approved-fg: var(--sfds-color-green-l4);
@@ -562,17 +588,35 @@
        the whole reason why. A custom property only takes effect where a var()
        is actually evaluated; `color` is INHERITED, and inheritance passes the
        computed value, not the reference. `body` resolves
-       `color: var(--legacy-slate-1)` against the dark :root above and computes
-       #f0f1f2, and every element in here with no colour rule of its own — most
-       body copy — inherited that straight past the light tokens below onto the
-       light --legacy-white background this shell paints.
+       `color: var(--text-primary)` (css/styles.css) against the dark :root
+       above and computes #f0f1f2, and every element in here with no colour
+       rule of its own — most body copy — inherited that straight past the
+       light tokens below onto this shell's own light background
+       (`--sfds-color-white`, #ffffff — see `.browser-shell` in
+       css/styles.css).
 
-       Measured: #f0f1f2 on #fcfcfc is 1.1:1. Not "low contrast" — invisible.
+       Measured: #f0f1f2 on #ffffff is 1.13:1. Not "low contrast" — invisible.
        Nine nodes per page of unreadable body text on a reviewer's machine set
        to dark, on the one surface that is supposed to be immune to the theme.
        Re-stating `color` here evaluates the light token at the boundary and
-       gives the subtree something correct to inherit. */
-    color: var(--legacy-slate-1);
+       gives the subtree something correct to inherit.
+
+       This MUST read `--text-primary`, not `--legacy-slate-1`. Task 6
+       repointed `body`'s own `color` at the semantic `--text-primary` token
+       (aliased to `--sfds-color-black`, #212123) rather than the legacy
+       primitive `--legacy-slate-1` (#0b0c0c, the old pre-migration black) —
+       the two used to be the same value and are not anymore. A restatement
+       here that keeps reading the legacy primitive silently re-diverges from
+       what light mode actually renders: a reviewer on a light-OS machine saw
+       #212123 body text while a reviewer on a dark-OS machine saw #0b0c0c
+       through this exact re-pin, on the one surface that's supposed to be
+       identical for both. Confirmed live with Playwright, emulating both
+       color schemes and reading `#mockPage`'s computed `color`/
+       `background-color` plus a `<p>` inside it: before this fix, dark mode
+       reported `rgb(11, 12, 12)` where light mode reported `rgb(33, 33, 35)`;
+       after, both report `rgb(33, 33, 35)` on `rgb(255, 255, 255)`,
+       identically. */
+    color: var(--text-primary);
 
     --legacy-slate-1: #0b0c0c;
     --legacy-slate-2: #383939;
