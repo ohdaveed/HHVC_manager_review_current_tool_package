@@ -2,7 +2,7 @@
 
    Loads after css/dashboard.css, whose .ds-* primitives and semantic tokens
    this builds on, and before css/theme.css. Nothing here reaches for a raw
-   --sfds-* value.
+   --legacy-* value.
 
    The panel is a diagnostics readout, so it is styled to be scanned rather
    than admired: figures large enough to read at a glance, explanations in

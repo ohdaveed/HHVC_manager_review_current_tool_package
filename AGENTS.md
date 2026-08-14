@@ -46,7 +46,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 40 unit-test files in tests/
+bun run test                  # Bun test runner over the 41 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -66,7 +66,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 40 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 41 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -129,9 +129,12 @@ near-identical functions and only the sync copy was tested, so the most
 similar pair in the repo was also the least covered and an edit to one could
 not fail CI; it pins the two DIFFERENCES too, since near-identical is exactly
 the condition under which the sync copy's extra `synced_at`/`local_dirty`
-clearing gets "helpfully" copied across), and `ai-assist-validate-rewrite`
+clearing gets "helpfully" copied across), `ai-assist-validate-rewrite`
 (the plain-language mandate and link-target checks a `rewrite-field` draft is
-held to). **The list in
+held to), and `sfds-tokens` (pins `css/sfds.css` against the vendored capture
+in BOTH directions — that no declared value drifts, and that no `--sfds-*`
+name exists outside the capture; the second is the one that catches an
+invented token, which is exactly what `--sfds-action-blue` was). **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
@@ -2309,8 +2312,9 @@ annotate config inline (e.g. the `"// script": "description"` keys in
 
 ### CSS
 
-Design-token-first: raw `--sfds-*` tokens (from the SF.gov/Karl design guide) →
-a semantic `--brand-*`/`--surface-*`/`--text-*` layer with baked-in `var(fallback)`
+Design-token-first: raw `--legacy-*` tokens (the hand-authored palette this tool
+shipped before adopting SFDS, scheduled for migration) → a semantic
+`--brand-*`/`--surface-*`/`--text-*` layer with baked-in `var(fallback)`
 values, so reviewers retheme by touching tokens only. Hand-authored, no
 preprocessor. Boxed section-banner comments; justify color/accessibility choices
 in-comment with the contrast math. `!important` is used liberally **only** in the
@@ -2320,11 +2324,11 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 
 **The nine stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
-the `--sfds-*` primitives `css/styles.css` declares on `:root`):
+the `--legacy-*` primitives `css/styles.css` declares on `:root`):
 
 | File                          | Owns                                                                                           |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
 | `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
 | `css/ai-assist.css`           | the AI assist panel                                                                            |
 | `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
@@ -2336,7 +2340,7 @@ the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
-for a raw `--sfds-*` value, and it must never hardcode a literal — every
+for a raw `--legacy-*` value, and it must never hardcode a literal — every
 dark-mode contrast bug this repo has had came from a literal sitting where a
 token belonged.
 

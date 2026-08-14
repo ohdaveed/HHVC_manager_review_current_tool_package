@@ -8,7 +8,7 @@
    add/remove/reset controls for section paragraphs and bullets.
 
    Design-token-first, matching every other stylesheet in this tool: no raw
-   --sfds-* values in these rules, no !important (reserved for
+   --legacy-* values in these rules, no !important (reserved for
    css/ux-improvements.css's override layer).
    ========================================================================== */
 
@@ -197,7 +197,7 @@
    target that points nowhere, and the whole editor holder when a PASTED link
    does. Both take --status-blocked-*, the same tokens the Blocked decision
    chip uses, so "this is wrong" reads the same everywhere in the tool. Those
-   tokens resolve through --sfds-danger-*, which css/theme.css redefines under
+   tokens resolve through --legacy-danger-*, which css/theme.css redefines under
    prefers-color-scheme: dark, so neither rule needs a dark-mode counterpart.
 
    Colour is never the only signal in either case: the input carries

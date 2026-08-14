@@ -1,7 +1,7 @@
 /* Overview charts (js/review-insights.js).
 
    Loads after css/dashboard.css, whose .ds-* primitives and semantic tokens
-   this builds on. Nothing here reaches for a raw --sfds-* value; the charts
+   this builds on. Nothing here reaches for a raw --legacy-* value; the charts
    and their cards follow the theme through the same semantic layer everything
    else in the dashboard uses.
 

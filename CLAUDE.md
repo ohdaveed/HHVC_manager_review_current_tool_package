@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 40 unit-test files in tests/
+bun run test                  # bun test over the 41 unit-test files in tests/
 bun run test:e2e              # playwright test over the 19 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 40 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 41 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -143,7 +143,11 @@ since near-identical is exactly the condition under which the sync copy's extra
 `synced_at`/`local_dirty` clearing gets "helpfully" copied across), and
 `ai-assist-validate-rewrite` (that a
 rewrite preserves every link's TARGET while its label stays free to change,
-and introduces no HTML into copy rendered through `formatMarkdown`).
+and introduces no HTML into copy rendered through `formatMarkdown`), and
+`sfds-tokens` (pins `css/sfds.css` against the vendored capture in BOTH
+directions — that no declared value drifts, and that no `--sfds-*` name exists
+outside the capture; the second is the one that catches an invented token, which
+is exactly what `--sfds-action-blue` was).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -1303,9 +1307,10 @@ and `ci.yml`). Match this voice.
 
 ### CSS
 
-Design-token-first: raw `--sfds-*` tokens (from the SF.gov/Karl design guide)
-→ a semantic `--brand-*`/`--surface-*`/`--text-*` layer with baked-in
-`var(fallback)` values, so reviewers retheme by touching tokens only.
+Design-token-first: raw `--legacy-*` tokens (the hand-authored palette this
+tool shipped before adopting SFDS, scheduled for migration) → a semantic
+`--brand-*`/`--surface-*`/`--text-*` layer with baked-in `var(fallback)`
+values, so reviewers retheme by touching tokens only.
 Hand-authored, no preprocessor. Boxed section-banner comments; justify
 color/accessibility choices in-comment with the contrast math. `!important` is
 used liberally **only** in the self-aware override layer
@@ -1315,11 +1320,11 @@ used liberally **only** in the self-aware override layer
 
 **The nine stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
 stay last — it is the semantic token layer, and its dark-mode block overrides
-the `--sfds-*` primitives `css/styles.css` declares on `:root`):
+the `--legacy-*` primitives `css/styles.css` declares on `:root`):
 
 | File                          | Owns                                                                                           |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
 | `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
 | `css/ai-assist.css`           | the AI assist panel                                                                            |
 | `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
@@ -1331,7 +1336,7 @@ the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
-for a raw `--sfds-*` value, and it must never hardcode a literal — every
+for a raw `--legacy-*` value, and it must never hardcode a literal — every
 dark-mode contrast bug this repo has had came from a literal sitting where a
 token belonged.
 

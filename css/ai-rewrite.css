@@ -7,7 +7,7 @@
    different layout problem with its own z-index stack.
 
    Tokens only, per the repo rule that a component reaching for a raw
-   --sfds-* value (or worse, a literal) is how every dark-mode contrast bug
+   --legacy-* value (or worse, a literal) is how every dark-mode contrast bug
    here started. `--brand-primary`, `--brand-on-primary`, `--surface-raised`,
    `--surface-sunken`, `--text-primary`, `--border-default`, `--radius` and
    the `--ds-*` scale are the real names declared in css/theme.css — verified

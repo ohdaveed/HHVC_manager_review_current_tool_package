@@ -88,7 +88,7 @@ test.describe('accessibility', () => {
   /* The workspace scan above opens Overview and stops there, so for a long time
      two of the three tabs were never scanned at all. Both were carrying serious
      WCAG 2.1 AA failures when these tests were added: 44 color-contrast nodes on
-     Checks (--sfds-slate-3 on the docked panel's surface, 4.37:1) plus a
+     Checks (--legacy-slate-3 on the docked panel's surface, 4.37:1) plus a
      scrollable-region-focusable failure on the panel itself, and 4 more contrast
      nodes on Help where a blanket `.dashboard-guidance-card span` rule reached
      into the Karl tag legend and overrode the slate-2 it carries deliberately.
@@ -113,7 +113,7 @@ test.describe('accessibility', () => {
      and both hid a failure until something measured them:
 
      - `color` is inherited, and inheritance carries the computed value, not the
-       var() reference. `body` resolved --sfds-slate-1 against the dark :root and
+       var() reference. `body` resolved --legacy-slate-1 against the dark :root and
        computed #f0f1f2; every element inside the shell without a colour rule of
        its own inherited that straight onto the shell's light background. #f0f1f2
        on #fcfcfc is 1.1:1 — most of the body copy on every page, invisible.

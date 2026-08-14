@@ -42,7 +42,7 @@ bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run start         # production-like: assemble dist/ (build:netlify), then serve it
 bun run validate      # Zod-validate pages/*.js and js/page-data.js (schema + invariants)
-bun run test          # Bun test runner over the 40 unit-test files in tests/
+bun run test          # Bun test runner over the 41 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run build         # validate -> export -> workshop form -> dist/ -> single-file HTML
@@ -50,7 +50,7 @@ bun run format        # prettier --write on everything
 bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```
 
-**There is a real test suite.** `bun run test` runs **forty** Bun unit-test
+**There is a real test suite.** `bun run test` runs **41** Bun unit-test
 files, plus nineteen Playwright e2e spec files. **The list in `package.json`'s `test`
 script is explicit, not a glob** — a new `tests/*.test.js` that is not named
 there never runs and reports nothing. A happy-dom environment is preloaded
@@ -104,7 +104,7 @@ Prettier is the only linter (`.prettierrc.json`): no semicolons, single quotes,
 explanatory comments that justify the _why_. Run `bun run format` before
 committing. See `AGENTS.md` for the full idiom and commit/PR conventions.
 
-**CSS is token-first.** Raw `--sfds-*` primitives feed a semantic layer in
+**CSS is token-first.** Raw `--legacy-*` primitives feed a semantic layer in
 `css/theme.css` (surfaces, a `--ds-text-*` type scale, spacing, status and
 decision colours, dark mode). Component rules take semantic tokens; a hardcoded
 colour literal is how every dark-mode contrast bug here has started. `css/theme.css`

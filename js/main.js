@@ -31,11 +31,11 @@
 // ORDER MATTERS, and css/theme.css must stay LAST.
 //
 // theme.css is the semantic token layer, and its dark-mode block overrides the
-// raw `--sfds-*` primitives that css/styles.css declares on :root. Custom
+// raw `--legacy-*` primitives that css/styles.css declares on :root. Custom
 // properties resolve at use time, so a token can be *referenced* before it is
 // declared without trouble — but when the same property is declared twice at
 // the same specificity, the later declaration wins. Importing theme.css first
-// (as it was) meant styles.css re-declared every --sfds-* afterwards and the
+// (as it was) meant styles.css re-declared every --legacy-* afterwards and the
 // entire dark theme silently did nothing.
 // ---------------------------------------------------------------------------
 // Self-hosted @font-face declarations for the two typefaces the real

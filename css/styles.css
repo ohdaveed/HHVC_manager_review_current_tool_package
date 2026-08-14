@@ -2,46 +2,46 @@
 /* Color and type tokens sourced from the Karl / SF.gov visual design style guide
    (sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-visual-design-style-guide). */
 :root {
-  --sfds-action-blue: #2a60af;
-  --sfds-action-blue-hover: #001d4e;
-  --sfds-slate-1: #0b0c0c;
-  --sfds-slate-2: #383939;
-  --sfds-slate-3: #6e7070;
-  --sfds-slate-4: #c9caca;
-  --sfds-slate-5: #f0f0f0;
-  --sfds-slate-6: #f8fafc;
-  --sfds-white: #fcfcfc;
-  --sfds-border: #e9eaea;
-  --sfds-green: #026800;
-  --sfds-info-dark: #0046c2;
-  --sfds-info-light: #e5f1ff;
-  --sfds-success-bg: #ecf8ed;
-  --sfds-success-border: #a6d8a8;
-  --sfds-success-text: #075e0a;
-  --sfds-warning-bg: #fff7e6;
-  --sfds-warning-border: #f2c94c;
-  --sfds-warning-text: #6f4a00;
-  --sfds-danger-bg: #fff1f0;
-  --sfds-danger-border: #d92d20;
-  --sfds-danger-text: #8f1d15;
-  --sfds-purple-bg: #f5efff;
-  --sfds-purple-border: #decdf6;
-  --sfds-purple-text: #4a2a7a;
-  --sfds-accent-light: #e9eef9;
-  --sfds-blue-soft-bg: #f1f4ff;
+  --legacy-action-blue: #2a60af;
+  --legacy-action-blue-hover: #001d4e;
+  --legacy-slate-1: #0b0c0c;
+  --legacy-slate-2: #383939;
+  --legacy-slate-3: #6e7070;
+  --legacy-slate-4: #c9caca;
+  --legacy-slate-5: #f0f0f0;
+  --legacy-slate-6: #f8fafc;
+  --legacy-white: #fcfcfc;
+  --legacy-border: #e9eaea;
+  --legacy-green: #026800;
+  --legacy-info-dark: #0046c2;
+  --legacy-info-light: #e5f1ff;
+  --legacy-success-bg: #ecf8ed;
+  --legacy-success-border: #a6d8a8;
+  --legacy-success-text: #075e0a;
+  --legacy-warning-bg: #fff7e6;
+  --legacy-warning-border: #f2c94c;
+  --legacy-warning-text: #6f4a00;
+  --legacy-danger-bg: #fff1f0;
+  --legacy-danger-border: #d92d20;
+  --legacy-danger-text: #8f1d15;
+  --legacy-purple-bg: #f5efff;
+  --legacy-purple-border: #decdf6;
+  --legacy-purple-text: #4a2a7a;
+  --legacy-accent-light: #e9eef9;
+  --legacy-blue-soft-bg: #f1f4ff;
   --page-max: 1120px;
   --content-max: 760px;
   --radius: 8px;
   --shadow: 0 10px 24px rgba(0, 43, 72, 0.1);
-  --sfds-focus-ring: rgba(42, 96, 175, 0.25);
-  --sfds-footer-bg: #001d4e;
-  --serp-title-color: var(--sfds-action-blue);
-  --serp-url-color: var(--sfds-green);
-  --serp-desc-color: var(--sfds-slate-2);
+  --legacy-focus-ring: rgba(42, 96, 175, 0.25);
+  --legacy-footer-bg: #001d4e;
+  --serp-title-color: var(--legacy-action-blue);
+  --serp-url-color: var(--legacy-green);
+  --serp-desc-color: var(--legacy-slate-2);
   --browser-dot-red: #ff5f56;
   --browser-dot-yellow: #ffbd2e;
   --browser-dot-green: #27c93f;
-  --sfds-info-border: #c7dae5;
+  --legacy-info-border: #c7dae5;
 }
 * {
   box-sizing: border-box;
@@ -62,18 +62,18 @@ body {
     Arial,
     sans-serif
   );
-  color: var(--sfds-slate-1);
-  background: var(--sfds-slate-5);
+  color: var(--legacy-slate-1);
+  background: var(--legacy-slate-5);
   font-size: 16px;
   line-height: 1.55;
 }
 a {
-  color: var(--sfds-action-blue);
+  color: var(--legacy-action-blue);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 a:hover {
-  color: var(--sfds-action-blue-hover);
+  color: var(--legacy-action-blue-hover);
 }
 p {
   margin: 0 0 1rem;
@@ -108,7 +108,7 @@ h1,
 h2,
 h3,
 h4 {
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   font-family: var(--font-display, var(--font-sans));
   line-height: 1.15;
   margin-top: 0;
@@ -166,8 +166,8 @@ h3 {
   top: 0;
   height: 100vh;
   overflow: auto;
-  background: var(--sfds-white);
-  border-right: 1px solid var(--sfds-border);
+  background: var(--legacy-white);
+  border-right: 1px solid var(--legacy-border);
   padding: 1.5rem;
   transition:
     width 0.2s ease,
@@ -182,10 +182,10 @@ h3 {
 }
 .icon-btn {
   flex: 0 0 auto;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
-  color: var(--sfds-slate-3);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-3);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -196,8 +196,8 @@ h3 {
     background 0.15s ease;
 }
 .icon-btn:hover {
-  background: var(--sfds-slate-5);
-  color: var(--sfds-slate-1);
+  background: var(--legacy-slate-5);
+  color: var(--legacy-slate-1);
 }
 .sidebar-toggle {
   width: 2rem;
@@ -229,12 +229,12 @@ h3 {
   text-transform: none;
   letter-spacing: normal;
   font-weight: 400;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
 }
 .control-group {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
-  border-top: 1px solid var(--sfds-border);
+  border-top: 1px solid var(--legacy-border);
 }
 details.control-group > summary {
   display: flex;
@@ -252,8 +252,8 @@ details.control-group > summary::after {
   display: inline-block;
   width: 0.5rem;
   height: 0.5rem;
-  border-right: 2px solid var(--sfds-slate-3);
-  border-bottom: 2px solid var(--sfds-slate-3);
+  border-right: 2px solid var(--legacy-slate-3);
+  border-bottom: 2px solid var(--legacy-slate-3);
   transform: rotate(45deg);
   margin-left: 0.5rem;
   flex: 0 0 auto;
@@ -263,13 +263,13 @@ details.control-group[open] > summary::after {
   transform: rotate(-135deg);
 }
 details.control-group > summary:hover {
-  color: var(--sfds-action-blue);
+  color: var(--legacy-action-blue);
 }
 details.control-group > summary:hover::after {
-  border-color: var(--sfds-action-blue);
+  border-color: var(--legacy-action-blue);
 }
 details.control-group > summary:focus-visible {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -281,19 +281,19 @@ label {
   font-size: 0.88rem;
   font-weight: 600;
   margin-bottom: 0.4rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
 }
 select,
 input[type='text'],
 input[type='date'],
 textarea {
   width: 100%;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   padding: 0.85rem 0.9rem;
   font: inherit;
-  color: var(--sfds-slate-1);
-  /* Sunken fill rather than the panel's own surface colour (--sfds-white),
+  color: var(--legacy-slate-1);
+  /* Sunken fill rather than the panel's own surface colour (--legacy-white),
      so a field reads as a distinct, interactable well instead of blending
      into the sidebar it sits on — most visible in dark mode, where the
      panel and the old field background were nearly the same value. */
@@ -309,7 +309,7 @@ textarea {
 /* Native <select> popups already theme correctly via the `color-scheme`
    property set in theme.css's dark-mode block, but the closed-box arrow is
    OS-drawn and doesn't match the sunken-fill treatment above. Redraw it as a
-   two-gradient chevron painted in --sfds-slate-3, the same secondary-text
+   two-gradient chevron painted in --legacy-slate-3, the same secondary-text
    token the labels use. Because theme.css inverts the raw primitives rather
    than the semantic layer, that one declaration follows the light/dark swap
    on its own — no icon asset and no per-theme override to keep in sync. */
@@ -317,8 +317,8 @@ select {
   appearance: none;
   -webkit-appearance: none;
   background-image:
-    linear-gradient(45deg, transparent 50%, var(--sfds-slate-3) 50%),
-    linear-gradient(135deg, var(--sfds-slate-3) 50%, transparent 50%);
+    linear-gradient(45deg, transparent 50%, var(--legacy-slate-3) 50%),
+    linear-gradient(135deg, var(--legacy-slate-3) 50%, transparent 50%);
   background-position:
     calc(100% - 1.25rem) center,
     calc(100% - 0.9rem) center;
@@ -330,18 +330,18 @@ select:hover,
 input[type='text']:hover,
 input[type='date']:hover,
 textarea:hover {
-  border-color: var(--sfds-slate-4);
+  border-color: var(--legacy-slate-4);
 }
 /* Placeholder text is required-reading guidance for reviewers.
    Browser defaults are light greys (~2:1). Force token ink that clears AA.
    Measured against --surface-sunken, the fill these fields now carry, not the
-   panel: light --sfds-slate-2 (#383939) on #f8fafc is ~11.07:1; dark
+   panel: light --legacy-slate-2 (#383939) on #f8fafc is ~11.07:1; dark
    (#c3c7ce on #0c0e11) is ~11.39:1. Both clear AA comfortably. */
 select::placeholder,
 input[type='text']::placeholder,
 input[type='date']::placeholder,
 textarea::placeholder {
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   opacity: 1;
 }
 /* input[type='date'] was missing from this list, so the review-date field fell
@@ -354,12 +354,12 @@ input[type='date']:focus,
 textarea:focus,
 button:focus,
 a:focus {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
 }
 .field-help {
   margin: 0.35rem 0 0.75rem;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
 }
 .char-count {
@@ -368,20 +368,20 @@ a:focus {
   gap: 0.75rem;
   margin: 0.35rem 0 0.75rem;
   font-size: 0.78rem;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
 }
 .char-count .ok {
-  color: var(--sfds-green);
+  color: var(--legacy-green);
   font-weight: 700;
 }
 .char-count .warn {
-  color: var(--sfds-warning-text);
+  color: var(--legacy-warning-text);
   font-weight: 700;
 }
 .search-preview {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
+  background: var(--legacy-white);
   padding: 0.9rem;
   margin-top: 0.85rem;
 }
@@ -424,7 +424,7 @@ a:focus {
   gap: 0.55rem;
   text-align: left;
   font-size: 0.9rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   align-items: start;
 }
 .check::before {
@@ -432,8 +432,8 @@ a:focus {
   width: 1.15rem;
   height: 1.15rem;
   border-radius: 50%;
-  color: var(--sfds-white);
-  background: var(--sfds-green);
+  color: var(--legacy-white);
+  background: var(--legacy-green);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -444,8 +444,8 @@ a:focus {
 .browser-shell {
   max-width: var(--page-max);
   margin: 0 auto;
-  background: var(--sfds-white);
-  border: 1px solid var(--sfds-border);
+  background: var(--legacy-white);
+  border: 1px solid var(--legacy-border);
   box-shadow: var(--shadow);
   border-radius: var(--radius);
   overflow: hidden;
@@ -454,10 +454,10 @@ a:focus {
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  border-bottom: 1px solid var(--sfds-border);
-  background: var(--sfds-slate-5);
+  border-bottom: 1px solid var(--legacy-border);
+  background: var(--legacy-slate-5);
   padding: 0.7rem 0.95rem;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
 }
 .dot {
@@ -477,9 +477,9 @@ a:focus {
 }
 .url {
   flex: 1;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 999px;
-  background: var(--sfds-white);
+  background: var(--legacy-white);
   font-size: 0.9rem;
   padding: 0.4rem 0.86rem;
   overflow: hidden;
@@ -487,8 +487,8 @@ a:focus {
   text-overflow: ellipsis;
 }
 .site-header {
-  background: var(--sfds-white);
-  border-bottom: 1px solid var(--sfds-border);
+  background: var(--legacy-white);
+  border-bottom: 1px solid var(--legacy-border);
   padding: 1.5rem 2rem;
 }
 .site-header-inner {
@@ -503,7 +503,7 @@ a:focus {
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   text-decoration: none;
   font-weight: 700;
   font-size: 1.5rem;
@@ -511,7 +511,7 @@ a:focus {
 .brand-mark {
   width: 44px;
   height: 44px;
-  border: 2px solid var(--sfds-slate-1);
+  border: 2px solid var(--legacy-slate-1);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -525,12 +525,12 @@ a:focus {
   font-weight: 600;
 }
 .site-nav a {
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   text-decoration: none;
 }
 .site-search {
   display: flex;
-  border: 1px solid var(--sfds-slate-1);
+  border: 1px solid var(--legacy-slate-1);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -542,24 +542,24 @@ a:focus {
      input[type='text'] rule at equal specificity (one class + one element vs
      one attribute + one element), so the sunken fill meant for the reviewer
      sidebar was reaching into .browser-shell — which simulates the real, light
-     public SF.gov page and must not drift with the tool's chrome. --sfds-white
+     public SF.gov page and must not drift with the tool's chrome. --legacy-white
      is re-pinned inside .browser-shell, so this stays #fcfcfc in both schemes. */
-  background: var(--sfds-white);
+  background: var(--legacy-white);
 }
 .site-search input:focus-visible {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: -2px;
 }
 .site-search button {
-  background: var(--sfds-action-blue);
-  color: var(--sfds-white);
+  background: var(--legacy-action-blue);
+  color: var(--legacy-white);
   border: none;
   padding: 0.5rem 1rem;
   cursor: pointer;
 }
 .hero {
-  background: var(--sfds-white);
-  border-bottom: 1px solid var(--sfds-border);
+  background: var(--legacy-white);
+  border-bottom: 1px solid var(--legacy-border);
   padding: 3.25rem 2rem 2.75rem;
   width: 100%;
   margin: 0 0 2rem;
@@ -580,13 +580,13 @@ a:focus {
 }
 .summary {
   font-size: 1.25rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   margin-bottom: 1.25rem;
 }
 .section {
   padding: 1rem 0;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--sfds-border);
+  border-bottom: 1px solid var(--legacy-border);
 }
 .section:last-child {
   border-bottom: 0;
@@ -627,9 +627,9 @@ a:focus {
      --radius token, which ~29 other selectors (cards, panels) still rely on
      and are intentionally left untouched by this pass. */
   border-radius: var(--ds-radius-sm, 4px);
-  border: 2px solid var(--sfds-action-blue);
-  background: var(--sfds-action-blue);
-  color: var(--sfds-white);
+  border: 2px solid var(--legacy-action-blue);
+  background: var(--legacy-action-blue);
+  color: var(--legacy-white);
   padding: 0.75rem 1.05rem;
   text-decoration: none;
   font-weight: 700;
@@ -640,13 +640,13 @@ a:focus {
   flex-wrap: wrap;
 }
 .btn:hover {
-  background: var(--sfds-action-blue-hover);
-  border-color: var(--sfds-action-blue-hover);
-  color: var(--sfds-white);
+  background: var(--legacy-action-blue-hover);
+  border-color: var(--legacy-action-blue-hover);
+  color: var(--legacy-white);
 }
 .btn.secondary {
-  background: var(--sfds-white);
-  color: var(--sfds-action-blue);
+  background: var(--legacy-white);
+  color: var(--legacy-action-blue);
 }
 .callout {
   /* Full border on all sides, not a left accent bar — this is what SF.gov's
@@ -654,20 +654,20 @@ a:focus {
      transaction pages: sf.gov/pay-your-annual-healthy-housing-fee-*,
      sf.gov/report-health-nuisance-or-hazards). The left-accent-bar pattern
      this replaced is also a recognizable AI-generated-UI tell. */
-  border: 1px solid var(--sfds-info-border);
-  background: var(--sfds-info-light);
+  border: 1px solid var(--legacy-info-border);
+  background: var(--legacy-info-light);
   padding: 1rem 1.1rem;
   border-radius: var(--radius);
   margin: 1rem 0;
 }
 .callout--step {
-  background: var(--sfds-slate-5);
+  background: var(--legacy-slate-5);
   padding: 1.5rem;
   border-radius: var(--radius);
   margin-top: 1.5rem;
 }
 .callout--panel {
-  background: var(--sfds-slate-5);
+  background: var(--legacy-slate-5);
   padding: 2rem;
   border-radius: var(--radius);
   margin: 2rem 0;
@@ -693,17 +693,17 @@ a:focus {
   margin-top: 1rem;
 }
 .card {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   padding: 1rem;
-  background: var(--sfds-white);
+  background: var(--legacy-white);
 }
 .card h3 {
   font-size: 1rem;
   margin-bottom: 0.35rem;
 }
 .card p {
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
 }
@@ -725,12 +725,12 @@ a:focus {
 .table th,
 .table td {
   text-align: left;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   padding: 0.75rem;
   vertical-align: top;
 }
 .table th {
-  background: var(--sfds-slate-5);
+  background: var(--legacy-slate-5);
   font-weight: 700;
 }
 .code-translation-figure {
@@ -746,7 +746,7 @@ a:focus {
   width: 50%;
 }
 .table--code-translation td:first-child {
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.92rem;
   line-height: 1.55;
 }
@@ -754,7 +754,7 @@ a:focus {
   line-height: 1.6;
 }
 .table--code-translation a:focus-visible {
-  outline: 2px solid var(--sfds-action-blue);
+  outline: 2px solid var(--legacy-action-blue);
   outline-offset: 2px;
 }
 @media (max-width: 640px) {
@@ -772,16 +772,16 @@ a:focus {
   .table--code-translation tbody tr {
     display: block;
     margin-bottom: 1.5rem;
-    border: 1px solid var(--sfds-border);
+    border: 1px solid var(--legacy-border);
     border-radius: var(--radius);
     overflow: hidden;
-    background: var(--sfds-white);
+    background: var(--legacy-white);
   }
   .table--code-translation tbody td {
     display: block;
     width: 100%;
     border: 0;
-    border-bottom: 1px solid var(--sfds-border);
+    border-bottom: 1px solid var(--legacy-border);
     padding: 1rem 1.15rem;
   }
   .table--code-translation tbody td:last-child {
@@ -794,7 +794,7 @@ a:focus {
     font-size: 0.78rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--sfds-slate-2);
+    color: var(--legacy-slate-2);
     margin-bottom: 0.45rem;
   }
   .table--code-translation tbody td:last-child::before {
@@ -804,7 +804,7 @@ a:focus {
     font-size: 0.78rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--sfds-slate-2);
+    color: var(--legacy-slate-2);
     margin-bottom: 0.45rem;
   }
 }
@@ -827,8 +827,8 @@ a:focus {
   margin: 0 auto 1.5rem;
   padding: 1.1rem 1.25rem;
   border-radius: var(--radius);
-  background: var(--sfds-slate-5);
-  border: 1px solid var(--sfds-border);
+  background: var(--legacy-slate-5);
+  border: 1px solid var(--legacy-border);
 }
 .what-to-know-heading {
   display: flex;
@@ -864,8 +864,8 @@ a:focus {
   margin: 0 auto 1.5rem;
   padding: 1.1rem 1.25rem;
   border-radius: var(--radius);
-  background: var(--sfds-slate-5);
-  border: 1px solid var(--sfds-border);
+  background: var(--legacy-slate-5);
+  border: 1px solid var(--legacy-border);
 }
 .top-facts h2 {
   font-size: 1.15rem;
@@ -890,14 +890,14 @@ a:focus {
   margin-left: 0;
 }
 .section--related {
-  border-top: 1px solid var(--sfds-border);
+  border-top: 1px solid var(--legacy-border);
   padding-top: 1rem;
 }
 .section--related .resources-list {
   margin-top: 0.75rem;
 }
 .section--partner-agencies {
-  border-top: 1px solid var(--sfds-border);
+  border-top: 1px solid var(--legacy-border);
   padding-top: 1rem;
 }
 .section--partner-agencies .resources-list {
@@ -907,9 +907,9 @@ a:focus {
   max-width: var(--content-max);
   margin: 0 auto 1.25rem;
   padding: 1rem 1.1rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-info-light);
+  background: var(--legacy-info-light);
 }
 .on-this-page-title {
   font-size: 0.95rem;
@@ -932,17 +932,17 @@ a:focus {
   align-items: center;
   min-height: 44px;
   padding: 0.45rem 0.9rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 999px;
-  background: var(--sfds-white);
-  color: var(--sfds-action-blue);
+  background: var(--legacy-white);
+  color: var(--legacy-action-blue);
   font-weight: 600;
   text-decoration: none;
 }
 .on-this-page a:hover,
 .on-this-page a:focus-visible {
-  background: var(--sfds-slate-5);
-  outline: 2px solid var(--sfds-action-blue);
+  background: var(--legacy-slate-5);
+  outline: 2px solid var(--legacy-action-blue);
   outline-offset: 2px;
 }
 .print-version-link {
@@ -952,7 +952,7 @@ a:focus {
 }
 .print-version-link a {
   font-weight: 700;
-  color: var(--sfds-action-blue);
+  color: var(--legacy-action-blue);
   text-decoration: none;
 }
 .page-body--report .spotlight {
@@ -964,7 +964,7 @@ a:focus {
   max-width: var(--content-max);
   margin: 0 auto 1.5rem;
   padding: 1rem 0;
-  border-top: 2px solid var(--sfds-border);
+  border-top: 2px solid var(--legacy-border);
 }
 .region-title {
   font-size: 1.35rem;
@@ -991,24 +991,24 @@ a:focus {
 .resources-list li {
   margin: 0 0 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--sfds-border);
+  border-bottom: 1px solid var(--legacy-border);
 }
 .resources-list a {
   font-weight: 700;
-  color: var(--sfds-action-blue);
+  color: var(--legacy-action-blue);
   text-decoration: none;
 }
 .resources-list p {
   margin: 0.25rem 0 0;
   font-size: 0.9rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
 }
 .file-badge {
   display: inline-block;
   margin-left: 0.35rem;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius);
-  background: var(--sfds-slate-5);
+  background: var(--legacy-slate-5);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -1019,7 +1019,7 @@ a:focus {
   max-width: var(--content-max);
   margin: 2rem auto 0;
   padding-top: 1rem;
-  border-top: 1px solid var(--sfds-border);
+  border-top: 1px solid var(--legacy-border);
 }
 .contact-section h3 {
   font-size: 1rem;
@@ -1029,12 +1029,12 @@ a:focus {
   margin-top: 0;
 }
 .callout--warning {
-  border-left-color: var(--sfds-warning-text);
-  background: var(--sfds-warning-bg);
+  border-left-color: var(--legacy-warning-text);
+  background: var(--legacy-warning-bg);
 }
 .callout--note {
-  border-left-color: var(--sfds-slate-3);
-  background: var(--sfds-slate-5);
+  border-left-color: var(--legacy-slate-3);
+  background: var(--legacy-slate-5);
 }
 .content-image {
   margin: 1rem 0;
@@ -1048,7 +1048,7 @@ a:focus {
 .content-image figcaption {
   margin-top: 0.35rem;
   font-size: 0.88rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
 }
 .spotlight {
   max-width: var(--content-max);
@@ -1060,12 +1060,12 @@ a:focus {
   gap: 1rem;
   padding: 1.25rem;
   border-radius: var(--radius);
-  background: var(--sfds-purple-bg);
-  border: 1px solid var(--sfds-purple-border);
+  background: var(--legacy-purple-bg);
+  border: 1px solid var(--legacy-purple-border);
 }
 /* Campaign/Topic's "Spotlight" block — light-blue box, confirmed live on
    both types (sf.gov/shop-dine-sf, sf.gov/1865-til-infinity,
-   sf.gov/topics--healthy-housing-conditions). Reuses the same --sfds-info-*
+   sf.gov/topics--healthy-housing-conditions). Reuses the same --legacy-info-*
    tokens .callout's info variant and .on-this-page already use rather than
    introducing a new blue. No image column: no existing page using this
    component has a source image asset for its illustrative program. */
@@ -1076,8 +1076,8 @@ a:focus {
 .spotlight-section-inner {
   padding: 1.25rem;
   border-radius: var(--radius);
-  background: var(--sfds-info-light);
-  border: 1px solid var(--sfds-info-border);
+  background: var(--legacy-info-light);
+  border: 1px solid var(--legacy-info-border);
 }
 .spotlight-section-inner h2 {
   margin-top: 0;
@@ -1093,18 +1093,18 @@ a:focus {
 .mockup-only-note {
   margin: 0.75rem 0;
   padding: 0.75rem;
-  border: 1px dashed var(--sfds-warning-border);
-  background: var(--sfds-warning-bg);
+  border: 1px dashed var(--legacy-warning-border);
+  background: var(--legacy-warning-bg);
   font-size: 0.88rem;
 }
 .supporting-info {
   margin: 1rem 0;
 }
 .accordion-item {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   margin: 0 0 0.5rem;
-  background: var(--sfds-white);
+  background: var(--legacy-white);
 }
 /* The toggle and the heading text are separate sibling elements rather than
    the usual heading-wrapping-a-full-width-button, because the heading has to
@@ -1131,15 +1131,15 @@ a:focus {
   border: 0;
   border-radius: var(--radius);
   background: transparent;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   cursor: pointer;
 }
 .accordion-trigger:hover {
-  background: var(--sfds-slate-5);
-  color: var(--sfds-action-blue);
+  background: var(--legacy-slate-5);
+  color: var(--legacy-action-blue);
 }
 .accordion-trigger:focus-visible {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
 }
 /* A bare two-border square rotated into a chevron, painted in currentColor so
@@ -1184,9 +1184,9 @@ a:focus {
   margin: 0 0 0.5rem;
 }
 .pill--topic {
-  background: var(--sfds-purple-bg);
-  color: var(--sfds-purple-text);
-  border: 1px solid var(--sfds-purple-border);
+  background: var(--legacy-purple-bg);
+  color: var(--legacy-purple-text);
+  border: 1px solid var(--legacy-purple-border);
 }
 @media (max-width: 900px) {
   .page-body--transaction {
@@ -1204,16 +1204,16 @@ a:focus {
   margin: 0 auto;
   padding: 0.75rem 1rem;
   text-align: center;
-  background: var(--sfds-warning-bg);
-  color: var(--sfds-warning-text);
-  border: 1px solid var(--sfds-warning-border);
+  background: var(--legacy-warning-bg);
+  color: var(--legacy-warning-text);
+  border: 1px solid var(--legacy-warning-border);
   border-radius: var(--radius);
   font-size: 0.9rem;
   font-weight: 600;
 }
 .footer {
-  background: var(--sfds-footer-bg);
-  color: var(--sfds-white);
+  background: var(--legacy-footer-bg);
+  color: var(--legacy-white);
   padding: 4rem 2rem 2rem;
   margin-top: 4rem;
   position: relative;
@@ -1235,7 +1235,7 @@ a:focus {
   margin-bottom: 1rem;
 }
 .footer-brand-mark {
-  border: 2px solid var(--sfds-white);
+  border: 2px solid var(--legacy-white);
   border-radius: 50%;
   width: 64px;
   height: 64px;
@@ -1260,8 +1260,8 @@ a:focus {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid var(--sfds-white);
-  color: var(--sfds-white);
+  border: 1px solid var(--legacy-white);
+  color: var(--legacy-white);
 }
 .footer-columns {
   flex: 2;
@@ -1270,7 +1270,7 @@ a:focus {
   justify-content: flex-end;
 }
 .footer-columns h4 {
-  color: var(--sfds-white);
+  color: var(--legacy-white);
   margin-bottom: 1rem;
   font-size: 1.1rem;
 }
@@ -1283,7 +1283,7 @@ a:focus {
   margin-bottom: 0.5rem;
 }
 .footer-columns a {
-  color: var(--sfds-white);
+  color: var(--legacy-white);
   text-decoration: underline;
 }
 .footer-watermark {
@@ -1301,15 +1301,15 @@ a:focus {
 .editor-qa {
   max-width: var(--content-max);
   margin: 0 auto 1.25rem;
-  border-left: 5px solid var(--sfds-warning-border);
-  background: var(--sfds-warning-bg);
-  color: var(--sfds-slate-2);
+  border-left: 5px solid var(--legacy-warning-border);
+  background: var(--legacy-warning-bg);
+  color: var(--legacy-slate-2);
   padding: 1rem;
   border-radius: var(--radius);
   font-size: 0.92rem;
 }
 .editor-qa strong {
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
 }
 .editor-qa-head {
   display: flex;
@@ -1329,27 +1329,27 @@ a:focus {
   font-weight: 700;
 }
 .editor-qa.qa-needs-review .editor-qa-status {
-  background: var(--sfds-warning-bg);
-  color: var(--sfds-warning-text);
-  border: 1px solid var(--sfds-warning-border);
+  background: var(--legacy-warning-bg);
+  color: var(--legacy-warning-text);
+  border: 1px solid var(--legacy-warning-border);
 }
 .editor-qa.qa-blocked {
-  border-left-color: var(--sfds-danger-border);
-  background: var(--sfds-danger-bg);
+  border-left-color: var(--legacy-danger-border);
+  background: var(--legacy-danger-bg);
 }
 .editor-qa.qa-blocked .editor-qa-status {
-  background: var(--sfds-danger-bg);
-  color: var(--sfds-danger-text);
-  border: 1px solid var(--sfds-danger-border);
+  background: var(--legacy-danger-bg);
+  color: var(--legacy-danger-text);
+  border: 1px solid var(--legacy-danger-border);
 }
 .editor-qa.qa-placeholder {
-  border-left-color: var(--sfds-purple-border);
-  background: var(--sfds-purple-bg);
+  border-left-color: var(--legacy-purple-border);
+  background: var(--legacy-purple-bg);
 }
 .editor-qa.qa-placeholder .editor-qa-status {
-  background: var(--sfds-purple-bg);
-  color: var(--sfds-purple-text);
-  border: 1px solid var(--sfds-purple-border);
+  background: var(--legacy-purple-bg);
+  color: var(--legacy-purple-text);
+  border: 1px solid var(--legacy-purple-border);
 }
 /* Sits in .canvas-toolbar beside the sticky review bar. It used to head a
    full-width banner inside .browser-shell, hence the card padding and
@@ -1361,7 +1361,7 @@ a:focus {
   gap: 0.5rem;
   flex: none;
   font-size: 0.85rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
 }
 .karl-tag-toggle-text {
   cursor: pointer;
@@ -1384,7 +1384,7 @@ a:focus {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background: var(--sfds-slate-4);
+  background: var(--legacy-slate-4);
   border-radius: 999px;
   transition: 0.2s ease;
 }
@@ -1395,13 +1395,13 @@ a:focus {
   block-size: 1.15rem;
   left: 0.22rem;
   top: 0.22rem;
-  background: var(--sfds-white);
+  background: var(--legacy-white);
   border-radius: 50%;
   transition: 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 43, 72, 0.22);
 }
 .karl-switch input:checked + .karl-slider {
-  background: var(--sfds-action-blue);
+  background: var(--legacy-action-blue);
 }
 .karl-switch input:checked + .karl-slider::before {
   transform: translateX(1.38rem);
@@ -1409,10 +1409,10 @@ a:focus {
 .cms-help {
   margin-top: 0.75rem;
   padding: 0.9rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-2);
   font-size: 0.9rem;
 }
 .karl-tag {
@@ -1424,9 +1424,9 @@ a:focus {
   margin: 0 0 0.55rem;
   padding: 0.22rem 0.48rem;
   border-radius: 10px;
-  background: var(--sfds-purple-bg);
-  color: var(--sfds-purple-text);
-  border: 1px solid var(--sfds-purple-border);
+  background: var(--legacy-purple-bg);
+  color: var(--legacy-purple-text);
+  border: 1px solid var(--legacy-purple-border);
   font-size: 0.72rem;
   line-height: 1.25;
   font-weight: 700;
@@ -1514,14 +1514,14 @@ a:focus {
   letter-spacing: 0.03em;
 }
 .karl-tag-flag {
-  background: var(--sfds-warning-bg);
-  color: var(--sfds-warning-text);
-  border: 1px solid var(--sfds-warning-border);
+  background: var(--legacy-warning-bg);
+  color: var(--legacy-warning-text);
+  border: 1px solid var(--legacy-warning-border);
 }
 .karl-tag-inherit {
-  background: var(--sfds-info-light);
-  color: var(--sfds-info-dark);
-  border: 1px solid var(--sfds-info-border);
+  background: var(--legacy-info-light);
+  color: var(--legacy-info-dark);
+  border: 1px solid var(--legacy-info-border);
 }
 /* The four `.karl-tag[data-kind='…']` colour blocks used to sit here, and they
    were dead: css/ux-improvements.css declares the same four selectors and sets
@@ -1544,9 +1544,9 @@ a:focus {
   margin-left: 0.4rem;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: var(--sfds-warning-bg);
-  color: var(--sfds-warning-text);
-  border: 1px solid var(--sfds-warning-border);
+  background: var(--legacy-warning-bg);
+  color: var(--legacy-warning-text);
+  border: 1px solid var(--legacy-warning-border);
   font-size: 0.68rem;
   font-weight: 700;
   vertical-align: middle;
@@ -1558,14 +1558,14 @@ a:focus {
 .karl-tag-legend {
   margin: 0.65rem 0 0;
   padding: 0.65rem 0.75rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
+  background: var(--legacy-white);
 }
 .karl-tag-legend-title {
   display: block;
   margin-bottom: 0.45rem;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1599,17 +1599,17 @@ a:focus {
 .karl-tag-legend--compact {
   margin: 0;
   padding: 0.45rem 0.75rem;
-  border-top: 1px solid var(--sfds-border);
-  border-bottom: 1px solid var(--sfds-border);
+  border-top: 1px solid var(--legacy-border);
+  border-bottom: 1px solid var(--legacy-border);
   border-radius: 0;
-  background: var(--sfds-slate-5);
+  background: var(--legacy-slate-5);
 }
 .karl-tag-legend-swatch {
   margin: 0;
   pointer-events: none;
 }
 .karl-tag-legend-desc {
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.76rem;
   line-height: 1.35;
 }
@@ -1694,26 +1694,26 @@ a:focus {
 .tool-btn {
   width: 100%;
   min-height: 44px;
-  border: 2px solid var(--sfds-action-blue);
+  border: 2px solid var(--legacy-action-blue);
   border-radius: var(--radius);
-  background: var(--sfds-action-blue);
-  color: var(--sfds-white);
+  background: var(--legacy-action-blue);
+  color: var(--legacy-white);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   padding: 0.7rem 0.85rem;
 }
 .tool-btn:hover {
-  background: var(--sfds-action-blue-hover);
-  border-color: var(--sfds-action-blue-hover);
+  background: var(--legacy-action-blue-hover);
+  border-color: var(--legacy-action-blue-hover);
 }
 .secondary-tool {
-  background: var(--sfds-white);
-  color: var(--sfds-action-blue);
+  background: var(--legacy-white);
+  color: var(--legacy-action-blue);
 }
 .secondary-tool:hover {
-  background: var(--sfds-blue-soft-bg);
-  color: var(--sfds-action-blue-hover);
+  background: var(--legacy-blue-soft-bg);
+  color: var(--legacy-action-blue-hover);
 }
 
 /* The one control in this group that DESTROYS review data rather than copying
@@ -1725,7 +1725,7 @@ a:focus {
 
    Outlined rather than solid red: solid would read as an error state on a
    control that is idle, and the outline still separates it from two solid
-   blues at a glance. Both themes carry it, since --sfds-white re-points to the
+   blues at a glance. Both themes carry it, since --legacy-white re-points to the
    dark panel surface (#16181d) and the danger tokens re-point with it.
 
    Contrast, measured against the surface each theme actually renders:
@@ -1736,14 +1736,14 @@ a:focus {
      dark   border #a84641 on #16181d → 3.06:1
      dark   hover text on #351416 → 8.71:1 */
 .danger-tool {
-  background: var(--sfds-white);
-  color: var(--sfds-danger-text);
-  border-color: var(--sfds-danger-border);
+  background: var(--legacy-white);
+  color: var(--legacy-danger-text);
+  border-color: var(--legacy-danger-border);
 }
 .danger-tool:hover {
-  background: var(--sfds-danger-bg);
-  color: var(--sfds-danger-text);
-  border-color: var(--sfds-danger-border);
+  background: var(--legacy-danger-bg);
+  color: var(--legacy-danger-text);
+  border-color: var(--legacy-danger-border);
 }
 
 /* Added for "Delete this page" (js/page-registry-ui.js), which disables itself
@@ -1753,22 +1753,22 @@ a:focus {
    — the same gap `.danger-tool` had before its rule above was written.
 
    Follows `.review-queue-action:disabled` (css/ux-improvements.css) in using
-   the slate fill, but NOT its `--sfds-border` hairline. That hairline is tuned
+   the slate fill, but NOT its `--legacy-border` hairline. That hairline is tuned
    for a button sitting on the workspace panel; here the button sits on the
-   sidebar, which is --sfds-white — the same value the fill is barely distinct
+   sidebar, which is --legacy-white — the same value the fill is barely distinct
    from. Measured, the queue's combination would have rendered this button
    effectively shapeless:
 
-     fill --sfds-slate-6 on the sidebar   light 1.02:1   dark 1.09:1
-     border --sfds-border on the sidebar  light 1.17:1   dark 1.32:1
+     fill --legacy-slate-6 on the sidebar   light 1.02:1   dark 1.09:1
+     border --legacy-border on the sidebar  light 1.17:1   dark 1.32:1
 
    A disabled control with no visible edge reads as missing rather than
    unavailable, which is the opposite of what disabling it is for. So the border
-   steps up to --sfds-slate-3, which clears the 3:1 non-text threshold in both
-   themes, and the label stays on --sfds-slate-2:
+   steps up to --legacy-slate-3, which clears the 3:1 non-text threshold in both
+   themes, and the label stays on --legacy-slate-2:
 
-     border --sfds-slate-3 on the sidebar light 4.86:1   dark 7.88:1
-     label  --sfds-slate-2 on the fill    light 11.07:1  dark 9.61:1
+     border --legacy-slate-3 on the sidebar light 4.86:1   dark 7.88:1
+     label  --legacy-slate-2 on the fill    light 11.07:1  dark 9.61:1
 
    WCAG 1.4.3 exempts inactive controls from the text minimum, so the label is
    this readable by choice: a reviewer who cannot read a disabled button cannot
@@ -1776,16 +1776,16 @@ a:focus {
 .tool-btn:disabled,
 .tool-btn:disabled:hover {
   cursor: not-allowed;
-  background: var(--sfds-slate-6);
-  border-color: var(--sfds-slate-3);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-slate-6);
+  border-color: var(--legacy-slate-3);
+  color: var(--legacy-slate-2);
 }
 
 /* WCAG contrast fix — use darker gray for better accessibility
    Original #6e7070 had 4.2:1 ratio; using #5a5c5c achieves 5.7:1 against white */
 .field-help,
 .char-count {
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
 }
 
 /* Toggleable checklist */
@@ -1793,7 +1793,7 @@ a:focus {
   cursor: pointer;
 }
 .check:focus-visible {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -1804,7 +1804,7 @@ a:focus {
 }
 .check.unchecked::before {
   content: '';
-  background: var(--sfds-slate-4);
+  background: var(--legacy-slate-4);
   opacity: 0.5;
 }
 .check.unchecked {
@@ -1817,7 +1817,7 @@ a:focus {
 .inline-link {
   border: 0;
   background: transparent;
-  color: var(--sfds-action-blue);
+  color: var(--legacy-action-blue);
   cursor: pointer;
   font: inherit;
   font-weight: 700;
@@ -1827,11 +1827,11 @@ a:focus {
 }
 
 .inline-link:hover {
-  color: var(--sfds-action-blue-hover);
+  color: var(--legacy-action-blue-hover);
 }
 
 .inline-link:focus-visible {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -1856,8 +1856,8 @@ a:focus {
 }
 .field-with-reset.modified input,
 .field-with-reset.modified textarea {
-  border-color: var(--sfds-action-blue);
-  background: var(--sfds-blue-soft-bg);
+  border-color: var(--legacy-action-blue);
+  background: var(--legacy-blue-soft-bg);
 }
 
 /* Canvas toolbar and page badge */
@@ -1978,7 +1978,7 @@ body.hide-karl-tags .unverified-pill {
 }
 
 /* Same pinned-chrome treatment as the toast above, for the same reason. This
-   one previously used `--sfds-danger-border` as a TEXT background: a token
+   one previously used `--legacy-danger-border` as a TEXT background: a token
    tuned to clear 3:1 as a border, which is not the 4.5:1 a background owes its
    text. It measured 4.65:1 in light only because the light value happens to be
    saturated enough, and fell to 3.06:1 once dark mode re-tuned it for its
@@ -2015,7 +2015,7 @@ body.hide-karl-tags .unverified-pill {
 }
 
 .error-banner-dismiss:focus-visible {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
 }
 @keyframes toastIn {
@@ -2067,7 +2067,7 @@ body.hide-karl-tags .unverified-pill {
 /* optgroup styling */
 #pageSelect optgroup {
   font-weight: 700;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
 }
 #pageSelect optgroup option {
   font-weight: 400;
@@ -2080,15 +2080,15 @@ body.hide-karl-tags .unverified-pill {
 }
 
 .page-parent-link {
-  background: var(--sfds-white);
+  background: var(--legacy-white);
   padding: 0.85rem 2rem;
-  border-bottom: 1px solid var(--sfds-border);
+  border-bottom: 1px solid var(--legacy-border);
 }
 .page-parent-link a {
   max-width: var(--page-max);
   margin: 0 auto;
   display: block;
-  color: var(--sfds-action-blue);
+  color: var(--legacy-action-blue);
   text-decoration: none;
   font-weight: 700;
   font-size: 0.9rem;
