@@ -738,6 +738,25 @@
         // e2e coverage of any toolbar-tool click.
         const nextFocus = event.relatedTarget
         if (nextFocus instanceof Element && this.holder.contains(nextFocus)) return
+        // Direction 2 from issue #118: if the holder has been removed from
+        // the document (because a render replaced #mockPage under the open
+        // editor), this focusout is a DOM teardown rather than a reviewer
+        // action. Committing here would either write empty text (the editor
+        // had just opened and the reviewer hadn't typed yet) or silently
+        // discard any text that was already in flight. Cancel without a
+        // re-render: the existing render already repainted #mockPage
+        // correctly, and clearing editingPath lets any follow-up interaction
+        // open a fresh session.
+        //
+        // This guard pairs with the focusRenderedPageHeading() fix in
+        // js/page-render.js (which is the primary mechanism behind the
+        // residual failures) — together they cover both the "holder still in
+        // the document but focus was stolen" case and the "holder torn out"
+        // case that can arise from any future paint.
+        if (!document.body.contains(this.holder)) {
+          this.cancel({ dontRerender: true })
+          return
+        }
         // Refusing holds the reviewer in the field by taking focus back, and
         // doing that when the whole DOCUMENT has lost focus — a tab switch,
         // devtools opening, an OS-level window blur — would fight the browser
