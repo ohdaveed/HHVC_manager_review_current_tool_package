@@ -115,12 +115,17 @@ those options turned the page title thin, and the weight change read as a larger
 departure than the pixel sizes did. The `title` ladder keeps all headings at
 bold 700.
 
-**The docs-site theme is canon; `sfds.css@0.0.1` is the fallback.** They
-disagree on typeface (Roboto Flex vs Rubik) and on title weight (700 vs 600).
-The docs-site theme is newer and agrees with the font sf.gov actually serves.
-Where only the package states something — the 768px desktop breakpoint, the
-per-step letter-spacing — the package is the source, since the theme does not
-carry it.
+**The docs-site theme is canon; `sfds.css@0.0.1` is the fallback.** Three
+disagreements were found and all three resolve the same way, toward the theme,
+because it is newer and agrees with the font sf.gov actually serves: typeface
+(Roboto Flex vs Rubik), title weight (700 vs 600), and `bigDesc` at desktop
+(bold vs 400). All three go in `docs/source/sfds/README.md`'s disagreement list
+rather than being silently resolved — an unrecorded discrepancy is exactly how
+`#2a60af` survived for as long as it did.
+
+Where only the package states something — the **768px** desktop breakpoint, and
+the per-step letter-spacing (`-1px` on the title steps, `-2px` on `displayLg` at
+desktop) — the package is the source, since the theme does not carry it.
 
 **Tokens are vendored and pinned, not generated.** A generator was considered
 and rejected: the guarantee lives in the test, and a generated CSS file would be
@@ -167,7 +172,13 @@ A grep for `--ext-` answers "what did we invent?", which is a question nobody
 can answer against the current codebase.
 
 - `--ext-dark-*` — the dark palette, derived from SFDS hues.
-- `--ext-text-2xs: 0.6875rem` — one step below SFDS's 14px floor.
+- `--ext-text-2xs: 0.6875rem` — one step below SFDS's 14px floor. **It exists
+  for uppercase eyebrow labels and nothing else.** That restriction is the whole
+  reason a floor can be raised for 49 other declarations and lowered for this
+  one: an eyebrow is a short all-caps string whose legibility comes from letter
+  spacing and weight rather than size, and it is the single documented use of
+  `--ds-text-micro` today. Without the restriction PR3's sweep has an escape
+  hatch and the floor is decorative.
 - `--ext-radius-{2,4,8,12,pill}` — derived from SFDS's own step ladder, since
   SFDS publishes no radius scale but its site uses `rounded-4` off that ladder.
 
@@ -192,6 +203,14 @@ with the disagreement between them written down rather than resolved silently.
 The second direction is the one that matters. The first would have passed
 happily on a repo where someone invented `--sfds-action-blue`; only the second
 catches a token that claims a provenance it does not have.
+
+**Which is why the legacy names cannot stay under `--sfds-*` even for one PR.**
+PR1 renames the 24 existing primitives to `--legacy-*` — a mechanical rename
+across `css/styles.css` and `css/theme.css` that moves no pixel — so the pinning
+test can land in PR1 and be true from its first commit rather than being
+deferred to PR2. That rename also buys a useful property for free: after PR1,
+anything still reading a `--legacy-*` name is un-migrated, and a grep says how
+much of the adoption is left.
 
 **Knock-on:** `docs/source/**` is the RAG corpus
 (`build_scripts/knowledge-sources.js`), so a new `sfds/` folder files itself as
@@ -267,9 +286,17 @@ sweep to verify by screenshot across a width range, not a substitution to trust.
 
 ### Radius
 
-`--radius: 8px` is deleted from `css/styles.css`. `--ext-radius-*` derives from
-SFDS's 2/4/8/12 steps plus a pill. `js/react/theme.js`'s `shape.borderRadius`
-reads `--ext-radius-4`.
+`--ext-radius-*` derives from SFDS's 2/4/8/12 steps plus a pill.
+
+**`--radius` cannot simply be deleted, and PR1 must not try.** It is read by 29
+rules inside `css/styles.css` itself, not only by the 17 chrome rules — so it is
+a genuinely shared token today, which is precisely the boundary problem, but it
+means removing it is a visual change rather than a relocation. PR1 therefore
+declares `--ext-radius-8: 8px` and leaves `--radius: var(--ext-radius-8)` in
+place as an alias: the declaration moves out of the mockup stylesheet, both sets
+of consumers keep rendering identically, and `js/react/theme.js` reads
+`--ext-radius-8` — its current effective value — rather than `--ext-radius-4`.
+PR3 repoints individual rules onto the right step and drops the alias.
 
 ### The MUI island stops drifting
 
@@ -308,23 +335,37 @@ the documented reason: a `var(--x)` string breaks `alpha()`, `lighten()` and
   pass; fonts are already `@fontsource`, so no new off-origin asset is
   introduced.
 - Review state is untouched, so the import/export round trip is not at risk.
-  Confirm anyway that the queue's e2e specs assert on class names rather than
-  colours, since every `--status-*` value moves.
+- **No test asserts a computed colour or size**, checked rather than assumed: a
+  sweep of `tests/e2e/*.spec.js` and `tests/*.test.js` for `rgb(`, the three
+  moving hex values and `font-size` returns one hit, and it is a prose comment
+  in `accessibility.spec.js` rather than an assertion. So the suite will not go
+  red merely because the palette moved — which also means it will not catch a
+  palette that moved *wrongly*. The dark-mode contrast checks and the axe run
+  are what cover that, not the existing specs.
 
 ---
 
 ## Delivery — three pull requests
 
 **PR1 — foundation, no pixel moves.** `docs/source/sfds/tokens.json` and its
-dated README, `css/sfds.css`, `tests/sfds-tokens.test.js`, and `--radius`
-relocated out of the mockup stylesheet into `--ext-radius-*`. The existing
-`--sfds-*` names survive as aliases holding their **current** values, so nothing
-renders differently. Docs and all three mirrors updated, including the corpus
-counts.
+dated README, `css/sfds.css` declaring the SFDS primitives, and
+`tests/sfds-tokens.test.js`. The 24 existing primitives are renamed
+`--sfds-*` → `--legacy-*`, keeping their **current** values, so the pinning test
+is true from its first commit and nothing renders differently. `--radius` stays
+readable but its declaration moves out of the mockup stylesheet as
+`--ext-radius-8`, aliased. Docs and all three mirrors updated, including the
+corpus counts.
+
+**No pixel moves is PR1's acceptance criterion, not a description of it** — a
+screenshot diff across the width sweep should be empty. If it is not, something
+in the rename or the radius relocation was not the no-op it was assumed to be,
+and that is worth finding in the PR that changes nothing rather than in the two
+that change a great deal.
 
 **PR2 — the mockup adopts SFDS.** Colours, the `title` heading ladder,
-`--font-display` narrowed to `h1`–`h2`, legacy aliases deleted. This is the
-reviewer-visible change, and it is worth telling reviewers before it lands.
+`--font-display` narrowed to `h1`–`h2`, and the `--legacy-*` names the mockup
+reads deleted as each is migrated. This is the reviewer-visible change, and it
+is worth telling reviewers before it lands.
 
 **PR3 — the chrome adopts SFDS.** The 171-literal spacing sweep, the 49
 sub-14px type declarations, the MUI theme mapping, the dark-mode extension, the
