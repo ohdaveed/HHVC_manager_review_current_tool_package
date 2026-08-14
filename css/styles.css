@@ -31,10 +31,19 @@
   --legacy-blue-soft-bg: #f1f4ff;
   --page-max: 1120px;
   --content-max: 760px;
-  /* Aliased rather than deleted: 29 rules in this file and 17 in the chrome
-     stylesheets read it, so removing it is a visual change and not a
-     relocation. The declaration now lives in css/theme.css as an --ext-*
-     step; Phase 3 repoints the consumers and drops this line. */
+  /* Aliased rather than deleted: rules in this file AND in the chrome
+     stylesheets both still read --radius directly — the exact boundary
+     crossing this task exists to stop, chrome code reading a token off the
+     mockup's own stylesheet instead of css/theme.css's semantic layer. A
+     hard count of how many rules on each side used to live here; it was
+     already wrong by the time this sentence was checked, which is the
+     point — a call count is a fact about the codebase today, not a fact
+     about this token, and belongs in a one-off grep rather than a comment
+     that outlives it. Deleting the name outright would turn that crossing
+     into a hard failure rather than the pure relocation this task is
+     scoped to, so it stays as an alias until both sides are repointed. The
+     declaration now lives in css/theme.css as an --ext-* step; Phase 3
+     repoints the remaining --radius consumers and drops this line. */
   --radius: var(--ext-radius-8);
   --shadow: 0 10px 24px rgba(0, 43, 72, 0.1);
   --legacy-focus-ring: rgba(42, 96, 175, 0.25);

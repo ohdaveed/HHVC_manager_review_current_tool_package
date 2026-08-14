@@ -137,6 +137,11 @@
      3 repoints their consumers onto the steps above and deletes them. */
   --ds-radius-sm: var(--ext-radius-4);
   --ds-radius-md: var(--ext-radius-8);
+  /* Deliberately still a literal, not var(--ext-radius-12): 14 is not on
+     the SFDS step ladder (2/4/8/12), so aliasing it to the 12px step would
+     move a real 2px, not just rename it. This task's whole criterion is
+     that nothing moves — repointing this one belongs to a later phase that
+     can own that visual change on purpose, not slip it in under a rename. */
   --ds-radius-lg: 14px;
   --ds-radius-pill: var(--ext-radius-pill);
 

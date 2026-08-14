@@ -47,6 +47,12 @@ const TOKEN_FALLBACKS = {
   '--status-approved-fg': '#075e0a',
   '--status-blocked-fg': '#8f1d15',
   '--status-edits-fg': '#6f4a00',
+  // Was '6px' until this task, which is wrong rather than merely stale: the
+  // token this stands in for has been 8px since it was written, so any
+  // render that ever fell through to the fallback — a happy-dom test, or a
+  // theme built before the stylesheets applied — silently rendered a 2px
+  // smaller radius than the real page. Do not "restore" 6px; it was never
+  // the token's value.
   '--ext-radius-8': '8px',
 }
 

@@ -22,6 +22,13 @@ describe('js/react/theme.js token reads', () => {
   test('has a fallback for every token it reads', () => {
     const read = [...source.matchAll(/token\(styles, '(--[a-z0-9-]+)'\)/g)].map((m) => m[1])
     const fallbacks = [...source.matchAll(/'(--[a-z0-9-]+)':\s*'/g)].map((m) => m[1])
+    // Guard the regex extraction itself, not just its result: if a harmless
+    // reformat ever breaks the `token(styles, '...')` pattern — a call
+    // wrapped across two lines, say — `read` silently becomes [], and
+    // `expect([]).toEqual([])` on the line below would pass while checking
+    // nothing at all. A text-matching test that can quietly match nothing
+    // is exactly the failure mode this assertion exists to catch.
+    expect(read.length).toBeGreaterThan(0)
     expect(read.filter((name) => !fallbacks.includes(name))).toEqual([])
   })
 })
