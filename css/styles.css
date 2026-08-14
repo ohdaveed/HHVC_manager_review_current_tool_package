@@ -1433,10 +1433,15 @@ a:focus {
 }
 .karl-tag-kind {
   flex: 0 0 auto;
-  padding: 0.05rem 0.35rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 999px;
+  /* Background and color are overridden per-kind in css/ux-improvements.css.
+     This fallback (barely-visible grey) applies only to unknown kind values. */
   background: rgba(0, 0, 0, 0.08);
-  font-size: 0.62rem;
+  /* --ds-text-micro (0.68rem) is the defined scale step for uppercase eyebrow
+     labels — exactly what the kind badge is. Previous 0.62rem was below the
+     scale's minimum and was too small to read at a glance. */
+  font-size: var(--ds-text-micro);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1464,10 +1469,14 @@ a:focus {
 .karl-tag-breadcrumb {
   display: block;
   margin-bottom: 0.15rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 700;
-  opacity: 0.85;
+  /* Previously uppercase — CMS paths like "Report Content › Table block" are
+     proper names, not eyebrow labels; uppercase made them harder to scan.
+     Mixed case with a slightly muted opacity preserves the secondary-info
+     role without sacrificing readability. */
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  opacity: 0.8;
 }
 .karl-tag-crumb-sep {
   margin: 0 0.2rem;
@@ -1476,8 +1485,12 @@ a:focus {
 .karl-tag-headline {
   display: inline;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  /* Previously uppercase — the headline is the primary human-readable content
+     of the tag (e.g. "Section heading in Karl"), and uppercase makes long
+     CMS field names hard to read at a glance. Reserve uppercase for the
+     kind badge only; the headline gets mixed case for scannability. */
+  text-transform: none;
+  letter-spacing: 0;
 }
 .karl-tag-rationale {
   display: block;
