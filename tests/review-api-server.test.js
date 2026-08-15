@@ -9,16 +9,92 @@ const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
 
-async function waitForServer(url, attempts = 50) {
+/**
+ * Drain whatever the spawned server wrote to stderr.
+ *
+ * The stream does not end until the process does, so a caller must have
+ * observed the exit — or killed it — before awaiting this, or it hangs waiting
+ * for output that is still possible.
+ *
+ * @param {import('bun').Subprocess} proc
+ * @returns {Promise<string>}
+ */
+async function readServerStderr(proc) {
+  if (!proc || !proc.stderr || typeof proc.stderr === 'number') return '(stderr not captured)'
+  try {
+    return (await new Response(proc.stderr).text()).trim() || '(nothing on stderr)'
+  } catch {
+    return '(stderr unreadable)'
+  }
+}
+
+/**
+ * The "it died" diagnostic, built in one place because waitForServer raises it
+ * from two — inside the poll loop and once more after it — and a drifting copy
+ * would mean the same failure read differently depending on its timing.
+ *
+ * @param {string} url
+ * @param {import('bun').Subprocess} proc
+ * @returns {Promise<Error>}
+ */
+async function exitedBeforeAnswering(url, proc) {
+  return new Error(
+    `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
+      `--- server stderr ---\n${await readServerStderr(proc)}`
+  )
+}
+
+/**
+ * Poll until the spawned server answers, or explain why it never will.
+ *
+ * **This used to report every cause as the same timeout**, which is the whole
+ * reason it takes `proc`. A server that dies on spawn — a port already bound, a
+ * DATABASE_URL pointing somewhere unreachable, a syntax error — is
+ * indistinguishable from a slow one when all you do is poll a URL, so a
+ * genuinely broken server produced "did not start in time" and read as a slow
+ * machine. Two rounds of timeout-widening were spent on that misreading before
+ * anyone captured the actual error (#135, #136).
+ *
+ * So there are now two distinct failures. An exited process fails IMMEDIATELY
+ * with its exit code, rather than burning the rest of the window on a process
+ * that cannot recover. A live but unresponsive one still uses the full window,
+ * because that genuinely is the slow case. Both print stderr, which is the part
+ * that actually names the cause.
+ *
+ * The wait window (attempts x 100ms = 8000ms) must stay under the explicit
+ * timeout on every beforeAll that calls it (15000ms) — whichever is smaller is
+ * what fires. Change both together or neither.
+ *
+ * @param {string} url
+ * @param {import('bun').Subprocess} [proc] The spawned server, for diagnostics.
+ * @param {number} [attempts]
+ */
+async function waitForServer(url, proc, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
       return
     } catch {
+      // exitCode stays null while the process is alive, so this only fires once
+      // it is genuinely gone and no further polling could succeed.
+      if (proc && proc.exitCode !== null) throw await exitedBeforeAnswering(url, proc)
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
   }
-  throw new Error(`Server at ${url} did not start in time`)
+  // The process can die during the FINAL sleep — after the last in-loop check,
+  // before the loop condition ends it. Without this second look that lands in
+  // the branch below and reports "still running" about a process that has
+  // exited, which is not merely vague but the opposite of what happened, and
+  // throws away the exit code this function exists to surface.
+  if (proc && proc.exitCode !== null) throw await exitedBeforeAnswering(url, proc)
+
+  // Genuinely alive and unresponsive. Killing it is what ends the stderr
+  // stream, so it has to happen before the drain rather than in afterAll.
+  proc?.kill()
+  throw new Error(
+    `Server for ${url} did not answer within ${(attempts * 100) / 1000}s, and was still running.\n` +
+      `--- server stderr ---\n${await readServerStderr(proc)}`
+  )
 }
 
 function createTestDbDir(name) {
@@ -61,7 +137,11 @@ function spawnServer({ port, token, dbDir, staticRoot, extraEnv = {} }) {
       ...extraEnv,
     },
     stdout: 'ignore',
-    stderr: 'ignore',
+    // Captured rather than discarded so waitForServer can say WHY a server
+    // never came up. Nothing reads this on the happy path, which is safe only
+    // because server.ts logs a line or two at boot — a chattier process could
+    // fill the pipe buffer and block on its own output.
+    stderr: 'pipe',
   })
 }
 
@@ -75,8 +155,8 @@ describe('review-state API (server.ts)', () => {
   beforeAll(async () => {
     dbDir = createTestDbDir('legacy')
     proc = spawnServer({ port: PORT, token: TOKEN, dbDir })
-    await waitForServer(`${base}/api/review-state`)
-  })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -359,8 +439,8 @@ describe('review-state API without REVIEW_API_TOKEN configured', () => {
   beforeAll(async () => {
     dbDir = createTestDbDir('no-token')
     proc = spawnServer({ port: PORT, token: '', dbDir })
-    await waitForServer(`${base}/api/review-state`)
-  })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -395,8 +475,8 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
   beforeAll(async () => {
     dbDir = createTestDbDir('empty-static-root')
     proc = spawnServer({ port: PORT, token: 'token', dbDir, staticRoot: '' })
-    await waitForServer(`${base}/api/review-state`)
-  })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -474,8 +554,8 @@ describe('optional API principal roles, CORS, and rate limits', () => {
         REVIEW_API_RATE_WINDOW_MS: '60000',
       },
     })
-    await waitForServer(`${base}/api/review-state`)
-  })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -593,8 +673,8 @@ describe('optional API invalid security configuration', () => {
         REVIEW_API_PRINCIPALS: '{"principal":"missing-array"}',
       },
     })
-    await waitForServer(`${base}/api/review-state`)
-  })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -629,8 +709,8 @@ describe('optional API invalid CORS configuration', () => {
         REVIEW_API_ALLOWED_ORIGINS: 'https://manager.example.test/review',
       },
     })
-    await waitForServer(`${base}/api/review-state`)
-  })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -670,8 +750,8 @@ describe('reviewer session sign-in', () => {
       dbDir,
       extraEnv: { REVIEW_SESSION_PASSWORD: PASSWORD },
     })
-    await waitForServer(`${base}/api/session`)
-  })
+    await waitForServer(`${base}/api/session`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -776,8 +856,8 @@ describe('reviewer session without a password configured', () => {
   beforeAll(async () => {
     dbDir = createTestDbDir('session-off')
     proc = spawnServer({ port: PORT, token: 'test-review-api-token', dbDir })
-    await waitForServer(`${base}/api/session`)
-  })
+    await waitForServer(`${base}/api/session`, proc)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()

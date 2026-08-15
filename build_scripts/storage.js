@@ -30,15 +30,37 @@
    an error. See the long comment in `putReviewPage`.
 
    Load-order dependency: none. It opens nothing at import time; the first call
-   to `initStorage()` or any read/write connects. */
+   to `initStorage()` or any read/write connects.
 
-import { Database } from 'bun:sqlite'
-import { SQL } from 'bun'
-import { mkdirSync } from 'node:fs'
-import { dirname } from 'node:path'
+   **CommonJS, deliberately, and this file used to be the exception.** Every
+   other module under build_scripts/ is CJS, including both of this one's
+   callers — build_scripts/ai/knowledge-retrieval.js and
+   build_scripts/ingest-knowledge.js, which reach it through `require()`. While
+   this file was ESM, that was CJS requiring ESM: the one direction Bun stopped
+   supporting in 1.3.14, which fails at import with
+
+     TypeError: require() async module ".../storage.js" is unsupported.
+
+   Because server.ts pulls knowledge-retrieval.js in at module scope, that threw
+   during boot and the server exited before binding its port — so every suite
+   that spawns it reported "did not start in time", and CI blamed a timeout
+   through three rounds of widening. It presented as flaky purely because
+   .github/workflows/ci.yml took `bun-version: latest`: runs that drew an older
+   Bun passed, runs that drew 1.3.14 did not.
+
+   The other direction is fine and stays in use — server.ts named-imports this
+   file, and the CJS modules beside it, from TypeScript. So the fix is for this
+   file to match its neighbours rather than for its callers to chase it. See
+   .bun-version, which now pins the runtime so a future break is a decision
+   rather than a surprise. */
+
+const { Database } = require('bun:sqlite')
+const { SQL } = require('bun')
+const { mkdirSync } = require('node:fs')
+const { dirname } = require('node:path')
 // The SQLite DDL, shared with the ingest path so the two cannot disagree about
 // the table's shape. The Postgres equivalent lives below, next to it.
-import { ensureKnowledgeChunksTable } from './knowledge-schema.js'
+const { ensureKnowledgeChunksTable } = require('./knowledge-schema.js')
 
 /** @type {import('bun:sqlite').Database|null} */
 let sqliteDb = null
@@ -433,7 +455,7 @@ async function knowledgeVersion(sqlitePath) {
   return `${row?.count ?? 0}:${row?.newest ?? ''}`
 }
 
-export {
+module.exports = {
   describeStorage,
   initKnowledgeStorage,
   initStorage,

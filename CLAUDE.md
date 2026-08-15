@@ -214,6 +214,16 @@ request, in two deliberately separate jobs so a formatting or schema failure
 reports in seconds without waiting on a Chromium download, and a flaky
 browser run never masks a unit failure:
 
+**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
+took `bun-version: latest` until 2026-08-15, so the runtime changed under the
+repo with no commit. Bun 1.3.14 stopped letting CJS `require()` an ESM module;
+`build_scripts/storage.js` was the only ESM file under `build_scripts/`, so
+`server.ts` threw at boot and every suite spawning it reported "did not start
+in time" — passing or failing per run depending on which Bun `latest` resolved
+to. **Everything under `build_scripts/` is CommonJS now**; keep it that way,
+since `server.ts` named-imports those modules from TypeScript, which is the
+supported direction. Bumping `.bun-version` is fine, just deliberate.
+
 - **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
   → `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity
   check: it fails if the committed workshop-form `dist` references assets
@@ -712,7 +722,24 @@ today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data
 same rule at validation time — in `bun run validate` **and** in the AI output
 validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
-crosses the CJS/ESM boundary. **CI never exercises that crossing under Node** —
+crosses the CJS/ESM boundary — CJS `require()`ing ESM, the direction Bun 1.3.14
+dropped for `build_scripts/storage.js`. **This one is not the same case, and the
+difference was measured** (2026-08-15, Bun 1.3.14): Bun rejects `require()` only
+of an ASYNC module, and `js/utils.js` has no top-level await and imports
+nothing, so the crossing works. The line is narrower than "no top-level await" —
+`await Promise.resolve()` requires fine, `await new Promise((r) => setTimeout(r,
+0))` and `await import('node:path')` both throw — so the hazard is one
+_deferring_ await away, surfacing as `bun run validate` dying with a TypeError
+that names neither validate nor the page data.
+`tests/data-validation.test.js` guards it in a **subprocess**; two in-process
+versions were written first and both passed against a deliberately broken
+`js/utils.js`, since a sibling test that ESM-imports it leaves it cached.
+**If that guard fails, remove the await — do not restructure `safeUrl`**: it is
+the XSS scheme guard, and on the BROWSER side every dual-export module in
+`js/` is read off `window` rather than named-imported (Node `require`s them
+directly, which is the half that works), so extracting `safeUrl` would push
+`js/page-render.js` onto window indirection for no gain. Separately,
+**CI never exercises that crossing under Node** —
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
 `build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
 Node, at the end of `build:netlify` (`node build_scripts/copy-workshop-form.js`),
@@ -1218,10 +1245,24 @@ start `bun run serve`.
   `HHVC mockup server running at http://127.0.0.1:8080`. `PORT=8080` is set too,
   and the domain's target port must match it.
 - **Railway runs `server.ts`, so the optional APIs finally have a runtime** —
-  impossible on Netlify. They still fail closed: `/api/review-state` and
-  `/api/ai/capabilities` answer **501** until `REVIEW_API_TOKEN` (or
-  `REVIEW_API_PRINCIPALS`) and a provider key are set. 501 is healthy there;
-  502 is not.
+  impossible on Netlify. They still fail closed: with neither
+  `REVIEW_API_TOKEN` nor `REVIEW_API_PRINCIPALS` set, `/api/review-state` and
+  `/api/ai/capabilities` answer **501**, the healthy resting state of an
+  unconfigured deploy. 502 is the broken one.
+- **On the live deploy those routes now answer 401, not 501** (verified
+  2026-08-15). Authorization is configured there, so **a 501 now would mean the
+  variables were lost.** A 503 has two causes only the response body
+  separates: `API CORS configuration is invalid.` means
+  `REVIEW_API_ALLOWED_ORIGINS` is malformed, while
+  `API authorization configuration is invalid.` means `REVIEW_API_PRINCIPALS`
+  is. The CORS check answers before the authorization gate runs, so a bare 503
+  is not evidence about auth — read the body, and report authorization as
+  **unknown** when CORS is the one that won. Presence was inferred from the
+  status code, not read out of the service — never print a variable's value.
+  **A 401 from `/api/ai/capabilities` says nothing about the provider keys**:
+  authorization is the first of two gates, so an unauthenticated caller never
+  reaches the capability report. Full procedure in the
+  `verify-railway-backend` skill.
 - **Netlify is retired but not deleted** — `netlify.toml` carries
   `build.ignore = "exit 0"` (skip every build). Delete that line to re-enable it.
 
