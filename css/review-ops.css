@@ -32,7 +32,7 @@
 .ops-stat {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--ds-space-1);
   padding: var(--ds-space-3);
   /* Lets a grid item shrink below its content's intrinsic width, so a long
      sync URL wraps instead of forcing the row into a horizontal scroll. */
@@ -128,7 +128,7 @@
 }
 
 .ops-finding-keys code {
-  padding: 0.1rem 0.4rem;
+  padding: var(--ds-space-1) var(--ds-space-2);
   border-radius: var(--ds-radius-sm, 4px);
   background: var(--surface-panel);
   border: 1px solid var(--border-default);

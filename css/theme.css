@@ -96,19 +96,22 @@
   --font-caption: 'Roboto Flex Variable', var(--font-sans);
 
   /* ===================================================================
-     Spacing scale
+     Spacing scale — SFDS's ladder, in rem
      ===================================================================
-     A 4px base, doubling roughly every two steps. Expressed in rem so it
-     scales with the user's browser font size — a hard requirement for
-     WCAG 1.4.4 (resize text) that fixed px spacing quietly breaks. */
-  --ds-space-1: 0.25rem; /*  4px */
-  --ds-space-2: 0.5rem; /*  8px */
-  --ds-space-3: 0.75rem; /* 12px */
-  --ds-space-4: 1rem; /* 16px */
-  --ds-space-5: 1.5rem; /* 24px */
-  --ds-space-6: 2rem; /* 32px */
-  --ds-space-7: 3rem; /* 48px */
-  --ds-space-8: 4rem; /* 64px */
+     The two ladders agreed through 16px and diverged above it: this repo
+     doubled (24/32/48/64) where SFDS steps 20/28/40/60/80/96. Steps 5-8
+     therefore MOVE, which is a visible change to every panel that uses
+     them, not a renaming. Expressed in rem so they scale with the user's
+     browser font size — a WCAG 1.4.4 requirement fixed px quietly breaks,
+     and the reason these are not simply SFDS's px values. */
+  --ds-space-1: var(--sfds-space-4); /*  4px */
+  --ds-space-2: var(--sfds-space-8); /*  8px */
+  --ds-space-3: var(--sfds-space-12); /* 12px */
+  --ds-space-4: var(--sfds-space-16); /* 16px */
+  --ds-space-5: var(--sfds-space-20); /* 20px, was 24 */
+  --ds-space-6: var(--sfds-space-28); /* 28px, was 32 */
+  --ds-space-7: var(--sfds-space-40); /* 40px, was 48 */
+  --ds-space-8: var(--sfds-space-60); /* 60px, was 64 */
 
   /* ===================================================================
      Type scale for tool chrome
