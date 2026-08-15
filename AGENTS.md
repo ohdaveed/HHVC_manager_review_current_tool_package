@@ -46,7 +46,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 40 unit-test files in tests/
+bun run test                  # Bun test runner over the 43 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -66,7 +66,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 40 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 43 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -129,20 +129,43 @@ near-identical functions and only the sync copy was tested, so the most
 similar pair in the repo was also the least covered and an edit to one could
 not fail CI; it pins the two DIFFERENCES too, since near-identical is exactly
 the condition under which the sync copy's extra `synced_at`/`local_dirty`
-clearing gets "helpfully" copied across), and `ai-assist-validate-rewrite`
+clearing gets "helpfully" copied across), `ai-assist-validate-rewrite`
 (the plain-language mandate and link-target checks a `rewrite-field` draft is
-held to). **The list in
+held to), `sfds-tokens` (asserts that no file under `css/` or `js/`
+contains the `--sfds-` prefix — the prefix names a design authority, and this
+guard is what stops a hand-authored value from claiming that authority again,
+which is the exact defect this branch exists to fix), `react-theme`
+(which design tokens the MUI bridge reads, and that each has a fallback — a
+token read with no fallback resolves to `''` before the stylesheets apply,
+and MUI turns an empty palette value into a crash rather than a default), and
+`font-loading` (that both typefaces carry a real weight-700 instance — the
+SFDS heading ladder is weight 700 throughout, and a browser asked for 700
+with no matching face synthesises bold by smearing a lighter weight's
+outlines rather than failing, which has different metrics and reads as a
+rendering fault rather than a design choice — by two DIFFERENT mechanisms:
+`js/main.js` imports both static weight files of `@fontsource/roboto-slab`,
+but Roboto Flex is a variable typeface upstream, so its static package can
+only ever freeze one weight and the repo instead imports
+`@fontsource-variable/roboto-flex`'s weight-axis file, which registers under
+the different family name `Roboto Flex Variable` — rethreaded through
+`--sfds-font-sans` and `--font-body`/`--font-caption` alongside the import,
+since getting the string wrong falls back to the system sans with nothing
+visibly broken. `tests/e2e/mockup-tokens.spec.js` closes the gap this file
+cannot: its assertions prove an import line and an on-disk file exist, not
+that the browser actually renders a non-synthesised 700, which only
+`document.fonts.check('700 16px "…"')` against a real loaded page can show).
+**The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-nineteen spec files, all UI-driven — navigation, editor panel, review
+twenty spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
-Overview insight cards, adding and deleting page mockups, and workshop-form
-submission handling — sharing plain helper functions in
+Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
+and workshop-form submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
 round-trip tests hand-rolled the merge inside `page.evaluate()` rather than
@@ -259,7 +282,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets to the
   document. It holds because MUI emits scoped `.css-*` classes and **no
   `CssBaseline`**. `CssBaseline` writes element-level rules on `html`/`body`/`*`,
-  and Emotion injects after the nine stylesheets, so it would win ties inside the
+  and Emotion injects after the ten stylesheets, so it would win ties inside the
   shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed; do not
   add the global one.
 - **`js/react/theme.js` is the only bridge to the design tokens.** It reads the
@@ -1499,13 +1522,14 @@ two things a reviewer most often needs the AI to know. `collectKnowledgeSources(
 is now the single definition of what gets embedded and what `category` each
 document is filed under.
 
-| Category       | What it is                                             | Where it comes from             |
-| -------------- | ------------------------------------------------------ | ------------------------------- |
-| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts | `docs/source/hhvc-policy/`      |
-| `sfgov-style`  | SF.gov's published writing guidance                    | `docs/source/sfgov-style/`      |
-| `sfgov-live`   | dated snapshots of what SF.gov publishes today         | `docs/source/sfgov-live/`       |
-| `karl`         | the 2026-08-14 measurement of the Karl editor          | `docs/karl-mockup-cookbook*.md` |
-| `mockup-draft` | the proposed page mockups themselves                   | `pages/*.js`, projected         |
+| Category       | What it is                                                                 | Where it comes from             |
+| -------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts                     | `docs/source/hhvc-policy/`      |
+| `sfgov-style`  | SF.gov's published writing guidance                                        | `docs/source/sfgov-style/`      |
+| `sfgov-live`   | dated snapshots of what SF.gov publishes today                             | `docs/source/sfgov-live/`       |
+| `karl`         | the 2026-08-14 measurement of the Karl editor                              | `docs/karl-mockup-cookbook*.md` |
+| `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected         |
+| `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`             |
 
 - **Category is derived from the first path segment under `docs/source/`**, so a
   new corpus folder files itself with no code change — which is exactly how the
@@ -1532,9 +1556,9 @@ document is filed under.
 - **Corpus definition is separate from ingestion on purpose**:
   `tests/knowledge-sources.test.js` covers which documents exist and how a page
   projects, with no Gemini key and no embedding call. Measured after this
-  change: **76 documents, 768 chunks** — `hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24.
-- **Retrieval is still brute-force cosine in JS.** 768 chunks ranks in
+  change: **77 documents, 769 chunks** — `hhvc-policy` 430, `mockup-draft` 233,
+  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1.
+- **Retrieval is still brute-force cosine in JS.** 769 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
 
 ### Reviewer sign-in (`/api/session`)
@@ -2308,8 +2332,9 @@ annotate config inline (e.g. the `"// script": "description"` keys in
 
 ### CSS
 
-Design-token-first: raw `--sfds-*` tokens (from the SF.gov/Karl design guide) →
-a semantic `--brand-*`/`--surface-*`/`--text-*` layer with baked-in `var(fallback)`
+Design-token-first: raw `--legacy-*` tokens (the hand-authored palette this tool
+shipped before adopting SFDS, scheduled for migration) → a semantic
+`--brand-*`/`--surface-*`/`--text-*` layer with baked-in `var(fallback)`
 values, so reviewers retheme by touching tokens only. Hand-authored, no
 preprocessor. Boxed section-banner comments; justify color/accessibility choices
 in-comment with the contrast math. `!important` is used liberally **only** in the
@@ -2317,13 +2342,16 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The nine stylesheets, in `js/main.js` import order** (`css/theme.css` MUST
-stay last — it is the semantic token layer, and its dark-mode block overrides
-the `--sfds-*` primitives `css/styles.css` declares on `:root`):
+**The ten stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
+stay first — it is the raw-primitive layer everything downstream reads, keyed
+to SFDS's own published token names; `css/theme.css` MUST stay last — it is
+the semantic token layer, and its dark-mode block overrides
+the `--legacy-*` primitives `css/styles.css` declares on `:root`):
 
 | File                          | Owns                                                                                           |
 | ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/styles.css`              | the mockup itself, plus the raw `--sfds-*` primitives                                          |
+| `css/sfds.css`                | the SFDS primitives, keyed to SFDS's own published token names                                 |
+| `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
 | `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
 | `css/ai-assist.css`           | the AI assist panel                                                                            |
 | `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
@@ -2335,7 +2363,7 @@ the `--sfds-*` primitives `css/styles.css` declares on `:root`):
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
-for a raw `--sfds-*` value, and it must never hardcode a literal — every
+for a raw `--legacy-*` value, and it must never hardcode a literal — every
 dark-mode contrast bug this repo has had came from a literal sitting where a
 token belonged.
 

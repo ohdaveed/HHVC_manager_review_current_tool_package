@@ -47,7 +47,13 @@ const TOKEN_FALLBACKS = {
   '--status-approved-fg': '#075e0a',
   '--status-blocked-fg': '#8f1d15',
   '--status-edits-fg': '#6f4a00',
-  '--radius': '6px',
+  // Was '6px' until this task, which is wrong rather than merely stale: the
+  // token this stands in for has been 8px since it was written, so any
+  // render that ever fell through to the fallback — a happy-dom test, or a
+  // theme built before the stylesheets applied — silently rendered a 2px
+  // smaller radius than the real page. Do not "restore" 6px; it was never
+  // the token's value.
+  '--ext-radius-8': '8px',
 }
 
 /**
@@ -107,7 +113,7 @@ function createWorkspaceTheme() {
     shape: {
       // parseInt because MUI's shape.borderRadius is a number it multiplies;
       // the token is a CSS length.
-      borderRadius: parseInt(token(styles, '--radius'), 10) || 6,
+      borderRadius: parseInt(token(styles, '--ext-radius-8'), 10) || 8,
     },
     typography: {
       // Inherit the page's own stack rather than pulling in MUI's Roboto
@@ -121,7 +127,7 @@ function createWorkspaceTheme() {
     },
     components: {
       // MUI's own baseline is deliberately absent: `CssBaseline` writes
-      // element-level rules on html/body/*, and Emotion injects after the nine
+      // element-level rules on html/body/*, and Emotion injects after the ten
       // stylesheets, so it would win ties INSIDE `.browser-shell` — the one
       // surface that has to keep rendering as SF.gov does. Measured before any
       // of this landed: a ThemeProvider plus a Button changes zero computed

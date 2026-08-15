@@ -31,27 +31,63 @@
 // ORDER MATTERS, and css/theme.css must stay LAST.
 //
 // theme.css is the semantic token layer, and its dark-mode block overrides the
-// raw `--sfds-*` primitives that css/styles.css declares on :root. Custom
+// raw `--legacy-*` primitives that css/styles.css declares on :root. Custom
 // properties resolve at use time, so a token can be *referenced* before it is
 // declared without trouble — but when the same property is declared twice at
 // the same specificity, the later declaration wins. Importing theme.css first
-// (as it was) meant styles.css re-declared every --sfds-* afterwards and the
+// (as it was) meant styles.css re-declared every --legacy-* afterwards and the
 // entire dark theme silently did nothing.
 // ---------------------------------------------------------------------------
 // Self-hosted @font-face declarations for the two typefaces the real
 // www.sf.gov site renders (Roboto Flex for body, Roboto Slab for headings —
 // confirmed against 7 live sf.gov pages, see css/theme.css's --font-body/
-// --font-display comment). Latin-only subset, weight 400 only: this repo
-// works fully offline (including the build:singlefile export), so the fonts
-// must be bundled rather than pulled from a CDN, and @fontsource/roboto-flex
-// only ships a static weight-400 build (Roboto Flex is inherently a
-// variable font; the full weight range lives in the separate, much heavier
-// @fontsource-variable/roboto-flex package this tool doesn't need).
-import '@fontsource/roboto-flex/latin-400.css'
+// --font-display comment). Latin-only subset: this repo works fully offline
+// (including the build:singlefile export), so the fonts must be bundled
+// rather than pulled from a CDN.
+//
+// Roboto Slab gets both weight 400 AND 700: SFDS's heading ladder is weight
+// 700 throughout, and a browser asked for 700 with only 400 loaded doesn't
+// fail — it synthesises bold by geometrically smearing the 400 outlines,
+// which has different metrics and stroke contrast from the real face and
+// reads as a rendering fault rather than a type choice (see
+// tests/font-loading.test.js, which guards exactly this).
+//
+// Roboto Flex comes from a DIFFERENT package than Roboto Slab, and that
+// asymmetry is deliberate — do not "tidy" it into a matching pair of static
+// imports. @fontsource/roboto-flex (the static package, like roboto-slab
+// above) is generated from the variable Roboto Flex source and its own
+// metadata documents exactly one static weight — `weights: [400]` — at any
+// version, so there is no latin-700.css it could ever ship. Roboto Flex
+// itself IS a variable font upstream; the static package is a single frozen
+// instance of it. @fontsource-variable/roboto-flex ships the real variable
+// file instead — one face whose `font-weight` range is `100 1000` — so it
+// replaces the static 400 rather than adding to it, and incidentally fixes
+// every OTHER weight this tool ever asks for, not just 700: bold body copy
+// (.eyebrow, .brand, .table th, .tool-btn, …) was rendering synthesised bold
+// the whole time the static package was in use. `wght.css` rather than the
+// bare default/`full.css` is deliberate too: it loads only the weight axis,
+// not the optical-size/slant/width/grade axes this design never varies.
+//
+// The package swap has one consequence that reaches beyond this file:
+// @fontsource-variable packages register a DIFFERENT font-family name than
+// their static counterparts — 'Roboto Flex Variable', not 'Roboto Flex' —
+// a Fontsource convention that lets a project depend on both at once
+// without one silently shadowing the other. Every place that names the
+// sans family (the sans token in css/sfds.css, --font-body/--font-caption
+// in css/theme.css, the vendored docs/source/sfds/tokens.json capture and
+// its disagreements.md entry) had to move to the new name together with
+// this import, or the browser falls back to the system sans with nothing
+// visibly broken. tests/e2e/mockup-tokens.spec.js asserts the ACTUAL
+// consequence via `document.fonts.check('700 16px "…"')`, since a package
+// swap that gets only the string right and the runtime face wrong is
+// exactly the failure mode this whole change exists to close out.
+import '@fontsource-variable/roboto-flex/wght.css'
 import '@fontsource/roboto-slab/latin-400.css'
+import '@fontsource/roboto-slab/latin-700.css'
 import '@sfgov/design-system/dist/css/base.css'
 import '@sfgov/design-system/dist/css/typography.css'
 import '@sfgov/design-system/dist/css/components.css'
+import './../css/sfds.css'
 import './../css/styles.css'
 import './../css/ux-improvements.css'
 import './../css/ai-assist.css'

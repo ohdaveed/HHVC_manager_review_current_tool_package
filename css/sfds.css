@@ -1,0 +1,145 @@
+/* SF Design System primitives.
+
+   Role: layer 1 of three. The raw SFDS palette, scales and faces, keyed to
+   SFDS's OWN published token names so any line here can be diffed against
+   design-system.sf.gov without a translation table. Layer 2 is css/theme.css
+   (semantic: what a thing IS); layer 3 is component CSS.
+
+   Load-order dependency: FIRST among this repo's stylesheets in js/main.js.
+   Everything downstream reads these; css/theme.css must still be LAST, since
+   its dark-mode block redefines what these declare.
+
+   **Why the names mirror SFDS rather than reading naturally.** The layer this
+   replaced used invented names — `--sfds-action-blue` holding `#2a60af`, a
+   name SFDS never published wrapped around a value SFDS never specified — and
+   nothing about the name made that discoverable. A name that matches the
+   published token is checkable by eye and, via tests/sfds-tokens.test.js,
+   by CI.
+
+   **Never edit a value here by hand.** docs/source/sfds/tokens.json is the
+   source; this file restates it and the test pins the two together. */
+
+:root {
+  /* ===================================================================
+     Colour — design-system.sf.gov/libraries/color/interface/
+     =================================================================== */
+  --sfds-color-white: #ffffff;
+  --sfds-color-black: #212123;
+  --sfds-color-action: var(--sfds-color-blue-bright);
+  --sfds-color-blue-l1: #edf4f7;
+  --sfds-color-blue-l2: #a9d6ea;
+  --sfds-color-blue-bright: #495ed4;
+  --sfds-color-blue-dark: #0c1464;
+  --sfds-color-green-l1: #e9f7ec;
+  --sfds-color-green-l2: #c0e2c5;
+  --sfds-color-green-l3: #00866a;
+  --sfds-color-green-l4: #1b674d;
+  --sfds-color-grey-l1: #f6f6f6;
+  --sfds-color-grey-l2: #e2e2e2;
+  --sfds-color-grey-l3: #c2c2c2;
+  --sfds-color-grey-l4: #a1a1a1;
+  --sfds-color-grey-dark: #424244;
+  --sfds-color-purple-l1: #edebf6;
+  --sfds-color-purple-l2: #cccced;
+  --sfds-color-purple-l3: #7d61b3;
+  --sfds-color-purple-l4: #543a89;
+  --sfds-color-red-l1: #f5e9e5;
+  --sfds-color-red-l2: #efcabb;
+  --sfds-color-red-l3: #c55236;
+  --sfds-color-red-l4: #9b3921;
+  --sfds-color-slate-l1: #eff3f4;
+  --sfds-color-slate-l2: #5a7a92;
+  --sfds-color-slate-l3: #1d4d70;
+  --sfds-color-slate-l4: #002b48;
+  --sfds-color-yellow-l1: #f8f1df;
+  --sfds-color-yellow-l2: #f9e3a3;
+  --sfds-color-yellow-l3: #f4c435;
+  --sfds-color-yellow-l4: #e0a81a;
+
+  /* ===================================================================
+     Space — SFDS publishes px; converted at /16 so it scales with the
+     user's browser font size, which fixed px quietly breaks (WCAG 1.4.4).
+     The step NAMES keep SFDS's px numbering so they stay diffable.
+     =================================================================== */
+  --sfds-space-0: 0;
+  --sfds-space-2: 0.125rem;
+  --sfds-space-4: 0.25rem;
+  --sfds-space-8: 0.5rem;
+  --sfds-space-12: 0.75rem;
+  --sfds-space-16: 1rem;
+  --sfds-space-20: 1.25rem;
+  --sfds-space-28: 1.75rem;
+  --sfds-space-40: 2.5rem;
+  --sfds-space-60: 3.75rem;
+  --sfds-space-80: 5rem;
+  --sfds-space-96: 6rem;
+
+  /* Breakpoints and border widths stay px: rem buys nothing at a media
+     query (which resolves against the root size regardless) and invites
+     rounding error at a hairline. */
+  --sfds-breakpoint-xs: 375px;
+  --sfds-breakpoint-sm: 640px;
+  --sfds-breakpoint-md: 768px;
+  --sfds-breakpoint-lg: 1024px;
+  --sfds-breakpoint-xl: 1280px;
+
+  --sfds-border-0: 0;
+  --sfds-border-1: 1px;
+  --sfds-border-2: 2px;
+  --sfds-border-3: 3px;
+
+  /* ===================================================================
+     Type. The faces are self-hosted via @fontsource — see js/main.js.
+     =================================================================== */
+  --sfds-font-sans: 'Roboto Flex Variable', ui-sans-serif, sans-serif;
+  --sfds-font-slab: 'Roboto Slab', ui-serif, serif;
+  --sfds-font-mono: 'Roboto Mono', ui-monospace, monospace;
+
+  --sfds-weight-light: 300;
+  --sfds-weight-normal: 400;
+  --sfds-weight-bold: 700;
+
+  --sfds-text-body: 1rem;
+  --sfds-leading-body: 1.5rem;
+  --sfds-text-small: 0.875rem;
+  --sfds-leading-small: 1.125rem;
+  --sfds-text-big-desc: 1.25rem;
+  --sfds-leading-big-desc: 1.75rem;
+  --sfds-text-title-xs: 1.25rem;
+  --sfds-leading-title-xs: 1.5rem;
+  --sfds-text-title-sm: 1.5rem;
+  --sfds-leading-title-sm: 1.75rem;
+  --sfds-text-title-md: 1.5rem;
+  --sfds-leading-title-md: 1.75rem;
+  --sfds-text-title-lg: 1.75rem;
+  --sfds-leading-title-lg: 2rem;
+  --sfds-text-title-xl: 2rem;
+  --sfds-leading-title-xl: 2.25rem;
+  --sfds-text-display-sm: 2.25rem;
+  --sfds-leading-display-sm: 2.5rem;
+  --sfds-text-display-lg: 2.75rem;
+  --sfds-leading-display-lg: 3rem;
+  --sfds-tracking-title: -1px;
+  --sfds-tracking-display-lg: -1px;
+}
+
+/* SFDS's desktop step, read from sfds.css@0.0.1's own media block. It is 768,
+   not 1024 and not the 1090 that file also uses for its layout container —
+   getting this wrong shifts every heading on tablet. */
+@media (min-width: 768px) {
+  :root {
+    --sfds-text-big-desc: 1.5rem;
+    --sfds-leading-big-desc: 2rem;
+    --sfds-text-title-md: 2rem;
+    --sfds-leading-title-md: 2.25rem;
+    --sfds-text-title-lg: 2.75rem;
+    --sfds-leading-title-lg: 3.25rem;
+    --sfds-text-title-xl: 3.75rem;
+    --sfds-leading-title-xl: 4rem;
+    --sfds-text-display-sm: 3rem;
+    --sfds-leading-display-sm: 3.25rem;
+    --sfds-text-display-lg: 4.5rem;
+    --sfds-leading-display-lg: 4.75rem;
+    --sfds-tracking-display-lg: -2px;
+  }
+}

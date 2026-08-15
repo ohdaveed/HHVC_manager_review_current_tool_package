@@ -35,7 +35,7 @@
   margin: 0;
   font-size: 0.86rem;
   font-weight: 800;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   line-height: 1.25;
   max-width: 28ch;
   overflow: hidden;
@@ -44,7 +44,7 @@
 }
 
 .review-sticky-bar-progress {
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
@@ -58,10 +58,10 @@
 }
 
 .review-sticky-btn {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
   font-size: 0.8rem;
@@ -73,22 +73,22 @@
 
 .review-sticky-btn:hover,
 .review-sticky-btn:focus-visible {
-  border-color: var(--sfds-action-blue);
-  background: var(--sfds-blue-soft-bg);
-  color: var(--sfds-action-blue-hover);
+  border-color: var(--legacy-action-blue);
+  background: var(--legacy-blue-soft-bg);
+  color: var(--legacy-action-blue-hover);
 }
 
 .review-sticky-btn.primary {
-  border-color: var(--sfds-action-blue);
-  background: var(--sfds-action-blue);
-  color: var(--sfds-white);
+  border-color: var(--legacy-action-blue);
+  background: var(--legacy-action-blue);
+  color: var(--legacy-white);
 }
 
 .review-sticky-btn.primary:hover,
 .review-sticky-btn.primary:focus-visible {
-  background: var(--sfds-action-blue-hover);
-  border-color: var(--sfds-action-blue-hover);
-  color: var(--sfds-white);
+  background: var(--legacy-action-blue-hover);
+  border-color: var(--legacy-action-blue-hover);
+  color: var(--legacy-white);
 }
 
 .review-workspace-panel[hidden] {
@@ -115,7 +115,7 @@
 
 .review-queue-subtitle {
   margin: 0.2rem 0 0;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
   line-height: 1.35;
 }
@@ -150,7 +150,7 @@
 }
 
 .review-queue-control-label {
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -158,12 +158,12 @@
 .review-queue-toolbar select {
   width: 100%;
   min-height: 2.9rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   padding: 0.7rem 0.85rem;
   font: inherit;
-  color: var(--sfds-slate-1);
-  background: var(--sfds-white);
+  color: var(--legacy-slate-1);
+  background: var(--legacy-white);
 }
 
 .review-queue-filters {
@@ -174,10 +174,10 @@
 }
 
 .review-queue-filter {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 999px;
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
@@ -188,14 +188,14 @@
 
 .review-queue-filter:hover,
 .review-queue-filter:focus-visible {
-  border-color: var(--sfds-action-blue);
-  color: var(--sfds-action-blue);
+  border-color: var(--legacy-action-blue);
+  color: var(--legacy-action-blue);
 }
 
 .review-queue-filter[aria-pressed='true'] {
-  border-color: var(--sfds-action-blue);
-  background: var(--sfds-blue-soft-bg);
-  color: var(--sfds-action-blue-hover);
+  border-color: var(--legacy-action-blue);
+  background: var(--legacy-blue-soft-bg);
+  color: var(--legacy-action-blue-hover);
 }
 
 .review-queue-bulk {
@@ -203,7 +203,7 @@
   gap: 0.55rem;
   margin-bottom: 0.75rem;
   padding: 0.7rem 0.75rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   background: var(--surface-soft);
 }
@@ -221,12 +221,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.78rem;
   font-weight: 700;
 }
 
-/* --text-primary, not the raw --sfds-slate-3 this used to reach for. That
+/* --text-primary, not the raw --legacy-slate-3 this used to reach for. That
    value is #6e7070, and the bulk bar it sits on is --surface-page (#f0f0f0),
    which works out at 4.37:1 — under the 4.5:1 AA threshold for text this size
    (0.8rem bold is well short of the 18.66px that would make bold text
@@ -265,10 +265,10 @@
   display: inline-block;
   min-width: 1.2rem;
   padding: 0.05rem 0.3rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 0.25rem;
-  background: var(--sfds-white);
-  color: var(--sfds-slate-1);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-1);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 700;
@@ -278,7 +278,7 @@
 
 .review-queue-row-title {
   display: block;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   font-size: 0.88rem;
   font-weight: 800;
   line-height: 1.25;
@@ -287,7 +287,7 @@
 .review-queue-row-meta {
   display: block;
   margin-top: 0.12rem;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.3;
@@ -298,7 +298,7 @@
   flex-wrap: wrap;
   gap: 0.35rem 0.75rem;
   margin-top: 0.22rem;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
   line-height: 1.3;
 }
@@ -318,10 +318,10 @@
 }
 
 .review-queue-action {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 999px;
-  background: var(--sfds-white);
-  color: var(--sfds-action-blue);
+  background: var(--legacy-white);
+  color: var(--legacy-action-blue);
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
@@ -333,27 +333,27 @@
 
 .review-queue-action:hover,
 .review-queue-action:focus-visible {
-  border-color: var(--sfds-action-blue);
-  background: var(--sfds-blue-soft-bg);
+  border-color: var(--legacy-action-blue);
+  background: var(--legacy-blue-soft-bg);
 }
 
 .review-queue-action:disabled {
   cursor: not-allowed;
   opacity: 0.55;
-  background: var(--sfds-slate-6);
-  color: var(--sfds-slate-3);
+  background: var(--legacy-slate-6);
+  color: var(--legacy-slate-3);
 }
 
 .review-queue-empty {
   padding: 1rem;
-  border: 1px dashed var(--sfds-border);
+  border: 1px dashed var(--legacy-border);
   border-radius: var(--radius);
   background: var(--surface-soft);
 }
 
 .review-queue-empty p {
   margin: 0 0 0.6rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
 }
 
 .review-queue-table-wrap {
@@ -370,8 +370,8 @@
 
 .review-queue-table th {
   padding: 0.5rem 0.6rem;
-  border-bottom: 2px solid var(--sfds-border);
-  color: var(--sfds-slate-3);
+  border-bottom: 2px solid var(--legacy-border);
+  color: var(--legacy-slate-3);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -386,19 +386,19 @@
 }
 
 .review-queue-table-row {
-  border-bottom: 1px solid var(--sfds-border);
+  border-bottom: 1px solid var(--legacy-border);
 }
 
 .review-queue-table-row:hover {
-  background: var(--sfds-blue-soft-bg);
+  background: var(--legacy-blue-soft-bg);
 }
 
 .review-queue-table-row.is-current {
-  box-shadow: inset 3px 0 0 var(--sfds-action-blue);
+  box-shadow: inset 3px 0 0 var(--legacy-action-blue);
 }
 
 .review-queue-table-row.is-selected {
-  background: var(--sfds-blue-soft-bg);
+  background: var(--legacy-blue-soft-bg);
 }
 
 .review-queue-table-select {
@@ -413,7 +413,7 @@
 }
 
 .review-sticky-bar-filter {
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
@@ -458,9 +458,40 @@
   color: var(--text-secondary);
 }
 
+/* De-emphasis used to be a flat `opacity: 0.85` on the whole list — which
+   fades a `<canvas>`-rendered pixel EQUALLY whether it belongs to a
+   background, a border, or a glyph. The MUI `success`-coloured "Pass" chip
+   in this list already sits at a thin 6.28:1 on its own card
+   (--status-approved-fg #1b674d on --surface-soft #f6f6f6, see the
+   .compliance-rule comment above for the same trade under a different
+   token). Composited through 0.85 opacity onto this list's white
+   --surface-panel backdrop, that text renders at an effective #3d7e68 on an
+   effective #f7f7f7 — 4.47:1, under the 4.5:1 floor 13px/normal-weight text
+   needs. tests/e2e/accessibility.spec.js caught it correctly; it was not
+   the axe false positive an earlier pass here recorded it as (verified with
+   `.superpowers/sdd/probe-axe.mjs` against a live build: fgColor #3d7e68,
+   bgColor #f7f7f7, contrastRatio 4.47, expectedContrastRatio 4.5:1 — an
+   exact match for 0.85 * text/bg composited over white, to the pixel).
+   Fading the *card* instead of the *group* keeps every descendant's
+   authored colour — including the chip label — at full opacity, so the
+   text contrast this list actually renders is whatever `.compliance-item`
+   already measures elsewhere (6.28:1 light / see dark-mode note below),
+   comfortably clear of AA either way. */
 .compliance-list--facts {
   margin-top: 0.55rem;
-  opacity: 0.85;
+}
+
+.compliance-list--facts .compliance-item {
+  /* Blends the card into the panel behind it (--surface-panel: white in
+     light mode, the dark-panel colour in dark mode) instead of standing out
+     with its own --surface-soft fill — the same "held back" effect opacity
+     produced, but on a background pixel a screen reader never reads text
+     color out of, so it costs nothing in contrast. Dark mode was measured
+     with 0 axe color-contrast violations both before and after this change
+     (--status-approved-fg is a separate, much lighter dark-mode green,
+     #8fd694, with double-digit ratios on every panel/soft background in
+     this file) — this rule only had bite in light mode. */
+  background: var(--surface-panel);
 }
 
 .compliance-item {
@@ -469,7 +500,7 @@
   gap: 0.5rem;
   align-items: start;
   padding: 0.65rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   background: var(--surface-soft);
   cursor: help;
@@ -481,26 +512,26 @@
   height: 0.9rem;
   margin-top: 0.22rem;
   border-radius: 50%;
-  background: var(--sfds-slate-4);
+  background: var(--legacy-slate-4);
 }
 
 .compliance-item.pass::before {
-  background: var(--sfds-green);
+  background: var(--legacy-green);
 }
 
 .compliance-item.warn::before {
-  background: var(--sfds-warning-border);
+  background: var(--legacy-warning-border);
 }
 
 .compliance-rule {
   display: block;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   font-size: 0.88rem;
   font-weight: 800;
   line-height: 1.25;
 }
 
-/* --sfds-slate-2, not slate-3. This panel sits on --surface-page (#f0f0f0),
+/* --legacy-slate-2, not slate-3. This panel sits on --surface-page (#f0f0f0),
    where slate-3 (#6e7070) measures 4.37:1 — under the 4.5:1 this size of text
    needs. It was not always wrong: on the white panel this content used to sit
    on, slate-3 gives 4.98:1 and passed. Docking the workspace changed the
@@ -515,7 +546,7 @@
 .compliance-detail {
   display: block;
   margin-top: 0.15rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.78rem;
   line-height: 1.35;
 }
@@ -533,7 +564,7 @@
 .compliance-citation {
   display: block;
   margin-top: 0.15rem;
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.7rem;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -563,13 +594,13 @@
   display: grid;
   gap: 0.15rem;
   padding: 0.4rem 0.5rem;
-  border-left: 3px solid var(--sfds-warning-border);
+  border-left: 3px solid var(--legacy-warning-border);
   border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--surface-panel);
 }
 
 .plain-language-offenders code {
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.7rem;
   /* The field path (sections[2].steps[0].bullets[1]) is the point of this
      line: it tells the reviewer exactly which field to edit. Wrap rather than
@@ -578,13 +609,13 @@
 }
 
 .plain-language-offenders span {
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   font-size: 0.78rem;
   line-height: 1.35;
 }
 
 .plain-language-offenders em {
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.72rem;
   font-style: normal;
   font-weight: 700;
@@ -592,15 +623,15 @@
 
 .review-queue input[type='search'] {
   width: 100%;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   padding: 0.85rem 0.9rem;
   font: inherit;
-  color: var(--sfds-slate-1);
-  background: var(--sfds-white);
+  color: var(--legacy-slate-1);
+  background: var(--legacy-white);
 }
 
-/* --sfds-focus-ring, not a literal. These two rules used to hardcode
+/* --legacy-focus-ring, not a literal. These two rules used to hardcode
    `rgba(42, 96, 175, 0.25)` — byte-identical to the token's LIGHT value, which
    is exactly what made the bug invisible in review. css/theme.css deliberately
    re-points the token in dark mode (to `rgba(141, 176, 230, 0.45)`), so these
@@ -609,7 +640,7 @@
    box and the sync settings, two of the most-used fields in the tool. Every
    other focus ring in the repo already went through the token. */
 .review-queue input[type='search']:focus {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
 }
 
@@ -633,24 +664,24 @@
 .review-sync-settings summary {
   font-size: 0.82rem;
   font-weight: 800;
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   cursor: pointer;
 }
 
 .sync-config-input {
   width: 100%;
   min-height: 44px;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
   padding: 0.6rem 0.9rem;
   font: inherit;
-  color: var(--sfds-slate-1);
-  background: var(--sfds-white);
+  color: var(--legacy-slate-1);
+  background: var(--legacy-white);
   box-sizing: border-box;
 }
 
 .sync-config-input:focus {
-  outline: 3px solid var(--sfds-focus-ring);
+  outline: 3px solid var(--legacy-focus-ring);
   outline-offset: 2px;
 }
 
@@ -659,16 +690,23 @@
 .sync-conflict-panel {
   margin-top: 0.75rem;
   padding: 0.75rem;
-  border: 1px solid var(--sfds-border);
-  /* --sfds-warning-border, not the undeclared `--sfds-yellow`. That token was
-     never declared anywhere in the repo, so its `#f5c542` fallback was the
-     value that always rendered — a literal no theme could reach, and the one
-     accent in the tool that stayed identical in dark mode. It was within a
-     hair of --sfds-warning-border (#f2c94c), which is a real token and does
-     re-tune for dark. */
-  border-left: 4px solid var(--sfds-warning-border);
+  border: 1px solid var(--legacy-border);
+  /* --legacy-warning-border, not the undeclared token this rule used to
+     reference under the pre-rename prefix: two leading hyphens, `sfds`, a
+     hyphen, then `yellow`. Spelled apart like that on purpose — the whole
+     namespace is now guarded by `tests/sfds-tokens.test.js`, which fails on
+     that literal substring appearing anywhere outside css/sfds.css, and a
+     future blanket sweep for it should not silently rewrite this historical
+     reference into a `--legacy-` name too, the same way the sweep that
+     produced this file's other renames once would have. That token was
+     never declared anywhere in the repo under either prefix, so its
+     `#f5c542` fallback was the value that always rendered — a literal no
+     theme could reach, and the one accent in the tool that stayed identical
+     in dark mode. It was within a hair of --legacy-warning-border (#f2c94c),
+     which is a real token and does re-tune for dark. */
+  border-left: 4px solid var(--legacy-warning-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
+  background: var(--legacy-white);
 }
 
 .sync-conflict-heading {
@@ -685,7 +723,7 @@
 }
 
 .sync-conflict-row + .sync-conflict-row {
-  border-top: 1px solid var(--sfds-border);
+  border-top: 1px solid var(--legacy-border);
 }
 
 .sync-conflict-label {
@@ -695,18 +733,18 @@
 }
 
 .tool-btn.copy-summary {
-  background: var(--sfds-slate-1);
-  border-color: var(--sfds-slate-1);
+  background: var(--legacy-slate-1);
+  border-color: var(--legacy-slate-1);
 }
 
 .tool-btn.copy-summary:hover {
-  background: var(--sfds-slate-2);
-  border-color: var(--sfds-slate-2);
+  background: var(--legacy-slate-2);
+  border-color: var(--legacy-slate-2);
 }
 
 .review-decision-note {
   margin: 0.45rem 0 0;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.78rem;
   line-height: 1.35;
 }
@@ -719,10 +757,10 @@
 }
 
 .decision-chip {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 999px;
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
   font-size: 0.78rem;
@@ -734,51 +772,51 @@
 
 .decision-chip:hover,
 .decision-chip:focus-visible {
-  border-color: var(--sfds-action-blue);
-  color: var(--sfds-action-blue);
+  border-color: var(--legacy-action-blue);
+  color: var(--legacy-action-blue);
 }
 
 .decision-chip[aria-pressed='true'] {
-  border-color: var(--sfds-slate-2);
-  background: var(--sfds-slate-5);
-  color: var(--sfds-slate-1);
-  box-shadow: inset 0 0 0 1px var(--sfds-slate-2);
+  border-color: var(--legacy-slate-2);
+  background: var(--legacy-slate-5);
+  color: var(--legacy-slate-1);
+  box-shadow: inset 0 0 0 1px var(--legacy-slate-2);
 }
 
 .decision-chip.approve[aria-pressed='true'] {
-  border-color: var(--sfds-success-border);
-  background: var(--sfds-success-bg);
-  color: var(--sfds-success-text);
-  box-shadow: inset 0 0 0 1px var(--sfds-success-border);
+  border-color: var(--legacy-success-border);
+  background: var(--legacy-success-bg);
+  color: var(--legacy-success-text);
+  box-shadow: inset 0 0 0 1px var(--legacy-success-border);
 }
 
 .decision-chip.revise[aria-pressed='true'],
 .decision-chip.block[aria-pressed='true'] {
-  border-color: var(--sfds-danger-border);
-  background: var(--sfds-danger-bg);
-  color: var(--sfds-danger-text);
-  box-shadow: inset 0 0 0 1px var(--sfds-danger-border);
+  border-color: var(--legacy-danger-border);
+  background: var(--legacy-danger-bg);
+  color: var(--legacy-danger-text);
+  box-shadow: inset 0 0 0 1px var(--legacy-danger-border);
 }
 
 .review-field-error {
   margin: -0.15rem 0 0.35rem;
-  color: var(--sfds-danger-text);
+  color: var(--legacy-danger-text);
   font-size: 0.8rem;
   font-weight: 700;
 }
 
 #reviewerInput[aria-invalid='true'] {
-  border-color: var(--sfds-danger-border);
+  border-color: var(--legacy-danger-border);
 }
 
 .shortcuts-hint-button {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: var(--radius);
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
   font-size: 0.8rem;
@@ -789,20 +827,20 @@
 
 .shortcuts-hint-button:hover,
 .shortcuts-hint-button:focus-visible {
-  border-color: var(--sfds-action-blue);
-  background: var(--sfds-blue-soft-bg);
-  color: var(--sfds-action-blue-hover);
+  border-color: var(--legacy-action-blue);
+  background: var(--legacy-blue-soft-bg);
+  color: var(--legacy-action-blue-hover);
 }
 
 .shortcuts-hint-button kbd,
 .shortcuts-dialog kbd {
   display: inline-block;
   min-width: 1.4rem;
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-bottom-width: 2px;
   border-radius: var(--radius);
   background: var(--surface-soft);
-  color: var(--sfds-slate-1);
+  color: var(--legacy-slate-1);
   font-family: inherit;
   font-size: 0.74rem;
   font-weight: 800;
@@ -837,10 +875,10 @@
 }
 
 .shortcuts-dialog-close {
-  border: 1px solid var(--sfds-border);
+  border: 1px solid var(--legacy-border);
   border-radius: 50%;
-  background: var(--sfds-white);
-  color: var(--sfds-slate-2);
+  background: var(--legacy-white);
+  color: var(--legacy-slate-2);
   cursor: pointer;
   font-size: 1rem;
   font-weight: 700;
@@ -851,13 +889,13 @@
 
 .shortcuts-dialog-close:hover,
 .shortcuts-dialog-close:focus-visible {
-  border-color: var(--sfds-action-blue);
-  color: var(--sfds-action-blue);
+  border-color: var(--legacy-action-blue);
+  color: var(--legacy-action-blue);
 }
 
 .shortcuts-dialog-note {
   margin: 0.4rem 0 0.75rem;
-  color: var(--sfds-slate-3);
+  color: var(--legacy-slate-3);
   font-size: 0.8rem;
 }
 
@@ -883,7 +921,7 @@
 }
 
 .shortcuts-or {
-  /* --sfds-slate-4 (#c9caca) is the BORDER step of the neutral ramp, not a
+  /* --legacy-slate-4 (#c9caca) is the BORDER step of the neutral ramp, not a
      text step: as text on the dialog's white surface it measures 1.60:1,
      far under WCAG 1.4.3's 4.5:1, so the "or" separating alternative keys
      was effectively invisible. --text-secondary is the ramp's secondary
@@ -895,7 +933,7 @@
 }
 
 .shortcuts-description {
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.82rem;
   line-height: 1.35;
 }
@@ -970,15 +1008,15 @@ ol li {
 .karl-tag[data-kind='body'],
 .karl-tag[data-kind='placement'],
 .karl-tag[data-kind='editor'] {
-  /* Removed the uniform --sfds-blue-soft-bg that flattened all four kinds
+  /* Removed the uniform --legacy-blue-soft-bg that flattened all four kinds
      to one background — each kind now gets its own tint below. The fallback
      here covers any unknown kind value. */
-  background: var(--sfds-blue-soft-bg) !important;
+  background: var(--legacy-blue-soft-bg) !important;
   border: none !important;
-  border-left: 4px solid var(--sfds-purple-border) !important;
+  border-left: 4px solid var(--legacy-purple-border) !important;
   /* WCAG 2.1 AA fix: slate-3 (#6e7070) was 3.78:1 on the .karl-tag-kind pill
      (rgba(0,0,0,.08) over #f1f4ff = #dee0eb). slate-2 (#383939) = 8.81:1. */
-  color: var(--sfds-slate-2) !important;
+  color: var(--legacy-slate-2) !important;
   font-size: 0.85rem !important;
   padding: 0.25rem 0.6rem 0.25rem 0.5rem !important;
   display: inline-flex !important;
@@ -994,20 +1032,20 @@ ol li {
    Background values are the existing -bg tokens, which already carry correct
    dark-mode overrides in css/theme.css. */
 .karl-tag[data-kind='meta'] {
-  border-left-color: var(--sfds-info-border) !important;
-  background: var(--sfds-info-light) !important;
+  border-left-color: var(--legacy-info-border) !important;
+  background: var(--legacy-info-light) !important;
 }
 .karl-tag[data-kind='body'] {
-  border-left-color: var(--sfds-purple-border) !important;
-  background: var(--sfds-purple-bg) !important;
+  border-left-color: var(--legacy-purple-border) !important;
+  background: var(--legacy-purple-bg) !important;
 }
 .karl-tag[data-kind='placement'] {
-  border-left-color: var(--sfds-warning-border) !important;
-  background: var(--sfds-warning-bg) !important;
+  border-left-color: var(--legacy-warning-border) !important;
+  background: var(--legacy-warning-bg) !important;
 }
 .karl-tag[data-kind='editor'] {
-  border-left-color: var(--sfds-success-border) !important;
-  background: var(--sfds-success-bg) !important;
+  border-left-color: var(--legacy-success-border) !important;
+  background: var(--legacy-success-bg) !important;
 }
 
 /* Kind badge: use the category's mid-tone border color as badge background so
@@ -1024,7 +1062,7 @@ ol li {
      editor    — #075e0a on #a6d8a8 = 4.98:1 ✓
 
    **These light values are what a tag ON THE MOCKUP renders in BOTH themes.**
-   `.browser-shell` pins the `--sfds-*` primitives back to their light values
+   `.browser-shell` pins the `--legacy-*` primitives back to their light values
    (css/theme.css) so the simulated public page stays light on a reviewer's
    dark machine — so a dark-mode contrast figure for these four rules would
    describe a state that never occurs inside the shell. The one place these
@@ -1034,30 +1072,30 @@ ol li {
    Placement and editor sit at 4.98:1, roughly half a point of headroom. If
    either token moves, re-measure rather than assuming the pair still passes. */
 .karl-tag[data-kind='meta'] .karl-tag-kind {
-  background: var(--sfds-info-border) !important;
-  color: var(--sfds-info-dark) !important;
+  background: var(--legacy-info-border) !important;
+  color: var(--legacy-info-dark) !important;
   border: none !important;
 }
 .karl-tag[data-kind='body'] .karl-tag-kind {
-  background: var(--sfds-purple-border) !important;
-  color: var(--sfds-purple-text) !important;
+  background: var(--legacy-purple-border) !important;
+  color: var(--legacy-purple-text) !important;
   border: none !important;
 }
 .karl-tag[data-kind='placement'] .karl-tag-kind {
-  background: var(--sfds-warning-border) !important;
-  color: var(--sfds-warning-text) !important;
+  background: var(--legacy-warning-border) !important;
+  color: var(--legacy-warning-text) !important;
   border: none !important;
 }
 .karl-tag[data-kind='editor'] .karl-tag-kind {
-  background: var(--sfds-success-border) !important;
-  color: var(--sfds-success-text) !important;
+  background: var(--legacy-success-border) !important;
+  color: var(--legacy-success-text) !important;
   border: none !important;
 }
 
 /* Dark mode, legend swatches only.
    =================================
    The Help tab's "Tag colors" key renders real `.karl-tag` markup OUTSIDE
-   `.browser-shell`, so unlike every tag on the mockup its `--sfds-*` tokens
+   `.browser-shell`, so unlike every tag on the mockup its `--legacy-*` tokens
    resolve to the dark palette. Measured there, three of the four category
    text-on-border pairs fall under AA:
 
@@ -1085,7 +1123,7 @@ ol li {
    two-component override loses to them however far down the file it sits. */
 @media (prefers-color-scheme: dark) {
   .karl-tag.karl-tag-legend-swatch[data-kind] .karl-tag-kind {
-    color: var(--sfds-slate-1) !important;
+    color: var(--legacy-slate-1) !important;
   }
 }
 
@@ -1181,16 +1219,16 @@ ol li {
 /* Validation failures. `role="alert"` in the markup, so this only has to make
    the region visible — the announcement is already handled. Uses the danger
    tokens rather than a literal, the same pair `.danger-tool` uses, so both
-   themes track each other: --sfds-danger-text measures 8.69:1 on
-   --sfds-danger-bg in light and 8.71:1 in dark (see the .danger-tool comment in
+   themes track each other: --legacy-danger-text measures 8.69:1 on
+   --legacy-danger-bg in light and 8.71:1 in dark (see the .danger-tool comment in
    css/styles.css, where those two values are worked out). */
 .page-admin-errors {
   margin: 0 0 var(--ds-space-3);
   padding: var(--ds-space-2) var(--ds-space-3);
-  border: 1px solid var(--sfds-danger-border);
+  border: 1px solid var(--legacy-danger-border);
   border-radius: var(--ds-radius-sm);
-  background: var(--sfds-danger-bg);
-  color: var(--sfds-danger-text);
+  background: var(--legacy-danger-bg);
+  color: var(--legacy-danger-text);
   font-size: var(--ds-text-label);
 }
 

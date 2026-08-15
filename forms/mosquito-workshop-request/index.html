@@ -4,8 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Request a mosquito education workshop | SF.gov</title>
+    <!-- Task 6 (SFDS colour adoption) repointed css/styles.css's shared rules
+         (body, h1-h4, form fields, .eyebrow, .summary, ...) from primitives
+         this file used to declare on its own onto css/sfds.css's tokens and
+         css/theme.css's semantic layer -- neither of which this sub-app
+         loaded before, since it previously only needed what css/styles.css's
+         own :root block defined locally. Without these two, every one of
+         those colours resolved to nothing here: body rendered transparent
+         over black text, confirmed live. Order matches js/main.js's:
+         css/sfds.css first (the primitives styles.css/theme.css read),
+         css/theme.css last (its dark-mode block must win the cascade). -->
+    <link rel="stylesheet" href="/css/sfds.css" />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/ux-improvements.css" />
+    <link rel="stylesheet" href="/css/theme.css" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>

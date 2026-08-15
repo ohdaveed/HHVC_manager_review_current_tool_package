@@ -51,7 +51,7 @@ import { updateReadingTarget } from './editor-panel.js'
     style.textContent = `
       .dashboard-guidance-panel {
         padding: 0.95rem 1rem 1rem;
-        background: var(--sfds-white);
+        background: var(--legacy-white);
       }
 
       .dashboard-guidance-panel h3 {
@@ -66,16 +66,16 @@ import { updateReadingTarget } from './editor-panel.js'
       }
 
       .dashboard-guidance-card {
-        border: 1px solid var(--sfds-border);
+        border: 1px solid var(--legacy-border);
         border-radius: var(--radius);
-        background: var(--sfds-white);
+        background: var(--legacy-white);
         padding: 0.7rem;
       }
 
       .dashboard-guidance-card strong {
         display: block;
         margin-bottom: 0.2rem;
-        color: var(--sfds-slate-1);
+        color: var(--legacy-slate-1);
         font-size: 0.82rem;
         line-height: 1.25;
       }
@@ -85,14 +85,14 @@ import { updateReadingTarget } from './editor-panel.js'
          legend, which arrived here when the legend moved out of the mockup and
          into Help. An unscoped descendant selector reached inside that
          component and restyled its parts: the .karl-tag-kind pills lost the
-         deliberate --sfds-slate-2 they carry for contrast (3.78:1 on the pill
+         deliberate --legacy-slate-2 they carry for contrast (3.78:1 on the pill
          fill, a WCAG 2.1 AA failure axe never saw because no scan opened this
          tab) and were forced to display:block, stacking pills designed to sit
          inline. Scoping to the child combinator keeps the intended styling for
          the text cards and stops the rule reaching into anything nested. */
       .dashboard-guidance-card > span {
         display: block;
-        color: var(--sfds-slate-3);
+        color: var(--legacy-slate-3);
         font-size: 0.76rem;
         line-height: 1.35;
       }
@@ -112,7 +112,7 @@ import { updateReadingTarget } from './editor-panel.js'
         justify-content: space-between;
         gap: 0.35rem 0.75rem;
         font-size: 0.78rem;
-        color: var(--sfds-slate-2);
+        color: var(--legacy-slate-2);
       }
 
       .dashboard-shortcuts-keys {
@@ -129,10 +129,10 @@ import { updateReadingTarget } from './editor-panel.js'
          2.09:1 on the dark background. Naming the token here is what removes
          the vendor colour from the cascade in both themes. */
       .dashboard-shortcuts-keys kbd {
-        border: 1px solid var(--sfds-border);
+        border: 1px solid var(--legacy-border);
         border-radius: 4px;
-        background: var(--sfds-slate-5);
-        color: var(--sfds-slate-1);
+        background: var(--legacy-slate-5);
+        color: var(--legacy-slate-1);
         padding: 0.1rem 0.35rem;
         font-size: 0.72rem;
         font-weight: 700;
@@ -151,7 +151,7 @@ import { updateReadingTarget } from './editor-panel.js'
       .dashboard-compliance-rules {
         margin: 0;
         padding-left: 1.1rem;
-        color: var(--sfds-slate-2);
+        color: var(--legacy-slate-2);
         font-size: 0.78rem;
         line-height: 1.45;
       }

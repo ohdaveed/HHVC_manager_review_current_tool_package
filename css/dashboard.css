@@ -2,7 +2,7 @@
 
    Loads after css/ux-improvements.css and before css/theme.css. Everything
    here is expressed in the semantic tokens declared by css/theme.css
-   (--ds-space-*, --ds-shadow-*, --status-*), never in raw --sfds-* values, so
+   (--ds-space-*, --ds-shadow-*, --status-*), never in raw --legacy-* values, so
    the whole surface follows the theme — including dark mode — without any of
    these rules knowing a theme exists.
 
@@ -441,7 +441,7 @@
   /* slate-2 ("strong secondary"), not --text-secondary, which is slate-3.
      A chip's default text sits a step darker than body secondary because it
      is a label, not prose. */
-  color: var(--sfds-slate-2);
+  color: var(--legacy-slate-2);
   font-size: 0.78rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;

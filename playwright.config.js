@@ -6,6 +6,20 @@ const { defineConfig } = require('@playwright/test')
 // downloading: PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium
 const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
 
+// The port both the spawned server and the tests use. It is configurable
+// because `reuseExistingServer` is on outside CI, which is a footgun the
+// moment a second checkout of this repo exists: a dev server already bound to
+// 8080 from ANOTHER worktree is silently reused, and the suite then reports on
+// a build that has nothing to do with the branch under test. Green, and
+// meaningless. Run a second checkout's suite on its own port instead:
+//
+//     HHVC_E2E_PORT=8085 bun run test:e2e
+//
+// `server.ts` and `vite.config.mjs` both already read PORT, so passing it
+// through is all that is needed to move the whole stack.
+const port = process.env.HHVC_E2E_PORT || process.env.PORT || '8080'
+const origin = `http://127.0.0.1:${port}`
+
 module.exports = defineConfig({
   testDir: './tests/e2e',
   timeout: 60_000,
@@ -14,7 +28,7 @@ module.exports = defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:8080',
+    baseURL: origin,
     trace: 'on-first-retry',
     ...(chromiumExecutablePath
       ? { launchOptions: { executablePath: chromiumExecutablePath } }
@@ -22,8 +36,14 @@ module.exports = defineConfig({
   },
   webServer: {
     command: 'bun run start',
-    url: 'http://127.0.0.1:8080',
-    reuseExistingServer: !process.env.CI,
+    env: { ...process.env, PORT: port },
+    url: origin,
+    // Reuse is off whenever HHVC_E2E_PORT is set, not just in CI. Naming a
+    // port is how a second checkout asks for isolation from whatever else is
+    // running — silently reusing a stranger's server on that port is exactly
+    // the footgun the port option exists to prevent, and it would defeat the
+    // isolation just as thoroughly as always reusing on 8080 did.
+    reuseExistingServer: !process.env.CI && !process.env.HHVC_E2E_PORT,
     timeout: 120_000,
   },
 })
