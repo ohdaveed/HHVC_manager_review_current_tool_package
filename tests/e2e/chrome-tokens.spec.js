@@ -83,3 +83,31 @@ test.describe('chrome type scale', () => {
     expect(small).toEqual([])
   })
 })
+
+test.describe('chrome spacing scale', () => {
+  test('resolves every step onto an SFDS value', async ({ page }) => {
+    await page.setViewportSize({ width: 1800, height: 1000 })
+    await gotoFresh(page)
+    const steps = await page.evaluate(() => {
+      const s = getComputedStyle(document.documentElement)
+      return [1, 2, 3, 4, 5, 6, 7, 8].map((n) => s.getPropertyValue(`--ds-space-${n}`).trim())
+    })
+    // Same minifier caveat as the type scale above, and it bites harder here:
+    // the first three steps are fraction-only, so the built CSS serializes
+    // them as `.25rem`/`.5rem`/`.75rem` rather than the `0.25rem` form
+    // css/theme.css authors. Confirmed against dist/assets/*.css, not
+    // inferred. Steps 5-8 are where the two ladders genuinely diverge —
+    // the repo's 24/32/48/64px become SFDS's 20/28/40/60px — so those four
+    // are a real value change and not a reformatting.
+    expect(steps).toEqual([
+      '.25rem',
+      '.5rem',
+      '.75rem',
+      '1rem',
+      '1.25rem',
+      '1.75rem',
+      '2.5rem',
+      '3.75rem',
+    ])
+  })
+})

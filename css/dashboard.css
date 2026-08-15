@@ -443,7 +443,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  padding: 0.22rem 0.65rem;
+  padding: var(--ds-space-1) var(--ds-space-3);
   border: 1px solid var(--border-default);
   border-radius: var(--ds-radius-pill);
   background: var(--surface-panel);
