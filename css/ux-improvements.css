@@ -33,7 +33,7 @@
 
 .review-sticky-bar-title {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: var(--ds-text-card);
   font-weight: 800;
   color: var(--legacy-slate-1);
   line-height: 1.25;
@@ -45,7 +45,7 @@
 
 .review-sticky-bar-progress {
   color: var(--legacy-slate-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -64,7 +64,7 @@
   color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   line-height: 1.2;
   min-height: 2.75rem;
@@ -110,13 +110,13 @@
 
 .review-queue-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--ds-text-panel);
 }
 
 .review-queue-subtitle {
   margin: 0.2rem 0 0;
   color: var(--legacy-slate-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 
@@ -151,7 +151,7 @@
 
 .review-queue-control-label {
   color: var(--legacy-slate-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
 }
 
@@ -180,7 +180,7 @@
   color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   min-height: 2.75rem;
   padding: 0.2rem 0.6rem;
@@ -222,21 +222,21 @@
   align-items: center;
   gap: 0.4rem;
   color: var(--legacy-slate-2);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
 }
 
 /* --text-primary, not the raw --legacy-slate-3 this used to reach for. That
    value is #6e7070, and the bulk bar it sits on is --surface-page (#f0f0f0),
    which works out at 4.37:1 — under the 4.5:1 AA threshold for text this size
-   (0.8rem bold is well short of the 18.66px that would make bold text
-   "large"). Axe had been unable to judge it because the queue rows were
-   partially obscured by the sticky sidebar, so the failure sat unreported
-   rather than absent. It is also a live count a reviewer reads off the bar,
-   which is not secondary text. */
+   (--ds-text-label bold, 14px, is well short of the 18.66px that would make
+   bold text "large"). Axe had been unable to judge it because the queue rows
+   were partially obscured by the sticky sidebar, so the failure sat
+   unreported rather than absent. It is also a live count a reviewer reads
+   off the bar, which is not secondary text. */
 .review-queue-bulk-count {
   color: var(--text-primary);
-  font-size: 0.8rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
 }
 
@@ -270,7 +270,7 @@
   background: var(--legacy-white);
   color: var(--legacy-slate-1);
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
@@ -279,7 +279,7 @@
 .review-queue-row-title {
   display: block;
   color: var(--legacy-slate-1);
-  font-size: 0.88rem;
+  font-size: var(--ds-text-card);
   font-weight: 800;
   line-height: 1.25;
 }
@@ -288,7 +288,7 @@
   display: block;
   margin-top: 0.12rem;
   color: var(--legacy-slate-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 600;
   line-height: 1.3;
 }
@@ -299,7 +299,7 @@
   gap: 0.35rem 0.75rem;
   margin-top: 0.22rem;
   color: var(--legacy-slate-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   line-height: 1.3;
 }
 
@@ -324,7 +324,7 @@
   color: var(--legacy-action-blue);
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 800;
   line-height: 1.2;
   min-height: 2.75rem;
@@ -372,7 +372,12 @@
   padding: 0.5rem 0.6rem;
   border-bottom: 2px solid var(--legacy-border);
   color: var(--legacy-slate-3);
-  font-size: 0.72rem;
+  /* --ds-text-label, not --ds-text-micro: the micro step is scoped to
+     uppercase eyebrows that need to sit BELOW the 14px floor, and there is
+     no such need here — a table header can read at the floor without
+     crowding anything beneath it. Uppercase alone does not earn the
+     extension. */
+  font-size: var(--ds-text-label);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-align: left;
@@ -414,7 +419,7 @@
 
 .review-sticky-bar-filter {
   color: var(--legacy-slate-3);
-  font-size: 0.74rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -436,7 +441,7 @@
 
 .compliance-panel h3 {
   margin: 0 0 0.55rem;
-  font-size: 1rem;
+  font-size: var(--ds-text-panel);
 }
 
 .compliance-list {
@@ -453,7 +458,7 @@
    eye lands on; they are context a reviewer occasionally wants, not results. */
 .compliance-subhead {
   margin: 1rem 0 0.25rem;
-  font-size: 0.85rem;
+  font-size: var(--ds-text-card);
   font-weight: 700;
   color: var(--text-secondary);
 }
@@ -526,7 +531,7 @@
 .compliance-rule {
   display: block;
   color: var(--legacy-slate-1);
-  font-size: 0.88rem;
+  font-size: var(--ds-text-card);
   font-weight: 800;
   line-height: 1.25;
 }
@@ -547,7 +552,7 @@
   display: block;
   margin-top: 0.15rem;
   color: var(--legacy-slate-2);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 
@@ -560,12 +565,19 @@
    not the nearer. The comment that used to sit here claimed slate-3 "clears
    4.5:1 on the panel background"; it measured 4.37:1. An asserted contrast
    ratio nobody re-measures after the surface moves is worse than none, because
-   it reads as evidence the check was done. */
+   it reads as evidence the check was done.
+
+   --ds-text-micro, not --ds-text-label: this is the one place in this file
+   where "smaller than its sibling" is a written requirement rather than an
+   incidental leftover value, and .compliance-detail already sits at the 14px
+   floor, so there is no smaller SFDS step to move to. It qualifies for the
+   extension on its own terms too — uppercase, a provenance tag rather than
+   read prose. */
 .compliance-citation {
   display: block;
   margin-top: 0.15rem;
   color: var(--legacy-slate-2);
-  font-size: 0.7rem;
+  font-size: var(--ds-text-micro);
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -601,7 +613,7 @@
 
 .plain-language-offenders code {
   color: var(--legacy-slate-3);
-  font-size: 0.7rem;
+  font-size: var(--ds-text-label);
   /* The field path (sections[2].steps[0].bullets[1]) is the point of this
      line: it tells the reviewer exactly which field to edit. Wrap rather than
      overflow, since deep paths are long and the panel is narrow. */
@@ -610,13 +622,13 @@
 
 .plain-language-offenders span {
   color: var(--legacy-slate-1);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 
 .plain-language-offenders em {
   color: var(--legacy-slate-3);
-  font-size: 0.72rem;
+  font-size: var(--ds-text-label);
   font-style: normal;
   font-weight: 700;
 }
@@ -662,7 +674,7 @@
 }
 
 .review-sync-settings summary {
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
   font-weight: 800;
   color: var(--legacy-slate-1);
   cursor: pointer;
@@ -711,7 +723,7 @@
 
 .sync-conflict-heading {
   margin: 0 0 0.5rem;
-  font-size: 0.95rem;
+  font-size: var(--ds-text-card);
 }
 
 .sync-conflict-row {
@@ -745,7 +757,7 @@
 .review-decision-note {
   margin: 0.45rem 0 0;
   color: var(--legacy-slate-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 
@@ -763,7 +775,7 @@
   color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   line-height: 1.2;
   min-height: 2.75rem;
@@ -801,7 +813,7 @@
 .review-field-error {
   margin: -0.15rem 0 0.35rem;
   color: var(--legacy-danger-text);
-  font-size: 0.8rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
 }
 
@@ -819,7 +831,7 @@
   color: var(--legacy-slate-2);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   min-height: 2.75rem;
   padding: 0.3rem 0.6rem;
@@ -842,7 +854,7 @@
   background: var(--surface-soft);
   color: var(--legacy-slate-1);
   font-family: inherit;
-  font-size: 0.74rem;
+  font-size: var(--ds-text-label);
   font-weight: 800;
   line-height: 1.3;
   padding: 0.08rem 0.35rem;
@@ -871,7 +883,7 @@
 
 .shortcuts-dialog-header h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--ds-text-panel);
 }
 
 .shortcuts-dialog-close {
@@ -880,7 +892,7 @@
   background: var(--legacy-white);
   color: var(--legacy-slate-2);
   cursor: pointer;
-  font-size: 1rem;
+  font-size: var(--ds-text-panel);
   font-weight: 700;
   line-height: 1;
   width: 2rem;
@@ -896,7 +908,7 @@
 .shortcuts-dialog-note {
   margin: 0.4rem 0 0.75rem;
   color: var(--legacy-slate-3);
-  font-size: 0.8rem;
+  font-size: var(--ds-text-label);
 }
 
 .shortcuts-list {
@@ -929,12 +941,12 @@
      axe color-contrast rule once it was re-enabled in
      tests/e2e/accessibility.spec.js. */
   color: var(--text-secondary);
-  font-size: 0.7rem;
+  font-size: var(--ds-text-label);
 }
 
 .shortcuts-description {
   color: var(--legacy-slate-2);
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 
@@ -1017,7 +1029,7 @@ ol li {
   /* WCAG 2.1 AA fix: slate-3 (#6e7070) was 3.78:1 on the .karl-tag-kind pill
      (rgba(0,0,0,.08) over #f1f4ff = #dee0eb). slate-2 (#383939) = 8.81:1. */
   color: var(--legacy-slate-2) !important;
-  font-size: 0.85rem !important;
+  font-size: var(--ds-text-card) !important;
   padding: 0.25rem 0.6rem 0.25rem 0.5rem !important;
   display: inline-flex !important;
   align-items: flex-start !important;

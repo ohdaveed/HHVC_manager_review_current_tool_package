@@ -42,7 +42,7 @@ bun run start                 # production-like: build:netlify then serve dist/ 
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
 bun run test                  # bun test over the 43 unit-test files in tests/
-bun run test:e2e              # playwright test over the 20 spec files in tests/e2e/
+bun run test:e2e              # playwright test over the 21 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
 bun run sync-tracking         # regenerate the local mockup tracking CSVs only
@@ -175,13 +175,13 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-one spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
-SFDS tokens, and workshop-form submission handling, sharing plain helper
-functions in
+SFDS tokens, the chrome type scale, and workshop-form submission handling,
+sharing plain helper functions in
 `tests/e2e/helpers.js` (no fixture framework). A fourteenth file,
 `review-import-export.spec.js`, was deleted rather than repaired: its
 round-trip tests hand-rolled the merge inside `page.evaluate()` instead of

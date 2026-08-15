@@ -46,7 +46,11 @@
   background: var(--status-edits-bg);
   color: var(--status-edits-fg);
   border: 1px solid var(--status-edits-border);
-  font-size: 0.68rem;
+  /* NOT --ds-text-micro: that extension is for uppercase eyebrow labels only
+     (tests/e2e/chrome-tokens.spec.js asserts it), and this badge reads
+     "Edited" in sentence case, so it takes the 14px floor like every other
+     non-eyebrow label the sweep raised. */
+  font-size: var(--ds-text-label);
   font-weight: 700;
   vertical-align: middle;
 }
@@ -54,7 +58,7 @@
 .inline-edit-reset {
   margin-left: 0.4rem;
   padding: 0.1rem 0.4rem;
-  font-size: 0.72rem;
+  font-size: var(--ds-text-label);
   font-weight: 600;
   color: var(--brand-primary);
   background: transparent;
@@ -72,7 +76,7 @@
   align-items: center;
   margin-top: 0.5rem;
   padding: 0.3rem 0.7rem;
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
   font-weight: 600;
   color: var(--brand-primary);
   background: var(--surface-panel);
@@ -93,7 +97,7 @@
   width: 1.4rem;
   height: 1.4rem;
   line-height: 1;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
   font-weight: 700;
   color: var(--status-blocked-fg);
   background: transparent;
@@ -171,7 +175,7 @@
 .inline-edit-editorjs-holder .ce-inline-tool.inline-edit-link-button {
   width: auto;
   padding: 0 0.5rem;
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 600;
 }
 

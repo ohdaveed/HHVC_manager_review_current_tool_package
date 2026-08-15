@@ -11,12 +11,12 @@
 
 .ai-assist-panel h3 {
   margin: 0 0 0.4rem;
-  font-size: 1rem;
+  font-size: var(--ds-text-panel);
 }
 
 .ai-assist-panel h4 {
   margin: 1rem 0 0.4rem;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
 }
 
 /* --- Settings ---------------------------------------------------------- */
@@ -30,7 +30,7 @@
 }
 
 .ai-assist-settings summary {
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
   font-weight: 800;
   color: var(--legacy-slate-1);
   cursor: pointer;
@@ -50,7 +50,7 @@
   background: var(--surface-panel);
   color: var(--legacy-slate-1);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--ds-text-card);
   resize: vertical;
 }
 
@@ -66,7 +66,7 @@
   align-items: center;
   margin: 0.5rem 0;
   color: var(--legacy-slate-2);
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
 }
 
 .ai-assist-actions {
@@ -83,7 +83,7 @@
   border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--legacy-danger-bg);
   color: var(--legacy-slate-1);
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
 }
 
 /* --- Result ------------------------------------------------------------ */
@@ -104,13 +104,13 @@
   border-radius: var(--radius);
   background: var(--legacy-warning-bg);
   color: var(--legacy-slate-1);
-  font-size: 0.82rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
 }
 
 .ai-assist-verdict {
   margin: 0 0 0.7rem;
-  font-size: 0.83rem;
+  font-size: var(--ds-text-label);
 }
 
 .ai-assist-verdict p {
@@ -143,7 +143,7 @@
   gap: 0.75rem;
   margin-bottom: 0.6rem;
   color: var(--legacy-slate-3);
-  font-size: 0.75rem;
+  font-size: var(--ds-text-label);
 }
 
 .ai-assist-result-actions {

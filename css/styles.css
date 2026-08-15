@@ -429,9 +429,21 @@ a:focus {
 .field-help {
   margin: 0.35rem 0 0.75rem;
   /* --text-secondary, not --sfds-color-slate-l2: sidebar chrome, same
-     dark-mode-following reasoning as `label` above. */
+     dark-mode-following reasoning as `label` above.
+
+     font-size is --ds-text-label for the same reason: this selector's own
+     consumers (js/ai-assist-render.js, js/dashboard-guidance.js,
+     js/page-registry-ui.js, js/ux-improvements-export.js,
+     js/review-state-sync.js) are all review-tool chrome, never mockup
+     content -- it lives in this file because it is shared with the editor
+     sidebar outside `#reviewWorkspace`, not because it describes the page
+     under review. Task 8's chrome-type-scale sweep is a narrow, disclosed
+     exception to leaving css/styles.css alone: tests/e2e/chrome-tokens.spec.js
+     verified this class renders inside #reviewWorkspace, and scoping the
+     override to a second file instead would split one selector across two
+     files, the exact pattern css/dashboard.css's own history warns against. */
   color: var(--text-secondary);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
 }
 .char-count {
   display: flex;

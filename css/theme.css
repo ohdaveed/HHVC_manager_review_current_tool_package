@@ -126,10 +126,35 @@
 
      In rem, not px, so they scale with the user's browser font size —
      the same WCAG 1.4.4 requirement the spacing scale is built for. */
-  --ds-text-panel: 1.05rem; /* a workspace panel's own heading */
-  --ds-text-card: 0.88rem; /* a card or section inside a panel */
-  --ds-text-label: 0.78rem; /* hints, captions, control labels */
-  --ds-text-micro: 0.68rem; /* uppercase eyebrow labels only */
+  --ds-text-panel: var(--sfds-text-title-xs); /* 20px — a panel's own heading */
+  --ds-text-card: var(--sfds-text-body); /* 16px — a card inside a panel */
+  --ds-text-label: var(--sfds-text-small); /* 14px — hints, captions, labels */
+
+  /* An EXTENSION: SFDS's smallest step is `small` at 14px, and an uppercase
+     eyebrow at 14px is visually louder than the card heading beneath it.
+     Legibility here comes from letter-spacing and weight rather than size,
+     which is why one step may sit below a floor that 49 other declarations
+     were raised to. It is for uppercase eyebrow labels and nothing else —
+     tests/e2e/chrome-tokens.spec.js asserts that, so the restriction is
+     enforced rather than merely written down. */
+  --ext-text-2xs: 0.6875rem; /* 11px */
+  --ds-text-micro: var(--ext-text-2xs);
+
+  /* Two outliers OUTSIDE the four-step scale above — not a fifth and sixth
+     rung on it, just a place for two call sites to stay layer-compliant.
+     A diagnostics stat figure and a KPI headline number both need to read
+     louder than --ds-text-panel, a heading, and the four-step scale has no
+     rung above panel. NOT a raw --sfds-text-title-sm/-md reference inlined
+     at the two call sites: tests/sfds-tokens.test.js enforces that only
+     css/theme.css and css/styles.css may consume the `--sfds-*` namespace
+     directly, so every other component file reaches for a semantic name
+     here instead — these two exist so css/dashboard.css and
+     css/review-ops.css can stay layer-compliant without duplicating that
+     rule two more times. Named after the SFDS step they alias, not
+     `--ext-*`: unlike --ext-text-2xs these ARE published SFDS values, just
+     consumed one layer removed. */
+  --ds-text-title-sm: var(--sfds-text-title-sm);
+  --ds-text-title-md: var(--sfds-text-title-md);
 
   /* ===================================================================
      Radius — an EXTENSION, because SFDS publishes no radius scale
