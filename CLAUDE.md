@@ -722,7 +722,24 @@ today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data
 same rule at validation time — in `bun run validate` **and** in the AI output
 validator — and imports `safeUrl` rather than restating it, so the renderer
 and the validator cannot come to disagree about what is safe. That import
-crosses the CJS/ESM boundary. **CI never exercises that crossing under Node** —
+crosses the CJS/ESM boundary — CJS `require()`ing ESM, the direction Bun 1.3.14
+dropped for `build_scripts/storage.js`. **This one is not the same case, and the
+difference was measured** (2026-08-15, Bun 1.3.14): Bun rejects `require()` only
+of an ASYNC module, and `js/utils.js` has no top-level await and imports
+nothing, so the crossing works. The line is narrower than "no top-level await" —
+`await Promise.resolve()` requires fine, `await new Promise((r) => setTimeout(r,
+0))` and `await import('node:path')` both throw — so the hazard is one
+_deferring_ await away, surfacing as `bun run validate` dying with a TypeError
+that names neither validate nor the page data.
+`tests/data-validation.test.js` guards it in a **subprocess**; two in-process
+versions were written first and both passed against a deliberately broken
+`js/utils.js`, since a sibling test that ESM-imports it leaves it cached.
+**If that guard fails, remove the await — do not restructure `safeUrl`**: it is
+the XSS scheme guard, and on the BROWSER side every dual-export module in
+`js/` is read off `window` rather than named-imported (Node `require`s them
+directly, which is the half that works), so extracting `safeUrl` would push
+`js/page-render.js` onto window indirection for no gain. Separately,
+**CI never exercises that crossing under Node** —
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
 `build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
 Node, at the end of `build:netlify` (`node build_scripts/copy-workshop-form.js`),

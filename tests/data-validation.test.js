@@ -16,6 +16,65 @@ const {
   findExternalAssetUrls,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
+const path = require('node:path')
+
+const ROOT = path.resolve(__dirname, '..')
+
+describe('require() of build_scripts/data-checks.js', () => {
+  // data-checks.js is CommonJS and `require()`s js/utils.js, which is an ES
+  // module, so `findUnsafeUrls` and the renderer share one safeUrl rather than
+  // two copies that could drift. Bun allows that only while js/utils.js is
+  // SYNCHRONOUSLY evaluable: it rejects `require()` of an async module. A
+  // top-level await that actually defers — `await import(...)`, an awaited
+  // timer — makes js/utils.js async and breaks `bun run validate` outright,
+  // with a TypeError naming neither validate nor the page data.
+  //
+  // Measured, because the boundary is narrower than "no top-level await":
+  // `await Promise.resolve()` is already settled and still requires fine, while
+  // `await new Promise((r) => setTimeout(r, 0))` and `await import('node:path')`
+  // both throw. So this guards the deferring case, which is the one that bites.
+  //
+  // It runs in a SUBPROCESS on purpose, and two cheaper versions of this test
+  // were written first and both passed against a deliberately broken
+  // js/utils.js. In-process assertions cannot work here: any sibling test file
+  // that ESM-imports js/utils.js leaves it evaluated and cached, so a later
+  // `require()` of it succeeds no matter what. Only a fresh process reproduces
+  // what `bun run validate` actually does.
+  //
+  // The fix, if this ever fails, is to remove the await — NOT to restructure
+  // safeUrl. It is the XSS scheme guard, its own comment warns that failing in
+  // one of its two execution contexts is worse than not existing, and on the browser side every
+  // dual-export module in js/ is read off `window` rather than named-imported,
+  // so extracting it would push js/page-render.js onto window indirection.
+  test('loads in a fresh Bun process without an async-module error', () => {
+    // process.execPath, not 'bun': this guards behaviour that CHANGED between
+    // Bun versions, so resolving the runtime through PATH could test a
+    // different one than the suite is running under and report on a version
+    // nobody asked about. Not hypothetical — this machine carries two Bun
+    // binaries (/root/.bun/bin/bun and /usr/local/bin/bun), in step today and
+    // with nothing keeping them so after either is upgraded.
+    const result = Bun.spawnSync(
+      [process.execPath, '-e', "require('./build_scripts/data-checks.js')"],
+      { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' }
+    )
+    if (result.exitCode !== 0) {
+      const stderr = result.stderr.toString().trim()
+      // Always carry stderr into the failure. A bare exit-code assertion
+      // reproduces the very problem this test exists to prevent: `bun run
+      // validate` failing with nothing that names the cause. The async-module
+      // hint is added when it applies, rather than being the only path that
+      // surfaces anything.
+      const hint = stderr.includes('async module')
+        ? '\n\nLikely cause: a DEFERRING top-level await was added to js/utils.js or something it imports. Remove it — do not restructure safeUrl (see the comment above this test).'
+        : ''
+      throw new Error(
+        `require('build_scripts/data-checks.js') failed in a fresh ${process.execPath} ` +
+          `(Bun ${Bun.version}, exit ${result.exitCode}).\n--- stderr ---\n${stderr}${hint}`
+      )
+    }
+    expect(result.exitCode).toBe(0)
+  })
+})
 
 function validPage(overrides = {}) {
   return {
