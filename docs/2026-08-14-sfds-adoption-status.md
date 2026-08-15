@@ -44,11 +44,14 @@ breakpoint re-measure.
   Setting the variable also disables reuse, so asking for a port means getting
   one.
 
-- **`tests/e2e/mosquito-workshop-form.spec.js` has one failing test**, "keeps
-  the request visible when submission fails". It is pre-existing and unrelated
-  to this migration — proved by reverting every migration file to the base
-  commit and reproducing it identically. It deserves its own investigation; do
-  not chase it from inside a migration task.
+- **`tests/e2e/mosquito-workshop-form.spec.js`'s "keeps the request visible when
+  submission fails" fails locally and passes in CI.** It reproduces on this
+  machine all the way back to the base commit — reverting every migration file
+  and re-running gives the identical failure — so it is not caused by this work.
+  But CI is green on it, on `main` and on this branch, so it is an artefact of a
+  local environment rather than a defect in the repo. Do not chase it from
+  inside a migration task, and do not treat a local red as a branch regression
+  without checking CI first.
 
 - **Four `--status-*-border` tokens sit below the 3:1 non-text contrast floor** —
   measured 1.41, 1.64, 1.56 and 1.78 — because SFDS's tint steps are paler than
