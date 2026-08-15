@@ -47,15 +47,31 @@ describe('the CommonJS -> ESM crossing that data-checks.js depends on', () => {
   // dual-export module in js/ is consumed off `window`, so extracting it would
   // push js/page-render.js onto window indirection to fix a non-problem.
   test('a fresh process can require() data-checks.js, and so its whole ESM graph', () => {
-    const result = Bun.spawnSync(['bun', '-e', "require('./build_scripts/data-checks.js')"], {
-      cwd: ROOT,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    })
-    const stderr = result.stderr.toString()
-    // Name the likely cause in the failure itself, so the next reader is not
-    // left with a bare exit code the way `validate` leaves them.
-    expect(stderr).not.toContain('async module')
+    // process.execPath, not 'bun': this guards behaviour that CHANGED between
+    // Bun versions, so resolving the runtime through PATH could test a
+    // different one than the suite is running under and report on a version
+    // nobody asked about. Not hypothetical — this machine carries two Bun
+    // binaries (/root/.bun/bin/bun and /usr/local/bin/bun), in step today and
+    // with nothing keeping them so after either is upgraded.
+    const result = Bun.spawnSync(
+      [process.execPath, '-e', "require('./build_scripts/data-checks.js')"],
+      { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' }
+    )
+    if (result.exitCode !== 0) {
+      const stderr = result.stderr.toString().trim()
+      // Always carry stderr into the failure. A bare exit-code assertion
+      // reproduces the very problem this test exists to prevent: `bun run
+      // validate` failing with nothing that names the cause. The async-module
+      // hint is added when it applies, rather than being the only path that
+      // surfaces anything.
+      const hint = stderr.includes('async module')
+        ? '\n\nLikely cause: a DEFERRING top-level await was added to js/utils.js or something it imports. Remove it — do not restructure safeUrl (see the comment above this test).'
+        : ''
+      throw new Error(
+        `require('build_scripts/data-checks.js') failed in a fresh ${process.execPath} ` +
+          `(Bun ${Bun.version}, exit ${result.exitCode}).\n--- stderr ---\n${stderr}${hint}`
+      )
+    }
     expect(result.exitCode).toBe(0)
   })
 })
