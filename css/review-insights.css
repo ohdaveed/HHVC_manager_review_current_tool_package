@@ -108,7 +108,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--ds-space-2);
-  padding: 6px var(--ds-space-2);
+  padding: var(--ds-space-1) var(--ds-space-2);
   background: var(--surface-panel);
   font-size: var(--ds-text-label);
 }
@@ -136,5 +136,5 @@
   flex: 1;
   min-height: 64px;
   padding: var(--ds-space-3);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
 }

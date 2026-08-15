@@ -32,7 +32,7 @@
 .ops-stat {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--ds-space-1);
   padding: var(--ds-space-3);
   /* Lets a grid item shrink below its content's intrinsic width, so a long
      sync URL wraps instead of forcing the row into a horizontal scroll. */
@@ -48,7 +48,15 @@
 }
 
 .ops-stat-value {
-  font-size: 1.2rem;
+  /* An outlier the four-step chrome scale has no rung for: a diagnostics
+     figure meant to be read at a glance needs to sit visibly above
+     --ds-text-panel (a heading, not a number a reviewer scans for).
+     --ds-text-title-sm (css/theme.css) is a pass-through alias onto SFDS's
+     own title-sm step, not a direct reference to that namespace here:
+     tests/sfds-tokens.test.js only allows css/theme.css and css/styles.css
+     to consume that namespace's names directly, so every other component
+     file goes through the alias. */
+  font-size: var(--ds-text-title-sm);
   line-height: 1.2;
   color: var(--text-primary);
   /* Tabular figures so counts do not shuffle as the panel re-renders on
@@ -60,7 +68,7 @@
 }
 
 .ops-stat-hint {
-  font-size: 0.72rem;
+  font-size: var(--ds-text-label);
   color: var(--text-secondary);
   overflow-wrap: anywhere;
 }
@@ -120,10 +128,10 @@
 }
 
 .ops-finding-keys code {
-  padding: 0.1rem 0.4rem;
+  padding: var(--ds-space-1) var(--ds-space-2);
   border-radius: var(--ds-radius-sm, 4px);
   background: var(--surface-panel);
   border: 1px solid var(--border-default);
-  font-size: 0.74rem;
+  font-size: var(--ds-text-label);
   color: var(--text-primary);
 }

@@ -108,7 +108,7 @@
   background: var(--surface-sunken);
   color: var(--text-secondary);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
 }
 
 /* =====================================================================
@@ -273,7 +273,7 @@
   /* `font: inherit` first — a <button> does not inherit the page font, and
      the shorthand resets size and weight, so it has to precede them. */
   font: inherit;
-  font-size: 0.88rem;
+  font-size: var(--ds-text-card);
   font-weight: 700;
 }
 
@@ -372,7 +372,16 @@
 .review-queue-kpi-value {
   display: block;
   color: var(--text-primary);
-  font-size: 1.65rem;
+  /* An outlier the four-step chrome scale has no rung for: a KPI tile's
+     headline number is the first thing a reviewer scans on the Overview tab,
+     and needs to sit visibly above --ds-text-panel (a heading).
+     --ds-text-title-md (css/theme.css) is a pass-through alias onto SFDS's
+     own title-md step, not a direct reference to that namespace here:
+     tests/sfds-tokens.test.js only allows css/theme.css and css/styles.css
+     to consume that namespace's names directly, so every other component
+     file goes through the alias. It grows further still on wider viewports,
+     since SFDS doubles title-md to 32px at its own 768px breakpoint. */
+  font-size: var(--ds-text-title-md);
   line-height: 1.1;
   font-weight: 800;
   /* Tabular figures so the numbers do not shuffle horizontally as counts
@@ -404,7 +413,7 @@
   display: block;
   margin-top: var(--ds-space-1);
   color: var(--text-secondary);
-  font-size: 0.76rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -434,7 +443,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  padding: 0.22rem 0.65rem;
+  padding: var(--ds-space-1) var(--ds-space-3);
   border: 1px solid var(--border-default);
   border-radius: var(--ds-radius-pill);
   background: var(--surface-panel);
@@ -442,7 +451,7 @@
      A chip's default text sits a step darker than body secondary because it
      is a label, not prose. */
   color: var(--legacy-slate-2);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -556,7 +565,7 @@
 .review-advanced-group > summary {
   padding: var(--ds-space-3);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
   color: var(--text-secondary);
   cursor: pointer;
 }
