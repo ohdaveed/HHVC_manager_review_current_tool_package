@@ -9,14 +9,18 @@ description: Verify the production Netlify deploy actually matches the current c
 > reviewers open — https://web-production-9bb3b.up.railway.app, project
 > `hhvc-manager-review`, service `web`, tracking `main`. `netlify.toml` now sets
 > `build.ignore = "exit 0"`, so Netlify builds nothing and its last deploy stays
-> frozen at `38d152c`. **To verify the live site, verify Railway**, using the
-> same three questions below with the Railway MCP tools (`list_deployments` for
-> the commit and status, `get_logs` for a 502, a browser check for the bundle).
+> frozen at `38d152c`. **To verify the live site, use the
+> `verify-railway-backend` skill** — it carries the current procedure, including
+> the GitHub deployments-API fallback for when this session's Railway MCP
+> exposes no `list_deployments`/`get_logs` (it frequently doesn't, and every
+> remaining Railway tool needs a `projectId` that nothing in this repo records).
 > Two Railway-specific facts the Netlify version has no equivalent for:
 > `server.ts` binds `127.0.0.1` unless `HOST=0.0.0.0` is set, which produces a
-> **502 behind a SUCCESSFUL build**; and `/api/*` answering **501** is the
-> healthy fail-closed state, not a fault. Keep reading below only when checking
-> the retired Netlify site itself.
+> **502 behind a SUCCESSFUL build**; and `/api/*` answers **401** on the live
+> deploy now that authorization is configured there — 501 is the fail-closed
+> state of an _unconfigured_ deploy, so a 501 on this host means the variables
+> were lost. Keep reading below only when checking the retired Netlify site
+> itself.
 
 This repo (`hhvc-manager-review-mockup-tool`) is a static Vite build deployed to
 Netlify (`netlify.toml`, site name `hhvc`, site id

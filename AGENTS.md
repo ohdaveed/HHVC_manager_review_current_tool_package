@@ -2234,10 +2234,24 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
   sets `PORT=8080`, and the generated domain's target port must match; a domain
   created before the port is known shows `Target port: -` and cannot route.
 - **Railway runs `server.ts`, so the optional APIs finally have a runtime.**
-  On Netlify they were structurally impossible. They still fail closed —
-  `/api/review-state` and `/api/ai/capabilities` both answer **501** until
-  `REVIEW_API_TOKEN` (or `REVIEW_API_PRINCIPALS`) and a provider key are set.
-  501 there is the healthy state, not a broken deploy; 502 is the broken one.
+  On Netlify they were structurally impossible. They still fail closed: with
+  neither `REVIEW_API_TOKEN` nor `REVIEW_API_PRINCIPALS` set, `/api/review-state`
+  and `/api/ai/capabilities` both answer **501**, which is the healthy resting
+  state of an unconfigured deploy rather than a broken one. 502 is the broken
+  one — see the `HOST=0.0.0.0` note above.
+- **On the live deploy those routes now answer 401, not 501** (verified
+  2026-08-15 against both). Authorization is configured there, so 501 has
+  stopped being the expected reading for this host: **a 501 now would mean the
+  variables were lost**, and 503 would mean the authorization config is
+  malformed. Presence of the credentials was inferred from the status code
+  rather than read out of the service — never print a variable's value.
+  **A 401 from `/api/ai/capabilities` says nothing about whether the provider
+  keys are set.** The two gates run in order — API authorization first,
+  provider key second — so an unauthenticated caller is rejected before the
+  capability report is ever reached, and `{anthropic: false, gemini: false}`
+  is only observable from behind a valid token. The `verify-railway-backend`
+  skill carries the full procedure, including the GitHub deployments-API
+  fallback for sessions whose Railway MCP cannot list projects or deployments.
 - **Netlify is retired but not deleted.** `netlify.toml` now carries
   `build.ignore = "exit 0"`, which tells Netlify to skip every build; the file
   itself is kept for its record of how the static bundle is assembled and of two

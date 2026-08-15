@@ -1218,10 +1218,18 @@ start `bun run serve`.
   `HHVC mockup server running at http://127.0.0.1:8080`. `PORT=8080` is set too,
   and the domain's target port must match it.
 - **Railway runs `server.ts`, so the optional APIs finally have a runtime** —
-  impossible on Netlify. They still fail closed: `/api/review-state` and
-  `/api/ai/capabilities` answer **501** until `REVIEW_API_TOKEN` (or
-  `REVIEW_API_PRINCIPALS`) and a provider key are set. 501 is healthy there;
-  502 is not.
+  impossible on Netlify. They still fail closed: with neither
+  `REVIEW_API_TOKEN` nor `REVIEW_API_PRINCIPALS` set, `/api/review-state` and
+  `/api/ai/capabilities` answer **501**, the healthy resting state of an
+  unconfigured deploy. 502 is the broken one.
+- **On the live deploy those routes now answer 401, not 501** (verified
+  2026-08-15). Authorization is configured there, so **a 501 now would mean the
+  variables were lost**, and 503 would mean the config is malformed. Presence
+  was inferred from the status code, not read out of the service — never print
+  a variable's value. **A 401 from `/api/ai/capabilities` says nothing about
+  the provider keys**: authorization is the first of two gates, so an
+  unauthenticated caller never reaches the capability report. Full procedure in
+  the `verify-railway-backend` skill.
 - **Netlify is retired but not deleted** — `netlify.toml` carries
   `build.ignore = "exit 0"` (skip every build). Delete that line to re-enable it.
 
