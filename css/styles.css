@@ -197,7 +197,14 @@ h3 {
   z-index: 210;
   width: 2rem;
   height: 2rem;
-  font-size: 0.85rem;
+  /* --ds-text-label, not the prior 0.85rem: this is the collapse/expand
+     arrow glyph on the sidebar itself, chrome rather than mockup, and Task
+     8's chrome-type-scale sweep left it (and the other rules below sharing
+     this comment) unswept only because they sit in css/styles.css outside
+     the disclosed .field-help exception -- not because they render inside
+     the mockup. tests/e2e/chrome-tokens.spec.js's floor check widened past
+     #reviewWorkspace to the tool's chrome as a whole and caught it. */
+  font-size: var(--ds-text-label);
 }
 .app.sidebar-collapsed .sidebar-toggle {
   position: fixed;
@@ -256,7 +263,11 @@ h3 {
 .sidebar-toggle {
   width: 2rem;
   height: 2rem;
-  font-size: 0.85rem;
+  /* --ds-text-label: this second `.sidebar-toggle` block (same specificity,
+     later in source order) was overriding the token set above it -- see
+     that rule's comment for why this needs to be a step rather than a
+     literal. */
+  font-size: var(--ds-text-label);
 }
 .sidebar h2 {
   font-size: 1.15rem;
@@ -450,7 +461,13 @@ a:focus {
   justify-content: space-between;
   gap: 0.75rem;
   margin: 0.35rem 0 0.75rem;
-  font-size: 0.78rem;
+  /* --ds-text-label, not the prior 0.78rem: same sidebar-chrome reasoning as
+     `.field-help` two rules up, which Task 8 swept for it. This rule was
+     left at its literal value only because the sweep's floor check was
+     scoped to #reviewWorkspace and this renders in the editor sidebar
+     outside it -- not because it is mockup content or belongs to a
+     different type-scale story. */
+  font-size: var(--ds-text-label);
   color: var(--text-secondary);
 }
 .char-count .ok {
@@ -478,7 +495,13 @@ a:focus {
 }
 .search-preview-url {
   color: var(--serp-url-color);
-  font-size: 0.78rem;
+  /* --ds-text-label, not the prior 0.78rem: this widget lives in the editor
+     sidebar (chrome), not #mockPage -- it approximates a Google result
+     snippet for the reviewer's benefit, but it is not the mockup under
+     review and gets no exemption from the mockup's own type-scale story.
+     Left unswept in Task 8 only because that sweep's floor check was scoped
+     to #reviewWorkspace. */
+  font-size: var(--ds-text-label);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -486,7 +509,9 @@ a:focus {
 }
 .search-preview-desc {
   color: var(--serp-desc-color);
-  font-size: 0.82rem;
+  /* --ds-text-label: same sidebar-chrome reasoning as `.search-preview-url`
+     directly above. */
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 .checklist {
@@ -1450,7 +1475,12 @@ a:focus {
   align-items: center;
   gap: 0.5rem;
   flex: none;
-  font-size: 0.85rem;
+  /* --ds-text-label, not the prior 0.85rem: the comment right below already
+     called this "chrome above the mockup" -- it sits in .canvas-toolbar,
+     outside .browser-shell, so it owes the SFDS 14px floor same as any
+     other chrome text. Left unswept in Task 8 only because that sweep's
+     floor check was scoped to #reviewWorkspace, which the toolbar isn't. */
+  font-size: var(--ds-text-label);
   /* --text-secondary, not --sfds-color-grey-dark: this sits in
      .canvas-toolbar, chrome above the mockup, so it needs to follow dark
      mode like the rest of the toolbar rather than stay fixed. */

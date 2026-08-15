@@ -32,10 +32,25 @@ test.describe('chrome type scale', () => {
   test('leaves no chrome rule below the SFDS 14px floor except eyebrows', async ({ page }) => {
     await page.setViewportSize({ width: 1800, height: 1000 })
     await gotoFresh(page)
-    const small = await page.evaluate(() => {
-      const panel = document.querySelector('#reviewWorkspace')
-      if (!panel) return []
-      return [...panel.querySelectorAll('*')]
+    const { total, small } = await page.evaluate(() => {
+      // Tool chrome is not just #reviewWorkspace -- the sidebar and the
+      // canvas toolbar are chrome too, and a sub-14px rule added to either
+      // of those would have passed this test silently before this scope
+      // widened. `.app` is the outermost container for all three (sidebar,
+      // canvas incl. toolbar, workspace), so scanning it and excluding the
+      // mockup is what "the tool's chrome as a whole" actually means.
+      //
+      // `.browser-shell` is excluded, not scoped out entirely, because it
+      // sits INSIDE `.app`: it is a live preview of a real SF.gov page that
+      // managers are being asked to approve, and its type scale was settled
+      // by separate work (see css/styles.css's h1-h4 comment) -- dragging it
+      // into the chrome floor would flag the thing under review, not a
+      // chrome regression.
+      const root = document.querySelector('.app')
+      const all = root
+        ? [...root.querySelectorAll('*')].filter((el) => !el.closest('.browser-shell'))
+        : []
+      const small = all
         .map((el) => ({
           size: parseFloat(getComputedStyle(el).fontSize),
           transform: getComputedStyle(el).textTransform,
@@ -50,8 +65,21 @@ test.describe('chrome type scale', () => {
           // the type-scale sweep.
           text: (el.textContent || '').trim(),
         }))
+        // Uppercase is a narrow exemption for eyebrow labels, not a general
+        // escape: legibility at these sizes comes from letter-spacing and
+        // weight rather than from the glyph's own height, which is exactly
+        // why the extension token (--ext-text-2xs, 11px) was scoped to
+        // uppercase eyebrows and nothing else. A sub-14px rule that is NOT
+        // uppercase gets no such argument and must resolve to a real step.
         .filter((r) => r.size < 14 && r.transform !== 'uppercase' && r.text)
+      return { total: all.length, small }
     })
+    // A selector that matches nothing yields an empty result and the
+    // assertion below passes for the wrong reason -- this is the exact
+    // failure mode that let the original #reviewWorkspace-only scope stay
+    // unnoticed. Asserting the scan actually walked real chrome markup
+    // before trusting an empty violation list is what closes that hole.
+    expect(total).toBeGreaterThan(50)
     expect(small).toEqual([])
   })
 })
