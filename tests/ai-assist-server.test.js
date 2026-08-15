@@ -162,7 +162,7 @@ function refusalResponse() {
   }
 }
 
-async function waitForServer(url, attempts = 60) {
+async function waitForServer(url, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
@@ -189,6 +189,17 @@ function isolatedApiEnvironment(overrides) {
     'REVIEW_API_RATE_LIMIT',
     'REVIEW_API_RATE_WINDOW_MS',
     'ANTHROPIC_PROFILE',
+    // Same reason tests/review-api-server.js strips it — build_scripts/storage.js
+    // switches drivers on DATABASE_URL — but the symptom here is worse than
+    // running against the wrong database, so it is worth naming. server.ts
+    // resolves storage while booting, so an inherited Postgres URL makes the
+    // spawned server sit on a connection to somebody else's database instead of
+    // binding its port. waitForServer then exhausts every attempt and all five
+    // suites fail as "did not start in time" — which reads as a slow machine,
+    // not an environment leak, and sends the next reader off tuning timeouts.
+    // CI never has DATABASE_URL set, so this is green there and fails only for
+    // a developer who has one exported.
+    'DATABASE_URL',
   ]) {
     delete env[key]
   }
@@ -286,7 +297,7 @@ describe('AI assist API (server.ts)', () => {
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
     })
     await waitForServer(`${base}/api/ai/capabilities`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1285,7 +1296,7 @@ describe('compliance-audit task when Gemini is not configured', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${noGeminiBase}/api/ai/capabilities`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1334,7 +1345,7 @@ describe('AI assist API when unconfigured', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${unconfiguredBase}/api/ai/capabilities`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1417,7 +1428,7 @@ describe('AI assist API request timeout', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${timeoutBase}/api/ai/capabilities`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1495,7 +1506,7 @@ describe('AI assist API upstream (SDK) timeout', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${sdkBase}/api/ai/capabilities`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()

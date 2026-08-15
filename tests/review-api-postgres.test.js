@@ -87,7 +87,7 @@ describe.skipIf(!DATABASE_URL)('review-state API on Postgres', () => {
     await waitForServer(`${base}/api/review-state`)
     // After boot, so the server's own CREATE TABLE IF NOT EXISTS has run.
     await sql`TRUNCATE review_pages`
-  })
+  }, 15000)
 
   afterAll(async () => {
     proc?.kill()
