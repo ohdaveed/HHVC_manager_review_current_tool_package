@@ -1224,12 +1224,18 @@ start `bun run serve`.
   unconfigured deploy. 502 is the broken one.
 - **On the live deploy those routes now answer 401, not 501** (verified
   2026-08-15). Authorization is configured there, so **a 501 now would mean the
-  variables were lost**, and 503 would mean the config is malformed. Presence
-  was inferred from the status code, not read out of the service — never print
-  a variable's value. **A 401 from `/api/ai/capabilities` says nothing about
-  the provider keys**: authorization is the first of two gates, so an
-  unauthenticated caller never reaches the capability report. Full procedure in
-  the `verify-railway-backend` skill.
+  variables were lost.** A 503 has two causes only the response body
+  separates: `API CORS configuration is invalid.` means
+  `REVIEW_API_ALLOWED_ORIGINS` is malformed, while
+  `API authorization configuration is invalid.` means `REVIEW_API_PRINCIPALS`
+  is. The CORS check answers before the authorization gate runs, so a bare 503
+  is not evidence about auth — read the body, and report authorization as
+  **unknown** when CORS is the one that won. Presence was inferred from the
+  status code, not read out of the service — never print a variable's value.
+  **A 401 from `/api/ai/capabilities` says nothing about the provider keys**:
+  authorization is the first of two gates, so an unauthenticated caller never
+  reaches the capability report. Full procedure in the
+  `verify-railway-backend` skill.
 - **Netlify is retired but not deleted** — `netlify.toml` carries
   `build.ignore = "exit 0"` (skip every build). Delete that line to re-enable it.
 

@@ -78,17 +78,24 @@ Reading it correctly:
   under investigation showed `failure`, which reads as "my change broke the
   deploy" — but its parent `1ee5946` had failed the same way four hours
   earlier, before that change existed. The breakage window opened at #129 and
-  closed at #132 (`fix: drop server.ts's default export, which crash-looped
-the Railway deploy`), and the commit in between was an innocent bystander.
-  Attributing a pre-existing crash loop to whatever merged into it is the
-  characteristic wrong answer here.
+  closed at #132, whose title names the real cause: `server.ts`'s default
+  export was crash-looping the deploy. The commit in between was an innocent
+  bystander. Attributing a pre-existing crash loop to whatever merged into it
+  is the characteristic wrong answer here.
 - **A config-only change leaves no fingerprint in the served output.** Don't
   try to prove it shipped by diffing asset hashes — a bundle hash moves for
   unrelated reasons (a dependency resolving differently, an intervening
   design change) and stays put for a change that never touches the bundle.
-  Prove it by ancestry instead: `git merge-base --is-ancestor <your-sha>
-<deployed-sha>`, plus `git show <deployed-sha>:<file>` to read the file out
-  of the deployed tree.
+  Prove it by ancestry instead — and **mind the argument order, which carries
+  the whole meaning.** `--is-ancestor` asks "is the FIRST one an ancestor of
+  the other?", so reversing it tests whether the deploy is an ancestor of your
+  work. That is usually true of an undeployed branch, so the reversed form
+  answers "shipped" precisely when it has not shipped.
+
+  ```bash
+  git merge-base --is-ancestor <your-sha> <deployed-sha>  # exit 0 = it shipped
+  git show <deployed-sha>:<file>                          # read the deployed tree
+  ```
 
 ## Procedure, in order — stop and report at the first genuine failure
 
@@ -126,19 +133,35 @@ that is inherent to how Railway answers the question, not a bug. **Report
 only whether the key names are present or absent — never echo, log, or paste
 a value into chat, a commit, or a file.** These are live production
 credentials. The names worth reporting are `REVIEW_API_TOKEN`,
-`REVIEW_API_PRINCIPALS`, `DATABASE_URL`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
-`HOST`, and `PORT`.
+`REVIEW_API_PRINCIPALS`, `REVIEW_API_ALLOWED_ORIGINS`, `DATABASE_URL`,
+`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `HOST`, and `PORT`.
 
-When it is not reachable, **step 4 infers the answer from the status code
-alone**, which is sufficient for the authorization layer and is the better
-evidence anyway — it observes the running server rather than its config.
+**`REVIEW_API_ALLOWED_ORIGINS` belongs on that list even though it is not an
+authorization variable**, because a malformed value produces the same 503 the
+authorization config does — and produces it _first_, so it masks everything
+behind it. Step 4 explains how to tell the two apart.
+
+When it is not reachable, **step 4 infers what it can from the response
+itself**, which is better evidence anyway — it observes the running server
+rather than its configuration.
+
+**That inference has one hard limit, and it is the trap this whole section
+exists for.** A CORS 503 answers before the authorization gate is ever
+reached, so when the body names CORS, the authorization state is not "broken"
+— it is **unknown**, and nothing observable from outside narrows it further.
+Report it as unknown and go fix the origins list first. Recording "auth is
+misconfigured" on the strength of a 503 you did not read the body of is
+exactly the misdiagnosis this step is meant to prevent.
 
 ### 4. Read the status codes against the two independent gates
 
 ```bash
-curl -sS -o /dev/null -w "%{http_code}\n" "$URL/api/review-state"
-curl -sS -o /dev/null -w "%{http_code}\n" "$URL/api/ai/capabilities"
+curl -sS -w "\n%{http_code}\n" "$URL/api/review-state"
+curl -sS -w "\n%{http_code}\n" "$URL/api/ai/capabilities"
 ```
+
+**Keep the response body — do not `-o /dev/null` these.** The status code
+alone cannot separate the two 503s below, and the body names which one it is.
 
 Never send a real bearer token from this check — it would land in a request
 log with your account attached. So:
@@ -150,9 +173,17 @@ log with your account attached. So:
   `REVIEW_API_PRINCIPALS` is set. Healthy for a default deploy, but **stale
   for this one** — a 501 here now is a regression (variables lost in a service
   rebuild), not the documented resting state.
-- **503** — malformed authorization config. `REVIEW_API_PRINCIPALS` present
-  but empty, duplicated, oversized, or naming an unknown role fails closed
-  this way and never falls back to `REVIEW_API_TOKEN`.
+- **503 — two different causes, and the body is the only way to tell them
+  apart.** A body of `API CORS configuration is invalid.` means
+  `REVIEW_API_ALLOWED_ORIGINS` is malformed. A body of
+  `API authorization configuration is invalid.` means `REVIEW_API_PRINCIPALS`
+  is present but empty, duplicated, oversized, or naming an unknown role — it
+  fails closed this way and never falls back to `REVIEW_API_TOKEN`. **Do not
+  assume the authorization one.** `getApiRequestContext()` runs at the top of
+  every API handler and returns the CORS 503 before `requireApiPrincipal()` is
+  ever reached, so a malformed origins list masks the authorization state
+  entirely — including on `/api/ai/capabilities`, making it look like an auth
+  problem on a deploy whose auth is fine.
 - **200** — unexpected, since this check sends no credential. Investigate
   rather than reporting success.
 - **Connection refused / timeout** — see step 2.
