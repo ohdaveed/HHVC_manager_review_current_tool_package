@@ -16,6 +16,49 @@ const {
   findExternalAssetUrls,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
+const path = require('node:path')
+
+const ROOT = path.resolve(__dirname, '..')
+
+describe('the CommonJS -> ESM crossing that data-checks.js depends on', () => {
+  // data-checks.js is CommonJS and `require()`s js/utils.js, which is an ES
+  // module, so `findUnsafeUrls` and the renderer share one safeUrl rather than
+  // two copies that could drift. Bun allows that only while js/utils.js is
+  // SYNCHRONOUSLY evaluable: it rejects `require()` of an async module. A
+  // top-level await that actually defers — `await import(...)`, an awaited
+  // timer — makes js/utils.js async and breaks `bun run validate` outright,
+  // with a TypeError naming neither validate nor the page data.
+  //
+  // Measured, because the boundary is narrower than "no top-level await":
+  // `await Promise.resolve()` is already settled and still requires fine, while
+  // `await new Promise((r) => setTimeout(r, 0))` and `await import('node:path')`
+  // both throw. So this guards the deferring case, which is the one that bites.
+  //
+  // It runs in a SUBPROCESS on purpose, and two cheaper versions of this test
+  // were written first and both passed against a deliberately broken
+  // js/utils.js. In-process assertions cannot work here: any sibling test file
+  // that ESM-imports js/utils.js leaves it evaluated and cached, so a later
+  // `require()` of it succeeds no matter what. Only a fresh process reproduces
+  // what `bun run validate` actually does.
+  //
+  // The fix, if this ever fails, is to remove the await — NOT to restructure
+  // safeUrl. It is the XSS scheme guard, its own comment warns that failing in
+  // one of its two execution contexts is worse than not existing, and every
+  // dual-export module in js/ is consumed off `window`, so extracting it would
+  // push js/page-render.js onto window indirection to fix a non-problem.
+  test('a fresh process can require() data-checks.js, and so its whole ESM graph', () => {
+    const result = Bun.spawnSync(['bun', '-e', "require('./build_scripts/data-checks.js')"], {
+      cwd: ROOT,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    })
+    const stderr = result.stderr.toString()
+    // Name the likely cause in the failure itself, so the next reader is not
+    // left with a bare exit code the way `validate` leaves them.
+    expect(stderr).not.toContain('async module')
+    expect(result.exitCode).toBe(0)
+  })
+})
 
 function validPage(overrides = {}) {
   return {
