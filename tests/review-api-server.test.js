@@ -29,6 +29,22 @@ async function readServerStderr(proc) {
 }
 
 /**
+ * The "it died" diagnostic, built in one place because waitForServer raises it
+ * from two — inside the poll loop and once more after it — and a drifting copy
+ * would mean the same failure read differently depending on its timing.
+ *
+ * @param {string} url
+ * @param {import('bun').Subprocess} proc
+ * @returns {Promise<Error>}
+ */
+async function exitedBeforeAnswering(url, proc) {
+  return new Error(
+    `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
+      `--- server stderr ---\n${await readServerStderr(proc)}`
+  )
+}
+
+/**
  * Poll until the spawned server answers, or explain why it never will.
  *
  * **This used to report every cause as the same timeout**, which is the whole
@@ -61,17 +77,19 @@ async function waitForServer(url, proc, attempts = 80) {
     } catch {
       // exitCode stays null while the process is alive, so this only fires once
       // it is genuinely gone and no further polling could succeed.
-      if (proc && proc.exitCode !== null) {
-        throw new Error(
-          `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
-            `--- server stderr ---\n${await readServerStderr(proc)}`
-        )
-      }
+      if (proc && proc.exitCode !== null) throw await exitedBeforeAnswering(url, proc)
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
   }
-  // Alive but never answered. Killing it is what ends the stderr stream, so it
-  // has to happen before the drain below rather than in afterAll.
+  // The process can die during the FINAL sleep — after the last in-loop check,
+  // before the loop condition ends it. Without this second look that lands in
+  // the branch below and reports "still running" about a process that has
+  // exited, which is not merely vague but the opposite of what happened, and
+  // throws away the exit code this function exists to surface.
+  if (proc && proc.exitCode !== null) throw await exitedBeforeAnswering(url, proc)
+
+  // Genuinely alive and unresponsive. Killing it is what ends the stderr
+  // stream, so it has to happen before the drain rather than in afterAll.
   proc?.kill()
   throw new Error(
     `Server for ${url} did not answer within ${(attempts * 100) / 1000}s, and was still running.\n` +

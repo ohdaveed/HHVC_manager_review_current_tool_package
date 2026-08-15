@@ -179,6 +179,22 @@ async function readServerStderr(proc) {
 }
 
 /**
+ * The "it died" diagnostic, built in one place because waitForServer raises it
+ * from two — inside the poll loop and once more after it — and a drifting copy
+ * would mean the same failure read differently depending on its timing.
+ *
+ * @param {string} url
+ * @param {import('bun').Subprocess} proc
+ * @returns {Promise<Error>}
+ */
+async function exitedBeforeAnswering(url, proc) {
+  return new Error(
+    `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
+      `--- server stderr ---\n${await readServerStderr(proc)}`
+  )
+}
+
+/**
  * Poll until the spawned server answers, or explain why it never will. An
  * exited process fails immediately with its code and stderr; a live but
  * unresponsive one uses the full window. See the fuller note in
@@ -203,15 +219,16 @@ async function waitForServer(url, proc, attempts = 80) {
       await fetch(url)
       return
     } catch {
-      if (proc && proc.exitCode !== null) {
-        throw new Error(
-          `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
-            `--- server stderr ---\n${await readServerStderr(proc)}`
-        )
-      }
+      if (proc && proc.exitCode !== null) throw await exitedBeforeAnswering(url, proc)
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
   }
+  // The process can die during the FINAL sleep — after the last in-loop check,
+  // before the loop condition ends it. Without this second look that reports
+  // "still running" about a process that has exited. See the fuller note in
+  // tests/review-api-server.test.js.
+  if (proc && proc.exitCode !== null) throw await exitedBeforeAnswering(url, proc)
+
   proc?.kill()
   throw new Error(
     `Server for ${url} did not answer within ${(attempts * 100) / 1000}s, and was still running.\n` +
