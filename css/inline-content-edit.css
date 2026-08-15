@@ -20,7 +20,7 @@
   background: var(--surface-panel);
   border: 1px solid var(--brand-primary);
   border-radius: 4px;
-  padding: 0.35rem 0.5rem;
+  padding: var(--ds-space-1) var(--ds-space-2);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 20%, transparent);
 }
 
@@ -40,21 +40,25 @@
 .inline-edit-badge {
   display: inline-flex;
   align-items: center;
-  margin-left: 0.4rem;
-  padding: 0.15rem 0.5rem;
+  margin-left: var(--ds-space-2);
+  padding: var(--ds-space-1) var(--ds-space-2);
   border-radius: 999px;
   background: var(--status-edits-bg);
   color: var(--status-edits-fg);
   border: 1px solid var(--status-edits-border);
-  font-size: 0.68rem;
+  /* NOT --ds-text-micro: that extension is for uppercase eyebrow labels only
+     (tests/e2e/chrome-tokens.spec.js asserts it), and this badge reads
+     "Edited" in sentence case, so it takes the 14px floor like every other
+     non-eyebrow label the sweep raised. */
+  font-size: var(--ds-text-label);
   font-weight: 700;
   vertical-align: middle;
 }
 
 .inline-edit-reset {
-  margin-left: 0.4rem;
-  padding: 0.1rem 0.4rem;
-  font-size: 0.72rem;
+  margin-left: var(--ds-space-2);
+  padding: var(--ds-space-1) var(--ds-space-2);
+  font-size: var(--ds-text-label);
   font-weight: 600;
   color: var(--brand-primary);
   background: transparent;
@@ -70,9 +74,9 @@
 .inline-edit-add {
   display: inline-flex;
   align-items: center;
-  margin-top: 0.5rem;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.82rem;
+  margin-top: var(--ds-space-2);
+  padding: var(--ds-space-1) var(--ds-space-3);
+  font-size: var(--ds-text-label);
   font-weight: 600;
   color: var(--brand-primary);
   background: var(--surface-panel);
@@ -89,11 +93,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: 0.35rem;
+  margin-left: var(--ds-space-1);
   width: 1.4rem;
   height: 1.4rem;
   line-height: 1;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
   font-weight: 700;
   color: var(--status-blocked-fg);
   background: transparent;
@@ -107,7 +111,7 @@
 }
 
 .inline-edit-undo-action {
-  margin-left: 0.5rem;
+  margin-left: var(--ds-space-2);
   font-weight: 700;
   text-decoration: underline;
   color: inherit;
@@ -170,13 +174,13 @@
    malformed hand-drawn SVG. */
 .inline-edit-editorjs-holder .ce-inline-tool.inline-edit-link-button {
   width: auto;
-  padding: 0 0.5rem;
-  font-size: 0.78rem;
+  padding: 0 var(--ds-space-2);
+  font-size: var(--ds-text-label);
   font-weight: 600;
 }
 
 .inline-edit-editorjs-holder .inline-edit-link-actions {
-  padding: 0.4rem;
+  padding: var(--ds-space-2);
 }
 
 .inline-edit-editorjs-holder .inline-edit-link-input {
@@ -187,7 +191,7 @@
   background: var(--surface-panel);
   border: 1px solid var(--brand-primary);
   border-radius: 4px;
-  padding: 0.3rem 0.5rem;
+  padding: var(--ds-space-1) var(--ds-space-2);
 }
 
 /* ---------------------------------------------------------------------------
@@ -219,15 +223,15 @@
 }
 
 .inline-edit-broken-links {
-  margin-top: 0.5rem;
-  padding: 0.5rem 0.6rem;
+  margin-top: var(--ds-space-2);
+  padding: var(--ds-space-2);
   background: var(--status-blocked-bg);
   border: 1px solid var(--status-blocked-border);
   border-radius: 4px;
 }
 
 .inline-edit-broken-links-message {
-  margin: 0 0 0.45rem;
+  margin: 0 0 var(--ds-space-2);
   color: var(--status-blocked-fg);
   font-size: var(--ds-text-label);
   line-height: 1.4;
@@ -245,7 +249,7 @@
      link is fixed — the same reasoning that sized the accordion chevron once
      it became the only way to expand a panel. */
   min-height: 44px;
-  padding: 0.35rem 0.75rem;
+  padding: var(--ds-space-1) var(--ds-space-3);
   cursor: pointer;
 }
 
