@@ -1374,21 +1374,40 @@ ever actually showed.) The tool follows SFDS on purpose, so the mockup
 deliberately no longer matches sf.gov's current Drupal theme. See
 `docs/superpowers/specs/2026-08-14-sfds-design-consistency-design.md`.
 
-The ladder applies to the bare `h1`/`h2`/`h3` rules; several
+The ladder applies to the bare `h1`/`h2`/`h3` rules (and, off-ladder, `h4` —
+see the bare `h4` rule's own comment for why it needs one at all); several
 component-scoped headings elsewhere in `css/styles.css` keep their own,
-smaller or larger, pre-existing sizes as a deliberate different tier rather
-than being forced onto it — `.region-title` (the "Services"/"Resources"
-grouping label), `.card h3`, `.contact-section h3`, `.top-facts h2`,
+smaller or larger, sizes as a deliberate different tier rather than being
+forced onto it — `.card h3`, `.contact-section h3`, `.top-facts h2`,
 `.callout-header h3`, `.what-to-know-subsection h3`, `.custom-section h3`,
-and the footer's `.footer-columns h4` among them. Only `.region-title` and
-`.footer-columns h4` carry their own in-file comment explaining the
-exception; the others are established, self-evidently-scoped component
-styles this task left alone. Tool chrome has its own scale in
-`css/theme.css`
-(`--ds-text-panel`, `--ds-text-card`, `--ds-text-label`, `--ds-text-micro`)
-and should use it. Note those are named `--ds-text-*`, not `--*-size-*`;
-grepping for "size" or "scale" misses them and makes the type scale look
-absent when it is not.
+`.sidebar h2`, `.what-to-know-heading`, `.accordion-heading`, and the
+footer's `.footer-columns h4` among them. `.spotlight-section-inner h2` joins
+that list too, matched to `.top-facts h2`'s exact size: both are a boxed
+sub-widget's own heading, one tier below a real `.section h2`, and a
+follow-up review found `.spotlight-section-inner h2` had never been given a
+font-size of its own at all — it was silently rendering at full titleLg
+(44px) inside a box meant to read as secondary, confirmed live on
+`ipmEducation`. Every one of these now carries its own `line-height: 1.15`
+and an in-file comment: that same follow-up review found the ladder
+rewrite's split of the old shared `h1, h2, h3, h4` block had dropped every
+one of their line-heights — for an `h1`-`h3`-level selector this cascades in
+a mismatched ladder token from the bare per-level rule instead (silently
+wrong, not silently absent, since only one rule ever sets `line-height` for
+a given heading level and the split didn't remove that rule, just its
+generality), and for `h4` outright, since no rule sets its line-height at
+any specificity once the split moved it into the color-only `h3, h4` block.
+`.region-title` is the one exception that moved the OTHER direction, from
+off-ladder onto it: the same review found the size gap it maintained against
+`.service-group h3` (its sibling heading, one tier down) had shrunk from 4px
+to 1.6px once `.service-group h3` itself joined the ladder's titleXs step in
+this same pass, so "Services"/"Resources" read as a peer of the group below
+it rather than a label above it. It is now `--sfds-text-title-sm` (24px),
+confirmed live against a real `.section h2` (44px) on the same page to not
+compete with it — an eyebrow treatment was the fallback if it had. Tool
+chrome has its own scale in `css/theme.css` (`--ds-text-panel`,
+`--ds-text-card`, `--ds-text-label`, `--ds-text-micro`) and should use it.
+Note those are named `--ds-text-*`, not `--*-size-*`; grepping for "size" or
+"scale" misses them and makes the type scale look absent when it is not.
 
 **A selector should be declared in exactly one file.** `.review-workspace`,
 its tabs, the KPI tiles and `.status-chip` were each split across

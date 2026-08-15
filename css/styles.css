@@ -176,6 +176,23 @@ h3 {
   line-height: var(--sfds-leading-title-xs);
   margin-bottom: var(--sfds-space-8);
 }
+/* h4 never joined the ladder (SFDS's title steps stop at h3 here, and every
+   real h4 in the mockup — the footer's nav-column labels — is deliberately
+   off it too, see .footer-columns h4 below), but the OLD shared
+   `h1, h2, h3, h4 { line-height: 1.15 }` block this task split apart still
+   applied a line-height to it. The split moved h4 into the h3-sharing color
+   block above, which carries no line-height, so h4 was left with no matching
+   rule at any specificity and fell through to true CSS inheritance — body's
+   1.55, meant for paragraph text, not a bold nav label. Restoring the same
+   1.15 multiplier h4 always had (rather than a --sfds-leading-* token, since
+   h4 is off-ladder) fixes every h4 in one place: no component-scoped h4
+   selector needs its own copy, because this is the only rule that ever sets
+   line-height for the h4 element and nothing overrides it. Verified via
+   tests/e2e/mockup-tokens.spec.js against .footer-columns h4, the only h4 in
+   the mockup. */
+h4 {
+  line-height: 1.15;
+}
 .app {
   position: relative;
   display: grid;
@@ -261,7 +278,15 @@ h3 {
   font-size: 0.85rem;
 }
 .sidebar h2 {
+  /* Off-ladder chrome label, not mockup content. Its own font-size always
+     outranked the bare `h2` rule, but it declared no line-height of its own
+     — the old shared block's 1.15 covered it invisibly. The ladder rewrite
+     replaced that block with a titleLg-specific line-height on bare `h2`,
+     which still cascades onto this element (nothing else sets line-height
+     for it) but sizes leading for a 44px heading onto an 18.4px one. 1.15
+     restores the original proportional leading. */
   font-size: 1.15rem;
+  line-height: 1.15;
   margin-bottom: 0.35rem;
 }
 .eyebrow {
@@ -769,8 +794,13 @@ a:focus {
   margin-bottom: 1rem;
 }
 .callout-header h3 {
+  /* Off-ladder, and currently unrendered — no page markup emits
+     .callout-header — but the rule still exists and still matched the old
+     shared block, so it still needs the same 1.15 restored rather than
+     silently keeping a mismatched titleXs leading from bare h3. */
   margin: 0;
   font-size: 1.75rem;
+  line-height: 1.15;
 }
 .callout-icon {
   font-size: 1.75rem;
@@ -789,7 +819,15 @@ a:focus {
   background: var(--sfds-color-white);
 }
 .card h3 {
+  /* Off-ladder card-title size, same regression as the other selectors in
+     this group: 1.15 restores the leading the old shared h1-h4 block gave
+     it, rather than the mismatched titleXs leading it picked up instead.
+     Currently unrendered like .callout-header h3 and .custom-section h3
+     above — renderCards()/.card is only reached by a Step List's own inline
+     cards (see renderCardList()'s comment in js/page-render.js), and no page
+     today gives a step its own `cards`. */
   font-size: 1rem;
+  line-height: 1.15;
   margin-bottom: 0.35rem;
 }
 .card p {
@@ -921,10 +959,15 @@ a:focus {
   border: 1px solid var(--sfds-color-grey-l2);
 }
 .what-to-know-heading {
+  /* Off-ladder box-widget title (same tier as .top-facts h2 below). Own
+     font-size, no own line-height — see the h4 rule's comment above for why
+     that silently swapped a proportional 1.15 for a mismatched ladder token
+     rather than the h4 case's outright loss. */
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 1.15rem;
+  line-height: 1.15;
   margin: 0 0 0.85rem;
 }
 .what-to-know-icon {
@@ -938,7 +981,11 @@ a:focus {
   margin-bottom: 0;
 }
 .what-to-know-subsection h3 {
+  /* Off-ladder item-label size, same regression as the other selectors in
+     this group: 1.15 restores the leading the old shared h1-h4 block gave
+     it, rather than the mismatched titleXs leading it picked up instead. */
   font-size: 1rem;
+  line-height: 1.15;
   margin: 0 0 0.35rem;
 }
 .what-to-know-subsection p,
@@ -958,7 +1005,16 @@ a:focus {
   border: 1px solid var(--sfds-color-grey-l2);
 }
 .top-facts h2 {
+  /* Off-ladder box-widget title, one tier below a real .section h2 — this is
+     a boxed sub-widget's own heading, not a second page section. Own
+     font-size with no own line-height regressed to a mismatched ladder token
+     the same way every selector in this comment group did; 1.15 restores the
+     original proportional leading. .spotlight-section-inner h2 below is
+     deliberately matched to this exact size: it is the same class of boxed
+     widget and was found rendering at full titleLg (44px) because it had
+     never been given a font-size of its own at all. */
   font-size: 1.15rem;
+  line-height: 1.15;
   margin: 0 0 0.85rem;
 }
 /* Transaction pages carry a right-hand related rail, so their body must be
@@ -1057,14 +1113,25 @@ a:focus {
   border-top: 2px solid var(--sfds-color-grey-l2);
 }
 .region-title {
-  /* Deliberately NOT on the h2 ladder. "Services"/"Resources" is a repeated
-     widget label wrapping one or more .service-group blocks (see the doc
-     comment above renderServiceGroup() in js/page-render.js) — a grouping
-     label one visual tier below the page's actual section headings
-     (.section h2, now --sfds-text-title-lg), not a second instance of one.
-     Kept at its pre-existing literal size rather than promoted to a token
-     so it stays visibly smaller than the section heading it sits under. */
-  font-size: 1.35rem;
+  /* ON the h2 ladder now, at titleSm rather than titleLg — promoted here,
+     not left off-ladder like the sibling group above. "Services"/"Resources"
+     is a repeated widget label wrapping one or more .service-group blocks
+     (see the doc comment above renderServiceGroup() in js/page-render.js), a
+     grouping label one visual tier below the page's actual section headings
+     (.section h2, --sfds-text-title-lg), which is still true and is why this
+     stays off titleLg. But its old bespoke 1.35rem (21.6px) was audited
+     against .service-group h3's OLD 1.1rem (17.6px) literal, a 4px gap; that
+     literal was promoted onto --sfds-text-title-xs (20px) in the same pass
+     that split this ladder apart, shrinking the gap to 1.6px with nothing
+     else distinguishing them — confirmed live (pestsTopic: "Services" sat
+     essentially flush atop "Get help with pests, mold, or trash"). Moving up
+     one full ladder step to titleSm (24px/28px leading) restores a clear gap
+     without competing with a real .section h2 (44px on the same page,
+     confirmed live) — an eyebrow treatment (--ds-text-micro, uppercase,
+     letter-spaced) was the fallback plan if 24px had read as competing with
+     the page's own h2s; it didn't, so the simpler token promotion stands. */
+  font-size: var(--sfds-text-title-sm);
+  line-height: var(--sfds-leading-title-sm);
   margin: 0 0 1rem;
 }
 .service-group {
@@ -1123,7 +1190,12 @@ a:focus {
   border-top: 1px solid var(--sfds-color-grey-l2);
 }
 .contact-section h3 {
+  /* Off-ladder contact-method label size, same regression as the other
+     selectors in this group: 1.15 restores the leading the old shared
+     h1-h4 block gave it, rather than the mismatched titleXs leading it
+     picked up instead. */
   font-size: 1rem;
+  line-height: 1.15;
   margin: 1rem 0 0.35rem;
 }
 .contact-section h3:first-of-type {
@@ -1182,6 +1254,24 @@ a:focus {
   border: 1px solid var(--sfds-color-blue-l2);
 }
 .spotlight-section-inner h2 {
+  /* Never audited when this component was built (see its own header comment
+     above), and never given a font-size of its own — the ladder rewrite
+     therefore let it inherit the full bare-h2 titleLg step (44px desktop),
+     rendering a boxed callout's own heading at full page-section size.
+     Confirmed live on ipmEducation: "Learn how to prevent pests without
+     heavy pesticide use" rendered as large as a real .section h2 inside a
+     box meant to read as a secondary widget.
+
+     .spotlight-section-inner is structurally the same tier as .top-facts —
+     both are a bordered, tinted box holding one widget's own heading, a
+     short paragraph or two, and (here) an optional image/CTA — one visual
+     tier below the page's actual section headings, exactly like
+     .region-title's reasoning above but for a box rather than a grouping
+     label. So it is matched to .top-facts h2 exactly (1.15rem / 18.4px,
+     line-height 1.15) rather than promoted onto the ladder: they should read
+     as the same class of thing, and now do. */
+  font-size: 1.15rem;
+  line-height: 1.15;
   margin-top: 0;
 }
 .spotlight-media img {
@@ -1267,8 +1357,13 @@ a:focus {
   }
 }
 .accordion-heading {
+  /* Off-ladder accordion-trigger label size, same regression as the other
+     selectors in this group: 1.15 restores the leading the old shared
+     h1-h4 block gave it, rather than the mismatched titleXs leading it
+     picked up instead. */
   margin: 0;
   font-size: 1rem;
+  line-height: 1.15;
   font-weight: 700;
 }
 .accordion-panel {
@@ -1281,7 +1376,14 @@ a:focus {
   margin: 0 0 1.5rem;
 }
 .custom-section h3 {
+  /* Off-ladder Custom-section heading size, same regression as the other
+     selectors in this group: 1.15 restores the leading the old shared
+     h1-h4 block gave it, rather than the mismatched titleXs leading it
+     picked up instead. Currently unrendered like .callout-header h3 above —
+     no page sets a Supporting section's `flat: true` today — but the rule
+     stays correct for whenever one does. */
   font-size: 1rem;
+  line-height: 1.15;
   font-weight: 700;
   margin: 0 0 0.5rem;
 }
@@ -1377,7 +1479,10 @@ a:focus {
   /* Deliberately off the h1-h3 title ladder: a footer nav-column label
      ("Our City", "Policy", "Get help"), one visual tier below any content
      heading and rendered white-on-dark rather than --text-primary, so it
-     was never a candidate for the ladder in the first place. */
+     was never a candidate for the ladder in the first place. Its
+     line-height comes from the bare `h4` rule near the top of this file
+     (1.15, restored there for every h4 at once) — this is the only h4 the
+     mockup renders, so no separate declaration is needed here. */
   color: var(--sfds-color-white);
   margin-bottom: 1rem;
   font-size: 1.1rem;
