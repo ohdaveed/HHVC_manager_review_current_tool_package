@@ -54,10 +54,12 @@ test.describe('workspace panels', () => {
      suite runs at Playwright's 1280 default, so for a while the only widths
      under test were one above the problem and one below it. In between, the
      breakpoint said "dock" while the mockup was still wider than the column
-     left for it: .browser-shell carries `flex-shrink: 0` and bottoms out around
-     780px, so it ran underneath the sticky panel by 162px at 1440, 100px at
-     1536 and 50px at 1600 — the widths a 14-inch laptop and a 125%-scaled
-     1920px display actually report.
+     left for it: .browser-shell will not shrink past its min-content floor, so
+     it ran underneath the sticky panel at the widths a 14-inch laptop and a
+     125%-scaled 1920px display actually report. Re-measured on 2026-08-15 after
+     the SFDS type and spacing work moved that floor from 780px to 765px: the
+     overlap a 1400px breakpoint would still produce is 147px at 1440, 80px at
+     1536 and 35px at 1600.
 
      Sampling across the range is the point. A single extra width would just
      move the blind spot somewhere else.
@@ -140,6 +142,87 @@ test.describe('workspace panels', () => {
           `workspace [${Math.round(workspace.left)},${Math.round(workspace.right)}]`
       ).toBe(false)
     }
+  })
+
+  /* The sweep above proves the two boxes never overlap AT THE BREAKPOINT WE
+     SHIPPED. It cannot tell a breakpoint with 50px of margin from one with
+     none, because a docked width that is one pixel from colliding passes it
+     exactly as cleanly as one with room to spare — so it would go green right
+     up to the moment the crossing point drifted past 1700 and then fail with
+     no warning. This test measures the crossing itself.
+
+     The crossing is arithmetic over two quantities. `.browser-shell` has a
+     min-content floor it will not go below (measured 765px on 2026-08-15, down
+     from 780px before the SFDS type and spacing work), and the sidebar plus the
+     canvas's own padding put its right edge at a FIXED x while it sits on that
+     floor — 370 + 20 + 765 = 1155. The docked panel occupies the third grid
+     track, `minmax(340px, 30vw)`, so it starts at 0.7 x viewport. The two cross
+     at 1155 / 0.7 = 1650px: below that the mockup runs underneath the sticky
+     panel, above it there is clear air.
+
+     That arithmetic describes ONE of two regimes, and holds only while the
+     crossing falls inside it. While the canvas track is narrower than the
+     floor the shell overflows its column and its right edge does not move,
+     which is the case the division models. Above `(floor + 410) / 0.7` —
+     1678.6px today, the width at which `0.7W - 370` minus the canvas's 40px of
+     padding finally reaches 765 — the shell widens with its track instead, and
+     from there the panel simply stays 20px clear of it (measured: a constant
+     -20px gap from 1680 to 1920, the canvas's own right padding, never
+     returning to an overlap). The crossing at 1650 sits below that boundary,
+     so it is a real width rather than an extrapolation, and the test asserts
+     the boundary rather than assuming it.
+
+     Nothing here forces the docked layout on. That x is the same in both
+     layouts — it is set by the sidebar track and the canvas padding, neither of
+     which the media query touches — so it can be read at a viewport narrow
+     enough to push the shell onto its floor, which 1100px does, while the
+     stacked fallback is in force. Forcing the docked layout would mean
+     restating the media block's six declarations in the test, where they would
+     drift out of step with the stylesheet they exist to model. */
+  test('the dock breakpoint clears the measured crossing point', async ({ page }) => {
+    await gotoFresh(page)
+    await openWorkspaceTab(page, 'overview')
+
+    // 1100px is below the shell's floor plus the sidebar, so the shell is
+    // pinned at its minimum and its right edge reads the fixed x the crossing
+    // is derived from. It is also above the 980px block that collapses the
+    // grid to one track, which would move the sidebar out of the sum.
+    await page.setViewportSize({ width: 1100, height: 950 })
+    const shellRight = await page.evaluate(() => {
+      window.scrollTo(0, 0)
+      return document.querySelector('.browser-shell').getBoundingClientRect().right
+    })
+
+    // The panel's left edge is `100vw - 30vw`, so the widths where the two
+    // touch is shellRight / 0.7.
+    const crossing = shellRight / 0.7
+    const BREAKPOINT = 1700
+
+    // 30vw only wins over the track's 340px minimum above 1133px; below that
+    // the panel's left edge is `100vw - 340`, and this division stops
+    // describing the layout at all.
+    expect(
+      crossing,
+      `the 30vw track no longer sets the panel edge at ${crossing}px`
+    ).toBeGreaterThan(1133)
+
+    // And the crossing has to fall inside the regime where the shell is still
+    // on its floor — see the header note. Above this width the shell grows with
+    // its track and the two never touch, so a "crossing" computed out here
+    // would be a width the layout never actually reaches.
+    const floorRegimeEnds = (shellRight + 20) / 0.7
+    expect(
+      crossing,
+      `the shell leaves its floor at ${Math.round(floorRegimeEnds)}px, before the ` +
+        `${Math.ceil(crossing)}px this arithmetic calls the crossing`
+    ).toBeLessThan(floorRegimeEnds)
+
+    expect(
+      crossing,
+      `the mockup's right edge sits at ${shellRight}px, so the docked panel ` +
+        `first clears it at ${Math.ceil(crossing)}px — past the ${BREAKPOINT}px ` +
+        `breakpoint in css/dashboard.css, which now docks a layout that overlaps`
+    ).toBeLessThanOrEqual(BREAKPOINT)
   })
 
   test('hiding the workspace really removes it', async ({ page }) => {

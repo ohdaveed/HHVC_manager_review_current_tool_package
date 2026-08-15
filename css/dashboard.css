@@ -187,13 +187,27 @@
    than as the default.
 
    1700px, not 1400px. The intent was always "dock only where three columns
-   fit"; 1400 was simply the wrong number for it, and between 1401px and
-   ~1672px the two columns collided. The arithmetic: .browser-shell carries
-   `flex-shrink: 0` (css/styles.css) and will not go below about 780px, so it
-   ends at roughly x=1170 no matter how narrow the column gets, while this
-   panel starts at `100vw - 30vw` = 0.7 x viewport. Those cross at 1170/0.7 =
-   1671px, and below that the mockup runs underneath the sticky workspace —
-   162px of overlap at 1440px, 100px at 1536px, 50px at 1600px.
+   fit"; 1400 was simply the wrong number for it, and between 1401px and the
+   crossing point the two columns collided. The arithmetic: .browser-shell
+   will not shrink past its min-content floor, so it ends at a fixed x no
+   matter how narrow the column gets, while this panel starts at
+   `100vw - 30vw` = 0.7 x viewport, and the two cross at that x divided by 0.7.
+
+   Re-measured on 2026-08-15, after the SFDS type and spacing work changed
+   both the mockup's copy metrics and the chrome's padding chain: the floor is
+   765px (it was 780px), so the shell ends at 370 + 20 + 765 = x=1155 and the
+   crossing moved DOWN to 1155/0.7 = 1650px. Below that the mockup runs
+   underneath the sticky workspace — 147px of overlap at 1440px, 80px at
+   1536px, 35px at 1600px.
+
+   1700 stays, and staying is the measured result rather than a no-op. It was
+   already a round-up over the old 1671 crossing, and the re-measurement widened
+   that margin instead of eating it. Lowering the breakpoint onto 1650 would buy
+   docking only between 1650 and 1700 — no real display sits there, since 1512,
+   1536 and 1470 are all far below it — while spending the margin that covers
+   the widths the 40px test sweep never visits, browser zoom, and the next
+   change to the mockup's copy. tests/e2e/workspace-panels.spec.js measures the
+   crossing from the live layout and fails if it ever rises past this number.
 
    That band is not exotic; it is where laptops live. A 14-inch MacBook Pro is
    1512 CSS px, a 13-inch Air 1470, and any 1920px screen at the 125% scaling

@@ -610,11 +610,21 @@ makes one copy enough, so resist re-adding a second printing of anything.
   as "background could not be determined, partially obscured by another
   element"); it is invisible in a screenshot taken at scroll position 0.
 - **The breakpoint is 1700px because that is where three columns actually
-  fit**, and it was 1400px for a while, which is not. `.browser-shell` carries
-  `flex-shrink: 0` and bottoms out near 780px wide, so it ends around x=1170
-  however narrow its column gets, while the panel starts at `100vw - 30vw`.
-  Those cross at ~1671px: every width from 1401px to there docked the panel
-  _on top of_ the mockup — 162px of overlap at 1440, 100px at 1536, 50px at 1600. Do not lower it again without re-measuring both numbers. The cost is
+  fit**, and it was 1400px for a while, which is not. `.browser-shell` will not
+  shrink past its min-content floor — re-measured at 765px on 2026-08-15, down
+  from 780px before the SFDS type and spacing work — so it ends at a fixed
+  x=1155 (370 sidebar + 20 canvas padding + 765) however narrow its column
+  gets, while the panel starts at `100vw - 30vw`. Those cross at 1155/0.7 =
+  1650px: every width from 1401px to there docked the panel _on top of_ the
+  mockup — 147px of overlap at 1440, 80px at 1536, 35px at 1600. **1700 stayed
+  after that re-measurement rather than moving down onto 1650**, because it was
+  already a round-up over the old 1671 crossing and the new floor widens that
+  margin instead of eating it; 1650–1700 is a band no real display reports, and
+  the margin is what covers browser zoom and the widths the 40px test sweep
+  never visits. Do not lower it without re-measuring both numbers — the
+  crossing is now asserted from the live layout in
+  `tests/e2e/workspace-panels.spec.js`, so a shell that grows past its floor
+  fails there rather than shipping. The cost is
   that a 14-inch laptop (1512 CSS px) now stacks rather than docks; squeezing
   the mockup instead is the other way out and is rejected on purpose, since it
   would misrepresent the page under review.
