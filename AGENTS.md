@@ -137,7 +137,11 @@ guard is what stops a hand-authored value from claiming that authority again,
 which is the exact defect this branch exists to fix), `react-theme`
 (which design tokens the MUI bridge reads, and that each has a fallback — a
 token read with no fallback resolves to `''` before the stylesheets apply,
-and MUI turns an empty palette value into a crash rather than a default), and
+and MUI turns an empty palette value into a crash rather than a default —
+plus which parts of the chrome scale the bridge maps at all, since MUI's own
+sizes and its 8px spacing factor are a real scale rather than an absent one,
+so an unmapped variant renders plausibly and only reads wrong beside the
+string-template panel next door), and
 `font-loading` (that both typefaces carry a real weight-700 instance — the
 SFDS heading ladder is weight 700 throughout, and a browser asked for 700
 with no matching face synthesises bold by smearing a lighter weight's

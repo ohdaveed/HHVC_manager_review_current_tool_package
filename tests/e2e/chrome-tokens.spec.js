@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { gotoFresh } from './helpers.js'
+import { gotoFresh, openWorkspaceTab } from './helpers.js'
 
 test.describe('chrome type scale', () => {
   test('resolves the four steps onto SFDS values', async ({ page }) => {
@@ -32,6 +32,15 @@ test.describe('chrome type scale', () => {
   test('leaves no chrome rule below the SFDS 14px floor except eyebrows', async ({ page }) => {
     await page.setViewportSize({ width: 1800, height: 1000 })
     await gotoFresh(page)
+    // The React islands mount on demand, through a dynamic import fired when
+    // their tab first opens, so a scan of a freshly loaded page walks chrome
+    // that does not yet include any of them. That is not a small gap: MUI
+    // components ship their own type sizes, and the Checks panel's Chip
+    // rendered at 13px -- below this floor, not uppercase, and invisible to
+    // this test -- until the theme mapped it. Opening the tab and waiting for
+    // a real MUI class is what puts the island inside the scan.
+    await openWorkspaceTab(page, 'checks')
+    await page.locator('#reviewChecksIsland .MuiChip-root').first().waitFor()
     const { total, small } = await page.evaluate(() => {
       // Tool chrome is not just #reviewWorkspace -- the sidebar and the
       // canvas toolbar are chrome too, and a sub-14px rule added to either
