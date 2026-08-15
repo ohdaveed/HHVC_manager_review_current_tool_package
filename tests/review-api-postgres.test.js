@@ -36,7 +36,12 @@ function resolveDatabaseUrl() {
 
 const DATABASE_URL = resolveDatabaseUrl()
 
-async function waitForServer(url, attempts = 80) {
+// This wait window (attempts x 100ms) must stay under the explicit timeout on
+// the beforeAll that calls it, currently 30000ms — whichever is smaller is what
+// fires. See the fuller note in tests/review-api-server.test.js. This suite
+// skips without a Postgres, so a mismatch here stays invisible until someone
+// runs it with one. Raise both together or neither.
+async function waitForServer(url, attempts = 200) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
@@ -87,7 +92,7 @@ describe.skipIf(!DATABASE_URL)('review-state API on Postgres', () => {
     await waitForServer(`${base}/api/review-state`)
     // After boot, so the server's own CREATE TABLE IF NOT EXISTS has run.
     await sql`TRUNCATE review_pages`
-  }, 15000)
+  }, 30000)
 
   afterAll(async () => {
     proc?.kill()
