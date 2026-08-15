@@ -91,6 +91,22 @@ body {
   font-size: 16px;
   line-height: 1.55;
 }
+/* Undo @sfgov/design-system/dist/css/typography.css's opening declaration —
+   `* { font-family: Rubik, ui-sans-serif, sans-serif }` — which imposes a
+   font-family on every descendant of `body` at zero specificity, giving each
+   element its own declared value and defeating inheritance from body's own
+   font-family. Rubik itself is not @font-face'd by any imported stylesheet,
+   so every element it "styled" was already falling through to the system
+   sans, and the Roboto Flex Variable face never triggered a load because
+   nothing on the page ever asked for it. Same specificity as the SFDS
+   declaration and declared later in the cascade, so this wins for every tag
+   without touching `code, pre` — that pair carries its own compound-selector
+   rule at 0-0-1 in typography.css and keeps Roboto mono. Verified live via
+   `document.fonts.check('700 16px "Roboto Flex Variable"')` and
+   `tests/e2e/mockup-tokens.spec.js`. */
+* {
+  font-family: inherit;
+}
 a {
   color: var(--sfds-color-action);
   text-decoration: underline;
