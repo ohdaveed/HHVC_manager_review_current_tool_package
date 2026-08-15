@@ -134,9 +134,17 @@ authorization variable**, because a malformed value produces the same 503 the
 authorization config does — and produces it _first_, so it masks everything
 behind it. Step 4 explains how to tell the two apart.
 
-When it is not reachable, **step 4 infers the answer from the status code
-alone**, which is sufficient for the authorization layer and is the better
-evidence anyway — it observes the running server rather than its config.
+When it is not reachable, **step 4 infers what it can from the response
+itself**, which is better evidence anyway — it observes the running server
+rather than its configuration.
+
+**That inference has one hard limit, and it is the trap this whole section
+exists for.** A CORS 503 answers before the authorization gate is ever
+reached, so when the body names CORS, the authorization state is not "broken"
+— it is **unknown**, and nothing observable from outside narrows it further.
+Report it as unknown and go fix the origins list first. Recording "auth is
+misconfigured" on the strength of a 503 you did not read the body of is
+exactly the misdiagnosis this step is meant to prevent.
 
 ### 4. Read the status codes against the two independent gates
 
