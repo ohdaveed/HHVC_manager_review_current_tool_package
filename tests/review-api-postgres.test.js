@@ -36,12 +36,14 @@ function resolveDatabaseUrl() {
 
 const DATABASE_URL = resolveDatabaseUrl()
 
-// This wait window (attempts x 100ms) must stay under the explicit timeout on
-// the beforeAll that calls it, currently 30000ms — whichever is smaller is what
-// fires. See the fuller note in tests/review-api-server.test.js. This suite
-// skips without a Postgres, so a mismatch here stays invisible until someone
-// runs it with one. Raise both together or neither.
-async function waitForServer(url, attempts = 200) {
+// This wait window (attempts x 100ms = 8000ms) and the explicit timeout on the
+// beforeAll that calls it (15000ms) are a pair: whichever is smaller is what
+// actually fires, so the window must stay under the timeout. It did not use to
+// — the window was already 8000ms while the hook passed no timeout, leaving it
+// on Bun's 5000ms default, so the wait could never run to completion. That was
+// invisible because this suite skips without a Postgres; it would have failed
+// the first time anyone ran it with one. Change both together or neither.
+async function waitForServer(url, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
@@ -92,7 +94,7 @@ describe.skipIf(!DATABASE_URL)('review-state API on Postgres', () => {
     await waitForServer(`${base}/api/review-state`)
     // After boot, so the server's own CREATE TABLE IF NOT EXISTS has run.
     await sql`TRUNCATE review_pages`
-  }, 30000)
+  }, 15000)
 
   afterAll(async () => {
     proc?.kill()

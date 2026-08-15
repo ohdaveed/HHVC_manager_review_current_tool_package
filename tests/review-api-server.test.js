@@ -9,17 +9,7 @@ const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
 
-// The two numbers here are a pair, and the relationship is the point: this
-// wait window (attempts x 100ms) must stay comfortably UNDER the explicit
-// timeout on every beforeAll that calls it, currently 30000ms. Whichever is
-// smaller is what actually fires, and both orderings have shipped broken —
-// a 5000ms window under Bun's 5000ms default killed the hook exactly as the
-// wait closed, and a 6000ms window under that same default killed it before
-// the wait could finish at all. 20000ms is also not just "bigger": an 8000ms
-// window still failed intermittently on a cold runner, where the first
-// `bun run server.ts` pays TypeScript transpilation and 8+ spawns queue up.
-// Raise both together or neither.
-async function waitForServer(url, attempts = 200) {
+async function waitForServer(url, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
@@ -86,7 +76,7 @@ describe('review-state API (server.ts)', () => {
     dbDir = createTestDbDir('legacy')
     proc = spawnServer({ port: PORT, token: TOKEN, dbDir })
     await waitForServer(`${base}/api/review-state`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -370,7 +360,7 @@ describe('review-state API without REVIEW_API_TOKEN configured', () => {
     dbDir = createTestDbDir('no-token')
     proc = spawnServer({ port: PORT, token: '', dbDir })
     await waitForServer(`${base}/api/review-state`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -406,7 +396,7 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
     dbDir = createTestDbDir('empty-static-root')
     proc = spawnServer({ port: PORT, token: 'token', dbDir, staticRoot: '' })
     await waitForServer(`${base}/api/review-state`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -485,7 +475,7 @@ describe('optional API principal roles, CORS, and rate limits', () => {
       },
     })
     await waitForServer(`${base}/api/review-state`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -604,7 +594,7 @@ describe('optional API invalid security configuration', () => {
       },
     })
     await waitForServer(`${base}/api/review-state`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -640,7 +630,7 @@ describe('optional API invalid CORS configuration', () => {
       },
     })
     await waitForServer(`${base}/api/review-state`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -681,7 +671,7 @@ describe('reviewer session sign-in', () => {
       extraEnv: { REVIEW_SESSION_PASSWORD: PASSWORD },
     })
     await waitForServer(`${base}/api/session`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -787,7 +777,7 @@ describe('reviewer session without a password configured', () => {
     dbDir = createTestDbDir('session-off')
     proc = spawnServer({ port: PORT, token: 'test-review-api-token', dbDir })
     await waitForServer(`${base}/api/session`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()

@@ -162,11 +162,14 @@ function refusalResponse() {
   }
 }
 
-// This wait window (attempts x 100ms) must stay under the explicit timeout on
-// every beforeAll that calls it, currently 30000ms — whichever is smaller is
-// what fires. See the fuller note in tests/review-api-server.test.js for the
-// two ways this pair has shipped broken. Raise both together or neither.
-async function waitForServer(url, attempts = 200) {
+// This wait window (attempts x 100ms = 8000ms) and the explicit timeout on
+// every beforeAll that calls it (15000ms) are a pair: whichever is smaller is
+// what actually fires, so the window must stay under the timeout. It did not
+// used to. The window was 6000ms while the hooks passed no timeout at all,
+// leaving them on Bun's 5000ms default — so the hook was killed BEFORE the
+// wait could finish, and no amount of widening the window alone could have
+// helped. Change both together or neither.
+async function waitForServer(url, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
@@ -301,7 +304,7 @@ describe('AI assist API (server.ts)', () => {
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
     })
     await waitForServer(`${base}/api/ai/capabilities`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1300,7 +1303,7 @@ describe('compliance-audit task when Gemini is not configured', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${noGeminiBase}/api/ai/capabilities`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1349,7 +1352,7 @@ describe('AI assist API when unconfigured', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${unconfiguredBase}/api/ai/capabilities`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1432,7 +1435,7 @@ describe('AI assist API request timeout', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${timeoutBase}/api/ai/capabilities`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -1510,7 +1513,7 @@ describe('AI assist API upstream (SDK) timeout', () => {
       stderr: 'ignore',
     })
     await waitForServer(`${sdkBase}/api/ai/capabilities`)
-  }, 30000)
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
