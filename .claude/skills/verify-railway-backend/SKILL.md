@@ -86,9 +86,16 @@ Reading it correctly:
   try to prove it shipped by diffing asset hashes — a bundle hash moves for
   unrelated reasons (a dependency resolving differently, an intervening
   design change) and stays put for a change that never touches the bundle.
-  Prove it by ancestry instead: run `git merge-base --is-ancestor` between
-  your SHA and the deployed one, then `git show <deployed-sha>:<file>` to
-  read the file straight out of the deployed tree.
+  Prove it by ancestry instead — and **mind the argument order, which carries
+  the whole meaning.** `--is-ancestor` asks "is the FIRST one an ancestor of
+  the other?", so reversing it tests whether the deploy is an ancestor of your
+  work. That is usually true of an undeployed branch, so the reversed form
+  answers "shipped" precisely when it has not shipped.
+
+  ```bash
+  git merge-base --is-ancestor <your-sha> <deployed-sha>  # exit 0 = it shipped
+  git show <deployed-sha>:<file>                          # read the deployed tree
+  ```
 
 ## Procedure, in order — stop and report at the first genuine failure
 
