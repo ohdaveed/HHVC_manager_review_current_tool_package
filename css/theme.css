@@ -75,12 +75,25 @@
      claiming it was already "the SF.gov system stack", which measurement
      against the live site showed was not true. The system-font fallback
      chain stays after the web font in case a build ever ships without the
-     @fontsource CSS loaded. */
+     @fontsource CSS loaded.
+
+     The body face is named 'Roboto Flex Variable', not 'Roboto Flex' — see
+     js/main.js's font-import comment. @fontsource-variable/roboto-flex
+     registers under that different family name so it can coexist with a
+     static @fontsource/roboto-flex install; this repo carries only the
+     variable package (it replaced the static 400-weight-only package, since
+     the design's weight-700 heading ladder and bold body copy both need a
+     real 700 instance, and the static package could never ship one). Naming
+     the old family here would silently fall back to the system sans with
+     nothing visibly broken — get this wrong and every other check in the
+     suite still passes, because none of them assert the ACTUAL rendered
+     font the way tests/e2e/mockup-tokens.spec.js's
+     `document.fonts.check()` calls do. */
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Roboto Slab', ui-serif, Georgia, 'Times New Roman', serif;
-  --font-body: 'Roboto Flex', var(--font-sans);
-  --font-caption: 'Roboto Flex', var(--font-sans);
+  --font-body: 'Roboto Flex Variable', var(--font-sans);
+  --font-caption: 'Roboto Flex Variable', var(--font-sans);
 
   /* ===================================================================
      Spacing scale

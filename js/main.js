@@ -52,22 +52,36 @@
 // reads as a rendering fault rather than a type choice (see
 // tests/font-loading.test.js, which guards exactly this).
 //
-// Roboto Flex stays at weight 400 ONLY, and that is not an oversight to
-// "complete" later: @fontsource/roboto-flex is generated from the variable
-// Roboto Flex source and its own README documents exactly one static
-// weight — `Weights: [400]` — so there is no latin-700.css to import here at
-// any version. The full weight range lives in the separate
-// @fontsource-variable/roboto-flex package, which registers a DIFFERENT
-// font-family name ('Roboto Flex Variable', not 'Roboto Flex' — a
-// Fontsource convention that lets both packages coexist) and would need
-// --font-body in css/theme.css and the SFDS font-sans token in css/sfds.css
-// rethreaded to match, on top of its own, much larger bundle cost. That's a
-// deliberate font-family decision belonging to whichever task chooses to
-// make it, not a side effect of loading a weight file that already exists
-// on disk. Until then, bold body copy (.eyebrow, .brand, .table th,
-// .tool-btn, …) keeps rendering synthesised-bold Roboto Flex — a
-// pre-existing condition, not one this change introduces or fixes.
-import '@fontsource/roboto-flex/latin-400.css'
+// Roboto Flex comes from a DIFFERENT package than Roboto Slab, and that
+// asymmetry is deliberate — do not "tidy" it into a matching pair of static
+// imports. @fontsource/roboto-flex (the static package, like roboto-slab
+// above) is generated from the variable Roboto Flex source and its own
+// metadata documents exactly one static weight — `weights: [400]` — at any
+// version, so there is no latin-700.css it could ever ship. Roboto Flex
+// itself IS a variable font upstream; the static package is a single frozen
+// instance of it. @fontsource-variable/roboto-flex ships the real variable
+// file instead — one face whose `font-weight` range is `100 1000` — so it
+// replaces the static 400 rather than adding to it, and incidentally fixes
+// every OTHER weight this tool ever asks for, not just 700: bold body copy
+// (.eyebrow, .brand, .table th, .tool-btn, …) was rendering synthesised bold
+// the whole time the static package was in use. `wght.css` rather than the
+// bare default/`full.css` is deliberate too: it loads only the weight axis,
+// not the optical-size/slant/width/grade axes this design never varies.
+//
+// The package swap has one consequence that reaches beyond this file:
+// @fontsource-variable packages register a DIFFERENT font-family name than
+// their static counterparts — 'Roboto Flex Variable', not 'Roboto Flex' —
+// a Fontsource convention that lets a project depend on both at once
+// without one silently shadowing the other. Every place that names the
+// sans family (the sans token in css/sfds.css, --font-body/--font-caption
+// in css/theme.css, the vendored docs/source/sfds/tokens.json capture and
+// its disagreements.md entry) had to move to the new name together with
+// this import, or the browser falls back to the system sans with nothing
+// visibly broken. tests/e2e/mockup-tokens.spec.js asserts the ACTUAL
+// consequence via `document.fonts.check('700 16px "…"')`, since a package
+// swap that gets only the string right and the runtime face wrong is
+// exactly the failure mode this whole change exists to close out.
+import '@fontsource-variable/roboto-flex/wght.css'
 import '@fontsource/roboto-slab/latin-400.css'
 import '@fontsource/roboto-slab/latin-700.css'
 import '@sfgov/design-system/dist/css/base.css'

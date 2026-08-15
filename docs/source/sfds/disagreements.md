@@ -29,3 +29,29 @@ and the canonical values are the theme's — the numbers this repo already uses.
 A fifth disagreement is with the world rather than within SFDS: live sf.gov
 matches neither source on link colour, background, body text colour, or heading
 scale. See `README.md`.
+
+A sixth entry is a deliberate departure by this repo, not a disagreement
+between SFDS's two sources — on typeface family name, both agree with each
+other and disagree with this repo on purpose.
+
+| Property | SFDS (both sources) | This repo serves |
+| --- | --- | --- |
+| Sans-serif family name | `Roboto Flex` | `Roboto Flex Variable` |
+
+SFDS's published token — `--sfds-font-sans` in both the docs-site theme and
+the package — names the family `Roboto Flex`. This repo cannot serve a font
+under that literal name and still load a real weight-700 instance of it:
+`Roboto Flex` is itself a variable typeface upstream, and the only Fontsource
+package that ships its true variable file (rather than a single static
+weight frozen out of it) is `@fontsource-variable/roboto-flex`, which
+registers under the different family name `Roboto Flex Variable` — a
+Fontsource convention that lets a project depend on the static and variable
+packages side by side without one silently shadowing the other. Naming the
+family `Roboto Flex` in this repo's CSS would ask the browser for a font that
+was never self-hosted here at all, and it would fail exactly the way an
+unrecorded discrepancy always fails in this file: silently, by falling back
+to the system sans with nothing visibly broken. `css/sfds.css`,
+`css/theme.css`, and `js/main.js`'s font-import comment all carry the
+`Roboto Flex Variable` name together, and `tests/e2e/mockup-tokens.spec.js`
+asserts the rendered consequence directly via `document.fonts.check()` rather
+than trusting that the string is merely present somewhere.

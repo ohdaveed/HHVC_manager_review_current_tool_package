@@ -151,14 +151,20 @@ exact defect this branch exists to fix), `react-theme` (which design
 tokens the MUI bridge reads, and that each has a fallback — a token read with
 no fallback resolves to `''` before the stylesheets apply, and MUI turns an
 empty palette value into a crash rather than a default), and
-`font-loading` (that both weights of Roboto Slab are imported — the
-mockup's headings are weight 700, and importing only 400 leaves the browser
-synthesising bold, which has different metrics and reads as a rendering fault
-rather than a type scale; it also pins that `@fontsource/roboto-flex` still
-ships no static 700 face, since that package's own README documents exactly
-one static weight and the only way to a real 700 instance is a different
-package under a different font-family name — a deferred decision, not an
-oversight, so the test goes red rather than stale if that ever changes).
+`font-loading` (that both typefaces carry a real weight-700 instance, by two
+DIFFERENT mechanisms — the mockup's headings are weight 700, and a browser
+asked for 700 with no matching face synthesises bold rather than failing,
+which has different metrics and reads as a rendering fault rather than a
+type scale. Roboto Slab imports both static weight files; Roboto Flex is a
+variable typeface upstream, so its static package can only ever freeze one
+weight and the repo instead imports `@fontsource-variable/roboto-flex`'s
+weight-axis file, which registers under the different family name
+`Roboto Flex Variable` — rethreaded through `--sfds-font-sans` and
+`--font-body`/`--font-caption` alongside the import, since a wrong string
+falls back to the system sans with nothing visibly broken.
+`tests/e2e/mockup-tokens.spec.js`'s `document.fonts.check()` assertions are
+what actually prove a 700 face renders rather than merely that an import
+line and an on-disk file exist).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

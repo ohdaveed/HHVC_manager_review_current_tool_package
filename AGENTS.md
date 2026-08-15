@@ -138,15 +138,22 @@ which is the exact defect this branch exists to fix), `react-theme`
 (which design tokens the MUI bridge reads, and that each has a fallback — a
 token read with no fallback resolves to `''` before the stylesheets apply,
 and MUI turns an empty palette value into a crash rather than a default), and
-`font-loading` (that both weights of Roboto Slab are imported in
-`js/main.js` — the SFDS heading ladder is weight 700 throughout, and a
-browser asked for 700 with only 400 loaded synthesises bold by smearing the
-400 outlines rather than failing, which has different metrics and reads as a
-rendering fault rather than a design choice; it also pins that
-`@fontsource/roboto-flex` still ships no static 700 face on disk, since the
-only path to one is a different package registering a different font-family
-name — a deliberate deferral, not an oversight, so the test goes red rather
-than stale if a future release changes that).
+`font-loading` (that both typefaces carry a real weight-700 instance — the
+SFDS heading ladder is weight 700 throughout, and a browser asked for 700
+with no matching face synthesises bold by smearing a lighter weight's
+outlines rather than failing, which has different metrics and reads as a
+rendering fault rather than a design choice — by two DIFFERENT mechanisms:
+`js/main.js` imports both static weight files of `@fontsource/roboto-slab`,
+but Roboto Flex is a variable typeface upstream, so its static package can
+only ever freeze one weight and the repo instead imports
+`@fontsource-variable/roboto-flex`'s weight-axis file, which registers under
+the different family name `Roboto Flex Variable` — rethreaded through
+`--sfds-font-sans` and `--font-body`/`--font-caption` alongside the import,
+since getting the string wrong falls back to the system sans with nothing
+visibly broken. `tests/e2e/mockup-tokens.spec.js` closes the gap this file
+cannot: its assertions prove an import line and an on-disk file exist, not
+that the browser actually renders a non-synthesised 700, which only
+`document.fonts.check('700 16px "…"')` against a real loaded page can show).
 **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports

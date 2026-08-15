@@ -91,7 +91,7 @@
   /* ===================================================================
      Type. The faces are self-hosted via @fontsource — see js/main.js.
      =================================================================== */
-  --sfds-font-sans: 'Roboto Flex', ui-sans-serif, sans-serif;
+  --sfds-font-sans: 'Roboto Flex Variable', ui-sans-serif, sans-serif;
   --sfds-font-slab: 'Roboto Slab', ui-serif, serif;
   --sfds-font-mono: 'Roboto Mono', ui-monospace, monospace;
 

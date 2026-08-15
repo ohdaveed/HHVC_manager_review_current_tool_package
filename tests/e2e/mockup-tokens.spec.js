@@ -33,4 +33,32 @@ test.describe('mockup SFDS tokens', () => {
     const link = page.locator('#mockPage .page-body a').first()
     await expect(link).toHaveCSS('color', 'rgb(73, 94, 212)')
   })
+
+  test('serves a real (non-synthesised) weight-700 instance of both typefaces', async ({
+    page,
+  }) => {
+    /* `String.includes()` over js/main.js (tests/font-loading.test.js) proves
+       an import line exists, not that the browser actually has a 700 face to
+       draw with — a typo'd family name would still pass that check while
+       silently falling back to the system sans. `document.fonts.check()` is
+       the one API that answers the real question: it returns true only when
+       a loaded face matches the given weight, and false when the browser
+       would have to synthesise one by smearing a lighter weight's outlines
+       (different metrics, different stroke contrast — a rendering fault,
+       not a type choice). Awaiting `document.fonts.ready` first is required:
+       @font-face rules are declared as soon as the stylesheet parses, but a
+       face isn't "available" to check() until the browser has actually
+       fetched and parsed its font data, which for a `font-display: swap`
+       face can lag first paint. */
+    await gotoFresh(page)
+    const checks = await page.evaluate(async () => {
+      await document.fonts.ready
+      return {
+        flex: document.fonts.check('700 16px "Roboto Flex Variable"'),
+        slab: document.fonts.check('700 16px "Roboto Slab"'),
+      }
+    })
+    expect(checks.flex).toBe(true)
+    expect(checks.slab).toBe(true)
+  })
 })
