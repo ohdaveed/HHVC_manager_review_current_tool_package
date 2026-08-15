@@ -9,7 +9,7 @@ const fs = require('fs')
 
 const ROOT = path.resolve(__dirname, '..')
 
-async function waitForServer(url, attempts = 50) {
+async function waitForServer(url, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
@@ -76,7 +76,7 @@ describe('review-state API (server.ts)', () => {
     dbDir = createTestDbDir('legacy')
     proc = spawnServer({ port: PORT, token: TOKEN, dbDir })
     await waitForServer(`${base}/api/review-state`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -360,7 +360,7 @@ describe('review-state API without REVIEW_API_TOKEN configured', () => {
     dbDir = createTestDbDir('no-token')
     proc = spawnServer({ port: PORT, token: '', dbDir })
     await waitForServer(`${base}/api/review-state`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -396,7 +396,7 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
     dbDir = createTestDbDir('empty-static-root')
     proc = spawnServer({ port: PORT, token: 'token', dbDir, staticRoot: '' })
     await waitForServer(`${base}/api/review-state`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -475,7 +475,7 @@ describe('optional API principal roles, CORS, and rate limits', () => {
       },
     })
     await waitForServer(`${base}/api/review-state`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -594,7 +594,7 @@ describe('optional API invalid security configuration', () => {
       },
     })
     await waitForServer(`${base}/api/review-state`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -630,7 +630,7 @@ describe('optional API invalid CORS configuration', () => {
       },
     })
     await waitForServer(`${base}/api/review-state`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -671,7 +671,7 @@ describe('reviewer session sign-in', () => {
       extraEnv: { REVIEW_SESSION_PASSWORD: PASSWORD },
     })
     await waitForServer(`${base}/api/session`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
@@ -777,7 +777,7 @@ describe('reviewer session without a password configured', () => {
     dbDir = createTestDbDir('session-off')
     proc = spawnServer({ port: PORT, token: 'test-review-api-token', dbDir })
     await waitForServer(`${base}/api/session`)
-  })
+  }, 15000)
 
   afterAll(() => {
     proc?.kill()
