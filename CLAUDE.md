@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 43 unit-test files in tests/
+bun run test                  # bun test over the 44 unit-test files in tests/
 bun run test:e2e              # playwright test over the 21 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 43 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 44 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -154,7 +154,17 @@ empty palette value into a crash rather than a default — plus which parts of
 the chrome scale the bridge maps at all, since MUI's own sizes and its 8px
 spacing factor are a real scale rather than an absent one, so an unmapped
 variant renders plausibly and only reads wrong beside the string-template
-panel next door), and
+panel next door), `theme-contrast` (WCAG ratios and CIE76 ΔE for the token
+pairs the tool actually renders, computed from the declared values rather than
+asserted from a comment — SFDS publishes no dark palette and no guarantees for
+the pairings this tool invents, and every dark-mode contrast bug this repo has
+had came from a literal sitting where a token belonged and failed no test, a
+comment being unable to go red. It reads `css/theme.css` in three named scopes
+rather than scraping it, since the file declares the light values, overrides
+them for dark, and then re-pins the light ones a third time inside
+`.browser-shell`; and it measures colour separation WITHIN a mode, never
+across, because the whole-file scrape puts the light neutral against the dark
+one and reports ΔE 14.1 for a pair that can never share a screen), and
 `font-loading` (that both typefaces carry a real weight-700 instance, by two
 DIFFERENT mechanisms — the mockup's headings are weight 700, and a browser
 asked for 700 with no matching face synthesises bold rather than failing,

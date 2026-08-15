@@ -31,19 +31,40 @@
      SFDS ships three brand blues (action, hover, accent-light) — enough
      for links and buttons, not enough for a dashboard that needs fills,
      borders, hovers and chart marks in the same family. This interpolates
-     the full scale in OKLCH so the steps are perceptually even, and pins
-     two of them to the real SFDS hexes so the brand colour stays literally
-     SF.gov's rather than an approximation:
+     the full scale in OKLCH and pins two of them to the real SFDS hexes so
+     the brand colour stays literally SF.gov's rather than an approximation:
 
-         step 40 = --legacy-action-blue        #2a60af
-         step 10 = --legacy-action-blue-hover  #001d4e  (also the footer)
+         step 40 = --sfds-color-blue-bright  #495ed4  (the action blue)
+         step 10 = --sfds-color-blue-dark    #0c1464  (hover, and the footer)
 
-     Contrast is measured against white and against --legacy-slate-1
-     (#0b0c0c), the two surfaces these actually land on. Steps 50 and
-     darker clear 4.5:1 on white, so they are safe for text; step 50 is
-     the lightest that does. Steps 60 and up are for fills and borders
-     only — 60 clears the 3:1 non-text bar (WCAG 1.4.11) but NOT the
-     4.5:1 text bar, so never put body copy on it.
+     The interpolation is NOT uniform across the whole ladder, and the old
+     version of this comment claiming it was ("so the steps are perceptually
+     even") stopped being true when the pins moved. Steps 10→40 are even
+     thirds in OKLCH and step 05 is half a step below 10, so the dark half
+     is evenly spaced. Above step 40 each step's `t` toward white is solved
+     for a CONTRAST target instead, because SFDS's action blue is lighter
+     than the one this ramp was originally pinned to (5.48:1 on white where
+     #2a60af gave 6.19:1) — which leaves step 50, whose whole role is "the
+     lightest step still safe for text", squeezed into the narrow band
+     between 4.5:1 and step 40 itself. Even lightness spacing would have
+     dropped it to about 4.0:1 and quietly cost the ramp that role. The
+     lightness delta from 40 to 50 is therefore 0.029 against 0.088 from 50
+     to 60; that is deliberate, not drift.
+
+     Contrast is measured against #ffffff and against #16181d, the two
+     surfaces these actually land on: the light panel (--surface-panel,
+     SFDS white) and the dark panel. Note the second one is NOT
+     --sfds-color-black (#212123) — that is the body TEXT colour, not a
+     surface anything is drawn on, and measuring against it would restate
+     the same class of error this re-derivation exists to fix.
+
+     Steps 50 and darker clear 4.5:1 on white, so they are safe for text;
+     step 50 is the lightest that does. Steps 60 and up are for fills and
+     borders only — 60 clears the 3:1 non-text bar (WCAG 1.4.11) but NOT
+     the 4.5:1 text bar, so never put body copy on it. The old step 60
+     missed even that, at 2.97:1, while this comment claimed it cleared;
+     tests/theme-contrast.test.js computes the figure now rather than
+     trusting the line above it.
 
      The 05..95 numbering deliberately matches Web Awesome's brand scale.
      Nothing depends on that today — Web Awesome's stylesheets are not
@@ -51,17 +72,17 @@
      tokens no component here consumes yet. When a Web Awesome component
      does land, aliasing --wa-color-brand-NN to --brand-NN is a one-line
      mapping and its components inherit SF.gov's blue automatically. */
-  --brand-95: #ecf2fb; /* on white  1.13:1 | on slate-1 17.41:1 */
-  --brand-90: #dbe6f7; /* on white  1.26:1 | on slate-1 15.55:1 */
-  --brand-80: #b3cbef; /* on white  1.65:1 | on slate-1 11.85:1 */
-  --brand-70: #8db0e6; /* on white  2.21:1 | on slate-1  8.85:1 */
-  --brand-60: #6897de; /* on white  2.97:1 | on slate-1  6.59:1 */
-  --brand-50: #4076c9; /* on white  4.51:1 | on slate-1  4.34:1 */
-  --brand-40: #2a60af; /* on white  6.19:1 | on slate-1  3.16:1  <- SFDS action blue */
-  --brand-30: #10438e; /* on white  9.48:1 | on slate-1  2.07:1 */
-  --brand-20: #023070; /* on white 12.66:1 | on slate-1  1.55:1 */
-  --brand-10: #001d4e; /* on white 16.33:1 | on slate-1  1.20:1  <- SFDS hover/footer */
-  --brand-05: #001033; /* on white 18.72:1 | on slate-1  1.05:1 */
+  --brand-95: #ecf1fd; /* on white  1.13:1 | on dark panel 15.70:1 */
+  --brand-90: #dee5fa; /* on white  1.26:1 | on dark panel 14.12:1 */
+  --brand-80: #bbc9f4; /* on white  1.64:1 | on dark panel 10.80:1 */
+  --brand-70: #99aced; /* on white  2.22:1 | on dark panel  8.02:1 */
+  --brand-60: #7188e2; /* on white  3.32:1 | on dark panel  5.35:1 */
+  --brand-50: #566cd9; /* on white  4.62:1 | on dark panel  3.84:1 */
+  --brand-40: #495ed4; /* on white  5.48:1 | on dark panel  3.24:1  <- SFDS action blue */
+  --brand-30: #3245ad; /* on white  8.11:1 | on dark panel  2.19:1 */
+  --brand-20: #1e2d88; /* on white 11.76:1 | on dark panel  1.51:1 */
+  --brand-10: #0c1464; /* on white 16.16:1 | on dark panel  1.10:1  <- SFDS hover/footer */
+  --brand-05: #060653; /* on white 18.12:1 | on dark panel  1.02:1 */
 
   /* Brand (SFDS action blue family) */
   --brand-primary: var(--sfds-color-action);
@@ -192,10 +213,15 @@
      Three steps, not five: this is a dense review tool, and more depth
      levels than a reviewer can distinguish is just noise. Tinted with the
      brand navy rather than neutral black so shadows read as part of the
-     palette instead of dirtying it. */
-  --ds-shadow-1: 0 1px 2px rgba(0, 29, 78, 0.06), 0 1px 3px rgba(0, 29, 78, 0.08);
-  --ds-shadow-2: 0 2px 4px rgba(0, 29, 78, 0.06), 0 4px 12px rgba(0, 29, 78, 0.1);
-  --ds-shadow-3: 0 8px 16px rgba(0, 29, 78, 0.08), 0 16px 32px rgba(0, 29, 78, 0.12);
+     palette instead of dirtying it — so the tint is step 10 of the ramp
+     above, #0c1464, written out as an rgb() triple because a shadow needs
+     an alpha and a custom property cannot be interpolated into one. It
+     moved with the ramp: this was rgb(0, 29, 78), the OLD step 10, which
+     would have left every shadow in the tool tinted with a blue the
+     palette no longer contains. */
+  --ds-shadow-1: 0 1px 2px rgba(12, 20, 100, 0.06), 0 1px 3px rgba(12, 20, 100, 0.08);
+  --ds-shadow-2: 0 2px 4px rgba(12, 20, 100, 0.06), 0 4px 12px rgba(12, 20, 100, 0.1);
+  --ds-shadow-3: 0 8px 16px rgba(12, 20, 100, 0.08), 0 16px 32px rgba(12, 20, 100, 0.12);
 
   /* Semantic surfaces */
   --surface-page: var(--sfds-color-grey-l1);
@@ -268,7 +294,12 @@
   --toast-fg: #fcfcfc;
   --toast-bg: #1f2229; /* 15.52:1 */
   --toast-success-bg: #026800; /*  6.86:1 */
-  --toast-info-bg: #2a60af; /*  6.04:1 */
+  /* The one brand-coloured member of this pinned set, so it moved with the
+     ramp: SFDS's action blue, not the old #2a60af. Still a literal rather
+     than var(--brand-40) — the whole point of this block is that these
+     survive a theme flip unchanged, and a token is exactly the thing that
+     might not. */
+  --toast-info-bg: #495ed4; /*  5.34:1 */
   --banner-danger-fg: #fcfcfc;
   --banner-danger-bg: #d92d20; /*  4.71:1 */
 
@@ -306,11 +337,28 @@
      will not show up again in a routine accessibility-suite run; it was
      found by hand computation during the SFDS migration (Task 6) and is
      recorded in `.superpowers/sdd/task-6-report.md` under "What could not be
-     completed" for the fix to land against. Re-picking is deferred because
-     it fans out into dark mode and the `--viz-decision-*` palette below,
-     both scoped to Task 11 ("Re-derive the brand ramp and the dark palette")
-     in `docs/superpowers/plans/2026-08-14-sfds-design-consistency.md` — an
-     asserted contrast ratio nobody re-measures after the surface moves is
+     completed" for the fix to land against.
+
+     **It stays open because SFDS does not publish a value that would fix
+     it.** No step of its yellow ramp clears 3:1 against white — `yellow-l4`
+     (#e0a81a) is the best at 2.15:1 — so "Needs edits" cannot be repaired by
+     moving to another published step the way approved (green-l3, 4.55:1) and
+     revise (purple-l3, 4.96:1) could. Fixing two families of four leaves two
+     chips outlined in a mid-tone and two in a pale tint, which is a worse
+     system than the consistent one that is currently wrong. The real fix is
+     either an invented `--ext-*` amber or a decision that a chip's border is
+     decorative given the chip carries its own text label — a
+     chip-visual-system judgement, and it belongs to whoever owns that next.
+
+     This comment previously gave a different reason: that the fix was
+     deferred because it fanned out into dark mode and the `--viz-decision-*`
+     palette below, both of which the brand re-derivation (Task 11) was going
+     to touch anyway. Measured there, neither fans out — the dark `-border`
+     steps are separately chosen literals that still clear 3:1 on the dark
+     panel, and the decision fills are green/amber/purple/red/neutral and owe
+     nothing to the brand blue. Both were re-measured and neither moved, so
+     this is an isolated light-mode finding rather than a coupled one.
+     An asserted contrast ratio nobody re-measures after the surface moves is
      worse than none, which is exactly the state the old unconditional claim
      here left this comment in. */
   --status-approved-bg: var(--sfds-color-green-l1);
@@ -364,10 +412,18 @@
      values and one of them ("Needs review") is the neutral default, so
      four saturated colours plus a neutral is exactly the requirement.
 
-     The purple is nudged 0.5% darker than Okabe-Ito's #CC79A7. That
-     original measures 3.06:1 against pure white but only 2.98:1 against
-     this repo's --legacy-white (#fcfcfc), which is slightly off-white —
-     i.e. it fails on the surface it is actually drawn on.
+     The purple is nudged 0.5% darker than Okabe-Ito's #CC79A7, and the
+     reason has since expired without the nudge becoming wrong. It was
+     added because the original measures 3.06:1 against pure white but only
+     2.98:1 against the --legacy-white (#fcfcfc) this tool's panels used at
+     the time — failing on the surface it was actually drawn on. Task 6
+     repointed --surface-panel onto --sfds-color-white, so that surface IS
+     pure white now and the unnudged colour would clear. It is kept anyway:
+     3.06:1 is a six-thousandth of margin over the floor, and the nudged
+     value holds 3.14:1 for no cost anyone can see. The figures below were
+     re-measured against #ffffff for the same reason — the light column
+     used to read 3.33/5.05/3.77/3.06, measured against a panel colour this
+     tool no longer has.
 
      A caution that matters when these sit side by side: no two
      Okabe-Ito colours reach 3:1 against EACH OTHER (the best pair is
@@ -375,10 +431,18 @@
      cells — therefore need a 1-2px separator in the surface colour, so
      each segment contrasts against the separator rather than against its
      neighbour. --viz-separator exists for exactly that. */
-  --viz-1: #009e73; /* bluish green   — light 3.33:1 | dark 5.19:1 */
-  --viz-2: #0072b2; /* blue           — light 5.05:1 | dark 3.42:1 */
-  --viz-3: #d55e00; /* vermillion     — light 3.77:1 | dark 4.59:1 */
-  --viz-4: #ca77a5; /* reddish purple — light 3.06:1 | dark 5.66:1 */
+  --viz-1: #009e73; /* bluish green   — light 3.42:1 | dark 5.19:1 */
+  --viz-2: #0072b2; /* blue           — light 5.19:1 | dark 3.42:1 */
+  --viz-3: #d55e00; /* vermillion     — light 3.87:1 | dark 4.59:1 */
+  --viz-4: #ca77a5; /* reddish purple — light 3.14:1 | dark 5.66:1 */
+  /* Deliberately carries no contrast figure, unlike the four above: at
+     1.78:1 on the light panel it would fail the 3:1 a data mark needs, and
+     its one consumer is not one. It paints `.review-queue-kpi::before`, a
+     4px decorative accent rail beside a tile whose meaning is carried
+     entirely by the label and number inside it — decorative, and so exempt
+     from WCAG 1.4.11. If it is ever used as an actual series colour it
+     needs re-picking first; the name promises more than the value can
+     currently deliver. */
   --viz-neutral: var(--sfds-color-grey-l3);
   --viz-separator: var(--surface-panel);
 
@@ -386,19 +450,38 @@
      ==========================================================
      These are NOT the --status-*-border tokens the chips use, and the
      difference is measured rather than stylistic. Those tokens are tuned to
-     be 1px strokes beside a tinted background; as large fills, two of them
-     collide. Running the four coloured steps through a CVD/ΔE validator:
+     be 1px strokes beside a tinted background, which is a different job from
+     a large fill — and the borrow fails on a different count now than it
+     did, so both are recorded:
 
-       chip borders  #a6d8a8 (approved) vs #c9caca (pending)
-                     → ΔE 8.4 under NORMAL vision, against a floor of 15
+       BEFORE the SFDS remap, the borders collided with each other.
+       #a6d8a8 (approved) vs #c9caca (pending) → ΔE 8.4 under NORMAL
+       vision, against a floor of 15. Approved and Needs review are the two
+       most common states and sit next to each other in the stacked bar, so
+       that pair failing is the whole chart failing.
 
-     Approved and Needs review are the two most common states and sit next to
-     each other in the stacked bar, so that pair failing is the whole chart
-     failing. The steps below were re-picked against the same validator and
-     clear every check — lightness band, chroma floor, colourblind separation,
-     normal-vision separation, and 3:1 against the surface — per mode. Dark is
-     a separately chosen set, not an automatic lightening: the light green
+       AFTER it, that particular pair separates fine — SFDS's green-l2
+       (#c0e2c5) against grey-l3 (#c2c2c2) measures ΔE 21.4 — but the
+       borders now fail the OTHER floor instead: green-l2 measures 1.41:1
+       against the white panel, where a fill has to clear 3:1 (WCAG 1.4.11).
+       So the conclusion is unchanged and its reason is not. Do not "notice"
+       the ΔE has recovered and repoint these at the chip tokens.
+
+     The steps below were picked against a CVD/ΔE validator and clear every
+     check — lightness band, chroma floor, colourblind separation,
+     normal-vision separation, and 3:1 against the surface — per mode. Dark
+     is a separately chosen set, not an automatic lightening: the light green
      lands at 2.96:1 on the dark panel, under the 3:1 floor.
+
+     Task 11 re-measured these rather than re-deriving them, and the
+     distinction is worth stating because the plan called for a re-derivation.
+     ΔE and colourblind separation are properties of the PAIRS, and no pair
+     changed — the fills are green/amber/purple/red/neutral and owe nothing to
+     the brand blue that moved. What genuinely needed re-running was the
+     surface contrast, since the light panel went #fcfcfc → #ffffff: worst
+     light pair ΔE 37.2, worst dark pair ΔE 45.9, and every fill clears 3:1 on
+     its own panel. Nothing moved, and tests/theme-contrast.test.js now
+     recomputes all of it per mode instead of leaving it here to rot.
 
      --viz-decision-pending is a deliberate exception to the chroma floor (and,
      in dark mode, the lightness band): it is a true neutral, and a neutral
@@ -457,15 +540,82 @@
   :root {
     color-scheme: dark;
 
-    /* Neutrals, inverted. Contrast measured against the panel (#16181d). */
-    --legacy-slate-1: #f0f1f2; /* body text        — 15.70:1 */
-    --legacy-slate-2: #c3c7ce; /* strong secondary — 10.47:1 */
-    --legacy-slate-3: #a9adb4; /* secondary text   —  7.88:1 */
-    --legacy-slate-4: #606670; /* strong border    —  3.07:1 */
-    --legacy-slate-5: #101216; /* page background */
-    --legacy-slate-6: #1d2027; /* raised/sunken fill */
-    --legacy-white: #16181d; /* panel surface */
-    --legacy-border: #2b2f37; /* hairline separator */
+    /* ===================================================================
+       The dark palette itself — --ext-dark-*
+       ===================================================================
+       SFDS publishes no dark palette. Not "an incomplete one": zero
+       `prefers-color-scheme` rules in either shipped bundle, and no
+       `-dark` variant of any colour token. So every value in this block is
+       this repo's own invention, derived from SFDS hues rather than picked
+       freehand, and it carries the `--ext-` prefix for exactly the reason
+       the radius scale does — a grep has to be able to separate what SFDS
+       specifies from what we made up, or the next reader assumes the whole
+       file is vendored.
+
+       They are declared once here and referenced below rather than being
+       written out at each use, because they were previously written out
+       TWICE: once for the `--legacy-*` primitive a component reads directly
+       and again for the semantic token that carries the same role. Twelve
+       hexes appeared in both halves of this block, free to drift apart, in
+       the one place where a drift shows up as unreadable text rather than
+       as a visual oddity.
+
+       Contrast figures below are against --ext-dark-panel (#16181d), which
+       is the surface these actually land on. tests/theme-contrast.test.js
+       recomputes them from these declarations. */
+
+    /* Neutrals — the inverted ramp the block header above describes, named
+       by the role each end actually plays rather than by the light-mode
+       step number it inverts from. */
+    --ext-dark-ink-1: #f0f1f2; /* body text        — 15.70:1 */
+    --ext-dark-ink-2: #c3c7ce; /* strong secondary — 10.47:1 */
+    --ext-dark-ink-3: #a9adb4; /* secondary text   —  7.88:1 */
+    --ext-dark-line-strong: #606670; /* strong border —  3.07:1 */
+    --ext-dark-line: #2b2f37; /* hairline separator */
+    --ext-dark-page: #101216;
+    --ext-dark-panel: #16181d;
+    --ext-dark-raised: #1d2027;
+    --ext-dark-sunken: #0c0e11;
+
+    /* Brand tints. Every one of these is a dark, desaturated blue that was
+       mixed from the OLD brand hue (OKLCH h ≈ -101.8°); re-derived here onto
+       SFDS's (h ≈ -88.8°) by holding each value's own lightness and chroma
+       and moving only its hue, so the tint keeps its weight and only its
+       family changes. Left alone they would have been the one part of the
+       chrome still quietly wearing the pre-SFDS blue, and at these
+       lightnesses that is invisible in isolation and obvious beside a link. */
+    --ext-dark-brand-tint-1: #161b2b; /* --brand-95's dark role: tab fills */
+    --ext-dark-brand-tint-2: #1c233a; /* --brand-90's dark role: hover wash */
+    --ext-dark-brand-wash: #212944;
+    --ext-dark-brand-soft: #161926;
+    --ext-dark-brand-deep: #0c1020;
+    --ext-dark-brand-line: #32384b; /* body text on it — 10.30:1 */
+
+    /* Status families. Each `-bg` is a near-black wash, each `-fg` is tuned
+       against that wash (all clear 8:1 there), and each `-line` is tuned
+       against the panel to clear the 3:1 a state-bearing border needs. */
+    --ext-dark-success-bg: #0e2a12;
+    --ext-dark-success-line: #35713a; /* 3.02:1 on panel */
+    --ext-dark-success-fg: #8fd694; /* 8.99:1 on its bg */
+    --ext-dark-warning-bg: #2e2410;
+    --ext-dark-warning-line: #7d6220; /* 3.08:1 on panel */
+    --ext-dark-warning-fg: #f0cd72; /* 9.94:1 on its bg */
+    --ext-dark-danger-bg: #351416;
+    --ext-dark-danger-line: #a84641; /* 3.06:1 on panel */
+    --ext-dark-danger-fg: #f5a8a2; /* 8.71:1 on its bg */
+    --ext-dark-purple-bg: #241a33;
+    --ext-dark-purple-line: #725a98; /* 3.07:1 on panel */
+    --ext-dark-purple-fg: #cbb0ef; /* 8.65:1 on its bg */
+
+    /* Neutrals, inverted. */
+    --legacy-slate-1: var(--ext-dark-ink-1);
+    --legacy-slate-2: var(--ext-dark-ink-2);
+    --legacy-slate-3: var(--ext-dark-ink-3);
+    --legacy-slate-4: var(--ext-dark-line-strong);
+    --legacy-slate-5: var(--ext-dark-page);
+    --legacy-slate-6: var(--ext-dark-raised);
+    --legacy-white: var(--ext-dark-panel);
+    --legacy-border: var(--ext-dark-line);
 
     /* Lightened from the light-mode #a84b00 for contrast against the dark
        panel surface — verify with the accessibility.spec.js axe scan (dark
@@ -479,49 +629,52 @@
        consumer ever adopts --eyebrow-agency outside `.browser-shell`. */
     --eyebrow-agency: #d97d3d;
 
-    /* Brand lightens. --legacy-action-blue (#2a60af) manages only 2.2:1 on
-       the dark panel — far under the 4.5:1 a link needs — so links take
-       step 70 of the ramp and hover goes lighter still, preserving the
-       "hover gets more prominent" direction that step 10 gave in light
-       mode. */
+    /* Brand lightens. SFDS's action blue (#495ed4) manages only 3.2:1 on
+       the dark panel — over the 3:1 a border needs and under the 4.5:1 a
+       link needs — so links take step 70 of the ramp and hover goes lighter
+       still, preserving the "hover gets more prominent" direction that step
+       10 gave in light mode. */
     --legacy-action-blue: var(--brand-70); /*  8.02:1 on panel */
-    --legacy-action-blue-hover: var(--brand-80); /* 10.74:1 on panel */
+    --legacy-action-blue-hover: var(--brand-80); /* 10.80:1 on panel */
 
     /* Only the two lightest steps are re-pointed. They are the ones used as
        background TINTS (the active workspace tab, hover washes), and at
-       #ecf2fb / #dbe6f7 they would render as near-white slabs on a dark
+       #ecf1fd / #dee5fa they would render as near-white slabs on a dark
        panel. Steps 80 and darker are used as foreground and accent colours
        — links take step 70 above — so they must stay light to keep their
        contrast against the dark surface, and are deliberately left alone.
        In other words the ramp is not inverted wholesale; only its role as
        "tint" flips. */
-    --brand-95: #131c2b;
-    --brand-90: #17243a;
-    --legacy-accent-light: #1d2a44;
-    --legacy-blue-soft-bg: #141a26;
-    --legacy-footer-bg: #0b1020;
-    --legacy-focus-ring: rgba(141, 176, 230, 0.45);
+    --brand-95: var(--ext-dark-brand-tint-1);
+    --brand-90: var(--ext-dark-brand-tint-2);
+    --legacy-accent-light: var(--ext-dark-brand-wash);
+    --legacy-blue-soft-bg: var(--ext-dark-brand-soft);
+    --legacy-footer-bg: var(--ext-dark-brand-deep);
+    /* Step 70 at 45% — the same colour links take, so a focused control
+       reads as brand rather than as a fifth accent. Written as a triple
+       because a custom property cannot be interpolated into an rgba(). */
+    --legacy-focus-ring: rgba(153, 172, 237, 0.45);
 
     /* Status families invert the same way: tinted light fills become dark
        washes, and each family's dark text becomes its light foreground —
        so the hue association (green = approved, red = blocked) survives
        the theme change. Every `-text` clears 4.5:1 on its own `-bg`. */
-    --legacy-success-bg: #0e2a12;
-    --legacy-success-border: #35713a; /* 3.02:1 on panel */
-    --legacy-success-text: #8fd694; /* 8.99:1 on its bg */
-    --legacy-green: #8fd694;
-    --legacy-warning-bg: #2e2410;
-    --legacy-warning-border: #7d6220; /* 3.08:1 on panel */
-    --legacy-warning-text: #f0cd72; /* 9.94:1 on its bg */
-    --legacy-danger-bg: #351416;
-    --legacy-danger-border: #a84641; /* 3.06:1 on panel */
-    --legacy-danger-text: #f5a8a2; /* 8.71:1 on its bg */
-    --legacy-purple-bg: #241a33;
-    --legacy-purple-border: #725a98; /* 3.07:1 on panel */
-    --legacy-purple-text: #cbb0ef; /* 8.65:1 on its bg */
-    --legacy-info-dark: #8db0e6;
-    --legacy-info-light: #141a26;
-    --legacy-info-border: #2b3a4a;
+    --legacy-success-bg: var(--ext-dark-success-bg);
+    --legacy-success-border: var(--ext-dark-success-line);
+    --legacy-success-text: var(--ext-dark-success-fg);
+    --legacy-green: var(--ext-dark-success-fg);
+    --legacy-warning-bg: var(--ext-dark-warning-bg);
+    --legacy-warning-border: var(--ext-dark-warning-line);
+    --legacy-warning-text: var(--ext-dark-warning-fg);
+    --legacy-danger-bg: var(--ext-dark-danger-bg);
+    --legacy-danger-border: var(--ext-dark-danger-line);
+    --legacy-danger-text: var(--ext-dark-danger-fg);
+    --legacy-purple-bg: var(--ext-dark-purple-bg);
+    --legacy-purple-border: var(--ext-dark-purple-line);
+    --legacy-purple-text: var(--ext-dark-purple-fg);
+    --legacy-info-dark: var(--brand-70);
+    --legacy-info-light: var(--ext-dark-brand-soft);
+    --legacy-info-border: var(--ext-dark-brand-line);
 
     /* Status borders are lighter than the container hairline on purpose.
        A decorative container edge is exempt from WCAG 1.4.11 — the change
@@ -529,7 +682,7 @@
        reads as harsh in dark mode. A status border is not decorative: it
        carries which state a chip is in, so each one is tuned to clear 3:1
        against the panel above. */
-    --status-pending-border: #606670;
+    --status-pending-border: var(--ext-dark-line-strong);
 
     /* Task 6 pointed the SEMANTIC layer's light-mode definitions straight at
        `--sfds-color-*` instead of through `--legacy-*` (see the top of this
@@ -557,29 +710,29 @@
        Nothing about dark mode's appearance changes; only which layer defines
        it does. */
     --brand-primary: var(--brand-70); /*  8.02:1 on panel */
-    --brand-primary-hover: var(--brand-80); /* 10.74:1 on panel */
-    --surface-page: #101216;
-    --surface-panel: #16181d;
-    --surface-soft: #101216;
-    --text-primary: #f0f1f2; /* 15.70:1 on panel */
-    --text-secondary: #a9adb4; /*  7.88:1 on panel */
-    --border-default: #2b2f37;
-    --border-strong: #606670; /*  3.07:1 on panel */
-    --status-approved-bg: #0e2a12;
-    --status-approved-border: #35713a; /* 3.02:1 on panel */
-    --status-approved-fg: #8fd694; /* 8.99:1 on its bg */
-    --status-edits-bg: #2e2410;
-    --status-edits-border: #7d6220; /* 3.08:1 on panel */
-    --status-edits-fg: #f0cd72; /* 9.94:1 on its bg */
-    --status-revise-bg: #241a33;
-    --status-revise-border: #725a98; /* 3.07:1 on panel */
-    --status-revise-fg: #cbb0ef; /* 8.65:1 on its bg */
-    --status-blocked-bg: #351416;
-    --status-blocked-border: #a84641; /* 3.06:1 on panel */
-    --status-blocked-fg: #f5a8a2; /* 8.71:1 on its bg */
-    --status-pending-bg: #101216;
-    --status-pending-fg: #c3c7ce; /* 10.47:1 on panel */
-    --viz-neutral: #606670;
+    --brand-primary-hover: var(--brand-80); /* 10.80:1 on panel */
+    --surface-page: var(--ext-dark-page);
+    --surface-panel: var(--ext-dark-panel);
+    --surface-soft: var(--ext-dark-page);
+    --text-primary: var(--ext-dark-ink-1);
+    --text-secondary: var(--ext-dark-ink-3);
+    --border-default: var(--ext-dark-line);
+    --border-strong: var(--ext-dark-line-strong);
+    --status-approved-bg: var(--ext-dark-success-bg);
+    --status-approved-border: var(--ext-dark-success-line);
+    --status-approved-fg: var(--ext-dark-success-fg);
+    --status-edits-bg: var(--ext-dark-warning-bg);
+    --status-edits-border: var(--ext-dark-warning-line);
+    --status-edits-fg: var(--ext-dark-warning-fg);
+    --status-revise-bg: var(--ext-dark-purple-bg);
+    --status-revise-border: var(--ext-dark-purple-line);
+    --status-revise-fg: var(--ext-dark-purple-fg);
+    --status-blocked-bg: var(--ext-dark-danger-bg);
+    --status-blocked-border: var(--ext-dark-danger-line);
+    --status-blocked-fg: var(--ext-dark-danger-fg);
+    --status-pending-bg: var(--ext-dark-page);
+    --status-pending-fg: var(--ext-dark-ink-2); /* 10.47:1 on panel */
+    --viz-neutral: var(--ext-dark-line-strong);
 
     /* Depth on dark surfaces comes from lighter fills, not darker shadow —
        a light-mode shadow over a dark panel just produces a muddy halo.
@@ -588,9 +741,13 @@
     --ds-shadow-2: 0 2px 8px rgba(0, 0, 0, 0.45);
     --ds-shadow-3: 0 8px 24px rgba(0, 0, 0, 0.5);
 
-    --surface-sunken: #0c0e11;
-    --surface-raised: #1d2027;
-    --brand-on-primary: #001033;
+    --surface-sunken: var(--ext-dark-sunken);
+    --surface-raised: var(--ext-dark-raised);
+    /* Label text on the primary button, which in dark mode is step 70 —
+       so this is the ramp's own darkest step rather than the near-black
+       #001033 it used to restate, which was the OLD ramp's step 05 and
+       therefore the old blue. 8.18:1 on --brand-primary. */
+    --brand-on-primary: var(--brand-05);
 
     /* The one piece of notification chrome that is re-tuned rather than
        pinned. The toast palette above stays as declared — a small dark
@@ -701,8 +858,8 @@
        that a reader can trust the mockup renders light, and a guarantee with
        three silent exceptions is not one. The next person to use a pending
        chip inside the mockup should not have to rediscover this. */
-    --brand-95: #ecf2fb;
-    --brand-90: #dbe6f7;
+    --brand-95: #ecf1fd;
+    --brand-90: #dee5fa;
     --status-pending-border: var(--sfds-color-grey-l3);
 
     /* Task 6's counterpart to the dark :root block above. The semantic
@@ -765,8 +922,8 @@
     --surface-sunken: var(--sfds-color-slate-l1);
     --surface-raised: var(--sfds-color-white);
     --brand-on-primary: var(--sfds-color-white);
-    --ds-shadow-1: 0 1px 2px rgba(0, 29, 78, 0.06), 0 1px 3px rgba(0, 29, 78, 0.08);
-    --ds-shadow-2: 0 2px 4px rgba(0, 29, 78, 0.06), 0 4px 12px rgba(0, 29, 78, 0.1);
-    --ds-shadow-3: 0 8px 16px rgba(0, 29, 78, 0.08), 0 16px 32px rgba(0, 29, 78, 0.12);
+    --ds-shadow-1: 0 1px 2px rgba(12, 20, 100, 0.06), 0 1px 3px rgba(12, 20, 100, 0.08);
+    --ds-shadow-2: 0 2px 4px rgba(12, 20, 100, 0.06), 0 4px 12px rgba(12, 20, 100, 0.1);
+    --ds-shadow-3: 0 8px 16px rgba(12, 20, 100, 0.08), 0 16px 32px rgba(12, 20, 100, 0.12);
   }
 }

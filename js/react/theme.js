@@ -32,21 +32,31 @@ import { createTheme } from '@mui/material/styles'
 /* Fallbacks are the light-mode values from css/theme.css. They are only
    reached when the tokens resolve empty — a happy-dom test, or a call made
    before the stylesheets applied — and exist so a theme build can never
-   produce `undefined`, which MUI turns into a crash rather than a default. */
+   produce `undefined`, which MUI turns into a crash rather than a default.
+
+   Every colour here was the PRE-SFDS value until Task 11, and the whole
+   table was wrong at once rather than drifting one entry at a time: Task 6
+   repointed the semantic layer onto `--sfds-color-*` and Task 11 re-derived
+   the brand ramp, and neither pass came back for this file. That is the
+   failure mode a fallback invites — it renders only when the stylesheets
+   are absent, so nothing on screen ever contradicts it, and
+   tests/react-theme.test.js asserts each token HAS a fallback rather than
+   what it says. Re-check these against css/theme.css's `:root` whenever a
+   light-mode value moves; a stale one is not visible, it is just wrong. */
 const TOKEN_FALLBACKS = {
-  '--surface-page': '#f0f0f0',
-  '--surface-panel': '#fcfcfc',
-  '--surface-sunken': '#f8fafc',
-  '--surface-soft': '#f0f0f0',
-  '--text-primary': '#0b0c0c',
-  '--text-secondary': '#6e7070',
-  '--border-default': '#e9eaea',
-  '--border-strong': '#c9caca',
-  '--brand-40': '#2a60af',
-  '--brand-10': '#001d4e',
-  '--status-approved-fg': '#075e0a',
-  '--status-blocked-fg': '#8f1d15',
-  '--status-edits-fg': '#6f4a00',
+  '--surface-page': '#f6f6f6',
+  '--surface-panel': '#ffffff',
+  '--surface-sunken': '#eff3f4',
+  '--surface-soft': '#f6f6f6',
+  '--text-primary': '#212123',
+  '--text-secondary': '#1d4d70',
+  '--border-default': '#e2e2e2',
+  '--border-strong': '#c2c2c2',
+  '--brand-40': '#495ed4',
+  '--brand-10': '#0c1464',
+  '--status-approved-fg': '#1b674d',
+  '--status-blocked-fg': '#9b3921',
+  '--status-edits-fg': '#424244',
   // Was '6px' until this task, which is wrong rather than merely stale: the
   // token this stands in for has been 8px since it was written, so any
   // render that ever fell through to the fallback — a happy-dom test, or a
