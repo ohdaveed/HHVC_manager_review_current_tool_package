@@ -1224,9 +1224,13 @@ start `bun run serve`.
   unconfigured deploy. 502 is the broken one.
 - **On the live deploy those routes now answer 401, not 501** (verified
   2026-08-15). Authorization is configured there, so **a 501 now would mean the
-  variables were lost**, and 503 would mean the config is malformed. Presence
-  was inferred from the status code, not read out of the service — never print
-  a variable's value. **A 401 from `/api/ai/capabilities` says nothing about
+  variables were lost.** A 503 has two causes only the response body separates
+  — `API CORS configuration is invalid.` (malformed
+  `REVIEW_API_ALLOWED_ORIGINS`) or `API authorization configuration is
+invalid.` (malformed `REVIEW_API_PRINCIPALS`); the CORS check runs first and
+  masks the auth state, so a bare 503 is not evidence of an auth problem.
+  Presence was inferred from the status code, not read out of the service —
+  never print a variable's value. **A 401 from `/api/ai/capabilities` says nothing about
   the provider keys**: authorization is the first of two gates, so an
   unauthenticated caller never reaches the capability report. Full procedure in
   the `verify-railway-backend` skill.

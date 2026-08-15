@@ -2242,8 +2242,12 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
 - **On the live deploy those routes now answer 401, not 501** (verified
   2026-08-15 against both). Authorization is configured there, so 501 has
   stopped being the expected reading for this host: **a 501 now would mean the
-  variables were lost**, and 503 would mean the authorization config is
-  malformed. Presence of the credentials was inferred from the status code
+  variables were lost.** A 503 has two causes and the response body is the only
+  thing that separates them — `API CORS configuration is invalid.` for a
+  malformed `REVIEW_API_ALLOWED_ORIGINS`, `API authorization configuration is
+invalid.` for a malformed `REVIEW_API_PRINCIPALS`. The CORS check runs first
+  and masks the authorization state entirely, so do not read a bare 503 as an
+  auth problem. Presence of the credentials was inferred from the status code
   rather than read out of the service — never print a variable's value.
   **A 401 from `/api/ai/capabilities` says nothing about whether the provider
   keys are set.** The two gates run in order — API authorization first,
