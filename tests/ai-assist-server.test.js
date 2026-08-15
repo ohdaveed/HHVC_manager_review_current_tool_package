@@ -162,23 +162,61 @@ function refusalResponse() {
   }
 }
 
-// This wait window (attempts x 100ms = 8000ms) and the explicit timeout on
-// every beforeAll that calls it (15000ms) are a pair: whichever is smaller is
-// what actually fires, so the window must stay under the timeout. It did not
-// used to. The window was 6000ms while the hooks passed no timeout at all,
-// leaving them on Bun's 5000ms default — so the hook was killed BEFORE the
-// wait could finish, and no amount of widening the window alone could have
-// helped. Change both together or neither.
-async function waitForServer(url, attempts = 80) {
+/**
+ * Drain the spawned server's stderr. The stream only ends when the process
+ * does, so the caller must have observed the exit or killed it first.
+ *
+ * @param {import('bun').Subprocess} proc
+ * @returns {Promise<string>}
+ */
+async function readServerStderr(proc) {
+  if (!proc || !proc.stderr || typeof proc.stderr === 'number') return '(stderr not captured)'
+  try {
+    return (await new Response(proc.stderr).text()).trim() || '(nothing on stderr)'
+  } catch {
+    return '(stderr unreadable)'
+  }
+}
+
+/**
+ * Poll until the spawned server answers, or explain why it never will. An
+ * exited process fails immediately with its code and stderr; a live but
+ * unresponsive one uses the full window. See the fuller note in
+ * tests/review-api-server.test.js for why the distinction was worth building —
+ * this file is where it cost the most, since a leaked DATABASE_URL left the
+ * server connecting to a remote database instead of binding, and reported
+ * itself as a timeout.
+ *
+ * The window (attempts x 100ms = 8000ms) must stay under the explicit timeout
+ * on every beforeAll that calls it (15000ms): whichever is smaller is what
+ * fires. The window was once 6000ms while the hooks passed no timeout at all,
+ * leaving them on Bun's 5000ms default, so the hook was killed BEFORE the wait
+ * could finish. Change both together or neither.
+ *
+ * @param {string} url
+ * @param {import('bun').Subprocess} [proc]
+ * @param {number} [attempts]
+ */
+async function waitForServer(url, proc, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
       return
     } catch {
+      if (proc && proc.exitCode !== null) {
+        throw new Error(
+          `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
+            `--- server stderr ---\n${await readServerStderr(proc)}`
+        )
+      }
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
   }
-  throw new Error(`Server at ${url} did not start in time`)
+  proc?.kill()
+  throw new Error(
+    `Server for ${url} did not answer within ${(attempts * 100) / 1000}s, and was still running.\n` +
+      `--- server stderr ---\n${await readServerStderr(proc)}`
+  )
 }
 
 function createTestDbDir(name) {
@@ -226,7 +264,7 @@ function spawnServer(env) {
     cwd: ROOT,
     env: isolatedApiEnvironment({ PORT: String(PORT), HOST: '127.0.0.1', ...env }),
     stdout: 'ignore',
-    stderr: 'ignore',
+    stderr: 'pipe',
   })
 }
 
@@ -303,7 +341,7 @@ describe('AI assist API (server.ts)', () => {
       GEMINI_BASE_URL: `http://127.0.0.1:${GEMINI_STUB_PORT}`,
       DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
     })
-    await waitForServer(`${base}/api/ai/capabilities`)
+    await waitForServer(`${base}/api/ai/capabilities`, proc)
   }, 15000)
 
   afterAll(() => {
@@ -1300,9 +1338,9 @@ describe('compliance-audit task when Gemini is not configured', () => {
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
       }),
       stdout: 'ignore',
-      stderr: 'ignore',
+      stderr: 'pipe',
     })
-    await waitForServer(`${noGeminiBase}/api/ai/capabilities`)
+    await waitForServer(`${noGeminiBase}/api/ai/capabilities`, proc)
   }, 15000)
 
   afterAll(() => {
@@ -1349,9 +1387,9 @@ describe('AI assist API when unconfigured', () => {
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
       }),
       stdout: 'ignore',
-      stderr: 'ignore',
+      stderr: 'pipe',
     })
-    await waitForServer(`${unconfiguredBase}/api/ai/capabilities`)
+    await waitForServer(`${unconfiguredBase}/api/ai/capabilities`, proc)
   }, 15000)
 
   afterAll(() => {
@@ -1432,9 +1470,9 @@ describe('AI assist API request timeout', () => {
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
       }),
       stdout: 'ignore',
-      stderr: 'ignore',
+      stderr: 'pipe',
     })
-    await waitForServer(`${timeoutBase}/api/ai/capabilities`)
+    await waitForServer(`${timeoutBase}/api/ai/capabilities`, proc)
   }, 15000)
 
   afterAll(() => {
@@ -1510,9 +1548,9 @@ describe('AI assist API upstream (SDK) timeout', () => {
         DATA_DB_PATH: path.join(dbDir, 'review-state.db'),
       }),
       stdout: 'ignore',
-      stderr: 'ignore',
+      stderr: 'pipe',
     })
-    await waitForServer(`${sdkBase}/api/ai/capabilities`)
+    await waitForServer(`${sdkBase}/api/ai/capabilities`, proc)
   }, 15000)
 
   afterAll(() => {

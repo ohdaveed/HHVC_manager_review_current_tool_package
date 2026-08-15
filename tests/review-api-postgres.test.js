@@ -36,23 +36,64 @@ function resolveDatabaseUrl() {
 
 const DATABASE_URL = resolveDatabaseUrl()
 
-// This wait window (attempts x 100ms = 8000ms) and the explicit timeout on the
-// beforeAll that calls it (15000ms) are a pair: whichever is smaller is what
-// actually fires, so the window must stay under the timeout. It did not use to
-// — the window was already 8000ms while the hook passed no timeout, leaving it
-// on Bun's 5000ms default, so the wait could never run to completion. That was
-// invisible because this suite skips without a Postgres; it would have failed
-// the first time anyone ran it with one. Change both together or neither.
-async function waitForServer(url, attempts = 80) {
+/**
+ * Drain the spawned server's stderr. The stream only ends when the process
+ * does, so the caller must have observed the exit or killed it first.
+ *
+ * @param {import('bun').Subprocess} proc
+ * @returns {Promise<string>}
+ */
+async function readServerStderr(proc) {
+  if (!proc || !proc.stderr || typeof proc.stderr === 'number') return '(stderr not captured)'
+  try {
+    return (await new Response(proc.stderr).text()).trim() || '(nothing on stderr)'
+  } catch {
+    return '(stderr unreadable)'
+  }
+}
+
+/**
+ * Poll until the spawned server answers, or explain why it never will. An
+ * exited process fails immediately with its code and stderr; a live but
+ * unresponsive one uses the full window. See the fuller note in
+ * tests/review-api-server.test.js.
+ *
+ * This suite has the most to gain from the stderr half: it is the only one
+ * pointed at a real database, so the interesting failure — bad credentials, an
+ * unreachable host, a missing database — happens INSIDE the server at boot and
+ * is invisible from the outside. Without the capture it presented as "did not
+ * start in time", which says nothing about Postgres at all.
+ *
+ * The window (attempts x 100ms = 8000ms) must stay under the beforeAll timeout
+ * (15000ms); whichever is smaller is what fires. The hook once passed no
+ * timeout, leaving it on Bun's 5000ms default under an 8000ms window — invisible
+ * because this suite skips without a Postgres, and it would have failed the
+ * first time anyone ran it with one. Change both together or neither.
+ *
+ * @param {string} url
+ * @param {import('bun').Subprocess} [proc]
+ * @param {number} [attempts]
+ */
+async function waitForServer(url, proc, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       await fetch(url)
       return
     } catch {
+      if (proc && proc.exitCode !== null) {
+        throw new Error(
+          `Server for ${url} exited with code ${proc.exitCode} before it answered.\n` +
+            `--- server stderr ---\n${await readServerStderr(proc)}`
+        )
+      }
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
   }
-  throw new Error(`Server at ${url} did not start in time`)
+  proc?.kill()
+  throw new Error(
+    `Server for ${url} did not answer within ${(attempts * 100) / 1000}s, and was still running.\n` +
+      `--- server stderr ---\n${await readServerStderr(proc)}`
+  )
 }
 
 function authHeaders() {
@@ -89,9 +130,9 @@ describe.skipIf(!DATABASE_URL)('review-state API on Postgres', () => {
         REVIEW_API_ALLOWED_ORIGINS: undefined,
       },
       stdout: 'ignore',
-      stderr: 'ignore',
+      stderr: 'pipe',
     })
-    await waitForServer(`${base}/api/review-state`)
+    await waitForServer(`${base}/api/review-state`, proc)
     // After boot, so the server's own CREATE TABLE IF NOT EXISTS has run.
     await sql`TRUNCATE review_pages`
   }, 15000)
