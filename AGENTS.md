@@ -685,9 +685,11 @@ load-bearing: two in-process versions were written first and both passed
 against a deliberately broken `js/utils.js`, because a sibling test file that
 ESM-imports it leaves it cached for any later `require()`. **The fix if that
 guard fails is to remove the await, not to restructure `safeUrl`** — it is the
-XSS scheme guard, and every dual-export module in `js/` is consumed off
-`window`, so extracting it would push `js/page-render.js` onto window
-indirection to solve a problem that does not exist.
+XSS scheme guard, and on the BROWSER side every dual-export module in `js/`
+is read off `window` rather than named-imported (Node `require`s them
+directly, which is the half that works), so extracting `safeUrl` would push
+`js/page-render.js` onto window indirection to solve a problem that does not
+exist.
 Separately, **CI never exercises that crossing under Node**:
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
 `build:netlify`, which invokes `bun build_scripts/validate.js`). CI does run

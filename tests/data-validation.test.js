@@ -20,7 +20,7 @@ const path = require('node:path')
 
 const ROOT = path.resolve(__dirname, '..')
 
-describe('the CommonJS -> ESM crossing that data-checks.js depends on', () => {
+describe('require() of build_scripts/data-checks.js', () => {
   // data-checks.js is CommonJS and `require()`s js/utils.js, which is an ES
   // module, so `findUnsafeUrls` and the renderer share one safeUrl rather than
   // two copies that could drift. Bun allows that only while js/utils.js is
@@ -43,10 +43,10 @@ describe('the CommonJS -> ESM crossing that data-checks.js depends on', () => {
   //
   // The fix, if this ever fails, is to remove the await — NOT to restructure
   // safeUrl. It is the XSS scheme guard, its own comment warns that failing in
-  // one of its two execution contexts is worse than not existing, and every
-  // dual-export module in js/ is consumed off `window`, so extracting it would
-  // push js/page-render.js onto window indirection to fix a non-problem.
-  test('a fresh process can require() data-checks.js, and so its whole ESM graph', () => {
+  // one of its two execution contexts is worse than not existing, and on the browser side every
+  // dual-export module in js/ is read off `window` rather than named-imported,
+  // so extracting it would push js/page-render.js onto window indirection.
+  test('loads in a fresh Bun process without an async-module error', () => {
     // process.execPath, not 'bun': this guards behaviour that CHANGED between
     // Bun versions, so resolving the runtime through PATH could test a
     // different one than the suite is running under and report on a version

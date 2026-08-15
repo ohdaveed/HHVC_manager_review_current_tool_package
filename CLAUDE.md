@@ -735,9 +735,10 @@ that names neither validate nor the page data.
 versions were written first and both passed against a deliberately broken
 `js/utils.js`, since a sibling test that ESM-imports it leaves it cached.
 **If that guard fails, remove the await — do not restructure `safeUrl`**: it is
-the XSS scheme guard, and every dual-export module in `js/` is consumed off
-`window`, so extracting it would push `js/page-render.js` onto window
-indirection for no gain. Separately,
+the XSS scheme guard, and on the BROWSER side every dual-export module in
+`js/` is read off `window` rather than named-imported (Node `require`s them
+directly, which is the half that works), so extracting `safeUrl` would push
+`js/page-render.js` onto window indirection for no gain. Separately,
 **CI never exercises that crossing under Node** —
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
 `build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
