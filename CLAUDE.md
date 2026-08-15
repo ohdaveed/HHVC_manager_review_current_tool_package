@@ -214,6 +214,16 @@ request, in two deliberately separate jobs so a formatting or schema failure
 reports in seconds without waiting on a Chromium download, and a flaky
 browser run never masks a unit failure:
 
+**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
+took `bun-version: latest` until 2026-08-15, so the runtime changed under the
+repo with no commit. Bun 1.3.14 stopped letting CJS `require()` an ESM module;
+`build_scripts/storage.js` was the only ESM file under `build_scripts/`, so
+`server.ts` threw at boot and every suite spawning it reported "did not start
+in time" — passing or failing per run depending on which Bun `latest` resolved
+to. **Everything under `build_scripts/` is CommonJS now**; keep it that way,
+since `server.ts` named-imports those modules from TypeScript, which is the
+supported direction. Bumping `.bun-version` is fine, just deliberate.
+
 - **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
   → `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity
   check: it fails if the committed workshop-form `dist` references assets
