@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 43 unit-test files in tests/
+bun run test                  # bun test over the 44 unit-test files in tests/
 bun run test:e2e              # playwright test over the 21 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 43 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 44 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -154,7 +154,17 @@ empty palette value into a crash rather than a default — plus which parts of
 the chrome scale the bridge maps at all, since MUI's own sizes and its 8px
 spacing factor are a real scale rather than an absent one, so an unmapped
 variant renders plausibly and only reads wrong beside the string-template
-panel next door), and
+panel next door), `theme-contrast` (WCAG ratios and CIE76 ΔE for the token
+pairs the tool actually renders, computed from the declared values rather than
+asserted from a comment — SFDS publishes no dark palette and no guarantees for
+the pairings this tool invents, and every dark-mode contrast bug this repo has
+had came from a literal sitting where a token belonged and failed no test, a
+comment being unable to go red. It reads `css/theme.css` in three named scopes
+rather than scraping it, since the file declares the light values, overrides
+them for dark, and then re-pins the light ones a third time inside
+`.browser-shell`; and it measures colour separation WITHIN a mode, never
+across, because the whole-file scrape puts the light neutral against the dark
+one and reports ΔE 14.1 for a pair that can never share a screen), and
 `font-loading` (that both typefaces carry a real weight-700 instance, by two
 DIFFERENT mechanisms — the mockup's headings are weight 700, and a browser
 asked for 700 with no matching face synthesises bold rather than failing,
@@ -600,11 +610,21 @@ makes one copy enough, so resist re-adding a second printing of anything.
   as "background could not be determined, partially obscured by another
   element"); it is invisible in a screenshot taken at scroll position 0.
 - **The breakpoint is 1700px because that is where three columns actually
-  fit**, and it was 1400px for a while, which is not. `.browser-shell` carries
-  `flex-shrink: 0` and bottoms out near 780px wide, so it ends around x=1170
-  however narrow its column gets, while the panel starts at `100vw - 30vw`.
-  Those cross at ~1671px: every width from 1401px to there docked the panel
-  _on top of_ the mockup — 162px of overlap at 1440, 100px at 1536, 50px at 1600. Do not lower it again without re-measuring both numbers. The cost is
+  fit**, and it was 1400px for a while, which is not. `.browser-shell` will not
+  shrink past its min-content floor — re-measured at 765px on 2026-08-15, down
+  from 780px before the SFDS type and spacing work — so it ends at a fixed
+  x=1155 (370 sidebar + 20 canvas padding + 765) however narrow its column
+  gets, while the panel starts at `100vw - 30vw`. Those cross at 1155/0.7 =
+  1650px: every width from 1401px to there docked the panel _on top of_ the
+  mockup — 147px of overlap at 1440, 80px at 1536, 35px at 1600. **1700 stayed
+  after that re-measurement rather than moving down onto 1650**, because it was
+  already a round-up over the old 1671 crossing and the new floor widens that
+  margin instead of eating it; 1650–1700 is a band no real display reports, and
+  the margin is what covers browser zoom and the widths the 40px test sweep
+  never visits. Do not lower it without re-measuring both numbers — the
+  crossing is now asserted from the live layout in
+  `tests/e2e/workspace-panels.spec.js`, so a shell that grows past its floor
+  fails there rather than shipping. The cost is
   that a 14-inch laptop (1512 CSS px) now stacks rather than docks; squeezing
   the mockup instead is the other way out and is rejected on purpose, since it
   would misrepresent the page under review.
