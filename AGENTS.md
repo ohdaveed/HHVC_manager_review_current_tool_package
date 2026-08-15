@@ -2367,17 +2367,34 @@ for a raw `--legacy-*` value, and it must never hardcode a literal — every
 dark-mode contrast bug this repo has had came from a literal sitting where a
 token belonged.
 
-**The mockup's own type scale is the documented exception to that rule.**
-`h1`–`h4` in `css/styles.css` carry literal sizes (`clamp(2.2rem, 4vw, 4rem)`,
-`clamp(1.6rem, 2.6vw, 2.25rem)`, `1.25rem`) rather than tokens, and should stay
-that way: they mirror what SF.gov actually renders, so they describe the page
-under review rather than this tool's chrome. A retunable token would let a
-reviewer change the apparent size of the thing they are being asked to judge —
-the same argument that docks the workspace at 1700px instead of squeezing the
-mockup. Tool chrome has its own scale in `css/theme.css` (`--ds-text-panel`,
-`--ds-text-card`, `--ds-text-label`, `--ds-text-micro`) and should use it. Note
-those are named `--ds-text-*`, not `--*-size-*`; grepping for "size" or "scale"
-misses them and makes the type scale look absent when it is not.
+**The mockup's type scale is SFDS's `title` ladder, and is no longer an
+exception.** `h1`–`h3` in `css/styles.css` read `--sfds-text-title-*` like
+everything else. The literals that stood here were justified as mirroring what
+SF.gov actually renders; measured in a real browser on 2026-08-14, they did not
+— live sf.gov renders `h1` at 46/56 w600, which sits on no SFDS step, and the
+old `clamp()` topped out at 64px, which sits on neither. (The literal was
+doubly moot for `h1`: every mockup page's title renders inside `.hero-inner`,
+whose own more-specific `font-size: 2.5rem` always outranked the bare `h1`
+rule, so the `clamp()` this paragraph used to defend was dead code no page
+ever actually showed.) The tool follows SFDS on purpose, so the mockup
+deliberately no longer matches sf.gov's current Drupal theme. See
+`docs/superpowers/specs/2026-08-14-sfds-design-consistency-design.md`.
+
+The ladder applies to the bare `h1`/`h2`/`h3` rules; several
+component-scoped headings elsewhere in `css/styles.css` keep their own,
+smaller or larger, pre-existing sizes as a deliberate different tier rather
+than being forced onto it — `.region-title` (the "Services"/"Resources"
+grouping label), `.card h3`, `.contact-section h3`, `.top-facts h2`,
+`.callout-header h3`, `.what-to-know-subsection h3`, `.custom-section h3`,
+and the footer's `.footer-columns h4` among them. Only `.region-title` and
+`.footer-columns h4` carry their own in-file comment explaining the
+exception; the others are established, self-evidently-scoped component
+styles this task left alone. Tool chrome has its own scale in
+`css/theme.css`
+(`--ds-text-panel`, `--ds-text-card`, `--ds-text-label`, `--ds-text-micro`)
+and should use it. Note those are named `--ds-text-*`, not `--*-size-*`;
+grepping for "size" or "scale" misses them and makes the type scale look
+absent when it is not.
 
 **A selector should be declared in exactly one file.** `.review-workspace`,
 its tabs, the KPI tiles and `.status-chip` were each split across

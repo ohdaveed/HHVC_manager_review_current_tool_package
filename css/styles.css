@@ -127,52 +127,54 @@ ol {
 li {
   margin-bottom: 0.35rem;
 }
-/* =====================================================================
-   Mockup type scale — deliberately literal, not tokenized
-   =====================================================================
-   Every other size step in this tool takes a semantic token, and the
-   rule of thumb is that a component "must never hardcode a literal."
-   The four heading rules below are the documented exception, and the
-   exception is the point: these sizes mirror what SF.gov actually
-   renders, so they describe the page under review rather than this
-   tool's chrome. Routing them through a retunable token would let a
-   reviewer change the apparent size of the very thing they are being
-   asked to judge — the same reason the workspace docks at 1700px
-   instead of squeezing the mockup into a narrower column.
+/* Headings follow SFDS's `title` ladder — titleXl, titleLg, titleXs — chosen
+   over the `display` ladder after seeing all three rendered at real size. SFDS
+   makes its display steps weight 300, which turned the page title thin; the
+   weight change read as a larger departure than the pixel sizes did.
 
-   Tool chrome has its own scale and should use it: --ds-text-panel /
-   --ds-text-card / --ds-text-label / --ds-text-micro in css/theme.css.
-   If you are reaching for a heading size here for anything outside
-   the mockup itself, you almost certainly want one of those instead. */
+   The sizes are tokens now rather than the clamp() literals that stood here,
+   and the comment those literals carried — that they mirror what SF.gov
+   actually renders — was false when measured: live sf.gov renders h1 at 46/56
+   w600, which is on no SFDS step. The tool follows SFDS deliberately, so the
+   mockup no longer matches sf.gov's current theme. That is the decision, not a
+   drift. */
 h1,
-h2,
-h3,
-h4 {
+h2 {
   /* --text-primary, not --sfds-color-black: this selector is unscoped, so it
      also styles chrome headings outside the mockup (e.g. a workspace panel's
-     own <h3>), which must follow dark mode. Only the SIZE exception below is
-     mockup-specific -- colour still needs to resolve through the same
-     dark-aware token the rest of chrome uses, and it does the right thing
-     inside `.browser-shell` too, since that element re-declares
-     --text-primary to its always-light value (see css/theme.css). */
+     own <h3>), which must follow dark mode. It does the right thing inside
+     `.browser-shell` too, since that element re-declares --text-primary to
+     its always-light value (see css/theme.css). */
   color: var(--text-primary);
-  font-family: var(--font-display, var(--font-sans));
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-weight: var(--sfds-weight-bold);
+  letter-spacing: var(--sfds-tracking-title);
+  margin-top: 0;
+}
+h3,
+h4 {
+  /* SFDS sets `*` to the sans face and live sf.gov renders h3 in Roboto Flex.
+     Both authorities agree, and this repo previously disagreed with both by
+     applying --font-display to all four levels. */
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-weight: var(--sfds-weight-bold);
   margin-top: 0;
 }
 h1 {
-  font-size: clamp(2.2rem, 4vw, 4rem);
-  letter-spacing: -0.04em;
-  margin-bottom: 1rem;
+  font-size: var(--sfds-text-title-xl);
+  line-height: var(--sfds-leading-title-xl);
+  margin-bottom: var(--sfds-space-16);
 }
 h2 {
-  font-size: clamp(1.6rem, 2.6vw, 2.25rem);
-  letter-spacing: -0.025em;
-  margin-bottom: 0.75rem;
+  font-size: var(--sfds-text-title-lg);
+  line-height: var(--sfds-leading-title-lg);
+  margin-bottom: var(--sfds-space-12);
 }
 h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.55rem;
+  font-size: var(--sfds-text-title-xs);
+  line-height: var(--sfds-leading-title-xs);
+  margin-bottom: var(--sfds-space-8);
 }
 .app {
   position: relative;
@@ -644,7 +646,17 @@ a:focus {
   margin: 0 auto;
 }
 .hero-inner h1 {
-  font-size: 2.5rem;
+  /* No font-size here on purpose. Every RENDERED mockup page's h1 lives
+     inside .hero-inner (renderHero() in js/page-render.js), so this
+     selector's higher specificity (0-1-1) always beat the bare `h1` rule
+     above — the literal 2.5rem that used to sit here was therefore the only
+     font-size any page's title ever rendered at. (The bare rule's font-size
+     was not fully dead: index.html's static no-JS placeholder,
+     `<h1>Loading HHVC mockup…</h1>` in `.page-body` rather than
+     `.hero-inner`, used it, and briefly still does on every load. That
+     placeholder is inside #mockPage, not tool chrome, so it is this task's
+     territory rather than Task 8's.) Leaving margin-top here and dropping
+     font-size lets the real page title inherit --sfds-text-title-xl. */
   margin-top: 0.5rem;
 }
 .page-body {
@@ -665,7 +677,12 @@ a:focus {
   border-bottom: 0;
 }
 .section h2 {
-  font-size: 2rem;
+  /* No font-size here on purpose, for the same reason as .hero-inner h1
+     above: this is renderSection()'s always-present section heading (the
+     h2 every page section — body, services, resources, supporting,
+     what-to-do — renders through), and its old 2rem literal always beat the
+     bare `h2` rule's font-size. Dropping it lets the section heading
+     inherit --sfds-text-title-lg like the rest of the ladder. */
   margin-top: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -1040,6 +1057,13 @@ a:focus {
   border-top: 2px solid var(--sfds-color-grey-l2);
 }
 .region-title {
+  /* Deliberately NOT on the h2 ladder. "Services"/"Resources" is a repeated
+     widget label wrapping one or more .service-group blocks (see the doc
+     comment above renderServiceGroup() in js/page-render.js) — a grouping
+     label one visual tier below the page's actual section headings
+     (.section h2, now --sfds-text-title-lg), not a second instance of one.
+     Kept at its pre-existing literal size rather than promoted to a token
+     so it stays visibly smaller than the section heading it sits under. */
   font-size: 1.35rem;
   margin: 0 0 1rem;
 }
@@ -1050,7 +1074,11 @@ a:focus {
   margin-bottom: 0;
 }
 .service-group h3 {
-  font-size: 1.1rem;
+  /* No font-size here on purpose, same reasoning as .hero-inner h1 and
+     .section h2 above: this is a real content heading (each service group's
+     own title, e.g. "If you rent"), and its old 1.1rem literal (17.6px) was
+     2.4px off the ladder's h3 step for no expressed reason. Dropping it lets
+     the heading inherit --sfds-text-title-xs like every other h3. */
   margin: 0 0 0.25rem;
 }
 .section--services .resources-list {
@@ -1346,6 +1374,10 @@ a:focus {
   justify-content: flex-end;
 }
 .footer-columns h4 {
+  /* Deliberately off the h1-h3 title ladder: a footer nav-column label
+     ("Our City", "Policy", "Get help"), one visual tier below any content
+     heading and rendered white-on-dark rather than --text-primary, so it
+     was never a candidate for the ladder in the first place. */
   color: var(--sfds-color-white);
   margin-bottom: 1rem;
   font-size: 1.1rem;

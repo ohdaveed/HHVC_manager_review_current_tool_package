@@ -62,3 +62,84 @@ test.describe('mockup SFDS tokens', () => {
     expect(checks.slab).toBe(true)
   })
 })
+
+test.describe('mockup type ladder', () => {
+  test('renders the SFDS title steps at desktop width', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await gotoFresh(page)
+    const sizes = await page.evaluate(() => {
+      const read = (sel) => {
+        const el = document.querySelector(sel)
+        if (!el) return null
+        const s = getComputedStyle(el)
+        return {
+          size: s.fontSize,
+          leading: s.lineHeight,
+          weight: s.fontWeight,
+          family: s.fontFamily,
+        }
+      }
+      // `#mockPage h2` alone resolves to the wrong element: DOM order puts
+      // .region-title ("Services"/"Resources", a grouping label one tier
+      // below the ladder -- see the comment on .region-title in
+      // css/styles.css) before the page's actual section heading. `.section
+      // h2` is renderSection()'s always-present heading and the one that
+      // takes --sfds-text-title-lg, so it is the one this assertion means.
+      // `#mockPage h3` needs no equivalent narrowing: the first h3 in DOM
+      // order is .service-group's own heading, which IS on the ladder.
+      return {
+        h1: read('#mockPage h1'),
+        h2: read('#mockPage .section h2'),
+        h3: read('#mockPage h3'),
+      }
+    })
+    expect(sizes.h1.size).toBe('60px')
+    expect(sizes.h1.leading).toBe('64px')
+    expect(sizes.h1.weight).toBe('700')
+    expect(sizes.h2.size).toBe('44px')
+    expect(sizes.h2.leading).toBe('52px')
+    expect(sizes.h3.size).toBe('20px')
+    expect(sizes.h3.leading).toBe('24px')
+  })
+
+  test('uses the slab face for h1 and h2 and the sans face for h3', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await gotoFresh(page)
+    const faces = await page.evaluate(() => ({
+      h1: getComputedStyle(document.querySelector('#mockPage h1')).fontFamily,
+      h3: getComputedStyle(document.querySelector('#mockPage h3')).fontFamily,
+    }))
+    expect(faces.h1).toContain('Roboto Slab')
+    expect(faces.h3).toContain('Roboto Flex')
+    expect(faces.h3).not.toContain('Roboto Slab')
+
+    /* getComputedStyle().fontWeight reports 700 whether the browser has a
+       real 700 face or is synthesising one by geometrically smearing the
+       400 outlines -- a different, worse set of metrics that reads as a
+       rendering fault, not a type choice (see the "serves a real
+       (non-synthesised) weight-700 instance" test above, which exists for
+       exactly this reason). document.fonts.check() is the instrument that
+       tells the two apart: it returns true only when a matching face is
+       actually available to draw with. Checked here specifically for the
+       slab face at h1/h2 and the sans face at h3, since those are the two
+       faces this test's own weight-700 headings depend on. */
+    const realFaces = await page.evaluate(async () => {
+      await document.fonts.ready
+      return {
+        slab: document.fonts.check('700 16px "Roboto Slab"'),
+        sans: document.fonts.check('700 16px "Roboto Flex Variable"'),
+      }
+    })
+    expect(realFaces.slab).toBe(true)
+    expect(realFaces.sans).toBe(true)
+  })
+
+  test('steps down below the 768px breakpoint', async ({ page }) => {
+    await page.setViewportSize({ width: 700, height: 900 })
+    await gotoFresh(page)
+    const h1 = await page.evaluate(
+      () => getComputedStyle(document.querySelector('#mockPage h1')).fontSize
+    )
+    expect(h1).toBe('32px')
+  })
+})
