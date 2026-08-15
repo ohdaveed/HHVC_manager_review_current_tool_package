@@ -1,9 +1,13 @@
-/* The MUI theme bridge's token contract.
+/* The MUI theme bridge's token and scale contract.
 
-   Role: pins which design tokens js/react/theme.js reads, and that every one
-   of them has a fallback. A token read with no fallback resolves to '' in a
-   happy-dom test or before the stylesheets apply, and MUI turns an empty
-   palette value into a crash rather than a default.
+   Role: pins two things about js/react/theme.js. First, which design tokens
+   it reads, and that every one of them has a fallback — a token read with no
+   fallback resolves to '' in a happy-dom test or before the stylesheets
+   apply, and MUI turns an empty palette value into a crash rather than a
+   default. Second, which parts of this repo's chrome scale the bridge maps
+   at all: MUI's own type sizes and its 8px spacing factor are a real scale
+   rather than an absent one, so an unmapped variant renders plausibly and
+   only reads wrong beside the string-template panel next door.
 
    Load-order dependency: none. */
 
@@ -30,5 +34,45 @@ describe('js/react/theme.js token reads', () => {
     // is exactly the failure mode this assertion exists to catch.
     expect(read.length).toBeGreaterThan(0)
     expect(read.filter((name) => !fallbacks.includes(name))).toEqual([])
+  })
+})
+
+/* The other half of the bridge: the scale. These are source-text assertions
+   like the ones above rather than assertions on a built theme object, and
+   deliberately so — the failure they exist to catch is a variant or a
+   spacing factor going MISSING, which leaves MUI's own default silently in
+   its place. A default is a real value, so a theme built without them looks
+   correct in isolation and only reads wrong beside the string-template panel
+   next door, which is exactly the disagreement no unit test would see. */
+describe('js/react/theme.js scale coverage', () => {
+  test('maps a spacing factor rather than inheriting MUI default', () => {
+    // The value matters, not just the key: MUI's default factor is 8, so an
+    // unset `spacing` makes theme.spacing(1) 8px where --ds-space-1 is 4px,
+    // and every ported panel drifts one step coarser than its neighbour.
+    expect(source).toContain('spacing: 4')
+  })
+
+  test('maps every chrome type step', () => {
+    for (const step of [
+      '--ds-text-panel',
+      '--ds-text-card',
+      '--ds-text-label',
+      '--ds-text-micro',
+    ]) {
+      expect(source).toContain(step)
+    }
+  })
+
+  test('maps the caption and button variants, not only h3/h4/body2', () => {
+    for (const variant of ['h5:', 'body1:', 'caption:', 'button:']) {
+      expect(source).toContain(variant)
+    }
+  })
+
+  test('leaves MUI button labels in the case they were written in', () => {
+    // MUI uppercases button labels by default and nothing else in this
+    // chrome does, so an unmapped `button` variant is visible as soon as an
+    // island renders one beside a string-template control.
+    expect(source).toContain("textTransform: 'none'")
   })
 })

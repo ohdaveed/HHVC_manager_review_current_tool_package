@@ -39,14 +39,25 @@ function RuleItem({ rule }) {
     <ListItem
       className={`compliance-item ${rule.pass ? 'pass' : 'warn'}`}
       disableGutters
-      sx={{ alignItems: 'flex-start', gap: 1, py: 0.5 }}
+      // These multipliers are counted in --ds-space steps, which is what the
+      // theme's spacing factor of 4 now makes them: gap 2 is 8px, the same
+      // --ds-space-2 that css/ux-improvements.css declares on
+      // `.compliance-item`, and py 1 is --ds-space-1. They read 1 and 0.5
+      // before the factor moved, meaning the same pixels under MUI's default
+      // factor of 8 — so this is holding the rendering still across a change
+      // of unit, not retuning the row.
+      sx={{ alignItems: 'flex-start', gap: 2, py: 1 }}
     >
       <Chip
         size="small"
         label={rule.pass ? 'Pass' : 'Check'}
         color={rule.pass ? 'success' : 'warning'}
         variant="outlined"
-        sx={{ mt: '0.15rem', flex: '0 0 auto' }}
+        // Step 1 rather than the 0.15rem literal this carried, for the same
+        // reason the spacing sweep replaced that class of value in the
+        // stylesheets: it is the same optical nudge, 1.6px larger, and it is
+        // what `.compliance-item::before` already uses to align its own dot.
+        sx={{ mt: 1, flex: '0 0 auto' }}
       />
       <span>
         <span className="compliance-rule">{rule.label}</span>

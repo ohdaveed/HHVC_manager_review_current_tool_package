@@ -115,15 +115,43 @@ function createWorkspaceTheme() {
       // the token is a CSS length.
       borderRadius: parseInt(token(styles, '--ext-radius-8'), 10) || 8,
     },
+    /* MUI multiplies this factor by the number passed to `theme.spacing(n)`,
+       so a factor of 4 makes spacing(1) 4px, spacing(2) 8px, spacing(3) 12px
+       — SFDS's own ladder through its dense end, and the same values the
+       string-template panels beside the island get from --ds-space-*. The
+       default factor is 8, which is why a ported panel and its neighbour
+       disagreed, and why the disagreement grew with every port.
+
+       It agrees exactly through spacing(5) = 20px = --ds-space-5 and then
+       stops: MUI's factor is linear and SFDS's ladder is not, so spacing(6)
+       is 24px where --ds-space-6 is 28px, and the gap widens from there. A
+       panel needing a step above the fifth should read `var(--ds-space-N)`
+       directly rather than reach for spacing(6) and land a step short. */
+    spacing: 4,
     typography: {
       // Inherit the page's own stack rather than pulling in MUI's Roboto
       // default, which this tool does not load and which would make the
       // workspace read as a different product from the sidebar beside it.
       fontFamily: 'inherit',
-      // The four steps in css/theme.css. Named --ds-text-*, not --*-size-*.
+      // The four steps in css/theme.css, all four now — h3/h4/body2 alone
+      // left body1, button and caption rendering at MUI's own sizes, which
+      // are a real scale rather than an absent one, so the mismatch showed
+      // up only beside a string-template panel. Named --ds-text-*, not
+      // --*-size-*.
       h3: { fontSize: 'var(--ds-text-panel)', fontWeight: 800 },
       h4: { fontSize: 'var(--ds-text-card)', fontWeight: 800 },
+      h5: { fontSize: 'var(--ds-text-card)', fontWeight: 700 },
+      body1: { fontSize: 'var(--ds-text-card)' },
       body2: { fontSize: 'var(--ds-text-label)' },
+      // MUI uppercases button labels by default and nothing else in this
+      // chrome does, so this is a correction rather than a preference.
+      button: { fontSize: 'var(--ds-text-label)', textTransform: 'none' },
+      // caption is the eyebrow step, and --ds-text-micro is 11px — below the
+      // 14px floor tests/e2e/chrome-tokens.spec.js enforces on chrome, whose
+      // one exemption is uppercase text. A sentence-case caption at this size
+      // would both fail that spec and lose the letter-spacing-and-weight
+      // legibility argument the exemption rests on.
+      caption: { fontSize: 'var(--ds-text-micro)', textTransform: 'uppercase' },
     },
     components: {
       // MUI's own baseline is deliberately absent: `CssBaseline` writes
@@ -135,6 +163,36 @@ function createWorkspaceTheme() {
       // so use ScopedCssBaseline inside a panel if a reset is ever needed.
       MuiPaper: { defaultProps: { elevation: 0 } },
       MuiButtonBase: { defaultProps: { disableRipple: true } },
+      /* Chip carries its own font size — 13px on the root, 12px on the small
+         variant — and neither is a step this chrome publishes. Mapping only
+         the typography variants left it there: the Checks panel's Pass/Check
+         badges rendered at 13px, below the 14px floor
+         tests/e2e/chrome-tokens.spec.js enforces, and the floor test could
+         not see them because islands mount on demand and nothing in that
+         spec opened the tab (widened here, in the same commit).
+
+         The eyebrow step rather than --ds-text-label is the deliberate
+         reading: a status badge beside a 14px rule label is exactly the
+         "small uppercase marker" --ext-text-2xs was scoped to, and at 14px
+         the badge would compete with the rule it annotates. The weight and
+         letter-spacing come with it, matching `.review-queue-kpi-label` in
+         css/dashboard.css — that pairing is what the floor test's uppercase
+         exemption rests on, so taking the size without them would satisfy
+         the assertion and lose the legibility argument behind it. */
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            fontSize: 'var(--ds-text-micro)',
+            fontWeight: 800,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+          },
+          // `sizeSmall` sets its own fontSize, and it is the size the Checks
+          // panel actually renders, so overriding `root` alone would leave
+          // every real chip in the tool untouched.
+          sizeSmall: { fontSize: 'var(--ds-text-micro)' },
+        },
+      },
     },
   })
 }
