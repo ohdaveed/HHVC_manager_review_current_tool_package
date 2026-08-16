@@ -180,9 +180,16 @@ describe('individually restated decision labels', () => {
     // silently matches NOTHING for a top-level brace alternation, and a
     // coverage check that scans zero files passes unconditionally — the same
     // vacuous-pass trap the per-file assertion above guards against.
+    //
+    // `js/**/*.js`, not `js/*.js`: a single star does not cross a slash, so
+    // the subdirectory that now holds the React islands was outside this
+    // check entirely. A module under `js/react/` can hardcode a decision
+    // label exactly as easily as one at the top level, and until 2026-08-15
+    // nothing here would have noticed.
     const repoRoot = join(import.meta.dir, '..')
-    const jsFiles = [...new Bun.Glob('js/*.js').scanSync({ cwd: repoRoot })]
+    const jsFiles = [...new Bun.Glob('js/**/*.js').scanSync({ cwd: repoRoot })]
     expect(jsFiles.length).toBeGreaterThan(0)
+    expect(jsFiles.some((file) => file.startsWith('js/react/'))).toBe(true)
 
     const restating = [...jsFiles, 'index.html']
       .filter((file) => !NOT_THE_DECISION_VOCABULARY.has(file))

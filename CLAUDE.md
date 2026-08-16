@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 44 unit-test files in tests/
+bun run test                  # bun test over the 45 unit-test files in tests/
 bun run test:e2e              # playwright test over the 21 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,13 +71,13 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 44 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 45 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
-`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta` — self-explanatory by name — plus a handful
+`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `ci-workflow` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
 `card-inheritance` (the shared `inherits`/`title-only`/`authored` classifier
 plus the audit built on it — `authored` must beat everything so a Table block

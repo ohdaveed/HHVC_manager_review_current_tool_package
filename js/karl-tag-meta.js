@@ -37,7 +37,7 @@ const GAP_LABEL_PATTERN =
 
 /**
  * Split a raw `karl` free-text note into display parts WITHOUT attempting to
- * fully parse it — the ~350 notes across pages/*.js use wildly inconsistent
+ * fully parse it — the notes across pages/*.js use wildly inconsistent
  * conventions (`Field: value`, `Field = value`, `->` chains, bare rationale,
  * terse one-liners), so anything past the safest possible split would
  * misparse a meaningful fraction of the corpus and render worse than the
