@@ -205,12 +205,12 @@ below, which is how the renderer already handles it.
 
 ### Fields that recur unchanged across types
 
-| UI label              | Raw name           | Restriction                       | Repeatable | Appears on                                                                       |
-| --------------------- | ------------------ | --------------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| Primary agency \*     | `primary_agency`   | page chooser, `Agency` pages only | single     | Transaction, Information, Resource Collection, Campaign, Topic, About us, Report |
-| Partner agencies      | `partner_agencies` | page chooser, `Agency` pages only | repeatable | Transaction, Information, Resource Collection, Campaign, Topic, Agency, Report   |
-| Topics                | `topics`           | page chooser, `Topic` pages only  | repeatable | Transaction, Information, Resource Collection, Agency                            |
-| Redirect this page to | `redirect_url`     | plain text                        | single     | Transaction, Agency, News, Profile                                               |
+| UI label              | Raw name                                   | Restriction                       | Repeatable | Appears on                                                                       |
+| --------------------- | ------------------------------------------ | --------------------------------- | ---------- | -------------------------------------------------------------------------------- |
+| Primary agency \*     | `primary_agency`                           | page chooser, `Agency` pages only | single     | Transaction, Information, Resource Collection, Campaign, Topic, About us, Report |
+| Partner agencies      | `partner_agencies`                         | page chooser, `Agency` pages only | repeatable | Transaction, Information, Resource Collection, Campaign, Topic, Agency, Report   |
+| Topics                | `topics`                                   | page chooser, `Topic` pages only  | repeatable | Transaction, Information, Resource Collection, Agency                            |
+| Redirect this page to | `redirect_url` (Agency: `agency_redirect`) | plain text                        | single     | Transaction, Agency, News, Profile                                               |
 
 Partner agencies helptext is identical wherever it appears: _"Add other close partner agencies,
 divisions or subcommittees."_ Transaction's Topics field additionally carries a **"Hide on Topic

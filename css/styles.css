@@ -2269,7 +2269,15 @@ body.hide-karl-tags .unverified-pill {
      this control gets to spend. */
   background: color-mix(in srgb, currentColor 6%, transparent);
   color: currentColor;
-  font-size: 0.75rem;
+  /* --ds-text-label, not the prior 0.75rem (12px). This is sentence-case, so
+     it has no eyebrow argument for sitting under the 14px chrome floor -- and
+     it is an ACTION, the control a reviewer clicks to undo something, which
+     is the worst place in the chrome to save two pixels. It survived the
+     floor sweep only because a toast is transient: nothing had rendered one
+     when the scan walked the DOM. tests/e2e/chrome-tokens.spec.js now raises
+     one before scanning, so this rule is inside the guard rather than beside
+     it. */
+  font-size: var(--ds-text-label);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;

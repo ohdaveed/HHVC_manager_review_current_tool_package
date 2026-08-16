@@ -57,6 +57,20 @@ test.describe('chrome type scale', () => {
     ]) {
       await openAdvancedSection(page, section)
     }
+    // Transient chrome needs raising before it can be measured, and this is
+    // the third kind of blind spot in the same test: a toast exists only
+    // between showToast() and its 4s self-dismiss, so a scan of a resting DOM
+    // never sees one. `.toast-action` rendered sentence-case at 0.75rem (12px)
+    // under a test asserting nothing non-eyebrow goes below 14px -- true of
+    // everything the scan could reach, and false of the page. The action
+    // variant is raised specifically because it is the branch with the extra
+    // control; a plain toast would leave `.toast-action` unrendered and the
+    // hole open. #toastContainer sits inside `.app`, so once one exists it is
+    // in scope with no change to the root.
+    await page.evaluate(() =>
+      window.showToast('Chrome floor scan', 'info', { label: 'Undo', callback: () => {} })
+    )
+    await page.locator('.toast .toast-action').first().waitFor()
     const { total, small, micro } = await page.evaluate(() => {
       // Tool chrome is not just #reviewWorkspace -- the sidebar and the
       // canvas toolbar are chrome too, and a sub-14px rule added to either
