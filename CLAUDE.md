@@ -1134,13 +1134,15 @@ explicitly because it lives in `docs/`), `mockup-draft` (the `pages/*.js`
 mockups, projected to markdown at ingest time and not committed), and `sfds`
 (the vendored SF Design System token capture and its recorded disagreements).
 
-- **`docs/karl-export-field-map.md` is NOT in the corpus** (checked 2026-08-15).
-  The `karl` category is an explicit two-file list in
-  `build_scripts/knowledge-sources.js`, not a glob, so the field map — now the
-  E1 source on what every Karl content type's form contains — cannot be
-  retrieved or cited by `compliance-audit`. Adding it is a one-line change to
-  that list, but it moves the measured document and chunk counts recorded
-  below, so it is a deliberate decision rather than a tidy-up.
+- **The `karl` category is an explicit file list, not a glob**, because those
+  documents live in `docs/` rather than `docs/source/`.
+  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
+  chunks: it is the E1 record of what every Karl content type's editor form
+  actually contains, and without it the corpus could answer what the Help
+  Center _says_ about a form but not what the form _offers_ — two things that
+  have given different answers four times over. **Adding a file here moves the
+  measured counts below**, so re-measure and re-ingest rather than editing the
+  list alone.
 - **Category comes from the first path segment under `docs/source/`**, so a new
   folder files itself with no code change.
 - **`mockup-draft` is about a third of the corpus and is the dangerous one** —
@@ -1150,8 +1152,10 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   on. Resolved from the matched row, so the model cannot spoof it; it also
   travels with the citation the reviewer sees.
 - Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured: **77 documents, 769 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1). Still brute-force cosine.
+- Measured 2026-08-15: **78 documents, 812 chunks** (`hhvc-policy` 430,
+  `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24, `sfds` 2).
+  `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
+  brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
   writes to Postgres and `compliance-audit` reports ready — verified:
   `knowledgeBase: {ready: true, chunkCount: 768}`.

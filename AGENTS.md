@@ -1590,22 +1590,24 @@ two things a reviewer most often needs the AI to know. `collectKnowledgeSources(
 is now the single definition of what gets embedded and what `category` each
 document is filed under.
 
-| Category       | What it is                                                                 | Where it comes from             |
-| -------------- | -------------------------------------------------------------------------- | ------------------------------- |
-| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts                     | `docs/source/hhvc-policy/`      |
-| `sfgov-style`  | SF.gov's published writing guidance                                        | `docs/source/sfgov-style/`      |
-| `sfgov-live`   | dated snapshots of what SF.gov publishes today                             | `docs/source/sfgov-live/`       |
-| `karl`         | the 2026-08-14 measurement of the Karl editor                              | `docs/karl-mockup-cookbook*.md` |
-| `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected         |
-| `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`             |
+| Category       | What it is                                                                 | Where it comes from                                              |
+| -------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts                     | `docs/source/hhvc-policy/`                                       |
+| `sfgov-style`  | SF.gov's published writing guidance                                        | `docs/source/sfgov-style/`                                       |
+| `sfgov-live`   | dated snapshots of what SF.gov publishes today                             | `docs/source/sfgov-live/`                                        |
+| `karl`         | live measurements of the Karl editor itself                                | `docs/karl-mockup-cookbook*.md`, `docs/karl-export-field-map.md` |
+| `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected                                          |
+| `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`                                              |
 
-- **`docs/karl-export-field-map.md` is NOT in the corpus** (checked 2026-08-15).
-  The `karl` category is an explicit two-file list in
-  `build_scripts/knowledge-sources.js`, not a glob, so the field map — now the
-  E1 source on what every Karl content type's form contains — cannot be
-  retrieved or cited by `compliance-audit`. Adding it is a one-line change to
-  that list, but it moves the measured document and chunk counts recorded
-  below, so it is a deliberate decision rather than a tidy-up.
+- **The `karl` category is an explicit file list, not a glob**, because those
+  documents live in `docs/` rather than `docs/source/`.
+  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
+  chunks: it is the E1 record of what every Karl content type's editor form
+  actually contains, and without it the corpus could answer what the Help
+  Center _says_ about a form but not what the form _offers_ — two things that
+  have given different answers four times over. **Adding a file here moves the
+  measured counts below**, so re-measure and re-ingest rather than editing the
+  list alone.
 - **Category is derived from the first path segment under `docs/source/`**, so a
   new corpus folder files itself with no code change — which is exactly how the
   scraped SF.gov snapshots work.
@@ -1631,9 +1633,11 @@ document is filed under.
 - **Corpus definition is separate from ingestion on purpose**:
   `tests/knowledge-sources.test.js` covers which documents exist and how a page
   projects, with no Gemini key and no embedding call. Measured after this
-  change: **77 documents, 769 chunks** — `hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1.
-- **Retrieval is still brute-force cosine in JS.** 769 chunks ranks in
+  change: **78 documents, 812 chunks** (re-measured 2026-08-15) — `hhvc-policy`
+  430, `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24,
+  `sfds` 2. `karl` rose from 53 when `docs/karl-export-field-map.md` was added;
+  `sfds` from 1 as its capture grew.
+- **Retrieval is still brute-force cosine in JS.** 812 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
 
 ### Reviewer sign-in (`/api/session`)
