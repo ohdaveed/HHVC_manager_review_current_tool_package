@@ -304,11 +304,26 @@ h4 {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  /* Left at its literal on purpose, unlike the chrome eyebrows below. This
+     rule is shared: js/page-render.js renders the mockup's page-type badge
+     (`.eyebrow--agency` / `.eyebrow--service`) with it, and that badge is
+     inside `.browser-shell`, whose type scale was settled by the mockup work
+     and is deliberately outside the chrome floor. Repointing the shared value
+     would resize the thing under review to satisfy a rule about tool chrome. */
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.75rem;
+}
+/* The sidebar's four eyebrows ARE tool chrome -- one panel label and three
+   <summary> disclosure headers -- so they take the chrome scale. They carry
+   the full eyebrow treatment (uppercase, 700, tracked), which is what buys a
+   sub-floor size at all; --ds-text-micro is the one size that buys, and
+   12.48px was not it. Scoped rather than applied to `.eyebrow` itself so the
+   mockup badge above keeps its own. */
+.sidebar .eyebrow {
+  font-size: var(--ds-text-micro);
 }
 .eyebrow--agency {
   color: var(--eyebrow-agency);
@@ -1834,7 +1849,12 @@ a:focus {
   display: block;
   margin-bottom: 0.45rem;
   color: var(--text-primary);
-  font-size: 0.78rem;
+  /* --ds-text-micro, not the prior 0.78rem (12.48px). This one really is an
+     eyebrow -- uppercase, bold, tracked -- so it keeps the sub-floor
+     exemption, but the exemption buys exactly ONE size: the 11px step the
+     scale publishes for it. 12.48px sat on no step at all, which is how it
+     collected the exemption's licence without its discipline. */
+  font-size: var(--ds-text-micro);
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1878,7 +1898,12 @@ a:focus {
 }
 .karl-tag-legend-desc {
   color: var(--text-secondary);
-  font-size: 0.76rem;
+  /* --ds-text-label, not the prior 0.76rem (12.16px): this is sentence-case
+     prose in the Help tab, so it has no eyebrow argument for going under the
+     14px chrome floor. It kept its literal only because the floor check never
+     opened the legend -- the same "unswept, not exempt" case as `.char-count`
+     above. */
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 @media (max-width: 980px) {

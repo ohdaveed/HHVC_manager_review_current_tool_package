@@ -76,7 +76,19 @@ import { updateReadingTarget } from './editor-panel.js'
         display: block;
         margin-bottom: 0.2rem;
         color: var(--legacy-slate-1);
-        font-size: 0.82rem;
+        /* --ds-text-card, not the prior 0.82rem: same chrome reasoning as
+           the .char-count and .search-preview-url rules in css/styles.css.
+           All of these kept their literals only because the floor check
+           never reached them -- these are injected into the Help tab, which
+           the scan did not open -- not because a guidance card is exempt.
+           The card step rather than the label step, so the title still
+           outranks its own body text below.
+           (No backticks in this block: it is a template literal, and one
+           unescaped backtick here closes the CSS string and turns the rest
+           of the comment into JS identifiers. That is not hypothetical --
+           it happened while writing this very comment, and the app stopped
+           booting with every e2e test failing on reviewKeyboardShortcuts.) */
+        font-size: var(--ds-text-card);
         line-height: 1.25;
       }
 
@@ -93,7 +105,9 @@ import { updateReadingTarget } from './editor-panel.js'
       .dashboard-guidance-card > span {
         display: block;
         color: var(--legacy-slate-3);
-        font-size: 0.76rem;
+        /* 12.16px before, under the 14px chrome floor and not uppercase, so
+           it had no eyebrow argument to stand on. */
+        font-size: var(--ds-text-label);
         line-height: 1.35;
       }
 
@@ -111,7 +125,7 @@ import { updateReadingTarget } from './editor-panel.js'
         align-items: baseline;
         justify-content: space-between;
         gap: 0.35rem 0.75rem;
-        font-size: 0.78rem;
+        font-size: var(--ds-text-label);
         color: var(--legacy-slate-2);
       }
 
@@ -134,7 +148,11 @@ import { updateReadingTarget } from './editor-panel.js'
         background: var(--legacy-slate-5);
         color: var(--legacy-slate-1);
         padding: 0.1rem 0.35rem;
-        font-size: 0.72rem;
+        /* 11.52px before. A key cap is the most legibility-sensitive text in
+           this list -- it is a literal instruction to press something -- so
+           it takes the floor rather than the micro exemption, which is for
+           uppercase eyebrow LABELS and not for content. */
+        font-size: var(--ds-text-label);
         font-weight: 700;
       }
 
@@ -152,7 +170,7 @@ import { updateReadingTarget } from './editor-panel.js'
         margin: 0;
         padding-left: 1.1rem;
         color: var(--legacy-slate-2);
-        font-size: 0.78rem;
+        font-size: var(--ds-text-label);
         line-height: 1.45;
       }
 

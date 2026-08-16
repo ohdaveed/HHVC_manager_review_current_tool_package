@@ -351,13 +351,37 @@ describe('categorical visualisation palette', () => {
    separation to begin with is the one that runs out first. */
 const STYLES = readFileSync(join(import.meta.dir, '..', 'css/styles.css'), 'utf8')
 
-/* Every toast background, so a variant added later is covered by being
-   declared rather than by being remembered here. */
-const TOAST_BACKGROUNDS = ['--toast-bg', '--toast-success-bg', '--toast-info-bg']
+/* Every toast background, DISCOVERED from the stylesheet rather than listed
+   here. An earlier version hard-coded the three names under a comment
+   claiming a new variant would be covered automatically -- which was simply
+   false, and false in the direction that matters: adding `--toast-warning-bg`
+   to css/theme.css would have left it untested while the comment said
+   otherwise. Reading the declarations is what makes the claim true.
+
+   `-fg` is excluded because it is the foreground these are measured AGAINST,
+   not another surface to measure. */
+const TOAST_BACKGROUNDS = [...LIGHT.matchAll(/(--toast-[a-z-]*bg):/g)].map((m) => m[1])
 
 /**
  * Composite one hex colour over another at a given alpha, the way `opacity`
  * and `color-mix(… N%, transparent)` both resolve against an opaque backdrop.
+ *
+ * **The blend is deliberately in gamma-encoded sRGB, not linearized sRGB**,
+ * and that is measured rather than assumed — it is the obvious thing to
+ * "correct" (WCAG's luminance step linearizes, so the two get conflated), and
+ * correcting it would make every number here wrong. Checked against Chromium
+ * on 2026-08-16 by rendering the real pairing and reading it back:
+ *
+ *   - `opacity: .92` of #fcfcfc over #495ed4 renders as rgb(237, 239, 249).
+ *     This function predicts (238, 239, 249); linearized predicts
+ *     (244, 244, 249) — off by 7/255 on the red channel.
+ *   - `color-mix(in srgb, #fcfcfc 6%, #495ed4)` computes to
+ *     `color(srgb 0.328392 0.405804 0.840784)` = rgb(84, 104, 214). This
+ *     function predicts (84, 103, 214); linearized predicts (98, 113, 215).
+ *
+ * Both halves match this implementation to within rounding. CSS `srgb` IS the
+ * gamma-encoded space — `srgb-linear` is the separate one — so a blend that
+ * linearized first would describe a colour the browser never draws.
  *
  * @param {string} fg Six-digit hex, the colour being laid down.
  * @param {string} bg Six-digit hex, the opaque colour behind it.
@@ -396,6 +420,17 @@ function inRule(selector, pattern) {
 
 describe('toast controls, composited against every variant', () => {
   const fg = hex(LIGHT, '--toast-fg')
+
+  test('discovers every declared toast background', () => {
+    // A regex that silently matches nothing turns every assertion below into
+    // a loop over an empty list, which passes while measuring no colour at
+    // all -- the same vacuous-pass shape this file guards against elsewhere.
+    // The three named here are the ones that exist today; the point of the
+    // discovery is that a fourth joins them without editing this file.
+    expect(TOAST_BACKGROUNDS).toContain('--toast-bg')
+    expect(TOAST_BACKGROUNDS).toContain('--toast-success-bg')
+    expect(TOAST_BACKGROUNDS).toContain('--toast-info-bg')
+  })
 
   test('the dismiss button clears 4.5:1 on every toast variant', () => {
     const opacity = inRule('.toast .toast-close', /opacity:\s*([\d.]+)/)
