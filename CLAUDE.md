@@ -1134,6 +1134,15 @@ explicitly because it lives in `docs/`), `mockup-draft` (the `pages/*.js`
 mockups, projected to markdown at ingest time and not committed), and `sfds`
 (the vendored SF Design System token capture and its recorded disagreements).
 
+- **The `karl` category is an explicit file list, not a glob**, because those
+  documents live in `docs/` rather than `docs/source/`.
+  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
+  chunks: it is the E1 record of what every Karl content type's editor form
+  actually contains, and without it the corpus could answer what the Help
+  Center _says_ about a form but not what the form _offers_ — two things that
+  have given different answers four times over. **Adding a file here moves the
+  measured counts below**, so re-measure and re-ingest rather than editing the
+  list alone.
 - **Category comes from the first path segment under `docs/source/`**, so a new
   folder files itself with no code change.
 - **`mockup-draft` is about a third of the corpus and is the dangerous one** —
@@ -1143,8 +1152,10 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   on. Resolved from the matched row, so the model cannot spoof it; it also
   travels with the citation the reviewer sees.
 - Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured: **77 documents, 769 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1). Still brute-force cosine.
+- Measured 2026-08-15: **78 documents, 812 chunks** (`hhvc-policy` 430,
+  `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24, `sfds` 2).
+  `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
+  brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
   writes to Postgres and `compliance-audit` reports ready — verified:
   `knowledgeBase: {ready: true, chunkCount: 768}`.
@@ -1310,10 +1321,18 @@ start `bun run serve`.
   (`manager_review_packet.md`, `manager_decision_log.csv`,
   `page_approval_checklist.csv`, `mockup_tracking_sheet.csv`), distinct from
   the in-browser `localStorage` review state.
-- **`docs/`** — `wagtail-content-mapping.md` (page type → Karl content type),
+- **`docs/`** — **`karl-export-field-map.md`** (the current per-content-type
+  field map: live UI labels, navigation paths, block and raw Wagtail field
+  names, required-versus-optional, repeatable-versus-single, internal versus
+  external link shapes, and an explicit unresolved/obsolete register — start
+  here for anything naming a Karl destination), `wagtail-content-mapping.md`
+  (the older page-type → Karl mapping, superseded on type coverage but still
+  the fuller record of per-type nested block detail and research history),
   `karl-mockup-cookbook.md` (the section-by-section build procedure for authors,
   and its dated capture record `karl-mockup-cookbook-plan-2026-08-14.md`), plus
-  dated research/audit notes.
+  dated research/audit notes. **Those dated notes are records, not
+  documentation** — a count or claim that was right on its date stays in the
+  file; corrections go in the field map's obsolete register instead.
 - **`docs/source/hhvc-policy/`** — source policy documents (PDFs and their
   markdown extracts) that page copy is based on; not code.
 - **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning and

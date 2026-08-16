@@ -38,6 +38,17 @@ const KARL_CAPTURE_FILES = [
   // ("what fields does a Transaction have, in order?"). The cookbook prose
   // covers the same ground for a human but drops the ordering column.
   'docs/karl-mockup-cookbook-plan-2026-08-14.md',
+  // The field map, added 2026-08-15. It is the E1 record of what every Karl
+  // content type's editor form actually contains — raw Wagtail field names,
+  // required markers, repeatability, and how an internal page link differs
+  // from an external URL — captured from the live admin rather than read off
+  // the Help Center. Without it the corpus could answer "what does the Help
+  // Center say about Report tables?" but not "what does the Report form
+  // actually offer?", and those have given different answers four times
+  // (see the doc's own `O3`, `O9`, `O11`, `O14`). It also carries the
+  // unresolved register, so a retrieval can distinguish a settled mapping
+  // from an open question instead of presenting both with equal confidence.
+  'docs/karl-export-field-map.md',
 ]
 
 /**
