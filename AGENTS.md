@@ -46,7 +46,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 44 unit-test files in tests/
+bun run test                  # Bun test runner over the 45 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -66,7 +66,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 44 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 45 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL

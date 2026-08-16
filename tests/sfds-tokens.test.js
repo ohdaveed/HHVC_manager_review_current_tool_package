@@ -21,8 +21,17 @@
    `css/ux-improvements.css`, `css/ai-assist.css`, still on `--legacy-*` as
    of Task 6); this test is what makes that widening a deliberate, reviewed
    line rather than a silent expansion. The value-pinning half — declared
-   values against `docs/source/sfds/tokens.json` — lands with Task 3, once
-   there is a `css/sfds.css` to check.
+   values against `docs/source/sfds/tokens.json` — is the second describe
+   block below. (An earlier version of this header said it "lands with Task 3";
+   it landed, and the sentence did not move. Corrected 2026-08-15.)
+
+   The file scan is RECURSIVE, and that is not a detail. It walked `js/` with a
+   flat `readdirSync` until 2026-08-15, and `js/react/theme.js` — the ONLY file
+   under `js/` that reads `--sfds-*` at all — sits one directory down, so the
+   guard could not see the single file it most needed to. A namespace guard
+   with a blind spot over the newest code is worse than none: it reports green
+   about a directory it never opened. Hence `expect(files.length)` below as
+   well, so a walk that silently finds nothing fails loudly.
 
    Load-order dependency: none. It reads files off disk and parses text. */
 
@@ -35,32 +44,59 @@ const ROOT = join(import.meta.dir, '..')
 /** Files that have migrated onto `--sfds-*` and may legitimately consume it,
  * beyond `css/sfds.css` itself (which declares the namespace). Task 6 added
  * `css/theme.css` and `css/styles.css`; every other stylesheet still reads
- * `--legacy-*` and is not yet on this list. */
-const MIGRATED_CONSUMERS = ['css/theme.css', 'css/styles.css']
+ * `--legacy-*` and is not yet on this list.
+ *
+ * `js/react/theme.js` is here because it is the ONE bridge between the design
+ * tokens and MUI — it reads them off `document.documentElement` at theme-build
+ * time so retheming still means editing `css/theme.css` only (see AGENTS.md,
+ * "React islands in the workspace"). It has read `--sfds-*` since the chrome
+ * scale was mapped into the theme; it was invisible to this guard until the
+ * scan became recursive, so listing it now records a consumer that already
+ * existed rather than permitting a new one. */
+const MIGRATED_CONSUMERS = ['css/theme.css', 'css/styles.css', 'js/react/theme.js']
 
 /**
  * Every file in the repo that may legitimately mention a design token.
  *
+ * Recurses, because the offender this guard exists to catch can be added in a
+ * subdirectory as easily as a top-level one — and one already had been.
+ *
+ * @param {string} dir Absolute directory to walk.
+ * @param {RegExp} extension Which files count.
  * @returns {string[]} Absolute paths.
  */
+function filesUnder(dir, extension) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) return filesUnder(path, extension)
+    return extension.test(entry.name) ? [path] : []
+  })
+}
+
 function tokenBearingFiles() {
-  const css = readdirSync(join(ROOT, 'css'))
-    .filter((f) => f.endsWith('.css'))
-    .map((f) => join(ROOT, 'css', f))
-  const js = readdirSync(join(ROOT, 'js'))
-    .filter((f) => f.endsWith('.js'))
-    .map((f) => join(ROOT, 'js', f))
-  return [...css, ...js]
+  return [...filesUnder(join(ROOT, 'css'), /\.css$/), ...filesUnder(join(ROOT, 'js'), /\.jsx?$/)]
 }
 
 describe('the --sfds-* namespace', () => {
   test('is used by no file outside css/sfds.css and its migrated consumers', () => {
-    const offenders = tokenBearingFiles()
+    const scanned = tokenBearingFiles()
+    // A walk that finds nothing would make the assertion below pass while
+    // checking nothing at all — the failure mode this guard just had.
+    expect(scanned.length).toBeGreaterThan(0)
+
+    const offenders = scanned
       .filter((path) => !path.endsWith('css/sfds.css'))
       .filter((path) => !MIGRATED_CONSUMERS.some((rel) => path.endsWith(rel)))
       .filter((path) => readFileSync(path, 'utf8').includes('--sfds-'))
       .map((path) => path.slice(ROOT.length + 1))
     expect(offenders).toEqual([])
+  })
+
+  test('reaches the subdirectories a flat scan would miss', () => {
+    // Names the specific file the flat scan skipped, so a future refactor that
+    // reintroduces a non-recursive walk fails here rather than going quiet.
+    const scanned = tokenBearingFiles().map((path) => path.slice(ROOT.length + 1))
+    expect(scanned).toContain('js/react/theme.js')
   })
 })
 

@@ -1,11 +1,18 @@
 // Coverage for parseKarlLabel(), the free-text-to-display-parts splitter
-// behind the redesigned Karl tag. The ~350 `karl` notes across pages/*.js use
+// behind the redesigned Karl tag. The `karl` notes across pages/*.js use
 // wildly inconsistent conventions (`Field: value`, `Field = value`, `->`
 // chains, bare rationale, terse one-liners), so the function trusts only one
 // separator (a leading `->`/`→` chain in the note's OWN first sentence) and
 // otherwise just splits at the first sentence boundary. What matters here is
 // that it never drops or garbles content — every fixture below is checked
 // for that, not just for the "happy path" split.
+//
+// This header quoted "~350 notes" until 2026-08-15, against a real 308. The
+// number was never checked by anything and carried no weight in the argument
+// (the notes are inconsistent whatever their count), so it is deleted rather
+// than corrected — the repo's own rule, from tests/doc-counts.test.js: quote a
+// number only if something here can verify it, because an unverified one reads
+// as authoritative.
 import { describe, test, expect } from 'bun:test'
 import { parseKarlLabel } from '../js/karl-tag-meta.js'
 
