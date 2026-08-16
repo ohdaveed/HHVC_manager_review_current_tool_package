@@ -1157,8 +1157,13 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
   brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
-  writes to Postgres and `compliance-audit` reports ready — verified:
-  `knowledgeBase: {ready: true, chunkCount: 768}`.
+  writes to Postgres and `compliance-audit` reports ready — verified against the
+  deployed service, which answered `chunkCount: 768` alongside `ready: true`.
+  **That number is a record of what that ingest wrote, not the current corpus
+  size**: it predates `docs/karl-export-field-map.md` joining the `karl`
+  category, which is what moved the measured total to the 812 above. What it
+  evidences is that the seam works on Postgres at all — read the live count from
+  `/api/ai/capabilities` rather than from this line.
 
 ### Reviewer sign-in (`/api/session`)
 
