@@ -127,7 +127,7 @@ window.HHVC_PAGES['filthReport'] = {
         '**Note:** Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
         'Under San Francisco Health Code Article 11, property owners must not let trash, filth, animal waste, or overgrown plants build up in a way that shelters pests or creates a health hazard.',
       ],
-      button: 'View Health Code Article 11',
+      button: 'View Article 11',
       buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
       buttonStyle: 'secondary',
     },
