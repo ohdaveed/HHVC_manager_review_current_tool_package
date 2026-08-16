@@ -39,28 +39,32 @@ Vite to bundle.
 
 ## Commands
 
+**`package.json` is the command reference — read it rather than a copy.** Every
+script key is preceded by a `"// <name>"` key carrying a full description, and
+several of those are longer and more precise than anything a table here could
+hold (`lint:anti-slop`'s, for instance, records the 280-finding measurement
+behind its narrow scope). A restatement in this file would be a second copy
+sitting beside the first, free to drift from it and checked by nothing. Open
+the `scripts` block and read it, or dump it with the Bun this repo already
+requires (deliberately not `jq`, which is neither a dependency here nor present
+in every environment):
+
 ```bash
-bun install                 # install deps (required before first `dev`)
-bun run dev                  # Vite dev server (HMR) at http://127.0.0.1:8080
-bun run dev:api              # optional sync backend (server.ts) on :8081; dev proxies /api
-bun run start                # production-like: build:netlify then serve dist/ + the API
-bun run serve                # serve an already-built dist/ without rebuilding
-bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 45 unit-test files in tests/
-bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
-bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
-bun run sync-tracking         # regenerate the local mockup tracking CSVs
-bun run push-tracking         # push page review status to the Google Sheets tracker
-bun run build                 # validate -> export -> workshop form -> build:app -> publish form -> singlefile
-bun run build:app             # vite build -> dist/ (what server.ts and Netlify serve)
-bun run build:singlefile      # vite build --mode singlefile -> dist-singlefile/index.html
-bun run build:workshop-form   # bun install + vite build inside forms/mosquito-workshop-request
-bun run build:netlify         # validate -> build:app -> copy-workshop-form.js (assembles dist/)
-bun run format                # prettier --write on everything
-bun run format:check          # prettier --check — THIS IS THE LINT STEP (no ESLint/tsc)
-bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_scripts/ai/ ONLY
-                              # — a developer-run report, NOT a CI gate (see Formatting below)
+bun -e 'for (const [k, v] of Object.entries(require("./package.json").scripts)) console.log(k + "\t" + v)'
 ```
+
+Two things to add to what those descriptions say — one they omit outright, one
+they state too weakly to act on:
+
+- **`bun install` is required before the first `dev`, `validate`, `test` or
+  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  third-party libraries, and validate/test need `zod`, `fast-glob` and
+  `happy-dom`. Nothing in `package.json` says so.
+- **`format:check` is not just _a_ linter, it is the ONLY one.** Its own
+  description calls it "the project's linter", which reads as one check among
+  several; in fact there is no ESLint and no `tsc` anywhere in this repo, so
+  Prettier is the entire gate CI can fail on. That absence is the part no
+  script description can state.
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
@@ -2450,24 +2454,17 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The ten stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
-stay first — it is the raw-primitive layer everything downstream reads, keyed
-to SFDS's own published token names; `css/theme.css` MUST stay last — it is
-the semantic token layer, and its dark-mode block overrides
-the `--legacy-*` primitives `css/styles.css` declares on `:root`):
+**There are ten stylesheets, and two positions in the order are load-bearing.**
+`css/sfds.css` MUST stay first — it is the raw-primitive layer everything
+downstream reads, keyed to SFDS's own published token names. `css/theme.css`
+MUST stay last — it is the semantic token layer, and its dark-mode block
+overrides the `--legacy-*` primitives `css/styles.css` declares on `:root`.
 
-| File                          | Owns                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/sfds.css`                | the SFDS primitives, keyed to SFDS's own published token names                                 |
-| `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
-| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
-| `css/ai-assist.css`           | the AI assist panel                                                                            |
-| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
-| `css/review-insights.css`     | the Overview cards and the failing-checks ranking                                              |
-| `css/review-ops.css`          | the stored-review-data panel                                                                   |
-| `css/ai-rewrite.css`          | the floating selection button and the rewrite popover                                          |
-| `css/inline-content-edit.css` | the inline click-to-edit widgets, Edited badge, add/remove/reset controls                      |
-| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+The full order is `js/main.js`'s import list, and every sheet opens with a
+banner comment naming what it owns (several also state which sheet they load
+after, and why). Read those two rather than a table here: ten one-line file
+descriptions restated in this file would be a second copy of ten header
+comments, checked by nothing and stale the first time one of them is edited.
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach

@@ -38,20 +38,26 @@ several of those descriptions are longer and more precise than anything a table
 here could hold (`lint:anti-slop`'s, for instance, records the 280-finding
 measurement behind its narrow scope). A restatement in this file would be a
 second copy sitting beside the first, free to drift from it and checked by
-nothing:
+nothing. Open the `scripts` block and read it, or dump it with the Bun this
+repo already requires (deliberately not `jq`, which is neither a dependency
+here nor present in every environment):
 
 ```bash
-jq -r '.scripts | to_entries[] | "\(.key)\t\(.value)"' package.json
+bun -e 'for (const [k, v] of Object.entries(require("./package.json").scripts)) console.log(k + "\t" + v)'
 ```
 
-Two facts those descriptions do NOT carry:
+Two things to add to what those descriptions say — one they omit outright, one
+they state too weakly to act on:
 
 - **`bun install` is required before the first `dev`, `validate`, `test` or
   `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
-  `happy-dom`.
-- **`format:check` IS the lint step.** There is no ESLint and no `tsc` in this
-  repo; CI fails on Prettier alone.
+  `happy-dom`. Nothing in `package.json` says so.
+- **`format:check` is not just _a_ linter, it is the ONLY one.** Its own
+  description calls it "the project's linter", which reads as one check among
+  several; in fact there is no ESLint and no `tsc` anywhere in this repo, so
+  Prettier is the entire gate CI can fail on. That absence is the part no
+  script description can state.
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server
 bind (`vite.config.mjs` reads `HOST`/`PORT`, defaulting to `127.0.0.1:8080`).
