@@ -47,12 +47,13 @@ for anything a manager will review.
 - **You cannot create an Agency page yourself.** Digital Services must create
   that content type. The HHVC Agency page is the front door of the section, so
   its mockup is a request-and-fill exercise, not a build-it-yourself one.
-- **Every page needs a Primary agency.** Karl makes it mandatory on all eight
-  content types, and the agency name renders under the title and description on
-  SF.gov. One page, one primary agency.
-- **The Karl editor has exactly two tabs: Content and Promote.** No Settings
-  tab. Everything SEO — the URL slug, the search title, the search description —
-  is on Promote.
+- **Every non-Agency page needs a Primary agency.** Karl makes it mandatory
+  on all other seven content types, and the agency name renders under the title
+  and description on SF.gov. One page, one primary agency.
+- **The Karl editor has three tabs: Content, Promote, and Settings.** Everything
+  SEO — the URL slug, the search title, the search description — is on Promote.
+  (Settings houses publishing controls like go-live/expiry dates, not page
+  content).
 - **A "+" button that opens no menu is not broken.** About half of Karl's
   repeatable fields hold exactly one kind of block and add it on click. Each
   recipe below says which behave that way.

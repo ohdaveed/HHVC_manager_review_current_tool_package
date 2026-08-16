@@ -1162,10 +1162,10 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   writes to Postgres and `compliance-audit` reports ready — verified against the
   deployed service, which answered `chunkCount: 768` alongside `ready: true`.
   **That number is a record of what that ingest wrote, not the current corpus
-  size**: it predates `docs/karl-export-field-map.md` joining the `karl`
-  category, which is what moved the measured total to the 813 above. What it
-  evidences is that the seam works on Postgres at all — read the live count from
-  `/api/ai/capabilities` rather than from this line.
+  size**, and the 45-chunk gap to the 813 above is not one change: that ingest
+  predates the field map joining the `karl` category, the field map's own later
+  growth from 42 chunks to 43, and the `sfds` category going from 1 document to 2. What the reading evidences is that the seam works on Postgres at all —
+  read the live count from `/api/ai/capabilities` rather than from this line.
 
 ### Reviewer sign-in (`/api/session`)
 

@@ -72,7 +72,17 @@ import { updateReadingTarget } from './editor-panel.js'
         padding: 0.7rem;
       }
 
-      .dashboard-guidance-card strong {
+      /* DIRECT child only, for exactly the reason the sibling > span rule
+         below documents -- and this one had the bug that comment describes.
+         The Karl tag legend renders INSIDE a guidance card, and its own
+         headings are <strong class="karl-tag-legend-title">, so an unscoped
+         descendant selector (0,1,1) outranks that class (0,1,0) and won.
+         "Tag colors" and "Reading a tag" were being painted at this rule's
+         size instead of the micro eyebrow step they ask for, and the bold
+         CMS-path example inside the notes list was enlarged and forced to
+         display:block along with them. Scoping to the card's own title is
+         what keeps this rule off an embedded component. */
+      .dashboard-guidance-card > strong {
         display: block;
         margin-bottom: 0.2rem;
         color: var(--legacy-slate-1);
