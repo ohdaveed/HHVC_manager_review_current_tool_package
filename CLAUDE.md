@@ -1134,6 +1134,13 @@ explicitly because it lives in `docs/`), `mockup-draft` (the `pages/*.js`
 mockups, projected to markdown at ingest time and not committed), and `sfds`
 (the vendored SF Design System token capture and its recorded disagreements).
 
+- **`docs/karl-export-field-map.md` is NOT in the corpus** (checked 2026-08-15).
+  The `karl` category is an explicit two-file list in
+  `build_scripts/knowledge-sources.js`, not a glob, so the field map — now the
+  E1 source on what every Karl content type's form contains — cannot be
+  retrieved or cited by `compliance-audit`. Adding it is a one-line change to
+  that list, but it moves the measured document and chunk counts recorded
+  below, so it is a deliberate decision rather than a tidy-up.
 - **Category comes from the first path segment under `docs/source/`**, so a new
   folder files itself with no code change.
 - **`mockup-draft` is about a third of the corpus and is the dangerous one** —
@@ -1310,10 +1317,18 @@ start `bun run serve`.
   (`manager_review_packet.md`, `manager_decision_log.csv`,
   `page_approval_checklist.csv`, `mockup_tracking_sheet.csv`), distinct from
   the in-browser `localStorage` review state.
-- **`docs/`** — `wagtail-content-mapping.md` (page type → Karl content type),
+- **`docs/`** — **`karl-export-field-map.md`** (the current per-content-type
+  field map: live UI labels, navigation paths, block and raw Wagtail field
+  names, required-versus-optional, repeatable-versus-single, internal versus
+  external link shapes, and an explicit unresolved/obsolete register — start
+  here for anything naming a Karl destination), `wagtail-content-mapping.md`
+  (the older page-type → Karl mapping, superseded on type coverage but still
+  the fuller record of per-type nested block detail and research history),
   `karl-mockup-cookbook.md` (the section-by-section build procedure for authors,
   and its dated capture record `karl-mockup-cookbook-plan-2026-08-14.md`), plus
-  dated research/audit notes.
+  dated research/audit notes. **Those dated notes are records, not
+  documentation** — a count or claim that was right on its date stays in the
+  file; corrections go in the field map's obsolete register instead.
 - **`docs/source/hhvc-policy/`** — source policy documents (PDFs and their
   markdown extracts) that page copy is based on; not code.
 - **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning and

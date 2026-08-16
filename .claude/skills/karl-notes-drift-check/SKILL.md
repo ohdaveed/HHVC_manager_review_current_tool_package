@@ -8,21 +8,52 @@ description: Cross-check the karl placement notes in pages/*.js against the real
 Every card, step, section, and callout across `pages/*.js` can carry a `karl`
 string — a precise, CMS-technical note mapping the mockup's content onto a
 real Karl (Wagtail) StreamField block, usually citing a specific field name,
-a repeat/max constraint, or a confirmed schema gap (242 of these across the
-repo as of 2026-08-07; see `grep -rn "karl:" pages/*.js`). They're written
+a repeat/max constraint, or a confirmed schema gap (308 of these across the
+repo as of 2026-08-15; see `grep -rn "karl:" pages/*.js`). They're written
 once, by whoever built that page, and nothing re-checks them against the real
 CMS afterward — so a note that was accurate when written can go stale
 silently as Karl's schema or documented guidance changes.
 
-**Read this before using the Karl MCP tools here, because their names invite
-a wrong assumption:** `mcp__claude_ai_Karl__getPage` and `searchDocumentation`
-query the **public Karl Editor Help Center** (a GitBook documentation site,
-`sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`) — not a live
-API into this project's actual Karl CMS instance. There is no tool here that
-reads real, currently-published SF.gov page content. What you _can_ verify is
-whether a `karl` note's claim about Karl's **documented** capabilities and
-constraints (block types, field limits, which content types support which
-component) matches what the Help Center actually says.
+**Check `docs/karl-export-field-map.md` first.** It is the E1 record of what
+every Karl content type's editor form actually contains — UI labels,
+navigation paths, block names, raw Wagtail field names, required markers,
+repeatability, and how an internal page link differs from an external URL —
+captured from the live admin on 2026-08-15 for all seventeen content types.
+Most drift questions are answered there without any tool call, and it carries
+an explicit register of what is still unresolved so you can tell a gap from
+an answer.
+
+**The Help Center is a weaker source than the live form, and this is not
+theoretical.** `mcp__claude_ai_Karl__getPage` and `searchDocumentation` query
+the **public Karl Editor Help Center** (a GitBook site,
+`sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`). It has been
+wrong about this repo's own subject matter at least four times, each recorded
+in the field map's obsolete register: it asserts Callout and Accordion support
+on Report (`O11`), understates Campaign's `Additional content` block count
+(`O9`), states a Related content-type restriction the live picker does not
+enforce (`O3`/`U12`), and says buttons "can only be 25 characters" when the
+field carries `maxlength="255"` (`O14`). **Where the two disagree about what a
+form contains, the live form wins.**
+
+**An earlier version of this skill said "there is no tool here that reads real,
+currently-published SF.gov page content." That is no longer true**, and
+believing it is what sends a session to the weaker source. Two routes exist:
+
+- **The live Karl admin**, via Playwright MCP or a CDP-attached browser, at
+  `https://api.sf.gov/admin/pages/add/sf/<model>/<parent_id>/`. Sign in through
+  `https://api.sf.gov/sso/login?next=/admin/`. Read each form's own panel tree
+  out of the `w-edit-handler-data` payload rather than scraping labels, and
+  open a StreamField's "+" to record its block types. **Read-only: never
+  submit, save or publish** — blocks inserted to inspect a chooser live only
+  in an unsaved form and are discarded by navigating away.
+- **Live rendered sf.gov pages**, which answer a different question: what a
+  component actually _publishes_, as opposed to what its editor form is
+  called. That distinction is why the card-inheritance rules are measured on
+  rendered pages and cannot be derived from any form.
+
+What the Help Center is still good for: editorial guidance the form does not
+encode — button-text libraries, the one-button-per-page recommendation,
+image dimensions, and the reasoning behind a component's intended use.
 
 ## What this catches, concretely (three real examples, checked 2026-08-07)
 
@@ -76,7 +107,7 @@ component) matches what the Help Center actually says.
 
 ## Scoping note: what has no automatable outlet here
 
-53 of the 242 `karl` notes (as of 2026-08-07;
+39 of the 308 `karl` notes (as of 2026-08-15;
 `grep -rn "karl:" pages/*.js | grep -iE "flag for|Digital Services|open question"`)
 are phrased as open product/design questions **for Digital Services** — the
 client team that owns this project, e.g. "flag for Digital Services if a

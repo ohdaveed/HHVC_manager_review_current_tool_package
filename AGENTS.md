@@ -1599,6 +1599,13 @@ document is filed under.
 | `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected         |
 | `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`             |
 
+- **`docs/karl-export-field-map.md` is NOT in the corpus** (checked 2026-08-15).
+  The `karl` category is an explicit two-file list in
+  `build_scripts/knowledge-sources.js`, not a glob, so the field map — now the
+  E1 source on what every Karl content type's form contains — cannot be
+  retrieved or cited by `compliance-audit`. Adding it is a one-line change to
+  that list, but it moves the measured document and chunk counts recorded
+  below, so it is a deliberate decision rather than a tidy-up.
 - **Category is derived from the first path segment under `docs/source/`**, so a
   new corpus folder files itself with no code change — which is exactly how the
   scraped SF.gov snapshots work.
@@ -2340,10 +2347,18 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
 - **`review/`** — reference/output for the manager review process
   (`manager_review_packet.md`, `manager_decision_log.csv`, etc.), distinct from
   the in-browser `localStorage` review state.
-- **`docs/`** — `wagtail-content-mapping.md` (page type → Karl content type),
+- **`docs/`** — **`karl-export-field-map.md`** (the current per-content-type
+  field map: live UI labels, navigation paths, block and raw Wagtail field
+  names, required-versus-optional, repeatable-versus-single, internal versus
+  external link shapes, and an explicit unresolved/obsolete register — start
+  here for anything naming a Karl destination), `wagtail-content-mapping.md`
+  (the older page-type → Karl mapping, superseded on type coverage but still
+  the fuller record of per-type nested block detail and research history),
   `karl-mockup-cookbook.md` (the section-by-section build procedure for authors,
   and its dated capture record `karl-mockup-cookbook-plan-2026-08-14.md`), plus
-  dated research/audit notes.
+  dated research/audit notes. **Those dated notes are records, not
+  documentation** — a count or claim that was right on its date stays in the
+  file; corrections go in the field map's obsolete register instead.
 - **`docs/source/hhvc-policy/`** — source policy documents (PDFs + markdown
   extracts) page copy is based on; not code.
 - **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning/design
