@@ -60,11 +60,12 @@ they state too weakly to act on:
   `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
-- **`format:check` is not just _a_ linter, it is the ONLY one.** Its own
-  description calls it "the project's linter", which reads as one check among
-  several; in fact there is no ESLint and no `tsc` anywhere in this repo, so
-  Prettier is the entire gate CI can fail on. That absence is the part no
-  script description can state.
+- **`format:check` is the only linter CI enforces.** Its own description calls
+  it "the project's linter", which undersells the consequence: there is no
+  ESLint and no `tsc` anywhere in this repo, so Prettier is the entire gate a
+  CI run can fail on. `lint:anti-slop` is a second linter, but a deliberately
+  un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
+  below. No single script description can state that relationship.
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
