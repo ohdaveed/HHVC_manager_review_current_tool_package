@@ -1,5 +1,18 @@
 # Karl CMS Content-Type Field Reference
 
+> **Superseded on type coverage by [`docs/karl-export-field-map.md`](../../karl-export-field-map.md) (2026-08-15).**
+> That doc maps all eight content types a `pages/*.js` file currently declares, with raw Wagtail
+> field names and required markers read from the live admin. **Specific claims below that are now
+> wrong**, listed as `O1`–`O13` there: the HHVC-gaps table says Campaign is not modeled and Report
+> is not in the mockup (both are live page types now); the spot-check table names `bedBugsInfo`,
+> `ratsReport` and `preventHub`, none of which exist in the current corpus; and the component
+> availability matrix asserts **Callout: Yes** and **Accordions: Yes** for Report, while Report's
+> `content` chooser offers exactly `Body` and `Table`.
+>
+> **This file is still the source** for the editorial caps it records (description ≤ 110 characters,
+> title ≤ 65, tables ≤ 3 columns) and for the screenshot appendix. Read it for those; read the field
+> map for what a given type's editor form actually contains.
+
 Research synthesis mapping live SF.gov page patterns to Karl CMS editor fields and to the HHVC manager-review mockup schema.
 
 **Sources:**
