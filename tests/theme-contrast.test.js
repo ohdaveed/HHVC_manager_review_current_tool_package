@@ -327,3 +327,123 @@ describe('categorical visualisation palette', () => {
     }
   })
 })
+
+/* The toast controls, which are the one place in this file where the rendered
+   colour is not a declared token.
+
+   Every other pair here reads two tokens and compares them. The toast's two
+   controls instead DERIVE their colour from `--toast-fg` at render time —
+   the dismiss button through `opacity`, the action button through a
+   `color-mix()` tint under its label — so the value that reaches the screen is
+   in `css/styles.css`, not in the palette, and no amount of checking the
+   palette catches it.
+
+   That gap is not hypothetical. `--toast-info-bg` moved from #2a60af to SFDS's
+   action blue #495ed4 during the ramp work. The token itself stayed correct
+   (5.34:1 against `--toast-fg`, comfortably AA) and every existing test stayed
+   green, while the dismiss button fell to 4.34:1 and the action label to
+   4.23:1 — both under AA, both with an in-file comment still asserting the
+   pre-move figures. Recomputing the composite from the two files is what would
+   have caught it, so that is what these tests do.
+
+   The lightest background always governs: opacity and a light tint each move
+   the rendered colour TOWARD the background, so the variant with the least
+   separation to begin with is the one that runs out first. */
+const STYLES = readFileSync(join(import.meta.dir, '..', 'css/styles.css'), 'utf8')
+
+/* Every toast background, so a variant added later is covered by being
+   declared rather than by being remembered here. */
+const TOAST_BACKGROUNDS = ['--toast-bg', '--toast-success-bg', '--toast-info-bg']
+
+/**
+ * Composite one hex colour over another at a given alpha, the way `opacity`
+ * and `color-mix(… N%, transparent)` both resolve against an opaque backdrop.
+ *
+ * @param {string} fg Six-digit hex, the colour being laid down.
+ * @param {string} bg Six-digit hex, the opaque colour behind it.
+ * @param {number} alpha 0-1.
+ * @returns {string} Six-digit hex of the result.
+ */
+function composite(fg, bg, alpha) {
+  const [f, b] = [fg.replace('#', ''), bg.replace('#', '')]
+  const channel = (i) => {
+    const fv = parseInt(f.slice(i, i + 2), 16)
+    const bv = parseInt(b.slice(i, i + 2), 16)
+    return Math.round(alpha * fv + (1 - alpha) * bv)
+  }
+  return `#${[0, 2, 4].map((i) => channel(i).toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Read a numeric declaration out of one CSS rule in `css/styles.css`.
+ *
+ * Scoped to the rule rather than the file because `opacity` and
+ * `color-mix()` both appear many times over; matching the first hit anywhere
+ * would silently measure some other component's value and pass.
+ *
+ * @param {string} selector The rule's full selector text.
+ * @param {RegExp} pattern Must expose the number as capture group 1.
+ * @returns {number}
+ */
+function inRule(selector, pattern) {
+  const start = STYLES.indexOf(`${selector} {`)
+  if (start === -1) throw new Error(`${selector} is not declared in css/styles.css`)
+  const rule = STYLES.slice(start, STYLES.indexOf('}', start))
+  const match = rule.match(pattern)
+  if (!match) throw new Error(`${selector} declares nothing matching ${pattern}`)
+  return parseFloat(match[1])
+}
+
+describe('toast controls, composited against every variant', () => {
+  const fg = hex(LIGHT, '--toast-fg')
+
+  test('the dismiss button clears 4.5:1 on every toast variant', () => {
+    const opacity = inRule('.toast .toast-close', /opacity:\s*([\d.]+)/)
+    for (const name of TOAST_BACKGROUNDS) {
+      const bg = hex(LIGHT, name)
+      expect(contrast(composite(fg, bg, opacity), bg)).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  test('the action label clears 4.5:1 on every toast variant', () => {
+    /* The label is full-strength --toast-fg; what moves is the surface under
+       it, so the tint is composited into the BACKGROUND and the text stays
+       put. Getting this the wrong way round measures a fading label on a
+       fixed background and reports a number that is not on screen. */
+    const tint = inRule('.toast .toast-action', /background:\s*color-mix\([^)]*?([\d.]+)%/) / 100
+    for (const name of TOAST_BACKGROUNDS) {
+      const bg = hex(LIGHT, name)
+      expect(contrast(fg, composite(fg, bg, tint))).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  test('the action border clears 3:1 against the toast behind it', () => {
+    /* A boundary carries no text, so this is WCAG 1.4.11's 3:1 rather than
+       4.5:1 — but it is what makes the control legible AS a control, and at
+       the 45% it started at this was 2.32:1 on the info variant. */
+    const border = inRule('.toast .toast-action', /border:[^;]*?([\d.]+)%/) / 100
+    for (const name of TOAST_BACKGROUNDS) {
+      const bg = hex(LIGHT, name)
+      expect(contrast(composite(fg, bg, border), bg)).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  test('hovering the action button never lowers its label contrast', () => {
+    /* The regression this pins is specific: the hover rule used to raise the
+       fill to 22%, taking the label to 3.49:1 — so pointing at the control
+       made it less readable, which is the opposite of what a hover state is
+       for. Asserting "no fill change on hover" would over-constrain the
+       design; asserting the rendered result stays AA does not. */
+    const start = STYLES.indexOf('.toast .toast-action:hover {')
+    expect(start).toBeGreaterThan(-1)
+    const rule = STYLES.slice(start, STYLES.indexOf('}', start))
+    const fill = rule.match(/background:\s*color-mix\([^)]*?([\d.]+)%/)
+    const tint = fill
+      ? parseFloat(fill[1]) / 100
+      : inRule('.toast .toast-action', /background:\s*color-mix\([^)]*?([\d.]+)%/) / 100
+    for (const name of TOAST_BACKGROUNDS) {
+      const bg = hex(LIGHT, name)
+      expect(contrast(fg, composite(fg, bg, tint))).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+})
