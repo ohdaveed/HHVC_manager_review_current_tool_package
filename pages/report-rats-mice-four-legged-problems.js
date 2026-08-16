@@ -108,7 +108,7 @@ window.HHVC_PAGES['rodentsReport'] = {
         '**Note:** Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
         'Under San Francisco Health Code Article 11, property owners are legally required to keep their buildings clean, watertight, and completely free of rodent infestations.',
       ],
-      button: 'View Health Code Article 11',
+      button: 'View Article 11',
       buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
       buttonStyle: 'secondary',
     },
