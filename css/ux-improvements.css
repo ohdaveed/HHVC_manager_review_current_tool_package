@@ -646,7 +646,7 @@
 /* --legacy-focus-ring, not a literal. These two rules used to hardcode
    `rgba(42, 96, 175, 0.25)` — byte-identical to the token's LIGHT value, which
    is exactly what made the bug invisible in review. css/theme.css deliberately
-   re-points the token in dark mode (to `rgba(141, 176, 230, 0.45)`), so these
+   re-points the token in dark mode (to `rgba(153, 172, 237, 0.45)`), so these
    two inputs drew a dark-blue 25%-alpha ring over the near-black page and lost
    their focus indicator entirely — a WCAG 2.4.11 failure on the queue's search
    box and the sync settings, two of the most-used fields in the tool. Every
@@ -1115,7 +1115,7 @@ ol li {
    resolve to the dark palette. Measured there, three of the four category
    text-on-border pairs fall under AA:
 
-     meta      — #8db0e6 on #2b3a4a = 5.25:1 ✓
+     meta      — #99aced on #32384b = 5.26:1 ✓
      body      — #cbb0ef on #725a98 = 3.03:1 ✗
      placement — #f0cd72 on #7d6220 = 3.76:1 ✗
      editor    — #8fd694 on #35713a = 3.42:1 ✗
@@ -1128,7 +1128,7 @@ ol li {
    The fix keeps the per-kind background — the colour coding is the point —
    and swaps the foreground to the dark theme's body-text token (#f0f1f2),
    which clears AA on all four grounds — measured in the running app after the
-   change: meta 10.28:1, body 5.11:1, placement 5.10:1, editor 5.19:1.
+   change: meta 10.30:1, body 5.11:1, placement 5.10:1, editor 5.19:1.
    Scoped to `.karl-tag-legend-swatch` on purpose: a tag
    on the mockup keeps its coloured badge text, since inside the shell these
    tokens are pinned light and already pass.
