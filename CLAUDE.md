@@ -1165,9 +1165,15 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   deployed service, which answered `chunkCount: 768` alongside `ready: true`.
   **That number is a record of what that ingest wrote, not the current corpus
   size**, and the 48-chunk gap to the 816 above is not one change: that ingest
-  predates the field map joining the `karl` category, the field map's own later
-  growth from 42 chunks to 43, and the `sfds` category going from 1 document to 2. What the reading evidences is that the seam works on Postgres at all —
-  read the live count from `/api/ai/capabilities` rather than from this line.
+  predates both `docs/karl-export-field-map.md` joining the `karl` category (46
+  chunks as measured today) and the `sfds` category existing at all (2 chunks),
+  which accounts for the whole of it. Those are CHUNK counts, not document
+  counts — `sfds` is a single ingested document,
+  `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
+  only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
+  the corpus and there is no second source to go looking for. What the reading
+  evidences is that the seam works on Postgres at all — read the live count from
+  `/api/ai/capabilities` rather than from this line.
 
 ### Reviewer sign-in (`/api/session`)
 
