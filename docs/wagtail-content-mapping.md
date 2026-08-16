@@ -1,5 +1,20 @@
 # Mockup → Karl (Wagtail) content mapping
 
+> **Superseded on type coverage by [`karl-export-field-map.md`](./karl-export-field-map.md)
+> (2026-08-15).** That doc maps every content type a `pages/*.js` file currently declares — eight
+> of them — at the tier each claim was actually observed at, and a read-only live-admin capture
+> closed most of what this file left open. **Specific claims below that are now wrong**, listed as
+> `O1`–`O13` there: Campaign is described here as not modeled (there are two Campaign pages);
+> `pestsTopic` is discussed as a Topic page with 9 sections (it is `type: 'Agency'` with 6, and the
+> Topic page is `healthyHousingTopic`); the "none of these types are used by any `pages/*.js` file"
+> note about the eight live-admin types is wrong for three of them; the forms are described as a
+> single Content tab with no Promote/Settings (all eight are three-tab); and Transaction's panel
+> order has `supporting_information` before `custom_section`, not the reverse.
+>
+> **This file is still the fuller record** for per-type nested block detail, the Karl editor UI
+> mechanics, and the research history behind each finding. Read it for depth; read the field map
+> for what is currently true.
+
 Karl, SF.gov's CMS, is a custom product built on Wagtail by Digital Services
 engineers. This tool has no Wagtail integration and never will (see
 `CLAUDE.md`: static mockup, no backend) — this doc exists only so the `karl`
