@@ -1136,7 +1136,7 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
 
 - **The `karl` category is an explicit file list, not a glob**, because those
   documents live in `docs/` rather than `docs/source/`.
-  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
+  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +46
   chunks: it is the E1 record of what every Karl content type's editor form
   actually contains, and without it the corpus could answer what the Help
   Center _says_ about a form but not what the form _offers_ — two things that
@@ -1152,13 +1152,28 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   on. Resolved from the matched row, so the model cannot spoof it; it also
   travels with the citation the reviewer sees.
 - Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured 2026-08-15: **78 documents, 812 chunks** (`hhvc-policy` 430,
-  `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24, `sfds` 2).
+- Re-measured 2026-08-16: **78 documents, 816 chunks** (`hhvc-policy` 430,
+  `mockup-draft` 233, `karl` 99, `sfgov-live` 28, `sfgov-style` 24, `sfds` 2).
+  **Editing an ingested document moves this, so re-measure rather than trusting
+  the number above** — `docs/karl-export-field-map.md` alone went 42 → 43 → 46
+  chunks over three passes of edits to its own register, and the corpus total
+  with it each time.
   `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
   brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
-  writes to Postgres and `compliance-audit` reports ready — verified:
-  `knowledgeBase: {ready: true, chunkCount: 768}`.
+  writes to Postgres and `compliance-audit` reports ready — verified against the
+  deployed service, which answered `chunkCount: 768` alongside `ready: true`.
+  **That number is a record of what that ingest wrote, not the current corpus
+  size**, and the 48-chunk gap to the 816 above is not one change: that ingest
+  predates both `docs/karl-export-field-map.md` joining the `karl` category (46
+  chunks as measured today) and the `sfds` category existing at all (2 chunks),
+  which accounts for the whole of it. Those are CHUNK counts, not document
+  counts — `sfds` is a single ingested document,
+  `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
+  only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
+  the corpus and there is no second source to go looking for. What the reading
+  evidences is that the seam works on Postgres at all — read the live count from
+  `/api/ai/capabilities` rather than from this line.
 
 ### Reviewer sign-in (`/api/session`)
 

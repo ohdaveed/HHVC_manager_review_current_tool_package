@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { gotoFresh, openWorkspaceTab } from './helpers.js'
+import { gotoFresh, openWorkspaceTab, openAdvancedSection } from './helpers.js'
 
 test.describe('chrome type scale', () => {
   test('resolves the four steps onto SFDS values', async ({ page }) => {
@@ -41,7 +41,37 @@ test.describe('chrome type scale', () => {
     // a real MUI class is what puts the island inside the scan.
     await openWorkspaceTab(page, 'checks')
     await page.locator('#reviewChecksIsland .MuiChip-root').first().waitFor()
-    const { total, small } = await page.evaluate(() => {
+    // Half this panel's chrome does not exist until Help opens, and the rest
+    // of it not until each collapsed <details> is expanded -- they render on
+    // Help opening but stay closed, so their contents never get a layout box
+    // and every rule inside them was invisible to this scan. That was not
+    // theoretical: `.karl-tag-legend-desc` renders non-uppercase at 0.76rem
+    // (12.16px), below this floor, and lived entirely inside the unopened
+    // legend. Opening each one is what puts the deferred chrome in scope.
+    await openWorkspaceTab(page, 'help')
+    for (const section of [
+      'Draft content with AI',
+      'Stored review data on this browser',
+      'Pages added and deleted',
+      'Save mockups as images',
+    ]) {
+      await openAdvancedSection(page, section)
+    }
+    // Transient chrome needs raising before it can be measured, and this is
+    // the third kind of blind spot in the same test: a toast exists only
+    // between showToast() and its 4s self-dismiss, so a scan of a resting DOM
+    // never sees one. `.toast-action` rendered sentence-case at 0.75rem (12px)
+    // under a test asserting nothing non-eyebrow goes below 14px -- true of
+    // everything the scan could reach, and false of the page. The action
+    // variant is raised specifically because it is the branch with the extra
+    // control; a plain toast would leave `.toast-action` unrendered and the
+    // hole open. #toastContainer sits inside `.app`, so once one exists it is
+    // in scope with no change to the root.
+    await page.evaluate(() =>
+      window.showToast('Chrome floor scan', 'info', { label: 'Undo', callback: () => {} })
+    )
+    await page.locator('.toast .toast-action').first().waitFor()
+    const { total, small, micro } = await page.evaluate(() => {
       // Tool chrome is not just #reviewWorkspace -- the sidebar and the
       // canvas toolbar are chrome too, and a sub-14px rule added to either
       // of those would have passed this test silently before this scope
@@ -55,10 +85,42 @@ test.describe('chrome type scale', () => {
       // by separate work (see css/styles.css's h1-h4 comment) -- dragging it
       // into the chrome floor would flag the thing under review, not a
       // chrome regression.
+      //
+      // The inline-edit widgets are the exception, and excluding them was a
+      // real hole. They are INJECTED under #mockPage, so they sit inside the
+      // shell, but they are review-tool controls styled by
+      // css/inline-content-edit.css -- not SF.gov page content. Dropping
+      // every descendant of the shell meant a sub-14px regression in that
+      // stylesheet could never fail this test. Membership is decided by the
+      // widget's own class prefix rather than by position in the DOM, which
+      // is the thing that actually distinguishes tool chrome from page copy
+      // here.
+      // The Karl tag legend is the mirror image of the inline-edit case, and
+      // needs the opposite treatment. It lives in Help -- chrome, outside the
+      // shell -- but its swatches and its two inline example pills
+      // (`.karl-tag-flag`, `.karl-tag-inherit`) are SPECIMENS: their whole
+      // job is to reproduce, at their real size, an annotation that renders
+      // inside the mockup. Holding a specimen to the chrome floor flags the
+      // thing being illustrated rather than any chrome, which is the same
+      // argument that keeps `.browser-shell` out above -- and resizing them
+      // to pass would make the legend stop depicting what it documents.
+      // css/styles.css says as much where it pins the legend's swatch colours
+      // to the mockup's rather than to the panel's. The legend's OWN prose
+      // and headings are not specimens and are scanned normally.
+      const isSpecimen = (el) =>
+        !!el.closest('.karl-tag-legend') &&
+        !!el.closest('.karl-tag, .karl-tag-flag, .karl-tag-inherit')
       const root = document.querySelector('.app')
-      const all = root
-        ? [...root.querySelectorAll('*')].filter((el) => !el.closest('.browser-shell'))
-        : []
+      const isChrome = (el) =>
+        (!el.closest('.browser-shell') || !!el.closest('[class*="inline-edit-"]')) &&
+        !isSpecimen(el)
+      const all = root ? [...root.querySelectorAll('*')].filter(isChrome) : []
+      // The one size allowed below the floor, read from the token rather than
+      // restated, so the exemption cannot drift away from the scale it names.
+      const micro = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--ds-text-micro')
+      )
+      const microPx = micro * 16
       const small = all
         .map((el) => ({
           size: parseFloat(getComputedStyle(el).fontSize),
@@ -80,9 +142,30 @@ test.describe('chrome type scale', () => {
         // why the extension token (--ext-text-2xs, 11px) was scoped to
         // uppercase eyebrows and nothing else. A sub-14px rule that is NOT
         // uppercase gets no such argument and must resolve to a real step.
-        .filter((r) => r.size < 14 && r.transform !== 'uppercase' && r.text)
-      return { total: all.length, small }
+        //
+        // The exemption is bounded by SIZE as well as by case, and it has to
+        // be. `transform !== 'uppercase'` alone exempts EVERY uppercase
+        // element at ANY size, so `font-size: 8px; text-transform: uppercase`
+        // passed -- and so did the 12.16px and 12.48px legend labels, which
+        // are uppercase but sit on no step at all. The argument for going
+        // below the floor is specifically the one step the scale publishes
+        // for it, so that is the only size it buys: --ds-text-micro, read
+        // above from the token itself and compared with a half-pixel
+        // tolerance for sub-pixel rounding.
+        .filter(
+          (r) =>
+            r.size < 14 &&
+            r.text &&
+            !(r.transform === 'uppercase' && Math.abs(r.size - microPx) <= 0.5)
+        )
+      return { total: all.length, small, micro: microPx }
     })
+    // Guard the exemption's own input: if --ds-text-micro ever fails to
+    // resolve, `microPx` is NaN, every comparison against it is false, and
+    // the filter silently becomes "no uppercase exemption at all" -- which
+    // fails loudly rather than passing, but for a reason that would look
+    // like a dozen unrelated type regressions. Naming it here is cheaper.
+    expect(micro).toBeGreaterThan(0)
     // A selector that matches nothing yields an empty result and the
     // assertion below passes for the wrong reason -- this is the exact
     // failure mode that let the original #reviewWorkspace-only scope stay

@@ -1601,7 +1601,7 @@ document is filed under.
 
 - **The `karl` category is an explicit file list, not a glob**, because those
   documents live in `docs/` rather than `docs/source/`.
-  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
+  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +46
   chunks: it is the E1 record of what every Karl content type's editor form
   actually contains, and without it the corpus could answer what the Help
   Center _says_ about a form but not what the form _offers_ — two things that
@@ -1633,11 +1633,11 @@ document is filed under.
 - **Corpus definition is separate from ingestion on purpose**:
   `tests/knowledge-sources.test.js` covers which documents exist and how a page
   projects, with no Gemini key and no embedding call. Measured after this
-  change: **78 documents, 812 chunks** (re-measured 2026-08-15) — `hhvc-policy`
-  430, `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24,
+  change: **78 documents, 816 chunks** (re-measured 2026-08-16) — `hhvc-policy`
+  430, `mockup-draft` 233, `karl` 99, `sfgov-live` 28, `sfgov-style` 24,
   `sfds` 2. `karl` rose from 53 when `docs/karl-export-field-map.md` was added;
   `sfds` from 1 as its capture grew.
-- **Retrieval is still brute-force cosine in JS.** 812 chunks ranks in
+- **Retrieval is still brute-force cosine in JS.** 816 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
 
 ### Reviewer sign-in (`/api/session`)
