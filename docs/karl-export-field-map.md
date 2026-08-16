@@ -751,7 +751,7 @@ Every claim above traces to one of these. No row was authored from memory of how
 - `build_scripts/schema.js` and `pages/*.js` — the mockup side, censused 2026-08-15 via
   `build_scripts/load-pages.js`.
 - **Karl Editor Help Center, swept directly 2026-08-15** (E3) —
-  `sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`, 371 URLs enumerated, 10 fetched.
+  `sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center`, 371 URLs enumerated, 14 fetched.
   This sweep is the source for everything marked E3 in the Agency, About us and Report sections,
   for the Spotlight cap table, and for `O9`/`O10`/`U16`/`U17`. Pages read:
   `content-types/building-a-page-by-content-type/` → `report/how-a-report-page-works`,
