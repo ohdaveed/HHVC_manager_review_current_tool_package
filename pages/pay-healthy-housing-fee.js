@@ -86,9 +86,9 @@ window.HHVC_PAGES['payFee'] = {
             'In person: pay by check, cash, or money order at City Hall, Room 140, 1 Dr. Carlton B. Goodlett Place.',
             'By mail: make a check or money order payable to "Department of Public Health." Write your invoice number on it and mail it to P.O. Box 7429, San Francisco, CA 94120.',
           ],
-          button: 'Pay your Healthy Housing fee online',
+          button: 'Pay your fee online',
           buttonUrl: 'https://services.paysf.co/service/healthy-housing-fee',
-          karl: 'what_to_do -> Section. Section title: "Pay online, in person, or by mail". Section specifics: one Text block (intro plus two payment-method bullets) + one Button link block set to External URL, pointing at the live PaySF Healthy Housing fee service. Karl caps Button link text at 25 characters and this mockup label is 35 ("Pay your Healthy Housing fee online"), so it needs shortening before it can be entered. Payment is the primary action, so it follows eligibility and amount confirmation without burying the live payment route.',
+          karl: 'what_to_do -> Section. Section title: "Pay online, in person, or by mail". Section specifics: one Text block (intro plus two payment-method bullets) + one Button link block set to External URL, pointing at the live PaySF Healthy Housing fee service. Link text shortened from "Pay your Healthy Housing fee online" (35 characters) to follow the SF.gov button-text guidance of 25 characters and its verb-first button library. That 25 is editorial rather than schema: the live Button link field carries maxlength 255 (measured 2026-08-15), so a longer label would save — it would just read poorly and contradict published guidance. Payment is the primary action, so it follows eligibility and amount confirmation without burying the live payment route.',
         },
         {
           title: 'Correct an invoice or update your information',
