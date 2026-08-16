@@ -2455,17 +2455,23 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**There are ten stylesheets, and two positions in the order are load-bearing.**
-`css/sfds.css` MUST stay first — it is the raw-primitive layer everything
-downstream reads, keyed to SFDS's own published token names. `css/theme.css`
-MUST stay last — it is the semantic token layer, and its dark-mode block
-overrides the `--legacy-*` primitives `css/styles.css` declares on `:root`.
+**There are ten repository-owned stylesheets, and two positions in their order
+are load-bearing.** `css/sfds.css` MUST stay first of the ten — it is the
+raw-primitive layer everything downstream reads, keyed to SFDS's own published
+token names. `css/theme.css` MUST stay last — it is the semantic token layer,
+and its dark-mode block overrides the `--legacy-*` primitives `css/styles.css`
+declares on `:root`.
 
-The full order is `js/main.js`'s import list, and every sheet opens with a
-banner comment naming what it owns (several also state which sheet they load
-after, and why). Read those two rather than a table here: ten one-line file
-descriptions restated in this file would be a second copy of ten header
-comments, checked by nothing and stale the first time one of them is edited.
+Their order is the tail of `js/main.js`'s CSS imports, and each of the ten
+opens with a banner comment naming what it owns (several also state which sheet
+they load after, and why). Read those two rather than a table here: ten
+one-line file descriptions restated in this file would be a second copy of ten
+header comments, checked by nothing and stale the first time one of them is
+edited. **"First" means first of the ten, not first in the file** — six
+dependency sheets (`@fontsource-variable/roboto-flex`, two
+`@fontsource/roboto-slab` weights, three `@sfgov/design-system` sheets) import
+ahead of `css/sfds.css` and carry none of those banners. They load before all
+ten, so the repo's own sheets override them rather than the reverse.
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
