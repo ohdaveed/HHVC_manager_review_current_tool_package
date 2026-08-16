@@ -13,10 +13,15 @@ It answers six questions per field, and refuses to answer any of them by guessin
 5. how an internal SF.gov page link is represented versus an external URL,
 6. what is still unresolved, and what earlier docs got wrong.
 
-**What this is not:** a re-verification. Every row is sourced from an existing dated capture in this
-repo — no field here was invented to fill a hole. Where a hole exists it is written as a hole, with
-a `U#` identifier, because the consuming plan's acceptance criteria say unresolved mappings must be
-explicit rather than guessed. Compiled 2026-08-15 against the page corpus at that date.
+**What this is not:** a re-verification. Every row is sourced from a dated capture — no field here
+was invented to fill a hole. Where a hole exists it is written as a hole, with a `U#` identifier,
+because the consuming plan's acceptance criteria say unresolved mappings must be explicit rather
+than guessed. Compiled 2026-08-15 against the page corpus at that date.
+
+**The eight-type scoping is the point, and it is census-driven** — `build_scripts/load-pages.js`
+decides what belongs here, not a judgement call. A second section, "Types not yet in use", carries a
+forward-looking inventory of the other nine Karl types for when more pages are added; it is
+deliberately shallower and maps to nothing that exists today.
 
 ---
 
@@ -66,6 +71,20 @@ repo's documentation culture exists to prevent.
 Raw Wagtail field names exist only where a tier-E1 pass inspected them. A blank raw-name cell means
 "not inspected", never "has none".
 
+### Precedence, decided 2026-08-15: the live admin capture is the source of truth
+
+**Where sources disagree about what an editor form contains, E1 wins** — over the Help Center (E3),
+over the older repo docs, and over the `karl` notes in `pages/*.js`. That directive is what closed
+`U12` and `U16` and demoted `O3` and `O9` from live conflicts to plain documentation errors.
+
+**It does not reach E4, because E4 answers a different question.** E1 says what fields the editor
+form has; E4 says what a published page actually renders. A `Related` entry has no description field
+_and_ publishes the destination's title only — those are two findings about two different things,
+and the second was measured on live sf.gov, not read off a form. The card-inheritance buckets below
+rest entirely on E4 and are **not** superseded by anything in the E1 capture. Do not delete them as
+outdated; there is no E1 evidence that could replace them, because the editor form cannot tell you
+what a template renders.
+
 ---
 
 ## Navigation paths
@@ -89,6 +108,11 @@ the chooser, and it is what the capture below used:
 | Agency   | `agency`   | Information         | `information`        | Report       | `report`     |
 | About us | `about`    | Resource Collection | `resourcecollection` | Topic        | `topic`      |
 | Campaign | `campaign` | Transaction         | `transaction`        | Step by step | `stepbystep` |
+
+**One consequence already applied to the corpus.** The capture showed that 27 `karl` notes across 15
+pages described `Step by step`'s Step block while sitting on Transaction and Information pages. Those
+notes were rewritten onto `what_to_do -> Section` rather than the pages being retyped — see
+"Step by step" under "Types not yet in use" for the evidence and the reason.
 
 **Reaching the field** — everything after the form opens is recorded verbatim, and this is the part
 an editor actually follows:
@@ -617,6 +641,114 @@ bolded lead-in, the same fallback Transaction's title-less Callout needs (`U2`).
 
 ---
 
+## Types not yet in use — captured for future pages
+
+Karl offers seventeen content types and this mockup declares eight. The other nine were captured in
+the same read-only session on 2026-08-15, at panel-tree depth: raw field names and panel order for
+all of them, chooser contents and block internals only where a plausible HHVC page would need them.
+**Nothing here maps to a page that exists** — this section answers "which type should this page be?"
+before the per-type sections above answer "what fields does it have?".
+
+They were deliberately not expanded two levels deep the way Agency's Subsection was. That expansion
+was justified because a live page depended on it; nothing depends on these yet.
+
+| Type                       | `<model>`                  | Plausible HHVC use                                    | Captured                            |
+| -------------------------- | -------------------------- | ----------------------------------------------------- | ----------------------------------- |
+| **Step by step**           | `stepbystep`               | the step-bearing pages — see below, this one matters  | panels + `steps` block internals    |
+| **Event**                  | `event`                    | a workshop with a date, versus the current Campaign   | panels + `call_to_action` internals |
+| **Form**                   | `form`                     | `forms/mosquito-workshop-request/` has a real sub-app | panels                              |
+| **News**                   | `news`                     | program announcements                                 | panels                              |
+| **Location**               | `locationpage`             | an office or clinic address                           | panels                              |
+| **Profile**                | `profile`                  | named staff                                           | panels                              |
+| Data story                 | `datastory`                | none identified                                       | panels                              |
+| Meeting                    | `meeting`                  | none identified                                       | panels                              |
+| Document Collection Search | `documentcollectionsearch` | none identified                                       | panels                              |
+
+Every one of these is the same three-tab `TabbedInterface`, read from its panel tree, so the
+Promote-tab table above applies unchanged. **Required markers were measured only on `Step by step`
+and `Event`** (both `title`, `primary_agency`, `slug`, like the eleven measured types); for the
+other seven that pattern is an inference, not a measurement, and is not asserted here.
+
+### Step by step — the type 27 `karl` notes were describing
+
+**Content tab:** `title`, `primary_agency`, `description`, `intro`, `steps`, `topics`,
+`partner_agencies`.
+
+**The `steps` block, expanded (E1):**
+
+| Field                            | UI label         | Type                                      | Required |
+| -------------------------------- | ---------------- | ----------------------------------------- | -------- |
+| `steps-N-value-step_type`        | Step type\*      | select: **`number`**, **`and`**, **`or`** | **yes**  |
+| `steps-N-value-title`            | Title\*          | text                                      | **yes**  |
+| `steps-N-value-optional`         | Optional         | checkbox                                  | no       |
+| `steps-N-value-cost`             | Cost             | —                                         | no       |
+| `steps-N-value-time`             | Time             | —                                         | no       |
+| `steps-N-value-step_description` | Step description | rich text                                 | no       |
+| `related_content_transactions`   | Transaction link | page chooser                              | no       |
+
+**This is the block 27 mockup `karl` notes named**, on 14 pages typed `Transaction` and one typed
+`Information`. Those notes read _"Transaction -> Steps -> Step. Step type: number. … Optional, Cost,
+Time, and Transaction link: blank"_ — seven fields, seven exact matches, and **none of them exists
+on a Transaction page**. Transaction's `what_to_do` → `Section` is `section_title` plus a
+`section_specifics` stream and nothing else.
+
+**Resolved by rewriting the notes, not by retyping the pages** (2026-08-15). The deciding fact is
+that `Step by step` has **no page-level `cost` and no `things_to_know`**: retyping the 14
+Transaction pages would have dropped `whatToKnow` from every one of them, since `whatToKnow.cost` is
+a single page-level statement with nowhere to go. `Step by step`'s `cost` is **per step**, which is
+a different thing. The notes now point at `what_to_do -> Section`; the pages stay Transactions.
+
+That leaves this type a live candidate for anything genuinely step-shaped that carries no page-level
+cost or things-to-know — and `U3`'s `afterReport` is exactly that question.
+
+### Event
+
+**Content tab:** `title`, `primary_agency`, `description`, `call_to_action`, `date_time`, `cost`,
+`location`, `image`, `body`, `partner_agencies`, `contact`, `topics`.
+
+`call_to_action` is a block of **Call to action title**, **Call to action description**, and a
+nested **Button link** (`link_to` radio → SF.gov page or External URL). **This is one of only two
+homes for the mockup's `primaryCta`** — the other is Agency's `call_to_action` — which the "Mockup
+fields with no Karl destination" table above records as unmappable, true only for the eight types
+in use.
+
+Event also has a page-level `cost`, like Transaction, so a workshop page needing both a date and a
+cost statement fits here in a way Campaign does not.
+
+### Form
+
+**Content tab:** `title`, `schema_url`, `confirmation_title`, `confirmation_body`, `primary_agency`,
+`get_help`, `partner_agencies`, `translatable_strings`.
+
+**`schema_url` is the whole mechanism** — the form itself lives elsewhere and Karl references it by
+URL. That is worth knowing before anyone assumes `forms/mosquito-workshop-request/` would be
+rebuilt inside Karl; on this evidence it would be hosted and pointed at.
+
+### News, Location, Profile
+
+- **News** — `title`, `primary_agency`, `date`, `image`, `redirect_url`, `abstract`, `body`,
+  `news_type`, `topics`, `partner_agencies`. Note `redirect_url` sits mid-form here rather than at
+  the bottom, and `news_type` is the News-versus-Press-Release switch.
+- **Location** — `title`, `primary_agency`, `description`, `alert`, `image`, `body`, `intro`,
+  `services`, `about_location`, `partner_agencies`, `at_this_location`, `people`,
+  `related_locations`, `contact`. It has its own `services` field, like Agency.
+- **Profile** — `title`, `pronouns`, `image`, `primary_job_title`, `primary_job_title_line_2`,
+  `primary_agency`, a `ProfileReferencesPanel`, `biography`, `phone`, `email`, `social_media`,
+  `spotlight`, `quick_links`, `contact`, `redirect_url`.
+
+### Data story, Meeting, Document Collection Search
+
+Field lists only — no HHVC page is heading toward any of these.
+
+- **Data story** — `title`, `primary_agency`, `description`, `content`, `partner_agencies`.
+- **Meeting** — `title`, `primary_agency`, `primary_agencies`, `cancelled`, `date_time`,
+  `meeting_location`, `overview`, `agenda`, `videos`, `related_documents`, `notices`,
+  `partner_agencies`.
+- **Document Collection Search** — `title`, `description`, `primary_agency`, `collection`. Four
+  fields; it is a search page over a document collection, not an authored page.
+
+---
+
 ## Card inheritance — the rule that keeps a description from being invented
 
 Requirement 5 has a second half that lives in this repo rather than in Karl: what a card _publishes_.
@@ -651,19 +783,19 @@ write-up: `docs/source/hhvc-policy/2026-08-08-karl-card-inheritance-verification
 Requirement 6, first half. These are real fields in `build_scripts/schema.js` that no verified Karl
 field accepts.
 
-| Mockup field                                      | Used?                               | Status                                                                                                     |
-| ------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `audience[]`                                      | all 29 pages                        | **Not migrated.** HHVC editorial standard, not a Karl concept                                              |
-| `reading`                                         | all 29 pages                        | **Not migrated.** HHVC grade-level target                                                                  |
-| `editorNote`                                      | 27 pages                            | **Not migrated.** QA guidance — equivalent to a Wagtail workflow comment, not page content                 |
-| `editorStatus`                                    | 12 pages                            | **Not migrated.** Review-state, mockup only                                                                |
-| `kind`                                            | every section                       | **Not migrated.** Drives tag colour in the mockup                                                          |
-| `karl`                                            | every section/step/card             | **Not migrated** — it is the instruction _about_ the migration                                             |
-| `seoTitle` / `metaDescription`                    | all 29 pages                        | Wagtail `seo_title` / `search_description` — **general guess, never verified against a Karl form** (`U11`) |
-| `callout.title`                                   | several                             | **No home.** Every Karl `Callout` is a bare rich text field (`U2`)                                         |
-| `primaryCta`                                      | **0 pages**                         | Schema-declared, unused. Nothing to map                                                                    |
-| `printVersionUrl`                                 | **0 pages**                         | Schema-declared, unused. Report's "Print version" field exists and is a document chooser, not a URL        |
-| section-level `button`/`buttonUrl` outside a step | 8 Transaction, 4 Report, 2 Campaign | Campaign's sit inside `spotlight` sections and are fine. The other 12 are `U1`                             |
+| Mockup field                                      | Used?                               | Status                                                                                                                                                                                                                                |
+| ------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `audience[]`                                      | all 29 pages                        | **Not migrated.** HHVC editorial standard, not a Karl concept                                                                                                                                                                         |
+| `reading`                                         | all 29 pages                        | **Not migrated.** HHVC grade-level target                                                                                                                                                                                             |
+| `editorNote`                                      | 27 pages                            | **Not migrated.** QA guidance — equivalent to a Wagtail workflow comment, not page content                                                                                                                                            |
+| `editorStatus`                                    | 12 pages                            | **Not migrated.** Review-state, mockup only                                                                                                                                                                                           |
+| `kind`                                            | every section                       | **Not migrated.** Drives tag colour in the mockup                                                                                                                                                                                     |
+| `karl`                                            | every section/step/card             | **Not migrated** — it is the instruction _about_ the migration                                                                                                                                                                        |
+| `seoTitle` / `metaDescription`                    | all 29 pages                        | Wagtail `seo_title` / `search_description` — **general guess, never verified against a Karl form** (`U11`)                                                                                                                            |
+| `callout.title`                                   | several                             | **No home.** Every Karl `Callout` is a bare rich text field (`U2`)                                                                                                                                                                    |
+| `primaryCta`                                      | **0 pages**                         | Schema-declared, unused. No home on the eight types in use — but `call_to_action` exists on **Agency** (in use, unused by `pestsTopic`) and on **Event** (not in use). So it is unmappable today rather than unmappable in principle. |
+| `printVersionUrl`                                 | **0 pages**                         | Schema-declared, unused. Report's "Print version" field exists and is a document chooser, not a URL                                                                                                                                   |
+| section-level `button`/`buttonUrl` outside a step | 8 Transaction, 4 Report, 2 Campaign | Campaign's sit inside `spotlight` sections and are fine. The other 12 are `U1`                                                                                                                                                        |
 
 **Karl fields with no mockup concept**, conversely: `Cost` (partially — `whatToKnow.cost` covers the
 description, not the radio), `Custom Section` on Transaction, `good_for_community`, `Data dashboard`,
@@ -683,21 +815,21 @@ whole register as a blocklist would suppress exactly what the 2026-08-15 sweep b
 | ID    | Status   | Unresolved                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Blocked on                                                 |
 | ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `U1`  | open     | **Section-level buttons outside a step.** 8 Transaction sections and 4 Report sections carry `button`/`buttonUrl` with no documented Karl slot. Transaction's only `Button link` is inside a `what_to_do` Section; Report's is documented only inside the Spotlight. The Help Center also states an editorial "no more than one button per page" rule, which several pages would already violate.                                                                                                                                                                                   | Digital Services decision                                  |
-| `U2`  | open     | **`callout.title` has no field.** Every Karl `Callout` — Transaction `what_to_do`, Transaction `section_specifics`, Information `information_section` — is a single rich text field with no title. Fold into the rich text as a bolded lead-in, or get a field added.                                                                                                                                                                                                                                                                                                               | Digital Services decision                                  |
-| `U3`  | open     | **Steps on an Information page.** `afterReport` carries 5 steps; Information has no Section/step container (E3, affirmative). Either the page becomes a Transaction or `Step by step`, or the steps become `Title and text` blocks.                                                                                                                                                                                                                                                                                                                                                 | Content decision                                           |
-| `U4`  | open     | **Topic `Services`/`Resources` blocks have no intro paragraph.** Live-confirmed. A mockup section with both `paragraphs[]` and `cards[]` either loses the paragraph or gains a nesting layer (`Content` → Section content → `Text` + `Resources`).                                                                                                                                                                                                                                                                                                                                  | Digital Services decision                                  |
-| `U5`  | open     | **Related panels on types with no Related field.** Topic's verified field list has no `Related`, and Resource Collection is confirmed to have none. `healthyHousingTopic` renders a `component: 'related'` section anyway. (Report is **not** part of this — its card sections are inline page links, see `U15`.)                                                                                                                                                                                                                                                                   | Live-admin re-check + Digital Services                     |
+| `U2`  | open     | **`callout.title` has no field.** Every Karl `Callout` — Transaction `what_to_do`, Transaction `section_specifics`, Information `information_section` — is a single rich text field with no title. Recorded at E1 on **2026-07-05**, when every "+" menu on those forms was opened; the 2026-08-15 pass re-confirmed `what_to_do`'s two block types but did not re-enumerate `section_specifics`. Fold into the rich text as a bolded lead-in, or get a field added. Two payFee callouts now carry this flag inline.                                                                | Digital Services decision                                  |
+| `U3`  | narrowed | **Answered 2026-08-15, and the answer has a cost.** `Step by step` exists and its `steps` block is an exact fit — see "Types not yet in use" below. But `Step by step` has **no page-level `cost` and no `things_to_know`**, so retyping `afterReport` would drop its `whatToKnow` entirely. The alternatives are unchanged: keep it Information and render the steps as `information_section` Title-and-text blocks, or make it a Transaction and use `what_to_do`. Still a content decision.                                                                                      | Content decision                                           |
+| `U4`  | open     | **Topic `Services`/`Resources` blocks have no intro paragraph.** Documented at E3 (Help Center) and recorded in the 2026-07-06 live-admin log; **not re-opened in either 2026-08-15 session**, so it is not E1 despite an earlier draft of this row saying "live-confirmed". A mockup section carrying both `paragraphs[]` and `cards[]` either loses the paragraph or gains a nesting layer (`Content` → Section content → `Text` + `Resources`).                                                                                                                                  | Digital Services decision, or a live-admin re-check        |
+| `U5`  | open     | **Split by the 2026-08-15 capture; the Karl half is settled.** Topic, Resource Collection and Report have **no `related` field** — confirmed at E1 on each form. What remains is a mockup question, not a source conflict: `healthyHousingTopic` renders a `component: 'related'` section that Karl cannot host on that type. Either the panel moves into `content_fields` as a `Resources` block, or the page drops it.                                                                                                                                                            | Content decision                                           |
 | `U6`  | open     | **`Primary agency` is required on 6 types and the mockup has no field for it.** Also `Part of` (Information) and `good_for_community` (Transaction). A page cannot be saved without Primary agency.                                                                                                                                                                                                                                                                                                                                                                                 | Add a mockup field, or accept it as an at-build-time input |
 | `U7`  | closed   | **Closed 2026-08-15 (E1).** Transaction's "Special cases" heading override is `special_cases`. The same capture also read `redirect_url`, the previously uninspected raw name behind "Redirect this page to".                                                                                                                                                                                                                                                                                                                                                                       |
 | `U8`  | closed   | **Closed 2026-08-15 (E1).** Agency `services`/`resources` expanded two levels in the live form: Subsection auto-inserts, carries one optional `Title`, and its own "+" offers `SF.gov page` / `External link`. All 26 panel raw names captured. `services_title`/`resources_title` are **required**, contradicting the Help Center.                                                                                                                                                                                                                                                 |
 | `U9`  | closed   | **Closed 2026-08-15 (E1).** About us is four panels — `title`, `primary_agency`, `about_info`, `resources`. `about_info` auto-inserts a block of `Custom section title` (text) + `Custom section text` (rich text), both optional.                                                                                                                                                                                                                                                                                                                                                  |
 | `U10` | closed   | **Closed 2026-08-15 (E1).** Report `content` chooser offers exactly `Body` and `Table`, opened in the live form. Table fields: Table header options, Description, Caption, Add column → Rich text → Column heading.                                                                                                                                                                                                                                                                                                                                                                 |
 | `U11` | closed   | **Closed 2026-08-15 (E1).** Every type has a **Promote** tab: `slug` (required), `seo_title`, `search_description`, `show_in_menus`, `tags`. So `seoTitle` → `seo_title` and `metaDescription` → `search_description` are verified, not inherited guesswork.                                                                                                                                                                                                                                                                                                                        |
-| `U12` | open     | **`Related`'s content-type restriction.** The Help Center states Related accepts only Transaction/Information/Campaign/Topic; a live check on Campaign's picker selected a Resource Collection page successfully. Re-queried via Karl MCP — the docs are unchanged, so this is a live-behaviour-versus-documented-policy conflict, not stale docs. Only Campaign's picker has been live-tested.                                                                                                                                                                                     | Digital Services, or a test on an already-saved page       |
+| `U12` | closed   | **Closed 2026-08-15 by precedence.** The Help Center states Related accepts only Transaction/Information/Campaign/Topic; the live Campaign picker returned and accepted a Resource Collection page. Under the source-of-truth rule the live form wins, so the documented four-type restriction is wrong (`O3`). Scope of the evidence: a **picker** observation, not a save-and-publish test.                                                                                                                                                                                       | closed                                                     |
 | `U13` | closed   | **Closed 2026-08-15 (E1).** Raw field names captured for all eight types from each form's panel tree. See "Raw field names, all eight types" above.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `U14` | closed   | **Closed 2026-08-15 (E1).** `additional_content` is its own top-level FieldPanel, a sibling of `spotlight_1` and `spotlight_2` — not nested inside either. The 2026-07-06 parenthetical was capture-order shorthand.                                                                                                                                                                                                                                                                                                                                                                |
 | `U15` | closed   | **Closed 2026-08-15 (E1).** Report has no page-card block; `content` offers only `Body` and `Table`. Each card becomes an inline hyperlink in the Body rich text and loses its `text`.                                                                                                                                                                                                                                                                                                                                                                                              |
-| `U16` | narrowed | **Narrowed 2026-08-15 (E1).** Topic's `content_fields` chooser lists `Spotlight` among six repeatable block types, so the form permits more than one. The Help Center says Topic allows 1. The form side is now confirmed twice; whether the template renders a second is the open half.                                                                                                                                                                                                                                                                                            |
+| `U16` | closed   | **Closed 2026-08-15 by precedence.** Topic's `content_fields` chooser lists `Spotlight` among six block types in a repeatable stream, so more than one is possible on the form. The Help Center's "Topic allows 1" loses. `healthyHousingTopic` uses one either way.                                                                                                                                                                                                                                                                                                                | closed                                                     |
 | `U17` | closed   | **Closed 2026-08-15 (E1). Agency's Resources is a DIFFERENT block, despite the shared label.** About us `resources` opens a chooser of `Resources section` / `Downloadable files`; Agency `resources` auto-inserts a Subsection (single block type, no chooser) whose entries are `SF.gov page` / `External link`. So the Help Center's list of four is right and its count of five is the error. This independently explains the E4 finding that **only** Agency subsection entries publish the destination's summary — it is not the same component as everyone else's Resources. | closed                                                     |
 | `U18` | closed   | **Closed 2026-08-15 (E1).** Report's `content` chooser offers `Body` and `Table` only — no Callout, no Accordion. The component matrix asserting both for Report is wrong (`O11`), and `article11Guide`'s one callout must fold into the Body rich text.                                                                                                                                                                                                                                                                                                                            |
 
@@ -764,13 +896,17 @@ Every claim above traces to one of these. No row was authored from memory of how
   `components/resources`, `components/spotlight`, `components/tables`.
 
 - **Live Karl admin, captured 2026-08-15** (E1) — an authenticated, read-only session against
-  `api.sf.gov/admin/pages/add/sf/<model>/2/` for all eight types in use. Panel trees were read from
+  `api.sf.gov/admin/pages/add/sf/<model>/2/` for **all seventeen** Karl content types — the eight in
+  use at full depth, the other nine at panel-tree depth. Panel trees were read from
   each form's own `w-edit-handler-data` payload; StreamField choosers were opened in place to record
   their block types; Agency's `services` and About us's `about_info` were expanded two levels. **No
   form was submitted, saved or published** — every inserted block existed only in an unsaved form and
   was discarded by navigating away, and the session was left on the page explorer. This is the source
-  for the raw-field-name table, the Promote-tab table, the Agency/About us/Report sections, and for
-  `O11`–`O13` and the closure of `U7`–`U11`, `U13`–`U15`, `U17` and `U18`.
+  for the raw-field-name table, the Promote-tab table, the Agency/About us/Report sections, the
+  "Types not yet in use" section, and for `O11`–`O13` and the closure of `U7`–`U11`, `U13`–`U15`,
+  `U17` and `U18`. A second pass on 2026-08-15 captured `Step by step`'s `steps` block and Event's
+  `call_to_action`, and confirmed Transaction's `what_to_do` → `Section` shape — which together
+  settled `U12`, `U16`, and the 27-note rewrite recorded above.
 
 **Why the Help Center sweep could not close the register on its own.** It reaches the documentation,
 not the CMS:
