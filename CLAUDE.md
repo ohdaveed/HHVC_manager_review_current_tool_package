@@ -898,12 +898,22 @@ and the orphan pruning, which a reviewer opens deliberately.
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 `build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
 has coverage independent of current page content). A page has `slug`,
-`type` (a free-form string, only `min(1)` checked — values in use are `Agency`,
-`Transaction`, `Information`, `Resource Collection`, `Campaign`, and `Report`,
-matching Karl content-type names; see `docs/wagtail-content-mapping.md`), `title`,
+`type` (a free-form string, only `min(1)` checked — **eight** values are in use:
+`Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
+`Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
+matching Karl content-type names. This list read six until 2026-08-15, omitting
+`Topic` and `About us`; a census via `build_scripts/load-pages.js` is what
+corrects it, so re-derive rather than trusting a restatement), `title`,
 `summary`, `audience[]`,
-`reading` (grade-level string), and `sections[]`. For Karl editor field mapping by
-content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
+`reading` (grade-level string), and `sections[]`. **For Karl editor field mapping
+by content type, `docs/karl-export-field-map.md` is the current source** — one
+map per type in use, giving live UI labels, navigation paths, block and raw
+Wagtail field names, required-versus-optional, repeatable-versus-single, how an
+internal page link differs from an external URL, and an explicit register of
+what is still unresolved. It supersedes `docs/wagtail-content-mapping.md` and
+`docs/source/hhvc-policy/karl-content-type-field-reference.md` on type coverage;
+both remain useful for their per-type detail and both still carry claims the
+newer doc lists as obsolete.
 Sections carry a required `heading` and `karl`, plus optional `kind`, `component`
 (enum: `body`, `services`, `resources`, `related`, `contact`, `spotlight`,
 `what-to-do`, `supporting`, `intro`, `top-facts`), `open` (renders a Transaction
