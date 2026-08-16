@@ -25,7 +25,7 @@ window.HHVC_PAGES['inspectionPrepInitial'] = {
   sections: [
     {
       heading: 'Before the inspector arrives',
-      karl: "Transaction -> Steps -> Step, mirroring noticeOfViolation's numbered-step shape.",
+      karl: 'what_to_do. The panel\'s "+" offers two block types, Callout and Section; each step below is one Section. Inside a Section, the Section specifics "+" offers Address, Callout, Document, Email, Button link, Phone number and Text. Mirrors noticeOfViolation\'s numbered-step shape.',
       kind: 'body',
       steps: [
         {
@@ -38,14 +38,14 @@ window.HHVC_PAGES['inspectionPrepInitial'] = {
                 'What specifically an inspector needs access to has no tier-1 source. Confirm with HHVC before publication.',
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Clear access to the reported area".',
+          karl: 'what_to_do -> Section. Section title: "Clear access to the reported area". Section specifics: one Text block.',
         },
         {
           title: 'Be ready to answer questions or provide access',
           text: [
             'If you gave contact information, an inspector may contact you to ask questions or schedule a visit.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Be ready to answer questions or provide access". Reuses afterReport\'s already-verified sentence.',
+          karl: 'what_to_do -> Section. Section title: "Be ready to answer questions or provide access". Section specifics: one Text block. Reuses afterReport\'s already-verified sentence.',
         },
         {
           title: 'Gather anything relevant',
@@ -63,13 +63,13 @@ window.HHVC_PAGES['inspectionPrepInitial'] = {
                 'Whether HHVC uses prior tenant-to-owner communication during an inspection has no tier-1 source. Confirm with HHVC before publication.',
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Gather anything relevant".',
+          karl: 'what_to_do -> Section. Section title: "Gather anything relevant". Section specifics: one Text block (bulleted list).',
         },
       ],
     },
     {
       heading: 'What to expect during the visit',
-      karl: "Transaction -> Steps -> Step, mirroring afterReport's inspection-narrative shape.",
+      karl: "what_to_do. A second run of Section blocks in the same panel — Karl has no separate container per heading, so this mockup section and the one above share one what_to_do stream. Mirrors afterReport's inspection-narrative shape.",
       kind: 'body',
       steps: [
         {
@@ -82,7 +82,7 @@ window.HHVC_PAGES['inspectionPrepInitial'] = {
                 'The scope of what an inspector checks beyond the reported condition has no tier-1 source. Confirm with HHVC before publication.',
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "An inspector may check the reported area and nearby spaces".',
+          karl: 'what_to_do -> Section. Section title: "An inspector may check the reported area and nearby spaces". Section specifics: one Text block.',
         },
         {
           title: 'You may not get advance notice for every visit',
@@ -90,7 +90,7 @@ window.HHVC_PAGES['inspectionPrepInitial'] = {
             'If you did not give contact information, an inspection may still happen without notice.',
             'This can happen when areas can be accessed, for example if the report describes an urgent health or safety risk.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "You may not get advance notice for every visit". Reuses afterReport\'s already-verified sentence, split into two for sentence length.',
+          karl: 'what_to_do -> Section. Section title: "You may not get advance notice for every visit". Section specifics: one Text block holding both paragraphs. Reuses afterReport\'s already-verified sentence, split into two for sentence length.',
         },
       ],
     },
