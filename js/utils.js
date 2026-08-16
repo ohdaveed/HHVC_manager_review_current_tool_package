@@ -13,7 +13,6 @@ const REVIEW_RECORD_FIELDS = [
   'decision',
   'notes',
   'risks_or_blockers',
-  'follow_up_owner',
   'seo_title',
   'meta_description',
   'primary_cta',
@@ -149,12 +148,54 @@ function zeroDecisionTally() {
   return Object.fromEntries(DECISION_LABELS.map((label) => [label, 0]))
 }
 
+/**
+ * Parse Markdown to HTML and sanitize it against XSS.
+ * Falls back to plain text escaping if parsing fails or libraries are missing.
+ * @param {string} rawString
+ * @returns {string} Safe HTML string.
+ */
+function safeMarkdown(rawString) {
+  const text = String(rawString ?? '')
+  if (!text) return ''
+
+  if (typeof window === 'undefined' || !window.marked || !window.DOMPurify) {
+    // In Node test environment or if libraries failed to load,
+    // fallback to basic HTML escaping.
+    return escapeHtml(text)
+  }
+
+  try {
+    const renderer = new window.marked.Renderer()
+    renderer.link = ({ href, text }) => {
+      if (/^https?:\/\//.test(href)) {
+        return `<a class="inline-link" href="${href}" target="_blank" rel="noopener noreferrer">${text} <span aria-hidden="true">↗</span></a>`
+      }
+      return `<button type="button" class="inline-link" data-render-target="${href}">${text}</button>`
+    }
+
+    // Configure marked to use our renderer
+    window.marked.use({ renderer })
+
+    // parseInline prevents wrapping the output in <p> tags
+    const rawHtml = window.marked.parseInline(text)
+
+    // Sanitize while allowing the required custom attributes
+    return window.DOMPurify.sanitize(rawHtml, {
+      ADD_ATTR: ['target', 'rel', 'data-render-target'],
+    })
+  } catch (error) {
+    console.error('safeMarkdown failed:', error)
+    return escapeHtml(text)
+  }
+}
+
 ;(function initSharedUtils() {
   // Expose utilities to window for backward compatibility
   // during the migration period.
   if (typeof window === 'undefined') return
 
   window.utils = {
+    safeMarkdown,
     escapeHtml,
     getByPath,
     setByPath,
@@ -482,6 +523,7 @@ function setPrimaryCta(page, label) {
  * Get today's date as YYYY-MM-DD.
  * @returns {string}
  */
+
 function today() {
   const now = new Date()
   const yyyy = now.getFullYear()
@@ -870,7 +912,6 @@ function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD
     decision: 'Needs review',
     notes: '',
     risks_or_blockers: '',
-    follow_up_owner: '',
     seo_title: defaultSeoTitle(page),
     meta_description: defaultMetaDescription(page),
     primary_cta: getPrimaryCta(page),
@@ -934,4 +975,5 @@ export {
   toCsv,
   today,
   urlProbe,
+  safeMarkdown,
 }

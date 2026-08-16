@@ -33,6 +33,9 @@ Captured pages:
 | `get-help-with-vermin-in-your-building.md` | `sf.gov/get-help-vermin-your-building` | `sf.Transaction` |
 | `keeping-your-building-free-of-vermin.md` | `sf.gov/information--keeping-your-building-free-vermin` | `sf.Information` |
 | `report-a-health-nuisance-or-hazards.md` | `sf.gov/report-health-nuisance-or-hazards` | `sf.Transaction` |
+| `healthy-housing-conditions-topic.md` | `sf.gov/topics--healthy-housing-conditions` | `sf.Topic` |
+| `environmental-health-agency.md` | `sf.gov/departments--department-public-health--environmental-health` | `sf.Agency` |
+| `sfgov-structural-design-patterns.md` | (Cross-site structural patterns) | `sf.StructuralPatterns` |
 
 The content type in that table is not a guess — SF.gov serves it as a `type`
 meta tag on every page (`sf.Transaction`, `sf.Information`), which is a free

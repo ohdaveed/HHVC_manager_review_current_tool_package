@@ -106,7 +106,8 @@ function init() {
       navigateTo(e.state.key, true)
     } else {
       const params = new URLSearchParams(window.location.search)
-      navigateTo(resolveInitialPageKey(params.get('page')), true)
+      const pageKey = params.get('page')
+      navigateTo(pageKey ? resolveInitialPageKey(pageKey) : null, true)
     }
   })
 
@@ -116,6 +117,7 @@ function init() {
   // would need flushing. js/ux-improvements.js does its own restoreInitialPage()
   // pass once its wrapper is installed.
   const params = new URLSearchParams(window.location.search)
-  renderPage(resolveInitialPageKey(params.get('page')), true)
+  const pageKey = params.get('page')
+  renderPage(pageKey ? resolveInitialPageKey(pageKey) : null, true)
 }
 init()

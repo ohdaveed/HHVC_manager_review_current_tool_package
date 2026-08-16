@@ -154,11 +154,19 @@
     const width = el.offsetWidth
     const height = el.offsetHeight
 
+    let maxViewportHeight = window.innerHeight
+    if (document.body.classList.contains('workspace-open')) {
+      const workspace = document.getElementById('reviewWorkspace')
+      if (workspace && !workspace.classList.contains('full-screen')) {
+        maxViewportHeight = window.innerHeight - workspace.offsetHeight
+      }
+    }
+
     let top = rect.bottom + margin
-    if (top + height > window.innerHeight - margin) {
+    if (top + height > maxViewportHeight - margin) {
       // Flip above the selection, which is where the room usually is.
       const above = rect.top - margin - height
-      top = above >= margin ? above : window.innerHeight - height - margin
+      top = above >= margin ? above : maxViewportHeight - height - margin
     }
 
     // Final, UNCONDITIONAL clamp — the anchor logic above is a preference, not
@@ -169,7 +177,7 @@
     // "visible, enabled and stable" while being unclickable — Playwright's
     // "element is outside of the viewport", which is exactly how it was found.
     // A fixed-position affordance must always be reachable.
-    el.style.top = `${Math.max(margin, Math.min(top, window.innerHeight - height - margin))}px`
+    el.style.top = `${Math.max(margin, Math.min(top, maxViewportHeight - height - margin))}px`
     el.style.left = `${Math.max(margin, Math.min(rect.left, window.innerWidth - width - margin))}px`
   }
 

@@ -171,7 +171,6 @@ const reviewRecordSchema = z
     decision: z.enum(VALID_DECISIONS).optional(),
     notes: z.string().optional(),
     risks_or_blockers: z.string().optional(),
-    follow_up_owner: z.string().optional(),
     seo_title: z.string().optional(),
     meta_description: z.string().optional(),
     primary_cta: z.string().optional(),

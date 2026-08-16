@@ -29,21 +29,13 @@
    * `local_dirty` are bookkeeping the write path owns; `page_key` never
    * changes.
    */
-  const RESTORED_FIELDS = [
-    'decision',
-    'notes',
-    'risks_or_blockers',
-    'follow_up_owner',
-    'reviewer',
-    'review_date',
-  ]
+  const RESTORED_FIELDS = ['decision', 'notes', 'risks_or_blockers', 'reviewer', 'review_date']
 
   /** What a page reverts to when the action created its record from nothing. */
   const EMPTY_RECORD = {
     decision: 'Needs review',
     notes: '',
     risks_or_blockers: '',
-    follow_up_owner: '',
   }
 
   /**

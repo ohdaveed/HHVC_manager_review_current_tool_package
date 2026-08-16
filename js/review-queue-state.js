@@ -33,7 +33,6 @@
    */
   const ACTION_LABELS = {
     ...DECISION_LABEL_BY_SLUG,
-    'assign-me': 'Assign to me',
   }
 
   function toast(message, tone = 'success') {
@@ -53,11 +52,6 @@
   }
 
   function buildActionPatch(action, suggestedOwner, reviewDate, currentSaved) {
-    if (action === 'assign-me') {
-      if (currentSaved.follow_up_owner === suggestedOwner) return null
-      return { follow_up_owner: suggestedOwner, review_date: reviewDate }
-    }
-
     const decision = ACTION_LABELS[action]
     if (!decision || !VALID_DECISIONS.has(decision)) return null
 
@@ -65,7 +59,6 @@
 
     return {
       decision,
-      follow_up_owner: currentSaved.follow_up_owner || suggestedOwner,
       review_date: reviewDate,
     }
   }
@@ -127,7 +120,6 @@
   function syncSidebarForKey(pageKey, saved) {
     if (pageKey !== getCurrentKey()) return
     window.utils.setValue('reviewDecision', saved.decision || 'Needs review')
-    window.utils.setValue('reviewOwner', saved.follow_up_owner || '')
     window.utils.setValue('reviewNotes', saved.notes || '')
     window.utils.setValue('reviewRisks', saved.risks_or_blockers || '')
     window.utils.setValue('reviewDateInput', saved.review_date || getSidebarReviewDate())

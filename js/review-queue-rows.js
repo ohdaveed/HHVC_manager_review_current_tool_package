@@ -28,18 +28,9 @@
   function getPriorityRank(row) {
     if (row.decision === 'Blocked') return 5
     if (row.decision === 'Revise and resubmit') return 4
-    if (row.decision === 'Needs review' && isUnassigned(row)) return 3
     if (row.isStale) return 2
     if (row.decision === 'Needs review') return 1
     return 0
-  }
-
-  function isUnassigned(row) {
-    return (
-      row.decision !== 'Approved' &&
-      row.decision !== 'Approved with edits' &&
-      !normalize(row.followUpOwner)
-    )
   }
 
   function getQueueRows() {
@@ -52,7 +43,6 @@
       const ageDays = getAgeInDays(updatedAt)
       const notes = saved?.notes || ''
       const blockers = saved?.risks_or_blockers || ''
-      const followUpOwner = saved?.follow_up_owner || ''
       const reviewer = saved?.reviewer || ''
       const isCurrentPage = key === getCurrentKey()
       // Scored rules only. Page type, Audience and Reading target are required
@@ -72,7 +62,6 @@
           page.type || '',
           page.summary || '',
           decision,
-          followUpOwner,
           reviewer,
           notes,
           blockers,
@@ -87,7 +76,6 @@
         decision,
         updatedAt,
         reviewDate: saved?.review_date || '',
-        followUpOwner,
         reviewer,
         notes,
         blockers,
@@ -119,13 +107,12 @@
 
     const reviewed = rows.filter((row) => window.utils.isDecided(row.decision)).length
     const stale = rows.filter((row) => row.isStale).length
-    const unassigned = rows.filter(isUnassigned).length
     const blocked = rows.filter(
       (row) => row.decision === 'Blocked' || row.decision === 'Revise and resubmit'
     ).length
     const failingChecks = rows.filter(isFailingChecks).length
 
-    return { total, reviewed, stale, unassigned, blocked, failingChecks, byDecision }
+    return { total, reviewed, stale, blocked, failingChecks, byDecision }
   }
 
   function matchesFilter(row) {
@@ -137,7 +124,6 @@
     if (state.filter === 'Blocked') {
       return row.decision === 'Blocked' || row.decision === 'Revise and resubmit'
     }
-    if (state.filter === 'Unassigned') return isUnassigned(row)
     if (state.filter === 'Stale') return row.isStale
     if (state.filter === 'Failing checks') return isFailingChecks(row)
     return true
@@ -180,17 +166,7 @@
       return filtered.filter((row) => row.searchText.includes(normalized)).sort(compareRows)
     }
     const fuse = new Fuse(filtered, {
-      keys: [
-        'key',
-        'title',
-        'type',
-        'summary',
-        'decision',
-        'followUpOwner',
-        'reviewer',
-        'notes',
-        'blockers',
-      ],
+      keys: ['key', 'title', 'type', 'summary', 'decision', 'reviewer', 'notes', 'blockers'],
       threshold: 0.4,
       ignoreLocation: true,
     })
@@ -330,7 +306,6 @@
 
   window.ReviewQueueInternal.rows = {
     getPriorityRank,
-    isUnassigned,
     getQueueRows,
     isFailingChecks,
     getQueueStats,

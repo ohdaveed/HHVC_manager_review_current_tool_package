@@ -97,7 +97,6 @@ async function mountManagerReviewExport({ title, summary } = {}) {
     <input id="reviewDecision" value="Needs review" />
     <textarea id="reviewNotes"></textarea>
     <textarea id="reviewRisks"></textarea>
-    <input id="reviewOwner" value="" />
     <input id="seoTitleInput" value="" />
     <textarea id="metaDescriptionInput"></textarea>
     <div id="reviewExportStatus"></div>

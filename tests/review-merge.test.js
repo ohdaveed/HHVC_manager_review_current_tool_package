@@ -7,7 +7,6 @@ describe('mergeReviewRecord', () => {
       page_key: 'pestsTopic',
       decision: 'Needs review',
       notes: 'first pass',
-      follow_up_owner: 'David',
       seo_title: 'Original SEO title',
     }
     const merged = mergeReviewRecord(existing, { decision: 'Approved', notes: 'looks good' })
@@ -15,7 +14,6 @@ describe('mergeReviewRecord', () => {
     expect(merged.decision).toBe('Approved')
     expect(merged.notes).toBe('looks good')
     // Fields not present in the patch survive untouched.
-    expect(merged.follow_up_owner).toBe('David')
     expect(merged.seo_title).toBe('Original SEO title')
     expect(merged.page_key).toBe('pestsTopic')
   })

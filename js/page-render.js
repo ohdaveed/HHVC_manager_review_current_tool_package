@@ -11,7 +11,14 @@ import {
   showToast,
 } from './ui-controls.js'
 import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
-import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
+import {
+  escapeHtml,
+  getPrimaryCta,
+  resolvePageKey,
+  safeUrl,
+  showErrorBanner,
+  safeMarkdown,
+} from './utils.js'
 import { karlKindMeta, parseKarlLabel } from './karl-tag-meta.js'
 import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
 // Side-effect import: js/card-inheritance.js publishes window.cardInheritance
@@ -80,17 +87,7 @@ function unverifiedPill(reason) {
   return `<span class="unverified-pill"${reason ? ` title="${escapeHtml(reason)}"` : ''}><span aria-hidden="true">⚠</span> Unverified</span>`
 }
 function formatMarkdown(text) {
-  if (typeof text !== 'string') return ''
-  let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  // [label](pageKey) becomes an in-mockup nav button; [label](https://...)
-  // becomes a real external link — page copy that points at third-party
-  // references (CDC, UC IPM, the municipal code) uses the same inline syntax.
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, target) =>
-    /^https?:\/\//.test(target)
-      ? `<a class="inline-link" href="${target}" target="_blank" rel="noopener noreferrer">${label} <span aria-hidden="true">↗</span></a>`
-      : `<button type="button" class="inline-link" data-render-target="${target}">${label}</button>`
-  )
-  return html
+  return safeMarkdown(text)
 }
 /**
  * @param {Array<string|object>} paragraphs
@@ -1278,6 +1275,29 @@ function applyPageContent(key) {
   restoreSidebarScroll()
 }
 function renderPage(key, skipHistory = false) {
+  if (!key) {
+    document.getElementById('mockPage').innerHTML = ''
+    document.getElementById('pageTitle').textContent = 'SF.gov Manager Review'
+    const desc = document.getElementById('pageDescription')
+    if (desc) desc.content = ''
+    document.title = 'Review Mockups'
+
+    // Ensure drawer is full screen
+    if (window.ReviewUx && window.ReviewUx.workspace) {
+      window.ReviewUx.workspace.expandWorkspace()
+    }
+
+    if (!skipHistory) {
+      const url = new URL(window.location)
+      url.searchParams.delete('page')
+      window.history.pushState({ key: null }, '', url)
+    }
+
+    // Dispatch event so other components know page changed (to null)
+    document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
+    return
+  }
+
   // Resolve unknown/retired keys instead of silently no-op'ing and leaving
   // the static "Loading…" placeholder on screen. resolveInitialPageKey()
   // already covers the first URL load; this path covers every later caller

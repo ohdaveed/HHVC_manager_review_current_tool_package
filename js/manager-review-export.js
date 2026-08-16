@@ -26,7 +26,6 @@ import { showToast } from './ui-controls.js'
     'decision',
     'notes',
     'risks_or_blockers',
-    'follow_up_owner',
     'seo_title',
     'meta_description',
     'primary_cta',
@@ -47,7 +46,6 @@ import { showToast } from './ui-controls.js'
         decision: document.getElementById('reviewDecision')?.value || 'Needs review',
         notes: document.getElementById('reviewNotes')?.value || '',
         risks_or_blockers: document.getElementById('reviewRisks')?.value || '',
-        follow_up_owner: document.getElementById('reviewOwner')?.value || '',
         seo_title: document.getElementById('seoTitleInput')?.value || defaultSeoTitle(page),
         meta_description:
           document.getElementById('metaDescriptionInput')?.value || defaultMetaDescription(page),

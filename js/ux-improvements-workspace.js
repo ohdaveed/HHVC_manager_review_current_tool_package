@@ -162,10 +162,7 @@ import { hasValidPageData } from './utils.js'
     if (!workspace) return null
 
     workspace.hidden = !isOpen
-    // The grid only carries a third column while the panel is open, so a closed
-    // workspace gives its width back to the mockup rather than leaving a gap.
-    // See the block comment on .review-workspace in css/dashboard.css.
-    document.querySelector('.app')?.classList.toggle('workspace-docked', isOpen)
+    document.body.classList.toggle('workspace-open', isOpen)
 
     const toggleButton = document.querySelector('[data-sticky-action="toggle-workspace"]')
     if (toggleButton) {
@@ -272,6 +269,20 @@ import { hasValidPageData } from './utils.js'
     if (action === 'toggle-workspace') {
       workspaceTriggerButton = button
       toggleWorkspace()
+    }
+  }
+
+  function shrinkWorkspace() {
+    const workspace = document.getElementById(WORKSPACE_ID)
+    if (workspace) {
+      workspace.classList.remove('full-screen')
+    }
+  }
+
+  function expandWorkspace() {
+    const workspace = document.getElementById(WORKSPACE_ID)
+    if (workspace) {
+      workspace.classList.add('full-screen')
     }
   }
 
@@ -403,6 +414,8 @@ import { hasValidPageData } from './utils.js'
 
   window.ReviewUx = window.ReviewUx || {}
   window.ReviewUx.workspace = {
+    shrinkWorkspace,
+    expandWorkspace,
     renderStickyBar,
     setWorkspaceTab,
     setWorkspaceOpen,
@@ -415,5 +428,10 @@ import { hasValidPageData } from './utils.js'
     clearReviewerDecisionError,
     validateReviewerForDecision,
     applyDecisionToCurrentPage,
+  }
+
+  const urlParams = new URLSearchParams(window.location.search)
+  if (!urlParams.get('page')) {
+    expandWorkspace()
   }
 })()
