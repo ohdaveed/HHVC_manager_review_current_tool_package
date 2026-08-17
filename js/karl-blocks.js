@@ -107,6 +107,80 @@ function panelsFor(type) {
 }
 
 /**
+ * One panel of a type, by its raw Wagtail field name.
+ *
+ * Raw names are unique within a type — asserted in tests/karl-blocks.test.js —
+ * which is why they, and not the UI label, are the key. Several types repeat a
+ * label: Agency has TWO panels called "Subsection", one under Section title 1
+ * and one under Section title 2.
+ *
+ * @param {string} type
+ * @param {string} rawName
+ * @returns {object|null}
+ */
+function panelByRawName(type, rawName) {
+  return panelsFor(type).find((panel) => panel.rawName === rawName) || null
+}
+
+/** A uiLabel as it should read inside a breadcrumb. The inventory keeps the
+ *  document's own label verbatim, including the parenthetical the field map
+ *  adds to disambiguate Topic's outer StreamField from the block choice of the
+ *  same name — useful in the record, noise in a path an editor follows. */
+function crumbLabel(panel) {
+  return panel.uiLabel.replace(/\s*\(.*\)\s*$/, '')
+}
+
+/**
+ * The Karl navigation path to one panel, as an editor clicks it.
+ *
+ * Every level here is DERIVED from the transcription rather than authored, so
+ * the drift guard covers the path as well as the fields:
+ *
+ * - the parent chain comes from `subPanelOf`, itself asserted against the
+ *   field map's `↳` prefix;
+ * - a repeated uiLabel is qualified by the nearest preceding panel with a
+ *   different label, which is what the form itself shows — Agency's two
+ *   "Subsection" panels are told apart by the "Section title 1"/"Section
+ *   title 2" heading immediately above each, and panel ORDER is transcribed;
+ * - `within` names a block type from the panel's own chooser and is checked
+ *   against `blockTypesDoc` by the caller's own test, so it cannot invent a
+ *   level either.
+ *
+ * @param {string} type
+ * @param {object|null} panel
+ * @param {string} [within] a block type from this panel's chooser
+ * @returns {string} e.g. 'Content → Section title 1 → Subsection'
+ */
+function breadcrumbFor(type, panel, within) {
+  if (!panel) return ''
+  const panels = panelsFor(type)
+  const chain = []
+  const seen = new Set([panel.rawName])
+  let current = panel
+  while (current.subPanelOf && !seen.has(current.subPanelOf)) {
+    seen.add(current.subPanelOf)
+    const parent = panelByRawName(type, current.subPanelOf)
+    if (!parent) break
+    chain.unshift(parent)
+    current = parent
+  }
+  const parts = []
+  const root = chain[0] || panel
+  if (panels.filter((entry) => entry.uiLabel === root.uiLabel).length > 1) {
+    const index = panels.indexOf(root)
+    for (let i = index - 1; i >= 0; i -= 1) {
+      if (panels[i].uiLabel !== root.uiLabel) {
+        parts.push(crumbLabel(panels[i]))
+        break
+      }
+    }
+  }
+  parts.push(...chain.map(crumbLabel), crumbLabel(panel))
+  if (within) parts.push(within)
+  return ['Content', ...parts].join(' → ')
+}
+
+/**
  * The field map's footnotes, as explicit values. These are half the mapping and
  * none of them are in the tables, so a table-driven transcription drops them
  * silently — which is why tests/karl-blocks.test.js asserts them by name rather
@@ -1813,7 +1887,9 @@ if (typeof window !== 'undefined') {
     KARL_FLAGS,
     PROMOTE_PANEL,
     UNRESOLVED,
+    breadcrumbFor,
     matchesSection,
+    panelByRawName,
     panelsFor,
   }
 }
@@ -1824,7 +1900,9 @@ if (typeof module !== 'undefined' && module.exports) {
     KARL_FLAGS,
     PROMOTE_PANEL,
     UNRESOLVED,
+    breadcrumbFor,
     matchesSection,
+    panelByRawName,
     panelsFor,
   }
 }

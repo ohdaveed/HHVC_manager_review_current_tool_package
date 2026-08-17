@@ -1,3 +1,17 @@
+/* js/karl-blocks.js is the Karl mapping AUTHORITY; this file is the guide
+   panel's presentation layer over it. Everything Karl knows about itself —
+   which panels a type has, what they are labelled, how they nest — is
+   transcribed there from docs/karl-export-field-map.md and guarded against it
+   by tests/karl-blocks.test.js. What lives here is this repo's own vocabulary:
+   roles, link shapes, and the steps a reviewer reads.
+
+   A static import rather than the `window.karlBlocks` indirection the other
+   consumers use: this module is an ES module in the bundle's own graph, and
+   Vite and Bun both resolve the CJS inventory through it. The window global
+   stays for js/karl-transcript.js, which is dual-exported and has to work
+   under Node with no bundler. */
+import { breadcrumbFor, panelByRawName, PROMOTE_PANEL } from './karl-blocks.js'
+
 // Keyed by normalizePageType() OUTPUT, not by the Karl type name — that
 // function lowercases and hyphenates, so `type: 'About us'` arrives here as
 // `about-us`. These tables read `about` until 2026-08-17, so every About-us
@@ -18,143 +32,107 @@ const PAGE_TYPE_LABELS = {
   report: 'Report',
 }
 
-/* Where each page type's body content goes in Karl, keyed by role.
-   Every row was checked against its own `## <Type> — E1` section of
-   docs/karl-export-field-map.md on 2026-08-17, because these arrived unverified
-   and guideForContext() stamps any non-empty path `evidence: 'E1'` /
-   `status: 'confirmed'` — so an unchecked row renders to a reviewer as a
-   measurement.
+/* Which Karl PANEL each role belongs to, keyed by page type and then role.
 
-   The rule the audit applied: **a path may name only levels the field map's own
-   "Panel / field (UI label)" column attests.** Nine rows failed it the same way,
-   by promoting a raw Wagtail field name (`supporting_information`,
-   `about_description`) or another type's vocabulary ("Links", which belongs to
-   Topic and Resource Collection) into the navigation path an editor is told to
-   click through. Each is corrected in place with a comment naming what was
-   wrong, rather than silently rewritten.
+   This replaced a table of 31 hand-written path strings on 2026-08-17. Nine of
+   those had named a level no Karl form has — a raw Wagtail field name promoted
+   into the navigation path, or another type's vocabulary borrowed across — and
+   nothing could have caught it, because the strings were this file's own
+   invention. js/karl-blocks.js is transcribed from
+   docs/karl-export-field-map.md and guarded against it by
+   tests/karl-blocks.test.js, so every path now comes from there and drift goes
+   red in CI.
 
-   One row was DELETED rather than corrected: `transaction.custom`
-   ("Content → Custom Section → Title and text") was accurate but unreachable —
-   no call site passes `role: 'custom'` and inferSectionRole() never returns it,
-   so it was a correct answer to a question nothing asks.
+   What is left here is the ROLE VOCABULARY, which is this repo's and not
+   Karl's: `services`, `what-to-know`, `top-facts` are names js/page-render.js
+   gives to parts of a mockup page. Each entry names the panel that role lands
+   in by its RAW field name — unique within a type, unlike the UI label, which
+   Agency repeats for its two "Subsection" panels — plus, optionally, the block
+   type to choose inside it.
 
-   Two rows are INFERRED rather than measured and now print as such; see
-   INFERRED_PATHS. */
-/* Fields shared by every type that has them, spelled per type rather than
-   merged in, because the exceptions are the whole point: `partner-agencies` is
-   absent from About us, and `contact` exists on only three of the eight. A
-   shared default with per-type opt-outs would make the absent case the quiet
-   one, and the absent case is where this feature does damage — see the
-   `contact` rows below. */
-const PARTNER_AGENCIES = 'Content → Partner agencies'
-const CONTACT_US = 'Content → Contact us'
-
-const PAGE_TYPE_FIELDS = {
+   Paths are shallower than the strings they replace. The inventory records
+   PANELS, and several levels the old strings carried (`→ Links`,
+   `→ Section content`, `→ Page`) are chooser or field levels the field map
+   documents only in prose beneath its tables. That is the trade taken
+   deliberately: a shorter path derived from a guarded record beats a longer one
+   nothing checks. `blockTypesDoc` carries the chooser contents into the guide's
+   steps, so the detail is not lost, only moved out of the breadcrumb. */
+const ROLE_PANELS = {
   transaction: {
-    content: 'Content → What to Do → Section → Section specifics',
-    // The panel's own UI label IS "Accordion title and text"; `supporting_information`
-    // is its raw Wagtail name. These two read
-    // "Content → Supporting information → Accordion title and text" until the
-    // 2026-08-17 audit, which put the raw name in the editor's navigation path as
-    // though it were a panel to click through. There is no such level on the form.
-    body: 'Content → Accordion title and text',
-    supporting: 'Content → Accordion title and text',
-    related: 'Content → Related → Page',
-    // `cost` and `things_to_know` sit together under the parent grouping
-    // "What to Know Before You Start" (field map, Transaction section). The
-    // path stops at the grouping because the mockup's `whatToKnow` renders
-    // BOTH — a path naming just one would be precise and wrong for the other,
-    // and buildSteps() names the two fields underneath it instead.
-    'what-to-know': 'Content → What to Know Before You Start',
-    // Raw name `get_help`; "Contact us" is the UI label an editor clicks.
-    contact: CONTACT_US,
-    'partner-agencies': PARTNER_AGENCIES,
+    content: { rawName: 'section_specifics' },
+    body: { rawName: 'supporting_information' },
+    supporting: { rawName: 'supporting_information' },
+    related: { rawName: 'related' },
+    // `cost` and `things_to_know` share the parent grouping "What to Know
+    // Before You Start", which is not a panel row and so has no label to
+    // derive. buildSteps() names both fields underneath.
+    'what-to-know': { rawName: 'cost' },
+    contact: { rawName: 'get_help' },
+    'partner-agencies': { rawName: 'partner_agencies' },
   },
   information: {
-    content: 'Content → Information section → Title and text',
-    body: 'Content → Information section → Title and text',
-    related: 'Content → Related → Page',
-    'partner-agencies': PARTNER_AGENCIES,
-    // **Information has no Contact us panel** — its form is Page title,
-    // Description, Primary agency, Part of, Information section, Partner
-    // agencies, Topics, Related, and nothing else. Two mockup pages
-    // (`component: 'contact'`) carry contact content anyway, so the honest
-    // answer is the absent row here: those render "Mockup only". Routing them
-    // to Information section → Title and text, which is what the body fallback
-    // did, tells an editor to paste a phone number into a prose block.
+    content: { rawName: 'information_section', within: 'Title and text' },
+    body: { rawName: 'information_section', within: 'Title and text' },
+    related: { rawName: 'related' },
+    'partner-agencies': { rawName: 'partner_agencies' },
+    // No Contact us panel on this type — see U22. An absent row resolves to
+    // '' and reports as Mockup only, which is the honest answer.
   },
   'resource-collection': {
-    content: 'Content → Body → Resources → Resource section → Links',
-    body: 'Content → Introductory text → Title and text',
-    resources: 'Content → Body → Resources → Resource section → Links',
-    'partner-agencies': PARTNER_AGENCIES,
-    // No Related and no Contact us on this type, confirmed by full-text
-    // extraction in the field map.
+    content: { rawName: 'body', within: 'Resources' },
+    resources: { rawName: 'body', within: 'Resources' },
+    body: { rawName: 'introductory_text' },
+    'partner-agencies': { rawName: 'partner_agencies' },
   },
   campaign: {
-    // INFERRED, and printed as such — see INFERRED_PATHS below. `additional_content`
-    // offers five block types (Image with text, Video, Accordion section, Embed,
-    // Resources) and the field map picks none of them for a plain heading-plus-prose
-    // section. Accordion section is the only one that holds prose, so it is the
-    // reasonable choice — but it is this repo's choice, not a measurement.
-    content: 'Content → Additional content → Accordion section',
-    body: 'Content → Additional content → Accordion section',
-    spotlight: 'Content → Spotlight 1 or Spotlight 2 → Spotlight',
-    // "Page block" named no field. `related_links` entries carry "Page" * and
-    // "Link text" *, so Page is the field an editor lands on.
-    related: 'Content → Related → Page',
-    // `facts_title` + `fact_items`, UI-labelled "Top facts" with a "Facts
-    // title" plain text and repeatable "Fact items". This is its own top-level
-    // panel, NOT part of `additional_content` — the ROLE_ALIASES entry that
-    // sent `top-facts` to `body` resolved it to Additional content → Accordion
-    // section, an unrelated component that is also one of this file's two
-    // INFERRED rows, so the guide presented a guess about the wrong panel.
-    'top-facts': 'Content → Top facts',
-    contact: CONTACT_US,
-    'partner-agencies': PARTNER_AGENCIES,
+    content: { rawName: 'additional_content', within: 'Accordion section' },
+    body: { rawName: 'additional_content', within: 'Accordion section' },
+    spotlight: { rawName: 'spotlight_1' },
+    related: { rawName: 'related_links' },
+    'top-facts': { rawName: 'facts_title + fact_items' },
+    contact: { rawName: 'contact' },
+    'partner-agencies': { rawName: 'partner_agencies' },
   },
   topic: {
-    content: 'Content → Child topics → Content → Section content',
-    body: 'Content → Child topics → Content → Section content → Text',
-    services: 'Content → Child topics → Services → Links',
-    resources: 'Content → Child topics → Resources → Links',
-    spotlight: 'Content → Child topics → Spotlight → Spotlight',
-    'partner-agencies': PARTNER_AGENCIES,
+    content: { rawName: 'content_fields', within: 'Content' },
+    body: { rawName: 'content_fields', within: 'Content' },
+    services: { rawName: 'content_fields', within: 'Services' },
+    resources: { rawName: 'content_fields', within: 'Resources' },
+    spotlight: { rawName: 'content_fields', within: 'Spotlight' },
+    'partner-agencies': { rawName: 'partner_agencies' },
   },
   agency: {
-    // The panel is labelled "About"; `about_description` is its raw name, and these
-    // two appended it as a field to click into. Its actual children are Call to
-    // action, Divisions or subcommittees and Partner agencies.
-    content: 'Content → About',
-    body: 'Content → About',
-    // A Subsection's entries are added straight from its own "+", which offers
-    // `SF.gov page` and `External link`. There is no "Links" level on Agency — that
-    // label belongs to Topic's Services/Resources blocks and Resource Collection's
-    // Resource section, and was carried across. The link shape line beneath the path
-    // already names the two entry types, so the path stops where the form does.
-    services: 'Content → Section title 1 → Subsection',
-    resources: 'Content → Section title 2 → Subsection',
-    // Agency hosts Spotlight 1 and Spotlight 2 like Campaign does (field map,
-    // "Spotlight — one component, five host types"). The row was absent, so an
-    // Agency spotlight fell through to the About body path.
-    spotlight: 'Content → Spotlight 1 or Spotlight 2 → Spotlight',
-    contact: CONTACT_US,
-    'partner-agencies': PARTNER_AGENCIES,
+    content: { rawName: 'about_description' },
+    body: { rawName: 'about_description' },
+    services: { rawName: 'services' },
+    resources: { rawName: 'resources' },
+    spotlight: { rawName: 'spotlight_1' },
+    contact: { rawName: 'contact' },
+    'partner-agencies': { rawName: 'partner_agencies' },
   },
   'about-us': {
-    content: 'Content → Information → Custom section',
-    body: 'Content → Information → Custom section',
-    // Same borrowed "Links" level as Agency above: `Resources section` offers
-    // SF.gov page / External link / Downloadable files from its own "+".
-    resources: 'Content → Resources → Resources section',
+    content: { rawName: 'about_info', within: 'Custom section' },
+    body: { rawName: 'about_info', within: 'Custom section' },
+    resources: { rawName: 'resources', within: 'Resources section' },
   },
   report: {
-    content: 'Content → Content → Body',
-    body: 'Content → Content → Body',
-    table: 'Content → Content → Table',
-    spotlight: 'Content → Spotlight → Spotlight',
-    'partner-agencies': PARTNER_AGENCIES,
+    content: { rawName: 'content', within: 'Body' },
+    body: { rawName: 'content', within: 'Body' },
+    table: { rawName: 'content', within: 'Table' },
+    spotlight: { rawName: 'spotlight' },
+    'partner-agencies': { rawName: 'partner_agencies' },
   },
+}
+
+/* Page metadata, which resolves through the inventory like everything else.
+   Karl labels the title field differently per type — "Page title" on
+   Transaction, "Title" on Campaign and Agency — so a single shared string, as
+   META_FIELDS used to hold, was wrong on half the corpus. `slug`, `seoTitle`
+   and `metaDescription` live on the Promote tab and come from
+   PROMOTE_PANEL. */
+const META_PANELS = {
+  title: { rawName: 'title' },
+  description: { rawName: 'description' },
 }
 
 /* Where a Button link nested inside another component lives, keyed
@@ -171,12 +149,12 @@ const PAGE_TYPE_FIELDS = {
    also what `U1` already says about the twelve section-level buttons that sit
    outside a step or a spotlight. */
 const BUTTON_HOSTS = {
-  'transaction.what-to-do': 'Content → What to Do → Section → Section specifics → Button link',
-  'transaction.content': 'Content → What to Do → Section → Section specifics → Button link',
-  'campaign.spotlight': 'Content → Spotlight 1 or Spotlight 2 → Spotlight → Button link',
-  'agency.spotlight': 'Content → Spotlight 1 or Spotlight 2 → Spotlight → Button link',
-  'topic.spotlight': 'Content → Child topics → Spotlight → Spotlight → Button link',
-  'report.spotlight': 'Content → Spotlight → Spotlight → Button link',
+  'transaction.what-to-do': { rawName: 'section_specifics', within: 'Button link' },
+  'transaction.content': { rawName: 'section_specifics', within: 'Button link' },
+  'campaign.spotlight': { rawName: 'spotlight_1', within: 'Button link' },
+  'agency.spotlight': { rawName: 'spotlight_1', within: 'Button link' },
+  'topic.spotlight': { rawName: 'content_fields', within: 'Spotlight → Button link' },
+  'report.spotlight': { rawName: 'spotlight', within: 'Button link' },
 }
 
 /* Rows this repo CHOSE rather than measured, keyed `<pageType>.<role>`.
@@ -211,27 +189,9 @@ function isInferredPath(pageType, role) {
   return INFERRED_PATHS.has(`${pageType}.${key}`)
 }
 
-// Page-level metadata does NOT vary by type, unlike everything in
-// PAGE_TYPE_FIELDS: every one of the eight measured types opens its Content
-// tab with `Title *` and a single `Description` textarea, and every one has
-// the identical Promote tab carrying `slug` (docs/karl-export-field-map.md,
-// "The Promote tab — where seoTitle and metaDescription actually go", which
-// closed U11 on 2026-08-15 at E1). These are separate from the body stream
-// because a guide that routed a page summary into `Content → About → About
-// description` — which is what the body fallback did — tells an editor to
-// paste approved copy into the wrong field, the one failure this whole
-// feature exists to prevent.
-const META_FIELDS = {
-  title: 'Content → Title',
-  description: 'Content → Description',
-  slug: 'Promote → For search engines → Slug',
-  seoTitle: 'Promote → For search engines → Title tag',
-  metaDescription: 'Promote → For search engines → Meta description',
-}
-
-// Roles that name a destination PAGE_TYPE_FIELDS already records under a
-// different word. An alias table rather than duplicate keys per type, so
-// PAGE_TYPE_FIELDS stays one row per real Karl panel.
+// Roles that name a destination ROLE_PANELS already records under a different
+// word. An alias table rather than duplicate entries per type, so ROLE_PANELS
+// stays one row per real Karl panel.
 const ROLE_ALIASES = {
   'what-to-do': 'content',
   intro: 'body',
@@ -371,27 +331,40 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  */
 function resolvePath(pageType, role, context) {
   if (context.unresolvedId) return ''
-  const fields = PAGE_TYPE_FIELDS[pageType]
-  // Metadata first: it is type-independent, so it must not fall through to
-  // the per-type body tables below.
-  if (META_FIELDS[role]) return META_FIELDS[role]
-  // A button belongs to its HOST block, not to a field of its own. Falling
-  // back to the page's `content` path answered a different question than the
-  // one asked, and the `'Content → Button link'` literal named a level no form
-  // has. Both are gone: an unattested host reports unmapped.
-  if (context.linkShape === 'button-link') return BUTTON_HOSTS[`${pageType}.${role}`] || ''
-  if (context.linkShape === 'campaign-related') return PAGE_TYPE_FIELDS.campaign.related
+  const karlType = PAGE_TYPE_LABELS[pageType]
+  if (!karlType) return ''
+  const crumb = (ref) =>
+    ref ? breadcrumbFor(karlType, panelByRawName(karlType, ref.rawName), ref.within) : ''
+
+  // Metadata first, so it cannot fall through to the body panels below. Title
+  // and Description are Content-tab panels of each type, so they resolve
+  // through the inventory and carry that type's own label; the Promote three
+  // are one shared table and come straight from PROMOTE_PANEL.
+  if (META_PANELS[role]) return crumb(META_PANELS[role])
+  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
+  if (promote) return `${PROMOTE_PANEL.uiLabel} → ${promote.label}`
+
+  // A button belongs to its HOST block, not to a field of its own. An
+  // unattested host reports unmapped, which is also what `U1` says about the
+  // twelve section-level buttons sitting outside a step or a spotlight.
+  if (context.linkShape === 'button-link') return crumb(BUTTON_HOSTS[`${pageType}.${role}`])
+  if (context.linkShape === 'campaign-related') return crumb(ROLE_PANELS.campaign.related)
+
+  const roles = ROLE_PANELS[pageType]
   if (context.linkShape === 'page-reference') {
-    if (role === 'related') return fields?.related || ''
-    // No `fields.content` fallback. A page-reference whose role names no row
-    // is a link this repo cannot place, and answering with the body path made
-    // every such card read as a confirmed instruction to paste it into prose.
-    return fields?.[ROLE_ALIASES[role] || role] || ''
+    if (role === 'related') return crumb(roles?.related)
+    // No `content` fallback. A page-reference whose role names no panel is a
+    // link this repo cannot place, and answering with the body path made every
+    // such card read as a confirmed instruction to paste it into prose.
+    return crumb(roles?.[ROLE_ALIASES[role] || role])
   }
-  if (role === 'image')
-    return pageType === 'information' ? 'Content → Information section → Image' : ''
+  if (role === 'image') {
+    return pageType === 'information'
+      ? crumb({ rawName: 'information_section', within: 'Image' })
+      : ''
+  }
   if (NON_FIELD_ROLES.has(role)) return ''
-  return fields?.[ROLE_ALIASES[role] || role] || ''
+  return crumb(roles?.[ROLE_ALIASES[role] || role])
 }
 
 function buildSteps(pageType, role, context, path, inferred = false) {
@@ -413,7 +386,10 @@ function buildSteps(pageType, role, context, path, inferred = false) {
   // The title tag's own copy panel offers Slug alongside Title, and slug is
   // required on every type but lives on a different tab — so the step has to
   // name that tab or the editor cannot save the page from Content alone.
-  if (role === 'title') steps.push(`Set the page URL on the Promote tab: ${META_FIELDS.slug}.`)
+  if (role === 'title')
+    steps.push(
+      `Set the page URL on the Promote tab: ${PROMOTE_PANEL.uiLabel} → ${PROMOTE_PANEL.fields[0].label}.`
+    )
   if (role === 'table')
     steps.push(
       'Choose the table header option, enter Description and Caption, then add rich-text columns.'
@@ -453,8 +429,8 @@ export {
   BUTTON_HOSTS,
   INFERRED_PATHS,
   LINK_SHAPES,
-  META_FIELDS,
-  PAGE_TYPE_FIELDS,
+  META_PANELS,
+  ROLE_PANELS,
   PAGE_TYPE_LABELS,
   UNRESOLVED,
   guideForContext,
