@@ -171,6 +171,66 @@ describe('structured Karl guides', () => {
     expect(guideStatusLabel(guide)).toBe('U1 unresolved')
   })
 
+  test('resolves an About us page against the hyphenated normalized key', () => {
+    // normalizePageType('About us') is 'about-us'; both registry tables were
+    // keyed 'about', so every About-us tag without an explicit karlGuide
+    // resolved to no path at all and reported as unmapped. The label survived
+    // that mismatch (it falls back to the raw type string), so only the path
+    // is proof the keys agree.
+    const guide = normalizeKarlGuide({
+      page: { type: 'About us' },
+      context: { role: 'resources', linkShape: 'resources-list' },
+    })
+    expect(guide.path).toBe('Content → Resources → Resources section → Links')
+    expect(guide.steps[0]).toContain('Add child page → About us')
+  })
+
+  test('routes page metadata to the Content and Promote tabs, not the body stream', () => {
+    // Title, Description and Slug are identical across all eight measured
+    // types (docs/karl-export-field-map.md, Promote tab / per-type Content
+    // tables), so they must never resolve through the per-type body path —
+    // that told an Agency reviewer to paste the page summary into
+    // `Content → About → About description`.
+    const title = normalizeKarlGuide({ page: { type: 'Agency' }, context: { role: 'title' } })
+    expect(title.path).toBe('Content → Title')
+    expect(title.steps.some((step) => step.includes('Promote'))).toBe(true)
+
+    const description = normalizeKarlGuide({
+      page: { type: 'Agency' },
+      context: { role: 'description' },
+    })
+    expect(description.path).toBe('Content → Description')
+  })
+
+  test('reports a tag kind with no role as mockup-only rather than guessing a path', () => {
+    // A call site that passes no context.role leaves guideForContext falling
+    // back to the tag KIND. 'placement' and 'meta' name no Karl field, and a
+    // resolved path is stamped "E1 confirmed" — so a body-path fallback here
+    // renders a guess as a measurement.
+    for (const role of ['placement', 'meta', 'editor']) {
+      const guide = normalizeKarlGuide({ page: { type: 'Agency' }, context: { role } })
+      expect(guide.path).toBe('')
+      expect(guide.status).toBe('mockup-only')
+      expect(guideStatusLabel(guide)).toBe('Mockup only')
+    }
+  })
+
+  test('keeps Services and Resources on their own Agency subsections', () => {
+    // Both render through renderResourcesList(), which used to hardcode the
+    // Resources role for everything that was not Related — so a Services list
+    // printed the Resources path directly under the Services region heading.
+    const services = normalizeKarlGuide({
+      page: { type: 'Agency' },
+      context: { role: 'services', linkShape: 'resources-list' },
+    })
+    const resources = normalizeKarlGuide({
+      page: { type: 'Agency' },
+      context: { role: 'resources', linkShape: 'resources-list' },
+    })
+    expect(services.path).toBe('Content → Section title 1 → Subsection → Links')
+    expect(resources.path).toBe('Content → Section title 2 → Subsection → Links')
+  })
+
   test('copies only safe visible values and preserves source labels', () => {
     expect(
       guideCopyValues([

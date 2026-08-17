@@ -96,8 +96,15 @@ function init() {
     page.metaDescriptionEdited = true
     updateSearchPreview()
   })
+  // No `hide-karl-tags` sync at init. `#tagToggle` ships unchecked and the
+  // mockup ships annotated, which is deliberate: the class is the reviewer's
+  // OWN later choice, and css/styles.css hides `.unverified-pill`,
+  // `.editor-qa` and `.cms-help` under it alongside the tags. Applying it at
+  // load therefore hid every Unverified pill on first paint — three e2e specs
+  // (ai-rewrite, inline-content-edit) resolve those pills and assert they are
+  // visible. Restoring a SAVED preference is a different thing and still
+  // happens, in applySavedUiPreferences() (js/ux-improvements-state-sync.js).
   const tagToggle = document.getElementById('tagToggle')
-  document.body.classList.toggle('hide-karl-tags', !tagToggle.checked)
   tagToggle.addEventListener('change', (e) => {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })

@@ -340,7 +340,14 @@ function renderAudienceFraming(page, pageType) {
   if (!audience.length) return ''
   const text = audience.join(' ')
   if (pageType === 'resource-collection') {
-    return `<p>${karlTag('Custom section: Who this is for (audience[] editorial framing, not a literal Karl field)', 'body')}${formatMarkdown(text)}</p>`
+    // The tag sits BEFORE the <p>, never inside it. karlTag() now emits a
+    // block-level guide panel, and a <div> inside a <p> makes the HTML parser
+    // close that paragraph early — the panel then lands outside
+    // `.karl-guide`, which is the positioned ancestor it is absolutely
+    // positioned against, so it opens somewhere else on the page and the
+    // paragraph's own markup is silently restructured. Same reason at
+    // renderTable()'s mockup-only note and renderPrintVersion().
+    return `${karlTag('Custom section: Who this is for (audience[] editorial framing, not a literal Karl field)', 'body')}<p>${formatMarkdown(text)}</p>`
   }
   const karlNote =
     pageType === 'campaign'
@@ -491,6 +498,35 @@ function cardActionAndDescription(section, card, opts = {}) {
   const inheritanceFact = cardInheritanceFact(card, title, descText)
   return { action, desc, descriptionText: descText, inheritanceFact }
 }
+/**
+ * The Karl guide role a card-bearing section's own links belong to.
+ *
+ * Cards used to pass no role at all, so guideForContext() fell back to the
+ * tag KIND ('placement'), which names no Karl field — every Agency service
+ * and resource card then resolved to the page type's body path and told the
+ * reviewer to open `Content → About → About description`. The section already
+ * knows: inferSectionRole() is the one classifier this file uses for exactly
+ * this question, so it is reused rather than a second one written beside it.
+ *
+ * The page type is read off `currentPageKey` rather than threaded down from
+ * the caller, matching what karlTag() itself already does one function above.
+ * That is safe rather than convenient: nothing renders a section for a page
+ * other than the open one — js/mockup-image-export.js, the only caller that
+ * sweeps every page, navigates through `window.renderPage(pageKey)`, which
+ * sets `currentPageKey` before it renders. Threading the parameter would mean
+ * widening renderCards/renderCardList/renderResourcesList, which tests and
+ * e2e specs call by name.
+ *
+ * @param {object|null} section The section owning the cards, or null for a
+ *   card list with no section (Partner agencies, a Step List's own cards).
+ * @returns {string|undefined} 'services' | 'resources' | 'related' | the
+ *   section's own role, or undefined when there is no section to classify.
+ */
+function cardSectionRole(section) {
+  if (!section) return undefined
+  const pageType = normalizePageType(pageData[currentPageKey]?.type)
+  return inferSectionRole(section, pageType)
+}
 function cardGuideOptions(section, card, title, desc, inheritanceFact) {
   const classify = window.cardInheritance?.classifySection
   const sectionKind = section && typeof classify === 'function' ? classify(section) : 'unknown'
@@ -523,7 +559,10 @@ function cardGuideOptions(section, card, title, desc, inheritanceFact) {
     })
   if (card.url) values.push({ label: 'URL', value: safeUrl(card.url), source: 'visible' })
   if (card.target) values.push({ label: 'SF.gov page key', value: card.target, source: 'visible' })
-  return { context: { linkShape, inheritance: sectionKind }, values }
+  return {
+    context: { role: cardSectionRole(section), linkShape, inheritance: sectionKind },
+    values,
+  }
 }
 
 function renderCards(cards = [], section = null) {
@@ -585,8 +624,22 @@ function renderCardList(cards = [], section = null) {
 // wait: tips to help with the problem" printed twice in a row.
 function renderResourcesList(cards = [], section = null) {
   if (!cards.length) return ''
-  const related = section?.component === 'related'
-  return `<div class="resources-list">${karlTag(related ? 'Related page links' : 'Resources links list', 'placement', { context: { role: related ? 'related' : 'resources', linkShape: related ? 'page-reference' : 'resources-list' } })}${renderCardList(cards, section)}</div>`
+  // A Services subsection renders through this same function (see
+  // renderServiceTiles below), so hardcoding 'resources' for everything that
+  // is not Related told every Agency and Topic Services list to use the
+  // Resources field path — contradicting the Services region guide printed
+  // directly above it. inferSectionRole() is the authority for which of the
+  // two a section is; `component` alone misses the karl-string fallback it
+  // carries for sections that set no component.
+  const role = cardSectionRole(section) || 'resources'
+  const related = role === 'related'
+  const label =
+    role === 'related'
+      ? 'Related page links'
+      : role === 'services'
+        ? 'Services links list'
+        : 'Resources links list'
+  return `<div class="resources-list">${karlTag(label, 'placement', { context: { role, linkShape: related ? 'page-reference' : 'resources-list' } })}${renderCardList(cards, section)}</div>`
 }
 // Services subsections render identically to Resources subsections on real
 // sf.gov (a plain divided list, not the boxed 2px-blue-border .service-tile
@@ -659,7 +712,9 @@ function renderTable(rows = [], pageType = 'generic', caption = '', pathPrefix =
   const codeTranslation = isCodeTranslationTable(head)
   const previewNote =
     pageType === 'information'
-      ? `<p class="mockup-only-note">${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
+      ? // Tag outside the <p>, not inside it — see renderAudienceFraming() for
+        // why a guide panel nested in a paragraph detaches from its anchor.
+        `${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}<p class="mockup-only-note">Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
       : ''
   const tableClass = codeTranslation ? 'table table--code-translation' : 'table'
   const table = `<table class="${tableClass}"><thead><tr>${head
@@ -1101,12 +1156,22 @@ function renderHero(page, heroCta) {
   const summaryHtml =
     pageTypeNormalized === 'campaign' || pageTypeNormalized === 'about'
       ? ''
-      : `${karlTag('Short summary / Description field', 'meta', { values: [{ label: 'Description', value: page.summary, source: 'visible' }] })}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>`
+      : // role: 'description' resolves to the Content tab's own Description
+        // textarea. Without it the role fell back to the tag kind, which names
+        // no field, and the guide printed the page type's BODY path — telling
+        // an editor to paste an Agency page's summary into `Content → About →
+        // About description`, or a Transaction's into What to Do.
+        `${karlTag('Short summary / Description field', 'meta', { context: { role: 'description' }, values: [{ label: 'Description', value: page.summary, source: 'visible' }] })}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>`
+  // No `guide: page.karlGuide` here. A page-level karlGuide describes that
+  // page's MAIN CONTENT block (What to Do, Custom section, Spotlight), so
+  // attaching it to the title tag showed confirmed steps for an unrelated
+  // Karl block beside Title and Slug copy values. Title and slug are
+  // type-independent and resolve from META_FIELDS instead.
   return `<section class="${heroClass}"><div class="hero-inner">${eyebrowHtml}${karlTag(
     'Page title field',
     'meta',
     {
-      guide: page.karlGuide,
+      context: { role: 'title' },
       values: [
         { label: 'Title', value: page.title, source: 'visible' },
         { label: 'Slug', value: page.slug, source: 'visible' },
@@ -1129,7 +1194,9 @@ function renderParentLink(page, key) {
 }
 function renderPrintVersion(url) {
   if (!url) return ''
-  return `<p class="print-version-link">${karlTag('Report Print version field', 'placement')}<a href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
+  // Tag outside the <p>, not inside it — see renderAudienceFraming() for why
+  // a guide panel nested in a paragraph detaches from its anchor.
+  return `${karlTag('Report Print version field', 'placement')}<p class="print-version-link"><a href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Print version <span aria-hidden="true">↗</span></a></p>`
 }
 function renderPageMain(page) {
   const parts = partitionSections(page)

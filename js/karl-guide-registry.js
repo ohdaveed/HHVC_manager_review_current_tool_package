@@ -1,3 +1,12 @@
+// Keyed by normalizePageType() OUTPUT, not by the Karl type name — that
+// function lowercases and hyphenates, so `type: 'About us'` arrives here as
+// `about-us`. These tables read `about` until 2026-08-17, so every About-us
+// page missed both lookups: the label silently fell back to the raw type
+// string (harmless) and the path resolved to '' (not harmless — a page with
+// no explicit karlGuide reported every tag as unmapped). Note this file's
+// normalizePageType is NOT js/page-render.js's same-named function, which
+// maps the same input to `about`; the two are independent and only the keys
+// here follow this one.
 const PAGE_TYPE_LABELS = {
   transaction: 'Transaction',
   information: 'Information',
@@ -5,7 +14,7 @@ const PAGE_TYPE_LABELS = {
   campaign: 'Campaign',
   topic: 'Topic',
   agency: 'Agency',
-  about: 'About us',
+  'about-us': 'About us',
   report: 'Report',
 }
 
@@ -46,7 +55,7 @@ const PAGE_TYPE_FIELDS = {
     services: 'Content → Section title 1 → Subsection → Links',
     resources: 'Content → Section title 2 → Subsection → Links',
   },
-  about: {
+  'about-us': {
     content: 'Content → Information → Custom section',
     body: 'Content → Information → Custom section',
     resources: 'Content → Resources → Resources section → Links',
@@ -58,6 +67,41 @@ const PAGE_TYPE_FIELDS = {
     spotlight: 'Content → Spotlight → Spotlight',
   },
 }
+
+// Page-level metadata does NOT vary by type, unlike everything in
+// PAGE_TYPE_FIELDS: every one of the eight measured types opens its Content
+// tab with `Title *` and a single `Description` textarea, and every one has
+// the identical Promote tab carrying `slug` (docs/karl-export-field-map.md,
+// "The Promote tab — where seoTitle and metaDescription actually go", which
+// closed U11 on 2026-08-15 at E1). These are separate from the body stream
+// because a guide that routed a page summary into `Content → About → About
+// description` — which is what the body fallback did — tells an editor to
+// paste approved copy into the wrong field, the one failure this whole
+// feature exists to prevent.
+const META_FIELDS = {
+  title: 'Content → Title',
+  description: 'Content → Description',
+  slug: 'Promote → For search engines → Slug',
+  seoTitle: 'Promote → For search engines → Title tag',
+  metaDescription: 'Promote → For search engines → Meta description',
+}
+
+// Roles that name a destination PAGE_TYPE_FIELDS already records under a
+// different word. An alias table rather than duplicate keys per type, so
+// PAGE_TYPE_FIELDS stays one row per real Karl panel.
+const ROLE_ALIASES = {
+  'what-to-do': 'content',
+  intro: 'body',
+  'top-facts': 'body',
+  callout: 'content',
+}
+
+// Not roles at all — these are TAG KINDS leaking through because the call
+// site passed no `context.role` and guideForContext falls back to `kind`.
+// None of them names a Karl field, and resolving them to the page's body
+// path is what let a metadata tag render as "E1 confirmed" while pointing at
+// the body stream.
+const NON_FIELD_ROLES = new Set(['meta', 'placement', 'editor'])
 
 const LINK_SHAPES = {
   pageReference: {
@@ -135,23 +179,42 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
   return result
 }
 
+/**
+ * Resolve the Karl field path a tag's guide should print, or '' when this
+ * repo has no recorded destination for it.
+ *
+ * The '' return is the load-bearing case. guideForContext() stamps a guide
+ * with `evidence: 'E1'` and `status: 'confirmed'` whenever a path is present,
+ * and guideStatusLabel() renders that to the reviewer as "E1 confirmed" — so
+ * a guessed path is indistinguishable from a measured one. This function
+ * therefore never guesses: an unrecognized role returns '', which reports as
+ * "Mockup only" with a step saying no verified Karl field is shown. Same
+ * posture as js/karl-transcript.js, where a section the card-inheritance
+ * classifier returns `unknown` for is FLAGged rather than given a guessed
+ * instruction a human then executes.
+ *
+ * @param {string} pageType normalizePageType() output, e.g. 'about-us'.
+ * @param {string} role Section/field role, or the tag kind when the call site
+ *   supplied no role.
+ * @param {{unresolvedId?: string, linkShape?: string}} context Guide context.
+ * @returns {string} A Karl path, or '' when none is recorded.
+ */
 function resolvePath(pageType, role, context) {
   if (context.unresolvedId) return ''
-  if (context.linkShape === 'button-link')
-    return PAGE_TYPE_FIELDS[pageType]?.content || 'Content → Button link'
+  const fields = PAGE_TYPE_FIELDS[pageType]
+  // Metadata first: it is type-independent, so it must not fall through to
+  // the per-type body tables below.
+  if (META_FIELDS[role]) return META_FIELDS[role]
+  if (context.linkShape === 'button-link') return fields?.content || 'Content → Button link'
   if (context.linkShape === 'campaign-related') return PAGE_TYPE_FIELDS.campaign.related
   if (context.linkShape === 'page-reference') {
-    if (role === 'related') return PAGE_TYPE_FIELDS[pageType]?.related || ''
-    return PAGE_TYPE_FIELDS[pageType]?.[role] || PAGE_TYPE_FIELDS[pageType]?.content || ''
+    if (role === 'related') return fields?.related || ''
+    return fields?.[role] || fields?.content || ''
   }
-  if (role === 'table') return PAGE_TYPE_FIELDS[pageType]?.table || ''
-  if (role === 'spotlight') return PAGE_TYPE_FIELDS[pageType]?.spotlight || ''
-  if (role === 'services' || role === 'resources') return PAGE_TYPE_FIELDS[pageType]?.[role] || ''
-  if (role === 'related') return PAGE_TYPE_FIELDS[pageType]?.related || ''
   if (role === 'image')
     return pageType === 'information' ? 'Content → Information section → Image' : ''
-  if (role === 'callout') return PAGE_TYPE_FIELDS[pageType]?.content || ''
-  return PAGE_TYPE_FIELDS[pageType]?.[role] || PAGE_TYPE_FIELDS[pageType]?.body || ''
+  if (NON_FIELD_ROLES.has(role)) return ''
+  return fields?.[ROLE_ALIASES[role] || role] || ''
 }
 
 function buildSteps(pageType, role, context, path) {
@@ -163,6 +226,10 @@ function buildSteps(pageType, role, context, path) {
   else steps.push('Keep this value in the mockup review record; no verified Karl field is shown.')
   const link = Object.values(LINK_SHAPES).find((item) => item.key === context.linkShape)
   if (link) steps.push(link.description)
+  // The title tag's own copy panel offers Slug alongside Title, and slug is
+  // required on every type but lives on a different tab — so the step has to
+  // name that tab or the editor cannot save the page from Content alone.
+  if (role === 'title') steps.push(`Set the page URL on the Promote tab: ${META_FIELDS.slug}.`)
   if (role === 'table')
     steps.push(
       'Choose the table header option, enter Description and Caption, then add rich-text columns.'
@@ -188,6 +255,7 @@ function linkShapeMeta(shape) {
 
 export {
   LINK_SHAPES,
+  META_FIELDS,
   PAGE_TYPE_FIELDS,
   PAGE_TYPE_LABELS,
   UNRESOLVED,
