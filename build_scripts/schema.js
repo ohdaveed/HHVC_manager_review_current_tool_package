@@ -130,9 +130,32 @@ const spotlightSchema = z.object({
   karl: z.string().optional(),
 })
 
+/**
+ * The Karl content types this corpus declares, in descending order of use
+ * (Transaction 14 pages, Information 6, Resource Collection 3, Campaign 2, and
+ * one page each of Topic, Agency, About us and Report).
+ *
+ * This is a closed union rather than an open string because js/karl-blocks.js
+ * keys its per-type Karl panel inventory on this value: an unrecognised type
+ * selects no inventory, so a typo would export an EMPTY transcript rather than
+ * failing — and an empty transcript reads like a page with no content, not like
+ * a bug. Adding a ninth type means capturing its form in
+ * docs/karl-export-field-map.md and adding its panel inventory, in that order.
+ */
+const PAGE_TYPES = [
+  'Transaction',
+  'Information',
+  'Resource Collection',
+  'Campaign',
+  'Topic',
+  'Agency',
+  'About us',
+  'Report',
+]
+
 const pageSchema = z.object({
   slug: z.string().min(1),
-  type: z.string().min(1),
+  type: z.enum(PAGE_TYPES),
   title: z.string().min(1),
   summary: z.string().min(1),
   audience: z.array(z.string()).min(1),
@@ -162,6 +185,7 @@ const dataSchema = z.object({
 })
 
 module.exports = {
+  PAGE_TYPES,
   cardSchema,
   stepSchema,
   sectionSchema,

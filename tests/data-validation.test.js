@@ -3,7 +3,7 @@
 // "test" (does it happen to pass on today's real page content) — nothing
 // proved it actually catches malformed data.
 const { describe, test, expect } = require('bun:test')
-const { dataSchema } = require('../build_scripts/schema')
+const { dataSchema, pageSchema, PAGE_TYPES } = require('../build_scripts/schema')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -95,6 +95,35 @@ function validData(pageOverrides = {}) {
     order: [['pestsTopic', 'Pests and housing problems']],
   }
 }
+
+describe('page type union', () => {
+  // `type` selects the Karl panel inventory in js/karl-blocks.js, so a typo'd
+  // value would export an EMPTY transcript rather than erroring — an outcome
+  // that reads like a page with no content instead of like a bug. That is why
+  // the field is a closed union rather than the open z.string() it used to be.
+  test('accepts every type the corpus declares', () => {
+    for (const type of PAGE_TYPES) {
+      expect(pageSchema.safeParse(validPage({ type })).success).toBe(true)
+    }
+  })
+
+  test('rejects a type that is not a Karl content type', () => {
+    expect(pageSchema.safeParse(validPage({ type: 'Transactoin' })).success).toBe(false)
+  })
+
+  test('names exactly the eight types in use', () => {
+    expect(PAGE_TYPES).toEqual([
+      'Transaction',
+      'Information',
+      'Resource Collection',
+      'Campaign',
+      'Topic',
+      'Agency',
+      'About us',
+      'Report',
+    ])
+  })
+})
 
 describe('dataSchema', () => {
   test('accepts a minimal valid page', () => {
