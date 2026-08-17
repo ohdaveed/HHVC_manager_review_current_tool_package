@@ -1,0 +1,230 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1200" width="1400" height="1200" style="background:#f8f9fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  
+  <!-- Header -->
+  <text x="50" y="50" font-size="26" font-family="'Roboto Slab', serif" font-weight="bold" fill="#001033">HHVC Review Tool — UI Component Library</text>
+  <text x="50" y="80" font-size="14" fill="#5f6368">Editable Figma components for Review Queue, Checks Island, Sidebar Controls &amp; Sticky Action Bar</text>
+
+  <!-- ========================================================================= -->
+  <!-- COMPONENT 1: STICKY REVIEW ACTION BAR -->
+  <!-- ========================================================================= -->
+  <text x="50" y="130" font-size="16" font-weight="bold" fill="#001033">1. Sticky Review Action Bar</text>
+  <g transform="translate(50, 145)">
+    <!-- Bar Container -->
+    <rect x="0" y="0" width="1300" height="64" rx="8" fill="#ffffff" stroke="#dadce0" stroke-width="1" filter="drop-shadow(0px 4px 12px rgba(0, 29, 78, 0.08))"/>
+    
+    <!-- Prev / Next Navigation -->
+    <rect x="16" y="14" width="36" height="36" rx="6" fill="#f1f3f4" stroke="#dadce0"/>
+    <text x="29" y="37" font-size="16" font-weight="bold" fill="#001033">◀</text>
+    
+    <text x="64" y="37" font-size="14" font-weight="bold" fill="#001033">Mosquito &amp; Vector Control</text>
+    <text x="250" y="37" font-size="12" fill="#5f6368">(Page 4 of 27)</text>
+
+    <rect x="340" y="14" width="36" height="36" rx="6" fill="#f1f3f4" stroke="#dadce0"/>
+    <text x="353" y="37" font-size="16" font-weight="bold" fill="#001033">▶</text>
+
+    <!-- Review Decision Buttons -->
+    <g transform="translate(420, 14)">
+      <!-- Approve -->
+      <rect x="0" y="0" width="130" height="36" rx="18" fill="#e6f4ea" stroke="#ceead6"/>
+      <circle cx="16" cy="18" r="5" fill="#137333"/>
+      <text x="28" y="23" font-size="12" font-weight="bold" fill="#137333">Approve [1]</text>
+
+      <!-- Needs Changes -->
+      <rect x="140" y="0" width="160" height="36" rx="18" fill="#fef7e0" stroke="#feefc3"/>
+      <circle cx="156" cy="18" r="5" fill="#b06000"/>
+      <text x="168" y="23" font-size="12" font-weight="bold" fill="#b06000">Needs Changes [2]</text>
+
+      <!-- Blocked -->
+      <rect x="310" y="0" width="120" height="36" rx="18" fill="#fce8e6" stroke="#fad2cf"/>
+      <circle cx="326" cy="18" r="5" fill="#c5221f"/>
+      <text x="338" y="23" font-size="12" font-weight="bold" fill="#c5221f">Blocked [3]</text>
+
+      <!-- Reset -->
+      <rect x="440" y="0" width="100" height="36" rx="18" fill="#f1f3f4" stroke="#dadce0"/>
+      <text x="458" y="23" font-size="12" font-weight="bold" fill="#5f6368">Reset [0]</text>
+    </g>
+
+    <!-- Actions Right -->
+    <g transform="translate(1080, 14)">
+      <rect x="0" y="0" width="100" height="36" rx="6" fill="#2a60af"/>
+      <text x="18" y="23" font-size="12" font-weight="bold" fill="#ffffff">Export [E]</text>
+
+      <rect x="110" y="0" width="90" height="36" rx="6" fill="#001d4e"/>
+      <text x="124" y="23" font-size="12" font-weight="bold" fill="#ffffff">Sync ↻</text>
+    </g>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- COMPONENT 2: CHECKS ISLAND (REACT + MUI PANEL) -->
+  <!-- ========================================================================= -->
+  <text x="50" y="260" font-size="16" font-weight="bold" fill="#001033">2. Scored Checks &amp; Compliance Island (`#reviewChecksIsland`)</text>
+  <g transform="translate(50, 280)">
+    <rect x="0" y="0" width="620" height="420" rx="8" fill="#ffffff" stroke="#dadce0" stroke-width="1" filter="drop-shadow(0px 2px 8px rgba(0, 29, 78, 0.06))"/>
+    
+    <!-- Title & Score Header -->
+    <text x="24" y="38" font-size="17" font-weight="bold" fill="#001033">Automated Compliance Checks</text>
+    
+    <!-- Score Pill -->
+    <rect x="480" y="18" width="115" height="28" rx="14" fill="#e6f4ea" stroke="#ceead6"/>
+    <text x="495" y="37" font-size="12" font-weight="bold" fill="#137333">5 / 6 Passed</text>
+    
+    <line x1="24" y1="60" x2="596" y2="60" stroke="#f1f3f4" stroke-width="1"/>
+
+    <!-- Scored Rule Rows -->
+    <!-- Rule 1: Pass -->
+    <g transform="translate(24, 75)">
+      <rect x="0" y="0" width="572" height="60" rx="6" fill="#ffffff" stroke="#f1f3f4"/>
+      <rect x="12" y="15" width="55" height="24" rx="12" fill="#e6f4ea" stroke="#ceead6"/>
+      <text x="23" y="31" font-size="11" font-weight="bold" fill="#137333">Pass</text>
+      
+      <text x="78" y="26" font-size="13" font-weight="bold" fill="#001033">Reading Level (Grade 8 Target)</text>
+      <rect x="295" y="13" width="95" height="18" rx="4" fill="#ecf2fb"/>
+      <text x="303" y="26" font-size="10" font-weight="bold" fill="#2a60af">Plain Language</text>
+      <text x="78" y="46" font-size="11" fill="#5f6368">Flesch-Kincaid grade 6.8 is within the target threshold.</text>
+    </g>
+
+    <!-- Rule 2: Warn / Check -->
+    <g transform="translate(24, 145)">
+      <rect x="0" y="0" width="572" height="60" rx="6" fill="#fffdf6" stroke="#feefc3"/>
+      <rect x="12" y="15" width="55" height="24" rx="12" fill="#fef7e0" stroke="#feefc3"/>
+      <text x="20" y="31" font-size="11" font-weight="bold" fill="#b06000">Check</text>
+      
+      <text x="78" y="26" font-size="13" font-weight="bold" fill="#001033">SEO Meta Description Length</text>
+      <rect x="280" y="13" width="75" height="18" rx="4" fill="#ecf2fb"/>
+      <text x="288" y="26" font-size="10" font-weight="bold" fill="#2a60af">SFDS SEO</text>
+      <text x="78" y="46" font-size="11" fill="#b06000">Current length (172 chars) exceeds the 160 character limit.</text>
+    </g>
+
+    <!-- Rule 3: Pass -->
+    <g transform="translate(24, 215)">
+      <rect x="0" y="0" width="572" height="60" rx="6" fill="#ffffff" stroke="#f1f3f4"/>
+      <rect x="12" y="15" width="55" height="24" rx="12" fill="#e6f4ea" stroke="#ceead6"/>
+      <text x="23" y="31" font-size="11" font-weight="bold" fill="#137333">Pass</text>
+      
+      <text x="78" y="26" font-size="13" font-weight="bold" fill="#001033">Heading Ladder Structure</text>
+      <rect x="260" y="13" width="75" height="18" rx="4" fill="#ecf2fb"/>
+      <text x="268" y="26" font-size="10" font-weight="bold" fill="#2a60af">WCAG 1.3.1</text>
+      <text x="78" y="46" font-size="11" fill="#5f6368">Single H1 detected, correct sequential H2 and H3 hierarchy.</text>
+    </g>
+
+    <!-- Rule 4: Pass -->
+    <g transform="translate(24, 285)">
+      <rect x="0" y="0" width="572" height="60" rx="6" fill="#ffffff" stroke="#f1f3f4"/>
+      <rect x="12" y="15" width="55" height="24" rx="12" fill="#e6f4ea" stroke="#ceead6"/>
+      <text x="23" y="31" font-size="11" font-weight="bold" fill="#137333">Pass</text>
+      
+      <text x="78" y="26" font-size="13" font-weight="bold" fill="#001033">Inline Link Targets</text>
+      <rect x="220" y="13" width="75" height="18" rx="4" fill="#ecf2fb"/>
+      <text x="228" y="26" font-size="10" font-weight="bold" fill="#2a60af">SFDS Links</text>
+      <text x="78" y="46" font-size="11" fill="#5f6368">All 14 internal and external links are valid and active.</text>
+    </g>
+
+    <!-- Advisory Banner -->
+    <g transform="translate(24, 355)">
+      <rect x="0" y="0" width="572" height="50" rx="6" fill="#ecf2fb" stroke="#b3cbef"/>
+      <text x="16" y="24" font-size="12" font-weight="bold" fill="#2a60af">Plain Language Suggestion</text>
+      <text x="16" y="40" font-size="11" fill="#10438e">Consider replacing "prior to" with "before" in section 2.</text>
+    </g>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- COMPONENT 3: SIDEBAR CONTROLS & SEO METADATA -->
+  <!-- ========================================================================= -->
+  <text x="720" y="260" font-size="16" font-weight="bold" fill="#001033">3. Sidebar Controls &amp; SEO Editor</text>
+  <g transform="translate(720, 280)">
+    <rect x="0" y="0" width="630" height="420" rx="8" fill="#ffffff" stroke="#dadce0" stroke-width="1" filter="drop-shadow(0px 2px 8px rgba(0, 29, 78, 0.06))"/>
+    
+    <text x="24" y="36" font-size="11" font-weight="bold" fill="#5f6368" letter-spacing="1">PAGE MOCKUP SELECTOR</text>
+    
+    <!-- Select Dropdown -->
+    <rect x="24" y="48" width="582" height="40" rx="6" fill="#ffffff" stroke="#dadce0"/>
+    <text x="40" y="73" font-size="13" fill="#001033">Mosquito &amp; Vector Control Program</text>
+    <text x="575" y="73" font-size="12" fill="#5f6368">▼</text>
+
+    <!-- Page Admin Buttons -->
+    <g transform="translate(24, 100)">
+      <rect x="0" y="0" width="110" height="32" rx="4" fill="#f1f3f4" stroke="#dadce0"/>
+      <text x="18" y="21" font-size="11" font-weight="bold" fill="#001033">+ Add page…</text>
+
+      <rect x="120" y="0" width="130" height="32" rx="4" fill="#fce8e6" stroke="#fad2cf"/>
+      <text x="134" y="21" font-size="11" font-weight="bold" fill="#c5221f">Delete this page</text>
+    </g>
+
+    <!-- SEO Section Divider -->
+    <line x1="24" y1="150" x2="606" y2="150" stroke="#f1f3f4" stroke-width="1"/>
+    <text x="24" y="178" font-size="11" font-weight="bold" fill="#5f6368" letter-spacing="1">SEARCH METADATA (SEO)</text>
+
+    <!-- SEO Title Input -->
+    <text x="24" y="202" font-size="12" font-weight="bold" fill="#001033">SEO Page Title</text>
+    <rect x="24" y="212" width="582" height="38" rx="6" fill="#ffffff" stroke="#dadce0"/>
+    <text x="36" y="236" font-size="13" fill="#001033">Mosquito control services | San Francisco</text>
+    
+    <text x="24" y="265" font-size="10" fill="#5f6368">41 characters (Target: ≤ 60)</text>
+    <text x="520" y="265" font-size="10" font-weight="bold" fill="#137333">✓ Optimal</text>
+
+    <!-- Meta Description Input -->
+    <text x="24" y="295" font-size="12" font-weight="bold" fill="#001033">Meta Description</text>
+    <rect x="24" y="305" width="582" height="64" rx="6" fill="#ffffff" stroke="#dadce0"/>
+    <text x="36" y="328" font-size="12" fill="#001033">Request free mosquito inspections, report standing water, and learn</text>
+    <text x="36" y="348" font-size="12" fill="#001033">prevention tips from SF Environmental Health.</text>
+    
+    <text x="24" y="388" font-size="10" fill="#5f6368">128 characters (Target: 120 – 160)</text>
+    <text x="520" y="388" font-size="10" font-weight="bold" fill="#137333">✓ Optimal</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- COMPONENT 4: REVIEW QUEUE ROW & PROGRESS -->
+  <!-- ========================================================================= -->
+  <text x="50" y="740" font-size="16" font-weight="bold" fill="#001033">4. Review Queue Table Row &amp; Progress Bar</text>
+  <g transform="translate(50, 760)">
+    <!-- Progress Bar Block -->
+    <rect x="0" y="0" width="1300" height="70" rx="8" fill="#ffffff" stroke="#dadce0" stroke-width="1" filter="drop-shadow(0px 2px 8px rgba(0, 29, 78, 0.06))"/>
+    <text x="24" y="32" font-size="14" font-weight="bold" fill="#001033">Overall Review Progress</text>
+    <text x="24" y="52" font-size="12" fill="#5f6368">18 of 27 pages reviewed (67% complete)</text>
+
+    <rect x="400" y="26" width="876" height="18" rx="9" fill="#f1f3f4"/>
+    <rect x="400" y="26" width="586" height="18" rx="9" fill="#2a60af"/>
+
+    <!-- Queue Table Header -->
+    <g transform="translate(0, 85)">
+      <rect x="0" y="0" width="1300" height="38" rx="6" fill="#ecf2fb"/>
+      <text x="24" y="24" font-size="11" font-weight="bold" fill="#10438e">PAGE TITLE</text>
+      <text x="500" y="24" font-size="11" font-weight="bold" fill="#10438e">STATUS</text>
+      <text x="700" y="24" font-size="11" font-weight="bold" fill="#10438e">READING LEVEL</text>
+      <text x="900" y="24" font-size="11" font-weight="bold" fill="#10438e">LAST REVIEWED</text>
+      <text x="1150" y="24" font-size="11" font-weight="bold" fill="#10438e">ACTIONS</text>
+    </g>
+
+    <!-- Queue Table Row 1 -->
+    <g transform="translate(0, 130)">
+      <rect x="0" y="0" width="1300" height="54" rx="6" fill="#ffffff" stroke="#f1f3f4"/>
+      <text x="24" y="32" font-size="13" font-weight="bold" fill="#001033">Mosquito &amp; Vector Control</text>
+      
+      <!-- Status Badge -->
+      <rect x="500" y="14" width="105" height="26" rx="13" fill="#e6f4ea" stroke="#ceead6"/>
+      <text x="515" y="31" font-size="11" font-weight="bold" fill="#137333">Approved</text>
+
+      <text x="700" y="32" font-size="13" fill="#001033">Grade 6.8</text>
+      <text x="900" y="32" font-size="12" fill="#5f6368">Today, 1:15 PM</text>
+      
+      <rect x="1150" y="12" width="70" height="30" rx="4" fill="#f1f3f4" stroke="#dadce0"/>
+      <text x="1165" y="31" font-size="11" font-weight="bold" fill="#001033">Review</text>
+    </g>
+
+    <!-- Queue Table Row 2 -->
+    <g transform="translate(0, 190)">
+      <rect x="0" y="0" width="1300" height="54" rx="6" fill="#ffffff" stroke="#f1f3f4"/>
+      <text x="24" y="32" font-size="13" font-weight="bold" fill="#001033">Lead Poisoning Prevention</text>
+      
+      <!-- Status Badge -->
+      <rect x="500" y="14" width="125" height="26" rx="13" fill="#fef7e0" stroke="#feefc3"/>
+      <text x="515" y="31" font-size="11" font-weight="bold" fill="#b06000">Needs Changes</text>
+
+      <text x="700" y="32" font-size="13" fill="#001033">Grade 7.4</text>
+      <text x="900" y="32" font-size="12" fill="#5f6368">Yesterday</text>
+      
+      <rect x="1150" y="12" width="70" height="30" rx="4" fill="#f1f3f4" stroke="#dadce0"/>
+      <text x="1165" y="31" font-size="11" font-weight="bold" fill="#001033">Review</text>
+    </g>
+  </g>
+</svg>

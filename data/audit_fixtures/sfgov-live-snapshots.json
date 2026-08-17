@@ -1,0 +1,157 @@
+{
+  "generated_at": "2026-08-16T03:06:19.544Z",
+  "snapshots_count": 4,
+  "snapshots": [
+    {
+      "name": "healthy-housing-conditions",
+      "expectedType": "Topic",
+      "url": "https://www.sf.gov/topics--healthy-housing-conditions",
+      "source": "docs/sfgov-healthy-housing-topic-and-agency-capture-2026-08-08.md",
+      "h1": "SF.gov capture: \"Healthy housing conditions\" Topic + the real Agency template",
+      "h2Headings": [
+        "Source",
+        "The requested comparison is cross-template",
+        "The live Agency template, as actually rendered",
+        "Calendar                               ← UPCOMING / PAST",
+        "Come to the Permit Center              ← Spotlight: H2 + paragraph + one CTA",
+        "Resources",
+        "About                                  ← one paragraph",
+        "Contact information                    ← Address / Phone / Email /",
+        "The finding that gates everything else",
+        "Answers from the Karl editor docs",
+        "Where the live content should change the mockup",
+        "Already settled — do not re-open",
+        "Live Topic inventory, for reference",
+        "Recommended sequence",
+        "Rerun inputs"
+      ],
+      "h3Headings": [
+        "Programs and services by topic        ← ONE subsection, ~12 cards, flat"
+      ],
+      "linksCount": 0,
+      "links": [],
+      "contentLength": 14183
+    },
+    {
+      "name": "environmental-health-dept",
+      "expectedType": "Agency",
+      "url": "https://www.sf.gov/departments--department-public-health--environmental-health",
+      "source": "docs/sfgov-healthy-housing-topic-and-agency-capture-2026-08-08.md",
+      "h1": "SF.gov capture: \"Healthy housing conditions\" Topic + the real Agency template",
+      "h2Headings": [
+        "Source",
+        "The requested comparison is cross-template",
+        "The live Agency template, as actually rendered",
+        "Calendar                               ← UPCOMING / PAST",
+        "Come to the Permit Center              ← Spotlight: H2 + paragraph + one CTA",
+        "Resources",
+        "About                                  ← one paragraph",
+        "Contact information                    ← Address / Phone / Email /",
+        "The finding that gates everything else",
+        "Answers from the Karl editor docs",
+        "Where the live content should change the mockup",
+        "Already settled — do not re-open",
+        "Live Topic inventory, for reference",
+        "Recommended sequence",
+        "Rerun inputs"
+      ],
+      "h3Headings": [
+        "Programs and services by topic        ← ONE subsection, ~12 cards, flat"
+      ],
+      "linksCount": 0,
+      "links": [],
+      "contentLength": 14183
+    },
+    {
+      "name": "keeping-building-free-of-vermin",
+      "expectedType": "Information",
+      "url": "https://www.sf.gov/information--keeping-your-building-free-vermin",
+      "source": "docs/source/sfgov-live/keeping-your-building-free-of-vermin.md",
+      "h1": "Keeping your building free of vermin",
+      "h2Headings": [
+        "Building owner responsibilities",
+        "Tenant responsibilities",
+        "Departments",
+        "Topics",
+        "Related"
+      ],
+      "h3Headings": [
+        "Preventing vermin",
+        "Training staff",
+        "Dealing with vermin"
+      ],
+      "linksCount": 7,
+      "links": [
+        {
+          "text": "Report a vermin issue or health hazard",
+          "href": "https://www.sf.gov/report-health-nuisance-or-hazards"
+        },
+        {
+          "text": "Department of Public Health",
+          "href": "https://www.sf.gov/departments--department-public-health"
+        },
+        {
+          "text": "Environmental Health",
+          "href": "https://www.sf.gov/departments--department-public-health--environmental-health"
+        },
+        {
+          "text": "Healthy housing conditions",
+          "href": "https://www.sf.gov/topics--healthy-housing-conditions"
+        },
+        {
+          "text": "Report a health nuisance or hazards",
+          "href": "https://www.sf.gov/report-health-nuisance-or-hazards"
+        },
+        {
+          "text": "Get help with vermin in your building",
+          "href": "https://www.sf.gov/get-help-vermin-your-building"
+        },
+        {
+          "text": "Pay your annual healthy housing fee for apartment buildings",
+          "href": "https://www.sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings"
+        }
+      ],
+      "contentLength": 7486
+    },
+    {
+      "name": "report-health-nuisance-or-hazards",
+      "expectedType": "Transaction",
+      "url": "https://www.sf.gov/report-a-health-nuisance-or-hazards",
+      "source": "docs/source/sfgov-live/report-a-health-nuisance-or-hazards.md",
+      "h1": "Report a health nuisance or hazards",
+      "h2Headings": [
+        "What to know",
+        "What to do",
+        "Special cases",
+        "Partner agencies",
+        "Contact us"
+      ],
+      "h3Headings": [
+        "You will need to give:",
+        "Response time varies",
+        "1. Check if your issue is on the online services page",
+        "2. Call 311 for other issues",
+        "Garbage or recycling",
+        "Noise issues",
+        "Other ways to report",
+        "Phone"
+      ],
+      "linksCount": 3,
+      "links": [
+        {
+          "text": "Environmental Health",
+          "href": "https://www.sf.gov/departments--department-public-health--environmental-health"
+        },
+        {
+          "text": "311 Customer Service Center",
+          "href": "https://www.sf.gov/departments--311-customer-service-center"
+        },
+        {
+          "text": "Environmental Health",
+          "href": "https://www.sf.gov/departments--department-public-health--environmental-health"
+        }
+      ],
+      "contentLength": 3108
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://tr.designtokens.org/format/",
+  "name": "SFDS & HHVC Mockup Tool Design Tokens",
+  "version": "1.0.0",
+  "color": {
+    "brand": {
+      "05": { "$value": "#001033", "$type": "color", "$description": "Deep brand navy (contrast on white: 18.72:1)" },
+      "10": { "$value": "#001d4e", "$type": "color", "$description": "SFDS hover and footer navy (16.33:1)" },
+      "20": { "$value": "#023070", "$type": "color", "$description": "Dark brand blue (12.66:1)" },
+      "30": { "$value": "#10438e", "$type": "color", "$description": "Medium dark brand blue (9.48:1)" },
+      "40": { "$value": "#2a60af", "$type": "color", "$description": "SFDS primary action blue (6.19:1)" },
+      "50": { "$value": "#4076c9", "$type": "color", "$description": "Accessible text blue on white (4.51:1)" },
+      "60": { "$value": "#6897de", "$type": "color", "$description": "Border & non-text UI element blue (2.97:1)" },
+      "70": { "$value": "#8db0e6", "$type": "color", "$description": "Light tint blue (2.21:1)" },
+      "80": { "$value": "#b3cbef", "$type": "color", "$description": "Soft background blue (1.65:1)" },
+      "90": { "$value": "#dbe6f7", "$type": "color", "$description": "Subtle container fill (1.26:1)" },
+      "95": { "$value": "#ecf2fb", "$type": "color", "$description": "Lightest tint highlight (1.13:1)" }
+    },
+    "status": {
+      "approved": {
+        "bg": { "$value": "#e6f4ea", "$type": "color" },
+        "fg": { "$value": "#137333", "$type": "color" },
+        "border": { "$value": "#ceead6", "$type": "color" }
+      },
+      "needsChanges": {
+        "bg": { "$value": "#fef7e0", "$type": "color" },
+        "fg": { "$value": "#b06000", "$type": "color" },
+        "border": { "$value": "#feefc3", "$type": "color" }
+      },
+      "blocked": {
+        "bg": { "$value": "#fce8e6", "$type": "color" },
+        "fg": { "$value": "#c5221f", "$type": "color" },
+        "border": { "$value": "#fad2cf", "$type": "color" }
+      },
+      "draft": {
+        "bg": { "$value": "#f1f3f4", "$type": "color" },
+        "fg": { "$value": "#5f6368", "$type": "color" },
+        "border": { "$value": "#dadce0", "$type": "color" }
+      }
+    },
+    "surface": {
+      "page": { "$value": "#f8f9fa", "$type": "color" },
+      "panel": { "$value": "#ffffff", "$type": "color" },
+      "sunken": { "$value": "#f1f3f4", "$type": "color" },
+      "raised": { "$value": "#ffffff", "$type": "color" }
+    }
+  },
+  "fontFamily": {
+    "display": { "$value": "Roboto Slab, ui-serif, Georgia, serif", "$type": "fontFamily" },
+    "body": { "$value": "Roboto Flex Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif", "$type": "fontFamily" }
+  },
+  "fontSize": {
+    "micro": { "$value": "11px", "$type": "dimension" },
+    "label": { "$value": "12.5px", "$type": "dimension" },
+    "card": { "$value": "14px", "$type": "dimension" },
+    "panel": { "$value": "16.8px", "$type": "dimension" },
+    "h1": { "$value": "36px", "$type": "dimension" },
+    "h2": { "$value": "28px", "$type": "dimension" },
+    "h3": { "$value": "22px", "$type": "dimension" }
+  },
+  "spacing": {
+    "space1": { "$value": "4px", "$type": "dimension" },
+    "space2": { "$value": "8px", "$type": "dimension" },
+    "space3": { "$value": "12px", "$type": "dimension" },
+    "space4": { "$value": "16px", "$type": "dimension" },
+    "space5": { "$value": "24px", "$type": "dimension" },
+    "space6": { "$value": "32px", "$type": "dimension" },
+    "space7": { "$value": "48px", "$type": "dimension" },
+    "space8": { "$value": "64px", "$type": "dimension" }
+  },
+  "borderRadius": {
+    "radius2": { "$value": "2px", "$type": "dimension" },
+    "radius4": { "$value": "4px", "$type": "dimension" },
+    "radius8": { "$value": "8px", "$type": "dimension" },
+    "radius12": { "$value": "12px", "$type": "dimension" },
+    "pill": { "$value": "999px", "$type": "dimension" }
+  },
+  "elevation": {
+    "shadow1": {
+      "$value": "0px 1px 3px rgba(0, 29, 78, 0.08)",
+      "$type": "shadow"
+    },
+    "shadow2": {
+      "$value": "0px 4px 12px rgba(0, 29, 78, 0.10)",
+      "$type": "shadow"
+    },
+    "shadow3": {
+      "$value": "0px 16px 32px rgba(0, 29, 78, 0.12)",
+      "$type": "shadow"
+    }
+  }
+}

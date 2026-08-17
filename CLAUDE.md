@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 46 unit-test files in tests/
+bun run test                  # bun test over the 47 unit-test files in tests/
 bun run test:e2e              # playwright test over the 21 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 46 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 47 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -188,7 +188,21 @@ its own row. The inventory is hand-transcribed from a 930-line prose document
 that keeps changing, and silent drift means an editor is told to type into a
 field that no longer exists. It asserts a MINIMUM row count per type FIRST,
 because a doc-parsing regex that stops matching does not fail — it stops
-checking, and reports zero rows on both sides).
+checking, and reports zero rows on both sides), and
+`karl-transcript` (the builder itself, driven with hand-built pages rather than
+the real corpus — like `card-inheritance`, so a legitimately added page never
+fails the suite. It pins overlay precedence including the cleared-to-empty
+case, that a `title-only` card emits a page choice and never a description,
+that an external entry in a `title-only` block has its description reported as
+dead while the same entry in an inheriting subsection keeps it, that
+`callout.title: false` is absence rather than a title, that bullets fold into
+the paragraph value instead of becoming a block, that an inline
+`[label](pageKey)` link surfaces separately with its Karl representation named,
+and that the 120-character `cost` cap measures the OVERLAID value — a reviewer
+can push a short authored value over the cap and pull a long one under it, so
+measuring the original reports the wrong page in both directions.
+Mutation-proven against two deliberate breakages: emitting a description for a
+picker card, in each of the two places one could be emitted).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

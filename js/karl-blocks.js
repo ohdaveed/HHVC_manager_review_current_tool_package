@@ -195,6 +195,45 @@ const UNRESOLVED = [
     reason:
       'Intro paragraphs on an Agency Services/Resources section. The Subsection carries a single optional Title and a links list — there is no description field, so the paragraph has nowhere to go. This is U4’s shape measured on Agency rather than Topic, and it needs the same answer. Blocked on a Digital Services decision.',
   },
+  // U21 is one register entry over three shapes rather than three entries: the
+  // gap is a property of the type, so the same open question lands under a
+  // different name on each of the three types that have it. Splitting it would
+  // suggest three decisions where there is one.
+  {
+    id: 'U21',
+    shape: 'campaign-page-summary',
+    docLine: 848,
+    reason:
+      'Campaign has no page `description` field, and both Campaign pages declare a summary the mockup renders under the title. `about_campaign` is an About SECTION rather than a page description, so folding it in is a content decision. Blocked on a content decision.',
+  },
+  {
+    id: 'U21',
+    shape: 'about-us-page-summary',
+    docLine: 848,
+    reason:
+      'About us has no page `description` field — its whole Content tab is four panels — and `aboutHhvcTeam` declares a summary. Blocked on a content decision.',
+  },
+  {
+    id: 'U21',
+    shape: 'report-page-summary',
+    docLine: 848,
+    reason:
+      'Report has no page `description` field, and `article11Guide` declares a summary. Blocked on a content decision.',
+  },
+  {
+    id: 'U22',
+    shape: 'information-page-contact',
+    docLine: 849,
+    reason:
+      'Information has no Contact us panel — `get_help` is Transaction’s, and the `Contact` block belongs to Campaign and Agency — yet two Information pages carry `contact`. Blocked on a content decision.',
+  },
+  {
+    id: 'U23',
+    shape: 'information-page-whattoknow',
+    docLine: 850,
+    reason:
+      'Information has no `cost` and no `things_to_know`; both sit under Transaction’s "What to Know Before You Start" grouping. One Information page carries `whatToKnow`. This is U3’s trade seen from the other side. Blocked on a content decision.',
+  },
 ]
 
 const KARL_PANELS = {

@@ -1,0 +1,307 @@
+{
+  "inspected_at": "2026-08-15T19:45:00Z",
+  "source_tier": "E1/E2 (Authenticated Live Admin Session & w-edit-handler-data payload)",
+  "tab_interface": {
+    "tabs": [
+      "Content",
+      "Promote",
+      "Settings"
+    ],
+    "promote_tab_fields": {
+      "slug": {
+        "raw_name": "slug",
+        "required": true,
+        "type": "SlugField"
+      },
+      "seo_title": {
+        "raw_name": "seo_title",
+        "required": false,
+        "type": "CharField"
+      },
+      "search_description": {
+        "raw_name": "search_description",
+        "required": false,
+        "type": "TextField"
+      },
+      "show_in_menus": {
+        "raw_name": "show_in_menus",
+        "required": false,
+        "type": "BooleanField"
+      },
+      "tags": {
+        "raw_name": "tags",
+        "required": false,
+        "type": "ClusterTaggableManager"
+      }
+    }
+  },
+  "content_types_in_use": {
+    "Agency": {
+      "model": "Agency",
+      "required_fields": [
+        "title",
+        "services_title",
+        "resources_title",
+        "public_records"
+      ],
+      "top_level_panels": [
+        "title",
+        "logo",
+        "background_header_image",
+        "alert",
+        "highlights",
+        "quick_links",
+        "meetings_events_news",
+        "services",
+        "spotlight",
+        "resources",
+        "about",
+        "divisions",
+        "people",
+        "public_records",
+        "contact"
+      ],
+      "streamfields": {
+        "services": {
+          "behavior": "auto-insert Subsection",
+          "item_types": [
+            "SF.gov page",
+            "External link"
+          ]
+        },
+        "resources": {
+          "behavior": "auto-insert Subsection",
+          "item_types": [
+            "SF.gov page",
+            "External link"
+          ]
+        }
+      }
+    },
+    "About": {
+      "model": "About",
+      "required_fields": [
+        "title",
+        "primary_agency"
+      ],
+      "top_level_panels": [
+        "title",
+        "primary_agency",
+        "about_info",
+        "resources"
+      ],
+      "streamfields": {
+        "about_info": {
+          "behavior": "auto-insert Custom section",
+          "fields": [
+            "custom_section_title",
+            "custom_section_text"
+          ]
+        },
+        "resources": {
+          "chooser": [
+            "Resources section",
+            "Downloadable files"
+          ]
+        }
+      }
+    },
+    "Transaction": {
+      "model": "Transaction",
+      "required_fields": [
+        "title",
+        "primary_agency",
+        "cost"
+      ],
+      "top_level_panels": [
+        "title",
+        "description",
+        "primary_agency",
+        "things_to_know",
+        "what_to_do",
+        "special_cases",
+        "supporting_information",
+        "custom_section",
+        "good_for_community",
+        "partner_agencies",
+        "topics",
+        "related",
+        "redirect_url"
+      ],
+      "streamfields": {
+        "what_to_do": {
+          "chooser": [
+            "Section",
+            "Step by step"
+          ],
+          "section_fields": [
+            "title",
+            "section_specifics",
+            "button_link"
+          ]
+        }
+      }
+    },
+    "Information": {
+      "model": "Information",
+      "required_fields": [
+        "title",
+        "primary_agency"
+      ],
+      "top_level_panels": [
+        "title",
+        "description",
+        "primary_agency",
+        "part_of",
+        "information_section",
+        "partner_agencies",
+        "topics",
+        "related"
+      ],
+      "streamfields": {
+        "information_section": {
+          "chooser": [
+            "Title and text",
+            "Image",
+            "Callout"
+          ]
+        }
+      }
+    },
+    "ResourceCollection": {
+      "model": "ResourceCollection",
+      "required_fields": [
+        "title",
+        "primary_agency"
+      ],
+      "top_level_panels": [
+        "title",
+        "description",
+        "primary_agency",
+        "data_dashboard",
+        "introductory_text",
+        "body",
+        "custom_section",
+        "topics",
+        "partner_agencies"
+      ],
+      "streamfields": {
+        "body": {
+          "chooser": [
+            "Documents",
+            "Resources",
+            "Data stories"
+          ]
+        }
+      }
+    },
+    "Campaign": {
+      "model": "Campaign",
+      "required_fields": [
+        "title",
+        "primary_agency"
+      ],
+      "top_level_panels": [
+        "title",
+        "primary_agency",
+        "logo",
+        "background_header_image",
+        "theme",
+        "spotlight_1",
+        "spotlight_2",
+        "additional_content",
+        "about_campaign",
+        "partner_agencies",
+        "related_links",
+        "contact"
+      ],
+      "spotlight_slots": 2,
+      "streamfields": {
+        "additional_content": {
+          "chooser": [
+            "Embed",
+            "Image with text",
+            "Resources",
+            "Accordions",
+            "Video"
+          ]
+        },
+        "related_links": {
+          "repeatable": true,
+          "item_types": [
+            "Page"
+          ]
+        }
+      }
+    },
+    "Topic": {
+      "model": "Topic",
+      "required_fields": [
+        "title",
+        "primary_agency"
+      ],
+      "top_level_panels": [
+        "title",
+        "description",
+        "primary_agency",
+        "content_fields",
+        "partner_agencies",
+        "child_topics"
+      ],
+      "streamfields": {
+        "content_fields": {
+          "chooser": [
+            "Spotlight",
+            "Resources",
+            "Services",
+            "Callout",
+            "Text",
+            "Quick links"
+          ]
+        }
+      }
+    },
+    "Report": {
+      "model": "Report",
+      "required_fields": [
+        "title",
+        "primary_agency"
+      ],
+      "top_level_panels": [
+        "title",
+        "description",
+        "primary_agency",
+        "print_version",
+        "content",
+        "partner_agencies",
+        "topics"
+      ],
+      "streamfields": {
+        "content": {
+          "chooser": [
+            "Body",
+            "Table"
+          ],
+          "body_heading_rule": "H2 allowed, auto-generates table of contents",
+          "table_fields": [
+            "header_options",
+            "description",
+            "caption",
+            "columns"
+          ]
+        }
+      }
+    }
+  },
+  "content_types_not_in_use": [
+    "Step by step",
+    "Event",
+    "Department table",
+    "Data story",
+    "News",
+    "Profile",
+    "Location",
+    "Service location",
+    "Meeting"
+  ]
+}

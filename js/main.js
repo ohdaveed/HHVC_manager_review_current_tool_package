@@ -147,6 +147,10 @@ import './card-inheritance.js'
 // card-inheritance.js above it, so its only ordering requirement is being
 // evaluated before js/karl-transcript.js reads window.karlBlocks.
 import './karl-blocks.js'
+// The transcript builder over that inventory. Reads window.karlBlocks above it,
+// plus window.cardInheritance and window.utils. Pure and DOM-free; the
+// workspace panel is what mounts a UI on top of it.
+import './karl-transcript.js'
 import './page-render.js'
 import './app.js'
 import './manager-review-export.js'
