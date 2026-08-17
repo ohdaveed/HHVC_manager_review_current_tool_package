@@ -19,7 +19,7 @@ window.HHVC_PAGES['article11Guide'] = {
     paragraphs: [
       'This guide is a plain-language summary, not the legal code. Use the municipal code for the complete and current text.',
     ],
-    button: 'View Article 11',
+    button: 'View Health Code Article 11',
     buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
     karl: 'Report Spotlight -> external Button link. The report points to the official municipal code rather than reproducing every Article 11 provision.',
   },
@@ -78,8 +78,11 @@ window.HHVC_PAGES['article11Guide'] = {
     },
     {
       heading: 'Garbage, filth, and waste',
-      karl: 'Report Content -> Table block. Covers the most common sanitation citations: Sec. 581(b)(1), (3), and (5). Pair each translation with the consolidated garbage, filth, and mold reporting Transaction rather than adding a new reporting page.',
+      karl: 'Report Content -> Table block. Covers the most common sanitation citations: Sec. 581(b)(1), (3), and (5). Pair each translation with an inline link to the consolidated garbage, filth, and mold reporting Transaction rather than adding a new reporting page.',
       kind: 'body',
+      paragraphs: [
+        'Report conditions like trash, mold, or unsanitary waste using [Report garbage, mold, or trash](filthReport).',
+      ],
       table: [
         ['Health code', 'In plain language'],
         [
@@ -95,13 +98,14 @@ window.HHVC_PAGES['article11Guide'] = {
           'Remove animal or human waste and clean contaminated materials. Waste left in a yard, hallway, or other shared area can be a health nuisance.',
         ],
       ],
-      button: 'Report garbage or filth',
-      buttonTarget: 'filthReport',
     },
     {
       heading: 'Overgrown vegetation and poisonous plants',
       karl: 'Report Content -> Table block. Covers Sec. 581(b)(2), (11), and 605. Keep vegetation and poison-plant duties distinct: overgrowth is a nuisance condition; Sec. 605 concerns an order to remove poison oak or ivy.',
       kind: 'body',
+      paragraphs: [
+        'Report overgrown vegetation or sanitation issues using [Report vegetation or a sanitation problem](filthReport).',
+      ],
       table: [
         ['Health code', 'In plain language'],
         [
@@ -117,8 +121,6 @@ window.HHVC_PAGES['article11Guide'] = {
           'If the City orders removal, the owner must remove the poisonous plants as directed.',
         ],
       ],
-      button: 'Report overgrowth',
-      buttonTarget: 'filthReport',
     },
     {
       heading: 'Mold and lead hazards',
@@ -192,6 +194,9 @@ window.HHVC_PAGES['article11Guide'] = {
       heading: 'Animals, clutter, and other health threats',
       karl: 'Report Content -> Table block. Covers Sec. 581(b)(12) and (18). Both citations need a case-specific inspection finding, so the plain-language column intentionally avoids declaring that a particular animal count or stored item is automatically a violation.',
       kind: 'body',
+      paragraphs: [
+        'Learn more about what conditions HHVC can inspect at [Find out if HHVC can inspect the problem](scopeInfo).',
+      ],
       table: [
         ['Health code', 'In plain language'],
         [
@@ -203,8 +208,6 @@ window.HHVC_PAGES['article11Guide'] = {
           'A dangerous condition not named elsewhere can still be a nuisance. Excessive stored materials may be a problem when they block inspection, create a hazard, or shelter pests.',
         ],
       ],
-      button: 'See what HHVC inspects',
-      buttonTarget: 'scopeInfo',
     },
     {
       heading: 'What happens after HHVC finds a violation',
@@ -244,10 +247,8 @@ window.HHVC_PAGES['article11Guide'] = {
       karl: 'Report Content -> short Title and text block. Covers Sec. 609 as an Article 11 reference, but keeps the current fiscal-year rates and payment instructions on the dedicated fee Transaction so they cannot drift in this legal-reference report.',
       kind: 'body',
       paragraphs: [
-        'Section 609 establishes the Healthy Housing inspection program fee for eligible apartment buildings. The fee is based on rental units, and the current rate schedule can change each fiscal year.',
+        'Section 609 establishes the Healthy Housing inspection program fee for eligible apartment buildings. The fee is based on rental units, and the current rate schedule can change each fiscal year. You can [pay your Healthy Housing fee](payFee) online.',
       ],
-      button: 'Pay your fee',
-      buttonTarget: 'payFee',
     },
   ],
 }

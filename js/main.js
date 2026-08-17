@@ -144,6 +144,14 @@ import './editor-panel.js'
 // this line is the same belt-and-braces documentation of the sequence that
 // page-data.js above is, not what makes it work.
 import './card-inheritance.js'
+// The Karl panel inventory. Import-free and window-published exactly like
+// card-inheritance.js above it, so its only ordering requirement is being
+// evaluated before js/karl-transcript.js reads window.karlBlocks.
+import './karl-blocks.js'
+// The transcript builder over that inventory. Reads window.karlBlocks above it,
+// plus window.cardInheritance and window.utils. Pure and DOM-free; the
+// workspace panel is what mounts a UI on top of it.
+import './karl-transcript.js'
 import './page-render.js'
 import './karl-guide.js'
 import './app.js'
@@ -212,5 +220,10 @@ import './inline-content-edit.js'
 // PNG export of the mockups. Imported after the review layers because it uses
 // window.showToast for progress and window.renderPage to step through pages.
 import './mockup-image-export.js'
+
+// The Karl transcript panel. After the review layers because it reads
+// window.reviewState and window.showToast, and after js/karl-transcript.js
+// whose builder it renders.
+import './karl-transcript-panel.js'
 
 import './keyboard-shortcuts.js'

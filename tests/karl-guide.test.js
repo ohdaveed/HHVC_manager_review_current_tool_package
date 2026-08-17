@@ -14,12 +14,7 @@
 // PR #153, every one of them a context resolving to a plausible neighbouring
 // field. Each is pinned below by the page type and role that produced it.
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import {
-  BUTTON_HOSTS,
-  META_FIELDS,
-  PAGE_TYPE_FIELDS,
-  guideForContext,
-} from '../js/karl-guide-registry.js'
+import { BUTTON_HOSTS, ROLE_PANELS, guideForContext } from '../js/karl-guide-registry.js'
 import { renderKarlGuidePanel } from '../js/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
@@ -82,11 +77,28 @@ describe('resolvePath never guesses', () => {
     }
   })
 
-  test('page metadata resolves type-independently', () => {
-    for (const type of ['Transaction', 'Campaign', 'About us', 'Report']) {
-      expect(guideFor(type, 'title').path).toBe(META_FIELDS.title)
-      expect(guideFor(type, 'description').path).toBe(META_FIELDS.description)
+  test("page metadata carries each type's own label, not one shared string", () => {
+    // This asserted the opposite until 2026-08-17, when the paths moved onto
+    // the drift-guarded inventory: METADATA IS NOT TYPE-INDEPENDENT. Karl
+    // labels the field "Page title" on three types and "Title" on the other
+    // five, and the old shared `META_FIELDS.title` was therefore wrong on
+    // whichever half you were not looking at.
+    expect(guideFor('Transaction', 'title').path).toBe('Content → Page title')
+    expect(guideFor('Campaign', 'title').path).toBe('Content → Title')
+  })
+
+  test('a type with no Description panel reports no destination for a summary', () => {
+    // Campaign, About us and Report have no page `description` field at all —
+    // that is `U21` in the field map's unresolved register, opened by this
+    // repo's own sweep. The single shared META_FIELDS string sent a summary to
+    // "Content → Description" on all three, naming a field their forms do not
+    // have. Resolving through the inventory returns nothing instead, which the
+    // panel renders as "Mockup only".
+    for (const type of ['Campaign', 'About us', 'Report']) {
+      expect(guideFor(type, 'description').path).toBe('')
+      expect(guideFor(type, 'description').status).toBe('mockup-only')
     }
+    expect(guideFor('Transaction', 'description').path).toBe('Content → Description')
   })
 })
 
@@ -116,9 +128,9 @@ describe('Contact us exists on three types and only three', () => {
     // The specific harm: a phone number landing in a rich-text block. Assert it
     // against every type at once rather than trusting the two lists above to
     // stay exhaustive as types are added.
-    for (const type of Object.keys(PAGE_TYPE_FIELDS)) {
+    for (const type of Object.keys(ROLE_PANELS)) {
       const contactPath = guideForContext({ page: { type }, context: { role: 'contact' } }).path
-      const bodyPath = PAGE_TYPE_FIELDS[type].body
+      const bodyPath = guideFor(type, 'body').path
       if (contactPath) expect(contactPath).not.toBe(bodyPath)
     }
   })
@@ -129,7 +141,7 @@ describe('components that own a Karl panel are not folded into the body stream',
     expect(guideFor('Campaign', 'top-facts').path).toBe('Content → Top facts')
     // And is NOT the Additional content row it used to alias onto, which is one
     // of the two paths this repo inferred rather than measured.
-    expect(guideFor('Campaign', 'top-facts').path).not.toBe(PAGE_TYPE_FIELDS.campaign.content)
+    expect(guideFor('Campaign', 'top-facts').path).not.toBe(guideFor('campaign', 'content').path)
     expect(guideFor('Campaign', 'top-facts').status).toBe('confirmed')
   })
 
@@ -139,8 +151,11 @@ describe('components that own a Karl panel are not folded into the body stream',
 
   test("Transaction's What to know is the cost grouping, not the What to Do stream", () => {
     const guide = guideFor('Transaction', 'what-to-know')
-    expect(guide.path).toBe('Content → What to Know Before You Start')
-    expect(guide.path).not.toBe(PAGE_TYPE_FIELDS.transaction.content)
+    // "What to Know Before You Start" is the parent GROUPING of `cost` and
+    // `things_to_know`, not a panel row, so it has no label to derive and the
+    // path names the field itself. buildSteps() still names both halves.
+    expect(guide.path).toBe('Content → Cost')
+    expect(guide.path).not.toBe(guideFor('transaction', 'content').path)
     // The path stops at the grouping, so a step has to name the two fields
     // under it or the editor cannot tell which half goes where.
     expect(guide.steps.join(' ')).toContain('Things to Know')
@@ -155,7 +170,7 @@ describe('components that own a Karl panel are not folded into the body stream',
 
   test('a Report table goes in the Table block, never Body', () => {
     expect(guideFor('Report', 'table').path).toBe('Content → Content → Table')
-    expect(guideFor('Report', 'table').path).not.toBe(PAGE_TYPE_FIELDS.report.body)
+    expect(guideFor('Report', 'table').path).not.toBe(guideFor('report', 'body').path)
     // No other type in use has a Table block; the mockup renders one on
     // Information as a deliberate preview, and it must not claim a field.
     expect(guideFor('Information', 'table').path).toBe('')
@@ -168,14 +183,14 @@ describe('a Button link belongs to its host block', () => {
   // Spotlight CTA in an accordion.
   test('a Spotlight CTA resolves to the Spotlight nested Button link', () => {
     const guide = guideFor('Campaign', 'spotlight', { linkShape: 'button-link' })
-    expect(guide.path).toBe(BUTTON_HOSTS['campaign.spotlight'])
+    expect(guide.path).toBe('Content → Spotlight 1 → Button link')
     expect(guide.path).toContain('Spotlight')
-    expect(guide.path).not.toBe(PAGE_TYPE_FIELDS.campaign.content)
+    expect(guide.path).not.toBe(guideFor('campaign', 'content').path)
   })
 
   test('a step action resolves to Section specifics Button link', () => {
     expect(guideFor('Transaction', 'what-to-do', { linkShape: 'button-link' }).path).toBe(
-      BUTTON_HOSTS['transaction.what-to-do']
+      'Content → What to Do → Section specifics → Button link'
     )
   })
 
@@ -187,8 +202,17 @@ describe('a Button link belongs to its host block', () => {
     expect(guide.steps.join(' ')).not.toContain('Button link →')
   })
 
-  test('every BUTTON_HOSTS row names a Button link', () => {
-    for (const path of Object.values(BUTTON_HOSTS)) expect(path).toContain('Button link')
+  test('every BUTTON_HOSTS row resolves to a path naming a Button link', () => {
+    // The rows hold panel references now rather than path strings, so this
+    // asserts the RESOLVED path — which is what a reviewer reads, and the only
+    // thing that can go wrong once the breadcrumb is derived rather than typed.
+    for (const [key, ref] of Object.entries(BUTTON_HOSTS)) {
+      const [type, role] = key.split('.')
+      const path = guideFor(type, role, { linkShape: 'button-link' }).path
+      expect(path, `${key} should resolve`).not.toBe('')
+      expect(path, `${key} should name a Button link`).toContain('Button link')
+      expect(ref.within).toContain('Button link')
+    }
   })
 })
 

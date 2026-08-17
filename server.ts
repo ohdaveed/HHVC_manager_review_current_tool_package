@@ -1,6 +1,33 @@
 import { serve } from "bun"
 import { resolve } from "node:path"
 import { createHash, createHmac, timingSafeEqual } from "node:crypto"
+// Deliberately NOT importing Hono here, and the reasoning is worth keeping
+// because "replace the hand-rolled HTTP plumbing with middleware" is an
+// obvious-looking suggestion that a rebuild proposal made and that measurement
+// refuted (2026-08-16, hono@4.13.2, read out of node_modules rather than out
+// of the docs):
+//
+//   - `hono/body-limit` abandons the reader at the first over-limit chunk
+//     without draining, which is the exact behaviour the drain branch in
+//     readBodyWithLimit() below exists to avoid — it leaves a keep-alive
+//     connection framed mid-request, so the client's NEXT valid request comes
+//     back 400/431. It also buffers every chunk of an UNDER-limit body into an
+//     array and rebuilds the Request, defeating the streaming cap outright.
+//   - `hono/cors` never rejects. A disallowed origin simply receives no
+//     Access-Control-Allow-Origin header and the request runs anyway, leaving
+//     enforcement to the browser; getApiRequestContext() answers 403 in the
+//     server. It also has no notion of the 503-on-invalid-config that must
+//     answer BEFORE the authorization gate, and validates neither the
+//     requested preflight method nor the requested headers.
+//   - `hono/secure-headers` disagrees with netlify.toml's set on three headers
+//     (X-Frame-Options SAMEORIGIN vs DENY, X-XSS-Protection 0 vs 1; mode=block,
+//     Referrer-Policy no-referrer vs strict-origin-when-cross-origin) and adds
+//     seven this deployment does not send. Configuring it to match costs more
+//     lines than the SECURITY_HEADERS constant below and adds a second place
+//     for those values to drift from netlify.toml.
+//
+// That leaves route dispatch as the only thing a framework would buy, which is
+// not what this file is expensive about.
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
 import { mergeReviewRecord } from "./js/review-merge.js"

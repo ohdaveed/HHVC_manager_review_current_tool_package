@@ -11,7 +11,14 @@ import {
   showToast,
 } from './ui-controls.js'
 import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
-import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
+import {
+  escapeHtml,
+  getPrimaryCta,
+  resolvePageKey,
+  safeUrl,
+  showErrorBanner,
+  safeMarkdown,
+} from './utils.js'
 import {
   karlKindMeta,
   nextKarlGuideId,
@@ -89,17 +96,7 @@ function unverifiedPill(reason) {
   return `<span class="unverified-pill"${reason ? ` title="${escapeHtml(reason)}"` : ''}><span aria-hidden="true">⚠</span> Unverified</span>`
 }
 function formatMarkdown(text) {
-  if (typeof text !== 'string') return ''
-  let html = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  // [label](pageKey) becomes an in-mockup nav button; [label](https://...)
-  // becomes a real external link — page copy that points at third-party
-  // references (CDC, UC IPM, the municipal code) uses the same inline syntax.
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, target) =>
-    /^https?:\/\//.test(target)
-      ? `<a class="inline-link" href="${target}" target="_blank" rel="noopener noreferrer">${label} <span aria-hidden="true">↗</span></a>`
-      : `<button type="button" class="inline-link" data-render-target="${target}">${label}</button>`
-  )
-  return html
+  return safeMarkdown(text)
 }
 /**
  * @param {Array<string|object>} paragraphs
@@ -1554,6 +1551,19 @@ function applyPageContent(key) {
   applyChecklistState(key)
   restoreSidebarScroll()
 }
+/* There is deliberately no `if (!key)` branch here, and one was removed on
+   2026-08-17 because it CRASHED the default entry point. It cleared #mockPage
+   and then set `.textContent` on `document.getElementById('pageTitle')` — an
+   element that exists nowhere in index.html — so a bare URL with no `?page=`
+   threw a TypeError before anything rendered, and so did every history pop
+   back to that URL. It survived because `resolveInitialPageKey()` already maps
+   a null key onto `pestsTopic`, so the only caller that could reach it was
+   js/app.js passing an explicit null, and every e2e spec navigates with a
+   `?page=` parameter.
+
+   That branch was the landing state for the bottom-drawer workspace, which is
+   also gone. A key that names no page is resolved rather than special-cased —
+   see resolveInitialPageKey() and resolvePageKey()'s `defaultKey`. */
 function renderPage(key, skipHistory = false) {
   // Resolve unknown/retired keys instead of silently no-op'ing and leaving
   // the static "Loading…" placeholder on screen. resolveInitialPageKey()

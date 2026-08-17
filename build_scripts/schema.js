@@ -32,9 +32,23 @@ const karlGuideSchema = z
     // panel renders it as "Inferred — verify" rather than "E1 confirmed". See
     // INFERRED_PATHS in js/karl-guide-registry.js.
     status: z.enum(['confirmed', 'inferred', 'inherited', 'mockup-only', 'unresolved']).optional(),
+    // Shape only — `U` followed by digits. This read
+    // `/^U(?:[1-9]|1[0-9]|20)$/` until the Karl transcript work merged, which
+    // was a hardcoded CEILING at U20 rather than a validity check, and it was
+    // already wrong: `docs/karl-export-field-map.md`'s register had opened
+    // U21, U22 and U23, so `js/karl-blocks.js` cited three IDs this schema
+    // rejected outright. A bound that has to be edited every time the register
+    // grows fails closed against correct data, which is the worst direction
+    // for a validator to fail in.
+    //
+    // Whether an ID is REAL is checked where the register actually lives:
+    // `tests/karl-blocks.test.js` asserts every rule names a register ID and
+    // cites a real line of that document. Duplicating the range here would be
+    // a second copy of the register's bounds, free to drift from it — the
+    // problem this file has twice now.
     unresolvedId: z
       .string()
-      .regex(/^U(?:[1-9]|1[0-9]|20)$/)
+      .regex(/^U\d+$/)
       .optional(),
     values: z.array(karlGuideValueSchema).optional(),
   })
@@ -199,9 +213,32 @@ const spotlightSchema = z.object({
   karlGuide: karlGuideSchema.optional(),
 })
 
+/**
+ * The Karl content types this corpus declares, in descending order of use
+ * (Transaction 14 pages, Information 6, Resource Collection 3, Campaign 2, and
+ * one page each of Topic, Agency, About us and Report).
+ *
+ * This is a closed union rather than an open string because js/karl-blocks.js
+ * keys its per-type Karl panel inventory on this value: an unrecognised type
+ * selects no inventory, so a typo would export an EMPTY transcript rather than
+ * failing — and an empty transcript reads like a page with no content, not like
+ * a bug. Adding a ninth type means capturing its form in
+ * docs/karl-export-field-map.md and adding its panel inventory, in that order.
+ */
+const PAGE_TYPES = [
+  'Transaction',
+  'Information',
+  'Resource Collection',
+  'Campaign',
+  'Topic',
+  'Agency',
+  'About us',
+  'Report',
+]
+
 const pageSchema = z.object({
   slug: z.string().min(1),
-  type: z.string().min(1),
+  type: z.enum(PAGE_TYPES),
   title: z.string().min(1),
   summary: z.string().min(1),
   audience: z.array(z.string()).min(1),
@@ -247,6 +284,7 @@ const dataSchema = z.object({
 })
 
 module.exports = {
+  PAGE_TYPES,
   cardSchema,
   stepSchema,
   sectionSchema,

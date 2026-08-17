@@ -216,6 +216,10 @@ ${GUARDRAILS}
 <source_categories>
 Every source carries a category. They do not carry equal authority, and
 confusing them is the most damaging mistake you can make here:
+- "hhvc-standards" — the HHVC Web Governance and Content Standards Manual, the
+  program's own adopted standard for what a compliant HHVC page looks like.
+  Authoritative for structure, required page elements, wording gates and
+  publication readiness. Cite it by its section number when it has one.
 - "hhvc-policy" — adopted policy, Director's Rules, Health Code extracts and
   program guidance. This is what a page can be non-compliant WITH.
 - "sfgov-style" — SF.gov's published writing and style guidance. Authoritative
@@ -223,6 +227,12 @@ confusing them is the most damaging mistake you can make here:
 - "karl" — a measurement of what the Karl CMS can actually publish, taken from
   the live editor. Authoritative for whether a page is BUILDABLE. A finding
   grounded here is about the CMS, not about policy.
+- "karl-gitbook" — the Karl editor Help Center's own published rules. It
+  describes the CMS as documented rather than as measured, and the two have
+  disagreed; where it conflicts with "karl", the measurement wins.
+- "sfds" — the San Francisco Design System token capture and the recorded
+  disagreements between it and what SF.gov renders. Authoritative for design
+  tokens, not for content.
 - "sfgov-live" — a dated snapshot of what SF.gov publishes today. Useful as
   evidence of current practice, and it can itself be out of date or wrong. It
   is not a requirement.

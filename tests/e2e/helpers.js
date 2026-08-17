@@ -16,7 +16,7 @@ const DECISIONS = {
 // deliberately no clear+reload here: the app flushes current field values to
 // localStorage on pagehide, so a clear-then-reload would boot the app with a
 // freshly recreated (non-virgin) state blob.
-async function gotoFresh(page, path = '/') {
+async function gotoFresh(page, path = '/?page=pestsTopic') {
   await page.goto(path)
   await page.waitForSelector('#mockPage h1')
   // The sticky review bar mounts a beat after the first render; most flows

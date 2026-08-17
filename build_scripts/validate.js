@@ -15,8 +15,10 @@ const {
   findListFormatViolations,
   findUnsafeUrls,
   findExternalAssetUrls,
+  findUnmappedSections,
   countUnverifiedClaims,
 } = require('./data-checks')
+const { UNRESOLVED } = require('../js/karl-blocks.js')
 const { findPageImports, findPageImportDrift } = require('./page-import-checks')
 
 // A page file nobody imports never registers onto window.HHVC_PAGES, so the
@@ -102,6 +104,22 @@ if (externalAssets.length) {
     `${pageKey} ${path} loads an image from another host: ${url}\n` +
       'Inline it as a data: URI or serve it locally — a hotlinked image breaks ' +
       'offline review and makes this page’s PNG export depend on a third party.'
+  )
+}
+
+// Content with no Karl destination. A KNOWN unmappable shape passes, because
+// the unresolved register documents it and someone is waiting on a decision; a
+// NEW one fails, because authoring content the CMS cannot hold is exactly what
+// this tool exists to catch and noticing it after approval is too late.
+const unmapped = findUnmappedSections(parsed.data.pages, UNRESOLVED)
+if (unmapped.length) {
+  const { pageKey, path, reason } = unmapped[0]
+  throw new Error(
+    `${pageKey} ${path} has no documented Karl destination: ${reason}\n` +
+      'Either map it in js/karl-blocks.js, or open an entry in the unresolved ' +
+      'register in docs/karl-export-field-map.md and add its shape rule there. ' +
+      'Do not widen an existing rule to cover it — a rule is an exemption for ' +
+      `one documented open question, not a category. (${unmapped.length} finding(s) total.)`
   )
 }
 

@@ -16,6 +16,15 @@ const { safeUrl, urlProbe } = require('../js/utils.js')
 // source. That module is deliberately import-free and reads no global, so it
 // costs this file no load-order dependency.
 const { isValidInlineLinkTarget } = require('../js/inline-link-target.js')
+// buildTranscript comes from js/karl-transcript.js for the third time in the
+// same pattern: findUnmappedSections must decide "this content has no Karl
+// destination" using exactly the walk that produces the instruction an editor
+// follows, or the gate and the export could come to disagree about what is
+// covered. This is the same CJS-requires-ESM crossing the two imports above
+// make, and safe for the same measured reason — that module has no top-level
+// await and imports nothing, so Bun's async-module restriction does not apply.
+// tests/data-validation.test.js guards the crossing in a subprocess.
+const { buildTranscript } = require('../js/karl-transcript.js')
 
 /**
  * Find order entries that reference a page key missing from `pages`.
@@ -318,8 +327,41 @@ function findExternalAssetUrls(pages) {
   return external
 }
 
+/**
+ * Find page content that resolves to no documented Karl destination and is not
+ * covered by a known unresolved-register rule.
+ *
+ * This is the ratchet the transcript export buys. `bun run audit-cards` is a
+ * report because a card's description is a per-card content judgement; this is
+ * a gate because "there is nowhere in the CMS for this to go" is a structural
+ * fact about the content, and discovering it after a manager has approved the
+ * copy is too late to be useful.
+ *
+ * Rules match by SHAPE, never by page key or section index. A path allowlist
+ * was rejected because it would let a newly authored section inherit an old
+ * exemption just by landing at the same index — precisely the case this check
+ * exists to catch. Closing a register entry upstream therefore means deleting
+ * its rule, and every section it covered fails until it is mapped.
+ *
+ * @param {Record<string, object>} pages
+ * @param {Array<{id: string, shape: string, reason: string}>} unresolved
+ * @returns {Array<{pageKey: string, path: string, shape: string, reason: string}>}
+ */
+function findUnmappedSections(pages, unresolved) {
+  const known = new Set((unresolved || []).map((rule) => rule.shape))
+  const findings = []
+  for (const [pageKey, page] of Object.entries(pages)) {
+    for (const finding of buildTranscript(page, null, pages).unmapped) {
+      if (known.has(finding.shape)) continue
+      findings.push({ pageKey, ...finding })
+    }
+  }
+  return findings
+}
+
 module.exports = {
   findMissingOrderKeys,
+  findUnmappedSections,
   findBrokenCardTargets,
   findBrokenButtonTargets,
   findBrokenInlineLinks,

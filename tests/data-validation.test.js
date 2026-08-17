@@ -3,7 +3,7 @@
 // "test" (does it happen to pass on today's real page content) — nothing
 // proved it actually catches malformed data.
 const { describe, test, expect } = require('bun:test')
-const { dataSchema } = require('../build_scripts/schema')
+const { dataSchema, pageSchema, PAGE_TYPES } = require('../build_scripts/schema')
 const {
   findMissingOrderKeys,
   findBrokenCardTargets,
@@ -14,6 +14,7 @@ const {
   findListFormatViolations,
   findUnsafeUrls,
   findExternalAssetUrls,
+  findUnmappedSections,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 const path = require('node:path')
@@ -95,6 +96,35 @@ function validData(pageOverrides = {}) {
     order: [['pestsTopic', 'Pests and housing problems']],
   }
 }
+
+describe('page type union', () => {
+  // `type` selects the Karl panel inventory in js/karl-blocks.js, so a typo'd
+  // value would export an EMPTY transcript rather than erroring — an outcome
+  // that reads like a page with no content instead of like a bug. That is why
+  // the field is a closed union rather than the open z.string() it used to be.
+  test('accepts every type the corpus declares', () => {
+    for (const type of PAGE_TYPES) {
+      expect(pageSchema.safeParse(validPage({ type })).success).toBe(true)
+    }
+  })
+
+  test('rejects a type that is not a Karl content type', () => {
+    expect(pageSchema.safeParse(validPage({ type: 'Transactoin' })).success).toBe(false)
+  })
+
+  test('names exactly the eight types in use', () => {
+    expect(PAGE_TYPES).toEqual([
+      'Transaction',
+      'Information',
+      'Resource Collection',
+      'Campaign',
+      'Topic',
+      'Agency',
+      'About us',
+      'Report',
+    ])
+  })
+})
 
 describe('dataSchema', () => {
   test('accepts a minimal valid page', () => {
@@ -798,5 +828,135 @@ describe('findUnsafeUrls', () => {
 
   test('returns nothing for pages with no url fields', () => {
     expect(findUnsafeUrls({ a: { sections: [{ heading: 'H', karl: 'k' }] } })).toEqual([])
+  })
+})
+
+describe('findUnmappedSections', () => {
+  /** One page shaped like a Transaction with a section-level button (U1). */
+  function pageWithSectionButton(overrides = {}) {
+    return {
+      slug: 's',
+      type: 'Transaction',
+      title: 'T',
+      summary: 'S',
+      audience: ['Tenants'],
+      reading: 'Grade 6',
+      sections: [
+        {
+          heading: 'Look it up',
+          karl: 'Custom section.',
+          paragraphs: ['Prose.'],
+          button: 'Search records',
+          buttonUrl: 'https://sf.gov/search',
+          ...overrides,
+        },
+      ],
+    }
+  }
+
+  const U1_ONLY = [
+    {
+      id: 'U1',
+      shape: 'section-button-outside-step',
+      docLine: 828,
+      reason: 'Section-level buttons outside a step have no documented Karl slot.',
+    },
+  ]
+
+  test('a known unmapped shape passes', () => {
+    expect(findUnmappedSections({ p: pageWithSectionButton() }, U1_ONLY)).toEqual([])
+  })
+
+  test('an unmapped shape with no rule fails', () => {
+    // The ratchet, and the whole difference between this and the report
+    // `bun run audit-cards` is: a new class of unmappable content stops the
+    // build rather than being noticed by whoever happens to read the output.
+    const findings = findUnmappedSections({ p: pageWithSectionButton() }, [])
+    expect(findings.map((finding) => finding.shape)).toContain('section-button-outside-step')
+    expect(findings[0].pageKey).toBe('p')
+  })
+
+  test('exemption is by SHAPE, never by page key or index', () => {
+    // A path allowlist would let a NEWLY AUTHORED section inherit an old
+    // exemption just by landing at the same index — exactly the case this
+    // check exists to catch. Two different pages carrying the same shape are
+    // both exempt, and neither is exempt because of where it sits.
+    const pages = {
+      a: pageWithSectionButton({ button: 'One' }),
+      b: pageWithSectionButton({ button: 'Two' }),
+    }
+    expect(findUnmappedSections(pages, U1_ONLY)).toEqual([])
+  })
+
+  test('a different shape at the same path is still reported', () => {
+    // The other half of the same property: the exemption travels with the
+    // shape, so a section at index 0 carrying something else entirely gains
+    // nothing from U1's rule.
+    const pages = {
+      a: {
+        slug: 's',
+        type: 'Transaction',
+        title: 'T',
+        summary: 'S',
+        audience: ['Tenants'],
+        reading: 'Grade 6',
+        sections: [{ heading: 'Fees', karl: 'Custom section.', table: [['A', 'B']] }],
+      },
+    }
+    expect(findUnmappedSections(pages, U1_ONLY).map((finding) => finding.path)).toEqual([
+      'sections.0.table',
+    ])
+  })
+
+  test('no rules at all still returns findings rather than throwing', () => {
+    expect(() => findUnmappedSections({ p: pageWithSectionButton() }, undefined)).not.toThrow()
+  })
+
+  test('the real corpus is fully covered', () => {
+    // The ratchet's resting state, and the assertion `bun run validate`
+    // enforces. A failure here names content authored with no Karl
+    // destination: decide the destination, or open a register entry and add
+    // its shape rule. Do not widen an existing rule to make it green.
+    const { loadPageData } = require('../build_scripts/load-pages.js')
+    const { UNRESOLVED } = require('../js/karl-blocks.js')
+    expect(findUnmappedSections(loadPageData().pages, UNRESOLVED)).toEqual([])
+  })
+})
+
+describe('transcript over-coverage', () => {
+  // The mirror of findUnmappedSections. That check catches content reaching NO
+  // panel; this one catches content reaching TWO, which no existing gate could
+  // see — `consumed` is a Set, so a double emission is invisible to the
+  // unmapped sweep, and the unit suite's entry lookup is a `.find()` that
+  // returns the first match and is structurally blind to a second.
+  //
+  // It cost a real defect before it existed: Information's `related` panel
+  // matches both `component: 'related'` and any `title-only` card section, a
+  // Related panel is usually both, and the transcript told an editor to add the
+  // same page references twice.
+  //
+  // Two entries for one section are legitimate ONLY when they take different
+  // halves of it — Resource Collection's `introductory_text` takes the prose
+  // and `body` takes the links — so the assertion is on the scope, not on the
+  // count.
+  test('no section is emitted twice into the same scope', () => {
+    const { loadPageData } = require('../build_scripts/load-pages.js')
+    const { buildTranscript } = require('../js/karl-transcript.js')
+    const pages = loadPageData().pages
+
+    const collisions = []
+    for (const [pageKey, page] of Object.entries(pages)) {
+      const scopesBySection = new Map()
+      for (const entry of buildTranscript(page, null, pages).entries) {
+        if (entry.sectionIndex === undefined) continue
+        const seen = scopesBySection.get(entry.sectionIndex) || []
+        if (seen.includes(entry.scope)) {
+          collisions.push(`${pageKey} sections.${entry.sectionIndex} scope=${entry.scope}`)
+        }
+        seen.push(entry.scope)
+        scopesBySection.set(entry.sectionIndex, seen)
+      }
+    }
+    expect(collisions).toEqual([])
   })
 })

@@ -8,6 +8,13 @@ node_modules/
 data/page_inventory.json
 data/page_inventory.csv
 
+# Karl transcripts (`bun run export:karl`), generated from pages/*.js and the
+# panel inventory in js/karl-blocks.js. Never hand-edited, and stale the moment
+# page copy changes. The reviewer-facing path is the Help-tab panel, which
+# renders the same transcript with that browser's own edits applied; this
+# directory is the whole-corpus snapshot for someone working from a checkout.
+/review/karl-transcripts/
+
 # Self-contained single-file export (`bun run build:singlefile`). Produced by
 # vite-plugin-singlefile, which replaced the hand-rolled script/style
 # concatenation that used to emit manager-review-single-file.html and
@@ -71,6 +78,8 @@ google-service-account.json
 
 # Local tool settings/credentials
 .poolside/
+.karl-session.json
+.karl-cookies.json
 
 # Serena's per-machine project index and language-server config. It is written
 # on first use by whichever agent has Serena attached, describes that machine's
@@ -106,6 +115,17 @@ google-service-account.json
 /.review-api-*/
 /.ai-api-*/
 agent-evals-regression-gate.zip
+
+# JetBrains Junie's local copy of the agent skills. Unlike `.cursor/`,
+# `.codex/` and `.claude/`, which carry a handful of deliberately tracked
+# pointer files (see "Cross-tool canon" in AGENTS.md), this one is a
+# generated 274-file duplicate of skills the repo already tracks under
+# `.claude/skills/`, so nothing here is worth reviewing or versioning.
+# It also has to be ignored rather than merely left untracked: Prettier 3
+# reads `.gitignore` as well as `.prettierignore`, and 206 of these files
+# fail `format:check` — enough to bury the handful of real findings the
+# lint step exists to surface.
+.junie/
 
 # Locally-installed agent skills (skill-manager tooling), the whole
 # directory rather than the itemized file list below — new skills installed
@@ -226,3 +246,16 @@ agent-evals-regression-gate/agent-evals-regression-gate/SKILL.md
 # regenerates it on demand, and a stale copy of a passing run is exactly the
 # kind of artifact that gets mistaken for evidence later.
 /test_output.txt
+
+# One-off capture output from the build_scripts/audit/ crawlers and a Figma
+# token export — ~7,000 lines of machine-written fixtures that nothing in the
+# build, the tests or the app reads. `data/page_inventory.*` is already ignored
+# above for the same reason; these were simply missed, which is not a harmless
+# omission: commit 594cec9 untracked exactly these seven files after a
+# `git add -A` swept them in, and with no ignore rule a later `git add -A` put
+# every one of them straight back. An ignore entry is what makes that
+# correction hold rather than needing to be made again.
+/data/audit_fixtures/
+/data/figma-tokens.json
+/data/figma-components-kit.svg
+/data/figma-swatches.svg

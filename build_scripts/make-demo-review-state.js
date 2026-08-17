@@ -181,7 +181,6 @@ function build() {
           decision: 'Needs review',
           notes: 'First pass — reading through.',
           risks_or_blockers: '',
-          follow_up_owner: '',
         },
         { timestamp: isoDaysAgo(item.daysAgo + 1, 14), updatedBy: 'local' }
       )
@@ -199,7 +198,6 @@ function build() {
         decision: item.decision,
         notes: item.notes,
         risks_or_blockers: item.risks || '',
-        follow_up_owner: item.owner || '',
       },
       { timestamp, updatedBy: 'local' }
     )

@@ -284,7 +284,6 @@ import { hasValidPageData } from './utils.js'
       decision: getValue('reviewDecision') || 'Needs review',
       notes: getValue('reviewNotes'),
       risks_or_blockers: getValue('reviewRisks'),
-      follow_up_owner: getValue('reviewOwner'),
       reading_target: page.reading || '',
       updated_at: new Date().toISOString(),
     })
@@ -331,7 +330,6 @@ import { hasValidPageData } from './utils.js'
       state.ui.last_page_key = snapshot.page_key
       state.ui.show_karl_tags = document.getElementById('tagToggle')?.checked !== false
       state.globals.reviewer = snapshot.reviewer
-      state.globals.owner = snapshot.follow_up_owner
 
       // A decision change IS a discrete review round, even though it
       // arrives through this same autosave path (the sidebar <select> and
@@ -417,7 +415,6 @@ import { hasValidPageData } from './utils.js'
     setValue('reviewDecision', 'Needs review')
     setValue('reviewNotes', '')
     setValue('reviewRisks', '')
-    setValue('reviewOwner', state?.globals?.owner || 'David')
   }
 
   /**
@@ -552,7 +549,6 @@ import { hasValidPageData } from './utils.js'
       setValue('reviewDecision', saved.decision || 'Needs review')
       setValue('reviewNotes', saved.notes || '')
       setValue('reviewRisks', saved.risks_or_blockers || '')
-      setValue('reviewOwner', saved.follow_up_owner || state.globals.owner || 'David')
       // Title and summary patch their own DOM node directly above; the CTA
       // cannot (see updateMockupTextFromSavedState's comment on that branch)
       // and reports whether it changed instead, so a CTA-only save still

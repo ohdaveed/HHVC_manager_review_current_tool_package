@@ -103,6 +103,12 @@ const FILES_WITH_DECISION_LITERALS = [
   'js/ux-improvements-workspace.js',
   'js/manager-review-export.js',
   'js/review-ops-data.js',
+  // The Karl transcript prints the page's decision at the top and marks a
+  // not-Approved page on every panel, so it compares against 'Approved' by
+  // value and defaults an unreviewed page to 'Needs review'. Renaming either
+  // label silently stops the comparison matching, and the visible symptom
+  // would be an unapproved page exporting as though it were signed off.
+  'js/karl-transcript.js',
   'index.html',
 ]
 
