@@ -14,6 +14,7 @@ const {
   findListFormatViolations,
   findUnsafeUrls,
   findExternalAssetUrls,
+  findUnmappedSections,
   countUnverifiedClaims,
 } = require('../build_scripts/data-checks')
 const path = require('node:path')
@@ -827,5 +828,97 @@ describe('findUnsafeUrls', () => {
 
   test('returns nothing for pages with no url fields', () => {
     expect(findUnsafeUrls({ a: { sections: [{ heading: 'H', karl: 'k' }] } })).toEqual([])
+  })
+})
+
+describe('findUnmappedSections', () => {
+  /** One page shaped like a Transaction with a section-level button (U1). */
+  function pageWithSectionButton(overrides = {}) {
+    return {
+      slug: 's',
+      type: 'Transaction',
+      title: 'T',
+      summary: 'S',
+      audience: ['Tenants'],
+      reading: 'Grade 6',
+      sections: [
+        {
+          heading: 'Look it up',
+          karl: 'Custom section.',
+          paragraphs: ['Prose.'],
+          button: 'Search records',
+          buttonUrl: 'https://sf.gov/search',
+          ...overrides,
+        },
+      ],
+    }
+  }
+
+  const U1_ONLY = [
+    {
+      id: 'U1',
+      shape: 'section-button-outside-step',
+      docLine: 828,
+      reason: 'Section-level buttons outside a step have no documented Karl slot.',
+    },
+  ]
+
+  test('a known unmapped shape passes', () => {
+    expect(findUnmappedSections({ p: pageWithSectionButton() }, U1_ONLY)).toEqual([])
+  })
+
+  test('an unmapped shape with no rule fails', () => {
+    // The ratchet, and the whole difference between this and the report
+    // `bun run audit-cards` is: a new class of unmappable content stops the
+    // build rather than being noticed by whoever happens to read the output.
+    const findings = findUnmappedSections({ p: pageWithSectionButton() }, [])
+    expect(findings.map((finding) => finding.shape)).toContain('section-button-outside-step')
+    expect(findings[0].pageKey).toBe('p')
+  })
+
+  test('exemption is by SHAPE, never by page key or index', () => {
+    // A path allowlist would let a NEWLY AUTHORED section inherit an old
+    // exemption just by landing at the same index — exactly the case this
+    // check exists to catch. Two different pages carrying the same shape are
+    // both exempt, and neither is exempt because of where it sits.
+    const pages = {
+      a: pageWithSectionButton({ button: 'One' }),
+      b: pageWithSectionButton({ button: 'Two' }),
+    }
+    expect(findUnmappedSections(pages, U1_ONLY)).toEqual([])
+  })
+
+  test('a different shape at the same path is still reported', () => {
+    // The other half of the same property: the exemption travels with the
+    // shape, so a section at index 0 carrying something else entirely gains
+    // nothing from U1's rule.
+    const pages = {
+      a: {
+        slug: 's',
+        type: 'Transaction',
+        title: 'T',
+        summary: 'S',
+        audience: ['Tenants'],
+        reading: 'Grade 6',
+        sections: [{ heading: 'Fees', karl: 'Custom section.', table: [['A', 'B']] }],
+      },
+    }
+    expect(findUnmappedSections(pages, U1_ONLY).map((finding) => finding.path)).toEqual([
+      'sections.0.table',
+    ])
+  })
+
+  test('no rules at all still returns findings rather than throwing', () => {
+    expect(() => findUnmappedSections({ p: pageWithSectionButton() }, undefined)).not.toThrow()
+  })
+
+  test('the real corpus is fully covered', () => {
+    // The ratchet's resting state, and the assertion `bun run validate`
+    // enforces. A failure here names content authored with no Karl
+    // destination: decide the destination, or open a register entry and add
+    // its shape rule. Do not widen an existing rule to make it green.
+    const { loadPageData } = require('../build_scripts/load-pages.js')
+    const { UNRESOLVED } = require('../js/karl-blocks.js')
+    expect(findUnmappedSections(loadPageData().pages, UNRESOLVED)).toEqual([])
   })
 })
