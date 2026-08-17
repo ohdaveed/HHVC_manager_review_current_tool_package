@@ -55,8 +55,10 @@ they state too weakly to act on:
   `happy-dom`. Nothing in `package.json` says so.
 - **`format:check` is the only linter CI enforces.** Its own description calls
   it "the project's linter", which undersells the consequence: there is no
-  ESLint and no `tsc` anywhere in this repo, so Prettier is the entire gate a
-  CI run can fail on. `lint:anti-slop` is a second linter, but a deliberately
+  ESLint and no `tsc` anywhere in this repo, so Prettier is the whole of the
+  lint gate. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+  the single-file build, the unit tests, Playwright — but not one of those
+  checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
   below. No single script description can state that relationship.
 
