@@ -2,6 +2,53 @@
 // escapeHtml is available for legend rendering.
 
 import { escapeHtml } from './utils.js'
+import { guideForContext, linkShapeMeta, unresolvedDescription } from './karl-guide-registry.js'
+
+let guideId = 0
+
+function nextKarlGuideId() {
+  guideId += 1
+  return `karl-guide-${guideId}`
+}
+
+function normalizeKarlGuide(options = {}) {
+  return guideForContext(options)
+}
+
+function guideStatusLabel(guide) {
+  if (guide?.unresolvedId) return `${guide.unresolvedId} unresolved`
+  if (guide?.status === 'inherited') return 'Inherited value'
+  if (guide?.status === 'mockup-only') return 'Mockup only'
+  return guide?.evidence ? `${guide.evidence} confirmed` : 'Review mapping'
+}
+
+function guideCopyValues(values = []) {
+  return values
+    .filter(
+      (item) =>
+        item &&
+        typeof item.label === 'string' &&
+        item.label.length > 0 &&
+        typeof item.value === 'string'
+    )
+    .map((item) => ({ label: item.label, value: item.value, source: item.source || 'visible' }))
+}
+
+function renderKarlGuidePanel(guide, panelId) {
+  const values = guideCopyValues(guide.values)
+  const unresolved = guide.unresolvedId
+    ? `<p class="karl-guide-unresolved"><strong>${escapeHtml(guide.unresolvedId)}:</strong> ${escapeHtml(unresolvedDescription(guide.unresolvedId))}</p>`
+    : ''
+  const valueRows = values.length
+    ? `<div class="karl-guide-values"><h4>Copy visible values</h4>${values
+        .map(
+          (item) =>
+            `<div class="karl-guide-value"><div><strong>${escapeHtml(item.label)}</strong><span class="karl-guide-value-source">${escapeHtml(item.source)}</span><code>${escapeHtml(item.value)}</code></div><button type="button" class="karl-guide-copy" data-karl-copy="${escapeHtml(item.value)}" aria-label="Copy ${escapeHtml(item.label)}">Copy</button></div>`
+        )
+        .join('')}</div>`
+    : ''
+  return `<div id="${escapeHtml(panelId)}" class="karl-guide-panel" hidden><div class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></div><ol class="karl-guide-steps">${guide.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${guide.path ? `<p class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></p>` : ''}${guide.linkShape ? `<p class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</p>` : ''}${unresolved}${valueRows}</div>`
+}
 const KARL_TAG_KINDS = {
   meta: {
     label: 'Metadata',
@@ -109,13 +156,14 @@ function renderKarlTagLegend(variant = 'full') {
   const notes =
     variant === 'full'
       ? `<div class="karl-tag-legend-notes">
-          <strong class="karl-tag-legend-title">Reading a tag</strong>
+          <strong class="karl-tag-legend-title">Using the Karl guide</strong>
           <ul class="karl-tag-legend-notes-list">
-            <li><strong>Report Content › Table block</strong> — the CMS path, when the note names one.</li>
-            <li>Bold text — the specific field or block.</li>
-            <li>Lighter text below — the reviewer's placement rationale.</li>
-            <li><span class="karl-tag-flag">Unresolved mapping</span> — an open question or editorial hold, not a settled placement.</li>
-            <li><span class="karl-tag-inherit">Card text won't publish</span> — Karl renders the linked page's own title/description here instead of this card's fields.</li>
+            <li>Open a tag to follow numbered Karl admin steps and see the exact visible values.</li>
+            <li>Copy buttons copy the displayed title, text, URL, or inherited destination value.</li>
+            <li><strong>E1–E4</strong> identifies the evidence tier; <strong>U#</strong> means a decision is still required.</li>
+            <li>Page references, Button links, Resources links, Campaign Related links, and Draftail links accept different fields.</li>
+            <li><span class="karl-tag-inherit">Inherited value</span> means Karl reads the linked page; Related and Resource Collection entries are title-only.</li>
+            <li>Audience, reading targets, QA metadata, and unresolved fields are mockup guidance, not publishable Karl fields.</li>
           </ul>
         </div>`
       : ''
@@ -139,4 +187,13 @@ function renderKarlTagLegend(variant = 'full') {
 window.KARL_TAG_KINDS = KARL_TAG_KINDS
 window.karlKindMeta = karlKindMeta
 
-export { karlKindMeta, parseKarlLabel, renderKarlTagLegend }
+export {
+  guideCopyValues,
+  guideStatusLabel,
+  karlKindMeta,
+  nextKarlGuideId,
+  normalizeKarlGuide,
+  parseKarlLabel,
+  renderKarlGuidePanel,
+  renderKarlTagLegend,
+}

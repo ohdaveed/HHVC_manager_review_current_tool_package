@@ -9,6 +9,20 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     'This page is for teachers, youth program leaders, and families who want to host a free mosquito science workshop.',
   ],
   reading: 'Grade 7',
+  karlGuide: {
+    path: 'Content → Spotlight 1 or Spotlight 2 → Spotlight',
+    panel: 'Spotlight 1 / Spotlight 2',
+    block: 'Spotlight',
+    field: 'Spotlight description',
+    rawField: 'spotlight_1',
+    steps: [
+      'Open Karl admin → Pages → Add child page → Campaign.',
+      'Open Content → Spotlight 1 or Spotlight 2 and add a Spotlight block.',
+      'Copy the visible title and description, choose image alignment and position, then add the optional Button link.',
+    ],
+    evidence: 'E1',
+    status: 'confirmed',
+  },
   editorNote:
     'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md). Spotlight, Additional-content Accordion sections, and Top facts now render as their own real-Karl-matching components (verified live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity) — remaining Campaign page-level fields with no mockup equivalent: Primary agency, Logo, Background header image, Color theme (no source image assets exist for this illustrative program). Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   editorStatus: 'placeholder',

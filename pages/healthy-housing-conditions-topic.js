@@ -9,6 +9,20 @@ window.HHVC_PAGES['healthyHousingTopic'] = {
     'This page is for tenants, property owners and managers, and anyone researching healthy-housing services in San Francisco.',
   ],
   reading: 'Grade 6',
+  karlGuide: {
+    path: 'Content → Child topics → Content → Section content',
+    panel: 'Child topics',
+    block: 'Content',
+    field: 'Section content',
+    rawField: 'content_fields',
+    steps: [
+      'Open Karl admin → Pages → Add child page → Topic.',
+      'Open Content → Child topics and choose Content for authored sections.',
+      'Use Section content for Text, Resources, Spotlight, or Button link blocks as appropriate.',
+    ],
+    evidence: 'E1',
+    status: 'confirmed',
+  },
   editorNote:
     "New Topic-type page mock, verified against the real, currently-live sf.gov/topics--healthy-housing-conditions — a Topic page that sits exactly where HHVC's own program belongs in SF.gov's real information architecture, one level above where this mockup's Agency page (pestsTopic) sits. Field mapping confirmed against docs/wagtail-content-mapping.md's \"Verified against the real Karl 'Topic' add-page form\" section (2026-07-05) plus this live re-check (2026-08-12). Every card below targets a page this mockup already has — no invented pages. The live page's own 'Lead poisoning issues'/asbestos content has no equivalent anywhere in this mockup and sits outside HHVC's established Article 11 scope (CLAUDE.md's banned-terms list), so it is not reproduced; the second Services sub-group below (\"Look up records\") substitutes this mockup's own real lookup Transaction pages in its place. Mockup fields with no equivalent here, matching every other page type's own documented gaps: Primary agency, Set top-level?, Child topics, Timeline (no other Topic pages exist in this mockup to nest under or list as children).",
   sections: [

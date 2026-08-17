@@ -3,10 +3,36 @@
 // independent of whatever the current pages/*.js content happens to be.
 const { z } = require('zod')
 
+const karlGuideValueSchema = z.object({
+  label: z.string().min(1),
+  value: z.string(),
+  source: z.enum(['visible', 'inherited', 'mockup-only', 'derived']).optional(),
+})
+
+const karlGuideSchema = z.object({
+  path: z.string().optional(),
+  panel: z.string().optional(),
+  block: z.string().optional(),
+  field: z.string().optional(),
+  rawField: z.string().optional(),
+  linkShape: z
+    .enum(['page-reference', 'button-link', 'resources-list', 'campaign-related', 'rich-text-link'])
+    .optional(),
+  steps: z.array(z.string().min(1)).min(1),
+  evidence: z.enum(['E1', 'E2', 'E3', 'E4', 'U']).optional(),
+  status: z.enum(['confirmed', 'inherited', 'mockup-only', 'unresolved']).optional(),
+  unresolvedId: z
+    .string()
+    .regex(/^U(?:[1-9]|1[0-9]|20)$/)
+    .optional(),
+  values: z.array(karlGuideValueSchema).optional(),
+})
+
 const imageSchema = z.object({
   src: z.string().min(1),
   alt: z.string().min(1),
   karl: z.string().optional(),
+  karlGuide: karlGuideSchema.optional(),
   caption: z.string().optional(),
 })
 
@@ -16,6 +42,7 @@ const cardSchema = z.object({
   target: z.string().optional(),
   url: z.string().optional(),
   karl: z.string().optional(),
+  karlGuide: karlGuideSchema.optional(),
   fileType: z.string().optional(),
   unverified: z.boolean().optional(),
   unverifiedReason: z.string().optional(),
@@ -24,6 +51,7 @@ const cardSchema = z.object({
 const calloutSchema = z.object({
   text: z.string().min(1),
   karl: z.string().optional(),
+  karlGuide: karlGuideSchema.optional(),
   title: z.union([z.string(), z.literal(false)]).optional(),
   variant: z.enum(['info', 'warning', 'note']).optional(),
 })
@@ -42,6 +70,7 @@ const stepSchema = z.object({
   buttonTarget: z.string().optional(),
   buttonUrl: z.string().optional(),
   karl: z.string().optional(),
+  karlGuide: karlGuideSchema.optional(),
   callout: calloutSchema.optional(),
 })
 
@@ -71,6 +100,7 @@ const sectionSchema = z.object({
   // latter. Orthogonal to `open`, which only has meaning for an accordion.
   flat: z.boolean().optional(),
   karl: z.string().min(1),
+  karlGuide: karlGuideSchema.optional(),
   paragraphs: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
   steps: z.array(stepSchema).optional(),
   bullets: z.array(z.union([z.string(), unverifiedItemSchema])).optional(),
@@ -128,6 +158,7 @@ const spotlightSchema = z.object({
   buttonTarget: z.string().optional(),
   buttonUrl: z.string().optional(),
   karl: z.string().optional(),
+  karlGuide: karlGuideSchema.optional(),
 })
 
 const pageSchema = z.object({
@@ -153,6 +184,7 @@ const pageSchema = z.object({
   reportDate: z.string().optional(),
   printVersionUrl: z.string().optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
+  karlGuide: karlGuideSchema.optional(),
   sections: z.array(sectionSchema).optional(),
 })
 
@@ -172,4 +204,6 @@ module.exports = {
   whatToKnowSchema,
   contactSchema,
   spotlightSchema,
+  karlGuideSchema,
+  karlGuideValueSchema,
 }

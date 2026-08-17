@@ -9,6 +9,20 @@ window.HHVC_PAGES['article11Compliance'] = {
     'This page is for property owners and managers responsible for Article 11 compliance.',
   ],
   reading: 'Grade 7',
+  karlGuide: {
+    path: 'Content → Information section → Title and text',
+    panel: 'Information section',
+    block: 'Title and text',
+    field: 'Text',
+    rawField: 'information_section',
+    steps: [
+      'Open Karl admin → Pages → Add child page → Information.',
+      'Open Content → Information section and choose Title and text.',
+      'Enter each visible section heading as Title and its visible paragraphs or bullets as Text.',
+    ],
+    evidence: 'E1',
+    status: 'confirmed',
+  },
   editorNote:
     "Information page modeled on the SF.gov minimum wage ordinance pattern (sf.gov/information--minimum-wage-ordinance): a short compliance-first front door, not a replacement for the deep-dive `article11Guide` Report page it links out to. Every fact here (fee tiers, 72-hour window, 2-year records, PCO licensing, pesticide notice, training) is pulled from `article11Guide` and `payFee`, not re-derived — see each section's karl note for which source page to cross-check. The one exception is the vermin-log requirement, which no other mockup page carries: it comes straight from the Director's Rules excerpt at `docs/source/hhvc-policy/2026-07-08-residential-building-owner-operator-guidelines-vector-control.md` (item 2), the same sentence the 72-hour window is quoted from. Worth adding to `article11Guide`'s owner-responsibility table as well, so this page keeps summarizing rather than becoming the sole source for it. Two open questions carried from the design spec, not blocking: (1) whether Karl's Information content type has a distinct checklist/callout-with-list block, or whether the bulleted list used below (see \"What Article 11 requires\" section) is the closest real-schema fit; (2) the same `cost` panel radio-option gap already flagged on `payFee` — no \"varies by unit count\" option, so Range or Minimum-and-up is Digital Services' call.",
   editorStatus: 'needs-review',

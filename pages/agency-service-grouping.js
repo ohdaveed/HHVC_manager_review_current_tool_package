@@ -9,6 +9,20 @@ window.HHVC_PAGES['pestsTopic'] = {
     'This page is for tenants, property owners and managers, and anyone reporting a pest or housing health problem.',
   ],
   reading: 'Grade 6',
+  karlGuide: {
+    path: 'Content → Section title 1 → Subsection → Links',
+    panel: 'Section title 1',
+    block: 'Subsection',
+    field: 'Title and links',
+    rawField: 'services',
+    steps: [
+      'Open Karl admin → Pages → Add child page → Agency.',
+      'Open Content → Section title 1 and keep the required services_title value.',
+      'Add a Subsection, enter this section heading as Title, then add each card as SF.gov page or External link.',
+    ],
+    evidence: 'E1',
+    status: 'confirmed',
+  },
   seoTitle: 'Healthy Housing and Vector Control | SF.gov',
   metaDescription:
     'Report pest, vector, and housing health problems, get tenant help, and find owner resources from Healthy Housing and Vector Control.',

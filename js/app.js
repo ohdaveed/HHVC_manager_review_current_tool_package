@@ -96,7 +96,9 @@ function init() {
     page.metaDescriptionEdited = true
     updateSearchPreview()
   })
-  document.getElementById('tagToggle').addEventListener('change', (e) => {
+  const tagToggle = document.getElementById('tagToggle')
+  document.body.classList.toggle('hide-karl-tags', !tagToggle.checked)
+  tagToggle.addEventListener('change', (e) => {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })
   initChecklist()

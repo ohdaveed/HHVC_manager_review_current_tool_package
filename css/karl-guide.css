@@ -1,0 +1,213 @@
+.karl-guide {
+  display: inline-flex;
+  position: relative;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.karl-guide-trigger {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  gap: var(--ds-space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.karl-guide-trigger:focus-visible {
+  outline: 3px solid var(--legacy-action-blue);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+.karl-guide-trigger .karl-tag {
+  margin-bottom: 0;
+}
+
+.karl-guide-trigger-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.karl-guide-trigger[aria-expanded='true'] .karl-guide-trigger-icon {
+  transform: rotate(45deg);
+}
+
+.karl-guide-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--ds-space-1));
+  left: 0;
+  width: min(31rem, calc(100vw - 2rem));
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.18);
+  font-size: var(--ds-text-label);
+  font-weight: 400;
+  text-align: left;
+}
+
+.karl-guide-panel[hidden] {
+  display: none;
+}
+
+.karl-guide-panel-header,
+.karl-guide-value {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-2);
+}
+
+.karl-guide-panel-header {
+  margin-bottom: var(--ds-space-2);
+  font-size: var(--ds-text-card);
+}
+
+.karl-guide-status,
+.karl-guide-value-source {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: var(--ds-text-micro);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.karl-guide-steps {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin: 0 0 var(--ds-space-2);
+  padding-left: 1.35rem;
+}
+
+.karl-guide-steps li {
+  margin: 0;
+  padding-left: 0.15rem;
+  line-height: 1.35;
+}
+
+.karl-guide-path,
+.karl-guide-link-shape,
+.karl-guide-unresolved {
+  margin: var(--ds-space-2) 0 0;
+  line-height: 1.35;
+}
+
+.karl-guide-path span,
+.karl-guide-value code {
+  display: block;
+  margin-top: 0.2rem;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: var(--ds-text-micro);
+}
+
+.karl-guide-values {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin-top: var(--ds-space-3);
+}
+
+.karl-guide-values h4 {
+  margin: 0;
+  font-size: var(--ds-text-label);
+}
+
+.karl-guide-value {
+  padding: var(--ds-space-1) 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.karl-guide-value > div {
+  min-width: 0;
+}
+
+.karl-guide-value strong {
+  display: block;
+}
+
+.karl-guide-value-source {
+  margin-left: var(--ds-space-1);
+  font-size: 0.6rem;
+  text-transform: none;
+}
+
+.karl-guide-copy {
+  flex: 0 0 auto;
+  min-height: 2rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  color: var(--legacy-action-blue);
+  font: inherit;
+  font-size: var(--ds-text-micro);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.karl-guide-copy:hover,
+.karl-guide-copy:focus-visible {
+  border-color: var(--legacy-action-blue);
+  background: var(--surface-sunken);
+}
+
+.review-action-with-guide {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ds-space-1);
+  max-width: 100%;
+}
+
+.karl-copy-fallback {
+  position: fixed;
+  inset: -10000px auto auto -10000px;
+  opacity: 0;
+}
+
+body.hide-karl-tags .karl-guide {
+  display: none !important;
+}
+
+@media (max-width: 42rem) {
+  .karl-guide-panel {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    max-height: calc(100vh - 6rem);
+    overflow: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .karl-guide-trigger-icon {
+    transition: none;
+  }
+}

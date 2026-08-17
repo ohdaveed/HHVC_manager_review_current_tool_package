@@ -12,7 +12,13 @@ import {
 } from './ui-controls.js'
 import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
 import { escapeHtml, getPrimaryCta, resolvePageKey, safeUrl, showErrorBanner } from './utils.js'
-import { karlKindMeta, parseKarlLabel } from './karl-tag-meta.js'
+import {
+  karlKindMeta,
+  nextKarlGuideId,
+  normalizeKarlGuide,
+  parseKarlLabel,
+  renderKarlGuidePanel,
+} from './karl-tag-meta.js'
 import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
 // Side-effect import: js/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so this is what guarantees the classifier exists before
@@ -33,14 +39,22 @@ function karlTag(label, kind = 'body', opts = {}) {
     typeof parseKarlLabel === 'function'
       ? parseKarlLabel(label)
       : { breadcrumb: [], headline: String(label ?? ''), rationale: '', flagged: false }
-
+  const guide = normalizeKarlGuide({
+    page: opts.page || pageData[currentPageKey],
+    kind,
+    context: opts.context || {},
+    guide: opts.guide,
+    values: opts.values,
+  })
+  if (opts.inheritanceFact === 'title-and-text') guide.status = 'inherited'
+  const panelId = nextKarlGuideId()
   const breadcrumbHtml = parsed.breadcrumb.length
     ? `<span class="karl-tag-breadcrumb">${parsed.breadcrumb
         .map((seg) => `<span class="karl-tag-crumb">${escapeHtml(seg)}</span>`)
         .join('<span class="karl-tag-crumb-sep" aria-hidden="true">›</span>')}</span>`
     : ''
   const flagHtml = parsed.flagged
-    ? `<span class="karl-tag-flag">${escapeHtml('Unresolved mapping')}</span>`
+    ? `<span class="karl-tag-flag">${escapeHtml('Legacy note needs review')}</span>`
     : ''
   const inheritHtml = INHERIT_BADGE_TEXT[opts.inheritanceFact]
     ? `<span class="karl-tag-inherit" data-inherit="${escapeHtml(opts.inheritanceFact)}">${escapeHtml(INHERIT_BADGE_TEXT[opts.inheritanceFact])}</span>`
@@ -48,13 +62,8 @@ function karlTag(label, kind = 'body', opts = {}) {
   const rationaleHtml = parsed.rationale
     ? `<span class="karl-tag-rationale">${escapeHtml(parsed.rationale)}</span>`
     : ''
-
-  // Karl tags are visual reviewer annotations, not part of the public-page
-  // control they precede. Leaving their long placement notes in the
-  // accessibility tree made a card button announce the entire CMS rationale
-  // before its actual destination; the toolbar toggle is the discoverable
-  // control for showing that visual layer.
-  return `<mark class="karl-tag" data-kind="${escapeHtml(kind)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${breadcrumbHtml}<span class="karl-tag-headline">${escapeHtml(parsed.headline)}</span>${flagHtml}${inheritHtml}${rationaleHtml}</span></mark>`
+  const triggerLabel = `Open Karl guide: ${parsed.headline || meta.label}`
+  return `<span class="karl-guide" data-karl-guide><button type="button" class="karl-guide-trigger" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="${escapeHtml(triggerLabel)}"><mark class="karl-tag" data-kind="${escapeHtml(kind)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${breadcrumbHtml}<span class="karl-tag-headline">${escapeHtml(parsed.headline)}</span>${flagHtml}${inheritHtml}${rationaleHtml}</span></mark><span class="karl-guide-trigger-icon" aria-hidden="true">+</span></button>${renderKarlGuidePanel(guide, panelId)}</span>`
 }
 const EDITOR_QA_STATUS = {
   'needs-review': { icon: '⚠', label: 'Needs review' },
@@ -261,13 +270,23 @@ document.addEventListener('click', (event) => {
   const key = link.getAttribute('data-render-target')
   if (key) window.renderPage(key)
 })
-function button(label, kind = 'primary', target = null, url = null) {
+function button(label, kind = 'primary', target = null, url = null, guideOptions = {}) {
   const cls = kind === 'secondary' ? 'btn secondary' : 'btn'
-  if (url) {
-    return `<a class="${cls}" href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${karlTag(kind === 'secondary' ? 'Links: Body external resource' : 'Button: Primary CTA (external)', 'placement')}${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
-  }
-  const attr = target ? ` data-render-target="${escapeHtml(target)}"` : ''
-  return `<button type="button" class="${cls}"${attr}>${karlTag(kind === 'secondary' ? 'Links: Related Transaction page' : 'Button: Primary CTA', 'placement')}${escapeHtml(label)}</button>`
+  const guideLabel =
+    kind === 'secondary' ? 'Button link: secondary action' : 'Button link: primary action'
+  const guide = karlTag(guideOptions.label || guideLabel, 'placement', {
+    guide: guideOptions.guide,
+    context: { linkShape: 'button-link', ...(guideOptions.context || {}) },
+    values: [
+      { label: 'Link text', value: label, source: 'visible' },
+      ...(url ? [{ label: 'External URL', value: safeUrl(url), source: 'visible' }] : []),
+      ...(target ? [{ label: 'SF.gov page key', value: target, source: 'visible' }] : []),
+    ],
+  })
+  const control = url
+    ? `<a class="${cls}" href="${escapeHtml(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)} <span aria-hidden="true">↗</span></a>`
+    : `<button type="button" class="${cls}"${target ? ` data-render-target="${escapeHtml(target)}"` : ''}>${escapeHtml(label)}</button>`
+  return `<span class="review-action-with-guide">${guide}${control}</span>`
 }
 /**
  * @param {object|null} callout
@@ -295,7 +314,11 @@ function renderCallout(callout, extraClass = '', pathPrefix = '') {
       : callout.title
         ? `<strong${titleAttr}>${escapeHtml(callout.title)}:</strong> `
         : ''
-  return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body')}${title}<span${textAttr}>${formatMarkdown(callout.text)}</span></aside>`
+  const guide =
+    callout.title && callout.title !== false
+      ? { ...(callout.karlGuide || {}), status: 'unresolved', evidence: 'U', unresolvedId: 'U2' }
+      : callout.karlGuide
+  return `<aside class="callout callout--${escapeHtml(variant)} ${extraClass}">${karlTag(callout.karl || 'Body callout', 'body', { guide, context: { role: 'callout' }, values: [{ label: 'Text', value: callout.text, source: 'visible' }, ...(callout.title && callout.title !== false ? [{ label: 'Title', value: callout.title, source: 'mockup-only' }] : [])] })}${title}<span${textAttr}>${formatMarkdown(callout.text)}</span></aside>`
 }
 /**
  * Non-Transaction pages don't get Karl's "What to know before you start" box
@@ -327,7 +350,7 @@ function renderAudienceFraming(page, pageType) {
 }
 function renderImage(image) {
   if (!image?.src) return ''
-  return `<figure class="content-image">${karlTag(image.karl || 'Information section: Image', 'body')}<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt || '')}" loading="lazy" />${image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ''}</figure>`
+  return `<figure class="content-image">${karlTag(image.karl || 'Information section: Image', 'body', { guide: image.karlGuide, context: { role: 'image' }, values: [{ label: 'Alt text', value: image.alt, source: 'visible' }, ...(image.caption ? [{ label: 'Caption', value: image.caption, source: 'visible' }] : [])] })}<img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt || '')}" loading="lazy" />${image.caption ? `<figcaption>${escapeHtml(image.caption)}</figcaption>` : ''}</figure>`
 }
 /**
  * Resolve what a card's description should actually SAY on the published page.
@@ -466,13 +489,58 @@ function cardActionAndDescription(section, card, opts = {}) {
     ? `${escapeHtml(descText)}${card.unverified ? unverifiedPill(card.unverifiedReason) : ''}`
     : ''
   const inheritanceFact = cardInheritanceFact(card, title, descText)
-  return { action, desc, inheritanceFact }
+  return { action, desc, descriptionText: descText, inheritanceFact }
 }
+function cardGuideOptions(section, card, title, desc, inheritanceFact) {
+  const classify = window.cardInheritance?.classifySection
+  const sectionKind = section && typeof classify === 'function' ? classify(section) : 'unknown'
+  const linkShape =
+    sectionKind === 'title-only'
+      ? 'page-reference'
+      : sectionKind === 'inherits'
+        ? 'resources-list'
+        : card.url
+          ? 'resources-list'
+          : 'page-reference'
+  const values = [
+    {
+      label: 'Title',
+      value: title,
+      source:
+        inheritanceFact === 'title' || inheritanceFact === 'title-and-text'
+          ? 'inherited'
+          : 'visible',
+    },
+  ]
+  if (desc)
+    values.push({
+      label: 'Description',
+      value: desc,
+      source:
+        inheritanceFact === 'text' || inheritanceFact === 'title-and-text'
+          ? 'inherited'
+          : 'visible',
+    })
+  if (card.url) values.push({ label: 'URL', value: safeUrl(card.url), source: 'visible' })
+  if (card.target) values.push({ label: 'SF.gov page key', value: card.target, source: 'visible' })
+  return { context: { linkShape, inheritance: sectionKind }, values }
+}
+
 function renderCards(cards = [], section = null) {
   return `<div class="cards">${cards
     .map((c) => {
-      const { action, desc, inheritanceFact } = cardActionAndDescription(section, c)
-      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement', { inheritanceFact })}<h3>${action}</h3>${desc ? `<p>${desc}</p>` : ''}</article>`
+      const { action, desc, descriptionText, inheritanceFact } = cardActionAndDescription(
+        section,
+        c
+      )
+      const guideOptions = cardGuideOptions(
+        section,
+        c,
+        cardTitle(section, c),
+        descriptionText,
+        inheritanceFact
+      )
+      return `<article class="card">${karlTag(c.karl || 'Linked page item: title + description + link. Use Related section, body link, Resource Collection item, or Agency page link section as appropriate.', 'placement', { inheritanceFact, ...guideOptions })}<h3>${action}</h3>${desc ? `<p>${desc}</p>` : ''}</article>`
     })
     .join('')}</div>`
 }
@@ -486,15 +554,26 @@ function renderCards(cards = [], section = null) {
 function renderCardList(cards = [], section = null) {
   return `<ul>${cards
     .map((c) => {
-      const { action, desc, inheritanceFact } = cardActionAndDescription(section, c, {
-        relNoreferrer: true,
-        externalMarkClass: 'external-mark',
-      })
+      const { action, desc, descriptionText, inheritanceFact } = cardActionAndDescription(
+        section,
+        c,
+        {
+          relNoreferrer: true,
+          externalMarkClass: 'external-mark',
+        }
+      )
       const fileBadge = c.fileType
         ? `<span class="file-badge">${escapeHtml(c.fileType)}</span>`
         : ''
       const text = desc ? `<p>${desc}</p>` : ''
-      return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement', { inheritanceFact })}${action}${fileBadge}${text}</li>`
+      const guideOptions = cardGuideOptions(
+        section,
+        c,
+        cardTitle(section, c),
+        descriptionText,
+        inheritanceFact
+      )
+      return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement', { inheritanceFact, ...guideOptions })}${action}${fileBadge}${text}</li>`
     })
     .join('')}</ul>`
 }
@@ -506,7 +585,8 @@ function renderCardList(cards = [], section = null) {
 // wait: tips to help with the problem" printed twice in a row.
 function renderResourcesList(cards = [], section = null) {
   if (!cards.length) return ''
-  return `<div class="resources-list">${karlTag('Body: Resources links', 'placement')}${renderCardList(cards, section)}</div>`
+  const related = section?.component === 'related'
+  return `<div class="resources-list">${karlTag(related ? 'Related page links' : 'Resources links list', 'placement', { context: { role: related ? 'related' : 'resources', linkShape: related ? 'page-reference' : 'resources-list' } })}${renderCardList(cards, section)}</div>`
 }
 // Services subsections render identically to Resources subsections on real
 // sf.gov (a plain divided list, not the boxed 2px-blue-border .service-tile
@@ -519,7 +599,7 @@ function renderServiceTiles(cards = [], section = null) {
 }
 function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
-  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement')}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
+  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement', { context: { role: 'related', linkShape: 'page-reference' }, guide: section?.karlGuide })}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
 }
 // Karl's "Partner agencies" field on a Transaction page — a separate H2
 // section from the Primary-Agency parent link (renderParentLink()) and from
@@ -549,7 +629,7 @@ function renderSteps(steps = [], pathPrefix = '') {
   return `<ol class="step-list">${steps
     .map(
       (s, index) =>
-        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body')}<h3${pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}.title`)}"` : ''}>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout, '', pathPrefix ? `${pathPrefix}.${index}.callout` : '') : ''}</div></li>`
+        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body', { guide: s.karlGuide, context: { role: 'what-to-do' }, values: [{ label: 'Title', value: s.title, source: 'visible' }, ...(s.text?.length ? [{ label: 'Text', value: s.text.map((item) => (typeof item === 'string' ? item : item.text)).join('\n'), source: 'visible' }] : []), ...(s.bullets?.length ? [{ label: 'Bullets', value: s.bullets.map((item) => (typeof item === 'string' ? item : item.text)).join('\n'), source: 'visible' }] : [])] })}<h3${pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}.title`)}"` : ''}>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout, '', pathPrefix ? `${pathPrefix}.${index}.callout` : '') : ''}</div></li>`
     )
     .join('')}</ol>`
 }
@@ -701,7 +781,7 @@ function renderWhatToKnow(whatToKnow, page) {
     : ''
   const body = `${audienceHtml}${costHtml}${labeledHtml}${unlabeledHtml}`
   if (!body) return ''
-  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body')}<h2 class="what-to-know-heading"><span class="what-to-know-icon" aria-hidden="true">ⓘ</span>What to know</h2>${body}</section>`
+  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body', { context: { role: 'content' }, values: [...(cost ? [{ label: 'Cost', value: cost, source: 'visible' }] : []), ...(audienceItems.length ? [{ label: 'Audience', value: audienceItems.join('\n'), source: 'mockup-only' }] : [])] })}<h2 class="what-to-know-heading"><span class="what-to-know-icon" aria-hidden="true">ⓘ</span>What to know</h2>${body}</section>`
 }
 function renderContactSection(contact, page) {
   const data = contact || resolveContact(page)
@@ -736,7 +816,19 @@ function renderContactSection(contact, page) {
       .join(' ')
     blocks.push(`<h3>Social media</h3><p>${links}</p>`)
   }
-  return `<section class="contact-section section">${karlTag('Contact section', 'placement')}<h2>Contact us</h2>${blocks.join('')}</section>`
+  return `<section class="contact-section section">${karlTag('Contact section', 'placement', {
+    context: { role: 'content' },
+    values: [
+      {
+        label: 'Contact values',
+        value: blocks
+          .map((block) => block.replace(/<[^>]+>/g, ' '))
+          .join(' ')
+          .trim(),
+        source: 'visible',
+      },
+    ],
+  })}<h2>Contact us</h2>${blocks.join('')}</section>`
 }
 // A boxed "Spotlight" block: light-blue box, title + description + optional
 // button, built from a mockup section object rather than the dedicated
@@ -754,7 +846,7 @@ function renderSpotlightSection(section) {
   const cta = section.button
     ? button(section.button, 'primary', section.buttonTarget || null, section.buttonUrl || null)
     : ''
-  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement')}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout, '', base ? `${base}.callout` : '') : ''}${cta}</div></section>`
+  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement', { guide: section.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: section.heading, source: 'visible' }, ...(section.paragraphs?.length ? [{ label: 'Description', value: section.paragraphs.join('\n'), source: 'visible' }] : [])] })}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout, '', base ? `${base}.callout` : '') : ''}${cta}</div></section>`
 }
 // Karl's Campaign "Top facts" widget: a boxed panel of named facts, reusing
 // the exact `what-to-know-subsection` H3-per-item markup/CSS
@@ -773,7 +865,7 @@ function renderTopFacts(section) {
         `<div class="what-to-know-subsection"><h3>${escapeHtml(f.label)}</h3><p>${formatMarkdown(f.text)}${f.unverified ? unverifiedPill(f.unverifiedReason) : ''}</p></div>`
     )
     .join('')
-  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body')}<h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${factsHtml}</section>`
+  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body', { guide: section.karlGuide, context: { role: 'content' }, values: [{ label: 'Section title', value: section.heading, source: 'visible' }] })}<h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${factsHtml}</section>`
 }
 function renderOnThisPage(sections = []) {
   const headings = sections
@@ -858,7 +950,8 @@ function renderSectionInner(section, pageType = 'generic') {
       section.button,
       section.buttonStyle || 'primary',
       section.buttonTarget || null,
-      section.buttonUrl || null
+      section.buttonUrl || null,
+      { guide: { status: 'unresolved', evidence: 'U', unresolvedId: 'U1' } }
     )
   // The section travels with its cards so cardDescription() can ask its `karl`
   // note whether each description is inherited from the destination page.
@@ -873,7 +966,17 @@ function renderSection(section, pageType = 'generic', options = {}) {
   const kind = section.kind || 'body'
   const role = inferSectionRole(section, pageType)
   const anchor = section.heading ? ` id="${sectionAnchorId(section.heading)}"` : ''
-  const tag = options.skipKarl ? '' : karlTag(section.karl || 'Body section', kind)
+  const sectionRole = role === 'what-to-do' ? 'what-to-do' : section.component || role
+  const tag = options.skipKarl
+    ? ''
+    : karlTag(section.karl || 'Body section', kind, {
+        guide: section.karlGuide,
+        context: {
+          role: sectionRole,
+          linkShape: sectionRole === 'related' ? 'page-reference' : undefined,
+        },
+        values: [{ label: 'Section title', value: section.heading, source: 'visible' }],
+      })
   const headingPathAttr =
     typeof section.__sectionIndex === 'number'
       ? ` data-rewrite-field="sections.${section.__sectionIndex}.heading"`
@@ -916,11 +1019,11 @@ function renderServiceGroup(section, pageType) {
 }
 function renderServicesRegion(sections, pageType, karlLabel = 'Topic page Services section') {
   if (!sections.length) return ''
-  return `<div class="services-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Services</h2>${sections.map((s) => renderServiceGroup(s, pageType)).join('')}</div>`
+  return `<div class="services-region">${karlTag(karlLabel, 'placement', { context: { role: 'services', linkShape: 'resources-list' } })}<h2 class="region-title">Services</h2>${sections.map((s) => renderServiceGroup(s, pageType)).join('')}</div>`
 }
 function renderResourcesRegion(sections, pageType, karlLabel = 'Topic page Resources section') {
   if (!sections.length) return ''
-  return `<div class="resources-region">${karlTag(karlLabel, 'placement')}<h2 class="region-title">Resources</h2>${sections.map((s) => renderServiceGroup(s, pageType)).join('')}</div>`
+  return `<div class="resources-region">${karlTag(karlLabel, 'placement', { context: { role: 'resources', linkShape: 'resources-list' } })}<h2 class="region-title">Resources</h2>${sections.map((s) => renderServiceGroup(s, pageType)).join('')}</div>`
 }
 function renderSpotlight(spotlight) {
   if (!spotlight) return ''
@@ -935,7 +1038,7 @@ function renderSpotlight(spotlight) {
         spotlight.buttonUrl || null
       )
     : ''
-  return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement')}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2 data-rewrite-field="spotlight.title">${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [], 'spotlight.paragraphs')}${cta}</div></div></section>`
+  return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement', { guide: spotlight.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: spotlight.title || '', source: 'visible' }, ...(spotlight.paragraphs?.length ? [{ label: 'Description', value: spotlight.paragraphs.join('\n'), source: 'visible' }] : [])] })}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2 data-rewrite-field="spotlight.title">${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [], 'spotlight.paragraphs')}${cta}</div></div></section>`
 }
 function resolveHeroCta(page, whatToDoSections) {
   if (normalizePageType(page.type) !== 'transaction') return null
@@ -977,9 +1080,9 @@ function renderHero(page, heroCta) {
         // confirmed live on sf.gov/topics--housing and
         // sf.gov/topics--healthy-housing-conditions (orange "TOPIC" above
         // the H1), matching the treatment already built for Agency.
-        `${karlTag('Metadata: Karl page type', 'meta')}<div class="eyebrow eyebrow--agency">${escapeHtml(page.type)}</div>`
+        `${karlTag('Metadata: Karl page type', 'meta', { values: [{ label: 'Page type', value: page.type, source: 'visible' }] })}<div class="eyebrow eyebrow--agency">${escapeHtml(page.type)}</div>`
       : pageTypeNormalized === 'transaction'
-        ? `${karlTag('Metadata: Karl page type (renders as "Service")', 'meta')}<div class="eyebrow eyebrow--service">Service</div>`
+        ? `${karlTag('Metadata: Karl page type (renders as "Service")', 'meta', { values: [{ label: 'Page type', value: page.type, source: 'visible' }] })}<div class="eyebrow eyebrow--service">Service</div>`
         : pageTypeNormalized === 'campaign'
           ? // Confirmed via 2 live Campaign pages (sf.gov/shop-dine-sf,
             // sf.gov/1865-til-infinity): no visible eyebrow text renders
@@ -998,8 +1101,18 @@ function renderHero(page, heroCta) {
   const summaryHtml =
     pageTypeNormalized === 'campaign' || pageTypeNormalized === 'about'
       ? ''
-      : `${karlTag('Short summary / Description field', 'meta')}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>`
-  return `<section class="${heroClass}"><div class="hero-inner">${eyebrowHtml}${karlTag('Page title field', 'meta')}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${summaryHtml}${ctaHtml}</div></section>`
+      : `${karlTag('Short summary / Description field', 'meta', { values: [{ label: 'Description', value: page.summary, source: 'visible' }] })}<p class="summary" data-rewrite-field="summary">${escapeHtml(page.summary)}</p>`
+  return `<section class="${heroClass}"><div class="hero-inner">${eyebrowHtml}${karlTag(
+    'Page title field',
+    'meta',
+    {
+      guide: page.karlGuide,
+      values: [
+        { label: 'Title', value: page.title, source: 'visible' },
+        { label: 'Slug', value: page.slug, source: 'visible' },
+      ],
+    }
+  )}<h1 tabindex="-1" data-rewrite-field="title">${escapeHtml(page.title)}</h1>${summaryHtml}${ctaHtml}</div></section>`
 }
 // Every one of the 7 sf.gov reference pages audited for this pass shows one
 // link back to its owning program (e.g. "Environmental Health"), never a
