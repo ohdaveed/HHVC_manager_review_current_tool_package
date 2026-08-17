@@ -75,7 +75,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 48 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 49 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -204,7 +204,17 @@ its own row. The inventory is hand-transcribed from a 930-line prose document
 that keeps changing, and silent drift means an editor is told to type into a
 field that no longer exists. It asserts a MINIMUM row count per type FIRST,
 because a doc-parsing regex that stops matching does not fail — it stops
-checking, and reports zero rows on both sides), and
+checking, and reports zero rows on both sides), `karl-vocabulary` (the check that a `karl` note names a field that exists on
+THAT page's content type. The vocabulary is derived from `js/karl-blocks.js`
+rather than written, because a hand-listed one is a second transcription of the
+field map free to drift from it — the exact failure the check exists to catch —
+and its first version produced false positives for `About` and `Information`,
+real panels it happened not to contain. Per type is the whole point: a flat set
+only asks whether a note sounds Karl-ish, while per type it can catch a note
+naming real fields on the WRONG form, which reads as authoritative and sends an
+editor looking for controls that are not there. It found one on merge — a Topic
+note citing the Help Center as confirming Related support, against an E1 form
+capture recording that Topic has no `related` field at all), and
 `karl-transcript` (the builder itself, driven with hand-built pages rather than
 the real corpus — like `card-inheritance`, so a legitimately added page never
 fails the suite. It pins overlay precedence including the cleared-to-empty

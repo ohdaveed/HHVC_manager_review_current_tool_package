@@ -86,7 +86,7 @@ window.HHVC_PAGES['healthyHousingTopic'] = {
     },
     {
       heading: 'Related',
-      karl: "Maps to Related (raw name related_links, a repeatable StreamField — same field confirmed on Transaction/Campaign). Links to this mockup's 2 Campaign-type educational programs, a realistic editorial choice from a Topic page and confirmed Related support for Topic per the Karl Help Center docs.",
+      karl: 'BLOCKED on U5. Topic has NO `related` field — confirmed at E1 on the live form, unlike Transaction, Information and Campaign, which do. This note previously cited the Karl Help Center as confirming Related support for Topic; the 2026-08-15 form capture contradicts it, and a measurement beats the Help Center. The two Campaign-type programs linked here are a sound editorial choice with nowhere on the Topic form to go: either they move into `content_fields` as a Resources block, or the page drops the panel. Needs a content decision.',
       kind: 'placement',
       component: 'related',
       cards: [
