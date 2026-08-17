@@ -21,6 +21,7 @@ const {
   KARL_PANELS,
   KARL_NAV,
   KARL_FLAGS,
+  PROMOTE_PANEL,
   UNRESOLVED,
   matchesSection,
   panelsFor,
@@ -104,11 +105,15 @@ function tableUnder(heading) {
     }
     inTable = true
     if (/^\s*\|[\s|:-]+\|\s*$/.test(line)) continue // the ---|--- separator
+    const cells = line.split(/(?<!\\)\|/).slice(1, -1)
     rows.push({
-      cells: line
-        .split(/(?<!\\)\|/)
-        .slice(1, -1)
-        .map(normalize),
+      cells: cells.map(normalize),
+      // The RAW first cell alongside the normalized ones, because normalize()
+      // strips `↳` — the document's only marker for a panel nested under
+      // another. The nesting assertion below needs it, and reading the file a
+      // second way to get it is exactly the split-source-of-truth this test
+      // exists to prevent.
+      raw: cells[0] ?? '',
       line: index + 1,
     })
   }
@@ -176,6 +181,53 @@ describe('karl-blocks inventory against docs/karl-export-field-map.md', () => {
         // and the separator differs per row.
         expect(FIELD_MAP_LINES[panel.docLine - 1]).toContain(panel.rawName.split(/[\s,+]/)[0])
       }
+    }
+  })
+
+  test.each(Object.keys(TYPE_HEADINGS))('%s: nesting matches the document', (type) => {
+    // `subPanelOf` is what breadcrumbFor() walks to build a path, so a panel
+    // nested under the wrong parent — or not marked as nested at all — sends an
+    // editor to a field that is not where the guide says it is. The document
+    // marks nesting with a `↳` prefix and nothing else, and normalize() strips
+    // it, so this reads the raw cell.
+    //
+    // It was hand-maintained and already wrong: Transaction's two sub-panels
+    // carried the marker and Agency's three under About did not, so three rows
+    // claimed to be top-level panels of the Agency form.
+    const rows = tableUnder(TYPE_HEADINGS[type])
+    const byRawName = new Map(KARL_PANELS[type].map((panel) => [panel.rawName, panel]))
+    let lastTopLevel = null
+    for (const row of rows) {
+      const rawName = row.cells[1]
+      const panel = byRawName.get(rawName)
+      if (!panel) continue // covered by the transcription test above
+      if (!row.raw.includes('↳')) {
+        lastTopLevel = rawName
+        expect(panel.subPanelOf, `${type} ${rawName} is top-level in the document`).toBeUndefined()
+        continue
+      }
+      // A nested row belongs to the nearest preceding un-nested one, which is
+      // how the document reads down the page.
+      expect(panel.subPanelOf, `${type} ${rawName} is nested under ${lastTopLevel}`).toBe(
+        lastTopLevel
+      )
+    }
+  })
+
+  test('the Promote tab is transcribed from its own table', () => {
+    // The Promote tab is one table shared by all eight types, so it sits
+    // outside KARL_PANELS and outside the per-type sweeps above — which means
+    // nothing checked it at all until this test. It is not optional detail:
+    // `slug` is required, and it is why a page cannot be saved from the
+    // Content tab alone.
+    const row = FIELD_MAP_LINES[PROMOTE_PANEL.docLine - 1]
+    expect(row).toContain('slug')
+    for (const field of PROMOTE_PANEL.fields) {
+      const cited = FIELD_MAP_LINES.slice(
+        PROMOTE_PANEL.docLine - 1,
+        PROMOTE_PANEL.docLine + PROMOTE_PANEL.fields.length
+      )
+      expect(cited.some((line) => line.includes(`\`${field.rawName}\``))).toBe(true)
     }
   })
 

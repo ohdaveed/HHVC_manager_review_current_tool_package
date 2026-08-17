@@ -33,7 +33,7 @@
 // in this repo take no imports, so this indirection is the idiom rather than a
 // workaround — see that file's own note at its foot.
 const isNodeContext = typeof module !== 'undefined' && module.exports
-const { panelsFor, matchesSection, KARL_NAV, KARL_FLAGS } = isNodeContext
+const { panelsFor, matchesSection, KARL_NAV, KARL_FLAGS, PROMOTE_PANEL } = isNodeContext
   ? require('./karl-blocks.js')
   : window.karlBlocks
 const { classifySection } = isNodeContext
@@ -48,26 +48,6 @@ const { getByPath } = isNodeContext ? require('./utils.js') : window.utils
    them as strings, so a renamed decision has to fail somewhere loud. That test
    pins every file spelling an individual label, this one included. */
 const APPROVED_DECISIONS = new Set(['Approved', 'Approved with edits'])
-
-/**
- * The Promote tab, which is identical on all eight types and therefore lives
- * here rather than in each per-type inventory (field map lines 139-145, closing
- * U11). It is still part of the instruction: `slug` is required and sits on
- * this tab, so a page cannot be saved from the Content tab alone.
- */
-const PROMOTE_PANEL = {
-  uiLabel: 'Promote → For search engines',
-  fields: [
-    { label: 'Slug', rawName: 'slug', path: 'slug', required: true },
-    { label: 'Title tag', rawName: 'seo_title', path: 'seoTitle', required: false },
-    {
-      label: 'Meta description',
-      rawName: 'search_description',
-      path: 'metaDescription',
-      required: false,
-    },
-  ],
-}
 
 /**
  * Mockup fields with no Karl destination and no intention of gaining one
@@ -938,7 +918,7 @@ function collectLinks(context, entry, text) {
 /** The Promote tab, identical on all eight types. */
 function emitPromoteTab(context) {
   const entry = newEntry(
-    { uiLabel: PROMOTE_PANEL.uiLabel, rawName: 'promote', docLine: 139 },
+    { uiLabel: PROMOTE_PANEL.uiLabel, rawName: 'promote', docLine: PROMOTE_PANEL.docLine },
     'TYPE'
   )
   for (const field of PROMOTE_PANEL.fields) {

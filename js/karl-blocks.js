@@ -154,6 +154,41 @@ const KARL_NAV = {
 }
 
 /**
+ * The Promote tab, which every one of the eight types carries identically —
+ * so it is one record here rather than a repeated block in each per-type
+ * inventory. The field map documents it in a single table (see `docLine`),
+ * which is what closed `U11`.
+ *
+ * It lives in the INVENTORY rather than in js/karl-transcript.js, where it was
+ * first written, because it is a fact about Karl's form: the same reason every
+ * other panel is here. The builder consumes it; it does not own it.
+ *
+ * Deliberately NOT a member of `KARL_PANELS`, and therefore not returned by
+ * `panelsFor()`. Those are Content-tab panels in the form's own order, and
+ * folding a second tab into that list would put this in the middle of the
+ * sequence an editor works down. It is also shaped differently — flat fields
+ * rather than a block source — because none of these is a StreamField.
+ *
+ * The instruction cannot be dropped for being small: `slug` is required on
+ * every type, and it is the reason a page cannot be saved from the Content tab
+ * alone.
+ */
+const PROMOTE_PANEL = {
+  uiLabel: 'Promote → For search engines',
+  docLine: 149,
+  fields: [
+    { label: 'Slug', rawName: 'slug', path: 'slug', required: true },
+    { label: 'Title tag', rawName: 'seo_title', path: 'seoTitle', required: false },
+    {
+      label: 'Meta description',
+      rawName: 'search_description',
+      path: 'metaDescription',
+      required: false,
+    },
+  ],
+}
+
+/**
  * The unresolved register, as SHAPE RULES rather than as a list of page keys.
  *
  * A path allowlist was rejected: it would let a newly authored section inherit
@@ -1454,6 +1489,7 @@ const KARL_PANELS = {
         kind: 'none',
       },
       docLine: 542,
+      subPanelOf: 'about_description',
     },
     {
       uiLabel: 'Divisions or subcommittees',
@@ -1469,6 +1505,7 @@ const KARL_PANELS = {
         kind: 'none',
       },
       docLine: 543,
+      subPanelOf: 'about_description',
     },
     {
       uiLabel: 'Partner agencies',
@@ -1485,6 +1522,7 @@ const KARL_PANELS = {
         path: 'partnerAgencies',
       },
       docLine: 544,
+      subPanelOf: 'about_description',
     },
     {
       uiLabel: 'People',
@@ -1769,8 +1807,24 @@ const KARL_PANELS = {
 }
 
 if (typeof window !== 'undefined') {
-  window.karlBlocks = { KARL_PANELS, KARL_NAV, KARL_FLAGS, UNRESOLVED, matchesSection, panelsFor }
+  window.karlBlocks = {
+    KARL_PANELS,
+    KARL_NAV,
+    KARL_FLAGS,
+    PROMOTE_PANEL,
+    UNRESOLVED,
+    matchesSection,
+    panelsFor,
+  }
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { KARL_PANELS, KARL_NAV, KARL_FLAGS, UNRESOLVED, matchesSection, panelsFor }
+  module.exports = {
+    KARL_PANELS,
+    KARL_NAV,
+    KARL_FLAGS,
+    PROMOTE_PANEL,
+    UNRESOLVED,
+    matchesSection,
+    panelsFor,
+  }
 }
