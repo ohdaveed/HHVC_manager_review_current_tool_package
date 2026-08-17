@@ -22,8 +22,13 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets. It holds
   because MUI emits scoped `.css-*` classes and there is **no `CssBaseline`** —
   that writes element-level rules on `html`/`body`/`*`, and Emotion injects after
-  the ten stylesheets, so it would win ties inside the shell. Use
-  `ScopedCssBaseline` inside a panel if a reset is ever needed.
+  every one of the repository's own stylesheets, so it would win ties inside the
+  shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed. **The
+  number of those sheets is deliberately not restated here** — it lives in
+  `AGENTS.md` and `CLAUDE.md`, where `tests/doc-counts.test.js` pins it against
+  what is actually in `css/`. This file said "ten" for as long as it existed,
+  written before `css/karl-guide.css` landed and checked by nothing, which is
+  exactly what an unguarded copy of a pinned count does.
 - **`js/react/theme.js` is the only bridge to the design tokens**, read off
   `document.documentElement` at theme-build time so retheming still means
   editing `css/theme.css` only. It resolves them to literal values because a

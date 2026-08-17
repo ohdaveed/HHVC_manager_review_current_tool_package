@@ -20,36 +20,13 @@ never writes anything, and every result carries the same `disclosure` string.
   except folder-index `README.md` files — including the one file named
   `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
-  citable, which is the failure mode this feature exists to avoid.
-  `EXTERNAL_SOURCE_FILES` in the same module carries the documents that live
-  outside that tree as `{path, category}` pairs — the Karl captures, the SF.gov
-  cross-type reading, and the HHVC Web Governance and Content Standards Manual,
-  which `js/plain-language.js` cites by section for every scored `error` rule
-  and which was absent from the corpus until 2026-08-16. **A superseded
-  document is deliberately kept out**: the chunker prefixes a chunk with its
-  heading path and never with the file's opening banner, so a "these claims are
-  now wrong" header cannot travel with chunk 40. That module's own exclusion
-  register names each excluded file and why.
-- **`notebooklm/compliance-standards.csv` is projected, not committed.** It is
-  the corpus's one non-markdown source and the only place a requirement and the
-  code section imposing it share a row.
-  `projectComplianceMatrixToMarkdown()` renders it at ingest time as
-  `hhvc-policy/compliance-standards-matrix.md`, one `###` per requirement (203
-  of them, 204 chunks, median 46 words) so each retrieves as its own citable
-  provision. `retrieveRelevantChunks()` is a flat top-K with no per-category
-  floor, so short formulaic chunks that embed toward each other can spend the
-  whole top-6 on one provision family — the standards manual's prose is what
-  loses that race. Grouping by code section (~61 longer chunks) is the recorded
-  fallback; measure it as "does an audit of a pest page still cite
-  `hhvc-standards`".
-- **Measured 2026-08-16: 95 documents, 1230 chunks** across `hhvc-standards`,
-  `hhvc-policy`, `sfgov-style`, `sfgov-live`, `karl`, `karl-gitbook`, `sfds`
-  and `mockup-draft`. Measure with the real pages loaded — with no `pages`
-  option `collectKnowledgeSources()` omits `mockup-draft` and the total looks
-  like a regression. Adding a category means adding it to
-  `buildComplianceAuditSystemPrompt()` too, which enumerates what each one is
-  worth; a category the prompt cannot weigh reaches the reviewer as an
-  unranked tag.
+  citable, which is the failure mode this feature exists to avoid. What each
+  category holds, why the outside list is a list rather than a second glob, and
+  the measured document and chunk counts are all in **What the corpus
+  contains** below — stated once, there, rather than summarized here as well.
+- **Adding a category means adding it to `buildComplianceAuditSystemPrompt()`
+  too**, which enumerates what each one is worth; a category the prompt cannot
+  weigh reaches the reviewer as an unranked tag.
 - **One new table, same store as `review_pages`.** `knowledge_chunks` lives
   wherever `build_scripts/storage.js` points — Postgres when `DATABASE_URL` is
   set, SQLite at `DATA_DB_PATH` otherwise — rather than a second database to
@@ -121,8 +98,6 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
 
 ## What the corpus contains (`build_scripts/knowledge-sources.js`)
 
-## What the corpus contains (`build_scripts/knowledge-sources.js`)
-
 One glob (`docs/source/**/*.md`) used to define the corpus, which excluded both
 the newest Karl capture and the mockup copy under review.
 `collectKnowledgeSources()` is now the single definition, and every chunk
@@ -156,8 +131,9 @@ disagreements).
   provision. `projectComplianceMatrixToMarkdown()` renders it at ingest time as
   `hhvc-policy/compliance-standards-matrix.md` — same treatment as `pages/*.js`,
   so no committed copy can drift from it. One `###` per requirement, 203 of
-  them, median 46 words. **Retrieval is a flat top-6 with no per-category floor**,
-  and short formulaic chunks embed toward each other — so a pest-page query can
+  them, 204 chunks, median 46 words. **`retrieveRelevantChunks()` is a flat
+  top-6 with no per-category floor**, and short formulaic chunks embed toward
+  each other — so a pest-page query can
   spend the whole top-6 on one provision family, and the document most at risk
   is the standards manual added in the same pass. Grouping by code section
   (~61 longer chunks) is the fallback; measure it as "does an audit of a pest

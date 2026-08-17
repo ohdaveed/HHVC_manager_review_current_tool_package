@@ -1,6 +1,6 @@
 ---
 name: hhvc-review-ops
-description: 'HHVC repo: the stored-review-data diagnostics panel at the end of Help — why it lost its own tab, why orphaned records are a real class, why an empty page-key set must report NO orphans rather than all of them, why `local_dirty`s three states are reported separately, and why pruning re-derives its list at click time. Load before editing js/review-ops*.js or css/review-ops.css.'
+description: 'HHVC repo: the stored-review-data diagnostics panel at the end of Help — why it lost its own tab, why orphaned records are a real class, why an empty page-key set must report NO orphans rather than all of them, why the three states of `local_dirty` are reported separately, and why pruning re-derives its list at click time. Load before editing js/review-ops*.js or css/review-ops.css.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-15. AGENTS.md remains the

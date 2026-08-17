@@ -1441,7 +1441,9 @@ Their full write-ups moved out of this file into `.claude/skills/hhvc-*/SKILL.md
 leaving the summary and the load-bearing warning here and the reasoning one
 `Skill` call away. The first six cut roughly 66,000 characters; a second round
 on 2026-08-15 moved five more sections that were file-scoped, carried no safety
-prohibition, and held none of the counts `tests/doc-counts.test.js` pins — call
+prohibition, and restate no count `tests/doc-counts.test.js` pins — the
+React-islands write-up defers its stylesheet count to the guarded copy here
+rather than carrying its own, which it had let go stale at ten — call
 it 85,000 characters and about 21,000 tokens per session once the skill
 descriptions, which stay resident, are netted off. (Deliberately rounded: an
 exact byte count stated inside the file it measures changes that file's size,

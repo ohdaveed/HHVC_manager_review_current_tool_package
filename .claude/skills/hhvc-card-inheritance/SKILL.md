@@ -1,6 +1,6 @@
 ---
 name: hhvc-card-inheritance
-description: 'HHVC repo: why a card description is inherited from its destination page rather than printed from `card.text` — the three buckets (`inherits`/`title-only`/`authored`) and why they key on the section `karl` note rather than `section.component`, why `js/card-inheritance.js` is dual-exported, why `bun run audit-cards` is a report rather than a CI gate, and the sf.gov census that settled external-URL entries. Load before editing js/page-render.js`s card rendering, js/card-inheritance.js, or build_scripts/audit-card-inheritance.js.'
+description: 'HHVC repo: why a card description is inherited from its destination page rather than printed from `card.text` — the three buckets (`inherits`/`title-only`/`authored`) and why they key on the section `karl` note rather than `section.component`, why `js/card-inheritance.js` is dual-exported, why `bun run audit-cards` is a report rather than a CI gate, and the sf.gov census that settled external-URL entries. Load before editing card rendering in js/page-render.js, js/card-inheritance.js, or build_scripts/audit-card-inheritance.js.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-15. AGENTS.md remains the

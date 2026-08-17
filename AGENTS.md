@@ -2855,10 +2855,17 @@ session never touches. `AGENTS.md` is opened deliberately, so length costs it
 nothing comparable.
 
 **What made the second round's five eligible, and what it excluded.** Each was
-file-scoped, carried no safety-shaped prohibition, and held none of the counts
-`tests/doc-counts.test.js` pins against `CLAUDE.md` (unit-test files, spec
-files, pages) — deleting one of those sentences fails CI rather than merely
-changing a number. Sections that stayed for the opposite reasons include
+file-scoped and carried no safety-shaped prohibition, and none holds a count
+`tests/doc-counts.test.js` pins against `CLAUDE.md` and this file — unit-test
+files, spec files, pages, and the number of repository-owned stylesheets —
+since deleting one of those sentences fails CI rather than merely changing a
+number. **The stylesheet count is the one that had to be handled rather than
+merely observed**: the React-islands write-up carries it — the sentence naming
+where Emotion injects states the count — and a copy of it inside a skill is a
+copy no test reaches. It read "ten" from the day the skill was written, one behind
+`css/karl-guide.css`, while both guarded docs said eleven. The skill now names
+no number at all and points here for it, which is the shape any extracted
+section carrying a pinned count has to take. Sections that stayed for the opposite reasons include
 `## Commands`, "Page object shape and validation rules", "Optional API access
 hardening", "URL schemes are validated, not just escaped", "Local persistence"
 (it carries the import-destroys-reviews warning), and "What the UX review
