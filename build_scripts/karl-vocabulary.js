@@ -41,7 +41,6 @@
 // GAP_LABEL_PATTERN is imported from js/karl-tag-meta.js rather than restated,
 // so the validator and the badge a reviewer sees cannot come to disagree about
 // what counts as unresolved.
-const { classifySection } = require('../js/card-inheritance.js')
 const { GAP_LABEL_PATTERN } = require('../js/karl-tag-meta.js')
 const { KARL_PANELS, PROMOTE_PANEL } = require('../js/karl-blocks.js')
 
@@ -55,40 +54,57 @@ const CROSS_TYPE_TERMS = [
   'SF.gov page',
   'External link',
   'Button link',
-  'Document Picker',
   'page chooser',
   'rich text',
   'Draftail',
   'inline page link',
   'Promote',
   ...PROMOTE_PANEL.fields.flatMap((field) => [field.label, field.rawName]),
-  // **Nested block names, which the inventory cannot supply.** These are the
-  // repeatable ITEM types inside a panel's chooser — a Resource Collection's
-  // `body → Resources` holds "Resource section" items, each with a "Links"
-  // stream — and the field map documents them in the prose beneath its tables
-  // rather than in the "Block type(s)" cell js/karl-blocks.js transcribes.
-  // Every one of the notes that named them was correct and was reported as
-  // unmoored until this list existed.
-  //
-  // They belong in js/karl-blocks.js, beside KARL_FLAGS, which exists for
-  // exactly this reason — half the mapping lives in footnotes. They are here
-  // rather than there because transcribing them properly means a nesting
-  // structure and a drift test of its own, which is a change to the inventory
-  // rather than to its first consumer.
-  'Resource section',
-  'Document section',
-  'Data story section',
-  'Accordion item',
-  'Accordion sidebar',
-  'Fact items',
-  'Subsection',
-  // 'Links' is deliberately NOT here. It is a real stream name, and it is also
-  // a substring of `related_links` and `quicklinks` — adding it made a Topic
-  // note that names Karl's `related_links` field, which Topic does not have,
-  // match its own vocabulary and stop being reported. That note is `U5`, one of
-  // the two findings this check exists for, so the generic term cost more than
-  // it bought.
 ]
+
+/**
+ * Nested block item names, PER TYPE.
+ *
+ * These are the repeatable item types inside a panel's chooser — a Resource
+ * Collection's `body → Resources` holds "Resource section" items — and the
+ * field map documents them in the prose beneath its tables rather than in the
+ * "Block type(s)" cell js/karl-blocks.js transcribes, so the derived vocabulary
+ * cannot supply them.
+ *
+ * **They are keyed by type and not merged into CROSS_TYPE_TERMS**, which is
+ * where they sat until review caught it. A cross-type list hands every term to
+ * every form, so a Report note saying "Maps to an Accordion sidebar" — a
+ * Campaign construct Report does not have — passed both checks. That is
+ * precisely the defect this module exists to catch, reintroduced by the list
+ * meant to reduce its false positives.
+ *
+ * Each entry cites the field map line that places it under that type. They
+ * belong in js/karl-blocks.js beside KARL_FLAGS, which exists for the same
+ * reason — half the mapping lives in footnotes — and are here only until that
+ * file transcribes nesting.
+ */
+const NESTED_TERMS_BY_TYPE = {
+  // Body → Documents / Data stories / Resources, field map lines 399-403.
+  'Resource Collection': [
+    'Resource section',
+    'Document section',
+    'Data story section',
+    'Document Picker',
+  ],
+  // Additional content → Accordion section / Resources, lines 451-456.
+  Campaign: ['Accordion sidebar', 'Resource section', 'Downloadable resources'],
+  // Resources → Resources section, lines 586 and 603.
+  'About us': ['Resources section', 'Downloadable files', 'Document Picker'],
+  // `print_version` is a document chooser (per-type table), so a note naming
+  // the document store is placing a real value.
+  Report: ['Document Picker'],
+}
+
+/** Fragments of a blockTypesDoc cell that describe a block rather than name
+ *  one. Anchored at the start so a real name containing one of these words is
+ *  unaffected. */
+const QUALIFIER_FRAGMENT =
+  /^(?:no chooser|instance labelled|unrestricted|auto-inserted|repeatable|min |max )/i
 
 /**
  * Block type names out of a panel's `blockTypesDoc` cell.
@@ -108,7 +124,12 @@ function blockTypeTerms(doc) {
   const afterColon = doc.includes(':') ? doc.slice(doc.indexOf(':') + 1) : doc
   for (const part of afterColon.split(/[|,]/)) {
     const cleaned = part.replace(/\(.*?\)/g, '').trim()
-    if (cleaned.length > 2) terms.push(cleaned)
+    // Qualifiers, not block names. The cell says things like "one type:
+    // title_and_text, no chooser" and "instance labelled \"Accordion item\"" —
+    // collecting those made a note reading only "no chooser" name a Karl
+    // construct and pass. The quoted-name loop below already picks up the
+    // instance label itself, which IS a name.
+    if (cleaned.length > 2 && !QUALIFIER_FRAGMENT.test(cleaned)) terms.push(cleaned)
   }
   for (const quoted of doc.match(/"([^"]+)"/g) || []) terms.push(quoted.replace(/"/g, ''))
   return terms
@@ -121,7 +142,7 @@ function blockTypeTerms(doc) {
  * @returns {Set<string>}
  */
 function termsForType(type) {
-  const terms = [...CROSS_TYPE_TERMS]
+  const terms = [...CROSS_TYPE_TERMS, ...(NESTED_TERMS_BY_TYPE[type] || [])]
   for (const panel of KARL_PANELS[type] || []) {
     terms.push(panel.uiLabel)
     // The inventory keeps the document's parenthetical on Topic's outer
@@ -172,13 +193,46 @@ function collectKarlNotes(pages) {
   return notes
 }
 
-/** Whether a note names any term in a vocabulary. Substring, case-insensitive:
- *  ordinals ("a second repeatable Services block") put the term mid-sentence, so
- *  a prefix match would miss most of the corpus. */
+/** Terms compiled to boundary-anchored matchers, built once per term. */
+const MATCHER_CACHE = new Map()
+
+/**
+ * A matcher for one term: boundary before, optional plural after.
+ *
+ * **Raw substring matching was the first version and it silently weakened the
+ * whole check.** A Report note reading "Put this somewhere suitable near the
+ * top" passed, because `suitable` contains the Report block name `table`; so
+ * did "a candidate for review", because `candidate` contains `date`. Notes
+ * naming no Karl construct at all were therefore accepted, which is the exact
+ * thing findUnmooredNotes exists to reject.
+ *
+ * The leading boundary is what fixes those: it rejects a term sitting inside a
+ * longer word. The trailing `s?` keeps plurals working — the corpus writes
+ * "Resource sections" and "two Related panels" — and the trailing boundary
+ * still rejects a longer word. Both are `[\w-]` rather than `\b` so that
+ * `related` does NOT match inside `related_links`: an underscore is a word
+ * character, and that distinction is load-bearing, since a Topic note naming
+ * Karl's `related_links` field is the U5 finding this check reports.
+ *
+ * @param {string} term lowercased
+ * @returns {RegExp}
+ */
+function matcherFor(term) {
+  let matcher = MATCHER_CACHE.get(term)
+  if (!matcher) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    matcher = new RegExp(`(?<![\\w-])${escaped}s?(?![\\w-])`, 'i')
+    MATCHER_CACHE.set(term, matcher)
+  }
+  return matcher
+}
+
+/** Whether a note names any term in a vocabulary. Terms may sit mid-sentence —
+ *  ordinals ("a second repeatable Services block") are normal in the corpus —
+ *  but must stand as whole words. */
 function namesTermFrom(karl, terms) {
-  const haystack = karl.toLowerCase()
   for (const term of terms) {
-    if (haystack.includes(term)) return term
+    if (matcherFor(term).test(karl)) return term
   }
   return null
 }
@@ -230,41 +284,12 @@ function findWrongTypeNotes(pages) {
   return found
 }
 
-/**
- * Sections that HAVE cards but whose note classifies as `unknown`.
- *
- * js/card-inheritance.js decides from the note's wording whether a card
- * publishes the destination page's title and summary, its title alone, or its
- * own authored words — so an unclassified card-bearing section is one where the
- * renderer has no rule and silently falls through. It is invisible whenever the
- * authored values happen to match the destination's, which is exactly how it
- * survives review.
- *
- * Sections without cards are not included: most of the corpus is prose, and no
- * bucket should claim them.
- *
- * @param {Record<string, object>} pages
- * @returns {Array<{pageKey: string, heading: string, cards: number}>}
- */
-function findUnclassifiedCardSections(pages) {
-  const found = []
-  for (const [pageKey, page] of Object.entries(pages)) {
-    for (const section of page.sections || []) {
-      if (!section.cards || !section.cards.length) continue
-      if (classifySection(section) === 'unknown') {
-        found.push({ pageKey, heading: section.heading, cards: section.cards.length })
-      }
-    }
-  }
-  return found
-}
-
 module.exports = {
   CROSS_TYPE_TERMS,
+  NESTED_TERMS_BY_TYPE,
   TERMS_BY_TYPE,
   blockTypeTerms,
   collectKarlNotes,
-  findUnclassifiedCardSections,
   findUnmooredNotes,
   findWrongTypeNotes,
   termsForType,

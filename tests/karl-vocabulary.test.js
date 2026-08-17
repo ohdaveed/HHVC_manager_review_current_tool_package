@@ -10,6 +10,7 @@
 import { describe, test, expect } from 'bun:test'
 const {
   CROSS_TYPE_TERMS,
+  NESTED_TERMS_BY_TYPE,
   TERMS_BY_TYPE,
   blockTypeTerms,
   collectKarlNotes,
@@ -75,7 +76,62 @@ describe('the vocabulary is derived from the panel inventory', () => {
   })
 })
 
+describe('terms must stand as whole words', () => {
+  // Raw substring matching was the first version and it silently weakened the
+  // whole check: a note naming NO Karl construct was accepted because a term
+  // happened to sit inside an ordinary English word.
+  test('a term inside a longer word is not a match', () => {
+    // `suitable` contains `table`; `candidate` contains `date`. Both are real
+    // Report block names, and both notes name nothing.
+    expect(
+      findUnmooredNotes({ a: pageWith('Report', 'Put this somewhere suitable.') })
+    ).toHaveLength(1)
+    expect(findUnmooredNotes({ a: pageWith('Report', 'A candidate for review.') })).toHaveLength(1)
+  })
+
+  test('a plural still matches', () => {
+    // The corpus writes "Resource sections" and "two Related panels", so the
+    // boundary rule has to allow a trailing s or it rejects correct notes.
+    expect(
+      findUnmooredNotes({ a: pageWith('Resource Collection', 'Two Resource sections here.') })
+    ).toEqual([])
+  })
+
+  test('an underscored field name is not matched by its bare prefix', () => {
+    // Load-bearing: `related` must NOT match inside `related_links`, or the
+    // Topic finding this check exists to report stops being reported.
+    const pages = { a: pageWith('Topic', 'Maps to Karl’s related_links stream.') }
+    expect(findUnmooredNotes(pages)).toHaveLength(1)
+  })
+})
+
+describe('nested block names are scoped to their owning type', () => {
+  test('a Campaign construct is not accepted on a Report page', () => {
+    // These sat in CROSS_TYPE_TERMS until review caught it, which handed every
+    // nested name to every form — reintroducing the exact defect the module
+    // exists to catch.
+    expect(TERMS_BY_TYPE.Campaign.has('accordion sidebar')).toBe(true)
+    expect(TERMS_BY_TYPE.Report.has('accordion sidebar')).toBe(false)
+    const found = findWrongTypeNotes({ a: pageWith('Report', 'Maps to an Accordion sidebar.') })
+    expect(found).toHaveLength(1)
+    expect(found[0].belongsTo).toEqual(['Campaign'])
+  })
+
+  test('every scoped term names a type the schema declares', () => {
+    expect(Object.keys(NESTED_TERMS_BY_TYPE).every((type) => PAGE_TYPES.includes(type))).toBe(true)
+  })
+})
+
 describe('blockTypeTerms', () => {
+  test('skips the qualifiers that describe a block rather than name one', () => {
+    // "one type: title_and_text, no chooser" — collecting `no chooser` let a
+    // note reading only that pass as though it named a Karl construct.
+    const terms = blockTypeTerms('one type: title_and_text, no chooser')
+    expect(terms).toContain('title_and_text')
+    expect(terms).not.toContain('no chooser')
+    expect(findUnmooredNotes({ a: pageWith('Transaction', 'no chooser') })).toHaveLength(1)
+  })
+
   test('splits a chooser list into its block names', () => {
     expect(blockTypeTerms('chooser: Callout | Section')).toEqual(['Callout', 'Section'])
   })
