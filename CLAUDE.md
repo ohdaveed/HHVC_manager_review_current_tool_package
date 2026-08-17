@@ -32,32 +32,35 @@ The repo currently holds **29 pages** under `pages/`. If `bun` isn't on
 
 ## Commands
 
+**`package.json` is the command reference — read it rather than a copy.** Every
+script key is preceded by a `"// <name>"` key carrying a full description, and
+several of those descriptions are longer and more precise than anything a table
+here could hold (`lint:anti-slop`'s, for instance, records the 280-finding
+measurement behind its narrow scope). A restatement in this file would be a
+second copy sitting beside the first, free to drift from it and checked by
+nothing. Open the `scripts` block and read it, or dump it with the Bun this
+repo already requires (deliberately not `jq`, which is neither a dependency
+here nor present in every environment):
+
 ```bash
-bun install                  # install deps (required before first `dev` — js/main.js
-                             # imports @sfgov/design-system CSS + the third-party libs,
-                             # and validate/test need zod, fast-glob, happy-dom)
-bun run dev                   # Vite dev server (HMR) at http://127.0.0.1:8080
-bun run dev:api               # optional sync backend (server.ts) on :8081; dev proxies /api to it
-bun run start                 # production-like: build:netlify then serve dist/ + the API
-bun run serve                 # serve an already-built dist/ without rebuilding
-bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 47 unit-test files in tests/
-bun run test:e2e              # playwright test over the 22 spec files in tests/e2e/
-bun run export                # regenerate data/page_inventory.{json,csv} AND the local
-                              # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
-bun run export:karl           # one paste-ready Karl transcript per page -> review/karl-transcripts/
-bun run sync-tracking         # regenerate the local mockup tracking CSVs only
-bun run push-tracking         # push page review status to the Google Sheets tracker
-bun run build                 # validate -> export -> workshop form -> build:app -> publish form -> singlefile
-bun run build:app             # vite build -> dist/ (what server.ts and Netlify serve)
-bun run build:singlefile      # vite build --mode singlefile -> dist-singlefile/index.html
-bun run build:workshop-form   # bun install + vite build inside forms/mosquito-workshop-request
-bun run build:netlify         # validate -> build:app -> copy-workshop-form.js (assembles dist/)
-bun run format                # prettier --write . (everything not in .prettierignore)
-bun run format:check          # prettier --check . — THIS IS THE LINT STEP (no ESLint/tsc)
-bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_scripts/ai/ ONLY
-                              # — a developer-run report, NOT a CI gate (see Formatting below)
+bun -e 'for (const [k, v] of Object.entries(require("./package.json").scripts)) console.log(k + "\t" + v)'
 ```
+
+Two things to add to what those descriptions say — one they omit outright, one
+they state too weakly to act on:
+
+- **`bun install` is required before the first `dev`, `validate`, `test` or
+  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  third-party libraries, and validate/test need `zod`, `fast-glob` and
+  `happy-dom`. Nothing in `package.json` says so.
+- **`format:check` is the only linter CI enforces.** Its own description calls
+  it "the project's linter", which undersells the consequence: there is no
+  ESLint and no `tsc` anywhere in this repo, so Prettier is the whole of the
+  lint gate. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+  the single-file build, the unit tests, Playwright — but not one of those
+  checks style. `lint:anti-slop` is a second linter, but a deliberately
+  un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
+  below. No single script description can state that relationship.
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server
 bind (`vite.config.mjs` reads `HOST`/`PORT`, defaulting to `127.0.0.1:8080`).
@@ -72,7 +75,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 47 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 48 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -117,7 +120,19 @@ point at, shared by the browser widget and `build_scripts/data-checks.js`'s
 rather than the scheme — `mailto:`/`tel:`/root-relative all pass `safeUrl` and
 would still render as dead `data-render-target` buttons, so a later reader
 "fixing" them by widening this predicate would ship exactly the broken control
-it removes), `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
+it removes), `karl-guide` (the Karl-field registry, its panel markup and the
+disclosure's keyboard behaviour — and most of its assertions are about paths
+that must NOT appear, because this feature's failure mode is a wrong answer
+delivered confidently: a guide stamps `E1 confirmed` whenever it holds any
+path, and that badge means MEASURED against the live admin. It therefore pins
+the empty string as a first-class answer, the one that is never harmful, and
+pins each of the ten wrong routings four independent PR reviewers found by the
+type and role that produced it. It also asserts the panel emits **no
+block-level element at all** — the panel renders inside a `<span>` that renders
+wherever its tag does, so a `<div>` in it closes an enclosing paragraph early
+and the panel escapes the ancestor it is positioned against; that had been a
+rule three call sites remembered, and is now a property of the markup),
+`page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
 schema so a mismatched required field fails here rather than shipping; asserts
 a malformed registry entry is **dropped rather than thrown on**, since a throw
 at the root of the module graph strands the reviewer with no UI to fix it; its
@@ -353,7 +368,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets. It holds
   because MUI emits scoped `.css-*` classes and there is **no `CssBaseline`** —
   that writes element-level rules on `html`/`body`/`*`, and Emotion injects after
-  the ten stylesheets, so it would win ties inside the shell. Use
+  the eleven stylesheets, so it would win ties inside the shell. Use
   `ScopedCssBaseline` inside a panel if a reset is ever needed.
 - **`js/react/theme.js` is the only bridge to the design tokens**, read off
   `document.documentElement` at theme-build time so retheming still means
@@ -1287,8 +1302,27 @@ disagreements).
 - **`bun run ingest` is yours to run and is billed.** Nothing in CI or the
   build does it, so a corpus change is not live on a deployment until it runs.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
-  writes to Postgres and `compliance-audit` reports ready — verified:
-  `knowledgeBase: {ready: true, chunkCount: 768}`.
+  writes to Postgres and `compliance-audit` reports ready — verified by querying
+  the deployed database directly, which held **816 chunks across 78 documents**
+  after a re-ingest on 2026-08-17, matching the on-disk measurement above
+  category for category. **That is a record of what that ingest wrote, not a
+  standing guarantee**: the deployed count drifts behind the corpus the moment
+  an ingested document is edited without a re-ingest, and it had, twice —
+  the reading before this one was `chunkCount: 768`, 48 short, because it
+  predated both `docs/karl-export-field-map.md` joining the `karl` category and
+  the `sfds` category existing at all. A later reading of 812 was 4 short for
+  the same reason, from edits to that file's own register. Those are CHUNK
+  counts, not document counts — `sfds` is a single ingested document,
+  `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
+  only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
+  the corpus and there is no second source to go looking for. Read the live
+  count from `/api/ai/capabilities` rather than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's: `DATABASE_URL` is Postgres's and
+  `GEMINI_API_KEY` is web's. The deployed `DATABASE_URL` also names
+  `postgres.railway.internal`, which does not resolve off-platform, so rebuild
+  it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather than
+  reusing the value the service sees.
 
 ### Reviewer sign-in (`/api/session`)
 
@@ -1413,6 +1447,19 @@ start `bun run serve`.
 
 - **`bun run serve`, not `bun run start`** — `start` is `build:netlify && serve`,
   which would repeat the whole build at boot on a platform that already ran it.
+- **`server.ts` must exit 0 on SIGTERM.** Railway retires a deployment by
+  sending SIGTERM and reads the exit status that follows as its verdict. With no
+  handler the process is simply killed, `bun run` reports 128 + 15 = 143, and
+  Railway mails "Deploy Crashed!" about a container it stopped on purpose — on
+  every deploy to `main`, with the only trace one line in the OUTGOING
+  deployment's log: `error: script "serve" was terminated by signal SIGTERM`.
+  The handler drains via `server.stop(false)` (`true` would sever in-flight
+  responses) raced against a 10s timer, so a hung request cannot hold the
+  process into SIGKILL and reach 143 the slow way.
+  `tests/review-api-server.test.js` asserts `signalCode` is null as well as
+  `exitCode` 0 — a signal-killed process reports `'SIGTERM'` there whatever the
+  code says. The start command stays `bun run serve`: with the handler in place
+  the script wrapper propagates the clean exit, so bypassing it buys nothing.
 - **`HOST=0.0.0.0` is required, as a variable rather than a code change.**
   `server.ts` defaults to `127.0.0.1`, which is right locally and unreachable in
   a container: the first deploy built and started cleanly and still served 502,
@@ -1560,24 +1607,23 @@ used liberally **only** in the self-aware override layer
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The ten stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
-stay first — it is the raw-primitive layer everything downstream reads, keyed
-to SFDS's own published token names; `css/theme.css` MUST stay last — it is
-the semantic token layer, and its dark-mode block overrides
-the `--legacy-*` primitives `css/styles.css` declares on `:root`):
+**There are eleven repository-owned stylesheets, and two positions in their
+order are load-bearing.** `css/sfds.css` MUST stay first of the eleven — it is
+the raw-primitive layer everything downstream reads, keyed to SFDS's own
+published token names. `css/theme.css` MUST stay last — it is the semantic
+token layer, and its dark-mode block overrides the `--legacy-*` primitives
+`css/styles.css` declares on `:root`.
 
-| File                          | Owns                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/sfds.css`                | the SFDS primitives, keyed to SFDS's own published token names                                 |
-| `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
-| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
-| `css/ai-assist.css`           | the AI assist panel                                                                            |
-| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
-| `css/review-insights.css`     | the Overview cards and the failing-checks ranking                                              |
-| `css/review-ops.css`          | the stored-review-data panel                                                                   |
-| `css/ai-rewrite.css`          | the floating selection button and the rewrite popover                                          |
-| `css/inline-content-edit.css` | the inline click-to-edit widgets, Edited badge, add/remove/reset controls                      |
-| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+Their order is the tail of `js/main.js`'s CSS imports, and each of the eleven
+opens with a banner comment naming what it owns (several also state which sheet
+they load after, and why). Read those two rather than a table here: eleven
+one-line file descriptions restated in this file would be a second copy of
+eleven header comments, checked by nothing and stale the first time one of them
+is edited. **"First" means first of the eleven, not first in the file** — six
+dependency sheets (`@fontsource-variable/roboto-flex`, two
+`@fontsource/roboto-slab` weights, three `@sfgov/design-system` sheets) import
+ahead of `css/sfds.css` and carry none of those banners. They load before all
+eleven, so the repo's own sheets override them rather than the reverse.
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
@@ -1676,6 +1722,17 @@ that stub globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
+- Karl guide panels → `js/karl-guide-registry.js` (the per-page-type field
+  tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
+  `''` rather than guessing — `guideForContext` stamps any non-empty path
+  `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
+  reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
+  `js/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
+  call site in `js/page-render.js` must pass `context.role`: without one the
+  tag KIND is used as the role, which names no Karl field. Note the panel is
+  block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
+  parser closes the paragraph and the panel escapes the element it is
+  positioned against.
 - Karl transcript export → `js/karl-blocks.js` (the transcribed panel inventory
   and the `UNRESOLVED` shape rules), `js/karl-transcript.js` (the pure builder —
   every judgement about what an editor is told lives there and only there),

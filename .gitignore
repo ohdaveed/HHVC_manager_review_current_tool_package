@@ -231,4 +231,31 @@ agent-evals-regression-gate.zip
 .claude/skills/wayfinder
 .claude/skills/wizard
 .claude/skills/writing-for-agents
+.claude/skills/anti-ui-slop
+.claude/skills/modern-web-guidance
 agent-evals-regression-gate/agent-evals-regression-gate/SKILL.md
+
+# JetBrains Junie's agent config and its own copy of the locally-installed
+# skills — a per-developer IDE working directory (275 files), not repo content.
+# It mirrors the same skill payloads already ignored under .claude/skills/ and
+# .agents/, so committing it would triple-store them for one editor's benefit.
+/.junie/
+
+# Scratch capture of a `bun run test` run, redirected to the repo root rather
+# than the scratchpad. 197 KB of console output with no reader — the suite
+# regenerates it on demand, and a stale copy of a passing run is exactly the
+# kind of artifact that gets mistaken for evidence later.
+/test_output.txt
+
+# One-off capture output from the build_scripts/audit/ crawlers and a Figma
+# token export — ~7,000 lines of machine-written fixtures that nothing in the
+# build, the tests or the app reads. `data/page_inventory.*` is already ignored
+# above for the same reason; these were simply missed, which is not a harmless
+# omission: commit 594cec9 untracked exactly these seven files after a
+# `git add -A` swept them in, and with no ignore rule a later `git add -A` put
+# every one of them straight back. An ignore entry is what makes that
+# correction hold rather than needing to be made again.
+/data/audit_fixtures/
+/data/figma-tokens.json
+/data/figma-components-kit.svg
+/data/figma-swatches.svg

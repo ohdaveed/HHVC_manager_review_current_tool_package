@@ -155,8 +155,6 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
         flushPendingPersist()
       }
 
-      window.ReviewUx?.workspace?.shrinkWorkspace?.()
-
       const result = originalRenderPage.call(this, key, skipHistory)
       const applyAndRefresh = () => {
         // Read after applyPageContent so aliases/unknown keys resolve to the

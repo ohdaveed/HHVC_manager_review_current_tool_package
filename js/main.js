@@ -96,6 +96,7 @@ import './../css/review-insights.css'
 import './../css/review-ops.css'
 import './../css/ai-rewrite.css'
 import './../css/inline-content-edit.css'
+import './../css/karl-guide.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
@@ -152,6 +153,7 @@ import './karl-blocks.js'
 // workspace panel is what mounts a UI on top of it.
 import './karl-transcript.js'
 import './page-render.js'
+import './karl-guide.js'
 import './app.js'
 import './manager-review-export.js'
 import './review-state-validation.js'

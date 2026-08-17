@@ -108,7 +108,7 @@
   background: var(--surface-sunken);
   color: var(--text-secondary);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
 }
 
 /* =====================================================================
@@ -131,44 +131,138 @@
    are changing one of these, this is the only place to look. */
 
 /* =====================================================================
-/* The bottom drawer review workspace */
+   The docked review workspace
+   =====================================================================
+   This panel used to be the last child of .canvas, below the mockup. The
+   mockup runs to about 8,800px, so the workspace began around y=9,400 in a
+   10,300px document — more than nine screenfuls down. A reviewer could never
+   see the page and the instruments judging it at the same time, which was
+   sharpest on the Page checks tab: it scores THE PAGE CURRENTLY IN THE MOCKUP
+   and rendered that score nine screens away from it.
+
+   It is now a third grid column in .app, sticky to the viewport, so the page
+   and the panel are side by side. Almost every redundancy this redesign
+   removed existed because information had to be repeated in the places a
+   reviewer could actually see; co-visibility is what makes one copy enough. */
 .review-workspace {
+  border-left: 1px solid var(--border-default);
   background: var(--surface-panel);
-  position: fixed;
-  bottom: 0;
-  left: 370px; /* Same as sidebar width */
-  right: 0;
+  /* Sticky rather than fixed so it participates in the grid and cannot overlap
+     the canvas. Its own scroll container, because the mockup beside it is far
+     taller than the viewport and the two must scroll independently. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
   display: flex;
   flex-direction: column;
-  height: 40vh;
-  z-index: 1000;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  transition:
-    height 0.3s ease,
-    left 0.2s ease;
 }
 
-body.workspace-open .canvas {
-  padding-bottom: 50vh;
+/* `display: flex` above is a class selector and therefore beats the UA
+   stylesheet's `[hidden] { display: none }`, which is where the attribute's
+   whole effect lives. Without this the panel stayed on screen after
+   setWorkspaceOpen(false) set the attribute — "Hide workspace" and the `w`
+   shortcut both appeared to do nothing. Any element that both carries `hidden`
+   and declares its own `display` needs this pairing. */
+.review-workspace[hidden] {
+  display: none;
 }
 
-.app.sidebar-collapsed .review-workspace {
-  left: 0;
+/* The grid only grows a third column while the workspace is actually open;
+   js/ux-improvements-workspace.js toggles this class alongside the panel's
+   hidden attribute. minmax() rather than a fixed width so the panel gives room
+   back to the mockup on a smaller screen instead of squeezing it. */
+.app.workspace-docked {
+  grid-template-columns: 370px minmax(0, 1fr) minmax(340px, 30vw);
 }
 
-@media (max-width: 980px) {
+.app.sidebar-collapsed.workspace-docked {
+  grid-template-columns: 0px minmax(0, 1fr) minmax(340px, 30vw);
+}
+
+/* Below this the three columns stop fitting: the mockup is a fixed-ish page
+   design and squeezing it to make room misrepresents the thing under review.
+   The workspace returns to its old position under the canvas, spanning the
+   full width — the original layout, kept as the narrow-screen fallback rather
+   than as the default.
+
+   1700px, not 1400px. The intent was always "dock only where three columns
+   fit"; 1400 was simply the wrong number for it, and between 1401px and the
+   crossing point the two columns collided. The arithmetic: .browser-shell
+   will not shrink past its min-content floor, so it ends at a fixed x no
+   matter how narrow the column gets, while this panel starts at
+   `100vw - 30vw` = 0.7 x viewport, and the two cross at that x divided by 0.7.
+
+   Re-measured on 2026-08-15, after the SFDS type and spacing work changed
+   both the mockup's copy metrics and the chrome's padding chain: the floor is
+   765px (it was 780px), so the shell ends at 370 + 20 + 765 = x=1155 and the
+   crossing moved DOWN to 1155/0.7 = 1650px. Below that the mockup runs
+   underneath the sticky workspace — 147px of overlap at 1440px, 80px at
+   1536px, 35px at 1600px.
+
+   1700 stays, and staying is the measured result rather than a no-op. It was
+   already a round-up over the old 1671 crossing, and the re-measurement widened
+   that margin instead of eating it. Lowering the breakpoint onto 1650 would buy
+   docking only between 1650 and 1700 — no real display sits there, since 1512,
+   1536 and 1470 are all far below it — while spending the margin that covers
+   the widths the 40px test sweep never visits, browser zoom, and the next
+   change to the mockup's copy. tests/e2e/workspace-panels.spec.js measures the
+   crossing from the live layout and fails if it ever rises past this number.
+
+   That band is not exotic; it is where laptops live. A 14-inch MacBook Pro is
+   1512 CSS px, a 13-inch Air 1470, and any 1920px screen at the 125% scaling
+   Windows ships by default is 1536. The regression hid because the one test
+   that measures the docked geometry (tests/e2e/workspace-panels.spec.js) sets
+   1800x1000 — above the band — and every other spec runs at Playwright's
+   1280 default, below it. The bug lived entirely in the gap between the two
+   widths anyone had thought to check.
+
+   Raising the breakpoint trades docking away on those laptops rather than
+   rendering it broken there. Making the mockup shrink instead is the other
+   way out and is deliberately not taken: it would misrepresent the page under
+   review, which is the whole reason the shell refuses to shrink. */
+@media (max-width: 1700px) {
+  .app.workspace-docked,
+  .app.sidebar-collapsed.workspace-docked {
+    grid-template-columns: 370px minmax(0, 1fr);
+  }
+
+  .app.sidebar-collapsed.workspace-docked {
+    grid-template-columns: 0px minmax(0, 1fr);
+  }
+
+  /* Column 2, NOT `1 / -1`. Spanning both columns puts the panel underneath
+     the sidebar, which is `position: sticky; height: 100vh` — so scrolling
+     slid the sidebar over the queue's left edge and covered the row titles.
+     Axe caught it before a human did: 57 queue-row cells came back as
+     "background could not be determined, partially obscured by another
+     element". Column 2 is where the panel used to sit as the last child of
+     .canvas, which is the layout this fallback is restoring. */
   .review-workspace {
-    left: 0;
+    grid-column: 2;
+    position: static;
+    height: auto;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--border-default);
   }
 }
 
-.review-workspace.full-screen {
-  height: 100vh;
-  max-height: 100vh;
-}
+/* The stacked workspace fallback above still retains the sidebar/canvas
+   two-column grid, which is useful down to a tablet width. Below that, its
+   more-specific `.workspace-docked` selector would otherwise beat
+   css/styles.css's plain `.app` mobile rule and leave just 20px for the
+   canvas. Reset both workspace variants to one track so the mockup can
+   reflow within the viewport instead of widening the document. */
+@media (max-width: 980px) {
+  .app.workspace-docked,
+  .app.sidebar-collapsed.workspace-docked {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
-.review-workspace[hidden] {
-  display: none;
+  .review-workspace {
+    grid-column: 1;
+  }
 }
 
 .review-workspace-tabs {
@@ -178,11 +272,6 @@ body.workspace-open .canvas {
   padding: 0 var(--ds-space-2);
   border-bottom: 1px solid var(--border-default);
   background: var(--surface-sunken);
-  cursor: grab;
-}
-
-.review-workspace-tabs:active {
-  cursor: grabbing;
 }
 
 .review-workspace-tab {
@@ -198,7 +287,7 @@ body.workspace-open .canvas {
   /* `font: inherit` first — a <button> does not inherit the page font, and
      the shorthand resets size and weight, so it has to precede them. */
   font: inherit;
-  font-size: 0.88rem;
+  font-size: var(--ds-text-card);
   font-weight: 700;
 }
 
@@ -234,8 +323,8 @@ body.workspace-open .canvas {
 }
 
 .review-workspace-panel {
-  padding: var(--ds-space-3);
-  height: 100%;
+  padding: var(--ds-space-4);
+  max-height: min(52vh, 560px);
   overflow: auto;
 }
 
@@ -252,7 +341,7 @@ body.workspace-open .canvas {
 .review-queue-kpis {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--ds-space-2);
+  gap: var(--ds-space-3);
 }
 
 /* Surface comes from the shared `.ds-card` recipe above, which this class is
@@ -260,7 +349,7 @@ body.workspace-open .canvas {
    card's rounded corners. */
 .review-queue-kpi {
   position: relative;
-  padding: var(--ds-space-2) var(--ds-space-3);
+  padding: var(--ds-space-3) var(--ds-space-4);
   overflow: hidden;
 }
 
@@ -286,7 +375,7 @@ body.workspace-open .canvas {
 
 .review-queue-kpi-label {
   display: block;
-  margin-bottom: 0.2rem;
+  margin-bottom: var(--ds-space-1);
   color: var(--text-secondary);
   font-size: var(--ds-text-micro);
   font-weight: 800;
@@ -297,7 +386,16 @@ body.workspace-open .canvas {
 .review-queue-kpi-value {
   display: block;
   color: var(--text-primary);
-  font-size: 1.25rem;
+  /* An outlier the four-step chrome scale has no rung for: a KPI tile's
+     headline number is the first thing a reviewer scans on the Overview tab,
+     and needs to sit visibly above --ds-text-panel (a heading).
+     --ds-text-title-md (css/theme.css) is a pass-through alias onto SFDS's
+     own title-md step, not a direct reference to that namespace here:
+     tests/sfds-tokens.test.js only allows css/theme.css and css/styles.css
+     to consume that namespace's names directly, so every other component
+     file goes through the alias. It grows further still on wider viewports,
+     since SFDS doubles title-md to 32px at its own 768px breakpoint. */
+  font-size: var(--ds-text-title-md);
   line-height: 1.1;
   font-weight: 800;
   /* Tabular figures so the numbers do not shuffle horizontally as counts
@@ -329,7 +427,7 @@ body.workspace-open .canvas {
   display: block;
   margin-top: var(--ds-space-1);
   color: var(--text-secondary);
-  font-size: 0.76rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -359,7 +457,7 @@ body.workspace-open .canvas {
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  padding: 0.22rem 0.65rem;
+  padding: var(--ds-space-1) var(--ds-space-3);
   border: 1px solid var(--border-default);
   border-radius: var(--ds-radius-pill);
   background: var(--surface-panel);
@@ -367,7 +465,7 @@ body.workspace-open .canvas {
      A chip's default text sits a step darker than body secondary because it
      is a label, not prose. */
   color: var(--legacy-slate-2);
-  font-size: 0.78rem;
+  font-size: var(--ds-text-label);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -453,44 +551,6 @@ body.workspace-open .canvas {
   cursor: progress;
 }
 
-/* Karl transcript panel — the three controls and the preview.
-   Shares the mockup-export button row's shape rather than inventing a second
-   one; only the preview needs rules of its own. */
-.karl-transcript-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ds-space-2);
-}
-
-/* The preview is a paste source, so it must keep the transcript's own line
-   breaks and never reflow them — `pre-wrap` rather than `pre` so a long field
-   value still wraps inside the panel instead of forcing the docked column to
-   scroll sideways. The height cap keeps a Transaction page (several hundred
-   lines) from pushing the rest of Help off screen; the box scrolls instead. */
-.karl-transcript-preview {
-  margin-top: var(--ds-space-3);
-  max-height: 22rem;
-  overflow: auto;
-  padding: var(--ds-space-3);
-  border: 1px solid var(--border-default);
-  border-radius: var(--ds-radius-sm);
-  background: var(--surface-sunken);
-  color: var(--text-primary);
-  /* No semantic mono token exists — the tool chrome has sans and serif only —
-     so this names the system stack directly rather than inventing a token for
-     one rule. A transcript is read as literal text an editor copies, and a
-     proportional face makes an indented field value harder to scan. */
-  font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
-  /* --ds-text-label (14px), not --ds-text-micro (11px): the chrome floor is
-     14px and the 11px step is scoped to uppercase eyebrow labels, where
-     letter-spacing and weight carry the legibility. This is body text an
-     editor reads while typing into another window. */
-  font-size: var(--ds-text-label);
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 /* =====================================================================
    Advanced sections inside Help
    =====================================================================
@@ -519,7 +579,7 @@ body.workspace-open .canvas {
 .review-advanced-group > summary {
   padding: var(--ds-space-3);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--ds-text-card);
   color: var(--text-secondary);
   cursor: pointer;
 }
@@ -590,4 +650,42 @@ body.workspace-open .canvas {
   display: flex;
   flex-shrink: 0;
   gap: var(--ds-space-1);
+}
+
+/* Karl transcript panel — the three controls and the preview.
+   Shares the mockup-export button row's shape rather than inventing a second
+   one; only the preview needs rules of its own. */
+.karl-transcript-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+
+/* The preview is a paste source, so it must keep the transcript's own line
+   breaks and never reflow them — `pre-wrap` rather than `pre` so a long field
+   value still wraps inside the panel instead of forcing the docked column to
+   scroll sideways. The height cap keeps a Transaction page (several hundred
+   lines) from pushing the rest of Help off screen; the box scrolls instead. */
+.karl-transcript-preview {
+  margin-top: var(--ds-space-3);
+  max-height: 22rem;
+  overflow: auto;
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  /* No semantic mono token exists — the tool chrome has sans and serif only —
+     so this names the system stack directly rather than inventing a token for
+     one rule. A transcript is read as literal text an editor copies, and a
+     proportional face makes an indented field value harder to scan. */
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  /* --ds-text-label (14px), not --ds-text-micro (11px): the chrome floor is
+     14px and the 11px step is scoped to uppercase eyebrow labels, where
+     letter-spacing and weight carry the legibility. This is body text an
+     editor reads while typing into another window. */
+  font-size: var(--ds-text-label);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
