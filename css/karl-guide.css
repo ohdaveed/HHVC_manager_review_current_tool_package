@@ -1,3 +1,28 @@
+/* Karl guide: the tag trigger, its expandable panel, and the copy controls
+   (js/karl-guide.js, markup built by js/karl-tag-meta.js).
+
+   Loads after css/inline-content-edit.css and before css/theme.css, whose
+   semantic tokens every rule here reads — no raw --legacy-* value and no
+   hardcoded colour.
+
+   One rule below is structural rather than cosmetic: `.karl-guide` is
+   `position: relative` because the panel is `position: absolute` and anchors
+   to it. That pairing is also why js/page-render.js may never emit a
+   karlTag() inside a `<p>` — the parser closes the paragraph around the
+   panel's block-level container, the panel escapes this element, and it then
+   opens against whatever positioned ancestor it lands under instead.
+
+   `.karl-guide-panel[hidden] { display: none }` is NOT load-bearing today and
+   is kept as a guard, which is worth stating because the same line elsewhere
+   in this repo IS required: css/dashboard.css needs it for
+   `.review-workspace[hidden]` because a class rule there sets `display`,
+   outranking the UA stylesheet's `[hidden]` rule. `.karl-guide-panel` sets no
+   `display` of its own, so `[hidden]` already works unaided — until someone
+   gives the class one, at which point this line is what stops every panel on
+   the page rendering open at once.
+
+   This sheet is annotation chrome, so it hides wholesale under
+   `body.hide-karl-tags` alongside the tags themselves. */
 .karl-guide {
   display: inline-flex;
   position: relative;

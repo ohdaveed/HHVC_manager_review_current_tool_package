@@ -48,14 +48,21 @@ const e2eSpecFiles = readdirSync(join(ROOT, 'tests', 'e2e'))
 
 const pageFiles = readdirSync(join(ROOT, 'pages')).filter((name) => name.endsWith('.js'))
 
-/* Stylesheets on disk. CLAUDE.md and AGENTS.md head a table with "The N
-   stylesheets, in js/main.js import order" and then list one row per file —
-   and unlike the counts above, nothing checked either half. It drifted the
-   first time a stylesheet was added: css/karl-guide.css landed with both docs
-   still saying ten and neither table naming it, so an agent reading the canon
-   was told a file that exists does not. The table is not decorative; it is
-   where the load-bearing "sfds.css first, theme.css last" ordering rule is
-   written, and a sheet missing from it has no recorded position. */
+/* Stylesheets on disk. CLAUDE.md and AGENTS.md both say "There are N
+   repository-owned stylesheets" and then repeat that N six more times in the
+   same paragraph — and unlike the counts above, nothing checked it. It drifted
+   the first time a stylesheet was added: css/karl-guide.css landed with both
+   docs still saying ten, in the paragraph that carries the load-bearing
+   "sfds.css first, theme.css last" ordering rule, so an agent reading the
+   canon was told a file that exists does not.
+
+   The paragraph also makes a claim ABOUT those files rather than merely
+   counting them — "each of the N opens with a banner comment naming what it
+   owns" — and explicitly tells the reader to read those banners INSTEAD of a
+   table here. That is a real dependency, not a flourish: it is the argument
+   for having deleted the table, so a sheet with no banner leaves the doc
+   pointing at nothing. css/karl-guide.css was exactly that, opening straight
+   into `.karl-guide {`. Both halves are asserted below. */
 const styleSheets = readdirSync(join(ROOT, 'css'))
   .filter((name) => name.endsWith('.css'))
   .sort()
@@ -200,11 +207,16 @@ describe('counts quoted in the instruction docs', () => {
   test.each([
     ['CLAUDE.md', CLAUDE_MD],
     ['AGENTS.md', AGENTS_MD],
-  ])('%s states the real number of stylesheets', (_name, text) => {
+  ])('%s states the real number of stylesheets outside the ordering paragraph', (_name, text) => {
     // "the N stylesheets", never a bare "N stylesheets". Both docs also say
     // "Emotion added 15 stylesheets" — that counts what MUI injects at
     // runtime, not what is in css/, and folding it in would pin an unrelated
     // measurement to this repo's file count.
+    //
+    // This catches the React-islands note only. The ordering paragraph phrases
+    // its own count as "There are N repository-owned stylesheets", with two
+    // words in between, so this pattern cannot see it — which is the whole
+    // reason the next test exists rather than a second regex here.
     const claims = countsIn(text, /\bthe\s+\*{0,2}([\w-]+)\*{0,2}\s+stylesheets/gi)
     expect(claims.length).toBeGreaterThan(0)
     for (const claim of claims) expect(claim).toBe(styleSheets.length)
@@ -213,17 +225,41 @@ describe('counts quoted in the instruction docs', () => {
   test.each([
     ['CLAUDE.md', CLAUDE_MD],
     ['AGENTS.md', AGENTS_MD],
-  ])('%s gives every stylesheet a row in the import-order table', (_name, text) => {
-    // The count alone is not enough. A sheet can be counted and still have no
-    // row, which leaves its position in the cascade unrecorded — and position
-    // is the whole reason the table exists.
+  ])('%s repeats one consistent count through the ordering paragraph', (_name, text) => {
+    // That paragraph states its count SEVEN times in seven different
+    // phrasings — "There are N", "first of the N", "each of the N", "N
+    // one-line file descriptions", "a second copy of N header comments",
+    // "first of the N, not first in the file", "before all N". Enumerating
+    // those as regexes is how a guard silently stops checking: one rewording
+    // upstream and the pattern matches nothing while still passing.
     //
-    // Matching the ROW (a leading `|`), not the filename anywhere in the doc.
-    // Both docs also name stylesheets in running prose and in the
-    // editing-rules list, so a plain `includes` passed with the row deleted —
-    // proven by deleting one.
+    // So this slices the paragraph out and asserts that EVERY spelled-out
+    // number inside it is the file count. It needs no phrase list, and it
+    // cannot half-match. The paragraph's other numbers are safe from it
+    // because NUMBER_WORDS starts at ten: "two positions", "six dependency
+    // sheets", "three @sfgov/design-system sheets" and "one-line" are all
+    // below that floor and are genuinely different quantities.
+    const anchor = text.indexOf('repository-owned stylesheets')
+    const end = text.indexOf('rather than the reverse.', anchor)
+    expect(anchor).toBeGreaterThan(-1)
+    expect(end).toBeGreaterThan(anchor)
+
+    const prose = text.slice(text.lastIndexOf('\n\n', anchor) + 1, end)
+    const spelled = prose.match(
+      new RegExp(`\\b(?:${Object.keys(NUMBER_WORDS).join('|')})\\b`, 'gi')
+    )
+    expect(spelled?.length ?? 0).toBeGreaterThanOrEqual(7)
+    for (const word of spelled) expect(NUMBER_WORDS[word.toLowerCase()]).toBe(styleSheets.length)
+  })
+
+  test('every stylesheet opens with the banner comment the docs point at', () => {
+    // The count alone is not enough. Both docs tell the reader to read each
+    // sheet's own banner comment INSTEAD of a table here, and that redirection
+    // is the stated argument for having deleted the table — so a sheet with no
+    // banner leaves the canon pointing at nothing. css/karl-guide.css was
+    // exactly that when it arrived, opening straight into `.karl-guide {`.
     const missing = styleSheets.filter(
-      (name) => !new RegExp('^\\|\\s*`css/' + name.replace('.', '\\.') + '`', 'm').test(text)
+      (name) => !readFileSync(join(ROOT, 'css', name), 'utf8').startsWith('/*')
     )
     expect(missing).toEqual([])
   })
