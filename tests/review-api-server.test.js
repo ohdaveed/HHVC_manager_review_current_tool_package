@@ -874,3 +874,40 @@ describe('reviewer session without a password configured', () => {
     expect(res.headers.get('set-cookie')).toBeNull()
   })
 })
+
+// The exit CODE is the assertion here, which is unusual enough to say why.
+// Railway retires a deployment with SIGTERM, and reads the exit status that
+// follows as the verdict on that deployment. With no signal handler the
+// default disposition kills the process, `bun run` reports 128 + 15 = 143, and
+// Railway mails "Deploy Crashed!" about a container it stopped on purpose —
+// which it did, on every deploy to main, until server.ts installed a handler.
+// Nothing else in this suite would notice: every other test kills its server
+// and ignores how it died.
+describe('graceful shutdown on SIGTERM', () => {
+  const PORT = 8140
+  const base = `http://127.0.0.1:${PORT}`
+  let dbDir
+
+  beforeAll(() => {
+    dbDir = createTestDbDir('sigterm')
+  })
+
+  afterAll(() => {
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('exits 0 rather than dying by signal', async () => {
+    const proc = spawnServer({ port: PORT, token: 'test-review-api-token', dbDir })
+    await waitForServer(`${base}/api/session`, proc)
+
+    proc.kill('SIGTERM')
+    await proc.exited
+
+    // signalCode is the half that actually distinguishes the fix from the bug:
+    // a process killed by SIGTERM reports 'SIGTERM' here whatever exitCode
+    // says, so asserting the code alone could pass on a platform that maps a
+    // signal death to 0.
+    expect(proc.signalCode).toBeNull()
+    expect(proc.exitCode).toBe(0)
+  }, 15000)
+})

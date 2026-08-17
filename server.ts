@@ -1427,6 +1427,56 @@ const server = serve({
 console.log(`HHVC mockup server running at http://${server.hostname}:${server.port}`)
 console.log(`Review state stored in ${describeStorage(DATA_DB_PATH)}`)
 
+/* **Graceful shutdown — and the reason this is not merely tidiness.**
+
+   Railway replaces a deployment by sending SIGTERM to the outgoing container
+   and waiting out a drain window before SIGKILL. With no handler installed,
+   the default disposition kills the process outright: Bun reports the script
+   as terminated by a signal, `bun run` turns that into a nonzero exit (128 +
+   15 = 143), and Railway reads a nonzero exit at shutdown as a CRASH — which
+   is exactly what it is not. Every deploy to `main` therefore mailed
+   "Deploy Crashed!" about the deployment that had just been retired on
+   purpose, with the only trace being this line in the OLD deployment's log:
+
+     error: script "serve" was terminated by signal SIGTERM (Polite quit request)
+
+   A crash notification that fires on every healthy deploy is worse than no
+   notification, because it trains the reader to ignore the one that matters.
+
+   The second reason is the honest one. `server.stop(false)` lets in-flight
+   requests finish rather than severing them mid-response; the `false` is
+   load-bearing, since `true` closes active connections immediately and
+   reintroduces the truncated-response behavior this block exists to remove.
+   A PUT /api/review-state landing at the moment of a redeploy is a reviewer's
+   decision, and the compare-and-swap in build_scripts/storage.js only protects
+   against a LOST update, not against a response the client never received.
+
+   The race against a timer is the backstop: a request that never completes
+   must not hold the process past Railway's drain window, where SIGKILL would
+   return us to exit 143 by a slower route. Whichever settles first wins, and
+   the explicit `process.exit(0)` is what states "this was an orderly stop" to
+   the platform. Storage needs no close call — no driver in
+   build_scripts/storage.js exports one, and the process is exiting anyway. */
+const SHUTDOWN_GRACE_MS = 10_000
+let shuttingDown = false
+
+async function shutdown(signal: string) {
+  // A second SIGTERM (or a SIGINT chasing a SIGTERM) must not start a second
+  // drain and race the first one's exit.
+  if (shuttingDown) return
+  shuttingDown = true
+  console.log(`Received ${signal}; draining in-flight requests before exit`)
+  await Promise.race([server.stop(false), Bun.sleep(SHUTDOWN_GRACE_MS)])
+  process.exit(0)
+}
+
+process.on("SIGTERM", () => {
+  void shutdown("SIGTERM")
+})
+process.on("SIGINT", () => {
+  void shutdown("SIGINT")
+})
+
 /* **This file deliberately has no default export, and adding one back would
    crash the deployment.** `bun run server.ts` auto-serves a module's default
    export when it carries a `fetch` — so exporting the already-started `Server`
