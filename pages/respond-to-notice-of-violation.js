@@ -46,7 +46,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'Read the full notice as soon as you receive it. It identifies the conditions that must be corrected and gives a deadline for completing the work.',
             'Check which actions apply to the building, shared areas, or a specific unit. A notice may list actions for an owner, manager, tenant, or more than one responsible party.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Read your Notice of Violation". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. This is first because the notice controls the scope and deadline for the specific case.',
+          karl: 'what_to_do -> Section. Section title: "Read your Notice of Violation". Section specifics: one Text block holding both paragraphs. This is first because the notice controls the scope and deadline for the specific case.',
         },
         {
           title: 'Make a plan to correct the conditions',
@@ -59,7 +59,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'Owners and managers should not wait for tenant actions before starting work they control.',
             'Tenants should follow unit-preparation instructions and allow properly noticed access for treatment or inspection.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Make a plan to correct the conditions". Step description: the lead paragraph and six bullets. Optional, Cost, Time, and Transaction link: blank. Responsibilities stay conditional because the notice, rather than this page, assigns the work for each case.',
+          karl: 'what_to_do -> Section. Section title: "Make a plan to correct the conditions". Section specifics: one Text block (lead paragraph and six bullets). Responsibilities stay conditional because the notice, rather than this page, assigns the work for each case.',
         },
         {
           title: 'Contact the investigator if you need help',
@@ -74,7 +74,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             '[Property owner responsibilities](ownerHub)',
             '[Integrated pest management for property owners and managers](ownerGuidance)',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Contact the investigator if you need help". Step description: the two paragraphs plus the five bullets, including rich-text links to the four related HHVC pages (a tenantNoticeSteps link added 2026-08-11). Optional, Cost, Time, and Transaction link: blank. The contact direction is supported by the HHVC Vegetation Overgrowth Notice; the language avoids promising an extension.',
+          karl: 'what_to_do -> Section. Section title: "Contact the investigator if you need help". Section specifics: one Text block (the two paragraphs plus the five bullets), whose rich-text Link tool carries the four related HHVC pages as Internal links (a tenantNoticeSteps link added 2026-08-11). The contact direction is supported by the HHVC Vegetation Overgrowth Notice; the language avoids promising an extension.',
         },
         {
           title: 'Prepare for follow-up inspection',
@@ -83,7 +83,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'Be ready for HHVC to check whether the cited conditions were corrected. Follow-up inspection may be needed before the case can close.',
           ],
           bullets: ['[Get ready for a follow-up inspection](inspectionPrepFollowup)'],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Prepare for follow-up inspection". Step description: the two paragraphs, plus a rich-text link (added 2026-08-11) to the new follow-up-inspection checklist. Optional, Cost, Time, and Transaction link: blank. The Article 11 workflow explicitly includes follow-up inspection after the compliance period; this does not promise a particular inspection date.',
+          karl: 'what_to_do -> Section. Section title: "Prepare for follow-up inspection". Section specifics: one Text block (the two paragraphs), whose rich-text Link tool carries an Internal link (added 2026-08-11) to the new follow-up-inspection checklist. The Article 11 workflow explicitly includes follow-up inspection after the compliance period; this does not promise a particular inspection date.',
         },
         {
           title: 'Finish the work or respond to further enforcement',
@@ -91,7 +91,7 @@ window.HHVC_PAGES['noticeOfViolation'] = {
             'If the violation is not corrected, HHVC may take additional enforcement action. This can include a reinspection fee when applicable, a citation, or a Director’s Hearing.',
             'Follow the instructions and deadlines in any later notice you receive.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Finish the work or respond to further enforcement". Step description: the two paragraphs. Optional, Cost, Time, and Transaction link: blank. This uses the Article 11 Interpretation Guide’s high-level enforcement workflow only; it intentionally omits unverified fee timing, hearing, appeal, and abatement details.',
+          karl: 'what_to_do -> Section. Section title: "Finish the work or respond to further enforcement". Section specifics: one Text block holding both paragraphs. This uses the Article 11 Interpretation Guide’s high-level enforcement workflow only; it intentionally omits unverified fee timing, hearing, appeal, and abatement details.',
         },
       ],
     },

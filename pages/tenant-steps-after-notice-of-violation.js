@@ -23,7 +23,7 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
   sections: [
     {
       heading: 'Prepare your unit',
-      karl: "Transaction -> Steps -> Step, mirroring noticeOfViolation's numbered-step shape.",
+      karl: 'what_to_do. The panel\'s "+" offers two block types, Callout and Section; each step below is one Section. Inside a Section, the Section specifics "+" offers Address, Callout, Document, Email, Button link, Phone number and Text. Mirrors noticeOfViolation\'s numbered-step shape.',
       kind: 'body',
       steps: [
         {
@@ -31,7 +31,7 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
           text: [
             'Read your Notice of Violation to see which corrective actions are listed for your unit or a shared area.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Check what applies to you".',
+          karl: 'what_to_do -> Section. Section title: "Check what applies to you". Section specifics: one Text block.',
         },
         {
           title: 'Get your unit ready',
@@ -49,7 +49,7 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
                 'No tier-1 source confirms who is responsible for issuing unit-prep instructions in every case. Confirm with HHVC before publication.',
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Get your unit ready".',
+          karl: 'what_to_do -> Section. Section title: "Get your unit ready". Section specifics: one Text block (bulleted list).',
         },
         {
           title: 'Allow access for treatment or inspection',
@@ -61,7 +61,7 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
                 'The specific notice period a property owner must give a tenant before entry has no tier-1 source in this design pass. Confirm with HHVC before publication.',
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Allow access for treatment or inspection".',
+          karl: 'what_to_do -> Section. Section title: "Allow access for treatment or inspection". Section specifics: one Text block.',
         },
       ],
     },

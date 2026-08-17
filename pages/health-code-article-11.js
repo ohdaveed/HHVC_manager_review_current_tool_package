@@ -33,7 +33,7 @@ window.HHVC_PAGES['article11Guide'] = {
     paragraphs: [
       'This guide is a plain-language summary, not the legal code. Use the municipal code for the complete and current text.',
     ],
-    button: 'View Health Code Article 11',
+    button: 'View Article 11',
     buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
     karl: 'Report Spotlight -> external Button link. The report points to the official municipal code rather than reproducing every Article 11 provision.',
   },
@@ -109,7 +109,7 @@ window.HHVC_PAGES['article11Guide'] = {
           'Remove animal or human waste and clean contaminated materials. Waste left in a yard, hallway, or other shared area can be a health nuisance.',
         ],
       ],
-      button: 'Report garbage, mold, or trash',
+      button: 'Report garbage or filth',
       buttonTarget: 'filthReport',
     },
     {
@@ -131,7 +131,7 @@ window.HHVC_PAGES['article11Guide'] = {
           'If the City orders removal, the owner must remove the poisonous plants as directed.',
         ],
       ],
-      button: 'Report vegetation or a sanitation problem',
+      button: 'Report overgrowth',
       buttonTarget: 'filthReport',
     },
     {
@@ -217,7 +217,7 @@ window.HHVC_PAGES['article11Guide'] = {
           'A dangerous condition not named elsewhere can still be a nuisance. Excessive stored materials may be a problem when they block inspection, create a hazard, or shelter pests.',
         ],
       ],
-      button: 'Find out if HHVC can inspect the problem',
+      button: 'See what HHVC inspects',
       buttonTarget: 'scopeInfo',
     },
     {
@@ -260,7 +260,7 @@ window.HHVC_PAGES['article11Guide'] = {
       paragraphs: [
         'Section 609 establishes the Healthy Housing inspection program fee for eligible apartment buildings. The fee is based on rental units, and the current rate schedule can change each fiscal year.',
       ],
-      button: 'Pay your Healthy Housing fee',
+      button: 'Pay your fee',
       buttonTarget: 'payFee',
     },
   ],

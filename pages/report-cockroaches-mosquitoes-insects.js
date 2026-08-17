@@ -75,7 +75,7 @@ window.HHVC_PAGES['insectsReport'] = {
             text: 'See a dead bird? Report it to the State West Nile virus program instead — dead birds help track West Nile virus.',
             title: false,
           },
-          button: 'Report a dead bird to the State',
+          button: 'Report a dead bird',
           buttonUrl: 'https://westnile.ca.gov/report',
           karl: 'what_to_do -> Section. Section title: "Tell us where the problem is". Section specifics: Text block (intro sentence + bulleted checklist) + Callout block + secondary Button link block (external State WNV reporting site). Checklist names the insect scope this consolidated page covers.',
         },
@@ -97,7 +97,7 @@ window.HHVC_PAGES['insectsReport'] = {
     },
     {
       heading: 'How your report is processed',
-      karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. Secondary Button link block ("View Health Code Article 11") citing the municipal code per Ch. 8.7.2.',
+      karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. Secondary Button link block ("View Article 11") citing the municipal code per Ch. 8.7.2.',
       kind: 'body',
       bullets: [
         '**Review time:** It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',
@@ -107,7 +107,7 @@ window.HHVC_PAGES['insectsReport'] = {
         '**Note:** Tenants have rights to safe and habitable housing. A property owner or manager cannot retaliate because a tenant reports housing conditions to the City.',
         'Under San Francisco Health Code Article 11, property owners are legally required to keep their buildings clean, watertight, and completely free of insect infestations, and to eliminate places where flies and mosquitoes breed.',
       ],
-      button: 'View Health Code Article 11',
+      button: 'View Article 11',
       buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
       buttonStyle: 'secondary',
     },

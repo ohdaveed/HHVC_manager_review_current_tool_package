@@ -304,11 +304,26 @@ h4 {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  /* Left at its literal on purpose, unlike the chrome eyebrows below. This
+     rule is shared: js/page-render.js renders the mockup's page-type badge
+     (`.eyebrow--agency` / `.eyebrow--service`) with it, and that badge is
+     inside `.browser-shell`, whose type scale was settled by the mockup work
+     and is deliberately outside the chrome floor. Repointing the shared value
+     would resize the thing under review to satisfy a rule about tool chrome. */
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.75rem;
+}
+/* The sidebar's four eyebrows ARE tool chrome -- one panel label and three
+   <summary> disclosure headers -- so they take the chrome scale. They carry
+   the full eyebrow treatment (uppercase, 700, tracked), which is what buys a
+   sub-floor size at all; --ds-text-micro is the one size that buys, and
+   12.48px was not it. Scoped rather than applied to `.eyebrow` itself so the
+   mockup badge above keeps its own. */
+.sidebar .eyebrow {
+  font-size: var(--ds-text-micro);
 }
 .eyebrow--agency {
   color: var(--eyebrow-agency);
@@ -1834,7 +1849,12 @@ a:focus {
   display: block;
   margin-bottom: 0.45rem;
   color: var(--text-primary);
-  font-size: 0.78rem;
+  /* --ds-text-micro, not the prior 0.78rem (12.48px). This one really is an
+     eyebrow -- uppercase, bold, tracked -- so it keeps the sub-floor
+     exemption, but the exemption buys exactly ONE size: the 11px step the
+     scale publishes for it. 12.48px sat on no step at all, which is how it
+     collected the exemption's licence without its discipline. */
+  font-size: var(--ds-text-micro);
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1878,7 +1898,12 @@ a:focus {
 }
 .karl-tag-legend-desc {
   color: var(--text-secondary);
-  font-size: 0.76rem;
+  /* --ds-text-label, not the prior 0.76rem (12.16px): this is sentence-case
+     prose in the Help tab, so it has no eyebrow argument for going under the
+     14px chrome floor. It kept its literal only because the floor check never
+     opened the legend -- the same "unswept, not exempt" case as `.char-count`
+     above. */
+  font-size: var(--ds-text-label);
   line-height: 1.35;
 }
 @media (max-width: 980px) {
@@ -2205,14 +2230,21 @@ body.hide-karl-tags .unverified-pill {
   background: transparent;
   border: none;
   /* Dimmed via opacity rather than a lighter colour so it tracks whichever
-     toast variant it lands on. 0.85 is set by the WORST variant, not the
-     default one: on --toast-bg it leaves 11.51:1, but on the lighter
-     --toast-info-bg it comes out at 4.87:1, and dropping to 0.75 would put
-     that variant at 4.17:1 — under 4.5:1 while the default still looked
-     comfortable. Check the info and success toasts, not just the plain one,
-     before lowering this. */
+     toast variant it lands on. The value is set by the WORST variant, not the
+     default one, and the worst variant is --toast-info-bg: opacity composites
+     --toast-fg TOWARD the background, so the lightest background is always the
+     one that governs. At 0.92 the three variants land at 13.33:1 (--toast-bg),
+     6.06:1 (success) and 4.78:1 (info).
+
+     It was 0.85, which measured 4.87:1 back when --toast-info-bg was #2a60af.
+     That number was correct when written and stopped being correct without
+     anything failing: the ramp work repointed the token to SFDS's action blue
+     (#495ed4, a full step lighter), taking this control to 4.34:1 — under AA,
+     with a comment still vouching for 4.87. tests/theme-contrast.test.js now
+     recomputes all three from the declared values so the next background
+     change fails a test instead of a code review. */
   color: currentColor;
-  opacity: 0.85;
+  opacity: 0.92;
   cursor: pointer;
   font-size: 1rem;
   padding: 0 0.25rem;
@@ -2224,18 +2256,40 @@ body.hide-karl-tags .unverified-pill {
 .toast .toast-action {
   margin-left: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  /* 65%, not the 45% this started at: the border is what makes the control
+     readable AS a control, and 45% of --toast-fg over --toast-info-bg is
+     2.32:1 against the toast behind it — under the 3:1 WCAG 1.4.11 asks of a
+     UI component boundary. 65% takes it to 3.23:1 on that same worst case. */
+  border: 1px solid color-mix(in srgb, currentColor 65%, transparent);
   border-radius: var(--radius);
-  background: color-mix(in srgb, currentColor 12%, transparent);
+  /* The fill is a currentColor tint, so it lightens a surface that is already
+     carrying light text — every percent added here COSTS label contrast. On
+     --toast-info-bg the old 12% put the label at 4.23:1, under AA. 6% leaves
+     4.77:1 (13.06:1 on --toast-bg, 6.03:1 on success), which is the headroom
+     this control gets to spend. */
+  background: color-mix(in srgb, currentColor 6%, transparent);
   color: currentColor;
-  font-size: 0.75rem;
+  /* --ds-text-label, not the prior 0.75rem (12px). This is sentence-case, so
+     it has no eyebrow argument for sitting under the 14px chrome floor -- and
+     it is an ACTION, the control a reviewer clicks to undo something, which
+     is the worst place in the chrome to save two pixels. It survived the
+     floor sweep only because a toast is transient: nothing had rendered one
+     when the scan walked the DOM. tests/e2e/chrome-tokens.spec.js now raises
+     one before scanning, so this rule is inside the guard rather than beside
+     it. */
+  font-size: var(--ds-text-label);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
+/* Hover moves the BORDER and deliberately leaves the fill alone. The old rule
+   raised the fill to 22%, which drops the label to 3.49:1 on --toast-info-bg —
+   so the state a reviewer enters by pointing at the control was the least
+   readable one. There is no fill value that both reads as a hover change and
+   clears 4.5:1 there (10% is already 4.39:1), whereas the border has room to
+   go all the way to solid. Feedback goes where the contrast budget is. */
 .toast .toast-action:hover {
-  background: color-mix(in srgb, currentColor 22%, transparent);
-  border-color: color-mix(in srgb, currentColor 65%, transparent);
+  border-color: currentColor;
 }
 
 /* Same pinned-chrome treatment as the toast above, for the same reason. This

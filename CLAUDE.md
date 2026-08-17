@@ -77,7 +77,7 @@ wrong). `bun run test` runs 45 Bun unit-test files under `tests/`: `utils`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
-`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `karl-guide` — self-explanatory by name — plus a handful
+`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `ci-workflow` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
 `card-inheritance` (the shared `inherits`/`title-only`/`authored` classifier
 plus the audit built on it — `authored` must beat everything so a Table block
@@ -918,12 +918,22 @@ and the orphan pruning, which a reviewer opens deliberately.
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 `build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
 has coverage independent of current page content). A page has `slug`,
-`type` (a free-form string, only `min(1)` checked — values in use are `Agency`,
-`Transaction`, `Information`, `Resource Collection`, `Campaign`, and `Report`,
-matching Karl content-type names; see `docs/wagtail-content-mapping.md`), `title`,
+`type` (a free-form string, only `min(1)` checked — **eight** values are in use:
+`Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
+`Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
+matching Karl content-type names. This list read six until 2026-08-15, omitting
+`Topic` and `About us`; a census via `build_scripts/load-pages.js` is what
+corrects it, so re-derive rather than trusting a restatement), `title`,
 `summary`, `audience[]`,
-`reading` (grade-level string), and `sections[]`. For Karl editor field mapping by
-content type, see `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
+`reading` (grade-level string), and `sections[]`. **For Karl editor field mapping
+by content type, `docs/karl-export-field-map.md` is the current source** — one
+map per type in use, giving live UI labels, navigation paths, block and raw
+Wagtail field names, required-versus-optional, repeatable-versus-single, how an
+internal page link differs from an external URL, and an explicit register of
+what is still unresolved. It supersedes `docs/wagtail-content-mapping.md` and
+`docs/source/hhvc-policy/karl-content-type-field-reference.md` on type coverage;
+both remain useful for their per-type detail and both still carry claims the
+newer doc lists as obsolete.
 Sections carry a required `heading` and `karl`, plus optional `kind`, `component`
 (enum: `body`, `services`, `resources`, `related`, `contact`, `spotlight`,
 `what-to-do`, `supporting`, `intro`, `top-facts`), `open` (renders a Transaction
@@ -1124,6 +1134,15 @@ explicitly because it lives in `docs/`), `mockup-draft` (the `pages/*.js`
 mockups, projected to markdown at ingest time and not committed), and `sfds`
 (the vendored SF Design System token capture and its recorded disagreements).
 
+- **The `karl` category is an explicit file list, not a glob**, because those
+  documents live in `docs/` rather than `docs/source/`.
+  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +46
+  chunks: it is the E1 record of what every Karl content type's editor form
+  actually contains, and without it the corpus could answer what the Help
+  Center _says_ about a form but not what the form _offers_ — two things that
+  have given different answers four times over. **Adding a file here moves the
+  measured counts below**, so re-measure and re-ingest rather than editing the
+  list alone.
 - **Category comes from the first path segment under `docs/source/`**, so a new
   folder files itself with no code change.
 - **`mockup-draft` is about a third of the corpus and is the dangerous one** —
@@ -1133,11 +1152,28 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   on. Resolved from the matched row, so the model cannot spoof it; it also
   travels with the citation the reviewer sees.
 - Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured: **77 documents, 769 chunks** (`hhvc-policy` 430, `mockup-draft` 233,
-  `karl` 53, `sfgov-live` 28, `sfgov-style` 24, `sfds` 1). Still brute-force cosine.
+- Re-measured 2026-08-16: **78 documents, 816 chunks** (`hhvc-policy` 430,
+  `mockup-draft` 233, `karl` 99, `sfgov-live` 28, `sfgov-style` 24, `sfds` 2).
+  **Editing an ingested document moves this, so re-measure rather than trusting
+  the number above** — `docs/karl-export-field-map.md` alone went 42 → 43 → 46
+  chunks over three passes of edits to its own register, and the corpus total
+  with it each time.
+  `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
+  brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
-  writes to Postgres and `compliance-audit` reports ready — verified:
-  `knowledgeBase: {ready: true, chunkCount: 768}`.
+  writes to Postgres and `compliance-audit` reports ready — verified against the
+  deployed service, which answered `chunkCount: 768` alongside `ready: true`.
+  **That number is a record of what that ingest wrote, not the current corpus
+  size**, and the 48-chunk gap to the 816 above is not one change: that ingest
+  predates both `docs/karl-export-field-map.md` joining the `karl` category (46
+  chunks as measured today) and the `sfds` category existing at all (2 chunks),
+  which accounts for the whole of it. Those are CHUNK counts, not document
+  counts — `sfds` is a single ingested document,
+  `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
+  only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
+  the corpus and there is no second source to go looking for. What the reading
+  evidences is that the seam works on Postgres at all — read the live count from
+  `/api/ai/capabilities` rather than from this line.
 
 ### Reviewer sign-in (`/api/session`)
 
@@ -1300,10 +1336,18 @@ start `bun run serve`.
   (`manager_review_packet.md`, `manager_decision_log.csv`,
   `page_approval_checklist.csv`, `mockup_tracking_sheet.csv`), distinct from
   the in-browser `localStorage` review state.
-- **`docs/`** — `wagtail-content-mapping.md` (page type → Karl content type),
+- **`docs/`** — **`karl-export-field-map.md`** (the current per-content-type
+  field map: live UI labels, navigation paths, block and raw Wagtail field
+  names, required-versus-optional, repeatable-versus-single, internal versus
+  external link shapes, and an explicit unresolved/obsolete register — start
+  here for anything naming a Karl destination), `wagtail-content-mapping.md`
+  (the older page-type → Karl mapping, superseded on type coverage but still
+  the fuller record of per-type nested block detail and research history),
   `karl-mockup-cookbook.md` (the section-by-section build procedure for authors,
   and its dated capture record `karl-mockup-cookbook-plan-2026-08-14.md`), plus
-  dated research/audit notes.
+  dated research/audit notes. **Those dated notes are records, not
+  documentation** — a count or claim that was right on its date stays in the
+  file; corrections go in the field map's obsolete register instead.
 - **`docs/source/hhvc-policy/`** — source policy documents (PDFs and their
   markdown extracts) that page copy is based on; not code.
 - **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning and

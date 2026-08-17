@@ -1,13 +1,26 @@
 // Coverage for parseKarlLabel(), the free-text-to-display-parts splitter
-// behind the redesigned Karl tag. The ~350 `karl` notes across pages/*.js use
+// behind the redesigned Karl tag. The `karl` notes across pages/*.js use
 // wildly inconsistent conventions (`Field: value`, `Field = value`, `->`
 // chains, bare rationale, terse one-liners), so the function trusts only one
 // separator (a leading `->`/`→` chain in the note's OWN first sentence) and
 // otherwise just splits at the first sentence boundary. What matters here is
 // that it never drops or garbles content — every fixture below is checked
 // for that, not just for the "happy path" split.
+//
+// This header quoted "~350 notes" until 2026-08-15, against a real 308. The
+// number was never checked by anything and carried no weight in the argument
+// (the notes are inconsistent whatever their count), so it is deleted rather
+// than corrected — the repo's own rule, from tests/doc-counts.test.js: quote a
+// number only if something here can verify it, because an unverified one reads
+// as authoritative.
 import { describe, test, expect } from 'bun:test'
-import { parseKarlLabel } from '../js/karl-tag-meta.js'
+import {
+  guideCopyValues,
+  guideStatusLabel,
+  normalizeKarlGuide,
+  parseKarlLabel,
+  renderKarlGuidePanel,
+} from '../js/karl-tag-meta.js'
 
 /** Strip whitespace/punctuation (including the `->`/`→` separator itself,
  *  which is structural, not content) so two strings can be compared for the
@@ -126,11 +139,11 @@ describe('parseKarlLabel', () => {
       rationale: '',
       flagged: false,
     })
+  })
 })
 
 describe('structured Karl guides', () => {
-  test('builds the canonical Agency subsection path and ordered steps', async () => {
-    const { normalizeKarlGuide } = await import('../js/karl-tag-meta.js')
+  test('builds the canonical Agency subsection path and ordered steps', () => {
     const guide = normalizeKarlGuide({
       page: { type: 'Agency', title: 'Program', summary: 'Summary.' },
       context: { role: 'services', linkShape: 'resources-list' },
@@ -141,12 +154,16 @@ describe('structured Karl guides', () => {
     expect(guide.evidence).toBe('E1')
   })
 
-  test('unresolved mappings never expose a guessed path', async () => {
-    const { normalizeKarlGuide, guideStatusLabel } = await import('../js/karl-tag-meta.js')
+  test('unresolved mappings never expose a guessed path', () => {
     const guide = normalizeKarlGuide({
       page: { type: 'Report' },
       context: { role: 'content' },
-      guide: { unresolvedId: 'U1', status: 'unresolved', evidence: 'U', steps: ['Decision required.'] },
+      guide: {
+        unresolvedId: 'U1',
+        status: 'unresolved',
+        evidence: 'U',
+        steps: ['Decision required.'],
+      },
     })
     expect(guide.path).toBe('')
     expect(guide.status).toBe('unresolved')
@@ -154,8 +171,7 @@ describe('structured Karl guides', () => {
     expect(guideStatusLabel(guide)).toBe('U1 unresolved')
   })
 
-  test('copies only safe visible values and preserves source labels', async () => {
-    const { guideCopyValues } = await import('../js/karl-tag-meta.js')
+  test('copies only safe visible values and preserves source labels', () => {
     expect(
       guideCopyValues([
         { label: 'Title', value: 'Visible title', source: 'inherited' },
@@ -168,8 +184,7 @@ describe('structured Karl guides', () => {
     ])
   })
 
-  test('escapes guide values and renders copy controls', async () => {
-    const { normalizeKarlGuide, renderKarlGuidePanel } = await import('../js/karl-tag-meta.js')
+  test('escapes guide values and renders copy controls', () => {
     const html = renderKarlGuidePanel(
       normalizeKarlGuide({
         page: { type: 'Agency' },
@@ -186,5 +201,4 @@ describe('structured Karl guides', () => {
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
     expect(html).not.toContain('<script>')
   })
-})
 })

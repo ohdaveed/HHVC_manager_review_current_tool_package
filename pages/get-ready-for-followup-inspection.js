@@ -25,7 +25,7 @@ window.HHVC_PAGES['inspectionPrepFollowup'] = {
   sections: [
     {
       heading: 'Document your work',
-      karl: "Transaction -> Steps -> Step, mirroring noticeOfViolation's numbered-step shape.",
+      karl: 'what_to_do. The panel\'s "+" offers two block types, Callout and Section; each step below is one Section. Inside a Section, the Section specifics "+" offers Address, Callout, Document, Email, Button link, Phone number and Text. Mirrors noticeOfViolation\'s numbered-step shape.',
       kind: 'body',
       steps: [
         {
@@ -33,7 +33,7 @@ window.HHVC_PAGES['inspectionPrepFollowup'] = {
           text: [
             'Keep records of the work you complete, such as photos, receipts, or pest treatment reports.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Keep records of what you completed". Reuses noticeOfViolation\'s existing, already-verified record-keeping sentence.',
+          karl: 'what_to_do -> Section. Section title: "Keep records of what you completed". Section specifics: one Text block. Reuses noticeOfViolation\'s existing, already-verified record-keeping sentence.',
         },
         {
           title: 'Make sure the cited conditions are fully corrected',
@@ -45,13 +45,13 @@ window.HHVC_PAGES['inspectionPrepFollowup'] = {
                 'No tier-1 source confirms whether a partial correction can close part of a multi-condition notice. Confirm with HHVC before publication.',
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Make sure the cited conditions are fully corrected".',
+          karl: 'what_to_do -> Section. Section title: "Make sure the cited conditions are fully corrected". Section specifics: one Text block.',
         },
       ],
     },
     {
       heading: 'What to expect at the follow-up visit',
-      karl: "Transaction -> Steps -> Step, mirroring afterReport's inspection-narrative shape.",
+      karl: "what_to_do. A second run of Section blocks in the same panel — Karl has no separate container per heading, so this mockup section and the one above share one what_to_do stream. Mirrors afterReport's inspection-narrative shape.",
       kind: 'body',
       steps: [
         {
@@ -64,13 +64,13 @@ window.HHVC_PAGES['inspectionPrepFollowup'] = {
                 "What exactly a follow-up inspection checks beyond the notice's cited conditions has no tier-1 source. Confirm with HHVC before publication.",
             },
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "An inspector checks the cited conditions".',
+          karl: 'what_to_do -> Section. Section title: "An inspector checks the cited conditions". Section specifics: one Text block.',
         },
         {
           title: 'If something is still not fixed',
           text: ['HHVC may take further enforcement action, which can include a reinspection fee.'],
           bullets: ['[What happens after you report a housing or pest problem](afterReport)'],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "If something is still not fixed". Links forward to afterReport\'s enforcement chain rather than restating its unverified fee/hearing figures — matches the sentence already published, unpilled, in noticeOfViolation\'s own whatToKnow.thingsToKnow.',
+          karl: 'what_to_do -> Section. Section title: "If something is still not fixed". Section specifics: one Text block (paragraph plus its bullet). Links forward to afterReport\'s enforcement chain rather than restating its unverified fee/hearing figures — matches the sentence already published, unpilled, in noticeOfViolation\'s own whatToKnow.thingsToKnow.',
         },
       ],
     },

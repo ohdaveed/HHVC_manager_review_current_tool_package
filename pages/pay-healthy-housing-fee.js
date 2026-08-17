@@ -64,7 +64,7 @@ window.HHVC_PAGES['payFee'] = {
             'Vacant units and units occupied by relatives still count as rental units.',
             'Condominium, commercial, and tenancy-in-common buildings do not pay this fee. Send the proof requested on your invoice.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Check your invoice and whether the fee applies". Step description: two paragraphs plus four bullets. Optional, Cost, Time, and Transaction link: blank. Leads with the decision that prevents an owner from starting a payment before knowing whether the annual program fee applies.',
+          karl: 'what_to_do -> Section. Section title: "Check your invoice and whether the fee applies". Section specifics: one Text block (two paragraphs plus four bullets). Leads with the decision that prevents an owner from starting a payment before knowing whether the annual program fee applies.',
         },
         {
           title: 'Confirm your annual fee',
@@ -90,7 +90,7 @@ window.HHVC_PAGES['payFee'] = {
             text: 'The annual fee supports Healthy Housing inspections. If an inspection finds an uncorrected violation, a separate reinspection fee may apply: $256 per hour for an Environmental Health Inspector or $234 per hour for an Environmental Health Technician. Additional half-hours cost $128 and $115.',
             karl: 'Callout inside the Transaction Step rich-text description. Keep the reinspection rates separate from the annual tier list so a reviewer does not mistake a potential enforcement cost for the amount due on the annual invoice. Rates are from the FY 2026-27 Environmental Health Branch fee schedule.',
           },
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Confirm your annual fee". Step description: the intro, seven fee-tier bullets, and annual-versus-reinspection callout. Optional, Cost, Time, and Transaction link: blank. The tier rates are from the FY 2026-27 Environmental Health Branch fee schedule; recheck against a newly certified schedule before publication.',
+          karl: 'what_to_do -> Section. Section title: "Confirm your annual fee". Section specifics: one Text block (intro plus seven fee-tier bullets) + one Callout block. The Callout is a single rich text field with no separate title field like this mockup callout has, so fold "Annual fee and reinspection fees are different" in as a bolded lead-in within the callout text, or flag for Digital Services if a distinct heading is required. The tier rates are from the FY 2026-27 Environmental Health Branch fee schedule; recheck against a newly certified schedule before publication.',
         },
         {
           title: 'Pay online, in person, or by mail',
@@ -101,9 +101,9 @@ window.HHVC_PAGES['payFee'] = {
             'In person: pay by check, cash, or money order at City Hall, Room 140, 1 Dr. Carlton B. Goodlett Place.',
             'By mail: make a check or money order payable to "Department of Public Health." Write your invoice number on it and mail it to P.O. Box 7429, San Francisco, CA 94120.',
           ],
-          button: 'Pay your Healthy Housing fee online',
+          button: 'Pay your fee online',
           buttonUrl: 'https://services.paysf.co/service/healthy-housing-fee',
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Pay online, in person, or by mail". Step description: intro plus two payment-method bullets. Button: "Pay your Healthy Housing fee online", linking to the live PaySF Healthy Housing fee service. Optional, Cost, Time, and Transaction link: blank. Payment is the primary action, so it follows eligibility and amount confirmation without burying the live payment route.',
+          karl: 'what_to_do -> Section. Section title: "Pay online, in person, or by mail". Section specifics: one Text block (intro plus two payment-method bullets) + one Button link block set to External URL, pointing at the live PaySF Healthy Housing fee service. Link text shortened from "Pay your Healthy Housing fee online" (35 characters) to follow the SF.gov button-text guidance of 25 characters and its verb-first button library. That 25 is editorial rather than schema: the live Button link field carries maxlength 255 (measured 2026-08-15), so a longer label would save — it would just read poorly and contradict published guidance. Payment is the primary action, so it follows eligibility and amount confirmation without burying the live payment route.',
         },
         {
           title: 'Correct an invoice or update your information',
@@ -117,7 +117,7 @@ window.HHVC_PAGES['payFee'] = {
             'For a mailing-address change, include the property address and block and lot number, or the invoice number.',
             'Email healthyhousing@sfdph.org or call 415-252-3800. Also report ownership changes to the Assessor-Recorder’s Office.',
           ],
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Correct an invoice or update your information". Step description: one intro paragraph and five bullets. Optional, Cost, Time, and Transaction link: blank. Consolidates the live page’s scattered owner-occupied, unit-count, building-type, ownership, and mailing-address exceptions into one correction path.',
+          karl: 'what_to_do -> Section. Section title: "Correct an invoice or update your information". Section specifics: one Text block (one intro paragraph and five bullets). Consolidates the live page’s scattered owner-occupied, unit-count, building-type, ownership, and mailing-address exceptions into one correction path.',
         },
         {
           title: 'Pay by the due date or contact us',
@@ -134,7 +134,7 @@ window.HHVC_PAGES['payFee'] = {
             text: 'Healthy Housing uses these fees to support inspections of apartment buildings. Inspectors look at common areas, yards, garbage storage areas, and lobbies for conditions that may support pests or create housing health hazards.',
             karl: 'Callout inside the Transaction Step rich-text description. This is the live page’s program-context copy, moved to the end so it explains the fee without delaying the payment decision.',
           },
-          karl: 'Transaction -> Steps -> Step. Step type: number. Title: "Pay by the due date or contact us". Step description: intro, late-payment bullets, and program-context callout. Optional, Cost, Time, and Transaction link: blank. Penalty timing is presented after the normal payment path rather than competing with it at the top of the page.',
+          karl: 'what_to_do -> Section. Section title: "Pay by the due date or contact us". Section specifics: one Text block (intro plus late-payment bullets) + one Callout block. Same title gap as the fee-tier callout above: fold "What the annual fee supports" in as a bolded lead-in, or flag for Digital Services. Penalty timing is presented after the normal payment path rather than competing with it at the top of the page.',
         },
       ],
     },
