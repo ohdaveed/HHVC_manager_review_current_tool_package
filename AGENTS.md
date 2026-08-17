@@ -310,7 +310,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets to the
   document. It holds because MUI emits scoped `.css-*` classes and **no
   `CssBaseline`**. `CssBaseline` writes element-level rules on `html`/`body`/`*`,
-  and Emotion injects after the ten stylesheets, so it would win ties inside the
+  and Emotion injects after the eleven stylesheets, so it would win ties inside the
   shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed; do not
   add the global one.
 - **`js/react/theme.js` is the only bridge to the design tokens.** It reads the
@@ -2450,7 +2450,7 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The ten stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
+**The eleven stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
 stay first — it is the raw-primitive layer everything downstream reads, keyed
 to SFDS's own published token names; `css/theme.css` MUST stay last — it is
 the semantic token layer, and its dark-mode block overrides
@@ -2467,6 +2467,7 @@ the `--legacy-*` primitives `css/styles.css` declares on `:root`):
 | `css/review-ops.css`          | the stored-review-data panel                                                                   |
 | `css/ai-rewrite.css`          | the floating selection button and the rewrite popover                                          |
 | `css/inline-content-edit.css` | the inline click-to-edit widgets, Edited badge, add/remove/reset controls                      |
+| `css/karl-guide.css`          | the Karl guide trigger, its expandable panel, status badges and copy controls                  |
 | `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
@@ -2582,6 +2583,17 @@ globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
+- Karl guide panels → `js/karl-guide-registry.js` (the per-page-type field
+  tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
+  `''` rather than guessing — `guideForContext` stamps any non-empty path
+  `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
+  reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
+  `js/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
+  call site in `js/page-render.js` must pass `context.role`: without one the
+  tag KIND is used as the role, which names no Karl field. Note the panel is
+  block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
+  parser closes the paragraph and the panel escapes the element it is
+  positioned against.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

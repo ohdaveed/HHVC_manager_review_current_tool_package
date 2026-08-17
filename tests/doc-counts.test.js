@@ -48,6 +48,18 @@ const e2eSpecFiles = readdirSync(join(ROOT, 'tests', 'e2e'))
 
 const pageFiles = readdirSync(join(ROOT, 'pages')).filter((name) => name.endsWith('.js'))
 
+/* Stylesheets on disk. CLAUDE.md and AGENTS.md head a table with "The N
+   stylesheets, in js/main.js import order" and then list one row per file —
+   and unlike the counts above, nothing checked either half. It drifted the
+   first time a stylesheet was added: css/karl-guide.css landed with both docs
+   still saying ten and neither table naming it, so an agent reading the canon
+   was told a file that exists does not. The table is not decorative; it is
+   where the load-bearing "sfds.css first, theme.css last" ordering rule is
+   written, and a sheet missing from it has no recorded position. */
+const styleSheets = readdirSync(join(ROOT, 'css'))
+  .filter((name) => name.endsWith('.css'))
+  .sort()
+
 const NUMBER_WORDS = {
   ten: 10,
   eleven: 11,
@@ -183,6 +195,37 @@ describe('counts quoted in the instruction docs', () => {
     const claims = countsIn(text, /\*\*(\d+)\s+pages\*\*|the (\d+)\s+pages/g)
     expect(claims.length).toBeGreaterThan(0)
     for (const claim of claims) expect(claim).toBe(pageFiles.length)
+  })
+
+  test.each([
+    ['CLAUDE.md', CLAUDE_MD],
+    ['AGENTS.md', AGENTS_MD],
+  ])('%s states the real number of stylesheets', (_name, text) => {
+    // "the N stylesheets", never a bare "N stylesheets". Both docs also say
+    // "Emotion added 15 stylesheets" — that counts what MUI injects at
+    // runtime, not what is in css/, and folding it in would pin an unrelated
+    // measurement to this repo's file count.
+    const claims = countsIn(text, /\bthe\s+\*{0,2}([\w-]+)\*{0,2}\s+stylesheets/gi)
+    expect(claims.length).toBeGreaterThan(0)
+    for (const claim of claims) expect(claim).toBe(styleSheets.length)
+  })
+
+  test.each([
+    ['CLAUDE.md', CLAUDE_MD],
+    ['AGENTS.md', AGENTS_MD],
+  ])('%s gives every stylesheet a row in the import-order table', (_name, text) => {
+    // The count alone is not enough. A sheet can be counted and still have no
+    // row, which leaves its position in the cascade unrecorded — and position
+    // is the whole reason the table exists.
+    //
+    // Matching the ROW (a leading `|`), not the filename anywhere in the doc.
+    // Both docs also name stylesheets in running prose and in the
+    // editing-rules list, so a plain `includes` passed with the row deleted —
+    // proven by deleting one.
+    const missing = styleSheets.filter(
+      (name) => !new RegExp('^\\|\\s*`css/' + name.replace('.', '\\.') + '`', 'm').test(text)
+    )
+    expect(missing).toEqual([])
   })
 
   test('CLAUDE.md names every unit-test file it claims to list', () => {
