@@ -96,6 +96,7 @@ import './../css/review-insights.css'
 import './../css/review-ops.css'
 import './../css/ai-rewrite.css'
 import './../css/inline-content-edit.css'
+import './../css/karl-guide.css'
 import './../css/theme.css'
 
 // ---------------------------------------------------------------------------
@@ -144,6 +145,7 @@ import './editor-panel.js'
 // page-data.js above is, not what makes it work.
 import './card-inheritance.js'
 import './page-render.js'
+import './karl-guide.js'
 import './app.js'
 import './manager-review-export.js'
 import './review-state-validation.js'

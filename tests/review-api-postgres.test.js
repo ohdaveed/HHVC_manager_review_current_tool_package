@@ -29,9 +29,13 @@ const base = `http://127.0.0.1:${PORT}`
  */
 function resolveDatabaseUrl() {
   if (process.env.TEST_DATABASE_URL) return process.env.TEST_DATABASE_URL
-  const ready = Bun.spawnSync(['pg_isready', '-q'])
-  if (ready.exitCode !== 0) return null
-  return 'postgres://localhost:5432/hhvc_parity'
+  try {
+    const ready = Bun.spawnSync(['pg_isready', '-q'])
+    if (ready.exitCode !== 0) return null
+    return 'postgres://localhost:5432/hhvc_parity'
+  } catch {
+    return null
+  }
 }
 
 const DATABASE_URL = resolveDatabaseUrl()

@@ -73,7 +73,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 45 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 46 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -114,6 +114,20 @@ rather than the scheme — `mailto:`, `tel:` and root-relative targets all pass
 `safeUrl` and would still render as dead `data-render-target` buttons, so a
 later reader "fixing" them by widening this predicate would ship exactly the
 broken control it removes),
+`karl-guide` (the Karl-field registry, its panel markup and the disclosure's
+keyboard behaviour. Most of its assertions are about paths that must NOT
+appear, because this feature's failure mode is a wrong answer delivered
+confidently: a guide is stamped `E1 confirmed` whenever it holds any path, and
+that badge means MEASURED against the live Karl admin, so a plausible
+neighbouring field is worse than none. It pins the empty string as a
+first-class answer — the one that is never harmful — and pins each of the ten
+wrong routings four independent PR reviewers found by the page type and role
+that produced it. It also asserts the panel emits **no block-level element at
+all**: the panel renders inside a `<span>` that renders wherever its tag does,
+so a `<div>` within it closes an enclosing paragraph early and the panel
+escapes the positioned ancestor it anchors to, opening elsewhere on the page.
+That had been a rule three call sites had to remember; it is now a property of
+the markup),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB),
 `review-api-postgres` (the same routes against a **real Postgres**, and
@@ -317,7 +331,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets to the
   document. It holds because MUI emits scoped `.css-*` classes and **no
   `CssBaseline`**. `CssBaseline` writes element-level rules on `html`/`body`/`*`,
-  and Emotion injects after the ten stylesheets, so it would win ties inside the
+  and Emotion injects after the eleven stylesheets, so it would win ties inside the
   shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed; do not
   add the global one.
 - **`js/react/theme.js` is the only bridge to the design tokens.** It reads the
@@ -2297,6 +2311,22 @@ and never sees a driver, a connection or a SQL string.
 - **`knowledge_chunks` lives behind this seam too**, so `bun run ingest` writes
   wherever the deployment reads. Embeddings are raw little-endian Float32 bytes
   in both drivers — a BLOB in SQLite, `bytea` in Postgres.
+- **The seam is verified on Postgres, not assumed**: the deployed database held
+  **816 chunks across 78 documents** after a re-ingest on 2026-08-17, matching
+  the on-disk measurement category for category. **That is a record of what one
+  ingest wrote, not a standing guarantee** — the deployed count drifts behind
+  the corpus the moment an ingested document is edited without a re-ingest, and
+  it had twice: a reading of `chunkCount: 768` predated both
+  `docs/karl-export-field-map.md` joining the `karl` category and the `sfds`
+  category existing at all, and a later 812 was 4 short from edits to that
+  file's own register. Read the live count from `/api/ai/capabilities` rather
+  than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's at a time: `DATABASE_URL` belongs to the
+  Postgres service and `GEMINI_API_KEY` to `web`. The deployed `DATABASE_URL`
+  also names `postgres.railway.internal`, which does not resolve off-platform —
+  rebuild it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather
+  than reusing the value the service itself sees.
 - **Bun's Postgres client is built in** (`Bun.SQL`, Bun 1.3+), so this added no
   npm dependency — the same reason `bun:sqlite` was used in the first place.
 
@@ -2312,6 +2342,25 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
   ran the build, where it would repeat the whole thing at boot. The bare `build`
   script is wronger still for a server: it also produces the single-file export
   and rebuilds the workshop form.
+- **`server.ts` must exit 0 on SIGTERM, and that is a deploy concern rather
+  than tidiness.** Railway retires a deployment by sending SIGTERM and reads the
+  exit status that follows as the verdict on it. With no handler the default
+  disposition kills the process, `bun run` reports it as terminated by a signal
+  (128 + 15 = 143), and Railway mails "Deploy Crashed!" about a container it
+  stopped on purpose — which it did on every deploy to `main`, on both services
+  then deployed, with the only trace being one line in the OUTGOING
+  deployment's log: `error: script "serve" was terminated by signal SIGTERM`.
+  A crash alert that fires on every healthy deploy trains its reader to ignore
+  the one that matters. The handler drains via `server.stop(false)` — `false`
+  is load-bearing, since `true` severs in-flight responses — and races that
+  against a 10s timer so a request that never completes cannot hold the process
+  into Railway's SIGKILL and return the same 143 by a slower route.
+  `tests/review-api-server.test.js` asserts `signalCode` is null as well as
+  `exitCode` 0, because a signal-killed process reports `'SIGTERM'` there
+  whatever the code says. **The `railway.json` start command stays
+  `bun run serve`** — measured, not assumed: with the handler installed the
+  script wrapper propagates the clean exit and stops printing the error line,
+  so bypassing it buys nothing.
 - **`HOST=0.0.0.0` is required and is a variable, not a code change.**
   `server.ts` defaults to `process.env.HOST ?? "127.0.0.1"`, which is right for
   local dev and unreachable inside a container — the first Railway deploy built
@@ -2457,23 +2506,23 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**There are ten repository-owned stylesheets, and two positions in their order
-are load-bearing.** `css/sfds.css` MUST stay first of the ten — it is the
-raw-primitive layer everything downstream reads, keyed to SFDS's own published
-token names. `css/theme.css` MUST stay last — it is the semantic token layer,
-and its dark-mode block overrides the `--legacy-*` primitives `css/styles.css`
-declares on `:root`.
+**There are eleven repository-owned stylesheets, and two positions in their
+order are load-bearing.** `css/sfds.css` MUST stay first of the eleven — it is
+the raw-primitive layer everything downstream reads, keyed to SFDS's own
+published token names. `css/theme.css` MUST stay last — it is the semantic
+token layer, and its dark-mode block overrides the `--legacy-*` primitives
+`css/styles.css` declares on `:root`.
 
-Their order is the tail of `js/main.js`'s CSS imports, and each of the ten
+Their order is the tail of `js/main.js`'s CSS imports, and each of the eleven
 opens with a banner comment naming what it owns (several also state which sheet
-they load after, and why). Read those two rather than a table here: ten
-one-line file descriptions restated in this file would be a second copy of ten
-header comments, checked by nothing and stale the first time one of them is
-edited. **"First" means first of the ten, not first in the file** — six
+they load after, and why). Read those two rather than a table here: eleven
+one-line file descriptions restated in this file would be a second copy of
+eleven header comments, checked by nothing and stale the first time one of them
+is edited. **"First" means first of the eleven, not first in the file** — six
 dependency sheets (`@fontsource-variable/roboto-flex`, two
 `@fontsource/roboto-slab` weights, three `@sfgov/design-system` sheets) import
 ahead of `css/sfds.css` and carry none of those banners. They load before all
-ten, so the repo's own sheets override them rather than the reverse.
+eleven, so the repo's own sheets override them rather than the reverse.
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
@@ -2588,6 +2637,17 @@ globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
+- Karl guide panels → `js/karl-guide-registry.js` (the per-page-type field
+  tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
+  `''` rather than guessing — `guideForContext` stamps any non-empty path
+  `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
+  reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
+  `js/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
+  call site in `js/page-render.js` must pass `context.role`: without one the
+  tag KIND is used as the role, which names no Karl field. Note the panel is
+  block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
+  parser closes the paragraph and the panel escapes the element it is
+  positioned against.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

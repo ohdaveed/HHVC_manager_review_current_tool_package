@@ -28,11 +28,13 @@ const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
 const realReviewMerge = require('../js/review-merge.js')
+const { pageData: REAL_PAGE_DATA } = require('../js/state.js')
 
 const MANAGER_REVIEW_EXPORT_PATH = path.resolve(__dirname, '../js/manager-review-export.js')
 const UX_IMPROVEMENTS_EXPORT_PATH = path.resolve(__dirname, '../js/ux-improvements-export.js')
 const REVIEW_QUEUE_STATE_PATH = path.resolve(__dirname, '../js/review-queue-state.js')
 const REVIEW_QUEUE_IMPORT_PATH = path.resolve(__dirname, '../js/review-queue-import.js')
+const DOM_WINDOW = global.window
 
 let originalWindow
 
@@ -102,23 +104,30 @@ async function mountManagerReviewExport({ title, summary } = {}) {
     <textarea id="metaDescriptionInput"></textarea>
     <div id="reviewExportStatus"></div>
   `
-  global.window = window
-  window.showToast = () => {}
+  global.window = DOM_WINDOW
+  // DOM_WINDOW is shared across this file's tests, so a stub installed here
+  // outlives the test that needed it unless restore() puts the original back —
+  // and a later test then exercises a silent showToast without knowing it. The
+  // repo's rule is that a test restoring a global restores ALL of them.
+  const originalShowToast = DOM_WINDOW.showToast
+  DOM_WINDOW.showToast = () => {}
 
   const modUrl = `${MANAGER_REVIEW_EXPORT_PATH}?t=${Date.now()}-${Math.random()}`
   await import(modUrl)
 
-  const pageData = window.HHVC_DATA.pages
+  const pageData = REAL_PAGE_DATA
   const originalTitle = pageData.pestsTopic.title
   const originalSummary = pageData.pestsTopic.summary
   if (title !== undefined) pageData.pestsTopic.title = title
   if (summary !== undefined) pageData.pestsTopic.summary = summary
 
   return {
-    ReviewExport: window.ReviewExport,
+    ReviewExport: DOM_WINDOW.ReviewExport,
     restore: () => {
       pageData.pestsTopic.title = originalTitle
       pageData.pestsTopic.summary = originalSummary
+      if (originalShowToast === undefined) delete DOM_WINDOW.showToast
+      else DOM_WINDOW.showToast = originalShowToast
     },
   }
 }
