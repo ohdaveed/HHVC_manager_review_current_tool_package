@@ -904,6 +904,19 @@ cards[]`) and a path only on Transaction's scalars, so a path resolver would
   would become an instruction a human executes. A section the classifier returns
   `unknown` for is FLAG, never a guessed TYPE: guessing TYPE reintroduces that
   defect and guessing CHOOSE silently drops authored copy.
+- **Two panels can match one section, and the transcript emits each half once.**
+  Several panels carry two sources that overlap — Information's `related`
+  matches both `component: 'related'` and any `title-only` card section, and a
+  Related panel is usually both — so matches are unioned and DEDUPED BY SECTION
+  INDEX per panel, first source winning. Where two DIFFERENT panels legitimately
+  share a section, a `source.emit` scope splits it: a Resource Collection
+  section carrying `paragraphs[]` and `cards[]` sends its prose to
+  `introductory_text` and its links to `body`, because the first is a
+  Title-and-text block with no chooser at all. Neither existing gate could see
+  this — `consumed` is a Set, so a double emission is invisible to the unmapped
+  sweep, and both ratchets are about UNDER-coverage — so
+  `tests/data-validation.test.js` asserts the other half against the real
+  corpus: no section is emitted twice into the same scope.
 - **A plain Transaction body section reaching `custom_section` is an INFERRED
   mapping and prints as one.** Transaction has no generic body stream and
   `custom_section` is its only repeatable Title-and-text panel, but the field map

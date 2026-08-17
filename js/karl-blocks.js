@@ -754,11 +754,17 @@ const KARL_PANELS = {
       repeatableDoc: 'repeatable',
       blockTypesDoc: 'one type: Title and text, no chooser',
       sourceDoc: 'section with paragraphs[] only (5 sections)',
+      // `emit: 'prose'` because a Resource Collection section can carry BOTH
+      // paragraphs and cards, and the two halves go to two different panels.
+      // Without the scope this panel — a Title-and-text block with no chooser
+      // at all — also emitted the section's cards, telling an editor to pick
+      // pages in a panel that has no page chooser.
       source: {
         kind: 'sections',
         match: {
           has: ['paragraphs'],
         },
+        emit: 'prose',
       },
       docLine: 383,
     },
@@ -772,11 +778,14 @@ const KARL_PANELS = {
       repeatableDoc: 'repeatable stream',
       blockTypesDoc: 'chooser: Documents | Data stories | Resources',
       sourceDoc: 'section with cards[] (12 sections) → Resources',
+      // The other half of the same split: this panel takes the links and leaves
+      // the prose to `introductory_text` above.
       source: {
         kind: 'sections',
         match: {
           has: ['cards'],
         },
+        emit: 'cards',
       },
       docLine: 384,
     },

@@ -481,7 +481,11 @@ body.workspace-open .canvas {
      one rule. A transcript is read as literal text an editor copies, and a
      proportional face makes an indented field value harder to scan. */
   font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
-  font-size: var(--ds-text-micro);
+  /* --ds-text-label (14px), not --ds-text-micro (11px): the chrome floor is
+     14px and the 11px step is scoped to uppercase eyebrow labels, where
+     letter-spacing and weight carry the legibility. This is body text an
+     editor reads while typing into another window. */
+  font-size: var(--ds-text-label);
   line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;

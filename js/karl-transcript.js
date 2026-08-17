@@ -321,7 +321,7 @@ function buildTranscript(page, reviewRecord, pages) {
     // only exists inside a block they have already filled.
     if (panel.subPanelOf) continue
     const sources = Array.isArray(panel.source) ? panel.source : [panel.source]
-    for (const source of sources) emitPanel(context, panel, source)
+    emitPanelSources(context, panel, sources)
   }
 
   emitPromoteTab(context)
@@ -339,11 +339,64 @@ function findPageKey(page, pages) {
   return ''
 }
 
-/** Dispatch one panel/source pair to the right emitter. */
+/**
+ * Emit one panel from all of its sources.
+ *
+ * A panel's section sources are unioned and DEDUPED BY SECTION INDEX before
+ * anything is emitted. Several panels legitimately carry two sources that
+ * overlap — Information's `related` matches both `component: 'related'` and any
+ * `title-only` card section, and a Related panel is usually both — and emitting
+ * per source produced two identical "Related [CHOOSE]" blocks telling an editor
+ * to add the same three page references twice. The first matching source wins,
+ * which is why the documented predicate is listed ahead of the inferred one.
+ *
+ * Neither existing ratchet could see this: `consumed` is a Set, so a double
+ * emission is invisible to the unmapped sweep, and both gates are about
+ * UNDER-coverage. tests/data-validation.test.js now asserts the over-coverage
+ * half against the real corpus.
+ * @param {object} context
+ * @param {object} panel
+ * @param {object[]} sources
+ */
+function emitPanelSources(context, panel, sources) {
+  const bySectionIndex = new Map()
+  for (const source of sources) {
+    if (!source || source.kind !== 'sections') {
+      emitPanel(context, panel, source)
+      continue
+    }
+    for (const index of matchedSectionIndexes(context, source)) {
+      if (!bySectionIndex.has(index)) bySectionIndex.set(index, source)
+    }
+  }
+  for (const index of [...bySectionIndex.keys()].sort((a, b) => a - b)) {
+    const source = bySectionIndex.get(index)
+    const section = context.sections[index]
+    if (source.field) emitSectionField(context, panel, source, section, index)
+    else emitSection(context, panel, source, section, index)
+  }
+}
+
+/** Dispatch one non-section panel/source pair to the right emitter. */
 function emitPanel(context, panel, source) {
   if (!source || source.kind === 'none') return emitEmptyPanel(context, panel)
   if (source.kind === 'path') return emitPathPanel(context, panel, source)
-  if (source.kind === 'sections') return emitSectionsPanel(context, panel, source)
+}
+
+/**
+ * The indexes of the sections one `sections` source selects, in document order.
+ * @param {object} context
+ * @param {object} source
+ * @returns {number[]}
+ */
+function matchedSectionIndexes(context, source) {
+  const matched = context.sections
+    .map((section, index) => ({ section, index }))
+    .filter(({ section, index }) => matchesSection(source.match, section, context.classes[index]))
+  if (typeof source.nth === 'number') {
+    return matched[source.nth] ? [matched[source.nth].index] : []
+  }
+  return matched.map(({ index }) => index)
 }
 
 /**
@@ -519,23 +572,6 @@ function noteButtonLength(entry, label) {
   }
 }
 
-/** A panel whose source is a section predicate. */
-function emitSectionsPanel(context, panel, source) {
-  let matched = context.sections
-    .map((section, index) => ({ section, index }))
-    .filter(({ section, index }) => matchesSection(source.match, section, context.classes[index]))
-  if (typeof source.nth === 'number') {
-    matched = matched[source.nth] ? [matched[source.nth]] : []
-  }
-  for (const { section, index } of matched) {
-    if (source.field) {
-      emitSectionField(context, panel, source, section, index)
-      continue
-    }
-    emitSection(context, panel, source, section, index)
-  }
-}
-
 /** One field of a matched section (Agency's two required section headings). */
 function emitSectionField(context, panel, source, section, index) {
   const path = `sections.${index}.${source.field}`
@@ -549,12 +585,24 @@ function emitSectionField(context, panel, source, section, index) {
   context.transcript.entries.push(entry)
 }
 
-/** One matched section, emitted by its shape. */
+/**
+ * One matched section, emitted by its shape and by the source's scope.
+ *
+ * `source.emit` narrows WHAT of the section this panel takes, which is the
+ * generalization of `source.field`. Resource Collection needs it: one mockup
+ * section carrying both `paragraphs[]` and `cards[]` maps to TWO Karl panels —
+ * `introductory_text` (a Title-and-text block with no chooser at all) and
+ * `body` → Resources (a links list). Without a scope, both panels emitted the
+ * whole section, so the transcript told an editor to pick pages inside a panel
+ * that has no page chooser, and printed the same links twice.
+ */
 function emitSection(context, panel, source, section, index) {
   const cardClass = context.classes[index]
+  const scope = source.emit || 'all'
   const entry = newEntry(panel, 'TYPE')
   entry.inferred = Boolean(source.inferred)
   entry.sectionIndex = index
+  entry.scope = scope
   if (panel.note) entry.notes.push(panel.note)
   if (entry.inferred) {
     entry.notes.push(
@@ -600,14 +648,24 @@ function emitSection(context, panel, source, section, index) {
     return
   }
 
-  if (section.cards && (cardClass === 'inherits' || cardClass === 'title-only')) {
+  if (
+    scope !== 'prose' &&
+    section.cards &&
+    (cardClass === 'inherits' || cardClass === 'title-only')
+  ) {
+    // A cards-scoped panel is a Resource section, which does have a Title of
+    // its own — unlike a Related panel, which is a bare page list with no
+    // fields at all, so the heading is printed only in the scoped case.
+    if (scope === 'cards' && heading.value) {
+      entry.fields.push({ label: 'Resource section — Title', value: String(heading.value) })
+    }
     emitCardChoices(context, entry, section, index, cardClass)
-    emitSectionProse(context, entry, section, index, {})
+    if (scope === 'all') emitSectionProse(context, entry, section, index, {})
     context.transcript.entries.push(entry)
     return
   }
 
-  if (section.cards && context.type === 'Report') {
+  if (scope !== 'prose' && section.cards && context.type === 'Report') {
     // U15: Report has no page-card block. Each card becomes an inline hyperlink
     // inside the Body rich text, which is the mockup's own fallback note and
     // the only thing the chooser allows.
@@ -628,7 +686,7 @@ function emitSection(context, panel, source, section, index) {
     return
   }
 
-  if (section.cards && cardClass !== 'authored') {
+  if (scope !== 'prose' && section.cards && cardClass !== 'authored') {
     // The classifier could not place this section, so what its cards publish is
     // unknown. Guessing TYPE would reintroduce the exact defect
     // js/card-inheritance.js exists to prevent — here as an instruction a human
@@ -640,8 +698,9 @@ function emitSection(context, panel, source, section, index) {
     context.consumed.add(`sections.${index}.cards`)
   }
 
-  emitSectionProse(context, entry, section, index, { heading: heading.value })
-  if (section.cards && cardClass === 'authored') {
+  if (scope !== 'cards')
+    emitSectionProse(context, entry, section, index, { heading: heading.value })
+  if (scope !== 'prose' && section.cards && cardClass === 'authored') {
     section.cards.forEach((card, cardIndex) => {
       entry.fields.push({ label: `Entry ${cardIndex + 1} — Title`, value: card.title })
       if (card.text) entry.fields.push({ label: `Entry ${cardIndex + 1} — Text`, value: card.text })

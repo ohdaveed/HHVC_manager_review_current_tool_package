@@ -464,6 +464,61 @@ describe('buildTranscript — inferred mappings and unknown classification', () 
   })
 })
 
+describe('buildTranscript — two sources on one panel', () => {
+  test('a section matching both of a panel\u2019s sources is emitted once', () => {
+    // Information's `related` matches both `component: 'related'` and any
+    // `title-only` card section, and a Related panel is usually both. Emitting
+    // per source told an editor to add the same page references twice.
+    const built = page({
+      type: 'Information',
+      sections: [
+        {
+          heading: 'Related',
+          component: 'related',
+          karl: 'Maps to the Related field (a generic unrestricted "Page" chooser).',
+          cards: [{ title: 'Ignored', target: 'target' }],
+        },
+      ],
+    })
+    const related = buildTranscript(built, null, PAGES).entries.filter(
+      (entry) => entry.rawName === 'related'
+    )
+    expect(related).toHaveLength(1)
+    expect(related[0].choices).toHaveLength(1)
+  })
+
+  test('a scoped source takes only its half of the section', () => {
+    // A Resource Collection section carrying both paragraphs and cards maps to
+    // TWO panels. Without the scope, `introductory_text` — a Title-and-text
+    // block with no chooser at all — also emitted the cards, so the transcript
+    // told an editor to pick pages in a panel that has no page chooser.
+    const built = page({
+      type: 'Resource Collection',
+      sections: [
+        {
+          heading: 'If you rent',
+          karl: 'Maps to Body → Resources → one Resource section (page chooser).',
+          paragraphs: ['Use these resources.'],
+          cards: [{ title: 'Ignored', target: 'target' }],
+        },
+      ],
+    })
+    const transcript = buildTranscript(built, null, PAGES)
+    const intro = entryFor(transcript, 'introductory_text')
+    const body = entryFor(transcript, 'body')
+
+    expect(intro.outcome).toBe('TYPE')
+    expect(intro.choices).toEqual([])
+    expect(intro.fields).toContainEqual({ label: 'Text', value: 'Use these resources.' })
+
+    expect(body.outcome).toBe('CHOOSE')
+    expect(body.choices).toHaveLength(1)
+    // The prose belongs to the panel above; printing it twice would read as
+    // two different fields wanting the same words.
+    expect(body.fields.map((field) => field.label)).not.toContain('Text')
+  })
+})
+
 describe('buildTranscript — coverage sweep', () => {
   test('a table on a non-Report type is unmapped, since only Report has tables', () => {
     const built = page({

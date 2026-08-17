@@ -922,3 +922,41 @@ describe('findUnmappedSections', () => {
     expect(findUnmappedSections(loadPageData().pages, UNRESOLVED)).toEqual([])
   })
 })
+
+describe('transcript over-coverage', () => {
+  // The mirror of findUnmappedSections. That check catches content reaching NO
+  // panel; this one catches content reaching TWO, which no existing gate could
+  // see — `consumed` is a Set, so a double emission is invisible to the
+  // unmapped sweep, and the unit suite's entry lookup is a `.find()` that
+  // returns the first match and is structurally blind to a second.
+  //
+  // It cost a real defect before it existed: Information's `related` panel
+  // matches both `component: 'related'` and any `title-only` card section, a
+  // Related panel is usually both, and the transcript told an editor to add the
+  // same page references twice.
+  //
+  // Two entries for one section are legitimate ONLY when they take different
+  // halves of it — Resource Collection's `introductory_text` takes the prose
+  // and `body` takes the links — so the assertion is on the scope, not on the
+  // count.
+  test('no section is emitted twice into the same scope', () => {
+    const { loadPageData } = require('../build_scripts/load-pages.js')
+    const { buildTranscript } = require('../js/karl-transcript.js')
+    const pages = loadPageData().pages
+
+    const collisions = []
+    for (const [pageKey, page] of Object.entries(pages)) {
+      const scopesBySection = new Map()
+      for (const entry of buildTranscript(page, null, pages).entries) {
+        if (entry.sectionIndex === undefined) continue
+        const seen = scopesBySection.get(entry.sectionIndex) || []
+        if (seen.includes(entry.scope)) {
+          collisions.push(`${pageKey} sections.${entry.sectionIndex} scope=${entry.scope}`)
+        }
+        seen.push(entry.scope)
+        scopesBySection.set(entry.sectionIndex, seen)
+      }
+    }
+    expect(collisions).toEqual([])
+  })
+})
