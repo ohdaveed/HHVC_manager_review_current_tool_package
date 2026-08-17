@@ -422,6 +422,47 @@ describe('buildTranscript — review decision', () => {
     expect(markdown).not.toContain('NOT APPROVED')
     expect(markdown).not.toContain('page not approved')
   })
+
+  test('"Approved with edits" is an approval, not a rejection', () => {
+    // Both labels exist in DECISIONS and the queue counts them together under
+    // Approved. An exact match on the first label headed a fully signed-off
+    // page "NOT APPROVED — do not publish" and repeated it on every panel —
+    // and the edits that outcome names are already applied by resolveValue().
+    const transcript = buildTranscript(page({}), { decision: 'Approved with edits' }, PAGES)
+    expect(transcript.approved).toBe(true)
+    const markdown = renderTranscriptMarkdown(transcript)
+    expect(markdown).not.toContain('NOT APPROVED')
+    expect(markdown).not.toContain('page not approved')
+  })
+})
+
+describe('buildTranscript — the edited slug', () => {
+  test('a reviewer-edited slug overlays the authored one', () => {
+    // `#urlInput` persists to `record.url_slug` and never mutates `page.slug`,
+    // so reading the page value reported the superseded URL. Slug is required
+    // on the Promote tab of every Karl type, which makes this an instruction
+    // to publish at the wrong address rather than a stale display.
+    const transcript = buildTranscript(
+      page({}),
+      { decision: 'Approved', url_slug: 'sf.gov/apply-for-the-renamed-thing' },
+      PAGES
+    )
+    expect(transcript.slug).toBe('sf.gov/apply-for-the-renamed-thing')
+    expect(renderTranscriptMarkdown(transcript)).toContain('sf.gov/apply-for-the-renamed-thing')
+  })
+
+  test('an absent or empty url_slug leaves the authored slug alone', () => {
+    // The overlay is opt-in on a truthy value: a record that has never touched
+    // the URL field carries `url_slug: ''` from buildReviewRecord(), and
+    // treating that as an edit would publish every reviewed page at no slug
+    // at all.
+    expect(buildTranscript(page({}), { decision: 'Approved' }, PAGES).slug).toBe(
+      'apply-for-a-thing'
+    )
+    expect(buildTranscript(page({}), { decision: 'Approved', url_slug: '' }, PAGES).slug).toBe(
+      'apply-for-a-thing'
+    )
+  })
 })
 
 describe('buildTranscript — inferred mappings and unknown classification', () => {

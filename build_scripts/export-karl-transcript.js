@@ -42,7 +42,22 @@ if (failures.length) {
   process.exit(1)
 }
 
+/* Every existing transcript is removed before the new set is written, so the
+   directory holds one file per CURRENT page and nothing else. Overwriting by
+   page key alone left a retired or renamed page's file behind, looking exactly
+   like a valid instruction — a markdown file of Karl fields to type, for a
+   page that is no longer in the corpus. That is the worst shape a stale
+   artifact can take here, because a human executes it.
+
+   The delete runs AFTER the build loop and its `failures` gate above, so a
+   page that fails to build cannot leave the reviewer with an empty directory
+   where a usable set of transcripts used to be. Only `.md` files are removed;
+   the directory is gitignored, but a reviewer may have put notes beside them
+   and this script did not create those. */
 fs.mkdirSync(OUT_DIR, { recursive: true })
+for (const existing of fs.readdirSync(OUT_DIR)) {
+  if (existing.endsWith('.md')) fs.rmSync(path.join(OUT_DIR, existing))
+}
 for (const { pageKey, markdown } of rendered) {
   fs.writeFileSync(path.join(OUT_DIR, `${pageKey}.md`), markdown, 'utf8')
 }

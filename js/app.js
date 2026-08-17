@@ -116,7 +116,7 @@ function init() {
     } else {
       const params = new URLSearchParams(window.location.search)
       const pageKey = params.get('page')
-      navigateTo(pageKey ? resolveInitialPageKey(pageKey) : null, true)
+      navigateTo(resolveInitialPageKey(pageKey), true)
     }
   })
 
@@ -127,6 +127,6 @@ function init() {
   // pass once its wrapper is installed.
   const params = new URLSearchParams(window.location.search)
   const pageKey = params.get('page')
-  renderPage(pageKey ? resolveInitialPageKey(pageKey) : null, true)
+  renderPage(resolveInitialPageKey(pageKey), true)
 }
 init()

@@ -179,9 +179,25 @@ function safeMarkdown(rawString) {
     // parseInline prevents wrapping the output in <p> tags
     const rawHtml = window.marked.parseInline(text)
 
-    // Sanitize while allowing the required custom attributes
+    // **An explicit allowlist, not DOMPurify's default one.** The default
+    // permits `<img>`, and `marked.parseInline` emits one for `![alt](url)` —
+    // so a remote image URL written into any paragraph, bullet, table cell or
+    // callout would load off-origin from inside page copy. That is not a
+    // theoretical hardening: `findExternalAssetUrls()` in
+    // build_scripts/data-checks.js fails validation on an off-host image
+    // precisely because this tool claims to work offline, and it inspects
+    // `image.src` only — markdown in body copy would route straight past it.
+    // The default list also admits headings, lists and tables, none of which
+    // the mockup's renderer has ever produced from inline markdown.
+    //
+    // The tags below are exactly what this function can emit: `<strong>` and
+    // `<em>` from marked, and the `<a>`/`<button>`/`<span>` the custom link
+    // renderer above builds. Widening this list means deciding that page copy
+    // may introduce that element — check `findExternalAssetUrls` and the
+    // offline claim before doing it.
     return window.DOMPurify.sanitize(rawHtml, {
-      ADD_ATTR: ['target', 'rel', 'data-render-target'],
+      ALLOWED_TAGS: ['a', 'button', 'span', 'strong', 'em', 'code'],
+      ALLOWED_ATTR: ['class', 'href', 'type', 'target', 'rel', 'aria-hidden', 'data-render-target'],
     })
   } catch (error) {
     console.error('safeMarkdown failed:', error)

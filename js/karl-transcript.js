@@ -41,6 +41,14 @@ const { classifySection } = isNodeContext
   : window.cardInheritance
 const { getByPath } = isNodeContext ? require('./utils.js') : window.utils
 
+/* The decision labels that mean "signed off", spelled out rather than derived
+   from DECISIONS. Deriving them would need a flag on the table in js/utils.js
+   that nothing else reads, and the labels are string literals here for the
+   reason tests/decision-vocabulary.test.js exists: most of the queue compares
+   them as strings, so a renamed decision has to fail somewhere loud. That test
+   pins every file spelling an individual label, this one included. */
+const APPROVED_DECISIONS = new Set(['Approved', 'Approved with edits'])
+
 /**
  * The Promote tab, which is identical on all eight types and therefore lives
  * here rather than in each per-type inventory (field map lines 139-145, closing
@@ -130,6 +138,17 @@ function resolveValue(page, reviewRecord, path) {
   }
   if (path === 'summary' && reviewRecord && reviewRecord.edited_summary) {
     return { value: reviewRecord.edited_summary, overlaid: true }
+  }
+  // `slug` is the third scalar the review layer edits and the only one it
+  // stores under a DIFFERENT name: `#urlInput` persists to `record.url_slug`
+  // and deliberately never mutates `page.slug`, so reading the page value here
+  // reported the authored slug after a reviewer had changed it. That is worse
+  // than a stale display — slug is required on the Promote tab of every Karl
+  // type, so the transcript was telling an editor to publish the page at the
+  // superseded URL. js/ux-improvements-export.js resolves it the same way
+  // (`saved.url_slug || page.slug`).
+  if (path === 'slug' && reviewRecord && reviewRecord.url_slug) {
+    return { value: reviewRecord.url_slug, overlaid: true }
   }
   return { value: getByPath(page, path), overlaid: false }
 }
@@ -277,13 +296,20 @@ function buildTranscript(page, reviewRecord, pages) {
     pageKey: findPageKey(page, pages),
     type,
     title: (page && page.title) || '',
-    slug: (page && page.slug) || '',
+    slug: resolveValue(page, reviewRecord, 'slug').value || '',
     navPath: KARL_NAV[type] || '',
     decision: (reviewRecord && reviewRecord.decision) || 'Needs review',
     reviewer: (reviewRecord && reviewRecord.reviewer) || '',
     reviewDate: (reviewRecord && reviewRecord.review_date) || '',
     reviewed: Boolean(reviewRecord),
-    approved: Boolean(reviewRecord && reviewRecord.decision === 'Approved'),
+    // **Both approval outcomes count.** `DECISIONS` in js/utils.js carries
+    // `Approved` and `Approved with edits`, and the queue groups them together
+    // in its Approved filter and count. An exact match on the first marked
+    // every page reviewed through the second as unapproved, so the transcript
+    // headed a fully signed-off page "NOT APPROVED — do not publish" and
+    // repeated it on every panel. The edits that outcome refers to are already
+    // applied here, by resolveValue() above.
+    approved: Boolean(reviewRecord && APPROVED_DECISIONS.has(reviewRecord.decision)),
     entries: [],
     consumed: [],
     unmapped: [],

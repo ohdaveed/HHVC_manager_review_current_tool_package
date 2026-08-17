@@ -1551,25 +1551,20 @@ function applyPageContent(key) {
   applyChecklistState(key)
   restoreSidebarScroll()
 }
+/* There is deliberately no `if (!key)` branch here, and one was removed on
+   2026-08-17 because it CRASHED the default entry point. It cleared #mockPage
+   and then set `.textContent` on `document.getElementById('pageTitle')` — an
+   element that exists nowhere in index.html — so a bare URL with no `?page=`
+   threw a TypeError before anything rendered, and so did every history pop
+   back to that URL. It survived because `resolveInitialPageKey()` already maps
+   a null key onto `pestsTopic`, so the only caller that could reach it was
+   js/app.js passing an explicit null, and every e2e spec navigates with a
+   `?page=` parameter.
+
+   That branch was the landing state for the bottom-drawer workspace, which is
+   also gone. A key that names no page is resolved rather than special-cased —
+   see resolveInitialPageKey() and resolvePageKey()'s `defaultKey`. */
 function renderPage(key, skipHistory = false) {
-  if (!key) {
-    document.getElementById('mockPage').innerHTML = ''
-    document.getElementById('pageTitle').textContent = 'SF.gov Manager Review'
-    const desc = document.getElementById('pageDescription')
-    if (desc) desc.content = ''
-    document.title = 'Review Mockups'
-
-    if (!skipHistory) {
-      const url = new URL(window.location)
-      url.searchParams.delete('page')
-      window.history.pushState({ key: null }, '', url)
-    }
-
-    // Dispatch event so other components know page changed (to null)
-    document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
-    return
-  }
-
   // Resolve unknown/retired keys instead of silently no-op'ing and leaving
   // the static "Loading…" placeholder on screen. resolveInitialPageKey()
   // already covers the first URL load; this path covers every later caller
