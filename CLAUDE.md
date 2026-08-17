@@ -1310,6 +1310,19 @@ start `bun run serve`.
 
 - **`bun run serve`, not `bun run start`** — `start` is `build:netlify && serve`,
   which would repeat the whole build at boot on a platform that already ran it.
+- **`server.ts` must exit 0 on SIGTERM.** Railway retires a deployment by
+  sending SIGTERM and reads the exit status that follows as its verdict. With no
+  handler the process is simply killed, `bun run` reports 128 + 15 = 143, and
+  Railway mails "Deploy Crashed!" about a container it stopped on purpose — on
+  every deploy to `main`, with the only trace one line in the OUTGOING
+  deployment's log: `error: script "serve" was terminated by signal SIGTERM`.
+  The handler drains via `server.stop(false)` (`true` would sever in-flight
+  responses) raced against a 10s timer, so a hung request cannot hold the
+  process into SIGKILL and reach 143 the slow way.
+  `tests/review-api-server.test.js` asserts `signalCode` is null as well as
+  `exitCode` 0 — a signal-killed process reports `'SIGTERM'` there whatever the
+  code says. The start command stays `bun run serve`: with the handler in place
+  the script wrapper propagates the clean exit, so bypassing it buys nothing.
 - **`HOST=0.0.0.0` is required, as a variable rather than a code change.**
   `server.ts` defaults to `127.0.0.1`, which is right locally and unreachable in
   a container: the first deploy built and started cleanly and still served 502,

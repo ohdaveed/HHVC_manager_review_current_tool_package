@@ -2328,6 +2328,25 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
   ran the build, where it would repeat the whole thing at boot. The bare `build`
   script is wronger still for a server: it also produces the single-file export
   and rebuilds the workshop form.
+- **`server.ts` must exit 0 on SIGTERM, and that is a deploy concern rather
+  than tidiness.** Railway retires a deployment by sending SIGTERM and reads the
+  exit status that follows as the verdict on it. With no handler the default
+  disposition kills the process, `bun run` reports it as terminated by a signal
+  (128 + 15 = 143), and Railway mails "Deploy Crashed!" about a container it
+  stopped on purpose — which it did on every deploy to `main`, on both services
+  then deployed, with the only trace being one line in the OUTGOING
+  deployment's log: `error: script "serve" was terminated by signal SIGTERM`.
+  A crash alert that fires on every healthy deploy trains its reader to ignore
+  the one that matters. The handler drains via `server.stop(false)` — `false`
+  is load-bearing, since `true` severs in-flight responses — and races that
+  against a 10s timer so a request that never completes cannot hold the process
+  into Railway's SIGKILL and return the same 143 by a slower route.
+  `tests/review-api-server.test.js` asserts `signalCode` is null as well as
+  `exitCode` 0, because a signal-killed process reports `'SIGTERM'` there
+  whatever the code says. **The `railway.json` start command stays
+  `bun run serve`** — measured, not assumed: with the handler installed the
+  script wrapper propagates the clean exit and stops printing the error line,
+  so bypassing it buys nothing.
 - **`HOST=0.0.0.0` is required and is a variable, not a code change.**
   `server.ts` defaults to `process.env.HOST ?? "127.0.0.1"`, which is right for
   local dev and unreachable inside a container — the first Railway deploy built
