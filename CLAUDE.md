@@ -1128,34 +1128,67 @@ offline static tool.
 One glob (`docs/source/**/*.md`) used to define the corpus, which excluded both
 the newest Karl capture and the mockup copy under review.
 `collectKnowledgeSources()` is now the single definition, and every chunk
-carries a `category`: `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated
-snapshots of live SF.gov), `karl` (the 2026-08-14 editor measurement, listed
-explicitly because it lives in `docs/`), `mockup-draft` (the `pages/*.js`
-mockups, projected to markdown at ingest time and not committed), and `sfds`
-(the vendored SF Design System token capture and its recorded disagreements).
+carries a `category`: `hhvc-standards` (the HHVC Web Governance and Content
+Standards Manual), `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated snapshots
+of live SF.gov, plus the cross-type reading of them), `karl` (live editor
+measurements, listed explicitly because they live outside `docs/source/`),
+`karl-gitbook` (the Help Center's own published rules), `mockup-draft` (the
+`pages/*.js` mockups, projected to markdown at ingest time and not committed),
+and `sfds` (the vendored SF Design System token capture and its recorded
+disagreements).
 
-- **The `karl` category is an explicit file list, not a glob**, because those
-  documents live in `docs/` rather than `docs/source/`.
-  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
-  chunks: it is the E1 record of what every Karl content type's editor form
-  actually contains, and without it the corpus could answer what the Help
-  Center _says_ about a form but not what the form _offers_ — two things that
-  have given different answers four times over. **Adding a file here moves the
-  measured counts below**, so re-measure and re-ingest rather than editing the
-  list alone.
+- **`EXTERNAL_SOURCE_FILES` is an explicit `{path, category}` list, not a
+  glob**, because those documents live outside `docs/source/`. It was a flat
+  path list that all became `karl` until 2026-08-16 — true while the only
+  outside documents were Karl captures, and false the moment the standards
+  manual came in. **Adding a file here moves the measured counts below**, so
+  re-measure and re-ingest rather than editing the list alone.
+- **The content standards manual is the addition worth understanding.**
+  `js/plain-language.js` cites it by section number for every scored
+  `severity: 'error'` rule (§7.x, §6.3), and it was not in the corpus at all —
+  it lives in `notebooklm/`, which no glob reached. A reviewer could not get
+  from a citation back to the manual section the tool's own checks are named
+  after. Added 2026-08-16, worth +75 chunks.
+- **`karl` and `karl-gitbook` are separate on purpose** — the CMS as MEASURED
+  versus as DOCUMENTED. They have disagreed four times over, and the prompt
+  says the measurement wins.
+- **The compliance matrix is projected from CSV, not converted.**
+  `notebooklm/compliance-standards.csv` is the only place a requirement and the
+  code section imposing it share a row, which is what lets a finding name a
+  provision. `projectComplianceMatrixToMarkdown()` renders it at ingest time as
+  `hhvc-policy/compliance-standards-matrix.md` — same treatment as `pages/*.js`,
+  so no committed copy can drift from it. One `###` per requirement, 203 of
+  them, median 46 words. **Retrieval is a flat top-6 with no per-category floor**,
+  and short formulaic chunks embed toward each other — so a pest-page query can
+  spend the whole top-6 on one provision family, and the document most at risk
+  is the standards manual added in the same pass. Grouping by code section
+  (~61 longer chunks) is the fallback; measure it as "does an audit of a pest
+  page still cite `hhvc-standards`" before reaching for it.
+- **A superseded document cannot carry its own warning**, because the chunker
+  prefixes each chunk with its heading path and never with the file's opening
+  banner. That is why `docs/wagtail-content-mapping.md`, the Help Center
+  research note, `hhvc_chapter_drafts/**` and the dated audit records are
+  excluded, and why draft Page Blueprints in `notebooklm/` are never filed as
+  policy. `build_scripts/knowledge-sources.js` carries the register with the
+  reason per file.
 - **Category comes from the first path segment under `docs/source/`**, so a new
   folder files itself with no code change.
-- **`mockup-draft` is about a third of the corpus and is the dangerous one** —
+- **`mockup-draft` is about a quarter of the corpus and is the dangerous one** —
   draft copy nobody approved, including the page being audited. The prompt's
   source tag now carries `category`, the system prompt states what each category
   is worth, and it forbids citing draft copy as the authority a finding rests
   on. Resolved from the matched row, so the model cannot spoof it; it also
   travels with the citation the reviewer sees.
 - Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured 2026-08-15: **78 documents, 812 chunks** (`hhvc-policy` 430,
-  `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24, `sfds` 2).
-  `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
-  brute-force cosine.
+- Measured 2026-08-16: **95 documents, 1230 chunks** (`hhvc-policy` 46/714,
+  `mockup-draft` 29/233, `karl` 4/102, `hhvc-standards` 1/75, `sfgov-live`
+  7/52, `karl-gitbook` 5/28, `sfgov-style` 2/24, `sfds` 1/2). Was 78/812 on
+  2026-08-15; the compliance matrix is 204 of the added chunks, which is why
+  `hhvc-policy` jumped 510 to 714 while gaining one document. **Measure with
+  the real pages** — no `pages` option omits `mockup-draft` and looks like a
+  regression. Still brute-force cosine.
+- **`bun run ingest` is yours to run and is billed.** Nothing in CI or the
+  build does it, so a corpus change is not live on a deployment until it runs.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
   writes to Postgres and `compliance-audit` reports ready — verified:
   `knowledgeBase: {ready: true, chunkCount: 768}`.

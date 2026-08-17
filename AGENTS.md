@@ -1590,36 +1590,93 @@ two things a reviewer most often needs the AI to know. `collectKnowledgeSources(
 is now the single definition of what gets embedded and what `category` each
 document is filed under.
 
-| Category       | What it is                                                                 | Where it comes from                                              |
-| -------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts                     | `docs/source/hhvc-policy/`                                       |
-| `sfgov-style`  | SF.gov's published writing guidance                                        | `docs/source/sfgov-style/`                                       |
-| `sfgov-live`   | dated snapshots of what SF.gov publishes today                             | `docs/source/sfgov-live/`                                        |
-| `karl`         | live measurements of the Karl editor itself                                | `docs/karl-mockup-cookbook*.md`, `docs/karl-export-field-map.md` |
-| `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected                                          |
-| `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`                                              |
+| Category         | What it is                                                                  | Where it comes from                                                |
+| ---------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `hhvc-standards` | the HHVC Web Governance and Content Standards Manual v2.1                   | `notebooklm/hhvc-standards-manual.md`                              |
+| `hhvc-policy`    | adopted policy, Director's Rules, Health Code extracts, IPM standards       | `docs/source/hhvc-policy/`, three files in `notebooklm/`           |
+| `sfgov-style`    | SF.gov's published writing guidance                                         | `docs/source/sfgov-style/`                                         |
+| `sfgov-live`     | dated snapshots of what SF.gov publishes today, plus the cross-type reading | `docs/source/sfgov-live/`, `docs/sfgov-live-design-inspiration.md` |
+| `karl`           | live measurements of the Karl editor itself                                 | four explicitly listed files under `docs/`                         |
+| `karl-gitbook`   | the Karl editor Help Center's own published rules                           | `docs/source/karl-gitbook/`                                        |
+| `mockup-draft`   | the proposed page mockups themselves                                        | `pages/*.js`, projected                                            |
+| `sfds`           | the vendored SF Design System token capture and its recorded disagreements  | `docs/source/sfds/`                                                |
 
-- **The `karl` category is an explicit file list, not a glob**, because those
-  documents live in `docs/` rather than `docs/source/`.
-  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
-  chunks: it is the E1 record of what every Karl content type's editor form
-  actually contains, and without it the corpus could answer what the Help
-  Center _says_ about a form but not what the form _offers_ — two things that
-  have given different answers four times over. **Adding a file here moves the
-  measured counts below**, so re-measure and re-ingest rather than editing the
-  list alone.
+- **`EXTERNAL_SOURCE_FILES` is an explicit `{path, category}` list, not a
+  glob**, because those documents live outside `docs/source/`. It was a flat
+  path list that all became `category: 'karl'` until 2026-08-16, which was true
+  while the only outside documents were Karl captures and stopped being true
+  when the standards manual came in — filing that as `karl` would have told the
+  audit prompt it was a measurement of what the CMS can publish. **Adding a file
+  here moves the measured counts below**, so re-measure and re-ingest rather
+  than editing the list alone.
+- **The content standards manual is the addition worth understanding.**
+  `js/plain-language.js` cites it by section number for every scored
+  `severity: 'error'` rule (§7.x, and §6.3 for the Karl Button component), and
+  it was not in the corpus at all — it lives in `notebooklm/`, which no glob
+  here reached. So `compliance-audit` grounded findings in Health Code extracts
+  while the document that defines what a compliant HHVC page looks like was
+  unretrievable, and a reviewer could not get from a citation back to the manual
+  section the tool's own checks are named after. Added 2026-08-16, worth +75
+  chunks.
+- **`karl` and `karl-gitbook` are separate on purpose**: the CMS as MEASURED
+  versus the CMS as DOCUMENTED. They have disagreed four times over (see the
+  field map's obsolete register), and collapsing them would let a Help Center
+  claim the live admin contradicts be cited with a measurement's authority. The
+  prompt says the measurement wins.
+- **A superseded document cannot be admitted, because it cannot carry its own
+  warning.** The chunker prefixes each chunk with its HEADING PATH, never with
+  the file's opening banner — so `docs/wagtail-content-mapping.md`'s "specific
+  claims below that are now wrong" header attaches to chunk 1 and to nothing
+  else, while the rest retrieve as confident current fact. That rules out that
+  file, `docs/karl-help-center-research-2026-07-06.md`, and
+  `hhvc_chapter_drafts/**` (which the manual consolidates, and which carries its
+  own `outdated/` subdirectory). The same reasoning excludes the dated audit
+  records under `docs/`, which count a 39-page corpus that is now 29.
+  `build_scripts/knowledge-sources.js` carries the full exclusion register with
+  the reason per file; read it there rather than re-deriving it.
+- **Draft page copy is never filed as policy.** Several `notebooklm/` files are
+  Page Blueprints — "Page ID GH-021", "Status: Mockup Completed" — and
+  admitting one as `hhvc-policy` would make a proposal citable as adopted
+  guidance. `pages/*.js` already covers that ground honestly as `mockup-draft`.
+- **The compliance matrix is projected, not converted.**
+  `notebooklm/compliance-standards.csv` is the one corpus source that is not
+  markdown, and it is the only place in the repo where a requirement ("seal
+  openings larger than 1/4 inch") and the provision imposing it ("SF Health
+  Code Article 2 Sec. 92(b)-(c)") sit in the same row — which is what lets an
+  audit finding name a section instead of gesturing at policy.
+  `projectComplianceMatrixToMarkdown()` renders it at ingest time under the id
+  `hhvc-policy/compliance-standards-matrix.md`, the same treatment `pages/*.js`
+  gets and for the same reason: a committed conversion would be a second source
+  of truth free to drift from the CSV the program maintains. **It writes one
+  `###` per requirement — 203 of them, more sections than any other document
+  here.** That is deliberate, so each requirement retrieves as its own chunk
+  carrying its own name. **The cost is concrete and lands on the standards
+  manual.** `retrieveRelevantChunks()` is a flat top-K with no per-category
+  floor and no diversity rule, `TOP_K` is 6, and these chunks have a median of
+  46 words — shorter than anything else in the corpus, and near-isomorphic to
+  each other apart from a section number and a noun. Formulaic short chunks
+  embed toward one another, so a query that matches one provision tends to
+  match several of its near-duplicates and spend the whole top-6 on one
+  provision family. The document most at risk is the manual added in the same
+  pass: its 75 chunks are prose about page structure and wording gates, which
+  loses a cosine race against legally specific text whenever page copy is about
+  rats, mold or refuse — so "the manual is unretrievable" can persist as "the
+  manual never reaches the top 6." Grouping rows by code section cuts the
+  matrix to about 61 longer chunks and is the recorded fallback, for exactly
+  that reason rather than for tidiness. **Measure before reaching for it**, and
+  measure it as "does an audit of a pest page still cite `hhvc-standards`".
 - **Category is derived from the first path segment under `docs/source/`**, so a
   new corpus folder files itself with no code change — which is exactly how the
-  scraped SF.gov snapshots work.
-- **The Karl capture is listed explicitly rather than moved.** Both canon files,
-  the copilot mirror and `tests/doc-counts.test.js` name those paths, and a
-  merged PR links them; relocating a document to satisfy an ingestion glob is
+  scraped SF.gov snapshots and `docs/source/karl-gitbook/` work.
+- **The outside documents are listed explicitly rather than moved.** Both canon
+  files, the copilot mirror and `tests/doc-counts.test.js` name those paths, and
+  a merged PR links them; relocating a document to satisfy an ingestion glob is
   the tail wagging the dog.
 - **The mockup pages are projected to markdown at ingest time and not
   committed** — headings become `##`/`###` so the existing chunker splits them
   the same way, and the `karl` placement notes are included because they carry
   the CMS rationale a reviewer actually asks about.
-- **`mockup-draft` is the dangerous one, and it is about a third of the corpus.**
+- **`mockup-draft` is the dangerous one, and it is about a quarter of the corpus.**
   It is DRAFT copy nobody has approved, including the page being audited. The
   source tag in the prompt now carries `category`, the system prompt spells out
   what each one is worth, and it says in terms that draft copy must never be
@@ -1633,12 +1690,22 @@ document is filed under.
 - **Corpus definition is separate from ingestion on purpose**:
   `tests/knowledge-sources.test.js` covers which documents exist and how a page
   projects, with no Gemini key and no embedding call. Measured after this
-  change: **78 documents, 812 chunks** (re-measured 2026-08-15) — `hhvc-policy`
-  430, `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24,
-  `sfds` 2. `karl` rose from 53 when `docs/karl-export-field-map.md` was added;
-  `sfds` from 1 as its capture grew.
-- **Retrieval is still brute-force cosine in JS.** 812 chunks ranks in
+  change: **95 documents, 1230 chunks** (re-measured 2026-08-16) —
+  `hhvc-policy` 46 docs / 714 chunks, `mockup-draft` 29 / 233, `karl` 4 / 102,
+  `hhvc-standards` 1 / 75, `sfgov-live` 7 / 52, `karl-gitbook` 5 / 28,
+  `sfgov-style` 2 / 24, `sfds` 1 / 2. Was 78 documents / 812 chunks on
+  2026-08-15, before `docs/source/karl-gitbook/`, the standards manual, the IPM
+  and disease-risk references, the Article 11 handbook and the compliance
+  matrix came in — the matrix alone is 204 of those chunks, which is why
+  `hhvc-policy` jumped 510 to 714 while gaining one document. **Measure with
+  the real pages** — `collectKnowledgeSources()` called with no `pages` option
+  omits `mockup-draft` entirely and returns a number that looks like a
+  regression.
+- **Retrieval is still brute-force cosine in JS.** 1230 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
+- **Re-ingest is yours to run and is not free.** `bun run ingest` makes real,
+  billed Gemini embedding calls, so nothing in CI or the build does it — a
+  corpus change is not live on a deployment until someone runs it.
 
 ### Reviewer sign-in (`/api/session`)
 
