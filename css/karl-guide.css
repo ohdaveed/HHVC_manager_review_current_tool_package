@@ -1,0 +1,267 @@
+/* Karl guide: the tag trigger, its expandable panel, and the copy controls
+   (js/karl-guide.js, markup built by js/karl-tag-meta.js).
+
+   Loads after css/inline-content-edit.css and before css/theme.css, whose
+   semantic tokens every rule here reads — no raw --legacy-* value and no
+   hardcoded colour.
+
+   One rule below is structural rather than cosmetic: `.karl-guide` is
+   `position: relative` because the panel is `position: absolute` and anchors
+   to it.
+
+   **The panel's markup is all `<span>`, and this sheet is what makes it read
+   as blocks.** js/karl-tag-meta.js explains why (a panel emitted inside a
+   paragraph used to break the page); the consequence here is that every part
+   of it needs an explicit `display`, and the steps need a CSS counter because
+   there is no longer an `<ol>` to draw ordinals. Those two files have to stay
+   in step: renaming a class or dropping a `display` below silently returns the
+   panel to a run of inline text.
+
+   `.karl-guide-panel[hidden] { display: none }` is NOT load-bearing today and
+   is kept as a guard, which is worth stating because the same line elsewhere
+   in this repo IS required: css/dashboard.css needs it for
+   `.review-workspace[hidden]` because a class rule there sets `display`,
+   outranking the UA stylesheet's `[hidden]` rule. `.karl-guide-panel` sets no
+   `display` of its own, so `[hidden]` already works unaided — until someone
+   gives the class one, at which point this line is what stops every panel on
+   the page rendering open at once.
+
+   This sheet is annotation chrome, so it hides wholesale under
+   `body.hide-karl-tags` alongside the tags themselves. */
+.karl-guide {
+  display: inline-flex;
+  position: relative;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.karl-guide-trigger {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  gap: var(--ds-space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.karl-guide-trigger:focus-visible {
+  outline: 3px solid var(--legacy-action-blue);
+  outline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+.karl-guide-trigger .karl-tag {
+  margin-bottom: 0;
+}
+
+.karl-guide-trigger-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--ds-size-affordance);
+  height: var(--ds-size-affordance);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.karl-guide-trigger[aria-expanded='true'] .karl-guide-trigger-icon {
+  transform: rotate(45deg);
+}
+
+.karl-guide-panel {
+  display: block;
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + var(--ds-space-1));
+  left: 0;
+  width: min(var(--ds-size-popover), calc(100vw - 2rem));
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  /* Was a literal `0 0.75rem 2rem rgba(0, 0, 0, 0.18)`. The token is the same
+     magnitude, tinted with the brand navy the rest of the tool's shadows use
+     rather than pure black, and — the reason this matters beyond consistency —
+     it is redefined under `prefers-color-scheme: dark`, where a light-mode
+     shadow over a dark panel reads as a muddy halo. */
+  box-shadow: var(--ds-shadow-3);
+  font-size: var(--ds-text-label);
+  font-weight: 400;
+  text-align: left;
+}
+
+.karl-guide-panel[hidden] {
+  display: none;
+}
+
+.karl-guide-panel-header,
+.karl-guide-value {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-2);
+}
+
+.karl-guide-panel-header {
+  margin-bottom: var(--ds-space-2);
+  font-size: var(--ds-text-card);
+}
+
+.karl-guide-status,
+.karl-guide-value-source {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: var(--ds-text-micro);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.karl-guide-steps {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin: 0 0 var(--ds-space-2);
+  /* The ordinals below are drawn by this counter, not by an <ol>. */
+  counter-reset: karl-guide-step;
+}
+
+.karl-guide-steps [role='listitem'] {
+  display: grid;
+  grid-template-columns: var(--ds-size-affordance) 1fr;
+  gap: var(--ds-space-1);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.karl-guide-steps [role='listitem']::before {
+  counter-increment: karl-guide-step;
+  content: counter(karl-guide-step) '.';
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.karl-guide-path,
+.karl-guide-link-shape,
+.karl-guide-unresolved {
+  display: block;
+  margin: var(--ds-space-2) 0 0;
+  line-height: 1.35;
+}
+
+.karl-guide-path span,
+.karl-guide-value code {
+  display: block;
+  margin-top: 0.2rem;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: var(--ds-text-micro);
+}
+
+.karl-guide-values {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin-top: var(--ds-space-3);
+}
+
+.karl-guide-values-heading {
+  display: block;
+  margin: 0;
+  font-size: var(--ds-text-label);
+  font-weight: 800;
+}
+
+.karl-guide-value {
+  padding: var(--ds-space-1) 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.karl-guide-value-body {
+  min-width: 0;
+}
+
+.karl-guide-value strong {
+  display: block;
+}
+
+.karl-guide-value-source {
+  margin-left: var(--ds-space-1);
+  font-size: 0.6rem;
+  text-transform: none;
+}
+
+.karl-guide-copy {
+  flex: 0 0 auto;
+  min-height: 2rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--surface-panel);
+  color: var(--legacy-action-blue);
+  font: inherit;
+  font-size: var(--ds-text-micro);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.karl-guide-copy:hover,
+.karl-guide-copy:focus-visible {
+  border-color: var(--legacy-action-blue);
+  background: var(--surface-sunken);
+}
+
+.review-action-with-guide {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ds-space-1);
+  max-width: 100%;
+}
+
+.karl-copy-fallback {
+  position: fixed;
+  inset: -10000px auto auto -10000px;
+  opacity: 0;
+}
+
+/* No `!important`: this selector already outranks `.karl-guide` on
+   specificity, and css/ux-improvements.css is this repo's designated override
+   layer — a lone `!important` here would be the exception that starts the
+   erosion. */
+body.hide-karl-tags .karl-guide {
+  display: none;
+}
+
+@media (max-width: 42rem) {
+  .karl-guide-panel {
+    position: fixed;
+    top: 5rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    max-height: calc(100vh - 6rem);
+    overflow: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .karl-guide-trigger-icon {
+    transition: none;
+  }
+}

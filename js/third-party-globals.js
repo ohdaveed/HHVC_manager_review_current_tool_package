@@ -35,7 +35,11 @@
 import Papa from 'papaparse'
 import Fuse from 'fuse.js'
 import { defu } from 'defu'
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 window.Papa = Papa
 window.Fuse = Fuse
 window.defu = defu
+window.marked = marked
+window.DOMPurify = DOMPurify

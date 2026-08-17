@@ -56,7 +56,6 @@
         'decision',
         'notes',
         'risks_or_blockers',
-        'follow_up_owner',
         'reviewer',
         'review_date',
         'seo_title',

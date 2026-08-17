@@ -96,7 +96,16 @@ function init() {
     page.metaDescriptionEdited = true
     updateSearchPreview()
   })
-  document.getElementById('tagToggle').addEventListener('change', (e) => {
+  // No `hide-karl-tags` sync at init. `#tagToggle` ships unchecked and the
+  // mockup ships annotated, which is deliberate: the class is the reviewer's
+  // OWN later choice, and css/styles.css hides `.unverified-pill`,
+  // `.editor-qa` and `.cms-help` under it alongside the tags. Applying it at
+  // load therefore hid every Unverified pill on first paint — three e2e specs
+  // (ai-rewrite, inline-content-edit) resolve those pills and assert they are
+  // visible. Restoring a SAVED preference is a different thing and still
+  // happens, in applySavedUiPreferences() (js/ux-improvements-state-sync.js).
+  const tagToggle = document.getElementById('tagToggle')
+  tagToggle.addEventListener('change', (e) => {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
   })
   initChecklist()
@@ -106,7 +115,8 @@ function init() {
       navigateTo(e.state.key, true)
     } else {
       const params = new URLSearchParams(window.location.search)
-      navigateTo(resolveInitialPageKey(params.get('page')), true)
+      const pageKey = params.get('page')
+      navigateTo(resolveInitialPageKey(pageKey), true)
     }
   })
 
@@ -116,6 +126,7 @@ function init() {
   // would need flushing. js/ux-improvements.js does its own restoreInitialPage()
   // pass once its wrapper is installed.
   const params = new URLSearchParams(window.location.search)
-  renderPage(resolveInitialPageKey(params.get('page')), true)
+  const pageKey = params.get('page')
+  renderPage(resolveInitialPageKey(pageKey), true)
 }
 init()

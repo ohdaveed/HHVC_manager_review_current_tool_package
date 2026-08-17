@@ -13,7 +13,6 @@ const REVIEW_RECORD_FIELDS = [
   'decision',
   'notes',
   'risks_or_blockers',
-  'follow_up_owner',
   'seo_title',
   'meta_description',
   'primary_cta',
@@ -149,12 +148,70 @@ function zeroDecisionTally() {
   return Object.fromEntries(DECISION_LABELS.map((label) => [label, 0]))
 }
 
+/**
+ * Parse Markdown to HTML and sanitize it against XSS.
+ * Falls back to plain text escaping if parsing fails or libraries are missing.
+ * @param {string} rawString
+ * @returns {string} Safe HTML string.
+ */
+function safeMarkdown(rawString) {
+  const text = String(rawString ?? '')
+  if (!text) return ''
+
+  if (typeof window === 'undefined' || !window.marked || !window.DOMPurify) {
+    // In Node test environment or if libraries failed to load,
+    // fallback to basic HTML escaping.
+    return escapeHtml(text)
+  }
+
+  try {
+    const renderer = new window.marked.Renderer()
+    renderer.link = ({ href, text }) => {
+      if (/^https?:\/\//.test(href)) {
+        return `<a class="inline-link" href="${href}" target="_blank" rel="noopener noreferrer">${text} <span aria-hidden="true">↗</span></a>`
+      }
+      return `<button type="button" class="inline-link" data-render-target="${href}">${text}</button>`
+    }
+
+    // Configure marked to use our renderer
+    window.marked.use({ renderer })
+
+    // parseInline prevents wrapping the output in <p> tags
+    const rawHtml = window.marked.parseInline(text)
+
+    // **An explicit allowlist, not DOMPurify's default one.** The default
+    // permits `<img>`, and `marked.parseInline` emits one for `![alt](url)` —
+    // so a remote image URL written into any paragraph, bullet, table cell or
+    // callout would load off-origin from inside page copy. That is not a
+    // theoretical hardening: `findExternalAssetUrls()` in
+    // build_scripts/data-checks.js fails validation on an off-host image
+    // precisely because this tool claims to work offline, and it inspects
+    // `image.src` only — markdown in body copy would route straight past it.
+    // The default list also admits headings, lists and tables, none of which
+    // the mockup's renderer has ever produced from inline markdown.
+    //
+    // The tags below are exactly what this function can emit: `<strong>` and
+    // `<em>` from marked, and the `<a>`/`<button>`/`<span>` the custom link
+    // renderer above builds. Widening this list means deciding that page copy
+    // may introduce that element — check `findExternalAssetUrls` and the
+    // offline claim before doing it.
+    return window.DOMPurify.sanitize(rawHtml, {
+      ALLOWED_TAGS: ['a', 'button', 'span', 'strong', 'em', 'code'],
+      ALLOWED_ATTR: ['class', 'href', 'type', 'target', 'rel', 'aria-hidden', 'data-render-target'],
+    })
+  } catch (error) {
+    console.error('safeMarkdown failed:', error)
+    return escapeHtml(text)
+  }
+}
+
 ;(function initSharedUtils() {
   // Expose utilities to window for backward compatibility
   // during the migration period.
   if (typeof window === 'undefined') return
 
   window.utils = {
+    safeMarkdown,
     escapeHtml,
     getByPath,
     setByPath,
@@ -482,6 +539,7 @@ function setPrimaryCta(page, label) {
  * Get today's date as YYYY-MM-DD.
  * @returns {string}
  */
+
 function today() {
   const now = new Date()
   const yyyy = now.getFullYear()
@@ -870,7 +928,6 @@ function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD
     decision: 'Needs review',
     notes: '',
     risks_or_blockers: '',
-    follow_up_owner: '',
     seo_title: defaultSeoTitle(page),
     meta_description: defaultMetaDescription(page),
     primary_cta: getPrimaryCta(page),
@@ -934,4 +991,5 @@ export {
   toCsv,
   today,
   urlProbe,
+  safeMarkdown,
 }

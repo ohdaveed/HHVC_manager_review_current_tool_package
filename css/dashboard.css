@@ -651,3 +651,41 @@
   flex-shrink: 0;
   gap: var(--ds-space-1);
 }
+
+/* Karl transcript panel — the three controls and the preview.
+   Shares the mockup-export button row's shape rather than inventing a second
+   one; only the preview needs rules of its own. */
+.karl-transcript-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+
+/* The preview is a paste source, so it must keep the transcript's own line
+   breaks and never reflow them — `pre-wrap` rather than `pre` so a long field
+   value still wraps inside the panel instead of forcing the docked column to
+   scroll sideways. The height cap keeps a Transaction page (several hundred
+   lines) from pushing the rest of Help off screen; the box scrolls instead. */
+.karl-transcript-preview {
+  margin-top: var(--ds-space-3);
+  max-height: 22rem;
+  overflow: auto;
+  padding: var(--ds-space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--ds-radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  /* No semantic mono token exists — the tool chrome has sans and serif only —
+     so this names the system stack directly rather than inventing a token for
+     one rule. A transcript is read as literal text an editor copies, and a
+     proportional face makes an indented field value harder to scan. */
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  /* --ds-text-label (14px), not --ds-text-micro (11px): the chrome floor is
+     14px and the 11px step is scoped to uppercase eyebrow labels, where
+     letter-spacing and weight carry the legibility. This is body text an
+     editor reads while typing into another window. */
+  font-size: var(--ds-text-label);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

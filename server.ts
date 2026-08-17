@@ -1,6 +1,33 @@
 import { serve } from "bun"
 import { resolve } from "node:path"
 import { createHash, createHmac, timingSafeEqual } from "node:crypto"
+// Deliberately NOT importing Hono here, and the reasoning is worth keeping
+// because "replace the hand-rolled HTTP plumbing with middleware" is an
+// obvious-looking suggestion that a rebuild proposal made and that measurement
+// refuted (2026-08-16, hono@4.13.2, read out of node_modules rather than out
+// of the docs):
+//
+//   - `hono/body-limit` abandons the reader at the first over-limit chunk
+//     without draining, which is the exact behaviour the drain branch in
+//     readBodyWithLimit() below exists to avoid — it leaves a keep-alive
+//     connection framed mid-request, so the client's NEXT valid request comes
+//     back 400/431. It also buffers every chunk of an UNDER-limit body into an
+//     array and rebuilds the Request, defeating the streaming cap outright.
+//   - `hono/cors` never rejects. A disallowed origin simply receives no
+//     Access-Control-Allow-Origin header and the request runs anyway, leaving
+//     enforcement to the browser; getApiRequestContext() answers 403 in the
+//     server. It also has no notion of the 503-on-invalid-config that must
+//     answer BEFORE the authorization gate, and validates neither the
+//     requested preflight method nor the requested headers.
+//   - `hono/secure-headers` disagrees with netlify.toml's set on three headers
+//     (X-Frame-Options SAMEORIGIN vs DENY, X-XSS-Protection 0 vs 1; mode=block,
+//     Referrer-Policy no-referrer vs strict-origin-when-cross-origin) and adds
+//     seven this deployment does not send. Configuring it to match costs more
+//     lines than the SECURITY_HEADERS constant below and adds a second place
+//     for those values to drift from netlify.toml.
+//
+// That leaves route dispatch as the only thing a framework would buy, which is
+// not what this file is expensive about.
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
 import { mergeReviewRecord } from "./js/review-merge.js"
@@ -1426,6 +1453,56 @@ const server = serve({
 // Postgres URL carries a password, and this log goes to Railway's log stream.
 console.log(`HHVC mockup server running at http://${server.hostname}:${server.port}`)
 console.log(`Review state stored in ${describeStorage(DATA_DB_PATH)}`)
+
+/* **Graceful shutdown — and the reason this is not merely tidiness.**
+
+   Railway replaces a deployment by sending SIGTERM to the outgoing container
+   and waiting out a drain window before SIGKILL. With no handler installed,
+   the default disposition kills the process outright: Bun reports the script
+   as terminated by a signal, `bun run` turns that into a nonzero exit (128 +
+   15 = 143), and Railway reads a nonzero exit at shutdown as a CRASH — which
+   is exactly what it is not. Every deploy to `main` therefore mailed
+   "Deploy Crashed!" about the deployment that had just been retired on
+   purpose, with the only trace being this line in the OLD deployment's log:
+
+     error: script "serve" was terminated by signal SIGTERM (Polite quit request)
+
+   A crash notification that fires on every healthy deploy is worse than no
+   notification, because it trains the reader to ignore the one that matters.
+
+   The second reason is the honest one. `server.stop(false)` lets in-flight
+   requests finish rather than severing them mid-response; the `false` is
+   load-bearing, since `true` closes active connections immediately and
+   reintroduces the truncated-response behavior this block exists to remove.
+   A PUT /api/review-state landing at the moment of a redeploy is a reviewer's
+   decision, and the compare-and-swap in build_scripts/storage.js only protects
+   against a LOST update, not against a response the client never received.
+
+   The race against a timer is the backstop: a request that never completes
+   must not hold the process past Railway's drain window, where SIGKILL would
+   return us to exit 143 by a slower route. Whichever settles first wins, and
+   the explicit `process.exit(0)` is what states "this was an orderly stop" to
+   the platform. Storage needs no close call — no driver in
+   build_scripts/storage.js exports one, and the process is exiting anyway. */
+const SHUTDOWN_GRACE_MS = 10_000
+let shuttingDown = false
+
+async function shutdown(signal: string) {
+  // A second SIGTERM (or a SIGINT chasing a SIGTERM) must not start a second
+  // drain and race the first one's exit.
+  if (shuttingDown) return
+  shuttingDown = true
+  console.log(`Received ${signal}; draining in-flight requests before exit`)
+  await Promise.race([server.stop(false), Bun.sleep(SHUTDOWN_GRACE_MS)])
+  process.exit(0)
+}
+
+process.on("SIGTERM", () => {
+  void shutdown("SIGTERM")
+})
+process.on("SIGINT", () => {
+  void shutdown("SIGINT")
+})
 
 /* **This file deliberately has no default export, and adding one back would
    crash the deployment.** `bun run server.ts` auto-serves a module's default

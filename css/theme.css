@@ -223,6 +223,21 @@
   --ds-shadow-2: 0 2px 4px rgba(12, 20, 100, 0.06), 0 4px 12px rgba(12, 20, 100, 0.1);
   --ds-shadow-3: 0 8px 16px rgba(12, 20, 100, 0.08), 0 16px 32px rgba(12, 20, 100, 0.12);
 
+  /* Two chrome dimensions that are shared rather than component-local, and so
+     belong here rather than as literals in the component sheet that happens to
+     use them first.
+
+     --ds-size-affordance is the diameter of a small circular control that sits
+     in a line of text — the Karl guide's expand dot today. It doubles as the
+     ordinal gutter for that guide's step list, which is deliberate: the number
+     column and the dot above it line up because they are the same measure.
+
+     --ds-size-popover is the natural width of a floating panel opened from
+     inline chrome. It is a MAX rather than a fixed width; every caller pairs it
+     with `min(…, calc(100vw - 2rem))` so a narrow viewport wins. */
+  --ds-size-affordance: 1.35rem;
+  --ds-size-popover: 31rem;
+
   /* Semantic surfaces */
   --surface-page: var(--sfds-color-grey-l1);
   --surface-panel: var(--sfds-color-white);
@@ -298,7 +313,15 @@
      ramp: SFDS's action blue, not the old #2a60af. Still a literal rather
      than var(--brand-40) — the whole point of this block is that these
      survive a theme flip unchanged, and a token is exactly the thing that
-     might not. */
+     might not.
+
+     This is the LIGHTEST of the three toast backgrounds, which makes it the
+     one that governs every control derived from --toast-fg: the dismiss
+     button's opacity and the action button's currentColor tint both composite
+     toward the background, so they are worst here even though the base label
+     clears 4.5:1 comfortably. Moving this token a step lighter is what took
+     both of those under AA once already. tests/theme-contrast.test.js checks
+     the derived pairs, not just the 5.34 below. */
   --toast-info-bg: #495ed4; /*  5.34:1 */
   --banner-danger-fg: #fcfcfc;
   --banner-danger-bg: #d92d20; /*  4.71:1 */

@@ -39,34 +39,41 @@ Vite to bundle.
 
 ## Commands
 
+**`package.json` is the command reference — read it rather than a copy.** Every
+script key is preceded by a `"// <name>"` key carrying a full description, and
+several of those are longer and more precise than anything a table here could
+hold (`lint:anti-slop`'s, for instance, records the 280-finding measurement
+behind its narrow scope). A restatement in this file would be a second copy
+sitting beside the first, free to drift from it and checked by nothing. Open
+the `scripts` block and read it, or dump it with the Bun this repo already
+requires (deliberately not `jq`, which is neither a dependency here nor present
+in every environment):
+
 ```bash
-bun install                 # install deps (required before first `dev`)
-bun run dev                  # Vite dev server (HMR) at http://127.0.0.1:8080
-bun run dev:api              # optional sync backend (server.ts) on :8081; dev proxies /api
-bun run start                # production-like: build:netlify then serve dist/ + the API
-bun run serve                # serve an already-built dist/ without rebuilding
-bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 45 unit-test files in tests/
-bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
-bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
-bun run sync-tracking         # regenerate the local mockup tracking CSVs
-bun run push-tracking         # push page review status to the Google Sheets tracker
-bun run build                 # validate -> export -> workshop form -> build:app -> publish form -> singlefile
-bun run build:app             # vite build -> dist/ (what server.ts and Netlify serve)
-bun run build:singlefile      # vite build --mode singlefile -> dist-singlefile/index.html
-bun run build:workshop-form   # bun install + vite build inside forms/mosquito-workshop-request
-bun run build:netlify         # validate -> build:app -> copy-workshop-form.js (assembles dist/)
-bun run format                # prettier --write on everything
-bun run format:check          # prettier --check — THIS IS THE LINT STEP (no ESLint/tsc)
-bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_scripts/ai/ ONLY
-                              # — a developer-run report, NOT a CI gate (see Formatting below)
+bun -e 'for (const [k, v] of Object.entries(require("./package.json").scripts)) console.log(k + "\t" + v)'
 ```
+
+Two things to add to what those descriptions say — one they omit outright, one
+they state too weakly to act on:
+
+- **`bun install` is required before the first `dev`, `validate`, `test` or
+  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  third-party libraries, and validate/test need `zod`, `fast-glob` and
+  `happy-dom`. Nothing in `package.json` says so.
+- **`format:check` is the only linter CI enforces.** Its own description calls
+  it "the project's linter", which undersells the consequence: there is no
+  ESLint and no `tsc` anywhere in this repo, so Prettier is the whole of the
+  lint gate. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+  the single-file build, the unit tests, Playwright — but not one of those
+  checks style. `lint:anti-slop` is a second linter, but a deliberately
+  un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
+  below. No single script description can state that relationship.
 
 `HOST=0.0.0.0 bun run dev` / `PORT=3000 bun run dev` override the dev server bind.
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 45 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 48 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -107,6 +114,20 @@ rather than the scheme — `mailto:`, `tel:` and root-relative targets all pass
 `safeUrl` and would still render as dead `data-render-target` buttons, so a
 later reader "fixing" them by widening this predicate would ship exactly the
 broken control it removes),
+`karl-guide` (the Karl-field registry, its panel markup and the disclosure's
+keyboard behaviour. Most of its assertions are about paths that must NOT
+appear, because this feature's failure mode is a wrong answer delivered
+confidently: a guide is stamped `E1 confirmed` whenever it holds any path, and
+that badge means MEASURED against the live Karl admin, so a plausible
+neighbouring field is worse than none. It pins the empty string as a
+first-class answer — the one that is never harmful — and pins each of the ten
+wrong routings four independent PR reviewers found by the page type and role
+that produced it. It also asserts the panel emits **no block-level element at
+all**: the panel renders inside a `<span>` that renders wherever its tag does,
+so a `<div>` within it closes an enclosing paragraph early and the panel
+escapes the positioned ancestor it anchors to, opening elsewhere on the page.
+That had been a rule three call sites had to remember; it is now a property of
+the markup),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB),
 `review-api-postgres` (the same routes against a **real Postgres**, and
@@ -168,19 +189,43 @@ since getting the string wrong falls back to the system sans with nothing
 visibly broken. `tests/e2e/mockup-tokens.spec.js` closes the gap this file
 cannot: its assertions prove an import line and an on-disk file exist, not
 that the browser actually renders a non-synthesised 700, which only
-`document.fonts.check('700 16px "…"')` against a real loaded page can show).
+`document.fonts.check('700 16px "…"')` against a real loaded page can show),
+and `karl-blocks` (the drift guard over `js/karl-blocks.js`, the Karl panel
+inventory the transcript export types into: it parses
+`docs/karl-export-field-map.md`'s eight per-type tables and asserts every
+transcribed row still matches on label, raw name, required/repeatable wording,
+block types and mockup source, plus that each row's cited `docLine` really is
+its own row. The inventory is hand-transcribed from a 930-line prose document
+that keeps changing, and silent drift means an editor is told to type into a
+field that no longer exists. It asserts a MINIMUM row count per type FIRST,
+because a doc-parsing regex that stops matching does not fail — it stops
+checking, and reports zero rows on both sides), and
+`karl-transcript` (the builder itself, driven with hand-built pages rather than
+the real corpus — like `card-inheritance`, so a legitimately added page never
+fails the suite. It pins overlay precedence including the cleared-to-empty
+case, that a `title-only` card emits a page choice and never a description,
+that an external entry in a `title-only` block has its description reported as
+dead while the same entry in an inheriting subsection keeps it, that
+`callout.title: false` is absence rather than a title, that bullets fold into
+the paragraph value instead of becoming a block, that an inline
+`[label](pageKey)` link surfaces separately with its Karl representation named,
+and that the 120-character `cost` cap measures the OVERLAID value — a reviewer
+can push a short authored value over the cap and pull a long one under it, so
+measuring the original reports the wrong page in both directions.
+Mutation-proven against two deliberate breakages: emitting a description for a
+picker card, in each of the two places one could be emitted).
 **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-one spec files, all UI-driven — navigation, editor panel, review
+twenty-two spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale,
+the chrome type scale, the Karl transcript panel,
 and workshop-form submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
@@ -310,7 +355,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets to the
   document. It holds because MUI emits scoped `.css-*` classes and **no
   `CssBaseline`**. `CssBaseline` writes element-level rules on `html`/`body`/`*`,
-  and Emotion injects after the ten stylesheets, so it would win ties inside the
+  and Emotion injects after the eleven stylesheets, so it would win ties inside the
   shell. Use `ScopedCssBaseline` inside a panel if a reset is ever needed; do not
   add the global one.
 - **`js/react/theme.js` is the only bridge to the design tokens.** It reads the
@@ -777,6 +822,77 @@ is requested**, so the numbers are present even if the chunk never loads.
 - **Colour is never the only encoding**: visible legend with counts, every chart
   `aria-hidden` beside an `.hhvc-sr-only` table, and the checks chart states its
   own top-8 cap while the table carries every page.
+
+### Karl transcript export (`js/karl-blocks.js`, `js/karl-transcript.js`)
+
+A paste-ready, per-page instruction listing what an editor types into Karl,
+field by field, in the order Karl's own form presents. `bun run export:karl`
+writes one markdown file per page into `review/karl-transcripts/` (gitignored,
+regenerate rather than edit); a collapsed section at the end of the **Help** tab
+renders the same transcript for the open page with this browser's edits applied.
+**A human performs every keystroke** — no API writes, no credentials, no
+publishing path — so the standing rule that a review layer never writes back to
+`pages/*.js` and that an export is never publication approval survives intact.
+A transcript changes what an export contains, not what it authorizes.
+
+- **`js/karl-blocks.js` is transcribed from `docs/karl-export-field-map.md`, not
+  parsed from it.** Half the mapping lives in prose footnotes under the tables —
+  a Callout has no title field, the cost description caps at 120 characters,
+  bullets fold into the Text block's rich text — and a parser reading only the
+  tables loses exactly those and reports success. `tests/karl-blocks.test.js`
+  parses the document instead, so drift goes red in CI without the runtime
+  depending on the prose staying machine-readable. Every row of every per-type
+  table is transcribed, including the rows with no mockup source: `primary_agency`
+  is required on seven of the eight types and this tool has no field for it
+  (`U6`), so the transcript has to say so rather than leave a hole the editor
+  discovers when Karl refuses to save.
+- **A panel's `source` is a tagged union, not a dotted path.** The field map's
+  Mockup source column is a PREDICATE on six of the eight types (`section` with
+  `component: 'supporting'`, `component: 'services'` sections, `section with
+cards[]`) and a path only on Transaction's scalars, so a path resolver would
+  cover one type and leave the rest silently empty.
+- **Card inheritance decides TYPE versus CHOOSE**, through the one
+  `js/card-inheritance.js` classifier, passed in rather than re-derived. An
+  `inherits` or `title-only` card is a picker, so the transcript says _choose
+  page X_ and never _type this description_ — emitting a description for a
+  picker is the exact defect that classifier exists to prevent, and here it
+  would become an instruction a human executes. A section the classifier returns
+  `unknown` for is FLAG, never a guessed TYPE: guessing TYPE reintroduces that
+  defect and guessing CHOOSE silently drops authored copy.
+- **Two panels can match one section, and the transcript emits each half once.**
+  Several panels carry two sources that overlap — Information's `related`
+  matches both `component: 'related'` and any `title-only` card section, and a
+  Related panel is usually both — so matches are unioned and DEDUPED BY SECTION
+  INDEX per panel, first source winning. Where two DIFFERENT panels legitimately
+  share a section, a `source.emit` scope splits it: a Resource Collection
+  section carrying `paragraphs[]` and `cards[]` sends its prose to
+  `introductory_text` and its links to `body`, because the first is a
+  Title-and-text block with no chooser at all. Neither existing gate could see
+  this — `consumed` is a Set, so a double emission is invisible to the unmapped
+  sweep, and both ratchets are about UNDER-coverage — so
+  `tests/data-validation.test.js` asserts the other half against the real
+  corpus: no section is emitted twice into the same scope.
+- **A plain Transaction body section reaching `custom_section` is an INFERRED
+  mapping and prints as one.** Transaction has no generic body stream and
+  `custom_section` is its only repeatable Title-and-text panel, but the field map
+  claims that panel only for `supporting`/`flat` sections. Nineteen sections
+  depend on it; the alternative was exporting a fifth of the heaviest type's
+  body copy as "no Karl destination".
+- **`findUnmappedSections` is a gate, not a report** — unlike `bun run
+audit-cards`, because "there is nowhere in the CMS for this to go" is a
+  structural fact about the content rather than a per-card content judgement.
+  Its exemptions in `karl-blocks.js`'s `UNRESOLVED` table are SHAPE rules, never
+  page keys or paths: an allowlist would let a newly authored section inherit an
+  old exemption just by landing at the same index, which is the case the ratchet
+  exists to catch. Closing a register entry upstream means deleting its rule, and
+  every section it covered fails until it is mapped. It found three gaps nobody
+  had recorded, now open as `U21`/`U22`/`U23`.
+- **Approval is per page, not per field.** The review record carries `decision`
+  and no field-level approval, so a not-Approved page is marked in the header
+  AND on every panel rather than exported as though it were signed off.
+- **The CLI reads no review state and says so.** That lives in the browser's
+  `localStorage`, so every CLI transcript is headed _no review recorded_; the
+  Help-tab panel is the path that carries a reviewer's edits.
 
 ### Queue undo (`js/review-queue-undo.js`)
 
@@ -1590,36 +1706,93 @@ two things a reviewer most often needs the AI to know. `collectKnowledgeSources(
 is now the single definition of what gets embedded and what `category` each
 document is filed under.
 
-| Category       | What it is                                                                 | Where it comes from                                              |
-| -------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `hhvc-policy`  | adopted policy, Director's Rules, Health Code extracts                     | `docs/source/hhvc-policy/`                                       |
-| `sfgov-style`  | SF.gov's published writing guidance                                        | `docs/source/sfgov-style/`                                       |
-| `sfgov-live`   | dated snapshots of what SF.gov publishes today                             | `docs/source/sfgov-live/`                                        |
-| `karl`         | live measurements of the Karl editor itself                                | `docs/karl-mockup-cookbook*.md`, `docs/karl-export-field-map.md` |
-| `mockup-draft` | the proposed page mockups themselves                                       | `pages/*.js`, projected                                          |
-| `sfds`         | the vendored SF Design System token capture and its recorded disagreements | `docs/source/sfds/`                                              |
+| Category         | What it is                                                                  | Where it comes from                                                |
+| ---------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `hhvc-standards` | the HHVC Web Governance and Content Standards Manual v2.1                   | `notebooklm/hhvc-standards-manual.md`                              |
+| `hhvc-policy`    | adopted policy, Director's Rules, Health Code extracts, IPM standards       | `docs/source/hhvc-policy/`, three files in `notebooklm/`           |
+| `sfgov-style`    | SF.gov's published writing guidance                                         | `docs/source/sfgov-style/`                                         |
+| `sfgov-live`     | dated snapshots of what SF.gov publishes today, plus the cross-type reading | `docs/source/sfgov-live/`, `docs/sfgov-live-design-inspiration.md` |
+| `karl`           | live measurements of the Karl editor itself                                 | four explicitly listed files under `docs/`                         |
+| `karl-gitbook`   | the Karl editor Help Center's own published rules                           | `docs/source/karl-gitbook/`                                        |
+| `mockup-draft`   | the proposed page mockups themselves                                        | `pages/*.js`, projected                                            |
+| `sfds`           | the vendored SF Design System token capture and its recorded disagreements  | `docs/source/sfds/`                                                |
 
-- **The `karl` category is an explicit file list, not a glob**, because those
-  documents live in `docs/` rather than `docs/source/`.
-  `docs/karl-export-field-map.md` was added to it on 2026-08-15, worth +42
-  chunks: it is the E1 record of what every Karl content type's editor form
-  actually contains, and without it the corpus could answer what the Help
-  Center _says_ about a form but not what the form _offers_ — two things that
-  have given different answers four times over. **Adding a file here moves the
-  measured counts below**, so re-measure and re-ingest rather than editing the
-  list alone.
+- **`EXTERNAL_SOURCE_FILES` is an explicit `{path, category}` list, not a
+  glob**, because those documents live outside `docs/source/`. It was a flat
+  path list that all became `category: 'karl'` until 2026-08-16, which was true
+  while the only outside documents were Karl captures and stopped being true
+  when the standards manual came in — filing that as `karl` would have told the
+  audit prompt it was a measurement of what the CMS can publish. **Adding a file
+  here moves the measured counts below**, so re-measure and re-ingest rather
+  than editing the list alone.
+- **The content standards manual is the addition worth understanding.**
+  `js/plain-language.js` cites it by section number for every scored
+  `severity: 'error'` rule (§7.x, and §6.3 for the Karl Button component), and
+  it was not in the corpus at all — it lives in `notebooklm/`, which no glob
+  here reached. So `compliance-audit` grounded findings in Health Code extracts
+  while the document that defines what a compliant HHVC page looks like was
+  unretrievable, and a reviewer could not get from a citation back to the manual
+  section the tool's own checks are named after. Added 2026-08-16, worth +75
+  chunks.
+- **`karl` and `karl-gitbook` are separate on purpose**: the CMS as MEASURED
+  versus the CMS as DOCUMENTED. They have disagreed four times over (see the
+  field map's obsolete register), and collapsing them would let a Help Center
+  claim the live admin contradicts be cited with a measurement's authority. The
+  prompt says the measurement wins.
+- **A superseded document cannot be admitted, because it cannot carry its own
+  warning.** The chunker prefixes each chunk with its HEADING PATH, never with
+  the file's opening banner — so `docs/wagtail-content-mapping.md`'s "specific
+  claims below that are now wrong" header attaches to chunk 1 and to nothing
+  else, while the rest retrieve as confident current fact. That rules out that
+  file, `docs/karl-help-center-research-2026-07-06.md`, and
+  `hhvc_chapter_drafts/**` (which the manual consolidates, and which carries its
+  own `outdated/` subdirectory). The same reasoning excludes the dated audit
+  records under `docs/`, which count a 39-page corpus that is now 29.
+  `build_scripts/knowledge-sources.js` carries the full exclusion register with
+  the reason per file; read it there rather than re-deriving it.
+- **Draft page copy is never filed as policy.** Several `notebooklm/` files are
+  Page Blueprints — "Page ID GH-021", "Status: Mockup Completed" — and
+  admitting one as `hhvc-policy` would make a proposal citable as adopted
+  guidance. `pages/*.js` already covers that ground honestly as `mockup-draft`.
+- **The compliance matrix is projected, not converted.**
+  `notebooklm/compliance-standards.csv` is the one corpus source that is not
+  markdown, and it is the only place in the repo where a requirement ("seal
+  openings larger than 1/4 inch") and the provision imposing it ("SF Health
+  Code Article 2 Sec. 92(b)-(c)") sit in the same row — which is what lets an
+  audit finding name a section instead of gesturing at policy.
+  `projectComplianceMatrixToMarkdown()` renders it at ingest time under the id
+  `hhvc-policy/compliance-standards-matrix.md`, the same treatment `pages/*.js`
+  gets and for the same reason: a committed conversion would be a second source
+  of truth free to drift from the CSV the program maintains. **It writes one
+  `###` per requirement — 203 of them, more sections than any other document
+  here.** That is deliberate, so each requirement retrieves as its own chunk
+  carrying its own name. **The cost is concrete and lands on the standards
+  manual.** `retrieveRelevantChunks()` is a flat top-K with no per-category
+  floor and no diversity rule, `TOP_K` is 6, and these chunks have a median of
+  46 words — shorter than anything else in the corpus, and near-isomorphic to
+  each other apart from a section number and a noun. Formulaic short chunks
+  embed toward one another, so a query that matches one provision tends to
+  match several of its near-duplicates and spend the whole top-6 on one
+  provision family. The document most at risk is the manual added in the same
+  pass: its 75 chunks are prose about page structure and wording gates, which
+  loses a cosine race against legally specific text whenever page copy is about
+  rats, mold or refuse — so "the manual is unretrievable" can persist as "the
+  manual never reaches the top 6." Grouping rows by code section cuts the
+  matrix to about 61 longer chunks and is the recorded fallback, for exactly
+  that reason rather than for tidiness. **Measure before reaching for it**, and
+  measure it as "does an audit of a pest page still cite `hhvc-standards`".
 - **Category is derived from the first path segment under `docs/source/`**, so a
   new corpus folder files itself with no code change — which is exactly how the
-  scraped SF.gov snapshots work.
-- **The Karl capture is listed explicitly rather than moved.** Both canon files,
-  the copilot mirror and `tests/doc-counts.test.js` name those paths, and a
-  merged PR links them; relocating a document to satisfy an ingestion glob is
+  scraped SF.gov snapshots and `docs/source/karl-gitbook/` work.
+- **The outside documents are listed explicitly rather than moved.** Both canon
+  files, the copilot mirror and `tests/doc-counts.test.js` name those paths, and
+  a merged PR links them; relocating a document to satisfy an ingestion glob is
   the tail wagging the dog.
 - **The mockup pages are projected to markdown at ingest time and not
   committed** — headings become `##`/`###` so the existing chunker splits them
   the same way, and the `karl` placement notes are included because they carry
   the CMS rationale a reviewer actually asks about.
-- **`mockup-draft` is the dangerous one, and it is about a third of the corpus.**
+- **`mockup-draft` is the dangerous one, and it is about a quarter of the corpus.**
   It is DRAFT copy nobody has approved, including the page being audited. The
   source tag in the prompt now carries `category`, the system prompt spells out
   what each one is worth, and it says in terms that draft copy must never be
@@ -1633,12 +1806,22 @@ document is filed under.
 - **Corpus definition is separate from ingestion on purpose**:
   `tests/knowledge-sources.test.js` covers which documents exist and how a page
   projects, with no Gemini key and no embedding call. Measured after this
-  change: **78 documents, 812 chunks** (re-measured 2026-08-15) — `hhvc-policy`
-  430, `mockup-draft` 233, `karl` 95, `sfgov-live` 28, `sfgov-style` 24,
-  `sfds` 2. `karl` rose from 53 when `docs/karl-export-field-map.md` was added;
-  `sfds` from 1 as its capture grew.
-- **Retrieval is still brute-force cosine in JS.** 812 chunks ranks in
+  change: **95 documents, 1230 chunks** (re-measured 2026-08-16) —
+  `hhvc-policy` 46 docs / 714 chunks, `mockup-draft` 29 / 233, `karl` 4 / 102,
+  `hhvc-standards` 1 / 75, `sfgov-live` 7 / 52, `karl-gitbook` 5 / 28,
+  `sfgov-style` 2 / 24, `sfds` 1 / 2. Was 78 documents / 812 chunks on
+  2026-08-15, before `docs/source/karl-gitbook/`, the standards manual, the IPM
+  and disease-risk references, the Article 11 handbook and the compliance
+  matrix came in — the matrix alone is 204 of those chunks, which is why
+  `hhvc-policy` jumped 510 to 714 while gaining one document. **Measure with
+  the real pages** — `collectKnowledgeSources()` called with no `pages` option
+  omits `mockup-draft` entirely and returns a number that looks like a
+  regression.
+- **Retrieval is still brute-force cosine in JS.** 1230 chunks ranks in
   microseconds; pgvector would add an extension dependency for no measured win.
+- **Re-ingest is yours to run and is not free.** `bun run ingest` makes real,
+  billed Gemini embedding calls, so nothing in CI or the build does it — a
+  corpus change is not live on a deployment until someone runs it.
 
 ### Reviewer sign-in (`/api/session`)
 
@@ -2290,6 +2473,22 @@ and never sees a driver, a connection or a SQL string.
 - **`knowledge_chunks` lives behind this seam too**, so `bun run ingest` writes
   wherever the deployment reads. Embeddings are raw little-endian Float32 bytes
   in both drivers — a BLOB in SQLite, `bytea` in Postgres.
+- **The seam is verified on Postgres, not assumed**: the deployed database held
+  **816 chunks across 78 documents** after a re-ingest on 2026-08-17, matching
+  the on-disk measurement category for category. **That is a record of what one
+  ingest wrote, not a standing guarantee** — the deployed count drifts behind
+  the corpus the moment an ingested document is edited without a re-ingest, and
+  it had twice: a reading of `chunkCount: 768` predated both
+  `docs/karl-export-field-map.md` joining the `karl` category and the `sfds`
+  category existing at all, and a later 812 was 4 short from edits to that
+  file's own register. Read the live count from `/api/ai/capabilities` rather
+  than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's at a time: `DATABASE_URL` belongs to the
+  Postgres service and `GEMINI_API_KEY` to `web`. The deployed `DATABASE_URL`
+  also names `postgres.railway.internal`, which does not resolve off-platform —
+  rebuild it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather
+  than reusing the value the service itself sees.
 - **Bun's Postgres client is built in** (`Bun.SQL`, Bun 1.3+), so this added no
   npm dependency — the same reason `bun:sqlite` was used in the first place.
 
@@ -2305,6 +2504,25 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
   ran the build, where it would repeat the whole thing at boot. The bare `build`
   script is wronger still for a server: it also produces the single-file export
   and rebuilds the workshop form.
+- **`server.ts` must exit 0 on SIGTERM, and that is a deploy concern rather
+  than tidiness.** Railway retires a deployment by sending SIGTERM and reads the
+  exit status that follows as the verdict on it. With no handler the default
+  disposition kills the process, `bun run` reports it as terminated by a signal
+  (128 + 15 = 143), and Railway mails "Deploy Crashed!" about a container it
+  stopped on purpose — which it did on every deploy to `main`, on both services
+  then deployed, with the only trace being one line in the OUTGOING
+  deployment's log: `error: script "serve" was terminated by signal SIGTERM`.
+  A crash alert that fires on every healthy deploy trains its reader to ignore
+  the one that matters. The handler drains via `server.stop(false)` — `false`
+  is load-bearing, since `true` severs in-flight responses — and races that
+  against a 10s timer so a request that never completes cannot hold the process
+  into Railway's SIGKILL and return the same 143 by a slower route.
+  `tests/review-api-server.test.js` asserts `signalCode` is null as well as
+  `exitCode` 0, because a signal-killed process reports `'SIGTERM'` there
+  whatever the code says. **The `railway.json` start command stays
+  `bun run serve`** — measured, not assumed: with the handler installed the
+  script wrapper propagates the clean exit and stops printing the error line,
+  so bypassing it buys nothing.
 - **`HOST=0.0.0.0` is required and is a variable, not a code change.**
   `server.ts` defaults to `process.env.HOST ?? "127.0.0.1"`, which is right for
   local dev and unreachable inside a container — the first Railway deploy built
@@ -2450,24 +2668,23 @@ self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
-**The ten stylesheets, in `js/main.js` import order** (`css/sfds.css` MUST
-stay first — it is the raw-primitive layer everything downstream reads, keyed
-to SFDS's own published token names; `css/theme.css` MUST stay last — it is
-the semantic token layer, and its dark-mode block overrides
-the `--legacy-*` primitives `css/styles.css` declares on `:root`):
+**There are eleven repository-owned stylesheets, and two positions in their
+order are load-bearing.** `css/sfds.css` MUST stay first of the eleven — it is
+the raw-primitive layer everything downstream reads, keyed to SFDS's own
+published token names. `css/theme.css` MUST stay last — it is the semantic
+token layer, and its dark-mode block overrides the `--legacy-*` primitives
+`css/styles.css` declares on `:root`.
 
-| File                          | Owns                                                                                           |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- |
-| `css/sfds.css`                | the SFDS primitives, keyed to SFDS's own published token names                                 |
-| `css/styles.css`              | the mockup itself, plus the raw `--legacy-*` primitives                                        |
-| `css/ux-improvements.css`     | the review layer's own chrome — the designated `!important` override sheet                     |
-| `css/ai-assist.css`           | the AI assist panel                                                                            |
-| `css/dashboard.css`           | the `.ds-*` primitives and the workspace shell, tabs, KPI tiles, progress bar and status chips |
-| `css/review-insights.css`     | the Overview cards and the failing-checks ranking                                              |
-| `css/review-ops.css`          | the stored-review-data panel                                                                   |
-| `css/ai-rewrite.css`          | the floating selection button and the rewrite popover                                          |
-| `css/inline-content-edit.css` | the inline click-to-edit widgets, Edited badge, add/remove/reset controls                      |
-| `css/theme.css`               | **the semantic token layer** — surfaces, type scale, status/decision colours, dark mode        |
+Their order is the tail of `js/main.js`'s CSS imports, and each of the eleven
+opens with a banner comment naming what it owns (several also state which sheet
+they load after, and why). Read those two rather than a table here: eleven
+one-line file descriptions restated in this file would be a second copy of
+eleven header comments, checked by nothing and stale the first time one of them
+is edited. **"First" means first of the eleven, not first in the file** — six
+dependency sheets (`@fontsource-variable/roboto-flex`, two
+`@fontsource/roboto-slab` weights, three `@sfgov/design-system` sheets) import
+ahead of `css/sfds.css` and carry none of those banners. They load before all
+eleven, so the repo's own sheets override them rather than the reverse.
 
 Retheming should mean editing `css/theme.css` only. A component rule that needs
 a colour, a size step or a radius takes a semantic token; it should not reach
@@ -2582,6 +2799,22 @@ globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
+- Karl guide panels → `js/karl-guide-registry.js` (the per-page-type field
+  tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
+  `''` rather than guessing — `guideForContext` stamps any non-empty path
+  `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
+  reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
+  `js/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
+  call site in `js/page-render.js` must pass `context.role`: without one the
+  tag KIND is used as the role, which names no Karl field. Note the panel is
+  block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
+  parser closes the paragraph and the panel escapes the element it is
+  positioned against.
+- Karl transcript export → `js/karl-blocks.js` (the transcribed panel inventory
+  and the `UNRESOLVED` shape rules), `js/karl-transcript.js` (the pure builder —
+  every judgement about what an editor is told lives there and only there),
+  `js/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
+  Re-run `bun run validate` after any of them: `findUnmappedSections` gates on it.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

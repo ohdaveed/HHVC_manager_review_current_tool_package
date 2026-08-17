@@ -233,7 +233,6 @@ function writeManagerDecisionLog(data) {
     'decision',
     'notes',
     'risks_or_blockers',
-    'follow_up_owner',
     'seo_title',
     'meta_description',
     'primary_cta',

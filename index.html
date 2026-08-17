@@ -192,13 +192,7 @@
               aria-label="Risks or blockers"
               placeholder="Legal/source review, policy issue, broken link, unclear scope, etc."
             ></textarea>
-            <label for="reviewOwner">Follow-up owner</label>
-            <input
-              id="reviewOwner"
-              type="text"
-              aria-label="Follow-up owner"
-              placeholder="Name, role, or team"
-            />
+
             <!-- One export control with a scope, and one import control that
                  takes either format.
 
@@ -373,6 +367,16 @@
             <details class="review-advanced-group">
               <summary>Pages added and deleted</summary>
               <div id="reviewWorkspacePages"></div>
+            </details>
+            <details class="review-advanced-group">
+              <summary>Karl transcript for this page</summary>
+              <div id="karlTranscriptControls">
+                <p class="field-help">
+                  What an editor types into Karl for the open page, field by field, in the order
+                  Karl's own form presents. It carries this browser's saved edits, so it is the
+                  approved copy rather than the draft it superseded. Copying it publishes nothing.
+                </p>
+              </div>
             </details>
             <details class="review-advanced-group">
               <summary>Save mockups as images</summary>

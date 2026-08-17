@@ -47,10 +47,6 @@
       <section class="review-queue-overview">
         <div class="review-queue-kpis" aria-label="Queue metrics">
           <div class="review-queue-kpi">
-            <span class="review-queue-kpi-label">No reviewer</span>
-            <strong class="review-queue-kpi-value">${stats.unassigned}</strong>
-          </div>
-          <div class="review-queue-kpi">
             <span class="review-queue-kpi-label">Untouched ${STALE_DAYS}+ days</span>
             <strong class="review-queue-kpi-value">${stats.stale}</strong>
           </div>
@@ -77,7 +73,6 @@
           <button type="button" class="review-queue-action" data-queue-select="clear"${selectedCount ? '' : ' disabled'}>Clear</button>
         </div>
         <div class="review-queue-bulk-actions" role="group" aria-label="Apply to selected pages">
-          <button type="button" class="review-queue-action" data-queue-bulk-action="assign-me"${selectedCount ? '' : ' disabled'}>Assign to me</button>
           <button type="button" class="review-queue-action" data-queue-bulk-action="needs-review"${selectedCount ? '' : ' disabled'}>Needs review</button>
           <button type="button" class="review-queue-action" data-queue-bulk-action="revise"${selectedCount ? '' : ' disabled'}>Revise</button>
           <button type="button" class="review-queue-action" data-queue-bulk-action="blocked"${selectedCount ? '' : ' disabled'}>Blocked</button>
@@ -214,7 +209,6 @@
         label: `Approved (${(stats.byDecision.Approved || 0) + (stats.byDecision['Approved with edits'] || 0)})`,
       },
       { id: 'Blocked', label: `Blocked (${stats.blocked})` },
-      { id: 'Unassigned', label: `Unassigned (${stats.unassigned})` },
       { id: 'Stale', label: `Stale (${stats.stale})` },
       { id: 'Failing checks', label: `Failing checks (${stats.failingChecks})` },
     ]
@@ -290,7 +284,6 @@
                   <th scope="col">Page</th>
                   <th scope="col">Checks</th>
                   <th scope="col">Decision</th>
-                  <th scope="col">Owner</th>
                   <th scope="col">Updated</th>
                   <th scope="col">Actions</th>
                 </tr>
@@ -299,7 +292,6 @@
                 ${rows
                   .map((row) => {
                     const chipClass = getDecisionChipClass(row.decision)
-                    const ownerLabel = row.followUpOwner || 'No owner'
                     const notesLabel = row.notes ? 'Notes saved' : 'No notes'
                     const ageChipClass = row.isStale
                       ? 'fail'
@@ -310,10 +302,6 @@
                     const checksLabel = row.isCurrentPage
                       ? `${row.checksPassed}/${row.checksTotal} live`
                       : `${row.checksPassed}/${row.checksTotal}`
-                    const suggestedOwner = getSidebarReviewerName()
-                    const isOwnerAssigned =
-                      normalize(row.followUpOwner) === normalize(suggestedOwner) &&
-                      !!row.followUpOwner
                     const isSelected = state.selected.has(row.key)
 
                     return `
@@ -346,15 +334,12 @@
                     </td>
                     <td class="review-queue-table-decision">
                       <span class="status-chip ${chipClass}">${escapeHtml(row.decision)}</span>
-                      ${row.followUpOwner ? '' : '<span class="status-chip warn">Needs owner</span>'}
                     </td>
-                    <td class="review-queue-table-owner">${escapeHtml(ownerLabel)}</td>
                     <td class="review-queue-table-updated">
                       <span class="status-chip ${ageChipClass}">${escapeHtml(formatAgeLabel(row))}</span>
                     </td>
                     <td class="review-queue-table-actions">
                       <span class="review-queue-actions" aria-label="Queue actions">
-                        <button type="button" class="review-queue-action" data-queue-action="assign-me"${isOwnerAssigned ? ' disabled' : ''}>Assign to me</button>
                         <button type="button" class="review-queue-action" data-queue-action="needs-review"${row.decision === 'Needs review' ? ' disabled' : ''}>Needs review</button>
                         <button type="button" class="review-queue-action" data-queue-action="revise"${row.decision === 'Revise and resubmit' ? ' disabled' : ''}>Revise</button>
                         <button type="button" class="review-queue-action" data-queue-action="blocked"${row.decision === 'Blocked' ? ' disabled' : ''}>Blocked</button>

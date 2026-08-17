@@ -32,7 +32,6 @@ import { hasValidPageData } from './utils.js'
     { keys: ['r'], description: 'Revise and resubmit (current or selected)' },
     { keys: ['b'], description: 'Blocked (current or selected)' },
     { keys: ['u'], description: 'Needs review (current or selected)' },
-    { keys: ['m'], description: 'Assign to me (current or selected)' },
     { keys: ['z'], description: 'Undo the last decision action' },
     { keys: ['x'], description: 'Toggle selection for the current page' },
     { keys: ['s'], description: 'Select all visible queue pages' },
@@ -101,16 +100,6 @@ import { hasValidPageData } from './utils.js'
     const action = DECISION_TO_ACTION[decision]
     if (action && applyQueueAction(action)) return
     window.reviewDecisions?.set?.(decision)
-  }
-
-  function assignToMe() {
-    if (applyQueueAction('assign-me')) return
-    const ownerField = document.getElementById('reviewOwner')
-    if (!ownerField) return
-    const reviewerName = document.getElementById('reviewerInput')?.value || 'Me'
-    ownerField.value = reviewerName
-    ownerField.dispatchEvent(new Event('change', { bubbles: true }))
-    if (typeof window.showToast === 'function') window.showToast('Assigned to me', 'success')
   }
 
   function toggleCurrentSelection() {
@@ -288,10 +277,6 @@ import { hasValidPageData } from './utils.js'
       case 'u':
         event.preventDefault()
         setDecision('Needs review')
-        break
-      case 'm':
-        event.preventDefault()
-        assignToMe()
         break
       case 'z':
         event.preventDefault()

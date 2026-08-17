@@ -37,6 +37,30 @@ test.describe('page navigation', () => {
     expect(page.url()).toContain('page=rodentsReport')
   })
 
+  test('a bare URL with no page parameter renders the default page', async ({ page }) => {
+    // Every other spec navigates through gotoFresh(), which defaults to
+    // `/?page=pestsTopic` — so nothing here had ever opened the app the way a
+    // reviewer first opens it. That blind spot hid a crash: renderPage() had a
+    // `if (!key)` branch that set `.textContent` on `#pageTitle`, an element
+    // index.html does not contain, and js/app.js passed an explicit null for a
+    // bare URL. The app threw before rendering anything, and the same happened
+    // on every history pop back to the parameterless URL.
+    //
+    // Asserting the heading is not enough on its own — a page error can be
+    // thrown while the DOM still looks plausible — so this fails on any
+    // uncaught exception as well.
+    const pageErrors = []
+    page.on('pageerror', (error) => pageErrors.push(error.message))
+
+    await page.goto('/')
+    await page.waitForSelector('#mockPage h1')
+
+    await expect(page.locator('#pageSelect')).toHaveValue('pestsTopic')
+    await expect(page.locator('#mockPage h1')).toContainText(/healthy housing/i)
+    await expect(page.locator('#hhvcGlobalErrorBanner')).toHaveCount(0)
+    expect(pageErrors).toEqual([])
+  })
+
   test('all registered pages render without errors', async ({ page }) => {
     await gotoFresh(page)
     for (const key of PAGE_KEYS.slice(1)) {

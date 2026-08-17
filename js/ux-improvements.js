@@ -93,7 +93,6 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
       'reviewDateInput',
       'reviewNotes',
       'reviewRisks',
-      'reviewOwner',
     ]
 
     // The debounced path re-checks pendingPersist so that an intervening
@@ -155,6 +154,7 @@ import { hasValidPageData, resolvePageKey } from './utils.js'
       if (key && key !== outgoingKey) {
         flushPendingPersist()
       }
+
       const result = originalRenderPage.call(this, key, skipHistory)
       const applyAndRefresh = () => {
         // Read after applyPageContent so aliases/unknown keys resolve to the
