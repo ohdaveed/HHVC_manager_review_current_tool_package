@@ -213,10 +213,19 @@ function renderKarlTagLegend(variant = 'full') {
    js/dashboard-guidance.js now renders this legend once, in the Help tab, where
    reference material belongs. */
 
-window.KARL_TAG_KINDS = KARL_TAG_KINDS
-window.karlKindMeta = karlKindMeta
+// Guarded so this module can be require()d from Node/Bun, which
+// build_scripts/karl-vocabulary.js does to share GAP_LABEL_PATTERN rather than
+// keep a second copy of it. An unguarded assignment threw "window is not
+// defined" the moment anything server-side tried, and a validator that had to
+// restate the pattern would be one more thing free to drift from the renderer
+// — which is the class of problem that validator exists to catch.
+if (typeof window !== 'undefined') {
+  window.KARL_TAG_KINDS = KARL_TAG_KINDS
+  window.karlKindMeta = karlKindMeta
+}
 
 export {
+  GAP_LABEL_PATTERN,
   guideCopyValues,
   guideStatusLabel,
   karlKindMeta,

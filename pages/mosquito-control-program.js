@@ -60,7 +60,7 @@ window.HHVC_PAGES['mosquitoControl'] = {
           title: 'Report a dead bird to the State',
           text: 'Dead birds help track West Nile virus. Report them to the State West Nile virus program.',
           url: 'https://westnile.ca.gov/report',
-          karl: 'External-URL card, same mapping gap as the siblings above. Replaces the retired City dead-bird transaction page — the State runs this reporting line (manager decision at plan review).',
+          karl: 'External-URL card with no clean mapping in the verified Information schema — same gap as the siblings above. Replaces the retired City dead-bird transaction page — the State runs this reporting line (manager decision at plan review).',
         },
       ],
     },

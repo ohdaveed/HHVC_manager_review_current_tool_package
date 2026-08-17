@@ -19,6 +19,7 @@ const {
   countUnverifiedClaims,
 } = require('./data-checks')
 const { UNRESOLVED } = require('../js/karl-blocks.js')
+const { findUnmooredNotes, findWrongTypeNotes } = require('./karl-vocabulary')
 const { findPageImports, findPageImportDrift } = require('./page-import-checks')
 
 // A page file nobody imports never registers onto window.HHVC_PAGES, so the
@@ -120,6 +121,40 @@ if (unmapped.length) {
       'register in docs/karl-export-field-map.md and add its shape rule there. ' +
       'Do not widen an existing rule to cover it — a rule is an exemption for ' +
       `one documented open question, not a category. (${unmapped.length} finding(s) total.)`
+  )
+}
+
+// **A `karl` note that names a field the page's own content type does not have
+// is a wrong instruction, not a typo.** It reads as precise — it names real
+// Karl constructs — and it sends whoever rebuilds the page looking for controls
+// that are not on the form. `sectionSchema` requires the field and checks only
+// `min(1)`, so nothing else can catch this.
+//
+// Reported before the wrong-type list because a note naming NOTHING on its form
+// is the broader failure; the wrong-type finding is a sharper subset of it and
+// names the type the term really belongs to.
+const wrongType = findWrongTypeNotes(parsed.data.pages)
+if (wrongType.length) {
+  const { pageKey, type, where, term, belongsTo } = wrongType[0]
+  throw new Error(
+    `${pageKey} (${type}) ${where}: the karl note names "${term}", which belongs to ` +
+      `${belongsTo.join(', ')} and not to ${type}.\n` +
+      "Correct the note against that type's table in docs/karl-export-field-map.md, " +
+      'or — if the mapping genuinely does not exist — say so in the note, citing the ' +
+      `register entry that records it. (${wrongType.length} finding(s) total.)`
+  )
+}
+
+const unmoored = findUnmooredNotes(parsed.data.pages)
+if (unmoored.length) {
+  const { pageKey, type, where, karl } = unmoored[0]
+  throw new Error(
+    `${pageKey} (${type}) ${where}: the karl note names no field on the ${type} form.\n` +
+      `  ${karl.slice(0, 140)}\n` +
+      "Name the panel it maps to, using that type's table in " +
+      'docs/karl-export-field-map.md — or, if there is no mapping, declare it the ' +
+      'way the rest of the corpus does ("no clean mapping", "flag for Digital ' +
+      `Services", "BLOCKED"). (${unmoored.length} finding(s) total.)`
   )
 }
 
