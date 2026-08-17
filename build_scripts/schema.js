@@ -184,7 +184,18 @@ const pageSchema = z.object({
   reportDate: z.string().optional(),
   printVersionUrl: z.string().optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
-  karlGuide: karlGuideSchema.optional(),
+  // No page-level `karlGuide`. Every other level of this schema has one and
+  // js/page-render.js reads all of them — a section's, a card's, a step's, a
+  // callout's, an image's, a spotlight's. A PAGE's had exactly one consumer,
+  // the hero title tag, and attaching it there was wrong: the eight authored
+  // objects all described their page's main CONTENT block (What to Do,
+  // Custom section, Spotlight), so the title tag showed confirmed steps for
+  // an unrelated Karl block. Removing that read left the field authored,
+  // schema-validated, and consumed by nothing — which fails no test, since
+  // unread data cannot. There is no natural page-level destination either:
+  // js/karl-guide-registry.js's PAGE_TYPE_FIELDS already derives the main
+  // content path per type, which is what those objects restated. Re-add this
+  // only alongside a reader, not before one.
   sections: z.array(sectionSchema).optional(),
 })
 

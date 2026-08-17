@@ -10,21 +10,6 @@ window.HHVC_PAGES['payFee'] = {
     'A property manager or billing contact paying or reviewing an invoice',
   ],
   reading: 'Grade 7',
-  karlGuide: {
-    path: 'Content → What to Do → Section → Section specifics',
-    panel: 'What to Do',
-    block: 'Section',
-    field: 'Section specifics',
-    rawField: 'what_to_do',
-    linkShape: 'button-link',
-    steps: [
-      'Open Karl admin → Pages → Add child page → Transaction.',
-      'Open Content → What to Do and add a Section for each visible step.',
-      'Enter the visible step title, place copy in Section specifics → Text, and add Button link only where the visible action is supported.',
-    ],
-    evidence: 'E1',
-    status: 'confirmed',
-  },
   editorNote:
     'Transaction redesign based on the live FY 2026-27 payment page and fee schedule. It puts the payment action first, then separates eligibility, annual fee tiers, invoice corrections, and late-payment consequences. The annual apartment-building fee and a reinspection fee are distinct charges; do not present reinspection rates as part of the annual bill.',
   whatToKnow: {

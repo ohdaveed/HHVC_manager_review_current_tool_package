@@ -9,20 +9,6 @@ window.HHVC_PAGES['aboutHhvcTeam'] = {
     'This page is for anyone who wants to know more about the Healthy Housing and Vector Control program and the people who run it.',
   ],
   reading: 'Grade 6',
-  karlGuide: {
-    path: 'Content → Information → Custom section',
-    panel: 'Information',
-    block: 'Custom section',
-    field: 'Custom section text',
-    rawField: 'about_info',
-    steps: [
-      'Open Karl admin → Pages → Add child page → About us.',
-      'Open Content → Information and add a Custom section.',
-      'Enter the visible section heading as Custom section title and the visible copy as Custom section text.',
-    ],
-    evidence: 'E1',
-    status: 'confirmed',
-  },
   editorStatus: 'placeholder',
   editorNote:
     'New About-us-type page mock. Karl\'s "About us" content type (Title, Primary agency, Information, Resources — live-admin-confirmed field list, docs/wagtail-content-mapping.md) has no real, currently-live HHVC equivalent to model content on: HHVC is a program inside the Environmental Health branch, not its own department, and Environmental Health itself has no About-us page. Structure is verified live against sf.gov/departments--controllers-office--about (visible "About {name}" H1, no visible eyebrow or summary, plain Information sections, a Resources block with named sub-groups) — but unlike the Topic-page pass, this page\'s OWN content (team composition, program framing) is illustrative mockup content for review, not reused real copy. Job titles (Environmental Health Inspector / Environmental Health Technician) are real, already confirmed elsewhere in this mockup (pages/pay-healthy-housing-fee.js\'s reinspection-fee rates cite the same two titles). Team size and specific numbers are deliberately not invented here — only scope and role descriptions, which are safer to state without a source. Karl fields with no mockup equivalent: Primary agency (same gap as every other page type in this mockup).',

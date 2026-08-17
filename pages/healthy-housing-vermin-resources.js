@@ -9,21 +9,6 @@ window.HHVC_PAGES['verminResources'] = {
     'This page is for tenants, property owners and managers, and anyone looking for pest and healthy-home resources.',
   ],
   reading: 'Grade 6',
-  karlGuide: {
-    path: 'Content → Body → Resources → Resource section → Links',
-    panel: 'Body',
-    block: 'Resources',
-    field: 'Links',
-    rawField: 'body',
-    linkShape: 'resources-list',
-    steps: [
-      'Open Karl admin → Pages → Add child page → Resource Collection.',
-      'Open Content → Body and choose Resources.',
-      'Add a Resource section for each visible heading, then add SF.gov page or External link entries.',
-    ],
-    evidence: 'E1',
-    status: 'confirmed',
-  },
   editorNote:
     'Redesign of the live "Healthy housing and vermin information" Resource Collection previewed 2026-08-07. The source page is a long document dump that combines reporting, tenant preparation, owner compliance, forms, regulations, translated materials, and videos. This mockup routes people by task and audience first, retains the most useful source documents as explicit links, and routes remaining specialized material to focused City or trusted partner pages. Verify document titles, language versions, and replacement URLs before publication.',
   sections: [
