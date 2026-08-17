@@ -35,6 +35,18 @@
 // a sharper one — it is the wrong-form case above, and it is reported separately
 // so the message can say which type the term belongs to.
 //
+// **A known limit: single-word generic terms.** Some panels and block types are
+// named with ordinary English — `Text`, `Section`, `Title`, `Body`, `Table` —
+// so a vague note that happens to use one of those words satisfies the check
+// without naming a destination. Boundary matching narrowed this (it no longer
+// fires on `suitable` or `candidate`) but cannot close it, because those words
+// really are the block names an accurate note would use, and a stoplist would
+// reject correct notes to catch vague ones. `Links` is excluded by hand for the
+// sharper version of the same problem — it is a substring of `related_links`,
+// and accepting it hid a real finding. Tightening this further means deciding
+// what a note must name in ADDITION to a generic term, which is a content
+// standard rather than a matching rule.
+//
 // **Deliberately unresolved notes are a first-class state, not a failure.**
 // Part of the corpus says "BLOCKED", "flag for Digital Services", "no clean
 // mapping" — an honest record that a mapping does not exist yet.
@@ -92,7 +104,12 @@ const NESTED_TERMS_BY_TYPE = {
     'Document Picker',
   ],
   // Additional content → Accordion section / Resources, lines 451-456.
-  Campaign: ['Accordion sidebar', 'Resource section', 'Downloadable resources'],
+  // `Accordion item` is derived on Transaction, where blockTypesDoc carries it
+  // as a quoted instance label — but NOT on Campaign, whose
+  // `additional_content` chooser lists only `Accordion section`. The item name
+  // is prose there (line 451), so dropping it as "already derived" was true of
+  // one type and false of the other.
+  Campaign: ['Accordion sidebar', 'Accordion item', 'Resource section', 'Downloadable resources'],
   // Resources → Resources section, lines 586 and 603.
   'About us': ['Resources section', 'Downloadable files', 'Document Picker'],
   // `print_version` is a document chooser (per-type table), so a note naming
@@ -148,7 +165,14 @@ function termsForType(type) {
     // The inventory keeps the document's parenthetical on Topic's outer
     // StreamField; a note naming just the label should still match.
     terms.push(panel.uiLabel.replace(/\s*\(.*\)\s*$/, ''))
+    // A few inventory rows carry SEVERAL raw fields in one cell — Campaign's
+    // `facts_title + fact_items`, Agency's `alert + alert_agency_wide` and its
+    // four comma-separated archive fields. Registering only the combined
+    // literal meant a note naming one constituent ("Maps to facts_title") was
+    // reported as unmoored. Both spellings are kept: the combined string is
+    // what the field map prints, and each part is what a note actually writes.
     terms.push(panel.rawName)
+    terms.push(...panel.rawName.split(/[+,]/))
     terms.push(...blockTypeTerms(panel.blockTypesDoc))
   }
   return new Set(

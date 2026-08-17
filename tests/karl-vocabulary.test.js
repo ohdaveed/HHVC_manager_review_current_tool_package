@@ -181,14 +181,34 @@ describe('findUnmooredNotes', () => {
   })
 
   test('walks cards, steps, callouts and images, not only sections', () => {
+    // Every nested path collectKarlNotes claims to walk is represented here.
+    // The fixture carried a section, a card and a callout only, so a
+    // regression in the image, step or step-callout paths would have passed.
     const pages = {
       a: pageWith('Transaction', 'What to Do panel.', {
         cards: [{ title: 'A card', karl: 'Put it wherever.' }],
         callout: { text: 'Note.', karl: 'Also wherever.' },
+        image: { src: 'a.png', alt: 'A', karl: 'Somewhere for the picture.' },
+        steps: [
+          {
+            title: 'A step',
+            karl: 'Anywhere at all.',
+            callout: { text: 'Note.', karl: 'And here too.' },
+          },
+        ],
       }),
     }
-    expect(collectKarlNotes(pages)).toHaveLength(3)
-    expect(findUnmooredNotes(pages)).toHaveLength(2)
+    expect(collectKarlNotes(pages)).toHaveLength(6)
+    // Only the section note names a real panel; the other five name nothing.
+    expect(findUnmooredNotes(pages)).toHaveLength(5)
+  })
+
+  test('a note naming one field of a compound inventory row is accepted', () => {
+    // Campaign's inventory stores `facts_title + fact_items` in one cell, and
+    // Agency stores four comma-separated archive fields. Registering only the
+    // combined literal reported a note naming one constituent as unmoored.
+    expect(findUnmooredNotes({ a: pageWith('Campaign', 'Maps to facts_title.') })).toEqual([])
+    expect(findUnmooredNotes({ a: pageWith('Agency', 'Maps to archive_url.') })).toEqual([])
   })
 })
 
