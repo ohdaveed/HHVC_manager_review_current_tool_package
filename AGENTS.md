@@ -49,6 +49,7 @@ bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema
 bun run test                  # Bun test runner over the 47 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
+bun run export:karl           # one paste-ready Karl transcript per page -> review/karl-transcripts/
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
 bun run push-tracking         # push page review status to the Google Sheets tracker
 bun run build                 # validate -> export -> workshop form -> build:app -> publish form -> singlefile
@@ -199,12 +200,12 @@ picker card, in each of the two places one could be emitted).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-one spec files, all UI-driven — navigation, editor panel, review
+twenty-two spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale,
+the chrome type scale, the Karl transcript panel,
 and workshop-form submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
@@ -801,6 +802,64 @@ is requested**, so the numbers are present even if the chunk never loads.
 - **Colour is never the only encoding**: visible legend with counts, every chart
   `aria-hidden` beside an `.hhvc-sr-only` table, and the checks chart states its
   own top-8 cap while the table carries every page.
+
+### Karl transcript export (`js/karl-blocks.js`, `js/karl-transcript.js`)
+
+A paste-ready, per-page instruction listing what an editor types into Karl,
+field by field, in the order Karl's own form presents. `bun run export:karl`
+writes one markdown file per page into `review/karl-transcripts/` (gitignored,
+regenerate rather than edit); a collapsed section at the end of the **Help** tab
+renders the same transcript for the open page with this browser's edits applied.
+**A human performs every keystroke** — no API writes, no credentials, no
+publishing path — so the standing rule that a review layer never writes back to
+`pages/*.js` and that an export is never publication approval survives intact.
+A transcript changes what an export contains, not what it authorizes.
+
+- **`js/karl-blocks.js` is transcribed from `docs/karl-export-field-map.md`, not
+  parsed from it.** Half the mapping lives in prose footnotes under the tables —
+  a Callout has no title field, the cost description caps at 120 characters,
+  bullets fold into the Text block's rich text — and a parser reading only the
+  tables loses exactly those and reports success. `tests/karl-blocks.test.js`
+  parses the document instead, so drift goes red in CI without the runtime
+  depending on the prose staying machine-readable. Every row of every per-type
+  table is transcribed, including the rows with no mockup source: `primary_agency`
+  is required on seven of the eight types and this tool has no field for it
+  (`U6`), so the transcript has to say so rather than leave a hole the editor
+  discovers when Karl refuses to save.
+- **A panel's `source` is a tagged union, not a dotted path.** The field map's
+  Mockup source column is a PREDICATE on six of the eight types (`section` with
+  `component: 'supporting'`, `component: 'services'` sections, `section with
+cards[]`) and a path only on Transaction's scalars, so a path resolver would
+  cover one type and leave the rest silently empty.
+- **Card inheritance decides TYPE versus CHOOSE**, through the one
+  `js/card-inheritance.js` classifier, passed in rather than re-derived. An
+  `inherits` or `title-only` card is a picker, so the transcript says _choose
+  page X_ and never _type this description_ — emitting a description for a
+  picker is the exact defect that classifier exists to prevent, and here it
+  would become an instruction a human executes. A section the classifier returns
+  `unknown` for is FLAG, never a guessed TYPE: guessing TYPE reintroduces that
+  defect and guessing CHOOSE silently drops authored copy.
+- **A plain Transaction body section reaching `custom_section` is an INFERRED
+  mapping and prints as one.** Transaction has no generic body stream and
+  `custom_section` is its only repeatable Title-and-text panel, but the field map
+  claims that panel only for `supporting`/`flat` sections. Nineteen sections
+  depend on it; the alternative was exporting a fifth of the heaviest type's
+  body copy as "no Karl destination".
+- **`findUnmappedSections` is a gate, not a report** — unlike `bun run
+audit-cards`, because "there is nowhere in the CMS for this to go" is a
+  structural fact about the content rather than a per-card content judgement.
+  Its exemptions in `karl-blocks.js`'s `UNRESOLVED` table are SHAPE rules, never
+  page keys or paths: an allowlist would let a newly authored section inherit an
+  old exemption just by landing at the same index, which is the case the ratchet
+  exists to catch. Closing a register entry upstream means deleting its rule, and
+  every section it covered fails until it is mapped. It found three gaps nobody
+  had recorded, now open as `U21`/`U22`/`U23`.
+- **Approval is per page, not per field.** The review record carries `decision`
+  and no field-level approval, so a not-Approved page is marked in the header
+  AND on every panel rather than exported as though it were signed off.
+- **The CLI reads no review state and says so.** That lives in the browser's
+  `localStorage`, so every CLI transcript is headed _no review recorded_; the
+  Help-tab panel is the path that carries a reviewer's edits.
 
 ### Queue undo (`js/review-queue-undo.js`)
 
@@ -2673,6 +2732,11 @@ globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
+- Karl transcript export → `js/karl-blocks.js` (the transcribed panel inventory
+  and the `UNRESOLVED` shape rules), `js/karl-transcript.js` (the pure builder —
+  every judgement about what an editor is told lives there and only there),
+  `js/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
+  Re-run `bun run validate` after any of them: `findUnmappedSections` gates on it.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it

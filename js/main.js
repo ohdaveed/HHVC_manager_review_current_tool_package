@@ -219,4 +219,9 @@ import './inline-content-edit.js'
 // window.showToast for progress and window.renderPage to step through pages.
 import './mockup-image-export.js'
 
+// The Karl transcript panel. After the review layers because it reads
+// window.reviewState and window.showToast, and after js/karl-transcript.js
+// whose builder it renders.
+import './karl-transcript-panel.js'
+
 import './keyboard-shortcuts.js'
