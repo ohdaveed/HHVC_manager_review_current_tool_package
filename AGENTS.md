@@ -2297,6 +2297,22 @@ and never sees a driver, a connection or a SQL string.
 - **`knowledge_chunks` lives behind this seam too**, so `bun run ingest` writes
   wherever the deployment reads. Embeddings are raw little-endian Float32 bytes
   in both drivers — a BLOB in SQLite, `bytea` in Postgres.
+- **The seam is verified on Postgres, not assumed**: the deployed database held
+  **816 chunks across 78 documents** after a re-ingest on 2026-08-17, matching
+  the on-disk measurement category for category. **That is a record of what one
+  ingest wrote, not a standing guarantee** — the deployed count drifts behind
+  the corpus the moment an ingested document is edited without a re-ingest, and
+  it had twice: a reading of `chunkCount: 768` predated both
+  `docs/karl-export-field-map.md` joining the `karl` category and the `sfds`
+  category existing at all, and a later 812 was 4 short from edits to that
+  file's own register. Read the live count from `/api/ai/capabilities` rather
+  than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's at a time: `DATABASE_URL` belongs to the
+  Postgres service and `GEMINI_API_KEY` to `web`. The deployed `DATABASE_URL`
+  also names `postgres.railway.internal`, which does not resolve off-platform —
+  rebuild it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather
+  than reusing the value the service itself sees.
 - **Bun's Postgres client is built in** (`Bun.SQL`, Bun 1.3+), so this added no
   npm dependency — the same reason `bun:sqlite` was used in the first place.
 

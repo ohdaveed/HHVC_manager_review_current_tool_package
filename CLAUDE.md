@@ -1165,19 +1165,27 @@ mockups, projected to markdown at ingest time and not committed), and `sfds`
   `karl` rose from 53 when `docs/karl-export-field-map.md` was added. Still
   brute-force cosine.
 - **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
-  writes to Postgres and `compliance-audit` reports ready — verified against the
-  deployed service, which answered `chunkCount: 768` alongside `ready: true`.
-  **That number is a record of what that ingest wrote, not the current corpus
-  size**, and the 48-chunk gap to the 816 above is not one change: that ingest
-  predates both `docs/karl-export-field-map.md` joining the `karl` category (46
-  chunks as measured today) and the `sfds` category existing at all (2 chunks),
-  which accounts for the whole of it. Those are CHUNK counts, not document
-  counts — `sfds` is a single ingested document,
+  writes to Postgres and `compliance-audit` reports ready — verified by querying
+  the deployed database directly, which held **816 chunks across 78 documents**
+  after a re-ingest on 2026-08-17, matching the on-disk measurement above
+  category for category. **That is a record of what that ingest wrote, not a
+  standing guarantee**: the deployed count drifts behind the corpus the moment
+  an ingested document is edited without a re-ingest, and it had, twice —
+  the reading before this one was `chunkCount: 768`, 48 short, because it
+  predated both `docs/karl-export-field-map.md` joining the `karl` category and
+  the `sfds` category existing at all. A later reading of 812 was 4 short for
+  the same reason, from edits to that file's own register. Those are CHUNK
+  counts, not document counts — `sfds` is a single ingested document,
   `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
   only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
-  the corpus and there is no second source to go looking for. What the reading
-  evidences is that the seam works on Postgres at all — read the live count from
-  `/api/ai/capabilities` rather than from this line.
+  the corpus and there is no second source to go looking for. Read the live
+  count from `/api/ai/capabilities` rather than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's: `DATABASE_URL` is Postgres's and
+  `GEMINI_API_KEY` is web's. The deployed `DATABASE_URL` also names
+  `postgres.railway.internal`, which does not resolve off-platform, so rebuild
+  it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather than
+  reusing the value the service sees.
 
 ### Reviewer sign-in (`/api/session`)
 
