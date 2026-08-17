@@ -1,6 +1,6 @@
 ---
 name: hhvc-review-sync-backend
-description: HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/review-state-sync.js.
+description: "HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/review-state-sync.js."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
