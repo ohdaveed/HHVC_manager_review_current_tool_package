@@ -21,6 +21,7 @@ import {
   parseKarlLabel,
   renderKarlGuidePanel,
 } from '../js/karl-tag-meta.js'
+import { UNRESOLVED } from '../js/karl-guide-registry.js'
 
 /** Strip whitespace/punctuation (including the `->`/`→` separator itself,
  *  which is structural, not content) so two strings can be compared for the
@@ -148,10 +149,70 @@ describe('structured Karl guides', () => {
       page: { type: 'Agency', title: 'Program', summary: 'Summary.' },
       context: { role: 'services', linkShape: 'resources-list' },
     })
-    expect(guide.path).toBe('Content → Section title 1 → Subsection → Links')
+    // Ends at Subsection, not at a "Links" level: that label belongs to Topic's
+    // Services/Resources blocks and Resource Collection's Resource section. On
+    // Agency a Subsection's own "+" offers SF.gov page / External link directly,
+    // and the link-shape line under the path already names those two.
+    expect(guide.path).toBe('Content → Section title 1 → Subsection')
     expect(guide.steps[0]).toContain('Add child page → Agency')
     expect(guide.steps[1]).toContain('Section title 1')
     expect(guide.evidence).toBe('E1')
+  })
+
+  test('never puts a raw Wagtail field name in the path an editor clicks through', () => {
+    // Both of these read as a navigable panel and are not one: the panel's own
+    // UI label is "Accordion title and text" (raw `supporting_information`), and
+    // Agency's is "About" (raw `about_description`). Promoting the raw name
+    // sends an editor looking for a level the form does not have.
+    expect(
+      normalizeKarlGuide({ page: { type: 'Transaction' }, context: { role: 'supporting' } }).path
+    ).toBe('Content → Accordion title and text')
+    expect(normalizeKarlGuide({ page: { type: 'Agency' }, context: { role: 'body' } }).path).toBe(
+      'Content → About'
+    )
+  })
+
+  test('reports a chosen destination as inferred rather than as E1 confirmed', () => {
+    // Campaign's `additional_content` offers five block types and the field map
+    // picks none of them for plain prose. Accordion section is this repo's
+    // reading, so it must not render with the badge a measured row gets — that
+    // badge is the only thing separating the two on screen.
+    const guide = normalizeKarlGuide({ page: { type: 'Campaign' }, context: { role: 'body' } })
+    expect(guide.path).toBe('Content → Additional content → Accordion section')
+    expect(guide.status).toBe('inferred')
+    expect(guide.evidence).toBe('U')
+    expect(guideStatusLabel(guide)).toBe('Inferred — verify')
+    expect(guide.steps.some((step) => step.includes('inferred, not measured'))).toBe(true)
+
+    // The same page type's measured rows are unaffected.
+    const spotlight = normalizeKarlGuide({
+      page: { type: 'Campaign' },
+      context: { role: 'spotlight' },
+    })
+    expect(spotlight.status).toBe('confirmed')
+    expect(guideStatusLabel(spotlight)).toBe('E1 confirmed')
+  })
+
+  test('an authored path is never downgraded to inferred', () => {
+    // isInferredPath applies to DERIVED rows only. A page/section that authors
+    // its own path carries its own evidence, and silently restamping it would
+    // discard a real measurement.
+    const guide = normalizeKarlGuide({
+      page: { type: 'Campaign' },
+      context: { role: 'body' },
+      guide: { path: 'Content → Measured elsewhere', steps: ['Do the measured thing.'] },
+    })
+    expect(guide.status).toBe('confirmed')
+    expect(guide.evidence).toBe('E1')
+  })
+
+  test('cites no unresolved ID it cannot describe', () => {
+    // UNRESOLVED is a display string, not a second copy of the field map's
+    // register — it held five dead entries, two of which had drifted from that
+    // document unnoticed precisely because nothing read them. Every ID here
+    // must be one a call site actually sets.
+    expect(Object.keys(UNRESOLVED).sort()).toEqual(['U1', 'U2'])
+    for (const text of Object.values(UNRESOLVED)) expect(text.length).toBeGreaterThan(20)
   })
 
   test('unresolved mappings never expose a guessed path', () => {
@@ -181,7 +242,7 @@ describe('structured Karl guides', () => {
       page: { type: 'About us' },
       context: { role: 'resources', linkShape: 'resources-list' },
     })
-    expect(guide.path).toBe('Content → Resources → Resources section → Links')
+    expect(guide.path).toBe('Content → Resources → Resources section')
     expect(guide.steps[0]).toContain('Add child page → About us')
   })
 
@@ -227,8 +288,8 @@ describe('structured Karl guides', () => {
       page: { type: 'Agency' },
       context: { role: 'resources', linkShape: 'resources-list' },
     })
-    expect(services.path).toBe('Content → Section title 1 → Subsection → Links')
-    expect(resources.path).toBe('Content → Section title 2 → Subsection → Links')
+    expect(services.path).toBe('Content → Section title 1 → Subsection')
+    expect(resources.path).toBe('Content → Section title 2 → Subsection')
   })
 
   test('copies only safe visible values and preserves source labels', () => {

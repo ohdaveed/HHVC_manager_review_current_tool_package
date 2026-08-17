@@ -19,6 +19,11 @@ function guideStatusLabel(guide) {
   if (guide?.unresolvedId) return `${guide.unresolvedId} unresolved`
   if (guide?.status === 'inherited') return 'Inherited value'
   if (guide?.status === 'mockup-only') return 'Mockup only'
+  // Checked BEFORE the evidence line below, which would otherwise render an
+  // inferred row's evidence tier as "U confirmed" — a contradiction in two
+  // words, on the one badge whose job is separating a measured destination
+  // from a chosen one.
+  if (guide?.status === 'inferred') return 'Inferred — verify'
   return guide?.evidence ? `${guide.evidence} confirmed` : 'Review mapping'
 }
 

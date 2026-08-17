@@ -20,7 +20,11 @@ const karlGuideSchema = z.object({
     .optional(),
   steps: z.array(z.string().min(1)).min(1),
   evidence: z.enum(['E1', 'E2', 'E3', 'E4', 'U']).optional(),
-  status: z.enum(['confirmed', 'inherited', 'mockup-only', 'unresolved']).optional(),
+  // `inferred` is deliberately distinct from `confirmed`: it marks a
+  // destination this repo CHOSE where the field map records no answer, and the
+  // panel renders it as "Inferred — verify" rather than "E1 confirmed". See
+  // INFERRED_PATHS in js/karl-guide-registry.js.
+  status: z.enum(['confirmed', 'inferred', 'inherited', 'mockup-only', 'unresolved']).optional(),
   unresolvedId: z
     .string()
     .regex(/^U(?:[1-9]|1[0-9]|20)$/)
