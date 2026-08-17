@@ -1144,6 +1144,15 @@ describe('card title inheritance', () => {
   // reasoning as the description-inheritance tests above: a future title edit
   // to scopeInfo should not fail this test while inheritance still works.
   const scopeInfoTitle = escapeHtml(pageData.scopeInfo.title)
+  /* **These assertions read the card's own markup, not the whole string.**
+     Every card now renders a Karl guide panel beside it, and one of the values
+     that panel offers to copy is the destination page's TITLE — that is the
+     string Karl's page chooser searches on, so it belongs there. A
+     whole-document `not.toContain(scopeInfoTitle)` therefore fails on an
+     authored card for a reason that has nothing to do with inheritance: the
+     title it found is in the guide, not in the card. Stripping the guide first
+     keeps each test asking its own question. */
+  const withoutGuide = (html) => html.replace(/<span class="karl-guide"[\s\S]*?<\/span><h3/g, '<h3')
 
   test('resolves the destination title for an inheriting internal card', () => {
     const html = ctx.renderCards(
@@ -1164,9 +1173,11 @@ describe('card title inheritance', () => {
   })
 
   test('keeps an authored card own title unchanged', () => {
-    const html = ctx.renderCards(
-      [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Authored table copy.' }],
-      authoredSection
+    const html = withoutGuide(
+      ctx.renderCards(
+        [{ title: 'Inspection scope', target: 'scopeInfo', text: 'Authored table copy.' }],
+        authoredSection
+      )
     )
     expect(html).toContain('>Inspection scope<')
     expect(html).not.toContain(`>${scopeInfoTitle}<`)

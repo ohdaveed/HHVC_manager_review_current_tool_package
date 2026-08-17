@@ -280,7 +280,24 @@ function button(label, kind = 'primary', target = null, url = null, guideOptions
     values: [
       { label: 'Link text', value: label, source: 'visible' },
       ...(url ? [{ label: 'External URL', value: safeUrl(url), source: 'visible' }] : []),
-      ...(target ? [{ label: 'SF.gov page key', value: target, source: 'visible' }] : []),
+      // **The page KEY is useless in Karl and was what this offered to copy.**
+      // `rodentsReport` is this mockup's private identifier; Karl's page
+      // chooser searches by page title, so a reviewer pasting the key finds
+      // nothing and has no way to tell that the value — not their search — was
+      // wrong. The destination's title is the string that actually locates the
+      // page, and it is marked `derived` rather than `visible` because it is
+      // resolved from the target rather than read off this control. A target
+      // naming no page in the mockup falls back to the key, which is at least
+      // a lead, and is the honest thing to show when nothing better exists.
+      ...(target
+        ? [
+            {
+              label: 'SF.gov page to choose',
+              value: pageData[target]?.title || target,
+              source: pageData[target]?.title ? 'derived' : 'mockup-only',
+            },
+          ]
+        : []),
     ],
   })
   const control = url
@@ -527,7 +544,7 @@ function cardSectionRole(section) {
   const pageType = normalizePageType(pageData[currentPageKey]?.type)
   return inferSectionRole(section, pageType)
 }
-function cardGuideOptions(section, card, title, desc, inheritanceFact) {
+function cardGuideOptions(section, card, title, desc, inheritanceFact, roleOverride) {
   const classify = window.cardInheritance?.classifySection
   const sectionKind = section && typeof classify === 'function' ? classify(section) : 'unknown'
   const linkShape =
@@ -535,9 +552,20 @@ function cardGuideOptions(section, card, title, desc, inheritanceFact) {
       ? 'page-reference'
       : sectionKind === 'inherits'
         ? 'resources-list'
-        : card.url
-          ? 'resources-list'
-          : 'page-reference'
+        : // **An `authored` card is a link in rich text, not a Resources entry.**
+          // The card-inheritance classifier returning `authored` means the host
+          // is a Table or Title-and-text block writing its own words — so its
+          // links are made with Draftail's Internal link / External link tools
+          // on selected text, which is link shape 5. Treating a URL-bearing one
+          // as `resources-list` described a Resources form it will never see:
+          // a title, a URL and a description field that do not exist here.
+          // Both directions go the same way, because Draftail's two tools are
+          // the same control on the same selected text.
+          sectionKind === 'authored'
+          ? 'rich-text-link'
+          : card.url
+            ? 'resources-list'
+            : 'page-reference'
   const values = [
     {
       label: 'Title',
@@ -558,9 +586,21 @@ function cardGuideOptions(section, card, title, desc, inheritanceFact) {
           : 'visible',
     })
   if (card.url) values.push({ label: 'URL', value: safeUrl(card.url), source: 'visible' })
-  if (card.target) values.push({ label: 'SF.gov page key', value: card.target, source: 'visible' })
+  // Same correction as button()'s: the mockup's page key is not a value Karl's
+  // page chooser can find. Offer the destination's title, which is what the
+  // chooser searches on.
+  if (card.target)
+    values.push({
+      label: 'SF.gov page to choose',
+      value: pageData[card.target]?.title || card.target,
+      source: pageData[card.target]?.title ? 'derived' : 'mockup-only',
+    })
   return {
-    context: { role: cardSectionRole(section), linkShape, inheritance: sectionKind },
+    context: {
+      role: roleOverride || cardSectionRole(section),
+      linkShape,
+      inheritance: sectionKind,
+    },
     values,
   }
 }
@@ -590,7 +630,12 @@ function renderCards(cards = [], section = null) {
 // Agency/Transaction/Information/Resource-Collection shapes — see the design
 // spec) — renderCards()/.card above is kept only for the one case that isn't
 // a full section of links: a Step List's own inline cards (renderSteps()).
-function renderCardList(cards = [], section = null) {
+// `roleOverride` exists for the card lists that have no section to classify:
+// cardSectionRole(null) is undefined, and an undefined role resolves to no Karl
+// field at all. Partner agencies is the case — a real, named Karl field whose
+// entries had been reporting "Mockup only" because the list they render in
+// carries no section object.
+function renderCardList(cards = [], section = null, roleOverride = undefined) {
   return `<ul>${cards
     .map((c) => {
       const { action, desc, descriptionText, inheritanceFact } = cardActionAndDescription(
@@ -610,7 +655,8 @@ function renderCardList(cards = [], section = null) {
         c,
         cardTitle(section, c),
         descriptionText,
-        inheritanceFact
+        inheritanceFact,
+        roleOverride
       )
       return `<li>${karlTag(c.karl || 'Linked page item: title + description + link', 'placement', { inheritanceFact, ...guideOptions })}${action}${fileBadge}${text}</li>`
     })
@@ -652,7 +698,18 @@ function renderServiceTiles(cards = [], section = null) {
 }
 function renderRelatedList(cards = [], heading = 'Related', section = null) {
   if (!cards.length) return ''
-  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement', { context: { role: 'related', linkShape: 'page-reference' }, guide: section?.karlGuide })}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
+  // **Campaign's Related is not the same field as everyone else's**, despite
+  // the identical panel label — the field map records that correction as `O2`.
+  // Transaction/Information `related` is a bare page chooser, so Karl supplies
+  // the destination title and the entry needs nothing else (link shape 1).
+  // Campaign `related_links` is a Page block requiring "Link text" and
+  // accepting an external URL (link shape 4). Hardcoding shape 1 told an editor
+  // on the two Campaign pages that a required field did not exist.
+  const linkShape =
+    normalizePageType(pageData[currentPageKey]?.type) === 'campaign'
+      ? 'campaign-related'
+      : 'page-reference'
+  return `<section class="section section--related">${karlTag('Related section: linked pages', 'placement', { context: { role: 'related', linkShape }, guide: section?.karlGuide })}<h2>${escapeHtml(heading)}</h2><div class="resources-list">${renderCardList(cards, section)}</div></section>`
 }
 // Karl's "Partner agencies" field on a Transaction page — a separate H2
 // section from the Primary-Agency parent link (renderParentLink()) and from
@@ -662,7 +719,14 @@ function renderRelatedList(cards = [], heading = 'Related', section = null) {
 // external card (see cardActionAndDescription()).
 function renderPartnerAgencies(cards = []) {
   if (!cards.length) return ''
-  return `<section class="section section--partner-agencies">${karlTag('Partner agencies: linked departments', 'placement')}<h2>Partner agencies</h2><div class="resources-list">${renderCardList(cards, null)}</div></section>`
+  // `partner_agencies` is a real, identically-named field on seven of the eight
+  // types in use (About us is the exception), and it is a page chooser
+  // restricted to Agency pages — not the external-resource form these entries
+  // were being described as. The section tag carried no context at all, so it
+  // fell back to the 'placement' KIND and reported no field; the entries
+  // themselves had no section to classify and so reported none either.
+  const context = { role: 'partner-agencies', linkShape: 'page-reference' }
+  return `<section class="section section--partner-agencies">${karlTag('Partner agencies: linked departments', 'placement', { context })}<h2>Partner agencies</h2><div class="resources-list">${renderCardList(cards, null, 'partner-agencies')}</div></section>`
 }
 /**
  * Step cards pass `null` for the section on purpose. A step's cards live inside
@@ -682,7 +746,7 @@ function renderSteps(steps = [], pathPrefix = '') {
   return `<ol class="step-list">${steps
     .map(
       (s, index) =>
-        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body', { guide: s.karlGuide, context: { role: 'what-to-do' }, values: [{ label: 'Title', value: s.title, source: 'visible' }, ...(s.text?.length ? [{ label: 'Text', value: s.text.map((item) => (typeof item === 'string' ? item : item.text)).join('\n'), source: 'visible' }] : []), ...(s.bullets?.length ? [{ label: 'Bullets', value: s.bullets.map((item) => (typeof item === 'string' ? item : item.text)).join('\n'), source: 'visible' }] : [])] })}<h3${pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}.title`)}"` : ''}>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null) : ''}${s.callout ? renderCallout(s.callout, '', pathPrefix ? `${pathPrefix}.${index}.callout` : '') : ''}</div></li>`
+        `<li class="step"><div>${karlTag(s.karl || 'Step List: body step', s.button ? 'placement' : 'body', { guide: s.karlGuide, context: { role: 'what-to-do' }, values: [{ label: 'Title', value: s.title, source: 'visible' }, ...(s.text?.length ? [{ label: 'Text', value: s.text.map((item) => (typeof item === 'string' ? item : item.text)).join('\n'), source: 'visible' }] : []), ...(s.bullets?.length ? [{ label: 'Bullets', value: s.bullets.map((item) => (typeof item === 'string' ? item : item.text)).join('\n'), source: 'visible' }] : [])] })}<h3${pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}.title`)}"` : ''}>${escapeHtml(s.title)}</h3>${paragraphList(s.text || [], pathPrefix ? `${pathPrefix}.${index}.text` : '')}${bulletList(s.bullets || [], pathPrefix ? `${pathPrefix}.${index}.bullets` : '')}${s.cards ? renderCards(s.cards, null) : ''}${s.button ? button(s.button, 'secondary', s.buttonTarget || null, s.buttonUrl || null, { context: { role: 'what-to-do' } }) : ''}${s.callout ? renderCallout(s.callout, '', pathPrefix ? `${pathPrefix}.${index}.callout` : '') : ''}</div></li>`
     )
     .join('')}</ol>`
 }
@@ -717,6 +781,23 @@ function renderTable(rows = [], pageType = 'generic', caption = '', pathPrefix =
         `${karlTag('Editor QA: Report-only table preview on Information page', 'editor')}<p class="mockup-only-note">Tables are native to the <strong>Report</strong> content type in Karl, not Information. Use card-based routing or a linked Resource Collection in production.</p>`
       : ''
   const tableClass = codeTranslation ? 'table table--code-translation' : 'table'
+  /* **The table gets its own guide, rather than borrowing its section's.**
+     A Karl Table is a block in its own right — `Content → Content → Table` on
+     Report, the only type that has one — while the section's tag speaks for the
+     section's prose. Six of the seven table-bearing sections in the corpus
+     carry no prose at all, so before this the section tag was the table's only
+     guide and it resolved through `inferSectionRole()` to `body`: an
+     E1-confirmed instruction to paste tabular content into rich text. The
+     seventh has a lead-in paragraph, which is exactly why this is a second tag
+     rather than a change to the section's role — that paragraph really does
+     belong in Body, and the table really does not.
+
+     On every other type the registry has no `table` row, so this reports
+     "Mockup only", pairing with the Information-only preview note above. */
+  const guide = karlTag('Table block', 'placement', {
+    context: { role: 'table' },
+    values: caption ? [{ label: 'Caption', value: caption, source: 'visible' }] : [],
+  })
   const table = `<table class="${tableClass}"><thead><tr>${head
     .map((h, i) => `<th scope="col"><span${cellAttr(0, i)}>${formatMarkdown(h)}</span></th>`)
     .join('')}</tr></thead><tbody>${body
@@ -733,9 +814,9 @@ function renderTable(rows = [], pageType = 'generic', caption = '', pathPrefix =
     )
     .join('')}</tbody></table>`
   if (codeTranslation && caption) {
-    return `${previewNote}<figure class="code-translation-figure"><figcaption class="visually-hidden">${escapeHtml(caption)}</figcaption>${table}</figure>`
+    return `${previewNote}${guide}<figure class="code-translation-figure"><figcaption class="visually-hidden">${escapeHtml(caption)}</figcaption>${table}</figure>`
   }
-  return `${previewNote}${table}`
+  return `${previewNote}${guide}${table}`
 }
 function resolveWhatToKnow(page) {
   if (page.whatToKnow) return page.whatToKnow
@@ -836,7 +917,10 @@ function renderWhatToKnow(whatToKnow, page) {
     : ''
   const body = `${audienceHtml}${costHtml}${labeledHtml}${unlabeledHtml}`
   if (!body) return ''
-  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body', { context: { role: 'content' }, values: [...(cost ? [{ label: 'Cost', value: cost, source: 'visible' }] : []), ...(audienceItems.length ? [{ label: 'Audience', value: audienceItems.join('\n'), source: 'mockup-only' }] : [])] })}<h2 class="what-to-know-heading"><span class="what-to-know-icon" aria-hidden="true">ⓘ</span>What to know</h2>${body}</section>`
+  // `what-to-know`, not `content`: Karl stores Cost and Things to Know in two
+  // top-level fields under "What to Know Before You Start", not in the
+  // What to Do stream that `content` resolves to.
+  return `<section class="what-to-know">${karlTag('What to know before you start: Who this is for, Cost, and Things to know', 'body', { context: { role: 'what-to-know' }, values: [...(cost ? [{ label: 'Cost', value: cost, source: 'visible' }] : []), ...(audienceItems.length ? [{ label: 'Audience', value: audienceItems.join('\n'), source: 'mockup-only' }] : [])] })}<h2 class="what-to-know-heading"><span class="what-to-know-icon" aria-hidden="true">ⓘ</span>What to know</h2>${body}</section>`
 }
 function renderContactSection(contact, page) {
   const data = contact || resolveContact(page)
@@ -871,8 +955,13 @@ function renderContactSection(contact, page) {
       .join(' ')
     blocks.push(`<h3>Social media</h3><p>${links}</p>`)
   }
+  // `contact`, not `content`. Transaction, Campaign and Agency each have a
+  // dedicated Contact us panel; Information, Resource Collection, Topic,
+  // About us and Report have none at all, so on those the registry resolves
+  // this to "Mockup only" rather than to a prose field. Both outcomes beat the
+  // old one, which sent a phone number to whatever the page's body stream was.
   return `<section class="contact-section section">${karlTag('Contact section', 'placement', {
-    context: { role: 'content' },
+    context: { role: 'contact' },
     values: [
       {
         label: 'Contact values',
@@ -898,8 +987,13 @@ function renderSpotlightSection(section) {
   const base =
     typeof section.__sectionIndex === 'number' ? `sections.${section.__sectionIndex}` : ''
   const headingPathAttr = base ? ` data-rewrite-field="${base}.heading"` : ''
+  // The host role travels with the button: a Button link is link shape 2
+  // living INSIDE another block, so the Spotlight is what decides its path.
+  // Without this the guide resolved it to the page type's body stream.
   const cta = section.button
-    ? button(section.button, 'primary', section.buttonTarget || null, section.buttonUrl || null)
+    ? button(section.button, 'primary', section.buttonTarget || null, section.buttonUrl || null, {
+        context: { role: 'spotlight' },
+      })
     : ''
   return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement', { guide: section.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: section.heading, source: 'visible' }, ...(section.paragraphs?.length ? [{ label: 'Description', value: section.paragraphs.join('\n'), source: 'visible' }] : [])] })}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout, '', base ? `${base}.callout` : '') : ''}${cta}</div></section>`
 }
@@ -920,7 +1014,9 @@ function renderTopFacts(section) {
         `<div class="what-to-know-subsection"><h3>${escapeHtml(f.label)}</h3><p>${formatMarkdown(f.text)}${f.unverified ? unverifiedPill(f.unverifiedReason) : ''}</p></div>`
     )
     .join('')
-  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body', { guide: section.karlGuide, context: { role: 'content' }, values: [{ label: 'Section title', value: section.heading, source: 'visible' }] })}<h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${factsHtml}</section>`
+  // `top-facts` is a Karl panel of its own on Campaign (`facts_title` +
+  // `fact_items`), not part of the Additional content stream `content` maps to.
+  return `<section class="top-facts">${karlTag(section.karl || 'Top facts', 'body', { guide: section.karlGuide, context: { role: 'top-facts' }, values: [{ label: 'Section title', value: section.heading, source: 'visible' }] })}<h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${factsHtml}</section>`
 }
 function renderOnThisPage(sections = []) {
   const headings = sections
@@ -1090,7 +1186,8 @@ function renderSpotlight(spotlight) {
         spotlight.button,
         'primary',
         spotlight.buttonTarget || null,
-        spotlight.buttonUrl || null
+        spotlight.buttonUrl || null,
+        { context: { role: 'spotlight' } }
       )
     : ''
   return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement', { guide: spotlight.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: spotlight.title || '', source: 'visible' }, ...(spotlight.paragraphs?.length ? [{ label: 'Description', value: spotlight.paragraphs.join('\n'), source: 'visible' }] : [])] })}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2 data-rewrite-field="spotlight.title">${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [], 'spotlight.paragraphs')}${cta}</div></div></section>`

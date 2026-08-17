@@ -9,28 +9,62 @@ const karlGuideValueSchema = z.object({
   source: z.enum(['visible', 'inherited', 'mockup-only', 'derived']).optional(),
 })
 
-const karlGuideSchema = z.object({
-  path: z.string().optional(),
-  panel: z.string().optional(),
-  block: z.string().optional(),
-  field: z.string().optional(),
-  rawField: z.string().optional(),
-  linkShape: z
-    .enum(['page-reference', 'button-link', 'resources-list', 'campaign-related', 'rich-text-link'])
-    .optional(),
-  steps: z.array(z.string().min(1)).min(1),
-  evidence: z.enum(['E1', 'E2', 'E3', 'E4', 'U']).optional(),
-  // `inferred` is deliberately distinct from `confirmed`: it marks a
-  // destination this repo CHOSE where the field map records no answer, and the
-  // panel renders it as "Inferred — verify" rather than "E1 confirmed". See
-  // INFERRED_PATHS in js/karl-guide-registry.js.
-  status: z.enum(['confirmed', 'inferred', 'inherited', 'mockup-only', 'unresolved']).optional(),
-  unresolvedId: z
-    .string()
-    .regex(/^U(?:[1-9]|1[0-9]|20)$/)
-    .optional(),
-  values: z.array(karlGuideValueSchema).optional(),
-})
+const karlGuideSchema = z
+  .object({
+    path: z.string().optional(),
+    panel: z.string().optional(),
+    block: z.string().optional(),
+    field: z.string().optional(),
+    rawField: z.string().optional(),
+    linkShape: z
+      .enum([
+        'page-reference',
+        'button-link',
+        'resources-list',
+        'campaign-related',
+        'rich-text-link',
+      ])
+      .optional(),
+    steps: z.array(z.string().min(1)).min(1),
+    evidence: z.enum(['E1', 'E2', 'E3', 'E4', 'U']).optional(),
+    // `inferred` is deliberately distinct from `confirmed`: it marks a
+    // destination this repo CHOSE where the field map records no answer, and the
+    // panel renders it as "Inferred — verify" rather than "E1 confirmed". See
+    // INFERRED_PATHS in js/karl-guide-registry.js.
+    status: z.enum(['confirmed', 'inferred', 'inherited', 'mockup-only', 'unresolved']).optional(),
+    unresolvedId: z
+      .string()
+      .regex(/^U(?:[1-9]|1[0-9]|20)$/)
+      .optional(),
+    values: z.array(karlGuideValueSchema).optional(),
+  })
+  // **An unresolved mapping may not also claim a destination.** These three
+  // fields are what the panel renders as authority — a path is printed as the
+  // place to paste approved copy, and `evidence: 'E1'` / `status: 'confirmed'`
+  // is what tells a reviewer that placement was MEASURED against the live Karl
+  // form. `unresolvedId` says the opposite: that this repo does not know where
+  // the value goes. A guide carrying both renders the open question as a
+  // settled answer, which is the exact failure this feature exists to prevent,
+  // and it renders it in the one place a human editor is most likely to act on
+  // it. The registry enforces the same rule at render time
+  // (`guideForContext()`), so authored data and derived data cannot disagree;
+  // this check is what stops the contradiction being authored in the first
+  // place, where the registry could only paper over it.
+  .superRefine((guide, ctx) => {
+    if (!guide.unresolvedId) return
+    for (const [field, invalid] of [
+      ['path', Boolean(guide.path)],
+      ['status', guide.status && guide.status !== 'unresolved'],
+      ['evidence', guide.evidence && guide.evidence !== 'U'],
+    ]) {
+      if (!invalid) continue
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [field],
+        message: `karlGuide.${field} conflicts with unresolvedId ${guide.unresolvedId}: an unresolved mapping must not also carry a path, a confirmed status, or evidence other than 'U'`,
+      })
+    }
+  })
 
 const imageSchema = z.object({
   src: z.string().min(1),

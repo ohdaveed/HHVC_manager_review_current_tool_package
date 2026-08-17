@@ -40,6 +40,15 @@ const PAGE_TYPE_LABELS = {
 
    Two rows are INFERRED rather than measured and now print as such; see
    INFERRED_PATHS. */
+/* Fields shared by every type that has them, spelled per type rather than
+   merged in, because the exceptions are the whole point: `partner-agencies` is
+   absent from About us, and `contact` exists on only three of the eight. A
+   shared default with per-type opt-outs would make the absent case the quiet
+   one, and the absent case is where this feature does damage — see the
+   `contact` rows below. */
+const PARTNER_AGENCIES = 'Content → Partner agencies'
+const CONTACT_US = 'Content → Contact us'
+
 const PAGE_TYPE_FIELDS = {
   transaction: {
     content: 'Content → What to Do → Section → Section specifics',
@@ -51,16 +60,36 @@ const PAGE_TYPE_FIELDS = {
     body: 'Content → Accordion title and text',
     supporting: 'Content → Accordion title and text',
     related: 'Content → Related → Page',
+    // `cost` and `things_to_know` sit together under the parent grouping
+    // "What to Know Before You Start" (field map, Transaction section). The
+    // path stops at the grouping because the mockup's `whatToKnow` renders
+    // BOTH — a path naming just one would be precise and wrong for the other,
+    // and buildSteps() names the two fields underneath it instead.
+    'what-to-know': 'Content → What to Know Before You Start',
+    // Raw name `get_help`; "Contact us" is the UI label an editor clicks.
+    contact: CONTACT_US,
+    'partner-agencies': PARTNER_AGENCIES,
   },
   information: {
     content: 'Content → Information section → Title and text',
     body: 'Content → Information section → Title and text',
     related: 'Content → Related → Page',
+    'partner-agencies': PARTNER_AGENCIES,
+    // **Information has no Contact us panel** — its form is Page title,
+    // Description, Primary agency, Part of, Information section, Partner
+    // agencies, Topics, Related, and nothing else. Two mockup pages
+    // (`component: 'contact'`) carry contact content anyway, so the honest
+    // answer is the absent row here: those render "Mockup only". Routing them
+    // to Information section → Title and text, which is what the body fallback
+    // did, tells an editor to paste a phone number into a prose block.
   },
   'resource-collection': {
     content: 'Content → Body → Resources → Resource section → Links',
     body: 'Content → Introductory text → Title and text',
     resources: 'Content → Body → Resources → Resource section → Links',
+    'partner-agencies': PARTNER_AGENCIES,
+    // No Related and no Contact us on this type, confirmed by full-text
+    // extraction in the field map.
   },
   campaign: {
     // INFERRED, and printed as such — see INFERRED_PATHS below. `additional_content`
@@ -74,6 +103,15 @@ const PAGE_TYPE_FIELDS = {
     // "Page block" named no field. `related_links` entries carry "Page" * and
     // "Link text" *, so Page is the field an editor lands on.
     related: 'Content → Related → Page',
+    // `facts_title` + `fact_items`, UI-labelled "Top facts" with a "Facts
+    // title" plain text and repeatable "Fact items". This is its own top-level
+    // panel, NOT part of `additional_content` — the ROLE_ALIASES entry that
+    // sent `top-facts` to `body` resolved it to Additional content → Accordion
+    // section, an unrelated component that is also one of this file's two
+    // INFERRED rows, so the guide presented a guess about the wrong panel.
+    'top-facts': 'Content → Top facts',
+    contact: CONTACT_US,
+    'partner-agencies': PARTNER_AGENCIES,
   },
   topic: {
     content: 'Content → Child topics → Content → Section content',
@@ -81,6 +119,7 @@ const PAGE_TYPE_FIELDS = {
     services: 'Content → Child topics → Services → Links',
     resources: 'Content → Child topics → Resources → Links',
     spotlight: 'Content → Child topics → Spotlight → Spotlight',
+    'partner-agencies': PARTNER_AGENCIES,
   },
   agency: {
     // The panel is labelled "About"; `about_description` is its raw name, and these
@@ -95,6 +134,12 @@ const PAGE_TYPE_FIELDS = {
     // already names the two entry types, so the path stops where the form does.
     services: 'Content → Section title 1 → Subsection',
     resources: 'Content → Section title 2 → Subsection',
+    // Agency hosts Spotlight 1 and Spotlight 2 like Campaign does (field map,
+    // "Spotlight — one component, five host types"). The row was absent, so an
+    // Agency spotlight fell through to the About body path.
+    spotlight: 'Content → Spotlight 1 or Spotlight 2 → Spotlight',
+    contact: CONTACT_US,
+    'partner-agencies': PARTNER_AGENCIES,
   },
   'about-us': {
     content: 'Content → Information → Custom section',
@@ -108,7 +153,30 @@ const PAGE_TYPE_FIELDS = {
     body: 'Content → Content → Body',
     table: 'Content → Content → Table',
     spotlight: 'Content → Spotlight → Spotlight',
+    'partner-agencies': PARTNER_AGENCIES,
   },
+}
+
+/* Where a Button link nested inside another component lives, keyed
+   `<pageType>.<hostRole>`. A button is not a field of its own: it is a link
+   shape (shape 2) that appears INSIDE a host block, and the host is what
+   decides the path. The `button-link` branch in resolvePath() used to answer
+   with the page type's generic `content` path plus a literal
+   `'Content → Button link'` fallback — a level that exists on no form — so a
+   Campaign Spotlight's CTA was routed to Additional content → Accordion
+   section and stamped E1 confirmed.
+
+   Only hosts the field map attests a nested Button link for are listed. A
+   button in any other host resolves to '' and reports as unmapped, which is
+   also what `U1` already says about the twelve section-level buttons that sit
+   outside a step or a spotlight. */
+const BUTTON_HOSTS = {
+  'transaction.what-to-do': 'Content → What to Do → Section → Section specifics → Button link',
+  'transaction.content': 'Content → What to Do → Section → Section specifics → Button link',
+  'campaign.spotlight': 'Content → Spotlight 1 or Spotlight 2 → Spotlight → Button link',
+  'agency.spotlight': 'Content → Spotlight 1 or Spotlight 2 → Spotlight → Button link',
+  'topic.spotlight': 'Content → Child topics → Spotlight → Spotlight → Button link',
+  'report.spotlight': 'Content → Spotlight → Spotlight → Button link',
 }
 
 /* Rows this repo CHOSE rather than measured, keyed `<pageType>.<role>`.
@@ -167,8 +235,11 @@ const META_FIELDS = {
 const ROLE_ALIASES = {
   'what-to-do': 'content',
   intro: 'body',
-  'top-facts': 'body',
   callout: 'content',
+  // `'top-facts': 'body'` was removed on 2026-08-17. It is a real Karl panel on
+  // Campaign (`facts_title` + `fact_items`) and has a row of its own now; on
+  // every other type it has no destination, and '' is the correct answer there
+  // rather than the body stream.
 }
 
 // Not roles at all — these are TAG KINDS leaking through because the call
@@ -243,7 +314,18 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
   const explicit = guide && typeof guide === 'object' ? guide : {}
   const role = context.role || context.component || kind
   const guideContext = { ...context, unresolvedId: explicit.unresolvedId || context.unresolvedId }
-  const path = explicit.path || resolvePath(pageType, role, guideContext)
+  // **Unresolved wins over every other signal, including an authored path.**
+  // resolvePath() already returns '' for an unresolved context, but an explicit
+  // `guide.path` bypassed it, and `explicit.evidence`/`explicit.status` were
+  // taken verbatim below — so a guide carrying both an unresolvedId and a path
+  // rendered as "E1 confirmed" while naming a destination this repo has openly
+  // recorded as unknown. build_scripts/schema.js rejects that combination at
+  // validation time; this is the same rule at render time, because the registry
+  // also serves contexts assembled at runtime by page-render.js, which the
+  // schema never sees.
+  const unresolvedId = guideContext.unresolvedId
+  const isUnresolved = Boolean(unresolvedId) && Boolean(UNRESOLVED[unresolvedId])
+  const path = isUnresolved ? '' : explicit.path || resolvePath(pageType, role, guideContext)
   // Only a DERIVED path can be inferred. An explicitly authored `guide.path`
   // carries its own evidence and status and is not second-guessed here.
   const inferred = !explicit.path && Boolean(path) && isInferredPath(pageType, role)
@@ -255,16 +337,10 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
       Array.isArray(explicit.steps) && explicit.steps.length
         ? explicit.steps
         : buildSteps(pageType, role, guideContext, path, inferred),
-    evidence: explicit.evidence || (inferred || !path ? 'U' : 'E1'),
-    status:
-      explicit.status ||
-      (explicit.unresolvedId
-        ? 'unresolved'
-        : inferred
-          ? 'inferred'
-          : path
-            ? 'confirmed'
-            : 'mockup-only'),
+    evidence: isUnresolved ? 'U' : explicit.evidence || (inferred || !path ? 'U' : 'E1'),
+    status: isUnresolved
+      ? 'unresolved'
+      : explicit.status || (inferred ? 'inferred' : path ? 'confirmed' : 'mockup-only'),
     values: resolvedValues.length ? resolvedValues : undefined,
   }
   if (explicit.unresolvedId && !UNRESOLVED[explicit.unresolvedId]) {
@@ -299,11 +375,18 @@ function resolvePath(pageType, role, context) {
   // Metadata first: it is type-independent, so it must not fall through to
   // the per-type body tables below.
   if (META_FIELDS[role]) return META_FIELDS[role]
-  if (context.linkShape === 'button-link') return fields?.content || 'Content → Button link'
+  // A button belongs to its HOST block, not to a field of its own. Falling
+  // back to the page's `content` path answered a different question than the
+  // one asked, and the `'Content → Button link'` literal named a level no form
+  // has. Both are gone: an unattested host reports unmapped.
+  if (context.linkShape === 'button-link') return BUTTON_HOSTS[`${pageType}.${role}`] || ''
   if (context.linkShape === 'campaign-related') return PAGE_TYPE_FIELDS.campaign.related
   if (context.linkShape === 'page-reference') {
     if (role === 'related') return fields?.related || ''
-    return fields?.[role] || fields?.content || ''
+    // No `fields.content` fallback. A page-reference whose role names no row
+    // is a link this repo cannot place, and answering with the body path made
+    // every such card read as a confirmed instruction to paste it into prose.
+    return fields?.[ROLE_ALIASES[role] || role] || ''
   }
   if (role === 'image')
     return pageType === 'information' ? 'Content → Information section → Image' : ''
@@ -339,6 +422,18 @@ function buildSteps(pageType, role, context, path, inferred = false) {
     steps.push(
       'Choose image alignment and position, then add the optional Button link if the visible CTA is approved.'
     )
+  // The path stops at the parent grouping because the mockup's whatToKnow
+  // renders both halves; these name which field each half goes in.
+  if (path && (ROLE_ALIASES[role] || role) === 'what-to-know')
+    steps.push(
+      'Cost is a required radio ending in a 120-character Cost description; each Things to Know entry is a Title plus rich text.'
+    )
+  if (path && (ROLE_ALIASES[role] || role) === 'top-facts')
+    steps.push('Enter the section heading as Facts title, then add one Fact item per fact.')
+  if (path && (ROLE_ALIASES[role] || role) === 'contact')
+    steps.push('Add one block per detail: Address, Phone number, Email, or Additional info.')
+  if (path && (ROLE_ALIASES[role] || role) === 'partner-agencies')
+    steps.push('This is a page chooser restricted to Agency pages — it takes no free text or URL.')
   if (context.inheritance === 'inherits')
     steps.push('Choose the destination page; Karl publishes its title and summary here.')
   if (context.inheritance === 'title-only')
