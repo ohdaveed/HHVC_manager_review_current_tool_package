@@ -675,7 +675,19 @@ function emitSectionSpotlight(context, entry, section, index, heading) {
 /** The prose half of a section: heading, paragraphs, bullets, table, callout. */
 function emitSectionProse(context, entry, section, index, options) {
   if (!options.headingAlreadyEmitted && options.heading !== undefined) {
-    entry.fields.push({ label: 'Title', value: String(options.heading || '') })
+    // Report's Body is one rich text field with no Title of its own — a
+    // section heading becomes a Heading 2 INSIDE it, which is also what
+    // auto-generates the published page's table of contents. Labelling it
+    // "Title" would send an editor looking for a field the Body block does not
+    // have.
+    if (context.type === 'Report') {
+      entry.fields.push({ label: 'Body — Heading 2', value: String(options.heading || '') })
+      entry.notes.push(
+        'Every Body block on this page can live in ONE Body field: Heading 2 auto-generates the table of contents and Heading 3 appears under "See all sections". Do not use Heading 4, 5 or 6 — they never render.'
+      )
+    } else {
+      entry.fields.push({ label: 'Title', value: String(options.heading || '') })
+    }
   }
   const paragraphsPath = `sections.${index}.paragraphs`
   const bulletsPath = `sections.${index}.bullets`
@@ -713,7 +725,25 @@ function emitCallout(context, entry, callout, basePath) {
   const textPath = `${basePath}.text`
   const text = resolveValue(context.page, context.reviewRecord, textPath)
   if (text.value) {
-    entry.fields.push({ label: 'Callout (rich text, no title field)', value: String(text.value) })
+    // U18: Report's `content` chooser offers Body and Table and nothing else —
+    // opened in the live form on 2026-08-15, against a component matrix that
+    // claims Callout: Yes. There is no Callout block to put this in, so it
+    // folds into the Body rich text, and the transcript says which rather than
+    // labelling it as a block that does not exist.
+    const isReport = context.type === 'Report'
+    entry.fields.push({
+      label: isReport
+        ? 'Body — fold in as a bolded lead-in (Report has no Callout block)'
+        : 'Callout (rich text, no title field)',
+      value: String(text.value),
+    })
+    if (isReport) {
+      context.transcript.flags.push({
+        path: textPath,
+        reason:
+          'U18 — Report’s content chooser offers Body and Table only, so this callout has no block of its own. Fold it into the Body rich text as a bolded lead-in; the component matrix claiming Callout: Yes for Report is wrong (O11).',
+      })
+    }
     collectLinks(context, entry, String(text.value))
     context.consumed.add(textPath)
   }
@@ -985,7 +1015,13 @@ function renderTranscriptMarkdown(transcript) {
     })
     if (entry.choices.length) lines.push('')
     if (entry.table) {
-      for (const row of entry.table) lines.push(`| ${row.join(' | ')} |`)
+      // The separator row is not decoration: without it every row renders as a
+      // header, and the whole point of printing a table here is that an editor
+      // can see which cell goes in which column.
+      entry.table.forEach((row, rowIndex) => {
+        lines.push(`| ${row.join(' | ')} |`)
+        if (rowIndex === 0) lines.push(`| ${row.map(() => '---').join(' | ')} |`)
+      })
       lines.push('')
     }
     if (entry.links.length) {
