@@ -117,7 +117,7 @@ window.HHVC_PAGES['filthReport'] = {
     },
     {
       heading: 'How your report is processed',
-      karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. Secondary Button link block ("View Health Code Article 11") citing the municipal code per Ch. 8.7.2.',
+      karl: 'Best real-schema fit: a second things_to_know entry. Title: "How your report is processed". Text: the bulleted list below (after-report expectations, weekday processing note, enforcement statement, tenant rights note, and the Health Code Article 11 property-owner-obligation summary required by HHVC content standards Ch. 8.7.1). Same ordering caveat as the section above — things_to_know sits before what_to_do on the real form. Secondary Button link block ("View Article 11") citing the municipal code per Ch. 8.7.2.',
       kind: 'body',
       bullets: [
         '**Review time:** It can take a few weekdays for 311 to send your report to Environmental Health and assign an inspector.',

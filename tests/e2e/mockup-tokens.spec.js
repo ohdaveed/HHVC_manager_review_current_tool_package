@@ -107,11 +107,24 @@ test.describe('mockup type ladder', () => {
   test('uses the slab face for h1 and h2 and the sans face for h3', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await gotoFresh(page)
+    /* h2 is read explicitly rather than left to the bare `h1, h2` rule this
+       test is really about. The rule is unscoped, so a scoped override —
+       `.section h2` already exists and sets its own size — could take the
+       slab face off every content heading in the mockup while h1 and h3 both
+       stayed correct. The test was named for h1 and h2 and asserted h1 and
+       h3, so that regression had no assertion anywhere.
+
+       `.section h2` specifically, not a bare `#mockPage h2`: the first h2 in
+       document order can be the "On this page" widget's own label, which is
+       deliberately off the title ladder and would be measuring a different
+       tier than the one this test names. */
     const faces = await page.evaluate(() => ({
       h1: getComputedStyle(document.querySelector('#mockPage h1')).fontFamily,
+      h2: getComputedStyle(document.querySelector('#mockPage .section h2')).fontFamily,
       h3: getComputedStyle(document.querySelector('#mockPage h3')).fontFamily,
     }))
     expect(faces.h1).toContain('Roboto Slab')
+    expect(faces.h2).toContain('Roboto Slab')
     expect(faces.h3).toContain('Roboto Flex')
     expect(faces.h3).not.toContain('Roboto Slab')
 

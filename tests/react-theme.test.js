@@ -52,20 +52,42 @@ describe('js/react/theme.js scale coverage', () => {
     expect(source).toContain('spacing: 4')
   })
 
-  test('maps every chrome type step', () => {
+  /* Every `fontSize: 'var(--x)'` in the file, as (token) pairs. Matching the
+     DECLARATION rather than the bare token name is the point: `toContain(
+     '--ds-text-micro')` is satisfied by the token appearing in a comment, so
+     a mapping could be deleted while its name survived in the prose
+     explaining why it exists — which is exactly the shape of edit that
+     removes one. Every assertion below reads this list. */
+  const sizeMappings = [...source.matchAll(/fontSize:\s*'var\((--[a-z0-9-]+)\)'/g)].map((m) => m[1])
+
+  test('maps every chrome type step through a real fontSize declaration', () => {
+    // Same guard as the fallback test above: a reformat that breaks the
+    // regex turns `sizeMappings` into [] and every `toContain` below would
+    // then fail loudly rather than pass vacuously — but assert it anyway, so
+    // the failure names the cause instead of looking like four missing steps.
+    expect(sizeMappings.length).toBeGreaterThan(0)
     for (const step of [
       '--ds-text-panel',
       '--ds-text-card',
       '--ds-text-label',
       '--ds-text-micro',
     ]) {
-      expect(source).toContain(step)
+      expect(sizeMappings).toContain(step)
     }
   })
 
   test('maps the caption and button variants, not only h3/h4/body2', () => {
-    for (const variant of ['h5:', 'body1:', 'caption:', 'button:']) {
-      expect(source).toContain(variant)
+    /* Assert the variant carries a fontSize off this chrome's own scale, not
+       merely that its key is written somewhere. An unmapped variant is not a
+       missing key — MUI supplies its own size — so `toContain('caption:')`
+       passes against `// caption: left to MUI for now`, which is precisely
+       the state this test exists to forbid. */
+    for (const variant of ['h3', 'h4', 'h5', 'body1', 'body2', 'button', 'caption']) {
+      const declaration = source.match(
+        new RegExp(`\\b${variant}:\\s*\\{[^}]*fontSize:\\s*'var\\((--[a-z0-9-]+)\\)'`)
+      )
+      expect(declaration, `${variant} maps no --ds-text-* step`).not.toBeNull()
+      expect(declaration[1]).toMatch(/^--ds-text-/)
     }
   })
 

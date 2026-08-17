@@ -298,7 +298,15 @@
      ramp: SFDS's action blue, not the old #2a60af. Still a literal rather
      than var(--brand-40) — the whole point of this block is that these
      survive a theme flip unchanged, and a token is exactly the thing that
-     might not. */
+     might not.
+
+     This is the LIGHTEST of the three toast backgrounds, which makes it the
+     one that governs every control derived from --toast-fg: the dismiss
+     button's opacity and the action button's currentColor tint both composite
+     toward the background, so they are worst here even though the base label
+     clears 4.5:1 comfortably. Moving this token a step lighter is what took
+     both of those under AA once already. tests/theme-contrast.test.js checks
+     the derived pairs, not just the 5.34 below. */
   --toast-info-bg: #495ed4; /*  5.34:1 */
   --banner-danger-fg: #fcfcfc;
   --banner-danger-bg: #d92d20; /*  4.71:1 */
