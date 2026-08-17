@@ -73,7 +73,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 45 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 46 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -114,6 +114,20 @@ rather than the scheme — `mailto:`, `tel:` and root-relative targets all pass
 `safeUrl` and would still render as dead `data-render-target` buttons, so a
 later reader "fixing" them by widening this predicate would ship exactly the
 broken control it removes),
+`karl-guide` (the Karl-field registry, its panel markup and the disclosure's
+keyboard behaviour. Most of its assertions are about paths that must NOT
+appear, because this feature's failure mode is a wrong answer delivered
+confidently: a guide is stamped `E1 confirmed` whenever it holds any path, and
+that badge means MEASURED against the live Karl admin, so a plausible
+neighbouring field is worse than none. It pins the empty string as a
+first-class answer — the one that is never harmful — and pins each of the ten
+wrong routings four independent PR reviewers found by the page type and role
+that produced it. It also asserts the panel emits **no block-level element at
+all**: the panel renders inside a `<span>` that renders wherever its tag does,
+so a `<div>` within it closes an enclosing paragraph early and the panel
+escapes the positioned ancestor it anchors to, opening elsewhere on the page.
+That had been a rule three call sites had to remember; it is now a property of
+the markup),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB),
 `review-api-postgres` (the same routes against a **real Postgres**, and

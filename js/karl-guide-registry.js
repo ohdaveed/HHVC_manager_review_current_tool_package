@@ -450,6 +450,7 @@ function linkShapeMeta(shape) {
 }
 
 export {
+  BUTTON_HOSTS,
   INFERRED_PATHS,
   LINK_SHAPES,
   META_FIELDS,

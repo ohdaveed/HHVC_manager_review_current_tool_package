@@ -105,6 +105,11 @@ async function mountManagerReviewExport({ title, summary } = {}) {
     <div id="reviewExportStatus"></div>
   `
   global.window = DOM_WINDOW
+  // DOM_WINDOW is shared across this file's tests, so a stub installed here
+  // outlives the test that needed it unless restore() puts the original back —
+  // and a later test then exercises a silent showToast without knowing it. The
+  // repo's rule is that a test restoring a global restores ALL of them.
+  const originalShowToast = DOM_WINDOW.showToast
   DOM_WINDOW.showToast = () => {}
 
   const modUrl = `${MANAGER_REVIEW_EXPORT_PATH}?t=${Date.now()}-${Math.random()}`
@@ -121,6 +126,8 @@ async function mountManagerReviewExport({ title, summary } = {}) {
     restore: () => {
       pageData.pestsTopic.title = originalTitle
       pageData.pestsTopic.summary = originalSummary
+      if (originalShowToast === undefined) delete DOM_WINDOW.showToast
+      else DOM_WINDOW.showToast = originalShowToast
     },
   }
 }

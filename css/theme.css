@@ -223,6 +223,21 @@
   --ds-shadow-2: 0 2px 4px rgba(12, 20, 100, 0.06), 0 4px 12px rgba(12, 20, 100, 0.1);
   --ds-shadow-3: 0 8px 16px rgba(12, 20, 100, 0.08), 0 16px 32px rgba(12, 20, 100, 0.12);
 
+  /* Two chrome dimensions that are shared rather than component-local, and so
+     belong here rather than as literals in the component sheet that happens to
+     use them first.
+
+     --ds-size-affordance is the diameter of a small circular control that sits
+     in a line of text — the Karl guide's expand dot today. It doubles as the
+     ordinal gutter for that guide's step list, which is deliberate: the number
+     column and the dot above it line up because they are the same measure.
+
+     --ds-size-popover is the natural width of a floating panel opened from
+     inline chrome. It is a MAX rather than a fixed width; every caller pairs it
+     with `min(…, calc(100vw - 2rem))` so a narrow viewport wins. */
+  --ds-size-affordance: 1.35rem;
+  --ds-size-popover: 31rem;
+
   /* Semantic surfaces */
   --surface-page: var(--sfds-color-grey-l1);
   --surface-panel: var(--sfds-color-white);

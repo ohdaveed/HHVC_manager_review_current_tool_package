@@ -65,12 +65,32 @@ function initKarlGuides() {
   })
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return
-    const trigger = event.target.closest('.karl-guide-trigger')
+    /* **Resolve the trigger through the guide's wrapper, not from the event
+       target.** The panel is a SIBLING of `.karl-guide-trigger` inside
+       `[data-karl-guide]`, so `closest('.karl-guide-trigger')` returns null for
+       anything focused inside the open panel — which is every Copy button in
+       it. A keyboard reviewer who tabbed from the trigger into the panel found
+       Escape did nothing and had no way back out except tabbing through every
+       remaining control. Closing the OWNING guide also means Escape cannot
+       reach past the panel and close some other guide that happens to be open. */
+    const owner = event.target.closest?.('[data-karl-guide]')
+    const trigger = owner?.querySelector('.karl-guide-trigger')
     if (!trigger || trigger.getAttribute('aria-expanded') !== 'true') return
     setExpanded(trigger, false)
+    // Focus returns to the trigger rather than staying on a control that is now
+    // inside a hidden subtree, which would leave the focus ring nowhere.
     trigger.focus()
   })
   window.karlGuide = { ready: true, setExpanded }
 }
 
-initKarlGuides()
+// Guarded because this module is imported for its exports as well as its mount:
+// initKarlGuides() touches `document` and `window` at import time, so a
+// non-browser import (a Bun test, or any Node-side consumer) would throw before
+// the caller could reach anything this file exports. Same
+// `typeof window === 'undefined'` early return the rest of the repo uses.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  initKarlGuides()
+}
+
+export { copyValue, initKarlGuides, setExpanded }

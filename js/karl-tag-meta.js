@@ -39,20 +39,44 @@ function guideCopyValues(values = []) {
     .map((item) => ({ label: item.label, value: item.value, source: item.source || 'visible' }))
 }
 
+/* **Every element in this panel is phrasing content, and that is a constraint
+   rather than a style.**
+
+   The panel is emitted inside `<span class="karl-guide">`, which sits wherever
+   its tag sits — inside an `<h3>`, an `<li>`, a table cell, or a paragraph. A
+   `<span>` may contain only phrasing content, so the `<div>`/`<ol>`/`<p>`/`<h4>`
+   this used to build were invalid there in every position, and inside a `<p>`
+   they were actively destructive: the HTML parser closes an open paragraph when
+   a block-level start tag arrives, so the panel escaped `.karl-guide` — the
+   positioned ancestor it is absolutely positioned against — and opened
+   somewhere else on the page, silently restructuring the reviewed mockup in the
+   process.
+
+   Three call sites hit exactly that and were fixed by moving the TAG out of the
+   paragraph (renderAudienceFraming, renderTable's preview note,
+   renderPrintVersion). That is a fix per call site, and there are 35+ of them;
+   this is the same fix once, at the only place the panel markup is built. A
+   future tag placed inside a paragraph now cannot break the page.
+
+   Semantics are preserved with ARIA rather than lost: `role="list"` /
+   `role="listitem"` keeps the steps announced as a list of N items, and
+   `role="heading" aria-level="4"` keeps the values heading a heading. The
+   ordinals the `<ol>` used to draw come from a CSS counter — see
+   css/karl-guide.css, where they have to stay in step with this markup. */
 function renderKarlGuidePanel(guide, panelId) {
   const values = guideCopyValues(guide.values)
   const unresolved = guide.unresolvedId
-    ? `<p class="karl-guide-unresolved"><strong>${escapeHtml(guide.unresolvedId)}:</strong> ${escapeHtml(unresolvedDescription(guide.unresolvedId))}</p>`
+    ? `<span class="karl-guide-unresolved"><strong>${escapeHtml(guide.unresolvedId)}:</strong> ${escapeHtml(unresolvedDescription(guide.unresolvedId))}</span>`
     : ''
   const valueRows = values.length
-    ? `<div class="karl-guide-values"><h4>Copy visible values</h4>${values
+    ? `<span class="karl-guide-values"><span class="karl-guide-values-heading" role="heading" aria-level="4">Copy visible values</span>${values
         .map(
           (item) =>
-            `<div class="karl-guide-value"><div><strong>${escapeHtml(item.label)}</strong><span class="karl-guide-value-source">${escapeHtml(item.source)}</span><code>${escapeHtml(item.value)}</code></div><button type="button" class="karl-guide-copy" data-karl-copy="${escapeHtml(item.value)}" aria-label="Copy ${escapeHtml(item.label)}">Copy</button></div>`
+            `<span class="karl-guide-value"><span class="karl-guide-value-body"><strong>${escapeHtml(item.label)}</strong><span class="karl-guide-value-source">${escapeHtml(item.source)}</span><code>${escapeHtml(item.value)}</code></span><button type="button" class="karl-guide-copy" data-karl-copy="${escapeHtml(item.value)}" aria-label="Copy ${escapeHtml(item.label)}">Copy</button></span>`
         )
-        .join('')}</div>`
+        .join('')}</span>`
     : ''
-  return `<div id="${escapeHtml(panelId)}" class="karl-guide-panel" hidden><div class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></div><ol class="karl-guide-steps">${guide.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${guide.path ? `<p class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></p>` : ''}${guide.linkShape ? `<p class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</p>` : ''}${unresolved}${valueRows}</div>`
+  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
 }
 const KARL_TAG_KINDS = {
   meta: {

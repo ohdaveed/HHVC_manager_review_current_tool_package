@@ -75,7 +75,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 45 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 46 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -120,7 +120,19 @@ point at, shared by the browser widget and `build_scripts/data-checks.js`'s
 rather than the scheme — `mailto:`/`tel:`/root-relative all pass `safeUrl` and
 would still render as dead `data-render-target` buttons, so a later reader
 "fixing" them by widening this predicate would ship exactly the broken control
-it removes), `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
+it removes), `karl-guide` (the Karl-field registry, its panel markup and the
+disclosure's keyboard behaviour — and most of its assertions are about paths
+that must NOT appear, because this feature's failure mode is a wrong answer
+delivered confidently: a guide stamps `E1 confirmed` whenever it holds any
+path, and that badge means MEASURED against the live admin. It therefore pins
+the empty string as a first-class answer, the one that is never harmful, and
+pins each of the ten wrong routings four independent PR reviewers found by the
+type and role that produced it. It also asserts the panel emits **no
+block-level element at all** — the panel renders inside a `<span>` that renders
+wherever its tag does, so a `<div>` in it closes an enclosing paragraph early
+and the panel escapes the ancestor it is positioned against; that had been a
+rule three call sites remembered, and is now a property of the markup),
+`page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
 schema so a mismatched required field fails here rather than shipping; asserts
 a malformed registry entry is **dropped rather than thrown on**, since a throw
 at the root of the module graph strands the reviewer with no UI to fix it; its

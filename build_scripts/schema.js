@@ -222,9 +222,13 @@ const pageSchema = z.object({
   reportDate: z.string().optional(),
   printVersionUrl: z.string().optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
-  // No page-level `karlGuide`. Every other level of this schema has one and
-  // js/page-render.js reads all of them — a section's, a card's, a step's, a
-  // callout's, an image's, a spotlight's. A PAGE's had exactly one consumer,
+  // No page-level `karlGuide`. Every level that renders its own tagged block
+  // has one and js/page-render.js reads all of them — a section's, a card's, a
+  // step's, a callout's, an image's, a spotlight's. (`whatToKnowSchema` and
+  // `contactSchema` carry none either: they describe values the page renders
+  // through a tag of its own, not blocks with a guide to attach to. The claim
+  // here was once "every other level of this schema", which those two make
+  // false.) A PAGE's had exactly one consumer,
   // the hero title tag, and attaching it there was wrong: the eight authored
   // objects all described their page's main CONTENT block (What to Do,
   // Custom section, Spotlight), so the title tag showed confirmed steps for
