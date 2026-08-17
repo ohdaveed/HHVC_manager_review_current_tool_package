@@ -24,7 +24,12 @@ describe('structured Karl guides', () => {
     const guide = normalizeKarlGuide({
       page: { type: 'Report' },
       context: { role: 'content' },
-      guide: { unresolvedId: 'U1', status: 'unresolved', evidence: 'U', steps: ['Decision required.'] },
+      guide: {
+        unresolvedId: 'U1',
+        status: 'unresolved',
+        evidence: 'U',
+        steps: ['Decision required.'],
+      },
     })
     expect(guide.path).toBe('')
     expect(guide.status).toBe('unresolved')
