@@ -41,7 +41,7 @@ bun run dev:api               # optional sync backend (server.ts) on :8081; dev 
 bun run start                 # production-like: build:netlify then serve dist/ + the API
 bun run serve                 # serve an already-built dist/ without rebuilding
 bun run validate              # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # bun test over the 45 unit-test files in tests/
+bun run test                  # bun test over the 46 unit-test files in tests/
 bun run test:e2e              # playwright test over the 21 spec files in tests/e2e/
 bun run export                # regenerate data/page_inventory.{json,csv} AND the local
                               # tracking CSVs (extract-pages.js + sync-tracking-sheet.js)
@@ -71,7 +71,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 45 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 46 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -178,7 +178,17 @@ weight-axis file, which registers under the different family name
 falls back to the system sans with nothing visibly broken.
 `tests/e2e/mockup-tokens.spec.js`'s `document.fonts.check()` assertions are
 what actually prove a 700 face renders rather than merely that an import
-line and an on-disk file exist).
+line and an on-disk file exist), and
+`karl-blocks` (the drift guard over `js/karl-blocks.js`, the Karl panel
+inventory the transcript export types into: it parses
+`docs/karl-export-field-map.md`'s eight per-type tables and asserts every
+transcribed row still matches on label, raw name, required/repeatable wording,
+block types and mockup source, plus that each row's cited `docLine` really is
+its own row. The inventory is hand-transcribed from a 930-line prose document
+that keeps changing, and silent drift means an editor is told to type into a
+field that no longer exists. It asserts a MINIMUM row count per type FIRST,
+because a doc-parsing regex that stops matching does not fail — it stops
+checking, and reports zero rows on both sides).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

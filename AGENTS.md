@@ -46,7 +46,7 @@ bun run dev:api              # optional sync backend (server.ts) on :8081; dev p
 bun run start                # production-like: build:netlify then serve dist/ + the API
 bun run serve                # serve an already-built dist/ without rebuilding
 bun run validate             # Zod-validate pages/*.js + js/page-data.js (schema + invariants)
-bun run test                  # Bun test runner over the 45 unit-test files in tests/
+bun run test                  # Bun test runner over the 46 unit-test files in tests/
 bun run test:e2e              # Playwright end-to-end tests (starts static server on :8080)
 bun run export                # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run sync-tracking         # regenerate the local mockup tracking CSVs
@@ -66,7 +66,7 @@ bun run lint:anti-slop        # anti-slop Oxlint rules over server.ts + build_sc
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 45 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 46 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -168,7 +168,17 @@ since getting the string wrong falls back to the system sans with nothing
 visibly broken. `tests/e2e/mockup-tokens.spec.js` closes the gap this file
 cannot: its assertions prove an import line and an on-disk file exist, not
 that the browser actually renders a non-synthesised 700, which only
-`document.fonts.check('700 16px "…"')` against a real loaded page can show).
+`document.fonts.check('700 16px "…"')` against a real loaded page can show),
+and `karl-blocks` (the drift guard over `js/karl-blocks.js`, the Karl panel
+inventory the transcript export types into: it parses
+`docs/karl-export-field-map.md`'s eight per-type tables and asserts every
+transcribed row still matches on label, raw name, required/repeatable wording,
+block types and mockup source, plus that each row's cited `docLine` really is
+its own row. The inventory is hand-transcribed from a 930-line prose document
+that keeps changing, and silent drift means an editor is told to type into a
+field that no longer exists. It asserts a MINIMUM row count per type FIRST,
+because a doc-parsing regex that stops matching does not fail — it stops
+checking, and reports zero rows on both sides).
 **The list in
 `package.json`'s `test` script is explicit, not a glob** — a new
 `tests/*.test.js` that is not added there simply never runs, and reports

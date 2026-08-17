@@ -143,6 +143,10 @@ import './editor-panel.js'
 // this line is the same belt-and-braces documentation of the sequence that
 // page-data.js above is, not what makes it work.
 import './card-inheritance.js'
+// The Karl panel inventory. Import-free and window-published exactly like
+// card-inheritance.js above it, so its only ordering requirement is being
+// evaluated before js/karl-transcript.js reads window.karlBlocks.
+import './karl-blocks.js'
 import './page-render.js'
 import './app.js'
 import './manager-review-export.js'
