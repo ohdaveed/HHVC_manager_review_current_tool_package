@@ -1652,7 +1652,7 @@ function renderPage(key, skipHistory = false) {
    page itself still renders, so nothing looks broken. */
 window.renderPage = renderPage
 
-/* Also published for js/ai-assist-render.js, which calls it to preview an
+/* Also published for js/ai/ai-assist-render.js, which calls it to preview an
    AI-drafted page object without touching pageData or the live mockup.
 
    That module is a self-mounting IIFE with no imports (like the other

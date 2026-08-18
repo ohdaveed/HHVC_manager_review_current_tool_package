@@ -155,7 +155,7 @@ cannot, since a spawn only ever sees the environment it was given),
 `ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
 endpoints, so both AI paths are covered without a key or a paid call),
 `ai-assist-client` (the browser client's config and HTTP surface — added
-because `js/ai-assist-client.js` and `js/sync/review-state-sync.js` carry five
+because `js/ai/ai-assist-client.js` and `js/sync/review-state-sync.js` carry five
 near-identical functions and only the sync copy was tested, so the most
 similar pair in the repo was also the least covered and an edit to one could
 not fail CI; it pins the two DIFFERENCES too, since near-identical is exactly
@@ -619,9 +619,9 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   reviewer who left Help open came back to an empty panel.
 
 - **AI assist breaks that naming pattern — mind the case.** `window.AiAssist` is
-  the **internal** namespace (`js/ai-assist-client.js` attaches `.client`, the
+  the **internal** namespace (`js/ai/ai-assist-client.js` attaches `.client`, the
   browser half of the optional `/api/ai/*` routes and a no-op unless configured;
-  `js/ai-assist-render.js` attaches `.render`). `js/ai-assist.js` consumes both,
+  `js/ai/ai-assist-render.js` attaches `.render`). `js/ai/ai-assist.js` consumes both,
   owns the request lifecycle and cancel, and publishes its public API on the
   separate lowercase **`window.aiAssist`** (`ensureRendered`,
   `refreshCapabilities`, `getCurrentPage`, `captureForm`). `window.AiAssist.ensureRendered`
@@ -2407,8 +2407,8 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
 ### AI rewrite (optional)
 
 A floating button that appears when a reviewer selects body copy in the mockup,
-offering an AI rewrite of the containing field. `js/ai-rewrite.js` is the
-orchestrator (selection, request lifecycle, apply/undo), `js/ai-rewrite-render.js`
+offering an AI rewrite of the containing field. `js/ai/ai-rewrite.js` is the
+orchestrator (selection, request lifecycle, apply/undo), `js/ai/ai-rewrite-render.js`
 the view (button, popover, positioning), and both ride the existing
 `window.AiAssist.client`. Additive, invisible unless `/api/ai/*` is configured,
 and it never writes to `pages/*.js`.

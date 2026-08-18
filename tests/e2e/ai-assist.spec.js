@@ -421,7 +421,7 @@ test.describe('AI assist panel', () => {
 
   // Regression: the AI-assist toast helper must actually reach showToast.
   //
-  // js/ai-assist.js guards with `typeof showToast === 'function'` against a
+  // js/ai/ai-assist.js guards with `typeof showToast === 'function'` against a
   // BARE identifier rather than window.showToast. A review flagged that as
   // dead under ES modules, which would silently swallow every AI-assist
   // toast — settings saved, generation failed, draft downloaded. Nothing

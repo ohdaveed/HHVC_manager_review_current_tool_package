@@ -3,22 +3,22 @@
    Owns the floating "AI rewrite" button that appears near a text selection,
    the popover it opens, and their positioning against a DOMRect the caller
    supplies. Holds no request logic and talks to no network — the
-   orchestrator in js/ai-rewrite.js (Task 8, not yet written) owns the
+   orchestrator in js/ai/ai-rewrite.js (Task 8, not yet written) owns the
    selection listener, the fetch to /api/ai/generate, and every transition of
    `state` below. This module only ever reads `state` to decide what to draw
-   and writes to it nowhere itself, mirroring how js/ai-assist-render.js's
-   `renderPanel()` is a pure function of js/ai-assist.js's state.
+   and writes to it nowhere itself, mirroring how js/ai/ai-assist-render.js's
+   `renderPanel()` is a pure function of js/ai/ai-assist.js's state.
 
    Load-order dependency: needs `window.utils.escapeHtml`, so it loads after
-   js/utils.js. It must also load before js/ai-rewrite.js, which reads
+   js/utils.js. It must also load before js/ai/ai-rewrite.js, which reads
    `window.AiRewrite.render` at mount time — see js/main.js's import list,
-   directly after js/ai-assist.js.
+   directly after js/ai/ai-assist.js.
 
    Everything interpolated into innerHTML here is untrusted by this module's
    own rules, for two different reasons: `state.fieldText` is copied straight
    out of `pages/*.js` page data (paragraph/bullet copy, not markup), and
    `state.result` is text the model wrote, which is exactly the "nobody in
-   this repo wrote it" case js/ai-assist-render.js's header calls out. Both
+   this repo wrote it" case js/ai/ai-assist-render.js's header calls out. Both
    go through escapeHtml before they reach the DOM, with no exception — unlike
    the AI-assist panel, this view never renders a trusted preview via
    renderPageMain(), so there is no second path to keep escaping-consistent
@@ -32,7 +32,7 @@
   window.AiRewrite = window.AiRewrite || {}
 
   /**
-   * Popover/button state. Mirrors js/ai-assist-render.js's `state` object:
+   * Popover/button state. Mirrors js/ai/ai-assist-render.js's `state` object:
    * a single mutable record the orchestrator writes to and this module reads
    * from on every render. Not persisted anywhere — like the AI-assist draft,
    * a pending rewrite is deliberately ephemeral and does not survive a page
@@ -55,7 +55,7 @@
    *   empty means "apply our content standards" per the placeholder copy.
    * - `busy` — a request is in flight; disables the instruction input's
    *   effect on the action row (the Cancel state) the same way
-   *   js/ai-assist-render.js disables its form fields while `state.busy`.
+   *   js/ai/ai-assist-render.js disables its form fields while `state.busy`.
    * - `error` — the last request's failure message, if any, cleared by the
    *   orchestrator before the next attempt.
    * - `result` — `{rewrittenText}` from a successful `rewrite-field`
@@ -199,7 +199,7 @@
    * resetting: the orchestrator decides whether a closed popover's state
    * should be cleared (e.g. after Discard/Undo) or left alone (e.g. a
    * reviewer who closes mid-instruction and reopens the same selection).
-   * That decision belongs to js/ai-rewrite.js, not this view.
+   * That decision belongs to js/ai/ai-rewrite.js, not this view.
    * @returns {void}
    */
   function closePopover() {
@@ -210,7 +210,7 @@
    * Redraw the popover from `state`.
    *
    * Rebuilt wholesale on every call rather than patched incrementally —
-   * the same tradeoff js/ai-assist-render.js's `renderPanel()` makes, and
+   * the same tradeoff js/ai/ai-assist-render.js's `renderPanel()` makes, and
    * for the same reason: the state machine here has few enough transitions
    * (idle -> busy -> result -> applied, or an error at any point) that a
    * full re-render is simpler to keep correct than hand-written DOM patches,

@@ -1,6 +1,6 @@
 /* AI assist: browser-side client for the optional /api/ai/* routes on
    server.ts. Attaches to window.AiAssist.client; the orchestrator in
-   js/ai-assist.js assembles the public API. Loads before js/ai-assist.js.
+   js/ai/ai-assist.js assembles the public API. Loads before js/ai/ai-assist.js.
 
    Every function here is a no-op unless a server URL and token are configured,
    so the tool keeps working exactly as it did before this file existed. This

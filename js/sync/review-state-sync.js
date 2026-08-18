@@ -1058,7 +1058,7 @@
     // <details> keeps the decision fields and export buttons above
     // immediately visible while collapsing the rarely-touched sync config
     // out of the way, mirroring the ai-assist-settings <details> pattern in
-    // js/ai-assist-render.js. A local-only reviewer should not have to scan
+    // js/ai/ai-assist-render.js. A local-only reviewer should not have to scan
     // server credentials or actions before reaching the review workflow.
     const details = document.createElement('details')
     details.className = 'review-sync-settings'

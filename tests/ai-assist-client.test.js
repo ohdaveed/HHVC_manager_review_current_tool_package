@@ -1,7 +1,7 @@
-// Unit tests for js/ai-assist-client.js's configuration and HTTP surface.
+// Unit tests for js/ai/ai-assist-client.js's configuration and HTTP surface.
 //
 // This file exists because of a coverage asymmetry, not because the code
-// looked untested. js/ai-assist-client.js and js/sync/review-state-sync.js were
+// looked untested. js/ai/ai-assist-client.js and js/sync/review-state-sync.js were
 // written from one another and carry five near-identical functions —
 // readConfig, writeConfig, isConfigured, assertEndpointUnchanged and
 // apiFetch. Only the sync copy had tests: assertEndpointUnchanged was
@@ -27,7 +27,7 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 
-const MODULE_PATH = path.resolve(__dirname, '../js/ai-assist-client.js')
+const MODULE_PATH = path.resolve(__dirname, '../js/ai/ai-assist-client.js')
 
 let originalFetch
 let originalWindow
@@ -47,7 +47,7 @@ afterEach(() => {
 })
 
 /**
- * Mount js/ai-assist-client.js against a fake window/localStorage, mirroring
+ * Mount js/ai/ai-assist-client.js against a fake window/localStorage, mirroring
  * loadReviewStateSync() in tests/review-state-sync.test.js.
  * @param {{stored?: string|null}} [options] `stored` is the RAW string the
  *   hhvcAiConfig key holds — a string rather than an object so a malformed

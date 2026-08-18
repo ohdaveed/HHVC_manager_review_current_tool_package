@@ -2,8 +2,8 @@
    resolves the containing field's dot-path, runs the rewrite request, and
    applies the result back into in-memory page data.
 
-   Loads after js/ai-rewrite-render.js (reads window.AiRewrite.render) and
-   after js/ai-assist-client.js (reuses its configured generate()). Never
+   Loads after js/ai/ai-rewrite-render.js (reads window.AiRewrite.render) and
+   after js/ai/ai-assist-client.js (reuses its configured generate()). Never
    writes to pages/*.js — this is a review aid, not a publishing tool. */
 ;(function mountAiRewrite() {
   if (typeof window === 'undefined') return
@@ -32,7 +32,7 @@
    * The page object currently open in the mockup.
    *
    * Delegates to js/utils.js rather than carrying its own copy — see the
-   * matching note in js/ai-assist.js, which needed the identical lookup.
+   * matching note in js/ai/ai-assist.js, which needed the identical lookup.
    * @returns {object|null}
    */
   function getCurrentPage() {

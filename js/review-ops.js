@@ -14,7 +14,7 @@
    top-level slot either — so this panel is docked inside Help, next to AI
    assist.
 
-   Mounts lazily when Help opens, and — like js/ai-assist.js — also catches an
+   Mounts lazily when Help opens, and — like js/ai/ai-assist.js — also catches an
    already-open panel at its own init(), since js/ux-improvements.js restores a
    persisted workspace_tab before these hooks exist and a restored tab would
    otherwise paint empty.
@@ -307,7 +307,7 @@ import { escapeHtml as escape } from './utils.js'
     // Catch a tab that is ALREADY open at init time — see
     // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
     // this, and why panel visibility is the signal rather than saved state.
-    // See the note in js/ai-assist.js: this is a section inside Help now, so
+    // See the note in js/ai/ai-assist.js: this is a section inside Help now, so
     // Help is the panel whose open state matters.
     window.utils.mountWorkspacePanelIfOpen('help', render)
   }

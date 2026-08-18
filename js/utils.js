@@ -884,8 +884,8 @@ function getCurrentKey(fallback) {
  * not resolve — which is a normal state for a page the reviewer has deleted
  * from the registry, not an error.
  *
- * Lives here rather than in each caller because js/ai-assist.js and
- * js/ai-rewrite.js are self-mounting IIFEs with no shared namespace between
+ * Lives here rather than in each caller because js/ai/ai-assist.js and
+ * js/ai/ai-rewrite.js are self-mounting IIFEs with no shared namespace between
  * them, so the byte-identical copies they each carried had nothing structural
  * stopping the next edit from landing on only one of them.
  * @returns {object|null}

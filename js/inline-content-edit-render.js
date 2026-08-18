@@ -1,7 +1,7 @@
 /* Inline content editing: edit-widget markup. Sibling to
    js/inline-content-edit.js (the orchestrator, which owns click handling
    and the commit/cancel/undo lifecycle) — mirrors the ai-assist split
-   (js/ai-assist.js + js/ai-assist-render.js). Loads before the orchestrator
+   (js/ai/ai-assist.js + js/ai/ai-assist-render.js). Loads before the orchestrator
    in js/main.js.
 
    Renders model-free, reviewer-authored text only (whatever the reviewer

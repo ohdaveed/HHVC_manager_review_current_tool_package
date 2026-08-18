@@ -9,8 +9,8 @@ description: 'HHVC repo: how the AI rewrite feature works — selection picks th
 # AI rewrite (optional)
 
 A floating button that appears when a reviewer selects body copy in the mockup,
-offering an AI rewrite of the containing field. `js/ai-rewrite.js` is the
-orchestrator (selection, request lifecycle, apply/undo), `js/ai-rewrite-render.js`
+offering an AI rewrite of the containing field. `js/ai/ai-rewrite.js` is the
+orchestrator (selection, request lifecycle, apply/undo), `js/ai/ai-rewrite-render.js`
 the view (button, popover, positioning), and both ride the existing
 `window.AiAssist.client`. Same posture as the rest of the AI surface: additive,
 invisible unless `/api/ai/*` is configured, and it never writes to `pages/*.js`.

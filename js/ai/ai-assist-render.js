@@ -1,6 +1,6 @@
 /* AI assist: panel rendering. Attaches to window.AiAssist.render; the
-   orchestrator in js/ai-assist.js wires events and assembles the public API.
-   Loads after js/ai-assist-client.js.
+   orchestrator in js/ai/ai-assist.js wires events and assembles the public API.
+   Loads after js/ai/ai-assist-client.js.
 
    Everything the model returns is untrusted text and goes through escapeHtml
    before it reaches innerHTML. This is the only surface in the tool that

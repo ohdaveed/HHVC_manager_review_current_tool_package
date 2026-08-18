@@ -2,8 +2,8 @@
    #mockPage, the edit-widget lifecycle (open/commit/cancel), and wiring
    into the existing autosave path. Sibling to js/inline-content-edit-render.js
    (markup) and js/inline-content-edit-data.js (pure section_edits logic).
-   Mirrors the ai-assist split (js/ai-assist.js orchestrates
-   js/ai-assist-client.js + js/ai-assist-render.js).
+   Mirrors the ai-assist split (js/ai/ai-assist.js orchestrates
+   js/ai/ai-assist-client.js + js/ai/ai-assist-render.js).
 
    Unlike AI assist, this needs no backend and no capability check: the
    affordance is present whenever the page has loaded. Loads after

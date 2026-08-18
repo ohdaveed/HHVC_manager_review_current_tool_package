@@ -161,7 +161,7 @@ baseline and asserts exactly one 409),
 server subprocess structurally cannot), `ai-assist-server` (spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
 with no key and no paid call), `ai-assist-client` (the browser client's config
-and HTTP surface — added because `js/ai-assist-client.js` and
+and HTTP surface — added because `js/ai/ai-assist-client.js` and
 `js/sync/review-state-sync.js` carry five near-identical functions and only the sync
 copy was tested, so the most similar pair in the repo was also the least
 covered and an edit to one could not fail CI; it pins the two DIFFERENCES too,
@@ -530,9 +530,9 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   reviewer who left Help open came back to an empty panel.
 
 - **AI assist breaks that naming pattern — mind the case.** `window.AiAssist` is
-  the **internal** namespace (`js/ai-assist-client.js` attaches `.client`, the
+  the **internal** namespace (`js/ai/ai-assist-client.js` attaches `.client`, the
   browser half of the optional `/api/ai/*` routes and a no-op unless configured;
-  `js/ai-assist-render.js` attaches `.render`). `js/ai-assist.js` consumes both,
+  `js/ai/ai-assist-render.js` attaches `.render`). `js/ai/ai-assist.js` consumes both,
   owns the request lifecycle and cancel, and publishes its public API on the
   separate lowercase **`window.aiAssist`** (`ensureRendered`,
   `refreshCapabilities`, `getCurrentPage`, `captureForm`). `window.AiAssist.ensureRendered`
@@ -1069,7 +1069,7 @@ page's own origin now, not a baked-in hostname; the token still has no default.
 
 ### AI rewrite (optional)
 
-A floating button offering an AI rewrite of the body copy a reviewer selects (`js/ai-rewrite.js`, `js/ai-rewrite-render.js`). Additive, invisible unless `/api/ai/*` is configured, never writes to `pages/*.js`. Full rationale in the `hhvc-ai-rewrite` skill — read it before touching those files or `data-rewrite-field` addressing.
+A floating button offering an AI rewrite of the body copy a reviewer selects (`js/ai/ai-rewrite.js`, `js/ai/ai-rewrite-render.js`). Additive, invisible unless `/api/ai/*` is configured, never writes to `pages/*.js`. Full rationale in the `hhvc-ai-rewrite` skill — read it before touching those files or `data-rewrite-field` addressing.
 
 ### Build outputs
 

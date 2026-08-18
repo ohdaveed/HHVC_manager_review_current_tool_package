@@ -1,7 +1,7 @@
 // End-to-end coverage for the selection-driven AI rewrite.
 //
 // This is the ONLY layer that proves the feature actually works: the
-// orchestrator (js/ai-rewrite.js) and the view (js/ai-rewrite-render.js) are
+// orchestrator (js/ai/ai-rewrite.js) and the view (js/ai/ai-rewrite-render.js) are
 // browser-only IIFEs with no module.exports, so nothing beneath this can
 // unit-test them. Everything below drives the real UI — a real DOM selection,
 // the real floating button, the real popover — against a stubbed /api/ai/*, so
@@ -107,7 +107,7 @@ async function selectFirstField(page) {
  * any section in the DOM — so a plain querySelector('[data-rewrite-field]')
  * now finds a page-level scalar or a heading first. All of those are written
  * back as bare strings, never the tagged {text, unverified, ...} object form
- * (see js/ai-rewrite.js's isPlainStringField), so a test asserting the
+ * (see js/ai/ai-rewrite.js's isPlainStringField), so a test asserting the
  * Unverified pill needs a paragraph/bullet ITEM specifically — matched by
  * ".paragraphs." or ".bullets." with a trailing index, not just any path
  * starting with "sections.", which a heading path also does.

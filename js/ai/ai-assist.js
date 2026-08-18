@@ -1,10 +1,10 @@
 /* AI assist: orchestrator. Wires events, owns the request lifecycle, and
    publishes the mount hook the workspace tab calls. Thin by design — the
-   client lives in js/ai-assist-client.js and the rendering in
-   js/ai-assist-render.js, mirroring the ux-improvements / review-queue /
+   client lives in js/ai/ai-assist-client.js and the rendering in
+   js/ai/ai-assist-render.js, mirroring the ux-improvements / review-queue /
    review-queue split.
 
-   Loads after js/ai-assist-render.js. May load after js/ux-improvements.js,
+   Loads after js/ai/ai-assist-render.js. May load after js/ux-improvements.js,
    because setWorkspaceTab calls the mount hook through optional chaining at
    tab-open time rather than at init. */
 ;(function mountAiAssist() {
@@ -50,7 +50,7 @@
   /**
    * The page open in the mockup, sent as grounding when the box is ticked.
    *
-   * Delegates to js/utils.js rather than carrying its own copy: js/ai-rewrite.js
+   * Delegates to js/utils.js rather than carrying its own copy: js/ai/ai-rewrite.js
    * needs the same lookup and the two IIFEs share no namespace, so two copies
    * had nothing stopping the next edit from landing on only one. Reached through
    * `window` rather than an import, so it stays optional-chained.
