@@ -39,7 +39,7 @@ const SKIP =
  * Path-shaped strings that are deliberately not real files.
  *
  * Measured, not guessed: with SKIP applied, these four are the ONLY broken
- * references in the tree today, across 1,370 matches in 308 files — the
+ * references in the tree today, across 1,371 matches in 308 files — the
  * fourth (`js/interactive-sitemap-render.js`) is this test file's own
  * self-reference, see its comment below, and only exists because the
  * original 307-file, three-entry count was necessarily taken before this
@@ -99,7 +99,7 @@ describe('js/ path references', () => {
       if (!existsSync(abs)) continue
       found += [...fs.readFileSync(abs, 'utf8').matchAll(/\bjs\/[a-z0-9/-]+\.jsx?\b/g)].length
     }
-    // 1,370 matched at the time this was written (including this file's own
+    // 1,371 matched at the time this was written (including this file's own
     // matches, once tracked). The floor is deliberately far below that — it
     // is a guard against a regex that stopped matching, not an assertion
     // about the count, which legitimately moves.
