@@ -289,15 +289,23 @@ those modules from TypeScript, which is the supported direction. Bumping
   `playwright-report/` as an artifact on failure.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
-per-PR.** It checks that every link in this repo's own markdown resolves —
-`findBrokenInlineLinks` in `build_scripts/data-checks.js` validates internal page
-keys and the SHAPE of an `http(s)` URL, and has never asked whether one answers,
-which matters because `docs/karl-export-field-map.md`'s authority rests on its
-citations resolving and a dead citation reads exactly like a live one. It is
+per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
+content, whose links are page keys `bun run validate` already resolves offline.
+Of its 48 links, 32 are cross-file anchors between `AGENTS.md`, `CLAUDE.md` and
+`.github/copilot-instructions.md`, and that local half is what earns the
+schedule: markdownlint's MD051 validates a fragment against the file it sits IN,
+so an anchor into another file is unchecked by everything else, and the first run
+found `CLAUDE.md`'s `#local-persistence` dead because its heading had grown a
+parenthetical while `AGENTS.md`'s had not. The 16 external links are
+documentation hygiene rather than a shipping concern — the same run found three
+dead SF.gov exemplars in `docs/sfgov-live-design-inspiration.md`. It is
 deliberately NOT a gate: a third-party outage must not be a reason a merge cannot
 happen. A failure opens (or comments on) an issue, because a scheduled workflow
-nobody watches is the same defect as a gate that cannot fire. Its first run found
-three dead SF.gov exemplars in `docs/sfgov-live-design-inspiration.md`.
+nobody watches is the same defect as a gate that cannot fire. **One measured
+coverage gap:** sf.gov reported a known-404 path as OK from a GitHub runner while
+returning 404 locally, so an sf.gov citation is verified by running
+`bun run check:links` locally, not by this schedule. The workflow's own header
+records the evidence.
 
 ## Architecture
 

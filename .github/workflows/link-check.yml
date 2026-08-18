@@ -1,4 +1,31 @@
-# Checks that every link in this repo's own markdown actually resolves.
+# Checks that the links in this repo's own markdown still resolve.
+#
+# **None of these are mockup content, and that bounds what this is for.** The
+# mockup's own links are page keys, and `bun run validate` already proves every
+# `card.target`, `buttonTarget` and inline `[label](pageKey)` resolves — offline,
+# with no network, which is the only way it could work in a tool that has to run
+# air-gapped. Nothing here is on the path a reviewer clicks.
+#
+# **The local half is what earns the schedule.** Of the 48 links, 32 are
+# `file://` — cross-file anchors between `AGENTS.md`, `CLAUDE.md` and
+# `.github/copilot-instructions.md`, the three-way mirror this repo spends real
+# effort keeping in step. Nothing else checks those: markdownlint's MD051
+# validates a fragment against the file it sits IN, so an anchor pointing into
+# another file is unchecked by every other tool here. That is where the first run
+# found a real break — `CLAUDE.md`'s `#local-persistence` had died because its
+# heading grew a parenthetical while `AGENTS.md`'s did not. No network is
+# involved in any of it.
+#
+# **The external half is 16 links, and its coverage is weaker than it looks.**
+# A known-404 `www.sf.gov` path was reported OK from a GitHub runner on
+# 2026-08-17 while returning 404 from a developer machine minutes earlier; a
+# github.com 404 in the same run failed correctly, so lychee and this workflow
+# are fine and sf.gov is answering datacenter IPs differently. The mechanism was
+# never pinned down — a soft 404, a WAF challenge and a redirect-to-search all
+# fit the one observation — because it affects 5 of 48 links in documentation
+# nobody ships. **Treat sf.gov citations as verified by a LOCAL
+# `bun run check:links`, not by this schedule.** The other external hosts
+# (Railway, the GitBook docs, github.com) behave normally here.
 #
 # **Deliberately NOT part of `ci.yml`.** A third-party outage is not a reason a
 # merge cannot happen, and putting a link checker in the `checks` job would make
@@ -9,15 +36,9 @@
 # fire**, so a failure opens an issue rather than turning one row of the Actions
 # tab red where no one is looking. The issue is titled by the run's own name, so
 # a second failure while the first is still open adds a comment instead of a
-# duplicate.
-#
-# What it catches that nothing else does: `findBrokenInlineLinks` in
-# `build_scripts/data-checks.js` validates internal page keys and the SHAPE of an
-# `http(s)` URL, never whether it answers. `docs/karl-export-field-map.md`'s
-# authority rests on its citations resolving, and a dead citation reads exactly
-# like a live one. It also checks LOCAL file links and their fragments, which is
-# the half markdownlint cannot do — MD051 validates a fragment against the file
-# it sits in and says nothing about a cross-file anchor into `AGENTS.md`.
+# duplicate. Both branches were exercised on 2026-08-17 against a planted dead
+# link, which took three probes: a `.invalid` host is on lychee's built-in
+# exclusion list and never requested, and the sf.gov probe hit the gap above.
 name: Link check
 
 on:
