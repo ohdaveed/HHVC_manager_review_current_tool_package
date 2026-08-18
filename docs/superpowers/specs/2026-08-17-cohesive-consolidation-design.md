@@ -299,23 +299,33 @@ What changes is what a reader meets first:
 
 ## 6. Verification
 
-### Path-coupled configuration
+### What a file move actually breaks
 
-Nine surfaces break silently when files move. Each is an explicit step, not
-something to be discovered when a gate goes red:
+The first draft of this section listed nine configuration surfaces from
+inspection. A census found most of them are directory-level or comment-only and
+survive a `js/`-internal move untouched. **Verified unaffected:** `index.html`
+(its one `<script src="/js/main.js">` keeps that path), `vite.config.mjs`,
+`.prettierignore`, `bunfig.toml`, `package.json`'s explicit 49-file `test` list
+(it names `tests/*.test.js`, and no test file moves in this step), both oxlint
+configs, and `knip.jsonc`.
 
-- `package.json`'s `test` script — 49 test files listed explicitly, never
-  globbed, so a moved test passes locally and covers nothing in CI
-- `.dependency-cruiser.cjs` — all five rules are `^js/(...)\.js$` path regexes
-- `knip.jsonc`
-- `.oxlintrc.ci.json`
-- `.oxlintrc.json` — its `overrides` pin the anti-slop scope to `server.ts` and
-  `build_scripts/ai/`
-- `vite.config.mjs`
-- `bunfig.toml` — the `tests/helpers/browser-env.js` preload path
-- `.prettierignore`
-- `build_scripts/page-import-checks.js` — diffs `pages/*.js` on disk against
-  `js/page-data.js`'s imports
+Listing a surface that does not need editing is not a harmless excess of
+caution — it sends an implementer to change a file that was already correct.
+What actually breaks:
+
+| Surface | Sites | Failure |
+| --- | --- | --- |
+| `js/` internal relative imports | 44 outside `main.js`, plus 51 side-effect imports in `main.js` | build error |
+| `build_scripts/load-pages.js:19`, `build_scripts/validate.js:29-30` | 3 hardcoded `'js/page-data.js'` strings | `validate` reports every page missing |
+| `.dependency-cruiser.cjs` | all 5 rules are `^js/(...)\.js$` path regexes | rules match nothing and silently stop enforcing |
+
+**The dependency-cruiser case is the one to be careful with**, because it fails
+in the direction that looks like success. A rule whose `from` regex matches no
+file cannot fire, so the cruise exits 0 while enforcing nothing — the same trap
+the config's own comment records for `doNotFollow` versus `exclude`, caught then
+by mutation-testing the rule rather than by reading it. Each rewritten regex is
+verified the same way: break the invariant on purpose, confirm the rule fires,
+restore it.
 
 ### Code that references `js/` paths
 
