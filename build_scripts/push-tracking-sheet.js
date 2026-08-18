@@ -55,10 +55,6 @@ function rowsToObjects(rows) {
     })
 }
 
-function objectsToRows(objects, header) {
-  return [header, ...objects.map((obj) => header.map((key) => obj[key] ?? ''))]
-}
-
 function loadTrackingByKey() {
   const text = fs.readFileSync(trackingPath, 'utf8')
   const rows = rowsToObjects(parseCsv(text))

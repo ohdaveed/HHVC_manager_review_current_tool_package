@@ -433,10 +433,16 @@ const SAFE_URL_SCHEMES = ['http:', 'https:', 'mailto:', 'tel:']
  * @returns {string} the lowercased, control-stripped, slash-normalized probe
  */
 function urlProbe(raw) {
-  return String(raw ?? '')
-    .replace(/[\u0000-\u0020]/g, '')
-    .replace(/\\/g, '/')
-    .toLowerCase()
+  return (
+    String(raw ?? '')
+      // Stripping control characters is the point of this function, not an
+      // accident: browsers resolve `java\tscript:` as `javascript:`, so the
+      // scheme guard has to test the string a browser would see.
+      // oxlint-disable-next-line eslint/no-control-regex
+      .replace(/[\u0000-\u0020]/g, '')
+      .replace(/\\/g, '/')
+      .toLowerCase()
+  )
 }
 
 /**

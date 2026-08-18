@@ -106,7 +106,6 @@ async function mountRoundTrip() {
   // js/inline-content-edit.js's persist() reaches through
   // window.ReviewUx.stateSync.saveCurrentPageToLocalStorage -- the real one,
   // now mounted above.
-  window.ReviewUx.stateSync.saveCurrentPageToLocalStorage
 
   const inlineEditUrl = `${INLINE_EDIT_PATH}?t=${Date.now()}-${Math.random()}`
   await import(inlineEditUrl)

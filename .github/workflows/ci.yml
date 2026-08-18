@@ -81,6 +81,20 @@ jobs:
       - name: Architecture rules (dependency-cruiser)
         run: bun run lint:architecture
 
+      # oxlint's core rules. These had never run: .oxlintrc.json sets
+      # `"rules": {}` and scopes the anti-slop PLUGIN to server.ts and
+      # build_scripts/ai, so the ~600 correctness rules were switched off
+      # everywhere, including the browser JS.
+      #
+      # A separate config, .oxlintrc.ci.json, is what makes this gateable.
+      # anti-slop stays a hand-run report — pointed at browser JS its rules
+      # argue with this codebase's own mandated `typeof window === 'undefined'`
+      # guard, which is why it was narrowed in the first place — and the two
+      # stylistic unicorn rules are off, for the same reason the repo already
+      # refused anti-slop's opinions.
+      - name: JavaScript lint (oxlint core rules)
+        run: bun run lint:js
+
       # Runs the real Vite production build, so a bundling failure (a bad
       # import path, a missing dependency) is caught here rather than at
       # deploy time. It also doubles as a deploy-integrity check: the

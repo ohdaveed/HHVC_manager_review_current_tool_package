@@ -184,7 +184,11 @@
     return [...state.selected].filter((key) => DATA.pages[key])
   }
 
-  function pruneSelection(visibleKeys) {
+  function pruneSelection(_visibleKeys) {
+    // The spread is load-bearing, not decorative: the body deletes from
+    // `state.selected` while iterating it, and a Set mutated mid-iteration
+    // skips entries. oxlint's no-useless-spread cannot see the mutation.
+    // oxlint-disable-next-line unicorn/no-useless-spread
     for (const key of [...state.selected]) {
       if (!DATA.pages[key]) state.selected.delete(key)
     }

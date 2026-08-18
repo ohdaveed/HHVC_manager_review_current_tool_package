@@ -66,7 +66,7 @@ async function inspectFormPage(page, typeInfo) {
   console.log(`\nInspecting: ${typeInfo.name} (${targetUrl})`)
 
   try {
-    const res = await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 25000 })
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 25000 })
 
     // Check if redirected to login
     if (page.url().includes('/login') || page.url().includes('sso')) {

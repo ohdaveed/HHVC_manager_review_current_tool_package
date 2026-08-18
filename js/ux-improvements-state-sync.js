@@ -410,7 +410,7 @@ import { hasValidPageData } from './utils.js'
     return snapshot.decision !== (existing.decision || 'Needs review')
   }
 
-  function clearReviewFieldsForNewPage(state) {
+  function clearReviewFieldsForNewPage(_state) {
     setValue('reviewDateInput', today())
     setValue('reviewDecision', 'Needs review')
     setValue('reviewNotes', '')
@@ -690,7 +690,10 @@ import { hasValidPageData } from './utils.js'
     // child element: writing innerHTML on the panel itself would tear out the
     // React root next to it. Both hosts are created once and then updated in
     // place, in DOM order — scored list first, advice below it.
-    const islandHost = ensureChecksHost(panel, 'reviewChecksIsland')
+    // Called for its side effect: it creates the island's host div. The node
+    // itself is not needed here — React mounts into it by id — unlike the
+    // advice host below, whose innerHTML is written directly.
+    ensureChecksHost(panel, 'reviewChecksIsland')
     const adviceHost = ensureChecksHost(panel, 'reviewChecksAdvice')
     adviceHost.innerHTML = renderPlainLanguageAdvice(page)
 

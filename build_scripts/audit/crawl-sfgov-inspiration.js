@@ -88,7 +88,7 @@ const INSPIRATION_CORPUS = [
   },
 ]
 
-function generateMarkdownGuide(corpus) {
+function generateMarkdownGuide(_corpus) {
   return `# SF.gov Live Design & Editorial Inspiration Guide
 
 This guide captures real-world design, layout, and copy patterns observed across live **SF.gov** pages to guide the **HHVC Manager Review** mockup tool and redesign.
