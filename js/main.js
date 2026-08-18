@@ -168,7 +168,7 @@ import './inline-content-edit-adapter.js'
 // build_scripts/data-checks.js under Node and is deliberately import-free so
 // it carries no load-order dependency of its own.
 import './inline-link-target.js'
-import './review-state-sync.js'
+import './sync/review-state-sync.js'
 
 // ---------------------------------------------------------------------------
 // Review/UX layers. Each is a self-mounting IIFE that reads window.HHVC_DATA

@@ -32,7 +32,7 @@ const ORIGINAL_DATA = JSON.parse(JSON.stringify(DATA))
 const pageData = DATA.pages
 const pageOrder = DATA.order
 
-// Published for js/review-state-sync.js's restorePageContentFromOriginal,
+// Published for js/sync/review-state-sync.js's restorePageContentFromOriginal,
 // which resets a page's in-memory copy to its pristine state when adopting
 // the server's version. It reads this through `window` rather than importing
 // it so that module stays free of this one's page-data dependency chain —

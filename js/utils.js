@@ -946,7 +946,7 @@ function buildReviewRecord(page, pageKey, overrides = {}, fields = REVIEW_RECORD
     // Distinct from updated_at (bumped on every local edit): synced_at only
     // changes on an actual pull/push response, so it can be used as the
     // conflict-detection baseline in server.ts's putReviewPage without a
-    // pre-push autosave silently invalidating it. See js/review-state-sync.js.
+    // pre-push autosave silently invalidating it. See js/sync/review-state-sync.js.
     synced_at: '',
   }
   const merged = { ...base, ...overrides }

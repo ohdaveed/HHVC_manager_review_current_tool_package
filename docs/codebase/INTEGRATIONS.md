@@ -19,7 +19,7 @@
 | Store                                          | Role                                        | Access layer                     | Key risk                                                           | Evidence                             |
 | ---------------------------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------ |
 | `localStorage` key `hhvcManagerReviewState:v1` | Reviewer decisions/notes/UI prefs           | `window.reviewState`             | Browser-local only; orphans when pages retire                      | `AGENTS.md`, `js/review-ops-data.js` |
-| `localStorage` `hhvcReviewSyncConfig`          | Sync endpoint + token (separate on purpose) | `js/review-state-sync.js`        | Token leakage if exported with reviews — mitigated by separate key | `AGENTS.md`                          |
+| `localStorage` `hhvcReviewSyncConfig`          | Sync endpoint + token (separate on purpose) | `js/sync/review-state-sync.js`   | Token leakage if exported with reviews — mitigated by separate key | `AGENTS.md`                          |
 | SQLite `review_pages` via `bun:sqlite`         | Optional multi-browser sync                 | `server.ts` `getDb()`            | Misconfigured open access — mitigated by fail-closed 501           | `server.ts`                          |
 | Generated `data/page_inventory.*`              | Inventory export                            | `build_scripts/extract-pages.js` | Stale if not regenerated                                           | `.gitignore`                         |
 
@@ -47,6 +47,6 @@
 - `build_scripts/ai/provider-anthropic.js`
 - `build_scripts/ai/provider-gemini.js`
 - `build_scripts/push-tracking-sheet.js`
-- `js/review-state-sync.js`
+- `js/sync/review-state-sync.js`
 - `netlify.toml`
 - `.gitignore`

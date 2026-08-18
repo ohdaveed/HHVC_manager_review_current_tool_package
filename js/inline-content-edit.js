@@ -391,7 +391,7 @@
    * {label, callback} action parameter (js/ui-controls.js) rather than
    * render.undoToastMarkup()'s raw-HTML button: showToast renders `message`
    * via textContent, and several existing callers pass externally-supplied
-   * strings straight into that parameter (e.g. js/review-state-sync.js's
+   * strings straight into that parameter (e.g. js/sync/review-state-sync.js's
    * sync-failure toasts), so switching it to innerHTML to accommodate an
    * embedded <button> would break that invariant tool-wide. showToast's
    * action.className/action.dataset (added alongside this function) still
@@ -447,7 +447,7 @@
 
   /**
    * Reset one field to its ORIGINAL_DATA value and re-render. Modeled on
-   * js/review-state-sync.js's restorePageContentFromOriginal, which resets
+   * js/sync/review-state-sync.js's restorePageContentFromOriginal, which resets
    * an entire page's title/summary/SEO/CTA — this is the per-field
    * equivalent this design calls for, since that function's granularity
    * (whole page) is too coarse for "undo just this one heading edit".

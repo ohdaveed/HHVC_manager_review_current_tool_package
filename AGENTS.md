@@ -155,7 +155,7 @@ cannot, since a spawn only ever sees the environment it was given),
 `ai-assist-server` (which spawns `server.ts` against stub Anthropic and Gemini
 endpoints, so both AI paths are covered without a key or a paid call),
 `ai-assist-client` (the browser client's config and HTTP surface — added
-because `js/ai-assist-client.js` and `js/review-state-sync.js` carry five
+because `js/ai-assist-client.js` and `js/sync/review-state-sync.js` carry five
 near-identical functions and only the sync copy was tested, so the most
 similar pair in the repo was also the least covered and an edit to one could
 not fail CI; it pins the two DIFFERENCES too, since near-identical is exactly
@@ -367,7 +367,7 @@ two having been the deleted `js/interactive-sitemap.js` and
 refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
-throw), and `window.ORIGINAL_DATA` (read by `js/review-state-sync.js`).
+throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).
 
 When adding a new page file: add `import '../pages/<file>.js'` to
 `js/page-data.js` and a `[pageKey, menuLabel]` entry to its `order` array. A new
@@ -588,7 +588,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 - **`window.ReviewUx`** ← `js/review-state-store.js` (shared `window.reviewState`
   read/write/update), `js/ux-improvements-state-sync.js`,
   `js/ux-improvements-workspace.js`, `js/ux-improvements-export.js`.
-  `js/review-merge.js` (`window.reviewMerge`) and `js/review-state-sync.js`
+  `js/review-merge.js` (`window.reviewMerge`) and `js/sync/review-state-sync.js`
   (`window.reviewStateSync`) sit alongside these as their own small globals —
   not under `window.ReviewUx` — since `js/review-merge.js` is also imported
   directly by `server.ts` (no DOM dependency) and needs no browser-only
@@ -1191,7 +1191,7 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   edit the very field the link sits in.
 - **Per-field "Reset to original" is new, not a mirror of an existing
   pattern.** The only prior precedent is `restorePageContentFromOriginal()`
-  (`js/review-state-sync.js`), and it's whole-page (title, summary, SEO
+  (`js/sync/review-state-sync.js`), and it's whole-page (title, summary, SEO
   fields, CTA all at once, via direct assignment) — there was no per-field
   reset anywhere in the tool before this feature. This feature's version is
   scoped to one field via `getByPath`(`ORIGINAL_DATA`)/`setByPath`, modeled
@@ -1967,7 +1967,7 @@ origin that 404s, so sync fails closed and the tool stays local-only. The
 TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   `.data/review-state.local.db` for local dev; point at a mounted volume in
   production).
-- **Client**: `js/review-state-sync.js`, a no-op unless configured. Its
+- **Client**: `js/sync/review-state-sync.js`, a no-op unless configured. Its
   settings live under their own `hhvcReviewSyncConfig` localStorage key,
   separate from `hhvcManagerReviewState:v1` on purpose — the token must never
   round-trip through the shareable CSV/JSON export/import/backup files. Sync
@@ -2867,7 +2867,7 @@ globals must restore them, or they pollute sibling test files.
 - Shared merge/history logic → `js/review-merge.js` (the only place a
   `history` entry should be constructed; loaded both as a browser `<script>`
   and imported directly by `server.ts`). Optional sync backend → `server.ts`
-  (API routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+  (API routes) and `js/sync/review-state-sync.js` (client pull/push + settings UI).
 - Adding/deleting page mockups → `js/page-registry-data.js` (pure validation +
   the in-place `order`/`pages` mutation), `js/page-registry.js` (the bootstrap,
   which MUST stay imported by `js/state.js` so it runs before the `ORIGINAL_DATA`

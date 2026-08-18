@@ -23,7 +23,7 @@ import { escapeHtml } from './utils.js'
  * marker (`data-inline-edit-undo` / `.inline-edit-undo-action`), and DOM APIs
  * make that safe to add without touching how `message` itself is rendered.
  * `message` still always goes through `el.textContent`, never `innerHTML` —
- * several existing callers (e.g. js/review-state-sync.js's sync-failure
+ * several existing callers (e.g. js/sync/review-state-sync.js's sync-failure
  * toasts) interpolate externally-supplied strings straight into it, and this
  * function must keep treating that text as inert.
  * @param {string} message

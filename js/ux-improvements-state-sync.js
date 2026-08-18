@@ -316,7 +316,7 @@ import { hasValidPageData } from './utils.js'
       // it to '' on every keystroke, which would silently destroy the
       // conflict-detection baseline server.ts's putReviewPage relies on
       // the very first time a reviewer edits a page after syncing it. See
-      // js/review-state-sync.js.
+      // js/sync/review-state-sync.js.
       snapshot.synced_at = existing?.synced_at || ''
       // Sticky until an actual push/pull clears it. Only flip it on when
       // the save really changed something: autosave also fires on

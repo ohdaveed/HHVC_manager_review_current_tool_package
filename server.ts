@@ -130,7 +130,7 @@ const STATIC_HEADERS = {
 // Additive, off-by-default persistence layer for the manager-review tool.
 // It's entirely separate from the mockup's core localStorage-only review
 // state (js/review-state-store.js): reviewers opt in per-browser via
-// js/review-state-sync.js, which is a no-op unless a sync URL/token is
+// js/sync/review-state-sync.js, which is a no-op unless a sync URL/token is
 // configured. See the `hhvc-review-sync-backend` skill (extracted from
 // CLAUDE.md; AGENTS.md carries the same section in full) for the
 // deployment/Railway details and the per-page merge safety invariant this
@@ -948,7 +948,7 @@ async function putReviewPage(
   // observed" — comparing THAT against the server's timestamp would almost
   // always look artificially fresh and defeat this check entirely.
   // synced_at only changes on an actual pull/push response (see
-  // js/review-state-sync.js), so it's the real baseline.
+  // js/sync/review-state-sync.js), so it's the real baseline.
   //
   // A missing synced_at is only safe to wave through when there's no
   // existing row to lose (a page that's never existed on the server). If a

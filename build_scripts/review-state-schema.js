@@ -184,7 +184,7 @@ const reviewRecordSchema = z
     // Last server updated_at this browser has actually observed (via a
     // pull or push response) — distinct from updated_at, which bumps on
     // every local edit. Used as the conflict-detection baseline in
-    // server.ts's putReviewPage; see js/review-state-sync.js.
+    // server.ts's putReviewPage; see js/sync/review-state-sync.js.
     synced_at: z.string().optional(),
     // Flat map of field path -> current full value for section-level manual
     // edits (headings, paragraphs, bullets). Keyed at the array/scalar field
@@ -201,7 +201,7 @@ const reviewRecordSchema = z
     // Whether this browser holds edits it has not pushed. A real boolean,
     // not a timestamp, precisely so conflict detection never has to compare
     // a browser-clock value against a server-clock one — see
-    // pullFromServer in js/review-state-sync.js.
+    // pullFromServer in js/sync/review-state-sync.js.
     local_dirty: z.boolean().optional(),
   })
   .passthrough()

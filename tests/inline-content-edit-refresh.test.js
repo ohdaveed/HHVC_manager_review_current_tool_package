@@ -2,7 +2,7 @@
 // to applySavedPageState() in js/ux-improvements-state-sync.js.
 //
 // js/ux-improvements-state-sync.js is a self-mounting IIFE (an ES module with
-// no module.exports tail — unlike js/review-state-sync.js/js/review-merge.js,
+// no module.exports tail — unlike js/sync/review-state-sync.js/js/review-merge.js,
 // it publishes its API only onto window.ReviewUx.stateSync at import time),
 // so there is no bare `require()` surface to test against. It is normally
 // exercised only via e2e specs (see CLAUDE.md's "Local persistence" section).

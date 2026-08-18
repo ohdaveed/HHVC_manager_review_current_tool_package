@@ -1,7 +1,7 @@
 /* Shared review-record merge logic: the single place "existing < patch"
    precedence and history-entry construction happen. Consumed by the browser
    (js/review-queue-state.js, js/ux-improvements-export.js,
-   js/review-state-sync.js) via window.reviewMerge, and by server.ts's
+   js/sync/review-state-sync.js) via window.reviewMerge, and by server.ts's
    /api/review-state routes via a plain require/import — so it has no DOM
    dependency and must stay loadable in both contexts. Loads early, right
    after js/review-state-store.js, since every one of those files depends on

@@ -1,7 +1,7 @@
 // Unit tests for js/ai-assist-client.js's configuration and HTTP surface.
 //
 // This file exists because of a coverage asymmetry, not because the code
-// looked untested. js/ai-assist-client.js and js/review-state-sync.js were
+// looked untested. js/ai-assist-client.js and js/sync/review-state-sync.js were
 // written from one another and carry five near-identical functions —
 // readConfig, writeConfig, isConfigured, assertEndpointUnchanged and
 // apiFetch. Only the sync copy had tests: assertEndpointUnchanged was
@@ -149,7 +149,7 @@ describe('writeConfig', () => {
   })
 
   test('does NOT clear review-state sync baselines, unlike the sync client', () => {
-    // js/review-state-sync.js's writeConfig clears synced_at and deletes
+    // js/sync/review-state-sync.js's writeConfig clears synced_at and deletes
     // local_dirty on an endpoint change, because those only mean something
     // relative to the deployment that issued them. Nothing here is
     // reconciled against server state, so there is nothing to clear — and

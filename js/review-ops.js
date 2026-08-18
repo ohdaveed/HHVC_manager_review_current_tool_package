@@ -20,7 +20,7 @@
    otherwise paint empty.
 
    Loads after js/review-ops-data.js (its diagnostics) and after
-   js/review-state-sync.js, whose config it reads to report sync status. */
+   js/sync/review-state-sync.js, whose config it reads to report sync status. */
 
 /* Imported rather than read off `window.utils` at call time. This file used to
    carry its own copy of the escape table as a fallback for "what if utils has

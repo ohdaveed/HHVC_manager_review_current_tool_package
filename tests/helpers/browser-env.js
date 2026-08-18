@@ -27,7 +27,7 @@ const { GlobalRegistrator } = require('@happy-dom/global-registrator')
 
    Bun's native implementations are captured before registration and put back
    afterwards. Nothing in js/*.js depends on fetch being DOM-flavoured — the
-   sync client in js/review-state-sync.js calls plain fetch() and stubs it
+   sync client in js/sync/review-state-sync.js calls plain fetch() and stubs it
    wholesale in its own tests — so the real one is both more correct here and
    closer to what the browser actually does. */
 const nativeNetworking = {

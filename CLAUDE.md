@@ -162,7 +162,7 @@ server subprocess structurally cannot), `ai-assist-server` (spawns `server.ts`
 against stub Anthropic **and** Gemini endpoints, so both AI paths are covered
 with no key and no paid call), `ai-assist-client` (the browser client's config
 and HTTP surface — added because `js/ai-assist-client.js` and
-`js/review-state-sync.js` carry five near-identical functions and only the sync
+`js/sync/review-state-sync.js` carry five near-identical functions and only the sync
 copy was tested, so the most similar pair in the repo was also the least
 covered and an edit to one could not fail CI; it pins the two DIFFERENCES too,
 since near-identical is exactly the condition under which the sync copy's extra
@@ -391,7 +391,7 @@ two having been the deleted `js/interactive-sitemap.js` and
 refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
-throw), and `window.ORIGINAL_DATA` (read by `js/review-state-sync.js`).
+throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).
 
 When adding a new page file: add `import '../pages/<file>.js'` to
 `js/page-data.js` and a `[pageKey, menuLabel]` entry to its `order` array. A new
@@ -499,7 +499,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 - **`window.ReviewUx`** ← `js/review-state-store.js` (shared `window.reviewState`
   read/write/update), `js/ux-improvements-state-sync.js`,
   `js/ux-improvements-workspace.js`, `js/ux-improvements-export.js`.
-  `js/review-merge.js` (`window.reviewMerge`) and `js/review-state-sync.js`
+  `js/review-merge.js` (`window.reviewMerge`) and `js/sync/review-state-sync.js`
   (`window.reviewStateSync`) sit alongside these as their own small globals —
   not under `window.ReviewUx` — since `js/review-merge.js` is also imported
   directly by `server.ts` (no DOM dependency) and needs no browser-only
@@ -1057,7 +1057,7 @@ The client still never merges on the push path — the server does, with
 `updatedBy: 'sync'` — so history stays bounded. The default endpoint is the
 page's own origin now, not a baked-in hostname; the token still has no default.
 
-`server.ts` optionally serves a small sync API alongside static files, backed by Postgres or SQLite depending on `DATABASE_URL` (see "Where review records live" above), with `js/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
+`server.ts` optionally serves a small sync API alongside static files, backed by Postgres or SQLite depending on `DATABASE_URL` (see "Where review records live" above), with `js/sync/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
 
 ### AI assist backend (optional)
 
@@ -1448,7 +1448,7 @@ that stub globals must restore them, or they pollute sibling test files.
 - Shared merge/history logic → `js/review-merge.js` (loaded both as a browser
   `<script>` and imported directly by `server.ts` — the only place a `history`
   entry should ever be constructed). Optional sync backend → `server.ts` (API
-  routes) and `js/review-state-sync.js` (client pull/push + settings UI).
+  routes) and `js/sync/review-state-sync.js` (client pull/push + settings UI).
 - Adding/deleting page mockups → `js/page-registry-data.js` (pure validation +
   the in-place `order`/`pages` mutation), `js/page-registry.js` (the bootstrap,
   which MUST stay imported by `js/state.js` so it runs before the `ORIGINAL_DATA`
@@ -1538,7 +1538,7 @@ so it is wrong the moment it is written.)
 | ----------------------------- | ---------------------------------------------------------------------------- |
 | `hhvc-inline-content-editing` | `js/inline-content-edit*.js`                                                 |
 | `hhvc-page-registry`          | `js/page-registry*.js`                                                       |
-| `hhvc-review-sync-backend`    | `server.ts`'s review-state routes, `js/review-state-sync.js`                 |
+| `hhvc-review-sync-backend`    | `server.ts`'s review-state routes, `js/sync/review-state-sync.js`            |
 | `hhvc-ai-assist-backend`      | `server.ts`'s AI routes, anything under `build_scripts/ai/`                  |
 | `hhvc-rag-knowledge-base`     | `build_scripts/knowledge-*.js`, `build_scripts/ai/compliance-audit.js`       |
 | `hhvc-ai-rewrite`             | `js/ai-rewrite*.js`, anything touching `data-rewrite-field` addressing       |

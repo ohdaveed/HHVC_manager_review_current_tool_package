@@ -233,7 +233,7 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   edit the very field the link sits in.
 - **Per-field "Reset to original" is new, not a mirror of an existing
   pattern.** The only prior precedent is `restorePageContentFromOriginal()`
-  (`js/review-state-sync.js`), and it's whole-page (title, summary, SEO
+  (`js/sync/review-state-sync.js`), and it's whole-page (title, summary, SEO
   fields, CTA all at once, via direct assignment) — there was no per-field
   reset anywhere in the tool before this feature. This feature's version is
   scoped to one field via `getByPath`(`ORIGINAL_DATA`)/`setByPath`, modeled

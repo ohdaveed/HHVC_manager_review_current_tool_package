@@ -1,6 +1,6 @@
 ---
 name: hhvc-review-sync-backend
-description: "HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/review-state-sync.js."
+description: "HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/sync/review-state-sync.js."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
@@ -34,7 +34,7 @@ unconfigured.
 TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   `.data/review-state.local.db` for local dev; point at a mounted volume in
   production).
-- **Client**: `js/review-state-sync.js`, a no-op unless configured. Its
+- **Client**: `js/sync/review-state-sync.js`, a no-op unless configured. Its
   settings live under their own `hhvcReviewSyncConfig` localStorage key,
   separate from `hhvcManagerReviewState:v1` on purpose — the token must never
   round-trip through the shareable CSV/JSON export/import/backup files.

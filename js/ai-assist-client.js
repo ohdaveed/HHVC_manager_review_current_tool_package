@@ -4,7 +4,7 @@
 
    Every function here is a no-op unless a server URL and token are configured,
    so the tool keeps working exactly as it did before this file existed. This
-   is the same shape js/review-state-sync.js uses for the sync backend, with
+   is the same shape js/sync/review-state-sync.js uses for the sync backend, with
    two deliberate differences noted at readConfig and apiFetch. */
 ;(function mountAiAssistClient() {
   if (typeof window === 'undefined') return
@@ -22,7 +22,7 @@
    * hhvcManagerReviewState:v1 — that blob round-trips through the CSV/JSON
    * export/import/backup paths, which are meant to be shareable files, so a
    * token must never be able to leak through them. Same reasoning, and the
-   * same separation, as js/review-state-sync.js's hhvcReviewSyncConfig.
+   * same separation, as js/sync/review-state-sync.js's hhvcReviewSyncConfig.
    *
    * Unlike the sync config there is no synced_at/local_dirty bookkeeping to
    * clear when the endpoint changes: nothing here is reconciled against server
