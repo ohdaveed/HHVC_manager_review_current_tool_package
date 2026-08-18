@@ -288,6 +288,17 @@ those modules from TypeScript, which is the supported direction. Bumping
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
 
+**A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
+per-PR.** It checks that every link in this repo's own markdown resolves —
+`findBrokenInlineLinks` in `build_scripts/data-checks.js` validates internal page
+keys and the SHAPE of an `http(s)` URL, and has never asked whether one answers,
+which matters because `docs/karl-export-field-map.md`'s authority rests on its
+citations resolving and a dead citation reads exactly like a live one. It is
+deliberately NOT a gate: a third-party outage must not be a reason a merge cannot
+happen. A failure opens (or comments on) an issue, because a scheduled workflow
+nobody watches is the same defect as a gate that cannot fire. Its first run found
+three dead SF.gov exemplars in `docs/sfgov-live-design-inspiration.md`.
+
 ## Architecture
 
 ### Data-driven rendering, no framework
