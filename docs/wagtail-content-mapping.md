@@ -488,7 +488,7 @@ in-person/virtual/hybrid).
 ### Agency, About us, Location, Meeting, News, Profile, Report, and Step by step — live-admin-confirmed field lists (2026-07-06)
 
 Live-admin-confirmed (stronger tier than doc-confirmed) top-level field
-lists, from opening each "New: <Type>" form directly in Karl. Only
+lists, from opening each `New: <Type>` form directly in Karl. Only
 top-level fields were captured, not full nested-block detail, and raw
 Wagtail field names weren't inspected for these 8 types. Full research
 log: `docs/karl-live-admin-verification-2026-07-06.md`.

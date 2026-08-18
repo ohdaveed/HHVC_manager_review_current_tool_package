@@ -53,22 +53,20 @@ they state too weakly to act on:
   `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
-- **`format:check`, `lint:js`, `lint:dead-code:ci` and `lint:architecture` are
-  the linters CI enforces**, and between them they still leave a gap: there is no
-  ESLint and no `tsc` anywhere in this repo. Prettier covers formatting, oxlint's
-  core rules cover correctness, Knip covers reachability, and dependency-cruiser
-  covers the module graph. `lint:js` reads `.oxlintrc.ci.json`, a SECOND oxlint
-  config on purpose: `.oxlintrc.json` sets `"rules": {}` and scopes the anti-slop
-  PLUGIN to `server.ts` and `build_scripts/ai/`, and `bun run lint:anti-slop`
-  remains a hand-run report rather than a gate. Knip gates only the categories
-  that were clean when it was adopted — unused files, unused/unlisted
-  dependencies, unresolved imports — because it reads this repo's deliberate
-  `window.<Namespace>` publishing as ~89 unused exports; `bun run lint:dead-code`
-  prints those as a triage list. The architecture rules live in
-  `.dependency-cruiser.cjs`: no cycles, the mockup renderer never reaching React
-  or MUI, the import-free base modules staying import-free, `pages/*.js` entering
-  only through `js/page-data.js`, and `js/state.js` keeping the side-effect
-  import of `js/page-registry.js`. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+- **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
+  `checks` job — read the job rather than a list here.** That sentence has been
+  rewritten by every tool that joined it, each time as though it were the only
+  addition, and an enumeration in three mirrored files is four copies of one
+  fact. What is worth stating is the shape: there is no ESLint and no `tsc`
+  anywhere in this repo, so Prettier covers formatting, oxlint's core rules
+  cover correctness, Knip covers reachability, dependency-cruiser covers the
+  module graph, and markdownlint covers the instruction docs. Each carries its
+  own caveat, and each caveat lives with its tool: `lint:js` reads
+  `.oxlintrc.ci.json` rather than `.oxlintrc.json`, so `bun run lint:anti-slop`
+  stays a hand-run report; Knip gates only the categories that were clean when
+  it was adopted, because it reads this repo's deliberate `window.<Namespace>`
+  publishing as ~89 unused exports; `lint:docs` derives its file list from
+  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the Netlify bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -872,7 +870,7 @@ for the client team and cite governance docs by section number. Keep them accura
 when editing copy. Page copy itself is plain-language, ~Grade 6, tenant-facing,
 empathetic civic writing.
 
-### Local persistence (browser-first; optional server sync layered on top)
+### Local persistence
 
 All reviewer state (decisions, notes, edited SEO fields, workspace UI prefs)
 is saved client-side under the versioned `localStorage` key
@@ -1110,7 +1108,7 @@ and never sees a driver or a SQL string.
 
 ### Deploying — Railway is the live host
 
-**https://web-production-9bb3b.up.railway.app** is the deploy reviewers open.
+**<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
 Railway project `hhvc-manager-review`, service `web`, connected to `main`, so a
 merge redeploys. Config lives in `railway.json`: build `bun run build:netlify`,
 start `bun run serve`.
@@ -1193,8 +1191,9 @@ start `bun run serve`.
 ### Formatting (a hard CI gate)
 
 Prettier is the **formatting gate CI enforces** (`.prettierrc.json`), alongside
-`lint:js` for oxlint's core rules, Knip for reachability (see `knip.jsonc`) and
-dependency-cruiser for the module graph (see `.dependency-cruiser.cjs`): **no
+`lint:js` for oxlint's core rules, Knip for reachability (see `knip.jsonc`),
+dependency-cruiser for the module graph (see `.dependency-cruiser.cjs`) and
+`lint:docs` for the markdown (see `.markdownlint-cli2.jsonc`): **no
 semicolons**, single quotes, 2-space indentation, `printWidth: 100`, ES5
 trailing commas. Code must be ASI-safe and semicolon-free. Run
 `bun run format` before committing; `bun run format:check` is the lint step

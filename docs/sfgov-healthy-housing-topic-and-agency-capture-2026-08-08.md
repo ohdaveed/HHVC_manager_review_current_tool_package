@@ -46,7 +46,7 @@ the Agency template. That is the whole reason this section is first.
 
 Environmental Health, in document order:
 
-```
+```text
 Agency                                    ← content-type label
 # Environmental Health                    ← H1
 "We help San Franciscans live and work    ← one-sentence mission summary
@@ -238,7 +238,7 @@ Partner agencies: Department of Public Health · Environmental Health.
 
 ## Rerun inputs
 
-```
+```bash
 firecrawl scrape "https://www.sf.gov/topics--healthy-housing-conditions" \
   --only-main-content -o .firecrawl/sfgov-healthy-housing-conditions.md
 
