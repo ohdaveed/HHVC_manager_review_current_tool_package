@@ -718,8 +718,8 @@
         // summary, primaryCta, and heading render through a bare escapeHtml()
         // with no formatMarkdown() call (js/page-render.js:216,219,560,631),
         // so offering Bold or Link there would visibly format text while
-        // editing and then silently revert to plain on commit (js/inline-
-        // content-edit-adapter.js's editingHtmlToPlainText strips both,
+        // editing and then silently revert to plain on commit
+        // (js/editing/inline-content-edit-adapter.js's editingHtmlToPlainText strips both,
         // correctly, since the renderer could never show them anyway) —
         // confusing rather than useful. The explicit ['bold', 'hhvcLink']
         // array (rather than Editor.js's boolean `true`, which would also

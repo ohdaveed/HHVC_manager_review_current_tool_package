@@ -309,8 +309,8 @@ test.describe('inline content editing (Editor.js widget)', () => {
 
   // The four cases below cover js/editing/inline-content-edit-link-tool.js (Phase 4
   // of the Editor.js integration), which had no e2e coverage before this
-  // rewrite. The first three are mutation-proven: reverting js/inline-
-  // content-edit.js's commit()-prefers-the-stash fix (deleting the
+  // rewrite. The first three are mutation-proven: reverting
+  // js/editing/inline-content-edit.js's commit()-prefers-the-stash fix (deleting the
   // `pendingLinkHtml` override and falling back to raw editor.save()
   // output) was confirmed to fail the internal- and external-link cases
   // specifically, with the plain-text paragraph edit case above still
@@ -340,8 +340,9 @@ test.describe('inline content editing (Editor.js widget)', () => {
   })
 
   test('typing after inserting a link is not silently discarded on blur', async ({ page }) => {
-    // Regression test for the bug this fixes: js/inline-content-edit-link-
-    // tool.js's commitLink() stashes the block's HTML at link-insertion time
+    // Regression test for the bug this fixes:
+    // js/editing/inline-content-edit-link-tool.js's commitLink() stashes the block's HTML at
+    // link-insertion time
     // (Editor.js's own blur cleanup strips the anchor before commit() can
     // read editor.save()'s output faithfully), and js/editing/inline-content-edit.js's
     // commit() always preferred that ONE-TIME stash over live editor state —

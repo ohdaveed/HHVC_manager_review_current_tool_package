@@ -92,14 +92,13 @@
   }
 
   /**
-   * Owns the one hand-off point between this file and js/inline-content-
-   * edit.js's commit() — the dataset key both sides used to independently
-   * spell out as a bare string literal (`holderEl.dataset.hhvcPendingLinkHtml`
-   * in both places, agreeing only by convention). See commitLink()'s own
-   * comment below for WHY the hand-off exists (an Editor.js blur-cleanup bug
-   * that strips a just-inserted anchor before commit() can read it); this
-   * object exists so the two files agree on HOW without either retyping the
-   * key, and a third caller (or a future rename) has one place to look.
+   * Owns the one hand-off point between this file and js/editing/inline-content-edit.js's
+   * commit() — the dataset key both sides used to independently spell out as a bare string
+   * literal (`holderEl.dataset.hhvcPendingLinkHtml` in both places, agreeing only by
+   * convention). See commitLink()'s own comment below for WHY the hand-off exists (an
+   * Editor.js blur-cleanup bug that strips a just-inserted anchor before commit() can read
+   * it); this object exists so the two files agree on HOW without either retyping the key,
+   * and a third caller (or a future rename) has one place to look.
    */
   const PENDING_LINK_ATTR = 'hhvcPendingLinkHtml'
   const LinkCommitBridge = {
@@ -384,9 +383,9 @@
      * exactly like an authored one. An empty or whitespace-only value
      * inserts nothing (equivalent to Escape).
      *
-     * Also stashes the resulting block HTML on the holder element, keyed
-     * off `data-inline-edit-editorjs-holder` (js/inline-content-edit-
-     * render.js's editorJsHolderHtml). This is a workaround, not
+     * Also stashes the resulting block HTML on the holder element, keyed off
+     * `data-inline-edit-editorjs-holder` (js/editing/inline-content-edit-render.js's
+     * editorJsHolderHtml). This is a workaround, not
      * incidental: Editor.js's own blur-triggered internal cleanup on the
      * contenteditable — which runs on the SAME native blur that later
      * drives js/editing/inline-content-edit.js's commit(), before that async

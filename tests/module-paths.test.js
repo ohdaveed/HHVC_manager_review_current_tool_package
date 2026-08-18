@@ -124,4 +124,65 @@ describe('js/ path references', () => {
     // about the count, which legitimately moves.
     expect(found).toBeGreaterThan(1000)
   })
+
+  /**
+   * A `js/` path that WRAPS across a line break is invisible to both tests
+   * above, and for the same reason: `\bjs\/[a-z0-9/-]+\.jsx?\b` is matched
+   * against one line's text at a time (a wrapped comment splits the path
+   * into `js/inline-content-edit-` on one line and `data.js` on the next),
+   * so the pattern never sees the two halves as one string and never
+   * matches either fragment. A path in that shape resolves for a human
+   * reader — prose reads across the line break fine — but is silent to
+   * both the "resolves on disk" test and the "found enough references"
+   * floor, which is exactly backwards: the file it names moved and the
+   * gate that exists to catch that has nothing to look at.
+   *
+   * Not hypothetical: `js/editing/`'s move (task 5 of the file-structure
+   * migration) left SEVEN of these behind, across five files, including two
+   * lines in this file's own sibling e2e spec
+   * (`tests/e2e/inline-content-edit.spec.js`). Every one of the seven broke
+   * at a hyphen — `js/inline-content-edit-` before `data.js`,
+   * `js/inline-content-edit-link-` before `tool.js`, `js/inline-` before
+   * `content-edit....` — because a hyphen is where a prose reflow (by hand
+   * or by a formatter) prefers to break a long hyphenated identifier, the
+   * same way it would break any other compound word. None were caught by
+   * the "resolves on disk" test, which is what motivates a THIRD, narrower
+   * check rather than trusting the first two to eventually cover this: a
+   * per-line pattern needs a per-line guard against the one shape it
+   * structurally cannot see.
+   *
+   * The pattern matches a `js/` path fragment ending in a hyphen, sitting
+   * at the end of a line with only trailing whitespace after it — a
+   * trailing hyphen because that is the shape every real wrap in this repo
+   * takes (see above), and end-of-line because a comment continuation
+   * marker like `*` or `//` opens the NEXT line, so the broken half is
+   * always the last non-whitespace text on its own line.
+   *
+   * **The character class allows an internal `/`, not just letters/digits/
+   * hyphens.** A narrower first draft — matching only a single path segment
+   * after `js/` — passed against this file's own dry run (all seven
+   * originals were single-segment, e.g. `js/inline-content-edit-`) but
+   * verifiably failed to catch a wrap re-tested against the FIXED text:
+   * once a reference reads `js/editing/inline-content-edit.js` and wraps at
+   * its usual hyphen, the dangling fragment is `js/editing/inline-`, which
+   * contains a second `/` a single-segment class cannot see past. Six more
+   * move tasks follow this one, each landing files a directory deeper than
+   * the flat tree the narrower pattern was validated against — a class that
+   * cannot see its own fix location is worse than no guard, since it would
+   * report clean on exactly the shape it exists to catch going forward.
+   */
+  test('no js/ path fragment is left dangling at a line break', () => {
+    const dangling = []
+    const re = /js\/[a-z0-9][a-z0-9/-]*-\s*$/
+    for (const file of trackedFiles()) {
+      const abs = path.join(root, file)
+      if (!existsSync(abs)) continue
+      const lines = fs.readFileSync(abs, 'utf8').split('\n')
+      lines.forEach((line, i) => {
+        const match = line.match(re)
+        if (match) dangling.push(`${file}:${i + 1}: "${match[0].trimEnd()}"`)
+      })
+    }
+    expect(dangling).toEqual([])
+  })
 })

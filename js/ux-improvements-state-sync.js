@@ -579,8 +579,8 @@ import { hasValidPageData } from './utils.js'
       // separately from the three page-level fields above:
       // updateMockupTextFromSavedState already owns edited_title/
       // edited_summary/primary_cta, and this must not duplicate that.
-      // applyContentEditsToPageData is DOM-free (see js/inline-content-edit-
-      // data.js) — it only mutates page.sections in memory. The page was
+      // applyContentEditsToPageData is DOM-free (see js/editing/inline-content-edit-data.js) —
+      // it only mutates page.sections in memory. The page was
       // already rendered from its PRISTINE shape before this function ever
       // ran (js/app.js's initial render is unwrapped, and every wrapped
       // render calls the real DOM-producing render before this reapply

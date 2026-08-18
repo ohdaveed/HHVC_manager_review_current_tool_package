@@ -204,8 +204,8 @@ async function setEditorBlockText(mockPage, text, { settle = 100 } = {}) {
 /** Commit the open field via focusout — openEditorJsEditor's holder-level
     'focusout' listener is what calls commit(), same as a reviewer blurring
     away in a real browser. No relatedTarget means "focus left the editor
-    entirely", which is what a genuine commit needs (js/inline-content-
-    edit.js's holder.contains(nextFocus) guard). Waits for the same
+    entirely", which is what a genuine commit needs (js/editing/inline-content-edit.js's
+    holder.contains(nextFocus) guard). Waits for the same
     post-isReady settle setEditorBlockText does (see its comment) before
     dispatching — this is also the only wait point for tests that open a
     field and commit it WITHOUT calling setEditorBlockText in between (e.g.
