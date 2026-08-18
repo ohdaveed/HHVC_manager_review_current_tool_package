@@ -65,14 +65,33 @@ const EXEMPT = new Set([
   'js/b.js',
 ])
 
-/** Every tracked file that could mention a js/ path. */
+/**
+ * Every tracked file that could mention a js/ path.
+ *
+ * **`.css` belongs in this list.** This repo's stylesheets carry substantial
+ * explanatory comments — see CLAUDE.md's "CSS" section on the required
+ * boxed-banner voice — and those comments routinely name the specific JS
+ * module a rule exists to serve (a token a script reads, a class a handler
+ * toggles, a selector a sibling subsystem depends on). A path named in a CSS
+ * comment rots exactly like a path named in a JS comment or a markdown
+ * document: nothing enforces it, so a moved file leaves a confidently wrong
+ * sentence behind. Omitting `.css` here let two such references go stale
+ * across a two-task file-structure migration and pass this gate anyway — the
+ * review-state-sync and ai-assist-render modules, moved into js/sync/ and
+ * js/ai/ respectively (commits d2e561d and 5fdf758), were still named by
+ * their pre-move bare paths in css/styles.css's comments. (Written here
+ * without a leading `js/` on purpose, so this very sentence does not become
+ * another match for the pattern it is describing.) A gate that under-scans
+ * its own domain is the same defect this test exists to catch, just one
+ * level up.
+ */
 function trackedFiles() {
   const out = spawnSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
   if (out.status !== 0) throw new Error('git ls-files failed: ' + out.stderr)
   return out.stdout
     .split('\n')
     .filter(Boolean)
-    .filter((f) => /\.(js|jsx|ts|md|json|html)$/.test(f))
+    .filter((f) => /\.(js|jsx|ts|md|json|html|css)$/.test(f))
     .filter((f) => !SKIP.test(f))
 }
 
