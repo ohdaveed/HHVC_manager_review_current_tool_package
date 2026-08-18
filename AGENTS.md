@@ -2839,17 +2839,37 @@ Two of the mirrors carry real content and must be updated alongside this file:
 | `.github/copilot-instructions.md` | Copilot's mirror — a condensed subset.                                 |
 
 **`CLAUDE.md` is a mirror of the same FACTS, not of the same LENGTH — added
-2026-08-13.** Six subsystem deep-dives that this file carries in full are
-summarized there and extracted into `.claude/skills/hhvc-*/SKILL.md`:
-`hhvc-inline-content-editing`, `hhvc-page-registry`, `hhvc-review-sync-backend`,
-`hhvc-ai-assist-backend`, `hhvc-rag-knowledge-base`, `hhvc-ai-rewrite`. Each is
-loaded on demand, by an agent about to edit the files it covers.
+2026-08-13, widened 2026-08-15.** Eleven subsystem deep-dives that this file
+carries in full are summarized there and extracted into
+`.claude/skills/hhvc-*/SKILL.md`: `hhvc-inline-content-editing`,
+`hhvc-page-registry`, `hhvc-review-sync-backend`, `hhvc-ai-assist-backend`,
+`hhvc-rag-knowledge-base`, `hhvc-ai-rewrite`, and — from the second round —
+`hhvc-card-inheritance`, `hhvc-react-islands`, `hhvc-workspace-layout`,
+`hhvc-review-insights`, `hhvc-review-ops`. Each is loaded on demand, by an
+agent about to edit the files it covers.
 
 The reason is a cost this file does not pay: `CLAUDE.md` is read into **every**
-Claude Code session in its entirety, and those six sections ran to ~66,000
-characters — roughly 16,000 tokens per session, spent mostly on subsystems the
+Claude Code session in its entirety, and those sections ran to ~85,000
+characters — roughly 21,000 tokens per session, spent mostly on subsystems the
 session never touches. `AGENTS.md` is opened deliberately, so length costs it
 nothing comparable.
+
+**What made the second round's five eligible, and what it excluded.** Each was
+file-scoped and carried no safety-shaped prohibition, and none holds a count
+`tests/doc-counts.test.js` pins against `CLAUDE.md` and this file — unit-test
+files, spec files, pages, and the number of repository-owned stylesheets —
+since deleting one of those sentences fails CI rather than merely changing a
+number. **The stylesheet count is the one that had to be handled rather than
+merely observed**: the React-islands write-up carries it — the sentence naming
+where Emotion injects states the count — and a copy of it inside a skill is a
+copy no test reaches. It read "ten" from the day the skill was written, one behind
+`css/karl-guide.css`, while both guarded docs said eleven. The skill now names
+no number at all and points here for it, which is the shape any extracted
+section carrying a pinned count has to take. Sections that stayed for the opposite reasons include
+`## Commands`, "Page object shape and validation rules", "Optional API access
+hardening", "URL schemes are validated, not just escaped", "Local persistence"
+(it carries the import-destroys-reviews warning), and "What the UX review
+removed, and why not to re-add it".
 
 **Do not "restore" those sections to `CLAUDE.md`.** The absence is the design.
 The rule one paragraph up — reconcile toward this file — is about which copy

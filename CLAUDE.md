@@ -364,126 +364,11 @@ from the `order` array.
 
 ### React islands in the workspace
 
-The review workspace renders through **React 19 + MUI**, mounted as islands
-inside `#reviewWorkspace`. Everything else — the sidebar, the toolbar, and above
-all `#mockPage` — is untouched plain JS and string templates.
-
-- **The boundary is the point.** The mockup is a preview of a real SF.gov page,
-  so Material styling on that surface would misrepresent the thing under review
-  — the same argument that docks the workspace at 1700px rather than squeezing
-  the mockup. Tool chrome is fair game; `.browser-shell` is not.
-- **That isolation is measured, not assumed.** A `ThemeProvider` plus one MUI
-  `Button` mounted into the Checks panel changed **zero** computed properties
-  across `body`, `.browser-shell`, the mockup's `h1`/`h2`/`p`/`a`/`ul`/`li`,
-  `.karl-tag` and `.karl-tag-kind`, while Emotion added 15 stylesheets. It holds
-  because MUI emits scoped `.css-*` classes and there is **no `CssBaseline`** —
-  that writes element-level rules on `html`/`body`/`*`, and Emotion injects after
-  the eleven stylesheets, so it would win ties inside the shell. Use
-  `ScopedCssBaseline` inside a panel if a reset is ever needed.
-- **`js/react/theme.js` is the only bridge to the design tokens**, read off
-  `document.documentElement` at theme-build time so retheming still means
-  editing `css/theme.css` only. It resolves them to literal values because a
-  `var(--x)` string breaks `alpha()`, `lighten()` and `contrastText`, which all
-  run through `decomposeColor()`.
-- **Dark mode follows `prefers-color-scheme`, never a MUI toggle** — there is
-  one dark media block and no `data-theme` selector, so an independently owned
-  `mode` would leave the workspace light inside a dark panel.
-- **Islands load on demand**, via a dynamic `import()` from
-  `js/ux-improvements-state-sync.js`: React, React DOM, Emotion and MUI land in
-  their own chunk (318 kB raw / 103 kB gzip) and the initial chunk did not grow.
-  Same reasoning as ECharts.
-- **A React root and `innerHTML` cannot share a host**, so each island gets its
-  own child `<div>` (`#reviewChecksIsland`) beside the string-rendered section
-  (`#reviewChecksAdvice`).
-- **Data is passed in, never read from a global on mount** — the caller resolves
-  the page as `(pageKey && DATA.pages[pageKey]) || getCurrentPage()`, in that
-  order, because `#pageSelect.value` is stale during the initial View
-  Transition.
-- **Legacy class names stay** (`.compliance-item`, `.compliance-citation`, …):
-  they are styled by `css/dashboard.css` and asserted on by
-  `tests/e2e/review-workflow.spec.js`.
-- **`.jsx` is new here**; such files live under `js/react/` and need
-  `@vitejs/plugin-react`. Prettier still formats them, so `format:check` gates.
-
-Ported so far: the Checks tab's scored rule list. The advisory section beside
-it, the Overview queue and the Help tab are still string templates.
+The review workspace renders through **React 19 + MUI**, mounted as islands inside `#reviewWorkspace`. Everything else — the sidebar, the toolbar, and above all `#mockPage` — is untouched plain JS and string templates, and **that boundary is the point**: Material styling on the mockup would misrepresent the page under review, so tool chrome is fair game and `.browser-shell` is not. The isolation is measured rather than assumed, and it holds because MUI emits scoped `.css-*` classes and **there is no `CssBaseline`** — that writes element-level rules on `html`/`body`/`*` and Emotion injects after the eleven stylesheets, so it would win ties inside the shell; use `ScopedCssBaseline` inside a panel if a reset is ever needed. `js/react/theme.js` is the only bridge to the design tokens, so retheming still means editing `css/theme.css` only. `.jsx` files live under `js/react/` and need `@vitejs/plugin-react`; Prettier still formats them, so `format:check` gates. Full rationale — the measurement, why the theme resolves tokens to literal values, why dark mode follows `prefers-color-scheme` only, and why each island needs its own child `<div>` — in the `hhvc-react-islands` skill.
 
 ### Card descriptions are inherited, not printed
 
-A Karl Services/Resources subsection entry — and a Related-panel entry, and a
-Resource Collection's Resource-section entry — is only a page picker: "add an
-SF.gov page or External link". It carries no label field, so its title always
-publishes as the **destination** page's own title; only the Agency
-Services/Resources subsection also lacks a description field, so only that
-bucket additionally publishes the destination's summary — a Related panel and
-a Resource Collection's Resource section render a title and a link and
-**nothing else** (see the three-bucket breakdown below). A card in
-`pages/*.js` carrying its own `text` was therefore showing reviewers copy that
-can never appear on SF.gov, which matters more here than in
-most codebases because approving that copy is the entire point of the tool —
-and the inline-content-editing feature then made those dead fields
-click-to-edit.
-
-`js/page-render.js` therefore resolves **every** card description through one
-helper, `cardDescription(section, card)`, instead of printing `card.text`.
-Syncing the two duplicated strings was the other option and was rejected: they
-drift again on the next edit to either side, whereas inheritance leaves them
-unable to disagree at all. An empty resolved description renders no element,
-not an empty one — a blank `<p>` still occupies its row and reads as copy that
-failed to load.
-
-- **There are three buckets, and they key on the section's `karl` note — NOT
-  on `section.component`.** `inherits` (an Agency Services/Resources
-  subsection) renders the destination's title AND summary. `title-only` (a
-  Related panel, a Resource Collection's Resource section) renders a title and
-  a link and **nothing else**, each verified separately at DOM level against
-  live pages on 2026-08-08 — the editor help center contradicts itself on this,
-  so do not re-widen it from the docs alone. `authored` (a Table block, a
-  Title-and-text block) writes its own words and is left untouched. The first
-  version of the classifier keyed on `component` and would have corrupted table
-  blocks and title-and-text blocks: 74 of its 98 findings sat in sections
-  carrying no `component` at all, and those were not one kind of thing
-  (`article11Guide`'s "Mold and lead hazards" is a table). The `karl` note
-  names the Karl block a section maps to, so it is the real authority. That
-  history is written up in `build_scripts/audit-card-inheritance.js`'s header;
-  read it there rather than re-deriving it.
-- **`js/card-inheritance.js` is dual-exported for the same reason
-  `js/review-merge.js` is.** `js/page-render.js` reads it off
-  `window.cardInheritance` (side-effect-importing the file so the module graph
-  guarantees it) and `build_scripts/audit-card-inheritance.js` `require`s it,
-  so the browser renderer and the Node audit share exactly one classifier and
-  cannot come to disagree about what inherits. A second copy of those regexes
-  would let the mockup show one thing while the audit asserted another, and the
-  drift would stay invisible until a reviewer approved copy that cannot ship.
-- **`bun run audit-cards` is a report, not a CI gate**, and exits 0 even with
-  findings on purpose. A title mismatch is safe to sync mechanically; a
-  description is a content judgement per card, and the right direction of the
-  fix is sometimes the destination page rather than the card.
-- **An external-URL entry inside an inheriting subsection keeps its own
-  authored text — measured, not assumed.** There is no destination page to
-  inherit from, so this was an open question the audit reported and refused to
-  assert on. It was settled on 2026-08-09 by a census of all 332
-  `departments--*` pages in `sf.gov/sitemap.xml`: **333 of the 363** entries
-  whose `href` leaves sf.gov render a description of their own (the 30 that do
-  not match the shape of an editor leaving the field blank, the same way 90
-  SF.gov entries render none because their destination has no summary). An
-  external entry therefore HAS a description field, authored on the entry
-  rather than inherited, and `js/page-render.js` printing `card.text` for one
-  is correct — so the audit counts them and reports no finding. **Two details
-  of that census are load-bearing, because a repeat that misses either gets a
-  different answer.** `api.sf.gov`/`media.api.sf.gov` hosts were counted
-  separately (69 with a description to 29 without): those are SF.gov's own
-  document store, so such an entry is a **Document Picker** upload reading its
-  text off the Document object — a third mechanism, and folding it in answers a
-  different question with the same number. And each anchor was matched to its
-  own closing `</a>` before its description was read, since attributing a
-  neighbour's description to an entry is how a sweep like this quietly confirms
-  whatever it set out to find. External entries in a `title-only` section are
-  the opposite case and needed their own evidence: that component renders no
-  description for **any** entry, which is a fact about the component rather
-  than about the destination, so those report as dead text and were deleted.
-  Full write-up in
-  `docs/source/hhvc-policy/2026-08-08-karl-card-inheritance-verification.md`.
+A Karl Services/Resources subsection entry, a Related-panel entry, and a Resource Collection's Resource-section entry are all only page pickers, so their title always publishes as the **destination** page's own title. A card in `pages/*.js` carrying its own `text` was therefore showing reviewers copy that can never appear on SF.gov — which matters more here than in most codebases, because approving that copy is the entire point of the tool. `js/page-render.js` resolves **every** card description through one helper, `cardDescription(section, card)`, instead of printing `card.text`; an empty resolved description renders no element, not an empty one. **There are three buckets and they key on the section's `karl` note, NOT on `section.component`** — `inherits` renders the destination's title AND summary, `title-only` renders a title and a link and **nothing else**, `authored` writes its own words and is left untouched. Keying on `component` would corrupt Table and Title-and-text blocks, which is not hypothetical: it was the first version. **`js/card-inheritance.js` is dual-exported** exactly like `js/review-merge.js`, so the browser renderer and the Node audit cannot come to disagree about what inherits. Full rationale — the three buckets verified at DOM level, why `bun run audit-cards` is a report rather than a CI gate, and the sf.gov census that settled external-URL entries — in the `hhvc-card-inheritance` skill.
 
 ### Core module split (formerly one `app.js`)
 
@@ -629,61 +514,7 @@ that did not exist yet.
 
 ### The workspace is docked, not stacked
 
-`#reviewWorkspace` is a **third grid column in `.app`**, sticky to the viewport,
-not the last child of `.canvas`. It used to be the latter, and the numbers are
-the argument: the mockup runs about 8,766px, so the panel began around y=9,413
-in a 10,348px document — more than nine screenfuls down. A reviewer could never
-see the page and the instruments judging it at once, which was sharpest on
-**Page checks**, a panel that scores _the page currently in the mockup_ and
-rendered that score nine screens away from it.
-
-Most of the redundancy this layout accumulated followed from that: the same fact
-had to be repeated wherever the reviewer might be looking. Co-visibility is what
-makes one copy enough, so resist re-adding a second printing of anything.
-
-- **`.app.workspace-docked` is what grows the third column**, toggled alongside
-  the panel's `hidden` attribute. `applyWorkspaceVisibility()` in
-  `js/ux-improvements-workspace.js` is the single place that does both, plus the
-  toggle button's label and `aria-expanded`. The first-run onboarding path used
-  to set `hidden` inline and duplicate two of the three steps — which is exactly
-  how it came to miss the third, giving a first-run reviewer an open panel the
-  grid had made no room for.
-- **`.review-workspace[hidden] { display: none }` is load-bearing.** The rule
-  above it sets `display: flex`, and a class selector outranks the UA
-  stylesheet's `[hidden] { display: none }`, which is where that attribute's
-  entire effect lives. Without the pairing, "Hide workspace" and the `w`
-  shortcut both appeared to do nothing. Any element that both carries `hidden`
-  and declares its own `display` needs this.
-- **Below 1700px the panel returns under the canvas, in `grid-column: 2`** —
-  deliberately not `1 / -1`. Spanning both columns puts it beneath the sticky,
-  full-height sidebar, which then slides over the queue's left edge as the
-  reviewer scrolls. Axe caught that before a human did (57 queue cells reported
-  as "background could not be determined, partially obscured by another
-  element"); it is invisible in a screenshot taken at scroll position 0.
-- **The breakpoint is 1700px because that is where three columns actually
-  fit**, and it was 1400px for a while, which is not. `.browser-shell` will not
-  shrink past its min-content floor — re-measured at 765px on 2026-08-15, down
-  from 780px before the SFDS type and spacing work — so it ends at a fixed
-  x=1155 (370 sidebar + 20 canvas padding + 765) however narrow its column
-  gets, while the panel starts at `100vw - 30vw`. Those cross at 1155/0.7 =
-  1650px: every width from 1401px to there docked the panel _on top of_ the
-  mockup — 147px of overlap at 1440, 80px at 1536, 35px at 1600. **1700 stayed
-  after that re-measurement rather than moving down onto 1650**, because it was
-  already a round-up over the old 1671 crossing and the new floor widens that
-  margin instead of eating it; 1650–1700 is a band no real display reports, and
-  the margin is what covers browser zoom and the widths the 40px test sweep
-  never visits. Do not lower it without re-measuring both numbers — the
-  crossing is now asserted from the live layout in
-  `tests/e2e/workspace-panels.spec.js`, so a shell that grows past its floor
-  fails there rather than shipping. The cost is
-  that a 14-inch laptop (1512 CSS px) now stacks rather than docks; squeezing
-  the mockup instead is the other way out and is rejected on purpose, since it
-  would misrepresent the page under review.
-- **Any new layout assertion should sweep a range of widths, not pick one.**
-  The overlap survived because the only two widths under test sat either side
-  of it: `workspace-panels.spec.js` set 1800 to prove docking, and every other
-  spec ran at Playwright's 1280 default. The assertion added for it samples
-  1280→1920 in 40px steps for that reason.
+`#reviewWorkspace` is a **third grid column in `.app`**, sticky to the viewport, not the last child of `.canvas` — a reviewer has to see the page and the instruments judging it at once, and stacked it began more than nine screenfuls down. Most of the redundancy this layout accumulated followed from that, so **resist re-adding a second printing of anything**: co-visibility is what makes one copy enough. `applyWorkspaceVisibility()` in `js/ux-improvements-workspace.js` is the single place that toggles both the panel's `hidden` attribute and `.app.workspace-docked` — do not set either one inline. **`.review-workspace[hidden] { display: none }` is load-bearing**, since the rule above it sets `display: flex` and a class selector outranks the UA stylesheet's `[hidden]` rule; without the pairing, "Hide workspace" and the `w` shortcut both appear to do nothing. **Below 1700px the panel stacks in `grid-column: 2`, deliberately not `1 / -1`.** **The 1700px breakpoint is measured — re-measured on 2026-08-15 after the SFDS type and spacing work moved `.browser-shell`'s min-content floor, and deliberately kept at 1700 rather than lowered onto the new 1650 crossing. Do not lower it without re-measuring both numbers**; the crossing is asserted from the live layout in `tests/e2e/workspace-panels.spec.js`. Full rationale — the y=9,413 measurement that motivated the dock, the Axe finding behind `grid-column: 2`, the arithmetic behind 1650 and 1700, and why a layout assertion should sweep a range of widths rather than pick one — in the `hhvc-workspace-layout` skill.
 
 ### What the UX review removed, and why not to re-add it
 
@@ -827,71 +658,7 @@ relying on Node-specific interop here would go unnoticed.
 
 ### Overview insight cards (`js/review-insights*.js`)
 
-Two compact cards above the review queue table — review activity over time (a
-chart) and the pages whose automated checks are failing (a ranked list). They
-sit on the **Overview tab rather than a workspace tab of their own** on purpose:
-a tab is a scarce slot bound to a number key.
-
-There were three, and the two that were cut are worth not re-adding:
-
-- **Decision mix** was a stacked bar of the five decision counts. The filter
-  chips directly above already print those counts _and_ filter by them, and the
-  chart's own legend reprinted them a third time — all within about 200 vertical
-  pixels. A chart whose exact values are already on screen twice is a
-  restatement, not an encoding. The careful colour work behind it (the
-  `--viz-decision-*` tokens, the separately chosen dark palette, the ΔE
-  validation) was real and was spent on a card carrying no new information.
-- **Checks needing attention** was a horizontal bar chart. On real data every
-  bar landed between 86% and 95% — one colour, eight near-identical lengths —
-  the axis labels truncated at ~18 characters, and the polarity read backwards
-  (a bar at 95% under a heading about what needs attention). The ranking was
-  always the value, so it ships as a ranked list naming the page and its count
-  of failing rules. It needs no parallel `.hhvc-sr-only` table, because it is
-  visible content rather than an aria-hidden graphic — one copy of those numbers
-  serves both audiences.
-
-That leaves **ECharts drawing exactly one line chart**. Still worth deferring
-rather than inlining, but a thin justification for a ~170 KB gzip chunk — a
-hand-drawn SVG line would remove the dependency outright. That is a build
-decision rather than a UX one, and was deliberately left alone.
-
-- **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
-  `buildActivitySeries`, `buildChecksSeries`, `insightsSignature`), dual
-  `window`/`module.exports` like `js/review-merge.js` so
-  `tests/review-insights-data.test.js` can `require` it with no browser.
-  `buildDecisionMix` still runs: `insightsSignature()` uses it to gate redraws,
-  since a decision change moves the activity series.
-- **`js/review-insights.js`** — the orchestrator. Builds the card markup, the
-  hidden data table and the ranked list, then draws.
-- **`js/review-insights-charts.js`** — the only module that imports ECharts.
-
-**ECharts is dynamically imported, and that is load-bearing, not tidiness.**
-It is ~530 KB raw / ~180 KB gzip — more than the entire rest of the bundle.
-The dynamic import makes Vite emit it as its own chunk, so the initial
-download stays ~114 KB gzip and the library arrives only when the Overview
-tab first renders. A second consequence shapes the file order: the headings
-and data tables are built **synchronously, before the import is requested**,
-so the numbers are in the DOM even if the chunk is slow or never loads.
-
-Other invariants worth not rediscovering:
-
-- **The chart host is re-parented, never rebuilt.** The Overview panel
-  replaces its whole `innerHTML` on every filter, sort and search keystroke.
-  `insightsSignature()` gates redraws, and a module-level generation counter
-  stops a slow async draw from painting stale data over newer numbers.
-- **The charts always describe the whole site, never the filtered view** —
-  they read `getQueueRows()`, not the visible rows.
-- **Decision fills use `--viz-decision-*`, not the `--status-*-border` chip
-  tokens.** The chip borders are tuned as 1px strokes; as large fills,
-  Approved and Needs review separate by ΔE 8.4 under _normal_ vision against
-  a floor of 15 — and they are the two most common states, adjacent in the
-  bar. Dark mode gets a separately chosen set, not a lightened copy (the
-  light green lands at 2.96:1 on the dark panel). If you change these,
-  re-validate rather than eyeball.
-- **Colour is never the only encoding**: the decision card carries a visible
-  legend with counts, every chart is `aria-hidden` beside an
-  `.hhvc-sr-only` data table, and the checks chart states its own top-8 cap
-  while the table carries every page.
+Two compact cards above the review queue table — review activity over time (a chart) and the pages whose automated checks are failing (a ranked list). They sit on the **Overview tab rather than a workspace tab of their own** on purpose: a tab is a scarce slot bound to a number key. There were three cards, and the two that were cut — Decision mix and a Checks-needing-attention bar chart — are worth not re-adding. `js/review-insights-data.js` is the pure data shaping, dual `window`/`module.exports` like `js/review-merge.js`; `js/review-insights.js` orchestrates; `js/review-insights-charts.js` is the only module that imports ECharts. **That import is dynamic, and that is load-bearing rather than tidiness** — ECharts is ~530 KB raw / ~180 KB gzip, more than the entire rest of the bundle, so it must stay its own chunk; and the headings and data tables are built **synchronously, before the import is requested**, so the numbers are in the DOM even if the chunk never loads. **Colour is never the only encoding**, and decision fills use `--viz-decision-*` rather than the `--status-*-border` chip tokens — if you change those, re-validate the contrast rather than eyeball it. Full rationale — why each cut card was cut, the re-parented chart host and its generation counter, and the ΔE measurements — in the `hhvc-review-insights` skill.
 
 ### Karl transcript export (`js/karl-blocks.js`, `js/karl-transcript.js`)
 
@@ -999,41 +766,7 @@ A reviewer can create a page mockup and delete an existing one from the browser.
 
 ### Stored review data (`js/review-ops*.js`)
 
-A collapsed section at the end of the **Help** tab reporting what this browser
-is actually holding and how it is connected — previously only visible in
-devtools. There are no roles in this tool: the reviewer and the operator are
-the same person, deliberately.
-
-- **`js/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
-  `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
-  `window`/`module.exports` so the tests need no browser.
-- **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
-  same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
-
-**It had a tab of its own — the `5` key — and lost it.** On a default or
-Netlify deploy every value it reported was "not configured" or "none", because
-both optional backends need `server.ts`; that is not worth one of the strip's
-slots. The one line a reviewer genuinely needs from it — _reviews are saved in
-this browser only_ — was promoted into the sidebar beside the export controls,
-where the risk it describes actually lives. What stays here is the diagnostics
-and the orphan pruning, which a reviewer opens deliberately.
-
-- **Orphaned records are a real class, not a hypothetical.** Review state is
-  keyed by page key and nothing prunes it when a page is retired, so a browser
-  that reviewed an earlier IA still carries rows for keys that no longer
-  exist. They are invisible in the queue, inflate any total taken from saved
-  state, and ride along in every backup.
-- **An empty page-key set reports NO orphans, not all of them.** An empty set
-  means page data has not loaded; the other reading would put a "remove these"
-  button in front of the reviewer's entire review history.
-- **`local_dirty`'s three states are reported separately.** `true`,
-  an explicit `false`, and ABSENT are different things — the whole reason the
-  field is tri-state is that missing must not be read as clean.
-- **Pruning is the only path in the tool that deletes review data outright**
-  (everything else merges). It confirms with the count and the keys first, and
-  **re-derives the list at click time** rather than trusting what was
-  rendered — the panel can sit open while a sync pull or import changes state
-  underneath it.
+A collapsed section at the end of the **Help** tab reporting what this browser is actually holding and how it is connected — previously only visible in devtools. `js/review-ops-data.js` is the pure diagnostics, dual `window`/`module.exports` so the tests need no browser; `js/review-ops.js` is the panel, lazily mounted when Help opens with the same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses. Two invariants are safety-shaped and stay here. **An empty page-key set reports NO orphans, not all of them** — an empty set means page data has not loaded, and the other reading would put a "remove these" button in front of the reviewer's entire review history. And **pruning is the only path in the tool that deletes review data outright** (everything else merges), so it confirms with the count and the keys first and **re-derives the list at click time** rather than trusting what was rendered, since the panel can sit open while a sync pull or import changes state underneath it. Full rationale — why it lost its own tab, why orphaned records are a real class, and why `local_dirty`'s three states are reported separately — in the `hhvc-review-ops` skill.
 
 ### Page object shape and validation rules
 
@@ -1247,92 +980,7 @@ offline static tool.
 
 ### What the RAG corpus contains (`build_scripts/knowledge-sources.js`)
 
-One glob (`docs/source/**/*.md`) used to define the corpus, which excluded both
-the newest Karl capture and the mockup copy under review.
-`collectKnowledgeSources()` is now the single definition, and every chunk
-carries a `category`: `hhvc-standards` (the HHVC Web Governance and Content
-Standards Manual), `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated snapshots
-of live SF.gov, plus the cross-type reading of them), `karl` (live editor
-measurements, listed explicitly because they live outside `docs/source/`),
-`karl-gitbook` (the Help Center's own published rules), `mockup-draft` (the
-`pages/*.js` mockups, projected to markdown at ingest time and not committed),
-and `sfds` (the vendored SF Design System token capture and its recorded
-disagreements).
-
-- **`EXTERNAL_SOURCE_FILES` is an explicit `{path, category}` list, not a
-  glob**, because those documents live outside `docs/source/`. It was a flat
-  path list that all became `karl` until 2026-08-16 — true while the only
-  outside documents were Karl captures, and false the moment the standards
-  manual came in. **Adding a file here moves the measured counts below**, so
-  re-measure and re-ingest rather than editing the list alone.
-- **The content standards manual is the addition worth understanding.**
-  `js/plain-language.js` cites it by section number for every scored
-  `severity: 'error'` rule (§7.x, §6.3), and it was not in the corpus at all —
-  it lives in `notebooklm/`, which no glob reached. A reviewer could not get
-  from a citation back to the manual section the tool's own checks are named
-  after. Added 2026-08-16, worth +75 chunks.
-- **`karl` and `karl-gitbook` are separate on purpose** — the CMS as MEASURED
-  versus as DOCUMENTED. They have disagreed four times over, and the prompt
-  says the measurement wins.
-- **The compliance matrix is projected from CSV, not converted.**
-  `notebooklm/compliance-standards.csv` is the only place a requirement and the
-  code section imposing it share a row, which is what lets a finding name a
-  provision. `projectComplianceMatrixToMarkdown()` renders it at ingest time as
-  `hhvc-policy/compliance-standards-matrix.md` — same treatment as `pages/*.js`,
-  so no committed copy can drift from it. One `###` per requirement, 203 of
-  them, median 46 words. **Retrieval is a flat top-6 with no per-category floor**,
-  and short formulaic chunks embed toward each other — so a pest-page query can
-  spend the whole top-6 on one provision family, and the document most at risk
-  is the standards manual added in the same pass. Grouping by code section
-  (~61 longer chunks) is the fallback; measure it as "does an audit of a pest
-  page still cite `hhvc-standards`" before reaching for it.
-- **A superseded document cannot carry its own warning**, because the chunker
-  prefixes each chunk with its heading path and never with the file's opening
-  banner. That is why `docs/wagtail-content-mapping.md`, the Help Center
-  research note, `hhvc_chapter_drafts/**` and the dated audit records are
-  excluded, and why draft Page Blueprints in `notebooklm/` are never filed as
-  policy. `build_scripts/knowledge-sources.js` carries the register with the
-  reason per file.
-- **Category comes from the first path segment under `docs/source/`**, so a new
-  folder files itself with no code change.
-- **`mockup-draft` is about a quarter of the corpus and is the dangerous one** —
-  draft copy nobody approved, including the page being audited. The prompt's
-  source tag now carries `category`, the system prompt states what each category
-  is worth, and it forbids citing draft copy as the authority a finding rests
-  on. Resolved from the matched row, so the model cannot spoof it; it also
-  travels with the citation the reviewer sees.
-- Folder `README.md` files are excluded, so provenance notes stay uncitable.
-- Measured 2026-08-16: **95 documents, 1230 chunks** (`hhvc-policy` 46/714,
-  `mockup-draft` 29/233, `karl` 4/102, `hhvc-standards` 1/75, `sfgov-live`
-  7/52, `karl-gitbook` 5/28, `sfgov-style` 2/24, `sfds` 1/2). Was 78/812 on
-  2026-08-15; the compliance matrix is 204 of the added chunks, which is why
-  `hhvc-policy` jumped 510 to 714 while gaining one document. **Measure with
-  the real pages** — no `pages` option omits `mockup-draft` and looks like a
-  regression. Still brute-force cosine.
-- **`bun run ingest` is yours to run and is billed.** Nothing in CI or the
-  build does it, so a corpus change is not live on a deployment until it runs.
-- **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
-  writes to Postgres and `compliance-audit` reports ready — verified by querying
-  the deployed database directly, which held **816 chunks across 78 documents**
-  after a re-ingest on 2026-08-17, matching the on-disk measurement above
-  category for category. **That is a record of what that ingest wrote, not a
-  standing guarantee**: the deployed count drifts behind the corpus the moment
-  an ingested document is edited without a re-ingest, and it had, twice —
-  the reading before this one was `chunkCount: 768`, 48 short, because it
-  predated both `docs/karl-export-field-map.md` joining the `karl` category and
-  the `sfds` category existing at all. A later reading of 812 was 4 short for
-  the same reason, from edits to that file's own register. Those are CHUNK
-  counts, not document counts — `sfds` is a single ingested document,
-  `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
-  only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
-  the corpus and there is no second source to go looking for. Read the live
-  count from `/api/ai/capabilities` rather than from this line.
-- **Ingesting against the deployed Postgres needs two services' variables**, and
-  `railway run` supplies one service's: `DATABASE_URL` is Postgres's and
-  `GEMINI_API_KEY` is web's. The deployed `DATABASE_URL` also names
-  `postgres.railway.internal`, which does not resolve off-platform, so rebuild
-  it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather than
-  reusing the value the service sees.
+`collectKnowledgeSources()` is the single definition of the corpus — not a glob — and every chunk carries a `category`: `hhvc-standards` (the HHVC Web Governance and Content Standards Manual), `hhvc-policy`, `sfgov-style`, `sfgov-live`, `karl` (the CMS as MEASURED), `karl-gitbook` (the CMS as DOCUMENTED — kept separate because the two have disagreed four times over, and the prompt says the measurement wins), `mockup-draft` and `sfds`. Category comes from the first path segment under `docs/source/`, so a new folder files itself with no code change; **`EXTERNAL_SOURCE_FILES` is the exception**, an explicit `{path, category}` list for documents living outside that tree — and **adding a file to it moves the measured counts**, so re-measure and re-ingest rather than editing the list alone. **`mockup-draft` is about a quarter of the corpus and is the dangerous one**: draft copy nobody approved, including the page being audited, so the system prompt forbids citing it as the authority a finding rests on, and the category is resolved from the matched row rather than the model, which cannot spoof it. **`bun run ingest` is yours to run and is billed** — nothing in CI or the build does it, so a corpus change is not live on a deployment until it runs. Full rationale — the per-category counts, why the compliance matrix is projected from CSV rather than committed, why a superseded document cannot carry its own warning, and the retrieval floor this corpus does not have — in the `hhvc-rag-knowledge-base` skill.
 
 ### Reviewer sign-in (`/api/session`)
 
@@ -1787,24 +1435,33 @@ equivalent).
 
 ### Subsystem deep-dives (`hhvc-*`)
 
-Six subsystems carry far more rationale than a session needs resident, and every
-one of them matters only while editing a specific, narrow set of files. Their
-full write-ups moved out of this file into `.claude/skills/hhvc-*/SKILL.md`,
+Eleven subsystems carry far more rationale than a session needs resident, and
+every one of them matters only while editing a specific, narrow set of files.
+Their full write-ups moved out of this file into `.claude/skills/hhvc-*/SKILL.md`,
 leaving the summary and the load-bearing warning here and the reasoning one
-`Skill` call away. That cut roughly 66,000 characters from this file — about
-16,000 tokens per session once the six skill descriptions, which stay
-resident, are netted off. (Deliberately rounded: an exact byte count stated
-inside the file it measures changes that file's size, so it is wrong the
-moment it is written.)
+`Skill` call away. The first six cut roughly 66,000 characters; a second round
+on 2026-08-15 moved five more sections that were file-scoped, carried no safety
+prohibition, and restate no count `tests/doc-counts.test.js` pins — the
+React-islands write-up defers its stylesheet count to the guarded copy here
+rather than carrying its own, which it had let go stale at ten — call
+it 85,000 characters and about 21,000 tokens per session once the skill
+descriptions, which stay resident, are netted off. (Deliberately rounded: an
+exact byte count stated inside the file it measures changes that file's size,
+so it is wrong the moment it is written.)
 
-| Skill                         | Read it before editing                                                 |
-| ----------------------------- | ---------------------------------------------------------------------- |
-| `hhvc-inline-content-editing` | `js/inline-content-edit*.js`                                           |
-| `hhvc-page-registry`          | `js/page-registry*.js`                                                 |
-| `hhvc-review-sync-backend`    | `server.ts`'s review-state routes, `js/review-state-sync.js`           |
-| `hhvc-ai-assist-backend`      | `server.ts`'s AI routes, anything under `build_scripts/ai/`            |
-| `hhvc-rag-knowledge-base`     | `build_scripts/knowledge-*.js`, `build_scripts/ai/compliance-audit.js` |
-| `hhvc-ai-rewrite`             | `js/ai-rewrite*.js`, anything touching `data-rewrite-field` addressing |
+| Skill                         | Read it before editing                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `hhvc-inline-content-editing` | `js/inline-content-edit*.js`                                                 |
+| `hhvc-page-registry`          | `js/page-registry*.js`                                                       |
+| `hhvc-review-sync-backend`    | `server.ts`'s review-state routes, `js/review-state-sync.js`                 |
+| `hhvc-ai-assist-backend`      | `server.ts`'s AI routes, anything under `build_scripts/ai/`                  |
+| `hhvc-rag-knowledge-base`     | `build_scripts/knowledge-*.js`, `build_scripts/ai/compliance-audit.js`       |
+| `hhvc-ai-rewrite`             | `js/ai-rewrite*.js`, anything touching `data-rewrite-field` addressing       |
+| `hhvc-card-inheritance`       | `js/card-inheritance.js`, `js/page-render.js`'s card rendering               |
+| `hhvc-react-islands`          | anything under `js/react/`, or adding a React island                         |
+| `hhvc-workspace-layout`       | the workspace grid in `css/dashboard.css`, `js/ux-improvements-workspace.js` |
+| `hhvc-review-insights`        | `js/review-insights*.js`, `css/review-insights.css`                          |
+| `hhvc-review-ops`             | `js/review-ops*.js`, `css/review-ops.css`                                    |
 
 **These are extracts, not a second source of truth.** `AGENTS.md` still carries
 every one of these sections in full — it is the canon, and it is read by tools
@@ -1863,14 +1520,15 @@ facts plus the Claude Code–specific notes above; `.github/copilot-instructions
 is Copilot's mirror. Keep the three in sync, and if they ever disagree, reconcile
 toward `AGENTS.md`.
 
-**One deliberate asymmetry, added 2026-08-13:** six subsystem deep-dives that
-`AGENTS.md` still carries in full are summarized here and extracted to
-`.claude/skills/hhvc-*/SKILL.md` (see "Subsystem deep-dives" above). This file
-is loaded into every Claude Code session in its entirety, which `AGENTS.md` is
-not, so length costs something here that it does not cost there — and each of
-those sections is only useful while editing a handful of files a skill can be
-loaded for. So "mirror" now means **the same facts, at the same authority, with
-six of them one hop away** rather than byte-for-byte parity. It does not license
+**One deliberate asymmetry, added 2026-08-13 and widened 2026-08-15:** eleven
+subsystem deep-dives that `AGENTS.md` still carries in full are summarized here
+and extracted to `.claude/skills/hhvc-*/SKILL.md` (see "Subsystem deep-dives"
+above). This file is loaded into every Claude Code session in its entirety,
+which `AGENTS.md` is not, so length costs something here that it does not cost
+there — and each of those sections is only useful while editing a handful of
+files a skill can be loaded for. So "mirror" now means **the same facts, at the
+same authority, with eleven of them one hop away** rather than byte-for-byte
+parity. It does not license
 dropping a fact from this file without putting it somewhere a session can still
 reach: cutting for length alone is what produced the rotted pointer files the
 next paragraph is about.

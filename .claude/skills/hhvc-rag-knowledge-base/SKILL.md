@@ -1,6 +1,6 @@
 ---
 name: hhvc-rag-knowledge-base
-description: HHVC repo: the compliance-audit RAG feature — docs/source corpus ingestion, chunking, Gemini-only embeddings, brute-force cosine retrieval, and citation validation against the retrieved set. Load before editing build_scripts/knowledge-*.js, build_scripts/ai/compliance-audit.js, or ingest-knowledge.js.
+description: 'HHVC repo: the compliance-audit RAG feature — docs/source corpus ingestion, chunking, Gemini-only embeddings, brute-force cosine retrieval, and citation validation against the retrieved set, plus what the corpus contains, why the `karl` category is an explicit file list rather than a glob, and why `mockup-draft` is the dangerous one. Load before editing build_scripts/knowledge-*.js, build_scripts/ai/compliance-audit.js, or ingest-knowledge.js.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
@@ -20,36 +20,13 @@ never writes anything, and every result carries the same `disclosure` string.
   except folder-index `README.md` files — including the one file named
   `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
-  citable, which is the failure mode this feature exists to avoid.
-  `EXTERNAL_SOURCE_FILES` in the same module carries the documents that live
-  outside that tree as `{path, category}` pairs — the Karl captures, the SF.gov
-  cross-type reading, and the HHVC Web Governance and Content Standards Manual,
-  which `js/plain-language.js` cites by section for every scored `error` rule
-  and which was absent from the corpus until 2026-08-16. **A superseded
-  document is deliberately kept out**: the chunker prefixes a chunk with its
-  heading path and never with the file's opening banner, so a "these claims are
-  now wrong" header cannot travel with chunk 40. That module's own exclusion
-  register names each excluded file and why.
-- **`notebooklm/compliance-standards.csv` is projected, not committed.** It is
-  the corpus's one non-markdown source and the only place a requirement and the
-  code section imposing it share a row.
-  `projectComplianceMatrixToMarkdown()` renders it at ingest time as
-  `hhvc-policy/compliance-standards-matrix.md`, one `###` per requirement (203
-  of them, 204 chunks, median 46 words) so each retrieves as its own citable
-  provision. `retrieveRelevantChunks()` is a flat top-K with no per-category
-  floor, so short formulaic chunks that embed toward each other can spend the
-  whole top-6 on one provision family — the standards manual's prose is what
-  loses that race. Grouping by code section (~61 longer chunks) is the recorded
-  fallback; measure it as "does an audit of a pest page still cite
-  `hhvc-standards`".
-- **Measured 2026-08-16: 95 documents, 1230 chunks** across `hhvc-standards`,
-  `hhvc-policy`, `sfgov-style`, `sfgov-live`, `karl`, `karl-gitbook`, `sfds`
-  and `mockup-draft`. Measure with the real pages loaded — with no `pages`
-  option `collectKnowledgeSources()` omits `mockup-draft` and the total looks
-  like a regression. Adding a category means adding it to
-  `buildComplianceAuditSystemPrompt()` too, which enumerates what each one is
-  worth; a category the prompt cannot weigh reaches the reviewer as an
-  unranked tag.
+  citable, which is the failure mode this feature exists to avoid. What each
+  category holds, why the outside list is a list rather than a second glob, and
+  the measured document and chunk counts are all in **What the corpus
+  contains** below — stated once, there, rather than summarized here as well.
+- **Adding a category means adding it to `buildComplianceAuditSystemPrompt()`
+  too**, which enumerates what each one is worth; a category the prompt cannot
+  weigh reaches the reviewer as an unranked tag.
 - **One new table, same store as `review_pages`.** `knowledge_chunks` lives
   wherever `build_scripts/storage.js` points — Postgres when `DATABASE_URL` is
   set, SQLite at `DATA_DB_PATH` otherwise — rather than a second database to
@@ -118,3 +95,93 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
   corpus-wide embedding-model table, a task-dispatching registry refactor of
   `generateContent()`), is in
   `docs/superpowers/specs/2026-08-07-rag-knowledge-base-design.md`.
+
+## What the corpus contains (`build_scripts/knowledge-sources.js`)
+
+One glob (`docs/source/**/*.md`) used to define the corpus, which excluded both
+the newest Karl capture and the mockup copy under review.
+`collectKnowledgeSources()` is now the single definition, and every chunk
+carries a `category`: `hhvc-standards` (the HHVC Web Governance and Content
+Standards Manual), `hhvc-policy`, `sfgov-style`, `sfgov-live` (dated snapshots
+of live SF.gov, plus the cross-type reading of them), `karl` (live editor
+measurements, listed explicitly because they live outside `docs/source/`),
+`karl-gitbook` (the Help Center's own published rules), `mockup-draft` (the
+`pages/*.js` mockups, projected to markdown at ingest time and not committed),
+and `sfds` (the vendored SF Design System token capture and its recorded
+disagreements).
+
+- **`EXTERNAL_SOURCE_FILES` is an explicit `{path, category}` list, not a
+  glob**, because those documents live outside `docs/source/`. It was a flat
+  path list that all became `karl` until 2026-08-16 — true while the only
+  outside documents were Karl captures, and false the moment the standards
+  manual came in. **Adding a file here moves the measured counts below**, so
+  re-measure and re-ingest rather than editing the list alone.
+- **The content standards manual is the addition worth understanding.**
+  `js/plain-language.js` cites it by section number for every scored
+  `severity: 'error'` rule (§7.x, §6.3), and it was not in the corpus at all —
+  it lives in `notebooklm/`, which no glob reached. A reviewer could not get
+  from a citation back to the manual section the tool's own checks are named
+  after. Added 2026-08-16, worth +75 chunks.
+- **`karl` and `karl-gitbook` are separate on purpose** — the CMS as MEASURED
+  versus as DOCUMENTED. They have disagreed four times over, and the prompt
+  says the measurement wins.
+- **The compliance matrix is projected from CSV, not converted.**
+  `notebooklm/compliance-standards.csv` is the only place a requirement and the
+  code section imposing it share a row, which is what lets a finding name a
+  provision. `projectComplianceMatrixToMarkdown()` renders it at ingest time as
+  `hhvc-policy/compliance-standards-matrix.md` — same treatment as `pages/*.js`,
+  so no committed copy can drift from it. One `###` per requirement, 203 of
+  them, 204 chunks, median 46 words. **`retrieveRelevantChunks()` is a flat
+  top-6 with no per-category floor**, and short formulaic chunks embed toward
+  each other — so a pest-page query can
+  spend the whole top-6 on one provision family, and the document most at risk
+  is the standards manual added in the same pass. Grouping by code section
+  (~61 longer chunks) is the fallback; measure it as "does an audit of a pest
+  page still cite `hhvc-standards`" before reaching for it.
+- **A superseded document cannot carry its own warning**, because the chunker
+  prefixes each chunk with its heading path and never with the file's opening
+  banner. That is why `docs/wagtail-content-mapping.md`, the Help Center
+  research note, `hhvc_chapter_drafts/**` and the dated audit records are
+  excluded, and why draft Page Blueprints in `notebooklm/` are never filed as
+  policy. `build_scripts/knowledge-sources.js` carries the register with the
+  reason per file.
+- **Category comes from the first path segment under `docs/source/`**, so a new
+  folder files itself with no code change.
+- **`mockup-draft` is about a quarter of the corpus and is the dangerous one** —
+  draft copy nobody approved, including the page being audited. The prompt's
+  source tag now carries `category`, the system prompt states what each category
+  is worth, and it forbids citing draft copy as the authority a finding rests
+  on. Resolved from the matched row, so the model cannot spoof it; it also
+  travels with the citation the reviewer sees.
+- Folder `README.md` files are excluded, so provenance notes stay uncitable.
+- Measured 2026-08-16: **95 documents, 1230 chunks** (`hhvc-policy` 46/714,
+  `mockup-draft` 29/233, `karl` 4/102, `hhvc-standards` 1/75, `sfgov-live`
+  7/52, `karl-gitbook` 5/28, `sfgov-style` 2/24, `sfds` 1/2). Was 78/812 on
+  2026-08-15; the compliance matrix is 204 of the added chunks, which is why
+  `hhvc-policy` jumped 510 to 714 while gaining one document. **Measure with
+  the real pages** — no `pages` option omits `mockup-draft` and looks like a
+  regression. Still brute-force cosine.
+- **`bun run ingest` is yours to run and is billed.** Nothing in CI or the
+  build does it, so a corpus change is not live on a deployment until it runs.
+- **`knowledge_chunks` is behind the storage seam**, so on Railway an ingest
+  writes to Postgres and `compliance-audit` reports ready — verified by querying
+  the deployed database directly, which held **816 chunks across 78 documents**
+  after a re-ingest on 2026-08-17, matching the on-disk measurement above
+  category for category. **That is a record of what that ingest wrote, not a
+  standing guarantee**: the deployed count drifts behind the corpus the moment
+  an ingested document is edited without a re-ingest, and it had, twice —
+  the reading before this one was `chunkCount: 768`, 48 short, because it
+  predated both `docs/karl-export-field-map.md` joining the `karl` category and
+  the `sfds` category existing at all. A later reading of 812 was 4 short for
+  the same reason, from edits to that file's own register. Those are CHUNK
+  counts, not document counts — `sfds` is a single ingested document,
+  `docs/source/sfds/disagreements.md`, because `collectKnowledgeSources()` takes
+  only `**/*.md` and skips `README.md`, so the sibling `tokens.json` is not in
+  the corpus and there is no second source to go looking for. Read the live
+  count from `/api/ai/capabilities` rather than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's: `DATABASE_URL` is Postgres's and
+  `GEMINI_API_KEY` is web's. The deployed `DATABASE_URL` also names
+  `postgres.railway.internal`, which does not resolve off-platform, so rebuild
+  it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather than
+  reusing the value the service sees.
