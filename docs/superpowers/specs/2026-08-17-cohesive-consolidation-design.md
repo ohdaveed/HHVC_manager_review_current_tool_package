@@ -317,6 +317,24 @@ something to be discovered when a gate goes red:
 - `build_scripts/page-import-checks.js` — diffs `pages/*.js` on disk against
   `js/page-data.js`'s imports
 
+### Code that references `js/` paths
+
+Four more surfaces, and these are code rather than configuration. They were
+missed by the first draft of this section, which counted only config:
+
+| Surface | References | Breaks how |
+| --- | --- | --- |
+| `tests/*.test.js` | 63 across 29 files, plus 8 to `js/react/theme.js` | a moved module is an unresolved import — the suite fails loudly |
+| `build_scripts/**` | 11 `require('../js/…')` calls | `validate`, `export`, `export:karl` and the AI output validator throw |
+| `server.ts` | 1 — `import { mergeReviewRecord } from './js/review-merge.js'` | the server fails to boot, taking every spawned-server test with it |
+| `tests/e2e/**` | 57, all prose inside comments | silent — nothing fails, the paths are simply wrong |
+
+The first three fail loudly and are caught by the gates. **The 57 comment
+references are the dangerous ones**, because nothing checks them: they are the
+same class of rot as a stale `docs/codebase/STRUCTURE.md`, and a comment that
+names a path no longer on disk is worse than no comment. They are updated in the
+same step that moves the file they name.
+
 ### Gates
 
 Every pull request runs the full set: `format:check`, `lint:js`,
