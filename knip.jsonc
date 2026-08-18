@@ -1,0 +1,57 @@
+// Knip finds files, exports and dependencies that nothing reaches.
+//
+// **Why this is here.** This repo has shipped that defect repeatedly and has
+// only ever caught it by hand: a page-level `karlGuide` authored across eight
+// `pages/*.js` files, schema-validated, and read by nothing; a
+// `findUnclassifiedCardSections` export dead since the draft that introduced
+// it; a `mountKarlTagLegend()` that had been a no-op "for some time"; a skill
+// symlink pointing at a file that no longer existed. Unread code fails no test,
+// which is exactly why a tool has to look for it.
+//
+// **JSONC rather than JSON on purpose.** Knip validates its config strictly and
+// rejects the `"// key": "note"` idiom this repo uses in package.json, so the
+// reasoning lives in real comments instead of being dropped.
+//
+// **This config is deliberately small.** A first attempt listed every
+// `build_scripts/*.js` entry point and several ignores by hand; Knip reported
+// all of them as redundant, because it already reads package.json's scripts and
+// `vite.config.mjs` and infers the same set. What is left is only what Knip
+// cannot infer.
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+
+  // `pages/*.js` export nothing: each assigns onto `window.HHVC_PAGES` and is
+  // side-effect-imported by `js/page-data.js`. There is no interface for Knip
+  // to judge, and `build_scripts/page-import-checks.js` already fails
+  // validation on a page file nobody imports — the check that matters there.
+  //
+  // `forms/` is an independent Vite app with its own package.json and build.
+  // `tools/oxlint/` is vendored third-party code (MIT, see its NOTICE.md).
+  "ignore": ["pages/**", "archive/**", "forms/**", "tools/oxlint/**"],
+
+  // One-off capture tools. Each produced a committed artifact — the Karl admin
+  // schema and GitBook rules under `data/audit_fixtures/`, the sfgov snapshots,
+  // the demo review state — and none is wired to a package.json script, so
+  // Knip correctly reported the files as unreachable. They are entry points
+  // rather than dead code: the captures they made are cited as evidence
+  // throughout `docs/`, and a repo whose rule is "re-measure rather than trust
+  // a restatement" needs the measuring tools to survive.
+  //
+  // Listing them here keeps Knip analysing what they IMPORT while not calling
+  // the files themselves unused. Giving each a `package.json` script would be
+  // better still, since it would make them discoverable rather than merely
+  // present — worth doing, and deliberately not bundled into the change that
+  // introduces the tool.
+  "entry": ["build_scripts/audit/*.js", "build_scripts/make-demo-review-state.js"],
+
+  // Neither is imported by any JavaScript, and both are still required:
+  // `.mcp.json` launches them by path out of `node_modules/`
+  // (`node_modules/@heyclaude/mcp/src/cli.js`), which Knip cannot see. Removing
+  // either breaks the MCP setup rather than shrinking the install.
+  //
+  // Worth knowing separately: both sit in `dependencies` rather than
+  // `devDependencies`, so they install on Railway and Netlify where nothing
+  // runs them. That is a placement question for whoever owns the MCP config,
+  // not something this file should decide.
+  "ignoreDependencies": ["@executeautomation/database-server", "@heyclaude/mcp"],
+}

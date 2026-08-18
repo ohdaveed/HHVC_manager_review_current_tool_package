@@ -53,6 +53,21 @@ jobs:
       - name: Validate page data (Zod schema + invariants)
         run: bun run validate
 
+      # Knip, on the categories that were already clean when it was adopted:
+      # an unused FILE, an unused dependency, an unlisted one, or an import
+      # that resolves nowhere. Cheap and static, so it sits beside validate
+      # rather than after the build.
+      #
+      # `--include` is doing real work here. Knip also reports unused EXPORTS,
+      # and this repo publishes deliberately onto `window.<Namespace>` — the
+      # review layers reach each other through globals rather than imports, by
+      # design — so Knip reads ~89 of those as unused when they are the
+      # architecture. Gating on them would fail the build for following the
+      # documented pattern. `bun run lint:dead-code` prints the full report,
+      # including that list, as a triage aid rather than a gate.
+      - name: Dead code (knip)
+        run: bun run lint:dead-code:ci
+
       # Runs the real Vite production build, so a bundling failure (a bad
       # import path, a missing dependency) is caught here rather than at
       # deploy time. It also doubles as a deploy-integrity check: the
