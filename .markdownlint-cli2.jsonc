@@ -1,0 +1,63 @@
+// markdownlint-cli2 — structural linting for the instruction docs that are canon here.
+//
+// **Why this is here.** `AGENTS.md`, `CLAUDE.md` and
+// `.github/copilot-instructions.md` are a hand-maintained three-way mirror that
+// three different tools read, and nothing checked their structure. The first
+// scoped run found a dead cross-reference in `CLAUDE.md` pointing at
+// `#local-persistence` — an anchor that resolves in `AGENTS.md`, whose heading is
+// a bare `### Local persistence`, and did not in `CLAUDE.md`, whose heading had
+// grown a parenthetical. The mirror had drifted at a heading and broken a link in
+// the file loaded into every session. It also found `"New: <Type>"` in
+// `docs/wagtail-content-mapping.md`, where the placeholder is parsed as an HTML
+// tag and vanishes from the rendered page.
+//
+// **This file carries rules only — never the file list.** `bun run lint:docs`
+// derives that from `git ls-files`, for reasons `build_scripts/lint-docs.js`
+// states at length. A `globs` key here would be a second, competing answer to
+// the question that script exists to answer.
+{
+  "config": {
+    // Off, and NOT because Prettier owns it. `.prettierrc.json` sets no
+    // `proseWrap`, so Prettier's default `"preserve"` applies and it never
+    // reflows markdown prose — only fenced code inside it. `printWidth: 100`
+    // therefore says nothing about the lines this rule measures, and a comment
+    // claiming otherwise would be a wrong reason sitting where a checked one
+    // belongs.
+    //
+    // The honest reason is the measurement: at MD013's default 80 this reported
+    // 1,066 findings, and at `line_length: 100` with tables and code blocks
+    // exempt it still reported 777. Reflowing several thousand lines of canon
+    // prose to satisfy a width nothing else enforces is churn, and churn in
+    // these three files is what the mirror can least afford.
+    "MD013": false,
+
+    // `<br>` is how a markdown table holds more than one line in a cell, and
+    // `docs/sfgov-live-design-inspiration.md` uses it throughout. Every OTHER
+    // inline element stays reportable, which is the half that earns its keep:
+    // an angle-bracket placeholder written outside backticks — `<Type>`,
+    // `<specific failure>` — is parsed as an HTML tag and silently dropped from
+    // the rendered page. Turning this rule off wholesale to accommodate the
+    // tables would have taken that catch with it.
+    "MD033": { "allowed_elements": ["br"] },
+
+    // `docs/karl-mockup-cookbook.md` is one recipe per Karl content type, and
+    // each recipe legitimately carries its own "The recipe", "Traps" and "The
+    // Karl form, top to bottom". `siblings_only` still catches a true duplicate
+    // under one parent while allowing the repeated shape across sections.
+    "MD024": { "siblings_only": true },
+
+    // The dated research notes under `docs/` number their findings as bold
+    // paragraph leads — `**5. Raw field names — …**` — eight in a row in
+    // `karl-live-admin-verification-2026-07-06.md` alone. This rule fired on two
+    // of those eight, so satisfying it would mean converting two items of a
+    // uniform list into headings and leaving six behind. Those notes are records
+    // rather than documentation (see AGENTS.md), and a rule that can only be
+    // satisfied by making a record internally inconsistent is the rule that is
+    // wrong here.
+    "MD036": false,
+
+    // A skill file opens with YAML frontmatter and then a `###` heading, which
+    // is the format the skill loader expects rather than a mistake.
+    "MD041": false,
+  },
+}

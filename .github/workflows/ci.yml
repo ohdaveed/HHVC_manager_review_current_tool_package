@@ -53,6 +53,20 @@ jobs:
       - name: Validate page data (Zod schema + invariants)
         run: bun run validate
 
+      # The instruction docs are canon here — AGENTS.md, CLAUDE.md and
+      # .github/copilot-instructions.md are a hand-maintained three-way mirror
+      # that three different tools read — and nothing checked their structure
+      # until now. The first run found a cross-reference in CLAUDE.md pointing at
+      # an anchor that had stopped existing, and an angle-bracket placeholder
+      # being parsed as an HTML tag and dropped from the rendered page.
+      #
+      # The file list is derived from `git ls-files`, not globbed. See
+      # build_scripts/lint-docs.js: a glob that stops matching does not fail, it
+      # stops checking, and the hand-written globs this replaced were missing
+      # more than half the repo's markdown.
+      - name: Docs lint (markdownlint)
+        run: bun run lint:docs
+
       # Knip, on the categories that were already clean when it was adopted:
       # an unused FILE, an unused dependency, an unlisted one, or an import
       # that resolves nowhere. Cheap and static, so it sits beside validate
