@@ -231,7 +231,7 @@ Mutation-proven: a deliberately fake path fails the test."
 ### Task 2: `js/standards/`
 
 **Files:**
-- Move: `js/standards/plain-language.js`, `js/standards/reading-level.js` → `js/standards/`
+- Move: `js/plain-language.js`, `js/reading-level.js` → `js/standards/`
 - Create: `/tmp/hhvc-retarget.mjs` (throwaway migration helper, never committed)
 - Modify: `.dependency-cruiser.cjs`, plus every file referencing the two moved modules
 
@@ -326,16 +326,16 @@ for (const c of changes) console.log('  ' + c)
 
 ```bash
 mkdir -p js/standards
-git mv js/standards/plain-language.js js/standards/plain-language.js
-git mv js/standards/reading-level.js js/standards/reading-level.js
+git mv js/plain-language.js js/standards/plain-language.js
+git mv js/reading-level.js js/standards/reading-level.js
 ```
 
 - [ ] **Step 3: Dry-run the retarget and read the table**
 
 ```bash
 bun /tmp/hhvc-retarget.mjs \
-  js/standards/plain-language.js=js/standards/plain-language.js \
-  js/standards/reading-level.js=js/standards/reading-level.js
+  js/plain-language.js=js/standards/plain-language.js \
+  js/reading-level.js=js/standards/reading-level.js
 ```
 
 Expected to list, among others: `js/main.js` (two side-effect imports), `js/ux-improvements-state-sync.js`, `build_scripts/ai/validate-output.js`, `tests/plain-language.test.js`, `tests/reading-level.test.js`, `AGENTS.md`, `CLAUDE.md`.
@@ -346,8 +346,8 @@ Read the list before applying. If a file you did not expect appears, understand 
 
 ```bash
 bun /tmp/hhvc-retarget.mjs --apply \
-  js/standards/plain-language.js=js/standards/plain-language.js \
-  js/standards/reading-level.js=js/standards/reading-level.js
+  js/plain-language.js=js/standards/plain-language.js \
+  js/reading-level.js=js/standards/reading-level.js
 ```
 
 - [ ] **Step 5: Update the dependency-cruiser regex**

@@ -14,7 +14,7 @@
 
 - **Never write to `pages/*.js`, never publish, never call a Karl API.** The transcript is an export. It changes what an export contains, not what it authorizes. (`AGENTS.md`, "Review/UX layers are additive".)
 - **Prettier is the only linter CI enforces**: no semicolons, single quotes, 2-space indent, `printWidth: 100`, ES5 trailing commas. Run `bun run format` before every commit; `bun run format:check` is the gate.
-- **The two new shared modules live in `js/`, not `build_scripts/`.** `build_scripts/` is CommonJS-only (the Bun 1.3.14 lesson recorded in `AGENTS.md` § CI) and the browser bundle is Vite ESM off `js/main.js`. Every existing dual-export module — `js/review-merge.js`, `js/standards/plain-language.js`, `js/card-inheritance.js`, `js/inline-content-edit-data.js` — sits in `js/`, imports nothing, and resolves siblings off `window.*` in the browser branch. Follow that idiom exactly.
+- **The two new shared modules live in `js/`, not `build_scripts/`.** `build_scripts/` is CommonJS-only (the Bun 1.3.14 lesson recorded in `AGENTS.md` § CI) and the browser bundle is Vite ESM off `js/main.js`. Every existing dual-export module — `js/review-merge.js`, `js/plain-language.js`, `js/card-inheritance.js`, `js/inline-content-edit-data.js` — sits in `js/`, imports nothing, and resolves siblings off `window.*` in the browser branch. Follow that idiom exactly.
 - **The dual-export tail is fixed boilerplate**, copied verbatim from `js/card-inheritance.js`:
   ```js
   if (typeof window !== 'undefined') {
@@ -1239,7 +1239,7 @@ Create `js/karl-transcript.js`. Header, then the pieces below.
    an editor is told. Every such judgement lives here and only here.
 
    Dual-exported (window.karlTranscript plus module.exports) like
-   js/review-merge.js and js/standards/plain-language.js.
+   js/review-merge.js and js/plain-language.js.
 
    Load-order dependency: reads window.karlBlocks, window.cardInheritance and
    window.utils in the browser branch, so js/main.js must list it after

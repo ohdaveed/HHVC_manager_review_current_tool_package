@@ -97,7 +97,7 @@ blur — the guarantee would be cosmetic.
 
 `js/inline-link-target.js`, dual-exported (`window.inlineLinkTarget` plus
 `module.exports`) exactly like `js/review-merge.js`, `js/card-inheritance.js`,
-`js/standards/plain-language.js` and `js/inline-content-edit-data.js`.
+`js/plain-language.js` and `js/inline-content-edit-data.js`.
 
 ```js
 isValidInlineLinkTarget(target, knownKeys) -> boolean
@@ -116,7 +116,7 @@ been an argument that never changes an answer, and there is consequently no
 
 That also moots the question of how to reach `safeUrl` from a dual-exported
 module. The predicate imports nothing and reads no global, matching
-`js/card-inheritance.js` and `js/standards/plain-language.js`, so it carries no
+`js/card-inheritance.js` and `js/plain-language.js`, so it carries no
 load-order dependency and adds no second `require(esm)` crossing on the Node
 side (`build_scripts/data-checks.js:11` already has one, and CI never
 exercises that crossing under Node — only Bun).

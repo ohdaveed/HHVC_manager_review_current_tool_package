@@ -5,7 +5,7 @@ cites the page it came from. See `README.md` for provenance and for the
 conflicts with `notebooklm/hhvc-standards-manual.md` that are deliberately left
 unresolved.
 
-`✓ scored` marks a rule `js/standards/plain-language.js` checks today. `— not checked`
+`✓ scored` marks a rule `js/plain-language.js` checks today. `— not checked`
 marks one it deliberately does not, with the reason.
 
 ---

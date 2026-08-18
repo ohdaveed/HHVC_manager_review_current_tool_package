@@ -620,7 +620,7 @@ In `build_scripts/ai/prompts.js`, add and export:
  * byte-stable for the same reason: caching is a prefix match, so anything
  * request-specific belongs in the user turn. The standing instruction lives
  * here rather than in the browser so the standard cannot drift between what
- * the panel sends and what js/standards/plain-language.js scores.
+ * the panel sends and what js/plain-language.js scores.
  * @returns {{system: string, groundedBy: string[]}}
  */
 function buildRewriteSystemPrompt() {

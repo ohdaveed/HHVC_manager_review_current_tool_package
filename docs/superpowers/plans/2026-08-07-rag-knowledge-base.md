@@ -15,7 +15,7 @@
 - The corpus is exactly `docs/source/**/*.md` (42 files today), `README.md` files excluded, **no other filtering** — the `DRAFT-NOT-FOR-PUBLICATION` file is ingested like every other file per an explicit reviewer decision.
 - Vector search is brute-force cosine similarity in plain JS — no `sqlite-vec`, no native extension.
 - `compliance-audit` is a new value on the existing task enum on `POST /api/ai/generate`, not a new route — it reuses `resolveProvider`, the disclosure convention, and the route's existing timeout/cancellation/error-mapping.
-- Pure logic (`knowledge-chunking.js`, `knowledge-search.js`) is dual-exported (`window`/`module.exports`), matching `js/review-merge.js`/`js/standards/plain-language.js`, and unit-tested without a DB or network call.
+- Pure logic (`knowledge-chunking.js`, `knowledge-search.js`) is dual-exported (`window`/`module.exports`), matching `js/review-merge.js`/`js/plain-language.js`, and unit-tested without a DB or network call.
 - New test files are added to `package.json`'s explicit (non-globbed) `test` script list — this repo's tests are enumerated, not discovered.
 - Code style: no semicolons, single quotes, 2-space indent, ES5 trailing commas (Prettier is the linter — run `bun run format` before each commit in this plan).
 - `build_scripts/ai/*` files are CommonJS (`require`/`module.exports`), matching every existing sibling in that directory. `server.ts` is the one TypeScript/ESM file.
@@ -111,7 +111,7 @@ Expected: FAIL — `Cannot find module '../build_scripts/knowledge-chunking'`
 //
 // Pure markdown chunker for the RAG knowledge base. No I/O: takes a markdown
 // string and returns chunk records. Dual-exported (window/module.exports),
-// matching js/review-merge.js and js/standards/plain-language.js, so this is
+// matching js/review-merge.js and js/plain-language.js, so this is
 // unit-testable without a DB or a browser, and reusable if a browser-side
 // tool ever wants the same chunking (none does today).
 //

@@ -101,7 +101,7 @@ filenames continue to exist as thin orchestrators.
 
 ```
 js/review-state-validation.js
-js/standards/reading-level.js
+js/reading-level.js
 js/review-state-store.js            <- new (shared)
 js/ux-improvements-state-sync.js    <- new
 js/ux-improvements-workspace.js     <- new
