@@ -27,13 +27,13 @@ Production TODO/FIXME/HACK scan: none found in production code (scan section).
 
 ### 3) Security Concerns
 
-| Risk                                   | OWASP category (if applicable) | Evidence                                     | Current mitigation                                  | Gap                                                                                    |
-| -------------------------------------- | ------------------------------ | -------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Unsafe URL schemes in rendered hrefs   | A03 Injection                  | `js/utils.js` `safeUrl`, `js/page-render.js` | Scheme guard + validate `findUnsafeUrls`            | One markdown-link path uses `https?` regex instead of `safeUrl` (documented exception) |
-| Unauthenticated sync/AI if misdeployed | A01 Broken Access Control      | `server.ts`                                  | Token required; unset → 501; rate limits; body caps | Ops must set secrets correctly                                                         |
-| XSS via `innerHTML`                    | A03                            | page-render escaping tests                   | `escapeHtml` + URL guards; dedicated tests          | Keep render path coverage                                                              |
-| Sync token in shareable backups        | A04                            | Separate `hhvcReviewSyncConfig` key          | Documented separation                               | Educate reviewers not to paste tokens                                                  |
-| No Dependabot/Snyk in scan             | N/A                            | scan SECURITY section empty                  | Manual upgrades                                     | [ASK USER] enable dependency alerts                                                    |
+| Risk                                   | OWASP category (if applicable) | Evidence                                            | Current mitigation                                  | Gap                                                                                    |
+| -------------------------------------- | ------------------------------ | --------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Unsafe URL schemes in rendered hrefs   | A03 Injection                  | `js/utils.js` `safeUrl`, `js/mockup/page-render.js` | Scheme guard + validate `findUnsafeUrls`            | One markdown-link path uses `https?` regex instead of `safeUrl` (documented exception) |
+| Unauthenticated sync/AI if misdeployed | A01 Broken Access Control      | `server.ts`                                         | Token required; unset → 501; rate limits; body caps | Ops must set secrets correctly                                                         |
+| XSS via `innerHTML`                    | A03                            | page-render escaping tests                          | `escapeHtml` + URL guards; dedicated tests          | Keep render path coverage                                                              |
+| Sync token in shareable backups        | A04                            | Separate `hhvcReviewSyncConfig` key                 | Documented separation                               | Educate reviewers not to paste tokens                                                  |
+| No Dependabot/Snyk in scan             | N/A                            | scan SECURITY section empty                         | Manual upgrades                                     | [ASK USER] enable dependency alerts                                                    |
 
 ### 4) Performance and Scaling Concerns
 
@@ -50,7 +50,7 @@ Production TODO/FIXME/HACK scan: none found in production code (scan section).
 | ------------------------------------------- | ------------------------------------------------ | --------------------- | -------------------------------------------------- |
 | `index.html`                                | Shell + workspace markup must match JS tab lists | 54 commits (90d scan) | Change with `WORKSPACE_TABS` + shortcuts together  |
 | `js/ux-improvements.js` / workspace CSS     | Docked layout + visibility class coupling        | 40 / 25 commits       | Touch `applyWorkspaceVisibility` only via one path |
-| `js/page-render.js`                         | XSS surface + Karl tags                          | 35 commits            | Keep escape/URL tests green                        |
+| `js/mockup/page-render.js`                  | XSS surface + Karl tags                          | 35 commits            | Keep escape/URL tests green                        |
 | `pages/agency-service-grouping.js`          | Agency hub content + invariants                  | 25 commits            | Run `validate` + banned-term checks                |
 | `js/utils.js`                               | Shared vocabulary + URL + records                | 24 commits            | Prefer additive helpers; don’t restate decisions   |
 | Instruction docs (`AGENTS.md`, `CLAUDE.md`) | Counts drift                                     | high churn            | Update with `doc-counts` in the same PR            |

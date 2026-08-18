@@ -35,7 +35,7 @@ wiring into the existing autosave path).
   fields — section `paragraphs` and `bullets` — and only of individual items,
   never whole sections/cards/steps, and never reordering.
 - **A field stamped `data-rewrite-field` but absent from that list is the worst
-  state to be in, and it was live.** `js/page-render.js` has stamped
+  state to be in, and it was live.** `js/mockup/page-render.js` has stamped
   `sections.N.steps.M.text.K` since the AI-rewrite work, while
   `computeSectionEdits` only ever diffed `heading`/`paragraphs`/`bullets` — so
   a step paragraph opened an editor, accepted the edit, re-rendered with it,
@@ -93,7 +93,7 @@ wiring into the existing autosave path).
   reviewer actually wants to change is already inline-editable where it lives,
   so keep cards out of scope; the missing attribute is the whole enforcement —
   do not "complete" the feature by adding it. The decision is restated at its
-  site in `js/page-render.js`, immediately above `renderCards`.
+  site in `js/mockup/page-render.js`, immediately above `renderCards`.
 - **Every renderer that builds its own heading has to stamp
   `data-rewrite-field` itself, and five of them silently did not.** Only
   `renderSection()` reads `__sectionIndex`, so any section shape rendered
@@ -114,7 +114,7 @@ wiring into the existing autosave path).
   `target.replaceWith(holder)` and that holder is a `<div>`, so annotating it
   there would have dropped a block-level Editor.js instance inside a native
   button (invalid content model, unreliable focus/caret) **and** handed one
-  click to two listeners — the document-level toggle in `js/page-render.js`
+  click to two listeners — the document-level toggle in `js/mockup/page-render.js`
   and the `#mockPage` editor handler, neither of which calls
   `stopPropagation()`. The panel would open while the heading flipped into an
   edit box. So a chevron button owns the toggle and a sibling `<h3>` owns the
@@ -123,7 +123,7 @@ wiring into the existing autosave path).
   trigger spanned the whole row, so target size was never a question), and its
   accessible name is restated with `aria-label` since it has no text of its
   own — the old button took its name from the heading text it contained.
-- **Addressing is reused, not reinvented.** `js/page-render.js` already
+- **Addressing is reused, not reinvented.** `js/mockup/page-render.js` already
   emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
   attributes (added for the in-flight AI-rewrite-selection feature) via
   `paragraphList()`/`bulletList()`'s `pathPrefix` parameter, plus

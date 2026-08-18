@@ -17,7 +17,7 @@
 
    Wrapped in an IIFE rather than declared at top level because a classic
    <script> shares one global scope with every other js/*.js file, and
-   js/page-render.js already declares a top-level `normalizeTextItem`. */
+   js/mockup/page-render.js already declares a top-level `normalizeTextItem`. */
 ;(function initPlainLanguage() {
   // --- Thresholds -------------------------------------------------------
   // Manual 7.2.2: sentences average "15 to 20 words or fewer"; the Karl
@@ -233,7 +233,7 @@
   // --- Text helpers -----------------------------------------------------
 
   /**
-   * Strip the inline markdown js/page-render.js understands, leaving the words
+   * Strip the inline markdown js/mockup/page-render.js understands, leaving the words
    * a reader actually sees: `**bold**` markers go, `[label](target)` collapses
    * to its label.
    * @param {unknown} text
@@ -388,7 +388,7 @@
           addItem(`${stepBase}.bullets[${index}]`, 'step-bullet', entry, { prose: true })
         })
         if (step.callout) {
-          // The title is rendered (renderCallout in js/page-render.js) and so
+          // The title is rendered (renderCallout in js/mockup/page-render.js) and so
           // has to be analysed. Collecting only `.text` left a visible field
           // exempt from the mandate rules — "The owner shall act" as a callout
           // title passed while the identical wording anywhere else failed.

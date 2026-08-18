@@ -169,7 +169,7 @@ describe('findUnmooredNotes', () => {
   test('a note declaring an unresolved mapping is not a failure', () => {
     // Roughly a tenth of the corpus honestly records that no mapping exists.
     // That is a state, not a defect, and the phrases come from
-    // GAP_LABEL_PATTERN in js/karl-tag-meta.js rather than a second list here.
+    // GAP_LABEL_PATTERN in js/mockup/karl-tag-meta.js rather than a second list here.
     for (const phrase of [
       'BLOCKED pending a decision.',
       'External-URL card with no clean mapping in the verified schema.',

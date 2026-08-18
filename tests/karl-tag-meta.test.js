@@ -20,7 +20,7 @@ import {
   normalizeKarlGuide,
   parseKarlLabel,
   renderKarlGuidePanel,
-} from '../js/karl-tag-meta.js'
+} from '../js/mockup/karl-tag-meta.js'
 import { UNRESOLVED } from '../js/karl/karl-guide-registry.js'
 
 /** Strip whitespace/punctuation (including the `->`/`→` separator itself,

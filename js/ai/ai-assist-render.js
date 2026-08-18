@@ -309,7 +309,7 @@ window.HHVC_PAGES['${key}'] = ${JSON.stringify(page, null, 2)}
    * Stop preview links from navigating the real mockup.
    *
    * renderPageMain emits the same `data-render-target` buttons the live page
-   * uses, and the click handler in js/page-render.js is bound to `document` —
+   * uses, and the click handler in js/mockup/page-render.js is bound to `document` —
    * so a card or inline link in a DRAFT would call window.renderPage() and move
    * the reviewer off the page they were reviewing. Rewriting the attribute to
    * `data-render-inert` keeps the button in the same handler branch (so the

@@ -1,15 +1,15 @@
-// Regression suite: every render* function in js/page-render.js must escape
+// Regression suite: every render* function in js/mockup/page-render.js must escape
 // page-data field values before they reach innerHTML. This is the review
 // tool's main HTML-building path, so an unescaped field here is an XSS
 // regression the same shape as the one fixed in the workshop request form.
 import { describe, test, expect } from 'bun:test'
 
-// Importing js/page-render.js pulls in js/utils.js, js/karl-tag-meta.js and
+// Importing js/mockup/page-render.js pulls in js/utils.js, js/mockup/karl-tag-meta.js and
 // js/state.js through the module graph — the same three files the old vm
 // harness had to be handed explicitly, now resolved by the loader. The
 // happy-dom environment preloaded via bunfig.toml is what lets that chain
 // evaluate here, since js/state.js reads window.HHVC_DATA on import.
-import * as ctx from '../js/page-render.js'
+import * as ctx from '../js/mockup/page-render.js'
 import { pageData } from '../js/state.js'
 import { escapeHtml } from '../js/utils.js'
 
@@ -34,7 +34,7 @@ describe('page-render.js escaping', () => {
   })
 
   test('karlTag escapes an XSS payload split across the headline and rationale spans', () => {
-    // parseKarlLabel() (js/karl-tag-meta.js) divides a note into separate
+    // parseKarlLabel() (js/mockup/karl-tag-meta.js) divides a note into separate
     // headline/rationale spans, each escaped independently — this proves
     // neither half leaks the raw payload and each renders its own escaped
     // fragment, not just that the whole markup string happens to contain one.
@@ -866,7 +866,7 @@ describe('data-rewrite-field annotation', () => {
   // render-order implementation would misattribute paths onto it. That
   // fixture was vacuous: 'related' sections carry no `paragraphs`/`bullets`
   // and cards are deliberately out of the v1 rewrite-field scope (see
-  // js/page-render.js's renderCards — it emits no data-rewrite-field at
+  // js/mockup/page-render.js's renderCards — it emits no data-rewrite-field at
   // all), so section 0 in that fixture NEVER emitted a data-rewrite-field
   // path under EITHER implementation. The assertion
   // `expect(html).not.toContain('data-rewrite-field="sections.0.paragraphs.0"')`
@@ -1018,7 +1018,7 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
 
 // A Karl Services/Resources subsection entry, and a Related-panel entry, is
 // only a page picker — there is no description field on the card, so what
-// publishes comes from the DESTINATION page. Before this, js/page-render.js
+// publishes comes from the DESTINATION page. Before this, js/mockup/page-render.js
 // printed `card.text` verbatim, showing reviewers 12 descriptions that could
 // never appear on SF.gov. These pin the resolution rules in
 // js/card-inheritance.js against the renderer that now consumes them, since a
@@ -1206,7 +1206,7 @@ describe('card title inheritance', () => {
   })
 })
 
-// cardInheritanceFact() (js/page-render.js) is a DIFF of values cardTitle()/
+// cardInheritanceFact() (js/mockup/page-render.js) is a DIFF of values cardTitle()/
 // cardDescription() already resolved against the card's own title/text, not
 // a second classifier — so it structurally cannot disagree with what
 // actually renders. These tests exist because a badge that disagrees with

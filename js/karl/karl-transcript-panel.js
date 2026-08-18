@@ -2,7 +2,7 @@
    in the collapsed section at the end of the Help tab.
 
    Static markup in index.html rendered at init, following
-   js/mockup-image-export.js — NOT the three lazy `__mountXOnTabOpen` hooks.
+   js/mockup/mockup-image-export.js — NOT the three lazy `__mountXOnTabOpen` hooks.
    Those exist because AI assist, stored review data and the page registry all
    depend on server.ts, so on a deploy with no runtime they were permanently
    empty panels; the transcript needs no server, so a fourth lazy panel would

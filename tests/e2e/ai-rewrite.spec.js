@@ -101,7 +101,7 @@ async function selectFirstField(page) {
  * Same as selectFirstField, but scoped to a paragraph/bullet ITEM path
  * rather than whichever field is first in the DOM.
  *
- * js/page-render.js's renderHero()/renderSection() also emit
+ * js/mockup/page-render.js's renderHero()/renderSection() also emit
  * data-rewrite-field="title"/"summary"/"primaryCta"/"sections.N.heading"
  * (added for the inline-content-editing feature), and the hero sits before
  * any section in the DOM — so a plain querySelector('[data-rewrite-field]')
@@ -231,7 +231,7 @@ test.describe('AI rewrite', () => {
   test('rewriting the page title writes a plain string, not an unverified pill', async ({
     page,
   }) => {
-    // Regression coverage: js/page-render.js's renderHero() emits
+    // Regression coverage: js/mockup/page-render.js's renderHero() emits
     // data-rewrite-field="title" on the hero <h1> for the inline-content-
     // editing feature. Before this fix, applyResult() unconditionally wrote
     // the {text, unverified, ...} object form paragraphs/bullets accept —

@@ -2,7 +2,7 @@
 // Depends on js/utils.js (csvEscape via toCsv, today, downloadFile,
 // defaultSeoTitle, defaultMetaDescription, setText, getPrimaryCta,
 // buildReviewRecord), js/state.js, js/ui-controls.js (showToast), and
-// js/page-render.js (renderPage, which this file wraps).
+// js/mockup/page-render.js (renderPage, which this file wraps).
 
 import {
   buildReviewRecord,

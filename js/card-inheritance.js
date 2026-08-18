@@ -3,7 +3,7 @@
    DESTINATION page's title and description, its title alone, or the card's own
    authored words.
 
-   Consumed by the browser (js/page-render.js, which side-effect-imports this
+   Consumed by the browser (js/mockup/page-render.js, which side-effect-imports this
    file so the graph guarantees it) via window.cardInheritance, and by
    build_scripts/audit-card-inheritance.js via a plain require — so it has no
    DOM dependency and must stay loadable in both contexts, exactly like
@@ -18,7 +18,7 @@
 
    Load-order dependency: none of its own — it imports nothing and reads no
    global. It must simply be evaluated before anything calls
-   window.cardInheritance, which js/page-render.js's own import of this file
+   window.cardInheritance, which js/mockup/page-render.js's own import of this file
    enforces, and js/main.js lists ahead of page-render.js as documentation. */
 
 /**

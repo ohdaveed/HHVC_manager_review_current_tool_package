@@ -37,7 +37,7 @@ module.exports = {
         'islands are loaded by a dynamic import from js/ux-improvements-state-sync.js, which ' +
         'is also what keeps them in their own chunk.',
       from: {
-        path: '^js/(page-render|state|utils|ui-controls|editor-panel|card-inheritance|page-data)\\.js$',
+        path: '^js/(mockup/page-render|state|utils|ui-controls|editor-panel|card-inheritance|page-data)\\.js$',
       },
       to: { path: 'node_modules/(react|react-dom|@mui|@emotion)' },
     },
@@ -102,7 +102,7 @@ module.exports = {
 
        Caught by mutation-testing the rule rather than by reading the config:
        the first version returned exit 0 with `import 'react'` sitting at the
-       top of js/page-render.js. */
+       top of js/mockup/page-render.js. */
     doNotFollow: { path: 'node_modules' },
     exclude: { path: '^(dist|dist-singlefile|archive|forms|tools/oxlint|\\.worktrees)' },
     tsPreCompilationDeps: true,

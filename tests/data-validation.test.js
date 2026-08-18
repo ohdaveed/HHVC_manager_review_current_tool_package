@@ -46,7 +46,7 @@ describe('require() of build_scripts/data-checks.js', () => {
   // safeUrl. It is the XSS scheme guard, its own comment warns that failing in
   // one of its two execution contexts is worse than not existing, and on the browser side every
   // dual-export module in js/ is read off `window` rather than named-imported,
-  // so extracting it would push js/page-render.js onto window indirection.
+  // so extracting it would push js/mockup/page-render.js onto window indirection.
   test('loads in a fresh Bun process without an async-module error', () => {
     // process.execPath, not 'bun': this guards behaviour that CHANGED between
     // Bun versions, so resolving the runtime through PATH could test a
@@ -377,7 +377,7 @@ describe('findBrokenInlineLinks', () => {
   })
 
   // The three cases below pin this function at the boundary it shares with
-  // js/inline-link-target.js. The predicate has its own exhaustive unit file;
+  // js/mockup/inline-link-target.js. The predicate has its own exhaustive unit file;
   // what these add is coverage of the CALLER, because extracting the rule
   // changed exactly one thing here — targets are now trimmed before testing —
   // and a corpus that happens to carry no padded target cannot show that.

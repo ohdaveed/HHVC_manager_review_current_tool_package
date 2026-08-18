@@ -18,7 +18,7 @@ import { breadcrumbFor, panelByRawName, PROMOTE_PANEL } from './karl-blocks.js'
 // page missed both lookups: the label silently fell back to the raw type
 // string (harmless) and the path resolved to '' (not harmless — a page with
 // no explicit karlGuide reported every tag as unmapped). Note this file's
-// normalizePageType is NOT js/page-render.js's same-named function, which
+// normalizePageType is NOT js/mockup/page-render.js's same-named function, which
 // maps the same input to `about`; the two are independent and only the keys
 // here follow this one.
 const PAGE_TYPE_LABELS = {
@@ -44,7 +44,7 @@ const PAGE_TYPE_LABELS = {
    red in CI.
 
    What is left here is the ROLE VOCABULARY, which is this repo's and not
-   Karl's: `services`, `what-to-know`, `top-facts` are names js/page-render.js
+   Karl's: `services`, `what-to-know`, `top-facts` are names js/mockup/page-render.js
    gives to parts of a mockup page. Each entry names the panel that role lands
    in by its RAW field name — unique within a type, unlike the UI label, which
    Agency repeats for its two "Subsection" panels — plus, optionally, the block

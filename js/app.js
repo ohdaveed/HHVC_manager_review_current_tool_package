@@ -1,11 +1,11 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
 // render. Loaded after js/state.js, js/ui-controls.js, js/editor-panel.js,
-// and js/page-render.js, all of which it depends on directly, and before
+// and js/mockup/page-render.js, all of which it depends on directly, and before
 // js/ux-improvements.js, which wraps renderPage once init() has run.
 
 import { buildPageSelect, initChecklist, showToast } from './ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
-import { renderPage } from './page-render.js'
+import { renderPage } from './mockup/page-render.js'
 import { resolvePageKey } from './utils.js'
 import { updateSearchPreview } from './editor-panel.js'
 
@@ -32,7 +32,7 @@ import { updateSearchPreview } from './editor-panel.js'
  * below is unchanged, and a future module adding a second would rely on it.
  *
  * Reassigning `window.renderPage` does NOT rebind this module's `import`,
- * which points at js/page-render.js's original export forever. Under the old
+ * which points at js/mockup/page-render.js's original export forever. Under the old
  * classic-<script> model `renderPage` was a shared global, so `window.renderPage
  * = wrapper` replaced the very binding this file called and the decorators
  * applied for free; as ES modules that stops being true, silently.

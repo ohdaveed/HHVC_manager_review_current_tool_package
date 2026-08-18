@@ -96,12 +96,12 @@ function unescapeHtml(html) {
 
 /**
  * Convert a stored plain-text value (the bold/link markdown convention —
- * **bold**, [label](target) — js/page-render.js's formatMarkdown() renders)
+ * **bold**, [label](target) — js/mockup/page-render.js's formatMarkdown() renders)
  * into the inline HTML representation Editor.js's paragraph block holds
  * while editing. Applies ONLY to paragraph/bullet items — title, summary,
  * primaryCta, and section heading are rendered by renderHero()/button()/
  * renderSection() via a bare escapeHtml() with no formatMarkdown() call at
- * all (js/page-render.js:216,219,560,631), so those four fields never
+ * all (js/mockup/page-render.js:216,219,560,631), so those four fields never
  * interpret that bold/link syntax on the real mockup; converting an edit
  * to one of them into that markup would store literal asterisks a reviewer
  * never asked for and the renderer will never turn back into formatting.

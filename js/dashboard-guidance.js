@@ -2,7 +2,7 @@
    Keeps descriptive review guidance near the page preview and trims repeated sidebar helper copy at runtime. */
 
 import { applyChecklistState, initChecklist } from './ui-controls.js'
-import { renderKarlTagLegend } from './karl-tag-meta.js'
+import { renderKarlTagLegend } from './mockup/karl-tag-meta.js'
 import { getCurrentKey } from './utils.js'
 import { updateReadingTarget } from './editor-panel.js'
 ;(function migrateDescriptiveTextToDashboard() {

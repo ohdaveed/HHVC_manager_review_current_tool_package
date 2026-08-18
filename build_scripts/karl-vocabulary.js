@@ -50,10 +50,10 @@
 // **Deliberately unresolved notes are a first-class state, not a failure.**
 // Part of the corpus says "BLOCKED", "flag for Digital Services", "no clean
 // mapping" — an honest record that a mapping does not exist yet.
-// GAP_LABEL_PATTERN is imported from js/karl-tag-meta.js rather than restated,
+// GAP_LABEL_PATTERN is imported from js/mockup/karl-tag-meta.js rather than restated,
 // so the validator and the badge a reviewer sees cannot come to disagree about
 // what counts as unresolved.
-const { GAP_LABEL_PATTERN } = require('../js/karl-tag-meta.js')
+const { GAP_LABEL_PATTERN } = require('../js/mockup/karl-tag-meta.js')
 const { KARL_PANELS, PROMOTE_PANEL } = require('../js/karl/karl-blocks.js')
 
 /**

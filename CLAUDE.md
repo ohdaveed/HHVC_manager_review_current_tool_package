@@ -413,7 +413,7 @@ The review workspace renders through **React 19 + MUI**, mounted as islands insi
 
 ### Card descriptions are inherited, not printed
 
-A Karl Services/Resources subsection entry, a Related-panel entry, and a Resource Collection's Resource-section entry are all only page pickers, so their title always publishes as the **destination** page's own title. A card in `pages/*.js` carrying its own `text` was therefore showing reviewers copy that can never appear on SF.gov — which matters more here than in most codebases, because approving that copy is the entire point of the tool. `js/page-render.js` resolves **every** card description through one helper, `cardDescription(section, card)`, instead of printing `card.text`; an empty resolved description renders no element, not an empty one. **There are three buckets and they key on the section's `karl` note, NOT on `section.component`** — `inherits` renders the destination's title AND summary, `title-only` renders a title and a link and **nothing else**, `authored` writes its own words and is left untouched. Keying on `component` would corrupt Table and Title-and-text blocks, which is not hypothetical: it was the first version. **`js/card-inheritance.js` is dual-exported** exactly like `js/review-merge.js`, so the browser renderer and the Node audit cannot come to disagree about what inherits. Full rationale — the three buckets verified at DOM level, why `bun run audit-cards` is a report rather than a CI gate, and the sf.gov census that settled external-URL entries — in the `hhvc-card-inheritance` skill.
+A Karl Services/Resources subsection entry, a Related-panel entry, and a Resource Collection's Resource-section entry are all only page pickers, so their title always publishes as the **destination** page's own title. A card in `pages/*.js` carrying its own `text` was therefore showing reviewers copy that can never appear on SF.gov — which matters more here than in most codebases, because approving that copy is the entire point of the tool. `js/mockup/page-render.js` resolves **every** card description through one helper, `cardDescription(section, card)`, instead of printing `card.text`; an empty resolved description renders no element, not an empty one. **There are three buckets and they key on the section's `karl` note, NOT on `section.component`** — `inherits` renders the destination's title AND summary, `title-only` renders a title and a link and **nothing else**, `authored` writes its own words and is left untouched. Keying on `component` would corrupt Table and Title-and-text blocks, which is not hypothetical: it was the first version. **`js/card-inheritance.js` is dual-exported** exactly like `js/review-merge.js`, so the browser renderer and the Node audit cannot come to disagree about what inherits. Full rationale — the three buckets verified at DOM level, why `bun run audit-cards` is a report rather than a CI gate, and the sf.gov census that settled external-URL entries — in the `hhvc-card-inheritance` skill.
 
 ### Core module split (formerly one `app.js`)
 
@@ -430,7 +430,7 @@ re-monolith them.**
   duplicating logic — though the module has drifted toward a grab-bag, and
   `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` sit here as a layer
   inversion: the bottom-most module reaching up into the workspace DOM.
-- **`js/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
+- **`js/mockup/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
   `body`, `placement`, `editor`) and legend markup used by `karlTag()` and the
   workspace legend. Loads after `js/utils.js` for `escapeHtml`.
 - **`js/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone used
@@ -439,7 +439,7 @@ re-monolith them.**
   page-picker `<select>`, and the review checklist.
 - **`js/editor-panel.js`** — SEO/editor panel: syncing input fields with the
   current page, dirty-state indicators, search-result preview, per-field reset.
-- **`js/page-render.js`** — turns `pages/*.js` page objects into the `#mockPage`
+- **`js/mockup/page-render.js`** — turns `pages/*.js` page objects into the `#mockPage`
   HTML, including `karlTag()` for Karl CMS placement annotations and the
   `unverifiedPill()` warning badge.
 - **`js/page-registry-data.js`** — pure validation for a page a reviewer
@@ -457,7 +457,7 @@ re-monolith them.**
   (`inherits`), its title alone (`title-only`), or their own authored words
   (`authored`). It imports nothing and reads no global, so it has no load-order
   dependency of its own — it must simply be evaluated before anything calls
-  `window.cardInheritance`, which `js/page-render.js`'s own import of it
+  `window.cardInheritance`, which `js/mockup/page-render.js`'s own import of it
   enforces. Dual-exported (`window.cardInheritance` plus `module.exports`)
   exactly like `js/review-merge.js`, and for the same reason: see "Card
   descriptions are inherited, not printed" above — the browser renderer and the
@@ -514,7 +514,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   of its own render, optional-chained.
 - **`window.ReviewOps`** (`js/review-ops.js`) ← `js/review-ops-data.js`, which
   attaches `.data`. The stored-review-data panel, a collapsed section in Help.
-- **`window.MockupImageExport`** (`js/mockup-image-export.js`) — PNG export of
+- **`window.MockupImageExport`** (`js/mockup/mockup-image-export.js`) — PNG export of
   the mockups, standing on its own.
 
 - **Three lazily-mounted panels publish a mount hook rather than rendering at
@@ -647,8 +647,8 @@ run the same implementation the Checks panel does.
 
 `escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
 none of the five characters it escapes — so every structured `href` in
-`js/page-render.js` goes through `safeUrl()` from `js/utils.js`, **except
-`formatMarkdown()`'s inline `[label](target)` links** (`js/page-render.js:51`),
+`js/mockup/page-render.js` goes through `safeUrl()` from `js/utils.js`, **except
+`formatMarkdown()`'s inline `[label](target)` links** (`js/mockup/page-render.js:51`),
 which gate on a bare `/^https?:\/\//` instead. Not a hole today: `escapeHtml`
 runs over the whole string first so the attribute cannot be broken out of, and
 the regex admits only `http(s)`, which `safeUrl` allows anyway. `safeUrl`
@@ -689,7 +689,7 @@ versions were written first and both passed against a deliberately broken
 the XSS scheme guard, and on the BROWSER side every dual-export module in
 `js/` is read off `window` rather than named-imported (Node `require`s them
 directly, which is the half that works), so extracting `safeUrl` would push
-`js/page-render.js` onto window indirection for no gain. Separately,
+`js/mockup/page-render.js` onto window indirection for no gain. Separately,
 **CI never exercises that crossing under Node** —
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
 `build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
@@ -1440,7 +1440,7 @@ that stub globals must restore them, or they pollute sibling test files.
 ## Editing rules (quick reference)
 
 - Public page content → `pages/*.js`.
-- Core render/state → `js/state.js`, `js/page-render.js`, `js/ui-controls.js`,
+- Core render/state → `js/state.js`, `js/mockup/page-render.js`, `js/ui-controls.js`,
   `js/editor-panel.js`, `js/app.js`.
 - Review/UX layers → `js/ux-improvements.js`, `js/review-queue.js`,
   `js/dashboard-guidance.js`, `js/keyboard-shortcuts.js`,
@@ -1462,9 +1462,9 @@ that stub globals must restore them, or they pollute sibling test files.
   tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
   `''` rather than guessing — `guideForContext` stamps any non-empty path
   `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
-  reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
+  reviewer as a measurement), `js/mockup/karl-tag-meta.js` (panel markup),
   `js/karl/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
-  call site in `js/page-render.js` must pass `context.role`: without one the
+  call site in `js/mockup/page-render.js` must pass `context.role`: without one the
   tag KIND is used as the role, which names no Karl field. Note the panel is
   block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
   parser closes the paragraph and the panel escapes the element it is
@@ -1542,7 +1542,7 @@ so it is wrong the moment it is written.)
 | `hhvc-ai-assist-backend`      | `server.ts`'s AI routes, anything under `build_scripts/ai/`                  |
 | `hhvc-rag-knowledge-base`     | `build_scripts/knowledge-*.js`, `build_scripts/ai/compliance-audit.js`       |
 | `hhvc-ai-rewrite`             | `js/ai-rewrite*.js`, anything touching `data-rewrite-field` addressing       |
-| `hhvc-card-inheritance`       | `js/card-inheritance.js`, `js/page-render.js`'s card rendering               |
+| `hhvc-card-inheritance`       | `js/card-inheritance.js`, `js/mockup/page-render.js`'s card rendering        |
 | `hhvc-react-islands`          | anything under `js/react/`, or adding a React island                         |
 | `hhvc-workspace-layout`       | the workspace grid in `css/dashboard.css`, `js/ux-improvements-workspace.js` |
 | `hhvc-review-insights`        | `js/review-insights*.js`, `css/review-insights.css`                          |

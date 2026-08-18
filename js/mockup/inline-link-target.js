@@ -1,7 +1,7 @@
 /* The single definition of what an inline link target may be.
 
    An inline link is written in page copy as `[label](target)` and rendered by
-   js/page-render.js's formatMarkdown(): an http(s) target becomes a real
+   js/mockup/page-render.js's formatMarkdown(): an http(s) target becomes a real
    external anchor, anything else becomes
    `<button data-render-target="...">`, an in-mockup navigation control. So a
    target that is neither a real page key nor a URL renders as a control that
@@ -29,7 +29,7 @@
    Note what this module deliberately does NOT do: it does not sanitize. The
    `href` an external target ends up in is still run through js/utils.js's
    safeUrl() at the point it is written, by js/editing/inline-content-edit-link-tool.js
-   and js/page-render.js. Deciding whether a target is VALID and neutralizing
+   and js/mockup/page-render.js. Deciding whether a target is VALID and neutralizing
    the string that reaches an attribute are two different jobs, and folding
    safeUrl() in here would add an argument that never changes an answer: every
    scheme safeUrl rejects is already rejected below for not being a page key,

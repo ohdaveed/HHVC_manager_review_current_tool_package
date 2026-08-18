@@ -1,7 +1,7 @@
 // Coverage for the card-inheritance classifier and the audit built on top of it.
 //
 // Both halves needed pinning for the same reason, and it is not the usual one.
-// `js/card-inheritance.js` exists so that `js/page-render.js` and
+// `js/card-inheritance.js` exists so that `js/mockup/page-render.js` and
 // `build_scripts/audit-card-inheritance.js` cannot come to disagree about what
 // inherits — but a shared module only removes the disagreement between the two
 // CALLERS. It does nothing to stop the shared answer itself from changing, and

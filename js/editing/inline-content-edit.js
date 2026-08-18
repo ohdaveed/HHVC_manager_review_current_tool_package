@@ -85,7 +85,7 @@
   }
 
   /**
-   * The plain-string fields js/page-render.js renders through
+   * The plain-string fields js/mockup/page-render.js renders through
    * formatMarkdown() rather than a bare escapeHtml(): a callout's body (on a
    * section or a step) and a table cell. Editing one of these as plain text
    * would show the reviewer raw `[label](target)` source and strip the link
@@ -171,7 +171,7 @@
    * editableItemKind, resolved off the shared data module at call time.
    *
    * Read through window rather than captured at module scope for the same
-   * reason js/page-render.js reads window.cardInheritance that way: this file
+   * reason js/mockup/page-render.js reads window.cardInheritance that way: this file
    * is an IIFE with no import of the dual-export module, and reading it lazily
    * keeps the two files' load order from mattering.
    * @param {string} path
@@ -211,7 +211,7 @@
    *
    * Returns whatever window.renderPage returns — in a real browser with
    * View Transitions support that is a pending promise, not a completed
-   * paint (see js/page-render.js's renderPage(), which routes through
+   * paint (see js/mockup/page-render.js's renderPage(), which routes through
    * document.startViewTransition()). Most callers here don't need to know
    * that (they do nothing DOM-dependent afterward), but addListItem() does
    * — see its use of this return value below.
@@ -255,7 +255,7 @@
    * than a captured original).
    *
    * Decoration must wait for the ACTUAL DOM mutation, not just for
-   * original.apply() to return. js/page-render.js's renderPage() uses
+   * original.apply() to return. js/mockup/page-render.js's renderPage() uses
    * document.startViewTransition() when the browser supports it (real
    * Chromium does; happy-dom does not), and in that case the DOM update
    * happens asynchronously inside the transition's callback — renderPage()
@@ -338,7 +338,7 @@
     // repainted #mockPage. In a real browser with View Transitions support,
     // rerender()'s return value is a pending promise (the DOM mutation
     // happens asynchronously inside the transition's callback — see
-    // js/page-render.js's renderPage()), so querying for the new field
+    // js/mockup/page-render.js's renderPage()), so querying for the new field
     // synchronously right after calling rerender() would run against the
     // PREVIOUS paint, before the new item exists at all. Without View
     // Transitions (including happy-dom, which has none — see the unit
@@ -512,7 +512,7 @@
     // A paragraphs/bullets array that currently has ZERO items — because
     // the reviewer just removed its last item, or because the page was
     // authored with an empty array — renders no elements at all
-    // (paragraphList()/bulletList() in js/page-render.js both return '' for
+    // (paragraphList()/bulletList() in js/mockup/page-render.js both return '' for
     // an empty array), so the DOM walk above never discovers it and
     // seenContainers would otherwise never gain its containerPath. Without
     // this pass, emptying a list is a one-way door: nothing left in the DOM
@@ -569,7 +569,7 @@
       // (build_scripts/schema.js), and renderSection() (Task 1) tags it
       // data-rewrite-field="sections.N.heading" for every section that went
       // through partitionSections(), which is all of them except the
-      // hardcoded "What to do" transaction-flow heading (js/page-render.js),
+      // hardcoded "What to do" transaction-flow heading (js/mockup/page-render.js),
       // which carries no such attribute and is skipped below rather than
       // guessed at.
       const sectionIndexMatch = containerPath.match(/^sections\.(\d+)\./)
@@ -716,7 +716,7 @@
         // and bullet items, plus the markdownText fields (a callout body, a
         // table cell) whose renderer also calls formatMarkdown(). title,
         // summary, primaryCta, and heading render through a bare escapeHtml()
-        // with no formatMarkdown() call (js/page-render.js:216,219,560,631),
+        // with no formatMarkdown() call (js/mockup/page-render.js:216,219,560,631),
         // so offering Bold or Link there would visibly format text while
         // editing and then silently revert to plain on commit
         // (js/editing/inline-content-edit-adapter.js's editingHtmlToPlainText strips both,
@@ -812,7 +812,7 @@
         // open a fresh session.
         //
         // This guard pairs with the focusRenderedPageHeading() fix in
-        // js/page-render.js (which is the primary mechanism behind the
+        // js/mockup/page-render.js (which is the primary mechanism behind the
         // residual failures) — together they cover both the "holder still in
         // the document but focus was stolen" case and the "holder torn out"
         // case that can arise from any future paint.
@@ -988,7 +988,7 @@
     /**
      * The invalid link targets in a value this session is about to write.
      *
-     * The rule lives in js/inline-link-target.js, shared with
+     * The rule lives in js/mockup/inline-link-target.js, shared with
      * build_scripts/data-checks.js; only the key set is resolved here, since
      * that is a browser concern the predicate deliberately knows nothing
      * about. window.InlineEdit.linkableKeys() is the live page set UNIONED
@@ -1217,11 +1217,11 @@
     // just at the field's own root. Two real cases hit this today:
     //   - The hero CTA: data-rewrite-field="primaryCta" sits on the
     //     wrapping <div class="hero-cta"> (renderHero() in
-    //     js/page-render.js), not on the interactive element itself, and
+    //     js/mockup/page-render.js), not on the interactive element itself, and
     //     button() renders a real <a href target="_blank"> when the CTA has
     //     a buttonUrl (confirmed live on the payFee page).
     //   - An inline citation/reference link inside paragraph or bullet body
-    //     text: formatMarkdown() (js/page-render.js) turns a
+    //     text: formatMarkdown() (js/mockup/page-render.js) turns a
     //     [label](https://...) markdown link into
     //     <a class="inline-link" href="..." target="_blank">, rendered
     //     directly inside the <p data-rewrite-field="sections.N.paragraphs.M">
@@ -1278,7 +1278,7 @@
     // wrapper installed just above — every render from this point on goes
     // through that wrapper instead).
     decorate()
-    // The call above is enough UNLESS js/page-render.js's renderPage()
+    // The call above is enough UNLESS js/mockup/page-render.js's renderPage()
     // routed through document.startViewTransition() for that initial
     // render: in a real browser that supports it, the actual DOM mutation
     // happens asynchronously inside the transition's callback, so the

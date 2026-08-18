@@ -55,7 +55,7 @@ original findings against that framing:
   independently-typed real page, not a contradiction. The mockup's
   `Information` typing for `pages/what-happens-after-report.js` stands;
   no retype needed (retyping would also require reworking
-  `js/page-render.js`'s type-specific rendering, which has no
+  `js/mockup/page-render.js`'s type-specific rendering, which has no
   `Step-by-step` branch today — out of scope for a documentation fix).
 - **"Get ready for an SRO inspection" doesn't exist**: an example name in
   the matrix, not a required page. No page needs to be built to satisfy

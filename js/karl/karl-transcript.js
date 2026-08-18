@@ -152,7 +152,7 @@ function itemText(item) {
  * Karl's Text block renders bullets INSIDE its own rich text rather than as a
  * sibling block (field map line 334), so emitting them as two panels would tell
  * an editor to create a block that does not exist. Document order is paragraphs
- * then bullets, matching how js/page-render.js paints them.
+ * then bullets, matching how js/mockup/page-render.js paints them.
  * @param {Array<string|{text: string}>|undefined} paragraphs
  * @param {Array<string|{text: string}>|undefined} bullets
  * @returns {string}

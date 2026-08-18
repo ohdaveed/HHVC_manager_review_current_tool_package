@@ -400,7 +400,7 @@ function setByPath(root, path, value) {
  * `javascript:alert(1)` contains none of the five characters it escapes, so it
  * passes through an escaped attribute completely intact.
  *
- * This matters most for AI assist. `js/page-render.js` renders generated drafts
+ * This matters most for AI assist. `js/mockup/page-render.js` renders generated drafts
  * through the same functions as real pages, and the page schema types `url` /
  * `buttonUrl` as bare strings, so a draft could otherwise put a `javascript:`
  * URL behind a clickable link in the preview. `formatMarkdown` already applies
@@ -680,7 +680,7 @@ function downloadFile(filename, content, mimeType) {
  * Trigger a browser download for an already-built Blob.
  *
  * Split out of downloadFile because the PNG export path
- * (js/mockup-image-export.js) gets a Blob straight from the renderer and has
+ * (js/mockup/mockup-image-export.js) gets a Blob straight from the renderer and has
  * nothing to serialize — routing it through downloadFile would mean wrapping
  * a Blob inside another Blob. Both share the same object-URL lifecycle:
  * create, click a detached <a>, revoke immediately. Revoking synchronously

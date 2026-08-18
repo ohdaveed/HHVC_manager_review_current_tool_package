@@ -182,7 +182,7 @@ describe('plainTextToEditingHtml', () => {
 
   test('leaves ** and [label](target) syntax as literal characters, unlike markdownToEditingHtml', () => {
     // title/summary/primaryCta/heading render through a bare escapeHtml()
-    // with no formatMarkdown() call (js/page-render.js:216,219,560,631), so
+    // with no formatMarkdown() call (js/mockup/page-render.js:216,219,560,631), so
     // these four fields never interpret this syntax — a literal "**bold**"
     // authored in a title is meant to display as literal asterisks, not
     // become a <b> tag while editing.

@@ -73,8 +73,8 @@ validate one page in isolation. Run both after editing anything under `pages/` o
   they depend on their listed order in `js/main.js`. Add a new page by importing it in `js/page-data.js` (validated by
   `build_scripts/page-import-checks.js`) and adding an `order` entry.
 - **Core is split into focused modules** (formerly one `app.js`): `js/utils.js`
-  (shared helpers, loads first), `js/karl-tag-meta.js`, `js/state.js`,
-  `js/ui-controls.js`, `js/editor-panel.js`, `js/page-render.js` (holds
+  (shared helpers, loads first), `js/mockup/karl-tag-meta.js`, `js/state.js`,
+  `js/ui-controls.js`, `js/editor-panel.js`, `js/mockup/page-render.js` (holds
   `karlTag()`), `js/app.js`, `js/manager-review-export.js`,
   `js/standards/reading-level.js`, `js/review-state-validation.js`. Don't re-monolith them.
 - **`js/utils.js` owns the shared vocabulary.** The review decision table
@@ -85,7 +85,7 @@ validate one page in isolation. Run both after editing anything under `pages/` o
 - **Review/UX layers are additive** self-contained IIFEs on top of the core
   (`js/ux-improvements*.js`, `js/review-queue*.js`, `js/review-insights*.js`,
   `js/review-ops*.js`, `js/dashboard-guidance.js`,
-  `js/ai-assist*.js`, `js/standards/plain-language.js`, `js/mockup-image-export.js`,
+  `js/ai-assist*.js`, `js/standards/plain-language.js`, `js/mockup/mockup-image-export.js`,
   `js/keyboard-shortcuts.js`) that read `HHVC_DATA`
   and `localStorage`. They may edit the **in-memory** page data but must never
   write back to `pages/*.js` or publish content.

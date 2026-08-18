@@ -1,5 +1,5 @@
 // Core app state: validated page data shared across the tool's modules.
-// Imported by js/ui-controls.js, js/editor-panel.js, js/page-render.js,
+// Imported by js/ui-controls.js, js/editor-panel.js, js/mockup/page-render.js,
 // js/app.js, and js/manager-review-export.js, all of which read these
 // bindings directly. ES module imports are *live views* onto the exporting
 // module's binding, so a reader that imported `currentPageKey` sees each
@@ -46,7 +46,7 @@ let currentPageKey = 'pestsTopic'
  * Point the shared "current page" binding at a different page key.
  *
  * Exists because an ES module's imported bindings are read-only to the
- * importer: js/page-render.js used to assign `currentPageKey = key`
+ * importer: js/mockup/page-render.js used to assign `currentPageKey = key`
  * directly when the tool still shared one global lexical scope, and that
  * assignment is a TypeError once these files are modules. Routing the one
  * write through a setter defined here keeps the mutation in the module

@@ -222,7 +222,7 @@ test.describe('manager review workflow', () => {
   })
 
   // Regression: page-picker navigation must run through the DECORATED
-  // window.renderPage, not js/page-render.js's raw export.
+  // window.renderPage, not js/mockup/page-render.js's raw export.
   //
   // js/ux-improvements.js wraps window.renderPage after startup. It is the
   // only wrapper left — js/interactive-sitemap.js was deleted and

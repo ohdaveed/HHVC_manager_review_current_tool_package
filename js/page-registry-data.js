@@ -32,7 +32,7 @@
 
 /* The one page key that may never be hidden. build_scripts/validate.js
    requires `pestsTopic` to exist AND to be first in `order`, and
-   js/page-render.js renders a hardcoded data-render-target="pestsTopic" parent
+   js/mockup/page-render.js renders a hardcoded data-render-target="pestsTopic" parent
    link on every other page. It is also the fallback in resolvePageKey(),
    getCurrentKey(), js/state.js and js/app.js — so hiding it does not degrade
    the tool gracefully, it removes the floor everything else falls back to. */
@@ -118,7 +118,7 @@ function hasOwn(target, key) {
 }
 
 /* Section fields the schema types as arrays. Anything here that arrives as an
-   object or a string reaches a `.map()`/`.entries()` in js/page-render.js and
+   object or a string reaches a `.map()`/`.entries()` in js/mockup/page-render.js and
    throws at render time — the boot-path throw this module exists to prevent. */
 const SECTION_ARRAY_FIELDS = ['paragraphs', 'bullets', 'cards', 'table', 'steps']
 
@@ -443,7 +443,7 @@ function isValidAddedEntry(key, entry) {
  *
  * In place is not a style choice. js/state.js exports `pageData`/`pageOrder` as
  * references to these very objects, and js/ui-controls.js,
- * js/page-render.js and js/manager-review-export.js hold the same references —
+ * js/mockup/page-render.js and js/manager-review-export.js hold the same references —
  * so `data.order = [...]` would update window.HHVC_DATA and leave three
  * modules reading a detached array. Only push/splice/delete propagate.
  *
@@ -611,7 +611,7 @@ function restoreOrderIndex(canonicalOrder, currentKeys, key) {
  * Count the links that would go dangling if `targetKey` were hidden.
  *
  * This exists because the consequence is otherwise invisible to the reviewer.
- * cardDescription() in js/page-render.js resolves an inheriting card's text
+ * cardDescription() in js/mockup/page-render.js resolves an inheriting card's text
  * from `pageData[card.target]`; once that lookup fails it falls through to the
  * card's own authored `text` — which is precisely the copy the card-inheritance
  * work exists to prove can never publish. Nothing errors, and a plausible

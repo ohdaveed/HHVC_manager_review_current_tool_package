@@ -204,7 +204,7 @@
    * Build the delete confirmation.
    *
    * The inbound-link count is the part that earns its place. Once a page leaves
-   * DATA.pages, cardDescription() in js/page-render.js stops resolving an
+   * DATA.pages, cardDescription() in js/mockup/page-render.js stops resolving an
    * inheriting card's text from the destination and falls through to the card's
    * own authored `text` — precisely the copy the card-inheritance work exists to
    * prove can never publish. Nothing errors; a plausible paragraph simply

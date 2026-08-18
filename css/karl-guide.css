@@ -1,5 +1,5 @@
 /* Karl guide: the tag trigger, its expandable panel, and the copy controls
-   (js/karl/karl-guide.js, markup built by js/karl-tag-meta.js).
+   (js/karl/karl-guide.js, markup built by js/mockup/karl-tag-meta.js).
 
    Loads after css/inline-content-edit.css and before css/theme.css, whose
    semantic tokens every rule here reads — no raw --legacy-* value and no
@@ -10,7 +10,7 @@
    to it.
 
    **The panel's markup is all `<span>`, and this sheet is what makes it read
-   as blocks.** js/karl-tag-meta.js explains why (a panel emitted inside a
+   as blocks.** js/mockup/karl-tag-meta.js explains why (a panel emitted inside a
    paragraph used to break the page); the consequence here is that every part
    of it needs an explicit `display`, and the steps need a CSS counter because
    there is no longer an `<ol>` to draw ordinals. Those two files have to stay

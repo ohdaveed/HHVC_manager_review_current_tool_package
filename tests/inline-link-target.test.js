@@ -1,4 +1,4 @@
-/* Unit coverage for js/inline-link-target.js — the single definition of what an
+/* Unit coverage for js/mockup/inline-link-target.js — the single definition of what an
    inline link target may be, shared by the browser widget
    (js/editing/inline-content-edit-link-tool.js typing one, js/editing/inline-content-edit.js
    committing a pasted one) and by build_scripts/data-checks.js's
@@ -11,7 +11,10 @@
 
 import { describe, test, expect } from 'bun:test'
 
-const { isValidInlineLinkTarget, INLINE_LINK_TARGET_RULE } = require('../js/inline-link-target.js')
+const {
+  isValidInlineLinkTarget,
+  INLINE_LINK_TARGET_RULE,
+} = require('../js/mockup/inline-link-target.js')
 
 // A stand-in for what window.pageRegistry.knownKeys() returns in the browser and
 // for Object.keys(pages) on the Node side: `hiddenPage` models a page the
@@ -133,7 +136,7 @@ describe('isValidInlineLinkTarget', () => {
 })
 
 describe('findInvalidInlineLinkTargets', () => {
-  const { findInvalidInlineLinkTargets } = require('../js/inline-link-target.js')
+  const { findInvalidInlineLinkTargets } = require('../js/mockup/inline-link-target.js')
 
   test('returns nothing for text with no links at all', () => {
     expect(findInvalidInlineLinkTargets('Plain copy about rodents.', KNOWN)).toEqual([])

@@ -1,12 +1,12 @@
 // Shared Karl tag kind labels and legend markup. Loaded after js/utils.js so
 // escapeHtml is available for legend rendering.
 
-import { escapeHtml } from './utils.js'
+import { escapeHtml } from '../utils.js'
 import {
   guideForContext,
   linkShapeMeta,
   unresolvedDescription,
-} from './karl/karl-guide-registry.js'
+} from '../karl/karl-guide-registry.js'
 
 let guideId = 0
 

@@ -15,7 +15,7 @@
 // field. Each is pinned below by the page type and role that produced it.
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { BUTTON_HOSTS, ROLE_PANELS, guideForContext } from '../js/karl/karl-guide-registry.js'
-import { renderKarlGuidePanel } from '../js/karl-tag-meta.js'
+import { renderKarlGuidePanel } from '../js/mockup/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
 

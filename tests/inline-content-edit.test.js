@@ -40,7 +40,7 @@ const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
 const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
-require('../js/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
+require('../js/mockup/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
 // which commit() and the link tool both consult before accepting a link target.
 require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
 require('../js/editing/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
@@ -318,7 +318,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
   })
 
   test('clicking a hero CTA rendered as an external <a href> opens the editor and prevents navigation', async () => {
-    // Matches what js/page-render.js actually produces: data-rewrite-field
+    // Matches what js/mockup/page-render.js actually produces: data-rewrite-field
     // sits on the WRAPPING <div class="hero-cta">, not on the anchor, and
     // button() renders a real navigating <a href target="_blank"> for a CTA
     // with a buttonUrl (e.g. mosquito-education-workshop.js). Without a
@@ -368,7 +368,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     // an `a[href]` ancestor — a no-op for this button, which has none — so it
     // never calls preventDefault() itself either way. But defaultPrevented is
     // a property of the shared event object, not of this module: in the real
-    // app, js/page-render.js's own document-level click listener ALSO
+    // app, js/mockup/page-render.js's own document-level click listener ALSO
     // matches `button[data-render-target]` and unconditionally calls
     // preventDefault() on it, for entirely unrelated SPA-navigation reasons.
     // Whether that listener happens to be registered in this Bun process
@@ -380,7 +380,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
 
   test('clicking an inline reference link inside a paragraph opens that paragraph editor and prevents navigation', async () => {
     // The hero CTA isn't the only place a navigating anchor sits inside a
-    // [data-rewrite-field] element. formatMarkdown() (js/page-render.js)
+    // [data-rewrite-field] element. formatMarkdown() (js/mockup/page-render.js)
     // turns a [label](https://...) markdown link in body copy into
     // <a class="inline-link" href="..." target="_blank" rel="noopener
     // noreferrer">, rendered directly inside the <p data-rewrite-field=
@@ -1247,7 +1247,7 @@ describe('inline content edit: decorateListControls appends add/remove controls 
   })
 
   test('a bullets array with zero items still gets an add control, anchored to the section heading (no dead end)', async () => {
-    // No <ul> at all: bulletList() in js/page-render.js renders '' for an
+    // No <ul> at all: bulletList() in js/mockup/page-render.js renders '' for an
     // empty array, whether the list was just emptied via the remove control
     // or authored empty — both cases produce the same DOM shape this test
     // exercises.
@@ -1384,7 +1384,7 @@ describe('inline content edit: decorateEditedFields applies the Edited badge and
 
 describe('inline content edit: decoration controls are excluded from PNG export', () => {
   test('add, remove, edited-badge, and reset controls all carry data-export-exclude', () => {
-    // js/mockup-image-export.js's capture filter skips any node carrying
+    // js/mockup/mockup-image-export.js's capture filter skips any node carrying
     // data-export-exclude — every persistent decoration control this module
     // renders must carry it, or it leaks into a reviewer's exported PNG
     // (which is meant to represent the page under review, not this tool's

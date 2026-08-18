@@ -9,8 +9,8 @@ import {
   restoreSidebarScroll,
   saveSidebarScroll,
   showToast,
-} from './ui-controls.js'
-import { currentPageKey, pageData, setCurrentPageKey } from './state.js'
+} from '../ui-controls.js'
+import { currentPageKey, pageData, setCurrentPageKey } from '../state.js'
 import {
   escapeHtml,
   getPrimaryCta,
@@ -18,7 +18,7 @@ import {
   safeUrl,
   showErrorBanner,
   safeMarkdown,
-} from './utils.js'
+} from '../utils.js'
 import {
   karlKindMeta,
   nextKarlGuideId,
@@ -26,12 +26,12 @@ import {
   parseKarlLabel,
   renderKarlGuidePanel,
 } from './karl-tag-meta.js'
-import { syncEditorFields, updateReadingTarget } from './editor-panel.js'
+import { syncEditorFields, updateReadingTarget } from '../editor-panel.js'
 // Side-effect import: js/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so this is what guarantees the classifier exists before
 // any card renders. js/main.js lists it ahead of this file too, but that list
 // is documentation — this import is the enforcement.
-import './card-inheritance.js'
+import '../card-inheritance.js'
 // Maps cardInheritanceFact()'s three outcomes to the badge text a reviewer
 // sees on a card's tag — the only place this vocabulary is spelled out.
 const INHERIT_BADGE_TEXT = {
@@ -525,7 +525,7 @@ function cardActionAndDescription(section, card, opts = {}) {
  * The page type is read off `currentPageKey` rather than threaded down from
  * the caller, matching what karlTag() itself already does one function above.
  * That is safe rather than convenient: nothing renders a section for a page
- * other than the open one — js/mockup-image-export.js, the only caller that
+ * other than the open one — js/mockup/mockup-image-export.js, the only caller that
  * sweeps every page, navigates through `window.renderPage(pageKey)`, which
  * sets `currentPageKey` before it renders. Threading the parameter would mean
  * widening renderCards/renderCardList/renderResourcesList, which tests and

@@ -172,7 +172,7 @@
    * object form paragraphs/bullets accept. This feature's v1 scope was
    * originally paragraphs/bullets/step text only, reached exclusively via
    * paragraphList()/bulletList()/renderSteps()'s pathPrefix — before
-   * js/page-render.js's renderHero()/renderSection() also started emitting
+   * js/mockup/page-render.js's renderHero()/renderSection() also started emitting
    * data-rewrite-field="title"/"summary"/"primaryCta"/"sections.N.heading"
    * for the inline-content-editing feature. Selecting one of those and
    * applying a rewrite without this guard writes the tagged object form into

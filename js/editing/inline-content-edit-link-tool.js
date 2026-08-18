@@ -3,7 +3,7 @@
    its own — its stock 'link' behavior is a block-level preview card, not an
    inline anchor around a text selection — so this reproduces the
    data-render-target (internal page) vs external-https:// branching
-   js/page-render.js's formatMarkdown() already applies when rendering
+   js/mockup/page-render.js's formatMarkdown() already applies when rendering
    authored [label](target) markdown, using the exact same
    /^https?:\/\// test. The two anchor shapes this tool builds
    (<a data-render-target="...">label</a> and
@@ -64,7 +64,7 @@
    *
    * Published on window.InlineEdit so js/editing/inline-content-edit.js's paste-path
    * check resolves the identical set; two call sites building this union
-   * separately is exactly the drift js/inline-link-target.js exists to stop,
+   * separately is exactly the drift js/mockup/inline-link-target.js exists to stop,
    * one level up.
    *
    * @returns {Array<string>}
@@ -78,7 +78,7 @@
   /**
    * Whether a reviewer-typed target is something an inline link may point at.
    *
-   * The rule itself lives in js/inline-link-target.js, shared with
+   * The rule itself lives in js/mockup/inline-link-target.js, shared with
    * build_scripts/data-checks.js — see that file's header for why a second
    * copy here would be the exact drift the extraction removed. This wrapper
    * exists only to resolve the key set, which is a browser concern the
@@ -232,7 +232,7 @@
       this.ruleEl = document.createElement('span')
       this.ruleEl.id = ruleId
       this.ruleEl.className = 'hhvc-sr-only'
-      // Read from js/inline-link-target.js rather than written out here, so
+      // Read from js/mockup/inline-link-target.js rather than written out here, so
       // the rule and the sentence describing it cannot drift apart.
       this.ruleEl.textContent = window.inlineLinkTarget.INLINE_LINK_TARGET_RULE
 

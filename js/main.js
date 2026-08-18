@@ -129,7 +129,7 @@ import './third-party-globals.js'
 // as documentation of where they sit in the sequence.
 // ---------------------------------------------------------------------------
 import './utils.js'
-import './karl-tag-meta.js'
+import './mockup/karl-tag-meta.js'
 import './page-data.js'
 import './page-registry-data.js'
 import './page-registry.js'
@@ -138,7 +138,7 @@ import './ui-controls.js'
 import './editor-panel.js'
 // BEFORE page-render.js: js/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so a consumer cannot import a binding from it and the
-// graph has no name to order by. js/page-render.js reads that global to decide
+// graph has no name to order by. js/mockup/page-render.js reads that global to decide
 // whether a card renders its own text or the destination page's summary, and
 // side-effect-imports this file itself so the ordering is genuinely enforced —
 // this line is the same belt-and-braces documentation of the sequence that
@@ -152,7 +152,7 @@ import './karl/karl-blocks.js'
 // plus window.cardInheritance and window.utils. Pure and DOM-free; the
 // workspace panel is what mounts a UI on top of it.
 import './karl/karl-transcript.js'
-import './page-render.js'
+import './mockup/page-render.js'
 import './karl/karl-guide.js'
 import './app.js'
 import './manager-review-export.js'
@@ -167,7 +167,7 @@ import './editing/inline-content-edit-adapter.js'
 // here rather than imported by either, because it is also require()d from
 // build_scripts/data-checks.js under Node and is deliberately import-free so
 // it carries no load-order dependency of its own.
-import './inline-link-target.js'
+import './mockup/inline-link-target.js'
 import './sync/review-state-sync.js'
 
 // ---------------------------------------------------------------------------
@@ -219,7 +219,7 @@ import './editing/inline-content-edit.js'
 
 // PNG export of the mockups. Imported after the review layers because it uses
 // window.showToast for progress and window.renderPage to step through pages.
-import './mockup-image-export.js'
+import './mockup/mockup-image-export.js'
 
 // The Karl transcript panel. After the review layers because it reads
 // window.reviewState and window.showToast, and after js/karl/karl-transcript.js

@@ -18,7 +18,7 @@ describe('EDITABLE_FIELD_SHAPES', () => {
   // absent here renders an editor, accepts keystrokes, and then loses them
   // on the next load, because computeSectionEdits never records the field.
   // That is not hypothetical — step text was in exactly that state (stamped
-  // by js/page-render.js since the AI-rewrite work, never recorded here),
+  // by js/mockup/page-render.js since the AI-rewrite work, never recorded here),
   // which is why the list is now asserted whole rather than by example.
   test('covers section, step, table, and page-level text containers', () => {
     const kinds = Object.fromEntries(
@@ -88,7 +88,7 @@ describe('editableItemKind', () => {
 
   test('reports plainString for table cells and string-array items', () => {
     // A contact entry and a table cell go through escapeHtml() directly in
-    // js/page-render.js, so the tagged object would print as "[object
+    // js/mockup/page-render.js, so the tagged object would print as "[object
     // Object]".
     expect(editableItemKind('sections.0.table.1.2')).toBe('plainString')
     expect(editableItemKind('contact.phone.0')).toBe('plainString')
@@ -387,7 +387,7 @@ describe('applyContentEditsToPageData', () => {
 })
 
 // The containers beyond heading/paragraphs/bullets. Steps are the case that
-// motivated this: js/page-render.js has stamped
+// motivated this: js/mockup/page-render.js has stamped
 // data-rewrite-field="sections.N.steps.M.text.K" since the AI-rewrite work,
 // so the editor opened on a step paragraph and accepted the edit — and
 // computeSectionEdits never recorded it, so it was gone on the next load

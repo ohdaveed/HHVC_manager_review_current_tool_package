@@ -545,7 +545,7 @@ describe('applyRegistryToData', () => {
 describe('countInboundLinks', () => {
   // This exists because the consequence is otherwise invisible. Once
   // pageData[card.target] stops resolving, cardDescription() in
-  // js/page-render.js falls through to the card's own authored `text` — exactly
+  // js/mockup/page-render.js falls through to the card's own authored `text` — exactly
   // the copy the card-inheritance work exists to prove can never publish. No
   // error, just a plausible paragraph appearing.
   function linkedData() {

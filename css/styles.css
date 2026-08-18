@@ -305,7 +305,7 @@ h4 {
   align-items: center;
   gap: 0.45rem;
   /* Left at its literal on purpose, unlike the chrome eyebrows below. This
-     rule is shared: js/page-render.js renders the mockup's page-type badge
+     rule is shared: js/mockup/page-render.js renders the mockup's page-type badge
      (`.eyebrow--agency` / `.eyebrow--service`) with it, and that badge is
      inside `.browser-shell`, whose type scale was settled by the mockup work
      and is deliberately outside the chrome floor. Repointing the shared value
@@ -724,7 +724,7 @@ a:focus {
 }
 .hero-inner h1 {
   /* No font-size here on purpose. Every RENDERED mockup page's h1 lives
-     inside .hero-inner (renderHero() in js/page-render.js), so this
+     inside .hero-inner (renderHero() in js/mockup/page-render.js), so this
      selector's higher specificity (0-1-1) always beat the bare `h1` rule
      above — the literal 2.5rem that used to sit here was therefore the only
      font-size any page's title ever rendered at. (The bare rule's font-size
@@ -876,7 +876,7 @@ a:focus {
      it, rather than the mismatched titleXs leading it picked up instead.
      Currently unrendered like .callout-header h3 and .custom-section h3
      above — renderCards()/.card is only reached by a Step List's own inline
-     cards (see renderCardList()'s comment in js/page-render.js), and no page
+     cards (see renderCardList()'s comment in js/mockup/page-render.js), and no page
      today gives a step its own `cards`. */
   font-size: 1rem;
   line-height: 1.15;
@@ -1047,7 +1047,7 @@ a:focus {
 }
 /* Campaign's "Top facts" widget — same boxed treatment as .what-to-know,
    and its facts reuse .what-to-know-subsection directly (see renderTopFacts()
-   in js/page-render.js), so this is the only new ruleset the component needs. */
+   in js/mockup/page-render.js), so this is the only new ruleset the component needs. */
 .top-facts {
   max-width: var(--content-max);
   margin: 0 auto 1.5rem;
@@ -1168,7 +1168,7 @@ a:focus {
   /* ON the h2 ladder now, at titleSm rather than titleLg — promoted here,
      not left off-ladder like the sibling group above. "Services"/"Resources"
      is a repeated widget label wrapping one or more .service-group blocks
-     (see the doc comment above renderServiceGroup() in js/page-render.js), a
+     (see the doc comment above renderServiceGroup() in js/mockup/page-render.js), a
      grouping label one visual tier below the page's actual section headings
      (.section h2, --sfds-text-title-lg), which is still true and is why this
      stays off titleLg. But its old bespoke 1.35rem (21.6px) was audited
@@ -1353,7 +1353,7 @@ a:focus {
 /* The toggle and the heading text are separate sibling elements rather than
    the usual heading-wrapping-a-full-width-button, because the heading has to
    stay independently replaceable by the inline editor — see the block comment
-   above renderAccordionSection() in js/page-render.js for the full reasoning.
+   above renderAccordionSection() in js/mockup/page-render.js for the full reasoning.
    This row is what keeps them reading as one control visually. */
 .accordion-header {
   display: flex;
@@ -1726,7 +1726,7 @@ a:focus {
    field/block, then any flag/inherit badges and the reviewer's rationale —
    each its own line so the one fact that matters (where this goes in Karl)
    is scannable without reading the whole note. parseKarlLabel() in
-   js/karl-tag-meta.js is what produces these parts; see its header comment
+   js/mockup/karl-tag-meta.js is what produces these parts; see its header comment
    for why only a leading `->`/`→` chain is trusted as structure. */
 .karl-tag-text {
   display: block;

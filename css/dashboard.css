@@ -536,7 +536,7 @@
 /* =====================================================================
    Mockup PNG export controls
    =====================================================================
-   Injected into .canvas-toolbar by js/mockup-image-export.js. They carry
+   Injected into .canvas-toolbar by js/mockup/mockup-image-export.js. They carry
    data-export-exclude so a capture never includes the buttons that
    triggered it. */
 

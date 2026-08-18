@@ -260,7 +260,7 @@ const pageSchema = z.object({
   printVersionUrl: z.string().optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
   // No page-level `karlGuide`. Every level that renders its own tagged block
-  // has one and js/page-render.js reads all of them — a section's, a card's, a
+  // has one and js/mockup/page-render.js reads all of them — a section's, a card's, a
   // step's, a callout's, an image's, a spotlight's. (`whatToKnowSchema` and
   // `contactSchema` carry none either: they describe values the page renders
   // through a tag of its own, not blocks with a guide to attach to. The claim

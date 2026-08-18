@@ -47,7 +47,7 @@ const SKIP =
  */
 const EXEMPT = new Set([
   // Described in the past tense in AGENTS.md, CLAUDE.md, docs/codebase/
-  // CONCERNS.md, js/app.js, js/page-render.js and one e2e spec, as a module
+  // CONCERNS.md, js/app.js, js/mockup/page-render.js and one e2e spec, as a module
   // that was REMOVED. Each sentence is correct precisely because the file is
   // gone, so making the path resolve would make the prose wrong.
   'js/interactive-sitemap.js',

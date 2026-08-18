@@ -17,7 +17,7 @@
 index.html -> js/main.js (CSS + modules)
   -> pages/*.js register window.HHVC_PAGES
   -> js/page-data.js builds window.HHVC_DATA
-  -> js/page-render.js + js/app.js render mockup
+  -> js/mockup/page-render.js + js/app.js render mockup
   -> review IIFEs read/write localStorage (hhvcManagerReviewState:v1)
   -> optional: fetch /api/review-state* or /api/ai/* on server.ts (Bearer token)
   -> Netlify serves static dist/ only (no API)
@@ -35,7 +35,7 @@ index.html -> js/main.js (CSS + modules)
 | Layer or module                                      | Owns                                                          | Must not own                                                         | Evidence                                        |
 | ---------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------- |
 | Page data (`pages/`, `page-data.js`)                 | Content objects + nav order                                   | Persistence, auth                                                    | `js/page-data.js`                               |
-| Core render (`page-render.js`, `app.js`, `state.js`) | DOM mockup, navigation, dirty/reset                           | Optional API                                                         | `js/page-render.js`                             |
+| Core render (`page-render.js`, `app.js`, `state.js`) | DOM mockup, navigation, dirty/reset                           | Optional API                                                         | `js/mockup/page-render.js`                      |
 | Utils (`utils.js`)                                   | Escaping, `safeUrl`, decision vocabulary, review record shape | Feature UI ownership (some workspace helpers live here — noted debt) | `js/utils.js`, `AGENTS.md`                      |
 | Review UX / queue / insights / ops                   | localStorage review workflow                                  | Source-file mutation                                                 | `js/ux-improvements*.js`, `js/review-queue*.js` |
 | `review-merge.js`                                    | Merge precedence + history append                             | Transport                                                            | `js/review-merge.js`                            |

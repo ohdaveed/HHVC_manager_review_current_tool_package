@@ -118,7 +118,7 @@ const FILES_WITH_DECISION_LITERALS = [
    restates it wholesale under its own assertion above — re-checking either
    here would be circular.
 
-   js/page-render.js is the interesting one: its `'Needs review'` and
+   js/mockup/page-render.js is the interesting one: its `'Needs review'` and
    `'Blocked'` are editorStatus pill labels (the `needs-review | blocked |
    placeholder` page field), a separate vocabulary that happens to share two
    words. Pinning them to DECISION_LABELS would invent a coupling that does
@@ -126,7 +126,7 @@ const FILES_WITH_DECISION_LITERALS = [
 const NOT_THE_DECISION_VOCABULARY = new Set([
   'js/utils.js',
   'js/review-insights-data.js',
-  'js/page-render.js',
+  'js/mockup/page-render.js',
 ])
 
 /* Decision labels are ordinary English phrases, so a literal is recognized by

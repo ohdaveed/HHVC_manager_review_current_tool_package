@@ -439,7 +439,7 @@ import { hasValidPageData } from './utils.js'
     // Unlike title/summary above, there's no single DOM node to patch
     // directly: setPrimaryCta() can write to a step's button, a section's
     // button, the spotlight's button, or the page-level fallback, depending
-    // on what the page structurally has — and button() (js/page-render.js)
+    // on what the page structurally has — and button() (js/mockup/page-render.js)
     // wraps whichever one renders in a karlTag() placement annotation plus,
     // for an external link, a trailing arrow glyph, so a plain textContent
     // write here would also clobber that markup. Report whether the value
@@ -480,7 +480,7 @@ import { hasValidPageData } from './utils.js'
    *
    * applySavedPageState(pageKey) only ever runs for the page a reviewer is
    * actually opening, which is correct for that page's own hero — but
-   * cardTitle()/cardDescription() in js/page-render.js resolve an inheriting
+   * cardTitle()/cardDescription() in js/mockup/page-render.js resolve an inheriting
    * card's title and description from `pageData[card.target]`, and a card's
    * target is very often a page the reviewer hasn't opened in this session.
    * Without this, a saved edit to a destination page's title or summary is

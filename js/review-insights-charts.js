@@ -17,7 +17,7 @@
    little performance that one small chart will never notice, and buys
    output that inherits the page's font rendering, stays sharp at any zoom, and
    survives DOM serialisation — the last one keeping these charts compatible
-   with the capture in js/mockup-image-export.js should they ever be included
+   with the capture in js/mockup/mockup-image-export.js should they ever be included
    in one.
 
    Takes no window globals and reads no DOM beyond the nodes it is handed, so

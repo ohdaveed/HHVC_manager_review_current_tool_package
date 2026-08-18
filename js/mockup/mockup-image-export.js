@@ -17,7 +17,7 @@
    step through pages during a bulk export. */
 
 import { domToBlob } from 'modern-screenshot'
-import { downloadBlob, getCurrentKey, today } from './utils.js'
+import { downloadBlob, getCurrentKey, today } from '../utils.js'
 
 /** What gets captured. The browser chrome frames the mockup the way a
     reviewer sees it, which reads better in a deck than a bare page. */

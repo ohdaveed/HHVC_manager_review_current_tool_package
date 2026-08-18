@@ -310,7 +310,7 @@ test.describe('AI assist panel', () => {
 
   test('preview links do not navigate the real mockup', async ({ page }) => {
     // renderPageMain emits the same data-render-target buttons the live page
-    // uses, and the click handler in js/page-render.js is bound to `document` —
+    // uses, and the click handler in js/mockup/page-render.js is bound to `document` —
     // so without neutralizing them, clicking a link inside a DRAFT would move
     // the reviewer off the page they were reviewing.
     await stubAiApi(page, {
