@@ -1235,6 +1235,24 @@ codebase rather than improving it. `.oxlintrc.json` pins the same scope in its
 `.github/workflows/ci.yml` invokes it — it is a report to read, and adding it
 to CI would be a decision to make on purpose, not a gap to close.
 
+**`typos` was measured and REJECTED, on 2026-08-17 — do not re-propose it
+without new evidence.** It was the obvious next docs tool, and the premise was
+that its correction-list design keeps false positives low enough to gate without
+a curated wordlist. Run over this repo's own source it produced 59 findings and
+**not one was a real misspelling.** Two clusters account for most of it: `SME`
+(Subject Matter Expert — the term behind the page schema's whole
+`unverified`/`unverifiedReason` mechanism) and `IIF`, matched inside `IIFE` and
+`IIFEs`, which is one of the two module patterns this repo's code style
+mandates. A wordlist fixes those, and that is not the reason it was rejected.
+The reason is the rest: `rodentsProbelm` in `tests/e2e/inline-content-edit.spec.js`
+and `Transactoin` in `tests/data-validation.test.js` are **deliberately invalid
+fixtures**, asserting that a broken link target and an unknown page type are
+REJECTED. Correcting either silently guts its test, and blessing them in a
+dictionary puts real misspellings into the dictionary, which weakens the tool
+everywhere it would otherwise work. Same shape as anti-slop above — a linter
+arguing with the codebase rather than improving it — and the same disposition:
+run it by hand if you want the report, but it is not a gate here.
+
 **oxlint itself DOES gate CI now, through a different config.** `lint:js` runs
 `.oxlintrc.ci.json`, which loads no plugin at all and enables oxlint's own core
 rules across `js/`, `pages/`, `build_scripts/` and `tests/` — those had never
@@ -1441,6 +1459,13 @@ that stub globals must restore them, or they pollute sibling test files.
   `js/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
   Re-run `bun run validate` after any of them: `findUnmappedSections` gates on it.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
+- Docs linting and link checking → `build_scripts/lint-docs.js` (markdownlint,
+  rules in `.markdownlint-cli2.jsonc`), `build_scripts/check-links.js` (lychee,
+  scheduled by `.github/workflows/link-check.yml`), and
+  `build_scripts/docs-file-set.js` — the SHARED derivation of "markdown this repo
+  authors", taken from `git ls-files` rather than globbed. A third caller reuses
+  it; it never re-globs. Both tools treat an empty file list as a broken
+  derivation and fail, because each exits 0 when handed no inputs.
 - Any new file under `pages/` needs an `import` in `js/page-data.js` (enforced
   by `build_scripts/page-import-checks.js`, so `bun run validate` fails without
   it) plus an `order` entry. A new `js/` module is imported by whoever needs it,
