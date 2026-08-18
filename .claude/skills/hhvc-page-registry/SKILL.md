@@ -1,6 +1,6 @@
 ---
 name: hhvc-page-registry
-description: HHVC repo: the browser-side add/delete page feature — why page-registry.js must run before state.js's ORIGINAL_DATA clone, why delete means hide, the ORIGINAL_DATA snapshot hazard on restore, prototype-safe page keys, and the import/sync limitations. Load before editing js/page-registry*.js.
+description: "HHVC repo: the browser-side add/delete page feature — why page-registry.js must run before state.js's ORIGINAL_DATA clone, why delete means hide, the ORIGINAL_DATA snapshot hazard on restore, prototype-safe page keys, and the import/sync limitations. Load before editing js/page-registry*.js."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the

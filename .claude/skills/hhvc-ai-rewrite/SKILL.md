@@ -1,6 +1,6 @@
 ---
 name: hhvc-ai-rewrite
-description: HHVC repo: how the AI rewrite feature works — selection picks the FIELD not the substring, data-rewrite-field paths use the ORIGINAL section index, getByPath/setByPath prototype guards, popover clamping. Load before editing js/ai-rewrite*.js or anything touching data-rewrite-field addressing.
+description: 'HHVC repo: how the AI rewrite feature works — selection picks the FIELD not the substring, data-rewrite-field paths use the ORIGINAL section index, getByPath/setByPath prototype guards, popover clamping. Load before editing js/ai-rewrite*.js or anything touching data-rewrite-field addressing.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the

@@ -1,6 +1,6 @@
 ---
 name: hhvc-ai-assist-backend
-description: HHVC repo: the optional /api/ai/* content-drafting backend — the two independent gates, the provider registry, usage normalization, input bounding and body draining, cancellation-vs-timeout classification, and the validation retry loop. Load before editing server.ts's AI routes or anything under build_scripts/ai/.
+description: "HHVC repo: the optional /api/ai/* content-drafting backend — the two independent gates, the provider registry, usage normalization, input bounding and body draining, cancellation-vs-timeout classification, and the validation retry loop. Load before editing server.ts's AI routes or anything under build_scripts/ai/."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
