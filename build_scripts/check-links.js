@@ -2,23 +2,32 @@
  * Runs lychee over the markdown this repo authors, checking that every link
  * actually resolves.
  *
- * **Why this is not `findBrokenInlineLinks`.** That check, in
- * `build_scripts/data-checks.js`, validates internal page keys and the SHAPE of
- * an `http(s)` URL. It has never asked whether a URL answers. The docs cite live
- * sf.gov pages, the Karl Help Center and the municipal code by URL, and
- * `docs/karl-export-field-map.md`'s whole authority rests on those citations
- * resolving — a dead citation is a claim with nothing behind it, which reads
- * exactly like a live one.
+ * **This checks documentation, never mockup content.** The mockup's own links
+ * are page keys, and `bun run validate` already proves every `card.target`,
+ * `buttonTarget` and inline `[label](pageKey)` resolves — offline, which is the
+ * only way it could work in a tool that has to run air-gapped. Nothing this
+ * script touches is on a path a reviewer clicks.
  *
- * The first run found three: `docs/sfgov-live-design-inspiration.md` cites one
- * live SF.gov page per content type as the "Real SF.gov Exemplar", and three of
- * the eight 404'd.
+ * **The local half is the half that pays.** Of the 48 links, 32 are `file://` —
+ * cross-file anchors between `AGENTS.md`, `CLAUDE.md` and
+ * `.github/copilot-instructions.md`. Nothing else checks those: markdownlint's
+ * MD051 validates a fragment against the file it sits IN, so
+ * `AGENTS.md#review-state-sync-backend-optional` cited from elsewhere is
+ * unchecked by every other tool here, and cross-file anchors between the three
+ * mirrored instruction docs are exactly where drift shows up. The first run
+ * proved it: `CLAUDE.md`'s `#local-persistence` had died because its heading
+ * grew a parenthetical while `AGENTS.md`'s did not.
  *
- * **Local file links and their fragments are checked too**, which is the half
- * markdownlint cannot do. MD051 validates a fragment against the file it sits
- * in; it says nothing about `AGENTS.md#review-state-sync-backend-optional` cited
- * from somewhere else. Cross-file anchors between the three mirrored instruction
- * docs are precisely where drift shows up.
+ * **The external half is 16 links and a documentation-hygiene concern, not a
+ * shipping one.** `findBrokenInlineLinks` in `build_scripts/data-checks.js`
+ * validates the SHAPE of an `http(s)` URL and never whether it answers, so a
+ * dead citation in `docs/karl-export-field-map.md` reads exactly like a live
+ * one — worth catching, and it caught three on its first run, where
+ * `docs/sfgov-live-design-inspiration.md` cites one live SF.gov page per content
+ * type as the "Real SF.gov Exemplar" and three of the eight 404'd. Note the
+ * coverage gap recorded in `.github/workflows/link-check.yml`: sf.gov answered a
+ * known-404 path as OK from a GitHub runner, so **running this LOCALLY is what
+ * verifies an sf.gov citation**, not the weekly schedule.
  *
  * **Scheduled, never per-PR.** A third-party outage is not a reason a merge
  * cannot happen, and a link checker wired into `checks` would make sf.gov's
