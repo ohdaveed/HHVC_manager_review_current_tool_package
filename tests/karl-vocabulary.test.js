@@ -9,7 +9,6 @@
 // so a test of it cannot go stale in the direction of passing wrongly.
 import { describe, test, expect } from 'bun:test'
 const {
-  CROSS_TYPE_TERMS,
   NESTED_TERMS_BY_TYPE,
   TERMS_BY_TYPE,
   blockTypeTerms,

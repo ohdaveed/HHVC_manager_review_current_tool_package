@@ -5,8 +5,7 @@
 
   const { escapeHtml, getDecisionChipClass, getCurrentKey } = window.utils
   const state = window.ReviewQueueInternal.state
-  const { QUEUE_PANEL_ID, STALE_DAYS, getSidebarReviewerName, normalize, restoreQueueUiState } =
-    window.ReviewQueueInternal.helpers
+  const { QUEUE_PANEL_ID, STALE_DAYS, restoreQueueUiState } = window.ReviewQueueInternal.helpers
 
   // The Overview table (~1,150 elements for 40 pages) is not built until the
   // workspace's Overview tab first opens; renders requested before then no-op.

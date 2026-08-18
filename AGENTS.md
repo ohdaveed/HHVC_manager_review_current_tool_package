@@ -60,19 +60,22 @@ they state too weakly to act on:
   `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
-- **`format:check`, `lint:dead-code:ci` and `lint:architecture` are the linters
-  CI enforces**, and between them they are still thin: there is no ESLint and no
-  `tsc` anywhere in this repo, so Prettier covers formatting, Knip covers
-  reachability and dependency-cruiser covers the module graph — and nothing
-  covers correctness. Knip gates only the categories that were clean when it was
-  adopted — unused files, unused/unlisted dependencies, unresolved imports —
-  because it reads this repo's deliberate `window.<Namespace>` publishing as ~89
-  unused exports; `bun run lint:dead-code` prints those as a triage list. The
-  architecture rules live in `.dependency-cruiser.cjs`: no cycles, the mockup
-  renderer never reaching React or MUI, the import-free base modules staying
-  import-free, `pages/*.js` entering only through `js/page-data.js`, and
-  `js/state.js` keeping the side-effect import of `js/page-registry.js`. Plenty
-  else fails a CI run — `validate`, the Netlify bundle build,
+- **`format:check`, `lint:js`, `lint:dead-code:ci` and `lint:architecture` are
+  the linters CI enforces**, and between them they still leave a gap: there is no
+  ESLint and no `tsc` anywhere in this repo. Prettier covers formatting, oxlint's
+  core rules cover correctness, Knip covers reachability, and dependency-cruiser
+  covers the module graph. `lint:js` reads `.oxlintrc.ci.json`, a SECOND oxlint
+  config on purpose: `.oxlintrc.json` sets `"rules": {}` and scopes the anti-slop
+  PLUGIN to `server.ts` and `build_scripts/ai/`, and `bun run lint:anti-slop`
+  remains a hand-run report rather than a gate. Knip gates only the categories
+  that were clean when it was adopted — unused files, unused/unlisted
+  dependencies, unresolved imports — because it reads this repo's deliberate
+  `window.<Namespace>` publishing as ~89 unused exports; `bun run lint:dead-code`
+  prints those as a triage list. The architecture rules live in
+  `.dependency-cruiser.cjs`: no cycles, the mockup renderer never reaching React
+  or MUI, the import-free base modules staying import-free, `pages/*.js` entering
+  only through `js/page-data.js`, and `js/state.js` keeping the side-effect
+  import of `js/page-registry.js`. Plenty else fails a CI run — `validate`, the Netlify bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -2600,8 +2603,8 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
 ### Formatting (a hard CI gate)
 
 Prettier is the **formatting gate CI enforces** (`.prettierrc.json`), alongside
-Knip for reachability (see `knip.jsonc`) and dependency-cruiser for the module
-graph (see `.dependency-cruiser.cjs`): **no
+`lint:js` for oxlint's core rules, Knip for reachability (see `knip.jsonc`) and
+dependency-cruiser for the module graph (see `.dependency-cruiser.cjs`): **no
 semicolons**, single quotes, 2-space indentation, `printWidth: 100`, ES5 trailing
 commas. Code must be ASI-safe and semicolon-free. Run `bun run format` before
 committing; `bun run format:check` is the lint step. `.prettierignore` excludes
@@ -2622,6 +2625,18 @@ pins the same scope in its `overrides`, so an editor running bare `oxlint` sees
 it too. Nothing in `.github/workflows/ci.yml` invokes it — it is a report to
 read, and adding it to CI would be a decision to make on purpose, not a gap to
 close.
+
+**oxlint itself DOES gate CI now, through a different config.** `lint:js` runs
+`.oxlintrc.ci.json`, which loads no plugin at all and enables oxlint's own core
+rules across `js/`, `pages/`, `build_scripts/` and `tests/` — those had never
+run anywhere, since `.oxlintrc.json` sets `"rules": {}`. Two configs rather than
+one because they answer different questions: anti-slop is an opinion about how
+to write TypeScript at an I/O boundary, and the core rules are correctness. Two
+stylistic `unicorn` rules are off in the CI config for the same reason anti-slop
+is not gated — `no-useless-fallback-in-spread` and
+`prefer-string-starts-ends-with` cluster in `js/ux-improvements-export.js` and
+`js/inline-content-edit.js`, and churning the import/export merge path for style
+is the trade this repo already refused once.
 
 ### JavaScript
 

@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "unicorn/no-useless-fallback-in-spread": "off",
+    "unicorn/prefer-string-starts-ends-with": "off"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "dist-singlefile/**",
+    "data/**",
+    "archive/**",
+    "node_modules/**",
+    "forms/*/dist/**",
+    "playwright-report/**",
+    "tools/oxlint/**"
+  ]
+}

@@ -10,7 +10,6 @@ const fs = require('fs')
 const path = require('path')
 
 const ROOT_DIR = path.resolve(__dirname, '../..')
-const FIXTURES_DIR = path.join(ROOT_DIR, 'data/audit_fixtures')
 const REPORT_FILE = path.join(ROOT_DIR, 'docs/karl-multi-source-audit-report.md')
 
 const DOCS_TO_AUDIT = [
@@ -38,12 +37,6 @@ function runAudit() {
     passCount: 0,
     warnCount: 0,
     errorCount: 0,
-  }
-
-  const adminSchemaPath = path.join(FIXTURES_DIR, 'karl-admin-schema.json')
-  let adminSchema = null
-  if (fs.existsSync(adminSchemaPath)) {
-    adminSchema = JSON.parse(fs.readFileSync(adminSchemaPath, 'utf8'))
   }
 
   for (const doc of DOCS_TO_AUDIT) {

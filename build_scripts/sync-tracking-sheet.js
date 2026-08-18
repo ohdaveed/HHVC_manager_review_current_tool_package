@@ -151,7 +151,7 @@ function mockupChangeStatus(sourceFile) {
   return 'Current'
 }
 
-function checklistItemsForPage(pageKey, pageType) {
+function checklistItemsForPage(pageKey, _pageType) {
   if (pageKey === 'pestsTopic') return [...AGENCY_CHECKS, ...COMMON_CHECKS]
   return COMMON_CHECKS
 }

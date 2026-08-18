@@ -764,7 +764,7 @@
 
       try {
         await this.editor.isReady
-      } catch (err) {
+      } catch {
         // A real failure mode per Editor.js's own isReady contract, not
         // hypothetical — fall back to cancelling this edit rather than
         // leaving the reviewer looking at a dead holder with nothing to type
@@ -889,7 +889,7 @@
       let outputValue
       try {
         outputValue = await this.editor.save()
-      } catch (err) {
+      } catch {
         editingPath = null
         this.editor.destroy()
         rerender()
