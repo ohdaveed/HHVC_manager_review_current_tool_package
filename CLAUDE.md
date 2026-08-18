@@ -53,14 +53,19 @@ they state too weakly to act on:
   `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
-- **`format:check` and `lint:dead-code:ci` are the linters CI enforces**, and
-  between them they are still thin: there is no ESLint and no `tsc` anywhere in
-  this repo, so Prettier covers formatting and Knip covers reachability, and
-  nothing covers correctness. Knip gates only the categories that were clean
-  when it was adopted — unused files, unused/unlisted dependencies, unresolved
-  imports — because it reads this repo's deliberate `window.<Namespace>`
-  publishing as ~89 unused exports. `bun run lint:dead-code` prints those as a
-  triage list. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+- **`format:check`, `lint:dead-code:ci` and `lint:architecture` are the linters
+  CI enforces**, and between them they are still thin: there is no ESLint and no
+  `tsc` anywhere in this repo, so Prettier covers formatting, Knip covers
+  reachability and dependency-cruiser covers the module graph — and nothing
+  covers correctness. Knip gates only the categories that were clean when it was
+  adopted — unused files, unused/unlisted dependencies, unresolved imports —
+  because it reads this repo's deliberate `window.<Namespace>` publishing as ~89
+  unused exports; `bun run lint:dead-code` prints those as a triage list. The
+  architecture rules live in `.dependency-cruiser.cjs`: no cycles, the mockup
+  renderer never reaching React or MUI, the import-free base modules staying
+  import-free, `pages/*.js` entering only through `js/page-data.js`, and
+  `js/state.js` keeping the side-effect import of `js/page-registry.js`. Plenty
+  else fails a CI run — `validate`, the Netlify bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -1185,7 +1190,8 @@ start `bun run serve`.
 ### Formatting (a hard CI gate)
 
 Prettier is the **formatting gate CI enforces** (`.prettierrc.json`), alongside
-Knip for reachability (see `knip.jsonc`): **no
+Knip for reachability (see `knip.jsonc`) and dependency-cruiser for the module
+graph (see `.dependency-cruiser.cjs`): **no
 semicolons**, single quotes, 2-space indentation, `printWidth: 100`, ES5
 trailing commas. Code must be ASI-safe and semicolon-free. Run
 `bun run format` before committing; `bun run format:check` is the lint step
