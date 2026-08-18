@@ -85,7 +85,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 49 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 50 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -238,7 +238,23 @@ and that the 120-character `cost` cap measures the OVERLAID value — a reviewer
 can push a short authored value over the cap and pull a long one under it, so
 measuring the original reports the wrong page in both directions.
 Mutation-proven against two deliberate breakages: emitting a description for a
-picker card, in each of the two places one could be emitted).
+picker card, in each of the two places one could be emitted), and
+`module-paths` (the gate that fails when a `js/<name>.js` path mentioned
+anywhere in a tracked file names no file on disk. An import breaks the build
+and a `require()` throws, but the same path sitting in a comment or a markdown
+doc is read by people and checked by nothing, so a moved module leaves behind
+a sentence that confidently points at nowhere — the same rot class as a stale
+`docs/codebase/STRUCTURE.md`. The check is deliberately dumb, matching
+path-shaped strings rather than parsing real references, which is why an
+EXEMPT list carves out the handful of deliberately-fake paths and states each
+one's reason; `docs/superpowers/` is SKIPped rather than fixed, since those are
+dated records correct on the date they were written. Mutation-proven: a
+deliberately fake path appended to the file fails the test, naming itself —
+which only works once the file is tracked, since the scan reads `git
+ls-files`. That is not incidental: the test's own header comment quotes a
+now-deleted module as a worked example, so once this file joined the tracked
+tree it had to add that quoted path to its own EXEMPT list rather than widen
+SKIP or weaken the regex to make the self-reference disappear).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
