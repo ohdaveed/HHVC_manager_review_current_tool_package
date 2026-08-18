@@ -164,7 +164,7 @@
 
   /**
    * title/summary/primaryCta and a section heading are all plain-string
-   * fields with no {text, unverified, ...} slot — js/inline-content-edit.js's
+   * fields with no {text, unverified, ...} slot — js/editing/inline-content-edit.js's
    * writeScalarValue() draws exactly this line, for the same reason: title/
    * summary/primaryCta are read/reapplied elsewhere
    * (updateMockupTextFromSavedState, collectCurrentPageReviewState) as bare
@@ -196,7 +196,7 @@
    * human-authored copy without opening anything. title/summary/primaryCta/
    * a heading are written as plain strings instead (see isPlainStringField
    * above); they still pick up the existing CSS-only "Edited" badge from
-   * js/inline-content-edit.js's decorateEditedFields(), which compares
+   * js/editing/inline-content-edit.js's decorateEditedFields(), which compares
    * against ORIGINAL_DATA regardless of which feature made the edit.
    * @returns {void}
    */

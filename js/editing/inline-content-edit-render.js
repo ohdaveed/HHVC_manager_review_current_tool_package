@@ -1,5 +1,5 @@
 /* Inline content editing: edit-widget markup. Sibling to
-   js/inline-content-edit.js (the orchestrator, which owns click handling
+   js/editing/inline-content-edit.js (the orchestrator, which owns click handling
    and the commit/cancel/undo lifecycle) — mirrors the ai-assist split
    (js/ai/ai-assist.js + js/ai/ai-assist-render.js). Loads before the orchestrator
    in js/main.js.
@@ -19,7 +19,7 @@
    * Build a scalar field's Editor.js holder: an empty <div> Editor.js will
    * mount into, carrying the same data-rewrite-field the plain <input>/
    * <textarea> widget carries so decorateListControls()/decorateEditedFields()
-   * and the click-delegation guards in js/inline-content-edit.js need no
+   * and the click-delegation guards in js/editing/inline-content-edit.js need no
    * changes to find it. `id` must be unique per open editor instance —
    * Editor.js's `holder` config takes an element id, and a stale id left
    * over from a previous edit on the same field would mount into a detached

@@ -1,13 +1,13 @@
 /* Inline content editing: orchestrator. Delegated click handling on
    #mockPage, the edit-widget lifecycle (open/commit/cancel), and wiring
-   into the existing autosave path. Sibling to js/inline-content-edit-render.js
-   (markup) and js/inline-content-edit-data.js (pure section_edits logic).
+   into the existing autosave path. Sibling to js/editing/inline-content-edit-render.js
+   (markup) and js/editing/inline-content-edit-data.js (pure section_edits logic).
    Mirrors the ai-assist split (js/ai/ai-assist.js orchestrates
    js/ai/ai-assist-client.js + js/ai/ai-assist-render.js).
 
    Unlike AI assist, this needs no backend and no capability check: the
    affordance is present whenever the page has loaded. Loads after
-   js/inline-content-edit-render.js and after js/ux-improvements.js (for
+   js/editing/inline-content-edit-render.js and after js/ux-improvements.js (for
    window.ReviewUx.stateSync.saveCurrentPageToLocalStorage). */
 ;(function mountInlineContentEdit() {
   if (typeof window === 'undefined') return
@@ -35,7 +35,7 @@
   /**
    * The `unverifiedReason` written onto a manually edited paragraph or bullet.
    *
-   * Resolved from js/inline-content-edit-adapter.js, which declares it, rather
+   * Resolved from js/editing/inline-content-edit-adapter.js, which declares it, rather
    * than restated here: it is a persisted value inside `section_edits`, and
    * two literals of a stored string means two classes of edited item that stop
    * comparing equal. Read off `window` — this file has no import of the
@@ -64,7 +64,7 @@
   }
 
   /**
-   * Map a data-rewrite-field path to js/inline-content-edit-adapter.js's
+   * Map a data-rewrite-field path to js/editing/inline-content-edit-adapter.js's
    * FIELD_TYPES vocabulary: 'paragraph'/'bullet' for a numeric-suffixed
    * array item path, otherwise the page-level field name itself.
    * @param {string} path
@@ -140,7 +140,7 @@
       return
     }
     // Which of the two forms this field takes is decided by one shared
-    // classifier (js/inline-content-edit-data.js's editableItemKind), not by
+    // classifier (js/editing/inline-content-edit-data.js's editableItemKind), not by
     // a regex here. The tagged object is only correct for a body-copy item
     // whose renderer runs it through normalizeTextItem(); a table cell, a
     // contact phone number, a spotlight paragraph and every whole-field
@@ -180,7 +180,7 @@
   function itemKindFor(path) {
     const kind = window.inlineEditData?.editableItemKind?.(path)
     if (kind) return kind
-    // The classifier is unavailable (js/inline-content-edit-data.js failed to
+    // The classifier is unavailable (js/editing/inline-content-edit-data.js failed to
     // evaluate) or does not recognize the path. Fall back to the rule that
     // predates it — a heading is a plain string, anything else addressed by an
     // item path is tagged body copy — rather than to one branch of it. The
@@ -724,7 +724,7 @@
         // confusing rather than useful. The explicit ['bold', 'hhvcLink']
         // array (rather than Editor.js's boolean `true`, which would also
         // enable its own built-in 'link' — a block-level preview card, not an
-        // inline anchor) is what keeps js/inline-content-edit-link-tool.js's
+        // inline anchor) is what keeps js/editing/inline-content-edit-link-tool.js's
         // custom tool the only link affordance offered; registering it in
         // `tools` below with `inlineToolbar: false` for scalar fields is
         // harmless, since a tool never referenced in the toolbar array is
@@ -785,7 +785,7 @@
         // and any tool popover nested further inside that — not as a sibling
         // outside holder's subtree. A plain blur/focusout with no containment
         // check would commit the instant a reviewer clicked a toolbar tool
-        // (Bold, or js/inline-content-edit-link-tool.js's Link), since that
+        // (Bold, or js/editing/inline-content-edit-link-tool.js's Link), since that
         // click moves focus off the contenteditable block and onto the tool's
         // own button/input, still within the same holder.
         //
@@ -850,7 +850,7 @@
         }
       })
       this.holder.addEventListener('input', (event) => {
-        // Keep js/inline-content-edit-link-tool.js's commitLink() pre-blur
+        // Keep js/editing/inline-content-edit-link-tool.js's commitLink() pre-blur
         // HTML stash (LinkCommitBridge, read in commit() below) in sync
         // with any typing that happens after a link is inserted but before
         // the field is blurred. Without this, commit() always preferred
@@ -900,7 +900,7 @@
       // fires as part of the same native blur that triggers the holder's
       // 'focusout' listener above, in the target phase, ahead of any
       // ancestor-level bubble-phase listener) — and it strips a link
-      // js/inline-content-edit-link-tool.js just inserted, using a
+      // js/editing/inline-content-edit-link-tool.js just inserted, using a
       // narrower rule set than editor.save()'s own sanitizer: measured live
       // via Playwright, calling editor.save() directly immediately after
       // insertion preserves the anchor perfectly (proving this feature's
@@ -930,7 +930,7 @@
       // been rejected.
       //
       // This is the paste path. A TYPED target never reaches here as an
-      // invalid one — js/inline-content-edit-link-tool.js's commitLink()
+      // invalid one — js/editing/inline-content-edit-link-tool.js's commitLink()
       // refuses before an anchor is built — but a pasted anchor bypasses that
       // code entirely, since the tool's sanitize() config allows `href` and
       // `data-render-target` and Editor.js carries a copied link straight
@@ -1099,7 +1099,7 @@
         if (isValid(target, keys)) continue
         anchor.replaceWith(...anchor.childNodes)
       }
-      // Keep js/inline-content-edit-link-tool.js's pre-blur HTML stash in
+      // Keep js/editing/inline-content-edit-link-tool.js's pre-blur HTML stash in
       // step. commit() prefers that snapshot over editor.save()'s output when
       // one exists, so leaving it holding the pre-removal HTML would hand the
       // retry the very anchors just removed.
@@ -1140,7 +1140,7 @@
 
   /**
    * Open a scalar field's editor using @editorjs/editorjs.
-   * js/inline-content-edit-adapter.js is the serialization boundary
+   * js/editing/inline-content-edit-adapter.js is the serialization boundary
    * EditorSession is built around: Editor.js's block-JSON output never
    * becomes the storage format, only a transient editing representation, so
    * every value it ends up writing is exactly the shape writeScalarValue

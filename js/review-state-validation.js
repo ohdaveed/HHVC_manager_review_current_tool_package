@@ -53,7 +53,7 @@ import { DECISION_LABELS } from './utils.js'
   // build_scripts/review-state-schema.js's SECTION_EDIT_PATH_PATTERN and
   // sectionEditTextItemSchema, for the same CJS/browser-Zod split reason
   // VALID_DECISIONS above is restated rather than imported. Restated again
-  // as defense-in-depth in js/inline-content-edit-data.js#applyContentEdits-
+  // as defense-in-depth in js/editing/inline-content-edit-data.js#applyContentEdits-
   // ToPageData, which has no ESM `export` surface either side can import
   // from. tests/review-state-schema.test.js pins all three together.
   const SECTION_EDIT_VALUE_KINDS = [

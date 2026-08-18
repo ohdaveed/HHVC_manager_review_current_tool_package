@@ -1,7 +1,7 @@
 // Round-trip persistence coverage for Task 7's add/remove/reset operations:
 // add a bullet, remove a bullet, and reset a heading, each verified against
 // the REAL section_edits recompute-on-save path (js/ux-improvements-state-sync.js's
-// collectCurrentPageReviewState -> js/inline-content-edit-data.js's
+// collectCurrentPageReviewState -> js/editing/inline-content-edit-data.js's
 // computeSectionEdits) and the REAL reapply-on-load path
 // (applySavedPageState -> applyContentEditsToPageData), rather than the
 // counting stubs tests/inline-content-edit.test.js uses for its click-behavior
@@ -9,7 +9,7 @@
 // change to any of these modules...must be verified against the round trip
 // itself before being called done."
 //
-// js/inline-content-edit.js and js/ux-improvements-state-sync.js are both
+// js/editing/inline-content-edit.js and js/ux-improvements-state-sync.js are both
 // self-mounting IIFEs with no module.exports, so each test imports fresh
 // copies via cache-busting dynamic import() against a hand-built window --
 // same pattern as tests/inline-content-edit-refresh.test.js's
@@ -18,11 +18,11 @@
 const { describe, test, expect, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
-const realInlineEditData = require('../js/inline-content-edit-data.js')
-require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
+const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
+require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
 
 const STATE_SYNC_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
-const INLINE_EDIT_PATH = path.resolve(__dirname, '../js/inline-content-edit.js')
+const INLINE_EDIT_PATH = path.resolve(__dirname, '../js/editing/inline-content-edit.js')
 
 let originalWindow
 
@@ -43,7 +43,7 @@ afterEach(() => {
  * Mount real js/ux-improvements-state-sync.js (for a real
  * saveCurrentPageToLocalStorage / applySavedPageState pair backed by real
  * computeSectionEdits/applyContentEditsToPageData) plus real
- * js/inline-content-edit.js on top of it, against one shared in-memory
+ * js/editing/inline-content-edit.js on top of it, against one shared in-memory
  * window.reviewState store standing in for localStorage.
  * @returns {Promise<{
  *   page: object,
@@ -93,7 +93,7 @@ async function mountRoundTrip() {
   }
   window.showToast = () => {}
 
-  // renderPage is the seam js/inline-content-edit.js's rerender() calls.
+  // renderPage is the seam js/editing/inline-content-edit.js's rerender() calls.
   // window.HHVC_DATA is the single shared page object throughout this test
   // (mutated in place by add/remove/reset), so a no-op stub is sufficient --
   // there's no separate rendered-DOM copy to keep in sync for this file's
@@ -103,7 +103,7 @@ async function mountRoundTrip() {
 
   const stateSyncUrl = `${STATE_SYNC_PATH}?t=${Date.now()}-${Math.random()}`
   await import(stateSyncUrl)
-  // js/inline-content-edit.js's persist() reaches through
+  // js/editing/inline-content-edit.js's persist() reaches through
   // window.ReviewUx.stateSync.saveCurrentPageToLocalStorage -- the real one,
   // now mounted above.
 
@@ -205,7 +205,7 @@ describe('inline content edit: add/remove/reset round-trip through the real save
     expect(page.sections[0].heading).toBe('Original Heading')
     const saved = readState().pages.testPage
     // The whole point of "reset to original is correct by construction"
-    // (js/inline-content-edit-data.js's design premise): once the live value
+    // (js/editing/inline-content-edit-data.js's design premise): once the live value
     // matches ORIGINAL_DATA again, computeSectionEdits's diff simply omits
     // the path on the next recompute -- no separate deletion step needed.
     expect(saved.section_edits['sections.0.heading']).toBeUndefined()

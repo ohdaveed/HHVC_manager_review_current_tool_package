@@ -12,7 +12,7 @@
    That rule existed in exactly one place — findBrokenInlineLinks() in
    build_scripts/data-checks.js, which walks authored pages/*.js copy at
    validation time — and nowhere at all on the path a REVIEWER creates a link:
-   js/inline-content-edit-link-tool.js's typed target, and any anchor pasted
+   js/editing/inline-content-edit-link-tool.js's typed target, and any anchor pasted
    into an open editor, both of which land in review state rather than in
    source, where `bun run validate` can never see them. This module is that
    rule, extracted so the widget and the validator cannot come to disagree
@@ -28,7 +28,7 @@
 
    Note what this module deliberately does NOT do: it does not sanitize. The
    `href` an external target ends up in is still run through js/utils.js's
-   safeUrl() at the point it is written, by js/inline-content-edit-link-tool.js
+   safeUrl() at the point it is written, by js/editing/inline-content-edit-link-tool.js
    and js/page-render.js. Deciding whether a target is VALID and neutralizing
    the string that reaches an attribute are two different jobs, and folding
    safeUrl() in here would add an argument that never changes an answer: every
@@ -39,7 +39,7 @@
  * The reviewer-facing statement of the rule below, in the words a reviewer
  * needs rather than the predicate's terms.
  *
- * It lives here rather than in js/inline-content-edit-link-tool.js so the rule
+ * It lives here rather than in js/editing/inline-content-edit-link-tool.js so the rule
  * and its description are declared together and cannot drift — the widget
  * renders this into a visually-hidden span referenced by the target input's
  * `aria-describedby`, so it is announced when focus first enters the field
@@ -127,13 +127,13 @@ function isValidInlineLinkTarget(target, knownKeys) {
  * Every invalid target in a committed field value, in the order they appear.
  *
  * This is the paste-path half of the feature. A reviewer typing a target goes
- * through js/inline-content-edit-link-tool.js's own check before an anchor is
+ * through js/editing/inline-content-edit-link-tool.js's own check before an anchor is
  * ever built — but an anchor PASTED into an open editor never touches that
  * code: the link tool's `static get sanitize()` allows `href` and
  * `data-render-target`, so Editor.js's sanitizer carries a copied link
  * straight through to the adapter with the toolbar closed. Checking the
  * committed value is what covers both, since
- * js/inline-content-edit-adapter.js has by then serialized every anchor —
+ * js/editing/inline-content-edit-adapter.js has by then serialized every anchor —
  * typed, pasted, or authored — back into the same `[label](target)` markdown.
  *
  * Results are deliberately NOT deduplicated and NOT sorted: the refusal

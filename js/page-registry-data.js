@@ -8,7 +8,7 @@
 
    LOAD ORDER: this file is evaluated in js/main.js's CORE block, pulled in
    through js/page-registry.js, which js/state.js imports. That is MUCH earlier
-   than js/inline-content-edit-data.js runs, and it is why this file must not
+   than js/editing/inline-content-edit-data.js runs, and it is why this file must not
    copy that file's trick of resolving `window.utils.setByPath` at module scope:
    js/utils.js is not guaranteed to have been evaluated yet. Everything here is
    self-contained for that reason — including the five-line slugify, which

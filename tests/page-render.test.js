@@ -812,7 +812,7 @@ describe('data-rewrite-field annotation', () => {
 
   // An accordion's heading is the one editable field that cannot simply take
   // the attribute where it already sits. EditorSession.open()
-  // (js/inline-content-edit.js) does target.replaceWith() with a <div> holder,
+  // (js/editing/inline-content-edit.js) does target.replaceWith() with a <div> holder,
   // and the heading text used to live inside the <button data-accordion-toggle>
   // itself — so annotating it in place would have put a block-level Editor.js
   // instance inside a native button AND routed one click to both the toggle

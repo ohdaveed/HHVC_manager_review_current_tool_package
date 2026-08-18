@@ -1,4 +1,4 @@
-// Unit tests for js/inline-content-edit.js — the click-to-edit orchestrator
+// Unit tests for js/editing/inline-content-edit.js — the click-to-edit orchestrator
 // for SCALAR fields (title, summary, primaryCta, section heading, a single
 // paragraph, a single bullet), plus Task 7's add/remove/undo/reset controls
 // and the post-render decoration entry points.
@@ -28,10 +28,10 @@
 // commit path anymore for any field, single-line or not — Editor.js traps
 // Enter inside its own single-block guard — so every commit test uses a
 // focusout, matching openEditorJsEditor's holder-level 'focusout' listener
-// (js/inline-content-edit.js) rather than a 'blur' dispatched directly on a
+// (js/editing/inline-content-edit.js) rather than a 'blur' dispatched directly on a
 // widget the way the old tests did.
 //
-// js/inline-content-edit.js is a self-mounting IIFE (no module.exports), so
+// js/editing/inline-content-edit.js is a self-mounting IIFE (no module.exports), so
 // each test imports it via a cache-busting dynamic import() to get a fresh
 // closure (editingPath state must not leak between tests) — same pattern
 // tests/inline-content-edit-refresh.test.js uses for its own IIFE-shaped
@@ -39,12 +39,12 @@
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
-const realInlineEditData = require('../js/inline-content-edit-data.js')
+const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 require('../js/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
 // which commit() and the link tool both consult before accepting a link target.
-require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
-require('../js/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
-require('../js/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
+require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
+require('../js/editing/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
+require('../js/editing/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
 // Imported once at file scope, not inside a test: js/ui-controls.js statically
 // imports js/state.js, which side-effect-loads the REAL js/page-data.js (all
 // 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
@@ -57,7 +57,7 @@ require('../js/inline-content-edit-adapter.js') // side-effect: populates window
 // calls in the tests below are safe.
 const { showToast: realShowToast } = require('../js/ui-controls.js')
 
-const MODULE_PATH = path.resolve(__dirname, '../js/inline-content-edit.js')
+const MODULE_PATH = path.resolve(__dirname, '../js/editing/inline-content-edit.js')
 
 let originalInlineEdit
 let originalHHVCData
@@ -89,7 +89,7 @@ afterEach(() => {
 })
 
 /**
- * Mount a fresh instance of js/inline-content-edit.js against the real
+ * Mount a fresh instance of js/editing/inline-content-edit.js against the real
  * happy-dom window/document, with a stubbed window.HHVC_DATA, renderPage,
  * and ReviewUx.stateSync.saveCurrentPageToLocalStorage — the three seams
  * the orchestrator reaches through.
@@ -1401,7 +1401,7 @@ describe('inline content edit: decoration controls are excluded from PNG export'
 
 describe('InlineEdit.LinkCommitBridge', () => {
   // window.InlineEdit.LinkCommitBridge is populated once, at file-load time,
-  // by the top-of-file `require('../js/inline-content-edit-link-tool.js')`
+  // by the top-of-file `require('../js/editing/inline-content-edit-link-tool.js')`
   // side effect — it is not per-test state and needs no cache-busting import
   // the way the orchestrator itself does.
   test('take() returns the HTML stash()ed for the same holder element', () => {

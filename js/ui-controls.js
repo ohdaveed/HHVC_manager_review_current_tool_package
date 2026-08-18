@@ -18,7 +18,7 @@ import { escapeHtml } from './utils.js'
  * anything a reviewer needs longer than that to decide on does not belong here
  * (which is why queue undo lives in the bulk bar instead).
  * `action.className`/`action.dataset` are an additive extension for
- * js/inline-content-edit.js's one-step-undo toast (Task 7): its e2e coverage
+ * js/editing/inline-content-edit.js's one-step-undo toast (Task 7): its e2e coverage
  * and its own CSS both need to find/style the generated button by a specific
  * marker (`data-inline-edit-undo` / `.inline-edit-undo-action`), and DOM APIs
  * make that safe to add without touching how `message` itself is rendered.

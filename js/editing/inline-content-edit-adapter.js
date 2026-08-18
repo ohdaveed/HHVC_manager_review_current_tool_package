@@ -3,21 +3,21 @@
    block-JSON OutputData shape. Editor.js is a transient EDITING widget only
    — its blocks never become the storage format. Every value this module
    produces for a page write is exactly the shape writeScalarValue already
-   wrote before Editor.js existed (js/inline-content-edit.js), so
+   wrote before Editor.js existed (js/editing/inline-content-edit.js), so
    build_scripts/review-state-schema.js, js/review-state-validation.js and
-   js/inline-content-edit-data.js's SECTION_EDIT_PATH_PATTERN/shape checks
+   js/editing/inline-content-edit-data.js's SECTION_EDIT_PATH_PATTERN/shape checks
    need no changes — this file's whole job is to keep producing values that
    already satisfy checks that predate it.
 
    Dual-exported (window.inlineEditAdapter plus module.exports), matching
-   js/inline-content-edit-data.js, js/review-merge.js and
+   js/editing/inline-content-edit-data.js, js/review-merge.js and
    js/standards/plain-language.js, so this file has no DOM dependency and is
    importable directly under Bun with no browser and no live Editor.js
    instance — the round-trip tests in
    tests/inline-content-edit-adapter.test.js exercise plain OutputData
    objects, never a real editor.
 
-   Deliberately import-free, like js/inline-content-edit-data.js: escaping
+   Deliberately import-free, like js/editing/inline-content-edit-data.js: escaping
    and unescaping are reimplemented here rather than importing
    js/utils.js's escapeHtml, so this module has no load-order dependency of
    its own. */
@@ -26,7 +26,7 @@
  * The editable field kinds. Scalar fields resolve to a plain string on
  * commit; paragraph/bullet items resolve to the same tagged object form
  * writeScalarValue already writes for a manual edit
- * (js/inline-content-edit.js:100-104) — this module's job is field-shape
+ * (js/editing/inline-content-edit.js:100-104) — this module's job is field-shape
  * fidelity, not a new tagging convention.
  *
  * `markdownText` is the one kind that splits those two properties apart, and
@@ -55,7 +55,7 @@ function isMarkdownFieldType(fieldType) {
 /**
  * The `unverifiedReason` stamped on a manually edited paragraph or bullet.
  *
- * Declared once and read by js/inline-content-edit.js off
+ * Declared once and read by js/editing/inline-content-edit.js off
  * `window.inlineEditAdapter` rather than restated there, because this is a
  * PERSISTED data value, not a label: it is written into `section_edits` under
  * hhvcManagerReviewState:v1 and rendered as the Unverified pill's reason. Two
@@ -137,7 +137,7 @@ function markdownToEditingHtml(text) {
  * nesting cases above symmetric. Any tag this function doesn't recognize
  * (a paste artifact — a stray <div>, <span>, <br>) is stripped while its
  * text content is kept, mirroring
- * js/inline-content-edit-data.js's applyContentEditsToPageData "drop don't
+ * js/editing/inline-content-edit-data.js's applyContentEditsToPageData "drop don't
  * throw" posture: an unrecognized fragment degrades to plain text rather
  * than surfacing raw HTML into stored content or throwing.
  * @param {string} html
@@ -193,7 +193,7 @@ function editingHtmlToPlainText(html) {
  * Whether a field kind wraps its committed value as
  * {text, unverified, unverifiedReason} (paragraph/bullet items) or writes a
  * plain string (title/summary/primaryCta/heading) — the same split
- * writeScalarValue already makes (js/inline-content-edit.js:82-105).
+ * writeScalarValue already makes (js/editing/inline-content-edit.js:82-105).
  * @param {string} fieldType
  * @returns {boolean}
  */
@@ -251,7 +251,7 @@ function pageValueToEditorData(fieldType, value) {
  * title/summary/primaryCta/heading, or {text, unverified: true,
  * unverifiedReason} for a paragraph/bullet item — reusing the existing
  * Unverified-pill rendering with no renderer change, exactly as
- * writeScalarValue's own comment documents (js/inline-content-edit.js:71-76).
+ * writeScalarValue's own comment documents (js/editing/inline-content-edit.js:71-76).
  *
  * Dispatches by fieldType the same way pageValueToEditorData does, and for
  * the same reason: a scalar field's block HTML is decoded as plain text

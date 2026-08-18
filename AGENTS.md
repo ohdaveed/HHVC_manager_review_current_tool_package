@@ -537,7 +537,7 @@ them.**
   mutates `order`/`pages` for the add/delete feature. Dual-exported and
   import-free; it is evaluated far earlier than the other dual-export modules
   (through `js/page-registry.js`, before `js/state.js`), so unlike
-  `js/inline-content-edit-data.js` it must not resolve anything off `window` at
+  `js/editing/inline-content-edit-data.js` it must not resolve anything off `window` at
   module scope — `js/utils.js` is not guaranteed to have run yet.
 - **`js/page-registry.js`** — applies that registry onto `window.HHVC_DATA` and
   publishes `window.pageRegistry`. Must run before `js/state.js`'s
@@ -974,15 +974,15 @@ re-rendering immediately and the edit persisting through the same
 browser-first `localStorage` review-state model every other field in this
 tool uses. `pages/*.js` is never touched; this is a review aid, same as
 every other review/UX layer. Three files, mirroring the AI-assist split:
-`js/inline-content-edit-render.js` (widget markup — inputs, textareas,
-add/remove/reset controls, the Edited badge), `js/inline-content-edit-data.js`
+`js/editing/inline-content-edit-render.js` (widget markup — inputs, textareas,
+add/remove/reset controls, the Edited badge), `js/editing/inline-content-edit-data.js`
 (pure `section_edits` diff/reapply, no DOM, dual-exported like
-`js/review-merge.js`), and `js/inline-content-edit.js` (the orchestrator —
+`js/review-merge.js`), and `js/editing/inline-content-edit.js` (the orchestrator —
 delegated click handling, the open/commit/cancel widget lifecycle, and
 wiring into the existing autosave path).
 
 - **Scope is one list, in one place: `EDITABLE_FIELD_SHAPES` in
-  `js/inline-content-edit-data.js`.** It covers a page's title, summary and
+  `js/editing/inline-content-edit-data.js`.** It covers a page's title, summary and
   primary CTA; a section's heading, paragraphs, bullets, table and callout; a
   step's title, text, bullets and callout; and the page-level `whatToKnow`,
   `spotlight` and `contact` blocks. Each entry declares the value shape its
@@ -1117,7 +1117,7 @@ wiring into the existing autosave path).
 - **`section_edits` is new, and it's derived, not accumulated.** A flat map
   on the review record, `field path -> current full value` (e.g.
   `{"sections.2.bullets": [...]}`). `computeSectionEdits()`
-  (`js/inline-content-edit-data.js`) recomputes it from scratch on every
+  (`js/editing/inline-content-edit-data.js`) recomputes it from scratch on every
   autosave by diffing the live page object's `heading`/`paragraphs`/`bullets`
   against `window.ORIGINAL_DATA`, the same "read live state fresh every
   save" approach `edited_title` has always used — not an accumulated diff
@@ -2687,7 +2687,7 @@ to write TypeScript at an I/O boundary, and the core rules are correctness. Two
 stylistic `unicorn` rules are off in the CI config for the same reason anti-slop
 is not gated — `no-useless-fallback-in-spread` and
 `prefer-string-starts-ends-with` cluster in `js/ux-improvements-export.js` and
-`js/inline-content-edit.js`, and churning the import/export merge path for style
+`js/editing/inline-content-edit.js`, and churning the import/export merge path for style
 is the trade this repo already refused once.
 
 ### JavaScript

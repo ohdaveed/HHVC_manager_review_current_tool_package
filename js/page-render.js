@@ -1030,7 +1030,7 @@ function renderOnThisPage(sections = []) {
 //
 // Every other editable field carries `data-rewrite-field` on the element that
 // already renders it, because EditorSession.open()
-// (js/inline-content-edit.js) mounts the editor by calling
+// (js/editing/inline-content-edit.js) mounts the editor by calling
 // `target.replaceWith(holder)` — and that holder is a <div>. Annotating the
 // heading text where it used to live, inside the trigger <button>, would
 // therefore have done two broken things at once: dropped a block-level
@@ -1602,7 +1602,7 @@ function renderPage(key, skipHistory = false) {
     window.history.pushState({ key }, '', url)
   }
   function focusRenderedPageHeading() {
-    // When js/inline-content-edit.js's addListItem() opens a new item, it
+    // When js/editing/inline-content-edit.js's addListItem() opens a new item, it
     // triggers this same render and then, two rAFs later, calls
     // openEditorJsEditor() — which sets editingPath synchronously before
     // the async open() runs. transition.finished fires after the animation
@@ -1611,7 +1611,7 @@ function renderPage(key, skipHistory = false) {
     // focusout that commits with empty text, and collapses the editor before
     // the reviewer can type. Skip the focus entirely when an editor is open.
     //
-    // window.inlineEdit is the public API js/inline-content-edit.js mounts
+    // window.inlineEdit is the public API js/editing/inline-content-edit.js mounts
     // on window; the optional chain degrades gracefully to "always focus" on
     // any page where that module hasn't loaded yet.
     if (window.inlineEdit?.isEditing?.()) return

@@ -447,7 +447,7 @@ re-monolith them.**
   mutates `order`/`pages` for the add/delete feature. Dual-exported and
   import-free; it is evaluated far earlier than the other dual-export modules
   (through `js/page-registry.js`, before `js/state.js`), so unlike
-  `js/inline-content-edit-data.js` it must not resolve anything off `window` at
+  `js/editing/inline-content-edit-data.js` it must not resolve anything off `window` at
   module scope — `js/utils.js` is not guaranteed to have run yet.
 - **`js/page-registry.js`** — applies that registry onto `window.HHVC_DATA` and
   publishes `window.pageRegistry`. Must run before `js/state.js`'s
@@ -803,7 +803,7 @@ so it is the only place a snapshot is recorded.
 
 ### Inline content editing (`js/inline-content-edit*.js`)
 
-Click-to-edit directly on the rendered mockup — every visible text field except cards, persisting through the same `localStorage` review-state model as every other field. A review aid: `pages/*.js` is never touched. **The scope is one list, `EDITABLE_FIELD_SHAPES` in `js/inline-content-edit-data.js`**, declaring each editable path and the value shape (`string`, `textArray`, `stringArray`, `table`) its stored entry takes. **A path stamped `data-rewrite-field` by a renderer but missing from that list silently loses the reviewer's edit on the next load** — step text was in exactly that state and is the reason the list exists; add the path in both places or neither. **Cards deliberately carry no `data-rewrite-field`** — an inheriting card's description IS the destination page's `summary`, so an edit here would appear to work and then vanish; do not "complete" the feature by adding it. Full rationale in the `hhvc-inline-content-editing` skill.
+Click-to-edit directly on the rendered mockup — every visible text field except cards, persisting through the same `localStorage` review-state model as every other field. A review aid: `pages/*.js` is never touched. **The scope is one list, `EDITABLE_FIELD_SHAPES` in `js/editing/inline-content-edit-data.js`**, declaring each editable path and the value shape (`string`, `textArray`, `stringArray`, `table`) its stored entry takes. **A path stamped `data-rewrite-field` by a renderer but missing from that list silently loses the reviewer's edit on the next load** — step text was in exactly that state and is the reason the list exists; add the path in both places or neither. **Cards deliberately carry no `data-rewrite-field`** — an inheriting card's description IS the destination page's `summary`, so an edit here would appear to work and then vanish; do not "complete" the feature by adding it. Full rationale in the `hhvc-inline-content-editing` skill.
 
 ### Adding and deleting pages (`js/page-registry*.js`)
 
@@ -1278,7 +1278,7 @@ how to write TypeScript at an I/O boundary, and the core rules are correctness.
 Two stylistic `unicorn` rules are off in the CI config for the same reason
 anti-slop is not gated — `no-useless-fallback-in-spread` and
 `prefer-string-starts-ends-with` cluster in `js/ux-improvements-export.js` and
-`js/inline-content-edit.js`, and churning the import/export merge path for style
+`js/editing/inline-content-edit.js`, and churning the import/export merge path for style
 is the trade this repo already refused once.
 
 ### JavaScript

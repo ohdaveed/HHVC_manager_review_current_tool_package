@@ -160,8 +160,8 @@ import './review-state-validation.js'
 import './standards/reading-level.js'
 import './review-state-store.js'
 import './review-merge.js'
-import './inline-content-edit-data.js'
-import './inline-content-edit-adapter.js'
+import './editing/inline-content-edit-data.js'
+import './editing/inline-content-edit-adapter.js'
 // Publishes window.inlineLinkTarget, read by inline-content-edit-link-tool.js
 // (a reviewer-typed target) and inline-content-edit.js (a pasted one). Listed
 // here rather than imported by either, because it is also require()d from
@@ -213,9 +213,9 @@ import './ai/ai-assist-render.js'
 import './ai/ai-assist.js'
 import './ai/ai-rewrite-render.js'
 import './ai/ai-rewrite.js'
-import './inline-content-edit-render.js'
-import './inline-content-edit-link-tool.js'
-import './inline-content-edit.js'
+import './editing/inline-content-edit-render.js'
+import './editing/inline-content-edit-link-tool.js'
+import './editing/inline-content-edit.js'
 
 // PNG export of the mockups. Imported after the review layers because it uses
 // window.showToast for progress and window.renderPage to step through pages.

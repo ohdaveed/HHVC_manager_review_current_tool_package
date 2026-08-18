@@ -9,7 +9,7 @@ const {
   EDITABLE_FIELD_SHAPES,
   editableFieldKind,
   editableItemKind,
-} = require('../js/inline-content-edit-data.js')
+} = require('../js/editing/inline-content-edit-data.js')
 
 describe('EDITABLE_FIELD_SHAPES', () => {
   // Every path shape a reviewer can edit on the mockup, and the value shape

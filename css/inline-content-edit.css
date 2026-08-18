@@ -1,8 +1,8 @@
 /* ==========================================================================
    Inline content editing
    ==========================================================================
-   Styling for the click-to-edit widgets (js/inline-content-edit.js /
-   js/inline-content-edit-render.js): the swapped-in @editorjs/editorjs
+   Styling for the click-to-edit widgets (js/editing/inline-content-edit.js /
+   js/editing/inline-content-edit-render.js): the swapped-in @editorjs/editorjs
    holder, the "Edited" badge for title/summary/heading/CTA (fields with no `unverified`
    schema slot to reuse the existing Unverified-pill mechanism), and the
    add/remove/reset controls for section paragraphs and bullets.
@@ -36,7 +36,7 @@
    "a reviewer changed this from what was authored" and is a review-time-only
    annotation, so the two use different tokens and never render on the same
    element (paragraphs/bullets get the pill, never this badge — see
-   decorateEditedFields()'s explicit exclusion in js/inline-content-edit.js). */
+   decorateEditedFields()'s explicit exclusion in js/editing/inline-content-edit.js). */
 .inline-edit-badge {
   display: inline-flex;
   align-items: center;
@@ -120,8 +120,8 @@
   cursor: pointer;
 }
 
-/* The @editorjs/editorjs holder (js/inline-content-edit-render.js's
-   editorJsHolderHtml, mounted by js/inline-content-edit.js's
+/* The @editorjs/editorjs holder (js/editing/inline-content-edit-render.js's
+   editorJsHolderHtml, mounted by js/editing/inline-content-edit.js's
    openEditorJsEditor — the rollout-toggle-gated Phase 2 path). It already
    carries .inline-edit-input for the shared border/background/focus rules
    above; these rules reset Editor.js's own default block padding/margins so
@@ -160,14 +160,14 @@
 }
 
 /* Wraps the "+ Add" control when it's appended inside a <ul> (a list's only
-   valid children are <li> — see js/inline-content-edit.js's
+   valid children are <li> — see js/editing/inline-content-edit.js's
    decorateListControls()). This <li> exists purely for valid list
    structure, not to be a visible list item, so it gets no bullet marker. */
 .inline-edit-add-li {
   list-style: none;
 }
 
-/* js/inline-content-edit-link-tool.js's custom inline Link tool — the
+/* js/editing/inline-content-edit-link-tool.js's custom inline Link tool — the
    toolbar button and its target-entry input (renderActions()). Text rather
    than an icon, matching this button against Editor.js's own default Bold
    button (also unstyled text/glyph at this size) with the least risk of a

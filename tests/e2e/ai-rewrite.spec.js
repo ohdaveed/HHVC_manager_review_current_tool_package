@@ -258,7 +258,7 @@ test.describe('AI rewrite', () => {
     await page.click('#aiRewriteRun')
     await page.click('#aiRewriteApply')
 
-    // decorateEditedFields() (js/inline-content-edit.js) also appends the
+    // decorateEditedFields() (js/editing/inline-content-edit.js) also appends the
     // "Edited"/"Reset to original" badge markup inside this <h1> once it
     // differs from ORIGINAL_DATA, so the full text is not JUST the rewrite.
     await expect(page.locator('#mockPage h1')).toContainText(REWRITTEN)

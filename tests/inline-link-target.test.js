@@ -1,6 +1,6 @@
 /* Unit coverage for js/inline-link-target.js — the single definition of what an
    inline link target may be, shared by the browser widget
-   (js/inline-content-edit-link-tool.js typing one, js/inline-content-edit.js
+   (js/editing/inline-content-edit-link-tool.js typing one, js/editing/inline-content-edit.js
    committing a pasted one) and by build_scripts/data-checks.js's
    findBrokenInlineLinks() walking authored pages/*.js copy.
 

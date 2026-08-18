@@ -121,7 +121,7 @@ const NON_CONTENT_FIELDS = new Set(['updated_at', 'synced_at', 'local_dirty', 'h
  * let the server's response overwrite it, and an edit to a previously-clean
  * record could leave `local_dirty` false and be silently overwritten by the
  * next pull. JSON.stringify is used instead for either side that is a
- * non-null object, matching the technique js/inline-content-edit-data.js's
+ * non-null object, matching the technique js/editing/inline-content-edit-data.js's
  * own deepEqual() already uses for this exact field's values.
  *
  * A missing/null object-valued field normalizes to `{}` rather than to

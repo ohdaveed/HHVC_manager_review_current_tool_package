@@ -8,7 +8,7 @@
    /^https?:\/\// test. The two anchor shapes this tool builds
    (<a data-render-target="...">label</a> and
    <a href="..." target="_blank" rel="noopener noreferrer">label</a>) are the
-   SAME two shapes js/inline-content-edit-adapter.js's markdownToEditingHtml
+   SAME two shapes js/editing/inline-content-edit-adapter.js's markdownToEditingHtml
    already produces when opening existing authored content for editing, and
    the only two shapes its editingHtmlToMarkdown inverse recognizes — this
    tool exists so a link a reviewer TYPES matches what one they open already
@@ -21,8 +21,8 @@
    every other href in this tool goes through (js/utils.js).
 
    Self-mounting IIFE publishing window.InlineEdit.LinkTool, mirroring
-   js/inline-content-edit-render.js's window.InlineEdit.render — loads after
-   js/utils.js (for safeUrl) and before js/inline-content-edit.js, which
+   js/editing/inline-content-edit-render.js's window.InlineEdit.render — loads after
+   js/utils.js (for safeUrl) and before js/editing/inline-content-edit.js, which
    registers this class in openEditorJsEditor()'s Editor.js `tools` config
    for paragraph/bullet fields only (the only fields that ever get an inline
    toolbar at all — see that function's inlineToolbar gate; title/summary/
@@ -37,7 +37,7 @@
   /**
    * Distinguishes the DOM ids this tool mints (`<datalist>`, the rule
    * description) between instances. Editor.js constructs one tool instance per
-   * editor, and js/inline-content-edit.js can have opened a previous field's
+   * editor, and js/editing/inline-content-edit.js can have opened a previous field's
    * editor whose actions markup has not yet been torn down — two elements
    * sharing an id would make `aria-describedby` and `list` resolve to
    * whichever the document happened to hold first.
@@ -62,7 +62,7 @@
    * single page silently invalidate prose on every other page that links to
    * it — turning a reversible action into a destructive one.
    *
-   * Published on window.InlineEdit so js/inline-content-edit.js's paste-path
+   * Published on window.InlineEdit so js/editing/inline-content-edit.js's paste-path
    * check resolves the identical set; two call sites building this union
    * separately is exactly the drift js/inline-link-target.js exists to stop,
    * one level up.
@@ -115,7 +115,7 @@
     /**
      * Whether a stash currently exists for this element, without consuming
      * it — unlike take(), a second call still returns the same answer. For
-     * a caller (js/inline-content-edit.js's holder-level 'input' listener)
+     * a caller (js/editing/inline-content-edit.js's holder-level 'input' listener)
      * that needs to know whether to keep the stash in sync with further
      * typing, not whether to resolve it.
      * @param {HTMLElement|null|undefined} holderEl
@@ -150,7 +150,7 @@
 
     /**
      * Allow exactly the attributes markdownToEditingHtml/editingHtmlToMarkdown
-     * (js/inline-content-edit-adapter.js) round-trip through. Editor.js's
+     * (js/editing/inline-content-edit-adapter.js) round-trip through. Editor.js's
      * sanitizer strips any attribute not explicitly listed here from every
      * <a> in the block, including one this tool itself just inserted —
      * omitting one here would silently drop it before editor.save() ever
@@ -389,15 +389,15 @@
      * render.js's editorJsHolderHtml). This is a workaround, not
      * incidental: Editor.js's own blur-triggered internal cleanup on the
      * contenteditable — which runs on the SAME native blur that later
-     * drives js/inline-content-edit.js's commit(), before that async
+     * drives js/editing/inline-content-edit.js's commit(), before that async
      * function ever starts — strips this anchor down to plain text using a
      * narrower rule set than editor.save()'s own sanitizer honors. Measured
      * live: calling editor.save() directly right after this method returns
      * preserves the anchor perfectly; the same call made once a real blur
      * has intervened does not, silently. Capturing the correct HTML here,
-     * before that blur can happen, is what js/inline-content-edit.js's
+     * before that blur can happen, is what js/editing/inline-content-edit.js's
      * commit() prefers over editor.save()'s own (by-then-corrupted) output.
-     * This is only the INITIAL capture — js/inline-content-edit.js's own
+     * This is only the INITIAL capture — js/editing/inline-content-edit.js's own
      * holder-level 'input' listener re-stashes via LinkCommitBridge on every
      * subsequent keystroke, so further typing after the link is inserted
      * but before the field blurs is not lost.

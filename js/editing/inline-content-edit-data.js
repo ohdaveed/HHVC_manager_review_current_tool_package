@@ -18,7 +18,7 @@
  * This list IS the feature's scope, in one place, and four things read it:
  * computeSectionEdits (which containers to diff), applyContentEditsToPageData
  * (what a stored value may be), editableItemKind (how one item inside an
- * array is written back), and js/inline-content-edit.js (which paths its
+ * array is written back), and js/editing/inline-content-edit.js (which paths its
  * widgets may open).
  *
  * The four kinds:
@@ -416,7 +416,7 @@ function sectionEditValuesEqual(before, after) {
 // importer of it (dual-export files in this repo take no imports — see
 // js/review-merge.js and js/standards/plain-language.js for the same shape).
 const { getByPath, setByPath } =
-  typeof module !== 'undefined' && module.exports ? require('./utils.js') : window.utils
+  typeof module !== 'undefined' && module.exports ? require('../utils.js') : window.utils
 
 if (typeof window !== 'undefined') {
   window.inlineEditData = {

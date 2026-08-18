@@ -27,7 +27,7 @@ const VALID_DECISIONS = [
 /**
  * The path/value contract for a section_edits entry — see CLAUDE.md's
  * "Inline content editing" section, whose canonical list is
- * js/inline-content-edit-data.js's EDITABLE_FIELD_SHAPES. Every path a
+ * js/editing/inline-content-edit-data.js's EDITABLE_FIELD_SHAPES. Every path a
  * reviewer can edit resolves to one of four value kinds: a plain `string`, a
  * `textArray` of strings and/or {text, unverified?, unverifiedReason?}
  * objects, a `stringArray` of plain strings, or a `table` of row arrays of
@@ -37,7 +37,7 @@ const VALID_DECISIONS = [
  * something this feature ever produces, but a JSON backup or a sync response
  * is an external file/service this browser did not write: an entry that
  * doesn't match gets dropped rather than trusted, since
- * js/inline-content-edit-data.js's applyContentEditsToPageData() would
+ * js/editing/inline-content-edit-data.js's applyContentEditsToPageData() would
  * otherwise pass it straight to the generic setByPath() and corrupt
  * page.sections (e.g. replacing a paragraphs array with a bare string, which
  * breaks the next render when it iterates the array).
@@ -51,7 +51,7 @@ const VALID_DECISIONS = [
  * Restated (not imported) in js/review-state-validation.js for the same
  * CJS/browser-Zod split reason VALID_DECISIONS above is restated, and
  * restated again as defense-in-depth in
- * js/inline-content-edit-data.js#applyContentEditsToPageData, which is a
+ * js/editing/inline-content-edit-data.js#applyContentEditsToPageData, which is a
  * dual CJS/browser file with no ESM `export` surface either side can import
  * from. tests/review-state-schema.test.js pins the three together.
  */

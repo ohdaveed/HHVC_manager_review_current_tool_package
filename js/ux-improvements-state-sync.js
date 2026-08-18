@@ -272,7 +272,7 @@ import { hasValidPageData } from './utils.js'
       // Derived fresh from live page state on every save, same as the three
       // fields above — never accumulated as a stored diff that could drift
       // from what page.sections actually contains. See
-      // js/inline-content-edit-data.js for why this makes "reset to
+      // js/editing/inline-content-edit-data.js for why this makes "reset to
       // original" correct by construction. originalPage can be undefined in
       // a context with no ORIGINAL_DATA (e.g. a future non-browser caller);
       // computeSectionEdits() itself returns {} rather than throwing.
@@ -561,7 +561,7 @@ import { hasValidPageData } from './utils.js'
       // correct at this exact point — but nothing has re-run inline
       // content editing's "Edited" badge/reset-control decoration against
       // that freshly-correct data yet. That decoration normally happens as
-      // a side effect of js/inline-content-edit.js's own render wrapper,
+      // a side effect of js/editing/inline-content-edit.js's own render wrapper,
       // chained off THIS SAME render's promise — but that wrapper's
       // callback and this function's callback are two independent .then()s
       // on the same promise, and this one can resolve first, leaving

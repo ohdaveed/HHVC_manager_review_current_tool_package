@@ -19,7 +19,7 @@
 const { describe, test, expect, beforeEach, afterEach, spyOn } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
-const realInlineEditData = require('../js/inline-content-edit-data.js')
+const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
 
@@ -127,7 +127,7 @@ function flushMicroAndMacroTasks() {
 }
 
 /**
- * Mount a fresh instance against the REAL js/inline-content-edit-data.js
+ * Mount a fresh instance against the REAL js/editing/inline-content-edit-data.js
  * (not the applyReturns stub above), so applyContentEditsToPageData actually
  * mutates the shared page object — required to prove what a "paint" reads at
  * the moment a triggered render fires, rather than just counting calls.
@@ -208,7 +208,7 @@ describe('applySavedPageState decorates the Edited badge synchronously', () => {
     // Confirmed live on the deployed production build: the "Edited" badge
     // intermittently failed to reappear after a reload even though the
     // underlying title/summary/CTA data was always correctly reapplied —
-    // js/inline-content-edit.js's own decorate() pass (chained off the
+    // js/editing/inline-content-edit.js's own decorate() pass (chained off the
     // SAME render promise as this function's own applyAndRefresh callback)
     // could resolve before or after this function's data patches depending
     // on real network/paint timing. applySavedPageState must call

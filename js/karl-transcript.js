@@ -28,7 +28,7 @@
    js/karl-blocks.js, js/card-inheritance.js and js/utils.js. Under Node it
    require()s all three directly. */
 
-// Resolved the way js/inline-content-edit-data.js resolves its helpers:
+// Resolved the way js/editing/inline-content-edit-data.js resolves its helpers:
 // require() under Node, the window namespaces in the browser. Dual-export files
 // in this repo take no imports, so this indirection is the idiom rather than a
 // workaround — see that file's own note at its foot.
@@ -101,7 +101,7 @@ const STEP_CONTENT_FIELDS = ['title', 'text', 'bullets', 'button', 'buttonUrl']
  *
  * `edited_title`/`edited_summary` are checked separately because those two live
  * at the top of the review record rather than inside `section_edits` — a split
- * that predates inline editing (see js/inline-content-edit-data.js's header).
+ * that predates inline editing (see js/editing/inline-content-edit-data.js's header).
  *
  * @param {object} page
  * @param {object|null|undefined} reviewRecord

@@ -89,7 +89,7 @@ describe('review-state-schema', () => {
     expect(result.success).toBe(true)
     // The whole sections.2.bullets array is dropped, not filtered item by
     // item — a mixed-validity array is itself malformed, and section_edits
-    // always writes the whole field (see js/inline-content-edit-data.js's
+    // always writes the whole field (see js/editing/inline-content-edit-data.js's
     // "Array edits are always a whole-field replace" note in CLAUDE.md).
     expect(result.data.section_edits).toEqual({})
   })
@@ -186,7 +186,7 @@ describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', ()
 // contains. tests/decision-vocabulary.test.js pins VALID_DECISIONS the same
 // way, for the same reason.
 // There is a THIRD copy of this shape rule, and it is the one that had
-// actually drifted: js/inline-content-edit-data.js's isValidSectionEditItem
+// actually drifted: js/editing/inline-content-edit-data.js's isValidSectionEditItem
 // sits on the WRITE side (computing the diff that gets stored) while the two
 // above sit on the read side (validating what comes back). Its check was
 // `typeof item === 'object'`, which — unlike the read side's isPlainObject —
@@ -199,7 +199,7 @@ describe('section_edits whitelist agrees between the Zod schema, the browser val
   const {
     isValidSectionEditValue,
     editableFieldKind,
-  } = require('../js/inline-content-edit-data.js')
+  } = require('../js/editing/inline-content-edit-data.js')
 
   test.each([
     [
