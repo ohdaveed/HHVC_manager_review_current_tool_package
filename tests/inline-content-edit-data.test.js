@@ -1,7 +1,7 @@
 // Pure logic for section-level inline edits: computing the section_edits
 // diff against ORIGINAL_DATA, and reapplying a saved section_edits map onto
 // a live page object. No DOM — dual-exported like js/review-merge.js and
-// js/plain-language.js so this file is importable directly under Bun.
+// js/standards/plain-language.js so this file is importable directly under Bun.
 const { describe, test, expect } = require('bun:test')
 const {
   computeSectionEdits,

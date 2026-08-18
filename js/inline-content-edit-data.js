@@ -3,7 +3,7 @@
    section_edits map onto a live page object on load.
 
    Dual-exported (window.inlineEditData plus module.exports), matching
-   js/review-merge.js and js/plain-language.js, so this file has no DOM
+   js/review-merge.js and js/standards/plain-language.js, so this file has no DOM
    dependency and is importable directly under Bun with no browser.
 
    Deliberately does NOT touch edited_title/edited_summary/primary_cta —
@@ -414,7 +414,7 @@ function sectionEditValuesEqual(before, after) {
 // bundle it's read off window.utils, since this file is a plain script
 // loaded after js/utils.js in js/main.js's import order, not an ES module
 // importer of it (dual-export files in this repo take no imports — see
-// js/review-merge.js and js/plain-language.js for the same shape).
+// js/review-merge.js and js/standards/plain-language.js for the same shape).
 const { getByPath, setByPath } =
   typeof module !== 'undefined' && module.exports ? require('./utils.js') : window.utils
 

@@ -21,7 +21,7 @@
    keystroke.
 
    Dual-exported (window.karlTranscript plus module.exports) like
-   js/review-merge.js and js/plain-language.js.
+   js/review-merge.js and js/standards/plain-language.js.
 
    Load-order dependency: reads window.karlBlocks, window.cardInheritance and
    window.utils in the browser branch, so js/main.js must list it after

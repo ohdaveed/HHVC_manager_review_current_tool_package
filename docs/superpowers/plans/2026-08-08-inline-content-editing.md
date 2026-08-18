@@ -43,7 +43,7 @@ Additionally, `applyContentEditsToPageData()` must apply **only `section_edits`*
 ## File Structure
 
 **New files:**
-- `js/inline-content-edit-data.js` — pure, dual-exported (`window` + `module.exports`, like `js/review-merge.js`/`js/plain-language.js`) logic: computing `section_edits` from a page + `ORIGINAL_DATA` diff, `applyContentEditsToPageData()`, and the in-scope-path list. No DOM.
+- `js/inline-content-edit-data.js` — pure, dual-exported (`window` + `module.exports`, like `js/review-merge.js`/`js/standards/plain-language.js`) logic: computing `section_edits` from a page + `ORIGINAL_DATA` diff, `applyContentEditsToPageData()`, and the in-scope-path list. No DOM.
 - `js/inline-content-edit-render.js` — edit-widget markup (input/textarea swap, add/remove/reset controls, the "Edited" badge markup).
 - `js/inline-content-edit.js` — orchestrator IIFE: delegated click handling, commit/cancel/undo lifecycle, wires `js/inline-content-edit-data.js` and `js/inline-content-edit-render.js` together, publishes `window.inlineEdit`.
 - `css/inline-content-edit.css` — the "Edited" badge, edit-widget input/textarea styling, add/remove control styling. Design tokens only, no raw `--sfds-*` values, no `!important`.
@@ -521,7 +521,7 @@ git commit -m "feat: add section_edits to the review-record schema (Zod and brow
   - `IN_SCOPE_SECTION_FIELD_SUFFIXES = ['heading', 'paragraphs', 'bullets']` — exported constant, the only section-level field kinds this feature ever diffs or writes.
   - `computeSectionEdits(page, originalPage)` — `(object, object) => Record<string, unknown>`. Walks `page.sections`, and for each section's `heading`/`paragraphs`/`bullets`, compares (via `JSON.stringify` deep-equality) the current value against `getByPath(originalPage, 'sections.N.<field>')`. Returns a flat map of `'sections.N.<field>'` → current value for every path that differs. A path whose current value equals the original is omitted (this is what makes "reset to original" correct-by-construction: once a field is written back to match `originalPage`, the next call to `computeSectionEdits` simply drops it). Returns `{}` for a page with no sections, or when `page`/`originalPage` is missing.
   - `applyContentEditsToPageData(page, savedRecord)` — `(object, object) => void`. Reads `savedRecord.section_edits` (a plain object, possibly absent/malformed) and, for each `[path, value]` entry, calls `setByPath(page, path, value)`. Never throws: an absent `savedRecord`, an absent/non-object `section_edits`, or a `setByPath` failure (stale path that no longer resolves against the current page shape) are all silently skipped — mirrors `getByPath`'s "total function" contract referenced in the design spec. Does **not** touch `edited_title`/`edited_summary`/`primary_cta` — those are already reapplied by the existing `updateMockupTextFromSavedState()` (see the "Repo-reality corrections" section above for why this function must not duplicate that).
-  - Dual-exported: `window.inlineEditData = { computeSectionEdits, applyContentEditsToPageData, IN_SCOPE_SECTION_FIELD_SUFFIXES }` when `window` exists, and `module.exports = { ... }` when `module.exports` exists — the same dual-export idiom `js/review-merge.js` and `js/plain-language.js` use, so this file is importable directly under Bun with no browser.
+  - Dual-exported: `window.inlineEditData = { computeSectionEdits, applyContentEditsToPageData, IN_SCOPE_SECTION_FIELD_SUFFIXES }` when `window` exists, and `module.exports = { ... }` when `module.exports` exists — the same dual-export idiom `js/review-merge.js` and `js/standards/plain-language.js` use, so this file is importable directly under Bun with no browser.
 
 - [ ] **Step 1: Write the failing test file**
 
@@ -531,7 +531,7 @@ Create `tests/inline-content-edit-data.test.js`:
 // Pure logic for section-level inline edits: computing the section_edits
 // diff against ORIGINAL_DATA, and reapplying a saved section_edits map onto
 // a live page object. No DOM — dual-exported like js/review-merge.js and
-// js/plain-language.js so this file is importable directly under Bun.
+// js/standards/plain-language.js so this file is importable directly under Bun.
 const { describe, test, expect } = require('bun:test')
 const {
   computeSectionEdits,
@@ -723,7 +723,7 @@ Expected: FAIL — `../js/inline-content-edit-data.js` does not exist yet (modul
    section_edits map onto a live page object on load.
 
    Dual-exported (window.inlineEditData plus module.exports), matching
-   js/review-merge.js and js/plain-language.js, so this file has no DOM
+   js/review-merge.js and js/standards/plain-language.js, so this file has no DOM
    dependency and is importable directly under Bun with no browser.
 
    Deliberately does NOT touch edited_title/edited_summary/primary_cta —
@@ -819,7 +819,7 @@ function applyContentEditsToPageData(page, savedRecord) {
 // bundle it's read off window.utils, since this file is a plain script
 // loaded after js/utils.js in js/main.js's import order, not an ES module
 // importer of it (dual-export files in this repo take no imports — see
-// js/review-merge.js and js/plain-language.js for the same shape).
+// js/review-merge.js and js/standards/plain-language.js for the same shape).
 const setByPath =
   typeof module !== 'undefined' && module.exports
     ? require('./utils.js').setByPath

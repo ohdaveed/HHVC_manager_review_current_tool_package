@@ -45,7 +45,7 @@ alongside the first.
 - Not adding OpenAI, Postgres, Express, or any dependency beyond what's already in
   `package.json` (`@google/genai` covers embeddings; `fast-glob` already covers file
   discovery for the ingestion script).
-- Not changing what `docs/source/` contains or how `js/plain-language.js` uses
+- Not changing what `docs/source/` contains or how `js/standards/plain-language.js` uses
   `docs/source/sfgov-style/` today — this design only adds a second consumer (the ingestion
   script) reading the same files.
 - Not filtering the corpus by publication status. Per an explicit reviewer decision, the one
@@ -119,7 +119,7 @@ join back to the source document to explain where a chunk came from.
 Pure function, no I/O: `build_scripts/knowledge-chunking.js`, dual-exported
 (`window`/`module.exports`) per this repo's existing convention for logic that needs to be
 unit-testable without a browser or a live DB (mirrors `js/review-merge.js`,
-`js/plain-language.js`).
+`js/standards/plain-language.js`).
 
 ### Ingestion script: `build_scripts/ingest-knowledge.js`
 

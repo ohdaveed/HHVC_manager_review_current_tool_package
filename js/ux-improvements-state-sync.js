@@ -183,7 +183,7 @@ import { hasValidPageData } from './utils.js'
     // Always pushed, never conditionally skipped.
     //
     // This used to be appended only when a grade could be computed, so a page
-    // with too little body text -- or a browser where js/reading-level.js
+    // with too little body text -- or a browser where js/standards/reading-level.js
     // failed to load -- silently lost a rule instead of failing one. That
     // shrinks the denominator behind the Overview tab's "checks passed" ratio,
     // which quietly flatters exactly the pages with the least content. It also
@@ -196,7 +196,7 @@ import { hasValidPageData } from './utils.js'
       detail: readingAnalysis ? readingAnalysis.detail : 'Reading-level module not loaded',
     })
 
-    // Plain-language rules via js/plain-language.js. Only mandates are scored
+    // Plain-language rules via js/standards/plain-language.js. Only mandates are scored
     // here; advisory rules are rendered separately by renderPageChecksPanel so
     // ~115 style suggestions cannot swamp the pass/fail ratio this list feeds.
     //

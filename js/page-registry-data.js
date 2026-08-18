@@ -3,7 +3,7 @@
    live window.HHVC_DATA.
 
    No DOM, no localStorage, no imports — dual-exported onto window and
-   module.exports exactly like js/review-merge.js and js/plain-language.js, so
+   module.exports exactly like js/review-merge.js and js/standards/plain-language.js, so
    tests/page-registry-data.test.js can require() it with no browser at all.
 
    LOAD ORDER: this file is evaluated in js/main.js's CORE block, pulled in

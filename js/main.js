@@ -157,7 +157,7 @@ import './karl-guide.js'
 import './app.js'
 import './manager-review-export.js'
 import './review-state-validation.js'
-import './reading-level.js'
+import './standards/reading-level.js'
 import './review-state-store.js'
 import './review-merge.js'
 import './inline-content-edit-data.js'
@@ -207,7 +207,7 @@ import './page-registry-ui.js'
 // the layers above: no imports, mounted on window, so they must run after the
 // core modules that publish the namespaces they read (window.renderPageMain
 // for the draft preview, window.showToast for feedback).
-import './plain-language.js'
+import './standards/plain-language.js'
 import './ai-assist-client.js'
 import './ai-assist-render.js'
 import './ai-assist.js'

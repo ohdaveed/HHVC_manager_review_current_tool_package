@@ -1656,7 +1656,7 @@ Find (around `index.html:350-352`):
 
 ```html
     <script src="js/review-state-validation.js"></script>
-    <script src="js/reading-level.js"></script>
+    <script src="js/standards/reading-level.js"></script>
     <script src="js/ux-improvements.js"></script>
 ```
 
@@ -1664,7 +1664,7 @@ Replace with:
 
 ```html
     <script src="js/review-state-validation.js"></script>
-    <script src="js/reading-level.js"></script>
+    <script src="js/standards/reading-level.js"></script>
     <script src="js/review-state-store.js"></script>
     <script src="js/ux-improvements.js"></script>
 ```

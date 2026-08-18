@@ -223,6 +223,6 @@
   window.AiAssist.client = api
 
   // Dual export so the client logic is unit-testable in Bun without a DOM,
-  // matching js/review-merge.js and js/plain-language.js.
+  // matching js/review-merge.js and js/standards/plain-language.js.
   if (typeof module !== 'undefined' && module.exports) module.exports = api
 })()

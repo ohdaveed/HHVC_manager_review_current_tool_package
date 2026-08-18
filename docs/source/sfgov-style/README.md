@@ -12,7 +12,7 @@ alongside a `.md` version of every page.
 
 Two reasons, and the second is the load-bearing one.
 
-**It grounds the plain-language scorer.** `js/plain-language.js` encodes rules
+**It grounds the plain-language scorer.** `js/standards/plain-language.js` encodes rules
 from these pages plus `notebooklm/hhvc-standards-manual.md`. Every rule in that
 file cites its source; this snapshot is where a reviewer checks the citation
 without a network round-trip.
@@ -44,7 +44,7 @@ here. The site's `llms.txt` lists every page if something has moved.
 
 Where this guidance and `notebooklm/hhvc-standards-manual.md` disagree, **neither
 has been silently picked**. Each conflict is recorded at the point of use in
-`js/plain-language.js` and left for a human:
+`js/standards/plain-language.js` and left for a human:
 
 - **Meta description length.** Manual §7.8 requires 110–160 characters;
   `index.html` and `getRuleResultsFor` require 110 or fewer. All 19 pages sit at

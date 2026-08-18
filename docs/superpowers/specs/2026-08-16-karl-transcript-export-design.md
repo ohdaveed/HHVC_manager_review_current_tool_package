@@ -53,7 +53,7 @@ The export is a join over an address space both sides already use.
 Everything new follows the repo's dual-export idiom (`window.X` plus
 `module.exports`, no DOM dependency) so Node and the browser share exactly one
 implementation, for the same reason `js/review-merge.js` and
-`js/plain-language.js` do.
+`js/standards/plain-language.js` do.
 
 ### New files
 

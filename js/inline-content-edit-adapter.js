@@ -11,7 +11,7 @@
 
    Dual-exported (window.inlineEditAdapter plus module.exports), matching
    js/inline-content-edit-data.js, js/review-merge.js and
-   js/plain-language.js, so this file has no DOM dependency and is
+   js/standards/plain-language.js, so this file has no DOM dependency and is
    importable directly under Bun with no browser and no live Editor.js
    instance — the round-trip tests in
    tests/inline-content-edit-adapter.test.js exercise plain OutputData

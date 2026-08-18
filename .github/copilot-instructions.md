@@ -76,7 +76,7 @@ validate one page in isolation. Run both after editing anything under `pages/` o
   (shared helpers, loads first), `js/karl-tag-meta.js`, `js/state.js`,
   `js/ui-controls.js`, `js/editor-panel.js`, `js/page-render.js` (holds
   `karlTag()`), `js/app.js`, `js/manager-review-export.js`,
-  `js/reading-level.js`, `js/review-state-validation.js`. Don't re-monolith them.
+  `js/standards/reading-level.js`, `js/review-state-validation.js`. Don't re-monolith them.
 - **`js/utils.js` owns the shared vocabulary.** The review decision table
   (`DECISIONS` and its derived label/slug/chip/colour lookups), `escapeHtml`,
   `safeUrl`, and `mountWorkspacePanelIfOpen` all live there. Derive from them
@@ -85,7 +85,7 @@ validate one page in isolation. Run both after editing anything under `pages/` o
 - **Review/UX layers are additive** self-contained IIFEs on top of the core
   (`js/ux-improvements*.js`, `js/review-queue*.js`, `js/review-insights*.js`,
   `js/review-ops*.js`, `js/dashboard-guidance.js`,
-  `js/ai-assist*.js`, `js/plain-language.js`, `js/mockup-image-export.js`,
+  `js/ai-assist*.js`, `js/standards/plain-language.js`, `js/mockup-image-export.js`,
   `js/keyboard-shortcuts.js`) that read `HHVC_DATA`
   and `localStorage`. They may edit the **in-memory** page data but must never
   write back to `pages/*.js` or publish content.

@@ -20,7 +20,7 @@ No UI framework. Rendering is data-driven string templates. High-impact packages
 | `zod`                                                       | ^3.24.1            | Page-object schema + AI request/output validation              | `package.json` `dependencies`, `build_scripts/schema.js`  |
 | `@anthropic-ai/sdk`                                         | ^0.115.0           | Optional AI assist (Claude) via `server.ts`                    | `package.json`, `build_scripts/ai/provider-anthropic.js`  |
 | `@google/genai`                                             | ^2.15.0            | Optional AI assist (Gemini) via `server.ts`                    | `package.json`, `build_scripts/ai/provider-gemini.js`     |
-| `text-readability`                                          | ^1.1.1             | Flesch-Kincaid reading level in the browser                    | `package.json`, `js/reading-level.js`                     |
+| `text-readability`                                          | ^1.1.1             | Flesch-Kincaid reading level in the browser                    | `package.json`, `js/standards/reading-level.js`           |
 | Bun `bun:sqlite`                                            | (runtime built-in) | Optional review-state SQLite store                             | `server.ts`, `.gitignore`                                 |
 | Vite-bundled client libs (declared under `devDependencies`) | see below          | Shipped in `dist/` via Vite, not required as Node runtime deps | `js/main.js`, `js/third-party-globals.js`, `package.json` |
 

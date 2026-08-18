@@ -117,7 +117,7 @@ disagreements).
   manual came in. **Adding a file here moves the measured counts below**, so
   re-measure and re-ingest rather than editing the list alone.
 - **The content standards manual is the addition worth understanding.**
-  `js/plain-language.js` cites it by section number for every scored
+  `js/standards/plain-language.js` cites it by section number for every scored
   `severity: 'error'` rule (§7.x, §6.3), and it was not in the corpus at all —
   it lives in `notebooklm/`, which no glob reached. A reviewer could not get
   from a citation back to the manual section the tool's own checks are named

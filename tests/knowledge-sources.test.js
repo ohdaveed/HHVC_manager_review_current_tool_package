@@ -89,7 +89,7 @@ describe('collectKnowledgeSources', () => {
   })
 
   test('the content standards manual is retrievable, under its own category', () => {
-    // The gap this addition closed: js/plain-language.js cites this manual by
+    // The gap this addition closed: js/standards/plain-language.js cites this manual by
     // section number for every scored `severity: 'error'` rule, and it was the
     // one document a compliance audit could not quote back — it lives in
     // notebooklm/, which no glob here reached.

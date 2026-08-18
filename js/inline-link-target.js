@@ -19,7 +19,7 @@
    about what a link may point at.
 
    Dual-exported (window.inlineLinkTarget plus module.exports) exactly like
-   js/review-merge.js, js/card-inheritance.js and js/plain-language.js, and
+   js/review-merge.js, js/card-inheritance.js and js/standards/plain-language.js, and
    deliberately IMPORT-FREE for the same reason those are: it is read by
    build_scripts/data-checks.js under Bun with no browser, and by browser code
    that must be able to call it without waiting on a load order. It reads no

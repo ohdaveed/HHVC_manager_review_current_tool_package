@@ -3,7 +3,7 @@
 // registry onto live page data.
 //
 // No DOM and no localStorage — the module is dual-exported like
-// js/review-merge.js and js/plain-language.js, so it is require()'d directly.
+// js/review-merge.js and js/standards/plain-language.js, so it is require()'d directly.
 //
 // The bucket that matters most here is applyRegistryToData. It runs on the boot
 // path at the root of the module graph, reading a blob that NOTHING upstream has

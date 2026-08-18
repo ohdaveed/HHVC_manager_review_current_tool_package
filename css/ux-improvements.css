@@ -584,7 +584,7 @@
 
 /* ==========================================================================
    Plain-language suggestions
-   Advisory findings from js/plain-language.js, rendered below the scored
+   Advisory findings from js/standards/plain-language.js, rendered below the scored
    compliance list. Single-column because each item carries a nested list of
    offending sentences, which the two-column .compliance-list grid would
    squeeze into an unreadable width.

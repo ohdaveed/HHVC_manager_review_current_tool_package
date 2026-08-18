@@ -93,7 +93,7 @@ placement in a `karl` note rather than relying on that field to show up.
 Karl's own help text is the rule: a title is _"descriptive, short, and in
 sentence case"_; a description _"should start with key words and help the user
 decide to read further."_ Copy is plain-language, roughly Grade 6, written for
-tenants. The Checks panel scores both, and `js/plain-language.js` cites the
+tenants. The Checks panel scores both, and `js/standards/plain-language.js` cites the
 standards manual section behind each failure.
 
 ### The `karl` note is not a comment — it decides what renders

@@ -4,7 +4,7 @@
 // require build_scripts/reading-level.js, a Node-side copy of the same logic
 // that nothing but this file ever loaded: not validate, not export, not
 // server.ts. The reviewer-facing "Computed reading level" check has always
-// called window.readingLevel (js/reading-level.js), which had no coverage at
+// called window.readingLevel (js/standards/reading-level.js), which had no coverage at
 // all. So 100% of the coverage sat on the copy that never shipped, and the two
 // copies had drifted 1.14 grades apart on average without a single red test.
 //
@@ -12,7 +12,7 @@
 // registered by bunfig.toml before the loader runs, so the side-effect import
 // below finds a `window` to attach to.
 import { describe, test, expect } from 'bun:test'
-import '../js/reading-level.js'
+import '../js/standards/reading-level.js'
 
 const { loadPageData } = require('../build_scripts/load-pages')
 const { fleschKincaidGrade, extractPageBodyText, normalizeTextItem, calloutText, joinChunks } =

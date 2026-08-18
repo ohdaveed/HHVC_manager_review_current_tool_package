@@ -468,7 +468,7 @@ re-monolith them.**
   snapshot, published on `window.ReviewExport` for the consolidated export
   control. It no longer wraps `renderPage`: that decorator existed only to
   refresh a sidebar label that has been cut.
-- **`js/reading-level.js`** — Flesch-Kincaid grade level for body copy, backed
+- **`js/standards/reading-level.js`** — Flesch-Kincaid grade level for body copy, backed
   by `text-readability` (a runtime dependency, bundled: 40 kB raw / 17.9 kB
   gzip). **There used to be two implementations and now there is one.** This
   file carried a hand-rolled formula from the no-build-step era while
@@ -620,7 +620,7 @@ reviewer scanned a column of green to find the single item they could act on.
 
 ### Content-standards scoring
 
-`js/plain-language.js` scores page copy against written standards, not
+`js/standards/plain-language.js` scores page copy against written standards, not
 preferences. Each check carries `severity` plus a `source`/`section` pair and
 a ready-to-render `citation`:
 

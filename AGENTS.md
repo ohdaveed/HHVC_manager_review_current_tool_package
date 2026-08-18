@@ -556,7 +556,7 @@ them.**
   published on `window.ReviewExport` for the consolidated export control. It no
   longer wraps `renderPage`: that decorator existed only to refresh a sidebar
   label that has been cut.
-- **`js/reading-level.js`** — Flesch-Kincaid grade for body copy, behind
+- **`js/standards/reading-level.js`** — Flesch-Kincaid grade for body copy, behind
   `window.readingLevel`, backed by `text-readability` (a runtime dependency;
   40 kB raw / 17.9 kB gzip in the app chunk). **There used to be two
   implementations of this and now there is one.** This file carried a
@@ -746,7 +746,7 @@ a "Page facts" subheading, and the scored list orders **failures first**.
 
 ### Content-standards scoring
 
-`js/plain-language.js` encodes written standards, not preferences. Each check
+`js/standards/plain-language.js` encodes written standards, not preferences. Each check
 carries `severity` plus a `source`/`section` pair and a ready-to-render
 `citation`. `severity: 'error'` mandates join the scored rule list behind the
 "checks passed" ratio and render their citation on the Checks tab;
@@ -1771,7 +1771,7 @@ document is filed under.
   here moves the measured counts below**, so re-measure and re-ingest rather
   than editing the list alone.
 - **The content standards manual is the addition worth understanding.**
-  `js/plain-language.js` cites it by section number for every scored
+  `js/standards/plain-language.js` cites it by section number for every scored
   `severity: 'error'` rule (§7.x, and §6.3 for the Karl Button component), and
   it was not in the corpus at all — it lives in `notebooklm/`, which no glob
   here reached. So `compliance-audit` grounded findings in Health Code extracts
@@ -2279,7 +2279,7 @@ by default, failing closed.
   and unioning the broken targets closes that with no duplicated traversal.
 - **Validation is the feature.** `build_scripts/ai/validate-output.js` runs a
   generated page through `build_scripts/schema.js`,
-  the `data-checks.js` invariants, and `js/plain-language.js`'s mandates — then
+  the `data-checks.js` invariants, and `js/standards/plain-language.js`'s mandates — then
   names the failures back to the model for exactly one retry. Results always
   return 200 with issues attached, since a draft failing one rule still helps a
   reviewer who can see which rule.

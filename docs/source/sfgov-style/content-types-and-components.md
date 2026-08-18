@@ -119,7 +119,7 @@ shared:
 
 ### Component rules worth encoding
 
-Already scored by `js/plain-language.js`:
+Already scored by `js/standards/plain-language.js`:
 
 - **Button** — "Buttons can only be 25 characters long. Shorter button text is
   more effective!" Also: "We recommend no more than one button on a page";
