@@ -68,6 +68,19 @@ jobs:
       - name: Dead code (knip)
         run: bun run lint:dead-code:ci
 
+      # The load-order and layering invariants AGENTS.md documents, as checks:
+      # no cycles, the mockup renderer never reaching React or MUI, the
+      # import-free base modules staying import-free, pages/*.js entering only
+      # through js/page-data.js, and js/state.js keeping the side-effect import
+      # of js/page-registry.js that applies the reviewer's page registry before
+      # ORIGINAL_DATA is cloned.
+      #
+      # Every rule was verified against the current graph before being written
+      # and mutation-proven afterwards, so this starts green and fails only on
+      # a real regression. server.ts is not cruised — see the script comment.
+      - name: Architecture rules (dependency-cruiser)
+        run: bun run lint:architecture
+
       # Runs the real Vite production build, so a bundling failure (a bad
       # import path, a missing dependency) is caught here rather than at
       # deploy time. It also doubles as a deploy-integrity check: the

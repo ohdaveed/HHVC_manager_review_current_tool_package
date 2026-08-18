@@ -100,7 +100,8 @@ validate one page in isolation. Run both after editing anything under `pages/` o
 ## Code style
 
 Prettier is the formatting linter (`.prettierrc.json`), with Knip gating
-reachability: no semicolons, single quotes,
+reachability and dependency-cruiser gating the module graph: no semicolons,
+single quotes,
 2-space indent, 100-char width, ES5 trailing commas. `camelCase` JS identifiers,
 `UPPER_SNAKE_CASE` constants, `snake_case` data fields. Write detailed,
 explanatory comments that justify the _why_. Run `bun run format` before
