@@ -182,21 +182,21 @@ import './ux-improvements-state-sync.js'
 import './ux-improvements-workspace.js'
 import './ux-improvements-export.js'
 import './ux-improvements.js'
-import './review-queue-state.js'
+import './review/review-queue-state.js'
 // Undo before rows: applyQueueAction records its snapshot through this.
-import './review-queue-undo.js'
-import './review-queue-rows.js'
-import './review-queue-render.js'
-import './review-queue-import.js'
-import './review-queue.js'
+import './review/review-queue-undo.js'
+import './review/review-queue-rows.js'
+import './review/review-queue-render.js'
+import './review/review-queue-import.js'
+import './review/review-queue.js'
 // Overview charts. After review-queue-render.js, which calls into it, and
 // after review-queue-rows.js, whose getQueueRows() supplies its data.
-import './review-insights-data.js'
-import './review-insights.js'
+import './review/review-insights-data.js'
+import './review/review-insights.js'
 // Ops/status tab. After review-state-sync.js, whose config it reports, and
 // after the review layers whose state it inspects.
-import './review-ops-data.js'
-import './review-ops.js'
+import './review/review-ops-data.js'
+import './review/review-ops.js'
 import './dashboard-guidance.js'
 // Add/delete page controls. After dashboard-guidance.js, which owns the Help
 // panel's layout, and after review-queue*.js, whose one-step undo this consumes

@@ -29,7 +29,7 @@ const updateOutPath = path.join(root, 'review/page_inventory_sheet_update.csv')
  * Not `toISOString().slice(0, 10)`, which is UTC: a push run at 5pm in San
  * Francisco stamps tomorrow's date, so the tracking sheet disagrees with the
  * `review_date` saved alongside it — `utils.today()` builds that from local
- * getFullYear/getMonth/getDate, and js/review-insights-data.js:88-96 already
+ * getFullYear/getMonth/getDate, and js/review/review-insights-data.js:88-96 already
  * rejected the UTC form for exactly this reason. This file kept it in two
  * places and is the last one that had to speak a different calendar.
  * @returns {string}

@@ -238,7 +238,7 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   reset anywhere in the tool before this feature. This feature's version is
   scoped to one field via `getByPath`(`ORIGINAL_DATA`)/`setByPath`, modeled
   on that function's shape but not calling it.
-- **One-step undo on delete, mirroring `js/review-queue-undo.js`'s
+- **One-step undo on delete, mirroring `js/review/review-queue-undo.js`'s
   precedent** — not a confirm dialog, since that would interrupt the editing
   flow for what is usually an accidental click. Deleting a paragraph or
   bullet shows a toast with an Undo affordance; pressing it re-inserts the
@@ -265,7 +265,7 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   existing CSV row model the same way `notes`/`decision` do
   (`js/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
   `js/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
-  `js/review-queue-import.js`'s CSV import field list all carry them).
+  `js/review/review-queue-import.js`'s CSV import field list all carry them).
   `section_edits` is a nested object keyed by dot-path and does not fit a
   flat CSV row — it round-trips through the JSON backup path
   (`importReviewStateBackup` in `js/ux-improvements-export.js`) only, for

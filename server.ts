@@ -971,7 +971,7 @@ async function putReviewPage(
   // The one place server-side merges happen: always merge onto the single
   // page_key being written, never touch the rest of the table. This is the
   // server-side half of the "merge, never wipe" invariant the client side
-  // already relies on (js/review-queue-import.js, js/ux-improvements-export.js).
+  // already relies on (js/review/review-queue-import.js, js/ux-improvements-export.js).
   const merged = mergeReviewRecord(existing, { ...patch, page_key: pageKey }, {
     updatedBy: "sync",
   })

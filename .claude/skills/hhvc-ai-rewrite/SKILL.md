@@ -47,7 +47,7 @@ invisible unless `/api/ai/*` is configured, and it never writes to `pages/*.js`.
   "AI-rewritten draft — verify before publishing", reusing the schema's existing
   pill rather than a new AI-specific flag, so AI-touched copy is distinguishable
   from human-authored copy at a glance in the mockup itself. Undo is one step
-  and consumed on use, matching `js/review-queue-undo.js`.
+  and consumed on use, matching `js/review/review-queue-undo.js`.
 - **The popover's position is clamped unconditionally.** Anchoring below the
   selection (and flipping above) is a preference, not a guarantee: the mockup
   runs ~8,800px, so a selection below the fold yields a `rect` outside the

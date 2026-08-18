@@ -7,7 +7,7 @@
    so the chart and its legend were the second and third rendering of numbers
    the reader had not yet scrolled past.
 
-   ECharts is NOT imported here. It lives in js/review-insights-charts.js and
+   ECharts is NOT imported here. It lives in js/review/review-insights-charts.js and
    is pulled in with a dynamic import the first time this renders, so Vite
    emits it as a separate chunk rather than adding ~530KB to the bundle every
    visitor downloads. That split has a second benefit worth stating, because it
@@ -25,18 +25,18 @@
    visible ranked list, which is already the accessible artifact.
 
    Load-order dependency: imported by js/main.js after js/review-queue*.js,
-   because js/review-queue-render.js calls window.ReviewInsights.render() at
+   because js/review/review-queue-render.js calls window.ReviewInsights.render() at
    the end of its own render. That call is optional-chained, so the ordering is
    a performance detail rather than a correctness one. */
 
-import { escapeHtml } from './utils.js'
+import { escapeHtml } from '../utils.js'
 
-// js/review-insights-data.js is a dual-export module (window.ReviewInsights.data
+// js/review/review-insights-data.js is a dual-export module (window.ReviewInsights.data
 // plus module.exports, no DOM dependency — see its header) so it stays
 // require()-able from Node/Bun test files with no ESM/CJS interop. It carries
 // no `export` statement, so it's loaded here as a side effect (js/main.js
 // imports it immediately before this file) and consumed off the window
-// namespace, matching how js/review-ops.js calls window.ReviewOps.data.*.
+// namespace, matching how js/review/review-ops.js calls window.ReviewOps.data.*.
 
 /** How many pages the checks ranking lists. See checksList for why it is capped. */
 const CHECKS_VISIBLE = 8
@@ -68,7 +68,7 @@ function readTheme() {
    which is the wrong direction for a guard: the values passing through here
    are page titles and decision strings, and those arrive from imported
    CSV/JSON backups and from sync responses — content this repo did not
-   author. js/review-ops.js hit the same question and answered it correctly
+   author. js/review/review-ops.js hit the same question and answered it correctly
    in its own file; this module could not see that, because the two were
    written in parallel.
 
@@ -258,7 +258,7 @@ function loadCharts() {
 /**
  * Render the insights block into the Overview panel.
  *
- * Called by js/review-queue-render.js after it rebuilds the panel. Safe to
+ * Called by js/review/review-queue-render.js after it rebuilds the panel. Safe to
  * call on every render: it re-parents the existing charts and only redraws
  * when the underlying numbers actually changed.
  * @returns {Promise<void>} resolves once any redraw has been applied

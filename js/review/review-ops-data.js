@@ -7,7 +7,7 @@
    can require it with no browser.
 
    These are diagnostics, never repairs. Everything here answers a question;
-   js/review-ops.js owns the one action that changes anything, and asks first. */
+   js/review/review-ops.js owns the one action that changes anything, and asks first. */
 
 /**
  * Review records whose page key is no longer part of the site.
@@ -72,7 +72,7 @@ function groupBySyncState(savedPages) {
  * that therefore has a decision and an empty history, and autosave preserves
  * the emptiness rather than backfilling it. Worth surfacing because it is
  * exactly the shape that makes the Overview activity chart and the decision
- * mix disagree until the fallback in js/review-insights-data.js catches it.
+ * mix disagree until the fallback in js/review/review-insights-data.js catches it.
  * @param {Record<string, object>} savedPages
  * @returns {string[]}
  */

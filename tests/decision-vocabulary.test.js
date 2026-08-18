@@ -6,7 +6,7 @@
 // restatements survive, and neither is an oversight: both sit on the far side
 // of a module boundary that stops them importing it.
 //
-//   - js/review-insights-data.js is dual-export (a `module.exports` block that
+//   - js/review/review-insights-data.js is dual-export (a `module.exports` block that
 //     its own test `require`s). Adding an `import` would make it an ES module,
 //     `module.exports` would stop running, and the require would come back
 //     empty.
@@ -40,7 +40,7 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import { DECISIONS, DECISION_LABELS, DECISION_UNDECIDED } from '../js/utils.js'
 
-const { DECISION_ORDER } = require('../js/review-insights-data.js')
+const { DECISION_ORDER } = require('../js/review/review-insights-data.js')
 const { VALID_DECISIONS } = require('../build_scripts/review-state-schema.js')
 
 describe('the canonical decision table', () => {
@@ -75,7 +75,7 @@ describe('the canonical decision table', () => {
 })
 
 describe('restatements of the decision vocabulary', () => {
-  test('js/review-insights-data.js DECISION_ORDER matches label-for-label, in order', () => {
+  test('js/review/review-insights-data.js DECISION_ORDER matches label-for-label, in order', () => {
     // Order is asserted, not just membership: the chart legend and the mix bar
     // follow this array, and a reshuffle would reorder the segments.
     expect(DECISION_ORDER).toEqual(DECISION_LABELS)
@@ -93,16 +93,16 @@ describe('restatements of the decision vocabulary', () => {
 // canonical table itself, and — worse — would quietly stop covering a file the
 // day someone renamed it, which is the exact failure this guards against.
 const FILES_WITH_DECISION_LITERALS = [
-  'js/review-queue-rows.js',
-  'js/review-queue-render.js',
-  'js/review-queue-state.js',
-  'js/review-queue-undo.js',
+  'js/review/review-queue-rows.js',
+  'js/review/review-queue-render.js',
+  'js/review/review-queue-state.js',
+  'js/review/review-queue-undo.js',
   'js/keyboard-shortcuts.js',
   'js/ux-improvements-state-sync.js',
   'js/ux-improvements-export.js',
   'js/ux-improvements-workspace.js',
   'js/manager-review-export.js',
-  'js/review-ops-data.js',
+  'js/review/review-ops-data.js',
   // The Karl transcript prints the page's decision at the top and marks a
   // not-Approved page on every panel, so it compares against 'Approved' by
   // value and defaults an unreviewed page to 'Needs review'. Renaming either
@@ -114,7 +114,7 @@ const FILES_WITH_DECISION_LITERALS = [
 
 /* Files whose decision-shaped literals are NOT decisions.
 
-   js/utils.js declares the canonical table, and js/review-insights-data.js
+   js/utils.js declares the canonical table, and js/review/review-insights-data.js
    restates it wholesale under its own assertion above — re-checking either
    here would be circular.
 
@@ -125,7 +125,7 @@ const FILES_WITH_DECISION_LITERALS = [
    not exist — rename the review decision and this file must NOT follow. */
 const NOT_THE_DECISION_VOCABULARY = new Set([
   'js/utils.js',
-  'js/review-insights-data.js',
+  'js/review/review-insights-data.js',
   'js/mockup/page-render.js',
 ])
 

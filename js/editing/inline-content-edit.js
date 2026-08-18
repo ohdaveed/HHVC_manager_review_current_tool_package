@@ -51,7 +51,7 @@
   let editorJsModulePromise = null
   /**
    * Dynamically import @editorjs/editorjs on first use, mirroring
-   * js/review-insights-charts.js's ECharts precedent — kept out of the
+   * js/review/review-insights-charts.js's ECharts precedent — kept out of the
    * initial bundle since most reviewers never open an editor, and Editor.js
    * is real weight against a tool whose initial-load budget is protected.
    * @returns {Promise<Function>} the EditorJS class
@@ -384,7 +384,7 @@
 
   /**
    * Remove one item from a paragraphs/bullets array, show a one-step-undo
-   * toast (matching js/review-queue-undo.js's precedent), and persist the
+   * toast (matching js/review/review-queue-undo.js's precedent), and persist the
    * reduced array as a whole-field replace.
    *
    * The undo affordance is built through the existing showToast()'s

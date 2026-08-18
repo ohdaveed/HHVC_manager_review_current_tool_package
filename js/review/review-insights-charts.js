@@ -1,14 +1,14 @@
 /* Review insights: the ECharts layer.
 
-   Split from js/review-insights.js so it can be loaded on demand. This is the
+   Split from js/review/review-insights.js so it can be loaded on demand. This is the
    only module that imports ECharts, which is what lets Vite emit it as its own
    chunk: the library is ~530KB raw, and pulling it into the main bundle would
    more than double the initial download for a chart most reviewers never
-   scroll to. js/review-insights.js dynamic-imports this module the first time
+   scroll to. js/review/review-insights.js dynamic-imports this module the first time
    the Overview tab renders.
 
    Only the activity line survives here — the decision-mix and checks cards were
-   cut (see js/review-insights.js), so ECharts is now carrying a single chart.
+   cut (see js/review/review-insights.js), so ECharts is now carrying a single chart.
    That is still worth deferring rather than inlining, but it is a thin
    justification for the dependency; a hand-drawn SVG line would remove it
    outright, which is a build decision rather than a UX one and is left alone.
@@ -27,11 +27,11 @@ import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-import { escapeHtml } from './utils.js'
+import { escapeHtml } from '../utils.js'
 
 // Register only what this chart uses, so the rest of ECharts is tree-shaken out
 // of the chunk rather than merely deferred. BarChart went with the decision-mix
-// and checks cards — see js/review-insights.js for why both were cut.
+// and checks cards — see js/review/review-insights.js for why both were cut.
 echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer])
 
 /** Shared styling, kept as its own function so a second chart can rejoin it. */

@@ -84,6 +84,21 @@ const EXEMPT = new Set([
  * another match for the pattern it is describing.) A gate that under-scans
  * its own domain is the same defect this test exists to catch, just one
  * level up.
+ *
+ * **`.cjs` and `.mjs` belong in this list too, added during task 8.**
+ * `.dependency-cruiser.cjs` holds nine `js/…` path references — regex
+ * alternations naming the pinned base modules' current locations — and that
+ * file is edited by this task and by each of the two tasks that follow it,
+ * since every task moving a pinned base module has to touch the same
+ * alternation. Before this fix a `.cjs` config file naming a real `js/` path
+ * was invisible to `trackedFiles()`'s extension filter, so a task that moved
+ * a pinned module but forgot (or mis-edited) the regex would leave a stale
+ * path sitting in committed config with nothing here to catch it — the exact
+ * failure mode this test exists to close for every other file type. `.mjs`
+ * is added for the same reason even though nothing under that extension is
+ * tracked today (`/tmp/hhvc-retarget.mjs` is a throwaway, never committed,
+ * per its own header) — a future `.mjs` build script naming a `js/` path
+ * should not have to rediscover this gap.
  */
 function trackedFiles() {
   const out = spawnSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
@@ -91,7 +106,7 @@ function trackedFiles() {
   return out.stdout
     .split('\n')
     .filter(Boolean)
-    .filter((f) => /\.(js|jsx|ts|md|json|html|css)$/.test(f))
+    .filter((f) => /\.(js|jsx|ts|cjs|mjs|md|json|html|css)$/.test(f))
     .filter((f) => !SKIP.test(f))
 }
 

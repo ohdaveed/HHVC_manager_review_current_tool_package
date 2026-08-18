@@ -93,7 +93,7 @@ validate one page in isolation. Run both after editing anything under `pages/` o
   notes mapping mockup content to Karl CMS StreamField blocks, surfaced via
   `karlTag()`. Keep them accurate when editing copy.
 - **Local persistence** is browser-only under `localStorage` key
-  `hhvcManagerReviewState:v1`. The CSV/JSON import path in `js/review-queue.js` has
+  `hhvcManagerReviewState:v1`. The CSV/JSON import path in `js/review/review-queue.js` has
   regressed before by overwriting instead of merging — manually verify any change
   to the import/export round-trip.
 

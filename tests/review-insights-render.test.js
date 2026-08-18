@@ -1,4 +1,4 @@
-// Unit tests for the Overview insight markup (js/review-insights.js).
+// Unit tests for the Overview insight markup (js/review/review-insights.js).
 //
 // buildMarkup() is a pure string builder, so what it emits can be asserted
 // without a browser, a chart instance, or ECharts being loaded at all — which
@@ -10,7 +10,7 @@
 // that used to reach an ECharts tooltip formatter now reach innerHTML directly,
 // so this is where that must not regress.
 import { describe, test, expect } from 'bun:test'
-import { buildMarkup } from '../js/review-insights.js'
+import { buildMarkup } from '../js/review/review-insights.js'
 
 const XSS = '<img src=x onerror="window.__xss=1">'
 

@@ -41,7 +41,7 @@
     // dead only for the guard to pass when actually tested (see "saving AI
     // settings shows a confirmation toast" in tests/e2e/ai-assist.spec.js).
     // It is spelled out explicitly because that is the pattern every other
-    // self-mounting layer uses (js/review-queue-state.js,
+    // self-mounting layer uses (js/review/review-queue-state.js,
     // js/ux-improvements-workspace.js), and because a global that only works
     // by scope-chain fallback is worth not making anyone re-derive.
     window.showToast?.(message, type)

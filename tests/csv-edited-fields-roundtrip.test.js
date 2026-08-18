@@ -2,7 +2,7 @@
 // columns in all three enumerations that previously omitted them
 // (js/manager-review-export.js's MANAGER_REVIEW_RECORD_FIELDS,
 // js/ux-improvements-export.js's exportSavedLocalReviewsCsv, and
-// js/review-queue-import.js's importReviewsFromCsvText field list).
+// js/review/review-queue-import.js's importReviewsFromCsvText field list).
 //
 // CLAUDE.md's "Local persistence" section requires any change touching the
 // import/export round trip to be verified against the round trip itself,
@@ -32,8 +32,8 @@ const { pageData: REAL_PAGE_DATA } = require('../js/state.js')
 
 const MANAGER_REVIEW_EXPORT_PATH = path.resolve(__dirname, '../js/manager-review-export.js')
 const UX_IMPROVEMENTS_EXPORT_PATH = path.resolve(__dirname, '../js/ux-improvements-export.js')
-const REVIEW_QUEUE_STATE_PATH = path.resolve(__dirname, '../js/review-queue-state.js')
-const REVIEW_QUEUE_IMPORT_PATH = path.resolve(__dirname, '../js/review-queue-import.js')
+const REVIEW_QUEUE_STATE_PATH = path.resolve(__dirname, '../js/review/review-queue-state.js')
+const REVIEW_QUEUE_IMPORT_PATH = path.resolve(__dirname, '../js/review/review-queue-import.js')
 const DOM_WINDOW = global.window
 
 let originalWindow
@@ -177,9 +177,9 @@ async function mountUxImprovementsExport({ savedPages = {} } = {}) {
 }
 
 /**
- * Mount the REAL js/review-queue-state.js (for a real
+ * Mount the REAL js/review/review-queue-state.js (for a real
  * updateLocalReviewForPage backed by the real mergeReviewRecord) plus the
- * REAL js/review-queue-import.js on top of it, against one shared
+ * REAL js/review/review-queue-import.js on top of it, against one shared
  * window.reviewState store. This is the import half of the round trip --
  * driving importReviewsFromCsvText for real, not a hand-rolled merge.
  */
@@ -306,7 +306,7 @@ describe('all-saved-reviews CSV export carries edited_title/edited_summary', () 
 
     // window.ReviewExport is not involved here -- exportSavedLocalReviewsCsv
     // is published on window.ReviewUx.exportImport by this module; call it
-    // via that surface (mirrors how js/review-queue.js's export button
+    // via that surface (mirrors how js/review/review-queue.js's export button
     // wiring reaches it in the browser).
     const capturedCsv = await captureDownloadedCsv(() =>
       window.ReviewUx.exportImport.exportSavedLocalReviewsCsv()

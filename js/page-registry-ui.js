@@ -247,7 +247,7 @@
    *
    * Re-derives the target at click time rather than trusting anything rendered
    * earlier, and treats a missing window.confirm as "do not delete" — the same
-   * discipline the orphan prune in js/review-ops.js applies, and for the same
+   * discipline the orphan prune in js/review/review-ops.js applies, and for the same
    * reason: this is a destructive action and the inverted default would fire it
    * silently in any environment without a confirm.
    */
@@ -499,7 +499,7 @@
     /* refreshUx() dispatches this after every render, so it is how the delete
        button learns which page is open, and how the Help list learns that a
        sync pull or an import changed the registry. Re-rendering the list only
-       when Help is actually visible matches js/review-ops.js. */
+       when Help is actually visible matches js/review/review-ops.js. */
     document.addEventListener('hhvc:review-data-changed', () => {
       syncDeleteButton()
       if (mounted && utils()?.isWorkspacePanelOpen?.('help')) render()

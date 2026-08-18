@@ -30,10 +30,10 @@ const REVIEW_RECORD_FIELDS = [
  * tool derives from this array rather than restating it.
  *
  * It was previously restated in eight places — a chip-class map here, a
- * `VALID_DECISIONS` set and a slug→label map in js/review-queue-state.js, a
+ * `VALID_DECISIONS` set and a slug→label map in js/review/review-queue-state.js, a
  * label→slug map in js/keyboard-shortcuts.js, a display order in
- * js/review-insights-data.js, a colour map in js/review-insights.js, a
- * pre-zeroed tally in js/review-queue-rows.js, and another valid-value set in
+ * js/review/review-insights-data.js, a colour map in js/review/review-insights.js, a
+ * pre-zeroed tally in js/review/review-queue-rows.js, and another valid-value set in
  * js/review-state-validation.js. Two of those were exact INVERSES of each other
  * maintained by hand in different files, which is a drift waiting to happen:
  * adding a sixth decision meant finding all eight, and missing one produced a

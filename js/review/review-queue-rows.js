@@ -1,5 +1,5 @@
 /* Cross-page review queue: row computation, filtering/sorting, selection,
-   and bulk/single queue actions. Loads after js/review-queue-state.js. */
+   and bulk/single queue actions. Loads after js/review/review-queue-state.js. */
 ;(function mountReviewQueueRows() {
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.ReviewQueueInternal?.helpers) return
@@ -222,7 +222,7 @@
     // paired with the updated_at the write produces, so the undo can tell an
     // untouched page from one edited since. Only pages that actually changed
     // are recorded — an action that was a no-op for a page has nothing to
-    // reverse. See js/review-queue-undo.js.
+    // reverse. See js/review/review-queue-undo.js.
     const undo = window.ReviewQueueInternal?.undo
     const undoEntries = []
 
@@ -253,7 +253,7 @@
     }
 
     document.dispatchEvent(new CustomEvent('hhvc:review-data-changed'))
-    // Intentional circular reference: js/review-queue-render.js loads after
+    // Intentional circular reference: js/review/review-queue-render.js loads after
     // this file but defines .render before any user interaction can reach
     // this call — see the "Intentional circular reference" note in Task 12.
     window.ReviewQueueInternal.render.renderReviewQueue()

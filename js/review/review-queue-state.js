@@ -1,6 +1,6 @@
 /* Cross-page review queue: shared mutable state, action helpers, sidebar
    sync, and queue UI persistence. Loads first among the review-queue-*.js
-   files, right where js/review-queue.js used to sit in index.html. */
+   files, right where js/review/review-queue.js used to sit in index.html. */
 ;(function mountReviewQueueState() {
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.reviewState || !window.reviewMerge) return
@@ -80,7 +80,7 @@
    * @param {object} patch
    * @param {string} [updatedBy] History-entry provenance tag. Defaults to
    *   'action' (a queue button/keyboard shortcut, this function's usual
-   *   caller in js/review-queue-rows.js). js/review-queue-import.js's CSV
+   *   caller in js/review/review-queue-rows.js). js/review/review-queue-import.js's CSV
    *   import path passes 'import' explicitly — without that override every
    *   CSV-imported row would be indistinguishable from a manual action in
    *   the history audit trail, unlike JSON backup import which already

@@ -240,7 +240,7 @@ import { hasValidPageData } from './utils.js'
     return (rules || []).filter((rule) => rule.scored !== false)
   }
 
-  // Exposed for js/review-queue.js's Overview tab, which needs to compute a
+  // Exposed for js/review/review-queue.js's Overview tab, which needs to compute a
   // checks passed/total count for every page, not just the one currently
   // open in the editor.
   window.reviewChecks = window.reviewChecks || {}
@@ -697,7 +697,7 @@ import { hasValidPageData } from './utils.js'
     const adviceHost = ensureChecksHost(panel, 'reviewChecksAdvice')
     adviceHost.innerHTML = renderPlainLanguageAdvice(page)
 
-    // A generation counter, for the same reason js/review-insights.js keeps
+    // A generation counter, for the same reason js/review/review-insights.js keeps
     // one: the island arrives over a dynamic import, and a reviewer can change
     // page again while that promise is in flight. Without this, a slow first
     // load repaints the previous page's scores over the current ones.

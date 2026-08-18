@@ -2,7 +2,7 @@
    Kept in its own file since this is the highest-regression-risk area (a
    prior bug here replaced saved review state wholesale instead of merging —
    see CLAUDE.md's "Local persistence" section). Loads after
-   js/review-queue-render.js. */
+   js/review/review-queue-render.js. */
 ;(function mountReviewQueueImport() {
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.ReviewQueueInternal?.render) return

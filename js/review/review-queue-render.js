@@ -1,4 +1,4 @@
-/* Cross-page review queue: rendering. Loads after js/review-queue-rows.js. */
+/* Cross-page review queue: rendering. Loads after js/review/review-queue-rows.js. */
 ;(function mountReviewQueueRender() {
   const DATA = window.HHVC_DATA
   if (!DATA || !DATA.pages || !DATA.order || !window.ReviewQueueInternal?.rows) return
@@ -366,7 +366,7 @@
     `
 
     // Charts go in after the panel exists, since ECharts sizes itself to a
-    // mounted container. Optional-chained because js/review-insights.js is an
+    // mounted container. Optional-chained because js/review/review-insights.js is an
     // additive layer: if it never loaded, the queue still renders.
     window.ReviewInsights?.render?.()
 

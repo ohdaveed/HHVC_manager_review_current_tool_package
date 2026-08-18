@@ -101,7 +101,7 @@ state.ui = {
 
 Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**.
 
-**Progress semantics:** The sticky bar and queue progress bar count **decided** pages — `stats.reviewed` in `js/review-queue-rows.js` filters on `utils.isDecided(row.decision)`, so a page whose decision is still **Needs review** does not count even when it carries saved notes. Saving a note is not a decision, and counting it as one would report the site as reviewed when nothing had been judged. The decision breakdown chips split the same set by decision. Sticky-bar prev/next respects the active queue filter when one is selected.
+**Progress semantics:** The sticky bar and queue progress bar count **decided** pages — `stats.reviewed` in `js/review/review-queue-rows.js` filters on `utils.isDecided(row.decision)`, so a page whose decision is still **Needs review** does not count even when it carries saved notes. Saving a note is not a decision, and counting it as one would report the site as reviewed when nothing had been judged. The decision breakdown chips split the same set by decision. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Dashboard guidance copy
 
@@ -266,7 +266,7 @@ HHVC_manager_review_current_tool_package/
 ├─ js/state.js
 ├─ js/utils.js
 ├─ js/ux-improvements.js
-├─ js/review-queue.js
+├─ js/review/review-queue.js
 ├─ js/dashboard-guidance.js
 ├─ pages/*.js
 ├─ data/page_inventory.json
@@ -287,7 +287,7 @@ HHVC_manager_review_current_tool_package/
 - Edit render behavior in `js/app.js`.
 - Edit shared local-state behavior in `js/state.js`.
 - Edit shared helpers in `js/utils.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`, and `css/ux-improvements.css`.
+- Edit UX review helpers in `js/ux-improvements.js`, `js/review/review-queue.js`, `js/dashboard-guidance.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.

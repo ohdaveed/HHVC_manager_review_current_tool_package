@@ -26,14 +26,14 @@ No UI framework. Rendering is data-driven string templates. High-impact packages
 
 Client libraries bundled into the static app (listed in `devDependencies` but imported by app code):
 
-| Dependency             | Version | Role                                     | Evidence                           |
-| ---------------------- | ------- | ---------------------------------------- | ---------------------------------- |
-| `@sfgov/design-system` | 0.0.1   | SF.gov/Karl CSS primitives               | `js/main.js`                       |
-| `fuse.js`              | ^7.4.2  | Page search                              | `js/third-party-globals.js`        |
-| `defu`                 | ^6.1.7  | Deep merge helper (globals)              | `js/third-party-globals.js`        |
-| `papaparse`            | ^5.5.4  | CSV parse/serialize                      | `js/third-party-globals.js`        |
-| `echarts`              | ^6.1.0  | Overview activity chart (dynamic import) | `js/review-insights-charts.js`     |
-| `modern-screenshot`    | ^4.7.0  | Mockup PNG export                        | `js/mockup/mockup-image-export.js` |
+| Dependency             | Version | Role                                     | Evidence                              |
+| ---------------------- | ------- | ---------------------------------------- | ------------------------------------- |
+| `@sfgov/design-system` | 0.0.1   | SF.gov/Karl CSS primitives               | `js/main.js`                          |
+| `fuse.js`              | ^7.4.2  | Page search                              | `js/third-party-globals.js`           |
+| `defu`                 | ^6.1.7  | Deep merge helper (globals)              | `js/third-party-globals.js`           |
+| `papaparse`            | ^5.5.4  | CSV parse/serialize                      | `js/third-party-globals.js`           |
+| `echarts`              | ^6.1.0  | Overview activity chart (dynamic import) | `js/review/review-insights-charts.js` |
+| `modern-screenshot`    | ^4.7.0  | Mockup PNG export                        | `js/mockup/mockup-image-export.js`    |
 
 ### 3) Development Toolchain
 

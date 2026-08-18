@@ -13,10 +13,10 @@ is actually holding and how it is connected — previously only visible in
 devtools. There are no roles in this tool: the reviewer and the operator are
 the same person, deliberately.
 
-- **`js/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
+- **`js/review/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
   `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
   `window`/`module.exports` so the tests need no browser.
-- **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
+- **`js/review/review-ops.js`** — the panel, lazily mounted when Help opens with the
   same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
 **It had a tab of its own — the `5` key — and lost it.** On a default or

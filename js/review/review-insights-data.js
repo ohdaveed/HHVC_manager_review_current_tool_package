@@ -5,9 +5,9 @@
    DOM and ECharts: everything here is a plain array-in / array-out transform,
    so the interesting logic (what counts as "decided", how a day's cumulative
    total is built, how ties sort) is unit-testable without a browser or a
-   charting library. js/review-insights.js owns all the rendering.
+   charting library. js/review/review-insights.js owns all the rendering.
 
-   Loaded before js/review-insights.js. Takes no imports — it is required
+   Loaded before js/review/review-insights.js. Takes no imports — it is required
    directly by tests/review-insights-data.test.js as well as being bundled, and
    that dual-export shape is what forbids an `import` here: adding one would
    make this an ES module, `module.exports` would stop running, and the test's

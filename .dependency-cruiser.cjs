@@ -55,10 +55,10 @@ module.exports = {
         'exactly one classifier instead of two copies free to drift.',
       from: {
         path:
-          '^js/(utils|card-inheritance|review-merge|' +
-          'review-insights-data|review-ops-data|page-registry-data)\\.js$|' +
+          '^js/(utils|card-inheritance|review-merge|page-registry-data)\\.js$|' +
           '^js/standards/plain-language\\.js$|' +
-          '^js/karl/karl-blocks\\.js$',
+          '^js/karl/karl-blocks\\.js$|' +
+          '^js/review/(review-insights-data|review-ops-data)\\.js$',
       },
       to: { pathNot: '^$' },
     },

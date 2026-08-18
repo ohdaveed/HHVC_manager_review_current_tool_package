@@ -7,7 +7,7 @@
 
    Their consumers still reach for them as globals behind
    `typeof X === 'undefined'` guards: js/utils.js's parseCsv, the fuzzy search
-   in js/review-queue-rows.js, and the backup merge in
+   in js/review/review-queue-rows.js, and the backup merge in
    js/ux-improvements-export.js. Those guards are the documented fallback that
    keeps each feature degrading to a simpler implementation rather than
    throwing, and the Node-side tests exercise exactly that path, so the
@@ -17,7 +17,7 @@
    ES module evaluation runs every static import of a module before any
    statement in that module's own body. So `window.Fuse = Fuse` written
    directly in js/main.js would execute AFTER every module js/main.js imports
-   had already evaluated — including js/review-queue.js, whose init() runs on
+   had already evaluated — including js/review/review-queue.js, whose init() runs on
    evaluation and re-renders the queue immediately when a reviewer reloads
    with the workspace already open on Overview. With a saved search query,
    that first render would silently fall back to substring matching because

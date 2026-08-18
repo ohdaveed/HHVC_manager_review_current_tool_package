@@ -143,7 +143,7 @@ function buildPageSelect() {
            raw, which was safe only while every key was a hardcoded identifier
            in a pages/*.js file. Reviewer-added pages (js/page-registry.js) put
            keys in localStorage, where a hand-edited or imported blob can carry
-           anything — so this now matches js/review-queue-render.js, which
+           anything — so this now matches js/review/review-queue-render.js, which
            escapes its row keys at all three of its interpolation sites.
            js/page-registry-data.js additionally constrains an added key to a
            bare identifier; this is the braces to that belt. */

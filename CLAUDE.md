@@ -484,14 +484,14 @@ re-monolith them.**
 
 ### Review/UX layers are additive, on top of the core
 
-`js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`,
+`js/ux-improvements.js`, `js/review/review-queue.js`, `js/dashboard-guidance.js`,
 and `js/keyboard-shortcuts.js` are self-contained
 IIFEs that read `window.HHVC_DATA` and `localStorage`. Some write edited
 title/summary/CTA/SEO fields back onto the **in-memory** `pageData` objects when
 restoring saved edits — but **must never write back to the `pages/*.js` source
 files or publish content.** They are review aids only, not publishing tools.
 
-`js/ux-improvements.js` and `js/review-queue.js` are
+`js/ux-improvements.js` and `js/review/review-queue.js` are
 thin orchestrators (event wiring + `init()` + public API) over sibling files that
 do the work, each attaching functions to an internal `window.<Namespace>` object
 (implementation detail — never referenced from `pages/*.js`):
@@ -504,15 +504,15 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   not under `window.ReviewUx` — since `js/review-merge.js` is also imported
   directly by `server.ts` (no DOM dependency) and needs no browser-only
   namespace.
-- **`window.ReviewQueueInternal`** ← `js/review-queue-state.js`,
-  `js/review-queue-rows.js`, `js/review-queue-render.js`, and
-  `js/review-queue-import.js` (CSV import — kept isolated as the
+- **`window.ReviewQueueInternal`** ← `js/review/review-queue-state.js`,
+  `js/review/review-queue-rows.js`, `js/review/review-queue-render.js`, and
+  `js/review/review-queue-import.js` (CSV import — kept isolated as the
   highest-regression-risk area; see [Local persistence](#local-persistence)).
-- **`window.ReviewInsights`** (`js/review-insights.js`) ←
-  `js/review-insights-data.js`, which attaches `.data`. The Overview cards;
-  `js/review-queue-render.js` calls `window.ReviewInsights.render()` at the end
+- **`window.ReviewInsights`** (`js/review/review-insights.js`) ←
+  `js/review/review-insights-data.js`, which attaches `.data`. The Overview cards;
+  `js/review/review-queue-render.js` calls `window.ReviewInsights.render()` at the end
   of its own render, optional-chained.
-- **`window.ReviewOps`** (`js/review-ops.js`) ← `js/review-ops-data.js`, which
+- **`window.ReviewOps`** (`js/review/review-ops.js`) ← `js/review/review-ops-data.js`, which
   attaches `.data`. The stored-review-data panel, a collapsed section in Help.
 - **`window.MockupImageExport`** (`js/mockup/mockup-image-export.js`) — PNG export of
   the mockups, standing on its own.
@@ -574,7 +574,7 @@ that did not exist yet.
   `index.html` at all and had been a no-op for some time.
 - **Three of four Overview KPI tiles.** "Visible" restated the "N of 19" printed
   directly above it. "Blocked" showed `stats.blocked`, which counts Blocked
-  **plus** Revise and resubmit (`js/review-queue-rows.js`) — so it read 5 while
+  **plus** Revise and resubmit (`js/review/review-queue-rows.js`) — so it read 5 while
   the Blocked filter chip forty pixels away read 2. Both numbers were correct
   and the label was not, and a panel that visibly disagrees with itself in its
   first two rows spends the credibility the rest of it needs. The decision tally
@@ -703,7 +703,7 @@ relying on Node-specific interop here would go unnoticed.
 
 ### Overview insight cards (`js/review-insights*.js`)
 
-Two compact cards above the review queue table — review activity over time (a chart) and the pages whose automated checks are failing (a ranked list). They sit on the **Overview tab rather than a workspace tab of their own** on purpose: a tab is a scarce slot bound to a number key. There were three cards, and the two that were cut — Decision mix and a Checks-needing-attention bar chart — are worth not re-adding. `js/review-insights-data.js` is the pure data shaping, dual `window`/`module.exports` like `js/review-merge.js`; `js/review-insights.js` orchestrates; `js/review-insights-charts.js` is the only module that imports ECharts. **That import is dynamic, and that is load-bearing rather than tidiness** — ECharts is ~530 KB raw / ~180 KB gzip, more than the entire rest of the bundle, so it must stay its own chunk; and the headings and data tables are built **synchronously, before the import is requested**, so the numbers are in the DOM even if the chunk never loads. **Colour is never the only encoding**, and decision fills use `--viz-decision-*` rather than the `--status-*-border` chip tokens — if you change those, re-validate the contrast rather than eyeball it. Full rationale — why each cut card was cut, the re-parented chart host and its generation counter, and the ΔE measurements — in the `hhvc-review-insights` skill.
+Two compact cards above the review queue table — review activity over time (a chart) and the pages whose automated checks are failing (a ranked list). They sit on the **Overview tab rather than a workspace tab of their own** on purpose: a tab is a scarce slot bound to a number key. There were three cards, and the two that were cut — Decision mix and a Checks-needing-attention bar chart — are worth not re-adding. `js/review/review-insights-data.js` is the pure data shaping, dual `window`/`module.exports` like `js/review-merge.js`; `js/review/review-insights.js` orchestrates; `js/review/review-insights-charts.js` is the only module that imports ECharts. **That import is dynamic, and that is load-bearing rather than tidiness** — ECharts is ~530 KB raw / ~180 KB gzip, more than the entire rest of the bundle, so it must stay its own chunk; and the headings and data tables are built **synchronously, before the import is requested**, so the numbers are in the DOM even if the chunk never loads. **Colour is never the only encoding**, and decision fills use `--viz-decision-*` rather than the `--status-*-border` chip tokens — if you change those, re-validate the contrast rather than eyeball it. Full rationale — why each cut card was cut, the re-parented chart host and its generation counter, and the ΔE measurements — in the `hhvc-review-insights` skill.
 
 ### Karl transcript export (`js/karl/karl-blocks.js`, `js/karl/karl-transcript.js`)
 
@@ -776,10 +776,10 @@ audit-cards`, because "there is nowhere in the CMS for this to go" is a
   `localStorage`, so every CLI transcript is headed _no review recorded_; the
   Help-tab panel is the path that carries a reviewer's edits.
 
-### Queue undo (`js/review-queue-undo.js`)
+### Queue undo (`js/review/review-queue-undo.js`)
 
 One step of undo for row and bulk decision actions. `applyQueueAction` in
-`js/review-queue-rows.js` is the single funnel every such action goes through,
+`js/review/review-queue-rows.js` is the single funnel every such action goes through,
 so it is the only place a snapshot is recorded.
 
 - **The undo is a new round, not a deletion.** `history[]` is append-only —
@@ -811,7 +811,7 @@ A reviewer can create a page mockup and delete an existing one from the browser.
 
 ### Stored review data (`js/review-ops*.js`)
 
-A collapsed section at the end of the **Help** tab reporting what this browser is actually holding and how it is connected — previously only visible in devtools. `js/review-ops-data.js` is the pure diagnostics, dual `window`/`module.exports` so the tests need no browser; `js/review-ops.js` is the panel, lazily mounted when Help opens with the same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses. Two invariants are safety-shaped and stay here. **An empty page-key set reports NO orphans, not all of them** — an empty set means page data has not loaded, and the other reading would put a "remove these" button in front of the reviewer's entire review history. And **pruning is the only path in the tool that deletes review data outright** (everything else merges), so it confirms with the count and the keys first and **re-derives the list at click time** rather than trusting what was rendered, since the panel can sit open while a sync pull or import changes state underneath it. Full rationale — why it lost its own tab, why orphaned records are a real class, and why `local_dirty`'s three states are reported separately — in the `hhvc-review-ops` skill.
+A collapsed section at the end of the **Help** tab reporting what this browser is actually holding and how it is connected — previously only visible in devtools. `js/review/review-ops-data.js` is the pure diagnostics, dual `window`/`module.exports` so the tests need no browser; `js/review/review-ops.js` is the panel, lazily mounted when Help opens with the same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses. Two invariants are safety-shaped and stay here. **An empty page-key set reports NO orphans, not all of them** — an empty set means page data has not loaded, and the other reading would put a "remove these" button in front of the reviewer's entire review history. And **pruning is the only path in the tool that deletes review data outright** (everything else merges), so it confirms with the count and the keys first and **re-derives the list at click time** rather than trusting what was rendered, since the panel can sit open while a sync pull or import changes state underneath it. Full rationale — why it lost its own tab, why orphaned records are a real class, and why `local_dirty`'s three states are reported separately — in the `hhvc-review-ops` skill.
 
 ### Page object shape and validation rules
 
@@ -922,7 +922,7 @@ risks_or_blockers, updated_by }` entries recording each review "round." A
 history entry is constructed in exactly one place — `mergeReviewRecord()` in
 `js/review-merge.js` — and only at discrete round-boundary events: queue bulk
 actions/keyboard shortcuts (`updateLocalReviewForPage` in
-`js/review-queue-state.js`), CSV/JSON backup import (`importReviewStateBackup`
+`js/review/review-queue-state.js`), CSV/JSON backup import (`importReviewStateBackup`
 in `js/ux-improvements-export.js`), server sync (`server.ts`'s
 `putReviewPage`), and a **decision change made from the sidebar** (the
 `<select>` or a quick-action chip). The continuous per-keystroke/blur autosave
@@ -945,10 +945,10 @@ time autosave runs the decision already matches and nothing double-records.
 
 **The CSV/JSON import path can destroy existing reviews** — a prior
 regression there replaced the saved state wholesale instead of merging. The
-round-trip logic lives in `js/review-queue-import.js` (CSV) and
+round-trip logic lives in `js/review/review-queue-import.js` (CSV) and
 `js/ux-improvements-export.js`'s `importReviewStateBackup` (JSON backup);
 both merge through the same `mergeReviewRecord` per-page-key path the sync
-backend uses, while `js/review-queue.js` wires the handlers and
+backend uses, while `js/review/review-queue.js` wires the handlers and
 `js/manager-review-export.js` exports current-page snapshots. **Any change to
 any of these modules, or to `js/review-merge.js`, must be verified against the
 round trip itself before being called done:** export a snapshot, re-import it,
@@ -1442,7 +1442,7 @@ that stub globals must restore them, or they pollute sibling test files.
 - Public page content → `pages/*.js`.
 - Core render/state → `js/state.js`, `js/mockup/page-render.js`, `js/ui-controls.js`,
   `js/editor-panel.js`, `js/app.js`.
-- Review/UX layers → `js/ux-improvements.js`, `js/review-queue.js`,
+- Review/UX layers → `js/ux-improvements.js`, `js/review/review-queue.js`,
   `js/dashboard-guidance.js`, `js/keyboard-shortcuts.js`,
   `js/manager-review-export.js`, `css/ux-improvements.css`.
 - Shared merge/history logic → `js/review-merge.js` (loaded both as a browser

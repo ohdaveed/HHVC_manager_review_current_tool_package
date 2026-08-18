@@ -96,7 +96,7 @@ surface so each selector is still declared in exactly one file.
   corruption for a state the reviewer created on purpose. `countInboundLinks()`
   counts `card.target` and section/step `buttonTarget` references and the dialog
   names them.
-- **`js/review-ops.js`'s `siteKeys()` counts a deleted page as still known.** Its
+- **`js/review/review-ops.js`'s `siteKeys()` counts a deleted page as still known.** Its
   record is not orphaned — it is what Restore returns — so listing it under
   "Records for pages that no longer exist" would put a delete button in front of
   a review one click from recovery. The widening is skipped when the key set is

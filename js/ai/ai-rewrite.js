@@ -233,7 +233,7 @@
   /**
    * Restore the pre-apply value. One step, consumed on use — a stack would
    * imply a history this state cannot reconstruct, and every other undo
-   * surface in this tool (js/review-queue-undo.js) makes the same choice for
+   * surface in this tool (js/review/review-queue-undo.js) makes the same choice for
    * the same reason.
    * @returns {void}
    */

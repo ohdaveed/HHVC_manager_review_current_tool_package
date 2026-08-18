@@ -1,7 +1,7 @@
 /* Cross-page review queue: one-step undo for decision actions.
 
-   Loads after js/review-queue-state.js (it calls updateLocalReviewForPage)
-   and before js/review-queue-rows.js, whose applyQueueAction is the single
+   Loads after js/review/review-queue-state.js (it calls updateLocalReviewForPage)
+   and before js/review/review-queue-rows.js, whose applyQueueAction is the single
    funnel every row and bulk action goes through and the only place that
    records a snapshot.
 

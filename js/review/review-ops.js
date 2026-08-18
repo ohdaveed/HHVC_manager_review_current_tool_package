@@ -19,7 +19,7 @@
    persisted workspace_tab before these hooks exist and a restored tab would
    otherwise paint empty.
 
-   Loads after js/review-ops-data.js (its diagnostics) and after
+   Loads after js/review/review-ops-data.js (its diagnostics) and after
    js/sync/review-state-sync.js, whose config it reads to report sync status. */
 
 /* Imported rather than read off `window.utils` at call time. This file used to
@@ -27,8 +27,8 @@
    not loaded yet", which is a load-order worry the module graph settles
    outright: an import cannot resolve late. It also left the repo with three
    hand-maintained copies of the same five replacements, and they had already
-   drifted — js/review-insights.js's version failed OPEN. */
-import { escapeHtml as escape } from './utils.js'
+   drifted — js/review/review-insights.js's version failed OPEN. */
+import { escapeHtml as escape } from '../utils.js'
 ;(function mountReviewOps() {
   if (typeof window === 'undefined') return
 
@@ -86,7 +86,7 @@ import { escapeHtml as escape } from './utils.js'
 
   /**
    * Assemble every diagnostic from the current saved state.
-   * @returns {object} the report shape js/review-ops-data.js's buildOpsReport returns
+   * @returns {object} the report shape js/review/review-ops-data.js's buildOpsReport returns
    */
   function buildReport() {
     const state = window.reviewState?.read?.() || { pages: {} }
