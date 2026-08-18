@@ -1,4 +1,4 @@
-import { showToast } from './ui-controls.js'
+import { showToast } from '../ui-controls.js'
 
 function setExpanded(trigger, expanded) {
   const panelId = trigger.getAttribute('aria-controls')

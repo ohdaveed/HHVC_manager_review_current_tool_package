@@ -98,7 +98,7 @@ function validData(pageOverrides = {}) {
 }
 
 describe('page type union', () => {
-  // `type` selects the Karl panel inventory in js/karl-blocks.js, so a typo'd
+  // `type` selects the Karl panel inventory in js/karl/karl-blocks.js, so a typo'd
   // value would export an EMPTY transcript rather than erroring — an outcome
   // that reads like a page with no content instead of like a bug. That is why
   // the field is a closed union rather than the open z.string() it used to be.
@@ -918,7 +918,7 @@ describe('findUnmappedSections', () => {
     // destination: decide the destination, or open a register entry and add
     // its shape rule. Do not widen an existing rule to make it green.
     const { loadPageData } = require('../build_scripts/load-pages.js')
-    const { UNRESOLVED } = require('../js/karl-blocks.js')
+    const { UNRESOLVED } = require('../js/karl/karl-blocks.js')
     expect(findUnmappedSections(loadPageData().pages, UNRESOLVED)).toEqual([])
   })
 })
@@ -941,7 +941,7 @@ describe('transcript over-coverage', () => {
   // count.
   test('no section is emitted twice into the same scope', () => {
     const { loadPageData } = require('../build_scripts/load-pages.js')
-    const { buildTranscript } = require('../js/karl-transcript.js')
+    const { buildTranscript } = require('../js/karl/karl-transcript.js')
     const pages = loadPageData().pages
 
     const collisions = []

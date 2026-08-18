@@ -200,7 +200,7 @@ visibly broken. `tests/e2e/mockup-tokens.spec.js` closes the gap this file
 cannot: its assertions prove an import line and an on-disk file exist, not
 that the browser actually renders a non-synthesised 700, which only
 `document.fonts.check('700 16px "…"')` against a real loaded page can show),
-and `karl-blocks` (the drift guard over `js/karl-blocks.js`, the Karl panel
+and `karl-blocks` (the drift guard over `js/karl/karl-blocks.js`, the Karl panel
 inventory the transcript export types into: it parses
 `docs/karl-export-field-map.md`'s eight per-type tables and asserts every
 transcribed row still matches on label, raw name, required/repeatable wording,
@@ -868,7 +868,7 @@ is requested**, so the numbers are present even if the chunk never loads.
   `aria-hidden` beside an `.hhvc-sr-only` table, and the checks chart states its
   own top-8 cap while the table carries every page.
 
-### Karl transcript export (`js/karl-blocks.js`, `js/karl-transcript.js`)
+### Karl transcript export (`js/karl/karl-blocks.js`, `js/karl/karl-transcript.js`)
 
 A paste-ready, per-page instruction listing what an editor types into Karl,
 field by field, in the order Karl's own form presents. `bun run export:karl`
@@ -880,7 +880,7 @@ publishing path — so the standing rule that a review layer never writes back t
 `pages/*.js` and that an export is never publication approval survives intact.
 A transcript changes what an export contains, not what it authorizes.
 
-- **`js/karl-blocks.js` is transcribed from `docs/karl-export-field-map.md`, not
+- **`js/karl/karl-blocks.js` is transcribed from `docs/karl-export-field-map.md`, not
   parsed from it.** Half the mapping lives in prose footnotes under the tables —
   a Callout has no title field, the cost description caps at 120 characters,
   bullets fold into the Text block's rich text — and a parser reading only the
@@ -2877,21 +2877,21 @@ globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
-- Karl guide panels → `js/karl-guide-registry.js` (the per-page-type field
+- Karl guide panels → `js/karl/karl-guide-registry.js` (the per-page-type field
   tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
   `''` rather than guessing — `guideForContext` stamps any non-empty path
   `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
   reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
-  `js/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
+  `js/karl/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
   call site in `js/page-render.js` must pass `context.role`: without one the
   tag KIND is used as the role, which names no Karl field. Note the panel is
   block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
   parser closes the paragraph and the panel escapes the element it is
   positioned against.
-- Karl transcript export → `js/karl-blocks.js` (the transcribed panel inventory
-  and the `UNRESOLVED` shape rules), `js/karl-transcript.js` (the pure builder —
+- Karl transcript export → `js/karl/karl-blocks.js` (the transcribed panel inventory
+  and the `UNRESOLVED` shape rules), `js/karl/karl-transcript.js` (the pure builder —
   every judgement about what an editor is told lives there and only there),
-  `js/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
+  `js/karl/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
   Re-run `bun run validate` after any of them: `findUnmappedSections` gates on it.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - Docs linting and link checking → `build_scripts/lint-docs.js` (markdownlint,

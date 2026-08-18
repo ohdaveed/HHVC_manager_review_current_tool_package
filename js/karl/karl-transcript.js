@@ -4,7 +4,7 @@
    Pure. It takes a page object, a review record and the page corpus, and
    returns data — no filesystem, no DOM, no global state — so the Node CLI
    (build_scripts/export-karl-transcript.js) and the browser panel
-   (js/karl-transcript-panel.js) share exactly one set of judgements about what
+   (js/karl/karl-transcript-panel.js) share exactly one set of judgements about what
    an editor is told to type. Every such judgement lives here and only here.
 
    The four outcomes are kept distinct on purpose, because keeping them apart is
@@ -25,7 +25,7 @@
 
    Load-order dependency: reads window.karlBlocks, window.cardInheritance and
    window.utils in the browser branch, so js/main.js must list it after
-   js/karl-blocks.js, js/card-inheritance.js and js/utils.js. Under Node it
+   js/karl/karl-blocks.js, js/card-inheritance.js and js/utils.js. Under Node it
    require()s all three directly. */
 
 // Resolved the way js/editing/inline-content-edit-data.js resolves its helpers:
@@ -37,9 +37,9 @@ const { panelsFor, matchesSection, KARL_NAV, KARL_FLAGS, PROMOTE_PANEL } = isNod
   ? require('./karl-blocks.js')
   : window.karlBlocks
 const { classifySection } = isNodeContext
-  ? require('./card-inheritance.js')
+  ? require('../card-inheritance.js')
   : window.cardInheritance
-const { getByPath } = isNodeContext ? require('./utils.js') : window.utils
+const { getByPath } = isNodeContext ? require('../utils.js') : window.utils
 
 /* The decision labels that mean "signed off", spelled out rather than derived
    from DECISIONS. Deriving them would need a flag on the table in js/utils.js

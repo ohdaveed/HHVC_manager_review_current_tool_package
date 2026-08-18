@@ -15,7 +15,7 @@ const {
   resolveValue,
   foldTextAndBullets,
   extractInlineLinks,
-} = require('../js/karl-transcript.js')
+} = require('../js/karl/karl-transcript.js')
 
 /** A minimal page carrying only what the test under it needs. */
 function page(overrides) {

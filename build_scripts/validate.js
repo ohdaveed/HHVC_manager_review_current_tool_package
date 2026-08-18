@@ -18,7 +18,7 @@ const {
   findUnmappedSections,
   countUnverifiedClaims,
 } = require('./data-checks')
-const { UNRESOLVED } = require('../js/karl-blocks.js')
+const { UNRESOLVED } = require('../js/karl/karl-blocks.js')
 const { findUnmooredNotes, findWrongTypeNotes } = require('./karl-vocabulary')
 const { findPageImports, findPageImportDrift } = require('./page-import-checks')
 
@@ -117,7 +117,7 @@ if (unmapped.length) {
   const { pageKey, path, reason } = unmapped[0]
   throw new Error(
     `${pageKey} ${path} has no documented Karl destination: ${reason}\n` +
-      'Either map it in js/karl-blocks.js, or open an entry in the unresolved ' +
+      'Either map it in js/karl/karl-blocks.js, or open an entry in the unresolved ' +
       'register in docs/karl-export-field-map.md and add its shape rule there. ' +
       'Do not widen an existing rule to cover it — a rule is an exemption for ' +
       `one documented open question, not a category. (${unmapped.length} finding(s) total.)`

@@ -2,7 +2,11 @@
 // escapeHtml is available for legend rendering.
 
 import { escapeHtml } from './utils.js'
-import { guideForContext, linkShapeMeta, unresolvedDescription } from './karl-guide-registry.js'
+import {
+  guideForContext,
+  linkShapeMeta,
+  unresolvedDescription,
+} from './karl/karl-guide-registry.js'
 
 let guideId = 0
 

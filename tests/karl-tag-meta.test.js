@@ -21,7 +21,7 @@ import {
   parseKarlLabel,
   renderKarlGuidePanel,
 } from '../js/karl-tag-meta.js'
-import { UNRESOLVED } from '../js/karl-guide-registry.js'
+import { UNRESOLVED } from '../js/karl/karl-guide-registry.js'
 
 /** Strip whitespace/punctuation (including the `->`/`→` separator itself,
  *  which is structural, not content) so two strings can be compared for the

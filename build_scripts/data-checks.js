@@ -16,7 +16,7 @@ const { safeUrl, urlProbe } = require('../js/utils.js')
 // source. That module is deliberately import-free and reads no global, so it
 // costs this file no load-order dependency.
 const { isValidInlineLinkTarget } = require('../js/inline-link-target.js')
-// buildTranscript comes from js/karl-transcript.js for the third time in the
+// buildTranscript comes from js/karl/karl-transcript.js for the third time in the
 // same pattern: findUnmappedSections must decide "this content has no Karl
 // destination" using exactly the walk that produces the instruction an editor
 // follows, or the gate and the export could come to disagree about what is
@@ -24,7 +24,7 @@ const { isValidInlineLinkTarget } = require('../js/inline-link-target.js')
 // make, and safe for the same measured reason — that module has no top-level
 // await and imports nothing, so Bun's async-module restriction does not apply.
 // tests/data-validation.test.js guards the crossing in a subprocess.
-const { buildTranscript } = require('../js/karl-transcript.js')
+const { buildTranscript } = require('../js/karl/karl-transcript.js')
 
 /**
  * Find order entries that reference a page key missing from `pages`.

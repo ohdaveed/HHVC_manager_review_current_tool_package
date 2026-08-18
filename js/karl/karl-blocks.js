@@ -24,7 +24,7 @@
 
    Load-order dependency: none of its own — it imports nothing and reads no
    global. It must simply be evaluated before anything calls window.karlBlocks,
-   which js/main.js guarantees by listing it ahead of js/karl-transcript.js. */
+   which js/main.js guarantees by listing it ahead of js/karl/karl-transcript.js. */
 
 /**
  * A panel's mockup source, as a tagged union rather than a dotted path.
@@ -233,7 +233,7 @@ const KARL_NAV = {
  * inventory. The field map documents it in a single table (see `docLine`),
  * which is what closed `U11`.
  *
- * It lives in the INVENTORY rather than in js/karl-transcript.js, where it was
+ * It lives in the INVENTORY rather than in js/karl/karl-transcript.js, where it was
  * first written, because it is a fact about Karl's form: the same reason every
  * other panel is here. The builder consumes it; it does not own it.
  *

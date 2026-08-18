@@ -1,4 +1,4 @@
-/* js/karl-blocks.js is the Karl mapping AUTHORITY; this file is the guide
+/* js/karl/karl-blocks.js is the Karl mapping AUTHORITY; this file is the guide
    panel's presentation layer over it. Everything Karl knows about itself —
    which panels a type has, what they are labelled, how they nest — is
    transcribed there from docs/karl-export-field-map.md and guarded against it
@@ -8,7 +8,7 @@
    A static import rather than the `window.karlBlocks` indirection the other
    consumers use: this module is an ES module in the bundle's own graph, and
    Vite and Bun both resolve the CJS inventory through it. The window global
-   stays for js/karl-transcript.js, which is dual-exported and has to work
+   stays for js/karl/karl-transcript.js, which is dual-exported and has to work
    under Node with no bundler. */
 import { breadcrumbFor, panelByRawName, PROMOTE_PANEL } from './karl-blocks.js'
 
@@ -38,7 +38,7 @@ const PAGE_TYPE_LABELS = {
    those had named a level no Karl form has — a raw Wagtail field name promoted
    into the navigation path, or another type's vocabulary borrowed across — and
    nothing could have caught it, because the strings were this file's own
-   invention. js/karl-blocks.js is transcribed from
+   invention. js/karl/karl-blocks.js is transcribed from
    docs/karl-export-field-map.md and guarded against it by
    tests/karl-blocks.test.js, so every path now comes from there and drift goes
    red in CI.
@@ -166,7 +166,7 @@ const BUTTON_HOSTS = {
    path indistinguishable from a measured one.
 
    Deleting the row instead was the alternative and was rejected for the same
-   reason js/karl-blocks.js prints its one inferred mapping rather than dropping
+   reason js/karl/karl-blocks.js prints its one inferred mapping rather than dropping
    it — a Campaign body section would otherwise report "no verified Karl field",
    which is less true than "Accordion section, verify this". Re-examine when the
    field map records which of `additional_content`'s five block types a plain
@@ -319,7 +319,7 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * a guessed path is indistinguishable from a measured one. This function
  * therefore never guesses: an unrecognized role returns '', which reports as
  * "Mockup only" with a step saying no verified Karl field is shown. Same
- * posture as js/karl-transcript.js, where a section the card-inheritance
+ * posture as js/karl/karl-transcript.js, where a section the card-inheritance
  * classifier returns `unknown` for is FLAGged rather than given a guessed
  * instruction a human then executes.
  *

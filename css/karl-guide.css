@@ -1,5 +1,5 @@
 /* Karl guide: the tag trigger, its expandable panel, and the copy controls
-   (js/karl-guide.js, markup built by js/karl-tag-meta.js).
+   (js/karl/karl-guide.js, markup built by js/karl-tag-meta.js).
 
    Loads after css/inline-content-edit.css and before css/theme.css, whose
    semantic tokens every rule here reads — no raw --legacy-* value and no

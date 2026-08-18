@@ -205,7 +205,7 @@ falls back to the system sans with nothing visibly broken.
 `tests/e2e/mockup-tokens.spec.js`'s `document.fonts.check()` assertions are
 what actually prove a 700 face renders rather than merely that an import
 line and an on-disk file exist), and
-`karl-blocks` (the drift guard over `js/karl-blocks.js`, the Karl panel
+`karl-blocks` (the drift guard over `js/karl/karl-blocks.js`, the Karl panel
 inventory the transcript export types into: it parses
 `docs/karl-export-field-map.md`'s eight per-type tables and asserts every
 transcribed row still matches on label, raw name, required/repeatable wording,
@@ -215,7 +215,7 @@ that keeps changing, and silent drift means an editor is told to type into a
 field that no longer exists. It asserts a MINIMUM row count per type FIRST,
 because a doc-parsing regex that stops matching does not fail — it stops
 checking, and reports zero rows on both sides), `karl-vocabulary` (the check that a `karl` note names a field that exists on
-THAT page's content type. The vocabulary is derived from `js/karl-blocks.js`
+THAT page's content type. The vocabulary is derived from `js/karl/karl-blocks.js`
 rather than written, because a hand-listed one is a second transcription of the
 field map free to drift from it — the exact failure the check exists to catch —
 and its first version produced false positives for `About` and `Information`,
@@ -705,7 +705,7 @@ relying on Node-specific interop here would go unnoticed.
 
 Two compact cards above the review queue table — review activity over time (a chart) and the pages whose automated checks are failing (a ranked list). They sit on the **Overview tab rather than a workspace tab of their own** on purpose: a tab is a scarce slot bound to a number key. There were three cards, and the two that were cut — Decision mix and a Checks-needing-attention bar chart — are worth not re-adding. `js/review-insights-data.js` is the pure data shaping, dual `window`/`module.exports` like `js/review-merge.js`; `js/review-insights.js` orchestrates; `js/review-insights-charts.js` is the only module that imports ECharts. **That import is dynamic, and that is load-bearing rather than tidiness** — ECharts is ~530 KB raw / ~180 KB gzip, more than the entire rest of the bundle, so it must stay its own chunk; and the headings and data tables are built **synchronously, before the import is requested**, so the numbers are in the DOM even if the chunk never loads. **Colour is never the only encoding**, and decision fills use `--viz-decision-*` rather than the `--status-*-border` chip tokens — if you change those, re-validate the contrast rather than eyeball it. Full rationale — why each cut card was cut, the re-parented chart host and its generation counter, and the ΔE measurements — in the `hhvc-review-insights` skill.
 
-### Karl transcript export (`js/karl-blocks.js`, `js/karl-transcript.js`)
+### Karl transcript export (`js/karl/karl-blocks.js`, `js/karl/karl-transcript.js`)
 
 A paste-ready, per-page instruction listing what an editor types into Karl,
 field by field, in the order Karl's own form presents. `bun run export:karl`
@@ -717,7 +717,7 @@ publishing path — so the standing rule that a review layer never writes back t
 `pages/*.js` and that an export is never publication approval survives intact.
 A transcript changes what an export contains, not what it authorizes.
 
-- **`js/karl-blocks.js` is transcribed from `docs/karl-export-field-map.md`, not
+- **`js/karl/karl-blocks.js` is transcribed from `docs/karl-export-field-map.md`, not
   parsed from it.** Half the mapping lives in prose footnotes under the tables —
   a Callout has no title field, the cost description caps at 120 characters,
   bullets fold into the Text block's rich text — and a parser reading only the
@@ -1458,21 +1458,21 @@ that stub globals must restore them, or they pollute sibling test files.
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
   `build_scripts/ai/compliance-audit.js`, and
   `build_scripts/ai/validate-compliance-audit.js`.
-- Karl guide panels → `js/karl-guide-registry.js` (the per-page-type field
+- Karl guide panels → `js/karl/karl-guide-registry.js` (the per-page-type field
   tables, the type-independent `META_FIELDS`, and `resolvePath`, which returns
   `''` rather than guessing — `guideForContext` stamps any non-empty path
   `evidence: 'E1'`/`status: 'confirmed'`, so a fallback path renders to the
   reviewer as a measurement), `js/karl-tag-meta.js` (panel markup),
-  `js/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
+  `js/karl/karl-guide.js` (expand/collapse + clipboard), `css/karl-guide.css`. A
   call site in `js/page-render.js` must pass `context.role`: without one the
   tag KIND is used as the role, which names no Karl field. Note the panel is
   block-level, so a `karlTag()` may never be emitted inside a `<p>` — the
   parser closes the paragraph and the panel escapes the element it is
   positioned against.
-- Karl transcript export → `js/karl-blocks.js` (the transcribed panel inventory
-  and the `UNRESOLVED` shape rules), `js/karl-transcript.js` (the pure builder —
+- Karl transcript export → `js/karl/karl-blocks.js` (the transcribed panel inventory
+  and the `UNRESOLVED` shape rules), `js/karl/karl-transcript.js` (the pure builder —
   every judgement about what an editor is told lives there and only there),
-  `js/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
+  `js/karl/karl-transcript-panel.js`, `build_scripts/export-karl-transcript.js`.
   Re-run `bun run validate` after any of them: `findUnmappedSections` gates on it.
 - Styles → `css/styles.css`; design tokens → `css/theme.css`.
 - Docs linting and link checking → `build_scripts/lint-docs.js` (markdownlint,
