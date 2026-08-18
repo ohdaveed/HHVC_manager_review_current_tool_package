@@ -112,7 +112,7 @@ only 2 types documented publicly) in favor of the 4-type claim.
 
 ---
 
-### Summary
+## Summary
 
 - Fully resolved: items 1, 4, 5, 6, 7, 8.
 - Corrects a prior wrong assumption (not just fills a gap): item 2 —

@@ -140,7 +140,7 @@ Getting this list wrong is worse than doing nothing, because the deletions are s
 
 - **Documented conventions.** Covered above, and worth repeating: the project's stated style wins.
 - **Comments explaining _why_.** "Uses X because Y breaks under Z" is the highest-value comment there is and the hardest to reconstruct once gone. Comments restating _what_ the code does are fair game.
-- **Bug archaeology.** "This looks redundant but removing it caused <specific failure>" is a warning left by someone who paid for the knowledge.
+- **Bug archaeology.** "This looks redundant but removing it caused `<specific failure>`" is a warning left by someone who paid for the knowledge.
 - **Defensive code that looks unreachable.** A guard for a case that "can't happen" may be why it doesn't. Trace it before cutting.
 - **Deliberate duplication.** Sometimes two copies exist because a module boundary prevents sharing — CommonJS/ESM, browser/server, a schema mirrored across a network boundary. The fix is a test pinning them together, not a merge that breaks the boundary.
 - **Domain-required repetition.** Legal, safety, accessibility and regulatory text is often repetitive by requirement. Do not tighten it without asking.

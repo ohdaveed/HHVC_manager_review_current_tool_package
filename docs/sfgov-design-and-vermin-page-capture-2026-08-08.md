@@ -67,7 +67,7 @@ deliberately literal for reasons documented in `css/styles.css`.
 
 The live page is a single omnibus document. Its heading tree is:
 
-```
+```text
 Keeping your building free of vermin
 ├── Building owner responsibilities
 │   ├── Preventing vermin  → Rodents / Bed Bugs / Pigeons / Mosquitoes
@@ -206,7 +206,7 @@ generic 30-day correction window"). The live page supplies a different, citable
 
 ## Rerun inputs
 
-```
+```yaml
 workflow: firecrawl-website-design-clone
 source_url: https://www.sf.gov/information--keeping-your-building-free-vermin
 output: docs/sfgov-design-and-vermin-page-capture-2026-08-08.md

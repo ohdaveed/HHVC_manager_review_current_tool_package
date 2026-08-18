@@ -872,7 +872,7 @@ for the client team and cite governance docs by section number. Keep them accura
 when editing copy. Page copy itself is plain-language, ~Grade 6, tenant-facing,
 empathetic civic writing.
 
-### Local persistence (browser-first; optional server sync layered on top)
+### Local persistence
 
 All reviewer state (decisions, notes, edited SEO fields, workspace UI prefs)
 is saved client-side under the versioned `localStorage` key
@@ -1110,7 +1110,7 @@ and never sees a driver or a SQL string.
 
 ### Deploying — Railway is the live host
 
-**https://web-production-9bb3b.up.railway.app** is the deploy reviewers open.
+**<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
 Railway project `hhvc-manager-review`, service `web`, connected to `main`, so a
 merge redeploys. Config lives in `railway.json`: build `bun run build:netlify`,
 start `bun run serve`.

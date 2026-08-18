@@ -149,7 +149,7 @@ that can replace the "entirely unverified" placeholder in
 
 ---
 
-### Summary
+## Summary
 
 - Moved to `[x] doc-confirmed` in `wagtail-content-mapping.md`: **items 1,
   2, 11** (Data story, Event).

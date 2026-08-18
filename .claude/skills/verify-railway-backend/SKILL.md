@@ -15,7 +15,7 @@ up, configured, and reachable. That gap is what this skill closes.
 
 **Status as of 2026-08-15 — this replaces the 2026-08-07 finding.** The
 deployment now exists and is live at
-**https://web-production-9bb3b.up.railway.app** (Railway project
+**<https://web-production-9bb3b.up.railway.app>** (Railway project
 `hhvc-manager-review`, service `web`, connected to `main`; `railway.json` is
 committed). The API authorization layer is **configured**: an unauthenticated
 `GET /api/review-state` answers **401**, not the 501 it returned while

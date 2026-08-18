@@ -177,7 +177,7 @@ Comments describing code that no longer exists.
 
 - ❌ "Tabs are numbered by the 1–9 shortcuts" when only six are bound → stale, fix it.
 - ✅ "This ran before X existed, so it must stay ordered before Y" → still true, keep.
-- ✅ "Removing this caused <specific failure>" → bug archaeology, always keep.
+- ✅ "Removing this caused `<specific failure>`" → bug archaeology, always keep.
 
 ## 9. Invented parallel scales
 
