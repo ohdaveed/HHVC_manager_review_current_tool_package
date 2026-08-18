@@ -89,6 +89,8 @@
     "format": "prettier --write .",
     "// format:check": "Checks files for formatting compliance with Prettier (acts as the project's linter)",
     "format:check": "prettier --check .",
+    "// check:links": "lychee over the same derived markdown set lint:docs uses, asking whether every link RESOLVES rather than whether it is shaped like a URL — the question findBrokenInlineLinks in build_scripts/data-checks.js has never asked. Local file links and their fragments are checked too, which is the cross-file half MD051 cannot see. Scheduled weekly by .github/workflows/link-check.yml and never gated per-PR: a third-party outage must not block a merge. Expects lychee on PATH.",
+    "check:links": "bun build_scripts/check-links.js",
     "// lint:anti-slop": "Runs the vendored anti-slop Oxlint plugin (tools/oxlint/anti-slop) over server.ts and build_scripts/ai/ ONLY, the two places holding decoded external input. The rules are written for TypeScript codebases; pointed at the browser JS they reported 280 findings, 254 of them no-runtime-typeof firing on the `typeof window === 'undefined'` guard this repo's code style mandates. The same scope is pinned in .oxlintrc.json's overrides, so an editor running bare oxlint sees it too. NOT wired into CI: a report to read, not a gate to pass",
     "lint:anti-slop": "oxlint server.ts build_scripts/ai",
     "// lint:architecture": "dependency-cruiser — the load-order and layering invariants AGENTS.md documents, as checks. server.ts is not cruised: dependency-cruiser needs a TypeScript compiler for it and this repo deliberately has no TS toolchain.",

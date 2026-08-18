@@ -1,0 +1,106 @@
+# Checks that every link in this repo's own markdown actually resolves.
+#
+# **Deliberately NOT part of `ci.yml`.** A third-party outage is not a reason a
+# merge cannot happen, and putting a link checker in the `checks` job would make
+# sf.gov's uptime a condition of shipping this repo. It runs weekly instead, and
+# on demand.
+#
+# **A scheduled workflow nobody watches is the same defect as a gate that cannot
+# fire**, so a failure opens an issue rather than turning one row of the Actions
+# tab red where no one is looking. The issue is titled by the run's own name, so
+# a second failure while the first is still open adds a comment instead of a
+# duplicate.
+#
+# What it catches that nothing else does: `findBrokenInlineLinks` in
+# `build_scripts/data-checks.js` validates internal page keys and the SHAPE of an
+# `http(s)` URL, never whether it answers. `docs/karl-export-field-map.md`'s
+# authority rests on its citations resolving, and a dead citation reads exactly
+# like a live one. It also checks LOCAL file links and their fragments, which is
+# the half markdownlint cannot do — MD051 validates a fragment against the file
+# it sits in and says nothing about a cross-file anchor into `AGENTS.md`.
+name: Link check
+
+on:
+  schedule:
+    # 07:00 UTC Monday — a weekday morning, so a failure is seen on a working day
+    # rather than aging over a weekend.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+# Read the tree, and open/comment on an issue when a link dies. Nothing else.
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    name: Check documentation links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      # A pinned release plus its published checksum, rather than the lychee
+      # action. The file list this checks is DERIVED (see
+      # build_scripts/docs-file-set.js), and the action takes globs — passing a
+      # computed list through an action input would mean either re-globbing here,
+      # which is the drift the derivation exists to prevent, or interpolating a
+      # step output into an args string, which is the shape GitHub's own guidance
+      # on workflow injection warns about. Downloading a version we name and
+      # verify is simpler than either.
+      - name: Install lychee
+        env:
+          LYCHEE_VERSION: lychee-v0.24.2
+          LYCHEE_SHA256: 73657a111819a30c47c08352896796f23d64e4eb2b3ed39b6d32149241566fc5
+        run: |
+          set -euo pipefail
+          archive="lychee-x86_64-unknown-linux-musl.tar.gz"
+          curl -sSLf -o "$archive" \
+            "https://github.com/lycheeverse/lychee/releases/download/${LYCHEE_VERSION}/${archive}"
+          echo "${LYCHEE_SHA256}  ${archive}" | sha256sum --check --status
+          tar -xzf "$archive"
+          install -m 0755 "lychee-x86_64-unknown-linux-musl/lychee" /usr/local/bin/lychee
+          lychee --version
+
+      # `tee` so the same output is both readable in the log and available as the
+      # issue body. `bun run` rather than lychee directly, so the scheduled run
+      # and a local `bun run check:links` check the same files with the same flags.
+      #
+      # `shell: bash` is load-bearing, not decoration. A `run:` step's default
+      # shell is `bash -e`, which does NOT set pipefail, so the exit status of
+      # `lychee | tee` would be tee's — always 0 — and every broken link would
+      # pass silently. Naming the shell explicitly gets `-eo pipefail`.
+      - name: Check links
+        id: lychee
+        shell: bash
+        run: bun run check:links 2>&1 | tee lychee-report.txt
+
+      # Only on failure, and the body comes from a FILE rather than a shell
+      # string: the report contains URLs and server responses from third-party
+      # sites, which is untrusted text that must never be interpolated into a
+      # command.
+      - name: Open or update the broken-links issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          title="Broken documentation links"
+          {
+            printf '%s\n\n' "The weekly link check found links that no longer resolve."
+            printf '%s\n\n' "Run: ${RUN_URL}"
+            printf '%s\n' '```'
+            cat lychee-report.txt
+            printf '%s\n' '```'
+          } > issue-body.md
+          existing="$(gh issue list --state open --search "$title in:title" \
+            --json number,title --jq "map(select(.title == \"$title\")) | .[0].number // empty")"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file issue-body.md
+          else
+            gh issue create --title "$title" --body-file issue-body.md --label documentation
+          fi
