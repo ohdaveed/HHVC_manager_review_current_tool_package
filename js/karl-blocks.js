@@ -1880,6 +1880,39 @@ const KARL_PANELS = {
   ],
 }
 
+/* **The ESM export block, and why it has to exist alongside the other two.**
+ *
+ * This module publishes three ways, which looks like belt-and-braces and is
+ * not. `window.karlBlocks` is how the browser's IIFE layers reach it;
+ * `module.exports` is how `build_scripts/validate.js` and
+ * `build_scripts/karl-vocabulary.js` `require()` it from Node; and these named
+ * ESM exports are what `js/karl-guide-registry.js` imports.
+ *
+ * That third one was missing, and the failure is worth recording because
+ * nothing caught it. `bun run build` worked, because Vite's CommonJS plugin
+ * synthesises named exports from `module.exports` at build time. `bun run test`
+ * worked, because Bun's own CJS/ESM interop does the same. `bun run test:e2e`
+ * worked, because it runs `bun run start` — the BUILT bundle. Only
+ * `bun run dev`, which serves this file to the browser unbundled, actually
+ * asked the module for an export named `PROMOTE_PANEL`, and got a SyntaxError
+ * that killed the whole module graph on page load.
+ *
+ * So the dev server was broken while every gate stayed green. Keep all three
+ * publishing forms in step: adding a name below without adding it here brings
+ * the same failure back, in the same place, with the same silence.
+ */
+export {
+  KARL_PANELS,
+  KARL_NAV,
+  KARL_FLAGS,
+  PROMOTE_PANEL,
+  UNRESOLVED,
+  breadcrumbFor,
+  matchesSection,
+  panelByRawName,
+  panelsFor,
+}
+
 if (typeof window !== 'undefined') {
   window.karlBlocks = {
     KARL_PANELS,
