@@ -16,13 +16,21 @@ function getPageScriptPaths() {
   const pageFiles = fg
     .sync('pages/*.js', { cwd: root, onlyFiles: true })
     .sort((a, b) => a.localeCompare(b))
-  return [...pageFiles, 'js/page-data.js']
+  return [...pageFiles, 'js/core/page-data.js']
 }
 
 /**
- * Return repo-relative paths for all js/*.js modules (excluding
- * js/vendor/*.js third-party files, which fast-glob's single-star pattern
- * naturally skips since it doesn't recurse into subdirectories).
+ * Return repo-relative paths for js/*.js modules. Unused by any caller today
+ * (`getPageScriptPaths` below is the one every build/test script imports),
+ * kept for parity with that sibling function.
+ *
+ * The third-party-vendor exclusion this comment used to describe (a
+ * `js/vendor/` directory of committed IIFE bundles) is gone along with the
+ * directory itself — third-party libraries are npm imports Vite bundles now.
+ * What the single-star pattern actually skips today is this repo's own nine
+ * feature folders: every module that used to sit directly in `js/` moved
+ * into `js/core/`, `js/review/`, etc. during the file-structure migration, so
+ * this glob now matches only `js/main.js`.
  * @returns {string[]}
  */
 function getJsScriptPaths() {
@@ -48,7 +56,7 @@ const SIDE_EFFECT_IMPORT = /^import\s+'[^']+'\s*$/gm
  *
  * `pages/*.js` are still plain scripts — each one assigns its page object
  * onto `window.HHVC_PAGES` and imports nothing — so they run in a vm
- * context unchanged. `js/page-data.js` is the exception: as an ES module it
+ * context unchanged. `js/core/page-data.js` is the exception: as an ES module it
  * now opens with one side-effect import per page file, and `vm.runInContext`
  * evaluates as a script, where `import` is a syntax error.
  *

@@ -1,9 +1,9 @@
-// Pure logic for the reviewer-managed page registry (js/page-registry-data.js):
+// Pure logic for the reviewer-managed page registry (js/core/page-registry-data.js):
 // validating a page a reviewer authored in the browser, and applying a stored
 // registry onto live page data.
 //
 // No DOM and no localStorage — the module is dual-exported like
-// js/review-merge.js and js/plain-language.js, so it is require()'d directly.
+// js/review/review-merge.js and js/standards/plain-language.js, so it is require()'d directly.
 //
 // The bucket that matters most here is applyRegistryToData. It runs on the boot
 // path at the root of the module graph, reading a blob that NOTHING upstream has
@@ -28,9 +28,9 @@ const {
   readRegistry,
   slugify,
   validateNewPage,
-} = require('../js/page-registry-data.js')
+} = require('../js/core/page-registry-data.js')
 const { pageSchema } = require('../build_scripts/schema.js')
-const { restoreOrderIndex } = require('../js/page-registry-data.js')
+const { restoreOrderIndex } = require('../js/core/page-registry-data.js')
 
 /** A minimal valid form submission, spread-and-overridden per test. */
 function formInput(overrides) {
@@ -70,7 +70,7 @@ function addedEntry(overrides) {
 describe('REQUIRED_PAGE_FIELDS', () => {
   // The drift guard. build_scripts/schema.js is CommonJS and needs Zod, so the
   // browser restates its required-field list rather than importing it — the
-  // same trade js/review-state-validation.js makes for the review-record rules.
+  // same trade js/review/review-state-validation.js makes for the review-record rules.
   // This is what makes the restatement safe: add a seventh required field to
   // pageSchema without mirroring it and CI fails here, instead of the tool
   // happily creating pages that would be rejected by `bun run validate`.
@@ -377,7 +377,7 @@ describe('applyRegistryToData', () => {
     const pages = data.pages
     const order = data.order
     applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {})
-    // js/state.js exports these by reference and three other modules hold the
+    // js/core/state.js exports these by reference and three other modules hold the
     // same references, so only in-place mutation propagates.
     expect(data.pages).toBe(pages)
     expect(data.order).toBe(order)
@@ -545,7 +545,7 @@ describe('applyRegistryToData', () => {
 describe('countInboundLinks', () => {
   // This exists because the consequence is otherwise invisible. Once
   // pageData[card.target] stops resolving, cardDescription() in
-  // js/page-render.js falls through to the card's own authored `text` — exactly
+  // js/mockup/page-render.js falls through to the card's own authored `text` — exactly
   // the copy the card-inheritance work exists to prove can never publish. No
   // error, just a plausible paragraph appearing.
   function linkedData() {
@@ -836,7 +836,7 @@ describe('applyRegistryToData: reporting key collisions', () => {
   // Found in review. The same "a page already occupies this key" condition covers
   // a harmless idempotent re-apply AND an added key that has since become a real
   // authored page. Only the caller can tell them apart, so the result reports the
-  // keys rather than passing over them silently — js/page-registry.js filters
+  // keys rather than passing over them silently — js/core/page-registry.js filters
   // them against the authored-key set it captured at boot.
   test('reports a key already occupied by a page in `collided`, not `added`', () => {
     const data = liveData()

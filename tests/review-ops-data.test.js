@@ -1,4 +1,4 @@
-// Unit tests for the ops panel's diagnostics (js/review-ops-data.js).
+// Unit tests for the ops panel's diagnostics (js/review/review-ops-data.js).
 //
 // These are the functions that decide whether the panel tells an operator
 // their data is fine or that something needs removing, and one of them backs a
@@ -11,7 +11,7 @@ const {
   measureStorage,
   countRounds,
   buildOpsReport,
-} = require('../js/review-ops-data.js')
+} = require('../js/review/review-ops-data.js')
 
 describe('findOrphanedRecords', () => {
   test('reports records whose page key is not part of the site', () => {

@@ -1,6 +1,6 @@
 // Pure serialization boundary between stored plain-string/{text,...} page
 // values and @editorjs/editorjs's block-JSON OutputData. No DOM, no live
-// Editor.js instance — dual-exported like js/inline-content-edit-data.js so
+// Editor.js instance — dual-exported like js/editing/inline-content-edit-data.js so
 // this file is importable directly under Bun. The fixed-point round-trip
 // test at the bottom is Phase 1's highest-value coverage per the approved
 // integration plan: a non-idempotent adapter would silently corrupt content
@@ -20,7 +20,7 @@ const {
   ITEM_FIELD_TYPES,
   isItemFieldType,
   isMarkdownFieldType,
-} = require('../js/inline-content-edit-adapter.js')
+} = require('../js/editing/inline-content-edit-adapter.js')
 
 describe('FIELD_TYPES', () => {
   test('splits into exactly the five scalar and two item field kinds', () => {
@@ -182,7 +182,7 @@ describe('plainTextToEditingHtml', () => {
 
   test('leaves ** and [label](target) syntax as literal characters, unlike markdownToEditingHtml', () => {
     // title/summary/primaryCta/heading render through a bare escapeHtml()
-    // with no formatMarkdown() call (js/page-render.js:216,219,560,631), so
+    // with no formatMarkdown() call (js/mockup/page-render.js:216,219,560,631), so
     // these four fields never interpret this syntax — a literal "**bold**"
     // authored in a title is meant to display as literal asterisks, not
     // become a <b> tag while editing.
@@ -278,7 +278,7 @@ describe('editorDataToPageValue', () => {
 
   test('a scalar field strips a real <b> tag to plain text rather than encoding **bold**', () => {
     // Defense-in-depth: the UI disables the inline toolbar for scalar
-    // fields (js/inline-content-edit.js's openEditorJsEditor), but a paste
+    // fields (js/editing/inline-content-edit.js's openEditorJsEditor), but a paste
     // can still introduce a <b> tag into the block HTML regardless of
     // toolbar availability. The renderer has no formatMarkdown() call for
     // these four fields, so the correct outcome is the same either way —
@@ -358,7 +358,7 @@ describe('fixed-point round trip: editorDataToPageValue(pageValueToEditorData(x)
 
     /**
      * Unwrap a paragraph/bullet item to its plain text, mirroring
-     * readScalarValue's own unwrapping (js/inline-content-edit.js:59-66) —
+     * readScalarValue's own unwrapping (js/editing/inline-content-edit.js:59-66) —
      * pageValueToEditorData's contract takes the plain string a caller has
      * already unwrapped, not the raw {text,...} object.
      * @param {string|{text: string}} item

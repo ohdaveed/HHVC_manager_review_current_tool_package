@@ -1,9 +1,9 @@
 /**
  * A module that is named-imported must actually declare those ESM exports.
  *
- * **Why this exists, and why nothing else catches it.** `js/karl-blocks.js`
+ * **Why this exists, and why nothing else catches it.** `js/karl/karl-blocks.js`
  * published only `window.karlBlocks` and `module.exports`, while
- * `js/karl-guide-registry.js` did `import { PROMOTE_PANEL } from
+ * `js/karl/karl-guide-registry.js` did `import { PROMOTE_PANEL } from
  * './karl-blocks.js'`. In a browser that is a hard `SyntaxError` — "does not
  * provide an export named 'PROMOTE_PANEL'" — and it killed the entire module
  * graph on page load, so `bun run dev` served a dead page.

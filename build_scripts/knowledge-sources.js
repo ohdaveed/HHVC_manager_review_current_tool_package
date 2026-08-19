@@ -12,7 +12,7 @@
 //
 // The same shape of gap survived that fix and was closed on 2026-08-16: the
 // HHVC Web Governance and Content Standards Manual lives in `notebooklm/`, so
-// the manual `js/plain-language.js` cites by section number for every scored
+// the manual `js/standards/plain-language.js` cites by section number for every scored
 // rule was the one document a compliance audit could not quote back.
 //
 // **Category is the whole point of this file.** Every chunk carries one, it is
@@ -98,7 +98,7 @@ const EXTERNAL_SOURCE_FILES = [
   { path: 'docs/karl-live-admin-verification-2026-07-06.md', category: 'karl' },
   // **The single largest gap this list existed to have.** The HHVC Web
   // Governance and Content Standards Manual v2.1 is the authority
-  // `js/plain-language.js` cites by section number for every scored
+  // `js/standards/plain-language.js` cites by section number for every scored
   // `severity: 'error'` rule (§7.x, and §6.3 for the Karl Button component),
   // and it was not in the corpus at all — so `compliance-audit` was grounding
   // findings in Health Code extracts and IPM guidance while the document that

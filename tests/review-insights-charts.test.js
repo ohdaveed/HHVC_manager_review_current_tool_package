@@ -1,4 +1,4 @@
-// Unit tests for the ECharts option builders (js/review-insights-charts.js).
+// Unit tests for the ECharts option builders (js/review/review-insights-charts.js).
 //
 // The option objects are plain data, and their tooltip `formatter` functions
 // are plain functions, so the security-relevant behaviour can be asserted
@@ -13,7 +13,7 @@
 // needs attention. The checks ranking is now plain markup, so its escaping is
 // asserted in tests/review-insights-render.test.js instead.
 const { describe, test, expect } = require('bun:test')
-const { activityOption } = require('../js/review-insights-charts.js')
+const { activityOption } = require('../js/review/review-insights-charts.js')
 
 /** Minimal stand-in for readTheme()'s output. */
 const THEME = {

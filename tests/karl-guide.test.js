@@ -14,8 +14,8 @@
 // PR #153, every one of them a context resolving to a plausible neighbouring
 // field. Each is pinned below by the page type and role that produced it.
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import { BUTTON_HOSTS, ROLE_PANELS, guideForContext } from '../js/karl-guide-registry.js'
-import { renderKarlGuidePanel } from '../js/karl-tag-meta.js'
+import { BUTTON_HOSTS, ROLE_PANELS, guideForContext } from '../js/karl/karl-guide-registry.js'
+import { renderKarlGuidePanel } from '../js/mockup/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
 
@@ -260,7 +260,7 @@ describe('Escape closes the guide from anywhere inside it', () => {
   let wrapper
 
   beforeEach(async () => {
-    const { initKarlGuides } = await import('../js/karl-guide.js')
+    const { initKarlGuides } = await import('../js/karl/karl-guide.js')
     initKarlGuides()
     wrapper = document.createElement('span')
     wrapper.className = 'karl-guide'

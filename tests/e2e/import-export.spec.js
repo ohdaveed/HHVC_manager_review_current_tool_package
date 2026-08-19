@@ -162,7 +162,7 @@ test.describe('review import/export through the UI', () => {
 
     page.on('dialog', (dialog) => dialog.accept())
     await page.click('#clearSavedLocalReviews')
-    /* Clearing RELOADS the page (js/ux-improvements-export.js), so everything
+    /* Clearing RELOADS the page (js/review/ux-improvements-export.js), so everything
        after this click runs against a document being rebuilt from scratch.
        Wait for the app to actually boot before reading anything.
 

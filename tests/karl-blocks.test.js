@@ -1,5 +1,5 @@
 /*
- * The drift guard for js/karl-blocks.js.
+ * The drift guard for js/karl/karl-blocks.js.
  *
  * That file is transcribed by hand from a 930-line prose document that keeps
  * changing, and silent drift means an editor is told to type into a field that
@@ -25,7 +25,7 @@ const {
   UNRESOLVED,
   matchesSection,
   panelsFor,
-} = require('../js/karl-blocks.js')
+} = require('../js/karl/karl-blocks.js')
 const { PAGE_TYPES } = require('../build_scripts/schema.js')
 
 const FIELD_MAP_PATH = path.resolve(__dirname, '..', 'docs', 'karl-export-field-map.md')

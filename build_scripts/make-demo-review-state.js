@@ -35,7 +35,7 @@
 
 const path = require('path')
 const fs = require('fs')
-const { mergeReviewRecord } = require('../js/review-merge.js')
+const { mergeReviewRecord } = require('../js/review/review-merge.js')
 const { loadPageData } = require('./load-pages.js')
 
 const REVIEWER = 'M. Chen'

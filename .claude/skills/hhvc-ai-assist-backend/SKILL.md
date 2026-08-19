@@ -208,7 +208,7 @@ by default, failing closed.
   and unioning the broken targets closes that with no duplicated traversal.
 - **Validation is the feature.** `build_scripts/ai/validate-output.js` runs a
   generated page through `build_scripts/schema.js`,
-  the `data-checks.js` invariants, and `js/plain-language.js`'s mandates — then
+  the `data-checks.js` invariants, and `js/standards/plain-language.js`'s mandates — then
   names the failures back to the model for exactly one retry. Results always
   return 200 with issues attached, since a draft failing one rule still helps a
   reviewer who can see which rule.
