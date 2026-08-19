@@ -1171,7 +1171,7 @@ ol li {
 /* =========================================================================
    Add / delete page controls (sidebar)
    =========================================================================
-   Chrome for js/page-registry-ui.js's half that lives in the sidebar, under
+   Chrome for js/core/page-registry-ui.js's half that lives in the sidebar, under
    the page picker: the two action buttons and the new-page form.
 
    The Help tab's "Pages added and deleted" list is styled in css/dashboard.css

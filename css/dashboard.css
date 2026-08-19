@@ -450,7 +450,7 @@
    it cost real information: `Blocked` and `Revise and resubmit` both drew
    as `fail`, and `Needs review` and `Approved with edits` both as `warn`,
    so a queue of five states rendered as three colours. See
-   getDecisionChipClass() in js/utils.js for why those two pairs are the
+   getDecisionChipClass() in js/core/utils.js for why those two pairs are the
    ones that matter. */
 
 .status-chip {
@@ -601,7 +601,7 @@
 }
 
 /* -------------------------------------------------------------------------
-   "Pages added and deleted" (js/page-registry-ui.js)
+   "Pages added and deleted" (js/core/page-registry-ui.js)
    -------------------------------------------------------------------------
    The Help-tab half of the add/delete-page feature. Its sidebar half is styled
    in css/ux-improvements.css; the split is by surface rather than by feature,

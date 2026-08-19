@@ -18,7 +18,7 @@
 // the IIFE reads at mount time, then assert against what it published).
 const { describe, test, expect, beforeEach, afterEach, spyOn } = require('bun:test')
 const path = require('path')
-const realUtils = require('../js/utils.js')
+const realUtils = require('../js/core/utils.js')
 const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/review/ux-improvements-state-sync.js')
@@ -256,7 +256,7 @@ describe('applySavedPageState section_edits follow-up render', () => {
       // changed since the first reapply already wrote it), and
       // applyContentEditsToPageData reports true whenever a path resolves,
       // not only when the value actually changed (see setByPath in
-      // js/utils.js) — so the guard, not this return value, is what has to
+      // js/core/utils.js) — so the guard, not this return value, is what has to
       // stop the recursion.
       applyReturns: true,
     })

@@ -15,7 +15,7 @@
 //
 // All three modules under test are self-mounting IIFEs with no
 // module.exports (js/review/manager-review-export.js is an ES module with real
-// `import`s from js/state.js; the other two read window.utils/window.reviewState
+// `import`s from js/core/state.js; the other two read window.utils/window.reviewState
 // at mount time), so each test builds a fresh window via dynamic import()
 // with a cache-busting query string -- the same pattern
 // tests/inline-content-edit-refresh.test.js and
@@ -26,9 +26,9 @@
 // agree on the field name.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
-const realUtils = require('../js/utils.js')
+const realUtils = require('../js/core/utils.js')
 const realReviewMerge = require('../js/review/review-merge.js')
-const { pageData: REAL_PAGE_DATA } = require('../js/state.js')
+const { pageData: REAL_PAGE_DATA } = require('../js/core/state.js')
 
 const MANAGER_REVIEW_EXPORT_PATH = path.resolve(__dirname, '../js/review/manager-review-export.js')
 const UX_IMPROVEMENTS_EXPORT_PATH = path.resolve(
@@ -53,7 +53,7 @@ afterEach(() => {
  * Build a single-page HHVC_DATA fixture. Both the edited-in-browser page
  * object (page.title/page.summary, what a click-to-edit session mutates
  * live per Task 6) and the ORIGINAL_DATA pristine copy are included, since
- * js/state.js's module graph expects both.
+ * js/core/state.js's module graph expects both.
  */
 function buildData(overrides = {}) {
   const page = {
@@ -74,10 +74,10 @@ function buildData(overrides = {}) {
  * Mount js/review/manager-review-export.js against a real happy-dom document with
  * the sidebar input fields it reads.
  *
- * js/state.js is a real, non-cache-busted `import` from
+ * js/core/state.js is a real, non-cache-busted `import` from
  * js/review/manager-review-export.js -- Bun's ESM loader evaluates a given module
  * path exactly once per process, so by the time this test file runs,
- * js/state.js has already been evaluated by an earlier test file's own
+ * js/core/state.js has already been evaluated by an earlier test file's own
  * import chain (module graphs across this repo's own suite pull it in
  * transitively) against the REAL window.HHVC_DATA the happy-dom preload
  * built from pages/*.js. Its `currentPageKey`/`pageData` bindings are
@@ -242,7 +242,7 @@ async function mountReviewQueueImport({ savedPages = {} } = {}) {
  * window.utils.downloadFile afterward does not intercept either call --
  * confirmed empirically (both such attempts failed with capturedCsv still
  * null). URL.createObjectURL is the one seam every path shares regardless of
- * import style, since js/utils.js's downloadBlob() always routes through it.
+ * import style, since js/core/utils.js's downloadBlob() always routes through it.
  * @param {() => void} triggerExport
  * @returns {Promise<string>} the exported CSV text
  */

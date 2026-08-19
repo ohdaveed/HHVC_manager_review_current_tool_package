@@ -4,7 +4,7 @@
    js/review-queue*.js (all load after this file) can read/write the same
    hhvcManagerReviewState:v1 blob via window.reviewState. */
 
-import { hasValidPageData } from '../utils.js'
+import { hasValidPageData } from '../core/utils.js'
 ;(function mountReviewStateStore() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA)) return

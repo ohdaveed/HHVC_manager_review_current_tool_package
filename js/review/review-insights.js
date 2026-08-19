@@ -29,7 +29,7 @@
    the end of its own render. That call is optional-chained, so the ordering is
    a performance detail rather than a correctness one. */
 
-import { escapeHtml } from '../utils.js'
+import { escapeHtml } from '../core/utils.js'
 
 // js/review/review-insights-data.js is a dual-export module (window.ReviewInsights.data
 // plus module.exports, no DOM dependency — see its header) so it stays

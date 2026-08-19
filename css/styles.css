@@ -486,7 +486,7 @@ a:focus {
 
      font-size is --ds-text-label for the same reason: this selector's own
      consumers (js/ai/ai-assist-render.js, js/review/dashboard-guidance.js,
-     js/page-registry-ui.js, js/review/ux-improvements-export.js,
+     js/core/page-registry-ui.js, js/review/ux-improvements-export.js,
      js/sync/review-state-sync.js) are all review-tool chrome, never mockup
      content -- it lives in this file because it is shared with the editor
      sidebar outside `#reviewWorkspace`, not because it describes the page
@@ -2039,7 +2039,7 @@ a:focus {
   border-color: var(--sfds-color-red-l3);
 }
 
-/* Added for "Delete this page" (js/page-registry-ui.js), which disables itself
+/* Added for "Delete this page" (js/core/page-registry-ui.js), which disables itself
    on the HHVC agency page and on the last remaining page rather than letting a
    reviewer click it and then be told no in a dialog. Without this rule a
    disabled `.tool-btn` kept its full solid-blue treatment and looked available

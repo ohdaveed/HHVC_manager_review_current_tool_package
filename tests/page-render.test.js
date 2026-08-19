@@ -4,14 +4,14 @@
 // regression the same shape as the one fixed in the workshop request form.
 import { describe, test, expect } from 'bun:test'
 
-// Importing js/mockup/page-render.js pulls in js/utils.js, js/mockup/karl-tag-meta.js and
-// js/state.js through the module graph — the same three files the old vm
+// Importing js/mockup/page-render.js pulls in js/core/utils.js, js/mockup/karl-tag-meta.js and
+// js/core/state.js through the module graph — the same three files the old vm
 // harness had to be handed explicitly, now resolved by the loader. The
 // happy-dom environment preloaded via bunfig.toml is what lets that chain
-// evaluate here, since js/state.js reads window.HHVC_DATA on import.
+// evaluate here, since js/core/state.js reads window.HHVC_DATA on import.
 import * as ctx from '../js/mockup/page-render.js'
-import { pageData } from '../js/state.js'
-import { escapeHtml } from '../js/utils.js'
+import { pageData } from '../js/core/state.js'
+import { escapeHtml } from '../js/core/utils.js'
 
 const PAYLOAD = `<script>alert('xss')</script>`
 const ESCAPED = `&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;`
@@ -1021,11 +1021,11 @@ describe('data-rewrite-field on the hero (title, summary, CTA)', () => {
 // publishes comes from the DESTINATION page. Before this, js/mockup/page-render.js
 // printed `card.text` verbatim, showing reviewers 12 descriptions that could
 // never appear on SF.gov. These pin the resolution rules in
-// js/card-inheritance.js against the renderer that now consumes them, since a
+// js/core/card-inheritance.js against the renderer that now consumes them, since a
 // silent regression here would put unpublishable copy back in front of a
 // manager with nothing to report it.
 describe('card description inheritance', () => {
-  // Matches INHERITS in js/card-inheritance.js. `scopeInfo` is a real page key,
+  // Matches INHERITS in js/core/card-inheritance.js. `scopeInfo` is a real page key,
   // so pageData resolves it and its own summary is what must render.
   const inheritsSection = { heading: 'Services', karl: 'Services subsection: page chooser' }
   const titleOnlySection = { heading: 'Related', karl: 'Related panel: linked pages' }

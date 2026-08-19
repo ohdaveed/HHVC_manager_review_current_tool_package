@@ -30,7 +30,7 @@ page. Copy the nearest existing page of the same content type and change it;
 that is faster and safer than writing one from scratch, and it keeps the house
 voice. A new file needs two more edits or the page silently disappears:
 
-1. `import '../pages/<your-file>.js'` in `js/page-data.js`
+1. `import '../pages/<your-file>.js'` in `js/core/page-data.js`
 2. a `[pageKey, menuLabel]` entry in that file's `order` array
 
 `bun run validate` fails if you forget the import, so you will find out
@@ -100,7 +100,7 @@ standards manual section behind each failure.
 
 **Read this before writing any section.** Every section carries a required
 `karl` string describing which Karl block it maps to. It is content, not
-commentary: `js/card-inheritance.js` reads the wording of that string to decide
+commentary: `js/core/card-inheritance.js` reads the wording of that string to decide
 whether a section's cards show their own text, only their title, or the
 destination page's title and summary.
 

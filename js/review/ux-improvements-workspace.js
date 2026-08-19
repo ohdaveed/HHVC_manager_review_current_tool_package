@@ -1,7 +1,7 @@
 /* Manager review: sticky bar, workspace tabs, and decision quick actions.
    Loads after js/review/ux-improvements-state-sync.js. */
 
-import { hasValidPageData } from '../utils.js'
+import { hasValidPageData } from '../core/utils.js'
 ;(function mountUxImprovementsWorkspace() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState || !window.ReviewUx?.stateSync) return
@@ -26,7 +26,7 @@ import { hasValidPageData } from '../utils.js'
   /* Every decision EXCEPT the undecided default needs a reviewer name against
      it — a recorded judgement with nobody attached to it is the one state the
      record cannot explain later. Derived from the canonical table in
-     js/utils.js rather than listing the other four, which is the same list
+     js/core/utils.js rather than listing the other four, which is the same list
      under a different name and goes stale the moment a decision is added: a
      new label would silently be treated as not needing a reviewer. */
   const REVIEWER_REQUIRED_DECISIONS = new Set(

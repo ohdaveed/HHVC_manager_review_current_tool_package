@@ -1,7 +1,7 @@
 // Manager review package additions. Runs locally in the browser only.
-// Depends on js/utils.js (csvEscape via toCsv, today, downloadFile,
+// Depends on js/core/utils.js (csvEscape via toCsv, today, downloadFile,
 // defaultSeoTitle, defaultMetaDescription, setText, getPrimaryCta,
-// buildReviewRecord), js/state.js, js/review/ui-controls.js (showToast), and
+// buildReviewRecord), js/core/state.js, js/review/ui-controls.js (showToast), and
 // js/mockup/page-render.js (renderPage, which this file wraps).
 
 import {
@@ -12,8 +12,8 @@ import {
   setText,
   toCsv,
   today,
-} from '../utils.js'
-import { currentPageKey, pageData, pageOrder } from '../state.js'
+} from '../core/utils.js'
+import { currentPageKey, pageData, pageOrder } from '../core/state.js'
 import { showToast } from './ui-controls.js'
 ;(function initManagerReviewExport() {
   const MANAGER_REVIEW_RECORD_FIELDS = [

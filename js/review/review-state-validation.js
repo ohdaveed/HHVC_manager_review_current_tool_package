@@ -6,13 +6,13 @@
 // tests/review-state-schema.test.js, which side-effect-imports this file on its
 // own, gets it too. Safe to import here (unlike js/review/review-insights-data.js):
 // this module publishes only onto `window` and nothing `require`s it.
-import { DECISION_LABELS } from '../utils.js'
+import { DECISION_LABELS } from '../core/utils.js'
 ;(function initReviewStateValidation() {
   if (typeof window === 'undefined') return
 
   const STORAGE_VERSION = 1
 
-  // From the canonical decision table in js/utils.js. The Node-side mirror of
+  // From the canonical decision table in js/core/utils.js. The Node-side mirror of
   // this validator (build_scripts/review-state-schema.js) keeps its own copy —
   // it is CommonJS and cannot reach a browser ES module — and
   // tests/decision-vocabulary.test.js pins the two together.

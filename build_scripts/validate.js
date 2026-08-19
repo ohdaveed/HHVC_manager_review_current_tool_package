@@ -26,18 +26,18 @@ const { findPageImports, findPageImportDrift } = require('./page-import-checks')
 // page silently disappears from the tool. Vite catches the opposite case (an
 // import naming a file that does not exist) as a build error, but not this
 // one — see build_scripts/page-import-checks.js.
-const pageFilesOnDisk = getPageScriptPaths().filter((file) => file !== 'js/page-data.js')
-const pageDataSource = fs.readFileSync(path.join(root, 'js/page-data.js'), 'utf8')
+const pageFilesOnDisk = getPageScriptPaths().filter((file) => file !== 'js/core/page-data.js')
+const pageDataSource = fs.readFileSync(path.join(root, 'js/core/page-data.js'), 'utf8')
 const importDrift = findPageImportDrift(pageFilesOnDisk, findPageImports(pageDataSource))
 if (importDrift.missingFromImports.length) {
   throw new Error(
-    'pages/*.js file(s) never imported by js/page-data.js: ' +
+    'pages/*.js file(s) never imported by js/core/page-data.js: ' +
       importDrift.missingFromImports.join(', ')
   )
 }
 if (importDrift.missingFromDisk.length) {
   throw new Error(
-    'js/page-data.js imports pages/*.js file(s) that no longer exist: ' +
+    'js/core/page-data.js imports pages/*.js file(s) that no longer exist: ' +
       importDrift.missingFromDisk.join(', ')
   )
 }

@@ -84,7 +84,7 @@
 
   /**
    * Derive a page key from a slug, matching the camelCase convention in
-   * js/page-data.js. Only used to name the downloaded module — the reviewer
+   * js/core/page-data.js. Only used to name the downloaded module — the reviewer
    * renames it if they disagree.
    * @param {string} slug
    * @returns {string}

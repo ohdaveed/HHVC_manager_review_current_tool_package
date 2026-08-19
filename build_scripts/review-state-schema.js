@@ -5,7 +5,7 @@ const { z } = require('zod')
 const STORAGE_VERSION = 1
 
 /**
- * **A restatement of `DECISIONS` in js/utils.js, and one of only two left in
+ * **A restatement of `DECISIONS` in js/core/utils.js, and one of only two left in
  * the repo.** It cannot import that table: this file is CommonJS and is loaded
  * by server.ts, so reaching into a browser ES module would pull the whole
  * browser utils graph into the server's dependency tree.

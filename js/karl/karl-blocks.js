@@ -18,7 +18,7 @@
    leave a hole the editor discovers when Karl refuses to save.
 
    Dual-exported (window.karlBlocks plus module.exports) exactly like
-   js/card-inheritance.js and js/review/review-merge.js: the browser panel and the Node
+   js/core/card-inheritance.js and js/review/review-merge.js: the browser panel and the Node
    CLI must share one inventory rather than two copies free to come to disagree
    about which field an editor is being sent to.
 
@@ -62,13 +62,13 @@
  *
  * `cardClass` is PASSED IN rather than derived here, so this module keeps its
  * "imports nothing, reads no global" property and the classification stays the
- * single one in js/card-inheritance.js. Re-deriving it here would be a second
+ * single one in js/core/card-inheritance.js. Re-deriving it here would be a second
  * copy of the rule that decides whether a card publishes its own words — the
  * exact drift that classifier exists to prevent.
  *
  * @param {Match} match
  * @param {object} section
- * @param {string|null} cardClass the js/card-inheritance.js classification
+ * @param {string|null} cardClass the js/core/card-inheritance.js classification
  * @returns {boolean}
  */
 function matchesSection(match, section, cardClass) {

@@ -864,9 +864,9 @@
    * makes "empty on the server" mean "back to the original," which is what
    * it means on the server.
    *
-   * ORIGINAL_DATA is published onto `window` by js/state.js and read from
+   * ORIGINAL_DATA is published onto `window` by js/core/state.js and read from
    * there rather than imported, deliberately. A static import would make
-   * this module depend on js/state.js, which pulls in js/page-data.js and
+   * this module depend on js/core/state.js, which pulls in js/core/page-data.js and
    * all 19 pages/*.js — and would also make the guard below dead, since an
    * imported binding always exists. The Node unit tests for this file mount
    * it against a minimal fake window with no page data at all, and the

@@ -4,7 +4,7 @@
  * Two tools need this list — `build_scripts/lint-docs.js` (markdownlint) and
  * `build_scripts/check-links.js` (lychee) — and a second copy of it would be
  * free to drift from the first. That is the same argument `js/review/review-merge.js`
- * and `js/card-inheritance.js` make for being dual-exported rather than
+ * and `js/core/card-inheritance.js` make for being dual-exported rather than
  * reimplemented: two callers, one answer.
  *
  * **The list is derived, never written down.** The first version of the

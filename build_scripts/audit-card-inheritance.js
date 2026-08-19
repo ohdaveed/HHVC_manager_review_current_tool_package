@@ -105,7 +105,7 @@
  * question for a day: only the INTERNAL case had been checked live, and
  * deleting an external card's text on the strength of an internal finding would
  * have been the same mistake the TITLE_ONLY comment in
- * `js/card-inheritance.js` warns about ("Do not re-widen this from the docs
+ * `js/core/card-inheritance.js` warns about ("Do not re-widen this from the docs
  * alone"), merely pointed the other way. It was settled by a census of all 332
  * `departments--*` pages in `sf.gov/sitemap.xml`: 333 of the 363 entries whose
  * `href` leaves sf.gov render a `tile-description` of their own. An external
@@ -135,13 +135,13 @@
  */
 
 const { loadPageData } = require('./load-pages')
-// The classifier itself lives in js/card-inheritance.js so the renderer and
+// The classifier itself lives in js/core/card-inheritance.js so the renderer and
 // this audit read one copy of it. A second set of regexes here would let the
 // mockup show one thing while the audit asserted another, and nothing would
 // report the disagreement. See that file's header for the WHY behind each
 // bucket's regex; the WHY behind the three-bucket SPLIT stays above, because
 // it is this audit's own history.
-const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/card-inheritance')
+const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/core/card-inheritance')
 
 /**
  * Compare every internal card link against the page it points at, and check

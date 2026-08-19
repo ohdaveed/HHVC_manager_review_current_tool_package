@@ -1,9 +1,9 @@
 // General UI chrome: toasts, sidebar collapse/scroll persistence, the page
-// picker dropdown, and the review checklist. Depends on js/state.js
+// picker dropdown, and the review checklist. Depends on js/core/state.js
 // (escapeHtml, pageOrder, currentPageKey).
 
-import { currentPageKey, pageData, pageOrder } from '../state.js'
-import { escapeHtml } from '../utils.js'
+import { currentPageKey, pageData, pageOrder } from '../core/state.js'
+import { escapeHtml } from '../core/utils.js'
 /**
  * Show a transient toast, optionally with one action button.
  *
@@ -105,7 +105,7 @@ function buildPageSelect() {
   const select = document.getElementById('pageSelect')
   if (!select) return
   // The optgroups, and the prefix stripped off a menu label, are both derived
-  // from js/page-registry-data.js's ALLOWED_PAGE_TYPES rather than restated
+  // from js/core/page-registry-data.js's ALLOWED_PAGE_TYPES rather than restated
   // here. That module is the one place the five grouping types are declared —
   // it constrains the reviewer's new-page form to exactly them — and it loads
   // at js/main.js:97, before this file. Three copies of one enum is how the
@@ -141,11 +141,11 @@ function buildPageSelect() {
         /* The KEY is escaped too, not just the label. This used to be the one
            place in the codebase that interpolated a page key into innerHTML
            raw, which was safe only while every key was a hardcoded identifier
-           in a pages/*.js file. Reviewer-added pages (js/page-registry.js) put
+           in a pages/*.js file. Reviewer-added pages (js/core/page-registry.js) put
            keys in localStorage, where a hand-edited or imported blob can carry
            anything — so this now matches js/review/review-queue-render.js, which
            escapes its row keys at all three of its interpolation sites.
-           js/page-registry-data.js additionally constrains an added key to a
+           js/core/page-registry-data.js additionally constrains an added key to a
            bare identifier; this is the braces to that belt. */
         items
           .map(([k, l]) => '<option value="' + escapeHtml(k) + '">' + escapeHtml(l) + '</option>')
@@ -200,9 +200,9 @@ function applyChecklistState(key) {
      each is designed to degrade to silence rather than throw if the core
      failed to load, which an import would turn into a hard load-time failure.
 
-   `buildPageSelect` joins them for a different reason: js/page-registry.js has
+   `buildPageSelect` joins them for a different reason: js/core/page-registry.js has
    to rebuild the picker after adding or deleting a page, and cannot import it.
-   This module imports js/state.js, which imports js/page-registry.js, so an
+   This module imports js/core/state.js, which imports js/core/page-registry.js, so an
    import there would close the cycle. Reaching it through `window` keeps the
    dependency one-directional, and the optional call there degrades to "the
    picker is stale until the next load" rather than throwing.

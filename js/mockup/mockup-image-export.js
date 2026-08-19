@@ -17,7 +17,7 @@
    step through pages during a bulk export. */
 
 import { domToBlob } from 'modern-screenshot'
-import { downloadBlob, getCurrentKey, today } from '../utils.js'
+import { downloadBlob, getCurrentKey, today } from '../core/utils.js'
 
 /** What gets captured. The browser chrome frames the mockup the way a
     reviewer sees it, which reads better in a deck than a bare page. */
@@ -105,7 +105,7 @@ async function exportCurrentPage() {
  * so each page has to be rendered into it and captured before the next one
  * replaces it. Navigation goes through window.renderPage so the review layers'
  * decorators still run — a bulk export must not be a path that quietly skips
- * the autosave flush (see js/app.js's navigateTo for why that matters).
+ * the autosave flush (see js/core/app.js's navigateTo for why that matters).
  * @returns {Promise<{exported: number, failed: string[]}>}
  */
 async function exportAllPages() {

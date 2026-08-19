@@ -7,10 +7,10 @@
    tests/page-registry-data.test.js can require() it with no browser at all.
 
    LOAD ORDER: this file is evaluated in js/main.js's CORE block, pulled in
-   through js/page-registry.js, which js/state.js imports. That is MUCH earlier
+   through js/core/page-registry.js, which js/core/state.js imports. That is MUCH earlier
    than js/editing/inline-content-edit-data.js runs, and it is why this file must not
    copy that file's trick of resolving `window.utils.setByPath` at module scope:
-   js/utils.js is not guaranteed to have been evaluated yet. Everything here is
+   js/core/utils.js is not guaranteed to have been evaluated yet. Everything here is
    self-contained for that reason — including the five-line slugify, which
    duplicates nothing that exists elsewhere but would otherwise be the one thing
    tempting an import.
@@ -25,8 +25,8 @@
    applyRegistryToData() from hand-edited localStorage and from another
    reviewer's JSON backup as readily as from our own form, so this module
    re-validates every entry on the way in and DROPS what fails rather than
-   throwing. A throw here would be fatal: js/page-registry.js evaluates inside
-   js/state.js's subtree at the root of the module graph, so it would take every
+   throwing. A throw here would be fatal: js/core/page-registry.js evaluates inside
+   js/core/state.js's subtree at the root of the module graph, so it would take every
    later module with it and leave the reviewer looking at index.html's static
    "Loading…" placeholder with no UI left to remove the bad entry. */
 
@@ -34,7 +34,7 @@
    requires `pestsTopic` to exist AND to be first in `order`, and
    js/mockup/page-render.js renders a hardcoded data-render-target="pestsTopic" parent
    link on every other page. It is also the fallback in resolvePageKey(),
-   getCurrentKey(), js/state.js and js/app.js — so hiding it does not degrade
+   getCurrentKey(), js/core/state.js and js/core/app.js — so hiding it does not degrade
    the tool gracefully, it removes the floor everything else falls back to. */
 const PROTECTED_PAGE_KEYS = ['pestsTopic']
 
@@ -75,7 +75,7 @@ const REQUIRED_PAGE_FIELDS = ['slug', 'type', 'title', 'summary', 'audience', 'r
    keys that arrive through this module). */
 const PAGE_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/
 
-/* The three segments js/utils.js's getByPath/setByPath reject, plus every other
+/* The three segments js/core/utils.js's getByPath/setByPath reject, plus every other
    name inherited from Object.prototype.
 
    `__proto__` would not merely be odd: `pages[key] = value` walks onto
@@ -126,7 +126,7 @@ const SECTION_ARRAY_FIELDS = ['paragraphs', 'bullets', 'cards', 'table', 'steps'
 const MAX_FIELD_LENGTH = 2000
 
 /**
- * A deep clone, via JSON round-trip, matching js/state.js's ORIGINAL_DATA
+ * A deep clone, via JSON round-trip, matching js/core/state.js's ORIGINAL_DATA
  * clone rather than reaching for structuredClone — page objects are plain JSON
  * by construction (build_scripts/schema.js admits nothing else), and using the
  * same mechanism as the pristine snapshot means the two cannot disagree about
@@ -441,7 +441,7 @@ function isValidAddedEntry(key, entry) {
 /**
  * Apply a registry onto a live `{pages, order}` object, IN PLACE.
  *
- * In place is not a style choice. js/state.js exports `pageData`/`pageOrder` as
+ * In place is not a style choice. js/core/state.js exports `pageData`/`pageOrder` as
  * references to these very objects, and js/review/ui-controls.js,
  * js/mockup/page-render.js and js/review/manager-review-export.js hold the same references —
  * so `data.order = [...]` would update window.HHVC_DATA and leave three
@@ -510,7 +510,7 @@ function applyRegistryToData(data, registry, stash, canonicalOrder) {
        earlier, or an added key that has since become a real authored page in
        pages/*.js. The second is not harmless — the Help panel would present the
        authored page as reviewer-added, and Remove would delete it from the live
-       mockup. js/page-registry.js holds the authored-key set captured at boot
+       mockup. js/core/page-registry.js holds the authored-key set captured at boot
        and decides; see its handling of result.collided.
 
        hasOwn, not truthiness — an inherited name like `toString` is truthy here

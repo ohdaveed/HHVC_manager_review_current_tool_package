@@ -16,15 +16,15 @@
 ```text
 index.html -> js/main.js (CSS + modules)
   -> pages/*.js register window.HHVC_PAGES
-  -> js/page-data.js builds window.HHVC_DATA
-  -> js/mockup/page-render.js + js/app.js render mockup
+  -> js/core/page-data.js builds window.HHVC_DATA
+  -> js/mockup/page-render.js + js/core/app.js render mockup
   -> review IIFEs read/write localStorage (hhvcManagerReviewState:v1)
   -> optional: fetch /api/review-state* or /api/ai/* on server.ts (Bearer token)
   -> Netlify serves static dist/ only (no API)
 ```
 
 1. Vite bundles `js/main.js` and CSS into `dist/` (or single-file HTML).
-2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/page-data.js` sets `order` (20 entries) and deleted-key aliases.
+2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/core/page-data.js` sets `order` (20 entries) and deleted-key aliases.
 3. Core modules render the mockup and wire editor/sidebar controls from in-memory `pageData`.
 4. Review layers persist decisions/notes/edits in versioned `localStorage`; continuous autosave skips history; round boundaries go through `mergeReviewRecord`.
 5. If configured, browser sync client pushes/pulls per-page records to SQLite via `server.ts`; AI panel posts drafts to `/api/ai/generate` (validated, never written to disk as pages).
@@ -34,9 +34,9 @@ index.html -> js/main.js (CSS + modules)
 
 | Layer or module                                      | Owns                                                          | Must not own                                                         | Evidence                                        |
 | ---------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------- |
-| Page data (`pages/`, `page-data.js`)                 | Content objects + nav order                                   | Persistence, auth                                                    | `js/page-data.js`                               |
+| Page data (`pages/`, `page-data.js`)                 | Content objects + nav order                                   | Persistence, auth                                                    | `js/core/page-data.js`                          |
 | Core render (`page-render.js`, `app.js`, `state.js`) | DOM mockup, navigation, dirty/reset                           | Optional API                                                         | `js/mockup/page-render.js`                      |
-| Utils (`utils.js`)                                   | Escaping, `safeUrl`, decision vocabulary, review record shape | Feature UI ownership (some workspace helpers live here — noted debt) | `js/utils.js`, `AGENTS.md`                      |
+| Utils (`utils.js`)                                   | Escaping, `safeUrl`, decision vocabulary, review record shape | Feature UI ownership (some workspace helpers live here — noted debt) | `js/core/utils.js`, `AGENTS.md`                 |
 | Review UX / queue / insights / ops                   | localStorage review workflow                                  | Source-file mutation                                                 | `js/ux-improvements*.js`, `js/review-queue*.js` |
 | `review-merge.js`                                    | Merge precedence + history append                             | Transport                                                            | `js/review/review-merge.js`                     |
 | `server.ts` + `build_scripts/ai/`                    | Auth-gated sync + AI generation                               | Unauthenticated open access                                          | `server.ts`                                     |
@@ -63,7 +63,7 @@ index.html -> js/main.js (CSS + modules)
 ### 6) Evidence
 
 - `js/main.js`
-- `js/page-data.js`
+- `js/core/page-data.js`
 - `js/review/review-merge.js`
 - `server.ts`
 - `vite.config.mjs`

@@ -1,7 +1,7 @@
 // Coverage for the card-inheritance classifier and the audit built on top of it.
 //
 // Both halves needed pinning for the same reason, and it is not the usual one.
-// `js/card-inheritance.js` exists so that `js/mockup/page-render.js` and
+// `js/core/card-inheritance.js` exists so that `js/mockup/page-render.js` and
 // `build_scripts/audit-card-inheritance.js` cannot come to disagree about what
 // inherits — but a shared module only removes the disagreement between the two
 // CALLERS. It does nothing to stop the shared answer itself from changing, and
@@ -16,7 +16,12 @@
 // BEHAVIOUR — which bucket a row lands in, and which populations are counted
 // separately — and synthetic pages state that directly.
 const { describe, test, expect } = require('bun:test')
-const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/card-inheritance.js')
+const {
+  classifySection,
+  AUTHORED,
+  INHERITS,
+  TITLE_ONLY,
+} = require('../js/core/card-inheritance.js')
 const { auditCards } = require('../build_scripts/audit-card-inheritance.js')
 
 /** A karl note naming an Agency Services subsection — the `inherits` bucket. */

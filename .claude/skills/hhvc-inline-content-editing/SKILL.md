@@ -136,7 +136,7 @@ wiring into the existing autosave path).
   `docs/superpowers/specs/2026-08-08-inline-content-editing-design.md` for
   why render-position addressing would silently target the wrong section.
   Every write goes through the existing guarded `getByPath`/`setByPath`
-  (`js/utils.js`) — never a hand-rolled path walker — except title, summary,
+  (`js/core/utils.js`) — never a hand-rolled path walker — except title, summary,
   and CTA, which are page-level (not inside `sections[]`) and already have
   dedicated accessors (`getPrimaryCta`/`setPrimaryCta`, direct
   `page.title =`/`page.summary =`).

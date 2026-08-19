@@ -23,6 +23,6 @@ The current app has since expanded to include records lookup pages, fee pages, o
 ## Use instead
 
 - `README.md` for current app documentation
-- `js/page-data.js` for the ordered page registry
+- `js/core/page-data.js` for the ordered page registry
 - `pages/*.js` for public page mockup content
 - `review/*.csv` for manager-review export templates

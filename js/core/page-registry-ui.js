@@ -4,7 +4,7 @@
 
    A self-mounting IIFE in js/main.js's review/UX block, after
    js/review/dashboard-guidance.js — it reads window.pageRegistry (published by
-   js/page-registry.js in the core block) and talks to nothing else through
+   js/core/page-registry.js in the core block) and talks to nothing else through
    imports, matching every other layer here.
 
    TWO SURFACES, ON PURPOSE. The verbs live in the sidebar, directly under the
@@ -273,7 +273,7 @@
   /**
    * Enable or disable the delete button for whatever page is open.
    *
-   * pestsTopic is refused by js/page-registry.js regardless, but a button that
+   * pestsTopic is refused by js/core/page-registry.js regardless, but a button that
    * looks available and then explains itself in a dialog is worse than one that
    * says up front why it cannot be used.
    */

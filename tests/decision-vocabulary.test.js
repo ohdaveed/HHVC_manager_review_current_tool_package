@@ -1,6 +1,6 @@
 // Drift guard for the review decision vocabulary.
 //
-// `DECISIONS` in js/utils.js is the canonical table, and almost everything in
+// `DECISIONS` in js/core/utils.js is the canonical table, and almost everything in
 // the tool now derives from it — chip classes, queue-action slugs, chart
 // colours, the pre-zeroed tally, the browser-side validator. Two WHOLE-LIST
 // restatements survive, and neither is an oversight: both sit on the far side
@@ -38,7 +38,7 @@
 import { describe, test, expect } from 'bun:test'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { DECISIONS, DECISION_LABELS, DECISION_UNDECIDED } from '../js/utils.js'
+import { DECISIONS, DECISION_LABELS, DECISION_UNDECIDED } from '../js/core/utils.js'
 
 const { DECISION_ORDER } = require('../js/review/review-insights-data.js')
 const { VALID_DECISIONS } = require('../build_scripts/review-state-schema.js')
@@ -114,7 +114,7 @@ const FILES_WITH_DECISION_LITERALS = [
 
 /* Files whose decision-shaped literals are NOT decisions.
 
-   js/utils.js declares the canonical table, and js/review/review-insights-data.js
+   js/core/utils.js declares the canonical table, and js/review/review-insights-data.js
    restates it wholesale under its own assertion above — re-checking either
    here would be circular.
 
@@ -124,7 +124,7 @@ const FILES_WITH_DECISION_LITERALS = [
    words. Pinning them to DECISION_LABELS would invent a coupling that does
    not exist — rename the review decision and this file must NOT follow. */
 const NOT_THE_DECISION_VOCABULARY = new Set([
-  'js/utils.js',
+  'js/core/utils.js',
   'js/review/review-insights-data.js',
   'js/mockup/page-render.js',
 ])

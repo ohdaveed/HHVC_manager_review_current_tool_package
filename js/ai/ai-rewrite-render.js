@@ -10,7 +10,7 @@
    `renderPanel()` is a pure function of js/ai/ai-assist.js's state.
 
    Load-order dependency: needs `window.utils.escapeHtml`, so it loads after
-   js/utils.js. It must also load before js/ai/ai-rewrite.js, which reads
+   js/core/utils.js. It must also load before js/ai/ai-rewrite.js, which reads
    `window.AiRewrite.render` at mount time — see js/main.js's import list,
    directly after js/ai/ai-assist.js.
 

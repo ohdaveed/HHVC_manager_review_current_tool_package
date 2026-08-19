@@ -53,7 +53,7 @@ const {
 } = require('./helpers.js')
 
 // The default landing page (pestsTopic, the Agency page) has paragraph
-// sections but no bullet sections (js/page-data.js / pages/agency-service-grouping.js).
+// sections but no bullet sections (js/core/page-data.js / pages/agency-service-grouping.js).
 // scopeInfo (pages/hhvc-inspection-scope.js) has several section-level bullet
 // lists with 2+ items each, so the add/remove list tests navigate there
 // explicitly rather than assuming the default page carries list controls.

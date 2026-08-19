@@ -19,7 +19,7 @@
 
    Deliberately import-free, like js/editing/inline-content-edit-data.js: escaping
    and unescaping are reimplemented here rather than importing
-   js/utils.js's escapeHtml, so this module has no load-order dependency of
+   js/core/utils.js's escapeHtml, so this module has no load-order dependency of
    its own. */
 
 /**
@@ -68,7 +68,7 @@ const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'
 const HTML_UNESCAPES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" }
 
 /**
- * Escape the five HTML special characters, matching js/utils.js's
+ * Escape the five HTML special characters, matching js/core/utils.js's
  * escapeHtml exactly (character set and entity spelling) — not imported,
  * per this file's own import-free convention, but must stay in step with
  * it by inspection since both run over the same authored content.

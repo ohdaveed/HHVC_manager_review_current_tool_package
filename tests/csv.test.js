@@ -4,7 +4,7 @@ const {
   csvEscape: browserCsvEscape,
   toCsv: browserToCsv,
   parseCsv: browserParseCsv,
-} = require('../js/utils.js')
+} = require('../js/core/utils.js')
 
 describe('build_scripts/csv', () => {
   test('round-trips quoted fields and commas', () => {
@@ -21,7 +21,7 @@ describe('build_scripts/csv', () => {
     expect(csvEscape('+1234')).toBe("'+1234")
   })
 
-  // Mirrors the js/utils.js csvEscape fix: leading tab/CR must be checked on
+  // Mirrors the js/core/utils.js csvEscape fix: leading tab/CR must be checked on
   // the raw text (trimStart() strips them as whitespace, so the old
   // trimmed-value checks never matched). The CR case also picks up outer
   // quoting from the comma/quote/newline rule, apostrophe kept inside.
@@ -31,7 +31,7 @@ describe('build_scripts/csv', () => {
   })
 })
 
-// The browser (js/utils.js) and Node (build_scripts/csv.js) CSV helpers are
+// The browser (js/core/utils.js) and Node (build_scripts/csv.js) CSV helpers are
 // two implementations of one format, and they must agree cell for cell.
 //
 // They are NOT merged into one shared module, deliberately. `toCsv` is
@@ -47,7 +47,7 @@ describe('build_scripts/csv', () => {
 // OUTPUT does: a reviewer exports a CSV from the browser, and the build
 // scripts write the tracking sheets that the same reviewer's spreadsheet
 // opens beside it.
-describe('js/utils.js and build_scripts/csv.js agree on the CSV format', () => {
+describe('js/core/utils.js and build_scripts/csv.js agree on the CSV format', () => {
   // Every escaping rule either implementation has, plus the combinations
   // where two rules interact — a formula prefix inside a value that also
   // needs quoting is where a naive fix puts the apostrophe outside the quote.

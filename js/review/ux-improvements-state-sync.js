@@ -1,7 +1,7 @@
 /* Manager review: page state sync between the SEO/editor sidebar and
    window.reviewState. Loads after js/review/review-state-store.js. */
 
-import { hasValidPageData } from '../utils.js'
+import { hasValidPageData } from '../core/utils.js'
 ;(function mountUxImprovementsStateSync() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState) return
@@ -499,7 +499,7 @@ import { hasValidPageData } from '../utils.js'
    * for every page except whichever one is currently painted, so calling it
    * for all of them here does not risk patching the wrong page's DOM.
    *
-   * Cannot run before EVERY render of the session — js/app.js's own initial
+   * Cannot run before EVERY render of the session — js/core/app.js's own initial
    * render happens synchronously at module-import time, before this file (or
    * any of the review layer) has even loaded, so the very first paint is
    * always from pristine pageData no matter where this is called from. That
@@ -582,7 +582,7 @@ import { hasValidPageData } from '../utils.js'
       // applyContentEditsToPageData is DOM-free (see js/editing/inline-content-edit-data.js) —
       // it only mutates page.sections in memory. The page was
       // already rendered from its PRISTINE shape before this function ever
-      // ran (js/app.js's initial render is unwrapped, and every wrapped
+      // ran (js/core/app.js's initial render is unwrapped, and every wrapped
       // render calls the real DOM-producing render before this reapply
       // step), so a true return here means the DOM the reviewer is looking
       // at is now stale and needs exactly one follow-up render to catch up.

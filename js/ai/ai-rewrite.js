@@ -31,7 +31,7 @@
   /**
    * The page object currently open in the mockup.
    *
-   * Delegates to js/utils.js rather than carrying its own copy — see the
+   * Delegates to js/core/utils.js rather than carrying its own copy — see the
    * matching note in js/ai/ai-assist.js, which needed the identical lookup.
    * @returns {object|null}
    */

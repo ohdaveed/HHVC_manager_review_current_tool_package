@@ -38,7 +38,7 @@ The Agency page routes users into scannable service groups:
 8. About Healthy Housing and Vector Control
 
 Retired page keys (from the consolidation) are mapped to their replacement pages in
-`window.HHVC_DELETED_PAGE_ALIASES` in `js/page-data.js`, so old shared `?page=<key>` links
+`window.HHVC_DELETED_PAGE_ALIASES` in `js/core/page-data.js`, so old shared `?page=<key>` links
 redirect instead of dead-ending.
 
 ## UX/UI review improvements
@@ -176,7 +176,7 @@ bun run format:check
 bun run format
 ```
 
-The `validate` script checks the `pages/*.js` and `js/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
+The `validate` script checks the `pages/*.js` and `js/core/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
 
 The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data, then refreshes Google Sheets–ready tracking CSVs under `review/`.
 
@@ -261,10 +261,10 @@ HHVC_manager_review_current_tool_package/
 ├─ css/theme.css
 ├─ css/styles.css
 ├─ css/ux-improvements.css
-├─ js/page-data.js
-├─ js/app.js
-├─ js/state.js
-├─ js/utils.js
+├─ js/core/page-data.js
+├─ js/core/app.js
+├─ js/core/state.js
+├─ js/core/utils.js
 ├─ js/review/ux-improvements.js
 ├─ js/review/review-queue.js
 ├─ js/review/dashboard-guidance.js
@@ -284,9 +284,9 @@ HHVC_manager_review_current_tool_package/
 ## Editing rules
 
 - Edit public page content in `pages/*.js`.
-- Edit render behavior in `js/app.js`.
-- Edit shared local-state behavior in `js/state.js`.
-- Edit shared helpers in `js/utils.js`.
+- Edit render behavior in `js/core/app.js`.
+- Edit shared local-state behavior in `js/core/state.js`.
+- Edit shared helpers in `js/core/utils.js`.
 - Edit UX review helpers in `js/review/ux-improvements.js`, `js/review/review-queue.js`, `js/review/dashboard-guidance.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.

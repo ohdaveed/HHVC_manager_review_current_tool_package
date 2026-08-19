@@ -2,7 +2,7 @@
    Shortcuts are ignored while typing in form fields so they never
    interfere with review notes or content edits. */
 
-import { hasValidPageData } from '../utils.js'
+import { hasValidPageData } from '../core/utils.js'
 ;(function initReviewKeyboardShortcuts() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA)) return
@@ -78,7 +78,7 @@ import { hasValidPageData } from '../utils.js'
     document.querySelector('[data-sticky-action="toggle-workspace"]')?.click()
   }
 
-  /* Derived from the canonical decision table in js/utils.js. This was a
+  /* Derived from the canonical decision table in js/core/utils.js. This was a
      hand-written literal that happened to be the exact inverse of ACTION_LABELS
      in js/review/review-queue-state.js — the same five pairs typed out twice, in two
      files, with nothing keeping them agreed. */

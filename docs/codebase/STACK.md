@@ -15,23 +15,23 @@
 
 No UI framework. Rendering is data-driven string templates. High-impact packages:
 
-| Dependency                                                  | Version            | Role in system                                                 | Evidence                                                  |
-| ----------------------------------------------------------- | ------------------ | -------------------------------------------------------------- | --------------------------------------------------------- |
-| `zod`                                                       | ^3.24.1            | Page-object schema + AI request/output validation              | `package.json` `dependencies`, `build_scripts/schema.js`  |
-| `@anthropic-ai/sdk`                                         | ^0.115.0           | Optional AI assist (Claude) via `server.ts`                    | `package.json`, `build_scripts/ai/provider-anthropic.js`  |
-| `@google/genai`                                             | ^2.15.0            | Optional AI assist (Gemini) via `server.ts`                    | `package.json`, `build_scripts/ai/provider-gemini.js`     |
-| `text-readability`                                          | ^1.1.1             | Flesch-Kincaid reading level in the browser                    | `package.json`, `js/standards/reading-level.js`           |
-| Bun `bun:sqlite`                                            | (runtime built-in) | Optional review-state SQLite store                             | `server.ts`, `.gitignore`                                 |
-| Vite-bundled client libs (declared under `devDependencies`) | see below          | Shipped in `dist/` via Vite, not required as Node runtime deps | `js/main.js`, `js/third-party-globals.js`, `package.json` |
+| Dependency                                                  | Version            | Role in system                                                 | Evidence                                                       |
+| ----------------------------------------------------------- | ------------------ | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| `zod`                                                       | ^3.24.1            | Page-object schema + AI request/output validation              | `package.json` `dependencies`, `build_scripts/schema.js`       |
+| `@anthropic-ai/sdk`                                         | ^0.115.0           | Optional AI assist (Claude) via `server.ts`                    | `package.json`, `build_scripts/ai/provider-anthropic.js`       |
+| `@google/genai`                                             | ^2.15.0            | Optional AI assist (Gemini) via `server.ts`                    | `package.json`, `build_scripts/ai/provider-gemini.js`          |
+| `text-readability`                                          | ^1.1.1             | Flesch-Kincaid reading level in the browser                    | `package.json`, `js/standards/reading-level.js`                |
+| Bun `bun:sqlite`                                            | (runtime built-in) | Optional review-state SQLite store                             | `server.ts`, `.gitignore`                                      |
+| Vite-bundled client libs (declared under `devDependencies`) | see below          | Shipped in `dist/` via Vite, not required as Node runtime deps | `js/main.js`, `js/core/third-party-globals.js`, `package.json` |
 
 Client libraries bundled into the static app (listed in `devDependencies` but imported by app code):
 
 | Dependency             | Version | Role                                     | Evidence                              |
 | ---------------------- | ------- | ---------------------------------------- | ------------------------------------- |
 | `@sfgov/design-system` | 0.0.1   | SF.gov/Karl CSS primitives               | `js/main.js`                          |
-| `fuse.js`              | ^7.4.2  | Page search                              | `js/third-party-globals.js`           |
-| `defu`                 | ^6.1.7  | Deep merge helper (globals)              | `js/third-party-globals.js`           |
-| `papaparse`            | ^5.5.4  | CSV parse/serialize                      | `js/third-party-globals.js`           |
+| `fuse.js`              | ^7.4.2  | Page search                              | `js/core/third-party-globals.js`      |
+| `defu`                 | ^6.1.7  | Deep merge helper (globals)              | `js/core/third-party-globals.js`      |
+| `papaparse`            | ^5.5.4  | CSV parse/serialize                      | `js/core/third-party-globals.js`      |
 | `echarts`              | ^6.1.0  | Overview activity chart (dynamic import) | `js/review/review-insights-charts.js` |
 | `modern-screenshot`    | ^4.7.0  | Mockup PNG export                        | `js/mockup/mockup-image-export.js`    |
 

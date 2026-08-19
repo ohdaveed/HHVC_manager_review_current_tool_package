@@ -22,12 +22,12 @@ const path = require('node:path')
 const ROOT = path.resolve(__dirname, '..')
 
 describe('require() of build_scripts/data-checks.js', () => {
-  // data-checks.js is CommonJS and `require()`s js/utils.js, which is an ES
+  // data-checks.js is CommonJS and `require()`s js/core/utils.js, which is an ES
   // module, so `findUnsafeUrls` and the renderer share one safeUrl rather than
-  // two copies that could drift. Bun allows that only while js/utils.js is
+  // two copies that could drift. Bun allows that only while js/core/utils.js is
   // SYNCHRONOUSLY evaluable: it rejects `require()` of an async module. A
   // top-level await that actually defers — `await import(...)`, an awaited
-  // timer — makes js/utils.js async and breaks `bun run validate` outright,
+  // timer — makes js/core/utils.js async and breaks `bun run validate` outright,
   // with a TypeError naming neither validate nor the page data.
   //
   // Measured, because the boundary is narrower than "no top-level await":
@@ -37,8 +37,8 @@ describe('require() of build_scripts/data-checks.js', () => {
   //
   // It runs in a SUBPROCESS on purpose, and two cheaper versions of this test
   // were written first and both passed against a deliberately broken
-  // js/utils.js. In-process assertions cannot work here: any sibling test file
-  // that ESM-imports js/utils.js leaves it evaluated and cached, so a later
+  // js/core/utils.js. In-process assertions cannot work here: any sibling test file
+  // that ESM-imports js/core/utils.js leaves it evaluated and cached, so a later
   // `require()` of it succeeds no matter what. Only a fresh process reproduces
   // what `bun run validate` actually does.
   //
@@ -66,7 +66,7 @@ describe('require() of build_scripts/data-checks.js', () => {
       // hint is added when it applies, rather than being the only path that
       // surfaces anything.
       const hint = stderr.includes('async module')
-        ? '\n\nLikely cause: a DEFERRING top-level await was added to js/utils.js or something it imports. Remove it — do not restructure safeUrl (see the comment above this test).'
+        ? '\n\nLikely cause: a DEFERRING top-level await was added to js/core/utils.js or something it imports. Remove it — do not restructure safeUrl (see the comment above this test).'
         : ''
       throw new Error(
         `require('build_scripts/data-checks.js') failed in a fresh ${process.execPath} ` +

@@ -9,35 +9,35 @@
    a bad path is now a build error. Adding a page means adding an import
    here plus an `order` entry below. */
 
-import '../pages/agency-service-grouping.js'
-import '../pages/healthy-housing-conditions-topic.js'
-import '../pages/about-hhvc-team.js'
-import '../pages/report-rats-mice-four-legged-problems.js'
-import '../pages/report-garbage-filth-vegetation.js'
-import '../pages/report-cockroaches-mosquitoes-insects.js'
-import '../pages/report-sro-hotel-problem.js'
-import '../pages/lookup-building-records.js'
-import '../pages/lookup-complaints-inspections.js'
-import '../pages/lookup-residential-violations.js'
-import '../pages/lookup-residential-hotel-records.js'
-import '../pages/find-inspector-by-neighborhood.js'
-import '../pages/public-records-request.js'
-import '../pages/property-owner-responsibilities.js'
-import '../pages/respond-to-notice-of-violation.js'
-import '../pages/tenant-steps-after-notice-of-violation.js'
-import '../pages/get-ready-for-followup-inspection.js'
-import '../pages/hhvc-inspection-scope.js'
-import '../pages/integrated-pest-management-property-managers.js'
-import '../pages/healthy-housing-vermin-resources.js'
-import '../pages/what-happens-after-report.js'
-import '../pages/get-ready-for-first-inspection.js'
-import '../pages/tenant-rights-reporting.js'
-import '../pages/mosquito-control-program.js'
-import '../pages/mosquito-education-workshop.js'
-import '../pages/integrated-pest-management-education.js'
-import '../pages/pay-healthy-housing-fee.js'
-import '../pages/article-11-compliance-for-property-owners.js'
-import '../pages/health-code-article-11.js'
+import '../../pages/agency-service-grouping.js'
+import '../../pages/healthy-housing-conditions-topic.js'
+import '../../pages/about-hhvc-team.js'
+import '../../pages/report-rats-mice-four-legged-problems.js'
+import '../../pages/report-garbage-filth-vegetation.js'
+import '../../pages/report-cockroaches-mosquitoes-insects.js'
+import '../../pages/report-sro-hotel-problem.js'
+import '../../pages/lookup-building-records.js'
+import '../../pages/lookup-complaints-inspections.js'
+import '../../pages/lookup-residential-violations.js'
+import '../../pages/lookup-residential-hotel-records.js'
+import '../../pages/find-inspector-by-neighborhood.js'
+import '../../pages/public-records-request.js'
+import '../../pages/property-owner-responsibilities.js'
+import '../../pages/respond-to-notice-of-violation.js'
+import '../../pages/tenant-steps-after-notice-of-violation.js'
+import '../../pages/get-ready-for-followup-inspection.js'
+import '../../pages/hhvc-inspection-scope.js'
+import '../../pages/integrated-pest-management-property-managers.js'
+import '../../pages/healthy-housing-vermin-resources.js'
+import '../../pages/what-happens-after-report.js'
+import '../../pages/get-ready-for-first-inspection.js'
+import '../../pages/tenant-rights-reporting.js'
+import '../../pages/mosquito-control-program.js'
+import '../../pages/mosquito-education-workshop.js'
+import '../../pages/integrated-pest-management-education.js'
+import '../../pages/pay-healthy-housing-fee.js'
+import '../../pages/article-11-compliance-for-property-owners.js'
+import '../../pages/health-code-article-11.js'
 
 window.HHVC_PAGES = window.HHVC_PAGES || {}
 window.HHVC_DATA = {
@@ -78,7 +78,7 @@ window.HHVC_DATA = {
 // Old page keys retired by content consolidations, mapped to the current
 // page that covers the same scope, so a saved/shared ?page=<oldKey> link
 // redirects instead of leaving the viewer stuck on the loading placeholder
-// (renderPage() no-ops on an unknown key). See js/app.js's init() and
+// (renderPage() no-ops on an unknown key). See js/core/app.js's init() and
 // popstate handler for where this is consulted.
 window.HHVC_DELETED_PAGE_ALIASES = {
   // Retired pre-2026-07-15 (report-transaction-only consolidation, #62)

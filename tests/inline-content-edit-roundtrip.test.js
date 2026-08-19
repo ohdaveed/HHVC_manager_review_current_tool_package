@@ -17,7 +17,7 @@
 // orchestrator on top of it so a real click can drive a real save.
 const { describe, test, expect, afterEach } = require('bun:test')
 const path = require('path')
-const realUtils = require('../js/utils.js')
+const realUtils = require('../js/core/utils.js')
 const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
 

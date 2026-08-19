@@ -18,11 +18,11 @@
    accepted into the href attribute: new code at a new entry point (a
    reviewer-typed URL, never previously an href anywhere in this feature), so
    nothing upstream has validated it. safeUrl() is the same scheme guard
-   every other href in this tool goes through (js/utils.js).
+   every other href in this tool goes through (js/core/utils.js).
 
    Self-mounting IIFE publishing window.InlineEdit.LinkTool, mirroring
    js/editing/inline-content-edit-render.js's window.InlineEdit.render — loads after
-   js/utils.js (for safeUrl) and before js/editing/inline-content-edit.js, which
+   js/core/utils.js (for safeUrl) and before js/editing/inline-content-edit.js, which
    registers this class in openEditorJsEditor()'s Editor.js `tools` config
    for paragraph/bullet fields only (the only fields that ever get an inline
    toolbar at all — see that function's inlineToolbar gate; title/summary/
@@ -302,7 +302,7 @@
      * Deliberately called here rather than from renderActions(): Editor.js
      * calls renderActions() once to build the element, not once per open (see
      * that method), while `pageOrder` changes at runtime whenever a reviewer
-     * adds or deletes a page (js/page-registry.js). Built once, the list goes
+     * adds or deletes a page (js/core/page-registry.js). Built once, the list goes
      * stale in exactly the session where a reviewer created the page they now
      * want to link to.
      *

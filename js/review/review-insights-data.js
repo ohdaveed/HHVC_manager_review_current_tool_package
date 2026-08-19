@@ -19,7 +19,7 @@
  * to arrive in, so the mix bar does not reshuffle itself as counts change
  * during triage.
  *
- * **This is a restatement of `DECISIONS` in js/utils.js, and one of only two
+ * **This is a restatement of `DECISIONS` in js/core/utils.js, and one of only two
  * left in the repo.** It cannot import that table: this file is dual-export
  * (see the header), so an `import` would break the `require` its tests use.
  * `tests/decision-vocabulary.test.js` pins the two together, so a decision

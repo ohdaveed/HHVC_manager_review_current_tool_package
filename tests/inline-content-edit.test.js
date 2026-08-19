@@ -38,7 +38,7 @@
 // module under test.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
-const realUtils = require('../js/utils.js')
+const realUtils = require('../js/core/utils.js')
 const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 require('../js/mockup/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
 // which commit() and the link tool both consult before accepting a link target.
@@ -46,7 +46,7 @@ require('../js/editing/inline-content-edit-render.js') // side-effect: populates
 require('../js/editing/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
 require('../js/editing/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
 // Imported once at file scope, not inside a test: js/review/ui-controls.js statically
-// imports js/state.js, which side-effect-loads the REAL js/page-data.js (all
+// imports js/core/state.js, which side-effect-loads the REAL js/core/page-data.js (all
 // 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
 // real dataset the moment it first runs. Importing it here, before any test's
 // beforeEach/mountInlineContentEdit stub assigns the test-scoped

@@ -12,7 +12,7 @@ function neutralizeFormulaInjection(value) {
   // =/+/-/@ are checked on the trimStart()ed value so formulas hidden behind
   // spaces are caught; tab/CR must be checked on the RAW text because
   // trimStart() strips them as whitespace, which made the old trimmed-value
-  // checks unreachable (same fix as csvEscape in js/utils.js — keep in sync).
+  // checks unreachable (same fix as csvEscape in js/core/utils.js — keep in sync).
   const trimmed = text.trimStart()
   const needsProtection =
     trimmed.startsWith('=') ||

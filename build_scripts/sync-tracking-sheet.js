@@ -17,7 +17,7 @@ const {
   defaultMetaDescription,
   getPrimaryCta,
   DECISION_UNDECIDED,
-} = require('../js/utils.js')
+} = require('../js/core/utils.js')
 
 const root = path.resolve(__dirname, '..')
 const reviewDir = path.join(root, 'review')

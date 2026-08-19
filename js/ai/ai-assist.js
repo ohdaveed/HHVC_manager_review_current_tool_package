@@ -50,7 +50,7 @@
   /**
    * The page open in the mockup, sent as grounding when the box is ticked.
    *
-   * Delegates to js/utils.js rather than carrying its own copy: js/ai/ai-rewrite.js
+   * Delegates to js/core/utils.js rather than carrying its own copy: js/ai/ai-rewrite.js
    * needs the same lookup and the two IIFEs share no namespace, so two copies
    * had nothing stopping the next edit from landing on only one. Reached through
    * `window` rather than an import, so it stays optional-chained.
@@ -261,7 +261,7 @@
     document.addEventListener('click', handleClick)
     window.__mountAiAssistOnTabOpen = ensureRendered
     // Catch a tab that is ALREADY open at init time — see
-    // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
+    // mountWorkspacePanelIfOpen in js/core/utils.js for why every lazy panel needs
     // this, and why panel visibility is the signal rather than saved state.
     // 'help', not 'assist': this panel no longer has a tab of its own — it is a
     // collapsed section inside Help, so Help being open is what means "already

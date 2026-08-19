@@ -3,18 +3,18 @@
 
    LOAD ORDER — this is the whole reason the file exists where it does.
 
-   js/state.js imports THIS file in place of js/page-data.js, so the module
+   js/core/state.js imports THIS file in place of js/core/page-data.js, so the module
    graph guarantees the sequence rather than js/main.js doing it by convention.
-   Running before js/state.js is not a preference:
+   Running before js/core/state.js is not a preference:
 
-   - js/state.js:24 takes ORIGINAL_DATA as a ONE-TIME deep clone of
+   - js/core/state.js:24 takes ORIGINAL_DATA as a ONE-TIME deep clone of
      window.HHVC_DATA. A page added after that clone has no ORIGINAL_DATA entry,
      and computeSectionEdits() returns {} when the original is missing — so
      inline paragraph and bullet edits on a reviewer-created page would appear
      to work, autosave, and silently vanish on the next load. Applying the
      registry first puts added pages inside the clone for free, and keeps hidden
      pages out of it.
-   - js/app.js's init() runs at import time, calling buildPageSelect() and
+   - js/core/app.js's init() runs at import time, calling buildPageSelect() and
      resolving the ?page= parameter. Applying the registry earlier means a deep
      link to an added page just works, instead of toasting "not a page in this
      mockup" and falling back to pestsTopic before the registry has been read.
@@ -34,8 +34,8 @@
    which clears the registry and reloads (see js/review/ux-improvements-export.js). */
 
 import './page-data.js'
-import './review/review-state-validation.js'
-import './review/review-state-store.js'
+import '../review/review-state-validation.js'
+import '../review/review-state-store.js'
 import './page-registry-data.js'
 ;(function mountPageRegistry() {
   const DATA = window.HHVC_DATA
@@ -76,7 +76,7 @@ import './page-registry-data.js'
      rather than the numeric index recorded at hide time: that index is
      measured against an already-shortened order, so two hides can record the
      same number and restoring them permutes the site. See
-     restoreOrderIndex()'s comment in js/page-registry-data.js for the worked
+     restoreOrderIndex()'s comment in js/core/page-registry-data.js for the worked
      example. */
   let canonicalOrder = []
 
@@ -194,7 +194,7 @@ import './page-registry-data.js'
    *
    * ONLY WHEN MISSING, which is the whole correctness argument on the restore
    * path. An existing entry is by definition the pristine copy — either cloned
-   * by js/state.js at boot or written here when the page was created — and
+   * by js/core/state.js at boot or written here when the page was created — and
    * overwriting it with whatever is live now would replace "original" with
    * "edited". The damage from that is silent and total: computeSectionEdits()
    * would then find no difference, the next autosave would recompute

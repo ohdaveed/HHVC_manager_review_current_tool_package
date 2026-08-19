@@ -1,6 +1,6 @@
 // Mockup page rendering: turns page-data.js page objects into the HTML shown
 // in #mockPage, including Karl placement/rationale tags. Depends on
-// js/state.js (escapeHtml, pageData) and js/review/editor-panel.js /
+// js/core/state.js (escapeHtml, pageData) and js/review/editor-panel.js /
 // js/review/ui-controls.js for the post-render side effects triggered by
 // applyPageContent (syncEditorFields, etc.).
 
@@ -10,7 +10,7 @@ import {
   saveSidebarScroll,
   showToast,
 } from '../review/ui-controls.js'
-import { currentPageKey, pageData, setCurrentPageKey } from '../state.js'
+import { currentPageKey, pageData, setCurrentPageKey } from '../core/state.js'
 import {
   escapeHtml,
   getPrimaryCta,
@@ -18,7 +18,7 @@ import {
   safeUrl,
   showErrorBanner,
   safeMarkdown,
-} from '../utils.js'
+} from '../core/utils.js'
 import {
   karlKindMeta,
   nextKarlGuideId,
@@ -27,11 +27,11 @@ import {
   renderKarlGuidePanel,
 } from './karl-tag-meta.js'
 import { syncEditorFields, updateReadingTarget } from '../review/editor-panel.js'
-// Side-effect import: js/card-inheritance.js publishes window.cardInheritance
+// Side-effect import: js/core/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so this is what guarantees the classifier exists before
 // any card renders. js/main.js lists it ahead of this file too, but that list
 // is documentation — this import is the enforcement.
-import '../card-inheritance.js'
+import '../core/card-inheritance.js'
 // Maps cardInheritanceFact()'s three outcomes to the badge text a reviewer
 // sees on a card's tag — the only place this vocabulary is spelled out.
 const INHERIT_BADGE_TEXT = {
@@ -1558,7 +1558,7 @@ function applyPageContent(key) {
    threw a TypeError before anything rendered, and so did every history pop
    back to that URL. It survived because `resolveInitialPageKey()` already maps
    a null key onto `pestsTopic`, so the only caller that could reach it was
-   js/app.js passing an explicit null, and every e2e spec navigates with a
+   js/core/app.js passing an explicit null, and every e2e spec navigates with a
    `?page=` parameter.
 
    That branch was the landing state for the bottom-drawer workspace, which is

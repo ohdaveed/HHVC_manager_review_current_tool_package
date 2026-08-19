@@ -412,11 +412,11 @@ function sectionEditValuesEqual(before, after) {
 // getByPath/setByPath are resolved differently depending on execution context: under
 // Bun (this file's own tests) it's require()'d directly; in the browser
 // bundle it's read off window.utils, since this file is a plain script
-// loaded after js/utils.js in js/main.js's import order, not an ES module
+// loaded after js/core/utils.js in js/main.js's import order, not an ES module
 // importer of it (dual-export files in this repo take no imports — see
 // js/review/review-merge.js and js/standards/plain-language.js for the same shape).
 const { getByPath, setByPath } =
-  typeof module !== 'undefined' && module.exports ? require('../utils.js') : window.utils
+  typeof module !== 'undefined' && module.exports ? require('../core/utils.js') : window.utils
 
 if (typeof window !== 'undefined') {
   window.inlineEditData = {

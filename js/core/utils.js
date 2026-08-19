@@ -500,7 +500,7 @@ function getPrimaryCta(page) {
 
 /**
  * Resolves a possibly-stale ?page= key to a real page key. Pure function
- * (no DOM/globals) so js/app.js's resolveInitialPageKey can layer toast
+ * (no DOM/globals) so js/core/app.js's resolveInitialPageKey can layer toast
  * side effects on top while this stays independently testable.
  * @param {string|null|undefined} key
  * @param {object} pageData
@@ -795,7 +795,7 @@ function setText(id, value) {
 
 /**
  * Whether HHVC_DATA has the shape every module depends on (a pages map and
- * an order list). js/state.js uses this to fail loudly (throw) if
+ * an order list). js/core/state.js uses this to fail loudly (throw) if
  * window.HHVC_DATA never loaded; every module that reads DATA after that —
  * including ones that might load standalone, before state.js runs — uses it
  * to fail quietly (return early) instead of assuming the shape is valid.

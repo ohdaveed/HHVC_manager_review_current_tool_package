@@ -22,7 +22,7 @@
   /**
    * Human label for each queue action.
    *
-   * The decision entries are derived from the canonical table in js/utils.js
+   * The decision entries are derived from the canonical table in js/core/utils.js
    * rather than retyped. They used to be spelled out here AND inverted by hand
    * in js/review/keyboard-shortcuts.js, so the same five pairs lived in two files with
    * nothing keeping them agreed.

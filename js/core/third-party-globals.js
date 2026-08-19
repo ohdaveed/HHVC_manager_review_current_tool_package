@@ -6,7 +6,7 @@
    js/vendor/ and that script are gone.
 
    Their consumers still reach for them as globals behind
-   `typeof X === 'undefined'` guards: js/utils.js's parseCsv, the fuzzy search
+   `typeof X === 'undefined'` guards: js/core/utils.js's parseCsv, the fuzzy search
    in js/review/review-queue-rows.js, and the backup merge in
    js/review/ux-improvements-export.js. Those guards are the documented fallback that
    keeps each feature degrading to a simpler implementation rather than

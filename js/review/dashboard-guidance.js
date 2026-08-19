@@ -3,7 +3,7 @@
 
 import { applyChecklistState, initChecklist } from './ui-controls.js'
 import { renderKarlTagLegend } from '../mockup/karl-tag-meta.js'
-import { getCurrentKey } from '../utils.js'
+import { getCurrentKey } from '../core/utils.js'
 import { updateReadingTarget } from './editor-panel.js'
 ;(function migrateDescriptiveTextToDashboard() {
   const GUIDANCE_ID = 'dashboardGuidancePanel'
@@ -12,7 +12,7 @@ import { updateReadingTarget } from './editor-panel.js'
   const SHORTCUTS_ID = 'dashboardShortcutsPanel'
   const STYLE_ID = 'dashboardGuidanceStyles'
 
-  // js/utils.js loads first (see index.html script order), so the shared
+  // js/core/utils.js loads first (see index.html script order), so the shared
   // helper is always available.
   const { escapeHtml } = window.utils
 

@@ -15,7 +15,7 @@
    why they stay listed in their original sequence.
 
    "Take no imports" is what this used to say, and it is not true: only
-   js/review-queue*.js takes none. The rest import js/utils.js helpers, so the
+   js/review-queue*.js takes none. The rest import js/core/utils.js helpers, so the
    graph orders them against the core on its own. The edge it cannot see, and
    the reason this order is still hand-maintained, is a `window.<Namespace>`
    one IIFE assigns and another reads at mount time.
@@ -107,43 +107,43 @@ import './../css/theme.css'
 // assignments in this file's body: a module body runs after every one of its
 // static imports has evaluated, so inlining these would set the globals only
 // after the review-queue modules had already mounted and rendered. See the
-// header of js/third-party-globals.js for the failure that caused.
+// header of js/core/third-party-globals.js for the failure that caused.
 // ---------------------------------------------------------------------------
-import './third-party-globals.js'
+import './core/third-party-globals.js'
 
 // ---------------------------------------------------------------------------
 // Core modules, in dependency order.
 //
-// js/page-data.js imports all 29 pages/*.js files (each registering itself
-// onto window.HHVC_PAGES) and then assembles window.HHVC_DATA. js/state.js
-// reaches it through js/page-registry.js, which imports it first, so the
+// js/core/page-data.js imports all 29 pages/*.js files (each registering itself
+// onto window.HHVC_PAGES) and then assembles window.HHVC_DATA. js/core/state.js
+// reaches it through js/core/page-registry.js, which imports it first, so the
 // ordering is already guaranteed by the module graph; listing these here as
 // well is belt-and-braces documentation of the sequence, not what makes it work.
 //
-// js/page-registry.js sits between them because it must run BEFORE js/state.js
+// js/core/page-registry.js sits between them because it must run BEFORE js/core/state.js
 // takes its one-time ORIGINAL_DATA clone — see that file's header for why a
 // page added after the clone silently loses its inline edits. To do its work it
 // needs window.reviewState, so it also pulls js/review/review-state-validation.js and
-// js/review/review-state-store.js forward; both import only js/utils.js, so hoisting
+// js/review/review-state-store.js forward; both import only js/core/utils.js, so hoisting
 // them is safe, and their later lines below are already-evaluated no-ops kept
 // as documentation of where they sit in the sequence.
 // ---------------------------------------------------------------------------
-import './utils.js'
+import './core/utils.js'
 import './mockup/karl-tag-meta.js'
-import './page-data.js'
-import './page-registry-data.js'
-import './page-registry.js'
-import './state.js'
+import './core/page-data.js'
+import './core/page-registry-data.js'
+import './core/page-registry.js'
+import './core/state.js'
 import './review/ui-controls.js'
 import './review/editor-panel.js'
-// BEFORE page-render.js: js/card-inheritance.js publishes window.cardInheritance
+// BEFORE page-render.js: js/core/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so a consumer cannot import a binding from it and the
 // graph has no name to order by. js/mockup/page-render.js reads that global to decide
 // whether a card renders its own text or the destination page's summary, and
 // side-effect-imports this file itself so the ordering is genuinely enforced —
 // this line is the same belt-and-braces documentation of the sequence that
 // page-data.js above is, not what makes it work.
-import './card-inheritance.js'
+import './core/card-inheritance.js'
 // The Karl panel inventory. Import-free and window-published exactly like
 // card-inheritance.js above it, so its only ordering requirement is being
 // evaluated before js/karl/karl-transcript.js reads window.karlBlocks.
@@ -154,7 +154,7 @@ import './karl/karl-blocks.js'
 import './karl/karl-transcript.js'
 import './mockup/page-render.js'
 import './karl/karl-guide.js'
-import './app.js'
+import './core/app.js'
 import './review/manager-review-export.js'
 import './review/review-state-validation.js'
 import './standards/reading-level.js'
@@ -201,7 +201,7 @@ import './review/dashboard-guidance.js'
 // Add/delete page controls. After dashboard-guidance.js, which owns the Help
 // panel's layout, and after review-queue*.js, whose one-step undo this consumes
 // when a page is deleted (window.ReviewQueueInternal.undo.clearAction).
-import './page-registry-ui.js'
+import './core/page-registry-ui.js'
 
 // Plain-language scoring and the AI-assist workspace tab. Same IIFE pattern as
 // the layers above: no imports, mounted on window, so they must run after the

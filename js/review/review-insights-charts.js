@@ -27,7 +27,7 @@ import * as echarts from 'echarts/core'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-import { escapeHtml } from '../utils.js'
+import { escapeHtml } from '../core/utils.js'
 
 // Register only what this chart uses, so the rest of ECharts is tree-shaken out
 // of the chunk rather than merely deferred. BarChart went with the decision-mix

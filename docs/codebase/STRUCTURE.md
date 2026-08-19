@@ -8,7 +8,7 @@
 | ---------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | `index.html`                       | Single HTML shell; one module script → `/js/main.js`                           | `index.html`, `AGENTS.md`                                       |
 | `js/`                              | Core app + review/UX layers (ES modules)                                       | `js/main.js`                                                    |
-| `pages/`                           | Page objects registered on `window.HHVC_PAGES` (20 `.js` files)                | `pages/*.js`, `js/page-data.js`                                 |
+| `pages/`                           | Page objects registered on `window.HHVC_PAGES` (20 `.js` files)                | `pages/*.js`, `js/core/page-data.js`                            |
 | `css/`                             | Hand-authored stylesheets imported by `js/main.js`                             | `js/main.js`                                                    |
 | `build_scripts/`                   | Validate, export, schema, AI providers, sheet sync                             | `package.json` scripts                                          |
 | `tests/`                           | Bun unit tests + `tests/e2e/` Playwright                                       | `package.json`, `playwright.config.js`                          |
@@ -51,7 +51,7 @@
 ### 5) Evidence
 
 - `js/main.js`
-- `js/page-data.js`
+- `js/core/page-data.js`
 - `package.json`
 - `index.html`
 - `docs/codebase/.codebase-scan.txt`

@@ -60,7 +60,7 @@
                  deleted belongs with the other stored-state panels in Help.
 
                  The form host and status line are filled by
-                 js/page-registry-ui.js; the buttons are authored here so the
+                 js/core/page-registry-ui.js; the buttons are authored here so the
                  markup a reviewer sees does not depend on that module having
                  mounted. -->
             <div class="page-admin-actions" role="group" aria-label="Add or delete page mockups">
@@ -335,7 +335,7 @@
                Sitemap is gone outright: it was a fourth way to navigate 19
                pages, drawing a hierarchy that is one level deep — most hubs
                rendered as "HUB 0/0" with "No child pages assigned" — and it
-               leaked js/page-data.js to reviewers.
+               leaked js/core/page-data.js to reviewers.
 
                AI assist and Status are not gone; they are demoted to here.
                Both depend on server.ts, and the Netlify build managers

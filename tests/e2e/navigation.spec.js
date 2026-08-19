@@ -42,7 +42,7 @@ test.describe('page navigation', () => {
     // `/?page=pestsTopic` — so nothing here had ever opened the app the way a
     // reviewer first opens it. That blind spot hid a crash: renderPage() had a
     // `if (!key)` branch that set `.textContent` on `#pageTitle`, an element
-    // index.html does not contain, and js/app.js passed an explicit null for a
+    // index.html does not contain, and js/core/app.js passed an explicit null for a
     // bare URL. The app threw before rendering anything, and the same happened
     // on every history pop back to the parameterless URL.
     //

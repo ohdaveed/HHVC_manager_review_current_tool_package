@@ -1,10 +1,10 @@
 // SEO/editor panel: syncing search metadata fields with the current page,
 // the search-result preview, and reading-target display. Depends on
-// js/utils.js (defaultSeoTitle, defaultMetaDescription, getValue, setValue,
-// setText) and js/state.js (pageData, currentPageKey).
+// js/core/utils.js (defaultSeoTitle, defaultMetaDescription, getValue, setValue,
+// setText) and js/core/state.js (pageData, currentPageKey).
 
-import { currentPageKey, pageData } from '../state.js'
-import { defaultMetaDescription, defaultSeoTitle, getValue, setText, setValue } from '../utils.js'
+import { currentPageKey, pageData } from '../core/state.js'
+import { defaultMetaDescription, defaultSeoTitle, getValue, setText, setValue } from '../core/utils.js'
 function statusClass(length, max) {
   return length <= max ? 'ok' : 'warn'
 }

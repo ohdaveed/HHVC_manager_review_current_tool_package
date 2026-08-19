@@ -1,7 +1,7 @@
-// Shared Karl tag kind labels and legend markup. Loaded after js/utils.js so
+// Shared Karl tag kind labels and legend markup. Loaded after js/core/utils.js so
 // escapeHtml is available for legend rendering.
 
-import { escapeHtml } from '../utils.js'
+import { escapeHtml } from '../core/utils.js'
 import {
   guideForContext,
   linkShapeMeta,

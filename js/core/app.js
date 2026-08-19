@@ -1,20 +1,20 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
-// render. Loaded after js/state.js, js/review/ui-controls.js, js/review/editor-panel.js,
+// render. Loaded after js/core/state.js, js/review/ui-controls.js, js/review/editor-panel.js,
 // and js/mockup/page-render.js, all of which it depends on directly, and before
 // js/review/ux-improvements.js, which wraps renderPage once init() has run.
 
-import { buildPageSelect, initChecklist, showToast } from './review/ui-controls.js'
+import { buildPageSelect, initChecklist, showToast } from '../review/ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
-import { renderPage } from './mockup/page-render.js'
+import { renderPage } from '../mockup/page-render.js'
 import { resolvePageKey } from './utils.js'
-import { updateSearchPreview } from './review/editor-panel.js'
+import { updateSearchPreview } from '../review/editor-panel.js'
 
 // Resolves a ?page= URL param to a real page key, following the
 // consolidation alias map for retired keys and falling back to the
 // default page. Without this, renderPage() silently no-ops on an unknown
 // key (e.g. an old saved/shared link), leaving the viewer stuck on the
 // static "Loading…" placeholder in index.html forever. Pure resolution
-// logic lives in resolvePageKey() (js/utils.js) so it's independently
+// logic lives in resolvePageKey() (js/core/utils.js) so it's independently
 // testable; this wrapper only adds the toast side effect.
 /**
  * Navigate to a page through whatever `window.renderPage` currently is.

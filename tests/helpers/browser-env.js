@@ -9,8 +9,8 @@
    global environment already in place rather than being handed one.
 
    happy-dom is used rather than a stub because the module graph now pulls in
-   real work at import time: js/state.js reads window.HHVC_DATA (populated by
-   js/page-data.js importing all 19 pages/*.js), and several modules touch
+   real work at import time: js/core/state.js reads window.HHVC_DATA (populated by
+   js/core/page-data.js importing all 19 pages/*.js), and several modules touch
    document/localStorage while mounting. Faking each of those individually is
    how the old stub grew its long tail of `getElementById() { return {} }`
    shims; a real DOM removes that class of maintenance entirely and makes the

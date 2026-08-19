@@ -16,7 +16,7 @@ function getPageScriptPaths() {
   const pageFiles = fg
     .sync('pages/*.js', { cwd: root, onlyFiles: true })
     .sort((a, b) => a.localeCompare(b))
-  return [...pageFiles, 'js/page-data.js']
+  return [...pageFiles, 'js/core/page-data.js']
 }
 
 /**
@@ -48,7 +48,7 @@ const SIDE_EFFECT_IMPORT = /^import\s+'[^']+'\s*$/gm
  *
  * `pages/*.js` are still plain scripts — each one assigns its page object
  * onto `window.HHVC_PAGES` and imports nothing — so they run in a vm
- * context unchanged. `js/page-data.js` is the exception: as an ES module it
+ * context unchanged. `js/core/page-data.js` is the exception: as an ES module it
  * now opens with one side-effect import per page file, and `vm.runInContext`
  * evaluates as a script, where `import` is a syntax error.
  *

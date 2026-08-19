@@ -295,7 +295,7 @@ carries no label and no description field of its own. `related`, `topics`,
 measurement.
 
 That is the failure the review tool exists to catch, and this repo already
-encodes it: `js/card-inheritance.js` classifies a section as `inherits`,
+encodes it: `js/core/card-inheritance.js` classifies a section as `inherits`,
 `title-only`, or `authored`, and `js/mockup/page-render.js` resolves every card
 description through `cardDescription()` rather than printing `card.text`. See
 "Card descriptions are inherited, not printed" in `AGENTS.md` / `CLAUDE.md` for

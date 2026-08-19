@@ -1,10 +1,10 @@
 /* Manager review UX/UI enhancements: orchestrator.
-   Runs after js/app.js and does not change source page content or review
+   Runs after js/core/app.js and does not change source page content or review
    export schemas. Composes window.ReviewUx.stateSync/.workspace/.exportImport
    (each in their own file, loaded before this one) into init()/refresh
    wiring. */
 
-import { hasValidPageData, resolvePageKey } from '../utils.js'
+import { hasValidPageData, resolvePageKey } from '../core/utils.js'
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
   if (
@@ -193,19 +193,19 @@ import { hasValidPageData, resolvePageKey } from '../utils.js'
     // anything here reads pageData for a card that might inherit its title
     // or description from a page the reviewer hasn't opened yet this
     // session. See hydrateAllPageTextFromSavedState()'s own comment for why
-    // this can't reach js/app.js's already-completed initial render, which
+    // this can't reach js/core/app.js's already-completed initial render, which
     // is exactly why the branches below that don't otherwise re-render force
     // one after this call.
     window.ReviewUx?.stateSync?.hydrateAllPageTextFromSavedState?.()
 
     // An explicit ?page= URL param (a deep link, bookmark, or shared/review-
-    // queue link) already drove js/app.js's initial render before this ran.
+    // queue link) already drove js/core/app.js's initial render before this ran.
     // That takes priority over "reopen the page I was last viewing" — without
     // this guard, restoring last_page_key here silently overrides the
     // requested page moments after it renders (issue #68).
     const params = new URLSearchParams(window.location.search)
     if (params.has('page')) {
-      // Resolve the ?page= param the same way js/app.js's initial render did
+      // Resolve the ?page= param the same way js/core/app.js's initial render did
       // rather than trusting getCurrentKey(): under View Transitions the
       // initial applyPageContent runs asynchronously inside the transition
       // callback, so #pageSelect can still be sitting on its first <option>
@@ -222,7 +222,7 @@ import { hasValidPageData, resolvePageKey } from '../utils.js'
           : window.utils?.getCurrentKey?.()
       window.ReviewUx?.stateSync?.applySavedPageState(deepLinkKey)
       reviewFormPageKey = deepLinkKey ?? reviewFormPageKey
-      // js/app.js already painted this page from PRISTINE data, before the
+      // js/core/app.js already painted this page from PRISTINE data, before the
       // hydration above ever ran. That paint's own hero title/summary get
       // patched by applySavedPageState's direct DOM writes, but any card
       // this page renders that inherits from a DIFFERENT, hydrated page
@@ -264,7 +264,7 @@ import { hasValidPageData, resolvePageKey } from '../utils.js'
       return
     }
 
-    // No deep link and no saved page: js/app.js's initial render already
+    // No deep link and no saved page: js/core/app.js's initial render already
     // showed the default page, from pristine data, before hydration above
     // ever ran — same gap as the deep-link branch, same fix.
     // Recompute that key the same way app.js did instead of reading
@@ -310,7 +310,7 @@ import { hasValidPageData, resolvePageKey } from '../utils.js'
 
   window.ReviewUx.refreshUx = refreshUx
 
-  /* Published for js/page-registry.js, which has to flush before it mutates.
+  /* Published for js/core/page-registry.js, which has to flush before it mutates.
      Hiding a page removes it from DATA.pages, and reviewFormPageKey stays
      pinned to that key until the follow-up navigation settles — so a debounced
      keystroke landing in between would call collectCurrentPageReviewState()

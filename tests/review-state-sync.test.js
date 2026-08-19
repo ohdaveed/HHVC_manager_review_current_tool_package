@@ -931,12 +931,12 @@ describe('pushPage', () => {
 describe('restorePageContentFromOriginal', () => {
   // The helper reaches for the real getPrimaryCta/setPrimaryCta, whose
   // fallback behaviour is the whole point of the CTA branch — stubbing them
-  // would test the stub. js/utils.js is an ES module now, and its namespace
+  // would test the stub. js/core/utils.js is an ES module now, and its namespace
   // has the same shape as the window.utils object it publishes, so it can be
   // handed straight to the fake window below.
-  const utilsModule = require('../js/utils.js')
+  const utilsModule = require('../js/core/utils.js')
 
-  // ORIGINAL_DATA is published onto `window` by js/state.js, and
+  // ORIGINAL_DATA is published onto `window` by js/core/state.js, and
   // restorePageContentFromOriginal reads it from there rather than importing
   // it (see that function's comment). loadReviewStateSync() builds a fresh
   // fake window per test, so each test sets it on that object and nothing

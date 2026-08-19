@@ -4,11 +4,11 @@
 // direct test coverage (see tests/data-validation.test.js) independent of
 // the real pages/*.js content.
 //
-// safeUrl comes from js/utils.js — the same function js/mockup/page-render.js applies
+// safeUrl comes from js/core/utils.js — the same function js/mockup/page-render.js applies
 // at render time — so findUnsafeUrls below cannot drift from what the renderer
 // actually considers safe. That file is browser-first and exports only its URL
 // guard to Node; see the note at its foot.
-const { safeUrl, urlProbe } = require('../js/utils.js')
+const { safeUrl, urlProbe } = require('../js/core/utils.js')
 // isValidInlineLinkTarget comes from js/mockup/inline-link-target.js for the same
 // anti-drift reason: it is also what the browser's inline link widget applies
 // when a reviewer TYPES a target, and a link a reviewer creates must never be

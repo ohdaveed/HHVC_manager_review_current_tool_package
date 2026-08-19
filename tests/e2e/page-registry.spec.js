@@ -6,7 +6,7 @@
 // fails SILENTLY when it breaks:
 //
 //   1. An added page's inline content edits persist. That works only because
-//      js/page-registry.js runs before js/state.js takes its one-time
+//      js/core/page-registry.js runs before js/core/state.js takes its one-time
 //      ORIGINAL_DATA clone, and seeds ORIGINAL_DATA itself for a page added
 //      mid-session. Without either, computeSectionEdits() returns {} and the
 //      edit is accepted, autosaved, and gone on the next load.
@@ -144,7 +144,7 @@ test.describe('adding a page mockup', () => {
 
   // THE ORIGINAL_DATA PROOF. computeSectionEdits() diffs the live page against
   // window.ORIGINAL_DATA and returns {} when the page has no entry there, so
-  // without the seeding in js/page-registry.js this edit would be accepted,
+  // without the seeding in js/core/page-registry.js this edit would be accepted,
   // autosaved, and silently absent after the reload.
   test('keeps an inline paragraph edit on an added page across a reload', async ({ page }) => {
     await gotoFresh(page)
@@ -204,7 +204,7 @@ test.describe('deleting a page mockup', () => {
     expect(saved.globals.page_registry.hidden.tenantRights).toBeTruthy()
   })
 
-  // THE SHARP EDGE, and the reason js/page-registry.js flushes before it
+  // THE SHARP EDGE, and the reason js/core/page-registry.js flushes before it
   // mutates. reviewFormPageKey still points at the deleted key until the
   // follow-up navigation settles, so an autosave landing in that window would
   // rebuild the record from `DATA.pages[key] || {}` — blanking page_title,
@@ -383,7 +383,7 @@ test.describe('the JSON backup round trip', () => {
     const backup = await downloadToText(page, () => page.click('#exportReviews'))
     expect(JSON.parse(backup).globals.page_registry.added[NEW_PAGE.key]).toBeTruthy()
 
-    // A genuinely empty browser: clear, then reload so js/page-registry.js
+    // A genuinely empty browser: clear, then reload so js/core/page-registry.js
     // re-boots with no registry at all.
     await page.evaluate(() => localStorage.clear())
     await page.reload()

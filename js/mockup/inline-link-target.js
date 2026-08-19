@@ -5,7 +5,7 @@
    external anchor, anything else becomes
    `<button data-render-target="...">`, an in-mockup navigation control. So a
    target that is neither a real page key nor a URL renders as a control that
-   does nothing on click — or, once js/page-registry.js is involved, raises the
+   does nothing on click — or, once js/core/page-registry.js is involved, raises the
    red "Unknown page key" banner, which reads as corruption for what is usually
    a typo.
 
@@ -19,7 +19,7 @@
    about what a link may point at.
 
    Dual-exported (window.inlineLinkTarget plus module.exports) exactly like
-   js/review/review-merge.js, js/card-inheritance.js and js/standards/plain-language.js, and
+   js/review/review-merge.js, js/core/card-inheritance.js and js/standards/plain-language.js, and
    deliberately IMPORT-FREE for the same reason those are: it is read by
    build_scripts/data-checks.js under Bun with no browser, and by browser code
    that must be able to call it without waiting on a load order. It reads no
@@ -27,7 +27,7 @@
    collection is always passed in.
 
    Note what this module deliberately does NOT do: it does not sanitize. The
-   `href` an external target ends up in is still run through js/utils.js's
+   `href` an external target ends up in is still run through js/core/utils.js's
    safeUrl() at the point it is written, by js/editing/inline-content-edit-link-tool.js
    and js/mockup/page-render.js. Deciding whether a target is VALID and neutralizing
    the string that reaches an attribute are two different jobs, and folding
@@ -60,7 +60,7 @@ const INLINE_LINK_TARGET_RULE =
  * property read, because `toString`, `valueOf` and `hasOwnProperty` all satisfy
  * the page-key pattern used elsewhere in this tool and are inherited by every
  * plain object — so a bare `keys[target]` answers true for a page that does not
- * exist. js/page-registry-data.js guards the same hazard the same way, and
+ * exist. js/core/page-registry-data.js guards the same hazard the same way, and
  * learned it the hard way: there, the inherited function being truthy made an
  * "already present, skip" branch fire and a page silently never get added.
  *

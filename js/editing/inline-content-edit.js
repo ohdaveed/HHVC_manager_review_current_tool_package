@@ -234,7 +234,7 @@
    * remove controls nor the Edited-badge/reset decorations (Task 1 kept the
    * renderer itself untouched beyond data-rewrite-field attributes — see
    * Step 1's rationale), and this module is not the only caller of
-   * window.renderPage: js/app.js's initial render, js/review/ux-improvements.js's
+   * window.renderPage: js/core/app.js's initial render, js/review/ux-improvements.js's
    * restoreInitialPage() (both a synchronous call and, for a page carrying
    * saved section_edits, an async setTimeout(0) follow-up call — see
    * js/review/ux-improvements-state-sync.js's refreshInFlightForKey guard), and
@@ -1273,7 +1273,7 @@
       decorateEditedFields()
     }
     // Decorate once here for the render that already happened before this
-    // module loaded (js/app.js's initial renderPage() call, which predates
+    // module loaded (js/core/app.js's initial renderPage() call, which predates
     // this module in js/main.js's import order and therefore predates the
     // wrapper installed just above — every render from this point on goes
     // through that wrapper instead).
@@ -1282,11 +1282,11 @@
     // routed through document.startViewTransition() for that initial
     // render: in a real browser that supports it, the actual DOM mutation
     // happens asynchronously inside the transition's callback, so the
-    // renderPage() call js/app.js already made had returned a pending
+    // renderPage() call js/core/app.js already made had returned a pending
     // promise by the time this function runs, with #mockPage not yet
     // repainted — the decorate() call above then ran against stale
     // (possibly empty) DOM and found nothing to decorate. There's no handle
-    // to that specific promise to await (js/app.js never exposed it), so
+    // to that specific promise to await (js/core/app.js never exposed it), so
     // this schedules a second, deferred pass via a double
     // requestAnimationFrame — the standard "wait for the next real paint"
     // idiom — gated on View Transitions support existing at all: without

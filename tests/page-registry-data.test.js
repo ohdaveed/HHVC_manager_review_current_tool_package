@@ -1,4 +1,4 @@
-// Pure logic for the reviewer-managed page registry (js/page-registry-data.js):
+// Pure logic for the reviewer-managed page registry (js/core/page-registry-data.js):
 // validating a page a reviewer authored in the browser, and applying a stored
 // registry onto live page data.
 //
@@ -28,9 +28,9 @@ const {
   readRegistry,
   slugify,
   validateNewPage,
-} = require('../js/page-registry-data.js')
+} = require('../js/core/page-registry-data.js')
 const { pageSchema } = require('../build_scripts/schema.js')
-const { restoreOrderIndex } = require('../js/page-registry-data.js')
+const { restoreOrderIndex } = require('../js/core/page-registry-data.js')
 
 /** A minimal valid form submission, spread-and-overridden per test. */
 function formInput(overrides) {
@@ -377,7 +377,7 @@ describe('applyRegistryToData', () => {
     const pages = data.pages
     const order = data.order
     applyRegistryToData(data, { added: { noiseComplaints: addedEntry() } }, {})
-    // js/state.js exports these by reference and three other modules hold the
+    // js/core/state.js exports these by reference and three other modules hold the
     // same references, so only in-place mutation propagates.
     expect(data.pages).toBe(pages)
     expect(data.order).toBe(order)
@@ -836,7 +836,7 @@ describe('applyRegistryToData: reporting key collisions', () => {
   // Found in review. The same "a page already occupies this key" condition covers
   // a harmless idempotent re-apply AND an added key that has since become a real
   // authored page. Only the caller can tell them apart, so the result reports the
-  // keys rather than passing over them silently — js/page-registry.js filters
+  // keys rather than passing over them silently — js/core/page-registry.js filters
   // them against the authored-key set it captured at boot.
   test('reports a key already occupied by a page in `collided`, not `added`', () => {
     const data = liveData()

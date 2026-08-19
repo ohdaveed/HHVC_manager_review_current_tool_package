@@ -229,7 +229,7 @@ test.describe('manager review workflow', () => {
   // js/review/manager-review-export.js's decorator went with the sidebar label it
   // refreshed — but one is enough to make the bug below reachable.
   // Reassigning window.renderPage does not rebind an ES module `import`, so
-  // when js/app.js called its imported binding the picker silently bypassed
+  // when js/core/app.js called its imported binding the picker silently bypassed
   // every wrapper — and applySavedPageState() never ran for the destination,
   // leaving the PREVIOUS page's decision and notes sitting in the sidebar
   // form. The next autosave would then write them onto the wrong page.

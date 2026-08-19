@@ -1,7 +1,7 @@
 /* Manager review: review summary, CSV export, and JSON backup/restore.
    Loads after js/review/ux-improvements-state-sync.js. */
 
-import { hasValidPageData } from '../utils.js'
+import { hasValidPageData } from '../core/utils.js'
 ;(function mountUxImprovementsExport() {
   const DATA = window.HHVC_DATA
   if (
@@ -439,13 +439,13 @@ import { hasValidPageData } from '../utils.js'
 
      It RELOADS afterwards, which it did not need to before pages could be added
      or deleted in the browser. The storage key holds globals.page_registry, and
-     js/page-registry.js has already mutated window.HHVC_DATA from it: added
+     js/core/page-registry.js has already mutated window.HHVC_DATA from it: added
      pages are in `order` and the picker, deleted ones are gone. Removing the key
      without reloading would leave both of those mutations in place with nothing
      left to explain them — the Help list empty, Restore impossible, and the
      added pages silently vanishing on the next load. The reload is what
      un-mutates HHVC_DATA, and it is also what makes this button the recovery
-     path for a page registry so malformed that js/page-registry.js could not
+     path for a page registry so malformed that js/core/page-registry.js could not
      apply it. */
   function clearSavedLocalReviews() {
     const confirmed = window.confirm(

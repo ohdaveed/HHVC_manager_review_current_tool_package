@@ -11,25 +11,25 @@ description: "HHVC repo: the browser-side add/delete page feature — why page-r
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
 is involved, and it works on the static Netlify build. Three files, mirroring the
-inline-content-edit split — `js/page-registry-data.js` (pure validation and the
+inline-content-edit split — `js/core/page-registry-data.js` (pure validation and the
 in-place mutation, dual-exported like `js/review/review-merge.js`),
-`js/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
-`window.pageRegistry`), and `js/page-registry-ui.js` (the sidebar controls and
+`js/core/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
+`window.pageRegistry`), and `js/core/page-registry-ui.js` (the sidebar controls and
 the Help list). No new stylesheet: the sidebar chrome lives in
 `css/ux-improvements.css` and the Help list in `css/dashboard.css`, split by
 surface so each selector is still declared in exactly one file.
 
-- **`js/page-registry.js` runs BEFORE `js/state.js`, and that is the load-order
-  fact the whole feature rests on.** `js/state.js` imports it in place of
-  `js/page-data.js` (which it imports first itself), so the module graph enforces
+- **`js/core/page-registry.js` runs BEFORE `js/core/state.js`, and that is the load-order
+  fact the whole feature rests on.** `js/core/state.js` imports it in place of
+  `js/core/page-data.js` (which it imports first itself), so the module graph enforces
   the order rather than `js/main.js` doing it by convention. `ORIGINAL_DATA` is a
-  one-time deep clone taken in `js/state.js`, and `computeSectionEdits()` returns
+  one-time deep clone taken in `js/core/state.js`, and `computeSectionEdits()` returns
   `{}` when a page has no entry in it — so a page added after that clone would
   accept an inline paragraph edit, autosave it, and silently lose it on the next
   load. Applying the registry first puts added pages inside the clone for free;
   a page added mid-session gets `window.ORIGINAL_DATA.pages[key]` seeded
   explicitly, from a **deep clone**, because an alias would make every later
-  diff come back clean. Running early also means `js/app.js`'s import-time
+  diff come back clean. Running early also means `js/core/app.js`'s import-time
   `init()` resolves a `?page=` deep link to an added page instead of toasting
   "not a page in this mockup".
 - **Storage is `state.globals.page_registry`, as keyed objects rather than
@@ -55,7 +55,7 @@ surface so each selector is still declared in exactly one file.
   from its own source module on the next load. The review record is never
   touched, which is what makes Restore worth having. `pestsTopic` is refused
   outright — `bun run validate` requires it to exist and be first, and it is the
-  fallback key in `resolvePageKey`, `getCurrentKey`, `js/state.js`, `js/app.js`
+  fallback key in `resolvePageKey`, `getCurrentKey`, `js/core/state.js`, `js/core/app.js`
   and the hardcoded parent link on every other page. Emptying `order` is refused
   too.
 - **A hidden page leaves `order` AND `HHVC_PAGES`.** Leaving it in `pages` is the
@@ -114,7 +114,7 @@ surface so each selector is still declared in exactly one file.
   return is also relaxed, since a backup can legitimately carry pages and no
   matching reviews.
 - **Clear saved reviews now reloads.** It removes the storage key, and
-  `js/page-registry.js` has already mutated `window.HHVC_DATA` from that key —
+  `js/core/page-registry.js` has already mutated `window.HHVC_DATA` from that key —
   so without a reload the added pages stay in `order` and the picker while the
   registry explaining them is gone, leaving the Help list empty and Restore
   impossible, and the added pages vanishing silently on the next load. The reload
@@ -221,7 +221,7 @@ surface so each selector is still declared in exactly one file.
   `applyRegistryToData()` reports it in `collided` rather than passing over it,
   because the same "a page already occupies this key" condition also covers a
   harmless idempotent re-apply — only the caller can tell them apart, which is why
-  `js/page-registry.js` captures the authored-key set from `DATA.pages` BEFORE the
+  `js/core/page-registry.js` captures the authored-key set from `DATA.pages` BEFORE the
   registry has ever run. Without that distinction the Help panel presents an
   authored page as reviewer-created and Remove deletes it from the live mockup, so
   `listAdded()` filters authored keys out and `removeAddedPage()` refuses them.

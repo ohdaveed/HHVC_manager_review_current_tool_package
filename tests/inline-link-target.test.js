@@ -125,7 +125,7 @@ describe('isValidInlineLinkTarget', () => {
     // A page key becomes an object property elsewhere in this tool, and
     // `toString`/`valueOf` satisfy the key pattern while being invisible to
     // Object.keys(). A plain-object key collection must not answer true for
-    // them. Mirrors the hasOwn discipline in js/page-registry-data.js.
+    // them. Mirrors the hasOwn discipline in js/core/page-registry-data.js.
     expect(isValidInlineLinkTarget('toString', {})).toBe(false)
     expect(isValidInlineLinkTarget('hasOwnProperty', {})).toBe(false)
   })

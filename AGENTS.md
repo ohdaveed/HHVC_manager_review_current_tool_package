@@ -93,7 +93,7 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
 `decision-vocabulary` (pins the two whole-list module-boundary restatements of
-the decision list against the canonical table in `js/utils.js` — and,
+the decision list against the canonical table in `js/core/utils.js` — and,
 separately, every file that spells out an INDIVIDUAL label as a literal, which
 is most of the queue: those are string comparisons, so a renamed decision
 leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
@@ -266,11 +266,11 @@ cannot press a global shortcut before the `keydown` listener exists. In a sandbo
 pre-installed Chromium, point Playwright at it instead of downloading:
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium bun run test:e2e`.
 `bun run validate` is a **complementary, not redundant** check: it loads every
-`pages/*.js` plus `js/page-data.js` into a Node VM and Zod-validates
+`pages/*.js` plus `js/core/page-data.js` into a Node VM and Zod-validates
 fields/shapes, plus a few business invariants (below). It always validates the
 full page set — you can't validate a single page file in isolation. **Run `bun
 run validate` and `bun run test` after editing anything under `pages/` or
-`js/page-data.js`.**
+`js/core/page-data.js`.**
 
 ### CI
 
@@ -328,7 +328,7 @@ records the evidence.
 ### Data-driven rendering, no framework
 
 Each file in `pages/*.js` assigns a page object onto the global
-`window.HHVC_PAGES['<pageKey>']`. `js/page-data.js` then builds
+`window.HHVC_PAGES['<pageKey>']`. `js/core/page-data.js` then builds
 `window.HHVC_DATA = { pages, order }`, where `order` is the array of
 `[pageKey, menuLabel]` pairs driving navigation/menu order.
 
@@ -340,8 +340,8 @@ tags sharing one global lexical scope) and the committed `js/vendor/` IIFE
 bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
 Order is enforced two ways. **Core modules enforce it themselves** — a module
-that needs `escapeHtml` imports it, and `js/state.js` imports
-`js/page-registry.js`, which imports `js/page-data.js` first, which imports all
+that needs `escapeHtml` imports it, and `js/core/state.js` imports
+`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all
 27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
@@ -352,7 +352,7 @@ objects rather than imports, so their sequence in `js/main.js` is load-bearing
 and hand-reviewed.
 
 Note that "no imports" would be too strong, and used to be written that way:
-only `js/review-queue*.js` takes none. The others do import — `js/utils.js`
+only `js/review-queue*.js` takes none. The others do import — `js/core/utils.js`
 helpers, and four imports in `js/review/dashboard-guidance.js` — so the module graph
 already orders them against the _core_. What it cannot order is the part that
 matters here: a `window.<Namespace>` a sibling IIFE assigns at mount time is
@@ -370,13 +370,13 @@ refreshed), `window.toggleSidebar` (an inline
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).
 
 When adding a new page file: add `import '../pages/<file>.js'` to
-`js/page-data.js` and a `[pageKey, menuLabel]` entry to its `order` array. A new
+`js/core/page-data.js` and a `[pageKey, menuLabel]` entry to its `order` array. A new
 `js/*.js` module just needs an importer; if it is a self-mounting IIFE with no
 importer, add it to `js/main.js` in the right position. Node-side scripts
 (`build_scripts/`, `tests/`) hardcode no file lists — they discover `pages/*.js`
 dynamically via `build_scripts/load-pages.js`. If you forget the page import,
 `bun run validate` catches it: `build_scripts/page-import-checks.js` diffs
-`pages/*.js` on disk against `js/page-data.js`'s imports. Vite already turns the
+`pages/*.js` on disk against `js/core/page-data.js`'s imports. Vite already turns the
 reverse case (an import naming a missing file) into a build error, but a page
 nobody imports fails silently — it never registers onto `window.HHVC_PAGES`, so
 the page just disappears. Import _order_ isn't checked; it's irrelevant, since
@@ -478,7 +478,7 @@ disagree at all.
   `karl` note names the Karl block a section maps to, so it is the authority. The
   full history lives in `build_scripts/audit-card-inheritance.js`'s header rather
   than being re-derived here.
-- **`js/card-inheritance.js` is dual-exported like `js/review/review-merge.js`, for the
+- **`js/core/card-inheritance.js` is dual-exported like `js/review/review-merge.js`, for the
   same reason.** `js/mockup/page-render.js` reads it off `window.cardInheritance` and
   `build_scripts/audit-card-inheritance.js` `require`s it, so the browser
   renderer and the Node audit share one classifier and cannot come to disagree
@@ -512,7 +512,7 @@ disagree at all.
 The old monolithic `app.js` was split into focused modules — **do not re-monolith
 them.**
 
-- **`js/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
+- **`js/core/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
   exported as bare top-level functions. Loads first. Beyond the obvious
   (`escapeHtml`, `today`, `debounce`, CSV parse/serialize/download, DOM
   get/set) it owns three things worth knowing by name: **`safeUrl`/`urlProbe`**,
@@ -524,7 +524,7 @@ them.**
   note the module has drifted toward a grab-bag, and
   `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` are a layer inversion
   living here: the bottom-most module reaching up into the workspace DOM.
-- **`js/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone for
+- **`js/core/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone for
   field-reset), `pageData`, `pageOrder`, `currentPageKey`.
 - **`js/review/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the
   page-picker `<select>`, review checklist.
@@ -532,17 +532,17 @@ them.**
   indicators, search-result preview, per-field reset.
 - **`js/mockup/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
-- **`js/page-registry-data.js`** — pure validation for a page a reviewer
+- **`js/core/page-registry-data.js`** — pure validation for a page a reviewer
   authored in the browser, plus `applyRegistryToData()`, the only function that
   mutates `order`/`pages` for the add/delete feature. Dual-exported and
   import-free; it is evaluated far earlier than the other dual-export modules
-  (through `js/page-registry.js`, before `js/state.js`), so unlike
+  (through `js/core/page-registry.js`, before `js/core/state.js`), so unlike
   `js/editing/inline-content-edit-data.js` it must not resolve anything off `window` at
-  module scope — `js/utils.js` is not guaranteed to have run yet.
-- **`js/page-registry.js`** — applies that registry onto `window.HHVC_DATA` and
-  publishes `window.pageRegistry`. Must run before `js/state.js`'s
+  module scope — `js/core/utils.js` is not guaranteed to have run yet.
+- **`js/core/page-registry.js`** — applies that registry onto `window.HHVC_DATA` and
+  publishes `window.pageRegistry`. Must run before `js/core/state.js`'s
   `ORIGINAL_DATA` clone; see "Adding and deleting pages" below.
-- **`js/card-inheritance.js`** — the shared classifier deciding whether a
+- **`js/core/card-inheritance.js`** — the shared classifier deciding whether a
   section's cards publish the destination page's title and summary, its title
   alone, or their own authored words. Imports nothing and reads no global, so it
   has no load-order dependency of its own. Dual-exported
@@ -550,7 +550,7 @@ them.**
   `js/review/review-merge.js`, and for the same reason — see "Card descriptions are
   inherited, not printed" above: the browser renderer and the Node audit must
   share one classifier rather than two copies that can silently drift apart.
-- **`js/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
+- **`js/core/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
   first page (`pestsTopic`).
 - **`js/review/manager-review-export.js`** — manager review CSV/JSON snapshot,
   published on `window.ReviewExport` for the consolidated export control. It no
@@ -614,7 +614,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   opens — a
   reviewer expanding one must never find an empty box. Each panel ALSO catches
   an already-open tab at its own `init()` via `mountWorkspacePanelIfOpen('help')`
-  in `js/utils.js` — `js/review/ux-improvements.js` initializes earlier and restores a
+  in `js/core/utils.js` — `js/review/ux-improvements.js` initializes earlier and restores a
   persisted `workspace_tab` before these hooks exist, so without the catch-up a
   reviewer who left Help open came back to an empty panel.
 
@@ -763,7 +763,7 @@ miscitations. Like `js/review/review-merge.js` the module is dual-export
 ### URL schemes are validated, not just escaped
 
 `escapeHtml` does not neutralize a scheme, so every structured `href` in
-`js/mockup/page-render.js` runs through `safeUrl()` from `js/utils.js` — with one
+`js/mockup/page-render.js` runs through `safeUrl()` from `js/core/utils.js` — with one
 exception worth knowing about: `formatMarkdown()` (`js/mockup/page-render.js:51`)
 gates inline `[label](target)` links on a bare `/^https?:\/\//` test instead.
 That is not a hole today, for two reasons that both have to hold: `escapeHtml`
@@ -789,7 +789,7 @@ than restating it so renderer and validator cannot drift. That import crosses
 the CJS/ESM boundary — CJS `require()`ing ESM, the direction Bun 1.3.14 dropped
 for `build_scripts/storage.js`. **This one is not the same case, and the
 difference was measured rather than assumed** (2026-08-15, Bun 1.3.14): Bun
-rejects `require()` only of an ASYNC module, and `js/utils.js` has no top-level
+rejects `require()` only of an ASYNC module, and `js/core/utils.js` has no top-level
 await and imports nothing, so it stays synchronously evaluable and the crossing
 works. The boundary is narrower still — `await Promise.resolve()` is already
 settled and requires fine, while `await new Promise((r) => setTimeout(r, 0))`
@@ -798,7 +798,7 @@ top-level await away, and it would surface as `bun run validate` dying with a
 TypeError naming neither validate nor the page data.
 `tests/data-validation.test.js` guards it in a **subprocess**, which is
 load-bearing: two in-process versions were written first and both passed
-against a deliberately broken `js/utils.js`, because a sibling test file that
+against a deliberately broken `js/core/utils.js`, because a sibling test file that
 ESM-imports it leaves it cached for any later `require()`. **The fix if that
 guard fails is to remove the await, not to restructure `safeUrl`** — it is the
 XSS scheme guard, and on the BROWSER side every dual-export module in `js/`
@@ -897,7 +897,7 @@ A transcript changes what an export contains, not what it authorizes.
 cards[]`) and a path only on Transaction's scalars, so a path resolver would
   cover one type and leave the rest silently empty.
 - **Card inheritance decides TYPE versus CHOOSE**, through the one
-  `js/card-inheritance.js` classifier, passed in rather than re-derived. An
+  `js/core/card-inheritance.js` classifier, passed in rather than re-derived. An
   `inherits` or `title-only` card is a picker, so the transcript says _choose
   page X_ and never _type this description_ — emitting a description for a
   picker is the exact defect that classifier exists to prevent, and here it
@@ -1094,7 +1094,7 @@ wiring into the existing autosave path).
   `docs/superpowers/specs/2026-08-08-inline-content-editing-design.md` for
   why render-position addressing would silently target the wrong section.
   Every write goes through the existing guarded `getByPath`/`setByPath`
-  (`js/utils.js`) — never a hand-rolled path walker — except title, summary,
+  (`js/core/utils.js`) — never a hand-rolled path walker — except title, summary,
   and CTA, which are page-level (not inside `sections[]`) and already have
   dedicated accessors (`getPrimaryCta`/`setPrimaryCta`, direct
   `page.title =`/`page.summary =`).
@@ -1242,25 +1242,25 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
 is involved, and it works on the static Netlify build. Three files, mirroring the
-inline-content-edit split — `js/page-registry-data.js` (pure validation and the
+inline-content-edit split — `js/core/page-registry-data.js` (pure validation and the
 in-place mutation, dual-exported like `js/review/review-merge.js`),
-`js/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
-`window.pageRegistry`), and `js/page-registry-ui.js` (the sidebar controls and
+`js/core/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
+`window.pageRegistry`), and `js/core/page-registry-ui.js` (the sidebar controls and
 the Help list). No new stylesheet: the sidebar chrome lives in
 `css/ux-improvements.css` and the Help list in `css/dashboard.css`, split by
 surface so each selector is still declared in exactly one file.
 
-- **`js/page-registry.js` runs BEFORE `js/state.js`, and that is the load-order
-  fact the whole feature rests on.** `js/state.js` imports it in place of
-  `js/page-data.js` (which it imports first itself), so the module graph enforces
+- **`js/core/page-registry.js` runs BEFORE `js/core/state.js`, and that is the load-order
+  fact the whole feature rests on.** `js/core/state.js` imports it in place of
+  `js/core/page-data.js` (which it imports first itself), so the module graph enforces
   the order rather than `js/main.js` doing it by convention. `ORIGINAL_DATA` is a
-  one-time deep clone taken in `js/state.js`, and `computeSectionEdits()` returns
+  one-time deep clone taken in `js/core/state.js`, and `computeSectionEdits()` returns
   `{}` when a page has no entry in it — so a page added after that clone would
   accept an inline paragraph edit, autosave it, and silently lose it on the next
   load. Applying the registry first puts added pages inside the clone for free;
   a page added mid-session gets `window.ORIGINAL_DATA.pages[key]` seeded
   explicitly, from a **deep clone**, because an alias would make every later
-  diff come back clean. Running early also means `js/app.js`'s import-time
+  diff come back clean. Running early also means `js/core/app.js`'s import-time
   `init()` resolves a `?page=` deep link to an added page instead of toasting
   "not a page in this mockup".
 - **Storage is `state.globals.page_registry`, as keyed objects rather than
@@ -1286,7 +1286,7 @@ surface so each selector is still declared in exactly one file.
   from its own source module on the next load. The review record is never
   touched, which is what makes Restore worth having. `pestsTopic` is refused
   outright — `bun run validate` requires it to exist and be first, and it is the
-  fallback key in `resolvePageKey`, `getCurrentKey`, `js/state.js`, `js/app.js`
+  fallback key in `resolvePageKey`, `getCurrentKey`, `js/core/state.js`, `js/core/app.js`
   and the hardcoded parent link on every other page. Emptying `order` is refused
   too.
 - **A hidden page leaves `order` AND `HHVC_PAGES`.** Leaving it in `pages` is the
@@ -1345,7 +1345,7 @@ surface so each selector is still declared in exactly one file.
   return is also relaxed, since a backup can legitimately carry pages and no
   matching reviews.
 - **Clear saved reviews now reloads.** It removes the storage key, and
-  `js/page-registry.js` has already mutated `window.HHVC_DATA` from that key —
+  `js/core/page-registry.js` has already mutated `window.HHVC_DATA` from that key —
   so without a reload the added pages stay in `order` and the picker while the
   registry explaining them is gone, leaving the Help list empty and Restore
   impossible, and the added pages vanishing silently on the next load. The reload
@@ -1452,7 +1452,7 @@ surface so each selector is still declared in exactly one file.
   `applyRegistryToData()` reports it in `collided` rather than passing over it,
   because the same "a page already occupies this key" condition also covers a
   harmless idempotent re-apply — only the caller can tell them apart, which is why
-  `js/page-registry.js` captures the authored-key set from `DATA.pages` BEFORE the
+  `js/core/page-registry.js` captures the authored-key set from `DATA.pages` BEFORE the
   registry has ever run. Without that distinction the Help panel presents an
   authored page as reviewer-created and Remove deletes it from the live mockup, so
   `listAdded()` filters authored keys out and `removeAddedPage()` refuses them.
@@ -2716,7 +2716,7 @@ is the trade this repo already refused once.
   `escapeHtml`; use optional chaining + `?? ''` coercion and guard-clause early
   returns; guard test/SSR contexts with a `typeof window === 'undefined'` early
   return; `csvEscape` includes spreadsheet formula-injection protection. Prefer
-  reusing `js/utils.js` helpers over inlining new logic.
+  reusing `js/core/utils.js` helpers over inlining new logic.
 - **State:** in-memory module singletons + versioned `localStorage` updated via
   functional updater callbacks (`updateLocalState((s) => { …; return s })`) +
   `HHVC_DATA`/`HHVC_PAGES` globals; `ORIGINAL_DATA` is a deep clone for reset.
@@ -2859,8 +2859,8 @@ globals must restore them, or they pollute sibling test files.
 ## Editing rules (quick reference)
 
 - Public page content → `pages/*.js`.
-- Core render/state → `js/state.js`, `js/mockup/page-render.js`, `js/review/ui-controls.js`,
-  `js/review/editor-panel.js`, `js/app.js`.
+- Core render/state → `js/core/state.js`, `js/mockup/page-render.js`, `js/review/ui-controls.js`,
+  `js/review/editor-panel.js`, `js/core/app.js`.
 - Review/UX layers → `js/review/ux-improvements.js`, `js/review/review-queue.js`,
   `js/review/dashboard-guidance.js`, `js/review/keyboard-shortcuts.js`,
   `js/review/manager-review-export.js`, `css/ux-improvements.css`.
@@ -2868,10 +2868,10 @@ globals must restore them, or they pollute sibling test files.
   `history` entry should be constructed; loaded both as a browser `<script>`
   and imported directly by `server.ts`). Optional sync backend → `server.ts`
   (API routes) and `js/sync/review-state-sync.js` (client pull/push + settings UI).
-- Adding/deleting page mockups → `js/page-registry-data.js` (pure validation +
-  the in-place `order`/`pages` mutation), `js/page-registry.js` (the bootstrap,
-  which MUST stay imported by `js/state.js` so it runs before the `ORIGINAL_DATA`
-  clone), `js/page-registry-ui.js`.
+- Adding/deleting page mockups → `js/core/page-registry-data.js` (pure validation +
+  the in-place `order`/`pages` mutation), `js/core/page-registry.js` (the bootstrap,
+  which MUST stay imported by `js/core/state.js` so it runs before the `ORIGINAL_DATA`
+  clone), `js/core/page-registry-ui.js`.
 - RAG knowledge base → `build_scripts/knowledge-chunking.js`,
   `build_scripts/knowledge-search.js`, `build_scripts/knowledge-schema.js`,
   `build_scripts/ingest-knowledge.js`, `build_scripts/ai/knowledge-retrieval.js`,
@@ -2901,7 +2901,7 @@ globals must restore them, or they pollute sibling test files.
   authors", taken from `git ls-files` rather than globbed. A third caller reuses
   it; it never re-globs. Both tools treat an empty file list as a broken
   derivation and fail, because each exits 0 when handed no inputs.
-- After editing `pages/*.js` or `js/page-data.js`, run `bun run validate` **and**
+- After editing `pages/*.js` or `js/core/page-data.js`, run `bun run validate` **and**
   `bun run test`. After touching the import/export round-trip, manually verify it
   (export → re-import → decisions survive).
 

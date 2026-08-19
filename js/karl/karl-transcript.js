@@ -25,7 +25,7 @@
 
    Load-order dependency: reads window.karlBlocks, window.cardInheritance and
    window.utils in the browser branch, so js/main.js must list it after
-   js/karl/karl-blocks.js, js/card-inheritance.js and js/utils.js. Under Node it
+   js/karl/karl-blocks.js, js/core/card-inheritance.js and js/core/utils.js. Under Node it
    require()s all three directly. */
 
 // Resolved the way js/editing/inline-content-edit-data.js resolves its helpers:
@@ -37,12 +37,12 @@ const { panelsFor, matchesSection, KARL_NAV, KARL_FLAGS, PROMOTE_PANEL } = isNod
   ? require('./karl-blocks.js')
   : window.karlBlocks
 const { classifySection } = isNodeContext
-  ? require('../card-inheritance.js')
+  ? require('../core/card-inheritance.js')
   : window.cardInheritance
-const { getByPath } = isNodeContext ? require('../utils.js') : window.utils
+const { getByPath } = isNodeContext ? require('../core/utils.js') : window.utils
 
 /* The decision labels that mean "signed off", spelled out rather than derived
-   from DECISIONS. Deriving them would need a flag on the table in js/utils.js
+   from DECISIONS. Deriving them would need a flag on the table in js/core/utils.js
    that nothing else reads, and the labels are string literals here for the
    reason tests/decision-vocabulary.test.js exists: most of the queue compares
    them as strings, so a renamed decision has to fail somewhere loud. That test
@@ -282,7 +282,7 @@ function buildTranscript(page, reviewRecord, pages) {
     reviewer: (reviewRecord && reviewRecord.reviewer) || '',
     reviewDate: (reviewRecord && reviewRecord.review_date) || '',
     reviewed: Boolean(reviewRecord),
-    // **Both approval outcomes count.** `DECISIONS` in js/utils.js carries
+    // **Both approval outcomes count.** `DECISIONS` in js/core/utils.js carries
     // `Approved` and `Approved with edits`, and the queue groups them together
     // in its Approved filter and count. An exact match on the first marked
     // every page reviewed through the second as unapproved, so the transcript
@@ -314,7 +314,7 @@ function buildTranscript(page, reviewRecord, pages) {
   const sections = Array.isArray(page.sections) ? page.sections : []
   // Classified ONCE, and passed everywhere it is needed. Re-deriving it inside
   // a matcher would put a second copy of the card-publishing rule in play, and
-  // two copies free to disagree is the exact drift js/card-inheritance.js
+  // two copies free to disagree is the exact drift js/core/card-inheritance.js
   // exists to prevent.
   const classes = sections.map((section) => (section.cards ? classifySection(section) : null))
   const consumed = new Set()
@@ -695,7 +695,7 @@ function emitSection(context, panel, source, section, index) {
   if (scope !== 'prose' && section.cards && cardClass !== 'authored') {
     // The classifier could not place this section, so what its cards publish is
     // unknown. Guessing TYPE would reintroduce the exact defect
-    // js/card-inheritance.js exists to prevent — here as an instruction a human
+    // js/core/card-inheritance.js exists to prevent — here as an instruction a human
     // executes — and guessing CHOOSE would silently drop authored copy.
     context.transcript.flags.push({
       path: `sections.${index}.cards`,

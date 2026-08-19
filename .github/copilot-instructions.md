@@ -41,7 +41,7 @@ depends on any of them.
 bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run start         # production-like: assemble dist/ (build:netlify), then serve it
-bun run validate      # Zod-validate pages/*.js and js/page-data.js (schema + invariants)
+bun run validate      # Zod-validate pages/*.js and js/core/page-data.js (schema + invariants)
 bun run test          # Bun test runner over the 50 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
@@ -58,26 +58,26 @@ there never runs and reports nothing. A happy-dom environment is preloaded
 via `bunfig.toml` so the ES modules can be imported directly. `bun run validate` is a
 complementary check that Zod-validates the full `pages/*.js` set — you can't
 validate one page in isolation. Run both after editing anything under `pages/` or
-`js/page-data.js`.
+`js/core/page-data.js`.
 
 ## Architecture (essentials — full detail in `AGENTS.md`)
 
 - **Data-driven; the mockup has no framework** (the review workspace does — see
   "React islands in the workspace" in `AGENTS.md`). Each `pages/*.js` file assigns onto
-  `window.HHVC_PAGES['<pageKey>']`; `js/page-data.js` builds
+  `window.HHVC_PAGES['<pageKey>']`; `js/core/page-data.js` builds
   `window.HHVC_DATA = { pages, order }`. **The app is bundled by Vite from one
   ES-module entry point, `js/main.js`** — `index.html` has a single
   `<script type="module">` tag. Core modules import what they need; the
   self-mounting IIFE layers reach each other through `window.<Namespace>`
-  objects rather than imports (most still import `js/utils.js` helpers), so
-  they depend on their listed order in `js/main.js`. Add a new page by importing it in `js/page-data.js` (validated by
+  objects rather than imports (most still import `js/core/utils.js` helpers), so
+  they depend on their listed order in `js/main.js`. Add a new page by importing it in `js/core/page-data.js` (validated by
   `build_scripts/page-import-checks.js`) and adding an `order` entry.
-- **Core is split into focused modules** (formerly one `app.js`): `js/utils.js`
-  (shared helpers, loads first), `js/mockup/karl-tag-meta.js`, `js/state.js`,
+- **Core is split into focused modules** (formerly one `app.js`): `js/core/utils.js`
+  (shared helpers, loads first), `js/mockup/karl-tag-meta.js`, `js/core/state.js`,
   `js/review/ui-controls.js`, `js/review/editor-panel.js`, `js/mockup/page-render.js` (holds
-  `karlTag()`), `js/app.js`, `js/review/manager-review-export.js`,
+  `karlTag()`), `js/core/app.js`, `js/review/manager-review-export.js`,
   `js/standards/reading-level.js`, `js/review/review-state-validation.js`. Don't re-monolith them.
-- **`js/utils.js` owns the shared vocabulary.** The review decision table
+- **`js/core/utils.js` owns the shared vocabulary.** The review decision table
   (`DECISIONS` and its derived label/slug/chip/colour lookups), `escapeHtml`,
   `safeUrl`, and `mountWorkspacePanelIfOpen` all live there. Derive from them
   rather than restating them — these were each duplicated across files before,

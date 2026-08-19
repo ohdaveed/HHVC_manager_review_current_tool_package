@@ -1,11 +1,11 @@
 // Core app state: validated page data shared across the tool's modules.
 // Imported by js/review/ui-controls.js, js/review/editor-panel.js, js/mockup/page-render.js,
-// js/app.js, and js/review/manager-review-export.js, all of which read these
+// js/core/app.js, and js/review/manager-review-export.js, all of which read these
 // bindings directly. ES module imports are *live views* onto the exporting
 // module's binding, so a reader that imported `currentPageKey` sees each
 // new value without re-importing — the same visibility the old shared
 // classic-<script> global scope gave us. Shared helpers (escapeHtml,
-// getPrimaryCta, setPrimaryCta, ...) come from js/utils.js.
+// getPrimaryCta, setPrimaryCta, ...) come from js/core/utils.js.
 //
 // The `./page-registry.js` import is for its side effect and is load-bearing
 // twice over. It pulls in `./page-data.js`, which assigns window.HHVC_DATA

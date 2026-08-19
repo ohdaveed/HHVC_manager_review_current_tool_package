@@ -28,7 +28,7 @@
    outright: an import cannot resolve late. It also left the repo with three
    hand-maintained copies of the same five replacements, and they had already
    drifted — js/review/review-insights.js's version failed OPEN. */
-import { escapeHtml as escape } from '../utils.js'
+import { escapeHtml as escape } from '../core/utils.js'
 ;(function mountReviewOps() {
   if (typeof window === 'undefined') return
 
@@ -41,7 +41,7 @@ import { escapeHtml as escape } from '../utils.js'
    * The page keys the site currently has, for the orphan check.
    *
    * A page the reviewer deleted during review is counted as still known, even
-   * though js/page-registry.js has removed it from `order`. Its record is not
+   * though js/core/page-registry.js has removed it from `order`. Its record is not
    * orphaned — it is the thing Restore brings back — so listing it under
    * "Records for pages that no longer exist" would offer the reviewer a button
    * that destroys the review they are one click away from recovering.
@@ -305,7 +305,7 @@ import { escapeHtml as escape } from '../utils.js'
     })
     window.__mountReviewOpsOnTabOpen = ensureRendered
     // Catch a tab that is ALREADY open at init time — see
-    // mountWorkspacePanelIfOpen in js/utils.js for why every lazy panel needs
+    // mountWorkspacePanelIfOpen in js/core/utils.js for why every lazy panel needs
     // this, and why panel visibility is the signal rather than saved state.
     // See the note in js/ai/ai-assist.js: this is a section inside Help now, so
     // Help is the panel whose open state matters.
