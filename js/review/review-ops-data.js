@@ -3,7 +3,7 @@
    Pure functions that inspect the persisted review state and report what an
    operator — the same person as the reviewer here, since this tool has no
    roles — would otherwise have to open devtools to find out. No DOM, dual
-   window/module.exports like js/review-merge.js, so tests/review-ops-data.test.js
+   window/module.exports like js/review/review-merge.js, so tests/review-ops-data.test.js
    can require it with no browser.
 
    These are diagnostics, never repairs. Everything here answers a question;

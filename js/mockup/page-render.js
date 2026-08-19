@@ -1,7 +1,7 @@
 // Mockup page rendering: turns page-data.js page objects into the HTML shown
 // in #mockPage, including Karl placement/rationale tags. Depends on
-// js/state.js (escapeHtml, pageData) and js/editor-panel.js /
-// js/ui-controls.js for the post-render side effects triggered by
+// js/state.js (escapeHtml, pageData) and js/review/editor-panel.js /
+// js/review/ui-controls.js for the post-render side effects triggered by
 // applyPageContent (syncEditorFields, etc.).
 
 import {
@@ -9,7 +9,7 @@ import {
   restoreSidebarScroll,
   saveSidebarScroll,
   showToast,
-} from '../ui-controls.js'
+} from '../review/ui-controls.js'
 import { currentPageKey, pageData, setCurrentPageKey } from '../state.js'
 import {
   escapeHtml,
@@ -26,7 +26,7 @@ import {
   parseKarlLabel,
   renderKarlGuidePanel,
 } from './karl-tag-meta.js'
-import { syncEditorFields, updateReadingTarget } from '../editor-panel.js'
+import { syncEditorFields, updateReadingTarget } from '../review/editor-panel.js'
 // Side-effect import: js/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so this is what guarantees the classifier exists before
 // any card renders. js/main.js lists it ahead of this file too, but that list
@@ -1637,13 +1637,13 @@ function renderPage(key, skipHistory = false) {
 }
 
 /* Republished as a browser global. This one is load-bearing in a way the
-   others are not: js/ux-improvements.js wraps `window.renderPage` to refresh
+   others are not: js/review/ux-improvements.js wraps `window.renderPage` to refresh
    itself after every navigation — reading the current value, closing over it,
    and reassigning the wrapper (guarded by its own `__…Wrapped` flag so the
    chain builds exactly once).
 
    There were three wrappers. js/interactive-sitemap.js is gone, and
-   js/manager-review-export.js's existed only to refresh a "Current page:"
+   js/review/manager-review-export.js's existed only to refresh a "Current page:"
    sidebar label that has since been cut, so it went with the label. The
    remaining one still needs the original on `window`, which the old shared
    script scope provided for free. Without this line its

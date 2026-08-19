@@ -1,13 +1,13 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
-// render. Loaded after js/state.js, js/ui-controls.js, js/editor-panel.js,
+// render. Loaded after js/state.js, js/review/ui-controls.js, js/review/editor-panel.js,
 // and js/mockup/page-render.js, all of which it depends on directly, and before
-// js/ux-improvements.js, which wraps renderPage once init() has run.
+// js/review/ux-improvements.js, which wraps renderPage once init() has run.
 
-import { buildPageSelect, initChecklist, showToast } from './ui-controls.js'
+import { buildPageSelect, initChecklist, showToast } from './review/ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
 import { renderPage } from './mockup/page-render.js'
 import { resolvePageKey } from './utils.js'
-import { updateSearchPreview } from './editor-panel.js'
+import { updateSearchPreview } from './review/editor-panel.js'
 
 // Resolves a ?page= URL param to a real page key, following the
 // consolidation alias map for retired keys and falling back to the
@@ -20,13 +20,13 @@ import { updateSearchPreview } from './editor-panel.js'
  * Navigate to a page through whatever `window.renderPage` currently is.
  *
  * This indirection is load-bearing and must not be "simplified" back to the
- * imported `renderPage`. js/ux-improvements.js decorates `window.renderPage`
+ * imported `renderPage`. js/review/ux-improvements.js decorates `window.renderPage`
  * after init() runs, reading the current value, closing over it, and
  * reassigning the wrapper.
  *
  * It is the only wrapper left, and the count is worth stating carefully
  * because this comment used to claim three and then name two — listing
- * js/manager-review-export.js twice, the one module that provably no longer
+ * js/review/manager-review-export.js twice, the one module that provably no longer
  * wraps at all (see its own header). js/interactive-sitemap.js, the third,
  * was deleted outright. One wrapper is still one more than zero: the hazard
  * below is unchanged, and a future module adding a second would rely on it.
@@ -37,7 +37,7 @@ import { updateSearchPreview } from './editor-panel.js'
  * = wrapper` replaced the very binding this file called and the decorators
  * applied for free; as ES modules that stops being true, silently.
  *
- * What the undecorated path skips is not cosmetic: the js/ux-improvements.js
+ * What the undecorated path skips is not cosmetic: the js/review/ux-improvements.js
  * wrapper flushes in-progress sidebar edits BEFORE the page switch. Without
  * it, keystrokes still inside the autosave debounce are either dropped or
  * written under the incoming page's key, and applySavedPageState() never runs
@@ -103,7 +103,7 @@ function init() {
   // load therefore hid every Unverified pill on first paint — three e2e specs
   // (ai-rewrite, inline-content-edit) resolve those pills and assert they are
   // visible. Restoring a SAVED preference is a different thing and still
-  // happens, in applySavedUiPreferences() (js/ux-improvements-state-sync.js).
+  // happens, in applySavedUiPreferences() (js/review/ux-improvements-state-sync.js).
   const tagToggle = document.getElementById('tagToggle')
   tagToggle.addEventListener('change', (e) => {
     document.body.classList.toggle('hide-karl-tags', !e.target.checked)
@@ -123,7 +123,7 @@ function init() {
   // The first render deliberately calls the import directly rather than
   // navigateTo(): init() runs before any module has wrapped window.renderPage,
   // so there is nothing to pick up, and there is no outgoing page whose edits
-  // would need flushing. js/ux-improvements.js does its own restoreInitialPage()
+  // would need flushing. js/review/ux-improvements.js does its own restoreInitialPage()
   // pass once its wrapper is installed.
   const params = new URLSearchParams(window.location.search)
   const pageKey = params.get('page')

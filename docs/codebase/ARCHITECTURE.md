@@ -38,7 +38,7 @@ index.html -> js/main.js (CSS + modules)
 | Core render (`page-render.js`, `app.js`, `state.js`) | DOM mockup, navigation, dirty/reset                           | Optional API                                                         | `js/mockup/page-render.js`                      |
 | Utils (`utils.js`)                                   | Escaping, `safeUrl`, decision vocabulary, review record shape | Feature UI ownership (some workspace helpers live here — noted debt) | `js/utils.js`, `AGENTS.md`                      |
 | Review UX / queue / insights / ops                   | localStorage review workflow                                  | Source-file mutation                                                 | `js/ux-improvements*.js`, `js/review-queue*.js` |
-| `review-merge.js`                                    | Merge precedence + history append                             | Transport                                                            | `js/review-merge.js`                            |
+| `review-merge.js`                                    | Merge precedence + history append                             | Transport                                                            | `js/review/review-merge.js`                     |
 | `server.ts` + `build_scripts/ai/`                    | Auth-gated sync + AI generation                               | Unauthenticated open access                                          | `server.ts`                                     |
 | Validate/export scripts                              | Schema + inventory CSVs                                       | Runtime UI                                                           | `build_scripts/validate.js`                     |
 
@@ -64,7 +64,7 @@ index.html -> js/main.js (CSS + modules)
 
 - `js/main.js`
 - `js/page-data.js`
-- `js/review-merge.js`
+- `js/review/review-merge.js`
 - `server.ts`
 - `vite.config.mjs`
 - `netlify.toml`

@@ -11,7 +11,7 @@
 | Google Sheets API           | External API                  | Push tracking status (`bun run push-tracking`)               | Service-account JSON via env/path                 | Low (offline CSVs still work) | `build_scripts/push-tracking-sheet.js`, `build_scripts/sheet-config.json` |
 | Netlify CDN/hosting         | Static hosting                | Deploy `dist/` for managers                                  | Netlify project + build                           | High for demo distribution    | `netlify.toml`                                                            |
 | Railway volume (documented) | Hosted Bun + SQLite volume    | Production path for `DATA_DB_PATH` when sync API is deployed | Bearer `REVIEW_API_TOKEN` (+ optional principals) | Medium when sync is used      | `.gitignore` comment, `.claude/skills/verify-railway-backend/`            |
-| Browser `localStorage`      | Client persistence            | Default review state                                         | Same-origin browser                               | High (always-on core)         | `js/review-state-store.js`, `AGENTS.md`                                   |
+| Browser `localStorage`      | Client persistence            | Default review state                                         | Same-origin browser                               | High (always-on core)         | `js/review/review-state-store.js`, `AGENTS.md`                            |
 | Karl / SF.gov CMS           | External CMS (reference only) | Placement notes; not written by this tool                    | Out of band                                       | N/A for runtime               | `AGENTS.md` Karl section                                                  |
 
 ### 2) Data Stores

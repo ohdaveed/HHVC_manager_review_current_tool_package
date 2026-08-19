@@ -1,7 +1,7 @@
 // Round-trip coverage for Task 9: edited_title/edited_summary as CSV
 // columns in all three enumerations that previously omitted them
-// (js/manager-review-export.js's MANAGER_REVIEW_RECORD_FIELDS,
-// js/ux-improvements-export.js's exportSavedLocalReviewsCsv, and
+// (js/review/manager-review-export.js's MANAGER_REVIEW_RECORD_FIELDS,
+// js/review/ux-improvements-export.js's exportSavedLocalReviewsCsv, and
 // js/review/review-queue-import.js's importReviewsFromCsvText field list).
 //
 // CLAUDE.md's "Local persistence" section requires any change touching the
@@ -14,24 +14,27 @@
 // this repo already applies to tests/e2e/import-export.spec.js.
 //
 // All three modules under test are self-mounting IIFEs with no
-// module.exports (js/manager-review-export.js is an ES module with real
+// module.exports (js/review/manager-review-export.js is an ES module with real
 // `import`s from js/state.js; the other two read window.utils/window.reviewState
 // at mount time), so each test builds a fresh window via dynamic import()
 // with a cache-busting query string -- the same pattern
 // tests/inline-content-edit-refresh.test.js and
 // tests/inline-content-edit-roundtrip.test.js use for the same reason.
-// js/review-merge.js is dual-export (window/module.exports, see its header
+// js/review/review-merge.js is dual-export (window/module.exports, see its header
 // comment), so the REAL mergeReviewRecord is required directly rather than
 // stubbed -- a stubbed merge would not prove the two enumerations actually
 // agree on the field name.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
 const realUtils = require('../js/utils.js')
-const realReviewMerge = require('../js/review-merge.js')
+const realReviewMerge = require('../js/review/review-merge.js')
 const { pageData: REAL_PAGE_DATA } = require('../js/state.js')
 
-const MANAGER_REVIEW_EXPORT_PATH = path.resolve(__dirname, '../js/manager-review-export.js')
-const UX_IMPROVEMENTS_EXPORT_PATH = path.resolve(__dirname, '../js/ux-improvements-export.js')
+const MANAGER_REVIEW_EXPORT_PATH = path.resolve(__dirname, '../js/review/manager-review-export.js')
+const UX_IMPROVEMENTS_EXPORT_PATH = path.resolve(
+  __dirname,
+  '../js/review/ux-improvements-export.js'
+)
 const REVIEW_QUEUE_STATE_PATH = path.resolve(__dirname, '../js/review/review-queue-state.js')
 const REVIEW_QUEUE_IMPORT_PATH = path.resolve(__dirname, '../js/review/review-queue-import.js')
 const DOM_WINDOW = global.window
@@ -68,11 +71,11 @@ function buildData(overrides = {}) {
 }
 
 /**
- * Mount js/manager-review-export.js against a real happy-dom document with
+ * Mount js/review/manager-review-export.js against a real happy-dom document with
  * the sidebar input fields it reads.
  *
  * js/state.js is a real, non-cache-busted `import` from
- * js/manager-review-export.js -- Bun's ESM loader evaluates a given module
+ * js/review/manager-review-export.js -- Bun's ESM loader evaluates a given module
  * path exactly once per process, so by the time this test file runs,
  * js/state.js has already been evaluated by an earlier test file's own
  * import chain (module graphs across this repo's own suite pull it in
@@ -80,7 +83,7 @@ function buildData(overrides = {}) {
  * built from pages/*.js. Its `currentPageKey`/`pageData` bindings are
  * therefore fixed at the real 'pestsTopic' page for the rest of the
  * process -- reassigning window.HHVC_DATA here does nothing, since
- * js/manager-review-export.js's `import { pageData } from './state.js'`
+ * js/review/manager-review-export.js's `import { pageData } from './state.js'`
  * already resolved to the first-evaluated module instance (confirmed
  * empirically: a synthetic testPage fixture was read back as the real
  * page's title).
@@ -132,7 +135,7 @@ async function mountManagerReviewExport({ title, summary } = {}) {
 }
 
 /**
- * Mount js/ux-improvements-export.js and js/manager-review-export.js's
+ * Mount js/review/ux-improvements-export.js and js/review/manager-review-export.js's
  * sibling dependencies (window.reviewState, window.reviewMerge,
  * window.ReviewUx.stateSync) against a shared in-memory state store, so
  * exportSavedLocalReviewsCsv can read window.reviewState.read() the same
@@ -232,8 +235,8 @@ async function mountReviewQueueImport({ savedPages = {} } = {}) {
  * Runs `triggerExport` and captures the CSV text passed to downloadFile's
  * underlying Blob, without needing a click-driven browser download.
  *
- * Both js/manager-review-export.js (an ES module `import`) and
- * js/ux-improvements-export.js (destructures `downloadFile` from
+ * Both js/review/manager-review-export.js (an ES module `import`) and
+ * js/review/ux-improvements-export.js (destructures `downloadFile` from
  * window.utils at mount time) capture their own local reference to
  * downloadFile before this function ever runs, so monkeypatching
  * window.utils.downloadFile afterward does not intercept either call --

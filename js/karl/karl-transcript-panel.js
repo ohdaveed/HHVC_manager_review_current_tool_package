@@ -47,7 +47,7 @@
   /**
    * Copy text to the clipboard, falling back to a hidden textarea where the
    * async API is unavailable — an insecure context, or a browser that blocks
-   * it. Mirrors js/ux-improvements-export.js's copyText for the same reason it
+   * it. Mirrors js/review/ux-improvements-export.js's copyText for the same reason it
    * exists there: a reviewer on a file:// URL still needs the button to work.
    * @param {string} text
    * @returns {Promise<void>}

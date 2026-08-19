@@ -4,7 +4,7 @@
    js/ai/ai-assist-render.js, mirroring the ux-improvements / review-queue /
    review-queue split.
 
-   Loads after js/ai/ai-assist-render.js. May load after js/ux-improvements.js,
+   Loads after js/ai/ai-assist-render.js. May load after js/review/ux-improvements.js,
    because setWorkspaceTab calls the mount hook through optional chaining at
    tab-open time rather than at init. */
 ;(function mountAiAssist() {
@@ -36,13 +36,13 @@
   function toast(message, type) {
     // Reads window.showToast rather than a bare `showToast`. The bare form
     // does work — an undeclared identifier resolves through the scope chain to
-    // the global object, where js/ui-controls.js publishes it, and the bundler
+    // the global object, where js/review/ui-controls.js publishes it, and the bundler
     // hoists both modules into one scope anyway — and a review flagged it as
     // dead only for the guard to pass when actually tested (see "saving AI
     // settings shows a confirmation toast" in tests/e2e/ai-assist.spec.js).
     // It is spelled out explicitly because that is the pattern every other
     // self-mounting layer uses (js/review/review-queue-state.js,
-    // js/ux-improvements-workspace.js), and because a global that only works
+    // js/review/ux-improvements-workspace.js), and because a global that only works
     // by scope-chain fallback is worth not making anyone re-derive.
     window.showToast?.(message, type)
   }

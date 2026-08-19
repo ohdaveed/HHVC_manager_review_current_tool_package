@@ -22,17 +22,17 @@ async function gotoFresh(page, path = '/?page=pestsTopic') {
   // The sticky review bar mounts a beat after the first render; most flows
   // (workspace toggling, w shortcut) need it, so wait for full app init.
   await page.waitForSelector('[data-sticky-action="toggle-workspace"]')
-  // ...but the sticky bar is mounted by js/ux-improvements.js, which runs
-  // EARLY in the DOMContentLoaded cascade. js/keyboard-shortcuts.js is the last
+  // ...but the sticky bar is mounted by js/review/ux-improvements.js, which runs
+  // EARLY in the DOMContentLoaded cascade. js/review/keyboard-shortcuts.js is the last
   // script in index.html and attaches its keydown listener in its own init, so
   // waiting for it is what actually makes "full app init" true. Without this a
   // test could press a global shortcut into a document with no handler yet.
   await waitForShortcuts(page)
 }
 
-// Wait until js/keyboard-shortcuts.js has actually attached its keydown
+// Wait until js/review/keyboard-shortcuts.js has actually attached its keydown
 // listener. The sticky bar that gotoFresh waits for is mounted by
-// js/ux-improvements.js, which initializes EARLIER in the DOMContentLoaded
+// js/review/ux-improvements.js, which initializes EARLIER in the DOMContentLoaded
 // cascade, so it is a proxy for "the app booted", not for "a keypress will be
 // handled". Any test that presses a global shortcut must await this first or
 // it is racing the listener.
@@ -164,7 +164,7 @@ async function openSearchMetadata(page) {
   await page.locator('#seoTitleInput').waitFor({ state: 'visible' })
 }
 
-// Field persistence is debounced 300ms (js/ux-improvements.js); wait it out.
+// Field persistence is debounced 300ms (js/review/ux-improvements.js); wait it out.
 async function settleDebounce(page) {
   await page.waitForTimeout(400)
 }
@@ -172,7 +172,7 @@ async function settleDebounce(page) {
 /**
  * Put keyboard focus somewhere the global shortcuts will actually fire.
  *
- * js/keyboard-shortcuts.js gates every shortcut on isShortcutContext(): the
+ * js/review/keyboard-shortcuts.js gates every shortcut on isShortcutContext(): the
  * focused element must sit inside #reviewWorkspace, .canvas-toolbar or
  * #mockPage. That is deliberate — it stops single-letter shortcuts firing
  * while a reviewer types in the sidebar — so a test that presses a key
@@ -192,7 +192,7 @@ async function focusMockPage(page) {
   // data-rewrite-field="title" (inline content editing), so a real click
   // opens that field's inline editor instead of merely moving keyboard
   // focus — swallowing every subsequent shortcut press, since the editor's
-  // <input> matches js/keyboard-shortcuts.js's isTypingContext() guard.
+  // <input> matches js/review/keyboard-shortcuts.js's isTypingContext() guard.
   // .focus() sets DOM focus directly with no click event, so it still lands
   // focus inside #mockPage (satisfying isShortcutContext()) without
   // triggering the click-to-edit handler at all.

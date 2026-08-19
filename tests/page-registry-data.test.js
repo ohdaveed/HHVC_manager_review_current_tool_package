@@ -3,7 +3,7 @@
 // registry onto live page data.
 //
 // No DOM and no localStorage — the module is dual-exported like
-// js/review-merge.js and js/standards/plain-language.js, so it is require()'d directly.
+// js/review/review-merge.js and js/standards/plain-language.js, so it is require()'d directly.
 //
 // The bucket that matters most here is applyRegistryToData. It runs on the boot
 // path at the root of the module graph, reading a blob that NOTHING upstream has
@@ -70,7 +70,7 @@ function addedEntry(overrides) {
 describe('REQUIRED_PAGE_FIELDS', () => {
   // The drift guard. build_scripts/schema.js is CommonJS and needs Zod, so the
   // browser restates its required-field list rather than importing it — the
-  // same trade js/review-state-validation.js makes for the review-record rules.
+  // same trade js/review/review-state-validation.js makes for the review-record rules.
   // This is what makes the restatement safe: add a seventh required field to
   // pageSchema without mirroring it and CI fails here, instead of the tool
   // happily creating pages that would be rejected by `bun run validate`.

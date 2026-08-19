@@ -1,6 +1,6 @@
 // Pure logic for section-level inline edits: computing the section_edits
 // diff against ORIGINAL_DATA, and reapplying a saved section_edits map onto
-// a live page object. No DOM — dual-exported like js/review-merge.js and
+// a live page object. No DOM — dual-exported like js/review/review-merge.js and
 // js/standards/plain-language.js so this file is importable directly under Bun.
 const { describe, test, expect } = require('bun:test')
 const {
@@ -215,7 +215,7 @@ describe('applyContentEditsToPageData', () => {
   })
 
   // The return value drives a FOLLOW-UP RENDER in applySavedPageState()
-  // (js/ux-improvements-state-sync.js): true means "the DOM the reviewer is
+  // (js/review/ux-improvements-state-sync.js): true means "the DOM the reviewer is
   // looking at is now stale". It used to mean "setByPath resolved a path",
   // which is true on every call for any page that has ever had a section
   // edit saved — so the render fired unconditionally, and a render replaces
@@ -345,7 +345,7 @@ describe('applyContentEditsToPageData', () => {
 
   test('skips an entry whose path is outside the heading/paragraphs/bullets contract', () => {
     // Defense-in-depth: build_scripts/review-state-schema.js and
-    // js/review-state-validation.js already filter these before a record
+    // js/review/review-state-validation.js already filter these before a record
     // reaches here, but this function must not trust that unconditionally.
     const page = freshPage()
     applyContentEditsToPageData(page, {

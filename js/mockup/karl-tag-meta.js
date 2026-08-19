@@ -214,7 +214,7 @@ function renderKarlTagLegend(variant = 'full') {
    screen of colour key on every page load, decoding an encoding that was never
    colour-only, since each tag already names its kind in words. #karlTagLegendCompact
    had no element in index.html at all and had been a no-op for some time.
-   js/dashboard-guidance.js now renders this legend once, in the Help tab, where
+   js/review/dashboard-guidance.js now renders this legend once, in the Help tab, where
    reference material belongs. */
 
 // Guarded so this module can be require()d from Node/Bun, which

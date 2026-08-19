@@ -6,7 +6,7 @@
 // tests/review-state-schema.test.js, which side-effect-imports this file on its
 // own, gets it too. Safe to import here (unlike js/review/review-insights-data.js):
 // this module publishes only onto `window` and nothing `require`s it.
-import { DECISION_LABELS } from './utils.js'
+import { DECISION_LABELS } from '../utils.js'
 ;(function initReviewStateValidation() {
   if (typeof window === 'undefined') return
 

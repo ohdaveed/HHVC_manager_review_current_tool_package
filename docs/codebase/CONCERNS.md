@@ -46,14 +46,14 @@ Production TODO/FIXME/HACK scan: none found in production code (scan section).
 
 ### 5) Fragile/High-Churn Areas
 
-| Area                                        | Why fragile                                      | Churn signal          | Safe change strategy                               |
-| ------------------------------------------- | ------------------------------------------------ | --------------------- | -------------------------------------------------- |
-| `index.html`                                | Shell + workspace markup must match JS tab lists | 54 commits (90d scan) | Change with `WORKSPACE_TABS` + shortcuts together  |
-| `js/ux-improvements.js` / workspace CSS     | Docked layout + visibility class coupling        | 40 / 25 commits       | Touch `applyWorkspaceVisibility` only via one path |
-| `js/mockup/page-render.js`                  | XSS surface + Karl tags                          | 35 commits            | Keep escape/URL tests green                        |
-| `pages/agency-service-grouping.js`          | Agency hub content + invariants                  | 25 commits            | Run `validate` + banned-term checks                |
-| `js/utils.js`                               | Shared vocabulary + URL + records                | 24 commits            | Prefer additive helpers; don’t restate decisions   |
-| Instruction docs (`AGENTS.md`, `CLAUDE.md`) | Counts drift                                     | high churn            | Update with `doc-counts` in the same PR            |
+| Area                                           | Why fragile                                      | Churn signal          | Safe change strategy                               |
+| ---------------------------------------------- | ------------------------------------------------ | --------------------- | -------------------------------------------------- |
+| `index.html`                                   | Shell + workspace markup must match JS tab lists | 54 commits (90d scan) | Change with `WORKSPACE_TABS` + shortcuts together  |
+| `js/review/ux-improvements.js` / workspace CSS | Docked layout + visibility class coupling        | 40 / 25 commits       | Touch `applyWorkspaceVisibility` only via one path |
+| `js/mockup/page-render.js`                     | XSS surface + Karl tags                          | 35 commits            | Keep escape/URL tests green                        |
+| `pages/agency-service-grouping.js`             | Agency hub content + invariants                  | 25 commits            | Run `validate` + banned-term checks                |
+| `js/utils.js`                                  | Shared vocabulary + URL + records                | 24 commits            | Prefer additive helpers; don’t restate decisions   |
+| Instruction docs (`AGENTS.md`, `CLAUDE.md`)    | Counts drift                                     | high churn            | Update with `doc-counts` in the same PR            |
 
 ### 6) `[ASK USER]` Questions
 

@@ -485,8 +485,8 @@ a:focus {
      dark-mode-following reasoning as `label` above.
 
      font-size is --ds-text-label for the same reason: this selector's own
-     consumers (js/ai/ai-assist-render.js, js/dashboard-guidance.js,
-     js/page-registry-ui.js, js/ux-improvements-export.js,
+     consumers (js/ai/ai-assist-render.js, js/review/dashboard-guidance.js,
+     js/page-registry-ui.js, js/review/ux-improvements-export.js,
      js/sync/review-state-sync.js) are all review-tool chrome, never mockup
      content -- it lives in this file because it is shared with the editor
      sidebar outside `#reviewWorkspace`, not because it describes the page

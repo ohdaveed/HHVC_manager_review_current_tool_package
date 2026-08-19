@@ -12,7 +12,7 @@
    CSS layout in JavaScript and gets grid, custom properties and modern colour
    functions wrong — all three of which this stylesheet leans on heavily.
 
-   Load-order dependency: imported by js/main.js after js/ux-improvements.js,
+   Load-order dependency: imported by js/main.js after js/review/ux-improvements.js,
    because it calls window.showToast for progress and window.renderPage to
    step through pages during a bulk export. */
 
@@ -149,7 +149,7 @@ async function exportAllPages() {
  *
  * Injected rather than written into index.html so the buttons live next to the
  * behaviour that owns them, matching how the other review controls mount
- * (js/ux-improvements-export.js does the same for the export/import pair).
+ * (js/review/ux-improvements-export.js does the same for the export/import pair).
  * @returns {void}
  */
 function mountExportControls() {

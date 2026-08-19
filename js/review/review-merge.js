@@ -1,10 +1,10 @@
 /* Shared review-record merge logic: the single place "existing < patch"
    precedence and history-entry construction happen. Consumed by the browser
-   (js/review/review-queue-state.js, js/ux-improvements-export.js,
+   (js/review/review-queue-state.js, js/review/ux-improvements-export.js,
    js/sync/review-state-sync.js) via window.reviewMerge, and by server.ts's
    /api/review-state routes via a plain require/import — so it has no DOM
    dependency and must stay loadable in both contexts. Loads early, right
-   after js/review-state-store.js, since every one of those files depends on
+   after js/review/review-state-store.js, since every one of those files depends on
    it existing first. */
 
 /**
@@ -59,7 +59,7 @@ function combineHistory(...lists) {
  * history entry describing the result. This is the ONLY place a history
  * entry gets constructed — callers that just want to keep a working
  * snapshot fresh without recording a new "round" (e.g. the per-keystroke
- * autosave in js/ux-improvements-state-sync.js) must NOT route through
+ * autosave in js/review/ux-improvements-state-sync.js) must NOT route through
  * this function; they carry the existing history array forward untouched
  * instead.
  *

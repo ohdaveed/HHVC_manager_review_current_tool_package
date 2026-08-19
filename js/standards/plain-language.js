@@ -8,10 +8,10 @@
    the section it comes from, so a reviewer who disagrees with a result can go
    argue with the standard rather than with the tool.
 
-   Consumed by the browser (js/ux-improvements-state-sync.js's Page checks
+   Consumed by the browser (js/review/ux-improvements-state-sync.js's Page checks
    panel) via window.plainLanguage, and by Node/Bun (tests, and later the AI
    output validator) via a plain require -- the same dual-export arrangement
-   js/review-merge.js uses, and for the same reason: one implementation cannot
+   js/review/review-merge.js uses, and for the same reason: one implementation cannot
    drift from itself. It has no DOM dependency and must stay loadable in both
    contexts.
 

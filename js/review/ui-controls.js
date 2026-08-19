@@ -2,12 +2,12 @@
 // picker dropdown, and the review checklist. Depends on js/state.js
 // (escapeHtml, pageOrder, currentPageKey).
 
-import { currentPageKey, pageData, pageOrder } from './state.js'
-import { escapeHtml } from './utils.js'
+import { currentPageKey, pageData, pageOrder } from '../state.js'
+import { escapeHtml } from '../utils.js'
 /**
  * Show a transient toast, optionally with one action button.
  *
- * `action` was a real gap rather than a new feature: js/ux-improvements-workspace.js
+ * `action` was a real gap rather than a new feature: js/review/ux-improvements-workspace.js
  * has always passed a third argument offering a "Next Actionable Page" jump
  * after a decision, and `css/styles.css`'s `.toast .toast-action` has always
  * styled it \u2014 but this function only ever declared two parameters, so the
@@ -86,7 +86,7 @@ function toggleSidebar() {
 }
 // Sidebar scroll position and the per-page checklist toggles below are
 // intentionally kept in sessionStorage rather than window.reviewState
-// (js/ux-improvements.js's localStorage-backed review data): they're
+// (js/review/ux-improvements.js's localStorage-backed review data): they're
 // ephemeral viewport/UI positions scoped to this browser tab, not review
 // content worth persisting across restarts or exporting.
 function saveSidebarScroll() {

@@ -18,7 +18,7 @@
    leave a hole the editor discovers when Karl refuses to save.
 
    Dual-exported (window.karlBlocks plus module.exports) exactly like
-   js/card-inheritance.js and js/review-merge.js: the browser panel and the Node
+   js/card-inheritance.js and js/review/review-merge.js: the browser panel and the Node
    CLI must share one inventory rather than two copies free to come to disagree
    about which field an editor is being sent to.
 

@@ -15,7 +15,7 @@
    assist.
 
    Mounts lazily when Help opens, and — like js/ai/ai-assist.js — also catches an
-   already-open panel at its own init(), since js/ux-improvements.js restores a
+   already-open panel at its own init(), since js/review/ux-improvements.js restores a
    persisted workspace_tab before these hooks exist and a restored tab would
    otherwise paint empty.
 

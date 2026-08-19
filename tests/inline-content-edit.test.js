@@ -45,7 +45,7 @@ require('../js/mockup/inline-link-target.js') // side-effect: populates window.i
 require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
 require('../js/editing/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
 require('../js/editing/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
-// Imported once at file scope, not inside a test: js/ui-controls.js statically
+// Imported once at file scope, not inside a test: js/review/ui-controls.js statically
 // imports js/state.js, which side-effect-loads the REAL js/page-data.js (all
 // 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
 // real dataset the moment it first runs. Importing it here, before any test's
@@ -53,9 +53,9 @@ require('../js/editing/inline-content-edit-adapter.js') // side-effect: populate
 // window.HHVC_DATA, means that one-time real-data clobber happens up front and
 // every test's own stub assignment (which always runs after this point) wins.
 // Requiring it again inside a test returns the cached module with no further
-// side effect, so this also documents why later `require('../js/ui-controls.js')`
+// side effect, so this also documents why later `require('../js/review/ui-controls.js')`
 // calls in the tests below are safe.
-const { showToast: realShowToast } = require('../js/ui-controls.js')
+const { showToast: realShowToast } = require('../js/review/ui-controls.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/editing/inline-content-edit.js')
 
@@ -726,7 +726,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
   test('committing title/summary/primaryCta as blank is refused and the field keeps its value', async () => {
     // Regression coverage: writeScalarValue accepted an empty string for
     // these three fields, but updateMockupTextFromSavedState
-    // (js/ux-improvements-state-sync.js) only reapplies a TRUTHY saved
+    // (js/review/ux-improvements-state-sync.js) only reapplies a TRUTHY saved
     // value, so a cleared field looked saved for the session and then
     // silently reverted to the authored value on the next reload. This
     // guard is exercised end to end in tests/e2e/inline-content-edit.spec.js
@@ -1057,7 +1057,7 @@ describe('inline content edit: add/remove/undo for paragraph and bullet arrays',
     const persistCallsAfterRemove = getPersistCalls()
 
     // Simulate navigating to a different page before the undo toast is
-    // clicked — getCurrentKey() is the seam js/ux-improvements.js's real
+    // clicked — getCurrentKey() is the seam js/review/ux-improvements.js's real
     // navigation flips.
     window.utils.getCurrentKey = () => 'otherPage'
 

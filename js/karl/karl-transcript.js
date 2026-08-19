@@ -21,7 +21,7 @@
    keystroke.
 
    Dual-exported (window.karlTranscript plus module.exports) like
-   js/review-merge.js and js/standards/plain-language.js.
+   js/review/review-merge.js and js/standards/plain-language.js.
 
    Load-order dependency: reads window.karlBlocks, window.cardInheritance and
    window.utils in the browser branch, so js/main.js must list it after
@@ -125,7 +125,7 @@ function resolveValue(page, reviewRecord, path) {
   // reported the authored slug after a reviewer had changed it. That is worse
   // than a stale display — slug is required on the Promote tab of every Karl
   // type, so the transcript was telling an editor to publish the page at the
-  // superseded URL. js/ux-improvements-export.js resolves it the same way
+  // superseded URL. js/review/ux-improvements-export.js resolves it the same way
   // (`saved.url_slug || page.slug`).
   if (path === 'slug' && reviewRecord && reviewRecord.url_slug) {
     return { value: reviewRecord.url_slug, overlaid: true }

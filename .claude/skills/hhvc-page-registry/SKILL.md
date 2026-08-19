@@ -12,7 +12,7 @@ A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
 is involved, and it works on the static Netlify build. Three files, mirroring the
 inline-content-edit split — `js/page-registry-data.js` (pure validation and the
-in-place mutation, dual-exported like `js/review-merge.js`),
+in-place mutation, dual-exported like `js/review/review-merge.js`),
 `js/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
 `window.pageRegistry`), and `js/page-registry-ui.js` (the sidebar controls and
 the Help list). No new stylesheet: the sidebar chrome lives in
@@ -34,7 +34,7 @@ surface so each selector is still declared in exactly one file.
   "not a page in this mockup".
 - **Storage is `state.globals.page_registry`, as keyed objects rather than
   arrays.** `globals` is the one slot both review-state validators copy through
-  untouched (a shallow spread in `js/review-state-validation.js`,
+  untouched (a shallow spread in `js/review/review-state-validation.js`,
   `.passthrough()` in `build_scripts/review-state-schema.js`), so the feature
   needs no validator change and **no storage-version bump** — a bump makes
   `readLocalState()` discard every reviewer's local state. Not `state.pages[key]`:
@@ -68,7 +68,7 @@ surface so each selector is still declared in exactly one file.
   and drives `j`/`k` navigation, the queue, the picker and batch PNG export, so
   appending would silently permute the site.
 - **Deleting the page on screen needs an explicit sequence, and the failure it
-  avoids is review-data loss.** `reviewFormPageKey` (`js/ux-improvements.js`)
+  avoids is review-data loss.** `reviewFormPageKey` (`js/review/ux-improvements.js`)
   stays pinned to the deleted key until the follow-up navigation settles, so an
   autosave landing in that window calls `collectCurrentPageReviewState(key)`
   where `DATA.pages[key] || {}` makes `page_title`, `edited_title`,
@@ -143,7 +143,7 @@ surface so each selector is still declared in exactly one file.
 - **A page key is constrained to `/^[A-Za-z][A-Za-z0-9]*$/` and rejects
   `__proto__`/`prototype`/`constructor`.** The key becomes an object property on
   `window.HHVC_PAGES`, an `<option>` value and a `?page=` parameter.
-  `js/ui-controls.js:128` also now escapes it — that was the one place in the
+  `js/review/ui-controls.js:128` also now escapes it — that was the one place in the
   codebase interpolating a page key into `innerHTML` raw, safe only while every
   key was hardcoded in a source file.
 - **Uniqueness is checked against `HHVC_DELETED_PAGE_ALIASES` too.** An added key

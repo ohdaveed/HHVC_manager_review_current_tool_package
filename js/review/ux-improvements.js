@@ -4,7 +4,7 @@
    (each in their own file, loaded before this one) into init()/refresh
    wiring. */
 
-import { hasValidPageData, resolvePageKey } from './utils.js'
+import { hasValidPageData, resolvePageKey } from '../utils.js'
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
   if (

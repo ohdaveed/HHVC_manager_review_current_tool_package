@@ -1,8 +1,8 @@
 // Unit tests for the section_edits follow-up-render re-entrancy guard added
-// to applySavedPageState() in js/ux-improvements-state-sync.js.
+// to applySavedPageState() in js/review/ux-improvements-state-sync.js.
 //
-// js/ux-improvements-state-sync.js is a self-mounting IIFE (an ES module with
-// no module.exports tail — unlike js/sync/review-state-sync.js/js/review-merge.js,
+// js/review/ux-improvements-state-sync.js is a self-mounting IIFE (an ES module with
+// no module.exports tail — unlike js/sync/review-state-sync.js/js/review/review-merge.js,
 // it publishes its API only onto window.ReviewUx.stateSync at import time),
 // so there is no bare `require()` surface to test against. It is normally
 // exercised only via e2e specs (see CLAUDE.md's "Local persistence" section).
@@ -21,7 +21,7 @@ const path = require('path')
 const realUtils = require('../js/utils.js')
 const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 
-const MODULE_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
+const MODULE_PATH = path.resolve(__dirname, '../js/review/ux-improvements-state-sync.js')
 
 let originalWindow
 // Tracks the current test's console.assert spy, if any, so afterEach can
@@ -45,7 +45,7 @@ afterEach(() => {
 })
 
 /**
- * Mount a fresh instance of js/ux-improvements-state-sync.js against a
+ * Mount a fresh instance of js/review/ux-improvements-state-sync.js against a
  * stubbed window, and return its published API plus test hooks.
  * @param {object} [options]
  * @param {object} [options.page] the pestsTopic page object DATA.pages will hold
@@ -68,7 +68,7 @@ async function mountStateSync({
   }
 
   const renderPageCalls = []
-  // The real wrapper (js/ux-improvements.js's wrapRenderPage) synchronously
+  // The real wrapper (js/review/ux-improvements.js's wrapRenderPage) synchronously
   // repaints the DOM via the original render, then defers a follow-up
   // applySavedPageState call. This stub mirrors exactly that shape — a
   // synchronous "render" recorded here, plus a setTimeout(0)-deferred call
@@ -422,7 +422,7 @@ describe('applySavedPageState asserts page identity before reapplying', () => {
     // that reads DATA.pages[pageKey] a second time (instead of reusing the
     // `page` local) and gets back a clone rather than the live object —
     // which would silently break refreshInFlightForKey's safety argument
-    // (see that variable's own comment in js/ux-improvements-state-sync.js).
+    // (see that variable's own comment in js/review/ux-improvements-state-sync.js).
     // A Proxy simulates this without editing the module under test: the
     // FIRST access to `pestsTopic` (the `const page = DATA.pages[pageKey]`
     // read) returns the real object; a SECOND access (the assertion this

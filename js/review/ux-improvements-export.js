@@ -1,7 +1,7 @@
 /* Manager review: review summary, CSV export, and JSON backup/restore.
-   Loads after js/ux-improvements-state-sync.js. */
+   Loads after js/review/ux-improvements-state-sync.js. */
 
-import { hasValidPageData } from './utils.js'
+import { hasValidPageData } from '../utils.js'
 ;(function mountUxImprovementsExport() {
   const DATA = window.HHVC_DATA
   if (

@@ -1,6 +1,6 @@
 // Unit tests for js/sync/review-state-sync.js's pull/push conflict-handling logic.
 // This file is browser-only (an IIFE with no top-level exports) except for a
-// dual module.exports tail mirroring js/review-merge.js's pattern, added
+// dual module.exports tail mirroring js/review/review-merge.js's pattern, added
 // specifically to make this logic testable here without a real browser/DOM.
 //
 // bun:test runs every test file in one shared process, and other files
@@ -14,7 +14,11 @@
 // the stubbing window is scoped to this file's own tests only.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
-const { mergeReviewRecord, combineHistory, reviewContentEquals } = require('../js/review-merge.js')
+const {
+  mergeReviewRecord,
+  combineHistory,
+  reviewContentEquals,
+} = require('../js/review/review-merge.js')
 
 const MODULE_PATH = path.resolve(__dirname, '../js/sync/review-state-sync.js')
 

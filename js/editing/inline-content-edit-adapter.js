@@ -4,13 +4,13 @@
    — its blocks never become the storage format. Every value this module
    produces for a page write is exactly the shape writeScalarValue already
    wrote before Editor.js existed (js/editing/inline-content-edit.js), so
-   build_scripts/review-state-schema.js, js/review-state-validation.js and
+   build_scripts/review-state-schema.js, js/review/review-state-validation.js and
    js/editing/inline-content-edit-data.js's SECTION_EDIT_PATH_PATTERN/shape checks
    need no changes — this file's whole job is to keep producing values that
    already satisfy checks that predate it.
 
    Dual-exported (window.inlineEditAdapter plus module.exports), matching
-   js/editing/inline-content-edit-data.js, js/review-merge.js and
+   js/editing/inline-content-edit-data.js, js/review/review-merge.js and
    js/standards/plain-language.js, so this file has no DOM dependency and is
    importable directly under Bun with no browser and no live Editor.js
    instance — the round-trip tests in

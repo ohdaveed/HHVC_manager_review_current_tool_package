@@ -193,7 +193,7 @@ describe.skipIf(!DATABASE_URL)('review-state API on Postgres', () => {
 
   test('round-trips jsonb without mangling a nested object field', async () => {
     // section_edits is the field most likely to be flattened by a driver that
-    // stringifies objects; js/review-merge.js compares it structurally.
+    // stringifies objects; js/review/review-merge.js compares it structurally.
     const response = await putPage('scopeInfo', {
       page_key: 'scopeInfo',
       decision: 'Needs review',

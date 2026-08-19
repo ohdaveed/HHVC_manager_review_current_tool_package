@@ -55,7 +55,7 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
   (~150-200 chunks) by cosine similarity in microseconds at this size; a
   loadable extension like `sqlite-vec` would buy nothing here and adds a
   native-binary deployment risk against Railway for no benefit. Dual-exported
-  like `js/review-merge.js`, so ranking is tested against synthetic embeddings
+  like `js/review/review-merge.js`, so ranking is tested against synthetic embeddings
   with no live Gemini call and no live DB.
 - **Re-ingestion is idempotent per file, and always full.** `bun run ingest`
   deletes and reinserts each file's rows in one transaction, reprocessing

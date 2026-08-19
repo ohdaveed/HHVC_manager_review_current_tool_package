@@ -1,6 +1,6 @@
 // Round-trip persistence coverage for Task 7's add/remove/reset operations:
 // add a bullet, remove a bullet, and reset a heading, each verified against
-// the REAL section_edits recompute-on-save path (js/ux-improvements-state-sync.js's
+// the REAL section_edits recompute-on-save path (js/review/ux-improvements-state-sync.js's
 // collectCurrentPageReviewState -> js/editing/inline-content-edit-data.js's
 // computeSectionEdits) and the REAL reapply-on-load path
 // (applySavedPageState -> applyContentEditsToPageData), rather than the
@@ -9,7 +9,7 @@
 // change to any of these modules...must be verified against the round trip
 // itself before being called done."
 //
-// js/editing/inline-content-edit.js and js/ux-improvements-state-sync.js are both
+// js/editing/inline-content-edit.js and js/review/ux-improvements-state-sync.js are both
 // self-mounting IIFEs with no module.exports, so each test imports fresh
 // copies via cache-busting dynamic import() against a hand-built window --
 // same pattern as tests/inline-content-edit-refresh.test.js's
@@ -21,7 +21,7 @@ const realUtils = require('../js/utils.js')
 const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
 require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
 
-const STATE_SYNC_PATH = path.resolve(__dirname, '../js/ux-improvements-state-sync.js')
+const STATE_SYNC_PATH = path.resolve(__dirname, '../js/review/ux-improvements-state-sync.js')
 const INLINE_EDIT_PATH = path.resolve(__dirname, '../js/editing/inline-content-edit.js')
 
 let originalWindow
@@ -40,7 +40,7 @@ afterEach(() => {
 })
 
 /**
- * Mount real js/ux-improvements-state-sync.js (for a real
+ * Mount real js/review/ux-improvements-state-sync.js (for a real
  * saveCurrentPageToLocalStorage / applySavedPageState pair backed by real
  * computeSectionEdits/applyContentEditsToPageData) plus real
  * js/editing/inline-content-edit.js on top of it, against one shared in-memory

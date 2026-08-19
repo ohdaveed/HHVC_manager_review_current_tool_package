@@ -1,7 +1,7 @@
 /* Manager review: page state sync between the SEO/editor sidebar and
-   window.reviewState. Loads after js/review-state-store.js. */
+   window.reviewState. Loads after js/review/review-state-store.js. */
 
-import { hasValidPageData } from './utils.js'
+import { hasValidPageData } from '../utils.js'
 ;(function mountUxImprovementsStateSync() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState) return
@@ -14,7 +14,7 @@ import { hasValidPageData } from './utils.js'
 
   // Re-entrancy guard for the section_edits follow-up render triggered by
   // applySavedPageState below. window.renderPage is always the WRAPPED
-  // version by the time applySavedPageState can run (js/ux-improvements.js's
+  // version by the time applySavedPageState can run (js/review/ux-improvements.js's
   // wrapRenderPage() installs it before restoreInitialPage()/any navigation
   // calls this), so calling it from inside applySavedPageState re-enters
   // that wrapper: originalRenderPage runs synchronously (this is what
@@ -252,7 +252,7 @@ import { hasValidPageData } from './utils.js'
    *
    * @param {string} [pageKeyOverride] Save under this page key instead of
    *   getCurrentKey(). Needed by the pre-navigation flush in
-   *   js/ux-improvements.js: getCurrentKey() reads #pageSelect.value, which is
+   *   js/review/ux-improvements.js: getCurrentKey() reads #pageSelect.value, which is
    *   ALREADY the destination page when navigation comes from the page picker
    *   (the <select>'s change event fires with the new value before renderPage
    *   runs), so a flush that trusted it would file the outgoing page's
@@ -307,7 +307,7 @@ import { hasValidPageData } from './utils.js'
       // reset history to [] via the fresh buildReviewRecord() snapshot, so
       // carry the existing array forward untouched. Round-boundary events
       // (queue actions, imports, sync) go through mergeReviewRecord
-      // instead, in js/review-merge.js.
+      // instead, in js/review/review-merge.js.
       const existingHistory = existing?.history
       snapshot.history = Array.isArray(existingHistory) ? existingHistory : []
       // Same reasoning as history: synced_at tracks the last server state
@@ -334,7 +334,7 @@ import { hasValidPageData } from './utils.js'
       // A decision change IS a discrete review round, even though it
       // arrives through this same autosave path (the sidebar <select> and
       // the quick-action chips both persist via the generic field
-      // listeners in js/ux-improvements.js). Route just that transition
+      // listeners in js/review/ux-improvements.js). Route just that transition
       // through mergeReviewRecord so the audit trail records it — without
       // opening the floodgates, since a decision only transitions on a
       // deliberate reviewer action, never per keystroke. Queue actions
@@ -671,7 +671,7 @@ import { hasValidPageData } from './utils.js'
     if (!panel) return
 
     // Skip rebuilds while the panel can't be seen; the Checks tab re-renders on
-    // activation (setWorkspaceTab in js/ux-improvements-workspace.js).
+    // activation (setWorkspaceTab in js/review/ux-improvements-workspace.js).
     const workspace = document.getElementById('reviewWorkspace')
     if (workspace?.hidden || panel.hidden) return
 
@@ -735,7 +735,7 @@ import { hasValidPageData } from './utils.js'
    */
   function loadChecksIsland() {
     if (!checksIslandPromise) {
-      checksIslandPromise = import('./react/checks-panel.jsx')
+      checksIslandPromise = import('../react/checks-panel.jsx')
         .then((module) => module.mountChecksPanel)
         .catch(() => null)
     }

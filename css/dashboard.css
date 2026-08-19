@@ -169,7 +169,7 @@
 }
 
 /* The grid only grows a third column while the workspace is actually open;
-   js/ux-improvements-workspace.js toggles this class alongside the panel's
+   js/review/ux-improvements-workspace.js toggles this class alongside the panel's
    hidden attribute. minmax() rather than a fixed width so the panel gives room
    back to the mockup on a smaller screen instead of squeezing it. */
 .app.workspace-docked {

@@ -1,7 +1,7 @@
 /* Manager review: sticky bar, workspace tabs, and decision quick actions.
-   Loads after js/ux-improvements-state-sync.js. */
+   Loads after js/review/ux-improvements-state-sync.js. */
 
-import { hasValidPageData } from './utils.js'
+import { hasValidPageData } from '../utils.js'
 ;(function mountUxImprovementsWorkspace() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA) || !window.reviewState || !window.ReviewUx?.stateSync) return
@@ -16,7 +16,7 @@ import { hasValidPageData } from './utils.js'
   // index.html). Because Help is last, and everything added lands before it,
   // Help's shortcut digit is the one that moves whenever the strip changes — so
   // keep this array, the tab markup in index.html and the 1-3 shortcut cases in
-  // js/keyboard-shortcuts.js in step with each other.
+  // js/review/keyboard-shortcuts.js in step with each other.
   const WORKSPACE_TABS = ['overview', 'checks', 'help']
   let workspaceTriggerButton = null
 
@@ -46,7 +46,7 @@ import { hasValidPageData } from './utils.js'
    *   never repainted until the reviewer navigated, so every load announced
    *   the wrong page beside a correct decision chip (the chip reads the
    *   sidebar, which `applySavedPageState()` had already filled in).
-   *   js/ux-improvements.js tracks the authoritative key as
+   *   js/review/ux-improvements.js tracks the authoritative key as
    *   `reviewFormPageKey` for exactly this class of bug; this parameter is
    *   how it reaches here.
    */

@@ -2,8 +2,8 @@
    Keeps descriptive review guidance near the page preview and trims repeated sidebar helper copy at runtime. */
 
 import { applyChecklistState, initChecklist } from './ui-controls.js'
-import { renderKarlTagLegend } from './mockup/karl-tag-meta.js'
-import { getCurrentKey } from './utils.js'
+import { renderKarlTagLegend } from '../mockup/karl-tag-meta.js'
+import { getCurrentKey } from '../utils.js'
 import { updateReadingTarget } from './editor-panel.js'
 ;(function migrateDescriptiveTextToDashboard() {
   const GUIDANCE_ID = 'dashboardGuidancePanel'
@@ -414,7 +414,7 @@ import { updateReadingTarget } from './editor-panel.js'
   function init() {
     // Only sidebar-visible effects run at load; the Help panels (~90 elements)
     // mount lazily via window.refreshDashboardGuidance when the Help tab opens
-    // (setWorkspaceTab in js/ux-improvements-workspace.js).
+    // (setWorkspaceTab in js/review/ux-improvements-workspace.js).
     injectStyles()
     compactSidebarCopy()
 

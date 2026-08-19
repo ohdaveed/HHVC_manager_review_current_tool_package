@@ -1,7 +1,7 @@
 //
 // Pure markdown chunker for the RAG knowledge base. No I/O: takes a markdown
 // string and returns chunk records. Dual-exported (window/module.exports),
-// matching js/review-merge.js and js/standards/plain-language.js, so this is
+// matching js/review/review-merge.js and js/standards/plain-language.js, so this is
 // unit-testable without a DB or a browser, and reusable if a browser-side
 // tool ever wants the same chunking (none does today).
 //

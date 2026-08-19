@@ -5,7 +5,7 @@
    synchronous core window.reviewState API is untouched, and every function
    here is a no-op whenever no sync URL/token is configured, so the app
    keeps working fully offline exactly as it did before this file existed.
-   Loads after js/review-merge.js and js/review-state-store.js. */
+   Loads after js/review/review-merge.js and js/review/review-state-store.js. */
 
 ;(function mountReviewStateSync() {
   if (typeof window === 'undefined' || !window.reviewState || !window.reviewMerge) return
@@ -750,7 +750,7 @@
   /**
    * Queue an automatic push for one page after its edits settle.
    *
-   * Called by the autosave path (js/ux-improvements-state-sync.js) AFTER it
+   * Called by the autosave path (js/review/ux-improvements-state-sync.js) AFTER it
    * has written localStorage — never instead of it. Debounced per page key so
    * a reviewer typing a long note produces one PUT rather than one per
    * keystroke, and coalesced so switching between two pages does not cancel
@@ -1334,7 +1334,7 @@
   }
 
   // Node/Bun-side export for unit testing the pull/push conflict-resolution
-  // logic without a real browser — same dual-export pattern js/review-merge.js
+  // logic without a real browser — same dual-export pattern js/review/review-merge.js
   // uses. No behavior change in the browser; module is undefined there.
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

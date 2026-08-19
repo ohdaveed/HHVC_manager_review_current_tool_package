@@ -4,13 +4,13 @@
 
 ### 1) Naming Rules
 
-| Item               | Rule                                                                   | Example                                | Evidence                            |
-| ------------------ | ---------------------------------------------------------------------- | -------------------------------------- | ----------------------------------- |
-| Files              | lowercase; hyphenate multi-word; no camelCase filenames                | `review-queue-rows.js`                 | `js/`, `AGENTS.md`                  |
-| Functions/methods  | camelCase                                                              | `mergeReviewRecord`, `escapeHtml`      | `js/review-merge.js`, `js/utils.js` |
-| Types/interfaces   | TypeScript only in `server.ts`; JSDoc elsewhere                        | `ApiRole`, `@param` blocks             | `server.ts`, module headers         |
-| Constants/env vars | `UPPER_SNAKE_CASE` module constants; `snake_case` persisted/CSV fields | `MAX_REVIEW_BODY_BYTES`, `review_date` | `server.ts`, `AGENTS.md`            |
-| Window namespaces  | PascalCase internals / mixed public APIs as documented                 | `window.ReviewUx`, `window.aiAssist`   | `AGENTS.md`                         |
+| Item               | Rule                                                                   | Example                                | Evidence                                   |
+| ------------------ | ---------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------ |
+| Files              | lowercase; hyphenate multi-word; no camelCase filenames                | `review-queue-rows.js`                 | `js/`, `AGENTS.md`                         |
+| Functions/methods  | camelCase                                                              | `mergeReviewRecord`, `escapeHtml`      | `js/review/review-merge.js`, `js/utils.js` |
+| Types/interfaces   | TypeScript only in `server.ts`; JSDoc elsewhere                        | `ApiRole`, `@param` blocks             | `server.ts`, module headers                |
+| Constants/env vars | `UPPER_SNAKE_CASE` module constants; `snake_case` persisted/CSV fields | `MAX_REVIEW_BODY_BYTES`, `review_date` | `server.ts`, `AGENTS.md`                   |
+| Window namespaces  | PascalCase internals / mixed public APIs as documented                 | `window.ReviewUx`, `window.aiAssist`   | `AGENTS.md`                                |
 
 ### 2) Formatting and Linting
 

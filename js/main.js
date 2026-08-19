@@ -123,8 +123,8 @@ import './third-party-globals.js'
 // js/page-registry.js sits between them because it must run BEFORE js/state.js
 // takes its one-time ORIGINAL_DATA clone — see that file's header for why a
 // page added after the clone silently loses its inline edits. To do its work it
-// needs window.reviewState, so it also pulls js/review-state-validation.js and
-// js/review-state-store.js forward; both import only js/utils.js, so hoisting
+// needs window.reviewState, so it also pulls js/review/review-state-validation.js and
+// js/review/review-state-store.js forward; both import only js/utils.js, so hoisting
 // them is safe, and their later lines below are already-evaluated no-ops kept
 // as documentation of where they sit in the sequence.
 // ---------------------------------------------------------------------------
@@ -134,8 +134,8 @@ import './page-data.js'
 import './page-registry-data.js'
 import './page-registry.js'
 import './state.js'
-import './ui-controls.js'
-import './editor-panel.js'
+import './review/ui-controls.js'
+import './review/editor-panel.js'
 // BEFORE page-render.js: js/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so a consumer cannot import a binding from it and the
 // graph has no name to order by. js/mockup/page-render.js reads that global to decide
@@ -155,11 +155,11 @@ import './karl/karl-transcript.js'
 import './mockup/page-render.js'
 import './karl/karl-guide.js'
 import './app.js'
-import './manager-review-export.js'
-import './review-state-validation.js'
+import './review/manager-review-export.js'
+import './review/review-state-validation.js'
 import './standards/reading-level.js'
-import './review-state-store.js'
-import './review-merge.js'
+import './review/review-state-store.js'
+import './review/review-merge.js'
 import './editing/inline-content-edit-data.js'
 import './editing/inline-content-edit-adapter.js'
 // Publishes window.inlineLinkTarget, read by inline-content-edit-link-tool.js
@@ -178,10 +178,10 @@ import './sync/review-state-sync.js'
 // public APIs from the sibling files listed
 // immediately above them.
 // ---------------------------------------------------------------------------
-import './ux-improvements-state-sync.js'
-import './ux-improvements-workspace.js'
-import './ux-improvements-export.js'
-import './ux-improvements.js'
+import './review/ux-improvements-state-sync.js'
+import './review/ux-improvements-workspace.js'
+import './review/ux-improvements-export.js'
+import './review/ux-improvements.js'
 import './review/review-queue-state.js'
 // Undo before rows: applyQueueAction records its snapshot through this.
 import './review/review-queue-undo.js'
@@ -197,7 +197,7 @@ import './review/review-insights.js'
 // after the review layers whose state it inspects.
 import './review/review-ops-data.js'
 import './review/review-ops.js'
-import './dashboard-guidance.js'
+import './review/dashboard-guidance.js'
 // Add/delete page controls. After dashboard-guidance.js, which owns the Help
 // panel's layout, and after review-queue*.js, whose one-step undo this consumes
 // when a page is deleted (window.ReviewQueueInternal.undo.clearAction).
@@ -226,4 +226,4 @@ import './mockup/mockup-image-export.js'
 // whose builder it renders.
 import './karl/karl-transcript-panel.js'
 
-import './keyboard-shortcuts.js'
+import './review/keyboard-shortcuts.js'

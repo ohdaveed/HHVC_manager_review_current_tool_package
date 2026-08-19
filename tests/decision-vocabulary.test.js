@@ -97,11 +97,11 @@ const FILES_WITH_DECISION_LITERALS = [
   'js/review/review-queue-render.js',
   'js/review/review-queue-state.js',
   'js/review/review-queue-undo.js',
-  'js/keyboard-shortcuts.js',
-  'js/ux-improvements-state-sync.js',
-  'js/ux-improvements-export.js',
-  'js/ux-improvements-workspace.js',
-  'js/manager-review-export.js',
+  'js/review/keyboard-shortcuts.js',
+  'js/review/ux-improvements-state-sync.js',
+  'js/review/ux-improvements-export.js',
+  'js/review/ux-improvements-workspace.js',
+  'js/review/manager-review-export.js',
   'js/review/review-ops-data.js',
   // The Karl transcript prints the page's decision at the top and marks a
   // not-Approved page on every panel, so it compares against 'Approved' by
@@ -144,7 +144,7 @@ const NOT_THE_DECISION_VOCABULARY = new Set([
    leaves the chip looking right.
 
    The body is letters and spaces only, which is what keeps PROSE out: the
-   shortcut list in js/keyboard-shortcuts.js describes its `r` binding as
+   shortcut list in js/review/keyboard-shortcuts.js describes its `r` binding as
    'Revise and resubmit (current or selected)', and a looser `[^']*` body
    swept that up and failed the file over a help string. Every real label is
    letters and spaces, so nothing legitimate is excluded by the narrowing. */

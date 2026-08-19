@@ -20,10 +20,10 @@
      mockup" and falling back to pestsTopic before the registry has been read.
 
    The three side-effect imports below are ordered, and ./page-data.js MUST stay
-   first: js/review-state-store.js returns early when window.HHVC_DATA is
+   first: js/review/review-state-store.js returns early when window.HHVC_DATA is
    absent, so importing it ahead of page-data.js would leave window.reviewState
    unpublished — turning a silent registry no-op into a hard TypeError in
-   js/ux-improvements.js, which reads window.reviewState unguarded.
+   js/review/ux-improvements.js, which reads window.reviewState unguarded.
 
    FAILURE POSTURE. Everything here is wrapped so that a corrupt registry
    degrades to "the registry did nothing" rather than taking the app down. This
@@ -31,17 +31,17 @@
    every module after it and leaves the reviewer looking at index.html's static
    "Loading…" placeholder — with no UI left to remove the bad entry. The
    recovery path for that state is the sidebar's "Clear saved reviews" button,
-   which clears the registry and reloads (see js/ux-improvements-export.js). */
+   which clears the registry and reloads (see js/review/ux-improvements-export.js). */
 
 import './page-data.js'
-import './review-state-validation.js'
-import './review-state-store.js'
+import './review/review-state-validation.js'
+import './review/review-state-store.js'
 import './page-registry-data.js'
 ;(function mountPageRegistry() {
   const DATA = window.HHVC_DATA
   const registryData = window.pageRegistryData
   if (!DATA || !DATA.pages || !DATA.order || !registryData) return
-  // Defensive: js/review-state-store.js publishes this, and the import above
+  // Defensive: js/review/review-state-store.js publishes this, and the import above
   // guarantees it has run — but it self-guards on page data, so a malformed
   // HHVC_DATA would leave it unpublished and every call below would throw.
   if (!window.reviewState) return
@@ -281,7 +281,7 @@ import './page-registry-data.js'
     applySavedRegistry()
     seedOriginalDataIfMissing(key, DATA.pages[key])
     refreshDerivedViews(key)
-    // Through window.renderPage, not the import: the js/ux-improvements.js
+    // Through window.renderPage, not the import: the js/review/ux-improvements.js
     // wrapper is what reassigns reviewFormPageKey and runs applySavedPageState
     // for the destination.
     window.renderPage?.(key)

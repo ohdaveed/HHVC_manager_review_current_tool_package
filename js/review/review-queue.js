@@ -197,7 +197,7 @@
     panel.addEventListener('change', handleQueueChange)
     document.addEventListener('hhvc:review-data-changed', renderReviewQueue)
     // The table mounts lazily on first Overview tab open (setWorkspaceTab in
-    // js/ux-improvements-workspace.js). If the workspace was already opened on
+    // js/review/ux-improvements-workspace.js). If the workspace was already opened on
     // Overview before this init ran, mount now.
     const workspace = document.getElementById('reviewWorkspace')
     if (workspace && !workspace.hidden && !panel.hidden) {

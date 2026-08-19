@@ -37,7 +37,7 @@
 | `pages/*.js`                                           | Page content objects (copy, sections, karl notes)              | Review UI logic; publishing/CMS writes         |
 | `js/` core (`utils`, `state`, `page-render`, `app`, …) | Render, in-memory state, editor panel                          | Optional API secrets; SQLite                   |
 | `js/` review/UX IIFEs                                  | localStorage review aids, queue, insights, AI panel UI         | Writing back into `pages/*.js` source          |
-| `js/review-merge.js`                                   | Shared merge + history construction (browser + server)         | DOM assumptions                                |
+| `js/review/review-merge.js`                            | Shared merge + history construction (browser + server)         | DOM assumptions                                |
 | `build_scripts/`                                       | Node/Bun validation, export, AI providers                      | Browser-only `window` APIs without dual-export |
 | `server.ts`                                            | Static file serve + gated `/api/review-state*` and `/api/ai/*` | Page content authorship                        |
 | `forms/...`                                            | Isolated workshop request form                                 | Main app review state                          |

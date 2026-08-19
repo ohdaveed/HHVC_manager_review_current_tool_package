@@ -1,5 +1,5 @@
 // Zod schema for hhvcManagerReviewState:v1 localStorage shape.
-// Shared by tests and browser validation (js/review-state-validation.js mirrors rules).
+// Shared by tests and browser validation (js/review/review-state-validation.js mirrors rules).
 const { z } = require('zod')
 
 const STORAGE_VERSION = 1
@@ -48,7 +48,7 @@ const VALID_DECISIONS = [
  * those renderers escape and print the value directly instead of running it
  * through normalizeTextItem().
  *
- * Restated (not imported) in js/review-state-validation.js for the same
+ * Restated (not imported) in js/review/review-state-validation.js for the same
  * CJS/browser-Zod split reason VALID_DECISIONS above is restated, and
  * restated again as defense-in-depth in
  * js/editing/inline-content-edit-data.js#applyContentEditsToPageData, which is a
@@ -134,7 +134,7 @@ function validateSectionEditEntry(path, value) {
  * contract, dropping the rest. A drop rather than a whole-record rejection,
  * matching how every other malformed field in this schema (an invalid
  * decision, a malformed history entry) is already handled in
- * js/review-state-validation.js: one bad nested value should not cost the
+ * js/review/review-state-validation.js: one bad nested value should not cost the
  * reviewer the rest of an imported record.
  * @param {Record<string, unknown>|undefined} sectionEdits
  * @returns {Record<string, unknown>|undefined}
@@ -179,7 +179,7 @@ const reviewRecordSchema = z
     edited_summary: z.string().optional(),
     updated_at: z.string().optional(),
     // Append-only round history. Constructed exclusively by
-    // mergeReviewRecord (js/review-merge.js) — never hand-written.
+    // mergeReviewRecord (js/review/review-merge.js) — never hand-written.
     history: z.array(historyEntrySchema).optional(),
     // Last server updated_at this browser has actually observed (via a
     // pull or push response) — distinct from updated_at, which bumps on

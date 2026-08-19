@@ -101,7 +101,7 @@ describe('failing-checks ranking', () => {
   })
 
   test('escapes a page title before it reaches innerHTML', () => {
-    // A page title is NOT trusted input: js/ux-improvements-state-sync.js
+    // A page title is NOT trusted input: js/review/ux-improvements-state-sync.js
     // assigns a restored edited_title straight onto the in-memory page object,
     // so a JSON backup or a sync response can put markup here.
     const failing = [{ key: 'a', title: XSS, passed: 1, total: 2, pct: 50 }]

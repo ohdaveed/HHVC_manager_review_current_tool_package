@@ -345,7 +345,7 @@
                reviewer genuinely needs, which now sits beside the export
                controls in the sidebar where the risk it describes lives.
 
-               js/dashboard-guidance.js moves this block to the end of the Help
+               js/review/dashboard-guidance.js moves this block to the end of the Help
                panel after mounting its own sections, so guidance comes first
                and DOM order still matches reading order. -->
           <div id="reviewWorkspaceAdvanced" class="review-advanced">
@@ -358,7 +358,7 @@
               <div id="reviewWorkspaceOps"></div>
             </details>
             <!-- Authored INSIDE #reviewWorkspaceAdvanced, not appended to the
-                 Help panel by JS. js/dashboard-guidance.js re-appends this whole
+                 Help panel by JS. js/review/dashboard-guidance.js re-appends this whole
                  block on every Help open, and it does so BEFORE the lazy mount
                  hooks run — so a <details> added to the panel itself would land
                  after this block and break the "advanced sections sit at the end

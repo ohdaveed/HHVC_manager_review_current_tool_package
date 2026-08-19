@@ -19,7 +19,7 @@ every other review/UX layer. Three files, mirroring the AI-assist split:
 `js/editing/inline-content-edit-render.js` (widget markup — inputs, textareas,
 add/remove/reset controls, the Edited badge), `js/editing/inline-content-edit-data.js`
 (pure `section_edits` diff/reapply, no DOM, dual-exported like
-`js/review-merge.js`), and `js/editing/inline-content-edit.js` (the orchestrator —
+`js/review/review-merge.js`), and `js/editing/inline-content-edit.js` (the orchestrator —
 delegated click handling, the open/commit/cancel widget lifecycle, and
 wiring into the existing autosave path).
 
@@ -150,7 +150,7 @@ wiring into the existing autosave path).
   this feature, not new ones.** `REVIEW_RECORD_FIELDS` and the review-record
   schema already had all three slots, and
   `collectCurrentPageReviewState()`/`updateMockupTextFromSavedState()`
-  (`js/ux-improvements-state-sync.js`) already wrote and reapplied them —
+  (`js/review/ux-improvements-state-sync.js`) already wrote and reapplied them —
   there was simply no UI that ever changed `page.title`/`page.summary`/the
   CTA to give them a non-empty value. This feature is that UI; it added no
   new persistence code for these three fields, only the click-to-edit
@@ -169,7 +169,7 @@ wiring into the existing autosave path).
   omits its path from the map, with no deletion logic required anywhere.
 - **Reapply reports rather than renders, and the caller owns the one
   follow-up paint.** `applyContentEditsToPageData()` — called once, from
-  `applySavedPageState()` in `js/ux-improvements-state-sync.js`, alongside
+  `applySavedPageState()` in `js/review/ux-improvements-state-sync.js`, alongside
   the pre-existing `updateMockupTextFromSavedState()` call — replays
   `section_edits` back onto the in-memory page object on every
   load/navigation/sync-pull/conflict-resolution path (all of which already
@@ -178,19 +178,19 @@ wiring into the existing autosave path).
   `updateMockupTextFromSavedState()`'s job, and reapplying them twice would
   race two functions writing the same fields on every load. It also does not
   re-render: staying DOM-free is why it's dual-exported and Bun-importable
-  with no browser, same as `js/review-merge.js`, so it returns a boolean —
+  with no browser, same as `js/review/review-merge.js`, so it returns a boolean —
   whether it actually wrote a path via `setByPath` — rather than reaching for
   `window.renderPage` itself. **That boolean exists because the obvious
   alternative (re-render unconditionally whenever reapply runs) is a live
   infinite loop, not a hypothetical one.** `window.renderPage` is already
-  `js/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
+  `js/review/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
   run, so a follow-up render re-enters that wrapper, which schedules its own
   deferred `applySavedPageState` call for the same page — which would see
   the same still-true "wrote something" signal and trigger a second render,
   forever (disabling the guard that prevents this produced 17 renders before
   a test's own teardown interrupted it). The fix is the boolean plus a
   `refreshInFlightForKey` re-entrancy guard in
-  `js/ux-improvements-state-sync.js`: at most one follow-up render per
+  `js/review/ux-improvements-state-sync.js`: at most one follow-up render per
   reapply, and the guard clears at the top of the very next
   `applySavedPageState` call for that key rather than immediately after the
   synchronous `renderPage()` call returns, since the reapply it's guarding
@@ -263,12 +263,12 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   carry `section_edits`.** This is a real, documented limitation, not an
   oversight: the three page-level fields are flat strings and fit the
   existing CSV row model the same way `notes`/`decision` do
-  (`js/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
-  `js/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
+  (`js/review/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
+  `js/review/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
   `js/review/review-queue-import.js`'s CSV import field list all carry them).
   `section_edits` is a nested object keyed by dot-path and does not fit a
   flat CSV row — it round-trips through the JSON backup path
-  (`importReviewStateBackup` in `js/ux-improvements-export.js`) only, for
+  (`importReviewStateBackup` in `js/review/ux-improvements-export.js`) only, for
   free, since that path already merges through `mergeReviewRecord` with
   whatever fields a saved record happens to carry. **A CSV export/import
   cycle therefore preserves title/summary/CTA edits but silently drops

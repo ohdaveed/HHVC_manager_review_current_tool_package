@@ -12,7 +12,7 @@
    act and then correct.
 
    THE UNDO IS A NEW ROUND, NOT A DELETION. history[] is append-only (see
-   mergeReviewRecord in js/review-merge.js, the only place an entry is ever
+   mergeReviewRecord in js/review/review-merge.js, the only place an entry is ever
    constructed), so undoing writes the previous content back as another
    recorded round rather than removing the entry the action made. The audit
    trail ends up reading "set to Approved, then reverted", which is what

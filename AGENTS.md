@@ -107,7 +107,7 @@ every string in the real page corpus for fixed-point fidelity),
 `inline-content-edit-refresh` (the re-entrancy guard around the
 `section_edits` follow-up render `applySavedPageState` triggers to catch the
 DOM up after a reapply; mounts a fresh instance of the IIFE-only
-`js/ux-improvements-state-sync.js` per test via a cache-busting dynamic
+`js/review/ux-improvements-state-sync.js` per test via a cache-busting dynamic
 `import()`, since that file has no `module.exports` tail),
 `inline-content-edit` (the click-to-edit orchestrator for scalar fields,
 driven with real DOM click/keydown/blur events against the real happy-dom
@@ -346,24 +346,24 @@ that needs `escapeHtml` imports it, and `js/state.js` imports
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
-`js/dashboard-guidance.js` and
-`js/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
+`js/review/dashboard-guidance.js` and
+`js/review/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
 objects rather than imports, so their sequence in `js/main.js` is load-bearing
 and hand-reviewed.
 
 Note that "no imports" would be too strong, and used to be written that way:
 only `js/review-queue*.js` takes none. The others do import — `js/utils.js`
-helpers, and four imports in `js/dashboard-guidance.js` — so the module graph
+helpers, and four imports in `js/review/dashboard-guidance.js` — so the module graph
 already orders them against the _core_. What it cannot order is the part that
 matters here: a `window.<Namespace>` a sibling IIFE assigns at mount time is
 invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(`js/ux-improvements.js` wraps it to refresh after navigation — the decorator
+(`js/review/ux-improvements.js` wraps it to refresh after navigation — the decorator
 only forms if the original is on `window`; it is the last of three, the other
 two having been the deleted `js/interactive-sitemap.js` and
-`js/manager-review-export.js`, whose decorator went with the sidebar label it
+`js/review/manager-review-export.js`, whose decorator went with the sidebar label it
 refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
@@ -416,7 +416,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   so a `mode` the island owned independently would let the workspace go light
   inside a dark panel. `subscribeToColorScheme()` rebuilds the theme on the flip
   and `js/react/mount.js` replays each island's last render.
-- **Islands load on demand.** `js/ux-improvements-state-sync.js` reaches the
+- **Islands load on demand.** `js/review/ux-improvements-state-sync.js` reaches the
   Checks panel component through a dynamic `import()`, so React, React DOM,
   Emotion and MUI land in their own chunk — 318 kB raw / **103 kB gzip** — that a
   reviewer who never opens the tab never downloads. The initial chunk did not
@@ -478,7 +478,7 @@ disagree at all.
   `karl` note names the Karl block a section maps to, so it is the authority. The
   full history lives in `build_scripts/audit-card-inheritance.js`'s header rather
   than being re-derived here.
-- **`js/card-inheritance.js` is dual-exported like `js/review-merge.js`, for the
+- **`js/card-inheritance.js` is dual-exported like `js/review/review-merge.js`, for the
   same reason.** `js/mockup/page-render.js` reads it off `window.cardInheritance` and
   `build_scripts/audit-card-inheritance.js` `require`s it, so the browser
   renderer and the Node audit share one classifier and cannot come to disagree
@@ -526,9 +526,9 @@ them.**
   living here: the bottom-most module reaching up into the workspace DOM.
 - **`js/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone for
   field-reset), `pageData`, `pageOrder`, `currentPageKey`.
-- **`js/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the
+- **`js/review/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the
   page-picker `<select>`, review checklist.
-- **`js/editor-panel.js`** — SEO/editor panel: input↔page sync, dirty-state
+- **`js/review/editor-panel.js`** — SEO/editor panel: input↔page sync, dirty-state
   indicators, search-result preview, per-field reset.
 - **`js/mockup/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
@@ -547,12 +547,12 @@ them.**
   alone, or their own authored words. Imports nothing and reads no global, so it
   has no load-order dependency of its own. Dual-exported
   (`window.cardInheritance` plus `module.exports`) exactly like
-  `js/review-merge.js`, and for the same reason — see "Card descriptions are
+  `js/review/review-merge.js`, and for the same reason — see "Card descriptions are
   inherited, not printed" above: the browser renderer and the Node audit must
   share one classifier rather than two copies that can silently drift apart.
 - **`js/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
   first page (`pestsTopic`).
-- **`js/manager-review-export.js`** — manager review CSV/JSON snapshot,
+- **`js/review/manager-review-export.js`** — manager review CSV/JSON snapshot,
   published on `window.ReviewExport` for the consolidated export control. It no
   longer wraps `renderPage`: that decorator existed only to refresh a sidebar
   label that has been cut.
@@ -573,24 +573,24 @@ them.**
 
 ### Review/UX layers are additive, on top of the core
 
-`js/ux-improvements.js`, `js/review/review-queue.js`, `js/dashboard-guidance.js`,
-and `js/keyboard-shortcuts.js` are self-contained
+`js/review/ux-improvements.js`, `js/review/review-queue.js`, `js/review/dashboard-guidance.js`,
+and `js/review/keyboard-shortcuts.js` are self-contained
 IIFEs that read `window.HHVC_DATA` and `localStorage`. Some write edited
 title/summary/CTA/SEO fields back onto the **in-memory** `pageData` objects when
 restoring saved edits — but **must never write back to the `pages/*.js` source
 files or publish content.** They are review aids only, not publishing tools.
 
-`js/ux-improvements.js` and `js/review/review-queue.js` are
+`js/review/ux-improvements.js` and `js/review/review-queue.js` are
 thin orchestrators (event wiring + `init()` + public API) over sibling files that
 do the work, each attaching functions to an internal `window.<Namespace>` object
 (implementation detail — never referenced from `pages/*.js`):
 
-- **`window.ReviewUx`** ← `js/review-state-store.js` (shared `window.reviewState`
-  read/write/update), `js/ux-improvements-state-sync.js`,
-  `js/ux-improvements-workspace.js`, `js/ux-improvements-export.js`.
-  `js/review-merge.js` (`window.reviewMerge`) and `js/sync/review-state-sync.js`
+- **`window.ReviewUx`** ← `js/review/review-state-store.js` (shared `window.reviewState`
+  read/write/update), `js/review/ux-improvements-state-sync.js`,
+  `js/review/ux-improvements-workspace.js`, `js/review/ux-improvements-export.js`.
+  `js/review/review-merge.js` (`window.reviewMerge`) and `js/sync/review-state-sync.js`
   (`window.reviewStateSync`) sit alongside these as their own small globals —
-  not under `window.ReviewUx` — since `js/review-merge.js` is also imported
+  not under `window.ReviewUx` — since `js/review/review-merge.js` is also imported
   directly by `server.ts` (no DOM dependency) and needs no browser-only
   namespace.
 - **`window.ReviewQueueInternal`** ← `js/review/review-queue-state.js`,
@@ -614,7 +614,7 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
   opens — a
   reviewer expanding one must never find an empty box. Each panel ALSO catches
   an already-open tab at its own `init()` via `mountWorkspacePanelIfOpen('help')`
-  in `js/utils.js` — `js/ux-improvements.js` initializes earlier and restores a
+  in `js/utils.js` — `js/review/ux-improvements.js` initializes earlier and restores a
   persisted `workspace_tab` before these hooks exist, so without the catch-up a
   reviewer who left Help open came back to an empty panel.
 
@@ -635,10 +635,10 @@ collapsed `<details>` at the end of Help — both depend on `server.ts`, which t
 Netlify deploy has no runtime for, so on the build managers actually open they
 were two permanently-empty panels holding two of six slots. Help stays last, so
 it is the digit that moves whenever the strip changes; `WORKSPACE_TABS`
-(`js/ux-improvements-workspace.js`), the tab markup in `index.html` and the
-`1`–`3` cases in `js/keyboard-shortcuts.js` must change together. The two
+(`js/review/ux-improvements-workspace.js`), the tab markup in `index.html` and the
+`1`–`3` cases in `js/review/keyboard-shortcuts.js` must change together. The two
 surviving lazy panels **also catch an already-open Help tab at their own
-`init()`** — `js/ux-improvements.js` initializes earlier and restores a
+`init()`** — `js/review/ux-improvements.js` initializes earlier and restores a
 persisted `workspace_tab` before those hooks exist, so without the catch-up a
 restored tab painted empty until the reviewer switched away and back.
 Relatedly, `hhvc:shortcuts-ready` and
@@ -662,7 +662,7 @@ makes one copy enough, so resist re-adding a second printing of anything.
 
 - **`.app.workspace-docked` is what grows the third column**, toggled alongside
   the panel's `hidden` attribute. `applyWorkspaceVisibility()` in
-  `js/ux-improvements-workspace.js` is the single place that does both, plus the
+  `js/review/ux-improvements-workspace.js` is the single place that does both, plus the
   toggle button's label — the first-run onboarding path used to set `hidden`
   inline and missed the class, so a first-run reviewer got an open panel the
   grid had made no room for.
@@ -717,7 +717,7 @@ makes one copy enough, so resist re-adding a second printing of anything.
 - **The page's name, printed four times.** The sidebar picker, a "Current page:"
   label under it, a "Viewing: …" badge in the toolbar, and the sticky bar. The
   middle two are gone — and with the label went the only reason
-  `js/manager-review-export.js` wrapped `renderPage` at all, so that decorator
+  `js/review/manager-review-export.js` wrapped `renderPage` at all, so that decorator
   went too.
 - **The decision `<select>`.** It sat directly above five chips writing the same
   field. `#reviewDecision` survives as an `<input type="hidden">` because it is
@@ -757,7 +757,7 @@ thinnest pages. `source` exists because not every rule comes from the manual:
 `house-style` and `list-length` cite the vendored `docs/source/sfgov-style/`
 snapshot, and `button-length` cites manual §6.3 (Karl Button component), not
 §7.8. Requiring a bare §7.x number is what previously forced all three into
-miscitations. Like `js/review-merge.js` the module is dual-export
+miscitations. Like `js/review/review-merge.js` the module is dual-export
 (`window.plainLanguage` + `module.exports`, no DOM dependency).
 
 ### URL schemes are validated, not just escaped
@@ -844,7 +844,7 @@ hand-drawn SVG line would remove the dependency outright. That is a build call,
 not a UX one, and was left alone.
 
 - **`js/review/review-insights-data.js`** — pure data shaping, dual
-  `window`/`module.exports` like `js/review-merge.js`, so
+  `window`/`module.exports` like `js/review/review-merge.js`, so
   `tests/review-insights-data.test.js` can `require` it with no browser.
 - **`js/review/review-insights.js`** — orchestrator: card markup, the hidden data
   table, the ranked list, redraw gating.
@@ -977,7 +977,7 @@ every other review/UX layer. Three files, mirroring the AI-assist split:
 `js/editing/inline-content-edit-render.js` (widget markup — inputs, textareas,
 add/remove/reset controls, the Edited badge), `js/editing/inline-content-edit-data.js`
 (pure `section_edits` diff/reapply, no DOM, dual-exported like
-`js/review-merge.js`), and `js/editing/inline-content-edit.js` (the orchestrator —
+`js/review/review-merge.js`), and `js/editing/inline-content-edit.js` (the orchestrator —
 delegated click handling, the open/commit/cancel widget lifecycle, and
 wiring into the existing autosave path).
 
@@ -1108,7 +1108,7 @@ wiring into the existing autosave path).
   this feature, not new ones.** `REVIEW_RECORD_FIELDS` and the review-record
   schema already had all three slots, and
   `collectCurrentPageReviewState()`/`updateMockupTextFromSavedState()`
-  (`js/ux-improvements-state-sync.js`) already wrote and reapplied them —
+  (`js/review/ux-improvements-state-sync.js`) already wrote and reapplied them —
   there was simply no UI that ever changed `page.title`/`page.summary`/the
   CTA to give them a non-empty value. This feature is that UI; it added no
   new persistence code for these three fields, only the click-to-edit
@@ -1127,7 +1127,7 @@ wiring into the existing autosave path).
   omits its path from the map, with no deletion logic required anywhere.
 - **Reapply reports rather than renders, and the caller owns the one
   follow-up paint.** `applyContentEditsToPageData()` — called once, from
-  `applySavedPageState()` in `js/ux-improvements-state-sync.js`, alongside
+  `applySavedPageState()` in `js/review/ux-improvements-state-sync.js`, alongside
   the pre-existing `updateMockupTextFromSavedState()` call — replays
   `section_edits` back onto the in-memory page object on every
   load/navigation/sync-pull/conflict-resolution path (all of which already
@@ -1136,19 +1136,19 @@ wiring into the existing autosave path).
   `updateMockupTextFromSavedState()`'s job, and reapplying them twice would
   race two functions writing the same fields on every load. It also does not
   re-render: staying DOM-free is why it's dual-exported and Bun-importable
-  with no browser, same as `js/review-merge.js`, so it returns a boolean —
+  with no browser, same as `js/review/review-merge.js`, so it returns a boolean —
   whether it actually wrote a path via `setByPath` — rather than reaching for
   `window.renderPage` itself. **That boolean exists because the obvious
   alternative (re-render unconditionally whenever reapply runs) is a live
   infinite loop, not a hypothetical one.** `window.renderPage` is already
-  `js/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
+  `js/review/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
   run, so a follow-up render re-enters that wrapper, which schedules its own
   deferred `applySavedPageState` call for the same page — which would see
   the same still-true "wrote something" signal and trigger a second render,
   forever (disabling the guard that prevents this produced 17 renders before
   a test's own teardown interrupted it). The fix is the boolean plus a
   `refreshInFlightForKey` re-entrancy guard in
-  `js/ux-improvements-state-sync.js`: at most one follow-up render per
+  `js/review/ux-improvements-state-sync.js`: at most one follow-up render per
   reapply, and the guard clears at the top of the very next
   `applySavedPageState` call for that key rather than immediately after the
   synchronous `renderPage()` call returns, since the reapply it's guarding
@@ -1221,12 +1221,12 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   carry `section_edits`.** This is a real, documented limitation, not an
   oversight: the three page-level fields are flat strings and fit the
   existing CSV row model the same way `notes`/`decision` do
-  (`js/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
-  `js/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
+  (`js/review/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
+  `js/review/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
   `js/review/review-queue-import.js`'s CSV import field list all carry them).
   `section_edits` is a nested object keyed by dot-path and does not fit a
   flat CSV row — it round-trips through the JSON backup path
-  (`importReviewStateBackup` in `js/ux-improvements-export.js`) only, for
+  (`importReviewStateBackup` in `js/review/ux-improvements-export.js`) only, for
   free, since that path already merges through `mergeReviewRecord` with
   whatever fields a saved record happens to carry. **A CSV export/import
   cycle therefore preserves title/summary/CTA edits but silently drops
@@ -1243,7 +1243,7 @@ A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
 is involved, and it works on the static Netlify build. Three files, mirroring the
 inline-content-edit split — `js/page-registry-data.js` (pure validation and the
-in-place mutation, dual-exported like `js/review-merge.js`),
+in-place mutation, dual-exported like `js/review/review-merge.js`),
 `js/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
 `window.pageRegistry`), and `js/page-registry-ui.js` (the sidebar controls and
 the Help list). No new stylesheet: the sidebar chrome lives in
@@ -1265,7 +1265,7 @@ surface so each selector is still declared in exactly one file.
   "not a page in this mockup".
 - **Storage is `state.globals.page_registry`, as keyed objects rather than
   arrays.** `globals` is the one slot both review-state validators copy through
-  untouched (a shallow spread in `js/review-state-validation.js`,
+  untouched (a shallow spread in `js/review/review-state-validation.js`,
   `.passthrough()` in `build_scripts/review-state-schema.js`), so the feature
   needs no validator change and **no storage-version bump** — a bump makes
   `readLocalState()` discard every reviewer's local state. Not `state.pages[key]`:
@@ -1299,7 +1299,7 @@ surface so each selector is still declared in exactly one file.
   and drives `j`/`k` navigation, the queue, the picker and batch PNG export, so
   appending would silently permute the site.
 - **Deleting the page on screen needs an explicit sequence, and the failure it
-  avoids is review-data loss.** `reviewFormPageKey` (`js/ux-improvements.js`)
+  avoids is review-data loss.** `reviewFormPageKey` (`js/review/ux-improvements.js`)
   stays pinned to the deleted key until the follow-up navigation settles, so an
   autosave landing in that window calls `collectCurrentPageReviewState(key)`
   where `DATA.pages[key] || {}` makes `page_title`, `edited_title`,
@@ -1374,7 +1374,7 @@ surface so each selector is still declared in exactly one file.
 - **A page key is constrained to `/^[A-Za-z][A-Za-z0-9]*$/` and rejects
   `__proto__`/`prototype`/`constructor`.** The key becomes an object property on
   `window.HHVC_PAGES`, an `<option>` value and a `?page=` parameter.
-  `js/ui-controls.js:128` also now escapes it — that was the one place in the
+  `js/review/ui-controls.js:128` also now escapes it — that was the one place in the
   codebase interpolating a page key into `innerHTML` raw, safe only while every
   key was hardcoded in a source file.
 - **Uniqueness is checked against `HHVC_DELETED_PAGE_ALIASES` too.** An added key
@@ -1646,7 +1646,7 @@ core and is unaffected by whether the optional sync backend below is ever used.
 Each page's review record also carries an append-only `history[]` array:
 `{ timestamp, reviewer, decision, notes, risks_or_blockers, updated_by }`
 entries recording each review round. **`mergeReviewRecord()` in
-`js/review-merge.js` is the only place a history entry gets constructed**, and
+`js/review/review-merge.js` is the only place a history entry gets constructed**, and
 only at discrete round-boundary events — queue actions/keyboard shortcuts
 (`updateLocalReviewForPage`), CSV/JSON import (`importReviewStateBackup`),
 server sync (`server.ts`'s `putReviewPage`), and a decision change made from
@@ -1666,11 +1666,11 @@ decision and nothing double-records.
 **The review import/export round-trip can destroy existing reviews** — a prior
 regression replaced saved state wholesale instead of merging. The actual
 round-trip logic lives in `js/review/review-queue-import.js` (CSV import) and
-`js/ux-improvements-export.js` (saved-state JSON backup/restore), both merging
+`js/review/ux-improvements-export.js` (saved-state JSON backup/restore), both merging
 through the same `mergeReviewRecord` per-page-key path the sync backend uses;
-`js/review/review-queue.js` wires the handlers and `js/manager-review-export.js`
+`js/review/review-queue.js` wires the handlers and `js/review/manager-review-export.js`
 exports current-page snapshots. **Any change to any of these review
-import/export modules, or to `js/review-merge.js`, must be verified against
+import/export modules, or to `js/review/review-merge.js`, must be verified against
 the round trip itself**: export a snapshot, re-import it, and confirm existing
 decisions/notes survive rather than being wiped.
 
@@ -1949,7 +1949,7 @@ origin that 404s, so sync fails closed and the tool stays local-only. The
 - **Routes**: `GET /api/review-state` (full state, same shape as
   `window.reviewState.read()`); `PUT /api/review-state/pages/:pageKey` (merges
   a patch via the shared `mergeReviewRecord()` — `server.ts` imports
-  `js/review-merge.js` directly, the same file a `<script>` tag loads
+  `js/review/review-merge.js` directly, the same file a `<script>` tag loads
   client-side — and returns the merged record). Every write is scoped to one
   `page_key`; the server never wholesale-replaces the table. The PUT body is
   capped at `MAX_REVIEW_BODY_BYTES` (1 MB) via the same streaming
@@ -1994,14 +1994,14 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   (autosave only when content actually changed, per `reviewContentEquals`;
   every `mergeReviewRecord` call except the server's own
   `updatedBy: 'sync'`) and cleared only by a real push/pull. It is a genuine
-  boolean, hence the explicit branch in `js/review-state-validation.js` —
+  boolean, hence the explicit branch in `js/review/review-state-validation.js` —
   the generic `String()` coercion there would turn `false` into the truthy
   string `'false'`. Only an **explicit `false`** means clean: records
   written before the field existed don't carry it (the storage version was
   deliberately not bumped, the field being additive), and treating
   "missing" as "clean" would let the first pull after an upgrade overwrite
   reviews that were never pushed. The absence has to survive autosave too:
-  `nextLocalDirty()` (`js/ux-improvements-state-sync.js`) returns
+  `nextLocalDirty()` (`js/review/ux-improvements-state-sync.js`) returns
   `undefined` for an unchanged legacy record instead of collapsing it to a
   boolean, since a content-neutral save would otherwise write an explicit
   `false` and grant the pull path the very permission this rule withholds.
@@ -2363,7 +2363,7 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
   (~150-200 chunks) by cosine similarity in microseconds at this size; a
   loadable extension like `sqlite-vec` would buy nothing here and adds a
   native-binary deployment risk against Railway for no benefit. Dual-exported
-  like `js/review-merge.js`, so ranking is tested against synthetic embeddings
+  like `js/review/review-merge.js`, so ranking is tested against synthetic embeddings
   with no live Gemini call and no live DB.
 - **Re-ingestion is idempotent per file, and always full.** `bun run ingest`
   deletes and reinserts each file's rows in one transaction, reprocessing
@@ -2686,7 +2686,7 @@ one because they answer different questions: anti-slop is an opinion about how
 to write TypeScript at an I/O boundary, and the core rules are correctness. Two
 stylistic `unicorn` rules are off in the CI config for the same reason anti-slop
 is not gated — `no-useless-fallback-in-spread` and
-`prefer-string-starts-ends-with` cluster in `js/ux-improvements-export.js` and
+`prefer-string-starts-ends-with` cluster in `js/review/ux-improvements-export.js` and
 `js/editing/inline-content-edit.js`, and churning the import/export merge path for style
 is the trade this repo already refused once.
 
@@ -2859,12 +2859,12 @@ globals must restore them, or they pollute sibling test files.
 ## Editing rules (quick reference)
 
 - Public page content → `pages/*.js`.
-- Core render/state → `js/state.js`, `js/mockup/page-render.js`, `js/ui-controls.js`,
-  `js/editor-panel.js`, `js/app.js`.
-- Review/UX layers → `js/ux-improvements.js`, `js/review/review-queue.js`,
-  `js/dashboard-guidance.js`, `js/keyboard-shortcuts.js`,
-  `js/manager-review-export.js`, `css/ux-improvements.css`.
-- Shared merge/history logic → `js/review-merge.js` (the only place a
+- Core render/state → `js/state.js`, `js/mockup/page-render.js`, `js/review/ui-controls.js`,
+  `js/review/editor-panel.js`, `js/app.js`.
+- Review/UX layers → `js/review/ux-improvements.js`, `js/review/review-queue.js`,
+  `js/review/dashboard-guidance.js`, `js/review/keyboard-shortcuts.js`,
+  `js/review/manager-review-export.js`, `css/ux-improvements.css`.
+- Shared merge/history logic → `js/review/review-merge.js` (the only place a
   `history` entry should be constructed; loaded both as a browser `<script>`
   and imported directly by `server.ts`). Optional sync backend → `server.ts`
   (API routes) and `js/sync/review-state-sync.js` (client pull/push + settings UI).

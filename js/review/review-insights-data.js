@@ -102,7 +102,7 @@ function toDayKey(timestamp) {
  *
  * Reads the whole history rather than trusting its order. Entries are appended
  * chronologically today, but a JSON backup import merges two histories
- * together (see combineHistory in js/review-merge.js), so "first entry that
+ * together (see combineHistory in js/review/review-merge.js), so "first entry that
  * counts" is not reliably the earliest one in the array.
  * @param {{history?: Array<{timestamp?: string, decision?: string}>}} record
  * @returns {string|null}

@@ -2,7 +2,7 @@
    Shortcuts are ignored while typing in form fields so they never
    interfere with review notes or content edits. */
 
-import { hasValidPageData } from './utils.js'
+import { hasValidPageData } from '../utils.js'
 ;(function initReviewKeyboardShortcuts() {
   const DATA = window.HHVC_DATA
   if (!hasValidPageData(DATA)) return
@@ -20,7 +20,7 @@ import { hasValidPageData } from './utils.js'
     // matters more than keeping any one tab on a fixed digit: the Help panel
     // renders this list, so the mapping documents itself the moment anyone
     // looks for it. Keep these in step with WORKSPACE_TABS in
-    // js/ux-improvements-workspace.js and the tab markup in index.html.
+    // js/review/ux-improvements-workspace.js and the tab markup in index.html.
     //
     // 4, 5 and 6 are unbound now. Sitemap was cut; AI assist and Tool status
     // moved inside Help, so they are reached by opening Help rather than by a
@@ -193,7 +193,7 @@ import { hasValidPageData } from './utils.js'
   }
 
   // The list is published at module scope because consumers read it
-  // synchronously (js/dashboard-guidance.js's Help panel does, during its own
+  // synchronously (js/review/dashboard-guidance.js's Help panel does, during its own
   // DOMContentLoaded init). `ready` is NOT set here — see init().
   window.reviewKeyboardShortcuts = { list: SHORTCUTS, toggleDialog: toggleHelpDialog, ready: false }
 
@@ -334,7 +334,7 @@ import { hasValidPageData } from './utils.js'
     // parsing and long before any key could be handled — so anything that
     // waited for "shortcuts ready" and then sent a key was racing a promise
     // the event had already broken. Nothing in the app depended on the early
-    // timing (js/dashboard-guidance.js only registers for this event as a
+    // timing (js/review/dashboard-guidance.js only registers for this event as a
     // fallback when the list is missing, which cannot happen by its own init),
     // and a test or integration that needs to press a key now has a truthful
     // signal to wait on.

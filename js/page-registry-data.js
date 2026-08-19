@@ -3,7 +3,7 @@
    live window.HHVC_DATA.
 
    No DOM, no localStorage, no imports — dual-exported onto window and
-   module.exports exactly like js/review-merge.js and js/standards/plain-language.js, so
+   module.exports exactly like js/review/review-merge.js and js/standards/plain-language.js, so
    tests/page-registry-data.test.js can require() it with no browser at all.
 
    LOAD ORDER: this file is evaluated in js/main.js's CORE block, pulled in
@@ -18,7 +18,7 @@
    WHY VALIDATION LIVES HERE AT ALL. The registry is stored under
    state.globals.page_registry, and `globals` is the one slot the review-state
    validators copy through untouched (a shallow spread in
-   js/review-state-validation.js; `.passthrough()` in
+   js/review/review-state-validation.js; `.passthrough()` in
    build_scripts/review-state-schema.js). That is what lets the feature ship
    without a storage-version bump — a bump would discard every reviewer's local
    state — but it also means nothing upstream has checked the blob. It reaches
@@ -39,7 +39,7 @@
 const PROTECTED_PAGE_KEYS = ['pestsTopic']
 
 /* The five types the page picker groups by, declared HERE and read from here
-   by js/ui-controls.js's buildPageSelect (off `window.pageRegistryData`, since
+   by js/review/ui-controls.js's buildPageSelect (off `window.pageRegistryData`, since
    this module is import-free and exports nothing an ES import could reach).
    The direction used to be the other way round — this list was described as a
    copy of that function's hardcoded `groups` map, which restated the same five
@@ -62,7 +62,7 @@ const ALLOWED_PAGE_TYPES = [
 /* Mirrors the six required fields of `pageSchema` in build_scripts/schema.js.
    Restated rather than imported because that file is CommonJS and needs Zod,
    neither of which belongs in the browser bundle — the same reasoning
-   js/review-state-validation.js applies to its own mirror of the review-record
+   js/review/review-state-validation.js applies to its own mirror of the review-record
    rules. tests/page-registry-data.test.js pins the two copies together the way
    tests/decision-vocabulary.test.js pins the decision vocabulary. */
 const REQUIRED_PAGE_FIELDS = ['slug', 'type', 'title', 'summary', 'audience', 'reading']
@@ -70,7 +70,7 @@ const REQUIRED_PAGE_FIELDS = ['slug', 'type', 'title', 'summary', 'audience', 'r
 /* A page key becomes an object property on window.HHVC_PAGES, a value in an
    `<option>`, and a `?page=` URL parameter. Restricting it to a bare
    identifier keeps all three safe at once and is far easier to reason about
-   than escaping each site separately (though js/ui-controls.js escapes its
+   than escaping each site separately (though js/review/ui-controls.js escapes its
    interpolation too — belt and braces, because this rule is only enforced for
    keys that arrive through this module). */
 const PAGE_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/
@@ -199,7 +199,7 @@ function slugify(value) {
  *
  * The prefix is not decoration. buildPageSelect() strips a
  * `Topic|Transaction|Resource Collection|Campaign|Information:` prefix from the
- * ORDER LABEL (js/ui-controls.js), not from the page title — so a label without
+ * ORDER LABEL (js/review/ui-controls.js), not from the page title — so a label without
  * one renders the type name inside the option text, inside an optgroup already
  * headed by that same type. All 27 authored entries carry it; so must these.
  * @param {{type?: string, title?: string}} page
@@ -442,8 +442,8 @@ function isValidAddedEntry(key, entry) {
  * Apply a registry onto a live `{pages, order}` object, IN PLACE.
  *
  * In place is not a style choice. js/state.js exports `pageData`/`pageOrder` as
- * references to these very objects, and js/ui-controls.js,
- * js/mockup/page-render.js and js/manager-review-export.js hold the same references —
+ * references to these very objects, and js/review/ui-controls.js,
+ * js/mockup/page-render.js and js/review/manager-review-export.js hold the same references —
  * so `data.order = [...]` would update window.HHVC_DATA and leave three
  * modules reading a detached array. Only push/splice/delete propagate.
  *

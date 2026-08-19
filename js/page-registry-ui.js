@@ -3,7 +3,7 @@
    end of the Help tab.
 
    A self-mounting IIFE in js/main.js's review/UX block, after
-   js/dashboard-guidance.js — it reads window.pageRegistry (published by
+   js/review/dashboard-guidance.js — it reads window.pageRegistry (published by
    js/page-registry.js in the core block) and talks to nothing else through
    imports, matching every other layer here.
 
@@ -507,7 +507,7 @@
 
     syncDeleteButton()
     window.__mountPageRegistryOnTabOpen = ensureRendered
-    /* Catch-up for a reviewer who left Help open: js/ux-improvements.js
+    /* Catch-up for a reviewer who left Help open: js/review/ux-improvements.js
        initializes earlier and restores the persisted workspace_tab before this
        hook exists, so without this the panel would sit empty until they
        switched tabs and back. */

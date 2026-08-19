@@ -8,7 +8,7 @@
    Their consumers still reach for them as globals behind
    `typeof X === 'undefined'` guards: js/utils.js's parseCsv, the fuzzy search
    in js/review/review-queue-rows.js, and the backup merge in
-   js/ux-improvements-export.js. Those guards are the documented fallback that
+   js/review/ux-improvements-export.js. Those guards are the documented fallback that
    keeps each feature degrading to a simpler implementation rather than
    throwing, and the Node-side tests exercise exactly that path, so the
    globals stay and no consumer needed editing.

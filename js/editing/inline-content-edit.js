@@ -7,7 +7,7 @@
 
    Unlike AI assist, this needs no backend and no capability check: the
    affordance is present whenever the page has loaded. Loads after
-   js/editing/inline-content-edit-render.js and after js/ux-improvements.js (for
+   js/editing/inline-content-edit-render.js and after js/review/ux-improvements.js (for
    window.ReviewUx.stateSync.saveCurrentPageToLocalStorage). */
 ;(function mountInlineContentEdit() {
   if (typeof window === 'undefined') return
@@ -205,7 +205,7 @@
    * controls, Edited badges) is NOT done here directly — it happens inside
    * wrapRenderPageForDecoration()'s wrapper around window.renderPage below,
    * so every render this module didn't itself trigger (page-picker
-   * navigation, js/ux-improvements.js's restoreInitialPage(), the async
+   * navigation, js/review/ux-improvements.js's restoreInitialPage(), the async
    * section_edits follow-up render) gets decorated too, not just the ones
    * this function causes.
    *
@@ -226,18 +226,18 @@
    * Wrap window.renderPage so every render — regardless of who triggers it —
    * is followed by decorateListControls()/decorateEditedFields(). This is
    * the same "wrap window.renderPage, run extra work after" pattern
-   * js/ux-improvements.js's wrapRenderPage() and
-   * js/manager-review-export.js's (removed) wrapper used; see CLAUDE.md's
+   * js/review/ux-improvements.js's wrapRenderPage() and
+   * js/review/manager-review-export.js's (removed) wrapper used; see CLAUDE.md's
    * "Some functions are deliberately published onto window" section.
    *
    * Required because renderPageMain()'s output carries neither the add/
    * remove controls nor the Edited-badge/reset decorations (Task 1 kept the
    * renderer itself untouched beyond data-rewrite-field attributes — see
    * Step 1's rationale), and this module is not the only caller of
-   * window.renderPage: js/app.js's initial render, js/ux-improvements.js's
+   * window.renderPage: js/app.js's initial render, js/review/ux-improvements.js's
    * restoreInitialPage() (both a synchronous call and, for a page carrying
    * saved section_edits, an async setTimeout(0) follow-up call — see
-   * js/ux-improvements-state-sync.js's refreshInFlightForKey guard), and
+   * js/review/ux-improvements-state-sync.js's refreshInFlightForKey guard), and
    * page-picker navigation all call window.renderPage without going through
    * this module's own rerender(). A one-time decoration call from init()
    * alone only ever catches whichever render happened to be current at
@@ -246,9 +246,9 @@
    * decorated once) would otherwise leave #mockPage completely undecorated
    * with nothing left to re-trigger it.
    *
-   * This module loads after js/ux-improvements.js in js/main.js, so by the
+   * This module loads after js/review/ux-improvements.js in js/main.js, so by the
    * time this wrapper installs, window.renderPage is already
-   * js/ux-improvements.js's own wrapper around the original — this wraps
+   * js/review/ux-improvements.js's own wrapper around the original — this wraps
    * that, keeping decoration outermost (runs after every render in the
    * chain, including that wrapper's own deferred section_edits reapply,
    * which calls window.renderPage — the live, wrapped reference — rather
@@ -264,7 +264,7 @@
    * after original.apply() would then run against the PREVIOUS page's
    * stale DOM (or, on the very first render, an empty #mockPage), which is
    * exactly the bug this wrapper exists to prevent — mirrors
-   * js/ux-improvements.js's own wrapRenderPage(), which defers its
+   * js/review/ux-improvements.js's own wrapRenderPage(), which defers its
    * post-render work the same way for the same reason.
    * @returns {void}
    */
@@ -354,7 +354,7 @@
     }
     // persist() just wrote this page's section_edits to localStorage, which
     // now includes the item being added here — so the SAME render this
-    // function triggers below can itself cause js/ux-improvements.js's
+    // function triggers below can itself cause js/review/ux-improvements.js's
     // applyAndRefresh to run applySavedPageState, find that saved
     // section_edits, and (depending on what it finds) kick off a SECOND,
     // independent View Transition to reapply it. That follow-up is a
@@ -388,7 +388,7 @@
    * reduced array as a whole-field replace.
    *
    * The undo affordance is built through the existing showToast()'s
-   * {label, callback} action parameter (js/ui-controls.js) rather than
+   * {label, callback} action parameter (js/review/ui-controls.js) rather than
    * render.undoToastMarkup()'s raw-HTML button: showToast renders `message`
    * via textContent, and several existing callers pass externally-supplied
    * strings straight into that parameter (e.g. js/sync/review-state-sync.js's
@@ -1170,7 +1170,7 @@
    * editor on the same click.
    *
    * The one-step-undo control is deliberately NOT matched here: it lives
-   * inside the toast rendered by showToast() (js/ui-controls.js), which is
+   * inside the toast rendered by showToast() (js/review/ui-controls.js), which is
    * appended to #toastContainer, outside #mockPage entirely — showToast's
    * own action.callback click listener owns that click, and this handler
    * never sees it.

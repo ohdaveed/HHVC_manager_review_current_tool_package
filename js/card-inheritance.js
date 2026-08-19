@@ -7,7 +7,7 @@
    file so the graph guarantees it) via window.cardInheritance, and by
    build_scripts/audit-card-inheritance.js via a plain require — so it has no
    DOM dependency and must stay loadable in both contexts, exactly like
-   js/review-merge.js.
+   js/review/review-merge.js.
 
    It lives here rather than in the audit script because the renderer and the
    audit must never come to disagree about what inherits. The audit's whole

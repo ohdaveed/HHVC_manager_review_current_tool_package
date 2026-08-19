@@ -224,9 +224,9 @@ test.describe('manager review workflow', () => {
   // Regression: page-picker navigation must run through the DECORATED
   // window.renderPage, not js/mockup/page-render.js's raw export.
   //
-  // js/ux-improvements.js wraps window.renderPage after startup. It is the
+  // js/review/ux-improvements.js wraps window.renderPage after startup. It is the
   // only wrapper left — js/interactive-sitemap.js was deleted and
-  // js/manager-review-export.js's decorator went with the sidebar label it
+  // js/review/manager-review-export.js's decorator went with the sidebar label it
   // refreshed — but one is enough to make the bug below reachable.
   // Reassigning window.renderPage does not rebind an ES module `import`, so
   // when js/app.js called its imported binding the picker silently bypassed
@@ -291,7 +291,7 @@ test.describe('manager review workflow', () => {
   test('the decision toast offers a jump to the next page needing review', async ({ page }) => {
     await gotoFresh(page)
 
-    // js/ux-improvements-workspace.js has always passed this action to
+    // js/review/ux-improvements-workspace.js has always passed this action to
     // showToast, but showToast only declared (message, type), so the object
     // was dropped and the button never rendered — a shipped affordance that
     // did nothing, with matching CSS that styled nothing.

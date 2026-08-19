@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test'
-import '../js/review-state-validation.js'
+import '../js/review/review-state-validation.js'
 import {
   validateReviewState,
   validateReviewRecord,
@@ -110,10 +110,10 @@ describe('review-state-schema', () => {
   })
 })
 
-// The browser has no Zod, so js/review-state-validation.js hand-rolls the
+// The browser has no Zod, so js/review/review-state-validation.js hand-rolls the
 // same rules. It runs on every read of hhvcManagerReviewState:v1, so a
 // mismatch here silently corrupts state rather than failing loudly.
-describe('browser-side sanitizeReviewRecord (js/review-state-validation.js)', () => {
+describe('browser-side sanitizeReviewRecord (js/review/review-state-validation.js)', () => {
   // The module is a self-mounting IIFE that publishes its API onto
   // window.reviewStateValidation; importing it for that side effect is the
   // ESM equivalent of the old harness evaluating it into a vm context.

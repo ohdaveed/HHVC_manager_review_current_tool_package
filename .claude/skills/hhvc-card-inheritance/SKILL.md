@@ -46,7 +46,7 @@ failed to load.
   history is written up in `build_scripts/audit-card-inheritance.js`'s header;
   read it there rather than re-deriving it.
 - **`js/card-inheritance.js` is dual-exported for the same reason
-  `js/review-merge.js` is.** `js/mockup/page-render.js` reads it off
+  `js/review/review-merge.js` is.** `js/mockup/page-render.js` reads it off
   `window.cardInheritance` (side-effect-importing the file so the module graph
   guarantees it) and `build_scripts/audit-card-inheritance.js` `require`s it,
   so the browser renderer and the Node audit share exactly one classifier and

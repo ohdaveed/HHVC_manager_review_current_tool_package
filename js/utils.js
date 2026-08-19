@@ -31,10 +31,10 @@ const REVIEW_RECORD_FIELDS = [
  *
  * It was previously restated in eight places — a chip-class map here, a
  * `VALID_DECISIONS` set and a slug→label map in js/review/review-queue-state.js, a
- * label→slug map in js/keyboard-shortcuts.js, a display order in
+ * label→slug map in js/review/keyboard-shortcuts.js, a display order in
  * js/review/review-insights-data.js, a colour map in js/review/review-insights.js, a
  * pre-zeroed tally in js/review/review-queue-rows.js, and another valid-value set in
- * js/review-state-validation.js. Two of those were exact INVERSES of each other
+ * js/review/review-state-validation.js. Two of those were exact INVERSES of each other
  * maintained by hand in different files, which is a drift waiting to happen:
  * adding a sixth decision meant finding all eight, and missing one produced a
  * decision that saved but could not be filtered, or filtered but drew no chip.
@@ -853,7 +853,7 @@ function isWorkspacePanelOpen(panelName) {
  *
  * The panels (AI assist, Tool status — both now sections inside Help) publish a
  * `window.__mount…OnTabOpen` hook that setWorkspaceTab calls when the reviewer
- * opens the tab. But js/ux-improvements.js initializes EARLIER and restores a
+ * opens the tab. But js/review/ux-improvements.js initializes EARLIER and restores a
  * persisted `workspace_tab` during its own init — before those hooks exist. Its
  * guarded call therefore finds nothing to call and skips, and a reviewer who
  * left one of these tabs open on their last visit came back to an empty panel

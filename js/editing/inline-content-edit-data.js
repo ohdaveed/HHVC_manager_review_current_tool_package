@@ -3,13 +3,13 @@
    section_edits map onto a live page object on load.
 
    Dual-exported (window.inlineEditData plus module.exports), matching
-   js/review-merge.js and js/standards/plain-language.js, so this file has no DOM
+   js/review/review-merge.js and js/standards/plain-language.js, so this file has no DOM
    dependency and is importable directly under Bun with no browser.
 
    Deliberately does NOT touch edited_title/edited_summary/primary_cta —
    those three page-level fields already have a working write/reapply path
    (collectCurrentPageReviewState / updateMockupTextFromSavedState in
-   js/ux-improvements-state-sync.js) that predates this feature. Reapplying
+   js/review/ux-improvements-state-sync.js) that predates this feature. Reapplying
    them here too would race that existing path on every page load. */
 
 /**
@@ -155,7 +155,7 @@ function editableItemKind(path) {
 
 /**
  * Path pattern for a section_edits key. Kept as a single regex because
- * build_scripts/review-state-schema.js and js/review-state-validation.js
+ * build_scripts/review-state-schema.js and js/review/review-state-validation.js
  * each restate this same contract (they can't import it — see their own
  * comments for why) and validate the SAME record before it ever reaches
  * applyContentEditsToPageData below. This check exists anyway as
@@ -172,7 +172,7 @@ const SECTION_EDIT_PATH_PATTERN = new RegExp(
  * applyContentEditsToPageData/computeSectionEdits agree on: a plain string,
  * or a {text, unverified?, unverifiedReason?} object.
  *
- * Mirrors js/review-state-validation.js's isValidSectionEditItem, and is kept
+ * Mirrors js/review/review-state-validation.js's isValidSectionEditItem, and is kept
  * textually identical to it on purpose — the two sit on either side of the
  * same value (this one on the write side computing the diff, that one on the
  * read side validating the stored blob), so a shape one accepts and the other
@@ -200,7 +200,7 @@ function isValidSectionEditItem(item) {
  * Whether a section_edits value matches the shape its path's kind requires.
  *
  * Takes the KIND rather than the path so the two validator restatements
- * (build_scripts/review-state-schema.js, js/review-state-validation.js) can
+ * (build_scripts/review-state-schema.js, js/review/review-state-validation.js) can
  * express the same rule against their own path matching. A path with no kind
  * has already been rejected by the caller.
  * @param {'string'|'textArray'|'stringArray'|'table'|null} kind
@@ -243,7 +243,7 @@ function deepEqual(a, b) {
  *
  * Mirrors how edited_title/edited_summary/primary_cta are already derived
  * fresh from live page state on every autosave (collectCurrentPageReviewState
- * in js/ux-improvements-state-sync.js), rather than accumulated as a stored
+ * in js/review/ux-improvements-state-sync.js), rather than accumulated as a stored
  * diff that could drift from what the page object actually contains.
  * @param {object} page the live (possibly edited) page object
  * @param {object} originalPage the pristine page object (ORIGINAL_DATA.pages[key])
@@ -319,7 +319,7 @@ function editableContainerPaths(page, originalPage) {
 
 /**
  * Reapply a saved section_edits map onto a live page object. Called once,
- * from applySavedPageState (js/ux-improvements-state-sync.js), alongside
+ * from applySavedPageState (js/review/ux-improvements-state-sync.js), alongside
  * the existing updateMockupTextFromSavedState call — the single choke point
  * every load/navigation/sync-pull/conflict-resolution path already funnels
  * through.
@@ -333,7 +333,7 @@ function editableContainerPaths(page, originalPage) {
  *
  * Returns whether reapplying actually CHANGED the page — not whether it
  * wrote. The caller (applySavedPageState in
- * js/ux-improvements-state-sync.js) uses this to decide whether the
+ * js/review/ux-improvements-state-sync.js) uses this to decide whether the
  * just-rendered DOM is stale and needs a follow-up render, and a render
  * there replaces #mockPage wholesale.
  *
@@ -414,7 +414,7 @@ function sectionEditValuesEqual(before, after) {
 // bundle it's read off window.utils, since this file is a plain script
 // loaded after js/utils.js in js/main.js's import order, not an ES module
 // importer of it (dual-export files in this repo take no imports — see
-// js/review-merge.js and js/standards/plain-language.js for the same shape).
+// js/review/review-merge.js and js/standards/plain-language.js for the same shape).
 const { getByPath, setByPath } =
   typeof module !== 'undefined' && module.exports ? require('../utils.js') : window.utils
 

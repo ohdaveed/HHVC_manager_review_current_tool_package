@@ -1,7 +1,7 @@
 /* The Checks tab's scored rule list, as a React + MUI island.
 
    Role: renders what `renderPageChecksPanel()` in
-   js/ux-improvements-state-sync.js used to build with a template string. That
+   js/review/ux-improvements-state-sync.js used to build with a template string. That
    function still owns WHEN to render, WHICH page to score, and the
    plain-language advisory section below this one; this file owns only the
    markup for the scored list and the page-facts list.

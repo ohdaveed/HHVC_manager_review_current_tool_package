@@ -24,7 +24,7 @@
    *
    * The decision entries are derived from the canonical table in js/utils.js
    * rather than retyped. They used to be spelled out here AND inverted by hand
-   * in js/keyboard-shortcuts.js, so the same five pairs lived in two files with
+   * in js/review/keyboard-shortcuts.js, so the same five pairs lived in two files with
    * nothing keeping them agreed.
    *
    * `assign-me` is spread in on top because it is a queue action that is not a
@@ -84,7 +84,7 @@
    *   import path passes 'import' explicitly — without that override every
    *   CSV-imported row would be indistinguishable from a manual action in
    *   the history audit trail, unlike JSON backup import which already
-   *   correctly tags its entries 'import' (js/ux-improvements-export.js).
+   *   correctly tags its entries 'import' (js/review/ux-improvements-export.js).
    */
   function updateLocalReviewForPage(pageKey, patch, updatedBy = 'action') {
     const page = DATA.pages[pageKey] || {}

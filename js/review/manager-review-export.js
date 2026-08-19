@@ -1,7 +1,7 @@
 // Manager review package additions. Runs locally in the browser only.
 // Depends on js/utils.js (csvEscape via toCsv, today, downloadFile,
 // defaultSeoTitle, defaultMetaDescription, setText, getPrimaryCta,
-// buildReviewRecord), js/state.js, js/ui-controls.js (showToast), and
+// buildReviewRecord), js/state.js, js/review/ui-controls.js (showToast), and
 // js/mockup/page-render.js (renderPage, which this file wraps).
 
 import {
@@ -12,8 +12,8 @@ import {
   setText,
   toCsv,
   today,
-} from './utils.js'
-import { currentPageKey, pageData, pageOrder } from './state.js'
+} from '../utils.js'
+import { currentPageKey, pageData, pageOrder } from '../state.js'
 import { showToast } from './ui-controls.js'
 ;(function initManagerReviewExport() {
   const MANAGER_REVIEW_RECORD_FIELDS = [
@@ -96,7 +96,7 @@ import { showToast } from './ui-controls.js'
      nothing left to refresh, the decorator had no work to do. One fewer wrapper
      in the renderPage chain. */
   /* These three used to own a button each in the sidebar. They are published
-     instead, and js/ux-improvements-export.js calls whichever one the single
+     instead, and js/review/ux-improvements-export.js calls whichever one the single
      "Export reviews" control's scope names — see the comment on that markup in
      index.html for why nine buttons became two. Publishing rather than
      exporting keeps this module reachable from the self-mounting IIFE layers,

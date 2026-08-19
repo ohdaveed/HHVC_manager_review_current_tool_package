@@ -265,9 +265,9 @@ HHVC_manager_review_current_tool_package/
 ├─ js/app.js
 ├─ js/state.js
 ├─ js/utils.js
-├─ js/ux-improvements.js
+├─ js/review/ux-improvements.js
 ├─ js/review/review-queue.js
-├─ js/dashboard-guidance.js
+├─ js/review/dashboard-guidance.js
 ├─ pages/*.js
 ├─ data/page_inventory.json
 ├─ data/page_inventory.csv
@@ -287,7 +287,7 @@ HHVC_manager_review_current_tool_package/
 - Edit render behavior in `js/app.js`.
 - Edit shared local-state behavior in `js/state.js`.
 - Edit shared helpers in `js/utils.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/review/review-queue.js`, `js/dashboard-guidance.js`, and `css/ux-improvements.css`.
+- Edit UX review helpers in `js/review/ux-improvements.js`, `js/review/review-queue.js`, `js/review/dashboard-guidance.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.

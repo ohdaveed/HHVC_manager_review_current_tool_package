@@ -34,10 +34,12 @@ module.exports = {
         'product decision, not a style: #mockPage is a preview of a real SF.gov page, so ' +
         'Material styling on that surface would misrepresent the thing under review. The core ' +
         'renderer and its helpers must therefore never reach React, MUI or Emotion — the ' +
-        'islands are loaded by a dynamic import from js/ux-improvements-state-sync.js, which ' +
+        'islands are loaded by a dynamic import from js/review/ux-improvements-state-sync.js, which ' +
         'is also what keeps them in their own chunk.',
       from: {
-        path: '^js/(mockup/page-render|state|utils|ui-controls|editor-panel|card-inheritance|page-data)\\.js$',
+        path:
+          '^js/(mockup/page-render|state|utils|card-inheritance|page-data)\\.js$|' +
+          '^js/review/(ui-controls|editor-panel)\\.js$',
       },
       to: { path: 'node_modules/(react|react-dom|@mui|@emotion)' },
     },
@@ -55,10 +57,10 @@ module.exports = {
         'exactly one classifier instead of two copies free to drift.',
       from: {
         path:
-          '^js/(utils|card-inheritance|review-merge|page-registry-data)\\.js$|' +
+          '^js/(utils|card-inheritance|page-registry-data)\\.js$|' +
           '^js/standards/plain-language\\.js$|' +
           '^js/karl/karl-blocks\\.js$|' +
-          '^js/review/(review-insights-data|review-ops-data)\\.js$',
+          '^js/review/(review-insights-data|review-ops-data|review-merge)\\.js$',
       },
       to: { pathNot: '^$' },
     },

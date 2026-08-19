@@ -1,6 +1,6 @@
 // Core app state: validated page data shared across the tool's modules.
-// Imported by js/ui-controls.js, js/editor-panel.js, js/mockup/page-render.js,
-// js/app.js, and js/manager-review-export.js, all of which read these
+// Imported by js/review/ui-controls.js, js/review/editor-panel.js, js/mockup/page-render.js,
+// js/app.js, and js/review/manager-review-export.js, all of which read these
 // bindings directly. ES module imports are *live views* onto the exporting
 // module's binding, so a reader that imported `currentPageKey` sees each
 // new value without re-importing — the same visibility the old shared

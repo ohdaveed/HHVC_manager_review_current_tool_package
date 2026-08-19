@@ -1,4 +1,4 @@
-import { showToast } from '../ui-controls.js'
+import { showToast } from '../review/ui-controls.js'
 
 function setExpanded(trigger, expanded) {
   const panelId = trigger.getAttribute('aria-controls')
@@ -12,7 +12,7 @@ function setExpanded(trigger, expanded) {
  * Copy one guide value to the clipboard, toasting only on a copy that
  * actually happened.
  *
- * Mirrors the hardened fallback in js/ux-improvements-export.js rather than
+ * Mirrors the hardened fallback in js/review/ux-improvements-export.js rather than
  * writing a third clipboard implementation. Three details are the whole
  * point: `document.execCommand('copy')` REPORTS failure by returning false
  * rather than throwing, so an ignored return toasts "copied" over an empty

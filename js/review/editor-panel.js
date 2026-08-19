@@ -3,8 +3,8 @@
 // js/utils.js (defaultSeoTitle, defaultMetaDescription, getValue, setValue,
 // setText) and js/state.js (pageData, currentPageKey).
 
-import { currentPageKey, pageData } from './state.js'
-import { defaultMetaDescription, defaultSeoTitle, getValue, setText, setValue } from './utils.js'
+import { currentPageKey, pageData } from '../state.js'
+import { defaultMetaDescription, defaultSeoTitle, getValue, setText, setValue } from '../utils.js'
 function statusClass(length, max) {
   return length <= max ? 'ok' : 'warn'
 }
@@ -50,10 +50,10 @@ function updateReadingTarget(page) {
    page:" label and the sticky review bar, all three of which are permanent
    rather than transient. */
 
-// Republished as a browser global because js/ux-improvements-state-sync.js
+// Republished as a browser global because js/review/ux-improvements-state-sync.js
 // calls it as `window.updateSearchPreview?.()` — an optional call, so that
 // module keeps working when the core editor panel is absent. See the longer
-// note in js/ui-controls.js for why these stay globals rather than imports.
+// note in js/review/ui-controls.js for why these stay globals rather than imports.
 window.updateSearchPreview = updateSearchPreview
 
 export { syncEditorFields, updateReadingTarget, updateSearchPreview }
