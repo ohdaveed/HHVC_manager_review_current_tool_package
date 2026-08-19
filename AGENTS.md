@@ -83,7 +83,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 49 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 50 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -92,6 +92,16 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
+`esm-named-exports` (that a module which is named-imported actually DECLARES
+those ESM exports. `js/karl-blocks.js` published only `window.karlBlocks` and
+`module.exports` while `js/karl-guide-registry.js` named-imported from it —
+a hard SyntaxError in a browser, which killed the whole module graph on page
+load. Every gate stayed green for its own reason: Vite's CommonJS plugin
+synthesises the names at build time, Bun's interop does the same under
+`bun run test`, and `test:e2e` runs the BUILT bundle. Only `bun run dev` serves
+the file unbundled, so the one command a developer runs daily was the only one
+that broke and the only one nothing ran. The check is static — it reads import
+statements rather than executing them, so no interop layer can flatter it),
 `decision-vocabulary` (pins the two whole-list module-boundary restatements of
 the decision list against the canonical table in `js/utils.js` — and,
 separately, every file that spells out an INDIVIDUAL label as a literal, which
