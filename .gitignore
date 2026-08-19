@@ -235,12 +235,6 @@ agent-evals-regression-gate.zip
 .claude/skills/modern-web-guidance
 agent-evals-regression-gate/agent-evals-regression-gate/SKILL.md
 
-# JetBrains Junie's agent config and its own copy of the locally-installed
-# skills — a per-developer IDE working directory (275 files), not repo content.
-# It mirrors the same skill payloads already ignored under .claude/skills/ and
-# .agents/, so committing it would triple-store them for one editor's benefit.
-/.junie/
-
 # Scratch capture of a `bun run test` run, redirected to the repo root rather
 # than the scratchpad. 197 KB of console output with no reader — the suite
 # regenerates it on demand, and a stale copy of a passing run is exactly the
