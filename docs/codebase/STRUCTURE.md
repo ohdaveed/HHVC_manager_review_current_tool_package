@@ -8,7 +8,7 @@
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | `index.html`                       | Single HTML shell; one module script → `/js/main.js`                                                      | `index.html`, `AGENTS.md`                                       |
 | `js/`                              | Nine feature folders (ES modules) plus `js/main.js`, the module graph's root — see the folder table below | `js/main.js`                                                    |
-| `pages/`                           | Page objects registered on `window.HHVC_PAGES` (20 `.js` files)                                           | `pages/*.js`, `js/core/page-data.js`                            |
+| `pages/`                           | Page objects registered on `window.HHVC_PAGES` (29 `.js` files)                                           | `pages/*.js`, `js/core/page-data.js`                            |
 | `css/`                             | Hand-authored stylesheets imported by `js/main.js`                                                        | `js/main.js`                                                    |
 | `build_scripts/`                   | Validate, export, schema, AI providers, sheet sync                                                        | `package.json` scripts                                          |
 | `tests/`                           | Bun unit tests + `tests/e2e/` Playwright                                                                  | `package.json`, `playwright.config.js`                          |

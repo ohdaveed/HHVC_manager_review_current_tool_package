@@ -1,9 +1,9 @@
 /* Publishes the three third-party libraries onto `window`.
 
    These used to arrive as browser globals — papaparse straight from
-   node_modules, Fuse and defu as committed IIFE bundles under js/vendor/
-   rebuilt by a `vendor:browser` script. Vite imports them from npm now, so
-   js/vendor/ and that script are gone.
+   node_modules, Fuse and defu as committed IIFE bundles under
+   js/vendor/, rebuilt by a `vendor:browser` script. Vite imports them from
+   npm now, so js/vendor/ and that script are gone.
 
    Their consumers still reach for them as globals behind
    `typeof X === 'undefined'` guards: js/core/utils.js's parseCsv, the fuzzy search

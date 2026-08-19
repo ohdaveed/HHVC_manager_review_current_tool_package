@@ -44,6 +44,27 @@ const SKIP =
  * self-reference, see its comment below, and only exists because the
  * original 307-file, three-entry count was necessarily taken before this
  * file joined the tree it now scans.
+ *
+ * **The exemption is GLOBAL, not per-site.** This is a plain `Set` keyed on
+ * the path string alone, and the "every js/ path mentioned in a tracked file
+ * exists on disk" test below only ever asks `EXEMPT.has(ref)` — it carries no
+ * memory of which file or line each entry was written for. Adding
+ * `'js/interactive-sitemap.js'` here to cover its six known past-tense
+ * mentions also silences a future, unrelated, genuinely broken reference to
+ * that exact string anywhere else in the tree — a new doc that typos a path
+ * into this one, say. That is inherent to a Set-of-strings design, not a bug
+ * to fix: the alternative (keying on file+line, or re-deriving the mention
+ * count on every run) is real complexity this test does not need for four
+ * entries. It does mean the choice between "add an EXEMPT entry" and "reword
+ * the comment so the path doesn't appear at all" is not neutral — an entry
+ * here is a standing exemption for that string everywhere, forever, while a
+ * reworded comment (see `js/core/third-party-globals.js`'s fix below, in the
+ * dangling-line test's own comment) closes the specific case with no lasting
+ * width. Prefer rewording when the string can be avoided; reach for EXEMPT
+ * only when it can't, same as the four entries below already do. Also note
+ * this Set is consulted by exactly one test — the dangling-line-break check
+ * two tests down never reads it, so a wrap that happens to end in an EXEMPT
+ * string still fails there; see that test's own comment.
  */
 const EXEMPT = new Set([
   // Described in the past tense in AGENTS.md, CLAUDE.md, docs/codebase/
@@ -99,14 +120,49 @@ const EXEMPT = new Set([
  * tracked today (`/tmp/hhvc-retarget.mjs` is a throwaway, never committed,
  * per its own header) — a future `.mjs` build script naming a `js/` path
  * should not have to rediscover this gap.
+ *
+ * **`.yml`, `.yaml`, `.toml` and `.jsonc` belong in this list too, added
+ * during the final whole-branch review of this migration.** `ci.yml`'s
+ * dependency-cruiser step comment, `bunfig.toml`'s preload-order rationale,
+ * and `knip.jsonc`'s ignore-list rationale each named the page-data, state
+ * and page-registry core modules by their pre-move bare paths after this
+ * migration relocated them under `js/core/`, and none of it was visible to
+ * `trackedFiles()`'s extension filter — `.yml`/`.toml`/`.jsonc` were as
+ * unscanned as `.cjs` was before task 8 closed that exact gap, one file
+ * extension later. `.github/workflows/ci.yml` and `.github/workflows/link-check.yml`
+ * match `.yml`; `bunfig.toml` and `netlify.toml` match `.toml`; `knip.jsonc`
+ * and `.markdownlint-cli2.jsonc` match `.jsonc`; `.codex/config.toml` and its
+ * sibling agent `.toml` files now scan too, though re-deriving rather than
+ * trusting the finding that motivated this fix turned up no stale path
+ * inside any of them.
+ *
+ * **`.gitignore` is scanned by exact basename, not by extension**, since it
+ * has none for the regex above to test — and it earned the special case for
+ * the same reason as the three config files above: its Karl-transcript
+ * comment named the karl-blocks module by its pre-move bare path after that
+ * module's own move into a new `js/karl/` folder. Widening the extension
+ * test itself to accept any bare dotfile would also pull in every other
+ * extensionless file this repo tracks — `.nvmrc`, `.bun-version`,
+ * `.windsurfrules`, several `.claude/skills/<name>` entries with no
+ * extension of their own — and checking each of those by hand found none
+ * holding a `js/` path reference, so that width would cost real scan volume
+ * for zero caught defects today. `SCAN_BASENAMES` below names `.gitignore`
+ * explicitly instead, so a future extensionless file that does need scanning
+ * is one entry away rather than a second regex to get wrong.
  */
+const SCAN_BASENAMES = new Set(['.gitignore'])
+
 function trackedFiles() {
   const out = spawnSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' })
   if (out.status !== 0) throw new Error('git ls-files failed: ' + out.stderr)
   return out.stdout
     .split('\n')
     .filter(Boolean)
-    .filter((f) => /\.(js|jsx|ts|cjs|mjs|md|json|html|css)$/.test(f))
+    .filter(
+      (f) =>
+        /\.(js|jsx|ts|cjs|mjs|md|json|jsonc|html|css|yml|yaml|toml)$/.test(f) ||
+        SCAN_BASENAMES.has(path.basename(f))
+    )
     .filter((f) => !SKIP.test(f))
 }
 
@@ -185,10 +241,27 @@ describe('js/ path references', () => {
    * the flat tree the narrower pattern was validated against — a class that
    * cannot see its own fix location is worse than no guard, since it would
    * report clean on exactly the shape it exists to catch going forward.
+   *
+   * **The terminal character class allows a trailing `/` as well as a
+   * trailing `-`, added during the final whole-branch review.** Every path
+   * this repo names now carries a folder segment, so a reflow can just as
+   * easily break right after the slash — `js/review/` at the end of one
+   * line, `review-queue.js` opening the next — as after a hyphen inside a
+   * name, and the hyphen-only class was blind to that shape by construction.
+   * There is no live instance of it today; this is prevention, the same
+   * posture task 8 took adding `.cjs`/`.mjs` ahead of any file needing them.
+   * Widening the class makes a COMPLETE past-tense reference read as a
+   * dangling one if the reference itself ends a line in `/` with nothing
+   * else following — `js/core/third-party-globals.js` said exactly that
+   * about the deleted `js/vendor/` directory, and reflowing it (not adding
+   * an EXEMPT entry, which this test never consults — see EXEMPT's own
+   * comment) is the fix, because EXEMPT is a `Set` keyed on the path
+   * strings the LITERAL test's for-loop tests membership against; this
+   * test's for-loop never reads it.
    */
   test('no js/ path fragment is left dangling at a line break', () => {
     const dangling = []
-    const re = /js\/[a-z0-9][a-z0-9/-]*-\s*$/
+    const re = /js\/[a-z0-9][a-z0-9/-]*[-/]\s*$/
     for (const file of trackedFiles()) {
       const abs = path.join(root, file)
       if (!existsSync(abs)) continue

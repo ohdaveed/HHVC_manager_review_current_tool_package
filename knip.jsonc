@@ -21,7 +21,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
 
   // `pages/*.js` export nothing: each assigns onto `window.HHVC_PAGES` and is
-  // side-effect-imported by `js/page-data.js`. There is no interface for Knip
+  // side-effect-imported by `js/core/page-data.js`. There is no interface for Knip
   // to judge, and `build_scripts/page-import-checks.js` already fails
   // validation on a page file nobody imports — the check that matters there.
   //
