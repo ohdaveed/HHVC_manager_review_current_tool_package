@@ -77,15 +77,23 @@ validate one page in isolation. Run both after editing anything under `pages/` o
   `js/review/ui-controls.js`, `js/review/editor-panel.js`, `js/mockup/page-render.js` (holds
   `karlTag()`), `js/core/app.js`, `js/review/manager-review-export.js`,
   `js/standards/reading-level.js`, `js/review/review-state-validation.js`. Don't re-monolith them.
+- **Nine feature folders under `js/`, not one flat directory:** `js/core/`
+  (bootstrap + shared state/vocabulary), `js/mockup/` (renders `#mockPage`),
+  `js/review/` (the review/UX layers), `js/editing/` (inline content editing),
+  `js/ai/` (optional AI assist + rewrite), `js/sync/` (optional review-state
+  sync client), `js/karl/` (Karl guide panels + transcript export),
+  `js/standards/` (reading-level + plain-language scoring), `js/react/` (React
+  - MUI workspace islands). `js/main.js` alone stays directly under `js/`, as
+    the module graph's root.
 - **`js/core/utils.js` owns the shared vocabulary.** The review decision table
   (`DECISIONS` and its derived label/slug/chip/colour lookups), `escapeHtml`,
   `safeUrl`, and `mountWorkspacePanelIfOpen` all live there. Derive from them
   rather than restating them — these were each duplicated across files before,
   and the copies drifted.
 - **Review/UX layers are additive** self-contained IIFEs on top of the core
-  (`js/ux-improvements*.js`, `js/review-queue*.js`, `js/review-insights*.js`,
-  `js/review-ops*.js`, `js/review/dashboard-guidance.js`,
-  `js/ai-assist*.js`, `js/standards/plain-language.js`, `js/mockup/mockup-image-export.js`,
+  (`js/review/ux-improvements*.js`, `js/review/review-queue*.js`, `js/review/review-insights*.js`,
+  `js/review/review-ops*.js`, `js/review/dashboard-guidance.js`,
+  `js/ai/ai-assist*.js`, `js/standards/plain-language.js`, `js/mockup/mockup-image-export.js`,
   `js/review/keyboard-shortcuts.js`) that read `HHVC_DATA`
   and `localStorage`. They may edit the **in-memory** page data but must never
   write back to `pages/*.js` or publish content.

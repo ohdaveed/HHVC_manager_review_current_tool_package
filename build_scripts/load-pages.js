@@ -20,9 +20,17 @@ function getPageScriptPaths() {
 }
 
 /**
- * Return repo-relative paths for all js/*.js modules (excluding
- * js/vendor/*.js third-party files, which fast-glob's single-star pattern
- * naturally skips since it doesn't recurse into subdirectories).
+ * Return repo-relative paths for js/*.js modules. Unused by any caller today
+ * (`getPageScriptPaths` below is the one every build/test script imports),
+ * kept for parity with that sibling function.
+ *
+ * The third-party-vendor exclusion this comment used to describe (a
+ * `js/vendor/` directory of committed IIFE bundles) is gone along with the
+ * directory itself — third-party libraries are npm imports Vite bundles now.
+ * What the single-star pattern actually skips today is this repo's own nine
+ * feature folders: every module that used to sit directly in `js/` moved
+ * into `js/core/`, `js/review/`, etc. during the file-structure migration, so
+ * this glob now matches only `js/main.js`.
  * @returns {string[]}
  */
 function getJsScriptPaths() {

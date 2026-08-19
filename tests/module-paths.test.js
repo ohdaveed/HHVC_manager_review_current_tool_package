@@ -200,4 +200,71 @@ describe('js/ path references', () => {
     }
     expect(dangling).toEqual([])
   })
+
+  /**
+   * A `js/<prefix>*` GLOB reference is invisible to every test above, and for
+   * a different reason than the dangling-line case. Those three tests' shared
+   * pattern is `[a-z0-9/-]+` — a character class with no `*` in it — so a
+   * glob string never matches at all: the scan simply does not see it,
+   * matched or broken. A literal path breaks loudly (the "resolves on disk"
+   * test fails); a glob breaks silently, because nothing upstream of this
+   * test was ever looking at it.
+   *
+   * (This paragraph deliberately never spells out `js/` immediately followed
+   * by a hyphenated name and a bare `*.js` — every such string below is this
+   * test's OWN broken-glob shape, and writing one here would make this
+   * comment a fixture for the assertion beneath it.)
+   *
+   * **This repo had eight distinct stale glob families, not the seven this
+   * task's own plan predicted.** The plan's table (written mid-migration, one
+   * task before this one) named seven — the `ai-assist`, `ai-rewrite`,
+   * `inline-content-edit`, `review-insights`, `review-ops` and `review-queue`
+   * families (plus a malformed trailing-dot copy of the inline-content-edit
+   * one) — and estimated 23 locations. Re-deriving rather than trusting that
+   * restatement (the same discipline this repo's own docs insist on
+   * elsewhere) found two more, `page-registry` and `ux-improvements`, sitting
+   * in files the plan's own reference table didn't name
+   * (`.claude/skills/hhvc-page-registry/SKILL.md`,
+   * `tests/e2e/page-registry.spec.js`), and a true count of 40 locations
+   * across those eight families. All eight were stale for the same reason:
+   * every file a family glob used to match sat directly in `js/` before this
+   * migration, and none of them do now — the flat directory the glob was
+   * written against is gone.
+   *
+   * **Expansion is directory-scoped, not recursive, and that is deliberate.**
+   * A real shell glob's `*` cannot cross a `/`, so a bare `js/<name>*.js`
+   * pattern only ever meant "files starting with `<name>` sitting directly in
+   * `js/`" — never "anywhere under `js/`". Expanding it any other way would
+   * make every one of the eight stale families above pass by accident: the
+   * files still exist somewhere under `js/`, just nested one level deeper
+   * now, and a recursive search would find them there without the prose ever
+   * being corrected to say where. The fix this task applies is exactly that
+   * correction — folding the destination folder into the pattern itself, e.g.
+   * `js/review/review-queue*.js` in place of the old bare form — so the glob
+   * keeps meaning "this family of files," now rooted where the family
+   * actually lives.
+   */
+  test('every js/<prefix>* glob pattern expands to at least one real file', () => {
+    const broken = []
+    const re = /\bjs\/[a-z0-9/-]+\*\.jsx?\b/g
+    for (const file of trackedFiles()) {
+      const abs = path.join(root, file)
+      if (!existsSync(abs)) continue
+      const source = fs.readFileSync(abs, 'utf8')
+      for (const match of source.matchAll(re)) {
+        const ref = match[0]
+        const starIndex = ref.indexOf('*')
+        const dirEnd = ref.lastIndexOf('/', starIndex)
+        const dir = ref.slice(0, dirEnd)
+        const prefix = ref.slice(dirEnd + 1, starIndex)
+        const suffix = ref.slice(starIndex + 1) // ".js" or ".jsx"
+        const dirAbs = path.join(root, dir)
+        const matched =
+          existsSync(dirAbs) &&
+          fs.readdirSync(dirAbs).some((name) => name.startsWith(prefix) && name.endsWith(suffix))
+        if (!matched) broken.push(`${file}: ${ref}`)
+      }
+    }
+    expect(broken).toEqual([])
+  })
 })

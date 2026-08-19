@@ -1,12 +1,12 @@
 ---
 name: hhvc-inline-content-editing
-description: 'HHVC repo: click-to-edit on the rendered mockup — the EDITABLE_FIELD_SHAPES scope list and its four value kinds, why cards carry no data-rewrite-field, why a stamped-but-unlisted path silently loses edits, section_edits being derived not accumulated, the reapply/re-render infinite-loop guard, and the CSV round-trip limitation. Load before editing js/inline-content-edit*.js.'
+description: 'HHVC repo: click-to-edit on the rendered mockup — the EDITABLE_FIELD_SHAPES scope list and its four value kinds, why cards carry no data-rewrite-field, why a stamped-but-unlisted path silently loses edits, section_edits being derived not accumulated, the reapply/re-render infinite-loop guard, and the CSV round-trip limitation. Load before editing js/editing/inline-content-edit*.js.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
      canonical copy of this content; see "Cross-tool canon" there. -->
 
-### Inline content editing (`js/inline-content-edit*.js`)
+### Inline content editing (`js/editing/inline-content-edit*.js`)
 
 Click-to-edit directly on the rendered mockup — every text field a reviewer
 can see except cards: the title, summary and primary CTA, a section heading,

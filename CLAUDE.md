@@ -369,14 +369,14 @@ that needs `escapeHtml` imports it, and `js/core/state.js` imports
 27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
-listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
+listed order** — `js/review/ux-improvements*.js`, `js/review/review-queue*.js`,
 `js/review/dashboard-guidance.js` and
 `js/review/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
 objects rather than imports, so their sequence in `js/main.js` is load-bearing
 and hand-reviewed.
 
 Note that "no imports" would be too strong, and used to be written that way:
-only `js/review-queue*.js` takes none. The others do import — `js/core/utils.js`
+only `js/review/review-queue*.js` takes none. The others do import — `js/core/utils.js`
 helpers, and four imports in `js/review/dashboard-guidance.js` — so the module graph
 already orders them against the _core_. What it cannot order is the part that
 matters here: a `window.<Namespace>` a sibling IIFE assigns at mount time is
@@ -418,7 +418,25 @@ A Karl Services/Resources subsection entry, a Related-panel entry, and a Resourc
 ### Core module split (formerly one `app.js`)
 
 The old monolithic `app.js` was split into focused modules — **do not
-re-monolith them.**
+re-monolith them.** Those modules, plus every review/UX and optional-feature
+layer, now live in nine feature folders under `js/` rather than one flat
+directory:
+
+| Folder          | Owns                                                                                                                                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `js/core/`      | Bootstrap, shared state and the cross-cutting vocabulary: `utils.js`, `state.js`, `app.js`, `page-data.js`, `page-registry*.js`, `card-inheritance.js`, `third-party-globals.js`                                                                                                                                         |
+| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                                              |
+| `js/review/`    | The review/UX layers on top of the core: `review-queue*.js`, `review-insights*.js`, `review-ops*.js`, `ux-improvements*.js`, `dashboard-guidance.js`, `editor-panel.js`, `keyboard-shortcuts.js`, `manager-review-export.js`, `review-merge.js`, `review-state-store.js`, `review-state-validation.js`, `ui-controls.js` |
+| `js/editing/`   | Click-to-edit inline content editing on the rendered mockup: `inline-content-edit*.js`                                                                                                                                                                                                                                   |
+| `js/ai/`        | The optional AI assist and AI rewrite features, invisible unless `/api/ai/*` is configured: `ai-assist*.js`, `ai-rewrite*.js`                                                                                                                                                                                            |
+| `js/sync/`      | The optional review-state sync client: `review-state-sync.js`                                                                                                                                                                                                                                                            |
+| `js/karl/`      | Karl guide panels and the Karl transcript export: `karl-guide*.js`, `karl-blocks.js`, `karl-transcript*.js`                                                                                                                                                                                                              |
+| `js/standards/` | Content-standards scoring: `reading-level.js`, `plain-language.js`                                                                                                                                                                                                                                                       |
+| `js/react/`     | The React 19 + MUI islands mounted inside `#reviewWorkspace`: `mount.js`, `theme.js`, `checks-panel.jsx`                                                                                                                                                                                                                 |
+
+`js/main.js` is the one file that stays directly under `js/` — it is the root
+of the module graph, imported by nothing, so it has no folder of its own to
+belong to.
 
 - **`js/core/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
   exported as bare top-level functions. Loads first. Beyond the obvious
@@ -701,7 +719,7 @@ than trusting a version number; it is opt-out by default on current Node 22 but
 was flag-gated in early 22.x.) Anything
 relying on Node-specific interop here would go unnoticed.
 
-### Overview insight cards (`js/review-insights*.js`)
+### Overview insight cards (`js/review/review-insights*.js`)
 
 Two compact cards above the review queue table — review activity over time (a chart) and the pages whose automated checks are failing (a ranked list). They sit on the **Overview tab rather than a workspace tab of their own** on purpose: a tab is a scarce slot bound to a number key. There were three cards, and the two that were cut — Decision mix and a Checks-needing-attention bar chart — are worth not re-adding. `js/review/review-insights-data.js` is the pure data shaping, dual `window`/`module.exports` like `js/review/review-merge.js`; `js/review/review-insights.js` orchestrates; `js/review/review-insights-charts.js` is the only module that imports ECharts. **That import is dynamic, and that is load-bearing rather than tidiness** — ECharts is ~530 KB raw / ~180 KB gzip, more than the entire rest of the bundle, so it must stay its own chunk; and the headings and data tables are built **synchronously, before the import is requested**, so the numbers are in the DOM even if the chunk never loads. **Colour is never the only encoding**, and decision fills use `--viz-decision-*` rather than the `--status-*-border` chip tokens — if you change those, re-validate the contrast rather than eyeball it. Full rationale — why each cut card was cut, the re-parented chart host and its generation counter, and the ΔE measurements — in the `hhvc-review-insights` skill.
 
@@ -801,15 +819,15 @@ so it is the only place a snapshot is recorded.
   self-dismiss after 4s — far too short to notice a wrong bulk action and
   reverse it. Keyboard shortcut `z`.
 
-### Inline content editing (`js/inline-content-edit*.js`)
+### Inline content editing (`js/editing/inline-content-edit*.js`)
 
 Click-to-edit directly on the rendered mockup — every visible text field except cards, persisting through the same `localStorage` review-state model as every other field. A review aid: `pages/*.js` is never touched. **The scope is one list, `EDITABLE_FIELD_SHAPES` in `js/editing/inline-content-edit-data.js`**, declaring each editable path and the value shape (`string`, `textArray`, `stringArray`, `table`) its stored entry takes. **A path stamped `data-rewrite-field` by a renderer but missing from that list silently loses the reviewer's edit on the next load** — step text was in exactly that state and is the reason the list exists; add the path in both places or neither. **Cards deliberately carry no `data-rewrite-field`** — an inheriting card's description IS the destination page's `summary`, so an edit here would appear to work and then vanish; do not "complete" the feature by adding it. Full rationale in the `hhvc-inline-content-editing` skill.
 
-### Adding and deleting pages (`js/page-registry*.js`)
+### Adding and deleting pages (`js/core/page-registry*.js`)
 
 A reviewer can create a page mockup and delete an existing one from the browser. Same posture as every other layer: `pages/*.js` is never written, no backend, works on the static build. `js/core/page-registry.js` MUST stay imported by `js/core/state.js` so it runs before the `ORIGINAL_DATA` clone. Full rationale — including the restore-snapshot hazard that silently drops inline edits — in the `hhvc-page-registry` skill.
 
-### Stored review data (`js/review-ops*.js`)
+### Stored review data (`js/review/review-ops*.js`)
 
 A collapsed section at the end of the **Help** tab reporting what this browser is actually holding and how it is connected — previously only visible in devtools. `js/review/review-ops-data.js` is the pure diagnostics, dual `window`/`module.exports` so the tests need no browser; `js/review/review-ops.js` is the panel, lazily mounted when Help opens with the same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses. Two invariants are safety-shaped and stay here. **An empty page-key set reports NO orphans, not all of them** — an empty set means page data has not loaded, and the other reading would put a "remove these" button in front of the reviewer's entire review history. And **pruning is the only path in the tool that deletes review data outright** (everything else merges), so it confirms with the count and the keys first and **re-derives the list at click time** rather than trusting what was rendered, since the panel can sit open while a sync pull or import changes state underneath it. Full rationale — why it lost its own tab, why orphaned records are a real class, and why `local_dirty`'s three states are reported separately — in the `hhvc-review-ops` skill.
 
@@ -1536,17 +1554,17 @@ so it is wrong the moment it is written.)
 
 | Skill                         | Read it before editing                                                              |
 | ----------------------------- | ----------------------------------------------------------------------------------- |
-| `hhvc-inline-content-editing` | `js/inline-content-edit*.js`                                                        |
-| `hhvc-page-registry`          | `js/page-registry*.js`                                                              |
+| `hhvc-inline-content-editing` | `js/editing/inline-content-edit*.js`                                                |
+| `hhvc-page-registry`          | `js/core/page-registry*.js`                                                         |
 | `hhvc-review-sync-backend`    | `server.ts`'s review-state routes, `js/sync/review-state-sync.js`                   |
 | `hhvc-ai-assist-backend`      | `server.ts`'s AI routes, anything under `build_scripts/ai/`                         |
 | `hhvc-rag-knowledge-base`     | `build_scripts/knowledge-*.js`, `build_scripts/ai/compliance-audit.js`              |
-| `hhvc-ai-rewrite`             | `js/ai-rewrite*.js`, anything touching `data-rewrite-field` addressing              |
+| `hhvc-ai-rewrite`             | `js/ai/ai-rewrite*.js`, anything touching `data-rewrite-field` addressing           |
 | `hhvc-card-inheritance`       | `js/core/card-inheritance.js`, `js/mockup/page-render.js`'s card rendering          |
 | `hhvc-react-islands`          | anything under `js/react/`, or adding a React island                                |
 | `hhvc-workspace-layout`       | the workspace grid in `css/dashboard.css`, `js/review/ux-improvements-workspace.js` |
-| `hhvc-review-insights`        | `js/review-insights*.js`, `css/review-insights.css`                                 |
-| `hhvc-review-ops`             | `js/review-ops*.js`, `css/review-ops.css`                                           |
+| `hhvc-review-insights`        | `js/review/review-insights*.js`, `css/review-insights.css`                          |
+| `hhvc-review-ops`             | `js/review/review-ops*.js`, `css/review-ops.css`                                    |
 
 **These are extracts, not a second source of truth.** `AGENTS.md` still carries
 every one of these sections in full — it is the canon, and it is read by tools

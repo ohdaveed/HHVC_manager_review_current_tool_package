@@ -94,7 +94,7 @@ visible from the tree:
 ```
 js/
   main.js          entry — stays at this path, the one <script> in index.html
-  core/            utils, state, page-data, page-registry*, card-inheritance,
+  core/            utils, state, app, page-data, page-registry*, card-inheritance,
                    third-party-globals
   mockup/          page-render, karl-tag-meta, mockup-image-export,
                    inline-link-target

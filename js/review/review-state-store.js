@@ -1,7 +1,7 @@
 /* Shared review-state localStorage store.
    Extracted from js/review/ux-improvements.js so js/review/ux-improvements-state-sync.js,
    js/review/ux-improvements-workspace.js, js/review/ux-improvements-export.js, and
-   js/review-queue*.js (all load after this file) can read/write the same
+   js/review/review-queue*.js (all load after this file) can read/write the same
    hhvcManagerReviewState:v1 blob via window.reviewState. */
 
 import { hasValidPageData } from '../core/utils.js'

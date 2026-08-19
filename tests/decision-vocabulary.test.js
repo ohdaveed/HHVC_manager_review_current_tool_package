@@ -32,7 +32,7 @@
 // The last describe block closes that gap: it reads those files and asserts
 // every decision-shaped literal in them is a real label. It deliberately does
 // NOT demand they be rewritten to reference the constant — several sit in
-// modules that take no imports at all (js/review-queue*.js) or in HTML
+// modules that take no imports at all (js/review/review-queue*.js) or in HTML
 // attributes, where a literal is the only option. What matters is that a
 // rename cannot leave one behind.
 import { describe, test, expect } from 'bun:test'

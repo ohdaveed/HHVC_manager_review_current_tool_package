@@ -1,4 +1,4 @@
-// Adding and deleting page mockups through the UI (js/page-registry*.js).
+// Adding and deleting page mockups through the UI (js/core/page-registry*.js).
 //
 // There is a unit layer beneath this — tests/page-registry-data.test.js covers
 // the pure validation and the in-place mutation — but three of the properties

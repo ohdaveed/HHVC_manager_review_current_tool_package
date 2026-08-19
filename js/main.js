@@ -15,7 +15,7 @@
    why they stay listed in their original sequence.
 
    "Take no imports" is what this used to say, and it is not true: only
-   js/review-queue*.js takes none. The rest import js/core/utils.js helpers, so the
+   js/review/review-queue*.js takes none. The rest import js/core/utils.js helpers, so the
    graph orders them against the core on its own. The edge it cannot see, and
    the reason this order is still hand-maintained, is a `window.<Namespace>`
    one IIFE assigns and another reads at mount time.

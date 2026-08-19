@@ -345,14 +345,14 @@ that needs `escapeHtml` imports it, and `js/core/state.js` imports
 27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
-listed order** — `js/ux-improvements*.js`, `js/review-queue*.js`,
+listed order** — `js/review/ux-improvements*.js`, `js/review/review-queue*.js`,
 `js/review/dashboard-guidance.js` and
 `js/review/keyboard-shortcuts.js` reach each other through `window.<Namespace>`
 objects rather than imports, so their sequence in `js/main.js` is load-bearing
 and hand-reviewed.
 
 Note that "no imports" would be too strong, and used to be written that way:
-only `js/review-queue*.js` takes none. The others do import — `js/core/utils.js`
+only `js/review/review-queue*.js` takes none. The others do import — `js/core/utils.js`
 helpers, and four imports in `js/review/dashboard-guidance.js` — so the module graph
 already orders them against the _core_. What it cannot order is the part that
 matters here: a `window.<Namespace>` a sibling IIFE assigns at mount time is
@@ -510,7 +510,24 @@ disagree at all.
 ### Core module split (formerly one `app.js`)
 
 The old monolithic `app.js` was split into focused modules — **do not re-monolith
-them.**
+them.** Those modules, plus every review/UX and optional-feature layer, now live
+in nine feature folders under `js/` rather than one flat directory:
+
+| Folder          | Owns                                                                                                                                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `js/core/`      | Bootstrap, shared state and the cross-cutting vocabulary: `utils.js`, `state.js`, `app.js`, `page-data.js`, `page-registry*.js`, `card-inheritance.js`, `third-party-globals.js`                                                                                                                                         |
+| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                                              |
+| `js/review/`    | The review/UX layers on top of the core: `review-queue*.js`, `review-insights*.js`, `review-ops*.js`, `ux-improvements*.js`, `dashboard-guidance.js`, `editor-panel.js`, `keyboard-shortcuts.js`, `manager-review-export.js`, `review-merge.js`, `review-state-store.js`, `review-state-validation.js`, `ui-controls.js` |
+| `js/editing/`   | Click-to-edit inline content editing on the rendered mockup: `inline-content-edit*.js`                                                                                                                                                                                                                                   |
+| `js/ai/`        | The optional AI assist and AI rewrite features, invisible unless `/api/ai/*` is configured: `ai-assist*.js`, `ai-rewrite*.js`                                                                                                                                                                                            |
+| `js/sync/`      | The optional review-state sync client: `review-state-sync.js`                                                                                                                                                                                                                                                            |
+| `js/karl/`      | Karl guide panels and the Karl transcript export: `karl-guide*.js`, `karl-blocks.js`, `karl-transcript*.js`                                                                                                                                                                                                              |
+| `js/standards/` | Content-standards scoring: `reading-level.js`, `plain-language.js`                                                                                                                                                                                                                                                       |
+| `js/react/`     | The React 19 + MUI islands mounted inside `#reviewWorkspace`: `mount.js`, `theme.js`, `checks-panel.jsx`                                                                                                                                                                                                                 |
+
+`js/main.js` is the one file that stays directly under `js/` — it is the root of
+the module graph, imported by nothing, so it has no folder of its own to belong
+to.
 
 - **`js/core/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
   exported as bare top-level functions. Loads first. Beyond the obvious
@@ -816,7 +833,7 @@ uncovered. That path needs
 version number; it is opt-out by default on current Node 22 but was flag-gated
 in early 22.x.
 
-### Overview insight cards (`js/review-insights*.js`)
+### Overview insight cards (`js/review/review-insights*.js`)
 
 Two compact cards above the review queue table — review activity over time (a
 chart) and the pages whose automated checks are failing (a ranked list). They
@@ -964,7 +981,7 @@ so it is the only place a snapshot is recorded.
   self-dismiss after 4s — far too short to notice a wrong bulk action and
   reverse it. Keyboard shortcut `z`.
 
-### Inline content editing (`js/inline-content-edit*.js`)
+### Inline content editing (`js/editing/inline-content-edit*.js`)
 
 Click-to-edit directly on the rendered mockup — every text field a reviewer
 can see except cards: the title, summary and primary CTA, a section heading,
@@ -1237,7 +1254,7 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   configuration — the click-to-edit affordance is present on every deploy,
   including the static Netlify build, the moment the page has loaded.
 
-### Adding and deleting pages (`js/page-registry*.js`)
+### Adding and deleting pages (`js/core/page-registry*.js`)
 
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
@@ -1503,7 +1520,7 @@ surface so each selector is still declared in exactly one file.
   AI-assist panel's `buildPageModuleSource()` is the thing to model it on), and
   reordering `order` from the UI.
 
-### Stored review data (`js/review-ops*.js`)
+### Stored review data (`js/review/review-ops*.js`)
 
 A collapsed section at the end of the **Help** tab reporting what this browser
 is actually holding and how it is connected — previously only visible in

@@ -24,7 +24,7 @@
    screen reader read the numbers twice. The checks card needs neither — it is a
    visible ranked list, which is already the accessible artifact.
 
-   Load-order dependency: imported by js/main.js after js/review-queue*.js,
+   Load-order dependency: imported by js/main.js after js/review/review-queue*.js,
    because js/review/review-queue-render.js calls window.ReviewInsights.render() at
    the end of its own render. That call is optional-chained, so the ordering is
    a performance detail rather than a correctness one. */

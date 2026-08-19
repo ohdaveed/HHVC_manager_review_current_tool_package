@@ -1,12 +1,12 @@
 ---
 name: hhvc-review-insights
-description: 'HHVC repo: the two Overview insight cards — why the other two were cut and should not be re-added, why the ECharts import must stay dynamic and the data tables built synchronously before it, the re-parented chart host and generation counter, and why decision fills use `--viz-decision-*` rather than the chip tokens. Load before editing js/review-insights*.js or css/review-insights.css.'
+description: 'HHVC repo: the two Overview insight cards — why the other two were cut and should not be re-added, why the ECharts import must stay dynamic and the data tables built synchronously before it, the re-parented chart host and generation counter, and why decision fills use `--viz-decision-*` rather than the chip tokens. Load before editing js/review/review-insights*.js or css/review-insights.css.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-15. AGENTS.md remains the
      canonical copy of this content; see "Cross-tool canon" there. -->
 
-# Overview insight cards (`js/review-insights*.js`)
+# Overview insight cards (`js/review/review-insights*.js`)
 
 Two compact cards above the review queue table — review activity over time (a
 chart) and the pages whose automated checks are failing (a ranked list). They

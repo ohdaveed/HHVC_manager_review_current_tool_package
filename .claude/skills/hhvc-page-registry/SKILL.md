@@ -1,12 +1,12 @@
 ---
 name: hhvc-page-registry
-description: "HHVC repo: the browser-side add/delete page feature — why page-registry.js must run before state.js's ORIGINAL_DATA clone, why delete means hide, the ORIGINAL_DATA snapshot hazard on restore, prototype-safe page keys, and the import/sync limitations. Load before editing js/page-registry*.js."
+description: "HHVC repo: the browser-side add/delete page feature — why page-registry.js must run before state.js's ORIGINAL_DATA clone, why delete means hide, the ORIGINAL_DATA snapshot hazard on restore, prototype-safe page keys, and the import/sync limitations. Load before editing js/core/page-registry*.js."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
      canonical copy of this content; see "Cross-tool canon" there. -->
 
-# Adding and deleting pages (`js/page-registry*.js`)
+# Adding and deleting pages (`js/core/page-registry*.js`)
 
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
