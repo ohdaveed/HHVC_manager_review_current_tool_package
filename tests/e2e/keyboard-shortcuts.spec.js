@@ -9,7 +9,7 @@ const {
 } = require('./helpers')
 
 // Shortcuts only fire while focus is inside #reviewWorkspace, .canvas-toolbar,
-// or #mockPage (isShortcutContext in js/keyboard-shortcuts.js), so each test
+// or #mockPage (isShortcutContext in js/review/keyboard-shortcuts.js), so each test
 // clicks the mock page heading first to land focus in a shortcut context.
 
 test.describe('keyboard shortcuts', () => {

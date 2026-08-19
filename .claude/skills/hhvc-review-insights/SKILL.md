@@ -1,12 +1,12 @@
 ---
 name: hhvc-review-insights
-description: 'HHVC repo: the two Overview insight cards — why the other two were cut and should not be re-added, why the ECharts import must stay dynamic and the data tables built synchronously before it, the re-parented chart host and generation counter, and why decision fills use `--viz-decision-*` rather than the chip tokens. Load before editing js/review-insights*.js or css/review-insights.css.'
+description: 'HHVC repo: the two Overview insight cards — why the other two were cut and should not be re-added, why the ECharts import must stay dynamic and the data tables built synchronously before it, the re-parented chart host and generation counter, and why decision fills use `--viz-decision-*` rather than the chip tokens. Load before editing js/review/review-insights*.js or css/review-insights.css.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-15. AGENTS.md remains the
      canonical copy of this content; see "Cross-tool canon" there. -->
 
-# Overview insight cards (`js/review-insights*.js`)
+# Overview insight cards (`js/review/review-insights*.js`)
 
 Two compact cards above the review queue table — review activity over time (a
 chart) and the pages whose automated checks are failing (a ranked list). They
@@ -36,15 +36,15 @@ rather than inlining, but a thin justification for a ~170 KB gzip chunk — a
 hand-drawn SVG line would remove the dependency outright. That is a build
 decision rather than a UX one, and was deliberately left alone.
 
-- **`js/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
+- **`js/review/review-insights-data.js`** — pure data shaping (`buildDecisionMix`,
   `buildActivitySeries`, `buildChecksSeries`, `insightsSignature`), dual
-  `window`/`module.exports` like `js/review-merge.js` so
+  `window`/`module.exports` like `js/review/review-merge.js` so
   `tests/review-insights-data.test.js` can `require` it with no browser.
   `buildDecisionMix` still runs: `insightsSignature()` uses it to gate redraws,
   since a decision change moves the activity series.
-- **`js/review-insights.js`** — the orchestrator. Builds the card markup, the
+- **`js/review/review-insights.js`** — the orchestrator. Builds the card markup, the
   hidden data table and the ranked list, then draws.
-- **`js/review-insights-charts.js`** — the only module that imports ECharts.
+- **`js/review/review-insights-charts.js`** — the only module that imports ECharts.
 
 **ECharts is dynamically imported, and that is load-bearing, not tidiness.**
 It is ~530 KB raw / ~180 KB gzip — more than the entire rest of the bundle.

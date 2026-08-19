@@ -294,7 +294,7 @@ test.describe('workspace panels', () => {
     await gotoFresh(page)
     await openWorkspaceTab(page, 'help')
 
-    // js/dashboard-guidance.js re-appends the block so DOM order matches
+    // js/review/dashboard-guidance.js re-appends the block so DOM order matches
     // reading order rather than relying on a CSS `order` rule.
     const isLast = await page.evaluate(() => {
       const help = document.getElementById('reviewWorkspaceHelp')

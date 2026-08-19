@@ -1,22 +1,22 @@
 ---
 name: hhvc-review-ops
-description: 'HHVC repo: the stored-review-data diagnostics panel at the end of Help — why it lost its own tab, why orphaned records are a real class, why an empty page-key set must report NO orphans rather than all of them, why the three states of `local_dirty` are reported separately, and why pruning re-derives its list at click time. Load before editing js/review-ops*.js or css/review-ops.css.'
+description: 'HHVC repo: the stored-review-data diagnostics panel at the end of Help — why it lost its own tab, why orphaned records are a real class, why an empty page-key set must report NO orphans rather than all of them, why the three states of `local_dirty` are reported separately, and why pruning re-derives its list at click time. Load before editing js/review/review-ops*.js or css/review-ops.css.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-15. AGENTS.md remains the
      canonical copy of this content; see "Cross-tool canon" there. -->
 
-# Stored review data (`js/review-ops*.js`)
+# Stored review data (`js/review/review-ops*.js`)
 
 A collapsed section at the end of the **Help** tab reporting what this browser
 is actually holding and how it is connected — previously only visible in
 devtools. There are no roles in this tool: the reviewer and the operator are
 the same person, deliberately.
 
-- **`js/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
+- **`js/review/review-ops-data.js`** — pure diagnostics (`findOrphanedRecords`,
   `groupBySyncState`, `findRecordsWithoutHistory`, `measureStorage`), dual
   `window`/`module.exports` so the tests need no browser.
-- **`js/review-ops.js`** — the panel, lazily mounted when Help opens with the
+- **`js/review/review-ops.js`** — the panel, lazily mounted when Help opens with the
   same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
 **It had a tab of its own — the `5` key — and lost it.** On a default or

@@ -4,19 +4,19 @@
 // direct test coverage (see tests/data-validation.test.js) independent of
 // the real pages/*.js content.
 //
-// safeUrl comes from js/utils.js — the same function js/page-render.js applies
+// safeUrl comes from js/core/utils.js — the same function js/mockup/page-render.js applies
 // at render time — so findUnsafeUrls below cannot drift from what the renderer
 // actually considers safe. That file is browser-first and exports only its URL
 // guard to Node; see the note at its foot.
-const { safeUrl, urlProbe } = require('../js/utils.js')
-// isValidInlineLinkTarget comes from js/inline-link-target.js for the same
+const { safeUrl, urlProbe } = require('../js/core/utils.js')
+// isValidInlineLinkTarget comes from js/mockup/inline-link-target.js for the same
 // anti-drift reason: it is also what the browser's inline link widget applies
 // when a reviewer TYPES a target, and a link a reviewer creates must never be
 // something this file would reject if the same text were later moved into
 // source. That module is deliberately import-free and reads no global, so it
 // costs this file no load-order dependency.
-const { isValidInlineLinkTarget } = require('../js/inline-link-target.js')
-// buildTranscript comes from js/karl-transcript.js for the third time in the
+const { isValidInlineLinkTarget } = require('../js/mockup/inline-link-target.js')
+// buildTranscript comes from js/karl/karl-transcript.js for the third time in the
 // same pattern: findUnmappedSections must decide "this content has no Karl
 // destination" using exactly the walk that produces the instruction an editor
 // follows, or the gate and the export could come to disagree about what is
@@ -24,7 +24,7 @@ const { isValidInlineLinkTarget } = require('../js/inline-link-target.js')
 // make, and safe for the same measured reason — that module has no top-level
 // await and imports nothing, so Bun's async-module restriction does not apply.
 // tests/data-validation.test.js guards the crossing in a subprocess.
-const { buildTranscript } = require('../js/karl-transcript.js')
+const { buildTranscript } = require('../js/karl/karl-transcript.js')
 
 /**
  * Find order entries that reference a page key missing from `pages`.
@@ -96,7 +96,7 @@ function isTopicPageFirst(order) {
  * cells, and step text whose target is neither an existing page key nor an
  * http(s) URL.
  * These render as in-mockup nav buttons (see formatMarkdown in
- * js/page-render.js), so a dangling key silently no-ops on click — the
+ * js/mockup/page-render.js), so a dangling key silently no-ops on click — the
  * card/button target checks above never see them.
  * @param {Record<string, object>} pages
  * @returns {Array<{pageKey: string, target: string}>}
@@ -111,7 +111,7 @@ function findBrokenInlineLinks(pages) {
       for (const match of text.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
         const target = match[1]
         // The rule itself (an existing page key, an http(s) URL, or the inert
-        // `#` sentinel) lives in js/inline-link-target.js so this validator and
+        // `#` sentinel) lives in js/mockup/inline-link-target.js so this validator and
         // the browser's inline link widget share one definition rather than two
         // free to drift. `keys` stays a parameter of this function rather than
         // something the predicate resolves for itself: the AI output validator
@@ -243,7 +243,7 @@ function countUnverifiedClaims(pages) {
  * it is enforced repo-wide because there is no reason authored copy should
  * carry one either.
  *
- * Shares `safeUrl` with js/page-render.js rather than re-deriving the rule, so
+ * Shares `safeUrl` with js/mockup/page-render.js rather than re-deriving the rule, so
  * the validator cannot come to disagree with the renderer about what is safe.
  * @param {Record<string, object>} pages
  * @returns {Array<{pageKey: string, path: string, url: string}>}

@@ -1,6 +1,6 @@
 // One-step undo for queue decision actions, driven through the real UI.
 //
-// The unit-testable half lives in js/review-queue-undo.js, but the parts worth
+// The unit-testable half lives in js/review/review-queue-undo.js, but the parts worth
 // proving are the ones that only exist end to end: that the button appears
 // after an action and names what it will reverse, that the reversal actually
 // reaches localStorage, that history[] survives it, and that a page edited

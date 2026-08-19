@@ -1,5 +1,5 @@
 // Compare pages/*.js on disk against the side-effect imports in
-// js/page-data.js.
+// js/core/page-data.js.
 //
 // This replaces the old index.html <script>-tag drift check. Before the Vite
 // migration, every page and every js/*.js module needed a hand-written
@@ -17,24 +17,30 @@
 //
 // Order is deliberately not checked. Page modules are independent — each only
 // writes into window.HHVC_PAGES — so the sequence of imports carries no
-// meaning; navigation order comes from the `order` array in js/page-data.js,
+// meaning; navigation order comes from the `order` array in js/core/page-data.js,
 // which the schema and `findMissingOrderKeys` validate separately.
 //
 // Split out as pure functions so they are testable without touching the real
-// js/page-data.js (see tests/page-import-checks.test.js).
+// js/core/page-data.js (see tests/page-import-checks.test.js).
 
 /**
  * Extract the `pages/*.js` paths imported for side effects by a
- * js/page-data.js source string, normalized to repo-relative form.
+ * js/core/page-data.js source string, normalized to repo-relative form.
  *
- * Matches `import '../pages/foo.js'` and returns `pages/foo.js`, so the
- * result can be compared directly against a fast-glob listing.
- * @param {string} source contents of js/page-data.js
+ * Matches `import '../../pages/foo.js'` and returns `pages/foo.js`, so the
+ * result can be compared directly against a fast-glob listing. The leading
+ * `(?:\.\.\/)+` accepts one OR MORE `../` segments rather than pinning
+ * exactly one or exactly two: js/core/page-data.js reaches pages/ via
+ * `../../` now that it sits a directory deeper than page-data.js did before
+ * this migration, but a hardcoded depth would silently stop matching again
+ * the next time page-data.js's own depth changes — the same failure this
+ * fix exists to correct.
+ * @param {string} source contents of js/core/page-data.js
  * @returns {string[]}
  */
 function findPageImports(source) {
   const imports = []
-  const re = /^import\s+'\.\.\/(pages\/[\w-]+\.js)'\s*$/gm
+  const re = /^import\s+'(?:\.\.\/)+(pages\/[\w-]+\.js)'\s*$/gm
   let match
   while ((match = re.exec(source))) {
     imports.push(match[1])
@@ -44,7 +50,7 @@ function findPageImports(source) {
 
 /**
  * @param {string[]} filesOnDisk repo-relative paths, e.g. 'pages/foo.js'
- * @param {string[]} importsInPageData repo-relative paths parsed from js/page-data.js
+ * @param {string[]} importsInPageData repo-relative paths parsed from js/core/page-data.js
  * @returns {{missingFromImports: string[], missingFromDisk: string[]}}
  */
 function findPageImportDrift(filesOnDisk, importsInPageData) {

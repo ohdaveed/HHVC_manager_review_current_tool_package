@@ -4,7 +4,7 @@ Source of truth for this audit: `notebooklm/hhvc-standards-manual.md`
 ("HHVC Web Governance and Content Standards Manual," Version 2.1, dated
 2026-07-06 — the most recently updated manual, consolidating the individual
 `hhvc_chapter_drafts/*.md` chapters). Audited against the live mockup's
-`js/page-data.js` order array (39 pages) and `pages/*.js` types/links.
+`js/core/page-data.js` order array (39 pages) and `pages/*.js` types/links.
 
 Scope: Chapter 1.5/1.6 (jurisdictional boundaries), Chapter 3 (sitemap
 inventory + cross-linking), Chapter 4 (content-type taxonomy). Not audited
@@ -48,14 +48,14 @@ original findings against that framing:
 - **Scale ("39 pages built vs. 33 prescribed")**: not a defect — "priority
   pages" reads as a curated subset by design. The mockup's larger scope is
   expected, not a violation. (Real page count remains 39; see
-  `js/page-data.js` if anyone wants the full inventory documented
+  `js/core/page-data.js` if anyone wants the full inventory documented
   elsewhere later, but no manual or mockup change is warranted here.)
 - **"What happens after you report" named as the Step-by-step example**:
   a name collision between an illustrative example row and an
   independently-typed real page, not a contradiction. The mockup's
   `Information` typing for `pages/what-happens-after-report.js` stands;
   no retype needed (retyping would also require reworking
-  `js/page-render.js`'s type-specific rendering, which has no
+  `js/mockup/page-render.js`'s type-specific rendering, which has no
   `Step-by-step` branch today — out of scope for a documentation fix).
 - **"Get ready for an SRO inspection" doesn't exist**: an example name in
   the matrix, not a required page. No page needs to be built to satisfy
@@ -85,7 +85,7 @@ as findings, not fixed.
 - **Manual fixed**: `notebooklm/hhvc-standards-manual.md` §4.2's content-type
   list (14 → 15 types, `Information` added, all citations/URLs preserved).
 - **No mockup changes**: every mockup page's `type`, slug, and content
-  stands as correct; nothing in `pages/*.js` or `js/page-data.js` needed
+  stands as correct; nothing in `pages/*.js` or `js/core/page-data.js` needed
   changing.
 - **Three findings withdrawn**: the 39-vs-33 scale note, the
   Step-by-step-example naming collision, and the nonexistent

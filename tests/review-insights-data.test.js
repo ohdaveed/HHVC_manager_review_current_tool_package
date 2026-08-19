@@ -1,4 +1,4 @@
-// Unit tests for the Overview charts' data shaping (js/review-insights-data.js).
+// Unit tests for the Overview charts' data shaping (js/review/review-insights-data.js).
 //
 // These functions are the whole reason that file is separate from the chart
 // rendering: the decisions they encode — what counts as "decided", how a
@@ -14,7 +14,7 @@ const {
   insightsSignature,
   firstDecidedDay,
   toDayKey,
-} = require('../js/review-insights-data.js')
+} = require('../js/review/review-insights-data.js')
 
 describe('buildDecisionMix', () => {
   test('counts every decision in canonical order', () => {

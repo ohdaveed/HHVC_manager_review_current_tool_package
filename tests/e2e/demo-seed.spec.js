@@ -30,7 +30,7 @@ const SEED = path.resolve(__dirname, '../../review/demo-review-state.json')
    wrong, and a guard watching only the numerator stayed green through it. The
    ratio is the claim, so the ratio is what gets held.
 
-   Written as the decision map rather than as string literals: js/utils.js owns
+   Written as the decision map rather than as string literals: js/core/utils.js owns
    the decision vocabulary and tests/decision-vocabulary.test.js exists to stop
    the module-boundary restatements, so a spec spelling out "Approved with edits"
    would be one more copy to keep in step. */

@@ -55,7 +55,7 @@ ingest` run 404'd on it — retired; verify against `client.models.list()`
   (~150-200 chunks) by cosine similarity in microseconds at this size; a
   loadable extension like `sqlite-vec` would buy nothing here and adds a
   native-binary deployment risk against Railway for no benefit. Dual-exported
-  like `js/review-merge.js`, so ranking is tested against synthetic embeddings
+  like `js/review/review-merge.js`, so ranking is tested against synthetic embeddings
   with no live Gemini call and no live DB.
 - **Re-ingestion is idempotent per file, and always full.** `bun run ingest`
   deletes and reinserts each file's rows in one transaction, reprocessing
@@ -117,7 +117,7 @@ disagreements).
   manual came in. **Adding a file here moves the measured counts below**, so
   re-measure and re-ingest rather than editing the list alone.
 - **The content standards manual is the addition worth understanding.**
-  `js/plain-language.js` cites it by section number for every scored
+  `js/standards/plain-language.js` cites it by section number for every scored
   `severity: 'error'` rule (§7.x, §6.3), and it was not in the corpus at all —
   it lives in `notebooklm/`, which no glob reached. A reviewer could not get
   from a citation back to the manual section the tool's own checks are named

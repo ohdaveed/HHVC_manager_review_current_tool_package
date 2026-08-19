@@ -1,11 +1,11 @@
 // Zod schema for hhvcManagerReviewState:v1 localStorage shape.
-// Shared by tests and browser validation (js/review-state-validation.js mirrors rules).
+// Shared by tests and browser validation (js/review/review-state-validation.js mirrors rules).
 const { z } = require('zod')
 
 const STORAGE_VERSION = 1
 
 /**
- * **A restatement of `DECISIONS` in js/utils.js, and one of only two left in
+ * **A restatement of `DECISIONS` in js/core/utils.js, and one of only two left in
  * the repo.** It cannot import that table: this file is CommonJS and is loaded
  * by server.ts, so reaching into a browser ES module would pull the whole
  * browser utils graph into the server's dependency tree.
@@ -27,7 +27,7 @@ const VALID_DECISIONS = [
 /**
  * The path/value contract for a section_edits entry — see CLAUDE.md's
  * "Inline content editing" section, whose canonical list is
- * js/inline-content-edit-data.js's EDITABLE_FIELD_SHAPES. Every path a
+ * js/editing/inline-content-edit-data.js's EDITABLE_FIELD_SHAPES. Every path a
  * reviewer can edit resolves to one of four value kinds: a plain `string`, a
  * `textArray` of strings and/or {text, unverified?, unverifiedReason?}
  * objects, a `stringArray` of plain strings, or a `table` of row arrays of
@@ -37,7 +37,7 @@ const VALID_DECISIONS = [
  * something this feature ever produces, but a JSON backup or a sync response
  * is an external file/service this browser did not write: an entry that
  * doesn't match gets dropped rather than trusted, since
- * js/inline-content-edit-data.js's applyContentEditsToPageData() would
+ * js/editing/inline-content-edit-data.js's applyContentEditsToPageData() would
  * otherwise pass it straight to the generic setByPath() and corrupt
  * page.sections (e.g. replacing a paragraphs array with a bare string, which
  * breaks the next render when it iterates the array).
@@ -48,10 +48,10 @@ const VALID_DECISIONS = [
  * those renderers escape and print the value directly instead of running it
  * through normalizeTextItem().
  *
- * Restated (not imported) in js/review-state-validation.js for the same
+ * Restated (not imported) in js/review/review-state-validation.js for the same
  * CJS/browser-Zod split reason VALID_DECISIONS above is restated, and
  * restated again as defense-in-depth in
- * js/inline-content-edit-data.js#applyContentEditsToPageData, which is a
+ * js/editing/inline-content-edit-data.js#applyContentEditsToPageData, which is a
  * dual CJS/browser file with no ESM `export` surface either side can import
  * from. tests/review-state-schema.test.js pins the three together.
  */
@@ -134,7 +134,7 @@ function validateSectionEditEntry(path, value) {
  * contract, dropping the rest. A drop rather than a whole-record rejection,
  * matching how every other malformed field in this schema (an invalid
  * decision, a malformed history entry) is already handled in
- * js/review-state-validation.js: one bad nested value should not cost the
+ * js/review/review-state-validation.js: one bad nested value should not cost the
  * reviewer the rest of an imported record.
  * @param {Record<string, unknown>|undefined} sectionEdits
  * @returns {Record<string, unknown>|undefined}
@@ -179,12 +179,12 @@ const reviewRecordSchema = z
     edited_summary: z.string().optional(),
     updated_at: z.string().optional(),
     // Append-only round history. Constructed exclusively by
-    // mergeReviewRecord (js/review-merge.js) — never hand-written.
+    // mergeReviewRecord (js/review/review-merge.js) — never hand-written.
     history: z.array(historyEntrySchema).optional(),
     // Last server updated_at this browser has actually observed (via a
     // pull or push response) — distinct from updated_at, which bumps on
     // every local edit. Used as the conflict-detection baseline in
-    // server.ts's putReviewPage; see js/review-state-sync.js.
+    // server.ts's putReviewPage; see js/sync/review-state-sync.js.
     synced_at: z.string().optional(),
     // Flat map of field path -> current full value for section-level manual
     // edits (headings, paragraphs, bullets). Keyed at the array/scalar field
@@ -201,7 +201,7 @@ const reviewRecordSchema = z
     // Whether this browser holds edits it has not pushed. A real boolean,
     // not a timestamp, precisely so conflict detection never has to compare
     // a browser-clock value against a server-clock one — see
-    // pullFromServer in js/review-state-sync.js.
+    // pullFromServer in js/sync/review-state-sync.js.
     local_dirty: z.boolean().optional(),
   })
   .passthrough()

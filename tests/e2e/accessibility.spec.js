@@ -28,7 +28,7 @@ const REPRESENTATIVE_PAGES = [
 
    Worth keeping from #92, which hardened this helper immediately before it was
    deleted, in case a fading element is ever added to a scanned page again: the
-   `.visible` CLASS is not a proxy for "settled". `js/editor-panel.js` added it
+   `.visible` CLASS is not a proxy for "settled". `js/review/editor-panel.js` added it
    and then removed it again on a 5s timer, so the class was absent in two
    completely different states — before the fade in (settled) and during the
    fade OUT (not settled). The fix was to ask the element what it is doing

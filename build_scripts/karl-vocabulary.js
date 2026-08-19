@@ -10,7 +10,7 @@
 // name a Karl field that does not exist on that page's content type and ship. A
 // reviewer following one goes looking for controls that are not on the form.
 //
-// **The vocabulary is DERIVED, not written.** js/karl-blocks.js is the panel
+// **The vocabulary is DERIVED, not written.** js/karl/karl-blocks.js is the panel
 // inventory — every panel of every content type, transcribed from
 // docs/karl-export-field-map.md and guarded against it by
 // tests/karl-blocks.test.js. Every term this module accepts comes from there:
@@ -50,11 +50,11 @@
 // **Deliberately unresolved notes are a first-class state, not a failure.**
 // Part of the corpus says "BLOCKED", "flag for Digital Services", "no clean
 // mapping" — an honest record that a mapping does not exist yet.
-// GAP_LABEL_PATTERN is imported from js/karl-tag-meta.js rather than restated,
+// GAP_LABEL_PATTERN is imported from js/mockup/karl-tag-meta.js rather than restated,
 // so the validator and the badge a reviewer sees cannot come to disagree about
 // what counts as unresolved.
-const { GAP_LABEL_PATTERN } = require('../js/karl-tag-meta.js')
-const { KARL_PANELS, PROMOTE_PANEL } = require('../js/karl-blocks.js')
+const { GAP_LABEL_PATTERN } = require('../js/mockup/karl-tag-meta.js')
+const { KARL_PANELS, PROMOTE_PANEL } = require('../js/karl/karl-blocks.js')
 
 /**
  * Terms a note may use for ANY type: link shapes and page-level fields that are
@@ -80,7 +80,7 @@ const CROSS_TYPE_TERMS = [
  * These are the repeatable item types inside a panel's chooser — a Resource
  * Collection's `body → Resources` holds "Resource section" items — and the
  * field map documents them in the prose beneath its tables rather than in the
- * "Block type(s)" cell js/karl-blocks.js transcribes, so the derived vocabulary
+ * "Block type(s)" cell js/karl/karl-blocks.js transcribes, so the derived vocabulary
  * cannot supply them.
  *
  * **They are keyed by type and not merged into CROSS_TYPE_TERMS**, which is
@@ -91,7 +91,7 @@ const CROSS_TYPE_TERMS = [
  * meant to reduce its false positives.
  *
  * Each entry cites the field map line that places it under that type. They
- * belong in js/karl-blocks.js beside KARL_FLAGS, which exists for the same
+ * belong in js/karl/karl-blocks.js beside KARL_FLAGS, which exists for the same
  * reason — half the mapping lives in footnotes — and are here only until that
  * file transcribes nesting.
  */

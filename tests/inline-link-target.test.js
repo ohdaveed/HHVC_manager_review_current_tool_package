@@ -1,6 +1,6 @@
-/* Unit coverage for js/inline-link-target.js — the single definition of what an
+/* Unit coverage for js/mockup/inline-link-target.js — the single definition of what an
    inline link target may be, shared by the browser widget
-   (js/inline-content-edit-link-tool.js typing one, js/inline-content-edit.js
+   (js/editing/inline-content-edit-link-tool.js typing one, js/editing/inline-content-edit.js
    committing a pasted one) and by build_scripts/data-checks.js's
    findBrokenInlineLinks() walking authored pages/*.js copy.
 
@@ -11,7 +11,10 @@
 
 import { describe, test, expect } from 'bun:test'
 
-const { isValidInlineLinkTarget, INLINE_LINK_TARGET_RULE } = require('../js/inline-link-target.js')
+const {
+  isValidInlineLinkTarget,
+  INLINE_LINK_TARGET_RULE,
+} = require('../js/mockup/inline-link-target.js')
 
 // A stand-in for what window.pageRegistry.knownKeys() returns in the browser and
 // for Object.keys(pages) on the Node side: `hiddenPage` models a page the
@@ -122,7 +125,7 @@ describe('isValidInlineLinkTarget', () => {
     // A page key becomes an object property elsewhere in this tool, and
     // `toString`/`valueOf` satisfy the key pattern while being invisible to
     // Object.keys(). A plain-object key collection must not answer true for
-    // them. Mirrors the hasOwn discipline in js/page-registry-data.js.
+    // them. Mirrors the hasOwn discipline in js/core/page-registry-data.js.
     expect(isValidInlineLinkTarget('toString', {})).toBe(false)
     expect(isValidInlineLinkTarget('hasOwnProperty', {})).toBe(false)
   })
@@ -133,7 +136,7 @@ describe('isValidInlineLinkTarget', () => {
 })
 
 describe('findInvalidInlineLinkTargets', () => {
-  const { findInvalidInlineLinkTargets } = require('../js/inline-link-target.js')
+  const { findInvalidInlineLinkTargets } = require('../js/mockup/inline-link-target.js')
 
   test('returns nothing for text with no links at all', () => {
     expect(findInvalidInlineLinkTargets('Plain copy about rodents.', KNOWN)).toEqual([])

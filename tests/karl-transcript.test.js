@@ -15,7 +15,7 @@ const {
   resolveValue,
   foldTextAndBullets,
   extractInlineLinks,
-} = require('../js/karl-transcript.js')
+} = require('../js/karl/karl-transcript.js')
 
 /** A minimal page carrying only what the test under it needs. */
 function page(overrides) {
@@ -151,7 +151,7 @@ describe('buildTranscript — the four outcomes', () => {
   })
 
   test('a title-only card is CHOOSE and emits NO description', () => {
-    // The defect js/card-inheritance.js exists to prevent, here as an
+    // The defect js/core/card-inheritance.js exists to prevent, here as an
     // instruction a human would execute. A Related entry publishes a title and
     // a link and nothing else, so a description typed here cannot appear.
     const built = page({
@@ -479,7 +479,7 @@ describe('buildTranscript — inferred mappings and unknown classification', () 
 
   test('a card section the classifier cannot place is FLAG, never a guessed TYPE', () => {
     // classifySection returns 'unknown' for most karl notes. Guessing TYPE
-    // reintroduces the defect js/card-inheritance.js prevents; guessing CHOOSE
+    // reintroduces the defect js/core/card-inheritance.js prevents; guessing CHOOSE
     // silently drops authored copy. Neither is a thing to hand a human.
     const built = page({
       sections: [

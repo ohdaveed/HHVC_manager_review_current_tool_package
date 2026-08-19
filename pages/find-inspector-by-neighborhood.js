@@ -13,7 +13,7 @@ window.HHVC_PAGES['inspectorLookup'] = {
   reading: 'Grade 7',
   editorStatus: 'placeholder',
   editorNote:
-    "New page reinstating content dropped in the 40->19 page consolidation (previously the retired findInspector key, aliased to scopeInfo — see js/page-data.js's HHVC_DELETED_PAGE_ALIASES). Confirmed during design (docs/superpowers/specs/2026-08-11-hhvc-page-gap-additions-design.md) that scopeInfo holds no inspector-lookup content; the alias exists only so an old shared link resolves to something. Modeled on findHotelRecords' explainer-plus-lookup-button shape. The lookup tool's actual entry point (URL or internal tool) is unconfirmed — the button below targets the inert \"#\" placeholder until HHVC confirms a real destination; do not invent a URL.",
+    "New page reinstating content dropped in the 40->19 page consolidation (previously the retired findInspector key, aliased to scopeInfo — see js/core/page-data.js's HHVC_DELETED_PAGE_ALIASES). Confirmed during design (docs/superpowers/specs/2026-08-11-hhvc-page-gap-additions-design.md) that scopeInfo holds no inspector-lookup content; the alias exists only so an old shared link resolves to something. Modeled on findHotelRecords' explainer-plus-lookup-button shape. The lookup tool's actual entry point (URL or internal tool) is unconfirmed — the button below targets the inert \"#\" placeholder until HHVC confirms a real destination; do not invent a URL.",
   whatToKnow: {
     cost: 'Free',
     thingsToKnow: ['The exact lookup tool and destination have not been confirmed yet.'],

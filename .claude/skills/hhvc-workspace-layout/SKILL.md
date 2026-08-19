@@ -1,6 +1,6 @@
 ---
 name: hhvc-workspace-layout
-description: 'HHVC repo: why `#reviewWorkspace` is a third grid column rather than the last child of `.canvas` — the co-visibility argument, why `.review-workspace[hidden] { display: none }` is load-bearing, why the stacked panel uses `grid-column: 2` and not `1 / -1`, and the 2026-08-15 re-measurement behind the 1700px breakpoint. Load before editing the workspace layout in css/dashboard.css, css/ux-improvements.css, or js/ux-improvements-workspace.js.'
+description: 'HHVC repo: why `#reviewWorkspace` is a third grid column rather than the last child of `.canvas` — the co-visibility argument, why `.review-workspace[hidden] { display: none }` is load-bearing, why the stacked panel uses `grid-column: 2` and not `1 / -1`, and the 2026-08-15 re-measurement behind the 1700px breakpoint. Load before editing the workspace layout in css/dashboard.css, css/ux-improvements.css, or js/review/ux-improvements-workspace.js.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-15. AGENTS.md remains the
@@ -22,7 +22,7 @@ makes one copy enough, so resist re-adding a second printing of anything.
 
 - **`.app.workspace-docked` is what grows the third column**, toggled alongside
   the panel's `hidden` attribute. `applyWorkspaceVisibility()` in
-  `js/ux-improvements-workspace.js` is the single place that does both, plus the
+  `js/review/ux-improvements-workspace.js` is the single place that does both, plus the
   toggle button's label and `aria-expanded`. The first-run onboarding path used
   to set `hidden` inline and duplicate two of the three steps — which is exactly
   how it came to miss the third, giving a first-run reviewer an open panel the

@@ -306,7 +306,7 @@ function buildComplianceAuditUserPrompt({ page, retrieved, issues, previousDraft
  *
  * The standing instruction lives HERE rather than in the browser on purpose.
  * If the panel sent the house rules, the rules a rewrite is held to could
- * drift away from the rules js/plain-language.js scores the page against, and
+ * drift away from the rules js/standards/plain-language.js scores the page against, and
  * the two would disagree with no single source of truth.
  * @returns {{system: string, groundedBy: string[]}}
  */

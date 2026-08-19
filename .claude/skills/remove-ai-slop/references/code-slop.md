@@ -62,14 +62,14 @@ The same helper implemented more than once, with the copies no longer in agreeme
 **Always diff the copies before consolidating.** Divergence is often the real defect:
 
 ```js
-// js/review-ops.js — fallback escapes
+// js/review/review-ops.js — fallback escapes
 function escape(value) {
   const text = String(value ?? '')
   if (window.utils?.escapeHtml) return window.utils.escapeHtml(text)
   return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;') /* … */
 }
 
-// js/review-insights.js — fallback returns input UNESCAPED
+// js/review/review-insights.js — fallback returns input UNESCAPED
 function escape(value) {
   return window.utils?.escapeHtml
     ? window.utils.escapeHtml(String(value ?? ''))

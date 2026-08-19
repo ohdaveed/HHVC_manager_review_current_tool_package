@@ -1,12 +1,12 @@
 // Drift guard for the review decision vocabulary.
 //
-// `DECISIONS` in js/utils.js is the canonical table, and almost everything in
+// `DECISIONS` in js/core/utils.js is the canonical table, and almost everything in
 // the tool now derives from it — chip classes, queue-action slugs, chart
 // colours, the pre-zeroed tally, the browser-side validator. Two WHOLE-LIST
 // restatements survive, and neither is an oversight: both sit on the far side
 // of a module boundary that stops them importing it.
 //
-//   - js/review-insights-data.js is dual-export (a `module.exports` block that
+//   - js/review/review-insights-data.js is dual-export (a `module.exports` block that
 //     its own test `require`s). Adding an `import` would make it an ES module,
 //     `module.exports` would stop running, and the require would come back
 //     empty.
@@ -32,15 +32,15 @@
 // The last describe block closes that gap: it reads those files and asserts
 // every decision-shaped literal in them is a real label. It deliberately does
 // NOT demand they be rewritten to reference the constant — several sit in
-// modules that take no imports at all (js/review-queue*.js) or in HTML
+// modules that take no imports at all (js/review/review-queue*.js) or in HTML
 // attributes, where a literal is the only option. What matters is that a
 // rename cannot leave one behind.
 import { describe, test, expect } from 'bun:test'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { DECISIONS, DECISION_LABELS, DECISION_UNDECIDED } from '../js/utils.js'
+import { DECISIONS, DECISION_LABELS, DECISION_UNDECIDED } from '../js/core/utils.js'
 
-const { DECISION_ORDER } = require('../js/review-insights-data.js')
+const { DECISION_ORDER } = require('../js/review/review-insights-data.js')
 const { VALID_DECISIONS } = require('../build_scripts/review-state-schema.js')
 
 describe('the canonical decision table', () => {
@@ -75,7 +75,7 @@ describe('the canonical decision table', () => {
 })
 
 describe('restatements of the decision vocabulary', () => {
-  test('js/review-insights-data.js DECISION_ORDER matches label-for-label, in order', () => {
+  test('js/review/review-insights-data.js DECISION_ORDER matches label-for-label, in order', () => {
     // Order is asserted, not just membership: the chart legend and the mix bar
     // follow this array, and a reshuffle would reorder the segments.
     expect(DECISION_ORDER).toEqual(DECISION_LABELS)
@@ -93,40 +93,40 @@ describe('restatements of the decision vocabulary', () => {
 // canonical table itself, and — worse — would quietly stop covering a file the
 // day someone renamed it, which is the exact failure this guards against.
 const FILES_WITH_DECISION_LITERALS = [
-  'js/review-queue-rows.js',
-  'js/review-queue-render.js',
-  'js/review-queue-state.js',
-  'js/review-queue-undo.js',
-  'js/keyboard-shortcuts.js',
-  'js/ux-improvements-state-sync.js',
-  'js/ux-improvements-export.js',
-  'js/ux-improvements-workspace.js',
-  'js/manager-review-export.js',
-  'js/review-ops-data.js',
+  'js/review/review-queue-rows.js',
+  'js/review/review-queue-render.js',
+  'js/review/review-queue-state.js',
+  'js/review/review-queue-undo.js',
+  'js/review/keyboard-shortcuts.js',
+  'js/review/ux-improvements-state-sync.js',
+  'js/review/ux-improvements-export.js',
+  'js/review/ux-improvements-workspace.js',
+  'js/review/manager-review-export.js',
+  'js/review/review-ops-data.js',
   // The Karl transcript prints the page's decision at the top and marks a
   // not-Approved page on every panel, so it compares against 'Approved' by
   // value and defaults an unreviewed page to 'Needs review'. Renaming either
   // label silently stops the comparison matching, and the visible symptom
   // would be an unapproved page exporting as though it were signed off.
-  'js/karl-transcript.js',
+  'js/karl/karl-transcript.js',
   'index.html',
 ]
 
 /* Files whose decision-shaped literals are NOT decisions.
 
-   js/utils.js declares the canonical table, and js/review-insights-data.js
+   js/core/utils.js declares the canonical table, and js/review/review-insights-data.js
    restates it wholesale under its own assertion above — re-checking either
    here would be circular.
 
-   js/page-render.js is the interesting one: its `'Needs review'` and
+   js/mockup/page-render.js is the interesting one: its `'Needs review'` and
    `'Blocked'` are editorStatus pill labels (the `needs-review | blocked |
    placeholder` page field), a separate vocabulary that happens to share two
    words. Pinning them to DECISION_LABELS would invent a coupling that does
    not exist — rename the review decision and this file must NOT follow. */
 const NOT_THE_DECISION_VOCABULARY = new Set([
-  'js/utils.js',
-  'js/review-insights-data.js',
-  'js/page-render.js',
+  'js/core/utils.js',
+  'js/review/review-insights-data.js',
+  'js/mockup/page-render.js',
 ])
 
 /* Decision labels are ordinary English phrases, so a literal is recognized by
@@ -144,7 +144,7 @@ const NOT_THE_DECISION_VOCABULARY = new Set([
    leaves the chip looking right.
 
    The body is letters and spaces only, which is what keeps PROSE out: the
-   shortcut list in js/keyboard-shortcuts.js describes its `r` binding as
+   shortcut list in js/review/keyboard-shortcuts.js describes its `r` binding as
    'Revise and resubmit (current or selected)', and a looser `[^']*` body
    swept that up and failed the file over a help string. Every real label is
    letters and spaces, so nothing legitimate is excluded by the narrowing. */

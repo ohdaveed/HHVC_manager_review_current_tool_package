@@ -1,4 +1,4 @@
-/* Overview charts (js/review-insights.js).
+/* Overview charts (js/review/review-insights.js).
 
    Loads after css/dashboard.css, whose .ds-* primitives and semantic tokens
    this builds on. Nothing here reaches for a raw --legacy-* value; the charts

@@ -1,4 +1,4 @@
-/* Tool status tab (js/review-ops.js).
+/* Tool status tab (js/review/review-ops.js).
 
    Loads after css/dashboard.css, whose .ds-* primitives and semantic tokens
    this builds on, and before css/theme.css. Nothing here reaches for a raw

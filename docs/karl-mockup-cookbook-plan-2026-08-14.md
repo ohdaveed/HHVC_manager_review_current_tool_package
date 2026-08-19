@@ -142,7 +142,7 @@ match is a trap.** Karl's `things_to_know` is a **repeatable** stream of
 `title` + `text` blocks. The mockup's `whatToKnow` is a single page-level
 object holding a `cost` string plus named subsections (see
 `pages/public-records-request.js`, and `renderWhatToKnow()` in
-`js/page-render.js`). So each named subsection becomes **its own**
+`js/mockup/page-render.js`). So each named subsection becomes **its own**
 `things_to_know` block, while `whatToKnow.cost` belongs in Karl's separate
 `cost` field — not in a `things_to_know` block. An author who pastes the whole
 box into one block loses the per-subsection H3s that SF.gov renders.
@@ -295,8 +295,8 @@ carries no label and no description field of its own. `related`, `topics`,
 measurement.
 
 That is the failure the review tool exists to catch, and this repo already
-encodes it: `js/card-inheritance.js` classifies a section as `inherits`,
-`title-only`, or `authored`, and `js/page-render.js` resolves every card
+encodes it: `js/core/card-inheritance.js` classifies a section as `inherits`,
+`title-only`, or `authored`, and `js/mockup/page-render.js` resolves every card
 description through `cardDescription()` rather than printing `card.text`. See
 "Card descriptions are inherited, not printed" in `AGENTS.md` / `CLAUDE.md` for
 the three-bucket breakdown, and

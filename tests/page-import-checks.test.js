@@ -1,4 +1,4 @@
-// Coverage for the pages/*.js <-> js/page-data.js import drift check used by
+// Coverage for the pages/*.js <-> js/core/page-data.js import drift check used by
 // build_scripts/validate.js. Replaces tests/index-html-checks.test.js, which
 // covered the same drift class back when membership was expressed as
 // <script> tags in index.html rather than as imports.
@@ -40,7 +40,7 @@ describe('findPageImportDrift', () => {
     })
   })
 
-  test('flags a page file that js/page-data.js never imports', () => {
+  test('flags a page file that js/core/page-data.js never imports', () => {
     // The silent-failure case the check exists for: the file is on disk and
     // looks wired up, but never registers onto window.HHVC_PAGES, so the page
     // just is not in the tool.

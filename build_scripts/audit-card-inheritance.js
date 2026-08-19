@@ -68,7 +68,7 @@
  * WHAT CHANGED WHEN THE RENDERER STARTED INHERITING (2026-08-09)
  *
  * The paragraph above describes the state this audit was born into, where
- * `js/page-render.js` printed `card.text` verbatim and the only way to close a
+ * `js/mockup/page-render.js` printed `card.text` verbatim and the only way to close a
  * finding was a per-card editorial decision. That decision has been made once,
  * globally: the renderer now resolves an inheriting card's description through
  * `classifySection()` and prints the DESTINATION page's summary, so a card's
@@ -105,12 +105,12 @@
  * question for a day: only the INTERNAL case had been checked live, and
  * deleting an external card's text on the strength of an internal finding would
  * have been the same mistake the TITLE_ONLY comment in
- * `js/card-inheritance.js` warns about ("Do not re-widen this from the docs
+ * `js/core/card-inheritance.js` warns about ("Do not re-widen this from the docs
  * alone"), merely pointed the other way. It was settled by a census of all 332
  * `departments--*` pages in `sf.gov/sitemap.xml`: 333 of the 363 entries whose
  * `href` leaves sf.gov render a `tile-description` of their own. An external
  * entry therefore HAS a description field, authored on the entry rather than
- * inherited from anywhere, and `js/page-render.js` printing `card.text` for one
+ * inherited from anywhere, and `js/mockup/page-render.js` printing `card.text` for one
  * is correct. They are skipped here exactly like an `authored` section's cards.
  *
  * Two details of that census matter, because a repeat that misses either gets a
@@ -135,13 +135,13 @@
  */
 
 const { loadPageData } = require('./load-pages')
-// The classifier itself lives in js/card-inheritance.js so the renderer and
+// The classifier itself lives in js/core/card-inheritance.js so the renderer and
 // this audit read one copy of it. A second set of regexes here would let the
 // mockup show one thing while the audit asserted another, and nothing would
 // report the disagreement. See that file's header for the WHY behind each
 // bucket's regex; the WHY behind the three-bucket SPLIT stays above, because
 // it is this audit's own history.
-const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/card-inheritance')
+const { classifySection, AUTHORED, INHERITS, TITLE_ONLY } = require('../js/core/card-inheritance')
 
 /**
  * Compare every internal card link against the page it points at, and check
@@ -187,7 +187,7 @@ function auditCards(pages) {
           titleMatches: card.title === dest.title,
           // "Correct" is now the same assertion for both inheriting buckets:
           // the card carries NO text of its own. A title-only component
-          // renders no description at all, and since js/page-render.js started
+          // renders no description at all, and since js/mockup/page-render.js started
           // resolving descriptions through classifySection(), an inheriting
           // component renders the DESTINATION's summary — so in both cases a
           // card's own `text` is a field that reaches no reader.

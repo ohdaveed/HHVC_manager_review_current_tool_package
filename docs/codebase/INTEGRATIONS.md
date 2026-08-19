@@ -11,17 +11,17 @@
 | Google Sheets API           | External API                  | Push tracking status (`bun run push-tracking`)               | Service-account JSON via env/path                 | Low (offline CSVs still work) | `build_scripts/push-tracking-sheet.js`, `build_scripts/sheet-config.json` |
 | Netlify CDN/hosting         | Static hosting                | Deploy `dist/` for managers                                  | Netlify project + build                           | High for demo distribution    | `netlify.toml`                                                            |
 | Railway volume (documented) | Hosted Bun + SQLite volume    | Production path for `DATA_DB_PATH` when sync API is deployed | Bearer `REVIEW_API_TOKEN` (+ optional principals) | Medium when sync is used      | `.gitignore` comment, `.claude/skills/verify-railway-backend/`            |
-| Browser `localStorage`      | Client persistence            | Default review state                                         | Same-origin browser                               | High (always-on core)         | `js/review-state-store.js`, `AGENTS.md`                                   |
+| Browser `localStorage`      | Client persistence            | Default review state                                         | Same-origin browser                               | High (always-on core)         | `js/review/review-state-store.js`, `AGENTS.md`                            |
 | Karl / SF.gov CMS           | External CMS (reference only) | Placement notes; not written by this tool                    | Out of band                                       | N/A for runtime               | `AGENTS.md` Karl section                                                  |
 
 ### 2) Data Stores
 
-| Store                                          | Role                                        | Access layer                     | Key risk                                                           | Evidence                             |
-| ---------------------------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------ |
-| `localStorage` key `hhvcManagerReviewState:v1` | Reviewer decisions/notes/UI prefs           | `window.reviewState`             | Browser-local only; orphans when pages retire                      | `AGENTS.md`, `js/review-ops-data.js` |
-| `localStorage` `hhvcReviewSyncConfig`          | Sync endpoint + token (separate on purpose) | `js/review-state-sync.js`        | Token leakage if exported with reviews — mitigated by separate key | `AGENTS.md`                          |
-| SQLite `review_pages` via `bun:sqlite`         | Optional multi-browser sync                 | `server.ts` `getDb()`            | Misconfigured open access — mitigated by fail-closed 501           | `server.ts`                          |
-| Generated `data/page_inventory.*`              | Inventory export                            | `build_scripts/extract-pages.js` | Stale if not regenerated                                           | `.gitignore`                         |
+| Store                                          | Role                                        | Access layer                     | Key risk                                                           | Evidence                                    |
+| ---------------------------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------------- |
+| `localStorage` key `hhvcManagerReviewState:v1` | Reviewer decisions/notes/UI prefs           | `window.reviewState`             | Browser-local only; orphans when pages retire                      | `AGENTS.md`, `js/review/review-ops-data.js` |
+| `localStorage` `hhvcReviewSyncConfig`          | Sync endpoint + token (separate on purpose) | `js/sync/review-state-sync.js`   | Token leakage if exported with reviews — mitigated by separate key | `AGENTS.md`                                 |
+| SQLite `review_pages` via `bun:sqlite`         | Optional multi-browser sync                 | `server.ts` `getDb()`            | Misconfigured open access — mitigated by fail-closed 501           | `server.ts`                                 |
+| Generated `data/page_inventory.*`              | Inventory export                            | `build_scripts/extract-pages.js` | Stale if not regenerated                                           | `.gitignore`                                |
 
 ### 3) Secrets and Credentials Handling
 
@@ -47,6 +47,6 @@
 - `build_scripts/ai/provider-anthropic.js`
 - `build_scripts/ai/provider-gemini.js`
 - `build_scripts/push-tracking-sheet.js`
-- `js/review-state-sync.js`
+- `js/sync/review-state-sync.js`
 - `netlify.toml`
 - `.gitignore`

@@ -10,7 +10,7 @@ const {
   containsPhrase,
   normalizePageType,
   SOURCES,
-} = require('../js/plain-language.js')
+} = require('../js/standards/plain-language.js')
 
 /** Minimal schema-valid page to hang a single rule off. */
 function makePage(overrides) {
