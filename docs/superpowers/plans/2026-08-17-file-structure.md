@@ -931,17 +931,40 @@ this path and this is not one of them."
 
 ### Task 10: `js/core/`
 
+> **REVISED 2026-08-18, mid-execution.** Tasks 1–9 surfaced nine defects in this
+> plan, and the original text of this task reproduced four of them. What changed:
+> the `ARGS=` invocation (broken under zsh), the `git checkout` mutation reverts
+> (which silently discard retarget output), `git add -A` (stages a symlink here),
+> and the absence of any statement of what the helper's output should look like.
+> The step list is otherwise unchanged.
+
 **Files:**
 - Move into `js/core/`: `utils.js`, `state.js`, `page-data.js`, `page-registry.js`, `page-registry-data.js`, `page-registry-ui.js`, `card-inheritance.js`, `third-party-globals.js`, `app.js`
-- Modify: `.dependency-cruiser.cjs` (four of the five rules name these files), `build_scripts/load-pages.js:19`, `build_scripts/validate.js:29-30`
+- Modify: `.dependency-cruiser.cjs` (four of its five rules name these files), `build_scripts/load-pages.js`, `build_scripts/validate.js`
 
 **Interfaces:**
-- Consumes: `retarget.mjs`.
-- Produces: the finished nine-folder layout.
+- Consumes: `/tmp/hhvc-retarget.mjs`, in its thrice-corrected form.
+- Produces: the finished nine-folder layout. No task after this one moves a file.
 
-**Last on purpose.** `js/utils.js` alone has 19 importers, and every earlier task has already rewritten its own references, so this diff is as small as it can be made.
+**Last on purpose, and it is still the largest retarget in the plan.** `utils.js`
+alone has 19 importers. More importantly `page-data.js` carries **29
+`../pages/*.js` side-effect imports**, every one of which must become
+`../../pages/*.js` — that is the "referring file moved, target did not" case,
+which the helper originally could not do at all and which has been fixed twice.
+This task is where that fix is proven at scale.
 
-- [ ] **Step 1: Move**
+- [ ] **Step 1: Confirm the helper is in its corrected form**
+
+Four corrections have accumulated. Check all four are present in
+`/tmp/hhvc-retarget.mjs` before trusting it, and recreate it from
+`task-2-brief.md` with them applied if the file is missing:
+
+1. Extension filter includes `css`, `cjs` and `mjs`, not just `js|jsx|ts|md|json|html`.
+2. Exclusion filter covers `^(\.agents|tools/oxlint|archive|forms|node_modules|docs/superpowers|docs/source|review|\.playwright-mcp)/` — the record trees must not be rewritten.
+3. The plain-string loop sorts pairs **longest-`oldRel`-first**. `page-registry.js` is a prefix of `page-registry-data.js` and `page-registry-ui.js`; without the sort those get rewritten through the wrong rule.
+4. A **reverse new→old map**, so a specifier is rewritten when the *referring file* moved and not only when its target did. `git mv` runs before the script, so `git ls-files` already returns post-move paths — a naive `after(file)` test can never fire.
+
+- [ ] **Step 2: Move**
 
 ```bash
 mkdir -p js/core
@@ -951,91 +974,167 @@ for f in utils state page-data page-registry page-registry-data page-registry-ui
 done
 ```
 
-- [ ] **Step 2: Dry-run, then apply**
+- [ ] **Step 3: Dry-run, then apply exactly once**
+
+This shell is zsh, which does **not** word-split unquoted parameters. The
+`ARGS="..."` form this task used to carry passes everything as one argv token
+and silently drops moves — it corrupted `js/main.js` in an earlier task while
+appearing to succeed. Pass each pair as its own literal argument:
 
 ```bash
-ARGS=""
-for f in utils state page-data page-registry page-registry-data page-registry-ui \
-         card-inheritance third-party-globals app; do
-  ARGS="$ARGS js/$f.js=js/core/$f.js"
-done
-bun /tmp/hhvc-retarget.mjs $ARGS
-bun /tmp/hhvc-retarget.mjs --apply $ARGS
+bun /tmp/hhvc-retarget.mjs \
+  js/utils.js=js/core/utils.js \
+  js/state.js=js/core/state.js \
+  js/page-data.js=js/core/page-data.js \
+  js/page-registry.js=js/core/page-registry.js \
+  js/page-registry-data.js=js/core/page-registry-data.js \
+  js/page-registry-ui.js=js/core/page-registry-ui.js \
+  js/card-inheritance.js=js/core/card-inheritance.js \
+  js/third-party-globals.js=js/core/third-party-globals.js \
+  js/app.js=js/core/app.js
 ```
 
-- [ ] **Step 3: Fix the three hardcoded `js/page-data.js` strings by hand**
+Read the table. Then re-run with `--apply` **once** — re-running double-rewrites
+paths.
 
-`retarget.mjs`'s plain-string pass should catch these, but verify each explicitly — they are the sites that make `bun run validate` report every page as missing rather than failing loudly:
+- [ ] **Step 4: Check the helper's output against what it should be**
+
+Derived from the tree before this task ran. Verify each; a mismatch means the
+helper is wrong, not that the expectation is.
+
+*Inside the moved files:*
+
+| File | Must become |
+| --- | --- |
+| `js/core/page-data.js` | all **29** `'../pages/…'` → `'../../pages/…'` |
+| `js/core/state.js` | `'./page-registry.js'` stays `'./page-registry.js'` (both moved together); `'./utils.js'` stays `'./utils.js'` |
+| `js/core/page-registry.js` | `'./page-data.js'` and `'./page-registry-data.js'` stay siblings; `'./review/review-state-validation.js'` → `'../review/review-state-validation.js'`; same for `'./review/review-state-store.js'` |
+| `js/core/app.js` | `'./review/ui-controls.js'` → `'../review/ui-controls.js'`; `'./state.js'` and `'./utils.js'` stay siblings; `'./mockup/page-render.js'` → `'../mockup/page-render.js'`; `'./review/editor-panel.js'` → `'../review/editor-panel.js'` |
+| `js/core/utils.js`, `page-registry-data.js`, `page-registry-ui.js`, `card-inheritance.js`, `third-party-globals.js` | **zero imports** — nothing to rewrite. If the helper touches a specifier inside any of these, stop and investigate. |
+
+*In files that moved in earlier tasks:* roughly twenty specifiers of the form
+`'../utils.js'`, `'../state.js'` and `'../card-inheritance.js'` — in
+`js/review/`, `js/mockup/`, `js/karl/` and `js/editing/` — must become
+`'../core/utils.js'`, `'../core/state.js'`, `'../core/card-inheritance.js'`.
+Two of these are `require()` calls inside dual-export modules
+(`js/karl/karl-transcript.js`, `js/editing/inline-content-edit-data.js`), not
+`import` statements. Check those two by hand: a `require` in a CJS branch is the
+shape that has been missed before.
+
+- [ ] **Step 5: Fix the hardcoded `js/page-data.js` strings**
+
+These are read as paths rather than imported, so they fail by making
+`bun run validate` report every page as missing rather than by throwing:
 
 ```bash
 grep -n "page-data" build_scripts/load-pages.js build_scripts/validate.js
 ```
 
-Expected: `build_scripts/load-pages.js:19` returning `'js/core/page-data.js'`, and `build_scripts/validate.js:29-30` filtering and reading the same path.
+Expected afterward: `build_scripts/load-pages.js` returning
+`'js/core/page-data.js'`, and `build_scripts/validate.js` filtering and reading
+the same path.
 
-- [ ] **Step 4: Confirm `pages/*.js` import checking still works**
+- [ ] **Step 6: Stage everything before any mutation test**
 
-`build_scripts/page-import-checks.js` diffs `pages/*.js` on disk against `js/core/page-data.js`'s import list. Prove it still fires:
+**This step is load-bearing and its absence has already cost real work.** The
+mutation tests below revert an injected line. If the retarget output is not
+staged first, `git checkout` restores the *staged* content — the `git mv`-only
+state — and silently discards every specifier rewrite. That happened once in
+this migration and cost six correct lines.
 
-`js/core/page-data.js` side-effect-imports every page file; removing one import
-leaves that page file on disk with nobody importing it, which is exactly the
-silent failure the check exists to catch — the page simply disappears from the
-site.
+Stage explicit paths. Do **not** use `git add -A`: `node_modules` in this
+worktree is a symlink, and `.gitignore`'s `node_modules/` pattern matches
+directories only, so `-A` tries to stage it.
+
+```bash
+git add js/ build_scripts/ tests/ css/ server.ts .dependency-cruiser.cjs \
+        AGENTS.md CLAUDE.md .github/copilot-instructions.md docs/ .claude/
+git status --porcelain | grep -v '^?? node_modules' || true
+```
+
+- [ ] **Step 7: Update all four remaining dependency-cruiser rules**
+
+Four of the five rules name files that just moved. This is the **final** update
+— no task after this moves anything, so unlike earlier tasks there is nothing
+speculative about naming every path now.
+
+| Rule | Change |
+| --- | --- |
+| `base-modules-import-nothing` | `utils`, `card-inheritance`, `page-registry-data` → their `js/core/` paths. All **8** pinned modules must still match afterward; count them. |
+| `mockup-stays-react-free` | `state`, `utils`, `card-inheritance`, `page-data` → `js/core/`. (`page-render` moved to `js/mockup/` in Task 7 and `ui-controls`/`editor-panel` to `js/review/` in Task 9 — those are already done.) |
+| `pages-enter-through-page-data` | `from.pathNot` `'^js/page-data\\.js$'` → `'^js/core/page-data\\.js$'` |
+| `state-applies-the-page-registry` | `module.path` `'^js/state\\.js$'` → `'^js/core/state\\.js$'`, and `to.path` `'^js/page-registry\\.js$'` → `'^js/core/page-registry\\.js$'` |
+
+- [ ] **Step 8: Mutation-test every one of the four, and report all outputs verbatim**
+
+A path regex that matches nothing exits 0 while enforcing nothing — it does not
+fail, it stops checking. This repo's own config records that the first version
+of `mockup-stays-react-free` returned exit 0 with `import 'react'` sitting at the
+top of `page-render.js`.
+
+**Revert with `head -n -2`, never `git checkout`** (see Step 6):
+
+```bash
+# base-modules-import-nothing
+printf "\nimport './state.js'\n" >> js/core/utils.js
+bun run lint:architecture     # must FAIL naming base-modules-import-nothing
+head -n -2 js/core/utils.js > /tmp/x && mv /tmp/x js/core/utils.js
+
+# mockup-stays-react-free
+printf "\nimport 'react'\n" >> js/core/state.js
+bun run lint:architecture     # must FAIL naming mockup-stays-react-free
+head -n -2 js/core/state.js > /tmp/x && mv /tmp/x js/core/state.js
+
+# pages-enter-through-page-data
+printf "\nimport '../../pages/agency-service-grouping.js'\n" >> js/core/app.js
+bun run lint:architecture     # must FAIL naming pages-enter-through-page-data
+head -n -2 js/core/app.js > /tmp/x && mv /tmp/x js/core/app.js
+
+bun run lint:architecture     # must PASS
+```
+
+The fourth rule is `required` rather than `forbidden`, so it is proven by
+REMOVING something rather than adding it. `js/core/state.js`'s side-effect import
+of `page-registry.js` looks removable to anything reading it as unused — and
+dropping it makes `ORIGINAL_DATA` clone the wrong page set, surfacing much later
+as a field reset restoring a deleted page:
+
+```bash
+cp js/core/state.js /tmp/state-backup.js
+grep -v "page-registry.js" js/core/state.js > /tmp/s.js && mv /tmp/s.js js/core/state.js
+bun run lint:architecture     # must FAIL naming state-applies-the-page-registry
+cp /tmp/state-backup.js js/core/state.js
+bun run lint:architecture     # must PASS
+```
+
+- [ ] **Step 9: Prove `page-import-checks` still fires**
+
+`build_scripts/page-import-checks.js` diffs `pages/*.js` on disk against
+`js/core/page-data.js`'s imports. A page nobody imports never registers onto
+`window.HHVC_PAGES` — it simply disappears from the site, with no error:
 
 ```bash
 cp js/core/page-data.js /tmp/page-data-backup.js
 grep -v "agency-service-grouping.js" js/core/page-data.js > /tmp/pd.js \
   && mv /tmp/pd.js js/core/page-data.js
-bun run validate
+bun run validate              # must FAIL naming pages/agency-service-grouping.js
+cp /tmp/page-data-backup.js js/core/page-data.js
+bun run validate              # must PASS
 ```
 
-Expected: FAIL, naming `pages/agency-service-grouping.js` as imported by nothing.
-
-```bash
-cp /tmp/page-data-backup.js js/core/page-data.js && bun run validate
-```
-
-Expected: PASS.
-
-- [ ] **Step 5: Update and mutation-test every remaining dependency-cruiser rule**
-
-Four rules name files that just moved. Update each, then prove each fires:
-
-```bash
-# base-modules-import-nothing (utils, card-inheritance, page-registry-data)
-printf "\nimport './state.js'\n" >> js/core/utils.js
-bun run lint:architecture   # expect FAIL
-git checkout js/core/utils.js
-
-# mockup-stays-react-free (state, utils, card-inheritance, page-data)
-printf "\nimport 'react'\n" >> js/core/state.js
-bun run lint:architecture   # expect FAIL
-git checkout js/core/state.js
-
-# state-applies-the-page-registry (a REQUIRED rule — removing the import must fail)
-grep -v "page-registry.js" js/core/state.js > /tmp/s.js && cp js/core/state.js /tmp/state-backup.js && mv /tmp/s.js js/core/state.js
-bun run lint:architecture   # expect FAIL naming state-applies-the-page-registry
-cp /tmp/state-backup.js js/core/state.js
-
-# pages-enter-through-page-data
-printf "\nimport '../../pages/agency-service-grouping.js'\n" >> js/core/app.js
-bun run lint:architecture   # expect FAIL
-git checkout js/core/app.js
-
-bun run lint:architecture   # expect PASS
-```
-
-The third of these matters most. `state-applies-the-page-registry` is a `required` rule rather than a `forbidden` one — it exists because `js/state.js`'s side-effect import of `page-registry.js` looks removable to anything reading it as unused, and dropping it makes `ORIGINAL_DATA` clone the wrong page set. That surfaces much later as a field reset restoring a deleted page.
-
-- [ ] **Step 6: Verify `no-circular` still passes and the graph is genuinely acyclic**
+- [ ] **Step 10: Confirm the graph is still acyclic**
 
 ```bash
 bun run lint:architecture
 ```
 
-Expected: PASS. If it fails, a specifier was rewritten to point somewhere unintended — the import graph was acyclic before this plan started and nothing in this plan should have changed an edge, only a path.
+Must PASS. The import graph was acyclic before this plan began and nothing in
+this plan changes an edge — only a path. A cycle here means a specifier was
+rewritten to point somewhere unintended.
 
-- [ ] **Step 7: Run the full gate set plus e2e and the single-file build**
+- [ ] **Step 11: Full gate set, e2e, and the single-file build**
+
+All in the foreground; never background a long run.
 
 ```bash
 bun run format && bun run format:check && bun run lint:js && bun run lint:architecture \
@@ -1044,39 +1143,66 @@ bun run build:netlify && bun run test:e2e
 bun run build:singlefile && ls -la dist-singlefile/index.html
 ```
 
-The single-file build is checked here and nowhere else: it inlines every script and stylesheet, so a specifier that resolves under the dev server but not under `--mode singlefile` shows up only in this output.
+`build:singlefile` is checked here and nowhere else in this plan. It inlines
+every script and stylesheet, so a specifier that resolves under the dev server
+but not under `--mode singlefile` appears only in this output.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 12: The three standing checks**
+
+1. **Every relative specifier in every moved file resolves on disk** — and this
+   task must also re-check the files moved in Tasks 2–9, since ~20 of their
+   specifiers point at modules moving now.
+2. **Multiset check** — every changed line byte-identical to its pre-move form
+   once moved-path prefixes are stripped. Anything else means a logic change hid
+   inside a path-rewrite hunk.
+3. **Wrapped comment paths** — `tests/module-paths.test.js`'s third assertion
+   catches a path split across a line break. If it fires, reflow so the path sits
+   unbroken on one line; never exempt it.
+
+- [ ] **Step 13: Commit**
 
 ```bash
-git add -A
+git add js/ build_scripts/ tests/ css/ server.ts .dependency-cruiser.cjs \
+        AGENTS.md CLAUDE.md .github/copilot-instructions.md docs/ .claude/
 git commit -m "refactor: move the core modules to js/core/
 
 utils, state, the page data and registry, the card-inheritance classifier, the
 third-party globals shim and the bootstrap. Last of the nine folders, because
 utils.js alone has 19 importers and every earlier task shrank this diff.
 
-Three hardcoded 'js/page-data.js' strings in load-pages.js and validate.js are
-updated — that path is read rather than imported, so it fails by reporting
-every page missing rather than by throwing.
+page-data.js's 29 ../pages/ imports all become ../../pages/ — the referring-file-
+moved case, proven here at scale.
 
-All four remaining dependency-cruiser rules are updated and each mutation-tested
-separately, including the required state-applies-the-page-registry rule.
-Verified build:singlefile as well as build:netlify."
+Two hardcoded 'js/page-data.js' strings in load-pages.js and validate.js are
+updated; that path is read rather than imported, so it fails by reporting every
+page missing rather than by throwing.
+
+All four remaining dependency-cruiser rules updated and each mutation-tested
+separately, including the required state-applies-the-page-registry rule, which
+is proven by removing its import rather than adding one. Verified
+build:singlefile as well as build:netlify."
 ```
 
 ---
 
-### Task 11: Documentation and the stale-comment sweep
+### Task 11: Documentation, the glob sweep, and the stale-comment cleanup
+
+> **REVISED 2026-08-18, mid-execution.** Two steps are new. The glob-star sweep
+> (Steps 2–3) exists because a Task 8 reviewer found that the migration helper
+> rewrites literal paths but not glob patterns, and the path gate cannot match
+> one either — leaving 23 stale references accumulated since Task 4.
 
 **Files:**
-- Modify: `docs/codebase/STRUCTURE.md`, `docs/codebase/ARCHITECTURE.md`, `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, any `.claude/skills/hhvc-*/SKILL.md` naming a moved path
+- Modify: `tests/module-paths.test.js`, `docs/codebase/STRUCTURE.md`, `docs/codebase/ARCHITECTURE.md`, `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, four `.claude/skills/hhvc-*/SKILL.md`, `js/main.js`, `js/review/review-state-store.js`, `js/review/review-insights.js`, `tests/decision-vocabulary.test.js`
 
 **Interfaces:**
-- Consumes: the finished layout from Task 10.
-- Produces: documentation that describes the tree as it now is.
+- Consumes: the finished nine-folder layout from Task 10.
+- Produces: documentation and comments that describe the tree as it now is.
 
-**Why this is a task and not a footnote.** `retarget.mjs` rewrote path *strings* mechanically. It could not rewrite a sentence whose meaning depends on the old flat layout — "`js/` is one flat directory" is now false, and no regex catches that.
+**Why this is a task rather than a footnote.** The helper rewrote path *strings*
+mechanically. It could not rewrite a sentence whose meaning depends on the old
+flat layout — "`js/` is one flat directory" is now false, and no regex catches
+that. Nor could it touch a glob.
 
 - [ ] **Step 1: Confirm the mechanical sweep is complete**
 
@@ -1084,38 +1210,91 @@ Verified build:singlefile as well as build:netlify."
 bun test tests/module-paths.test.js
 ```
 
-Expected: PASS. This is Task 1's gate doing the job it was built for. A failure here names a path string that survived every earlier task.
+Must PASS. This is Task 1's gate doing the job it was built for; a failure here
+names a literal path string that survived every earlier task.
 
-- [ ] **Step 2: Find prose that describes the old layout**
+- [ ] **Step 2: Add a fourth gate assertion for glob-star paths**
+
+The helper rewrites literal paths only, and the gate's own regex cannot match a
+`*` because `*` is outside its character class. So `js/review-queue*.js` is
+invisible to both, and 23 such references went stale across Tasks 4–9 without
+any check noticing.
+
+Add a fourth test to `tests/module-paths.test.js`: find every `js/<prefix>*`
+pattern in the scanned files, expand it against the filesystem, and fail when a
+pattern matches nothing. Give it the same explanatory header voice as the file's
+other tests — say why a glob is invisible to the other three, and that this repo
+had seven distinct stale ones.
+
+Prove it fails before you fix anything: at this point the 23 references are still
+stale, so the new test should go **red** naming them. That red run is the
+evidence the test works. Record its output verbatim.
+
+- [ ] **Step 3: Sweep the seven stale glob patterns**
+
+Seven distinct patterns across 23 locations, measured on 2026-08-18:
+
+| Pattern | Now lives in |
+| --- | --- |
+| `js/ai-assist*.js` | `js/ai/` |
+| `js/ai-rewrite*.js` | `js/ai/` |
+| `js/inline-content-edit*.js` | `js/editing/` |
+| `js/review-insights*.js` | `js/review/` |
+| `js/review-ops*.js` | `js/review/` |
+| `js/review-queue*.js` | `js/review/` |
+| `js/inline-content-edit*.js.` | malformed — fix the stray trailing dot too |
+
+They appear in `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`,
+`docs/codebase/ARCHITECTURE.md`, the `hhvc-ai-rewrite`,
+`hhvc-inline-content-editing`, `hhvc-review-insights` and `hhvc-review-ops`
+skills, and in four code files: `js/main.js`, `js/review/review-state-store.js`,
+`js/review/review-insights.js`, `tests/decision-vocabulary.test.js`.
+
+Re-run the Step 2 test afterward. It must now pass.
+
+- [ ] **Step 4: Rewrite prose that describes the old flat layout**
 
 ```bash
-grep -rn "flat directory\|js/\*\.js\|one flat\|55 flat\|113 flat" \
-  AGENTS.md CLAUDE.md .github/copilot-instructions.md docs/codebase/ .claude/skills/hhvc-*/SKILL.md
+grep -rn "flat directory\|one flat\|55 flat\|js/\*\.js" \
+  AGENTS.md CLAUDE.md .github/copilot-instructions.md docs/codebase/ \
+  .claude/skills/hhvc-*/SKILL.md
 ```
 
-Read each hit and rewrite the sentence rather than the path. The load-order section of `AGENTS.md` is the one to read most carefully — it still describes `js/main.js`'s hand-reviewed order, and that description remains **correct** after this plan. The order is dismantled by the module-coherence plan, not this one. Do not describe it as fixed.
+Rewrite the sentence, not just the path. **Read the load-order section of
+`AGENTS.md` most carefully**: it describes `js/main.js`'s hand-reviewed import
+order, and that description is still **correct** after this plan. The order is
+dismantled by the module-coherence plan, not this one. Do not describe it as
+fixed.
 
-- [ ] **Step 3: Update `docs/codebase/STRUCTURE.md` and `ARCHITECTURE.md`**
+- [ ] **Step 5: Update `docs/codebase/STRUCTURE.md` and `ARCHITECTURE.md`**
 
-Replace the flat file listing with the nine folders and one line each on what the folder owns. These two files describe layout directly and are the most wrong right now.
+Replace the flat file listing with the nine folders and one line each on what
+the folder owns. These two describe layout directly and are the most wrong right
+now.
 
-- [ ] **Step 4: Add the folder map to the three mirrors**
+- [ ] **Step 6: Add the folder map to the three mirrors**
 
-`AGENTS.md` is canon; `CLAUDE.md` and `.github/copilot-instructions.md` mirror it. Add the nine-folder table to the "Core module split" section of each, and reconcile toward `AGENTS.md` if they disagree.
+`AGENTS.md` is canon; `CLAUDE.md` and `.github/copilot-instructions.md` mirror
+it. Add the nine-folder table to the "Core module split" section of each, and
+reconcile toward `AGENTS.md` if they disagree.
 
-- [ ] **Step 5: Record the `app.js` placement in the spec**
+- [ ] **Step 7: Record the `app.js` placement in the spec**
 
-The spec's §1 tree omits `app.js`. Add it to `js/core/` there, so the spec and the tree agree for the plans that follow.
+The spec's §1 tree omits `app.js`. Add it to `js/core/`, so the spec and the tree
+agree for the three plans that follow this one.
 
-- [ ] **Step 6: Run the docs gates**
+- [ ] **Step 8: Docs gates**
 
 ```bash
 bun run lint:docs && bun run check:links && bun test tests/doc-counts.test.js
 ```
 
-`check:links` is normally a weekly scheduled job rather than a gate, and it is run by hand here because this task edits cross-file anchors between the three mirrors — markdownlint's MD051 validates a fragment only against the file it sits in, so an anchor into another file is unchecked by everything else.
+`check:links` is normally a weekly scheduled job rather than a gate. Run it by
+hand here because this task edits cross-file anchors between the three mirrors,
+and markdownlint's MD051 validates a fragment only against the file it sits in —
+an anchor into another file is unchecked by everything else.
 
-- [ ] **Step 7: Run the full gate set one final time**
+- [ ] **Step 9: Full gate set, one final time**
 
 ```bash
 bun run format && bun run format:check && bun run lint:js && bun run lint:architecture \
@@ -1123,24 +1302,31 @@ bun run format && bun run format:check && bun run lint:js && bun run lint:archit
 bun run build:netlify && bun run test:e2e
 ```
 
-- [ ] **Step 8: Delete the migration helper**
+- [ ] **Step 10: Delete the migration helper**
 
 ```bash
-rm /tmp/hhvc-retarget.mjs
-git status --porcelain
+rm -f /tmp/hhvc-retarget.mjs
+git status --porcelain | grep -v '^?? node_modules' || true
 ```
 
-Expected: clean. `retarget.mjs` was never committed, and the repo's scope discipline forbids leaving migration scaffolding behind.
+Expected: nothing but the `node_modules` symlink. The helper was never
+committed, and this repo's scope discipline forbids leaving migration
+scaffolding behind.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
-git add -A
-git commit -m "docs: describe the nine-folder layout
+git add tests/ js/ docs/ AGENTS.md CLAUDE.md .github/copilot-instructions.md .claude/
+git commit -m "docs: describe the nine-folder layout, and sweep the stale globs
 
-retarget.mjs rewrote path strings mechanically across the migration. It could
-not rewrite sentences whose meaning depended on the flat layout, and
+The retarget helper rewrote path strings mechanically across the migration. It
+could not rewrite sentences whose meaning depended on the flat layout, and
 docs/codebase/STRUCTURE.md described a directory that no longer exists.
+
+It also could not rewrite a GLOB. js/review-queue*.js and six siblings went
+stale across seven earlier tasks, in 23 places, invisible to the path gate
+because a * cannot match its character class. tests/module-paths.test.js gains a
+fourth assertion that expands each glob and fails when it matches nothing.
 
 The load-order section is deliberately unchanged: js/main.js's order is still
 hand-reviewed after this plan. It is the module-coherence plan that makes the
@@ -1151,9 +1337,17 @@ graph enforce it."
 
 ## What this plan does not do
 
-Named here because each is a plausible-looking next step that belongs to a different plan:
+Named here because each is a plausible-looking next step that belongs to a
+different plan:
 
-- **No `window.<Namespace>` conversion.** The 50 cycles, the 25 mount-body guards and `js/main.js`'s load-bearing order all survive this plan untouched. That is the module-coherence plan.
-- **No CSS changes.** The 31 `--legacy-*` tokens and their 155 uses are untouched. `js/main.js`'s eleven `./../css/*.css` imports keep their paths and their order.
-- **No behavior changes to the optional backends.** No fixtures, no keys, no ingest.
-- **No test file moves and no new tests** beyond Task 1's gate.
+- **No `window.<Namespace>` conversion.** The 50 cycles, the 25 mount-body
+  guards and `js/main.js`'s load-bearing order all survive this plan untouched.
+  That is the module-coherence plan.
+- **No CSS changes.** The 31 `--legacy-*` tokens and their 155 uses are
+  untouched. `js/main.js`'s eleven `./../css/*.css` imports keep their paths and
+  their order.
+- **No behavior changes to the optional backends.** No fixtures, no keys, no
+  ingest.
+- **No test file moves.** The only test files this plan touches are
+  `tests/module-paths.test.js`, which it creates and then extends three times,
+  and comment-only edits elsewhere.
