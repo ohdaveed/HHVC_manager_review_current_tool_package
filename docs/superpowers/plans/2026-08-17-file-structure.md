@@ -1070,7 +1070,7 @@ Verified build:singlefile as well as build:netlify."
 ### Task 11: Documentation and the stale-comment sweep
 
 **Files:**
-- Modify: `docs/codebase/STRUCTURE.md`, `docs/codebase/ARCHITECTURE.md`, `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, any `.claude/skills/hhvc-*/SKILL.md` naming a moved path
+- Modify: `docs/codebase/STRUCTURE.md`, `docs/codebase/ARCHITECTURE.md`, `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, any `.claude/skills/**/*.md` naming a moved path — **not only the `hhvc-*` ones.** `verify/SKILL.md` names `js/app.js` and is the recipe someone follows to check a change in a real browser; `remove-ai-slop/references/code-slop.md` names `js/review-insights.js` and `js/review-ops.js`.
 
 **Interfaces:**
 - Consumes: the finished layout from Task 10.
@@ -1090,7 +1090,7 @@ Expected: PASS. This is Task 1's gate doing the job it was built for. A failure 
 
 ```bash
 grep -rn "flat directory\|js/\*\.js\|one flat\|55 flat\|113 flat" \
-  AGENTS.md CLAUDE.md .github/copilot-instructions.md docs/codebase/ .claude/skills/hhvc-*/SKILL.md
+  AGENTS.md CLAUDE.md .github/copilot-instructions.md docs/codebase/ .claude/skills/
 ```
 
 Read each hit and rewrite the sentence rather than the path. The load-order section of `AGENTS.md` is the one to read most carefully — it still describes `js/main.js`'s hand-reviewed order, and that description remains **correct** after this plan. The order is dismantled by the module-coherence plan, not this one. Do not describe it as fixed.

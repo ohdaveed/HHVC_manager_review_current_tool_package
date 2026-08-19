@@ -315,7 +315,7 @@ What actually breaks:
 
 | Surface | Sites | Failure |
 | --- | --- | --- |
-| `js/` internal relative imports | 44 outside `main.js`, plus 51 side-effect imports in `main.js` | build error |
+| `js/` internal relative imports | 70 outside `main.js` (35 side-effect, 35 `from`), plus 52 side-effect imports in `main.js` | build error |
 | `build_scripts/load-pages.js:19`, `build_scripts/validate.js:29-30` | 3 hardcoded `'js/page-data.js'` strings | `validate` reports every page missing |
 | `.dependency-cruiser.cjs` | all 5 rules are `^js/(...)\.js$` path regexes | rules match nothing and silently stop enforcing |
 
@@ -329,21 +329,31 @@ restore it.
 
 ### Code that references `js/` paths
 
-Four more surfaces, and these are code rather than configuration. They were
+Five more surfaces, and these are code rather than configuration. They were
 missed by the first draft of this section, which counted only config:
 
 | Surface | References | Breaks how |
 | --- | --- | --- |
-| `tests/*.test.js` | 63 across 29 files, plus 8 to `js/react/theme.js` | a moved module is an unresolved import — the suite fails loudly |
+| `tests/*.test.js` | 63 across 32 files, plus 8 to `js/react/theme.js` | a moved module is an unresolved import — the suite fails loudly |
 | `build_scripts/**` | 11 `require('../js/…')` calls | `validate`, `export`, `export:karl` and the AI output validator throw |
-| `server.ts` | 1 — `import { mergeReviewRecord } from './js/review-merge.js'` | the server fails to boot, taking every spawned-server test with it |
+| `server.ts` | 1 import — `mergeReviewRecord` from `./js/review-merge.js` — plus 8 in comments | the import fails the boot, taking every spawned-server test with it; the comments rot silently |
 | `tests/e2e/**` | 57, all prose inside comments | silent — nothing fails, the paths are simply wrong |
+| `css/**` | 18 distinct paths, all in banner comments | silent — every sheet's header names the module that builds its markup |
 
-The first three fail loudly and are caught by the gates. **The 57 comment
-references are the dangerous ones**, because nothing checks them: they are the
-same class of rot as a stale `docs/codebase/STRUCTURE.md`, and a comment that
-names a path no longer on disk is worse than no comment. They are updated in the
-same step that moves the file they name.
+The first three fail loudly and are caught by the gates. **The 83 comment
+references are the dangerous ones** — 57 in `tests/e2e/**`, 18 in `css/**`, 8 in
+`server.ts` — because nothing checks them: they are the same class of rot as a
+stale `docs/codebase/STRUCTURE.md`, and a comment that names a path no longer on
+disk is worse than no comment. They are updated in the same step that moves the
+file they name.
+
+**These counts were re-verified on 2026-08-18** against the same commit this
+plan was written on, so they are a measurement rather than an estimate. Three
+were wrong in the first draft and one surface was absent: the internal-import
+count read 44 against an actual 70, `main.js` read 51 against 52, the test-file
+count read 29 against 32, and `css/**` was not listed at all. Re-count rather
+than trusting these if the tree has moved — `grep -rnE "^\s*import .*['\"]\.{1,2}/" js`
+is the whole of it.
 
 ### Gates
 
