@@ -1,6 +1,6 @@
 ---
 name: hhvc-review-sync-backend
-description: "HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/review-state-sync.js."
+description: "HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/sync/review-state-sync.js."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
@@ -16,7 +16,7 @@ unconfigured.
 - **Routes**: `GET /api/review-state` (full state, same shape as
   `window.reviewState.read()`); `PUT /api/review-state/pages/:pageKey` (merges
   a patch via the shared `mergeReviewRecord()` — `server.ts` imports
-  `js/review-merge.js` directly, the same file a `<script>` tag loads
+  `js/review/review-merge.js` directly, the same file a `<script>` tag loads
   client-side — and returns the merged record). Every write is scoped to one
   `page_key`; the server never wholesale-replaces the table. The PUT body is
   capped at `MAX_REVIEW_BODY_BYTES` (1 MB) via the same streaming
@@ -34,7 +34,7 @@ unconfigured.
 TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   `.data/review-state.local.db` for local dev; point at a mounted volume in
   production).
-- **Client**: `js/review-state-sync.js`, a no-op unless configured. Its
+- **Client**: `js/sync/review-state-sync.js`, a no-op unless configured. Its
   settings live under their own `hhvcReviewSyncConfig` localStorage key,
   separate from `hhvcManagerReviewState:v1` on purpose — the token must never
   round-trip through the shareable CSV/JSON export/import/backup files.
@@ -70,14 +70,14 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   (autosave only when content actually changed, per `reviewContentEquals`;
   every `mergeReviewRecord` call except the server's own
   `updatedBy: 'sync'`) and cleared only by a real push/pull. It is a genuine
-  boolean, hence the explicit branch in `js/review-state-validation.js` —
+  boolean, hence the explicit branch in `js/review/review-state-validation.js` —
   the generic `String()` coercion there would turn `false` into the truthy
   string `'false'`. Only an **explicit `false`** means clean: records
   written before the field existed don't carry it (the storage version was
   deliberately not bumped, the field being additive), and treating
   "missing" as "clean" would let the first pull after an upgrade overwrite
   reviews that were never pushed. The absence has to survive autosave too:
-  `nextLocalDirty()` (`js/ux-improvements-state-sync.js`) returns
+  `nextLocalDirty()` (`js/review/ux-improvements-state-sync.js`) returns
   `undefined` for an unchanged legacy record instead of collapsing it to a
   boolean, since a content-neutral save would otherwise write an explicit
   `false` and grant the pull path the very permission this rule withholds.

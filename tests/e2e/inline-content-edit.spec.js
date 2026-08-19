@@ -1,8 +1,8 @@
 // Inline content editing: click-to-edit on the mockup, add/remove for
 // paragraphs and bullets, one-step undo, per-field reset, internal/external
 // links, and persistence across reload and the JSON backup export/import
-// round trip. See js/inline-content-edit.js, js/inline-content-edit-render.js
-// and js/inline-content-edit-link-tool.js for the feature's implementation;
+// round trip. See js/editing/inline-content-edit.js, js/editing/inline-content-edit-render.js
+// and js/editing/inline-content-edit-link-tool.js for the feature's implementation;
 // existing unit tests (tests/inline-content-edit*, tests/inline-content-edit-
 // adapter.test.js) already cover internals through happy-dom — this file
 // drives the real browser UI instead, matching tests/e2e/import-export.spec.js's
@@ -22,7 +22,7 @@
 // intentional hook points, not incidental styling classes.
 //
 // The three Link-tool cases below are re-proven via deliberate breakage:
-// reverting js/inline-content-edit.js's holder.contains(nextFocus) focusout
+// reverting js/editing/inline-content-edit.js's holder.contains(nextFocus) focusout
 // check back to its earlier holder.closest('.codex-editor') form (which can
 // never match — .codex-editor is a DESCENDANT of holder, never an ancestor,
 // so that comparison was always false) makes exactly the internal-link and
@@ -53,12 +53,12 @@ const {
 } = require('./helpers.js')
 
 // The default landing page (pestsTopic, the Agency page) has paragraph
-// sections but no bullet sections (js/page-data.js / pages/agency-service-grouping.js).
+// sections but no bullet sections (js/core/page-data.js / pages/agency-service-grouping.js).
 // scopeInfo (pages/hhvc-inspection-scope.js) has several section-level bullet
 // lists with 2+ items each, so the add/remove list tests navigate there
 // explicitly rather than assuming the default page carries list controls.
 // A Transaction page like payFee also has bullets, but they sit nested
-// inside steps[].bullets (js/inline-content-edit.js's decorateListControls()
+// inside steps[].bullets (js/editing/inline-content-edit.js's decorateListControls()
 // only decorates sections.N.bullets/paragraphs directly, not
 // sections.N.steps.M.bullets) — verified live, this is out of the current
 // feature's scope, not a bug, so the fixture page must be picked accordingly.
@@ -98,7 +98,7 @@ test.describe('inline content editing (Editor.js widget)', () => {
   })
 
   test('committing a blank title is rejected and the original text survives', async ({ page }) => {
-    // js/inline-content-edit.js's commit() special-cases title/summary/
+    // js/editing/inline-content-edit.js's commit() special-cases title/summary/
     // primaryCta: unlike a section paragraph or bullet (which CAN be
     // deleted to empty via the remove control), clearing one of these three
     // to blank text and committing is refused outright — the field would
@@ -165,11 +165,11 @@ test.describe('inline content editing (Editor.js widget)', () => {
     const before = await page.locator(`#mockPage [data-rewrite-field^="${containerPath}."]`).count()
     await addButton.click()
 
-    // addListItem() (js/inline-content-edit.js) opens the new item's editor
+    // addListItem() (js/editing/inline-content-edit.js) opens the new item's editor
     // once its own rerender() resolves — a real, possibly-async View
     // Transition in a real browser (see that function's comments) — so wait
     // for the widget to exist rather than asserting focus at a fixed instant.
-    // js/inline-content-edit-render.js's editorJsHolderHtml() carries the
+    // js/editing/inline-content-edit-render.js's editorJsHolderHtml() carries the
     // same data-rewrite-field/data-inline-edit-input attributes the old
     // <textarea> widget did, so this selector still resolves the live
     // editor for the new item unchanged — only what's INSIDE it (a
@@ -307,10 +307,10 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await expect(page.locator('#mockPage h2', { hasText: 'Round Trip Heading' })).toBeVisible()
   })
 
-  // The four cases below cover js/inline-content-edit-link-tool.js (Phase 4
+  // The four cases below cover js/editing/inline-content-edit-link-tool.js (Phase 4
   // of the Editor.js integration), which had no e2e coverage before this
-  // rewrite. The first three are mutation-proven: reverting js/inline-
-  // content-edit.js's commit()-prefers-the-stash fix (deleting the
+  // rewrite. The first three are mutation-proven: reverting
+  // js/editing/inline-content-edit.js's commit()-prefers-the-stash fix (deleting the
   // `pendingLinkHtml` override and falling back to raw editor.save()
   // output) was confirmed to fail the internal- and external-link cases
   // specifically, with the plain-text paragraph edit case above still
@@ -318,7 +318,7 @@ test.describe('inline content editing (Editor.js widget)', () => {
   // not incidentally passing alongside it. The "typing after inserting a
   // link" case immediately below the first covers a narrower regression in
   // that same stash: reverting the holder-level 'input' listener that keeps
-  // it in sync with further typing (js/inline-content-edit.js) reproduces
+  // it in sync with further typing (js/editing/inline-content-edit.js) reproduces
   // the silent-data-loss bug this test exists to catch.
   test('adding an internal link renders as an internal-page control', async ({ page }) => {
     await gotoFresh(page)
@@ -340,14 +340,15 @@ test.describe('inline content editing (Editor.js widget)', () => {
   })
 
   test('typing after inserting a link is not silently discarded on blur', async ({ page }) => {
-    // Regression test for the bug this fixes: js/inline-content-edit-link-
-    // tool.js's commitLink() stashes the block's HTML at link-insertion time
+    // Regression test for the bug this fixes:
+    // js/editing/inline-content-edit-link-tool.js's commitLink() stashes the block's HTML at
+    // link-insertion time
     // (Editor.js's own blur cleanup strips the anchor before commit() can
-    // read editor.save()'s output faithfully), and js/inline-content-edit.js's
+    // read editor.save()'s output faithfully), and js/editing/inline-content-edit.js's
     // commit() always preferred that ONE-TIME stash over live editor state —
     // so any text typed after inserting a link but before blurring the field
     // (a completely normal add-link-then-keep-typing flow) vanished with no
-    // error, no warning, nothing. js/inline-content-edit.js's holder-level
+    // error, no warning, nothing. js/editing/inline-content-edit.js's holder-level
     // 'input' listener now keeps the stash in sync with further typing.
     await gotoFresh(page)
     const paragraph = page
@@ -417,7 +418,7 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await expect(internalLink).toBeVisible()
 
     // Reopen the same field: pageValueToEditorData/markdownToEditingHtml
-    // (js/inline-content-edit-adapter.js) turns the stored
+    // (js/editing/inline-content-edit-adapter.js) turns the stored
     // [word](rodentsReport) markdown back into an
     // <a data-render-target="rodentsReport">word</a> for editing, so the
     // selected text is now INSIDE that anchor. Clicking the Link button on

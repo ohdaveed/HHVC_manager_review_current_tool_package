@@ -9,7 +9,7 @@ data/page_inventory.json
 data/page_inventory.csv
 
 # Karl transcripts (`bun run export:karl`), generated from pages/*.js and the
-# panel inventory in js/karl-blocks.js. Never hand-edited, and stale the moment
+# panel inventory in js/karl/karl-blocks.js. Never hand-edited, and stale the moment
 # page copy changes. The reviewer-facing path is the Help-tab panel, which
 # renders the same transcript with that browser's own edits applied; this
 # directory is the whole-corpus snapshot for someone working from a checkout.

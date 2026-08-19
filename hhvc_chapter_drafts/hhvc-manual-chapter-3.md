@@ -124,7 +124,7 @@ Every Transaction page must answer within five seconds:
 
 ### **3.7 Sitemap Governance**
 
-- The approved page inventory lives in `js/page-data.js` (`order` array) and the mockup `pages/*.js` files.
+- The approved page inventory lives in `js/core/page-data.js` (`order` array) and the mockup `pages/*.js` files.
 - `pestsTopic` must remain the first entry in navigation order.
 - Retire or redirect obsolete pages when fee schedules or Director's Rules versions change — do not leave stale rates searchable.
 - Run `bun run validate` and `audit_pages.py` after any sitemap edit.

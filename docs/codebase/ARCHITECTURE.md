@@ -16,15 +16,15 @@
 ```text
 index.html -> js/main.js (CSS + modules)
   -> pages/*.js register window.HHVC_PAGES
-  -> js/page-data.js builds window.HHVC_DATA
-  -> js/page-render.js + js/app.js render mockup
+  -> js/core/page-data.js builds window.HHVC_DATA
+  -> js/mockup/page-render.js + js/core/app.js render mockup
   -> review IIFEs read/write localStorage (hhvcManagerReviewState:v1)
   -> optional: fetch /api/review-state* or /api/ai/* on server.ts (Bearer token)
   -> Netlify serves static dist/ only (no API)
 ```
 
 1. Vite bundles `js/main.js` and CSS into `dist/` (or single-file HTML).
-2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/page-data.js` sets `order` (20 entries) and deleted-key aliases.
+2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/core/page-data.js` sets `order` (29 entries) and deleted-key aliases.
 3. Core modules render the mockup and wire editor/sidebar controls from in-memory `pageData`.
 4. Review layers persist decisions/notes/edits in versioned `localStorage`; continuous autosave skips history; round boundaries go through `mergeReviewRecord`.
 5. If configured, browser sync client pushes/pulls per-page records to SQLite via `server.ts`; AI panel posts drafts to `/api/ai/generate` (validated, never written to disk as pages).
@@ -32,15 +32,30 @@ index.html -> js/main.js (CSS + modules)
 
 ### 3) Layer/Module Responsibilities
 
-| Layer or module                                      | Owns                                                          | Must not own                                                         | Evidence                                        |
-| ---------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------- |
-| Page data (`pages/`, `page-data.js`)                 | Content objects + nav order                                   | Persistence, auth                                                    | `js/page-data.js`                               |
-| Core render (`page-render.js`, `app.js`, `state.js`) | DOM mockup, navigation, dirty/reset                           | Optional API                                                         | `js/page-render.js`                             |
-| Utils (`utils.js`)                                   | Escaping, `safeUrl`, decision vocabulary, review record shape | Feature UI ownership (some workspace helpers live here — noted debt) | `js/utils.js`, `AGENTS.md`                      |
-| Review UX / queue / insights / ops                   | localStorage review workflow                                  | Source-file mutation                                                 | `js/ux-improvements*.js`, `js/review-queue*.js` |
-| `review-merge.js`                                    | Merge precedence + history append                             | Transport                                                            | `js/review-merge.js`                            |
-| `server.ts` + `build_scripts/ai/`                    | Auth-gated sync + AI generation                               | Unauthenticated open access                                          | `server.ts`                                     |
-| Validate/export scripts                              | Schema + inventory CSVs                                       | Runtime UI                                                           | `build_scripts/validate.js`                     |
+`js/` holds nine feature folders rather than one flat directory of modules —
+`js/main.js` alone stays directly under `js/`, as the module graph's root:
+
+| Folder          | Owns                                                                                                                                                                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `js/core/`      | Bootstrap and shared state/vocabulary: `utils.js`, `state.js`, `app.js`, `page-data.js`, `page-registry*.js`, `card-inheritance.js`, `third-party-globals.js`                                                                                                                     |
+| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                       |
+| `js/review/`    | The review/UX layers on top of the core: queue, insights, ops, `ux-improvements*.js`, `dashboard-guidance.js`, `editor-panel.js`, `keyboard-shortcuts.js`, `manager-review-export.js`, `review-merge.js`, `review-state-store.js`, `review-state-validation.js`, `ui-controls.js` |
+| `js/editing/`   | Click-to-edit inline content editing on the rendered mockup                                                                                                                                                                                                                       |
+| `js/ai/`        | Optional AI assist and AI rewrite features, invisible unless `/api/ai/*` is configured                                                                                                                                                                                            |
+| `js/sync/`      | The optional review-state sync client                                                                                                                                                                                                                                             |
+| `js/karl/`      | Karl guide panels and the Karl transcript export                                                                                                                                                                                                                                  |
+| `js/standards/` | Content-standards scoring: `reading-level.js`, `plain-language.js`                                                                                                                                                                                                                |
+| `js/react/`     | React 19 + MUI islands mounted inside `#reviewWorkspace`                                                                                                                                                                                                                          |
+
+| Layer or module                                      | Owns                                                          | Must not own                                                         | Evidence                                                      |
+| ---------------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Page data (`pages/`, `page-data.js`)                 | Content objects + nav order                                   | Persistence, auth                                                    | `js/core/page-data.js`                                        |
+| Core render (`page-render.js`, `app.js`, `state.js`) | DOM mockup, navigation, dirty/reset                           | Optional API                                                         | `js/mockup/page-render.js`                                    |
+| Utils (`utils.js`)                                   | Escaping, `safeUrl`, decision vocabulary, review record shape | Feature UI ownership (some workspace helpers live here — noted debt) | `js/core/utils.js`, `AGENTS.md`                               |
+| Review UX / queue / insights / ops                   | localStorage review workflow                                  | Source-file mutation                                                 | `js/review/ux-improvements*.js`, `js/review/review-queue*.js` |
+| `review-merge.js`                                    | Merge precedence + history append                             | Transport                                                            | `js/review/review-merge.js`                                   |
+| `server.ts` + `build_scripts/ai/`                    | Auth-gated sync + AI generation                               | Unauthenticated open access                                          | `server.ts`                                                   |
+| Validate/export scripts                              | Schema + inventory CSVs                                       | Runtime UI                                                           | `build_scripts/validate.js`                                   |
 
 ### 4) Reused Patterns
 
@@ -63,8 +78,8 @@ index.html -> js/main.js (CSS + modules)
 ### 6) Evidence
 
 - `js/main.js`
-- `js/page-data.js`
-- `js/review-merge.js`
+- `js/core/page-data.js`
+- `js/review/review-merge.js`
 - `server.ts`
 - `vite.config.mjs`
 - `netlify.toml`

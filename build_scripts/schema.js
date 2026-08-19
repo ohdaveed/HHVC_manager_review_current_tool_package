@@ -30,13 +30,13 @@ const karlGuideSchema = z
     // `inferred` is deliberately distinct from `confirmed`: it marks a
     // destination this repo CHOSE where the field map records no answer, and the
     // panel renders it as "Inferred — verify" rather than "E1 confirmed". See
-    // INFERRED_PATHS in js/karl-guide-registry.js.
+    // INFERRED_PATHS in js/karl/karl-guide-registry.js.
     status: z.enum(['confirmed', 'inferred', 'inherited', 'mockup-only', 'unresolved']).optional(),
     // Shape only — `U` followed by digits. This read
     // `/^U(?:[1-9]|1[0-9]|20)$/` until the Karl transcript work merged, which
     // was a hardcoded CEILING at U20 rather than a validity check, and it was
     // already wrong: `docs/karl-export-field-map.md`'s register had opened
-    // U21, U22 and U23, so `js/karl-blocks.js` cited three IDs this schema
+    // U21, U22 and U23, so `js/karl/karl-blocks.js` cited three IDs this schema
     // rejected outright. A bound that has to be edited every time the register
     // grows fails closed against correct data, which is the worst direction
     // for a validator to fail in.
@@ -218,7 +218,7 @@ const spotlightSchema = z.object({
  * (Transaction 14 pages, Information 6, Resource Collection 3, Campaign 2, and
  * one page each of Topic, Agency, About us and Report).
  *
- * This is a closed union rather than an open string because js/karl-blocks.js
+ * This is a closed union rather than an open string because js/karl/karl-blocks.js
  * keys its per-type Karl panel inventory on this value: an unrecognised type
  * selects no inventory, so a typo would export an EMPTY transcript rather than
  * failing — and an empty transcript reads like a page with no content, not like
@@ -260,7 +260,7 @@ const pageSchema = z.object({
   printVersionUrl: z.string().optional(),
   editorStatus: z.enum(['needs-review', 'blocked', 'placeholder']).optional(),
   // No page-level `karlGuide`. Every level that renders its own tagged block
-  // has one and js/page-render.js reads all of them — a section's, a card's, a
+  // has one and js/mockup/page-render.js reads all of them — a section's, a card's, a
   // step's, a callout's, an image's, a spotlight's. (`whatToKnowSchema` and
   // `contactSchema` carry none either: they describe values the page renders
   // through a tag of its own, not blocks with a guide to attach to. The claim
@@ -272,7 +272,7 @@ const pageSchema = z.object({
   // an unrelated Karl block. Removing that read left the field authored,
   // schema-validated, and consumed by nothing — which fails no test, since
   // unread data cannot. There is no natural page-level destination either:
-  // js/karl-guide-registry.js's PAGE_TYPE_FIELDS already derives the main
+  // js/karl/karl-guide-registry.js's PAGE_TYPE_FIELDS already derives the main
   // content path per type, which is what those objects restated. Re-add this
   // only alongside a reader, not before one.
   sections: z.array(sectionSchema).optional(),

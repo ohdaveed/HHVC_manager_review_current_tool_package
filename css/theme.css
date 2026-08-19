@@ -331,7 +331,7 @@
      ===================================================================
      One triplet per value of the review `decision` enum.
 
-     This exists because getStatusChipClass() in js/utils.js collapses five
+     This exists because getStatusChipClass() in js/core/utils.js collapses five
      decisions into three CSS classes (pass / warn / fail), which renders
      "Blocked" and "Revise and resubmit" identically — the two states a
      manager most needs to tell apart, since one is waiting on someone else

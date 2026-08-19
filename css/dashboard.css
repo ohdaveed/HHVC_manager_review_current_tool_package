@@ -169,7 +169,7 @@
 }
 
 /* The grid only grows a third column while the workspace is actually open;
-   js/ux-improvements-workspace.js toggles this class alongside the panel's
+   js/review/ux-improvements-workspace.js toggles this class alongside the panel's
    hidden attribute. minmax() rather than a fixed width so the panel gives room
    back to the mockup on a smaller screen instead of squeezing it. */
 .app.workspace-docked {
@@ -450,7 +450,7 @@
    it cost real information: `Blocked` and `Revise and resubmit` both drew
    as `fail`, and `Needs review` and `Approved with edits` both as `warn`,
    so a queue of five states rendered as three colours. See
-   getDecisionChipClass() in js/utils.js for why those two pairs are the
+   getDecisionChipClass() in js/core/utils.js for why those two pairs are the
    ones that matter. */
 
 .status-chip {
@@ -536,7 +536,7 @@
 /* =====================================================================
    Mockup PNG export controls
    =====================================================================
-   Injected into .canvas-toolbar by js/mockup-image-export.js. They carry
+   Injected into .canvas-toolbar by js/mockup/mockup-image-export.js. They carry
    data-export-exclude so a capture never includes the buttons that
    triggered it. */
 
@@ -601,7 +601,7 @@
 }
 
 /* -------------------------------------------------------------------------
-   "Pages added and deleted" (js/page-registry-ui.js)
+   "Pages added and deleted" (js/core/page-registry-ui.js)
    -------------------------------------------------------------------------
    The Help-tab half of the add/delete-page feature. Its sidebar half is styled
    in css/ux-improvements.css; the split is by surface rather than by feature,

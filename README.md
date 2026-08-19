@@ -38,7 +38,7 @@ The Agency page routes users into scannable service groups:
 8. About Healthy Housing and Vector Control
 
 Retired page keys (from the consolidation) are mapped to their replacement pages in
-`window.HHVC_DELETED_PAGE_ALIASES` in `js/page-data.js`, so old shared `?page=<key>` links
+`window.HHVC_DELETED_PAGE_ALIASES` in `js/core/page-data.js`, so old shared `?page=<key>` links
 redirect instead of dead-ending.
 
 ## UX/UI review improvements
@@ -101,7 +101,7 @@ state.ui = {
 
 Queue rows read saved decisions from `hhvcManagerReviewState:v1`. Unsaved pages show **Needs review**.
 
-**Progress semantics:** The sticky bar and queue progress bar count **decided** pages — `stats.reviewed` in `js/review-queue-rows.js` filters on `utils.isDecided(row.decision)`, so a page whose decision is still **Needs review** does not count even when it carries saved notes. Saving a note is not a decision, and counting it as one would report the site as reviewed when nothing had been judged. The decision breakdown chips split the same set by decision. Sticky-bar prev/next respects the active queue filter when one is selected.
+**Progress semantics:** The sticky bar and queue progress bar count **decided** pages — `stats.reviewed` in `js/review/review-queue-rows.js` filters on `utils.isDecided(row.decision)`, so a page whose decision is still **Needs review** does not count even when it carries saved notes. Saving a note is not a decision, and counting it as one would report the site as reviewed when nothing had been judged. The decision breakdown chips split the same set by decision. Sticky-bar prev/next respects the active queue filter when one is selected.
 
 ## Dashboard guidance copy
 
@@ -176,7 +176,7 @@ bun run format:check
 bun run format
 ```
 
-The `validate` script checks the `pages/*.js` and `js/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
+The `validate` script checks the `pages/*.js` and `js/core/page-data.js` data model, ensuring page objects have required fields and valid card, step, section, and page shapes before exports run.
 
 The `export` script regenerates `data/page_inventory.json` and `data/page_inventory.csv` from the source page data, then refreshes Google Sheets–ready tracking CSVs under `review/`.
 
@@ -261,13 +261,13 @@ HHVC_manager_review_current_tool_package/
 ├─ css/theme.css
 ├─ css/styles.css
 ├─ css/ux-improvements.css
-├─ js/page-data.js
-├─ js/app.js
-├─ js/state.js
-├─ js/utils.js
-├─ js/ux-improvements.js
-├─ js/review-queue.js
-├─ js/dashboard-guidance.js
+├─ js/core/page-data.js
+├─ js/core/app.js
+├─ js/core/state.js
+├─ js/core/utils.js
+├─ js/review/ux-improvements.js
+├─ js/review/review-queue.js
+├─ js/review/dashboard-guidance.js
 ├─ pages/*.js
 ├─ data/page_inventory.json
 ├─ data/page_inventory.csv
@@ -284,10 +284,10 @@ HHVC_manager_review_current_tool_package/
 ## Editing rules
 
 - Edit public page content in `pages/*.js`.
-- Edit render behavior in `js/app.js`.
-- Edit shared local-state behavior in `js/state.js`.
-- Edit shared helpers in `js/utils.js`.
-- Edit UX review helpers in `js/ux-improvements.js`, `js/review-queue.js`, `js/dashboard-guidance.js`, and `css/ux-improvements.css`.
+- Edit render behavior in `js/core/app.js`.
+- Edit shared local-state behavior in `js/core/state.js`.
+- Edit shared helpers in `js/core/utils.js`.
+- Edit UX review helpers in `js/review/ux-improvements.js`, `js/review/review-queue.js`, `js/review/dashboard-guidance.js`, and `css/ux-improvements.css`.
 - Edit styles in `css/styles.css` and theme tokens in `css/theme.css`.
 - Use review exports for manager decisions only.
 - Do not use review exports as automatic publication approval.

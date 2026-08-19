@@ -30,7 +30,7 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto"
 // not what this file is expensive about.
 // @ts-ignore - plain JS module, shared with the browser via a <script> tag
 // (see index.html); no .d.ts and none needed for the one function used here.
-import { mergeReviewRecord } from "./js/review-merge.js"
+import { mergeReviewRecord } from "./js/review/review-merge.js"
 // @ts-ignore - plain JS module (CJS via Zod), no .d.ts; same interop as above.
 import { reviewRecordSchema } from "./build_scripts/review-state-schema.js"
 // The storage seam. Postgres when DATABASE_URL is set, SQLite otherwise; see
@@ -129,8 +129,8 @@ const STATIC_HEADERS = {
 //
 // Additive, off-by-default persistence layer for the manager-review tool.
 // It's entirely separate from the mockup's core localStorage-only review
-// state (js/review-state-store.js): reviewers opt in per-browser via
-// js/review-state-sync.js, which is a no-op unless a sync URL/token is
+// state (js/review/review-state-store.js): reviewers opt in per-browser via
+// js/sync/review-state-sync.js, which is a no-op unless a sync URL/token is
 // configured. See the `hhvc-review-sync-backend` skill (extracted from
 // CLAUDE.md; AGENTS.md carries the same section in full) for the
 // deployment/Railway details and the per-page merge safety invariant this
@@ -868,7 +868,7 @@ async function readBodyWithLimit(req: Request, maxBytes: number): Promise<string
 }
 
 /** Reassemble the flattened { version, updated_at, ui, globals, pages } shape
- *  js/review-state-store.js already uses, from the per-page rows table. */
+ *  js/review/review-state-store.js already uses, from the per-page rows table. */
 async function getFullReviewState(): Promise<object> {
   // readAllReviewPages() already drops a row it cannot parse rather than
   // failing the whole GET — one corrupt record must not cost a reviewer the
@@ -917,7 +917,7 @@ async function putReviewPage(
   }
 
   // Validate against the same schema the browser validates GET responses
-  // against (js/review-state-validation.js / build_scripts/review-state-schema.js)
+  // against (js/review/review-state-validation.js / build_scripts/review-state-schema.js)
   // — without this, a malformed or malicious PUT body would merge and
   // persist as-is, unlike every other entry point into review state.
   const parsed = reviewRecordSchema.safeParse(body)
@@ -948,7 +948,7 @@ async function putReviewPage(
   // observed" — comparing THAT against the server's timestamp would almost
   // always look artificially fresh and defeat this check entirely.
   // synced_at only changes on an actual pull/push response (see
-  // js/review-state-sync.js), so it's the real baseline.
+  // js/sync/review-state-sync.js), so it's the real baseline.
   //
   // A missing synced_at is only safe to wave through when there's no
   // existing row to lose (a page that's never existed on the server). If a
@@ -971,7 +971,7 @@ async function putReviewPage(
   // The one place server-side merges happen: always merge onto the single
   // page_key being written, never touch the rest of the table. This is the
   // server-side half of the "merge, never wipe" invariant the client side
-  // already relies on (js/review-queue-import.js, js/ux-improvements-export.js).
+  // already relies on (js/review/review-queue-import.js, js/review/ux-improvements-export.js).
   const merged = mergeReviewRecord(existing, { ...patch, page_key: pageKey }, {
     updatedBy: "sync",
   })

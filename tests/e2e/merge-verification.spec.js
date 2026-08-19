@@ -1,6 +1,6 @@
 /* The manual check CLAUDE.md mandates, written down so it stops being manual.
 
-   "Any change to any of these modules, or to js/review-merge.js, must be
+   "Any change to any of these modules, or to js/review/review-merge.js, must be
    manually verified before being called done: export a snapshot, re-import it,
    and confirm existing decisions/notes are still present rather than wiped."
 

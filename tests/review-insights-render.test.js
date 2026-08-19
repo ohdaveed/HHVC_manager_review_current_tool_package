@@ -1,4 +1,4 @@
-// Unit tests for the Overview insight markup (js/review-insights.js).
+// Unit tests for the Overview insight markup (js/review/review-insights.js).
 //
 // buildMarkup() is a pure string builder, so what it emits can be asserted
 // without a browser, a chart instance, or ECharts being loaded at all — which
@@ -10,7 +10,7 @@
 // that used to reach an ECharts tooltip formatter now reach innerHTML directly,
 // so this is where that must not regress.
 import { describe, test, expect } from 'bun:test'
-import { buildMarkup } from '../js/review-insights.js'
+import { buildMarkup } from '../js/review/review-insights.js'
 
 const XSS = '<img src=x onerror="window.__xss=1">'
 
@@ -101,7 +101,7 @@ describe('failing-checks ranking', () => {
   })
 
   test('escapes a page title before it reaches innerHTML', () => {
-    // A page title is NOT trusted input: js/ux-improvements-state-sync.js
+    // A page title is NOT trusted input: js/review/ux-improvements-state-sync.js
     // assigns a restored edited_title straight onto the in-memory page object,
     // so a JSON backup or a sync response can put markup here.
     const failing = [{ key: 'a', title: XSS, passed: 1, total: 2, pct: 50 }]

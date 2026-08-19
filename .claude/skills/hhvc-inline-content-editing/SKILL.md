@@ -1,12 +1,12 @@
 ---
 name: hhvc-inline-content-editing
-description: 'HHVC repo: click-to-edit on the rendered mockup — the EDITABLE_FIELD_SHAPES scope list and its four value kinds, why cards carry no data-rewrite-field, why a stamped-but-unlisted path silently loses edits, section_edits being derived not accumulated, the reapply/re-render infinite-loop guard, and the CSV round-trip limitation. Load before editing js/inline-content-edit*.js.'
+description: 'HHVC repo: click-to-edit on the rendered mockup — the EDITABLE_FIELD_SHAPES scope list and its four value kinds, why cards carry no data-rewrite-field, why a stamped-but-unlisted path silently loses edits, section_edits being derived not accumulated, the reapply/re-render infinite-loop guard, and the CSV round-trip limitation. Load before editing js/editing/inline-content-edit*.js.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
      canonical copy of this content; see "Cross-tool canon" there. -->
 
-### Inline content editing (`js/inline-content-edit*.js`)
+### Inline content editing (`js/editing/inline-content-edit*.js`)
 
 Click-to-edit directly on the rendered mockup — every text field a reviewer
 can see except cards: the title, summary and primary CTA, a section heading,
@@ -16,15 +16,15 @@ re-rendering immediately and the edit persisting through the same
 browser-first `localStorage` review-state model every other field in this
 tool uses. `pages/*.js` is never touched; this is a review aid, same as
 every other review/UX layer. Three files, mirroring the AI-assist split:
-`js/inline-content-edit-render.js` (widget markup — inputs, textareas,
-add/remove/reset controls, the Edited badge), `js/inline-content-edit-data.js`
+`js/editing/inline-content-edit-render.js` (widget markup — inputs, textareas,
+add/remove/reset controls, the Edited badge), `js/editing/inline-content-edit-data.js`
 (pure `section_edits` diff/reapply, no DOM, dual-exported like
-`js/review-merge.js`), and `js/inline-content-edit.js` (the orchestrator —
+`js/review/review-merge.js`), and `js/editing/inline-content-edit.js` (the orchestrator —
 delegated click handling, the open/commit/cancel widget lifecycle, and
 wiring into the existing autosave path).
 
 - **Scope is one list, in one place: `EDITABLE_FIELD_SHAPES` in
-  `js/inline-content-edit-data.js`.** It covers a page's title, summary and
+  `js/editing/inline-content-edit-data.js`.** It covers a page's title, summary and
   primary CTA; a section's heading, paragraphs, bullets, table and callout; a
   step's title, text, bullets and callout; and the page-level `whatToKnow`,
   `spotlight` and `contact` blocks. Each entry declares the value shape its
@@ -35,7 +35,7 @@ wiring into the existing autosave path).
   fields — section `paragraphs` and `bullets` — and only of individual items,
   never whole sections/cards/steps, and never reordering.
 - **A field stamped `data-rewrite-field` but absent from that list is the worst
-  state to be in, and it was live.** `js/page-render.js` has stamped
+  state to be in, and it was live.** `js/mockup/page-render.js` has stamped
   `sections.N.steps.M.text.K` since the AI-rewrite work, while
   `computeSectionEdits` only ever diffed `heading`/`paragraphs`/`bullets` — so
   a step paragraph opened an editor, accepted the edit, re-rendered with it,
@@ -93,7 +93,7 @@ wiring into the existing autosave path).
   reviewer actually wants to change is already inline-editable where it lives,
   so keep cards out of scope; the missing attribute is the whole enforcement —
   do not "complete" the feature by adding it. The decision is restated at its
-  site in `js/page-render.js`, immediately above `renderCards`.
+  site in `js/mockup/page-render.js`, immediately above `renderCards`.
 - **Every renderer that builds its own heading has to stamp
   `data-rewrite-field` itself, and five of them silently did not.** Only
   `renderSection()` reads `__sectionIndex`, so any section shape rendered
@@ -114,7 +114,7 @@ wiring into the existing autosave path).
   `target.replaceWith(holder)` and that holder is a `<div>`, so annotating it
   there would have dropped a block-level Editor.js instance inside a native
   button (invalid content model, unreliable focus/caret) **and** handed one
-  click to two listeners — the document-level toggle in `js/page-render.js`
+  click to two listeners — the document-level toggle in `js/mockup/page-render.js`
   and the `#mockPage` editor handler, neither of which calls
   `stopPropagation()`. The panel would open while the heading flipped into an
   edit box. So a chevron button owns the toggle and a sibling `<h3>` owns the
@@ -123,7 +123,7 @@ wiring into the existing autosave path).
   trigger spanned the whole row, so target size was never a question), and its
   accessible name is restated with `aria-label` since it has no text of its
   own — the old button took its name from the heading text it contained.
-- **Addressing is reused, not reinvented.** `js/page-render.js` already
+- **Addressing is reused, not reinvented.** `js/mockup/page-render.js` already
   emits `data-rewrite-field="sections.N.paragraphs.M"`-style dot-path
   attributes (added for the in-flight AI-rewrite-selection feature) via
   `paragraphList()`/`bulletList()`'s `pathPrefix` parameter, plus
@@ -136,7 +136,7 @@ wiring into the existing autosave path).
   `docs/superpowers/specs/2026-08-08-inline-content-editing-design.md` for
   why render-position addressing would silently target the wrong section.
   Every write goes through the existing guarded `getByPath`/`setByPath`
-  (`js/utils.js`) — never a hand-rolled path walker — except title, summary,
+  (`js/core/utils.js`) — never a hand-rolled path walker — except title, summary,
   and CTA, which are page-level (not inside `sections[]`) and already have
   dedicated accessors (`getPrimaryCta`/`setPrimaryCta`, direct
   `page.title =`/`page.summary =`).
@@ -150,7 +150,7 @@ wiring into the existing autosave path).
   this feature, not new ones.** `REVIEW_RECORD_FIELDS` and the review-record
   schema already had all three slots, and
   `collectCurrentPageReviewState()`/`updateMockupTextFromSavedState()`
-  (`js/ux-improvements-state-sync.js`) already wrote and reapplied them —
+  (`js/review/ux-improvements-state-sync.js`) already wrote and reapplied them —
   there was simply no UI that ever changed `page.title`/`page.summary`/the
   CTA to give them a non-empty value. This feature is that UI; it added no
   new persistence code for these three fields, only the click-to-edit
@@ -159,7 +159,7 @@ wiring into the existing autosave path).
 - **`section_edits` is new, and it's derived, not accumulated.** A flat map
   on the review record, `field path -> current full value` (e.g.
   `{"sections.2.bullets": [...]}`). `computeSectionEdits()`
-  (`js/inline-content-edit-data.js`) recomputes it from scratch on every
+  (`js/editing/inline-content-edit-data.js`) recomputes it from scratch on every
   autosave by diffing the live page object's `heading`/`paragraphs`/`bullets`
   against `window.ORIGINAL_DATA`, the same "read live state fresh every
   save" approach `edited_title` has always used — not an accumulated diff
@@ -169,7 +169,7 @@ wiring into the existing autosave path).
   omits its path from the map, with no deletion logic required anywhere.
 - **Reapply reports rather than renders, and the caller owns the one
   follow-up paint.** `applyContentEditsToPageData()` — called once, from
-  `applySavedPageState()` in `js/ux-improvements-state-sync.js`, alongside
+  `applySavedPageState()` in `js/review/ux-improvements-state-sync.js`, alongside
   the pre-existing `updateMockupTextFromSavedState()` call — replays
   `section_edits` back onto the in-memory page object on every
   load/navigation/sync-pull/conflict-resolution path (all of which already
@@ -178,19 +178,19 @@ wiring into the existing autosave path).
   `updateMockupTextFromSavedState()`'s job, and reapplying them twice would
   race two functions writing the same fields on every load. It also does not
   re-render: staying DOM-free is why it's dual-exported and Bun-importable
-  with no browser, same as `js/review-merge.js`, so it returns a boolean —
+  with no browser, same as `js/review/review-merge.js`, so it returns a boolean —
   whether it actually wrote a path via `setByPath` — rather than reaching for
   `window.renderPage` itself. **That boolean exists because the obvious
   alternative (re-render unconditionally whenever reapply runs) is a live
   infinite loop, not a hypothetical one.** `window.renderPage` is already
-  `js/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
+  `js/review/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
   run, so a follow-up render re-enters that wrapper, which schedules its own
   deferred `applySavedPageState` call for the same page — which would see
   the same still-true "wrote something" signal and trigger a second render,
   forever (disabling the guard that prevents this produced 17 renders before
   a test's own teardown interrupted it). The fix is the boolean plus a
   `refreshInFlightForKey` re-entrancy guard in
-  `js/ux-improvements-state-sync.js`: at most one follow-up render per
+  `js/review/ux-improvements-state-sync.js`: at most one follow-up render per
   reapply, and the guard clears at the top of the very next
   `applySavedPageState` call for that key rather than immediately after the
   synchronous `renderPage()` call returns, since the reapply it's guarding
@@ -233,12 +233,12 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   edit the very field the link sits in.
 - **Per-field "Reset to original" is new, not a mirror of an existing
   pattern.** The only prior precedent is `restorePageContentFromOriginal()`
-  (`js/review-state-sync.js`), and it's whole-page (title, summary, SEO
+  (`js/sync/review-state-sync.js`), and it's whole-page (title, summary, SEO
   fields, CTA all at once, via direct assignment) — there was no per-field
   reset anywhere in the tool before this feature. This feature's version is
   scoped to one field via `getByPath`(`ORIGINAL_DATA`)/`setByPath`, modeled
   on that function's shape but not calling it.
-- **One-step undo on delete, mirroring `js/review-queue-undo.js`'s
+- **One-step undo on delete, mirroring `js/review/review-queue-undo.js`'s
   precedent** — not a confirm dialog, since that would interrupt the editing
   flow for what is usually an accidental click. Deleting a paragraph or
   bullet shows a toast with an Undo affordance; pressing it re-inserts the
@@ -263,12 +263,12 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
   carry `section_edits`.** This is a real, documented limitation, not an
   oversight: the three page-level fields are flat strings and fit the
   existing CSV row model the same way `notes`/`decision` do
-  (`js/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
-  `js/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
-  `js/review-queue-import.js`'s CSV import field list all carry them).
+  (`js/review/manager-review-export.js`'s `MANAGER_REVIEW_RECORD_FIELDS`,
+  `js/review/ux-improvements-export.js`'s `exportSavedLocalReviewsCsv`, and
+  `js/review/review-queue-import.js`'s CSV import field list all carry them).
   `section_edits` is a nested object keyed by dot-path and does not fit a
   flat CSV row — it round-trips through the JSON backup path
-  (`importReviewStateBackup` in `js/ux-improvements-export.js`) only, for
+  (`importReviewStateBackup` in `js/review/ux-improvements-export.js`) only, for
   free, since that path already merges through `mergeReviewRecord` with
   whatever fields a saved record happens to carry. **A CSV export/import
   cycle therefore preserves title/summary/CTA edits but silently drops

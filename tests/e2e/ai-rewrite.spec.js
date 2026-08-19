@@ -1,7 +1,7 @@
 // End-to-end coverage for the selection-driven AI rewrite.
 //
 // This is the ONLY layer that proves the feature actually works: the
-// orchestrator (js/ai-rewrite.js) and the view (js/ai-rewrite-render.js) are
+// orchestrator (js/ai/ai-rewrite.js) and the view (js/ai/ai-rewrite-render.js) are
 // browser-only IIFEs with no module.exports, so nothing beneath this can
 // unit-test them. Everything below drives the real UI — a real DOM selection,
 // the real floating button, the real popover — against a stubbed /api/ai/*, so
@@ -101,13 +101,13 @@ async function selectFirstField(page) {
  * Same as selectFirstField, but scoped to a paragraph/bullet ITEM path
  * rather than whichever field is first in the DOM.
  *
- * js/page-render.js's renderHero()/renderSection() also emit
+ * js/mockup/page-render.js's renderHero()/renderSection() also emit
  * data-rewrite-field="title"/"summary"/"primaryCta"/"sections.N.heading"
  * (added for the inline-content-editing feature), and the hero sits before
  * any section in the DOM — so a plain querySelector('[data-rewrite-field]')
  * now finds a page-level scalar or a heading first. All of those are written
  * back as bare strings, never the tagged {text, unverified, ...} object form
- * (see js/ai-rewrite.js's isPlainStringField), so a test asserting the
+ * (see js/ai/ai-rewrite.js's isPlainStringField), so a test asserting the
  * Unverified pill needs a paragraph/bullet ITEM specifically — matched by
  * ".paragraphs." or ".bullets." with a trailing index, not just any path
  * starting with "sections.", which a heading path also does.
@@ -231,7 +231,7 @@ test.describe('AI rewrite', () => {
   test('rewriting the page title writes a plain string, not an unverified pill', async ({
     page,
   }) => {
-    // Regression coverage: js/page-render.js's renderHero() emits
+    // Regression coverage: js/mockup/page-render.js's renderHero() emits
     // data-rewrite-field="title" on the hero <h1> for the inline-content-
     // editing feature. Before this fix, applyResult() unconditionally wrote
     // the {text, unverified, ...} object form paragraphs/bullets accept —
@@ -258,7 +258,7 @@ test.describe('AI rewrite', () => {
     await page.click('#aiRewriteRun')
     await page.click('#aiRewriteApply')
 
-    // decorateEditedFields() (js/inline-content-edit.js) also appends the
+    // decorateEditedFields() (js/editing/inline-content-edit.js) also appends the
     // "Edited"/"Reset to original" badge markup inside this <h1> once it
     // differs from ORIGINAL_DATA, so the full text is not JUST the rewrite.
     await expect(page.locator('#mockPage h1')).toContainText(REWRITTEN)

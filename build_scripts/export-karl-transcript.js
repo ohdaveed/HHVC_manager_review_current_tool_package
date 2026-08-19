@@ -1,6 +1,6 @@
 // Write one paste-ready Karl transcript per page into review/karl-transcripts/.
 //
-// A thin CLI over js/karl-transcript.js — every judgement about what an editor
+// A thin CLI over js/karl/karl-transcript.js — every judgement about what an editor
 // is told to type lives there, so this file only loads the corpus, renders, and
 // writes.
 //
@@ -13,7 +13,7 @@
 const fs = require('fs')
 const path = require('path')
 const { loadPageData, root } = require('./load-pages')
-const { buildTranscript, renderTranscriptMarkdown } = require('../js/karl-transcript.js')
+const { buildTranscript, renderTranscriptMarkdown } = require('../js/karl/karl-transcript.js')
 
 const OUT_DIR = path.join(root, 'review', 'karl-transcripts')
 

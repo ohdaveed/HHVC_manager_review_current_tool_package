@@ -198,7 +198,7 @@ and Information. The Document icon is a _separate_ "Choose a document" modal, no
 pages** sit on a field that publishes a title and a link and nothing else, counting Transaction and
 Information sections whose `karl` note names a Related field or panel. The figure moves with the cut
 you take: 83 cards across 24 pages for every Related-naming section regardless of type, and 111
-across 25 for the whole `title-only` bucket as `js/card-inheritance.js` classifies it. An earlier
+across 25 for the whole `title-only` bucket as `js/core/card-inheritance.js` classifies it. An earlier
 draft said "roughly 34" without naming a cut, which is how a number ends up unfalsifiable — and the
 spread between these three is why the cut has to travel with the figure. See "Card inheritance"
 below, which is how the renderer already handles it.
@@ -770,7 +770,7 @@ Field lists only — no HHVC page is heading toward any of these.
 ## Card inheritance — the rule that keeps a description from being invented
 
 Requirement 5 has a second half that lives in this repo rather than in Karl: what a card _publishes_.
-`js/card-inheritance.js` is the one classifier, shared by the browser renderer and
+`js/core/card-inheritance.js` is the one classifier, shared by the browser renderer and
 `build_scripts/audit-card-inheritance.js` so the two cannot drift. It keys on the section's `karl`
 note, **not** on `section.component` — a first version keyed on `component` and would have blanked
 table blocks and title-and-text blocks (74 of its 98 findings sat in sections carrying no

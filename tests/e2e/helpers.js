@@ -22,17 +22,17 @@ async function gotoFresh(page, path = '/?page=pestsTopic') {
   // The sticky review bar mounts a beat after the first render; most flows
   // (workspace toggling, w shortcut) need it, so wait for full app init.
   await page.waitForSelector('[data-sticky-action="toggle-workspace"]')
-  // ...but the sticky bar is mounted by js/ux-improvements.js, which runs
-  // EARLY in the DOMContentLoaded cascade. js/keyboard-shortcuts.js is the last
+  // ...but the sticky bar is mounted by js/review/ux-improvements.js, which runs
+  // EARLY in the DOMContentLoaded cascade. js/review/keyboard-shortcuts.js is the last
   // script in index.html and attaches its keydown listener in its own init, so
   // waiting for it is what actually makes "full app init" true. Without this a
   // test could press a global shortcut into a document with no handler yet.
   await waitForShortcuts(page)
 }
 
-// Wait until js/keyboard-shortcuts.js has actually attached its keydown
+// Wait until js/review/keyboard-shortcuts.js has actually attached its keydown
 // listener. The sticky bar that gotoFresh waits for is mounted by
-// js/ux-improvements.js, which initializes EARLIER in the DOMContentLoaded
+// js/review/ux-improvements.js, which initializes EARLIER in the DOMContentLoaded
 // cascade, so it is a proxy for "the app booted", not for "a keypress will be
 // handled". Any test that presses a global shortcut must await this first or
 // it is racing the listener.
@@ -164,7 +164,7 @@ async function openSearchMetadata(page) {
   await page.locator('#seoTitleInput').waitFor({ state: 'visible' })
 }
 
-// Field persistence is debounced 300ms (js/ux-improvements.js); wait it out.
+// Field persistence is debounced 300ms (js/review/ux-improvements.js); wait it out.
 async function settleDebounce(page) {
   await page.waitForTimeout(400)
 }
@@ -172,7 +172,7 @@ async function settleDebounce(page) {
 /**
  * Put keyboard focus somewhere the global shortcuts will actually fire.
  *
- * js/keyboard-shortcuts.js gates every shortcut on isShortcutContext(): the
+ * js/review/keyboard-shortcuts.js gates every shortcut on isShortcutContext(): the
  * focused element must sit inside #reviewWorkspace, .canvas-toolbar or
  * #mockPage. That is deliberate — it stops single-letter shortcuts firing
  * while a reviewer types in the sidebar — so a test that presses a key
@@ -192,7 +192,7 @@ async function focusMockPage(page) {
   // data-rewrite-field="title" (inline content editing), so a real click
   // opens that field's inline editor instead of merely moving keyboard
   // focus — swallowing every subsequent shortcut press, since the editor's
-  // <input> matches js/keyboard-shortcuts.js's isTypingContext() guard.
+  // <input> matches js/review/keyboard-shortcuts.js's isTypingContext() guard.
   // .focus() sets DOM focus directly with no click event, so it still lands
   // focus inside #mockPage (satisfying isShortcutContext()) without
   // triggering the click-to-edit handler at all.
@@ -201,9 +201,9 @@ async function focusMockPage(page) {
 
 // Locate the live Editor.js contenteditable block for whichever field is
 // currently open, and wait for it to actually hold focus. openEditorJsEditor
-// (js/inline-content-edit.js) sets autofocus: true, but that only lands once
+// (js/editing/inline-content-edit.js) sets autofocus: true, but that only lands once
 // editor.isReady resolves — a real async gap, since @editorjs/editorjs is
-// dynamically imported on first use (js/inline-content-edit.js's
+// dynamically imported on first use (js/editing/inline-content-edit.js's
 // loadEditorJs()) — so waiting on toBeFocused() rather than just visibility
 // is what actually proves the editor mounted rather than racing it.
 async function editorJsBlock(page) {
@@ -255,7 +255,7 @@ async function commitEditorJsField(page) {
 }
 
 // Select `word` inside the open Editor.js block and click the resulting
-// Link inline-toolbar button (js/inline-content-edit-link-tool.js), all
+// Link inline-toolbar button (js/editing/inline-content-edit-link-tool.js), all
 // inside ONE page.evaluate() call. This has to happen in a single browser-
 // side round trip, not as separate Playwright locator actions: Editor.js's
 // inline toolbar visibility is driven by the native 'selectionchange'
@@ -412,7 +412,7 @@ async function addInlineLink(page, word, target) {
 //
 // addInlineLink() reports only that it managed to press Enter, which was
 // enough while every target was accepted. Now that a target pointing nowhere
-// is REFUSED (js/inline-content-edit-link-tool.js's commitLink()), a test has
+// is REFUSED (js/editing/inline-content-edit-link-tool.js's commitLink()), a test has
 // to distinguish "the link was inserted" from "the input is still open,
 // holding what was typed, marked invalid" — which is the whole refusal
 // contract in one object.
@@ -441,7 +441,7 @@ async function readLinkInputState(page) {
 // appending the element directly, and the difference is not cosmetic: it was
 // measured. An anchor appended programmatically is stripped by Editor.js's own
 // blur cleanup before commit() ever reads the value (the same cleanup
-// js/inline-content-edit-link-tool.js's LinkCommitBridge exists to work
+// js/editing/inline-content-edit-link-tool.js's LinkCommitBridge exists to work
 // around), so it never reaches the adapter and never exercises the refusal. A
 // pasted one goes through Editor.js's paste pipeline and its sanitizer — which
 // this tool's sanitize() config permits data-render-target through — and
@@ -501,12 +501,12 @@ async function readBrokenLinkNotice(page) {
 
 // Type additional text into the currently-open Editor.js block right after
 // addInlineLink() has committed a link, but BEFORE the field is blurred —
-// the exact window in which js/inline-content-edit.js's commit() used to
+// the exact window in which js/editing/inline-content-edit.js's commit() used to
 // silently discard anything typed, since it always preferred the ONE-TIME
-// HTML snapshot js/inline-content-edit-link-tool.js's commitLink() stashed
+// HTML snapshot js/editing/inline-content-edit-link-tool.js's commitLink() stashed
 // at link-insertion time over the live editor state. Appends extraText as a
 // plain text node at the end of the block and dispatches a real, bubbling
-// 'input' event — the same event js/inline-content-edit.js's holder-level
+// 'input' event — the same event js/editing/inline-content-edit.js's holder-level
 // 'input' listener (added to fix that gap) re-syncs the stash on. Returns
 // the stash's live value so a test can assert the fix actually ran, not
 // just that the final commit happened to look right.

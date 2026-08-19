@@ -22,12 +22,12 @@ const path = require('node:path')
 const ROOT = path.resolve(__dirname, '..')
 
 describe('require() of build_scripts/data-checks.js', () => {
-  // data-checks.js is CommonJS and `require()`s js/utils.js, which is an ES
+  // data-checks.js is CommonJS and `require()`s js/core/utils.js, which is an ES
   // module, so `findUnsafeUrls` and the renderer share one safeUrl rather than
-  // two copies that could drift. Bun allows that only while js/utils.js is
+  // two copies that could drift. Bun allows that only while js/core/utils.js is
   // SYNCHRONOUSLY evaluable: it rejects `require()` of an async module. A
   // top-level await that actually defers — `await import(...)`, an awaited
-  // timer — makes js/utils.js async and breaks `bun run validate` outright,
+  // timer — makes js/core/utils.js async and breaks `bun run validate` outright,
   // with a TypeError naming neither validate nor the page data.
   //
   // Measured, because the boundary is narrower than "no top-level await":
@@ -37,8 +37,8 @@ describe('require() of build_scripts/data-checks.js', () => {
   //
   // It runs in a SUBPROCESS on purpose, and two cheaper versions of this test
   // were written first and both passed against a deliberately broken
-  // js/utils.js. In-process assertions cannot work here: any sibling test file
-  // that ESM-imports js/utils.js leaves it evaluated and cached, so a later
+  // js/core/utils.js. In-process assertions cannot work here: any sibling test file
+  // that ESM-imports js/core/utils.js leaves it evaluated and cached, so a later
   // `require()` of it succeeds no matter what. Only a fresh process reproduces
   // what `bun run validate` actually does.
   //
@@ -46,7 +46,7 @@ describe('require() of build_scripts/data-checks.js', () => {
   // safeUrl. It is the XSS scheme guard, its own comment warns that failing in
   // one of its two execution contexts is worse than not existing, and on the browser side every
   // dual-export module in js/ is read off `window` rather than named-imported,
-  // so extracting it would push js/page-render.js onto window indirection.
+  // so extracting it would push js/mockup/page-render.js onto window indirection.
   test('loads in a fresh Bun process without an async-module error', () => {
     // process.execPath, not 'bun': this guards behaviour that CHANGED between
     // Bun versions, so resolving the runtime through PATH could test a
@@ -66,7 +66,7 @@ describe('require() of build_scripts/data-checks.js', () => {
       // hint is added when it applies, rather than being the only path that
       // surfaces anything.
       const hint = stderr.includes('async module')
-        ? '\n\nLikely cause: a DEFERRING top-level await was added to js/utils.js or something it imports. Remove it — do not restructure safeUrl (see the comment above this test).'
+        ? '\n\nLikely cause: a DEFERRING top-level await was added to js/core/utils.js or something it imports. Remove it — do not restructure safeUrl (see the comment above this test).'
         : ''
       throw new Error(
         `require('build_scripts/data-checks.js') failed in a fresh ${process.execPath} ` +
@@ -98,7 +98,7 @@ function validData(pageOverrides = {}) {
 }
 
 describe('page type union', () => {
-  // `type` selects the Karl panel inventory in js/karl-blocks.js, so a typo'd
+  // `type` selects the Karl panel inventory in js/karl/karl-blocks.js, so a typo'd
   // value would export an EMPTY transcript rather than erroring — an outcome
   // that reads like a page with no content instead of like a bug. That is why
   // the field is a closed union rather than the open z.string() it used to be.
@@ -377,7 +377,7 @@ describe('findBrokenInlineLinks', () => {
   })
 
   // The three cases below pin this function at the boundary it shares with
-  // js/inline-link-target.js. The predicate has its own exhaustive unit file;
+  // js/mockup/inline-link-target.js. The predicate has its own exhaustive unit file;
   // what these add is coverage of the CALLER, because extracting the rule
   // changed exactly one thing here — targets are now trimmed before testing —
   // and a corpus that happens to carry no padded target cannot show that.
@@ -918,7 +918,7 @@ describe('findUnmappedSections', () => {
     // destination: decide the destination, or open a register entry and add
     // its shape rule. Do not widen an existing rule to make it green.
     const { loadPageData } = require('../build_scripts/load-pages.js')
-    const { UNRESOLVED } = require('../js/karl-blocks.js')
+    const { UNRESOLVED } = require('../js/karl/karl-blocks.js')
     expect(findUnmappedSections(loadPageData().pages, UNRESOLVED)).toEqual([])
   })
 })
@@ -941,7 +941,7 @@ describe('transcript over-coverage', () => {
   // count.
   test('no section is emitted twice into the same scope', () => {
     const { loadPageData } = require('../build_scripts/load-pages.js')
-    const { buildTranscript } = require('../js/karl-transcript.js')
+    const { buildTranscript } = require('../js/karl/karl-transcript.js')
     const pages = loadPageData().pages
 
     const collisions = []

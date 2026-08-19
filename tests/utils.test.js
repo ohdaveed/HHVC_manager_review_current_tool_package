@@ -1,11 +1,11 @@
 import { describe, test, expect } from 'bun:test'
 
-// js/utils.js is an ES module now, so its helpers are imported directly
+// js/core/utils.js is an ES module now, so its helpers are imported directly
 // instead of being evaluated into a vm context by the old load-scripts
 // harness. `ctx` is kept as the local name so the assertions below read
 // unchanged.
-import * as ctx from '../js/utils.js'
-import { getByPath, setByPath, REVIEW_RECORD_FIELDS, buildReviewRecord } from '../js/utils.js'
+import * as ctx from '../js/core/utils.js'
+import { getByPath, setByPath, REVIEW_RECORD_FIELDS, buildReviewRecord } from '../js/core/utils.js'
 
 describe('safeUrl', () => {
   test('passes through absolute http and https URLs unchanged', () => {

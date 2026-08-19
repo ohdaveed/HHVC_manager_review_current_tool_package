@@ -38,7 +38,7 @@ all `#mockPage` — is untouched plain JS and string templates.
   one dark media block and no `data-theme` selector, so an independently owned
   `mode` would leave the workspace light inside a dark panel.
 - **Islands load on demand**, via a dynamic `import()` from
-  `js/ux-improvements-state-sync.js`: React, React DOM, Emotion and MUI land in
+  `js/review/ux-improvements-state-sync.js`: React, React DOM, Emotion and MUI land in
   their own chunk (318 kB raw / 103 kB gzip) and the initial chunk did not grow.
   Same reasoning as ECharts.
 - **A React root and `innerHTML` cannot share a host**, so each island gets its

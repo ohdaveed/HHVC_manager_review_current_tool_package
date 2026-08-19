@@ -1,5 +1,5 @@
 const { describe, test, expect } = require('bun:test')
-const { mergeReviewRecord, reviewContentEquals } = require('../js/review-merge.js')
+const { mergeReviewRecord, reviewContentEquals } = require('../js/review/review-merge.js')
 
 describe('mergeReviewRecord', () => {
   test('patch fields overwrite existing fields, unrelated fields untouched', () => {

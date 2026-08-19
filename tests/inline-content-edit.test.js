@@ -1,4 +1,4 @@
-// Unit tests for js/inline-content-edit.js — the click-to-edit orchestrator
+// Unit tests for js/editing/inline-content-edit.js — the click-to-edit orchestrator
 // for SCALAR fields (title, summary, primaryCta, section heading, a single
 // paragraph, a single bullet), plus Task 7's add/remove/undo/reset controls
 // and the post-render decoration entry points.
@@ -28,36 +28,36 @@
 // commit path anymore for any field, single-line or not — Editor.js traps
 // Enter inside its own single-block guard — so every commit test uses a
 // focusout, matching openEditorJsEditor's holder-level 'focusout' listener
-// (js/inline-content-edit.js) rather than a 'blur' dispatched directly on a
+// (js/editing/inline-content-edit.js) rather than a 'blur' dispatched directly on a
 // widget the way the old tests did.
 //
-// js/inline-content-edit.js is a self-mounting IIFE (no module.exports), so
+// js/editing/inline-content-edit.js is a self-mounting IIFE (no module.exports), so
 // each test imports it via a cache-busting dynamic import() to get a fresh
 // closure (editingPath state must not leak between tests) — same pattern
 // tests/inline-content-edit-refresh.test.js uses for its own IIFE-shaped
 // module under test.
 const { describe, test, expect, beforeEach, afterEach } = require('bun:test')
 const path = require('path')
-const realUtils = require('../js/utils.js')
-const realInlineEditData = require('../js/inline-content-edit-data.js')
-require('../js/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
+const realUtils = require('../js/core/utils.js')
+const realInlineEditData = require('../js/editing/inline-content-edit-data.js')
+require('../js/mockup/inline-link-target.js') // side-effect: populates window.inlineLinkTarget,
 // which commit() and the link tool both consult before accepting a link target.
-require('../js/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
-require('../js/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
-require('../js/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
-// Imported once at file scope, not inside a test: js/ui-controls.js statically
-// imports js/state.js, which side-effect-loads the REAL js/page-data.js (all
+require('../js/editing/inline-content-edit-render.js') // side-effect: populates window.InlineEdit.render
+require('../js/editing/inline-content-edit-link-tool.js') // side-effect: populates window.InlineEdit.LinkTool
+require('../js/editing/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
+// Imported once at file scope, not inside a test: js/review/ui-controls.js statically
+// imports js/core/state.js, which side-effect-loads the REAL js/core/page-data.js (all
 // 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
 // real dataset the moment it first runs. Importing it here, before any test's
 // beforeEach/mountInlineContentEdit stub assigns the test-scoped
 // window.HHVC_DATA, means that one-time real-data clobber happens up front and
 // every test's own stub assignment (which always runs after this point) wins.
 // Requiring it again inside a test returns the cached module with no further
-// side effect, so this also documents why later `require('../js/ui-controls.js')`
+// side effect, so this also documents why later `require('../js/review/ui-controls.js')`
 // calls in the tests below are safe.
-const { showToast: realShowToast } = require('../js/ui-controls.js')
+const { showToast: realShowToast } = require('../js/review/ui-controls.js')
 
-const MODULE_PATH = path.resolve(__dirname, '../js/inline-content-edit.js')
+const MODULE_PATH = path.resolve(__dirname, '../js/editing/inline-content-edit.js')
 
 let originalInlineEdit
 let originalHHVCData
@@ -89,7 +89,7 @@ afterEach(() => {
 })
 
 /**
- * Mount a fresh instance of js/inline-content-edit.js against the real
+ * Mount a fresh instance of js/editing/inline-content-edit.js against the real
  * happy-dom window/document, with a stubbed window.HHVC_DATA, renderPage,
  * and ReviewUx.stateSync.saveCurrentPageToLocalStorage — the three seams
  * the orchestrator reaches through.
@@ -204,8 +204,8 @@ async function setEditorBlockText(mockPage, text, { settle = 100 } = {}) {
 /** Commit the open field via focusout — openEditorJsEditor's holder-level
     'focusout' listener is what calls commit(), same as a reviewer blurring
     away in a real browser. No relatedTarget means "focus left the editor
-    entirely", which is what a genuine commit needs (js/inline-content-
-    edit.js's holder.contains(nextFocus) guard). Waits for the same
+    entirely", which is what a genuine commit needs (js/editing/inline-content-edit.js's
+    holder.contains(nextFocus) guard). Waits for the same
     post-isReady settle setEditorBlockText does (see its comment) before
     dispatching — this is also the only wait point for tests that open a
     field and commit it WITHOUT calling setEditorBlockText in between (e.g.
@@ -318,7 +318,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
   })
 
   test('clicking a hero CTA rendered as an external <a href> opens the editor and prevents navigation', async () => {
-    // Matches what js/page-render.js actually produces: data-rewrite-field
+    // Matches what js/mockup/page-render.js actually produces: data-rewrite-field
     // sits on the WRAPPING <div class="hero-cta">, not on the anchor, and
     // button() renders a real navigating <a href target="_blank"> for a CTA
     // with a buttonUrl (e.g. mosquito-education-workshop.js). Without a
@@ -368,7 +368,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
     // an `a[href]` ancestor — a no-op for this button, which has none — so it
     // never calls preventDefault() itself either way. But defaultPrevented is
     // a property of the shared event object, not of this module: in the real
-    // app, js/page-render.js's own document-level click listener ALSO
+    // app, js/mockup/page-render.js's own document-level click listener ALSO
     // matches `button[data-render-target]` and unconditionally calls
     // preventDefault() on it, for entirely unrelated SPA-navigation reasons.
     // Whether that listener happens to be registered in this Bun process
@@ -380,7 +380,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
 
   test('clicking an inline reference link inside a paragraph opens that paragraph editor and prevents navigation', async () => {
     // The hero CTA isn't the only place a navigating anchor sits inside a
-    // [data-rewrite-field] element. formatMarkdown() (js/page-render.js)
+    // [data-rewrite-field] element. formatMarkdown() (js/mockup/page-render.js)
     // turns a [label](https://...) markdown link in body copy into
     // <a class="inline-link" href="..." target="_blank" rel="noopener
     // noreferrer">, rendered directly inside the <p data-rewrite-field=
@@ -726,7 +726,7 @@ describe('inline content edit: click-to-edit for scalar fields', () => {
   test('committing title/summary/primaryCta as blank is refused and the field keeps its value', async () => {
     // Regression coverage: writeScalarValue accepted an empty string for
     // these three fields, but updateMockupTextFromSavedState
-    // (js/ux-improvements-state-sync.js) only reapplies a TRUTHY saved
+    // (js/review/ux-improvements-state-sync.js) only reapplies a TRUTHY saved
     // value, so a cleared field looked saved for the session and then
     // silently reverted to the authored value on the next reload. This
     // guard is exercised end to end in tests/e2e/inline-content-edit.spec.js
@@ -1057,7 +1057,7 @@ describe('inline content edit: add/remove/undo for paragraph and bullet arrays',
     const persistCallsAfterRemove = getPersistCalls()
 
     // Simulate navigating to a different page before the undo toast is
-    // clicked — getCurrentKey() is the seam js/ux-improvements.js's real
+    // clicked — getCurrentKey() is the seam js/review/ux-improvements.js's real
     // navigation flips.
     window.utils.getCurrentKey = () => 'otherPage'
 
@@ -1247,7 +1247,7 @@ describe('inline content edit: decorateListControls appends add/remove controls 
   })
 
   test('a bullets array with zero items still gets an add control, anchored to the section heading (no dead end)', async () => {
-    // No <ul> at all: bulletList() in js/page-render.js renders '' for an
+    // No <ul> at all: bulletList() in js/mockup/page-render.js renders '' for an
     // empty array, whether the list was just emptied via the remove control
     // or authored empty — both cases produce the same DOM shape this test
     // exercises.
@@ -1384,7 +1384,7 @@ describe('inline content edit: decorateEditedFields applies the Edited badge and
 
 describe('inline content edit: decoration controls are excluded from PNG export', () => {
   test('add, remove, edited-badge, and reset controls all carry data-export-exclude', () => {
-    // js/mockup-image-export.js's capture filter skips any node carrying
+    // js/mockup/mockup-image-export.js's capture filter skips any node carrying
     // data-export-exclude — every persistent decoration control this module
     // renders must carry it, or it leaks into a reviewer's exported PNG
     // (which is meant to represent the page under review, not this tool's
@@ -1401,7 +1401,7 @@ describe('inline content edit: decoration controls are excluded from PNG export'
 
 describe('InlineEdit.LinkCommitBridge', () => {
   // window.InlineEdit.LinkCommitBridge is populated once, at file-load time,
-  // by the top-of-file `require('../js/inline-content-edit-link-tool.js')`
+  // by the top-of-file `require('../js/editing/inline-content-edit-link-tool.js')`
   // side effect — it is not per-test state and needs no cache-busting import
   // the way the orchestrator itself does.
   test('take() returns the HTML stash()ed for the same holder element', () => {

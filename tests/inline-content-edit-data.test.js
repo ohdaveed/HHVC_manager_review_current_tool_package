@@ -1,7 +1,7 @@
 // Pure logic for section-level inline edits: computing the section_edits
 // diff against ORIGINAL_DATA, and reapplying a saved section_edits map onto
-// a live page object. No DOM — dual-exported like js/review-merge.js and
-// js/plain-language.js so this file is importable directly under Bun.
+// a live page object. No DOM — dual-exported like js/review/review-merge.js and
+// js/standards/plain-language.js so this file is importable directly under Bun.
 const { describe, test, expect } = require('bun:test')
 const {
   computeSectionEdits,
@@ -9,7 +9,7 @@ const {
   EDITABLE_FIELD_SHAPES,
   editableFieldKind,
   editableItemKind,
-} = require('../js/inline-content-edit-data.js')
+} = require('../js/editing/inline-content-edit-data.js')
 
 describe('EDITABLE_FIELD_SHAPES', () => {
   // Every path shape a reviewer can edit on the mockup, and the value shape
@@ -18,7 +18,7 @@ describe('EDITABLE_FIELD_SHAPES', () => {
   // absent here renders an editor, accepts keystrokes, and then loses them
   // on the next load, because computeSectionEdits never records the field.
   // That is not hypothetical — step text was in exactly that state (stamped
-  // by js/page-render.js since the AI-rewrite work, never recorded here),
+  // by js/mockup/page-render.js since the AI-rewrite work, never recorded here),
   // which is why the list is now asserted whole rather than by example.
   test('covers section, step, table, and page-level text containers', () => {
     const kinds = Object.fromEntries(
@@ -88,7 +88,7 @@ describe('editableItemKind', () => {
 
   test('reports plainString for table cells and string-array items', () => {
     // A contact entry and a table cell go through escapeHtml() directly in
-    // js/page-render.js, so the tagged object would print as "[object
+    // js/mockup/page-render.js, so the tagged object would print as "[object
     // Object]".
     expect(editableItemKind('sections.0.table.1.2')).toBe('plainString')
     expect(editableItemKind('contact.phone.0')).toBe('plainString')
@@ -215,7 +215,7 @@ describe('applyContentEditsToPageData', () => {
   })
 
   // The return value drives a FOLLOW-UP RENDER in applySavedPageState()
-  // (js/ux-improvements-state-sync.js): true means "the DOM the reviewer is
+  // (js/review/ux-improvements-state-sync.js): true means "the DOM the reviewer is
   // looking at is now stale". It used to mean "setByPath resolved a path",
   // which is true on every call for any page that has ever had a section
   // edit saved — so the render fired unconditionally, and a render replaces
@@ -345,7 +345,7 @@ describe('applyContentEditsToPageData', () => {
 
   test('skips an entry whose path is outside the heading/paragraphs/bullets contract', () => {
     // Defense-in-depth: build_scripts/review-state-schema.js and
-    // js/review-state-validation.js already filter these before a record
+    // js/review/review-state-validation.js already filter these before a record
     // reaches here, but this function must not trust that unconditionally.
     const page = freshPage()
     applyContentEditsToPageData(page, {
@@ -387,7 +387,7 @@ describe('applyContentEditsToPageData', () => {
 })
 
 // The containers beyond heading/paragraphs/bullets. Steps are the case that
-// motivated this: js/page-render.js has stamped
+// motivated this: js/mockup/page-render.js has stamped
 // data-rewrite-field="sections.N.steps.M.text.K" since the AI-rewrite work,
 // so the editor opened on a step paragraph and accepted the edit — and
 // computeSectionEdits never recorded it, so it was gone on the next load

@@ -15,7 +15,7 @@ const { loadPageData } = require('./load-pages')
 // works because every build script here runs under Bun (see package.json's
 // export/sync-tracking/push-tracking scripts) — the same crossing
 // build_scripts/data-checks.js already makes for safeUrl.
-const { defaultSeoTitle, defaultMetaDescription, getPrimaryCta } = require('../js/utils.js')
+const { defaultSeoTitle, defaultMetaDescription, getPrimaryCta } = require('../js/core/utils.js')
 
 const root = path.resolve(__dirname, '..')
 const data = loadPageData()

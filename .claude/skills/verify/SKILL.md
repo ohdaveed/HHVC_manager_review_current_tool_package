@@ -76,7 +76,7 @@ review-queue behavior — seed the state first:
 
 ## Observing renders
 
-Everything renders through `window.renderPage` — `js/app.js`'s navigation, the
+Everything renders through `window.renderPage` — `js/core/app.js`'s navigation, the
 inline-edit module's own `rerender()`, and `applySavedPageState`'s follow-up —
 so one wrapper captures every caller:
 

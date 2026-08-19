@@ -30,7 +30,7 @@ page. Copy the nearest existing page of the same content type and change it;
 that is faster and safer than writing one from scratch, and it keeps the house
 voice. A new file needs two more edits or the page silently disappears:
 
-1. `import '../pages/<your-file>.js'` in `js/page-data.js`
+1. `import '../pages/<your-file>.js'` in `js/core/page-data.js`
 2. a `[pageKey, menuLabel]` entry in that file's `order` array
 
 `bun run validate` fails if you forget the import, so you will find out
@@ -93,14 +93,14 @@ placement in a `karl` note rather than relying on that field to show up.
 Karl's own help text is the rule: a title is _"descriptive, short, and in
 sentence case"_; a description _"should start with key words and help the user
 decide to read further."_ Copy is plain-language, roughly Grade 6, written for
-tenants. The Checks panel scores both, and `js/plain-language.js` cites the
+tenants. The Checks panel scores both, and `js/standards/plain-language.js` cites the
 standards manual section behind each failure.
 
 ### The `karl` note is not a comment — it decides what renders
 
 **Read this before writing any section.** Every section carries a required
 `karl` string describing which Karl block it maps to. It is content, not
-commentary: `js/card-inheritance.js` reads the wording of that string to decide
+commentary: `js/core/card-inheritance.js` reads the wording of that string to decide
 whether a section's cards show their own text, only their title, or the
 destination page's title and summary.
 

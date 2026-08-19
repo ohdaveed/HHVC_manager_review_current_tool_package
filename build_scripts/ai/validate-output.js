@@ -10,7 +10,7 @@
 //   1. build_scripts/schema.js  — the Zod shape validate.js uses.
 //   2. build_scripts/data-checks.js — the business invariants (link targets
 //      resolve, lists of 3+ use bullets, the Agency page stays in scope).
-//   3. js/plain-language.js — the written content standards.
+//   3. js/standards/plain-language.js — the written content standards.
 const { pageSchema } = require('../schema')
 const {
   findBrokenCardTargets,
@@ -20,7 +20,7 @@ const {
   findListFormatViolations,
   findUnsafeUrls,
 } = require('../data-checks')
-const { analyzePlainLanguage } = require('../../js/plain-language.js')
+const { analyzePlainLanguage } = require('../../js/standards/plain-language.js')
 
 // Same list validate.js applies. HHVC's remit is Health Code Article 11;
 // structural problems belong to the Department of Building Inspection.
@@ -243,7 +243,7 @@ function validateRewrite(result, fieldText, pageType) {
   }
 
   // Run the same content-standards mandates a full page draft is held to
-  // (js/plain-language.js), scoped to just this field's text via a
+  // (js/standards/plain-language.js), scoped to just this field's text via a
   // single-paragraph synthetic page — a rewrite that adds a contraction, a
   // prohibited term, or an overlong sentence previously validated clean
   // because nothing here checked prose quality at all, only shape.

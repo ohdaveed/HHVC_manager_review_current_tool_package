@@ -1,12 +1,12 @@
 // Coverage for the PNG export filename contract.
 //
-// buildFilename is the part of js/mockup-image-export.js that reviewers
+// buildFilename is the part of js/mockup/mockup-image-export.js that reviewers
 // actually depend on: exports pile up in a downloads folder, and a name that
 // does not sort or identify cleanly makes a batch of 19 captures useless. The
 // capture itself needs a real browser and is covered by
 // tests/e2e/mockup-image-export.spec.js.
 const { describe, test, expect } = require('bun:test')
-const { buildFilename } = require('../js/mockup-image-export.js')
+const { buildFilename } = require('../js/mockup/mockup-image-export.js')
 
 describe('buildFilename', () => {
   test('combines the page key and date into a sortable PNG name', () => {
