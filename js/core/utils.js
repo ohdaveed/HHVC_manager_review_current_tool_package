@@ -148,13 +148,7 @@ function zeroDecisionTally() {
   return Object.fromEntries(DECISION_LABELS.map((label) => [label, 0]))
 }
 
-/**
- * Parse Markdown to HTML and sanitize it against XSS.
- * Falls back to plain text escaping if parsing fails or libraries are missing.
- * @param {string} rawString
- * @returns {string} Safe HTML string.
- */
-let cachedMarkedInstance = null
+let _cachedMarkedInstance = null
 
 /**
  * Parse Markdown to HTML and sanitize it against XSS.
@@ -173,11 +167,11 @@ function safeMarkdown(rawString) {
   }
 
   try {
-    if (!cachedMarkedInstance) {
+    if (!_cachedMarkedInstance) {
       if (typeof window.marked.Marked === 'function') {
-        cachedMarkedInstance = new window.marked.Marked()
+        _cachedMarkedInstance = new window.marked.Marked()
       } else {
-        cachedMarkedInstance = window.marked
+        _cachedMarkedInstance = window.marked
       }
       const renderer = new window.marked.Renderer()
       renderer.link = ({ href, text }) => {
@@ -186,11 +180,11 @@ function safeMarkdown(rawString) {
         }
         return `<button type="button" class="inline-link" data-render-target="${href}">${text}</button>`
       }
-      cachedMarkedInstance.use({ renderer })
+      _cachedMarkedInstance.use({ renderer })
     }
 
     // parseInline prevents wrapping the output in <p> tags
-    const rawHtml = cachedMarkedInstance.parseInline(text)
+    const rawHtml = _cachedMarkedInstance.parseInline(text)
 
     // **An explicit allowlist, not DOMPurify's default one.** The default
     // permits `<img>`, and `marked.parseInline` emits one for `![alt](url)` —
