@@ -176,8 +176,22 @@ only the third is difficult:
 
 Some `window` publishing is the design and stays, documented as such:
 
-- `window.renderPage` — `js/ux-improvements.js` wraps it to refresh after
-  navigation, and the decorator only forms if the original is on `window`.
+- ~~`window.renderPage`~~ — **struck 2026-08-19 after measurement.** This entry
+  and this section's own commitment that cycles are "broken, not translated"
+  could not both hold. `window.renderPage` is responsible for **24 of the
+  intra-SCC edges** in the one 16-file cycle cluster the graph contains — the
+  largest single contributor, and dropping it plus `showToast` shrinks that
+  cluster to 12 files. Keeping it guarantees the cycles this section exists to
+  remove.
+
+  **Resolution: a post-render hook registry.** `js/mockup/page-render.js`
+  exports `onAfterRender(fn)`; `js/review/ux-improvements.js` registers a
+  callback instead of monkey-patching a global. Callers plainly
+  `import { renderPage }`. This inverts the dependency — `page-render.js` then
+  depends on none of its subscribers — which is what actually breaks the
+  cluster. A hook registry rather than a custom event because an event name is
+  a string: a typo fails silently, and silent under-coverage is the failure
+  mode this repo has hit four times already.
 - `window.toggleSidebar` — an inline `onclick` in `index.html`.
 - `window.ORIGINAL_DATA`, `window.HHVC_PAGES`, `window.HHVC_DATA` — the page
   data contract, read by `js/review-state-sync.js` among others.
@@ -201,6 +215,26 @@ hubs last. A hub converted early cannot land cycle-free, and `no-circular` at
 
 `js/main.js`'s listed order and its explanatory comments are removed
 incrementally, each entry as the file it names stops depending on position.
+
+### What measurement changed about this section
+
+Measured 2026-08-19 against the post-move tree
+(`docs/superpowers/specs/2026-08-19-module-coherence-measurement.md`). Three
+corrections to what this section assumed:
+
+- **The cycles are a policy problem, not a runtime one.** Edges split 78
+  mount-time / 120 call-time, and **the mount-time edges form zero cycles** —
+  that subgraph is a DAG, which is what `js/main.js`'s hand-maintained order
+  has been encoding all along. Every cycle runs through a call-time edge, which
+  ES modules resolve correctly through function hoisting. What makes cycles
+  fatal here is `no-circular` at `severity: 'error'`, not the browser.
+- **Most of the work is not work.** There is exactly **one** strongly connected
+  component, of 16 files. The other **42 of 58 convert cleanly** with no design
+  decision attached.
+- **The hazard count is 36, not "roughly five".** Thirty-six value reads happen
+  at import time in the 31 mount bodies, and **12 of them are the single
+  pattern `const DATA = window.HHVC_DATA`**. That one substitution is the
+  highest-leverage change in the section.
 
 ### The invariant
 
