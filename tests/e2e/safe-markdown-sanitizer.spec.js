@@ -60,6 +60,9 @@ test.describe('safeMarkdown sanitizer allowlist (real browser)', () => {
     const onerror = await render(page, '<img src=x onerror="alert(1)">')
     expect(onerror).not.toContain('onerror')
     expect(onerror).not.toContain('<img')
+    // Mutation-proven 2026-08-20: adding 'onclick' to ALLOWED_ATTR fails this
+    // test. The <img> assertions above stay green under that same mutation,
+    // which is why they were not sufficient on their own.
     const onclick = await render(page, '<span onclick="alert(1)">text</span>')
     expect(onclick).not.toContain('onclick')
     expect(onclick).toContain('<span')
@@ -68,6 +71,14 @@ test.describe('safeMarkdown sanitizer allowlist (real browser)', () => {
   // Block-level elements DOMPurify's default admits and this renderer has never
   // produced from inline markdown. Asserting their absence is what stops the
   // allowlist being widened without a decision.
+  //
+  // The <h1> is supplied as RAW HTML, and has to be. safeMarkdown calls
+  // marked.parseInline(), which never turns the `# Heading` block syntax beside
+  // it into a heading — so driven by that markdown alone DOMPurify would receive
+  // no h1 at all, the assertion would pass vacuously, and it would KEEP passing
+  // if h1 were later added to ALLOWED_TAGS. That is the exact regression this
+  // test exists to catch. Mutation-proven 2026-08-20: adding 'h1' to
+  // ALLOWED_TAGS fails this test, and did not fail its markdown-driven version.
   test('strips block elements the mockup renderer never emits', async ({ page }) => {
     const html = await render(
       page,
@@ -119,6 +130,11 @@ test.describe('safeMarkdown sanitizer allowlist (real browser)', () => {
       mock.locator('strong', { hasText: 'Environmental Health Inspectors' })
     ).toHaveCount(1)
     // No body-copy markdown anywhere in the corpus may produce an image.
-    expect(await mock.locator('img').count()).toBe(0)
+    // toHaveCount rather than a one-shot .count(): js/review/ux-improvements.js
+    // decorates renderPage with a post-navigation refresh, so a non-waiting read
+    // can land between the two renders. The one-shot count is what made the
+    // fixed sleep this test used to open with look load-bearing; with both
+    // assertions auto-waiting, removing that sleep is safe rather than a race.
+    await expect(mock.locator('img')).toHaveCount(0)
   })
 })
