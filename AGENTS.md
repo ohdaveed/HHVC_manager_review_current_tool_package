@@ -37,6 +37,14 @@ If `bun` is not found, it installs to `~/.bun/bin`; run
 `js/main.js` imports `@sfgov/design-system` CSS and the third-party libraries for
 Vite to bundle.
 
+## Definition of Done
+
+Work is not complete until: the full test suite passes, changes are committed,
+pushed to origin, a PR is opened (if on a branch), and CI is green. Never leave
+commits sitting unpushed on a local branch. Before merging a PR, re-fetch and
+confirm the remote head includes all local commits — a stale head has silently
+dropped commits before.
+
 ## Commands
 
 **`package.json` is the command reference — read it rather than a copy.** Every
@@ -2634,6 +2642,21 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
   plugin traps. Delete that one line to turn Netlify back on. The site's last
   deploy stopped at `38d152c` and was serving 503 when Railway took over.
 
+- **A merge is not a deploy, and a green build is not a serving site.** The
+  branch connection above cuts both ways: a push to a feature branch builds
+  nothing, so a green branch push is not a shipped change — only the merge is.
+  And both halves of `railway.json` have completed successfully while the site
+  answered 502 (see `HOST=0.0.0.0` above) or 503. **After any merge that
+  changes site content or JS, verify the artifact rather than the pipeline**:
+  load the live URL headlessly with Playwright, assert zero console errors, and
+  confirm the deployed commit matches the merged SHA. Build success and deploy
+  success are different claims, and only the second one is the one being made.
+- **Never deploy from a git worktree checkout.** `railway up` uploads the
+  directory it is invoked in, so from a worktree it ships that tree's state
+  rather than `main` — a deploy that succeeds and serves the wrong commit,
+  which the hash check above is what catches. Switch to a normal clone of
+  `main` first.
+
 ### Other directories
 
 - **`forms/mosquito-workshop-request/`** — independent Vite app (own
@@ -2867,6 +2890,23 @@ function. Use `test.todo` (with a reasoning comment) to document a
 known-but-unfixed bug rather than asserting wrong behavior. Tests that stub
 globals must restore them, or they pollute sibling test files.
 
+### Test data invariants
+
+Do not hardcode counts — page counts, doc counts, section counts — in tests or
+assertions. Derive them from the source of truth instead; hardcoded counts have
+broken CI after merges more than once. `tests/doc-counts.test.js` is the model:
+it reads the counts back out of the docs and compares them to the filesystem,
+rather than asserting a number that was true on the day it was typed.
+
+## Security Reviews
+
+When asked for a security review of changed files: do **not** read files
+one-by-one first. Start with `git diff` (or `git diff --stat` then
+`git diff <paths>`) to load the actual changed hunks in one call, then report
+findings within the first 2-3 tool calls. Report incrementally — emit findings
+per file as you go rather than batching everything to the end. Only read full
+files when a diff hunk is ambiguous.
+
 ## Commits & pull requests
 
 - **Imperative mood.** Prefer **Conventional-Commits prefixes** for code changes
@@ -2937,6 +2977,16 @@ globals must restore them, or they pollute sibling test files.
 Login URL for the Karl (Wagtail-based) CMS admin:
 `https://api.sf.gov/sso/login?next=/admin/`. Keep user-specific credentials and
 private MCP config out of the repo (in `~/.codex/config.toml` or equivalent).
+
+## Safety
+
+### Concurrency safety
+
+More than one agent session may be working in this repo at once. Before
+editing, run `git status`; if the working tree has changed since you last read
+a file, re-read it before editing. Never run a destructive shell one-liner
+against a config file — a `jq` write to `~/.claude.json`, an `mv` over a
+dotfile — without writing to a temp file first and verifying it is non-empty.
 
 ## Cross-tool canon
 

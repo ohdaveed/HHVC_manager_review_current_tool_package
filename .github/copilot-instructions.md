@@ -122,6 +122,31 @@ colour literal is how every dark-mode contrast bug here has started. `css/theme.
 must stay LAST in `js/main.js`'s import list, and a selector should be declared
 in exactly one stylesheet.
 
+## Workflow & verification
+
+- **Security reviews start from the diff.** Asked to review changed files, run
+  `git diff` (or `git diff --stat` then `git diff <paths>`) and work from the
+  hunks — do not read files one at a time first. Report findings per file as you
+  go, within the first few tool calls; open a full file only when a hunk is
+  ambiguous.
+- **Definition of done:** tests pass, changes committed, pushed to origin, PR
+  opened if on a branch, CI green. Never leave commits unpushed on a local
+  branch, and re-fetch before merging to confirm the remote head has them all.
+- **Railway is the live host, not Netlify** (`netlify.toml` carries
+  `build.ignore = "exit 0"`). The service is connected to `main`, so a merge is
+  the deploy and a branch push ships nothing. After a merge that changes content
+  or JS, verify the live URL headlessly with zero console errors and confirm the
+  deployed commit matches the merged SHA — a green build has served a 502 here.
+  Never deploy from a git worktree checkout. See `AGENTS.md` for the URL and
+  service names.
+- **Never hardcode counts** — of pages, docs, or sections — in tests or
+  assertions; derive them from the source of truth. Hardcoded counts have broken
+  CI after a merge more than once.
+- **Assume another agent session may be working in this tree.** Run
+  `git status` before editing, and re-read a file that has changed since you
+  last read it. Never run a destructive shell one-liner against a config or
+  dotfile without writing to a temp file first and checking it is non-empty.
+
 ## Pull request scope
 
 Keep dashboard-UX changes (layout, queue, workspace, review helpers) and

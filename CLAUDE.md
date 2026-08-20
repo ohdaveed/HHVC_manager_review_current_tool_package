@@ -30,6 +30,14 @@ build step, built independently — see Build outputs below).
 The repo currently holds **29 pages** under `pages/`. If `bun` isn't on
 `PATH` it installs to `~/.bun/bin`; run `export PATH="$HOME/.bun/bin:$PATH"`.
 
+## Definition of Done
+
+Work is not complete until: full test suite passes, changes are committed,
+pushed to origin, PR opened (if on a branch), and CI is green. Never leave
+commits sitting unpushed on a local branch. Before merging a PR, re-fetch and
+confirm the remote head includes all local commits (a stale head has silently
+dropped commits before).
+
 ## Commands
 
 **`package.json` is the command reference — read it rather than a copy.** Every
@@ -1455,6 +1463,12 @@ assertion per render function. Use `test.todo` (with a reasoning comment) to
 document a known-but-unfixed bug rather than asserting wrong behavior. Tests
 that stub globals must restore them, or they pollute sibling test files.
 
+### Test data invariants
+
+Do not hardcode counts (page counts, doc counts, section counts) in tests or
+assertions — derive them from the source of truth. Hardcoded counts have broken
+CI after merges more than once.
+
 ## Editing rules (quick reference)
 
 - Public page content → `pages/*.js`.
@@ -1509,6 +1523,15 @@ that stub globals must restore them, or they pollute sibling test files.
   **and** `bun run test`. After touching the import/export round-trip,
   manually verify it (export → re-import → decisions survive).
 
+## Security Reviews
+
+When asked for a security review of changed files: do **not** read files
+one-by-one first. Start with `git diff` (or `git diff --stat` then
+`git diff <paths>`) to load the actual changed hunks in one call, then report
+findings within the first 2-3 tool calls. Report incrementally — emit findings
+per file as you go rather than batching everything to the end. Only read full
+files when a diff hunk is ambiguous.
+
 ## Commits & pull requests
 
 - **Imperative mood.** Prefer **Conventional-Commits prefixes** for code
@@ -1526,6 +1549,29 @@ that stub globals must restore them, or they pollute sibling test files.
 - **Review exports** (`review/*.csv`, saved local-review CSV/JSON) are for
   manager decisions only — **never treat them as automatic publication
   approval.**
+
+## Deployment
+
+### Deploy & verify
+
+**Railway is the host, not Netlify.** "Deploying — Railway is the live host"
+under Architecture holds the URL, the project and service names, and the build
+and start commands — read it there rather than looking for a second copy here.
+Netlify is retired but not deleted: `netlify.toml` carries
+`build.ignore = "exit 0"`, so it builds nothing.
+
+What this section adds is the procedure. After any commit that changes site
+content or JS:
+
+- **Push, then merge — the merge is the deploy.** The service is connected to
+  `main`, so a feature-branch push builds nothing. Do not read a green branch
+  push as a shipped change.
+- **Verify the artifact, not the pipeline.** Load the live URL headlessly with
+  Playwright, assert zero console errors, and confirm the deployed commit hash
+  matches HEAD. A green build has shipped alongside a 502 more than once here.
+- **Never deploy from a git worktree checkout.** `railway up` uploads the
+  directory it runs in, so a worktree ships that tree rather than `main`.
+  Switch to a normal clone of `main` first.
 
 ## Karl CMS
 
@@ -1615,6 +1661,16 @@ exists yet; created lazily by `/domain-modeling`). See
   session. This matters especially near a session usage-limit boundary:
   don't let the session end assuming a subagent's self-report was the final
   verification.
+
+## Safety
+
+### Concurrency safety
+
+Multiple Claude sessions may be running against this repo. Before editing, run
+`git status`; if the working tree changed since you last read a file, re-read it
+before editing. Never run destructive shell one-liners against config files
+(`jq` writes to `~/.claude.json`, `mv` on dotfiles) without writing to a temp
+file first and verifying non-zero size.
 
 ## Cross-tool canon
 
