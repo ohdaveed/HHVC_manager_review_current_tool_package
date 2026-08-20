@@ -112,30 +112,45 @@ describe("package.json's explicit test list", () => {
   })
 })
 
-/* Minimum claims each file must still yield.
+/* Minimum claims each (file, claim type) pair must still yield.
+ *
+ * Per-claim-type, not one aggregate integer per file. An aggregate was tried
+ * first and rejected: once a file's TOTAL sits comfortably above its floor,
+ * one claim type could stop matching entirely — its regex silently drifting
+ * out of reach — while the file's other claim types carry the aggregate over
+ * the line, and the ratchet would still pass. That is the exact failure this
+ * feature exists to prevent, surviving in a more diffuse form. Flooring each
+ * (file, type) pair closes that gap: a claim type with no floor entry for a
+ * file is simply not floored there, which is correct — not every file states
+ * every claim — but a floored one that drops out is caught regardless of how
+ * healthy its siblings look.
  *
  * Asserted BEFORE any value comparison, and that order is the point. A
  * doc-parsing regex that stops matching does not fail — it stops checking, and
  * every remaining assertion passes. tests/karl-blocks.test.js asserts a
  * minimum row count first for exactly this reason.
  *
- * Only files carrying claims today get an entry: a floor of 0 asserts nothing.
- * Skill files are still SCANNED — the ratchet catches a lost claim, and the
- * value check below catches a wrong one even with no floor.
+ * Only (file, claim type) pairs carrying claims today get an entry: a claim
+ * type absent from a file's object is simply not floored there, which is
+ * correct — not every file states every claim. Skill files carry no entry at
+ * all and are still SCANNED — the "every claim found anywhere matches the
+ * filesystem" test below covers them regardless of floor, so an unfloored
+ * file is not an unchecked one.
  *
  * Lowering a number here silently reduces coverage. Do not adjust one to make
  * a build pass; fix the doc or the pattern.
  *
- * `.github/copilot-instructions.md` earns a floor despite being a deliberate
+ * `.github/copilot-instructions.md` earns floors despite being a deliberate
  * POINTER doc — no file inventories, no architecture summary, per the canon
  * section governing it — because it still quotes counts, and until a scanner
  * read it nothing did: it once sat claiming 33 unit-test files against a real
  * 36. A pointer being unchecked is exactly the rot the pointer convention
- * exists to avoid. */
+ * exists to avoid. It carries no `pages`/`stylesheets` entry because it makes
+ * no such claim, not because one went uncounted. */
 const CLAIM_FLOORS = {
-  'AGENTS.md': 5,
-  'CLAUDE.md': 6,
-  '.github/copilot-instructions.md': 3,
+  'AGENTS.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 2, stylesheets: 1 },
+  'CLAUDE.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 3, stylesheets: 1 },
+  '.github/copilot-instructions.md': { 'unit-tests': 2, 'e2e-specs': 1 },
 }
 const GLOBAL_FLOOR = 14
 
@@ -152,6 +167,15 @@ const DERIVER_BY_CLAIM = {
   stylesheets: 'styleSheets',
 }
 
+// Flattened (file, floor, claimType) triples for test.each — one row per
+// floored claim type per file, rather than one row per file. Floor sits
+// before claimType so the title's %d/%s placeholders line up with each
+// row's own types in left-to-right order (test.each substitutes positionally
+// against the row, not against the callback's parameter names).
+const CLAIM_TYPE_FLOORS = Object.entries(CLAIM_FLOORS).flatMap(([name, floors]) =>
+  Object.entries(floors).map(([claimId, floor]) => [name, floor, claimId])
+)
+
 describe('doc claims, across every file that describes the repo as it is now', () => {
   const scanned = currentClaimFiles().map((name) => ({ name, claims: scanText(read(name)) }))
 
@@ -161,11 +185,19 @@ describe('doc claims, across every file that describes the repo as it is now', (
     expect(scanned.length).toBeGreaterThan(3)
   })
 
-  test.each(Object.entries(CLAIM_FLOORS))('%s still yields at least %d claims', (name, floor) => {
-    const entry = scanned.find((file) => file.name === name)
-    expect(entry).toBeDefined()
-    expect(entry.claims.length).toBeGreaterThanOrEqual(floor)
-  })
+  test.each(CLAIM_TYPE_FLOORS)(
+    '%s still yields at least %d "%s" claims',
+    (name, floor, claimId) => {
+      const entry = scanned.find((file) => file.name === name)
+      expect(entry).toBeDefined()
+      const matching = entry.claims.filter((claim) => claim.id === claimId).length
+      if (matching < floor) {
+        throw new Error(
+          `${name}: "${claimId}" yielded ${matching} claims, floor requires at least ${floor}`
+        )
+      }
+    }
+  )
 
   test('the corpus as a whole has not lost claims', () => {
     const total = scanned.reduce((sum, file) => sum + file.claims.length, 0)
