@@ -1420,3 +1420,77 @@ describe('renderWhatToKnow', () => {
     expect(html).not.toContain('<h3>Things to know</h3>')
   })
 })
+
+// NOTE ON PLACEMENT: this block is deliberately LAST in the file. karlTag()
+// numbers its guide panels from a module-global counter, and the snapshot
+// tests in "renderCards / renderCardList" assert on rendered `karl-guide-NNN`
+// ids — so any describe() added ABOVE them shifts those ids and fails two
+// snapshots that have nothing to do with the change. Append here rather than
+// re-recording those snapshots, which would only move the tripwire.
+describe('Karl tag values for text-bearing arrays', () => {
+  // Paragraphs accept either a plain string or a { text, unverified } object
+  // (build_scripts/schema.js's unverifiedItemSchema). Both spotlight renderers
+  // used to hand section.paragraphs straight to .join('\n'), which stringifies
+  // the object form to "[object Object]".
+  //
+  // This is not cosmetic. A Karl tag's values are the instruction telling an
+  // editor what to type into Karl, and js/karl/karl-transcript.js exports the
+  // same content as a paste-ready script a human performs keystroke by
+  // keystroke. A confidently-wrong instruction is that feature's worst failure
+  // mode, so a JS internal reaching a value is a defect rather than a glitch.
+  //
+  // Both real Campaign pages hit this: the CTA paragraph on
+  // pages/integrated-pest-management-education.js and the one on
+  // pages/mosquito-education-workshop.js are both flagged unverified.
+  test('renderSpotlightSection unwraps an unverified paragraph object', () => {
+    const html = ctx.renderSpotlightSection({
+      heading: 'Request a workshop',
+      karl: 'Maps to Spotlight 2',
+      component: 'spotlight',
+      paragraphs: [
+        {
+          text: 'Use the online request form.',
+          unverified: true,
+          unverifiedReason: 'SME placeholder',
+        },
+        'You can also contact the program directly.',
+      ],
+    })
+    expect(html).not.toContain('[object Object]')
+    expect(html).toContain('Use the online request form.')
+  })
+
+  // The page-level `spotlight` field has its own renderer, which is not
+  // exported — drive it through renderPageMain the way the layout tests above
+  // do, so the second call site is covered rather than assumed.
+  test('the page-level spotlight unwraps an unverified paragraph object', () => {
+    const html = ctx.renderPageMain({
+      slug: 'sf.gov/x',
+      type: 'Campaign',
+      title: 'T',
+      summary: 'S',
+      audience: ['A'],
+      reading: 'Grade 6',
+      sections: [],
+      spotlight: {
+        title: 'Spotlight title',
+        karl: 'Spotlight',
+        paragraphs: [{ text: 'Unverified spotlight copy.', unverified: true }, 'Plain copy.'],
+      },
+    })
+    expect(html).not.toContain('[object Object]')
+    expect(html).toContain('Unverified spotlight copy.')
+  })
+
+  test('a plain-string paragraph list is unchanged', () => {
+    const html = ctx.renderSpotlightSection({
+      heading: 'H',
+      karl: 'k',
+      component: 'spotlight',
+      paragraphs: ['One.', 'Two.'],
+    })
+    expect(html).not.toContain('[object Object]')
+    expect(html).toContain('One.')
+    expect(html).toContain('Two.')
+  })
+})
