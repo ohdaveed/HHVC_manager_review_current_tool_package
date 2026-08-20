@@ -555,9 +555,10 @@
    Advanced sections inside Help
    =====================================================================
    AI assist and the stored-data diagnostics used to be tabs. Both depend on
-   server.ts, which the static Netlify deploy has no runtime for, so on the
-   build managers actually open they were two permanently-empty panels holding
-   two of six top-level slots. They are collapsed <details> at the end of Help
+   server.ts, which the static Netlify deploy live at the time had no runtime
+   for, so on the build managers actually opened they were two permanently-empty
+   panels holding two of six top-level slots. Railway runs server.ts now, but
+   each still reports nothing until its own optional backend is configured. They are collapsed <details> at the end of Help
    now — present and reachable, but not competing with the two panels a
    reviewer uses to do the work. */
 

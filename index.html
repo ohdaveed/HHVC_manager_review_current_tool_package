@@ -338,9 +338,11 @@
                leaked js/core/page-data.js to reviewers.
 
                AI assist and Status are not gone; they are demoted to here.
-               Both depend on server.ts, and the Netlify build managers
-               actually open has no server runtime, so on that deploy they were
-               two permanently-empty panels out of six. Everything Status
+               Both depend on server.ts, and the static Netlify build managers
+               opened at the time had no server runtime, so on that deploy they
+               were two permanently-empty panels out of six. Railway runs
+               server.ts now, but each still reports nothing until its own
+               optional backend is configured. Everything Status
                reported was "not configured" or "none" — except the one line a
                reviewer genuinely needs, which now sits beside the export
                controls in the sidebar where the risk it describes lives.

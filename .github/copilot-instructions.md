@@ -31,16 +31,16 @@ up an unbounded generation bill). Cross-origin browser callers are
 denied unless explicitly allowlisted, and process-local limits are only a
 supplement to reverse-proxy/identity-aware-edge controls in public,
 multi-instance production. See `AGENTS.md`'s “Optional API access hardening”
-for the exact environment format and failure behavior. Netlify's static deploy
-has no server runtime, so it simply has none of them. Nothing else in the tool
-depends on any of them.
+for the exact environment format and failure behavior. Railway runs `server.ts`,
+so the live deploy has a runtime for them; a static-only host has none of them at
+all. Nothing else in the tool depends on any of them.
 
 ## Commands
 
 ```bash
 bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
-bun run start         # production-like: assemble dist/ (build:netlify), then serve it
+bun run start         # production-like: assemble dist/ (build:railway), then serve it
 bun run validate      # Zod-validate pages/*.js and js/core/page-data.js (schema + invariants)
 bun run test          # Bun test runner over the 51 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
