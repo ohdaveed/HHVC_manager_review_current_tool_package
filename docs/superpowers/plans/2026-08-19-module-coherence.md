@@ -23,6 +23,10 @@
 - **Gates, every PR:** `format:check`, `lint:js`, `lint:architecture`, `lint:dead-code:ci`, `lint:docs`, `validate`, `test`, `build:netlify`, `test:e2e`. Run long ones in the FOREGROUND, one at a time, never chained with `&&` — a chained run stalled an agent's watchdog in the previous plan.
 - **Environment:** `mv`/`cp` are aliased to interactive mode — use `\mv -f`/`\cp -f`. Stage explicit paths; `git add -A` misbehaves where `node_modules` is a symlink. Never `git checkout` to revert a mutation test — it restores staged content and silently discards work.
 
+## A note on the line numbers below
+
+They were derived against `main` @ `1ba718e`. **Verify each before editing.** An earlier draft of this plan cited numbers taken from comment-stripped source — off by the length of every comment block above them, which in this repo is substantial. If a cited line does not hold what this plan says, trust the file and report the discrepancy.
+
 ## What measurement established
 
 Read these four facts before writing any code; three of them contradict what the spec originally assumed.
@@ -30,7 +34,7 @@ Read these four facts before writing any code; three of them contradict what the
 1. **The cycles are a policy problem, not a runtime one.** Edges split 78 mount-time / 120 call-time, and the mount-time edges form **zero cycles**. ES modules resolve call-time cycles through function hoisting. What makes a cycle fatal here is `no-circular`, not the browser.
 2. **42 of 58 files are already acyclic** and convert with no design decision attached. There is exactly one strongly connected component, of 16 files.
 3. **`window.renderPage` causes 24 of the intra-SCC edges** — nearly double the next contributor. Task 1 removes it, which is why Task 1 is first.
-4. **36 value reads execute at import time**, and 12 are the single pattern `const DATA = window.HHVC_DATA`. That substitution is the highest-leverage edit in the plan.
+4. **36 value reads execute at import time**, and 12 are the single pattern `const DATA = window.HHVC_DATA` — one of 24 capture sites for that object tree-wide. That substitution is the highest-leverage edit in the plan.
 
 ---
 
@@ -44,7 +48,7 @@ Read these four facts before writing any code; three of them contradict what the
 - Produces: `onAfterRender(fn) -> () => void` exported from `js/mockup/page-render.js`. Registers `fn` to run after every `renderPage()` completes, and returns an unsubscribe function. Hooks run in registration order, each wrapped so one throwing does not prevent the next.
 - Consumes: nothing from later tasks.
 
-**Why this is first.** `js/review/ux-improvements.js:137` monkey-patches `window.renderPage` to refresh after navigation, guarding with `window.renderPage.__uxWrapped`. That patch is why `renderPage` must live on `window`, and `window.renderPage` is responsible for 24 of the 16-file SCC's edges. Inverting it — `page-render.js` calling hooks it knows nothing about, instead of subscribers reaching in to wrap it — is what lets every later task land cycle-free.
+**Why this is first.** `js/review/ux-improvements.js` monkey-patches `window.renderPage` — guard at **line 137**, reassignment at **142**, `__uxWrapped` stamp at **187**. That patch is why `renderPage` must live on `window`, and `window.renderPage` is responsible for 24 of the 16-file SCC's edges. Inverting it — `page-render.js` calling hooks it knows nothing about, instead of subscribers reaching in to wrap it — is what lets every later task land cycle-free.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -177,7 +181,7 @@ Expected: PASS, 4 tests.
 
 - [ ] **Step 5: Convert `ux-improvements.js` from monkey-patch to subscriber**
 
-At `js/review/ux-improvements.js:137` the wrapper reassigns `window.renderPage` and marks it `__uxWrapped`. Replace the whole wrapper with a registration:
+The wrapper spans `js/review/ux-improvements.js:137-187` — guard, reassignment, `__uxWrapped` stamp. Note that **line 251** separately *calls* `window.renderPage` to restore the saved page; that is a plain call and becomes a plain import, not part of the wrapper. Replace the wrapper with a registration:
 
 ```js
 import { onAfterRender } from '../mockup/page-render.js'
@@ -269,9 +273,9 @@ Add to `package.json`'s `test` list (52 → 53), update the three mirror counts,
 
 **These folders are outside the SCC**, so every conversion here lands cycle-free by construction. Apply the three classes from the spec:
 
-- **Presence guards → delete.** `js/ai/ai-assist.js:4` (`!window.AiAssist?.client || !window.AiAssist?.render`) and `js/ai/ai-rewrite.js:4` are unreachable once the imports exist. **Keep** `typeof window === 'undefined'` guards and keep any condition testing *data validity* rather than *module presence* — `js/sync/review-state-sync.js:244`'s `!window.HHVC_DATA?.pages?.[key]` is a real runtime state and stays.
+- **Presence guards → delete.** `js/ai/ai-assist.js:12` (`!window.AiAssist?.client || !window.AiAssist?.render`) and `js/ai/ai-rewrite.js:10` are unreachable once the imports exist. **Keep** `typeof window === 'undefined'` guards and keep any condition testing *data validity* rather than *module presence* — `js/sync/review-state-sync.js`'s `!window.HHVC_DATA?.pages?.[key]` is a real runtime state and stays.
 - **Function reads → imports.** Safe even inside a cycle; ES modules hoist function bindings.
-- **Value reads → imports of the same binding.** `js/ai/ai-assist.js:6-7` captures `window.AiAssist.client` and `.render` at mount; both become named imports.
+- **Value reads → imports of the same binding.** `js/ai/ai-assist.js` captures `window.AiAssist.client` and `.render` at mount; both become named imports.
 
 **A trap specific to these folders:** `js/karl/karl-blocks.js` and `js/standards/plain-language.js` are pinned base modules. Consumers import *from* them; they import nothing. If a step seems to need an import inside one, the step is wrong — stop and report BLOCKED.
 
@@ -302,7 +306,7 @@ Same three classes and same one-file-at-a-time rhythm as Task 3.
 **Two constraints specific to `core`:**
 
 - **`js/core/state.js` must keep its side-effect import of `page-registry.js`.** `.dependency-cruiser.cjs`'s `state-applies-the-page-registry` is a `required` rule guarding it, and dropping it makes `ORIGINAL_DATA` clone the wrong page set — surfacing much later as a field reset restoring a deleted page.
-- **`window.HHVC_DATA` is the highest-leverage substitution in the plan.** 23 sites read it; 12 at import time. `js/core/page-data.js` builds the object, so the replacement is a named import of the same object — **not a copy.** `js/core/page-registry.js` mutates `order` and `pages` in place, and every importer must observe those mutations, so the export must be the same reference and nothing may reassign it.
+- **`window.HHVC_DATA` is the highest-leverage substitution in the plan.** **24 sites capture it into a local**, across 46 mentions; 12 of those captures run at import time. `js/core/page-data.js` builds the object, so the replacement is a named import of the same object — **not a copy.** `js/core/page-registry.js` mutates `order` and `pages` in place, and every importer must observe those mutations, so the export must be the same reference and nothing may reassign it.
 
 - [ ] **Step 1: Convert `window.HHVC_DATA` first and prove mutation is still visible**
 
