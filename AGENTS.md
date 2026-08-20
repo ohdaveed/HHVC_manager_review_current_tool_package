@@ -264,14 +264,21 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-two spec files, all UI-driven — navigation, editor panel, review
+twenty-three spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
 the chrome type scale, the Karl transcript panel,
-and workshop-form submission handling — sharing plain helper functions in
-`tests/e2e/helpers.js`, no fixture framework. A fourteenth,
+workshop-form submission handling, and the safeMarkdown sanitizer allowlist
+— that last one can only live here for the `<strong>`/`<em>` positive
+assertions: happy-dom's DOMPurify strips both even though they are in
+`ALLOWED_TAGS`, so a unit assertion would either pin that artifact or pass
+vacuously against a sanitizer that strips everything (`tests/utils.test.js`
+covers the rest of the safeMarkdown path in unit tests, including image
+stripping, both link renderers, and script removal) —
+sharing plain helper functions in
+`tests/e2e/helpers.js`, no fixture framework. One spec file,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
 round-trip tests hand-rolled the merge inside `page.evaluate()` rather than
 calling `importReviewStateBackup()`, so reverting that function to the
