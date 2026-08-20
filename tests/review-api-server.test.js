@@ -911,3 +911,86 @@ describe('graceful shutdown on SIGTERM', () => {
     expect(proc.exitCode).toBe(0)
   }, 15000)
 })
+
+// Regression: a non-GET request to a STATIC path must not answer 200.
+//
+// The static branch matched on pathname alone, with no method check, so
+// `POST /` returned 200 with the app's index.html. Any client reading
+// `response.ok` as "the server accepted this" got a false success for a
+// request nothing received and nothing stored.
+//
+// forms/mosquito-workshop-request/ did exactly that: it POSTs to "/" by the
+// Netlify Forms convention, and on Railway — which has no Netlify Forms
+// handler — it rendered a confirmation screen for every discarded submission.
+// A false success is worse than a visible failure, because nobody retries and
+// nobody reports it.
+//
+// The /api/* routes are matched BEFORE the static branch, so this guard must
+// not disturb their own POST/PUT/DELETE verbs; that is asserted here too,
+// because a guard hoisted one block too high would break every write route
+// while still passing the static assertions.
+describe('static paths reject non-GET methods', () => {
+  const PORT = 8131
+  const base = `http://127.0.0.1:${PORT}`
+  let proc
+  let dbDir
+
+  beforeAll(async () => {
+    dbDir = createTestDbDir('static-method-guard')
+    proc = spawnServer({ port: PORT, token: 'token', dbDir })
+    await waitForServer(`${base}/api/review-state`, proc)
+  }, 15000)
+
+  afterAll(() => {
+    proc?.kill()
+    fs.rmSync(dbDir, { recursive: true, force: true })
+  })
+
+  test('POST / answers 405 rather than 200 with the app shell', async () => {
+    const body = new URLSearchParams({ 'form-name': 'mosquito-workshop-request' })
+    const res = await fetch(`${base}/`, { method: 'POST', body })
+    expect(res.status).toBe(405)
+    // The precise failure this guards: ok===true is what the form read as
+    // "submitted", so assert the client-visible predicate, not just the code.
+    expect(res.ok).toBe(false)
+    expect(res.headers.get('allow')).toBe('GET, HEAD')
+  })
+
+  test('PUT and DELETE on a static path are refused the same way', async () => {
+    for (const method of ['PUT', 'DELETE', 'PATCH']) {
+      const res = await fetch(`${base}/`, { method })
+      expect(res.status, `${method} / must be refused`).toBe(405)
+    }
+  })
+
+  test('a non-GET on a nonexistent static path is also refused', async () => {
+    const res = await fetch(`${base}/no/such/page`, { method: 'POST' })
+    expect(res.status).toBe(405)
+  })
+
+  test('GET still serves normally', async () => {
+    const res = await fetch(`${base}/`)
+    expect([200, 404]).toContain(res.status)
+    expect(res.status).not.toBe(405)
+  })
+
+  // The guard sits below the /api/* dispatch. If it were hoisted above it,
+  // every write route would 405 while the tests above still passed.
+  test('the /api/* write verbs still reach their handlers', async () => {
+    const put = await fetch(`${base}/api/review-state/pestsTopic`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer token' },
+      body: JSON.stringify({ page: { decision: 'Approved' } }),
+    })
+    expect(put.status).not.toBe(405)
+
+    // Unauthenticated on purpose — the point is that POST reaches the route's
+    // own auth logic rather than being refused for its verb.
+    const session = await fetch(`${base}/api/session`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: 'wrong' }),
+    })
+    expect(session.status).not.toBe(405)
+  })
+})
