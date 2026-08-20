@@ -71,7 +71,13 @@ function numberPattern() {
 // Words permitted between the number and its noun. Letter-initial so it cannot
 // swallow the number itself, but \w after — this repo's prose is full of
 // digit-bearing tokens (e2e, h1, v2), and a letters-only class cannot cross
-// `e2e`, which is precisely what hid the claim that shipped wrong.
+// `e2e`. That is NOT what let the twenty-two/twenty-three miscount described
+// above ship past CI — that was .github/copilot-instructions.md being left off
+// a hand-maintained file list, a different failure mode entirely, fixed above
+// by deriving the file list instead. But a letters-only gap would leave that
+// same file's own e2e claim unseen by THIS pattern regardless of the file-list
+// fix, since the claim text sits right next to the digit-bearing word `e2e` —
+// reason enough on its own to admit digits here.
 const GAP = '(?:\\s+[A-Za-z][\\w.-]*){0,3}'
 
 // Bounded at three words and admitting no punctuation, so a match cannot cross

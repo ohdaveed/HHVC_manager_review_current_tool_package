@@ -8,9 +8,13 @@ describe('scanText', () => {
     ])
   })
 
-  // The exact string that shipped a wrong count past CI. Two words sit between
-  // the number and the noun, and one of them carries a DIGIT — a letters-only
-  // gap class cannot cross `e2e`, which is what actually hid this claim.
+  // Two words sit between the number and the noun, and one of them carries a
+  // DIGIT — a letters-only gap class cannot cross `e2e`. (What actually let a
+  // wrong e2e count ship past CI once was a file omitted from the old
+  // hand-maintained (file x claim) matrix, not a regex gap — see
+  // build_scripts/doc-claims.js's header comment. This test instead pins the
+  // substantive reason the gap must admit digits: a letters-only class would
+  // leave copilot-instructions.md's own e2e claim unseen by this pattern.)
   test('reads a count separated from its noun by digit-bearing words', () => {
     expect(scanText('plus twenty-three Playwright e2e spec files.')).toEqual([
       { id: 'e2e-specs', value: 23 },

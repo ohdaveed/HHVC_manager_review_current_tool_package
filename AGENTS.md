@@ -119,8 +119,11 @@ leaves the chip rendering and silently stops matching), `knowledge-chunking`, `k
 `doc-claims` (the count-claim scanner's own unit tests — pins the
 number-anchored capture against a `[\w-]+` false start, and the gap that
 must admit digit-bearing words like `e2e` rather than letters-only, since a
-letters-only gap is what let a wrong e2e spec count ship past CI once
-already),
+letters-only gap would leave `.github/copilot-instructions.md`'s own e2e claim
+unseen by this pattern — not, as an earlier version of this note claimed, what
+let a wrong e2e spec count ship past CI once already; that was a file omitted
+from the old hand-maintained `(file x claim)` matrix, not a regex gap, per
+`build_scripts/doc-claims.js`'s own header comment),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
 `inline-content-edit-adapter` (the pure markdown/HTML serialization boundary
@@ -676,8 +679,8 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
-hierarchy one level deep), and **AI assist** and **Tool status** became
+**Sitemap** was removed outright (a fourth way to navigate the page set,
+drawing a hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
 static Netlify deploy live at the time had no runtime for, so on the build
 managers actually opened they were two permanently-empty panels holding two of

@@ -61,6 +61,23 @@ const styleSheets = readdirSync(join(ROOT, 'css'))
   .filter((name) => name.endsWith('.css'))
   .sort()
 
+// Deliberately a SEPARATE copy from build_scripts/doc-claims.js's exported
+// NUMBER_WORDS, not an import of it, even though this file already imports
+// scanText/currentClaimFiles from that module and the two tables overlap
+// word-for-word from `ten` through `forty`. The "repeats one consistent
+// count" test below (search NUMBER_WORDS starts at ten) depends on this
+// table's LOWER bound being exactly `ten` — its comment explains that "two
+// positions", "six dependency sheets", "three @sfgov/design-system sheets"
+// and "one-line" in the ordering paragraph are safe from being swept into a
+// stylesheet-count claim only because they all fall below that floor.
+// Swapping in the exported table would not break that today (it also starts
+// at `ten`), but it would silently couple a test about doc PROSE STRUCTURE to
+// a table whose real job is claim-scanning coverage — someone extending the
+// scanner's vocabulary downward past `ten` for an unrelated claim type would
+// have no reason to know it also widens what this file's ordering-paragraph
+// regex sweeps up, and the failure would show up here, far from the edit.
+// Kept separate and untouched below `forty` (this file never needs `fifty`+),
+// so this table's own floor stays a fact a reader of THIS file can see.
 const NUMBER_WORDS = {
   ten: 10,
   eleven: 11,
@@ -183,6 +200,18 @@ describe('doc claims, across every file that describes the repo as it is now', (
     // An empty set is a broken derivation, not a clean run — the same reading
     // build_scripts/docs-file-set.js's callers take.
     expect(scanned.length).toBeGreaterThan(3)
+  })
+
+  test('floors a non-empty (file, claim type) table', () => {
+    // Same reading as the file-set check above, and for the same reason: an
+    // empty table is a broken derivation, not a clean run. Confirmed against
+    // Bun 1.3.14, `test.each([])(...)` generates ZERO test cases rather than
+    // failing — so if the CLAIM_FLOORS entries above were ever deleted down
+    // to nothing, or the flatMap building CLAIM_TYPE_FLOORS broke and started
+    // returning [], every floor assertion below would silently stop existing
+    // and the suite would report 0 fail. This is the guard that turns that
+    // into a loud failure instead.
+    expect(CLAIM_TYPE_FLOORS.length).toBeGreaterThan(0)
   })
 
   test.each(CLAIM_TYPE_FLOORS)(
