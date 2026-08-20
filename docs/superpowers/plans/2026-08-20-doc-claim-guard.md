@@ -225,6 +225,15 @@ const GAP = '(?:\\s+[A-Za-z][\\w.-]*){0,3}'
  * Phrases are disambiguated, never bare nouns: `the N stylesheets` rather than
  * `stylesheets`, so a runtime measurement ("Emotion added 15 stylesheets") is
  * not read as a claim about this repo.
+ *
+ * The `pages` entry is the narrowest, and deliberately. This rationale moved
+ * here from the test block that used to hold it, because that block is gone
+ * and the reasoning outlived it: a bare /(\d+) pages/ also matches the
+ * plain-language budget ("any one rule failing at most 8 pages"), which is a
+ * THRESHOLD rather than a count of what is on disk. It also matches prose
+ * findings like "nine pages reported hitting a reading target". Both spellings
+ * the docs really use are covered — "holds **29 pages** under" and "across the
+ * 29 pages" — and nothing wider than those two.
  */
 const CLAIMS = [
   {
@@ -509,7 +518,15 @@ Remove exactly these four `test.each` blocks from `describe('counts quoted in th
 
 **Keep** every other test in the file: `repeats one consistent count through the ordering paragraph`, `every stylesheet opens with the banner comment the docs point at`, `CLAUDE.md names every unit-test file it claims to list`, and the whole `package.json's explicit test list` describe. They assert things the scanner does not.
 
-Keep `countsIn` and `NUMBER_WORDS` in the file — the ordering-paragraph test still uses them.
+**Delete `countsIn` too** (the function at roughly line 129). It is called at exactly four sites — the four blocks you just removed — so keeping it leaves a dead module-level function, which this repo's style forbids and which oxlint's core `no-unused-vars` gates in CI.
+
+**Keep `NUMBER_WORDS`.** It is different: the surviving ordering-paragraph test uses it at two sites (`Object.keys(NUMBER_WORDS).join('|')` and the lookup below it). Verify before removing anything else:
+
+```bash
+grep -n "countsIn\|NUMBER_WORDS" tests/doc-counts.test.js
+```
+
+Expected after the deletions: no `countsIn` line at all; `NUMBER_WORDS` still defined and referenced twice inside the ordering-paragraph test.
 
 - [ ] **Step 5: Verify no coverage regression**
 
@@ -600,11 +617,24 @@ rm tests/e2e/zz-mutation-probe.spec.js
 
 Expected: RED in all three mirrors — filesystem 24, docs 23.
 
-- [ ] **Step 6: Fix the stale worked example**
+- [ ] **Step 6: Verify the pages rationale survived, and no stale example remains**
 
-The comment at `tests/doc-counts.test.js:199` still illustrates its regex with `19 pages`, from when the corpus held nineteen; it holds 29. The assertion is derived so the code is correct and only the example is stale — but a stale example inside the guard this PR rewrites is the same defect class.
+The plan originally said to correct a stale `19 pages` worked example at
+`tests/doc-counts.test.js:199`. **That step is void:** the pre-flight scan found the
+comment sits INSIDE the `states the real number of pages` block that Task 2 deleted, so
+there is nothing left to correct. What mattered was its rationale, which Task 1 carried
+into the `CLAIMS` registry comment. Confirm both halves:
 
-Replace `19` with `29` in both places in that comment (`holds **19 pages** under` and `across the 19 pages`).
+```bash
+grep -rn "19 pages" tests/ build_scripts/ || echo "no stale 19-pages example ✓"
+grep -n "plain-language budget" build_scripts/doc-claims.js
+```
+
+Expected: no `19 pages` anywhere in `tests/` or `build_scripts/`, and the
+plain-language-budget rationale present in `build_scripts/doc-claims.js`. If the
+rationale is missing, add it there rather than reinstating the deleted test block —
+losing it is how a later maintainer widens the `pages` pattern and re-admits the false
+positive it exists to prevent.
 
 - [ ] **Step 7: Full suite and commit**
 
