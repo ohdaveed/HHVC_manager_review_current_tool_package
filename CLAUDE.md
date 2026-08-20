@@ -1567,8 +1567,11 @@ content or JS:
   `main`, so a feature-branch push builds nothing. Do not read a green branch
   push as a shipped change.
 - **Verify the artifact, not the pipeline.** Load the live URL headlessly with
-  Playwright, assert zero console errors, and confirm the deployed commit hash
-  matches HEAD. A green build has shipped alongside a 502 more than once here.
+  Playwright, assert zero console errors, and confirm the deployed commit
+  matches the merged SHA — re-fetch `origin/main` and read it from there rather
+  than trusting local `HEAD`, which is a different commit after a squash merge
+  and stale whenever someone else's work lands first. A green build has shipped
+  alongside a 502 more than once here.
 - **Never deploy from a git worktree checkout.** `railway up` uploads the
   directory it runs in, so a worktree ships that tree rather than `main`.
   Switch to a normal clone of `main` first.

@@ -2642,15 +2642,20 @@ Railway project `hhvc-manager-review`, service `web`, connected to this repo's
   plugin traps. Delete that one line to turn Netlify back on. The site's last
   deploy stopped at `38d152c` and was serving 503 when Railway took over.
 
-- **A merge is not a deploy, and a green build is not a serving site.** The
-  branch connection above cuts both ways: a push to a feature branch builds
-  nothing, so a green branch push is not a shipped change — only the merge is.
-  And both halves of `railway.json` have completed successfully while the site
-  answered 502 (see `HOST=0.0.0.0` above) or 503. **After any merge that
-  changes site content or JS, verify the artifact rather than the pipeline**:
-  load the live URL headlessly with Playwright, assert zero console errors, and
-  confirm the deployed commit matches the merged SHA. Build success and deploy
-  success are different claims, and only the second one is the one being made.
+- **A merge triggers the deploy; it does not prove one served.** The branch
+  connection above cuts both ways: a push to a feature branch builds nothing,
+  so a green branch push is not a shipped change — only the merge starts a
+  deploy at all. And starting one is not finishing one: both halves of
+  `railway.json` have completed successfully while the site answered 502 (see
+  `HOST=0.0.0.0` above) or 503. **After any merge that changes site content or
+  JS, verify the artifact rather than the pipeline**: load the live URL
+  headlessly with Playwright, assert zero console errors, and confirm the
+  deployed commit matches **the merged SHA read from a freshly fetched
+  `origin/main`** — not local `HEAD`, which is a different commit after a
+  squash merge and stale whenever someone else's work lands first, so checking
+  it can pass against a revision that was never deployed. Build success and
+  deploy success are different claims, and only the second one is the one being
+  made.
 - **Never deploy from a git worktree checkout.** `railway up` uploads the
   directory it is invoked in, so from a worktree it ships that tree's state
   rather than `main` — a deploy that succeeds and serves the wrong commit,
