@@ -281,13 +281,13 @@ shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
 SFDS tokens, the chrome type scale, the Karl transcript panel, and
 workshop-form submission handling, and the safeMarkdown sanitizer allowlist —
-which can ONLY be asserted here, since the unit environment publishes neither
-`window.marked` nor `window.DOMPurify` (so every call there takes the
-"libraries missing" fallback), and happy-dom's DOMPurify strips `<strong>`/
-`<em>` despite both being allow-listed, so a unit assertion would either pin
-that artifact or pass vacuously,
+which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
+since happy-dom's DOMPurify strips both despite them being allow-listed, so a
+unit assertion would either pin that artifact or pass vacuously
+(`tests/utils.test.js` covers the rest of the safeMarkdown path in unit tests,
+including image stripping, both link renderers, and script removal),
 sharing plain helper functions in
-`tests/e2e/helpers.js` (no fixture framework). A fourteenth file,
+`tests/e2e/helpers.js` (no fixture framework). One spec file,
 `review-import-export.spec.js`, was deleted rather than repaired: its
 round-trip tests hand-rolled the merge inside `page.evaluate()` instead of
 calling `importReviewStateBackup()`, so it stayed green against the wholesale

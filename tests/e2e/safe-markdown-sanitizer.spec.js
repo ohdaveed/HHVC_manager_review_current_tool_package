@@ -2,28 +2,25 @@ const { test, expect } = require('@playwright/test')
 const { gotoFresh } = require('./helpers')
 
 // The DOMPurify allowlist in js/core/utils.js's safeMarkdown(), asserted in a
-// REAL browser. This is the only place it can be asserted at all.
+// REAL browser. This is the only place the <strong>/<em> positive assertions
+// can live.
 //
-// WHY NOT A UNIT TEST. The Bun suite never publishes window.marked or
-// window.DOMPurify — those come from js/core/third-party-globals.js, which only
-// evaluates through js/main.js in a browser. So every safeMarkdown() call in a
-// unit test takes the "libraries missing" early return and comes back as
-// escapeHtml(text). The parse-and-sanitize path — the entire reason the
-// function exists — was never executed by any test before this file.
-//
-// And it cannot simply be moved into the unit suite by stubbing the globals in.
-// Measured 2026-08-20: under happy-dom, DOMPurify strips <strong> and <em> even
-// though both are in ALLOWED_TAGS, while <a>, <button> and <span> survive —
+// WHY NOT ENTIRELY IN THE UNIT SUITE. tests/utils.test.js covers image
+// stripping, both link renderers, script removal, and repeated parse/sanitize
+// calls by importing real marked and DOMPurify into window in a beforeAll.
+// That leaves one gap: happy-dom strips <strong> and <em> even though both are
+// in ALLOWED_TAGS, while <a>, <button> and <span> survive —
 //
 //   DOMPurify.sanitize('<strong>b</strong>', { ALLOWED_TAGS: ['strong'] })
 //     -> 'b'                  (happy-dom)
 //     -> '<strong>b</strong>' (Chromium)
 //
-// so a unit assertion would either pin that artifact or pass vacuously. A
-// vacuous pass is the dangerous half: a test asserting "no <script> in the
-// output" succeeds trivially against a sanitizer that strips EVERYTHING, and
-// would keep succeeding if the allowlist were later widened to admit <img>.
-// tests/utils.test.js carries a test.todo recording the same measurement.
+// so a unit assertion on those two tags would either pin the happy-dom artifact
+// or pass vacuously. A vacuous pass is the dangerous half: a test asserting
+// "no <script> in the output" succeeds trivially against a sanitizer that strips
+// EVERYTHING, and would keep succeeding if the allowlist were later widened to
+// admit <img>. tests/utils.test.js carries a test.todo recording the same
+// measurement.
 //
 // WHY THIS MATTERS RATHER THAN BEING TIDINESS. safeMarkdown deliberately passes
 // an explicit ALLOWED_TAGS rather than using DOMPurify's default, and the
@@ -57,16 +54,25 @@ test.describe('safeMarkdown sanitizer allowlist (real browser)', () => {
 
   test('strips script and event-handler attributes', async ({ page }) => {
     expect(await render(page, '<script>alert(1)</script>ok')).not.toContain('<script')
+    // onerror on an <img> — the whole element is stripped, so also verify that
+    // an event-handler attribute on an ALLOWED element (e.g. <span>) is removed
+    // even when the element itself is retained.
     const onerror = await render(page, '<img src=x onerror="alert(1)">')
     expect(onerror).not.toContain('onerror')
     expect(onerror).not.toContain('<img')
+    const onclick = await render(page, '<span onclick="alert(1)">text</span>')
+    expect(onclick).not.toContain('onclick')
+    expect(onclick).toContain('<span')
   })
 
   // Block-level elements DOMPurify's default admits and this renderer has never
   // produced from inline markdown. Asserting their absence is what stops the
   // allowlist being widened without a decision.
   test('strips block elements the mockup renderer never emits', async ({ page }) => {
-    const html = await render(page, '# Heading\n\n<div>x</div><table><tr><td>y</td></tr></table>')
+    const html = await render(
+      page,
+      '<h1>Heading</h1># Heading\n\n<div>x</div><table><tr><td>y</td></tr></table>'
+    )
     for (const tag of ['<h1', '<div', '<table', '<tr', '<td']) {
       expect(html, `${tag} must not survive`).not.toContain(tag)
     }
@@ -108,7 +114,6 @@ test.describe('safeMarkdown sanitizer allowlist (real browser)', () => {
   // path works on shipped content and not only on strings this spec invents.
   test('renders real page copy through the sanitizer into the DOM', async ({ page }) => {
     await page.evaluate(() => window.renderPage('aboutHhvcTeam'))
-    await page.waitForTimeout(300)
     const mock = page.locator('#mockPage')
     await expect(
       mock.locator('strong', { hasText: 'Environmental Health Inspectors' })
