@@ -17,6 +17,7 @@
 import { describe, test, expect } from 'bun:test'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+const { scanText, currentClaimFiles } = require('../build_scripts/doc-claims.js')
 
 const ROOT = join(import.meta.dir, '..')
 const read = (name) => readFileSync(join(ROOT, name), 'utf8')
@@ -24,13 +25,6 @@ const read = (name) => readFileSync(join(ROOT, name), 'utf8')
 const pkg = JSON.parse(read('package.json'))
 const CLAUDE_MD = read('CLAUDE.md')
 const AGENTS_MD = read('AGENTS.md')
-/* The THIRD mirror. It is deliberately a pointer — no file inventories, no
-   architecture summary — but it does quote one count, and until this file read
-   it nothing did: it sat claiming 33 unit-test files against a real 36, which
-   is exactly the rot the pointer convention exists to avoid and which two
-   checked mirrors cannot catch on its behalf. Only its counts are pinned here;
-   re-expanding it into a summary is what the canon section forbids. */
-const COPILOT_MD = read('.github/copilot-instructions.md')
 
 /** Test files actually on disk. */
 const unitTestFiles = readdirSync(join(ROOT, 'tests'))
@@ -101,43 +95,6 @@ const NUMBER_WORDS = {
   forty: 40,
 }
 
-/**
- * Pull every count matching a pattern out of a doc, accepting digits or the
- * spelled-out form — both spellings appear, sometimes in the same paragraph.
- *
- * Two things a pattern here must tolerate, because this is prose in wrapped
- * markdown and BOTH of them hid a wrong count that this very file was supposed
- * to be checking:
- *
- *   - **Separate words with `\s+`, never a literal space.** Any two words in a
- *     phrase can be split across a line break at any time by an unrelated edit
- *     upstream rewrapping the paragraph. `.github/copilot-instructions.md` kept
- *     a spelled-out "thirty-three" claim straight through the change that added
- *     it to this file's coverage, because the phrase had wrapped between
- *     "unit-test" and "files".
- *   - **Allow `**` around the number.** The same claim then survived the `\s+`
- *     fix too: it reads `**thirty-six** Bun unit-test files`, and `[\w-]+`
- *     cannot end on `*`, so the capture slid forward and matched the literal
- *     word "Bun" instead of the count.
- *
- * The shared failure mode is that a pattern which stops matching does not fail
- * — it silently stops checking, and every remaining assertion passes. The
- * `expect(claims.length).toBeGreaterThan(0)` guard in each test below is what
- * catches the total-miss case; these two rules are what catch the partial one,
- * where some claims in a file still match and the wrong one does not.
- */
-function countsIn(text, pattern) {
-  const found = []
-  for (const match of text.matchAll(pattern)) {
-    // First capture group that actually matched — patterns with alternatives
-    // leave the others undefined.
-    const raw = match.slice(1).find((group) => group !== undefined)
-    if (raw === undefined) continue
-    found.push(NUMBER_WORDS[raw.toLowerCase()] ?? Number(raw))
-  }
-  return found
-}
-
 describe("package.json's explicit test list", () => {
   // The `test` script names its files rather than globbing, so a new test file
   // covers nothing until it is added there. It passes locally when invoked by
@@ -152,6 +109,80 @@ describe("package.json's explicit test list", () => {
     for (const name of namedTestFiles) {
       expect(unitTestFiles).toContain(name)
     }
+  })
+})
+
+/* Minimum claims each file must still yield.
+ *
+ * Asserted BEFORE any value comparison, and that order is the point. A
+ * doc-parsing regex that stops matching does not fail — it stops checking, and
+ * every remaining assertion passes. tests/karl-blocks.test.js asserts a
+ * minimum row count first for exactly this reason.
+ *
+ * Only files carrying claims today get an entry: a floor of 0 asserts nothing.
+ * Skill files are still SCANNED — the ratchet catches a lost claim, and the
+ * value check below catches a wrong one even with no floor.
+ *
+ * Lowering a number here silently reduces coverage. Do not adjust one to make
+ * a build pass; fix the doc or the pattern.
+ *
+ * `.github/copilot-instructions.md` earns a floor despite being a deliberate
+ * POINTER doc — no file inventories, no architecture summary, per the canon
+ * section governing it — because it still quotes counts, and until a scanner
+ * read it nothing did: it once sat claiming 33 unit-test files against a real
+ * 36. A pointer being unchecked is exactly the rot the pointer convention
+ * exists to avoid. */
+const CLAIM_FLOORS = {
+  'AGENTS.md': 5,
+  'CLAUDE.md': 6,
+  '.github/copilot-instructions.md': 3,
+}
+const GLOBAL_FLOOR = 14
+
+const derivedCounts = {
+  unitTestFiles: unitTestFiles.length,
+  e2eSpecFiles: e2eSpecFiles.length,
+  pageFiles: pageFiles.length,
+  styleSheets: styleSheets.length,
+}
+const DERIVER_BY_CLAIM = {
+  'unit-tests': 'unitTestFiles',
+  'e2e-specs': 'e2eSpecFiles',
+  pages: 'pageFiles',
+  stylesheets: 'styleSheets',
+}
+
+describe('doc claims, across every file that describes the repo as it is now', () => {
+  const scanned = currentClaimFiles().map((name) => ({ name, claims: scanText(read(name)) }))
+
+  test('scans a non-empty file set', () => {
+    // An empty set is a broken derivation, not a clean run — the same reading
+    // build_scripts/docs-file-set.js's callers take.
+    expect(scanned.length).toBeGreaterThan(3)
+  })
+
+  test.each(Object.entries(CLAIM_FLOORS))('%s still yields at least %d claims', (name, floor) => {
+    const entry = scanned.find((file) => file.name === name)
+    expect(entry).toBeDefined()
+    expect(entry.claims.length).toBeGreaterThanOrEqual(floor)
+  })
+
+  test('the corpus as a whole has not lost claims', () => {
+    const total = scanned.reduce((sum, file) => sum + file.claims.length, 0)
+    expect(total).toBeGreaterThanOrEqual(GLOBAL_FLOOR)
+  })
+
+  test('every claim found anywhere matches the filesystem', () => {
+    const wrong = []
+    for (const { name, claims } of scanned) {
+      for (const claim of claims) {
+        const expected = derivedCounts[DERIVER_BY_CLAIM[claim.id]]
+        if (claim.value !== expected) {
+          wrong.push(`${name}: "${claim.id}" claims ${claim.value}, filesystem has ${expected}`)
+        }
+      }
+    }
+    expect(wrong).toEqual([])
   })
 })
 
@@ -172,56 +203,6 @@ describe("package.json's explicit test list", () => {
  * number, because it reads as authoritative.
  */
 describe('counts quoted in the instruction docs', () => {
-  test.each([
-    ['CLAUDE.md', CLAUDE_MD],
-    ['AGENTS.md', AGENTS_MD],
-    ['.github/copilot-instructions.md', COPILOT_MD],
-  ])('%s states the real number of unit-test files', (_name, text) => {
-    const claims = countsIn(text, /\*{0,2}([\w-]+)\*{0,2}\s+(?:Bun\s+)?unit-test\s+files/gi)
-    expect(claims.length).toBeGreaterThan(0)
-    for (const claim of claims) expect(claim).toBe(unitTestFiles.length)
-  })
-
-  test.each([
-    ['CLAUDE.md', CLAUDE_MD],
-    ['AGENTS.md', AGENTS_MD],
-  ])('%s states the real number of e2e spec files', (_name, text) => {
-    const claims = countsIn(text, /\*{0,2}([\w-]+)\*{0,2}\s+spec\s+files/gi)
-    expect(claims.length).toBeGreaterThan(0)
-    for (const claim of claims) expect(claim).toBe(e2eSpecFiles.length)
-  })
-
-  test.each([
-    ['CLAUDE.md', CLAUDE_MD],
-    ['AGENTS.md', AGENTS_MD],
-  ])('%s states the real number of pages', (_name, text) => {
-    // Both spellings the docs actually use — "holds **19 pages** under" and
-    // "across the 19 pages". Deliberately narrow: a bare /(\d+) pages/ also
-    // matches the plain-language budget ("any one rule failing at most 8
-    // pages"), which is a threshold, not a count of what is on disk.
-    const claims = countsIn(text, /\*\*(\d+)\s+pages\*\*|the (\d+)\s+pages/g)
-    expect(claims.length).toBeGreaterThan(0)
-    for (const claim of claims) expect(claim).toBe(pageFiles.length)
-  })
-
-  test.each([
-    ['CLAUDE.md', CLAUDE_MD],
-    ['AGENTS.md', AGENTS_MD],
-  ])('%s states the real number of stylesheets outside the ordering paragraph', (_name, text) => {
-    // "the N stylesheets", never a bare "N stylesheets". Both docs also say
-    // "Emotion added 15 stylesheets" — that counts what MUI injects at
-    // runtime, not what is in css/, and folding it in would pin an unrelated
-    // measurement to this repo's file count.
-    //
-    // This catches the React-islands note only. The ordering paragraph phrases
-    // its own count as "There are N repository-owned stylesheets", with two
-    // words in between, so this pattern cannot see it — which is the whole
-    // reason the next test exists rather than a second regex here.
-    const claims = countsIn(text, /\bthe\s+\*{0,2}([\w-]+)\*{0,2}\s+stylesheets/gi)
-    expect(claims.length).toBeGreaterThan(0)
-    for (const claim of claims) expect(claim).toBe(styleSheets.length)
-  })
-
   test.each([
     ['CLAUDE.md', CLAUDE_MD],
     ['AGENTS.md', AGENTS_MD],
