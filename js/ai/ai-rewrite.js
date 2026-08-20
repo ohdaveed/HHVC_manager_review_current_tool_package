@@ -283,9 +283,9 @@
    * Ask the server what it supports once, at init.
    *
    * The button never appears on a deployment with no AI backend — a static host
-   * has no runtime for /api/ai/* at all, and a Railway deploy still answers 501
-   * there until a provider key is configured. An affordance that always fails is
-   * worse than no affordance.
+   * has no runtime for /api/ai/* at all, and an unconfigured/unauthorized API
+   * answers 501/401. Capabilities can still answer when no provider key is set;
+   * it reports that generation is unavailable.
    * @returns {Promise<void>}
    */
   async function checkAvailability() {
