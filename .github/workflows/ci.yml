@@ -35,7 +35,13 @@ jobs:
     name: Format, validate, unit tests
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 because the revert check below walks a file's history on
+      # origin/main to find a superseded revision. The default shallow clone
+      # has one commit and no origin/main, so the check would SKIP — and a gate
+      # that silently skips is the thing it exists to prevent.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -49,6 +55,26 @@ jobs:
 
       - name: Prettier check (the lint step)
         run: bun run format:check
+
+      # Fails when a branch RESTORES a version of a file that origin/main has
+      # already moved past. This is the one class of regression every other
+      # gate here is blind to: format:check, validate, the unit suite and
+      # Playwright each ask only "is this branch internally consistent?", and a
+      # wholesale revert is perfectly self-consistent. GitHub's own "require
+      # branches to be up to date" rule does not help either — it is a check on
+      # the COMMIT GRAPH, so a branch that MERGES main and then reverts the
+      # merged content satisfies it completely.
+      #
+      # That is not hypothetical: PR #169's branch contained both #170's and
+      # #173's commits as ancestors while its content had railway.json back at
+      # a deleted script, the workshop page back at the embedded mock form, and
+      # 74 lines of tests removed — 36 files, +140/-238 against main, every
+      # check green.
+      #
+      # An intended revert is a normal thing to want: put [allow-revert] in a
+      # commit message on the branch.
+      - name: Reverted-work check (branch vs main)
+        run: bun run check:revert
 
       - name: Validate page data (Zod schema + invariants)
         run: bun run validate
