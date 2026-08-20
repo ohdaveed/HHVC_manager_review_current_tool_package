@@ -46,7 +46,7 @@ services and resources sections by subheading, as in Agency pages. You
 can also move services and resources within subsections by dragging into
 the order you want."_ No intro-text field is mentioned for these blocks,
 but the page is prose, not a field-by-field list (unlike the
-Information/Transaction/Campaign "How a ___ page works" pages).
+Information/Transaction/Campaign "How a \_\_\_ page works" pages).
 **Partially addressed, still needs live admin** — consistent with the
 doc's existing framing; no new resolution.
 

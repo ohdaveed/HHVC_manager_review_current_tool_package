@@ -126,7 +126,7 @@ Achieving complete conformance with Web Content Accessibility Guidelines (WCAG) 
 #### **7.6.2 Other Universal Design Controls**
 
 - **No Color-Only Cues:** Never use color as the sole method to convey meaning or urgency [283]. (E.g., do not write _"Required steps are highlighted in red"_). Combine color cues with bold text, descriptive labels, or icons [283].
-- **Semantic CMS Bullets:** Always use Karl's native bullet and ordered list components [283]. Typing manual dashes (-), asterisks (*), or custom bullet characters breaks screen-reader list announcements [283].
+- **Semantic CMS Bullets:** Always use Karl's native bullet and ordered list components [283]. Typing manual dashes (-), asterisks (\*), or custom bullet characters breaks screen-reader list announcements [283].
 - **Accessible PDF Policy:** Avoid publishing PDFs whenever possible [14, 130, 134]. If a PDF is required (such as an official ordinance or a multi-page form), the editor must provide an accessible, machine-translatable HTML equivalent directly on the SF.gov page, or guarantee the PDF is fully tagged for screen readers [130, 134, 284].
 
 ---

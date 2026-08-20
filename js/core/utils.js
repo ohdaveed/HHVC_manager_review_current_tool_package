@@ -154,6 +154,14 @@ function zeroDecisionTally() {
  * @param {string} rawString
  * @returns {string} Safe HTML string.
  */
+let cachedMarkedInstance = null
+
+/**
+ * Parse Markdown to HTML and sanitize it against XSS.
+ * Falls back to plain text escaping if parsing fails or libraries are missing.
+ * @param {string} rawString
+ * @returns {string} Safe HTML string.
+ */
 function safeMarkdown(rawString) {
   const text = String(rawString ?? '')
   if (!text) return ''
@@ -165,19 +173,24 @@ function safeMarkdown(rawString) {
   }
 
   try {
-    const renderer = new window.marked.Renderer()
-    renderer.link = ({ href, text }) => {
-      if (/^https?:\/\//.test(href)) {
-        return `<a class="inline-link" href="${href}" target="_blank" rel="noopener noreferrer">${text} <span aria-hidden="true">↗</span></a>`
+    if (!cachedMarkedInstance) {
+      if (typeof window.marked.Marked === 'function') {
+        cachedMarkedInstance = new window.marked.Marked()
+      } else {
+        cachedMarkedInstance = window.marked
       }
-      return `<button type="button" class="inline-link" data-render-target="${href}">${text}</button>`
+      const renderer = new window.marked.Renderer()
+      renderer.link = ({ href, text }) => {
+        if (/^https?:\/\//.test(href)) {
+          return `<a class="inline-link" href="${href}" target="_blank" rel="noopener noreferrer">${text} <span aria-hidden="true">↗</span></a>`
+        }
+        return `<button type="button" class="inline-link" data-render-target="${href}">${text}</button>`
+      }
+      cachedMarkedInstance.use({ renderer })
     }
 
-    // Configure marked to use our renderer
-    window.marked.use({ renderer })
-
     // parseInline prevents wrapping the output in <p> tags
-    const rawHtml = window.marked.parseInline(text)
+    const rawHtml = cachedMarkedInstance.parseInline(text)
 
     // **An explicit allowlist, not DOMPurify's default one.** The default
     // permits `<img>`, and `marked.parseInline` emits one for `![alt](url)` —
