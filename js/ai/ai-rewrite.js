@@ -282,8 +282,9 @@
   /**
    * Ask the server what it supports once, at init.
    *
-   * The button never appears on a deployment with no AI backend — a Netlify
-   * build has no runtime for /api/ai/*, and an affordance that always fails is
+   * The button never appears on a deployment with no AI backend — a static host
+   * has no runtime for /api/ai/* at all, and a Railway deploy still answers 501
+   * there until a provider key is configured. An affordance that always fails is
    * worse than no affordance.
    * @returns {Promise<void>}
    */

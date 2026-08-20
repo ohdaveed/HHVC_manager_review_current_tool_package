@@ -50,7 +50,7 @@
   // either breaks the MCP setup rather than shrinking the install.
   //
   // Worth knowing separately: both sit in `dependencies` rather than
-  // `devDependencies`, so they install on Railway and Netlify where nothing
+  // `devDependencies`, so they install on Railway where nothing
   // runs them. That is a placement question for whoever owns the MCP config,
   // not something this file should decide.
   "ignoreDependencies": ["@executeautomation/database-server", "@heyclaude/mcp"],

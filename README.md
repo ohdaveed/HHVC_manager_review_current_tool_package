@@ -166,8 +166,8 @@ bun run export
 # Run validation, export, form build, and single-file HTML rebuild
 bun run build
 
-# Build the Netlify distribution
-bun run build:netlify
+# Build the deploy distribution (what Railway runs)
+bun run build:railway
 
 # Check code formatting
 bun run format:check

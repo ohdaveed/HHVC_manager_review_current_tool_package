@@ -52,7 +52,7 @@ Client libraries bundled into the static app (listed in `devDependencies` but im
 ```bash
 bun install
 bun run build          # validate -> export -> workshop form -> app -> copy form -> singlefile
-bun run build:netlify  # validate -> vite build -> copy workshop form (Netlify)
+bun run build:railway  # validate -> vite build -> copy workshop form (Railway build)
 bun run test           # explicit list of 22 Bun unit-test files
 bun run test:e2e       # Playwright
 bun run format:check   # lint step
@@ -63,7 +63,7 @@ bun run dev:api        # optional server.ts API on :8081
 
 ### 5) Environment and Config
 
-- Config sources: `vite.config.mjs`, `netlify.toml`, `bunfig.toml`, `playwright.config.js`, `build_scripts/sheet-config.json`, gitignored `.env.local`
+- Config sources: `vite.config.mjs`, `railway.json`, `netlify.toml`, `bunfig.toml`, `playwright.config.js`, `build_scripts/sheet-config.json`, gitignored `.env.local`
 - No `.env.example` / `.env.template` in repo ([TODO] if one should be added)
 - Required / optional env vars observed in code:
   - Server/static: `HOST`, `PORT`, `STATIC_ROOT`, `API_PORT` (Vite proxy)
@@ -71,13 +71,13 @@ bun run dev:api        # optional server.ts API on :8081
   - AI: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MAX_RETRIES`, `ANTHROPIC_TIMEOUT_MS`, `AI_EFFORT`, `AI_REQUEST_TIMEOUT_MS`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`, `GEMINI_MAX_ATTEMPTS`, `GEMINI_TIMEOUT_MS`
   - Sheets push: `GOOGLE_SERVICE_ACCOUNT_JSON` or `GOOGLE_APPLICATION_CREDENTIALS`
   - E2E: `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `CI`
-- Deployment constraints: Netlify publish is static `dist/` only — optional `/api/*` has no Netlify runtime. Production SQLite path is documented as a Railway volume in `.gitignore`.
+- Deployment constraints: Railway builds `dist/` and starts `server.ts`, so the optional `/api/*` routes have a runtime and fail closed until configured. Netlify is retired (`netlify.toml` carries `build.ignore = "exit 0"`) and would publish static `dist/` only. Production SQLite path is documented as a Railway volume in `.gitignore`.
 
 ### 6) Evidence
 
 - `package.json`
 - `vite.config.mjs`
-- `netlify.toml`
+- `railway.json`
 - `.github/workflows/ci.yml`
 - `server.ts`
 - `build_scripts/ai/provider-anthropic.js`

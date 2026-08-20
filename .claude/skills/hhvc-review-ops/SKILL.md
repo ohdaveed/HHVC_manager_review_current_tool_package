@@ -20,7 +20,8 @@ the same person, deliberately.
   same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
 **It had a tab of its own — the `5` key — and lost it.** On a default or
-Netlify deploy every value it reported was "not configured" or "none", because
+deploy without the optional backends configured — which then meant the static
+Netlify one — every value it reported was "not configured" or "none", because
 both optional backends need `server.ts`; that is not worth one of the strip's
 slots. The one line a reviewer genuinely needs from it — _reviews are saved in
 this browser only_ — was promoted into the sidebar beside the export controls,

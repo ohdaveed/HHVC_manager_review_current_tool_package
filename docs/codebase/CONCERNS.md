@@ -8,7 +8,7 @@
 | -------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | high     | Review import/export can destroy reviews if merge regresses; limited non-e2e coverage | `AGENTS.md` Local persistence; deleted `review-import-export.spec.js` history            | Manager decisions wiped                               | Keep e2e green; manual round-trip after touching merge/import/export; consider dual-export for unit tests |
 | high     | README page count stale (19) vs disk/`order` (20)                                     | `README.md` vs `js/core/page-data.js` (20 order entries), `pages/*.js` (20), `CLAUDE.md` | Wrong onboarding claims; sticky copy may still say 19 | Update README + any UI strings; extend `doc-counts` to README [ASK USER]                                  |
-| med      | Optional APIs fail closed, but UI historically looked “empty” on Netlify              | `netlify.toml`, `AGENTS.md` workspace tab cuts                                           | Confusing demos                                       | Keep AI/ops nested under Help; document deploy matrix                                                     |
+| med      | Optional APIs fail closed, so the UI reads “empty” until they are configured          | `railway.json`, `AGENTS.md` workspace tab cuts                                           | Confusing demos                                       | Keep AI/ops nested under Help; document deploy matrix                                                     |
 | med      | Explicit `test` file list                                                             | `package.json`, `tests/doc-counts.test.js`                                               | New tests silently never run                          | Always add to `package.json` when adding files                                                            |
 | med      | No `.env.example` for many secrets/tunables                                           | scan: no env template; greps in `server.ts` / AI providers                               | Misconfigured deploys                                 | Add sanitized template [ASK USER]                                                                         |
 | low      | Scan metrics polluted by `.worktrees` + large policy binaries                         | `.codebase-scan.txt` CODE METRICS                                                        | Misleading size/complexity                            | Exclude worktrees when scanning                                                                           |
@@ -60,7 +60,7 @@ Production TODO/FIXME/HACK scan: none found in production code (scan section).
 1. [ASK USER] Should `README.md` (and any remaining “19 pages” UI strings) be updated to **20**, and should `tests/doc-counts.test.js` also guard README?
 2. [ASK USER] Is Railway the confirmed long-term host for `server.ts` sync/AI, or provisional documentation only?
 3. [ASK USER] Should Vite-bundled client libraries move from `devDependencies` to `dependencies` for clearer production inventory?
-4. [ASK USER] Is Netlify remaining permanently API-less for manager demos, or is a hosted sync/AI endpoint planned for that audience?
+4. [ASK USER] Railway now runs `server.ts` for manager demos — are the sync and AI endpoints meant to stay configured there, or to remain off for that audience?
 5. [ASK USER] Do you want a committed `.env.example` listing required/optional vars without secrets?
 6. [ASK USER] Should CI enforce a coverage threshold, or keep the current validate + explicit unit list + e2e gate?
 7. [ASK USER] After Article 11 compliance landed, is **20** the stable page-set target for this review package, or are more consolidations/additions expected soon?
@@ -72,6 +72,6 @@ Production TODO/FIXME/HACK scan: none found in production code (scan section).
 - `AGENTS.md` (persistence / security / workspace)
 - `package.json`
 - `server.ts`
-- `netlify.toml`
+- `railway.json`
 - `.gitignore`
 - `tests/doc-counts.test.js`

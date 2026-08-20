@@ -20,7 +20,7 @@ index.html -> js/main.js (CSS + modules)
   -> js/mockup/page-render.js + js/core/app.js render mockup
   -> review IIFEs read/write localStorage (hhvcManagerReviewState:v1)
   -> optional: fetch /api/review-state* or /api/ai/* on server.ts (Bearer token)
-  -> Netlify serves static dist/ only (no API)
+  -> Railway runs server.ts: serves dist/ plus the optional /api/* routes
 ```
 
 1. Vite bundles `js/main.js` and CSS into `dist/` (or single-file HTML).
@@ -28,7 +28,7 @@ index.html -> js/main.js (CSS + modules)
 3. Core modules render the mockup and wire editor/sidebar controls from in-memory `pageData`.
 4. Review layers persist decisions/notes/edits in versioned `localStorage`; continuous autosave skips history; round boundaries go through `mergeReviewRecord`.
 5. If configured, browser sync client pushes/pulls per-page records to SQLite via `server.ts`; AI panel posts drafts to `/api/ai/generate` (validated, never written to disk as pages).
-6. Managers on Netlify get the static bundle only; sync/AI require a Bun host with secrets.
+6. Managers open the Railway deploy, which runs `server.ts`; the sync/AI routes still need secrets configured, and a purely static host would have no runtime for them at all.
 
 ### 3) Layer/Module Responsibilities
 
@@ -72,7 +72,7 @@ index.html -> js/main.js (CSS + modules)
 
 - IIFE load order in `js/main.js` is still hand-maintained for `window.<Namespace>` edges the module graph cannot see — wrong order breaks silent mounts (`js/main.js` header).
 - Import/export round-trip for reviews has limited automated coverage (primarily e2e); wholesale replace once destroyed reviews (`AGENTS.md`).
-- Netlify vs Bun-backend split means AI/sync UI can look “empty” on the deploy managers open unless those panels stay collapsed/discoverable (`AGENTS.md`).
+- Static-host vs Bun-backend split means AI/sync UI can look “empty” on the deploy managers open unless those panels stay collapsed/discoverable; Railway supplies the runtime, but each panel is still empty until its own backend is configured (`AGENTS.md`).
 - Explicit `package.json` test file list: a new `tests/*.test.js` never runs until named (`package.json`, `tests/doc-counts.test.js`).
 
 ### 6) Evidence
@@ -82,6 +82,6 @@ index.html -> js/main.js (CSS + modules)
 - `js/review/review-merge.js`
 - `server.ts`
 - `vite.config.mjs`
-- `netlify.toml`
+- `railway.json`
 - `AGENTS.md`
 - `README.md`
