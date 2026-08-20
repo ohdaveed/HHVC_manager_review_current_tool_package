@@ -1,0 +1,242 @@
+# Doc claim guard — single-sourcing the counts the mirrors keep drifting on
+
+**Date:** 2026-08-20
+**Status:** Design approved, not yet implemented
+**Scope:** Tooling only. No prose reorganization, no change to the mirror set.
+
+## The problem, as measured rather than assumed
+
+PR #177 changed the number of Playwright spec files from twenty-two to
+twenty-three. That count is stated in three files. **Two of them were
+updated and the third was not**, and CI went green anyway.
+
+`tests/doc-counts.test.js` exists precisely to stop this. It did not, for two
+independent reasons, and both matter to the design:
+
+1. **Its file list is hand-maintained.** The test reads
+   `.github/copilot-instructions.md` at line 33 and includes it in the
+   unit-test-count check — but that file was simply **left off** the
+   `test.each` list for the spec-file check. Nothing detects an omission from
+   a hand-written list; that is what a hand-written list is.
+2. **Its regex could not have matched anyway.** The pattern
+   `/\*{0,2}([\w-]+)\*{0,2}\s+spec\s+files/` requires the number to sit
+   immediately before `spec files`. That file writes
+   `twenty-two Playwright e2e spec files`, so two intervening words hid the
+   claim even from the check that did run.
+
+**The failure mode is silence.** A doc-parsing regex that stops matching does
+not fail — it stops checking, and reports success. This repo has recorded that
+exact lesson once already, in `tests/karl-blocks.test.js`, which asserts a
+minimum row count FIRST for the same reason.
+
+### What actually drifts
+
+Every recorded drift incident in this repo has been a **count or an
+inventory**, never the reasoning prose:
+
+- the spec-file count, today;
+- the stylesheet count inside `hhvc-react-islands`, which read `ten` for as
+  long as the skill existed while both guarded docs said `eleven`;
+- `.cursor` and `.windsurf` quoting a unit-test-file count "less than half the
+  real one", per their own headers.
+
+So the target is the count class, and the prose is deliberately left alone.
+
+## Decisions
+
+| # | Decision | Rejected alternative and why |
+| - | -------- | ---------------------------- |
+| 1 | Single-source the volatile facts | Guard-hardening alone fixes today's bug, not the class. Generating `CLAUDE.md` from `AGENTS.md` is a rewrite: only 37% of its paragraphs are byte-identical (38 KB shared, 76 KB unique). |
+| 2 | Verify against the docs, with auto-discovered files | Marker injection (`<!--count:e2e-->`) litters the prose this repo values. Moving counts out of prose entirely destroys the inline-fact voice. |
+| 3 | Coverage ratchet, floors asserted first | A strict phrasing allowlist bends the prose to the tool. Per-number triage is more upfront work than the risk warrants. |
+| 4 | Scan the 3 prose mirrors + tracked `.claude/skills/*/SKILL.md` | Mirrors-only leaves the skill class unguarded, which has already failed once. All tracked markdown drags in `docs/`, whose dated notes are **frozen by policy** — "a count or claim that was right on its date stays in the file" — and would red-line correct history. |
+
+## Architecture
+
+One new module, `build_scripts/doc-claims.js`, exporting a pure scanner.
+`tests/doc-counts.test.js` becomes its caller. Pure and dual-exported like
+`js/review/review-merge.js` and `js/core/card-inheritance.js`, so the scanner
+is testable against hand-built fixtures rather than only against the real
+corpus — the same reason `card-inheritance` and `karl-transcript` are driven
+with synthetic pages.
+
+Three inputs, and **only one of them is hand-maintained**:
+
+| Input | Source | Hand-maintained |
+| ----- | ------ | --------------- |
+| Files to scan | `git ls-files` → the 3 mirrors + tracked `.claude/skills/*/SKILL.md` | No |
+| Claim types | the `CLAIMS` registry | **Yes** |
+| Expected values | the filesystem, read at test time | No |
+
+The hand-maintained axis shrinks from **(files × claims)** to **(claims)**.
+That is the whole point: today's bug was a missing cell in the matrix, and the
+matrix stops existing.
+
+**Discovery reads `git ls-files`**, matching `build_scripts/docs-file-set.js`
+and `tests/module-paths.test.js`. It inherits their property — an untracked
+file is invisible — which is correct here: a new mirror is covered the moment
+it is committed, with no list to update. It also inherits their hazard, that a
+file must be tracked before the guard sees it, which the global floor below
+partially covers.
+
+## The CLAIMS registry
+
+**The registry adopts the four regexes `doc-counts.test.js` already carries.**
+They are field-proven against this corpus's false positives; new ones are not.
+Each entry pairs one pattern with its filesystem deriver.
+
+Registry phrases are **disambiguated noun phrases, never bare nouns** —
+`repository-owned stylesheets`, not `stylesheets`. That single choice is what
+keeps a runtime measurement out of the match set, and the existing test says so
+in its own comment (`tests/doc-counts.test.js:199`): "Deliberately narrow: a
+bare `/(\d+) pages/` also matches the plain-language budget".
+
+### One regex is fixed
+
+The e2e pattern is the one that failed and the only one changed:
+
+```js
+// before — misses "twenty-two Playwright e2e spec files"
+/\*{0,2}([\w-]+)\*{0,2}\s+spec\s+files/gi
+
+// after — tolerates up to 3 intervening words, no punctuation in the gap
+/\*{0,2}([\w-]+)\*{0,2}(?:\s+[A-Za-z][\w.-]*){0,3}\s+spec\s+files/gi
+```
+
+The gap is bounded at three words and admits **no punctuation**, so it cannot
+cross a clause boundary and capture an unrelated number from the previous
+sentence.
+
+### Number words must match longest-first
+
+Sort the number-word list by descending length before joining the alternation.
+Unsorted, `nine` matches inside `twenty-nine` and `twenty` inside
+`twenty-three`, and the scanner silently under-matches.
+
+**This is not hypothetical.** The throwaway probe written while designing this
+reproduced today's bug exactly: it missed
+`twenty-three Playwright e2e spec files` in `copilot-instructions.md` — a
+string `grep` confirms is present — because `twenty` won the alternation. The
+scanner under-reported and reported success. Any implementation must carry a
+test for this specific ordering.
+
+## The ratchet
+
+Assertion order is load-bearing:
+
+```
+1. found.length >= FLOOR[file]   ← fails FIRST, names the file
+2. TOTAL >= GLOBAL_FLOOR         ← the corpus cannot collapse wholesale
+3. every found claim === filesystem
+```
+
+Value checking alone cannot catch a claim that stopped being *found*; that is
+the whole lesson of `karl-blocks.test.js`, quoted in `CLAUDE.md`: "It asserts a
+MINIMUM row count per type FIRST, because a doc-parsing regex that stops
+matching does not fail — it stops checking, and reports zero rows on both
+sides."
+
+Floors are committed integers, and **only for files carrying claims today**. A
+floor of `0` asserts nothing, so the skill files with no counts get no entry.
+They are still scanned: the ratchet catches a *lost* claim, value checking
+catches a *wrong* one, and a skill that newly acquires a stale count is caught
+by the second even with no floor of its own.
+
+`GLOBAL_FLOOR` exists so that a discovery bug — a broken `git ls-files` call,
+a bad path join — cannot pass by finding nothing anywhere. Both
+`build_scripts/docs-file-set.js` callers already treat an empty file list as a
+broken derivation rather than a clean run, for the same reason.
+
+## Failure output
+
+Today's bug produced no signal at all. Every failure must name the file, the
+claim, and both numbers:
+
+```
+copilot-instructions.md: "spec files" claims 22, filesystem has 23
+copilot-instructions.md: matched 1 claim, floor is 2
+```
+
+The second line is the one the current design cannot express: **a claim
+stopped being checked.**
+
+## Migration
+
+The five `test.each` blocks collapse into one scanner-driven loop.
+
+**Hard requirement: no coverage regression.** Snapshot the current
+(file × claim) matrix that the existing tests assert, and diff it against the
+matrix the scanner produces. Replacing a hand list with discovery is exactly
+where coverage silently drops, and an implementation that quietly checks fewer
+pairs than before would be this bug a second time.
+
+## Proof
+
+Mutation-proven, per repo convention — this PR exists because two assertions
+could not fail, so its own guard must be shown to.
+
+| Mutation | Expected |
+| -------- | -------- |
+| Wrong spec count in one mirror | RED — value check, naming that file |
+| A claim rephrased out of regex reach | RED — **ratchet**, before any value check |
+| New `tests/e2e/*.spec.js`, docs untouched | RED — every mirror carrying that claim |
+| Number-word list left unsorted | RED — the longest-first ordering test |
+| `Emotion added 15 stylesheets` | **GREEN** — false-positive fixture |
+| `nine pages reported hitting a reading target` | **GREEN** — false-positive fixture |
+
+The three false-positive fixtures are committed as test data so that a later
+"improvement" to a regex cannot silently re-admit them.
+
+### The PR demonstrates itself
+
+Adding `build_scripts/doc-claims.js` and its test file moves the unit-test
+count 52 → 53. That must land in all three mirrors **and** in `package.json`'s
+explicit `test` list, which is enumerated rather than globbed. If any is
+missed, the new guard fails on its own introducing commit — which is the
+cleanest available evidence that it works.
+
+## Non-goals
+
+Stated explicitly so they are not mistaken for solved:
+
+- **The mirror count is unchanged.** Three prose files still carry real
+  content and are still hand-synced. This kills the count drift class, not the
+  mirrors.
+- **Non-count prose stays unguarded.** The rot that hit `.cursor` and
+  `.windsurf` was architecture prose describing a bundler the repo had
+  removed. No regex catches that, and none is proposed.
+- **Skills carrying non-count facts stay hand-synced** against `AGENTS.md`.
+
+## Risks
+
+- **A new claim type is added to the docs and never registered.** It is
+  unguarded, and the ratchet does not see it because it never counted it.
+  Mitigated only by the registry being short and reviewed; not eliminated.
+- **The 3-word gap admits a false positive** some future sentence creates. The
+  punctuation exclusion narrows this; the false-positive fixtures are the
+  regression net.
+- **Floors are committed integers and can be lowered.** Lowering one to make a
+  build pass silently reduces coverage. The global floor limits the blast
+  radius; a reviewer noticing a decremented floor is the real control.
+
+## PR shape
+
+One PR, tooling only:
+
+- `build_scripts/doc-claims.js` — the scanner
+- `tests/doc-claims.test.js` — fixture-driven tests including the ordering
+  trap and the three false positives
+- `tests/doc-counts.test.js` — rewired to the scanner, coverage matrix diffed
+- `package.json` — the new test file named in the explicit `test` list
+- count corrections in the three mirrors, as the guard demands them
+
+**One incidental fix belongs in this PR.** The comment at
+`tests/doc-counts.test.js:199` still illustrates its regex with `19 pages`,
+from when the corpus held nineteen. The corpus holds 29 and the assertion
+itself is derived, so the code is correct and only the worked example is
+stale — but a stale example inside the very guard this PR rewrites is the
+same defect class, and it is read by whoever maintains the registry next.
+
+No prose reorganization. The three pointer files
+(`.cursor/rules/repo-context.mdc`, `.windsurfrules`, `.codex/AGENTS.md`) are
+already correct and are not touched.
