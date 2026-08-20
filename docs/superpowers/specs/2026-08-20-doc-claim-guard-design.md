@@ -107,18 +107,46 @@ The gap is bounded at three words and admits **no punctuation**, so it cannot
 cross a clause boundary and capture an unrelated number from the previous
 sentence.
 
-### Number words must match longest-first
+### The capture must be number-anchored, and the gap must admit digits
 
-Sort the number-word list by descending length before joining the alternation.
-Unsorted, `nine` matches inside `twenty-nine` and `twenty` inside
-`twenty-three`, and the scanner silently under-matches.
+Two rules, both established by testing the design rather than by reasoning
+about it. The second one is the demonstrated bug; the first is a flaw found in
+this design's own first draft.
 
-**This is not hypothetical.** The throwaway probe written while designing this
-reproduced today's bug exactly: it missed
-`twenty-three Playwright e2e spec files` in `copilot-instructions.md` — a
-string `grep` confirms is present — because `twenty` won the alternation. The
-scanner under-reported and reported success. Any implementation must carry a
-test for this specific ordering.
+**The capture group must match only number-shaped tokens.** The obvious
+gap-tolerant fix — widening `([\w-]+)` and allowing intervening words —
+captures the WRONG token, because the leftmost match wins:
+
+```js
+// captures "plus" from "plus twenty-three Playwright e2e spec files"
+/\*{0,2}([\w-]+)\*{0,2}(?:\s+[A-Za-z][\w.-]*){0,3}\s+spec\s+files/gi
+```
+
+`[\w-]+` happily matches `plus`, then the gap absorbs
+`twenty-three Playwright e2e`. `Number('plus')` is `NaN`, so the assertion
+fails loudly rather than silently — better than the current bug, but it is a
+false failure, not a correct check. The capture must therefore be an
+alternation of digits and known number words, not any word.
+
+**The gap must admit digits.** This is the actual cause of the miss, verified
+by isolating it:
+
+```
+[A-Za-z.`-]+  matches "e2e"?  false
+```
+
+A gap class of letters-only cannot cross `e2e`, so
+`twenty-three Playwright e2e spec files` never matches however the number
+alternation is ordered. This repo's prose is full of digit-bearing tokens —
+`e2e`, `h1`, `v2`, `SFDS` — so the gap token must be `[A-Za-z][\w.-]*`:
+letter-initial, digits permitted after.
+
+**Sorting the number-word alternation longest-first is a cheap precaution, not
+a demonstrated fix.** It was asserted as the cause in this spec's first draft
+and testing did not support it: regex backtracking recovers `twenty` →
+`twenty-three` unaided. Keep the sort — it costs one line and removes a class
+of reasoning about backtracking — but do not describe it as the bug, and do
+not let it stand in for the two rules above, which are load-bearing.
 
 ## The ratchet
 
@@ -180,7 +208,8 @@ could not fail, so its own guard must be shown to.
 | Wrong spec count in one mirror | RED — value check, naming that file |
 | A claim rephrased out of regex reach | RED — **ratchet**, before any value check |
 | New `tests/e2e/*.spec.js`, docs untouched | RED — every mirror carrying that claim |
-| Number-word list left unsorted | RED — the longest-first ordering test |
+| Capture widened to `([\w-]+)` | RED — captures `plus`, `NaN` vs 23 |
+| Gap class narrowed to letters-only | RED — **ratchet**: the claim goes unseen |
 | `Emotion added 15 stylesheets` | **GREEN** — false-positive fixture |
 | `nine pages reported hitting a reading target` | **GREEN** — false-positive fixture |
 
