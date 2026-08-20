@@ -282,10 +282,16 @@
   /**
    * Ask the server what it supports once, at init.
    *
-   * The button never appears on a deployment with no AI backend — a static host
-   * has no runtime for /api/ai/* at all, and an unconfigured/unauthorized API
-   * answers 501/401. Capabilities can still answer when no provider key is set;
-   * it reports that generation is unavailable.
+   * The button never appears on a deployment with no AI backend, and three
+   * different gates land on that same outcome. A static host has no runtime for
+   * /api/ai/* at all. A Railway deploy answers 401 until this browser is a
+   * principal, since authorization is checked before anything else. And an
+   * authorized deploy with no provider key answers 200 with an EMPTY `tasks`
+   * array — /api/ai/capabilities is the discovery endpoint and deliberately
+   * never 501s there, because a browser has to be able to tell "no AI key"
+   * from "no server at all". So it is `tasks`, not the status code, that says
+   * whether a rewrite can actually run. An affordance that always fails is
+   * worse than no affordance.
    * @returns {Promise<void>}
    */
   async function checkAvailability() {
