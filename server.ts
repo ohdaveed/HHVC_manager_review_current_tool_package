@@ -1401,6 +1401,28 @@ const server = serve({
       return handleAiApi(req, url)
     }
 
+    // Everything below this point serves static files, and a static file has
+    // no verb but GET (or HEAD). The branch used to match on PATHNAME ALONE,
+    // so a POST to "/" returned 200 with index.html — and any client reading
+    // `response.ok` as "the server took it" got a false success for a request
+    // nothing received and nothing stored.
+    //
+    // That is not hypothetical. forms/mosquito-workshop-request/ POSTs to "/"
+    // by the Netlify Forms convention; there is no Netlify handler on Railway,
+    // so it rendered a confirmation screen for every silently discarded
+    // submission. A false success is strictly worse than a visible failure,
+    // because nobody retries and nobody reports it.
+    //
+    // 405 rather than 404: the path DOES exist, the verb is what is wrong, and
+    // Allow tells a client which verbs are real. The /api/* routes are matched
+    // above, so their POST/PUT/DELETE verbs never reach this guard.
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { ...HTML_HEADERS, Allow: "GET, HEAD" },
+      })
+    }
+
     // Never let the static handler below serve a dotfile/dotdir path (e.g.
     // /.data/review-state.local.db, /.git/..., /.env.local). The static
     // branch has no denylist otherwise — it serves any existing path under

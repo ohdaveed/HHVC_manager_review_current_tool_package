@@ -35,6 +35,27 @@ test.describe('mosquito workshop request form', () => {
     await expect(page.locator('.form-success')).toHaveCount(0)
   })
 
+  // BOTH tests above mock the response, which is what let the real defect ship:
+  // they prove the client renders success on a 200 and an error on a 500, and
+  // it does. Nothing asserted what the REAL server answers. It answered 200
+  // with index.html for POST /, because the static branch matched on pathname
+  // with no method check — so the form showed a confirmation for every
+  // submission, and the suite stayed green throughout. See issue #172.
+  //
+  // This test uses no route mock at all.
+  test('does not claim success when the real server has no form handler', async ({ page }) => {
+    await page.goto(FORM_PATH)
+    await fillRequiredFields(page)
+
+    await page.click('button[type="submit"]')
+
+    // The form is a mockup: there is no intake backend on any deploy. The one
+    // thing it must never do is tell someone their request was received.
+    await expect(page.locator('.form-success')).toHaveCount(0)
+    await expect(page.locator('#submissionError')).toContainText('could not submit your request')
+    await expect(page.locator('#workshopForm')).toBeVisible()
+  })
+
   test('confirms a request accepted by the form handler', async ({ page }) => {
     await page.route('http://127.0.0.1:8080/', async (route) => {
       if (route.request().method() === 'POST') {
