@@ -47,7 +47,7 @@ require('../js/editing/inline-content-edit-link-tool.js') // side-effect: popula
 require('../js/editing/inline-content-edit-adapter.js') // side-effect: populates window.inlineEditAdapter
 // Imported once at file scope, not inside a test: js/review/ui-controls.js statically
 // imports js/core/state.js, which side-effect-loads the REAL js/core/page-data.js (all
-// 19 pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
+// of pages/*.js) and overwrites window.HHVC_DATA/window.ORIGINAL_DATA with the
 // real dataset the moment it first runs. Importing it here, before any test's
 // beforeEach/mountInlineContentEdit stub assigns the test-scoped
 // window.HHVC_DATA, means that one-time real-data clobber happens up front and
