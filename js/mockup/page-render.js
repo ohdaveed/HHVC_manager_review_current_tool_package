@@ -92,23 +92,6 @@ function normalizeTextItem(item) {
     unverifiedReason: item.unverifiedReason || '',
   }
 }
-/**
- * Flatten a text-bearing array to the plain strings a Karl tag's `values` list
- * shows the editor.
- *
- * Paragraphs, bullets and step text each accept either a plain string or a
- * `{ text, unverified }` object (see build_scripts/schema.js), so a bare
- * `items.join('\n')` stringifies the object form to "[object Object]". That
- * matters more here than a cosmetic glitch would: a Karl tag's values are what
- * tell an editor what to type into Karl, and the Karl transcript export reads
- * the same content — a confidently-wrong instruction is this feature's worst
- * failure mode, so it must never print a JS internal.
- * @param {Array<string|{text: string}>} items
- * @returns {string} One plain string per item, newline-joined.
- */
-function textValues(items) {
-  return (items || []).map((item) => normalizeTextItem(item).text).join('\n')
-}
 function unverifiedPill(reason) {
   return `<span class="unverified-pill"${reason ? ` title="${escapeHtml(reason)}"` : ''}><span aria-hidden="true">⚠</span> Unverified</span>`
 }
@@ -1009,7 +992,7 @@ function renderSpotlightSection(section) {
         context: { role: 'spotlight' },
       })
     : ''
-  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement', { guide: section.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: section.heading, source: 'visible' }, ...(section.paragraphs?.length ? [{ label: 'Description', value: textValues(section.paragraphs), source: 'visible' }] : [])] })}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout, '', base ? `${base}.callout` : '') : ''}${cta}</div></section>`
+  return `<section class="spotlight-section">${karlTag(section.karl || 'Spotlight', 'placement', { guide: section.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: section.heading, source: 'visible' }, ...(section.paragraphs?.length ? [{ label: 'Description', value: section.paragraphs.join('\n'), source: 'visible' }] : [])] })}<div class="spotlight-section-inner"><h2${headingPathAttr}>${escapeHtml(section.heading)}</h2>${paragraphList(section.paragraphs || [], base ? `${base}.paragraphs` : '')}${section.callout ? renderCallout(section.callout, '', base ? `${base}.callout` : '') : ''}${cta}</div></section>`
 }
 // Karl's Campaign "Top facts" widget: a boxed panel of named facts, reusing
 // the exact `what-to-know-subsection` H3-per-item markup/CSS
@@ -1204,7 +1187,7 @@ function renderSpotlight(spotlight) {
         { context: { role: 'spotlight' } }
       )
     : ''
-  return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement', { guide: spotlight.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: spotlight.title || '', source: 'visible' }, ...(spotlight.paragraphs?.length ? [{ label: 'Description', value: textValues(spotlight.paragraphs), source: 'visible' }] : [])] })}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2 data-rewrite-field="spotlight.title">${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [], 'spotlight.paragraphs')}${cta}</div></div></section>`
+  return `<section class="spotlight">${karlTag(spotlight.karl || 'Spotlight', 'placement', { guide: spotlight.karlGuide, context: { role: 'spotlight' }, values: [{ label: 'Title', value: spotlight.title || '', source: 'visible' }, ...(spotlight.paragraphs?.length ? [{ label: 'Description', value: spotlight.paragraphs.join('\n'), source: 'visible' }] : [])] })}<div class="spotlight-inner">${img}<div class="spotlight-copy"><h2 data-rewrite-field="spotlight.title">${escapeHtml(spotlight.title || '')}</h2>${paragraphList(spotlight.paragraphs || [], 'spotlight.paragraphs')}${cta}</div></div></section>`
 }
 function resolveHeroCta(page, whatToDoSections) {
   if (normalizePageType(page.type) !== 'transaction') return null

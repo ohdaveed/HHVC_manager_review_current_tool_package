@@ -58,7 +58,7 @@ Two things to add to what those descriptions say — one they omit outright, one
 they state too weakly to act on:
 
 - **`bun install` is required before the first `dev`, `validate`, `test` or
-  `build:railway`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
@@ -74,7 +74,7 @@ they state too weakly to act on:
   stays a hand-run report; Knip gates only the categories that were clean when
   it was adopted, because it reads this repo's deliberate `window.<Namespace>`
   publishing as ~89 unused exports; `lint:docs` derives its file list from
-  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the deploy bundle build,
+  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the Netlify bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -324,7 +324,7 @@ since `server.ts` named-imports those modules from TypeScript, which is the
 supported direction. Bumping `.bun-version` is fine, just deliberate.
 
 - **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
-  → `build:railway` → `test`. `build:railway` doubles as a deploy-integrity
+  → `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity
   check: it fails if the committed workshop-form `dist` references assets
   that were never committed (the "form shell that never hydrates" regression).
   **It runs before `test` on purpose**, even though that delays a unit
@@ -569,11 +569,8 @@ right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
 **Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
 hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
-static Netlify deploy live at the time had no runtime for, so on the build
-managers actually opened they were two permanently-empty panels holding two of
-six slots. Railway runs `server.ts`, so they are no longer structurally empty —
-but each still reports nothing until its own optional backend is configured,
-which is why the cut stands. Help stays last, so
+Netlify deploy has no runtime for, so on the build managers actually open they
+were two permanently-empty panels holding two of six slots. Help stays last, so
 it is the digit that moves whenever the strip changes; `WORKSPACE_TABS`
 (`js/review/ux-improvements-workspace.js`), the tab markup in `index.html` and the
 `1`–`3` cases in `js/review/keyboard-shortcuts.js` must change together. The two
@@ -721,8 +718,8 @@ directly, which is the half that works), so extracting `safeUrl` would push
 `js/mockup/page-render.js` onto window indirection for no gain. Separately,
 **CI never exercises that crossing under Node** —
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
-`build:railway`, which invokes `bun build_scripts/validate.js`). CI _does_ run
-Node, at the end of `build:railway` (`node build_scripts/copy-workshop-form.js`),
+`build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
+Node, at the end of `build:netlify` (`node build_scripts/copy-workshop-form.js`),
 but that script never touches `data-checks.js`, so the `require(esm)` path is
 _not_ covered. (That path
 needs `require(esm)` enabled — check `process.features.require_module` rather
@@ -1122,8 +1119,7 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
   in `build_scripts/sheet-config.json`) and optionally pushes via the Sheets
   API. It needs a Google service-account key, which is gitignored and must
   stay that way — never commit `*-service-account*.json` or `.env.local`.
-- **`bun run build:railway`** (what `railway.json` runs as its build command)
-  runs `validate` →
+- **`bun run build:netlify`** (driven by `netlify.toml`) runs `validate` →
   `build:app` (the real Vite production build into `dist/`) →
   `build_scripts/copy-workshop-form.js`. That last script is the surviving
   half of the old `build-netlify-dist.js`: everything it used to copy by hand
@@ -1141,8 +1137,7 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
   the root bundle is ignored as `/dist/`, anchored on purpose so it doesn't
   also swallow that sub-app's committed `dist/`.
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
-  `X-Frame-Options`, etc.) that `netlify.toml` declares for the retired static
-  site, so the live Railway deploy and the archived Netlify config agree.
+  `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
 
 ### Where review records live (`build_scripts/storage.js`)
 
@@ -1176,10 +1171,10 @@ and never sees a driver or a SQL string.
 
 **<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
 Railway project `hhvc-manager-review`, service `web`, connected to `main`, so a
-merge redeploys. Config lives in `railway.json`: build `bun run build:railway`,
+merge redeploys. Config lives in `railway.json`: build `bun run build:netlify`,
 start `bun run serve`.
 
-- **`bun run serve`, not `bun run start`** — `start` is `build:railway && serve`,
+- **`bun run serve`, not `bun run start`** — `start` is `build:netlify && serve`,
   which would repeat the whole build at boot on a platform that already ran it.
 - **`server.ts` must exit 0 on SIGTERM.** Railway retires a deployment by
   sending SIGTERM and reads the exit status that follows as its verdict. With no
@@ -1227,7 +1222,7 @@ start `bun run serve`.
 - **`forms/mosquito-workshop-request/`** — an independent Vite app (own
   `package.json`, `vite.config.js`, `src/main.js`) for one embedded form. Not
   wired into the main Bun dev server; built separately via
-  `bun run build:workshop-form` or the deploy build (`build:railway`).
+  `bun run build:workshop-form` or the Netlify build.
 - **`review/`** — reference/output for the manager review process
   (`manager_review_packet.md`, `manager_decision_log.csv`,
   `page_approval_checklist.csv`, `mockup_tracking_sheet.csv`), distinct from
@@ -1653,7 +1648,7 @@ exists yet; created lazily by `/domain-modeling`). See
   on a failed `Read` against a guessed path before self-correcting via
   `Glob`/`pwd`.
 - **`node_modules/` may be absent on a fresh clone or sandbox.** `bun install`
-  is required before `dev`, `validate`, `test`, or `build:railway` — the first
+  is required before `dev`, `validate`, `test`, or `build:netlify` — the first
   three need `zod`/`fast-glob`/`papaparse`, and `index.html` links
   `@sfgov/design-system` CSS straight out of `node_modules`.
 - **Land brainstorming/exploration sessions on a decision.** Open-ended

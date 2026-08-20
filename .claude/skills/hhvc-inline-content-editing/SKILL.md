@@ -277,5 +277,4 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
 - **No AI, no backend, no capability gating.** Unlike AI assist and the sync
   backend, this feature has no `server.ts` dependency and needs no
   configuration — the click-to-edit affordance is present on every deploy,
-  including a purely static one with no server at all, the moment the page has
-  loaded.
+  including the static Netlify build, the moment the page has loaded.

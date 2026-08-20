@@ -65,7 +65,7 @@ Two things to add to what those descriptions say — one they omit outright, one
 they state too weakly to act on:
 
 - **`bun install` is required before the first `dev`, `validate`, `test` or
-  `build:railway`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
@@ -81,7 +81,7 @@ they state too weakly to act on:
   stays a hand-run report; Knip gates only the categories that were clean when
   it was adopted, because it reads this repo's deliberate `window.<Namespace>`
   publishing as ~89 unused exports; `lint:docs` derives its file list from
-  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the deploy bundle build,
+  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the Netlify bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -310,7 +310,7 @@ those modules from TypeScript, which is the supported direction. Bumping
 `.bun-version` is a normal change, just a deliberate one.
 
 - **checks** — `bun install --frozen-lockfile` → `format:check` → `validate` →
-  `build:railway` → `test`. `build:railway` doubles as a deploy-integrity check:
+  `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity check:
   it fails if the committed workshop-form `dist` references assets that were
   never committed (the "form shell that never hydrates" regression). **It runs
   before `test` on purpose**, even though that delays a unit failure by a
@@ -667,11 +667,8 @@ right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
 **Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
 hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
-static Netlify deploy live at the time had no runtime for, so on the build
-managers actually opened they were two permanently-empty panels holding two of
-six slots. Railway runs `server.ts`, so they are no longer structurally empty —
-but each still reports nothing until its own optional backend is configured,
-which is why the cut stands. Help stays last, so
+Netlify deploy has no runtime for, so on the build managers actually open they
+were two permanently-empty panels holding two of six slots. Help stays last, so
 it is the digit that moves whenever the strip changes; `WORKSPACE_TABS`
 (`js/review/ux-improvements-workspace.js`), the tab markup in `index.html` and the
 `1`–`3` cases in `js/review/keyboard-shortcuts.js` must change together. The two
@@ -846,8 +843,8 @@ directly, which is the half that works), so extracting `safeUrl` would push
 exist.
 Separately, **CI never exercises that crossing under Node**:
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
-`build:railway`, which invokes `bun build_scripts/validate.js`). CI does run
-Node — `build:railway` ends in `node build_scripts/copy-workshop-form.js` — but
+`build:netlify`, which invokes `bun build_scripts/validate.js`). CI does run
+Node — `build:netlify` ends in `node build_scripts/copy-workshop-form.js` — but
 that script never touches `data-checks.js`, so the `require(esm)` path is
 uncovered. That path needs
 `require(esm)` enabled — check `process.features.require_module` rather than a
@@ -1273,14 +1270,13 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
 - **No AI, no backend, no capability gating.** Unlike AI assist and the sync
   backend, this feature has no `server.ts` dependency and needs no
   configuration — the click-to-edit affordance is present on every deploy,
-  including a purely static one with no server at all, the moment the page has
-  loaded.
+  including the static Netlify build, the moment the page has loaded.
 
 ### Adding and deleting pages (`js/core/page-registry*.js`)
 
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
-is involved, and it works on a purely static build. Three files, mirroring the
+is involved, and it works on the static Netlify build. Three files, mirroring the
 inline-content-edit split — `js/core/page-registry-data.js` (pure validation and the
 in-place mutation, dual-exported like `js/review/review-merge.js`),
 `js/core/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
@@ -1555,10 +1551,9 @@ same person, deliberately.
 - **`js/review/review-ops.js`** — the panel, lazily mounted when Help opens with the
   same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
-**It had a tab of its own — the `5` key — and lost it.** On any deploy without
-the optional backends configured — which then meant the static Netlify one —
-every value it reported was "not configured" or "none", because both need
-`server.ts`. That is not worth one of the strip's slots.
+**It had a tab of its own — the `5` key — and lost it.** On a default or Netlify
+deploy every value it reported was "not configured" or "none", because both
+optional backends need `server.ts`. That is not worth one of the strip's slots.
 The one line a reviewer genuinely needs from it — _reviews are saved in this
 browser only_ — was promoted into the sidebar beside the export controls, where
 the risk it describes actually lives. What stays here is the diagnostics and the
@@ -2111,8 +2106,8 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
   configuration (never committed). Apply the reverse-proxy/identity-aware edge
   control described above for public or replicated deployments. Local dev and
-  any static-only deploy (the `build:railway` bundle served without `server.ts`,
-  so these routes have no runtime) are unaffected either way.
+  Netlify's static-only deploy (`build:netlify`, no server runtime for these
+  routes) are unaffected either way.
 - **Tests**: `tests/review-merge.test.js` (unit) and
   `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
   DB, exercises auth/merge/isolation over real HTTP).
@@ -2369,10 +2364,9 @@ grounded compliance audit of the open page, citing this repo's own
 the rest of the AI backend — additive, off unless configured, fails closed,
 never writes anything, and every result carries the same `disclosure` string.
 
-- **Corpus is `docs/source/**/*.md`, `README.md` excluded, publication status
-  not filtered.** `build_scripts/ingest-knowledge.js` globs the whole tree
-  except folder-index `README.md` files — including the one file named
-  `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
+- **Corpus is `docs/source/**/\*.md`, `README.md`excluded, publication status
+  not filtered.**`build_scripts/ingest-knowledge.js`globs the whole tree
+  except folder-index`README.md`files — including the one file named`DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
   citable, which is the failure mode this feature exists to avoid.
 - **One new table, same store as `review_pages`.** `knowledge_chunks` lives
@@ -2514,18 +2508,16 @@ and it never writes to `pages/*.js`.
   pushes via the Sheets API. It needs a Google service-account key — gitignored,
   and it must stay that way (never commit `*-service-account*.json` or
   `.env.local`).
-- **`bun run build:railway`** (what `railway.json` runs as its build command)
-  runs `validate` →
+- **`bun run build:netlify`** (driven by `netlify.toml`) runs `validate` →
   `build:app` (the real Vite production build) →
   `build_scripts/copy-workshop-form.js`. That copy step does **not** run the
   sub-app's Vite build — it copies whatever is checked into
   `forms/mosquito-workshop-request/dist`, so rebuild that form first
-  (`bun run build:workshop-form`) after editing its `src` or the deploy ships
-  stale assets. It fails loudly if the committed form HTML references assets that were
+  (`bun run build:workshop-form`) after editing its `src` or Netlify ships stale
+  assets. It fails loudly if the committed form HTML references assets that were
   never committed (the "form shell that never hydrates" regression).
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
-  `X-Frame-Options`, etc.) that `netlify.toml` declares for the retired static
-  site, so the live Railway deploy and the archived Netlify config agree.
+  `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
 
 ### Where review records live (`build_scripts/storage.js`)
 
@@ -2584,10 +2576,10 @@ and never sees a driver, a connection or a SQL string.
 **<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
 Railway project `hhvc-manager-review`, service `web`, connected to this repo's
 `main` branch, so a merge redeploys. Config lives in `railway.json`: build
-`bun run build:railway`, start `bun run serve`.
+`bun run build:netlify`, start `bun run serve`.
 
 - **`bun run serve`, not `bun run start`.** The `start` script is
-  `build:railway && serve` — correct locally, wrong on a platform that already
+  `build:netlify && serve` — correct locally, wrong on a platform that already
   ran the build, where it would repeat the whole thing at boot. The bare `build`
   script is wronger still for a server: it also produces the single-file export
   and rebuilds the workshop form.

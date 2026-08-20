@@ -10,7 +10,7 @@ description: "HHVC repo: the browser-side add/delete page feature — why page-r
 
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
-is involved, and it works on a purely static build. Three files, mirroring the
+is involved, and it works on the static Netlify build. Three files, mirroring the
 inline-content-edit split — `js/core/page-registry-data.js` (pure validation and the
 in-place mutation, dual-exported like `js/review/review-merge.js`),
 `js/core/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on

@@ -147,8 +147,8 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
   configuration (never committed). Apply the reverse-proxy/identity-aware edge
   control described above for public or replicated deployments. Local dev and
-  any static-only deploy (the `build:railway` bundle served without `server.ts`,
-  so these routes have no runtime) are unaffected either way.
+  Netlify's static-only deploy (`build:netlify`, no server runtime for these
+  routes) are unaffected either way.
 - **Tests**: `tests/review-merge.test.js` (unit) and
   `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
   DB, exercises auth/merge/isolation over real HTTP).

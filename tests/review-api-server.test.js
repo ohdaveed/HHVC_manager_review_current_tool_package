@@ -498,7 +498,7 @@ describe('review-state API (server.ts) with STATIC_ROOT set but empty', () => {
   // Unlike every other test in this suite, this one needs a build to exist —
   // it is asserting on what dist/ contains. `bun test` on a fresh clone has no
   // dist/, so it skips rather than failing for a reason unrelated to whatever
-  // the developer changed. CI runs build:railway before the unit tests
+  // the developer changed. CI runs build:netlify before the unit tests
   // specifically so this never skips there; see the note in ci.yml.
   test.skipIf(!fs.existsSync(path.join(ROOT, 'dist', 'index.html')))(
     'still serves the built application from dist/',

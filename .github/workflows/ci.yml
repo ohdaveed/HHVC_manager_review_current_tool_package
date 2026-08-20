@@ -123,13 +123,13 @@ jobs:
       # correct fallback from a broken one if dist/ actually exists. The test
       # skips itself when there is no build, so with the fast order it passed
       # by skipping and the regression it guards went uncovered in CI.
-      - name: Vite build + deploy bundle assembly (deploy-integrity check)
-        run: bun run build:railway
+      - name: Vite build + Netlify bundle assembly (deploy-integrity check)
+        run: bun run build:netlify
 
       - name: Unit tests (bun test)
         run: bun run test
 
-      # build:railway only exercises the default build mode. The single-file
+      # build:netlify only exercises the default build mode. The single-file
       # export goes through vite-plugin-singlefile with different inlining
       # rules, so a regression there (an asset the plugin cannot inline, a
       # mode-specific config mistake) would otherwise surface only when

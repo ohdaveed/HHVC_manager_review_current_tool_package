@@ -9,7 +9,7 @@
 | Anthropic Messages API      | External LLM API              | Optional content drafting (`/api/ai/generate`)               | `ANTHROPIC_API_KEY`                               | Low (optional; 501 if unset)  | `build_scripts/ai/provider-anthropic.js`                                  |
 | Google Gemini API           | External LLM API              | Alternate drafting provider                                  | `GEMINI_API_KEY`                                  | Low (optional)                | `build_scripts/ai/provider-gemini.js`                                     |
 | Google Sheets API           | External API                  | Push tracking status (`bun run push-tracking`)               | Service-account JSON via env/path                 | Low (offline CSVs still work) | `build_scripts/push-tracking-sheet.js`, `build_scripts/sheet-config.json` |
-| Railway hosting             | App hosting (build + run)     | Build `dist/` and run `server.ts` for managers               | Railway project + service + env vars              | High for demo distribution    | `railway.json`                                                            |
+| Netlify CDN/hosting         | Static hosting                | Deploy `dist/` for managers                                  | Netlify project + build                           | High for demo distribution    | `netlify.toml`                                                            |
 | Railway volume (documented) | Hosted Bun + SQLite volume    | Production path for `DATA_DB_PATH` when sync API is deployed | Bearer `REVIEW_API_TOKEN` (+ optional principals) | Medium when sync is used      | `.gitignore` comment, `.claude/skills/verify-railway-backend/`            |
 | Browser `localStorage`      | Client persistence            | Default review state                                         | Same-origin browser                               | High (always-on core)         | `js/review/review-state-store.js`, `AGENTS.md`                            |
 | Karl / SF.gov CMS           | External CMS (reference only) | Placement notes; not written by this tool                    | Out of band                                       | N/A for runtime               | `AGENTS.md` Karl section                                                  |
@@ -39,7 +39,7 @@
 
 - Logging around external calls: server maps AI errors to status codes; `console.warn` on bad env numbers
 - Metrics/tracing coverage: none configured in repo ([TODO])
-- Missing visibility gaps: no APM/SBOM/Dependabot configs in scan; Railway service variables are set in the Railway UI rather than in `railway.json` (`AGENTS.md` deploy section)
+- Missing visibility gaps: no APM/SBOM/Dependabot configs in scan; Netlify UI-installed plugins are outside `netlify.toml` visibility (`netlify.toml` comments)
 
 ### 6) Evidence
 
@@ -48,5 +48,5 @@
 - `build_scripts/ai/provider-gemini.js`
 - `build_scripts/push-tracking-sheet.js`
 - `js/sync/review-state-sync.js`
-- `railway.json`
+- `netlify.toml`
 - `.gitignore`

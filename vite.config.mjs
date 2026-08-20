@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react'
    Two outputs come out of this one config, selected by mode:
 
    - `vite build` (default) writes a normal hashed-asset bundle to dist/,
-     which is what Railway deploys and what server.ts serves in production.
+     which is what Netlify deploys and what server.ts serves in production.
    - `vite build --mode singlefile` inlines every script and stylesheet into
      one self-contained dist-singlefile/index.html. That replaces the old
      hand-rolled build_scripts/build-single-file.js, which walked index.html's
