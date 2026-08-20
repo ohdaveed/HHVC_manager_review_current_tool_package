@@ -274,13 +274,18 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-two spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-three spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
 SFDS tokens, the chrome type scale, the Karl transcript panel, and
-workshop-form submission handling,
+workshop-form submission handling, and the safeMarkdown sanitizer allowlist —
+which can ONLY be asserted here, since the unit environment publishes neither
+`window.marked` nor `window.DOMPurify` (so every call there takes the
+"libraries missing" fallback), and happy-dom's DOMPurify strips `<strong>`/
+`<em>` despite both being allow-listed, so a unit assertion would either pin
+that artifact or pass vacuously,
 sharing plain helper functions in
 `tests/e2e/helpers.js` (no fixture framework). A fourteenth file,
 `review-import-export.spec.js`, was deleted rather than repaired: its
