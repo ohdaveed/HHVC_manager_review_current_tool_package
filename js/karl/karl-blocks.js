@@ -1926,7 +1926,7 @@ if (typeof window !== 'undefined') {
     panelsFor,
   }
 }
-if (typeof module !== 'undefined' && module.exports && typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     KARL_PANELS,
     KARL_NAV,

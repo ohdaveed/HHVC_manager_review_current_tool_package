@@ -14,8 +14,11 @@ grounded compliance audit of the open page, citing this repo's own
 the rest of the AI backend — additive, off unless configured, fails closed,
 never writes anything, and every result carries the same `disclosure` string.
 
-- **Corpus is `docs/source/**/\*.md`plus an explicit outside list,`README.md`excluded, publication status not filtered.**`build_scripts/knowledge-sources.js`globs the whole`docs/source/`tree
-except folder-index`README.md`files — including the one file named`DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
+- **Corpus is `docs/source/**/*.md` plus an explicit outside list, `README.md`
+  excluded, publication status not filtered.**
+  `build_scripts/knowledge-sources.js` globs the whole `docs/source/` tree
+  except folder-index `README.md` files — including the one file named
+  `DRAFT-NOT-FOR-PUBLICATION`, on an explicit reviewer decision. The
   alternative was the ingestion script silently deciding what counts as
   citable, which is the failure mode this feature exists to avoid. What each
   category holds, why the outside list is a list rather than a second glob, and
