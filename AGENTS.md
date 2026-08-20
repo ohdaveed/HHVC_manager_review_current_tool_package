@@ -91,7 +91,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 52 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 53 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -116,6 +116,10 @@ separately, every file that spells out an INDIVIDUAL label as a literal, which
 is most of the queue: those are string comparisons, so a renamed decision
 leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
+`doc-claims` (the scanner underneath it — pins the number-anchored capture
+against a `[\w-]+` false start, and the gap that must admit digit-bearing
+words like `e2e` rather than letters-only, since a letters-only gap is what
+let a wrong e2e spec count ship past CI once already),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
 `inline-content-edit-adapter` (the pure markdown/HTML serialization boundary

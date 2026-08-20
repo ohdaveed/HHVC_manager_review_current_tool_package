@@ -93,7 +93,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 52 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 53 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -117,6 +117,10 @@ an INDIVIDUAL label as a literal, which is most of the queue: those are string
 comparisons, so a renamed decision leaves the chip rendering and silently stops
 matching), `doc-counts` (reads the counts back out of these docs and
 compares them to the filesystem — this very list is what it checks),
+`doc-claims` (the scanner underneath it — pins the number-anchored capture
+against a `[\w-]+` false start, and the gap that must admit digit-bearing
+words like `e2e` rather than letters-only, since a letters-only gap is what
+let a wrong e2e spec count ship past CI once already),
 `inline-content-edit-data` (pure `section_edits` diff/reapply logic against
 `ORIGINAL_DATA`, no DOM, dual-exported like `review-merge`),
 `inline-content-edit-adapter` (the pure markdown/HTML serialization boundary
