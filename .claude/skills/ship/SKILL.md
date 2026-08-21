@@ -101,8 +101,15 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # both that and the half-created run underneath it. Existence alone is not
    # enough: jobs become checks as they START, so a run mid-creation reports a
    # SUBSET, and a subset that happens to be all green reads as a pass.
-   # Actions-only, so it is a floor rather than a census -- a required check
-   # from another provider is still caught by `probe`, just not gated here.
+   # Actions-only, so it is a floor rather than a census -- and today the
+   # floor carries it: both required contexts are ci.yml jobs, so a completed
+   # ci.yml run means every required check exists. Add a required check from
+   # another provider and that stops being true, in a way `probe` cannot
+   # cover for you. `--required` reports the checks that EXIST, so one not yet
+   # created is ABSENT rather than pending, and the all-green subset left
+   # behind reads as a pass -- the same stale-subset bug this binding closes,
+   # moved one level up. Gate that provider here too rather than trusting
+   # `probe` to notice a check it was never shown.
    # Scope to the GATING workflow, not every run for the sha. Filtering on
    # head_sha alone also catches `link-check.yml`, which this repo makes
    # non-gating on purpose so a third-party outage cannot block a merge; a
