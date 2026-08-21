@@ -1547,9 +1547,13 @@ CI after merges more than once.
 When asked for a security review of a diff or of changed files: do **not**
 start by reading every file. Load the actual changed hunks in one call, using
 the command that matches what is actually under review — `git diff HEAD` for
-uncommitted work, `git show <sha>` when the request names a commit (not
-`git diff <sha>^ <sha>`, which aborts outright on a root commit and in a
-shallow clone, where the parent it names does not resolve),
+uncommitted work, `git show --first-parent <sha>` when the request names a
+commit — `--first-parent` because on a MERGE commit bare `git show` prints the
+combined `--cc` format, which names the changed file in its stat and then omits
+the patch, so a leaked secret merged in from a branch renders as a clean-looking
+review; and `git show` rather than `git diff <sha>^ <sha>`, which aborts
+outright on a root commit and in a shallow clone, where the parent it names does
+not resolve —
 `gh pr diff <number>` when it names a pull request. **`HEAD`, the revision, or
 the number: always name the subject.** Bare `git diff` compares the working
 tree to the INDEX, so a change that is merely staged is invisible to it — a

@@ -126,8 +126,9 @@ in exactly one stylesheet.
 
 - **Security reviews start from the diff.** Asked to review a diff or changed
   files, load the hunks with the command matching the subject —
-  `git diff HEAD` for uncommitted work, `git show <sha>` for a named commit
-  (the `<sha>^ <sha>` form aborts on a root commit and in a shallow clone),
+  `git diff HEAD` for uncommitted work, `git show --first-parent <sha>` for a
+  named commit (bare `git show` omits the patch on a merge commit; the
+  `<sha>^ <sha>` form aborts on a root commit and in a shallow clone),
   `gh pr diff <number>` for a pull request — always naming the subject,
   since bare `git diff` hides staged changes (it diffs against the index) and
   bare `gh pr diff` picks the current branch's PR. Pair the local case with
