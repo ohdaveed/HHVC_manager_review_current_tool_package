@@ -82,6 +82,13 @@
 .form-success {
   border-left: 4px solid var(--sfds-green, #026800);
   background: var(--sfds-success-bg, #ecf8ed);
+  /* PIN THE INK TO THE BACKGROUND. This block sets a light background and used
+     to inherit its colour from `body`, which `css/theme.css` flips to #f0f1f2
+     under `prefers-color-scheme: dark` -- 1.03:1 against #ecf8ed, an
+     invisible panel. This sub-app has no dark-mode block of its own, so the
+     pair has to be stated together or the next theme change breaks it again.
+     #14231a on #ecf8ed is 14.95:1. */
+  color: #14231a;
   padding: 1rem 1rem 1rem 1.1rem;
   border-radius: 6px;
 }
@@ -111,7 +118,7 @@
 .form-mock-banner {
   /* Amber rather than the error red used by .form-error: this is a standing
      property of the page, not something that went wrong. Contrast checked
-     against the note background: #7a4a00 on #fff8e6 is 7.4:1, above the 4.5:1
+     against the note background: #7a4a00 on #fff8e6 is 7.06:1, above the 4.5:1
      WCAG AA floor for body text. */
   background: #fff8e6;
   border-left: 4px solid #b26a00;
@@ -131,7 +138,10 @@
   text-align: left;
   vertical-align: top;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #d9d9d9;
+  /* Inherits .form-success's pinned ink. The rule sits INSIDE that panel, so
+     it must not reintroduce a colour of its own. Border is 3.37:1 against the
+     panel, above the 3:1 WCAG floor for a non-text boundary. */
+  border-bottom: 1px solid #5c9169;
 }
 
 .form-summary th {
@@ -142,17 +152,13 @@
 }
 
 .form-summary td em {
-  color: #595959; /* 7.0:1 on white; still readable as de-emphasised text. */
+  /* 7.41:1 against the panel's #ecf8ed -- measured there, not against white,
+     which is not the background this text ever sits on. */
+  color: #41544a;
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
+/*
+  `.visually-hidden` is deliberately NOT defined here. This page links
+  /css/styles.css, which already declares it; a second copy would be free to
+  drift from the one the rest of the tool uses.
+*/

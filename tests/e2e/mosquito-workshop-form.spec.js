@@ -66,12 +66,18 @@ test.describe('mosquito workshop request form', () => {
     // checks against what HHVC actually needs, so a blank optional field has
     // to appear rather than vanish.
     await page.goto(FORM_PATH)
+    // Derive the expectation from the form itself. A hardcoded number lets a
+    // dropped field keep the test green -- and this repo's own rule is that
+    // counts come from the source of truth rather than a literal.
+    const fieldCount = await page.locator('#workshopForm .form-field').count()
+    expect(fieldCount).toBeGreaterThan(0)
     await fillRequiredFields(page)
     await page.click('button[type="submit"]')
 
     const rows = page.locator('.form-summary tbody tr')
-    const fieldCount = await page.evaluate(() => 11)
-    expect(await rows.count()).toBeGreaterThanOrEqual(fieldCount)
+    // EXACTLY, not at-least: the summary is the field inventory, so a missing
+    // row and a duplicated one are both defects.
+    expect(await rows.count()).toBe(fieldCount)
     await expect(page.locator('.form-summary')).toContainText('Example School')
     await expect(page.locator('.form-summary')).toContainText('(left blank)')
   })

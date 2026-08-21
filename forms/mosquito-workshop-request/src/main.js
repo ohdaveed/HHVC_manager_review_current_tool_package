@@ -112,7 +112,6 @@ function renderForm() {
         The real form would collect interest for HHVC's free mosquito education workshop campaign.
         Submitting would not guarantee a scheduled date.
       </p>
-      <p class="form-error" id="submissionError" role="alert" hidden></p>
       <div class="form-grid two-col">${top.map(fieldHtml).join('')}</div>
       <div class="form-grid two-col">${middle.map(fieldHtml).join('')}</div>
       <div class="form-grid">${bottom.map(fieldHtml).join('')}</div>
