@@ -2928,16 +2928,23 @@ rather than asserting a number that was true on the day it was typed.
 ## Security Reviews
 
 When asked for a security review of a diff or of changed files: do **not**
-start by reading every file. Start with `git diff` (or `git diff --stat` then
-`git diff <paths>`, or `gh pr diff` when the subject is a pull request) to load
-the actual changed hunks in one call, then summarize the attack surface those
-hunks expose in 3-5 bullets. That summary is what decides where to look next —
-reading first and summarizing afterwards inverts the order and spends the
-budget before the review has a shape. Read only the specific files the bullets
-flag. At least a preliminary finding must land within the first 2 tool calls.
-Report incrementally — emit findings per file as you go rather than batching
-everything to the end. Only read a whole file when a diff hunk is genuinely
-ambiguous, and say why.
+start by reading every file. Start with `git diff` — or `gh pr diff` when the
+subject is a pull request — to load the actual changed hunks in one call, then
+summarize the attack surface those hunks expose in 3-5 bullets. That summary is
+what decides where to look next; reading first and summarizing afterwards
+inverts the order and spends the budget before the review has a shape. Read
+only the specific files those bullets flag.
+
+A **preliminary assessment** must land within the first 2 tool calls, and
+"nothing confirmed yet — here is the surface and where I am looking next" is a
+valid one. The deadline is on saying something, never on having found
+something: a clean diff has no findings, and an instruction demanding one by
+call two is an instruction to invent one. `git diff --stat` followed by
+`git diff <paths>` is a legitimate way into a diff too large to read whole, but
+it spends both calls before a word is written — so take the single-call route
+unless the size forces the split. Report incrementally — emit findings per file
+as you go rather than batching everything to the end. Only read a whole file
+when a diff hunk is genuinely ambiguous, and say why.
 
 ## Commits & pull requests
 
