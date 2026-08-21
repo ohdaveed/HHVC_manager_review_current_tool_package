@@ -61,7 +61,12 @@ esac
 # `Claude-Session:` line sitting mid-body with prose under it is not a
 # trailer, and `git interpret-trailers --parse` says so; a whole-message grep
 # counts it and hands out a pass. Verified both ways.
-trailers=$(printf '%s\n' "$body" | git interpret-trailers --parse 2>/dev/null || true)
+# `-c trailer.separators=:` is not decoration. The setting is configurable
+# per user and per repo, and a value without a colon (`=`, say) makes
+# `--parse` return NOTHING for this repo's colon-form trailers -- every
+# counter zero, and an unpaired Claude co-author accepted. Measured.
+trailers=$(printf '%s\n' "$body" |
+  git -c trailer.separators=: interpret-trailers --parse 2>/dev/null || true)
 
 # Case-insensitive throughout: git preserves whatever case was typed, so
 # `claude-session:` is the same trailer and must not be a way around this.

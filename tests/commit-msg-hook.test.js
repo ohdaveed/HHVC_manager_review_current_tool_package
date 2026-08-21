@@ -182,6 +182,29 @@ describe('commit-msg hook: regressions review caught', () => {
   })
 })
 
+describe('commit-msg hook: hostile git configuration', () => {
+  test('still enforces when trailer.separators omits the colon', () => {
+    // `trailer.separators` is configurable per user and per repo. Set to a
+    // value without `:`, `interpret-trailers --parse` returns NOTHING for
+    // this repo's colon-form trailers, every counter reads zero, and an
+    // unpaired Claude co-author sails through. The hook pins the separator
+    // on its own invocation; this proves the pin, by injecting the hostile
+    // value through GIT_CONFIG_* rather than writing to any real config.
+    const file = path.join(tmpDir, 'msg-separators')
+    fs.writeFileSync(file, `fix: x\n\n${COAUTHOR}\n`)
+    const result = spawnSync('sh', [HOOK, file], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        GIT_CONFIG_COUNT: '1',
+        GIT_CONFIG_KEY_0: 'trailer.separators',
+        GIT_CONFIG_VALUE_0: '=',
+      },
+    })
+    expect(result.status).toBe(1)
+  })
+})
+
 describe('commit-msg hook: message the author actually sees', () => {
   test('names the missing trailer and offers the escape hatch', () => {
     const file = path.join(tmpDir, 'msg-diagnostic')

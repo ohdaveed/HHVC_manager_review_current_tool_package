@@ -134,13 +134,27 @@ function install() {
     fs.mkdirSync(dir, { recursive: true })
     for (const name of names) {
       attempted += 1
-      const source = path.join(from, '.githooks', name)
+      let source = path.join(from, '.githooks', name)
       if (!fs.existsSync(source)) {
-        // The main checkout can legitimately sit on a revision predating the
-        // hook. Say so rather than linking at a path that does not exist.
-        console.error(`  ${name}: ${source} does not exist; skipping ${dir}`)
-        process.exitCode = 1
-        continue
+        // The main checkout legitimately predates the hook while the hook is
+        // being INTRODUCED on a branch — the common case, not an exotic one —
+        // and skipping the common directory there leaves a clone with no gate
+        // at all whenever `core.hooksPath` is unset. Fall back to this
+        // checkout so the hook works now, and say what that costs: the link
+        // dies with this worktree, so re-run from the main checkout once the
+        // hook has landed there.
+        const fallback = path.join(repoRoot, '.githooks', name)
+        if (!fs.existsSync(fallback)) {
+          console.error(`  ${name}: no source found at ${source} or ${fallback}`)
+          process.exitCode = 1
+          continue
+        }
+        console.warn(
+          `  ${name}: ${from} has no .githooks/${name} yet, so ${dir} points at\n` +
+            `  this checkout instead. Re-run from the main checkout once the hook\n` +
+            '  has landed there, or the link breaks when this worktree is removed.'
+        )
+        source = fallback
       }
       if (!assertExecutable(source, name)) {
         process.exitCode = 1
