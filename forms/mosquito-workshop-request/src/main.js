@@ -101,70 +101,87 @@ function renderForm() {
   const bottom = fields.slice(8)
 
   app.innerHTML = `
-    <form class="form-card" id="workshopForm" name="mosquito-workshop-request" method="POST" data-netlify="true" novalidate>
-      <input type="hidden" name="form-name" value="mosquito-workshop-request" />
-      <p class="form-note" aria-hidden="true" style="display:none">
-        <label>Don't fill this out: <input name="bot-field" /></label>
+    <form class="form-card" id="workshopForm" name="mosquito-workshop-request" novalidate>
+      <p class="form-note form-mock-banner" role="note">
+        <strong>This is a design reference, not a live form.</strong> Nothing you enter is sent or
+        stored anywhere. It exists to show what the real intake form needs to capture — HHVC's
+        production form will be a Fillout form linked from the campaign page, following how SF.gov
+        form pages hand off rather than embed.
       </p>
       <p class="form-note">
-        This form collects interest for HHVC's free mosquito education workshop campaign. Submitting
-        does not guarantee a scheduled date.
+        The real form would collect interest for HHVC's free mosquito education workshop campaign.
+        Submitting would not guarantee a scheduled date.
       </p>
       <p class="form-error" id="submissionError" role="alert" hidden></p>
       <div class="form-grid two-col">${top.map(fieldHtml).join('')}</div>
       <div class="form-grid two-col">${middle.map(fieldHtml).join('')}</div>
       <div class="form-grid">${bottom.map(fieldHtml).join('')}</div>
       <div class="form-actions">
-        <button class="btn" type="submit">Submit workshop request</button>
+        <button class="btn" type="submit">Preview what this form captures</button>
         <a class="btn secondary" href="/">Back to mockup tool</a>
       </div>
     </form>`
 }
 
-function renderSuccess(data) {
+function renderSummary(data) {
+  // A design reference is most useful when it shows what the real form has to
+  // carry, so submitting renders the captured payload rather than pretending
+  // to send it. The heading says NOT SUBMITTED first, because the one thing
+  // this page must never imply is that somebody's request was received.
+  const rows = fields
+    .map((field) => {
+      const value = (data[field.id] ?? '').trim()
+      return `<tr><th scope="row">${escapeHtml(field.label)}</th><td>${
+        value ? escapeHtml(value) : '<em>(left blank)</em>'
+      }</td></tr>`
+    })
+    .join('')
+
   app.innerHTML = `
     <div class="form-success" role="status">
-      <h2>Thank you — we received your request</h2>
+      <h2>Not submitted — this is what the real form would capture</h2>
       <p>
-        <strong>${escapeHtml(data.organization)}</strong> is on the list for follow-up. HHVC will contact
-        ${escapeHtml(data.contactName)} at ${escapeHtml(data.email)} about workshop availability.
+        No request was sent and nothing was stored. This preview exists so reviewers can check the
+        field list against what HHVC actually needs before the production Fillout form is built.
       </p>
+      <table class="form-summary">
+        <caption class="visually-hidden">Field values entered in this preview</caption>
+        <tbody>${rows}</tbody>
+      </table>
       <p style="margin-top:0.75rem">
+        <button class="btn secondary" type="button" id="backToForm">Back to the form</button>
         <a href="/">Return to the HHVC mockup tool</a>
       </p>
     </div>`
+
+  document.getElementById('backToForm').addEventListener('click', () => {
+    renderForm()
+    attachSubmitHandler()
+  })
 }
 
 function getFormData(form) {
   return Object.fromEntries(new FormData(form).entries())
 }
 
-function showSubmissionError(message) {
-  const error = document.getElementById('submissionError')
-  if (!error) return
-  error.textContent = message
-  error.hidden = false
-}
-
 renderForm()
+attachSubmitHandler()
 
-document.getElementById('workshopForm').addEventListener('submit', async (event) => {
-  event.preventDefault()
-  const form = event.currentTarget
-  if (!form.reportValidity()) return
-  const data = getFormData(form)
-
-  try {
-    const body = new FormData(form)
-    body.append('form-name', 'mosquito-workshop-request')
-    const response = await fetch('/', { method: 'POST', body })
-    if (!response.ok) throw new Error(`Submission failed with status ${response.status}.`)
-  } catch {
-    showSubmissionError(
-      'We could not submit your request. Please check your connection and try again.'
-    )
-    return
-  }
-
-  renderSuccess(data)
-})
+/**
+ * Validate, then show what was captured. There is deliberately no network
+ * call: this form has no intake backend on any deploy, and the version that
+ * POSTed to "/" by the Netlify Forms convention rendered a confirmation for
+ * every silently discarded submission once Netlify was retired. The server
+ * answers 405 for that POST now, which made the failure visible — but a form
+ * that always fails reads as broken rather than as a mock, so it no longer
+ * asks at all.
+ */
+function attachSubmitHandler() {
+  const form = document.getElementById('workshopForm')
+  if (!form) return
+  form.addEventListener('submit', (event) => {
+    event.preventDefault()
+    if (!form.reportValidity()) return
+    renderSummary(getFormData(form))
+  })
+}

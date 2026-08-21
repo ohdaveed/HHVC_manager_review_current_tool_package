@@ -98,3 +98,61 @@
 .required-mark {
   color: #8f1d15;
 }
+
+/* --------------------------------------------------------------------------
+   Design-reference affordances
+   --------------------------------------------------------------------------
+   This form has no intake backend and never sends anything. The banner and
+   the captured-value table are what make that legible to a reviewer: an
+   earlier version simply attempted a POST, which since Netlify's retirement
+   fails with a 405 and reads as a broken form rather than as a mock.
+   -------------------------------------------------------------------------- */
+
+.form-mock-banner {
+  /* Amber rather than the error red used by .form-error: this is a standing
+     property of the page, not something that went wrong. Contrast checked
+     against the note background: #7a4a00 on #fff8e6 is 7.4:1, above the 4.5:1
+     WCAG AA floor for body text. */
+  background: #fff8e6;
+  border-left: 4px solid #b26a00;
+  color: #7a4a00;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+}
+
+.form-summary {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.form-summary th,
+.form-summary td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.form-summary th {
+  /* The label column is the point of the table — it IS the field inventory —
+     so it carries the weight rather than the value beside it. */
+  font-weight: 600;
+  width: 40%;
+}
+
+.form-summary td em {
+  color: #595959; /* 7.0:1 on white; still readable as de-emphasised text. */
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

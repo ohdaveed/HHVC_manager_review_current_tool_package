@@ -18,8 +18,8 @@
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/ux-improvements.css" />
     <link rel="stylesheet" href="/css/theme.css" />
-    <script type="module" crossorigin src="/forms/mosquito-workshop-request/assets/index-CK4Xwr6x.js"></script>
-    <link rel="stylesheet" crossorigin href="/forms/mosquito-workshop-request/assets/index-x2oeU-Qg.css">
+    <script type="module" crossorigin src="/forms/mosquito-workshop-request/assets/index-J-CLTlx8.js"></script>
+    <link rel="stylesheet" crossorigin href="/forms/mosquito-workshop-request/assets/index-BggmsHQq.css">
   </head>
   <body>
     <div class="form-shell">
@@ -31,27 +31,14 @@
           Vector Control will follow up about availability.
         </p>
       </header>
-      <!-- Netlify Forms detection (fields mirrored in src/main.js) -->
-      <form
-        name="mosquito-workshop-request"
-        data-netlify="true"
-        netlify-honeypot="bot-field"
-        hidden
-      >
-        <input name="organization" />
-        <input name="contactName" />
-        <input name="email" />
-        <input name="phone" />
-        <input name="organizationType" />
-        <input name="audienceAge" />
-        <input name="groupSize" />
-        <input name="preferredDates" />
-        <input name="eventLocation" />
-        <input name="spaceType" />
-        <input name="electricity" />
-        <textarea name="notes"></textarea>
-        <input name="bot-field" />
-      </form>
+      <!--
+        A hidden Netlify Forms detection stub used to sit here, mirroring every
+        field so Netlify's build crawler would register the form. It is gone
+        with Netlify itself: this form has no intake backend and submits
+        nowhere, so the stub registered nothing — and it was a SECOND copy of
+        the field list, free to drift from the one in src/main.js that actually
+        renders. One inventory, in the module that owns it.
+      -->
       <main id="app"></main>
     </div>
   </body>

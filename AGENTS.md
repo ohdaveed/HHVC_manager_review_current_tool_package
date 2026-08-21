@@ -280,7 +280,7 @@ keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
 the chrome type scale, the Karl transcript panel,
-workshop-form submission handling, and the safeMarkdown sanitizer allowlist
+the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist
 — that last one can only live here for the `<strong>`/`<em>` positive
 assertions: happy-dom's DOMPurify strips both even though they are in
 `ALLOWED_TAGS`, so a unit assertion would either pin that artifact or pass
