@@ -386,7 +386,7 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    marker in the HTML, no injection in `vite.config.mjs` — so there is nothing
    to read off the page and the comparison has no left-hand side without this.
    The deployment record is where it lives: the Railway MCP's
-   `list_deployments` returns `id | status | timestamp | commit` per
+   `list-deployments` returns `id | status | timestamp | commit` per
    deployment, and `railway status --json` carries the same for the active
    one. Require the newest `SUCCESS` row's commit to equal `origin/main`. A
    `REMOVED` or `FAILED` row above it means the newest deploy is not the one
