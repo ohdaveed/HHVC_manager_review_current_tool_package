@@ -329,7 +329,8 @@ a graph of seven jobs rather than one long one, so a formatting or schema
 failure reports in seconds without waiting on a Chromium download and a flaky
 browser run never masks a unit failure.
 
-**Every job pins Bun from `.bun-version`, and that pin is load-bearing.** They
+**Every job that USES Bun pins it from `.bun-version`, and that pin is
+load-bearing.** They
 took `bun-version: latest` until 2026-08-15, which meant the runtime changed
 under the repo without a commit. Bun 1.3.14 stopped allowing CJS to `require()`
 an ESM module; `build_scripts/storage.js` was the only ESM file under
@@ -340,7 +341,11 @@ timeouts before anyone captured the server's stderr. **Everything under
 `build_scripts/` is CommonJS now** — keep it that way; `server.ts` named-imports
 those modules from TypeScript, which is the supported direction. Bumping
 `.bun-version` is a normal change, just a deliberate one.
-`tests/ci-workflow.test.js` asserts the pin across every job.
+`tests/ci-workflow.test.js` asserts the pin, though note its scope: it
+splits the file on `uses: oven-sh/setup-bun` and checks each block it
+finds, so it covers every job that sets Bun up and says nothing about a
+job that does not. `changes` is the one that does not — it runs only
+`dorny/paths-filter` and needs no runtime.
 
 - **changes** — classifies the PR's touched paths into `docs` and `code`
   outputs. Everything below gates on those, so it is the only job that always
