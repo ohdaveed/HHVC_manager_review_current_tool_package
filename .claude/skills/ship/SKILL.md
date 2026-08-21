@@ -76,6 +76,8 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    success. Count what finished instead of looking for an absence:
 
    ```sh
+   PR=<the pull request number>
+
    # The required checks are whatever branch protection says they are. Do not
    # write the job names here: that is a second inventory of something ci.yml
    # owns, and a renamed job would leave this polling an already-green PR.
@@ -85,26 +87,38 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    [ -n "$REQUIRED" ] || { echo "ABORT: no required checks resolved"; exit 1; }
 
    # `gh pr checks --jq` accepts no --arg, and jq is not a dependency here, so
-   # bun filters. It prints a WORD, never a bare count: "not finished yet" and
-   # "finished badly" have to stay distinguishable, and a count collapses them.
-   #   pass  every required check exists and passed
-   #   fail  every required check exists and at least one did not pass
-   #   wait  required checks missing or still running -- no verdict yet
+   # bun filters. probe() prints a WORD, never a count, because there are FOUR
+   # outcomes here and any count collapses at least two of them:
+   #   pass   every required check exists and passed
+   #   fail   every required check exists and at least one did not pass
+   #   wait   required checks missing or still running -- no verdict yet
+   #   error  nothing trustworthy came back -- do not spend the deadline on it
    probe() {
-     # Do not `|| return 1` here. In the creation window `gh pr checks` exits
-     # non-zero with `no checks reported on the '<branch>' branch` -- a "not
-     # yet", not a read failure. Measured on gh 2.97.0: `--json` returns 0
-     # while checks are merely PENDING, so the exit 8 in `gh help exit-codes`
-     # is the default output mode only. Drop `--json` and you need this too.
-     out=$(gh pr checks "$PR" --json name,bucket 2>/dev/null)
+     errf=$(mktemp)
+     out=$(gh pr checks "$PR" --json name,bucket 2>"$errf"); rc=$?
+     msg=$(cat "$errf"); rm -f "$errf"
+     # Do not `|| return 1` on rc alone. The creation window exits non-zero
+     # with `no checks reported on the '<branch>' branch`, which is a "not
+     # yet". An expired token or a 5xx is NOT, and must never masquerade as
+     # slow CI -- that would trade a false green for a silent 30-minute hang.
+     if [ "$rc" -ne 0 ]; then
+       case "$msg" in
+         *"no checks reported"*) echo wait ;;
+         *) echo error ;;
+       esac
+       return
+     fi
      printf '%s' "$out" | REQ="$REQUIRED" bun -e '
        let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
          const req=(process.env.REQ||"").split("\n").filter(Boolean)
          let j
-         try { j=JSON.parse(s) } catch { console.log("wait"); return } // no body yet
-         if (!Array.isArray(j)) { console.log("wait"); return }
+         try { j=JSON.parse(s) } catch { console.log("error"); return }
+         if (!Array.isArray(j)) { console.log("error"); return }
+         // Presence BY NAME. Comparing lengths would wait forever on a
+         // duplicated context (a re-run, or two sources under one name)
+         // instead of only on a missing one.
+         if (req.some(n=>!j.some(c=>c.name===n))) { console.log("wait"); return }
          const mine=j.filter(c=>req.includes(c.name))
-         if (mine.length !== req.length) { console.log("wait"); return } // not created
          if (mine.some(c=>c.bucket==="pending")) { console.log("wait"); return }
          console.log(mine.every(c=>c.bucket==="pass") ? "pass" : "fail")
        })'
@@ -117,10 +131,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      case "$(probe)" in
        pass) echo "CI green"; break ;;
        fail) echo "ABORT: a required check did not pass"; exit 1 ;;
-       *)    # wait, or an empty line because bun itself could not run
-             [ "$(date +%s)" -lt "$deadline" ] \
+       wait) [ "$(date +%s)" -lt "$deadline" ] \
                || { echo "ABORT: timed out waiting on required checks"; exit 1; }
              sleep 20 ;;
+       # error, or an empty line because bun itself could not run.
+       *)    echo "ABORT: cannot read check status"; exit 1 ;;
      esac
    done
    ```
@@ -133,8 +148,10 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    waiting only for `!= "pending"` exits just as happily on a FAILED job and
    swallows `gh`'s non-zero exit inside the substitution. If either `gh` call
    fails outright — expired auth, a transient 5xx — an unguarded version leaves
-   `REQUIRED` empty, every count at zero, and zero compares equal to zero,
-   which reads GREEN.
+   `REQUIRED` empty and every count at zero, and zero compares equal to zero,
+   which reads GREEN. That is why the required list is emptiness-checked before
+   the loop starts, and why `error` is its own outcome: a read failure that
+   merely slept would spend the whole deadline impersonating slow CI.
 
    The fourth is the one that bites the fix rather than the bug: closing the
    third by treating every non-zero `gh` exit as fatal turns a "not yet" into
