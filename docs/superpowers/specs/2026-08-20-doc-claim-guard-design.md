@@ -99,13 +99,19 @@ The e2e pattern is the one that failed and the only one changed:
 // before — misses "twenty-two Playwright e2e spec files"
 /\*{0,2}([\w-]+)\*{0,2}\s+spec\s+files/gi
 
-// after — tolerates up to 3 intervening words, no punctuation in the gap
+// after — tolerates up to 3 intervening tokens, each letter-initial but free
+// to carry digits, periods and hyphens (so it can still cross "Node.js", "v2.1")
 /\*{0,2}([\w-]+)\*{0,2}(?:\s+[A-Za-z][\w.-]*){0,3}\s+spec\s+files/gi
 ```
 
-The gap is bounded at three words and admits **no punctuation**, so it cannot
-cross a clause boundary and capture an unrelated number from the previous
-sentence.
+The gap is bounded at three letter-initial tokens, and `[\w.-]*` lets each of
+those tokens itself contain digits, periods and hyphens — a period inside a
+token is deliberately permitted, because this repo's own prose crosses tokens
+like `Node.js`, `v2.1` and `e2e`. What the gap does **not** admit is a
+punctuation character standing as its own whitespace-separated token, or a
+sentence-ending character splitting what would otherwise be one token in two —
+so it still cannot cross a clause boundary and capture an unrelated number
+from the previous sentence.
 
 ### The capture must be number-anchored, and the gap must admit digits
 
@@ -150,12 +156,24 @@ not let it stand in for the two rules above, which are load-bearing.
 
 ## The ratchet
 
+Floors are **per-(file, claim type), not one aggregate integer per file.** An
+aggregate was tried first and rejected: once a file's TOTAL sits comfortably
+above its floor, one claim type could stop matching entirely — its regex
+silently drifting out of reach — while the file's other claim types carry the
+aggregate over the line, and the ratchet would still pass. That is the exact
+failure this feature exists to prevent, surviving in a more diffuse form.
+Flooring each (file, type) pair closes that gap: a claim type with no floor
+entry for a file is simply not floored there, which is correct — not every
+file states every claim — but a floored one that drops out is caught
+regardless of how healthy its siblings look.
+
 Assertion order is load-bearing:
 
 ```
-1. found.length >= FLOOR[file]   ← fails FIRST, names the file
-2. TOTAL >= GLOBAL_FLOOR         ← the corpus cannot collapse wholesale
-3. every found claim === filesystem
+1. CLAIM_TYPE_FLOORS is non-empty              ← a broken table is not a clean run
+2. found.length >= FLOOR[file][claimType]      ← fails FIRST, names the file AND the claim type
+3. TOTAL >= GLOBAL_FLOOR                       ← the corpus cannot collapse wholesale
+4. every found claim === filesystem
 ```
 
 Value checking alone cannot catch a claim that stopped being *found*; that is
@@ -164,11 +182,23 @@ MINIMUM row count per type FIRST, because a doc-parsing regex that stops
 matching does not fail — it stops checking, and reports zero rows on both
 sides."
 
-Floors are committed integers, and **only for files carrying claims today**. A
-floor of `0` asserts nothing, so the skill files with no counts get no entry.
-They are still scanned: the ratchet catches a *lost* claim, value checking
-catches a *wrong* one, and a skill that newly acquires a stale count is caught
-by the second even with no floor of its own.
+**The non-empty check exists for the same reason, one level up.** The
+(file, claim type) floor table is flattened into `test.each` rows via
+`Object.entries(CLAIM_FLOORS).flatMap(...)` rather than written as a literal
+list, and `test.each([])(...)` generates ZERO test cases rather than failing —
+confirmed against the Bun version this repo pins. So if the flattened table
+were ever emptied, whether by deleting every `CLAIM_FLOORS` entry or by
+breaking the `flatMap` itself, every floor assertion downstream would
+silently stop existing and the suite would report a clean 0 failures. This
+check is what turns that into a loud failure instead, and it has to run
+*before* the `test.each` it is guarding.
+
+Floors are committed integers, and **only for (file, claim type) pairs
+carrying claims today**. A pair with no entry asserts nothing there, so the
+skill files with no counts get no entry at all. They are still scanned: the
+ratchet catches a *lost* claim, value checking catches a *wrong* one, and a
+skill that newly acquires a stale count is caught by the second even with no
+floor of its own.
 
 `GLOBAL_FLOOR` exists so that a discovery bug — a broken `git ls-files` call,
 a bad path join — cannot pass by finding nothing anywhere. Both
@@ -242,8 +272,8 @@ Stated explicitly so they are not mistaken for solved:
   unguarded, and the ratchet does not see it because it never counted it.
   Mitigated only by the registry being short and reviewed; not eliminated.
 - **The 3-word gap admits a false positive** some future sentence creates. The
-  punctuation exclusion narrows this; the false-positive fixtures are the
-  regression net.
+  three-token bound and the requirement that each token be letter-initial
+  narrow this; the false-positive fixtures are the regression net.
 - **Floors are committed integers and can be lowered.** Lowering one to make a
   build pass silently reduces coverage. The global floor limits the blast
   radius; a reviewer noticing a decremented floor is the real control.
@@ -259,12 +289,20 @@ One PR, tooling only:
 - `package.json` — the new test file named in the explicit `test` list
 - count corrections in the three mirrors, as the guard demands them
 
-**One incidental fix belongs in this PR.** The comment at
-`tests/doc-counts.test.js:199` still illustrates its regex with `19 pages`,
-from when the corpus held nineteen. The corpus holds 29 and the assertion
-itself is derived, so the code is correct and only the worked example is
-stale — but a stale example inside the very guard this PR rewrites is the
-same defect class, and it is read by whoever maintains the registry next.
+**One incidental fix was planned here and voided during execution.** The
+comment at `tests/doc-counts.test.js:199` illustrated its regex with `19
+pages`, from when the corpus held nineteen — the corpus holds 29, and this
+spec originally called for correcting that worked example in place as a
+stale-example fix riding along with the rewrite. There turned out to be
+nothing to correct: that comment lived inside the hand-maintained `test.each`
+block this rewrite deletes wholesale, so the stale example left the repo along
+with the block that held it rather than being edited. Its underlying
+rationale was worth keeping regardless of the worked example's staleness — a
+bare `/(\d+) pages/` also matches the plain-language budget's threshold
+("any one rule failing at most 8 pages"), not a count of what is on disk — so
+it was rescued rather than discarded: it now lives in
+`build_scripts/doc-claims.js`'s `CLAIMS` registry comment, attached to the
+`pages` entry it explains.
 
 No prose reorganization. The three pointer files
 (`.cursor/rules/repo-context.mdc`, `.windsurfrules`, `.codex/AGENTS.md`) are

@@ -61,11 +61,37 @@ const NUMBER_WORDS = {
 /**
  * The number alternation, sorted longest-first.
  *
+ * Deliberately UNANCHORED — this is the raw alternation, still exactly what
+ * it was before word-boundary anchoring was added, so `numberPattern`'s own
+ * tests (which inspect this string directly, splitting on `|` and checking
+ * longest-first order) keep asserting the clean word list rather than a
+ * string with boundary tokens spliced onto its first and last entries. Every
+ * CLAIMS pattern below reaches this through `boundedNumberPattern()`
+ * instead of using it raw.
+ *
  * @returns {string} regex source matching digits or a spelled-out number
  */
 function numberPattern() {
   const words = Object.keys(NUMBER_WORDS).sort((a, b) => b.length - a.length)
   return `\\d+|${words.join('|')}`
+}
+
+/**
+ * `numberPattern()`, wrapped so a claim can only be read from a COMPLETE
+ * token. Unanchored, `\d+` matches inside a longer digit run — "v53 unit-test
+ * files" read 53 out of "v53" — and the spelled-out alternation matches
+ * inside a longer word — "often spec files" read ten out of "often", since
+ * "often" contains the literal substring "ten". `\b` is defined on `\w`, so
+ * it holds correctly on either side of a hyphenated compound like
+ * "twenty-three": the hyphen itself is not a word character, so the boundary
+ * check lands at the outer t/e edges of the whole compound regardless of the
+ * punctuation in the middle — "twenty-three" still matches in full, and is
+ * never truncated down to "three".
+ *
+ * @returns {string} regex source: a boundary-anchored number alternation
+ */
+function boundedNumberPattern() {
+  return `\\b(?:${numberPattern()})\\b`
 }
 
 // Words permitted between the number and its noun. Letter-initial so it cannot
@@ -80,8 +106,13 @@ function numberPattern() {
 // reason enough on its own to admit digits here.
 const GAP = '(?:\\s+[A-Za-z][\\w.-]*){0,3}'
 
-// Bounded at three words and admitting no punctuation, so a match cannot cross
-// a clause boundary and capture a number from the previous sentence.
+// Bounded at three letter-initial tokens, which may themselves contain
+// digits, periods and hyphens (see GAP's own comment above and
+// `[\w.-]*`) — "Node.js", "v2.1" and "e2e" all have to cross this gap. What
+// it does NOT admit is a punctuation character as its own
+// whitespace-separated token, or a sentence-ending character breaking a
+// token in two, so a match still cannot cross a clause boundary and capture
+// a number left over from the previous sentence.
 
 /**
  * The registry — the ONLY hand-maintained axis.
@@ -104,12 +135,13 @@ const CLAIMS = [
     id: 'unit-tests',
     deriver: 'unitTestFiles',
     pattern: () =>
-      new RegExp(`\\*{0,2}(${numberPattern()})\\*{0,2}${GAP}\\s+unit-test\\s+files`, 'gi'),
+      new RegExp(`\\*{0,2}(${boundedNumberPattern()})\\*{0,2}${GAP}\\s+unit-test\\s+files`, 'gi'),
   },
   {
     id: 'e2e-specs',
     deriver: 'e2eSpecFiles',
-    pattern: () => new RegExp(`\\*{0,2}(${numberPattern()})\\*{0,2}${GAP}\\s+spec\\s+files`, 'gi'),
+    pattern: () =>
+      new RegExp(`\\*{0,2}(${boundedNumberPattern()})\\*{0,2}${GAP}\\s+spec\\s+files`, 'gi'),
   },
   {
     id: 'pages',
@@ -120,7 +152,7 @@ const CLAIMS = [
     id: 'stylesheets',
     deriver: 'styleSheets',
     pattern: () =>
-      new RegExp(`\\bthe\\s+\\*{0,2}(${numberPattern()})\\*{0,2}\\s+stylesheets`, 'gi'),
+      new RegExp(`\\bthe\\s+\\*{0,2}(${boundedNumberPattern()})\\*{0,2}\\s+stylesheets`, 'gi'),
   },
 ]
 

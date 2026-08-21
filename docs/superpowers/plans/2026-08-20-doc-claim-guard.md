@@ -216,8 +216,11 @@ function numberPattern() {
 // `e2e`, which is precisely what hid the claim that shipped wrong.
 const GAP = '(?:\\s+[A-Za-z][\\w.-]*){0,3}'
 
-// Bounded at three words and admitting no punctuation, so a match cannot cross
-// a clause boundary and capture a number from the previous sentence.
+// Bounded at three letter-initial tokens, which may themselves contain
+// digits, periods and hyphens — Node.js, v2.1 and e2e all have to cross this
+// gap — but it never admits a punctuation character as its own
+// whitespace-separated token, so a match still cannot cross a clause
+// boundary and capture a number from the previous sentence.
 
 /**
  * The registry — the ONLY hand-maintained axis.
@@ -307,7 +310,7 @@ module.exports = { NUMBER_WORDS, numberPattern, scanText, currentClaimFiles }
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `bun test tests/doc-claims.test.js`
-Expected: PASS, all 12 tests.
+Expected: PASS, all 11 tests — the count Step 1's file above actually defines.
 
 If `ignores an unrelated use of the word pages` fails, the `pages` pattern's `\bthe\s+` anchor is missing — restore it rather than widening the test.
 

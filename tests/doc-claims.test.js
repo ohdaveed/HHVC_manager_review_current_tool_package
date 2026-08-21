@@ -58,6 +58,22 @@ describe('false positives that must never be read as claims', () => {
   test('ignores an unrelated use of the word pages', () => {
     expect(scanText('one for conflicted pages')).toEqual([])
   })
+
+  // Neither the spelled-out alternation nor \d+ was word-boundary-anchored
+  // before this test existed: "often" contains the literal substring "ten",
+  // so an unanchored alternation read a claim out of a word that never
+  // mentions a count at all.
+  test('ignores a spelled-out number embedded inside a larger word', () => {
+    expect(scanText('often spec files')).toEqual([])
+  })
+
+  // Same failure mode, digit side: an unanchored \d+ matches inside a longer
+  // digit-bearing token rather than only a standalone number, so a version
+  // string or an identifier like "v53" would have been misread as the count
+  // "53" sitting right before "unit-test files".
+  test('ignores a digit run embedded inside a larger token', () => {
+    expect(scanText('v53 unit-test files')).toEqual([])
+  })
 })
 
 describe('numberPattern', () => {
