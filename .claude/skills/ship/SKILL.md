@@ -79,64 +79,76 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # The required checks are whatever branch protection says they are. Do not
    # write the job names here: that is a second inventory of something ci.yml
    # owns, and a renamed job would leave this polling an already-green PR.
-   # Every step below fails CLOSED — an error reading GitHub must never look
-   # like a pass.
    REQUIRED=$(gh api "repos/{owner}/{repo}/branches/main/protection" \
      --jq '.required_status_checks.contexts[]') \
      || { echo "ABORT: cannot read branch protection"; exit 1; }
-   want=$(printf '%s\n' "$REQUIRED" | grep -c .)
-   [ "$want" -gt 0 ] || { echo "ABORT: no required checks resolved"; exit 1; }
+   [ -n "$REQUIRED" ] || { echo "ABORT: no required checks resolved"; exit 1; }
 
    # `gh pr checks --jq` accepts no --arg, and jq is not a dependency here, so
-   # bun filters. It exits non-zero on anything it cannot answer from.
-   count() {
-     out=$(gh pr checks "$PR" --json name,bucket) || return 1
-     printf '%s' "$out" | REQ="$REQUIRED" MODE="$1" bun -e '
+   # bun filters. It prints a WORD, never a bare count: "not finished yet" and
+   # "finished badly" have to stay distinguishable, and a count collapses them.
+   #   pass  every required check exists and passed
+   #   fail  every required check exists and at least one did not pass
+   #   wait  required checks missing or still running -- no verdict yet
+   probe() {
+     # Do not `|| return 1` here. `gh pr checks` exits 8 whenever a check is
+     # pending and non-zero with `no checks reported on the '<branch>' branch`
+     # during the creation window; both are answers, not read failures.
+     out=$(gh pr checks "$PR" --json name,bucket 2>/dev/null)
+     printf '%s' "$out" | REQ="$REQUIRED" bun -e '
        let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
          const req=(process.env.REQ||"").split("\n").filter(Boolean)
          let j
-         try { j=JSON.parse(s) } catch { process.exit(1) }   // unparseable -> fail closed
-         if (!Array.isArray(j) || j.length===0) process.exit(1)
+         try { j=JSON.parse(s) } catch { console.log("wait"); return } // no body yet
+         if (!Array.isArray(j)) { console.log("wait"); return }
          const mine=j.filter(c=>req.includes(c.name))
-         if (mine.length !== req.length) process.exit(1)     // a required check missing
-         console.log(process.env.MODE==="settled"
-           ? mine.filter(c=>c.bucket!=="pending").length
-           : mine.filter(c=>c.bucket!=="pass").length)
+         if (mine.length !== req.length) { console.log("wait"); return } // not created
+         if (mine.some(c=>c.bucket==="pending")) { console.log("wait"); return }
+         console.log(mine.every(c=>c.bucket==="pass") ? "pass" : "fail")
        })'
    }
 
-   until s=$(count settled) && [ "$s" = "$want" ]; do
-     [ -n "${s:-}" ] || { echo "ABORT: cannot read check status"; exit 1; }
-     sleep 20
+   # Bounded, so "tolerate the creation window" cannot become "hang forever on
+   # a PR whose CI never triggered". Expiry aborts; it never falls through.
+   deadline=$(( $(date +%s) + 1800 ))
+   while :; do
+     case "$(probe)" in
+       pass) echo "CI green"; break ;;
+       fail) echo "ABORT: a required check did not pass"; exit 1 ;;
+       *)    # wait, or an empty line because bun itself could not run
+             [ "$(date +%s)" -lt "$deadline" ] \
+               || { echo "ABORT: timed out waiting on required checks"; exit 1; }
+             sleep 20 ;;
+     esac
    done
-   np=$(count notpass) || { echo "ABORT: cannot read check status"; exit 1; }
-   [ "$np" = "0" ] || { echo "ABORT: CI is not green ($np not passing)"; exit 1; }
    ```
 
-   **Three separate ways this reports a false green, all of them closed above.**
+   **Four separate ways this reports a false green, all of them closed above.**
    Waiting for an ABSENCE of pending checks returns instantly in the seconds
    before GitHub creates them, reporting a stale or missing result as success —
    that happened twice while this skill was written. `gh pr checks --help`
    defines `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so
    waiting only for `!= "pending"` exits just as happily on a FAILED job and
-   swallows `gh`'s non-zero exit inside the substitution. And if either `gh`
-   call fails outright — expired auth, a transient 5xx — an unguarded version
-   leaves `REQUIRED` empty, `want` at zero, and every count at zero, which
-   compares equal and reads GREEN.
+   swallows `gh`'s non-zero exit inside the substitution. If either `gh` call
+   fails outright — expired auth, a transient 5xx — an unguarded version leaves
+   `REQUIRED` empty, every count at zero, and zero compares equal to zero,
+   which reads GREEN.
 
-   That third one is the worst of the three, because it fires exactly when you
-   have least reason to suspect it. `gh pr checks` also exits non-zero with
-   `no checks reported on the '<branch>' branch` inside the creation window,
-   which is why the loop distinguishes "no answer" from "not yet finished".
+   The fourth is the one that bites the fix rather than the bug. A version that
+   closes the third by treating every non-zero `gh` exit as fatal aborts on the
+   FIRST poll of every healthy run, because **`gh pr checks` exits 8 whenever a
+   check is pending** — documented under `Additional exit codes` in its own
+   `--help`. It exits non-zero a second way inside the creation window, with
+   the `no checks reported` message quoted in the comment above. Neither is a
+   failure to read. Both times this loop reported nothing while the skill was
+   being written, the run it was meant to watch had not started.
 
-   Trading one silent wrong answer for another is the trap this whole step
-   exists to name.
-
-   `gh pr checks` also exits non-zero with `no checks reported on the '<branch>'
-branch` inside that window, so tolerate that rather than reading it as a
-   failure. This is not hypothetical: the loop above silently reported nothing
-   twice while writing this skill, and both times the run it was meant to watch
-   had not started.
+   So the two halves pull against each other: tightening the guard until no
+   read error can read green is exactly what makes a pending check look like a
+   broken one. Trading one silent wrong answer for another is the trap this
+   whole step exists to name. What settles it is classifying instead of
+   counting — `pass`, `fail` and "no verdict yet" are three outcomes, not two,
+   so the creation window and a live failure can never land in the same branch.
 
 7. Confirm with the user first. Then prove three things, in this order, because
    each catches a different way the merge ships something you did not inspect:
