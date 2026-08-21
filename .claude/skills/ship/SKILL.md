@@ -61,6 +61,33 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 6. `gh pr checks --watch`, then clear every review thread. This repo's `main`
    requires conversation resolution, so one unanswered bot comment blocks the
    merge with all checks green.
+
+   **If you poll instead of using `--watch`, wait for the required checks to be
+   PRESENT and finished — not merely for nothing to be pending.** GitHub takes
+   a few seconds to create a run's checks after a push, and during that window
+   the pending set is EMPTY, so the obvious loop
+
+   ```sh
+   # WRONG: exits instantly while the checks do not yet exist
+   until [ -z "$(gh pr checks N --json name,bucket --jq '.[]|select(.bucket=="pending")')" ]; do sleep 20; done
+   ```
+
+   returns at once and reports the PREVIOUS run's result, or nothing at all, as
+   success. Count what finished instead of looking for an absence:
+
+   ```sh
+   # RIGHT: both required checks must exist AND have settled
+   until [ "$(gh pr checks N --json name,bucket --jq \
+     '[.[]|select(.name=="Playwright end-to-end tests" or .name=="Format, validate, unit tests")
+       |select(.bucket!="pending")]|length')" = "2" ]; do sleep 20; done
+   ```
+
+   `gh pr checks` also exits non-zero with `no checks reported on the '<branch>'
+branch` inside that window, so tolerate that rather than reading it as a
+   failure. This is not hypothetical: the loop above silently reported nothing
+   twice while writing this skill, and both times the run it was meant to watch
+   had not started.
+
 7. Confirm with the user first. Then prove three things, in this order, because
    each catches a different way the merge ships something you did not inspect:
    - `git status --porcelain` is empty. Clearing a review thread often leaves an
