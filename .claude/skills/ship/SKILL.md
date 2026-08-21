@@ -128,9 +128,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 
    ```sh
    PR=<the pull request number>
-   # Set in step 5. Re-derive here only if you are running this block alone;
-   # in a full /ship run it is already bound to the commit you pushed.
-   SHA=${SHA:-$(git rev-parse HEAD)}
+   # Read the commit step 5 recorded. NOT `git rev-parse HEAD`: this block
+   # runs in its own shell, and by the time it is re-entered after a review
+   # fix, HEAD is the new commit while the run being judged is still the old
+   # one. Re-push means re-record -- step 5's line again -- then re-enter here.
+   SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")
 
    # Bind to the commit you pushed. `gh pr checks` describes whatever the PR
    # points at RIGHT NOW, which in the seconds after a push is still the
@@ -368,9 +370,10 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      measures local `HEAD` against the base branch, so an unpushed commit still
      reads as an ordinary `0 N`.
    - The head GitHub holds equals the head **whose CI you actually watched**.
-     Step 6 bound its verdict to `$SHA`; carry that variable in rather than
-     recomputing, and require THREE values to agree: `$SHA`, a fresh
-     `git rev-parse HEAD`, and a fresh `gh pr view --json headRefOid`.
+     Step 6 bound its verdict to the commit step 5 recorded, so read it back
+     the same way — `SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")` — and
+     require THREE values to agree: that `$SHA`, a fresh `git rev-parse HEAD`,
+     and a fresh `gh pr view --json headRefOid`.
      Recomputing the local head is the hole, and it is the ordinary path
      rather than an exotic one: step 6 ends by clearing review threads, a
      cleared thread is usually a commit, and that commit moves `HEAD` and the
