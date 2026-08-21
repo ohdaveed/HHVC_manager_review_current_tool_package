@@ -96,7 +96,12 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    probe() {
      errf=$(mktemp)
      out=$(gh pr checks "$PR" --json name,bucket 2>"$errf"); rc=$?
-     msg=$(cat "$errf"); rm -f "$errf"
+     msg=$(cat "$errf")
+     # Silence the cleanup. probe() is read through `$(...)`, so ANY other
+     # command that writes to stdout here lands in the verdict: an
+     # interactive `alias rm='rm -v'` prepends `removed '/tmp/...'` and the
+     # case below falls through to the abort. Measured, not hypothetical.
+     rm -f "$errf" >/dev/null 2>&1
      # Do not `|| return 1` on rc alone. The creation window exits non-zero
      # with `no checks reported on the '<branch>' branch`, which is a "not
      # yet". An expired token or a 5xx is NOT, and must never masquerade as
@@ -163,6 +168,17 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    exit as fatal dies at t+6s. The window was ONE poll wide — which is why it
    is missed by hand, and why it has to be handled by shape rather than caught
    by luck.
+
+   **A fifth way, found by running this loop rather than reading it.** `probe`
+   is consumed as `$(probe)`, so its stdout must carry the verdict and nothing
+   else. On the machine this was written on, `rm` is aliased to `rm -v`, and
+   the cleanup line printed `removed '/tmp/tmp.42FSr6UGYe'` ahead of a
+   perfectly good `wait` — the `case` matched neither `wait` nor `pass`, fell
+   to the catch-all, and aborted a healthy run with `cannot read check status`.
+   It fails closed, so it cost a re-run rather than a bad merge; the general
+   rule is that anything inside a function read through a substitution needs
+   its output routed to `/dev/null` on purpose, and an interactive shell's
+   aliases are part of the environment the snippet runs in.
 
    The fourth is the one that bites the fix rather than the bug: closing the
    third by treating every non-zero `gh` exit as fatal turns a "not yet" into
