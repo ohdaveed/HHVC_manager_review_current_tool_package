@@ -62,7 +62,7 @@ they state too weakly to act on:
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
-  `checks` job — read the job rather than a list here.** That sentence has been
+  `format_validate_lint` job — read the job rather than a list here.** That sentence has been
   rewritten by every tool that joined it, each time as though it were the only
   addition, and an enumeration in three mirrored files is four copies of one
   fact. What is worth stating is the shape: there is no ESLint and no `tsc`
@@ -323,33 +323,41 @@ or `js/core/page-data.js`.**
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on every pull
-request, in two deliberately separate jobs so a formatting or schema failure
-reports in seconds without waiting on a Chromium download, and a flaky
-browser run never masks a unit failure:
+`.github/workflows/ci.yml` runs on pushes to `main` and on every pull request
+as a multi-job graph. Formatting and schema failures report before a Chromium
+download begins; a flaky browser run never masks a unit failure.
 
-**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
+**All jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
 took `bun-version: latest` until 2026-08-15, so the runtime changed under the
 repo with no commit. Bun 1.3.14 stopped letting CJS `require()` an ESM module;
 `build_scripts/storage.js` was the only ESM file under `build_scripts/`, so
 `server.ts` threw at boot and every suite spawning it reported "did not start
-in time" — passing or failing per run depending on which Bun `latest` resolved
-to. **Everything under `build_scripts/` is CommonJS now**; keep it that way,
-since `server.ts` named-imports those modules from TypeScript, which is the
+in time". **Everything under `build_scripts/` is CommonJS now**; keep it that
+way, since `server.ts` named-imports those modules from TypeScript, which is the
 supported direction. Bumping `.bun-version` is fine, just deliberate.
 
-- **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
-  → `build:railway` → `test`. `build:railway` doubles as a deploy-integrity
-  check: it fails if the committed workshop-form `dist` references assets
-  that were never committed (the "form shell that never hydrates" regression).
-  **It runs before `test` on purpose**, even though that delays a unit
-  failure by a build: one test in `tests/review-api-server.test.js` asserts
-  that a set-but-empty `STATIC_ROOT` still serves the real built app, and it
-  can only tell a correct fallback from a broken one if `dist/` exists. It
-  skips itself when there is no build — so with the fast order it passed by
-  skipping and covered nothing.
-- **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
-  `playwright-report/` as an artifact on failure (traces are on-first-retry).
+CI runs as a **multi-job graph** (not a single `checks` job):
+
+- **`changes`** — classifies the diff into `code` and `docs` outputs; all other
+  jobs gate their `if:` on these outputs.
+- **`docs_only_checks`** — docs-only PRs only: `lint:docs` + `format:check`;
+  heavy jobs are skipped.
+- **`format_validate_lint`** — code-changing PRs and all `main` pushes: full
+  format/revert/validate/lint gauntlet.
+- **`build_railway`** — downstream of `format_validate_lint`. Runs `build:railway`
+  (deploy-integrity check: fails if the committed workshop-form `dist` references
+  assets that were never committed).
+- **`build_singlefile`** — parallel with `build_railway`, downstream of
+  `format_validate_lint`. Runs `build:singlefile`.
+- **`unit`** — downstream of **`build_railway`** (not `format_validate_lint`
+  directly): `build:railway` must complete first so the `STATIC_ROOT` fallback test
+  can distinguish a correct result from a broken one.
+- **`e2e`** — downstream of `format_validate_lint`. Playwright, uploads
+  `playwright-report/` on failure.
+
+On `push` to `main` all code jobs run unconditionally. A concurrency group
+cancels in-progress runs on the same ref. **Do not refer to a single `checks`
+job as the CI gate.**
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
