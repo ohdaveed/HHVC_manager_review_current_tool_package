@@ -83,15 +83,21 @@ const FULL_MIRRORS = ['AGENTS.md', 'CLAUDE.md']
  * A claim may carry its own `sections` map to look somewhere other than
  * DEFAULT_SECTIONS, so the registry is not bound to one part of the documents.
  *
- * KNOWN LIMIT, stated rather than implied: every claim currently registered
- * comes from the security-review guidance, so drift in any OTHER mirrored
- * section is still uncaught. That is a gap in this registry's COVERAGE, not in
- * its mechanism — adding a claim elsewhere needs only a `sections` entry. Which
- * further facts are load-bearing enough to bind all three mirrors, including
- * the compressed one, is an editorial judgement rather than a mechanical one,
- * and is tracked on issue #182 rather than guessed at here.
+ * WHAT EARNS A PLACE HERE, so the list does not become a matter of taste: a
+ * fact qualifies only if it ALREADY appears in all three mirrors. That keeps
+ * the rule mechanical rather than editorial, and it can never force the
+ * compressed Copilot mirror to carry detail it deliberately omits — the gate
+ * preserves an agreement that exists, it does not impose one. Measured when
+ * this list was written, 62 code spans satisfied that test; the ones below are
+ * the subset whose exact spelling is load-bearing, which is the second and
+ * last filter: a mirror naming a different storage key, role or entry point is
+ * not stale but wrong, and a reader who follows it writes to the wrong place.
+ * Incidental path mentions are deliberately left out, since one mirror
+ * dropping a passing reference is not drift.
  */
 const SHARED_CLAIMS = [
+  // Procedural guidance: scoped to the section that carries it, because the
+  // same words can appear in prose ABOUT the rule without being the rule.
   { id: 'local-diff-names-head', needle: 'git diff HEAD' },
   { id: 'commit-diff-first-parent', needle: 'git show --first-parent' },
   { id: 'pr-diff-takes-number', needle: 'gh pr diff <number>' },
@@ -99,6 +105,23 @@ const SHARED_CLAIMS = [
   { id: 'untracked-needs-status', needle: 'git status --short' },
   { id: 'attack-surface-bullets', needle: '3-5 bullets' },
   { id: 'assessment-deadline', needle: '2 tool calls' },
+
+  // Identifiers whose exact spelling is load-bearing, searched file-wide.
+  // A mirror that names a different storage key, role or entry point is not
+  // merely stale, it is wrong, and a reader following it writes to the wrong
+  // place. Presence anywhere IS the fact, so these need no section.
+  { id: 'module-graph-root', needle: 'js/main.js', scope: 'file' },
+  { id: 'single-script-host', needle: 'index.html', scope: 'file' },
+  { id: 'theme-token-layer', needle: 'css/theme.css', scope: 'file' },
+  { id: 'page-source-dir', needle: 'pages/*.js', scope: 'file' },
+  { id: 'persisted-state-key', needle: 'hhvcManagerReviewState:v1', scope: 'file' },
+  { id: 'page-registry-global', needle: "window.HHVC_PAGES['<pageKey>']", scope: 'file' },
+  { id: 'page-data-global', needle: 'window.HHVC_DATA = { pages, order }', scope: 'file' },
+  { id: 'server-entry', needle: 'server.ts', scope: 'file' },
+  { id: 'ai-route-prefix', needle: '/api/ai/*', scope: 'file' },
+  { id: 'role-review-read', needle: 'review:read', scope: 'file' },
+  { id: 'role-review-write', needle: 'review:write', scope: 'file' },
+  { id: 'role-ai-generate', needle: 'ai:generate', scope: 'file' },
 ]
 
 /**
@@ -181,6 +204,7 @@ describe('instruction mirrors', () => {
     // claim fails for a reason that names the wrong problem.
     const wanted = new Set()
     for (const claim of SHARED_CLAIMS) {
+      if (claim.scope === 'file') continue
       const map = claim.sections ?? DEFAULT_SECTIONS
       for (const path of MIRROR_PATHS) wanted.add(`${path}\u0000${map[path]}`)
     }
@@ -194,9 +218,22 @@ describe('instruction mirrors', () => {
   describe('shared claims appear in all three mirrors', () => {
     const parsed = Object.fromEntries(MIRROR_PATHS.map((p) => [p, sectionsOf(readMirror(p))]))
 
-    /** Normalized body of the CARRYING SECTION only, never the whole file. */
+    const whole = Object.fromEntries(MIRROR_PATHS.map((p) => [p, normalize(readMirror(p))]))
+
+    /**
+     * Normalized haystack for one claim in one mirror.
+     *
+     * Section-scoped by default, because prose ABOUT a rule can otherwise
+     * satisfy the check after the rule itself has gone — that happened here
+     * once already. A claim marked `scope: 'file'` searches the whole document
+     * instead: it names an identifier, and an identifier appearing anywhere IS
+     * the fact, so pinning it to a section would only make the check brittle
+     * against the mirrors' different shapes.
+     */
     const haystackFor = (claim, path) =>
-      normalize(parsed[path].get((claim.sections ?? DEFAULT_SECTIONS)[path]) ?? '')
+      claim.scope === 'file'
+        ? whole[path]
+        : normalize(parsed[path].get((claim.sections ?? DEFAULT_SECTIONS)[path]) ?? '')
 
     for (const claim of SHARED_CLAIMS) {
       const { id, needle } = claim
