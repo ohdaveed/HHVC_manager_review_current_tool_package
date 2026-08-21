@@ -91,7 +91,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 54 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 55 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -100,6 +100,7 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
+`commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
 `mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over),
 `esm-named-exports` (that a module which is named-imported actually DECLARES
 those ESM exports. `js/karl/karl-blocks.js` published only `window.karlBlocks` and
@@ -2978,6 +2979,23 @@ when a diff hunk is genuinely ambiguous, and say why.
   an explicit **verification line** (e.g. "Verified headless at 1600px and
   850px…"). AI-assisted commits carry `Co-Authored-By` and `Claude-Session`
   trailers.
+- **A `commit-msg` hook enforces that pairing**, and it is a PAIRING check
+  rather than a blanket one: the trigger is a `Co-Authored-By` line naming
+  Claude, so a human's own commit is untouched, and either trailer without the
+  other fails. The rule lives in the TRACKED `.githooks/commit-msg`;
+  `bun run hooks:install` symlinks `.git/hooks/commit-msg` at it, and that is
+  required once per clone because hooks are never committed. **It deliberately
+  does not set `core.hooksPath`** — that setting is already global here,
+  pointing at ggshield, and a repo-local value overrides it outright and
+  silently disables the pre-push secret scan. It is unnecessary anyway, since
+  ggshield's `_dispatch` forwards each hook to
+  `$(git rev-parse --git-dir)/hooks/<name>` whenever that file is executable
+  (which is why the hook's mode bit is part of its contract, and asserted in
+  `tests/commit-msg-hook.test.js` — a non-executable hook is not a broken gate
+  but an absent one, with no error to notice). The known gap, worth stating:
+  a commit carrying NEITHER trailer is invisible to it, because nothing in the
+  message distinguishes that from a human commit. `--no-verify` bypasses it,
+  as it bypasses every hook.
 - **Keep dashboard-UX changes and policy-copy changes in separate PRs** — reduces
   merge conflicts and keeps review focused.
 - **Never hand-edit generated files** (single-file HTML exports,
