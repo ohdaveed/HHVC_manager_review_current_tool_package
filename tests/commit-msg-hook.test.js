@@ -268,6 +268,41 @@ describe('commit-msg hook: a real merge, in a scratch repository', () => {
   })
 })
 
+describe('commit-msg hook: who counts as the agent', () => {
+  test('leaves a HUMAN named Claude alone', () => {
+    // A substring match on "claude" classified this person as AI and demanded
+    // a session id they cannot produce. The identity that signs these commits
+    // is an anthropic.com address, and every Co-Authored-By naming the agent
+    // in this repository's history uses one.
+    expect(accepts('fix: x\n\nCo-Authored-By: Claude Dupont <claude@example.com>\n')).toBe(true)
+  })
+
+  test('still catches the agent under any display name', () => {
+    expect(accepts('fix: x\n\nCo-Authored-By: Some Agent <noreply@anthropic.com>\n')).toBe(false)
+  })
+})
+
+describe('commit-msg hook: a non-default core.commentChar', () => {
+  test('strips the status block whatever character git was told to use', () => {
+    // `core.commentChar` is configurable. A hand-rolled `#` strip leaves a
+    // `;`-commented block in place, which ends the message in a non-trailer
+    // block — so the parser finds nothing and an unpaired co-author sails
+    // through. `git stripspace --strip-comments` honours the setting.
+    const file = path.join(tmpDir, 'msg-commentchar')
+    fs.writeFileSync(file, `fix: x\n\n${COAUTHOR}\n; status block\n; more\n`)
+    const result = spawnSync('sh', [HOOK, file], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        GIT_CONFIG_COUNT: '1',
+        GIT_CONFIG_KEY_0: 'core.commentChar',
+        GIT_CONFIG_VALUE_0: ';',
+      },
+    })
+    expect(result.status).toBe(1)
+  })
+})
+
 describe('commit-msg hook: message the author actually sees', () => {
   test('names the missing trailer and offers the escape hatch', () => {
     const file = path.join(tmpDir, 'msg-diagnostic')

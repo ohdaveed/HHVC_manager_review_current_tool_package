@@ -51,7 +51,14 @@ msg_file=${1:-}
 # means the message no longer ENDS in a trailer block and
 # `interpret-trailers` reports nothing at all -- which would read as "no
 # Co-Authored-By" and skip enforcement on exactly the commits that have it.
-body=$(sed -e '/^# *-* >8 -*/,$d' -e '/^diff --git /,$d' -e '/^#/d' "$msg_file")
+# `git stripspace --strip-comments` rather than a `#` sed: the comment
+# character is configurable (`core.commentChar`), and a hand-rolled `#` strip
+# leaves a `;`-commented status block in place, which ends the message in a
+# non-trailer block so the parser finds nothing and an unpaired co-author is
+# accepted. git honours whatever is configured; we should not second-guess it.
+# The scissors and its RAW diff still need removing by hand, because those
+# lines are not comments at all.
+body=$(sed -e '/^diff --git /,$d' "$msg_file" | git stripspace --strip-comments)
 
 # These reference another commit's message rather than carrying their own.
 # `amend!` is deliberately NOT here: it REPLACES a message wholesale, so it
@@ -73,7 +80,13 @@ trailers=$(printf '%s\n' "$body" |
 
 # Case-insensitive throughout: git preserves whatever case was typed, so
 # `claude-session:` is the same trailer and must not be a way around this.
-coauthor=$(printf '%s\n' "$trailers" | grep -ciE '^Co-Authored-By:[[:space:]]*.*claude' || true)
+# Match the AGENT, not the string "claude". A human co-author can legitimately
+# be called Claude -- `Co-Authored-By: Claude Dupont <claude@example.com>` --
+# and a substring match classified them as AI and demanded a session id they
+# have no way to produce. The identity that actually signs these commits is an
+# anthropic.com address: 593 of the 593 Co-Authored-By trailers naming the
+# agent in this repository's history use `noreply@anthropic.com`.
+coauthor=$(printf '%s\n' "$trailers" | grep -ciE '^Co-Authored-By:.*@anthropic\.com' || true)
 session_any=$(printf '%s\n' "$trailers" | grep -ciE '^Claude-Session:' || true)
 session=$(printf '%s\n' "$trailers" | grep -ciE '^Claude-Session:[[:space:]]*[^[:space:]]' || true)
 
