@@ -30,6 +30,13 @@ jobs:
       - id: filter
         uses: dorny/paths-filter@v3
         with:
+          # `every`, not the default `some`. With `some` a path matches a
+          # filter when ANY of its patterns match, so the leading `**` in
+          # `code` matches a Markdown file and the negations below it never
+          # get a say -- `code` comes back true for a docs-only PR and
+          # `docs_only_checks` never runs at all. The default silently
+          # disables the whole docs-only path rather than failing.
+          predicate-quantifier: every
           filters: |
             docs:
               - '**/*.md'
