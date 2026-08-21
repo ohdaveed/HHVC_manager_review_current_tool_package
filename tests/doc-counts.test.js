@@ -164,6 +164,21 @@ describe("package.json's explicit test list", () => {
  * 36. A pointer being unchecked is exactly the rot the pointer convention
  * exists to avoid. It carries no `pages`/`stylesheets` entry because it makes
  * no such claim, not because one went uncounted. */
+// `pages-inventory` (build_scripts/doc-claims.js's separate id for the "N
+// `pages/*.js`" phrasing, as opposed to `pages`'s "**N pages**"/"the N pages")
+// earns no entry here, deliberately. The one place that phrasing appeared —
+// AGENTS.md and CLAUDE.md both saying "which imports all\n27 `pages/*.js`",
+// stale against a real 29 — was fixed by removing the number entirely rather
+// than resetting it, following this branch's own precedent (see aea5367:
+// "docs: remove the stale page-count numbers instead of resetting them") of
+// stopping a drift clock instead of restarting it. With no digit left next to
+// a backtick-fenced `pages/*.js` glob anywhere in the scanned corpus, the
+// pattern floors at zero here — an absent entry, per the convention above,
+// not a floor of 0 written out. It is still exercised: fixtures in
+// tests/doc-claims.test.js pin both the positive phrasing and the narrow
+// negative case, and DERIVER_BY_CLAIM below still wires it to `pageFiles` so
+// a future reappearance of this phrasing is validated against the real page
+// count rather than silently skipped.
 const CLAIM_FLOORS = {
   'AGENTS.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 2, stylesheets: 1 },
   'CLAUDE.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 3, stylesheets: 1 },
@@ -181,6 +196,7 @@ const DERIVER_BY_CLAIM = {
   'unit-tests': 'unitTestFiles',
   'e2e-specs': 'e2eSpecFiles',
   pages: 'pageFiles',
+  'pages-inventory': 'pageFiles',
   stylesheets: 'styleSheets',
 }
 

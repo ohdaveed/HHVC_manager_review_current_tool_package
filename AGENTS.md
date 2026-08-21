@@ -374,8 +374,8 @@ bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
 Order is enforced two ways. **Core modules enforce it themselves** — a module
 that needs `escapeHtml` imports it, and `js/core/state.js` imports
-`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all
-27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all of
+`pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/review/ux-improvements*.js`, `js/review/review-queue*.js`,

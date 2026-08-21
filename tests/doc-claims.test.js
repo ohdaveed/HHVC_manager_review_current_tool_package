@@ -41,6 +41,17 @@ describe('scanText', () => {
   test('returns an empty array for prose carrying no claim', () => {
     expect(scanText('The 1700px breakpoint is measured.')).toEqual([])
   })
+
+  // The phrasing a 2026-08-20 PR review found neither `pages` branch could
+  // see: a number modifying the backtick-fenced glob `pages/*.js` directly,
+  // rather than the bare noun "pages" — AGENTS.md and CLAUDE.md both said
+  // "which imports all\n27 `pages/*.js`" and the miscount went unnoticed
+  // because nothing scanned this shape at all.
+  test('reads a count modifying the backtick-fenced pages glob', () => {
+    expect(scanText('which imports all\n27 `pages/*.js`, so window.HHVC_DATA')).toEqual([
+      { id: 'pages-inventory', value: 27 },
+    ])
+  })
 })
 
 describe('false positives that must never be read as claims', () => {
@@ -57,6 +68,13 @@ describe('false positives that must never be read as claims', () => {
 
   test('ignores an unrelated use of the word pages', () => {
     expect(scanText('one for conflicted pages')).toEqual([])
+  })
+
+  // Proves `pages-inventory` stays as narrow as `pages` itself: a bare count
+  // of the noun "pages", with no backtick-fenced `pages/*.js` glob anywhere
+  // nearby, must satisfy neither claim id.
+  test('ignores a bare page count with no backtick-fenced glob nearby', () => {
+    expect(scanText('a bare 27 pages in unrelated prose')).toEqual([])
   })
 
   // Neither the spelled-out alternation nor \d+ was word-boundary-anchored

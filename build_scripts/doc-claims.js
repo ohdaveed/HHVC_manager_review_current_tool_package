@@ -151,6 +151,30 @@ const GAP = '(?:\\s+[A-Za-z](?:[\\w.-]*\\w)?){0,3}'
  * findings like "nine pages reported hitting a reading target". Both spellings
  * the docs really use are covered — "holds **29 pages** under" and "across the
  * 29 pages" — and nothing wider than those two.
+ *
+ * `pages-inventory` is a SEPARATE id from `pages`, not a third branch on its
+ * pattern, even though both derive against the same `pageFiles` count. A PR
+ * review on 2026-08-20 found a third phrasing neither `pages` branch can see:
+ * AGENTS.md and CLAUDE.md both said "which imports all\n27 `pages/*.js`",
+ * stale against a real 29, and invisible to a scanner that only recognizes
+ * "**N pages**" and "the N pages" because the number there modifies a
+ * backtick-fenced glob token, not the bare noun "pages". A shared `pages` id
+ * would report that mismatch as "pages" and leave a reader guessing which of
+ * three regex branches actually fired; a separate id keeps a floor, and a
+ * failure message, specific to which grammatical shape broke.
+ *
+ * It stays exactly as narrow as `pages` is, and for the same reason `pages`
+ * itself carries no GAP: the repo's own corpus mentions `` `pages/*.js` ``
+ * roughly thirty times, so admitting a gap here — the way `unit-tests` and
+ * `e2e-specs` must, to cross "Playwright e2e" — would turn every one of those
+ * thirty sites into a match target for any number sitting up to three tokens
+ * upstream, which is a materially wider surface than the one real instance
+ * this id was written to guard ("27 `pages/*.js`", zero gap). No bold markers
+ * either, for the same reason: neither guards a phrasing that exists. The
+ * number must sit directly against the backtick-fenced glob, through nothing
+ * but whitespace, so a bare "27 pages" in unrelated prose — the exact false
+ * positive `pages` itself was built to reject — still cannot satisfy this
+ * pattern either.
  */
 const CLAIMS = [
   {
@@ -169,6 +193,11 @@ const CLAIMS = [
     id: 'pages',
     deriver: 'pageFiles',
     pattern: () => new RegExp(`\\*\\*(\\d+)\\s+pages\\*\\*|\\bthe\\s+(\\d+)\\s+pages\\b`, 'g'),
+  },
+  {
+    id: 'pages-inventory',
+    deriver: 'pageFiles',
+    pattern: () => new RegExp(`(${boundedNumberPattern()})\\s+\`pages/\\*\\.js\``, 'g'),
   },
   {
     id: 'stylesheets',
