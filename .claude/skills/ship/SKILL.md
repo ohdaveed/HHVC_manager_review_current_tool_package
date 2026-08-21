@@ -74,13 +74,34 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    non-fast-forward and the run stops before a PR exists — capture the remote
    OID beforehand and push with `--force-with-lease=<ref>:<oid>`, which refuses
    if anyone else moved the ref meanwhile.
-6. `gh pr checks --watch`, then clear every review thread. This repo's `main`
-   requires conversation resolution, so one unanswered bot comment blocks the
-   merge with all checks green. **`--watch` does not escape the race
-   described below.** Started inside the creation window it attaches to the
-   PREVIOUS run's checks and reports green for work it never saw — the same
-   stale read the loop below exists to prevent, just with a spinner. Let the
-   push register its checks before running it, or poll.
+6. Wait for CI, then clear every review thread. This repo's `main` requires
+   conversation resolution, so one unanswered bot comment blocks the merge
+   with all checks green.
+
+   **`gh pr checks --watch` cannot be the whole of this step, and "let the
+   push register first" is not a precondition anything enforces.** Its
+   selector is a PR number, URL or branch — the
+   [manual](https://cli.github.com/manual/gh_pr_checks) offers no commit
+   option — so `$SHA` is unused on that path and nothing binds the spinner to
+   the revision you pushed. Started inside the creation window it attaches to
+   the PREVIOUS run and reports green for work it never saw: the same stale
+   read the loop below exists to prevent, just with a spinner in front of it.
+   Measured at t+3s after a push, `gh pr checks` returned the previous run's
+   eight checks with every one green.
+
+   So gate on the pushed commit FIRST, whichever route you then take. One
+   call, and it is the same question `sha_state` asks below:
+
+   ```sh
+   until [ "$(gh api "repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=$SHA" \
+     --jq '.total_count')" -gt 0 ] 2>/dev/null; do sleep 5; done
+   gh pr checks "$PR" --watch
+   ```
+
+   That only proves the run EXISTS, which is what makes `--watch` watch the
+   right one; it says nothing about the outcome, so read `--watch`'s verdict
+   as usual. The polling block below is the stricter route and needs no such
+   preamble, since every one of its states is already bound to `$SHA`.
 
    **If you poll instead of using `--watch`, wait for the required checks to be
    PRESENT and finished — not merely for nothing to be pending.** GitHub takes
