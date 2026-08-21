@@ -65,11 +65,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    working tree, so run before the commit it inspects the previous commit and
    passes while the restoring change sits unexamined in the tree.
 5. `SHA=$(git rev-parse HEAD)`, then `git push -u origin HEAD` and
-   `gh pr create --fill`. **Capture the SHA here, not inside step 6's optional
-   polling snippet** — step 7 binds its head comparison and
-   `--match-head-commit` to `$SHA`, and `--watch` is the primary route, so a
-   `SHA` that only exists on the fallback path leaves the default one
-   comparing against an empty variable. If step 2 rebased a
+   `gh pr create --fill`. **Capture the SHA here, before step 6 rather than
+   inside it** — step 7 binds its head comparison and `--match-head-commit` to
+   `$SHA`, and it has to name the commit you pushed even if step 6 is
+   interrupted or re-entered, so it cannot be a variable that only exists once
+   the poll starts. If step 2 rebased a
    branch that had already been pushed, this plain push is rejected as
    non-fast-forward and the run stops before a PR exists — capture the remote
    OID beforehand and push with `--force-with-lease=<ref>:<oid>`, which refuses
@@ -380,6 +380,18 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    matches a freshly fetched `origin/main` — not local `HEAD`, which is a
    different commit after a squash merge. A `curl` status code can come from
    the previous deployment and cannot see the console.
+
+   **Ask Railway for that commit; the app does not carry it.** Nothing in this
+   repo stamps a build with its revision — no version route in `server.ts`, no
+   marker in the HTML, no injection in `vite.config.mjs` — so there is nothing
+   to read off the page and the comparison has no left-hand side without this.
+   The deployment record is where it lives: the Railway MCP's
+   `list_deployments` returns `id | status | timestamp | commit` per
+   deployment, and `railway status --json` carries the same for the active
+   one. Require the newest `SUCCESS` row's commit to equal `origin/main`. A
+   `REMOVED` or `FAILED` row above it means the newest deploy is not the one
+   serving, which is exactly the case a page that loads cannot show you.
+
 9. Switch to `main` and pull. `--delete-branch` in step 7 already removed both
    copies; if one survived, delete it by name with `git branch -D <branch>` —
    a squash merge leaves it unmerged in git's view, so `-d` refuses.
