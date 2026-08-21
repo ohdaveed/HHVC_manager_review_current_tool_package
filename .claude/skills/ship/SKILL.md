@@ -287,16 +287,25 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      every local commit. Comparing `origin/main...HEAD` does not test this: it
      measures local `HEAD` against the base branch, so an unpushed commit still
      reads as an ordinary `0 N`.
-   - The head GitHub holds equals the head you inspected. Read it fresh —
-     `gh pr view --json headRefOid` — and require it to equal
-     `git rev-parse HEAD`, then pass that same SHA to
-     `gh pr merge --squash --delete-branch --match-head-commit <sha>`. The
-     revision counts cannot substitute for this: if another actor pushed after
-     your last fetch, the remote-TRACKING ref still points at your inspected
-     commit, so `@{upstream}..HEAD` reads 0 while the PR head has moved on.
-     Only asking GitHub what it currently holds detects that, and
-     `--match-head-commit` then makes the merge fail rather than silently
-     shipping the newer commit.
+   - The head GitHub holds equals the head **whose CI you actually watched**.
+     Step 6 bound its verdict to `$SHA`; carry that variable in rather than
+     recomputing, and require THREE values to agree: `$SHA`, a fresh
+     `git rev-parse HEAD`, and a fresh `gh pr view --json headRefOid`.
+     Recomputing the local head is the hole, and it is the ordinary path
+     rather than an exotic one: step 6 ends by clearing review threads, a
+     cleared thread is usually a commit, and that commit moves `HEAD` and the
+     PR head together. Both then agree with each other and disagree with the
+     run that was validated — all three proofs read clean and the merge ships
+     a commit whose checks may not exist yet. If `$SHA` no longer matches, do
+     not widen the comparison: go back to step 6 and re-poll the new head.
+     `gh pr checks` selects by PR, URL or branch and never by commit, so
+     nothing downstream preserves this binding for you. Then pass `$SHA` to
+     `gh pr merge --squash --delete-branch --match-head-commit <sha>`, which
+     makes the merge fail rather than silently shipping the newer commit. The
+     revision counts cannot substitute for any of it: if another actor pushed
+     after your last fetch, the remote-TRACKING ref still points at your
+     inspected commit, so `@{upstream}..HEAD` reads 0 while the PR head has
+     moved on.
      **The merge is the deploy** — Railway is connected to `main`, so a branch
      push builds nothing and steps 8 and 9 are unreachable without this.
 8. Verify the artifact rather than the pipeline: load the live Railway URL
