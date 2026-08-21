@@ -96,6 +96,17 @@
 .form-success h2 {
   margin: 0 0 0.5rem;
   font-size: 1.2rem;
+  /* INHERIT, explicitly. Pinning the colour on `.form-success` is not enough
+     for this heading: `css/styles.css` declares `h2 { color: var(--text-primary) }`
+     on the element itself, and an explicit declaration beats an inherited
+     value however specific the ancestor is. In dark mode that token is
+     #f0f1f2 -- 1.03:1 on this panel's #ecf8ed, an invisible heading. `.form-success h2`
+     outranks the bare `h2`, so this takes the panel's pinned 14.95:1 ink.
+     The link below it needs no such rule: `a` resolves to #495ed4, which is
+     5.01:1 here. `css/sfds.css` does re-declare that token inside its
+     dark block, but to the SAME literal, so the pairing holds in both
+     modes -- checked rather than assumed. */
+  color: inherit;
 }
 
 .form-success p {
