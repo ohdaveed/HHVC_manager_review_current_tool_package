@@ -2,15 +2,15 @@
 name: ship
 description: Rebase, test, commit, push, open PR, watch CI, merge, verify deploy
 disable-model-invocation: true
-allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
+allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
 ---
 
 **Read the frontmatter as it actually behaves.** `allowed-tools` is a
 PRE-APPROVAL — tools listed there run without a permission prompt — not a
 sandbox. It cannot deny anything. So the list above holds only read-only
 inspection: fetch, status, log, diff, rev-list, the read-only `gh pr`
-subcommands, the test and lint scripts, and the four browser tools step 7
-needs. Every mutating command in this workflow — `git commit`, `git push`,
+subcommands, the five gate scripts, and the four browser tools step 8 needs.
+Every mutating command in this workflow — `git commit`, `git push`,
 `git rebase`, `git branch -D`, `gh pr create`, `gh pr merge` — is deliberately
 absent, so each one stops for permission at the moment it runs. That, plus
 `disable-model-invocation: true` (this skill runs only when a human types
@@ -18,7 +18,7 @@ absent, so each one stops for permission at the moment it runs. That, plus
 `Bash(git *)` / `Bash(gh *)`: that pre-approves the merge, which is the deploy.
 
 1. Refuse to run from `main`. Check `git branch --show-current`; if it is the
-   default branch, stop and ask for a feature branch. Step 4 would otherwise
+   default branch, stop and ask for a feature branch. Step 5 would otherwise
    push `HEAD` straight to `origin/main` — deploying with no PR if the
    credentials can bypass branch protection, and failing at `gh pr create`
    (which defaults head to the current branch and base to the default branch)
@@ -28,21 +28,36 @@ absent, so each one stops for permission at the moment it runs. That, plus
    `git rebase --autostash origin/main` so uncommitted work in the tree does not
    abort it. Never rebase once the PR is open: that rewrites pushed commits and
    forces a force-push into a live review.
-3. Run the test suite; stop and report if red.
-4. Commit with a conventional-commit message, carrying the `Co-Authored-By`
-   and `Claude-Session` trailers this repo requires of AI-assisted commits.
+3. Run every gate CI runs, not just the tests: `bun run format:check`,
+   `bun run validate`, `bun run test`, `bun run lint:docs`,
+   `bun run check:revert`. Stop and report on the first failure. Running only
+   the tests defers a formatting or schema failure to CI, which costs a full
+   cycle to learn something a local second would have told you.
+4. Commit with a conventional-commit message carrying the `Co-Authored-By` and
+   `Claude-Session` trailers this repo requires of AI-assisted commits, then
+   read it back with `git log -1 --format=%B` and confirm both are present. An
+   instruction to include a trailer is not evidence that one was written.
 5. `git push -u origin HEAD` then `gh pr create --fill`
 6. `gh pr checks --watch`, then clear every review thread. This repo's `main`
    requires conversation resolution, so one unanswered bot comment blocks the
    merge with all checks green.
-7. Confirm with the user first. Then re-fetch and prove the REMOTE head carries
-   every local commit — `git rev-list --count @{upstream}..HEAD` must be 0.
-   Comparing `origin/main...HEAD` does not test this: it measures local `HEAD`
-   against the base branch, so a review fix committed but not pushed still
-   reads as an ordinary `0 N` while `gh pr merge` merges the stale remote head
-   and silently drops the fix. Then `gh pr merge --squash --delete-branch`.
-   **The merge is the deploy** — Railway is connected to `main`, so a branch
-   push builds nothing and steps 8 and 9 are unreachable without this.
+7. Confirm with the user first. Then prove three things, in this order, because
+   each catches a different way the merge ships something you did not inspect:
+   - `git status --porcelain` is empty. Clearing a review thread often leaves an
+     unstaged or staged fix, and a revision-only check cannot see one — it is
+     not a commit yet, so every count reads 0 while the fix stays behind.
+   - `git rev-list --count @{upstream}..HEAD` is 0, so the remote head carries
+     every local commit. Comparing `origin/main...HEAD` does not test this: it
+     measures local `HEAD` against the base branch, so an unpushed commit still
+     reads as an ordinary `0 N`.
+   - The head you inspected is the head you merge. Read it with
+     `gh pr view --json headRefOid` and pass it:
+     `gh pr merge --squash --delete-branch --match-head-commit <sha>`. Without
+     that binding, anything pushed to the branch between the check and the
+     merge ships unreviewed, and `@{upstream}..HEAD` stays 0 the whole time
+     because it only counts the direction where the remote is behind.
+     **The merge is the deploy** — Railway is connected to `main`, so a branch
+     push builds nothing and steps 8 and 9 are unreachable without this.
 8. Verify the artifact rather than the pipeline: load the live Railway URL
    headlessly, assert zero console errors, and confirm the deployed commit
    matches a freshly fetched `origin/main` — not local `HEAD`, which is a
