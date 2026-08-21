@@ -12,10 +12,16 @@ inspection: fetch, status, log, diff, rev-list, the read-only `gh pr`
 subcommands, the five gate scripts, and the four browser tools step 8 needs.
 Every mutating command in this workflow — `git commit`, `git push`,
 `git rebase`, `git branch -D`, `gh pr create`, `gh pr merge` — is deliberately
-absent, so each one stops for permission at the moment it runs. That, plus
-`disable-model-invocation: true` (this skill runs only when a human types
-`/ship`), is what bounds it. Do not "tidy up" by widening these to
-`Bash(git *)` / `Bash(gh *)`: that pre-approves the merge, which is the deploy.
+absent, which means this skill does not pre-approve them. **It does not mean
+they will stop and ask.** Whether they prompt is decided entirely by the
+session's own permission configuration: a session already holding a broad
+`Bash(git *)` allow rule, or running with permission checks bypassed, runs them
+without a word. The only real enforcement is a deny rule or a hook, in settings
+the caller controls, not in this file. What this frontmatter genuinely buys is
+narrower: it declines to hand out a pre-approval, and
+`disable-model-invocation: true` means the skill runs only when a human types
+`/ship`. Do not "tidy up" by widening these to `Bash(git *)` / `Bash(gh *)`:
+that pre-approves the merge, which is the deploy.
 
 1. Refuse to run from `main`. Check `git branch --show-current`; if it is the
    default branch, stop and ask for a feature branch. Step 5 would otherwise
@@ -47,7 +53,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    REVISIONS (`origin/main` against `HEAD`) and reads neither the index nor the
    working tree, so run before the commit it inspects the previous commit and
    passes while the restoring change sits unexamined in the tree.
-5. `git push -u origin HEAD` then `gh pr create --fill`
+5. `git push -u origin HEAD` then `gh pr create --fill`. If step 2 rebased a
+   branch that had already been pushed, this plain push is rejected as
+   non-fast-forward and the run stops before a PR exists — capture the remote
+   OID beforehand and push with `--force-with-lease=<ref>:<oid>`, which refuses
+   if anyone else moved the ref meanwhile.
 6. `gh pr checks --watch`, then clear every review thread. This repo's `main`
    requires conversation resolution, so one unanswered bot comment blocks the
    merge with all checks green.
