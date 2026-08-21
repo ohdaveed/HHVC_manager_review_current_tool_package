@@ -76,11 +76,25 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    success. Count what finished instead of looking for an absence:
 
    ```sh
-   # RIGHT: both required checks must exist AND have settled
+   # Wait for both required checks to EXIST and settle...
    until [ "$(gh pr checks N --json name,bucket --jq \
      '[.[]|select(.name=="Playwright end-to-end tests" or .name=="Format, validate, unit tests")
        |select(.bucket!="pending")]|length')" = "2" ]; do sleep 20; done
+
+   # ...then require them to have PASSED. Settled is not green.
+   [ "$(gh pr checks N --json name,bucket --jq \
+     '[.[]|select(.name=="Playwright end-to-end tests" or .name=="Format, validate, unit tests")
+       |select(.bucket!="pass")]|length')" = "0" ] || { echo "CI is not green"; exit 1; }
    ```
+
+   **That second command is not optional.** `gh pr checks --help` defines
+   `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so a loop that
+   waits for `!= "pending"` exits just as happily on a FAILED, cancelled or
+   skipped job — and it swallows `gh`'s own non-zero exit status inside the
+   command substitution, which is the failure signal `--watch` would have given
+   you. Without the pass check you have replaced "merges too early" with "merges
+   on red", which is strictly worse. Trading one silent wrong answer for another
+   is the trap this whole step exists to name.
 
    `gh pr checks` also exits non-zero with `no checks reported on the '<branch>'
 branch` inside that window, so tolerate that rather than reading it as a
