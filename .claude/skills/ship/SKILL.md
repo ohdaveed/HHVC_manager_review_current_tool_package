@@ -132,10 +132,20 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # GitHub; when it goes, `checks[].context` beside it is the replacement.
    BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName) \
      || { echo "ABORT: cannot read the PR's base branch"; exit 1; }
-   REQUIRED=$(gh api "repos/{owner}/{repo}/branches/$BASE/protection" \
-     --jq '.required_status_checks.contexts[]' 2>/dev/null) || REQUIRED=""
-   [ -n "$REQUIRED" ] \
-     || echo "NOTE: branch protection unreadable; verdict is a floor, not a census" >&2
+   # Readable-but-requires-nothing and unreadable BOTH leave REQUIRED empty,
+   # and conflating them parks a PR that has no required checks on the
+   # deadline: the `--required` floor returns `[]`, which is `wait`, forever.
+   # The `[]?` guard is load-bearing -- without it jq exits NON-ZERO when
+   # `required_status_checks` is absent, which IS the readable-empty case, so
+   # the error path swallows the very state being separated out. Measured.
+   if REQUIRED=$(gh api "repos/{owner}/{repo}/branches/$BASE/protection" \
+        --jq '.required_status_checks.contexts[]? // empty' 2>/dev/null); then
+     CENSUS=yes
+   else
+     CENSUS=no
+     REQUIRED=""
+     echo "NOTE: branch protection unreadable; verdict is a floor, not a census" >&2
+   fi
 
    probe() {
      errf=$(mktemp)
@@ -193,7 +203,17 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    while :; do
      case "$(sha_state)" in
        none|running) v=wait ;;   # no finished run for the commit you pushed
-       done) v=$(probe) ;;
+       done)
+         # A census that came back EMPTY is the one case where "no checks"
+         # legitimately means go -- GitHub requires nothing on this base. It
+         # must be reachable only from a SUCCESSFUL lookup, never from a
+         # failed one, which is the whole point of tracking CENSUS.
+         if [ "$CENSUS" = yes ] && [ -z "$REQUIRED" ]; then
+           echo "NOTE: $BASE requires no checks; nothing to wait for" >&2
+           v=pass
+         else
+           v=$(probe)
+         fi ;;
        *) v=error ;;             # unreadable count is not a slow run
      esac
      case "$v" in
@@ -231,8 +251,10 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      exit as fatal kills a healthy run, because the creation window exits
      non-zero with `no checks reported on the '<branch>' branch` — a "not yet".
      Closed by matching the message rather than the code. Note `--json`
-     changes what you are guarding: `gh help exit-codes` documents 8 for
-     PENDING, and measured on gh 2.97.0 against a genuinely pending check,
+     changes what you are guarding: `gh pr checks --help` documents 8 for
+     PENDING under `Additional exit codes` — `gh help exit-codes` does NOT,
+     listing only 0/1/2/4 and telling you to check the command's own page —
+     and measured on gh 2.97.0 against a genuinely pending check,
      `gh pr checks <n>` exited 8 while the same PR with
      `--json name,bucket` exited 0 in the same second.
    - **Letting anything else write to stdout.** `probe` is consumed as
