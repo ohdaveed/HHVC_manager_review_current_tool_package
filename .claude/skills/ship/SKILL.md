@@ -78,33 +78,30 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    conversation resolution, so one unanswered bot comment blocks the merge
    with all checks green.
 
-   **`gh pr checks --watch` cannot be the whole of this step, and "let the
-   push register first" is not a precondition anything enforces.** Its
-   selector is a PR number, URL or branch — the
+   **The SHA-bound poll below is the gate. `gh pr checks --watch` is not, and
+   cannot be made into one.** Its selector is a PR number, URL or branch — the
    [manual](https://cli.github.com/manual/gh_pr_checks) offers no commit
-   option — so `$SHA` is unused on that path and nothing binds the spinner to
-   the revision you pushed. Started inside the creation window it attaches to
-   the PREVIOUS run and reports green for work it never saw: the same stale
-   read the loop below exists to prevent, just with a spinner in front of it.
-   Measured at t+3s after a push, `gh pr checks` returned the previous run's
-   eight checks with every one green.
+   option — so nothing ties it to the revision you pushed. Started inside the
+   creation window it attaches to the PREVIOUS run and reports green for work
+   it never saw. Measured at t+3s after a push: `gh pr checks` returned the
+   previous run's eight checks with every one green.
 
-   So gate on the pushed commit FIRST, whichever route you then take. One
-   call, and it is the same question `sha_state` asks below:
+   A preflight does not rescue it. Waiting for the Actions API to show a run
+   for `$SHA` proves the RUN record exists, not that its jobs have become
+   check rows on the PR — the block below says jobs become checks only as they
+   start — so `--watch` can still read the stale rollup in the gap between the
+   two. Both halves of that were tried here and neither closed it, which is
+   the argument for one mechanism rather than two: a second gate that is
+   weaker than the first is a copy free to drift, and this one drifted before
+   it was even committed, shipping an `until` loop with no deadline directly
+   beneath a paragraph explaining why the real loop has one.
 
-   ```sh
-   until [ "$(gh api "repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=$SHA" \
-     --jq '.total_count')" -gt 0 ] 2>/dev/null; do sleep 5; done
-   gh pr checks "$PR" --watch
-   ```
+   So watch it with a spinner if you like the feedback — it is genuinely
+   nicer to look at — but read the verdict from the poll below, which binds
+   every state it can reach to `$SHA`.
 
-   That only proves the run EXISTS, which is what makes `--watch` watch the
-   right one; it says nothing about the outcome, so read `--watch`'s verdict
-   as usual. The polling block below is the stricter route and needs no such
-   preamble, since every one of its states is already bound to `$SHA`.
-
-   **If you poll instead of using `--watch`, wait for the required checks to be
-   PRESENT and finished — not merely for nothing to be pending.** GitHub takes
+   **Wait for the required checks to be PRESENT and finished — not merely for
+   nothing to be pending.** GitHub takes
    a few seconds to create a run's checks after a push, and during that window
    the pending set is EMPTY, so the obvious loop
 
