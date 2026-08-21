@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Rebase, test, commit, push, open PR, watch CI, verify deploy
+description: Rebase, test, commit, push, open PR, watch CI, merge, verify deploy
 ---
 
 1. `git fetch origin`. Rebase only if main actually moved — check
@@ -14,10 +14,16 @@ description: Rebase, test, commit, push, open PR, watch CI, verify deploy
 5. `gh pr checks --watch`, then clear every review thread. This repo's `main`
    requires conversation resolution, so one unanswered bot comment blocks the
    merge with all checks green.
-6. After merge, verify the artifact rather than the pipeline: load the live
-   Railway URL headlessly, assert zero console errors, and confirm the deployed
-   commit matches a freshly fetched `origin/main`. A `curl` status code can come
-   from the previous deployment and cannot see the console.
-7. Switch to `main` and pull, then delete the branch by name with
-   `git branch -D <branch>` — a squash merge leaves it unmerged in git's view,
-   so `-d` refuses. `gh pr merge --squash --delete-branch` does both sides.
+6. Re-fetch and confirm the remote head carries every local commit
+   (`git rev-list --left-right --count origin/main...HEAD`), then
+   `gh pr merge --squash --delete-branch`. **The merge is the deploy** — Railway
+   is connected to `main`, so a branch push builds nothing and steps 7 and 8
+   are unreachable without this.
+7. Verify the artifact rather than the pipeline: load the live Railway URL
+   headlessly, assert zero console errors, and confirm the deployed commit
+   matches a freshly fetched `origin/main` — not local `HEAD`, which is a
+   different commit after a squash merge. A `curl` status code can come from
+   the previous deployment and cannot see the console.
+8. Switch to `main` and pull. `--delete-branch` in step 6 already removed both
+   copies; if one survived, delete it by name with `git branch -D <branch>` —
+   a squash merge leaves it unmerged in git's view, so `-d` refuses.
