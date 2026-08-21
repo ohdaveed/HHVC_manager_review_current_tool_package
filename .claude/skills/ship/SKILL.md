@@ -2,7 +2,7 @@
 name: ship
 description: Rebase, test, commit, push, open PR, watch CI, merge, verify deploy
 disable-model-invocation: true
-allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
+allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) Bash(bun run lint:dead-code:ci) Bash(bun run lint:architecture) Bash(bun run lint:js) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
 ---
 
 **Read the frontmatter as it actually behaves.** `allowed-tools` is a
@@ -28,11 +28,17 @@ absent, so each one stops for permission at the moment it runs. That, plus
    `git rebase --autostash origin/main` so uncommitted work in the tree does not
    abort it. Never rebase once the PR is open: that rewrites pushed commits and
    forces a force-push into a live review.
-3. Run every gate CI runs, not just the tests: `bun run format:check`,
-   `bun run validate`, `bun run test`, `bun run lint:docs`,
-   `bun run check:revert`. Stop and report on the first failure. Running only
-   the tests defers a formatting or schema failure to CI, which costs a full
-   cycle to learn something a local second would have told you.
+3. `bun install --frozen-lockfile` first — on a fresh checkout the first gate
+   otherwise fails for a missing Prettier rather than for anything you changed.
+   Then run what CI's `checks` job runs, in its order: `format:check`,
+   `check:revert`, `validate`, `lint:docs`, `lint:dead-code:ci`,
+   `lint:architecture`, `lint:js`, `build:railway`, `test`, `build:singlefile`.
+   The `e2e` job additionally runs `test:e2e` behind a Chromium install; run it
+   locally when the change touches the UI, and otherwise let CI cover it. Stop
+   and report on the first failure. Derive this list from `.github/workflows/
+ci.yml` rather than trusting it here — a copy of a list is free to drift
+   from the list, and this one already did once, claiming completeness at five
+   of eleven steps.
 4. Commit with a conventional-commit message carrying the `Co-Authored-By` and
    `Claude-Session` trailers this repo requires of AI-assisted commits, then
    read it back with `git log -1 --format=%B` and confirm both are present. An
@@ -50,12 +56,16 @@ absent, so each one stops for permission at the moment it runs. That, plus
      every local commit. Comparing `origin/main...HEAD` does not test this: it
      measures local `HEAD` against the base branch, so an unpushed commit still
      reads as an ordinary `0 N`.
-   - The head you inspected is the head you merge. Read it with
-     `gh pr view --json headRefOid` and pass it:
-     `gh pr merge --squash --delete-branch --match-head-commit <sha>`. Without
-     that binding, anything pushed to the branch between the check and the
-     merge ships unreviewed, and `@{upstream}..HEAD` stays 0 the whole time
-     because it only counts the direction where the remote is behind.
+   - The head GitHub holds equals the head you inspected. Read it fresh —
+     `gh pr view --json headRefOid` — and require it to equal
+     `git rev-parse HEAD`, then pass that same SHA to
+     `gh pr merge --squash --delete-branch --match-head-commit <sha>`. The
+     revision counts cannot substitute for this: if another actor pushed after
+     your last fetch, the remote-TRACKING ref still points at your inspected
+     commit, so `@{upstream}..HEAD` reads 0 while the PR head has moved on.
+     Only asking GitHub what it currently holds detects that, and
+     `--match-head-commit` then makes the merge fail rather than silently
+     shipping the newer commit.
      **The merge is the deploy** — Railway is connected to `main`, so a branch
      push builds nothing and steps 8 and 9 are unreachable without this.
 8. Verify the artifact rather than the pipeline: load the live Railway URL
