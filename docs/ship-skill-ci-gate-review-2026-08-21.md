@@ -4,7 +4,8 @@
 `.claude/skills/ship/SKILL.md` on 2026-08-21, during PR #184 (`fix/ship-check-race`). Claims here
 were true on that date. Every blocker named below was fixed before the PR merged, so **do not read
 this file as a list of live defects** — read it for the failure shapes, which are the part worth
-keeping. Corrections belong in the skill itself, not here.
+keeping. One finding (S4) was **rejected on review as a security regression** and is recorded that
+way rather than quietly dropped. Corrections belong in the skill itself, not here.
 
 ## Why this was worth reviewing at all
 
@@ -31,7 +32,7 @@ findings below are invisible to a careful read of the snippet and only appear wh
 | S1  | `skipping` scored as a failure                                  | Fixed in `b198c6e`, restored `6a82d59` |
 | S2  | Protection lookup hardcoded `main` while deriving contexts      | Superseded by the census/floor split   |
 | S3  | Branch-protection read is admin-only, undocumented              | Superseded — falls back to a floor     |
-| S4  | `allowed-tools` lacked `gh api` and `bun -e`                    | Fixed in `b198c6e`                     |
+| S4  | `allowed-tools` lacked `gh api` and `bun -e`                    | **Rejected — the finding was wrong**   |
 | S5  | `--watch` shares the same race, unguarded                       | Fixed in `b198c6e`                     |
 | S6  | No deadline or iteration cap on the loop                        | Fixed — 1800s deadline                 |
 | S7  | Step 7 recomputed the head instead of carrying step 6's SHA     | Fixed in `9883e31`                     |
@@ -85,7 +86,11 @@ threads produced two more commits, and the merge was stopped only by an unrelate
 - **No secrets**, across the full patch of every commit on the branch — ambient `gh` auth only.
 - **No path handling**: external input reaches only `grep -c` and a string comparison.
 - **No dependency, lockfile, or workflow change.**
-- **Inert until invoked** — `disable-model-invocation: true`, and no hook reads `.claude/skills/`.
+- **Inert until invoked** — `disable-model-invocation: true`, and nothing auto-EXECUTES a skill: no
+  hook, `SessionStart` entry, or settings key runs one. Tooling does READ these files —
+  `build_scripts/docs-file-set.js` derives the markdownlint set from `git ls-files` without
+  excluding `.claude/`, so `ship/SKILL.md` is linted like any other doc. Reading is not executing,
+  and only the second one was ever the question here.
 
 ## Where the review itself was wrong
 
@@ -99,6 +104,25 @@ Recording these because the review's own errors were as instructive as its findi
   empty check and a SHA-bound precondition.
 - **Asserted a name-space mismatch would hang the loop.** Branch-protection display names match
   `gh pr checks --json name` exactly; measured, not inferred.
+
+### S4 was not a defect, and calling it one was the review's worst moment
+
+The review flagged `allowed-tools` for lacking `Bash(gh api *)` and `Bash(bun -e *)`, on the grounds
+that a gate written to run unattended should not stop for a permission prompt. That was **wrong, and
+wrong in the dangerous direction.** Both entries were added, then removed again, and the skill now
+carries the reason in its own frontmatter notes: a pre-approval is matched as a PREFIX, so
+`Bash(gh api *)` covers `gh api -X DELETE` as readily as a GET — and `gh api`'s field flags switch a
+request to POST on their own, without `--method` — while `Bash(bun -e *)` is arbitrary JavaScript,
+free to write files or spawn processes. Two patterns that broad would have pre-approved more mutation
+than every command the skill deliberately withholds.
+
+**The review had the correct reasoning in hand and failed to apply it.** It declined to add
+`Bash(rm -f *)` for exactly this reason — that the pattern pre-approves far more than the one temp
+file the loop deletes — and then did not carry that same test across to two patterns that are worse.
+One prompt per run was always the cheaper side of the trade.
+
+The disposition is therefore **rejected**, not fixed. Anyone reading this record later should treat
+the absence of those entries as the intended design and leave it alone.
 
 ## The general shape
 
