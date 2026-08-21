@@ -90,14 +90,24 @@ The working fix came in `ef9c2d2` (PR #185), which persists the value to a file 
 Recording S7 as simply "fixed" would have preserved a broken fix as a successful one — which is the
 same defect as the record itself, one level up.
 
-## Verified clean
+## Verified clean — as of the reviewed revision, not the shipped gate
+
+**Scope, because the difference is the whole value of this section.** Everything below was checked
+against `3af4602`, the revision under review. The gate was then rewritten twice more, in this PR and
+in #185. These bullets are a record of what was examined on the date, **not clearance for the code
+that shipped** — where the two diverge it is called out inline.
 
 - **No injection.** The `bun -e` program is single-quoted, the value crosses via the environment and
   is read as `process.env.REQ`, and every expansion is double-quoted. Context names containing spaces
   and commas pass through intact on every run. It would become injectable with a double-quoted
   program body or a concatenated `jq` filter; neither is present.
 - **No secrets**, across the full patch of every commit on the branch — ambient `gh` auth only.
-- **No path handling**: external input reaches only `grep -c` and a string comparison.
+- **No path handling _in the reviewed snippet_**: external input reached only
+  `want=$(printf '%s\n' "$REQUIRED" | grep -c .)` (line 87 of `3af4602`) and a string comparison.
+  **This does not carry to the shipped gate.** `grep -c` is gone from `main`, and the loop now
+  interpolates `$PR` into `gh` arguments, `$SHA` into an API query string, and `$BASE` into an API
+  PATH — `repos/{owner}/{repo}/branches/$BASE/protection`. Those flows postdate this review and were
+  never assessed here.
 - **No dependency, lockfile, or workflow change.**
 - **Inert until invoked** — `disable-model-invocation: true`, and nothing auto-EXECUTES a skill: no
   hook, `SessionStart` entry, or settings key runs one. Tooling does READ these files —
