@@ -100,9 +100,15 @@ test.describe('mosquito workshop request form', () => {
     await page.click('#backToForm')
 
     await expect(page.locator('#workshopForm')).toBeVisible()
+    // Entries survive the round trip. Losing them would mean retyping ten
+    // fields to correct one, which is the opposite of reviewable.
+    await expect(page.locator('#organization')).toHaveValue('Example School')
+    await expect(page.locator('#email')).toHaveValue('alex@example.test')
+    await expect(page.locator('#organizationType')).toHaveValue('School')
+    await expect(page.locator('#spaceType')).toHaveValue('Indoor classroom')
     // The handler must be re-attached on the way back, or the second submit
-    // does a native form GET and navigates away.
-    await fillRequiredFields(page)
+    // does a native form GET and navigates away. No refill needed now that
+    // the values persist, which is itself the assertion.
     await page.click('button[type="submit"]')
     await expect(page.locator('.form-success')).toBeVisible()
   })

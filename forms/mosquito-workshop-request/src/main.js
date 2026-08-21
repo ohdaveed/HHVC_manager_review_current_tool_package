@@ -64,17 +64,31 @@ const fields = [
   },
 ]
 
-function fieldHtml(field) {
+/**
+ * Render one field, restoring `values[field.id]` if it is there.
+ *
+ * The restore is what makes "Back to the form" usable: a reviewer who spots
+ * one wrong entry in the preview should not have to retype the other ten to
+ * fix it. Every value goes through escapeHtml on the way back into an
+ * attribute, since it is the reviewer's own text being re-serialized.
+ */
+function fieldHtml(field, values = {}) {
   const required = field.required ? ` <span class="required-mark" aria-hidden="true">*</span>` : ''
   const reqAttr = field.required ? 'required' : ''
+  const current = values[field.id] ?? ''
 
   if (field.type === 'select') {
+    const options = field.options
+      .map(
+        (o) => `<option value="${escapeHtml(o)}"${o === current ? ' selected' : ''}>${o}</option>`
+      )
+      .join('')
     return `
       <div class="form-field">
         <label for="${field.id}">${field.label}${required}</label>
         <select id="${field.id}" name="${field.id}" ${reqAttr}>
-          <option value="">Select one</option>
-          ${field.options.map((o) => `<option value="${o}">${o}</option>`).join('')}
+          <option value=""${current ? '' : ' selected'}>Select one</option>
+          ${options}
         </select>
       </div>`
   }
@@ -83,7 +97,7 @@ function fieldHtml(field) {
     return `
       <div class="form-field">
         <label for="${field.id}">${field.label}${required}</label>
-        <textarea id="${field.id}" name="${field.id}" ${reqAttr}></textarea>
+        <textarea id="${field.id}" name="${field.id}" ${reqAttr}>${escapeHtml(current)}</textarea>
       </div>`
   }
 
@@ -91,11 +105,13 @@ function fieldHtml(field) {
   return `
     <div class="form-field">
       <label for="${field.id}">${field.label}${required}</label>
-      <input id="${field.id}" name="${field.id}" type="${field.type}" ${reqAttr}${extra} />
+      <input id="${field.id}" name="${field.id}" type="${field.type}" value="${escapeHtml(
+        current
+      )}" ${reqAttr}${extra} />
     </div>`
 }
 
-function renderForm() {
+function renderForm(values = {}) {
   const top = fields.slice(0, 4)
   const middle = fields.slice(4, 8)
   const bottom = fields.slice(8)
@@ -112,9 +128,9 @@ function renderForm() {
         The real form would collect interest for HHVC's free mosquito education workshop campaign.
         Submitting would not guarantee a scheduled date.
       </p>
-      <div class="form-grid two-col">${top.map(fieldHtml).join('')}</div>
-      <div class="form-grid two-col">${middle.map(fieldHtml).join('')}</div>
-      <div class="form-grid">${bottom.map(fieldHtml).join('')}</div>
+      <div class="form-grid two-col">${top.map((f) => fieldHtml(f, values)).join('')}</div>
+      <div class="form-grid two-col">${middle.map((f) => fieldHtml(f, values)).join('')}</div>
+      <div class="form-grid">${bottom.map((f) => fieldHtml(f, values)).join('')}</div>
       <div class="form-actions">
         <button class="btn" type="submit">Preview what this form captures</button>
         <a class="btn secondary" href="/">Back to mockup tool</a>
@@ -154,7 +170,7 @@ function renderSummary(data) {
     </div>`
 
   document.getElementById('backToForm').addEventListener('click', () => {
-    renderForm()
+    renderForm(data)
     attachSubmitHandler()
   })
 }
