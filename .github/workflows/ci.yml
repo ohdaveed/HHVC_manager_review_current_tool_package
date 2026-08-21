@@ -68,7 +68,13 @@ jobs:
     needs: [changes]
     if: github.event_name == 'pull_request' && needs.changes.outputs.docs == 'true' && needs.changes.outputs.code != 'true'
     steps:
+      # Full history, because `check:revert` below compares this branch
+      # against origin/main. On a shallow checkout it cannot resolve the base
+      # and RETURNS 0 with a SKIP notice — so the step would run, the job
+      # would stay green, and nothing would have been checked.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
@@ -85,6 +91,15 @@ jobs:
         run: bun run lint:docs
       - name: Prettier check
         run: bun run format:check
+      # The revert guard lives here too, not only in `format_validate_lint`.
+      # It compares THIS BRANCH against origin/main, and docs are exactly what
+      # it protects: a docs-only branch can restore a byte-identical
+      # superseded revision of README or of the synchronised instruction
+      # files, and nothing else on this path would notice. The unit suite
+      # covers `check:revert`'s own logic against temporary repositories,
+      # which is a different question from running it on the branch at hand.
+      - name: Reverted-work check (branch vs main)
+        run: bun run check:revert
       # Docs are SOURCE DATA here, not prose, so lint alone does not cover a
       # docs-only change. Thirteen test files read them: `doc-counts` and
       # `doc-claims` check figures against the filesystem, `mirror-consistency`
