@@ -91,7 +91,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 53 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 54 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -100,6 +100,7 @@ Task 9 of the inline-content-editing feature; mounts the REAL
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
+`mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. Every comparison runs over whitespace-collapsed text: written with a literal match it reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. Mutation-proven, and proven against the real drift — every fact in its registry was absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree),
 `esm-named-exports` (that a module which is named-imported actually DECLARES
 those ESM exports. `js/karl/karl-blocks.js` published only `window.karlBlocks` and
 `module.exports` while `js/karl/karl-guide-registry.js` named-imported from it —
