@@ -103,13 +103,9 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # SUBSET, and a subset that happens to be all green reads as a pass.
    # Actions-only, so it is a floor rather than a census -- and today the
    # floor carries it: both required contexts are ci.yml jobs, so a completed
-   # ci.yml run means every required check exists. Add a required check from
-   # another provider and that stops being true, in a way `probe` cannot
-   # cover for you. `--required` reports the checks that EXIST, so one not yet
-   # created is ABSENT rather than pending, and the all-green subset left
-   # behind reads as a pass -- the same stale-subset bug this binding closes,
-   # moved one level up. Gate that provider here too rather than trusting
-   # `probe` to notice a check it was never shown.
+   # ci.yml run means every required check exists. A required check from
+   # another provider breaks that, so this is a floor and `probe` carries the
+   # census when it can -- see below.
    # Scope to the GATING workflow, not every run for the sha. Filtering on
    # head_sha alone also catches `link-check.yml`, which this repo makes
    # non-gating on purpose so a third-party outage cannot block a merge; a
@@ -122,16 +118,34 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
              then "running" else "done" end' 2>/dev/null
    }
 
-   # `--required` asks the SERVER which checks are required, so this needs no
-   # Administration permission. Reading branch protection does -- a
-   # collaborator who can push and merge still gets 403 there and would abort
-   # every time -- and it returns `required_status_checks.contexts`, which
-   # GitHub has put a closing-down notice on. The trade is that a
-   # server-filtered list cannot tell you what is MISSING, and `[].every()` is
-   # true, so an empty answer must be caught by hand rather than counted.
+   # TWO inventories, and which one you get decides what `pass` can mean.
+   # Branch protection is the COMPLETE list, so a context it names that
+   # produced no check is visible as MISSING -- the case that matters is a job
+   # renamed in ci.yml before protection is updated, which leaves a required
+   # context nothing will ever satisfy. It needs Administration permission.
+   # `--required` needs none, but the SERVER filters it to checks that EXIST,
+   # so that same renamed context is absent rather than pending and the
+   # all-pass subset left behind reads as a pass while GitHub still blocks the
+   # merge. So take the census when it is readable and fall back to the floor
+   # when it is not, rather than aborting a collaborator who can merge but
+   # cannot read protection. `contexts` carries a closing-down notice from
+   # GitHub; when it goes, `checks[].context` beside it is the replacement.
+   BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName) \
+     || { echo "ABORT: cannot read the PR's base branch"; exit 1; }
+   REQUIRED=$(gh api "repos/{owner}/{repo}/branches/$BASE/protection" \
+     --jq '.required_status_checks.contexts[]' 2>/dev/null) || REQUIRED=""
+   [ -n "$REQUIRED" ] \
+     || echo "NOTE: branch protection unreadable; verdict is a floor, not a census" >&2
+
    probe() {
      errf=$(mktemp)
-     out=$(gh pr checks "$PR" --required --json name,bucket 2>"$errf"); rc=$?
+     # With the census, ask for ALL checks -- filtering server-side would hide
+     # the very absence being looked for.
+     if [ -n "$REQUIRED" ]; then
+       out=$(gh pr checks "$PR" --json name,bucket 2>"$errf"); rc=$?
+     else
+       out=$(gh pr checks "$PR" --required --json name,bucket 2>"$errf"); rc=$?
+     fi
      msg=$(cat "$errf")
      # Silence the cleanup. probe() is read through `$(...)`, so ANY other
      # command that writes to stdout here lands in the verdict: an
@@ -149,12 +163,20 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
        esac
        return
      fi
-     printf '%s' "$out" | bun -e '
+     printf '%s' "$out" | REQ="$REQUIRED" bun -e '
        let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+         const req=(process.env.REQ||"").split("\n").filter(Boolean)
          let j
          try { j=JSON.parse(s) } catch { console.log("error"); return }
          if (!Array.isArray(j)) { console.log("error"); return }
          if (j.length===0) { console.log("wait"); return } // [].every() is true
+         // Census: a required context with no row is MISSING, not passing.
+         // Presence BY NAME, never by count -- a duplicated context would
+         // otherwise stand in for an absent one.
+         if (req.length && req.some(n=>!j.some(c=>c.name===n))) {
+           console.log("wait"); return
+         }
+         if (req.length) j=j.filter(c=>req.includes(c.name))
          if (j.some(c=>c.bucket==="pending")) { console.log("wait"); return }
          // `skipping` is GitHub's NEUTRAL, which branch protection does not
          // block on -- treating it as failure aborts a PR the merge button
