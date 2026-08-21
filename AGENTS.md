@@ -319,8 +319,11 @@ Bumping `.bun-version` is a normal change, just a deliberate one.
 
 The current jobs are:
 
-- **`checks`** — Format, validate, docs lint, dead-code lint, architecture lint,
-  oxlint, `build:railway`, unit tests, and `build:singlefile`.
+- **`checks`** — format check, revert check, validate, docs lint, dead-code lint,
+  architecture lint, JavaScript lint, `build:railway`, unit tests, and
+  `build:singlefile`.
+  `build:railway` intentionally runs before unit tests so the `STATIC_ROOT`
+  fallback assertion tests against a real built `dist/` tree instead of skipping.
 - **`e2e`** — installs Playwright Chromium, runs `test:e2e`, and uploads
   `playwright-report/` on failure.
 

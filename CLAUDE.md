@@ -323,9 +323,9 @@ or `js/core/page-data.js`.**
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on every pull request
-as a multi-job graph. Formatting and schema failures report before a Chromium
-download begins; a flaky browser run never masks a unit failure.
+`.github/workflows/ci.yml` runs on pushes to `main` and on every pull request.
+It currently runs two jobs, so formatting/schema failures report before a
+Chromium download begins and a flaky browser run never masks a unit failure.
 
 **All jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
 took `bun-version: latest` until 2026-08-15, so the runtime changed under the
@@ -341,6 +341,8 @@ CI currently has **two jobs**:
 - **`checks`** — format check, revert check, validate, docs lint, dead-code lint,
   architecture lint, JavaScript lint, `build:railway`, unit tests, and
   `build:singlefile`.
+  `build:railway` intentionally runs before unit tests so the `STATIC_ROOT`
+  fallback assertion tests against a real built `dist/` tree instead of skipping.
 - **`e2e`** — Playwright end-to-end tests, uploading `playwright-report/` on
   failure.
 
