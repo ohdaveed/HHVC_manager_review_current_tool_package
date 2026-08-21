@@ -24,18 +24,18 @@ findings below are invisible to a careful read of the snippet and only appear wh
 
 ## Findings, with disposition
 
-| #   | Finding                                                         | Disposition                            |
-| --- | --------------------------------------------------------------- | -------------------------------------- |
-| B1  | Presence tested by cardinality, not membership                  | Fixed — presence by name               |
-| B2  | The loop could never wait; it aborted in the creation window    | Fixed — four-outcome `probe()`         |
-| B3  | `$PR` never assigned; `gh` silently resolves the current branch | Fixed — assigned explicitly            |
-| S1  | `skipping` scored as a failure                                  | Fixed in `b198c6e`, restored `6a82d59` |
-| S2  | Protection lookup hardcoded `main` while deriving contexts      | Superseded by the census/floor split   |
-| S3  | Branch-protection read is admin-only, undocumented              | Superseded — falls back to a floor     |
-| S4  | `allowed-tools` lacked `gh api` and `bun -e`                    | **Rejected — the finding was wrong**   |
-| S5  | `--watch` shares the same race, unguarded                       | Fixed in `b198c6e`                     |
-| S6  | No deadline or iteration cap on the loop                        | Fixed — 1800s deadline                 |
-| S7  | Step 7 recomputed the head instead of carrying step 6's SHA     | Fixed in `9883e31`                     |
+| #   | Finding                                                         | Disposition                                  |
+| --- | --------------------------------------------------------------- | -------------------------------------------- |
+| B1  | Presence tested by cardinality, not membership                  | Fixed — presence by name                     |
+| B2  | The loop could never wait; it aborted in the creation window    | Fixed — four-outcome `probe()`               |
+| B3  | `$PR` never assigned; `gh` silently resolves the current branch | Fixed — assigned explicitly                  |
+| S1  | `skipping` scored as a failure                                  | Fixed in `b198c6e`, restored `6a82d59`       |
+| S2  | Protection lookup hardcoded `main` while deriving contexts      | Superseded by the census/floor split         |
+| S3  | Branch-protection read is admin-only, undocumented              | Superseded — falls back to a floor           |
+| S4  | `allowed-tools` lacked `gh api` and `bun -e`                    | **Rejected — the finding was wrong**         |
+| S5  | `--watch` shares the same race, unguarded                       | Fixed in `b198c6e`                           |
+| S6  | No deadline or iteration cap on the loop                        | Fixed — 1800s deadline                       |
+| S7  | Step 7 recomputed the head instead of carrying step 6's SHA     | Incomplete in `9883e31`; closed in `ef9c2d2` |
 
 ### B1 — cardinality is not membership
 
@@ -76,6 +76,19 @@ with each other, every proof reads clean, and the merge ships a commit whose che
 
 This is not hypothetical. It is the sequence this very PR ran: the poll captured a SHA, clearing two
 threads produced two more commits, and the merge was stopped only by an unrelated open-thread guard.
+
+**And the first fix for it was itself broken, in the same way the review had just finished
+documenting.** `9883e31` told step 7 to "carry that variable in" — a SHELL VARIABLE, across steps
+that execute in separate shells. That is precisely B3's failure: shell state does not survive a
+tool-call boundary, so `$SHA` arrives empty and the comparison it anchors silently compares nothing.
+The review identified that mechanism for `$PR`, then reintroduced it two commits later for `$SHA`.
+
+The working fix came in `ef9c2d2` (PR #185), which persists the value to a file instead —
+`git rev-parse HEAD > "$(git rev-parse --git-dir)/ship-sha"`, read back in step 7 as
+`SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")`. A file survives what a variable cannot.
+
+Recording S7 as simply "fixed" would have preserved a broken fix as a successful one — which is the
+same defect as the record itself, one level up.
 
 ## Verified clean
 
