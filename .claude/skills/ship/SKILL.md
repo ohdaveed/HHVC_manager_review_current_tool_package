@@ -2,7 +2,7 @@
 name: ship
 description: Rebase, test, commit, push, open PR, watch CI, merge, verify deploy
 disable-model-invocation: true
-allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) Bash(bun run lint:dead-code:ci) Bash(bun run lint:architecture) Bash(bun run lint:js) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
+allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(gh api *) Bash(bun -e *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) Bash(bun run lint:dead-code:ci) Bash(bun run lint:architecture) Bash(bun run lint:js) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
 ---
 
 **Read the frontmatter as it actually behaves.** `allowed-tools` is a
@@ -10,6 +10,11 @@ PRE-APPROVAL — tools listed there run without a permission prompt — not a
 sandbox. It cannot deny anything. So the list above holds only read-only
 inspection: fetch, status, log, diff, rev-list, the read-only `gh pr`
 subcommands, the five gate scripts, and the four browser tools step 8 needs.
+`gh api *` and `bun -e *` are there for step 6's poll loop, which reads branch
+protection and filters JSON; both are reads, and without them a gate meant to
+run unattended stops for a prompt on its first iteration. The loop's `mktemp`
+and `rm -f` are deliberately NOT listed — `Bash(rm -f *)` pre-approves far more
+than one temp file, and one prompt per run is the cheaper side of that trade.
 Every mutating command in this workflow — `git commit`, `git push`,
 `git rebase`, `git branch -D`, `gh pr create`, `gh pr merge` — is deliberately
 absent, which means this skill does not pre-approve them. **It does not mean
@@ -60,7 +65,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    if anyone else moved the ref meanwhile.
 6. `gh pr checks --watch`, then clear every review thread. This repo's `main`
    requires conversation resolution, so one unanswered bot comment blocks the
-   merge with all checks green.
+   merge with all checks green. **`--watch` does not escape the race
+   described below.** Started inside the creation window it attaches to the
+   PREVIOUS run's checks and reports green for work it never saw — the same
+   stale read the loop below exists to prevent, just with a spinner. Let the
+   push register its checks before running it, or poll.
 
    **If you poll instead of using `--watch`, wait for the required checks to be
    PRESENT and finished — not merely for nothing to be pending.** GitHub takes
@@ -77,25 +86,34 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 
    ```sh
    PR=<the pull request number>
+   SHA=$(git rev-parse HEAD)
 
-   # The required checks are whatever branch protection says they are. Do not
-   # write the job names here: that is a second inventory of something ci.yml
-   # owns, and a renamed job would leave this polling an already-green PR.
-   REQUIRED=$(gh api "repos/{owner}/{repo}/branches/main/protection" \
-     --jq '.required_status_checks.contexts[]') \
-     || { echo "ABORT: cannot read branch protection"; exit 1; }
-   [ -n "$REQUIRED" ] || { echo "ABORT: no required checks resolved"; exit 1; }
+   # Bind to the commit you pushed. `gh pr checks` describes whatever the PR
+   # points at RIGHT NOW, which in the seconds after a push is still the
+   # previous run -- measured below at t+3s: eight checks, every one green.
+   # Requiring a run for THIS sha, and requiring it to be finished, closes
+   # both that and the half-created run underneath it. Existence alone is not
+   # enough: jobs become checks as they START, so a run mid-creation reports a
+   # SUBSET, and a subset that happens to be all green reads as a pass.
+   # Actions-only, so it is a floor rather than a census -- a required check
+   # from another provider is still caught by `probe`, just not gated here.
+   sha_state() {
+     gh api "repos/{owner}/{repo}/actions/runs?head_sha=$SHA" \
+       --jq 'if .total_count==0 then "none"
+             elif ([.workflow_runs[]|select(.status!="completed")]|length)>0
+             then "running" else "done" end' 2>/dev/null
+   }
 
-   # `gh pr checks --jq` accepts no --arg, and jq is not a dependency here, so
-   # bun filters. probe() prints a WORD, never a count, because there are FOUR
-   # outcomes here and any count collapses at least two of them:
-   #   pass   every required check exists and passed
-   #   fail   every required check exists and at least one did not pass
-   #   wait   required checks missing or still running -- no verdict yet
-   #   error  nothing trustworthy came back -- do not spend the deadline on it
+   # `--required` asks the SERVER which checks are required, so this needs no
+   # Administration permission. Reading branch protection does -- a
+   # collaborator who can push and merge still gets 403 there and would abort
+   # every time -- and it returns `required_status_checks.contexts`, which
+   # GitHub has put a closing-down notice on. The trade is that a
+   # server-filtered list cannot tell you what is MISSING, and `[].every()` is
+   # true, so an empty answer must be caught by hand rather than counted.
    probe() {
      errf=$(mktemp)
-     out=$(gh pr checks "$PR" --json name,bucket 2>"$errf"); rc=$?
+     out=$(gh pr checks "$PR" --required --json name,bucket 2>"$errf"); rc=$?
      msg=$(cat "$errf")
      # Silence the cleanup. probe() is read through `$(...)`, so ANY other
      # command that writes to stdout here lands in the verdict: an
@@ -113,19 +131,14 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
        esac
        return
      fi
-     printf '%s' "$out" | REQ="$REQUIRED" bun -e '
+     printf '%s' "$out" | bun -e '
        let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-         const req=(process.env.REQ||"").split("\n").filter(Boolean)
          let j
          try { j=JSON.parse(s) } catch { console.log("error"); return }
          if (!Array.isArray(j)) { console.log("error"); return }
-         // Presence BY NAME. Comparing lengths would wait forever on a
-         // duplicated context (a re-run, or two sources under one name)
-         // instead of only on a missing one.
-         if (req.some(n=>!j.some(c=>c.name===n))) { console.log("wait"); return }
-         const mine=j.filter(c=>req.includes(c.name))
-         if (mine.some(c=>c.bucket==="pending")) { console.log("wait"); return }
-         console.log(mine.every(c=>c.bucket==="pass") ? "pass" : "fail")
+         if (j.length===0) { console.log("wait"); return } // [].every() is true
+         if (j.some(c=>c.bucket==="pending")) { console.log("wait"); return }
+         console.log(j.every(c=>c.bucket==="pass") ? "pass" : "fail")
        })'
    }
 
@@ -133,8 +146,13 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # a PR whose CI never triggered". Expiry aborts; it never falls through.
    deadline=$(( $(date +%s) + 1800 ))
    while :; do
-     case "$(probe)" in
-       pass) echo "CI green"; break ;;
+     case "$(sha_state)" in
+       none|running) v=wait ;;   # no finished run for the commit you pushed
+       done) v=$(probe) ;;
+       *) v=error ;;             # unreadable count is not a slow run
+     esac
+     case "$v" in
+       pass) echo "CI green on $SHA"; break ;;
        fail) echo "ABORT: a required check did not pass"; exit 1 ;;
        wait) [ "$(date +%s)" -lt "$deadline" ] \
                || { echo "ABORT: timed out waiting on required checks"; exit 1; }
@@ -145,63 +163,60 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    done
    ```
 
-   **Four separate ways this reports a false green, all of them closed above.**
-   Waiting for an ABSENCE of pending checks returns instantly in the seconds
-   before GitHub creates them, reporting a stale or missing result as success —
-   that happened twice while this skill was written. `gh pr checks --help`
-   defines `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so
-   waiting only for `!= "pending"` exits just as happily on a FAILED job and
-   swallows `gh`'s non-zero exit inside the substitution. If either `gh` call
-   fails outright — expired auth, a transient 5xx — an unguarded version leaves
-   `REQUIRED` empty and every count at zero, and zero compares equal to zero,
-   which reads GREEN. That is why the required list is emptiness-checked before
-   the loop starts, and why `error` is its own outcome: a read failure that
-   merely slept would spend the whole deadline impersonating slow CI.
+   **Every way this step has reported a false green, and what closes each.**
+   The list grew by one each time the loop was actually run rather than read,
+   which is the argument for running it.
 
-   **Both hazards were measured on this repo, 2026-08-21**, polling
+   - **Waiting for an ABSENCE of pending checks.** Returns instantly in the
+     seconds before GitHub creates them, reporting a stale or missing result
+     as success. Closed by asking what FINISHED, never what is absent.
+   - **Accepting any bucket that is not `pending`.** `gh pr checks --help`
+     defines `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so
+     `!= "pending"` exits just as happily on a FAILED job. Closed by requiring
+     `pass`.
+   - **Letting a `gh` failure read as zero checks.** Expired auth or a
+     transient 5xx leaves the required list empty and every count at zero, and
+     zero compares equal to zero, which reads GREEN. Closed by giving an
+     unreadable answer its own outcome — a read failure that merely slept
+     would spend the whole deadline impersonating slow CI.
+   - **Then over-correcting that into an abort.** Treating every non-zero `gh`
+     exit as fatal kills a healthy run, because the creation window exits
+     non-zero with `no checks reported on the '<branch>' branch` — a "not yet".
+     Closed by matching the message rather than the code. Note `--json`
+     changes what you are guarding: `gh help exit-codes` documents 8 for
+     PENDING, and measured on gh 2.97.0 against a genuinely pending check,
+     `gh pr checks <n>` exited 8 while the same PR with
+     `--json name,bucket` exited 0 in the same second.
+   - **Letting anything else write to stdout.** `probe` is consumed as
+     `$(probe)`, so its stdout must carry the verdict and nothing else. On the
+     machine this was written on `rm` is aliased to `rm -v`, and the cleanup
+     line printed `removed '/tmp/tmp.42FSr6UGYe'` ahead of a perfectly good
+     `wait`; the `case` matched nothing and aborted a healthy run. It failed
+     closed, so it cost a re-run rather than a bad merge. An interactive
+     shell's aliases are part of the environment the snippet runs in.
+   - **Reading a SUBSET as the whole.** `--required` is what keeps this
+     runnable without Administration permission, but a server-filtered list
+     cannot say what is missing, and `[].every()` is `true`. A run whose
+     second job has not started yet reports one green check and reads as a
+     pass. Closed by the `sha_state` precondition, not by counting.
+
+   **Both of the first two were measured on this repo, 2026-08-21**, polling
    `gh pr checks --json name,bucket` every three seconds across a push to an
    open PR. At t+3s it returned the PREVIOUS run's eight checks, every one of
    them `pass`. At t+6s it exited 1 with an empty body and
-   `no checks reported`. From t+9s the new run's checks appeared. Both failures
-   sit in that trace three seconds apart: a loop that exits on "nothing
-   pending" takes the stale green at t+3s, and one that treats any non-zero
-   exit as fatal dies at t+6s. The window was ONE poll wide — which is why it
-   is missed by hand, and why it has to be handled by shape rather than caught
-   by luck.
+   `no checks reported`. From t+9s the new run's checks appeared. Both
+   failures sit in that trace three seconds apart, and the window was ONE poll
+   wide — which is why it is missed by hand, and why it has to be handled by
+   shape rather than caught by luck.
 
-   **A fifth way, found by running this loop rather than reading it.** `probe`
-   is consumed as `$(probe)`, so its stdout must carry the verdict and nothing
-   else. On the machine this was written on, `rm` is aliased to `rm -v`, and
-   the cleanup line printed `removed '/tmp/tmp.42FSr6UGYe'` ahead of a
-   perfectly good `wait` — the `case` matched neither `wait` nor `pass`, fell
-   to the catch-all, and aborted a healthy run with `cannot read check status`.
-   It fails closed, so it cost a re-run rather than a bad merge; the general
-   rule is that anything inside a function read through a substitution needs
-   its output routed to `/dev/null` on purpose, and an interactive shell's
-   aliases are part of the environment the snippet runs in.
-
-   The fourth is the one that bites the fix rather than the bug: closing the
-   third by treating every non-zero `gh` exit as fatal turns a "not yet" into
-   an abort. Inside the creation window `gh pr checks` exits non-zero with the
-   `no checks reported` message quoted in the comment above — both times this
-   loop reported nothing while the skill was being written, the run it was
-   meant to watch had not started.
-
-   **Check the exit code you are actually guarding, because `--json` changes
-   it.** `gh help exit-codes` documents 8 for pending, and that is the DEFAULT
-   output mode: measured on gh 2.97.0 against a genuinely pending check,
-   `gh pr checks <n>` exited 8 while `gh pr checks <n> --json name,bucket`
-   exited 0 on the same PR in the same second. So the loop above is not saved
-   by its own guard — it is saved by `--json`, and a later edit that drops the
-   flag, or a poller that never had it, reintroduces the abort at the first
-   pending poll.
-
-   So the two halves pull against each other: tightening the guard until no
-   read error can read green is exactly what makes a pending check look like a
+   The two halves pull against each other: tightening the guard until no read
+   error can read green is exactly what makes a pending check look like a
    broken one. Trading one silent wrong answer for another is the trap this
    whole step exists to name. What settles it is classifying instead of
-   counting — `pass`, `fail` and "no verdict yet" are three outcomes, not two,
-   so the creation window and a live failure can never land in the same branch.
+   counting — `pass`, `fail`, "no verdict yet" and "no trustworthy answer" are
+   four outcomes, not two — plus binding the question to the commit you
+   actually pushed, so a green belonging to someone else's commit cannot be
+   mistaken for yours.
 
 7. Confirm with the user first. Then prove three things, in this order, because
    each catches a different way the merge ships something you did not inspect:
