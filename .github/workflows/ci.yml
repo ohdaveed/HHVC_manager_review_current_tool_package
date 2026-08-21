@@ -130,6 +130,13 @@ jobs:
       - name: Vite build + deploy bundle assembly (deploy-integrity check)
         run: bun run build:railway
 
+      - name: Upload dist artifact for downstream unit tests
+        uses: actions/upload-artifact@v5
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
   build_singlefile:
     name: Build single-file export
     runs-on: ubuntu-latest
@@ -178,6 +185,12 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Download dist artifact from build job
+        uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist/
 
       - name: Unit tests (bun test)
         run: bun run test
