@@ -124,11 +124,16 @@ in exactly one stylesheet.
 
 ## Workflow & verification
 
-- **Security reviews start from the diff.** Asked to review changed files, run
-  `git diff` (or `git diff --stat` then `git diff <paths>`) and work from the
-  hunks — do not read files one at a time first. Report findings per file as you
-  go, within the first few tool calls; open a full file only when a hunk is
-  ambiguous.
+- **Security reviews start from the diff.** Asked to review a diff or changed
+  files, run `git diff` — or `gh pr diff <number>`, always with the number,
+  since the bare form selects whatever PR belongs to the current branch — and
+  summarize the attack surface those hunks expose in 3-5 bullets before opening
+  anything else; those bullets decide what gets read. Do not read files one at a
+  time first. A preliminary **assessment** lands within the first 2 tool calls,
+  and "nothing confirmed yet, here is the surface" is a valid one: the deadline
+  is on saying something, never on having found something, since a clean diff
+  has no findings. Report findings per file as you go rather than batching them;
+  open a full file only when a hunk is genuinely ambiguous.
 - **Definition of done:** tests pass, changes committed, pushed to origin, PR
   opened if on a branch, CI green. Never leave commits unpushed on a local
   branch, and re-fetch before merging to confirm the remote head has them all.
