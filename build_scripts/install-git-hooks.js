@@ -177,8 +177,15 @@ function install() {
           installed += 1
           continue
         }
-        if (points.endsWith(path.join('.githooks', name)) && fs.existsSync(points)) {
-          console.log(`  ${name} -> ${dir}: already installed via ${points}`)
+        if (points.endsWith(path.join('.githooks', name))) {
+          // Ours, but naming a different checkout. REPOINT rather than
+          // accept: that is exactly the state the fallback above creates, and
+          // the reinstall it tells you to run is the only thing that clears
+          // it. Accepting here left the stale link in place, so the advice
+          // did nothing and the link still died with the worktree.
+          fs.unlinkSync(target)
+          fs.symlinkSync(linkTarget, target)
+          console.log(`  ${name} -> ${dir}: repointed from ${points}`)
           installed += 1
           continue
         }

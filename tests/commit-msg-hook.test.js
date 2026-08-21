@@ -205,6 +205,69 @@ describe('commit-msg hook: hostile git configuration', () => {
   })
 })
 
+describe('commit-msg hook: a real merge, in a scratch repository', () => {
+  // `git merge -m` takes a message the developer WROTE, so exempting merges
+  // turned every one of them into a way around the gate. An earlier version
+  // did exactly that, returning early whenever MERGE_HEAD existed. These run
+  // real merges in a throwaway repo rather than asserting against this one.
+
+  /** A repo with two divergent branches and the hook installed. */
+  function scratchRepo(name) {
+    const dir = path.join(tmpDir, name)
+    const run = (...args) =>
+      spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8', env: process.env })
+    fs.mkdirSync(dir, { recursive: true })
+    spawnSync('git', ['init', '-q', '-b', 'main', dir], { encoding: 'utf8' })
+    run('config', 'user.email', 'test@example.com')
+    run('config', 'user.name', 'Test')
+    // Pin hooksPath at this repo so the machine's global setting, whatever it
+    // is, cannot decide whether the test exercises the hook.
+    const hooks = path.join(dir, '.git', 'hooks')
+    fs.mkdirSync(hooks, { recursive: true })
+    fs.copyFileSync(HOOK, path.join(hooks, 'commit-msg'))
+    fs.chmodSync(path.join(hooks, 'commit-msg'), 0o755)
+    run('config', 'core.hooksPath', hooks)
+
+    run('commit', '-q', '--allow-empty', '-m', 'root')
+    run('checkout', '-q', '-b', 'side')
+    run('commit', '-q', '--allow-empty', '-m', 'side work')
+    run('checkout', '-q', 'main')
+    return { dir, run, head: () => run('rev-parse', 'HEAD').stdout.trim() }
+  }
+
+  test('blocks a merge whose authored message has an unpaired co-author', () => {
+    const repo = scratchRepo('merge-blocked')
+    const before = repo.head()
+    const merged = repo.run('merge', '--no-ff', '-m', `Merge side\n\n${COAUTHOR}`, 'side')
+    expect(merged.status).not.toBe(0)
+    expect(repo.head()).toBe(before)
+  })
+
+  test('allows a merge whose authored message carries both trailers', () => {
+    const repo = scratchRepo('merge-allowed')
+    const before = repo.head()
+    const merged = repo.run(
+      'merge',
+      '--no-ff',
+      '-m',
+      `Merge side\n\n${COAUTHOR}\n${SESSION}`,
+      'side'
+    )
+    expect(merged.status).toBe(0)
+    expect(repo.head()).not.toBe(before)
+  })
+
+  test('leaves git’s own generated merge message alone', () => {
+    // The reason the blanket exemption was unnecessary: a generated merge
+    // message carries no Claude trailer, so the rule never fires on it.
+    const repo = scratchRepo('merge-generated')
+    const before = repo.head()
+    const merged = repo.run('merge', '--no-ff', '--no-edit', 'side')
+    expect(merged.status).toBe(0)
+    expect(repo.head()).not.toBe(before)
+  })
+})
+
 describe('commit-msg hook: message the author actually sees', () => {
   test('names the missing trailer and offers the escape hatch', () => {
     const file = path.join(tmpDir, 'msg-diagnostic')
