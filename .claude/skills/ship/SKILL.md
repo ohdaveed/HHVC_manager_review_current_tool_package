@@ -141,15 +141,21 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      # too. Report the conclusion, so a red run cannot be read as a finished
      # one. `skipped` counts as success for the same reason `skipping` does
      # in probe(): branch protection does not block on it.
+     # Judge the LATEST run only. A sha can carry several -- close/reopen the
+     # PR, or re-run after a red build -- and scanning them all lets a
+     # superseded failure pin this at `failed` forever, aborting a commit
+     # whose replacement run is green. `completed` is not a verdict either:
+     # a failed or cancelled run is completed too, so read the conclusion.
+     # `skipped` counts as success for the same reason `skipping` does in
+     # probe() -- branch protection does not block on it.
      gh api "repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=$SHA" \
-       --jq 'if .total_count==0 then "none"
-             elif ([.workflow_runs[]|select(.status!="completed")]|length)>0
-               then "running"
-             elif ([.workflow_runs[]
-                    |select(.conclusion!="success" and .conclusion!="skipped")]
-                   |length)>0
-               then "failed"
-             else "done" end' 2>/dev/null
+       --jq 'if .total_count==0 then "none" else
+               ([.workflow_runs[]]|sort_by(.created_at)|last) as $r
+               | if $r.status!="completed" then "running"
+                 elif ($r.conclusion!="success" and $r.conclusion!="skipped")
+                   then "failed"
+                 else "done" end
+             end' 2>/dev/null
    }
 
    # TWO inventories, and which one you get decides what `pass` can mean.
@@ -311,11 +317,15 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    updated to match, say. `sha_state` does not catch it either: it proves the
    gating run finished, not that every required context exists. So a non-empty
    all-pass subset reads `pass` while GitHub still refuses the merge. Closing
-   it needs the complete required-context inventory, which is the
-   Administration-only endpoint this loop dropped on purpose. What the loop
-   reports is therefore "every required check that EXISTS has passed", which is
-   not the same sentence as "GitHub will let you merge" — step 7 reads the
-   merge box, and step 6 prefers `--watch`, for exactly this gap.
+   it needs the complete required-context inventory — which is exactly what
+   the census above reads when branch protection is READABLE, so on an
+   admin-readable base this gap is already closed. **It reopens only when
+   `CENSUS=no`**: a collaborator who can merge but cannot read protection
+   falls back to the `--required` floor, and there the loop reports "every
+   required check that EXISTS has passed", which is not the same sentence as
+   "GitHub will let you merge". Step 7's merge box is what covers that case;
+   `--watch` is not an alternative to any of this, for the reasons step 6
+   gives.
 
    **Both of the first two were measured on this repo, 2026-08-21**, polling
    `gh pr checks --json name,bucket` every three seconds across a push to an
