@@ -74,6 +74,55 @@ describe('false positives that must never be read as claims', () => {
   test('ignores a digit run embedded inside a larger token', () => {
     expect(scanText('v53 unit-test files')).toEqual([])
   })
+
+  // A hyphen is not a word character, so a bare \b anchor sits satisfied on
+  // its own between "-" and "5" — "v-53" presented "53" as a complete token
+  // even after word-boundary anchoring was added. boundedNumberPattern()'s
+  // lookarounds reject a word character OR a hyphen on either side, which is
+  // what actually closes this off.
+  test('ignores a digit run attached to a hyphenated identifier', () => {
+    expect(scanText('v-53 unit-test files')).toEqual([])
+  })
+
+  test('ignores a digit run attached to a hyphenated identifier, build-prefixed', () => {
+    expect(scanText('build-53 unit-test files')).toEqual([])
+  })
+
+  // Same hyphen-boundary failure, spelled-out side: "x-twenty-three" would
+  // have read the whole compound as a complete token under the old \b
+  // anchor, since the hyphen before "twenty" satisfied the boundary as
+  // readily as whitespace would have.
+  test('ignores a spelled-out number attached to a hyphenated identifier', () => {
+    expect(scanText('x-twenty-three spec files')).toEqual([])
+  })
+
+  // GAP used to admit a gap token ending in "." — "e2e." — so the match
+  // crossed the sentence boundary the period was meant to be. The fix
+  // requires a gap token's last character to be a plain word character, so
+  // "e2e." stops at "e2e" and strands the period, breaking the \s+ the
+  // trailing "spec files" needs immediately after it.
+  test('ignores a claim whose gap token trails a sentence-ending period', () => {
+    expect(scanText('twenty-three Playwright e2e. spec files')).toEqual([])
+  })
+})
+
+describe('spelled-out numbers still match in full after hyphen-boundary tightening', () => {
+  // Fix 1 rejects a hyphen on either side of the whole matched alternative,
+  // not just a bare \b — regression risk is that a naive trailing anchor
+  // reads a hyphenated compound's OWN internal hyphen as a boundary and
+  // truncates it down to its last segment ("twenty-three" -> "three").
+  // These pin the full compound surviving that tightening.
+  test('reads twenty-three in full, not truncated to three', () => {
+    expect(scanText('twenty-three spec files')).toEqual([{ id: 'e2e-specs', value: 23 }])
+  })
+
+  test('reads thirty-six in full, not truncated to six', () => {
+    expect(scanText('thirty-six unit-test files')).toEqual([{ id: 'unit-tests', value: 36 }])
+  })
+
+  test('reads fifty-two in full, not truncated to two', () => {
+    expect(scanText('fifty-two unit-test files')).toEqual([{ id: 'unit-tests', value: 52 }])
+  })
 })
 
 describe('numberPattern', () => {

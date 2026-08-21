@@ -100,18 +100,28 @@ The e2e pattern is the one that failed and the only one changed:
 /\*{0,2}([\w-]+)\*{0,2}\s+spec\s+files/gi
 
 // after — tolerates up to 3 intervening tokens, each letter-initial but free
-// to carry digits, periods and hyphens (so it can still cross "Node.js", "v2.1")
-/\*{0,2}([\w-]+)\*{0,2}(?:\s+[A-Za-z][\w.-]*){0,3}\s+spec\s+files/gi
+// to carry digits, periods and hyphens internally (so it can still cross
+// "Node.js", "v2.1") while never ENDING a token on that punctuation
+/\*{0,2}([\w-]+)\*{0,2}(?:\s+[A-Za-z](?:[\w.-]*\w)?){0,3}\s+spec\s+files/gi
 ```
 
-The gap is bounded at three letter-initial tokens, and `[\w.-]*` lets each of
-those tokens itself contain digits, periods and hyphens — a period inside a
-token is deliberately permitted, because this repo's own prose crosses tokens
-like `Node.js`, `v2.1` and `e2e`. What the gap does **not** admit is a
-punctuation character standing as its own whitespace-separated token, or a
-sentence-ending character splitting what would otherwise be one token in two —
-so it still cannot cross a clause boundary and capture an unrelated number
-from the previous sentence.
+The gap is bounded at three letter-initial tokens, and `(?:[\w.-]*\w)?` lets
+each of those tokens itself contain digits, periods and hyphens — a period
+inside a token is deliberately permitted, because this repo's own prose
+crosses tokens like `Node.js`, `v2.1` and `e2e`. What it does **not** admit is
+a token that ENDS on that punctuation: the trailing `\w` requires a token's
+last character to be a plain word character, so a token that would otherwise
+trail off on a sentence-ending period — `e2e.` inside "twenty-three
+Playwright e2e. spec files" — is cut back to the word before it, stranding
+the period outside the gap. That stranded period is not whitespace, so it
+breaks the `\s+` the next gap token or the trailing noun phrase requires, and
+the match fails. A first version of this gap (`[A-Za-z][\w.-]*`, with no
+constraint on the last character) let a token swallow that trailing period
+and, with it, the sentence boundary the period was meant to mark — the match
+then continued into the next sentence and read a number that belonged to a
+different claim entirely. So the gap still cannot cross a clause boundary and
+capture an unrelated number from the previous sentence, but doing so now
+takes an end-of-token rule, not just a ban on a bare punctuation token.
 
 ### The capture must be number-anchored, and the gap must admit digits
 
@@ -144,8 +154,11 @@ by isolating it:
 A gap class of letters-only cannot cross `e2e`, so
 `twenty-three Playwright e2e spec files` never matches however the number
 alternation is ordered. This repo's prose is full of digit-bearing tokens —
-`e2e`, `h1`, `v2`, `SFDS` — so the gap token must be `[A-Za-z][\w.-]*`:
-letter-initial, digits permitted after.
+`e2e`, `h1`, `v2`, `SFDS` — so the gap token must be letter-initial with
+digits permitted after: `[A-Za-z][\w.-]*` in the first cut of this design,
+tightened later (see "One regex is fixed" above) to `[A-Za-z](?:[\w.-]*\w)?`
+once a gap token ending on a sentence period was found to swallow the
+sentence boundary along with it.
 
 **Sorting the number-word alternation longest-first is a cheap precaution, not
 a demonstrated fix.** It was asserted as the cause in this spec's first draft

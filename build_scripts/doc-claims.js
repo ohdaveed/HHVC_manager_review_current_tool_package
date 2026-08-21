@@ -81,17 +81,24 @@ function numberPattern() {
  * token. Unanchored, `\d+` matches inside a longer digit run — "v53 unit-test
  * files" read 53 out of "v53" — and the spelled-out alternation matches
  * inside a longer word — "often spec files" read ten out of "often", since
- * "often" contains the literal substring "ten". `\b` is defined on `\w`, so
- * it holds correctly on either side of a hyphenated compound like
- * "twenty-three": the hyphen itself is not a word character, so the boundary
- * check lands at the outer t/e edges of the whole compound regardless of the
- * punctuation in the middle — "twenty-three" still matches in full, and is
- * never truncated down to "three".
+ * "often" contains the literal substring "ten". A bare `\b` anchor was tried
+ * first and still let a hyphenated identifier through: `\b` sits between a
+ * word character and a NON-word character, and `-` is itself a non-word
+ * character, so "v-53 unit-test files" and "build-53 unit-test files" both
+ * presented "53" as a complete token — the hyphen satisfied the boundary on
+ * its own, with nothing left to reject it. The lookarounds below reject a
+ * word character OR a hyphen on either side, so a number directly attached to
+ * a hyphenated identifier by punctuation alone is never read as a standalone
+ * claim. "twenty-three" still matches in full: its INTERNAL hyphen sits
+ * between two characters the alternative already consumes as one literal
+ * token, so the lookarounds only ever inspect the characters just outside the
+ * whole matched alternative — the outer t/e edges of the compound — and never
+ * see the hyphen in the middle. It is never truncated down to "three".
  *
  * @returns {string} regex source: a boundary-anchored number alternation
  */
 function boundedNumberPattern() {
-  return `\\b(?:${numberPattern()})\\b`
+  return `(?<![\\w-])(?:${numberPattern()})(?![\\w-])`
 }
 
 // Words permitted between the number and its noun. Letter-initial so it cannot
@@ -104,15 +111,30 @@ function boundedNumberPattern() {
 // same file's own e2e claim unseen by THIS pattern regardless of the file-list
 // fix, since the claim text sits right next to the digit-bearing word `e2e` —
 // reason enough on its own to admit digits here.
-const GAP = '(?:\\s+[A-Za-z][\\w.-]*){0,3}'
+//
+// A gap token may contain a period or a hyphen INTERNALLY — "Node.js" and
+// "v2.1" both have to cross this gap — but must not END on one. `[\w.-]*\w`
+// requires the token's last character to be a plain word character, so a
+// token that would otherwise trail off on a sentence-ending period is cut
+// back to the word before it: inside "twenty-three Playwright e2e. spec
+// files" the token stops at "e2e", leaving the period stranded outside the
+// gap. That stranded period is not whitespace, so it breaks the `\s+` the
+// next gap token or the trailing noun phrase requires, and the whole match
+// fails — a claim can no longer walk across a full stop and glue a number
+// from one sentence onto a noun phrase from the next. A trailing period
+// OUTSIDE the gap — ending the sentence the claim itself lives in — is
+// unaffected: "twenty-three Playwright e2e spec files." still matches, since
+// that period sits after "files", never inside a token the gap has to
+// swallow.
+const GAP = '(?:\\s+[A-Za-z](?:[\\w.-]*\\w)?){0,3}'
 
 // Bounded at three letter-initial tokens, which may themselves contain
-// digits, periods and hyphens (see GAP's own comment above and
-// `[\w.-]*`) — "Node.js", "v2.1" and "e2e" all have to cross this gap. What
-// it does NOT admit is a punctuation character as its own
-// whitespace-separated token, or a sentence-ending character breaking a
-// token in two, so a match still cannot cross a clause boundary and capture
-// a number left over from the previous sentence.
+// digits, periods and hyphens internally (see GAP's own comment above) —
+// "Node.js", "v2.1" and "e2e" all have to cross this gap, provided the token
+// doesn't END on that punctuation. What it does NOT admit is a punctuation
+// character as its own whitespace-separated token, or a sentence-ending
+// character closing out a token, so a match still cannot cross a clause
+// boundary and capture a number left over from the previous sentence.
 
 /**
  * The registry — the ONLY hand-maintained axis.

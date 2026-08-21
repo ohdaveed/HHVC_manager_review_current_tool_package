@@ -214,13 +214,19 @@ function numberPattern() {
 // swallow the number itself, but \w after — this repo's prose is full of
 // digit-bearing tokens (e2e, h1, v2), and a letters-only class cannot cross
 // `e2e`, which is precisely what hid the claim that shipped wrong.
-const GAP = '(?:\\s+[A-Za-z][\\w.-]*){0,3}'
+const GAP = '(?:\\s+[A-Za-z](?:[\\w.-]*\\w)?){0,3}'
 
 // Bounded at three letter-initial tokens, which may themselves contain
-// digits, periods and hyphens — Node.js, v2.1 and e2e all have to cross this
-// gap — but it never admits a punctuation character as its own
-// whitespace-separated token, so a match still cannot cross a clause
-// boundary and capture a number from the previous sentence.
+// digits, periods and hyphens internally — Node.js, v2.1 and e2e all have to
+// cross this gap — but a token must not END on that punctuation:
+// `(?:[\w.-]*\w)?` requires the last character of a token to be a plain word
+// character, so a token trailing off on a sentence period ("e2e." at the end
+// of a clause) stops at "e2e" and strands the period outside the gap. That
+// period then breaks the `\s+` the next token or the trailing noun phrase
+// requires, so a match still cannot cross a clause boundary and capture a
+// number from the previous sentence — a bare "no punctuation as its own
+// token" rule was not enough on its own, since the punctuation here rides
+// along inside a token rather than standing apart from one.
 
 /**
  * The registry — the ONLY hand-maintained axis.
