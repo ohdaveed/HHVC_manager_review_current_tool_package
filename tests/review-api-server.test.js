@@ -919,11 +919,12 @@ describe('graceful shutdown on SIGTERM', () => {
 // `response.ok` as "the server accepted this" got a false success for a
 // request nothing received and nothing stored.
 //
-// forms/mosquito-workshop-request/ did exactly that: it POSTs to "/" by the
+// forms/mosquito-workshop-request/ did exactly that: it POSTED to "/" by the
 // Netlify Forms convention, and on Railway — which has no Netlify Forms
 // handler — it rendered a confirmation screen for every discarded submission.
 // A false success is worse than a visible failure, because nobody retries and
-// nobody reports it.
+// nobody reports it. That form no longer submits anywhere, so this test is now
+// guarding the SERVER's contract rather than that one client's behaviour.
 //
 // The /api/* routes are matched BEFORE the static branch, so this guard must
 // not disturb their own POST/PUT/DELETE verbs; that is asserted here too,

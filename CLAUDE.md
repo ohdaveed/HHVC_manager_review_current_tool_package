@@ -290,7 +290,7 @@ queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
 SFDS tokens, the chrome type scale, the Karl transcript panel, and
-workshop-form submission handling, and the safeMarkdown sanitizer allowlist —
+the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist —
 which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
 since happy-dom's DOMPurify strips both despite them being allow-listed, so a
 unit assertion would either pin that artifact or pass vacuously

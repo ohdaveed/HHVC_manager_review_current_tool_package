@@ -16,59 +16,100 @@ async function fillRequiredFields(page) {
   await page.selectOption('#electricity', 'Yes')
 }
 
+// This form is a DESIGN REFERENCE with no intake backend on any deploy. It
+// used to POST to "/" by the Netlify Forms convention, and once Netlify was
+// retired that rendered a confirmation screen for every silently discarded
+// submission (issue #172). The server answers 405 for that POST now, which
+// made the failure visible — but a form that always fails reads as broken
+// rather than as a mock, so it no longer submits at all.
+//
+// These tests therefore assert two different things, and the second is the
+// one that matters: that no request leaves the page, and that nothing on the
+// page can be read as "your request was received".
 test.describe('mosquito workshop request form', () => {
-  test('keeps the request visible when submission fails', async ({ page }) => {
-    await page.route('http://127.0.0.1:8080/', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({ status: 500, body: 'Submission failed' })
-        return
-      }
-      await route.fallback()
+  test('sends no network request when submitted', async ({ page }) => {
+    const posts = []
+    page.on('request', (request) => {
+      if (request.method() !== 'GET') posts.push(`${request.method()} ${request.url()}`)
     })
+
     await page.goto(FORM_PATH)
     await fillRequiredFields(page)
+    await page.click('button[type="submit"]')
 
+    await expect(page.locator('.form-success')).toBeVisible()
+    // Asserted on the collected list rather than a route mock: a mock would
+    // prove only what the client does with a reply, which is exactly the gap
+    // that let the original defect ship.
+    expect(posts).toEqual([])
+  })
+
+  test('never claims a request was received', async ({ page }) => {
+    await page.goto(FORM_PATH)
+    await fillRequiredFields(page)
+    await page.click('button[type="submit"]')
+
+    const body = await page.locator('body').innerText()
+    expect(body).not.toMatch(/we received your request/i)
+    expect(body).not.toMatch(/thank you/i)
+    await expect(page.locator('.form-success')).toContainText('Not submitted')
+  })
+
+  test('says it is a design reference before anything is entered', async ({ page }) => {
+    await page.goto(FORM_PATH)
+    await expect(page.locator('.form-mock-banner')).toContainText('not a live form')
+    await expect(page.locator('.form-mock-banner')).toContainText('Fillout')
+  })
+
+  test('shows every captured field, including the ones left blank', async ({ page }) => {
+    // The table IS the deliverable: it is the field inventory a reviewer
+    // checks against what HHVC actually needs, so a blank optional field has
+    // to appear rather than vanish.
+    await page.goto(FORM_PATH)
+    // Derive the expectation from the form itself. A hardcoded number lets a
+    // dropped field keep the test green -- and this repo's own rule is that
+    // counts come from the source of truth rather than a literal.
+    const fieldCount = await page.locator('#workshopForm .form-field').count()
+    expect(fieldCount).toBeGreaterThan(0)
+    await fillRequiredFields(page)
+    await page.click('button[type="submit"]')
+
+    const rows = page.locator('.form-summary tbody tr')
+    // EXACTLY, not at-least: the summary is the field inventory, so a missing
+    // row and a duplicated one are both defects.
+    expect(await rows.count()).toBe(fieldCount)
+    await expect(page.locator('.form-summary')).toContainText('Example School')
+    await expect(page.locator('.form-summary')).toContainText('(left blank)')
+  })
+
+  test('still enforces required fields', async ({ page }) => {
+    // Validation is part of what the reference documents — which fields the
+    // real Fillout form must make mandatory.
+    await page.goto(FORM_PATH)
+    await page.fill('#organization', 'Example School')
     await page.click('button[type="submit"]')
 
     await expect(page.locator('#workshopForm')).toBeVisible()
-    await expect(page.locator('#submissionError')).toContainText('could not submit your request')
     await expect(page.locator('.form-success')).toHaveCount(0)
   })
 
-  // BOTH tests above mock the response, which is what let the real defect ship:
-  // they prove the client renders success on a 200 and an error on a 500, and
-  // it does. Nothing asserted what the REAL server answers. It answered 200
-  // with index.html for POST /, because the static branch matched on pathname
-  // with no method check — so the form showed a confirmation for every
-  // submission, and the suite stayed green throughout. See issue #172.
-  //
-  // This test uses no route mock at all.
-  test('does not claim success when the real server has no form handler', async ({ page }) => {
+  test('returns to the form from the preview', async ({ page }) => {
     await page.goto(FORM_PATH)
     await fillRequiredFields(page)
-
     await page.click('button[type="submit"]')
+    await page.click('#backToForm')
 
-    // The form is a mockup: there is no intake backend on any deploy. The one
-    // thing it must never do is tell someone their request was received.
-    await expect(page.locator('.form-success')).toHaveCount(0)
-    await expect(page.locator('#submissionError')).toContainText('could not submit your request')
     await expect(page.locator('#workshopForm')).toBeVisible()
-  })
-
-  test('confirms a request accepted by the form handler', async ({ page }) => {
-    await page.route('http://127.0.0.1:8080/', async (route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({ status: 200 })
-        return
-      }
-      await route.fallback()
-    })
-    await page.goto(FORM_PATH)
-    await fillRequiredFields(page)
-
+    // Entries survive the round trip. Losing them would mean retyping ten
+    // fields to correct one, which is the opposite of reviewable.
+    await expect(page.locator('#organization')).toHaveValue('Example School')
+    await expect(page.locator('#email')).toHaveValue('alex@example.test')
+    await expect(page.locator('#organizationType')).toHaveValue('School')
+    await expect(page.locator('#spaceType')).toHaveValue('Indoor classroom')
+    // The handler must be re-attached on the way back, or the second submit
+    // does a native form GET and navigates away. No refill needed now that
+    // the values persist, which is itself the assertion.
     await page.click('button[type="submit"]')
-
-    await expect(page.locator('.form-success')).toContainText('we received your request')
+    await expect(page.locator('.form-success')).toBeVisible()
   })
 })
