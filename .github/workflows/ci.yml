@@ -1,28 +1,3 @@
-# CI for the HHVC manager-review mockup tool.
-#
-# Mirrors the local pre-commit gauntlet documented in AGENTS.md:
-#   format:check  — Prettier is the ONLY linter in this repo (no ESLint/tsc)
-#   validate      — Zod schema + business invariants over pages/*.js
-#   test          — the Bun unit-test files EXPLICITLY NAMED in package.json's
-#                   `test` script (not a glob — an unnamed test file never runs)
-#   test:e2e      — the Playwright specs under tests/e2e/
-#
-# Counts are deliberately not written here. They were "10" and "9" against a
-# real 20 and 14, because nothing makes a comment fail when it goes stale.
-#
-# Both jobs pin Bun from `.bun-version` rather than taking `latest`, and the
-# pin is load-bearing: `latest` means the runtime changes under the repo with
-# no commit, which is how Bun 1.3.14's dropping of `require()` on an async ESM
-# module once made every server-spawning suite fail intermittently — passing or
-# failing per run depending on what `latest` resolved to that hour. AGENTS.md
-# has described this pin as already in place since 2026-08-15; it was not, on
-# either job, until this change. `tests/ci-workflow.test.js` now asserts it,
-# because a documented safety property nothing checks is exactly the class of
-# claim that rots.
-#
-# Unit checks and the (slower, browser-downloading) e2e suite run as separate
-# jobs so a formatting or schema failure reports in seconds without waiting on
-# a Chromium download, and so a flaky browser run never masks a unit failure.
 name: CI
 
 on:
@@ -30,15 +5,125 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  # `dorny/paths-filter` reads the pull-request files API on `pull_request`
+  # runs. Declaring any `permissions` block sets every unlisted scope to
+  # `none`, so omitting this leaves the change detector without the access it
+  # needs -- and every downstream job gates on its outputs, so the failure
+  # takes the whole graph with it.
+  pull-requests: read
+
 jobs:
-  checks:
-    name: Format, validate, unit tests
+  changes:
+    name: Detect changed files
     runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter_code.outputs.code }}
+      docs: ${{ steps.filter_docs.outputs.docs }}
     steps:
-      # fetch-depth: 0 because the revert check below walks a file's history on
-      # origin/main to find a superseded revision. The default shallow clone
-      # has one commit and no origin/main, so the check would SKIP — and a gate
-      # that silently skips is the thing it exists to prevent.
+      - uses: actions/checkout@v5
+
+      # TWO steps, because `predicate-quantifier` is per-invocation and the
+      # two filters need opposite semantics.
+      #
+      # `code` is a positive pattern narrowed by negations, so every rule has
+      # to match or the negations never get a say: under the default `some`,
+      # the leading `**` matches a Markdown file on its own and `code` comes
+      # back true for a docs-only PR.
+      - id: filter_code
+        uses: dorny/paths-filter@v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!.github/*.md'
+              - '!.github/**/*.md'
+
+      # `docs` is a list of ALTERNATIVES, so it needs the default `some`. No
+      # file can match `docs/**` and `.github/**/*.md` at once, so running it
+      # with `every` makes `docs` permanently false -- which disables the
+      # docs-only path just as thoroughly as the bug above, in the opposite
+      # direction.
+      - id: filter_docs
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            docs:
+              - '**/*.md'
+              - 'docs/**'
+              - '.github/*.md'
+              - '.github/**/*.md'
+
+  docs_only_checks:
+    name: Docs-only checks
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs == 'true' && needs.changes.outputs.code != 'true'
+    steps:
+      # Full history, because `check:revert` below compares this branch
+      # against origin/main. On a shallow checkout it cannot resolve the base
+      # and RETURNS 0 with a SKIP notice — so the step would run, the job
+      # would stay green, and nothing would have been checked.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Docs lint (markdownlint)
+        run: bun run lint:docs
+      - name: Prettier check
+        run: bun run format:check
+      # The revert guard lives here too, not only in `format_validate_lint`.
+      # It compares THIS BRANCH against origin/main, and docs are exactly what
+      # it protects: a docs-only branch can restore a byte-identical
+      # superseded revision of README or of the synchronised instruction
+      # files, and nothing else on this path would notice. The unit suite
+      # covers `check:revert`'s own logic against temporary repositories,
+      # which is a different question from running it on the branch at hand.
+      - name: Reverted-work check (branch vs main)
+        run: bun run check:revert
+      # Docs are SOURCE DATA here, not prose, so lint alone does not cover a
+      # docs-only change. Thirteen test files read them: `doc-counts` and
+      # `doc-claims` check figures against the filesystem, `mirror-consistency`
+      # checks AGENTS.md/CLAUDE.md/copilot-instructions against each other,
+      # `module-paths` checks that a `js/` path in a doc names a real file, and
+      # `karl-blocks` parses docs/karl-export-field-map.md against the panel
+      # inventory the exporter types into. Without this a docs-only PR merges
+      # with a stale count or a mismatched field map, and only the push to
+      # `main` finds out.
+      #
+      # The WHOLE suite rather than a curated list of those files: a named list
+      # is a second inventory of which tests read docs, free to drift from the
+      # tests themselves, and the run is ~30s. What this path still skips is
+      # the expensive half — both builds and Playwright — which is what it
+      # exists to skip.
+      - name: Unit tests (bun test)
+        run: bun run test
+
+  format_validate_lint:
+    name: Format, validate, lint
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -47,131 +132,156 @@ jobs:
         with:
           bun-version-file: .bun-version
 
-      # js/main.js imports @sfgov/design-system CSS and the third-party
-      # libraries for Vite to bundle, and validate/test load pages through
-      # node_modules deps (zod, fast-glob, happy-dom).
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
       - name: Prettier check (the lint step)
         run: bun run format:check
 
-      # Fails when a branch RESTORES a version of a file that origin/main has
-      # already moved past. This is the one class of regression every other
-      # gate here is blind to: format:check, validate, the unit suite and
-      # Playwright each ask only "is this branch internally consistent?", and a
-      # wholesale revert is perfectly self-consistent. GitHub's own "require
-      # branches to be up to date" rule does not help either — it is a check on
-      # the COMMIT GRAPH, so a branch that MERGES main and then reverts the
-      # merged content satisfies it completely.
-      #
-      # That is not hypothetical: PR #169's branch contained both #170's and
-      # #173's commits as ancestors while its content had railway.json back at
-      # a deleted script, the workshop page back at the embedded mock form, and
-      # 74 lines of tests removed — 36 files, +140/-238 against main, every
-      # check green.
-      #
-      # An intended revert is a normal thing to want: put [allow-revert] in a
-      # commit message on the branch.
       - name: Reverted-work check (branch vs main)
         run: bun run check:revert
 
       - name: Validate page data (Zod schema + invariants)
         run: bun run validate
 
-      # The instruction docs are canon here — AGENTS.md, CLAUDE.md and
-      # .github/copilot-instructions.md are a hand-maintained three-way mirror
-      # that three different tools read — and nothing checked their structure
-      # until now. The first run found a cross-reference in CLAUDE.md pointing at
-      # an anchor that had stopped existing, and an angle-bracket placeholder
-      # being parsed as an HTML tag and dropped from the rendered page.
-      #
-      # The file list is derived from `git ls-files`, not globbed. See
-      # build_scripts/lint-docs.js: a glob that stops matching does not fail, it
-      # stops checking, and the hand-written globs this replaced were missing
-      # more than half the repo's markdown.
       - name: Docs lint (markdownlint)
         run: bun run lint:docs
 
-      # Knip, on the categories that were already clean when it was adopted:
-      # an unused FILE, an unused dependency, an unlisted one, or an import
-      # that resolves nowhere. Cheap and static, so it sits beside validate
-      # rather than after the build.
-      #
-      # `--include` is doing real work here. Knip also reports unused EXPORTS,
-      # and this repo publishes deliberately onto `window.<Namespace>` — the
-      # review layers reach each other through globals rather than imports, by
-      # design — so Knip reads ~89 of those as unused when they are the
-      # architecture. Gating on them would fail the build for following the
-      # documented pattern. `bun run lint:dead-code` prints the full report,
-      # including that list, as a triage aid rather than a gate.
       - name: Dead code (knip)
         run: bun run lint:dead-code:ci
 
-      # The load-order and layering invariants AGENTS.md documents, as checks:
-      # no cycles, the mockup renderer never reaching React or MUI, the
-      # import-free base modules staying import-free, pages/*.js entering only
-      # through js/core/page-data.js, and js/core/state.js keeping the
-      # side-effect import of js/core/page-registry.js that applies the
-      # reviewer's page registry before ORIGINAL_DATA is cloned.
-      #
-      # Every rule was verified against the current graph before being written
-      # and mutation-proven afterwards, so this starts green and fails only on
-      # a real regression. server.ts is not cruised — see the script comment.
       - name: Architecture rules (dependency-cruiser)
         run: bun run lint:architecture
 
-      # oxlint's core rules. These had never run: .oxlintrc.json sets
-      # `"rules": {}` and scopes the anti-slop PLUGIN to server.ts and
-      # build_scripts/ai, so the ~600 correctness rules were switched off
-      # everywhere, including the browser JS.
-      #
-      # A separate config, .oxlintrc.ci.json, is what makes this gateable.
-      # anti-slop stays a hand-run report — pointed at browser JS its rules
-      # argue with this codebase's own mandated `typeof window === 'undefined'`
-      # guard, which is why it was narrowed in the first place — and the two
-      # stylistic unicorn rules are off, for the same reason the repo already
-      # refused anti-slop's opinions.
       - name: JavaScript lint (oxlint core rules)
         run: bun run lint:js
 
-      # Runs the real Vite production build, so a bundling failure (a bad
-      # import path, a missing dependency) is caught here rather than at
-      # deploy time. It also doubles as a deploy-integrity check: the
-      # workshop-form copy step fails if the committed sub-app dist
-      # references assets that were never committed (the "form shell that
-      # never hydrates" regression).
-      #
-      # This runs BEFORE the unit tests, which is worth a sentence because the
-      # obvious order is the other way round. One test in
-      # tests/review-api-server.test.js asserts that a set-but-empty
-      # STATIC_ROOT still serves the real built app, and it can only tell a
-      # correct fallback from a broken one if dist/ actually exists. The test
-      # skips itself when there is no build, so with the fast order it passed
-      # by skipping and the regression it guards went uncovered in CI.
-      - name: Vite build + deploy bundle assembly (deploy-integrity check)
-        run: bun run build:railway
-
-      - name: Unit tests (bun test)
-        run: bun run test
-
-      # build:railway only exercises the default build mode. The single-file
-      # export goes through vite-plugin-singlefile with different inlining
-      # rules, so a regression there (an asset the plugin cannot inline, a
-      # mode-specific config mistake) would otherwise surface only when
-      # someone tried to produce the portable HTML for a reviewer.
-      - name: Single-file export build
-        run: bun run build:singlefile
-
-  e2e:
-    name: Playwright end-to-end tests
+  build_railway:
+    name: Build railway bundle
     runs-on: ubuntu-latest
+    needs: [format_validate_lint, changes]
+    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v5
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: .bun-version
+
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Vite build + deploy bundle assembly (deploy-integrity check)
+        run: bun run build:railway
+
+      - name: Upload dist artifact for downstream unit tests
+        uses: actions/upload-artifact@v5
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  build_singlefile:
+    name: Build single-file export
+    runs-on: ubuntu-latest
+    needs: [format_validate_lint, changes]
+    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Single-file export build
+        run: bun run build:singlefile
+
+  unit:
+    name: Unit tests (bun test)
+    runs-on: ubuntu-latest
+    needs: [build_railway, changes]
+    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download dist artifact from build job
+        uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist/
+
+      - name: Unit tests (bun test)
+        run: bun run test
+
+  e2e:
+    name: Playwright end-to-end tests
+    runs-on: ubuntu-latest
+    needs: [format_validate_lint, changes]
+    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Cache Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -182,8 +292,6 @@ jobs:
       - name: Run Playwright tests
         run: bun run test:e2e
 
-      # The HTML report (with on-first-retry traces) is the fastest way to
-      # debug a red e2e run without reproducing it locally.
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v5

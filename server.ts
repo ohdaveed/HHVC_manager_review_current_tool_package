@@ -1439,7 +1439,14 @@ const server = serve({
     }
 
     if (url.pathname === "/" || url.pathname === "/index.html") {
-      return new Response(Bun.file(`${ROOT}/index.html`), {
+      const indexFile = Bun.file(`${ROOT}/index.html`)
+      if (!(await indexFile.exists())) {
+        return new Response("Not Found", {
+          status: 404,
+          headers: HTML_HEADERS,
+        })
+      }
+      return new Response(indexFile, {
         headers: HTML_HEADERS,
       })
     }

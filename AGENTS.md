@@ -69,7 +69,7 @@ they state too weakly to act on:
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
-  `checks` job — read the job rather than a list here.** That sentence has been
+  `format_validate_lint` job — read the job rather than a list here.** That sentence has been
   rewritten by every tool that joined it, each time as though it were the only
   addition, and an enumeration in three mirrored files is four copies of one
   fact. What is worth stating is the shape: there is no ESLint and no `tsc`
@@ -309,12 +309,13 @@ run validate` and `bun run test` after editing anything under `pages/` or
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, in
-two deliberately separate jobs so a formatting or schema failure reports in
-seconds without waiting on a Chromium download, and a flaky browser run never
-masks a unit failure:
+`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
+a graph of seven jobs rather than one long one, so a formatting or schema
+failure reports in seconds without waiting on a Chromium download and a flaky
+browser run never masks a unit failure.
 
-**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
+**Every job that USES Bun pins it from `.bun-version`, and that pin is
+load-bearing.** They
 took `bun-version: latest` until 2026-08-15, which meant the runtime changed
 under the repo without a commit. Bun 1.3.14 stopped allowing CJS to `require()`
 an ESM module; `build_scripts/storage.js` was the only ESM file under
@@ -325,19 +326,77 @@ timeouts before anyone captured the server's stderr. **Everything under
 `build_scripts/` is CommonJS now** — keep it that way; `server.ts` named-imports
 those modules from TypeScript, which is the supported direction. Bumping
 `.bun-version` is a normal change, just a deliberate one.
+`tests/ci-workflow.test.js` asserts the pin, though note its scope: it
+splits the file on `uses: oven-sh/setup-bun` and checks each block it
+finds, so it covers every job that sets Bun up and says nothing about a
+job that does not. `changes` is the one that does not — it runs only
+`dorny/paths-filter` and needs no runtime.
 
-- **checks** — `bun install --frozen-lockfile` → `format:check` → `validate` →
-  `build:railway` → `test`. `build:railway` doubles as a deploy-integrity check:
-  it fails if the committed workshop-form `dist` references assets that were
-  never committed (the "form shell that never hydrates" regression). **It runs
-  before `test` on purpose**, even though that delays a unit failure by a
-  build: one test in `tests/review-api-server.test.js` asserts that a
-  set-but-empty `STATIC_ROOT` still serves the real built app, and it can only
-  tell a correct fallback from a broken one if `dist/` exists. It skips itself
-  when there is no build — so with the fast order it passed by skipping and
-  covered nothing.
+- **changes** — classifies the PR's touched paths into `docs` and `code`
+  outputs. Everything below gates on those, so it is the only job that always
+  runs.
+- **docs_only_checks** — for a pull request touching docs and no code:
+  `lint:docs`, `format:check`, **and the full unit suite**. That last one is
+  not belt-and-braces. Docs are SOURCE DATA here — thirteen test files read
+  them, including `doc-counts` and `doc-claims` (figures against the
+  filesystem), `mirror-consistency` (the three instruction files against each
+  other), `module-paths` (a `js/` path in a doc naming a real file) and
+  `karl-blocks` (parsing `docs/karl-export-field-map.md` against the panel
+  inventory). Linting alone would let a docs-only PR merge with a stale count
+  or a mismatched field map, and only the push to `main` would find out. The
+  whole suite runs rather than a curated list, because a named list is a second
+  inventory of which tests read docs and free to drift from the tests.
+- **format_validate_lint** — `format:check`, `check:revert`, `validate`,
+  `lint:docs`, `lint:dead-code:ci`, `lint:architecture`, `lint:js`. The fast
+  gates, so they report before anything builds.
+- **build_railway** — `build:railway`, which doubles as a deploy-integrity
+  check: it fails if the committed workshop-form `dist` references assets that
+  were never committed (the "form shell that never hydrates" regression). It
+  then **uploads `dist/` as an artifact**.
+- **build_singlefile** — `build:singlefile`, in parallel with the above.
+- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+  is what makes the ordering mean anything.** `needs:` only sequences jobs; a
+  separate runner gets a fresh checkout, and `dist/` is gitignored, so without
+  the artifact the job would test against a tree that has never been built. One
+  test in `tests/review-api-server.test.js` asserts a set-but-empty
+  `STATIC_ROOT` still serves the real built app, and it `skipIf`s itself when
+  `dist/index.html` is absent — so it would pass by skipping and cover nothing,
+  which is the exact gap the old in-job `build:railway` → `test` order existed
+  to close.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
+
+**Branch protection's required contexts are job NAMES, not job ids, and they
+have to be changed with this file.** Splitting the old `checks` job renamed the
+context `Format, validate, unit tests` out of existence, and a context that no
+job produces stays permanently pending however green the run — so a PR can go
+fully green and still never satisfy the requirement.
+
+**All six gating jobs have to be required, and the reason is counter-intuitive:
+GitHub treats a conditionally SKIPPED job as a PASSING required check.** That
+is what makes this graph's `if:` conditions dangerous to under-require:
+
+- Require only the code-path jobs, and a docs-only PR satisfies every one of
+  them by SKIPPING them, leaving `Docs-only checks` — which is where its real
+  coverage lives — unrequired and therefore optional.
+- Leave the builds unrequired, and a `build_singlefile` failure blocks nothing
+  at all, while a `build_railway` failure SKIPS `unit`, and that skip then
+  reads as a pass. A red build merges.
+
+So the required set is **every job in the file**, `Detect changed files`
+included: `Format, validate, lint`, `Unit tests (bun test)`,
+`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
+`Build single-file export` and `Detect changed files`.
+
+The detector is the one people leave out, on the reasoning that it only
+computes outputs and cannot itself be skipped — which is true and beside the
+point. If it FAILS, every job downstream of it is skipped, each of those skips
+reads as a pass, and the PR merges with nothing having been checked at all. An
+action outage or a permissions regression is enough to get there. Requiring it
+is what turns that silent green into a visible red.
+
+Adding a job to this file means adding its name here and to protection, or it
+is advisory.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
