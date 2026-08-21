@@ -153,6 +153,17 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    the loop starts, and why `error` is its own outcome: a read failure that
    merely slept would spend the whole deadline impersonating slow CI.
 
+   **Both hazards were measured on this repo, 2026-08-21**, polling
+   `gh pr checks --json name,bucket` every three seconds across a push to an
+   open PR. At t+3s it returned the PREVIOUS run's eight checks, every one of
+   them `pass`. At t+6s it exited 1 with an empty body and
+   `no checks reported`. From t+9s the new run's checks appeared. Both failures
+   sit in that trace three seconds apart: a loop that exits on "nothing
+   pending" takes the stale green at t+3s, and one that treats any non-zero
+   exit as fatal dies at t+6s. The window was ONE poll wide — which is why it
+   is missed by hand, and why it has to be handled by shape rather than caught
+   by luck.
+
    The fourth is the one that bites the fix rather than the bug: closing the
    third by treating every non-zero `gh` exit as fatal turns a "not yet" into
    an abort. Inside the creation window `gh pr checks` exits non-zero with the
