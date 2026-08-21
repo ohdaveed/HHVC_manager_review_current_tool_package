@@ -72,7 +72,13 @@ async function exitedBeforeAnswering(url, proc) {
 async function waitForServer(url, proc, attempts = 80) {
   for (let i = 0; i < attempts; i += 1) {
     try {
-      await fetch(url)
+      const res = await fetch(url)
+      // Bun can reuse this connection for the very next request in the suite.
+      // If the probe response is left unread, that next request can fail with a
+      // server-side 500 despite reaching a healthy route, which makes
+      // "server started" probes flip unrelated tests red. Drain the body before
+      // returning so the connection is left in a clean state.
+      await res.arrayBuffer()
       return
     } catch {
       // exitCode stays null while the process is alive, so this only fires once
@@ -930,7 +936,7 @@ describe('graceful shutdown on SIGTERM', () => {
 // because a guard hoisted one block too high would break every write route
 // while still passing the static assertions.
 describe('static paths reject non-GET methods', () => {
-  const PORT = 8131
+  const PORT = 8141
   const base = `http://127.0.0.1:${PORT}`
   let proc
   let dbDir
@@ -954,24 +960,28 @@ describe('static paths reject non-GET methods', () => {
     // "submitted", so assert the client-visible predicate, not just the code.
     expect(res.ok).toBe(false)
     expect(res.headers.get('allow')).toBe('GET, HEAD')
+    await res.arrayBuffer()
   })
 
   test('PUT and DELETE on a static path are refused the same way', async () => {
     for (const method of ['PUT', 'DELETE', 'PATCH']) {
       const res = await fetch(`${base}/`, { method })
       expect(res.status, `${method} / must be refused`).toBe(405)
+      await res.arrayBuffer()
     }
   })
 
   test('a non-GET on a nonexistent static path is also refused', async () => {
     const res = await fetch(`${base}/no/such/page`, { method: 'POST' })
     expect(res.status).toBe(405)
+    await res.arrayBuffer()
   })
 
   test('GET still serves normally', async () => {
     const res = await fetch(`${base}/`)
     expect([200, 404]).toContain(res.status)
     expect(res.status).not.toBe(405)
+    await res.arrayBuffer()
   })
 
   // The guard sits below the /api/* dispatch. If it were hoisted above it,
