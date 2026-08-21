@@ -93,7 +93,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 51 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 52 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
@@ -262,7 +262,17 @@ which only works once the file is tracked, since the scan reads `git
 ls-files`. That is not incidental: the test's own header comment quotes a
 now-deleted module as a worked example, so once this file joined the tracked
 tree it had to add that quoted path to its own EXEMPT list rather than widen
-SKIP or weaken the regex to make the self-reference disappear).
+SKIP or weaken the regex to make the self-reference disappear), and
+`page-render-hooks` (the `onAfterRender(fn)` post-render subscriber registry
+in `js/mockup/page-render.js`, added to replace js/review/ux-improvements.js's
+monkey-patch of `window.renderPage` — measurement found that patch responsible
+for 24 of the edges binding this codebase's single 16-file dependency cycle,
+nearly double the next contributor. A registry rather than a custom event,
+deliberately: an event name is a string, so a typo unsubscribes silently and
+nothing fails, and silent under-coverage is the failure this repo has now hit
+four separate times. Asserts registration order, that a throwing hook does not
+block its siblings, and that unsubscribe stops only the hook it was returned
+for).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in

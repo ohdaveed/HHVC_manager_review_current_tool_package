@@ -91,8 +91,16 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 51 Bun unit-test files under `tests/` —
-`utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
+isn't). `bun run test` runs 52 Bun unit-test files under `tests/` —
+`utils`, `data-validation`, `page-render`, `page-render-hooks` (the
+`onAfterRender(fn)` post-render subscriber registry in `js/mockup/page-render.js`,
+added to replace js/review/ux-improvements.js's monkey-patch of
+`window.renderPage` — measurement found that patch responsible for 24 of the
+edges binding this codebase's single 16-file dependency cycle, nearly double
+the next contributor. A registry rather than a custom event, deliberately: an
+event name is a string, so a typo unsubscribes silently and nothing fails, and
+silent under-coverage is the failure this repo has now hit four separate
+times), `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
 `manager-review-export`/`ux-improvements-export`/`review-queue-state`/

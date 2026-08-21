@@ -50,7 +50,7 @@ Read these four facts before writing any code; three of them contradict what the
 
 **Why this is first.** `js/review/ux-improvements.js` monkey-patches `window.renderPage` — guard at **line 137**, reassignment at **142**, `__uxWrapped` stamp at **187**. That patch is why `renderPage` must live on `window`, and `window.renderPage` is responsible for 24 of the 16-file SCC's edges. Inverting it — `page-render.js` calling hooks it knows nothing about, instead of subscribers reaching in to wrap it — is what lets every later task land cycle-free.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/page-render-hooks.test.js`:
 
@@ -116,7 +116,7 @@ describe('onAfterRender', () => {
 })
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [x] **Step 2: Run it and watch it fail**
 
 ```bash
 bun test tests/page-render-hooks.test.js
@@ -124,7 +124,7 @@ bun test tests/page-render-hooks.test.js
 
 Expected: FAIL — `onAfterRender` is not exported by `js/mockup/page-render.js`.
 
-- [ ] **Step 3: Implement the registry**
+- [x] **Step 3: Implement the registry**
 
 In `js/mockup/page-render.js`, near the top-level declarations:
 
@@ -171,7 +171,7 @@ function runAfterRenderHooks(pageKey) {
 
 Call `runAfterRenderHooks(pageKey)` as the last statement of `renderPage()`, and add both names to the file's `export { … }` block.
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ```bash
 bun test tests/page-render-hooks.test.js
@@ -179,7 +179,7 @@ bun test tests/page-render-hooks.test.js
 
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Convert `ux-improvements.js` from monkey-patch to subscriber**
+- [x] **Step 5: Convert `ux-improvements.js` from monkey-patch to subscriber**
 
 The wrapper spans `js/review/ux-improvements.js:137-187` — guard, reassignment, `__uxWrapped` stamp. Note that **line 251** separately *calls* `window.renderPage` to restore the saved page; that is a plain call and becomes a plain import, not part of the wrapper. Replace the wrapper with a registration:
 
@@ -189,7 +189,7 @@ import { onAfterRender } from '../mockup/page-render.js'
 
 and, where the wrapper was installed, `onAfterRender(() => refreshUx())` — keeping whatever the wrapper did after calling through. **Delete the `__uxWrapped` guard entirely**; it existed only to make double-wrapping idempotent, and a registry has no such hazard.
 
-- [ ] **Step 6: Register the test and update the documented count**
+- [x] **Step 6: Register the test and update the documented count**
 
 Add `tests/page-render-hooks.test.js` to `package.json`'s explicit `test` list (51 → 52) and update the count in `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md`. `tests/doc-counts.test.js` enforces this.
 
