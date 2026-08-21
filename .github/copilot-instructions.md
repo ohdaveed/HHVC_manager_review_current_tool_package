@@ -43,6 +43,7 @@ bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run start         # production-like: assemble dist/ (build:railway), then serve it
 bun run validate      # Zod-validate pages/*.js and js/core/page-data.js (schema + invariants)
 bun run test          # Bun test runner over the 55 unit-test files in tests/
+bun run hooks:install # Once per clone: installs the commit-msg trailer gate (.githooks/)
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run export:karl   # write one paste-ready Karl transcript per page into review/karl-transcripts/

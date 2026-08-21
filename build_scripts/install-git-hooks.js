@@ -23,42 +23,75 @@ const { execFileSync } = require('node:child_process')
 const repoRoot = path.resolve(__dirname, '..')
 const sourceDir = path.join(repoRoot, '.githooks')
 
-/** Resolve the clone's real git directory; worktrees do not put it at `.git`. */
-function gitDir() {
-  const out = execFileSync('git', ['rev-parse', '--git-dir'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  }).trim()
-  return path.resolve(repoRoot, out)
+function git(...args) {
+  return execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8' }).trim()
+}
+
+/**
+ * Every directory a hook could be read from, deduped.
+ *
+ * There are two, and in a linked worktree they are DIFFERENT places:
+ * `--git-common-dir` is `.git`, where git itself looks when `core.hooksPath`
+ * is unset, and `--git-dir` is `.git/worktrees/<name>`, which is where
+ * ggshield's `_dispatch` looks because that is the path it resolves. Install
+ * into both rather than guessing which mechanism is live.
+ *
+ * NOT `--git-path hooks`, which is the obvious call and the wrong one: it
+ * RESPECTS `core.hooksPath`, so here it returns ggshield's own directory and
+ * the install would write into a third party's tree.
+ */
+function hookDirs() {
+  const dirs = [git('rev-parse', '--git-common-dir'), git('rev-parse', '--git-dir')].map((d) =>
+    path.resolve(repoRoot, d, 'hooks')
+  )
+  return [...new Set(dirs)]
 }
 
 /**
  * Report a `core.hooksPath` that would stop these hooks from ever running.
- * An unset value, or ggshield's forwarding directory, are both fine; anything
- * else takes precedence over `.git/hooks` and the install would be a no-op
- * that LOOKS successful, which is the failure worth naming out loud.
+ * Unset, or ggshield's forwarding directory, are both fine; anything else
+ * takes precedence and the install becomes a no-op that LOOKS successful,
+ * which is the failure worth naming out loud.
  */
 function warnIfHooksPathBypasses() {
   let configured = ''
   try {
-    configured = execFileSync('git', ['config', '--get', 'core.hooksPath'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim()
+    configured = git('config', '--get', 'core.hooksPath')
   } catch {
-    return // unset: git looks in .git/hooks, which is what we want
+    return // unset: git reads the repository's own hooks directory
   }
   if (!configured) return
-  const forwards = fs.existsSync(path.join(configured, '_dispatch'))
-  if (forwards) {
-    console.log(`  note: core.hooksPath is ${configured}, which forwards to .git/hooks`)
+  if (fs.existsSync(path.join(configured, '_dispatch'))) {
+    console.log(`  note: core.hooksPath is ${configured}, which forwards to the repo's hooks`)
     return
   }
   console.warn(
     `  WARNING: core.hooksPath is set to ${configured}, which takes precedence\n` +
-      '  over .git/hooks. These hooks will NOT run until that directory forwards\n' +
-      '  to the repository, or the setting is cleared.'
+      "  over the repository's hooks directory. These hooks will NOT run until that\n" +
+      '  directory forwards to the repository, or the setting is cleared.'
   )
+}
+
+/**
+ * The executable bit is part of the hook's contract, not packaging: ggshield's
+ * dispatcher guards on `[ -x ]` and exits 0 without it, so an unexecutable
+ * hook is an ABSENT gate rather than a broken one. Fail loudly instead of
+ * chmod-ing it here — a silent fix would dirty the working tree and, worse,
+ * would repair at install time the very thing the committed mode bit is
+ * supposed to guarantee, hiding a repo that had lost it.
+ */
+function assertExecutable(source, name) {
+  try {
+    fs.accessSync(source, fs.constants.X_OK)
+  } catch {
+    console.error(
+      `  ${name}: not executable.\n` +
+        `  Restore the bit and commit it: chmod +x .githooks/${name} && ` +
+        `git update-index --chmod=+x .githooks/${name}`
+    )
+    return false
+  }
+  return true
 }
 
 function install() {
@@ -66,9 +99,6 @@ function install() {
     console.error(`No tracked hooks directory at ${sourceDir}`)
     process.exit(1)
   }
-  const hooksDir = path.join(gitDir(), 'hooks')
-  fs.mkdirSync(hooksDir, { recursive: true })
-
   const names = fs.readdirSync(sourceDir).filter((n) => !n.startsWith('.'))
   if (names.length === 0) {
     console.error(`No hooks found in ${sourceDir}`)
@@ -76,37 +106,55 @@ function install() {
   }
 
   let installed = 0
-  for (const name of names) {
-    const source = path.join(sourceDir, name)
-    const target = path.join(hooksDir, name)
-    // Relative, so the link survives the repo being moved or renamed.
-    const linkTarget = path.relative(hooksDir, source)
-
-    fs.chmodSync(source, 0o755)
-
-    const existing = fs.lstatSync(target, { throwIfNoEntry: false })
-    if (existing) {
-      if (existing.isSymbolicLink() && fs.readlinkSync(target) === linkTarget) {
-        console.log(`  ${name}: already installed`)
-        installed += 1
+  let attempted = 0
+  for (const dir of hookDirs()) {
+    fs.mkdirSync(dir, { recursive: true })
+    for (const name of names) {
+      attempted += 1
+      const source = path.join(sourceDir, name)
+      if (!assertExecutable(source, name)) {
+        process.exitCode = 1
         continue
       }
-      // Never clobber silently. A hand-written hook in a clone is somebody's
-      // work, and this script has no way to know it is safe to discard.
-      console.error(
-        `  ${name}: ${target} already exists and is not our symlink.\n` +
-          '  Inspect and remove it, then re-run.'
-      )
-      process.exitCode = 1
-      continue
-    }
+      const target = path.join(dir, name)
+      // Relative, so the link survives the repo being moved or renamed.
+      const linkTarget = path.relative(dir, source)
 
-    fs.symlinkSync(linkTarget, target)
-    console.log(`  ${name}: installed`)
-    installed += 1
+      const existing = fs.lstatSync(target, { throwIfNoEntry: false })
+      if (existing) {
+        // Satisfied by any checkout's copy of the same tracked hook, not only
+        // by this one's. Run from a linked worktree, the common directory's
+        // link already points at the MAIN checkout's `.githooks`, and
+        // repointing it at a temporary worktree would leave the main clone
+        // with a dangling hook the moment that worktree is removed.
+        const points = existing.isSymbolicLink() ? path.resolve(dir, fs.readlinkSync(target)) : ''
+        if (points === path.resolve(source)) {
+          console.log(`  ${name} -> ${dir}: already installed`)
+          installed += 1
+          continue
+        }
+        if (points.endsWith(path.join('.githooks', name)) && fs.existsSync(points)) {
+          console.log(`  ${name} -> ${dir}: already installed via ${points}`)
+          installed += 1
+          continue
+        }
+        // Never clobber silently. A hand-written hook in a clone is somebody's
+        // work and this script cannot know it is safe to discard.
+        console.error(
+          `  ${name}: ${target} already exists and is not our symlink.\n` +
+            '  Inspect and remove it, then re-run.'
+        )
+        process.exitCode = 1
+        continue
+      }
+
+      fs.symlinkSync(linkTarget, target)
+      console.log(`  ${name} -> ${dir}: installed`)
+      installed += 1
+    }
   }
 
-  console.log(`git hooks: ${installed}/${names.length} installed into ${hooksDir}`)
+  console.log(`git hooks: ${installed}/${attempted} installed`)
   warnIfHooksPathBypasses()
 }
 

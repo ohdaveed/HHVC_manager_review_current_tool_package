@@ -133,6 +133,55 @@ describe('commit-msg hook: commits it must reject', () => {
   })
 })
 
+describe('commit-msg hook: regressions review caught', () => {
+  test('rejects a lone, EMPTY Claude-Session with no co-author', () => {
+    // The first version counted "session with a value" and "co-author"
+    // separately, so this message set neither and exited 0 — a commit
+    // announcing the trailer and supplying nothing passed the gate.
+    expect(accepts('fix: x\n\nClaude-Session:\n')).toBe(false)
+  })
+
+  test('matches Claude-Session case-insensitively', () => {
+    // Co-Authored-By was matched case-insensitively from the start and this
+    // one was not, which made lower-casing the token a way around the gate.
+    expect(accepts('fix: x\n\nclaude-session: abc-123\n')).toBe(false)
+  })
+
+  test('ignores a trailer-shaped line that ordinary prose follows', () => {
+    // Not a trailer at all: `git interpret-trailers --parse` reports nothing
+    // for this message. A whole-message grep counted it and handed out a pass.
+    const message = ['docs: describe the trailer syntax', '', `${SESSION}`, 'Then prose.', ''].join(
+      '\n'
+    )
+    expect(accepts(message)).toBe(true)
+  })
+
+  test('still enforces under `commit --verbose`, whose diff is not commented', () => {
+    // The scissors block's diff lines are raw, so leaving them in place makes
+    // the message stop ending in a trailer block and interpret-trailers
+    // reports NOTHING — which would read as "no co-author" and skip
+    // enforcement on precisely the commits that carry one.
+    const message = [
+      'fix: x',
+      '',
+      COAUTHOR,
+      '',
+      '# ------------------------ >8 ------------------------',
+      '# Do not modify or remove the line above.',
+      'diff --git a/a.txt b/a.txt',
+      '+something',
+      '',
+    ].join('\n')
+    expect(accepts(message)).toBe(false)
+  })
+
+  test('enforces on amend!, which replaces a message wholesale', () => {
+    // Unlike fixup!/squash!, an `amend!` commit carries its own full message,
+    // so exempting it was a free bypass for anything prefixed that way.
+    expect(accepts(`amend! fix: x\n\n${COAUTHOR}\n`)).toBe(false)
+  })
+})
+
 describe('commit-msg hook: message the author actually sees', () => {
   test('names the missing trailer and offers the escape hatch', () => {
     const file = path.join(tmpDir, 'msg-diagnostic')

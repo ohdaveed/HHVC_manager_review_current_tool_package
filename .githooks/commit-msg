@@ -41,24 +41,39 @@ git_dir=$(git rev-parse --git-dir 2>/dev/null) || exit 0
 # for it just the same.
 [ -e "$git_dir/MERGE_HEAD" ] && exit 0
 
-# Comment lines must go first: git's cleanup runs AFTER this hook, so the
-# file still holds the `#` status block. A trailer mentioned in there — or in
-# the diff `--verbose` appends — would otherwise read as present.
-body=$(sed -e '/^#/d' -e '/^diff --git /,$d' "$msg_file")
+# Strip what git will strip, BEFORE asking git to parse trailers. Cleanup runs
+# after this hook, so the file still carries the `#` status block and, under
+# `commit --verbose`, the scissors marker with a RAW diff beneath it. That
+# diff is the subtle one: its lines are not comments, so leaving it in place
+# means the message no longer ENDS in a trailer block and
+# `interpret-trailers` reports nothing at all -- which would read as "no
+# Co-Authored-By" and skip enforcement on exactly the commits that have it.
+body=$(sed -e '/^# *-* >8 -*/,$d' -e '/^diff --git /,$d' -e '/^#/d' "$msg_file")
 
-# These carry the target commit's trailers, not their own.
+# These reference another commit's message rather than carrying their own.
+# `amend!` is deliberately NOT here: it REPLACES a message wholesale, so it
+# needs the trailers as much as an ordinary commit does.
 case "$body" in
-  fixup!* | squash!* | amend!*) exit 0 ;;
+  fixup!* | squash!*) exit 0 ;;
 esac
 
-coauthor=$(printf '%s\n' "$body" | grep -ciE '^Co-Authored-By:[[:space:]]*.*claude' || true)
-session=$(printf '%s\n' "$body" | grep -cE '^Claude-Session:[[:space:]]*[^[:space:]]' || true)
-session_any=$(printf '%s\n' "$body" | grep -ciE '^Claude-Session:' || true)
+# Ask git what the trailers are rather than grepping the whole message. A
+# `Claude-Session:` line sitting mid-body with prose under it is not a
+# trailer, and `git interpret-trailers --parse` says so; a whole-message grep
+# counts it and hands out a pass. Verified both ways.
+trailers=$(printf '%s\n' "$body" | git interpret-trailers --parse 2>/dev/null || true)
+
+# Case-insensitive throughout: git preserves whatever case was typed, so
+# `claude-session:` is the same trailer and must not be a way around this.
+coauthor=$(printf '%s\n' "$trailers" | grep -ciE '^Co-Authored-By:[[:space:]]*.*claude' || true)
+session_any=$(printf '%s\n' "$trailers" | grep -ciE '^Claude-Session:' || true)
+session=$(printf '%s\n' "$trailers" | grep -ciE '^Claude-Session:[[:space:]]*[^[:space:]]' || true)
 
 fail() {
   echo "commit-msg: $1" >&2
   echo >&2
-  echo "  An AI-assisted commit in this repo carries BOTH trailers:" >&2
+  echo "  An AI-assisted commit in this repo carries BOTH trailers, in the" >&2
+  echo "  message's final trailer block:" >&2
   echo >&2
   echo "    Co-Authored-By: Claude <noreply@anthropic.com>" >&2
   echo "    Claude-Session: <session id or claude.ai/code URL>" >&2
@@ -68,15 +83,14 @@ fail() {
   exit 1
 }
 
-if [ "$coauthor" -gt 0 ] && [ "$session" -eq 0 ]; then
-  if [ "$session_any" -gt 0 ]; then
-    fail "Claude-Session: is present but has no value."
-  fi
-  fail "Co-Authored-By names Claude, but Claude-Session: is missing."
-fi
-
-if [ "$session" -gt 0 ] && [ "$coauthor" -eq 0 ]; then
-  fail "Claude-Session: is present, but no Co-Authored-By names Claude."
+# Either marker means the commit presents itself as AI-assisted, so both must
+# be there and the session must have a value. Testing them together is what
+# catches a lone, empty `Claude-Session:` -- which set neither counter in an
+# earlier version and passed.
+if [ "$coauthor" -gt 0 ] || [ "$session_any" -gt 0 ]; then
+  [ "$coauthor" -gt 0 ] || fail "Claude-Session: is present, but no Co-Authored-By names Claude."
+  [ "$session_any" -gt 0 ] || fail "Co-Authored-By names Claude, but Claude-Session: is missing."
+  [ "$session" -gt 0 ] || fail "Claude-Session: is present but has no value."
 fi
 
 exit 0
