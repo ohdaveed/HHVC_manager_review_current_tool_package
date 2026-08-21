@@ -103,8 +103,13 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # SUBSET, and a subset that happens to be all green reads as a pass.
    # Actions-only, so it is a floor rather than a census -- a required check
    # from another provider is still caught by `probe`, just not gated here.
+   # Scope to the GATING workflow, not every run for the sha. Filtering on
+   # head_sha alone also catches `link-check.yml`, which this repo makes
+   # non-gating on purpose so a third-party outage cannot block a merge; a
+   # manual dispatch of it against the branch would hold `sha_state` at
+   # `running` and time the loop out with CI already green.
    sha_state() {
-     gh api "repos/{owner}/{repo}/actions/runs?head_sha=$SHA" \
+     gh api "repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=$SHA" \
        --jq 'if .total_count==0 then "none"
              elif ([.workflow_runs[]|select(.status!="completed")]|length)>0
              then "running" else "done" end' 2>/dev/null
@@ -213,6 +218,18 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      cannot say what is missing, and `[].every()` is `true`. A run whose
      second job has not started yet reports one green check and reads as a
      pass. Closed by the `sha_state` precondition, not by counting.
+
+   **One residual this loop does NOT close, stated rather than papered over.**
+   `--required` cannot emit a row for a required context that produced no
+   check at all — a job renamed in `ci.yml` before branch protection was
+   updated to match, say. `sha_state` does not catch it either: it proves the
+   gating run finished, not that every required context exists. So a non-empty
+   all-pass subset reads `pass` while GitHub still refuses the merge. Closing
+   it needs the complete required-context inventory, which is the
+   Administration-only endpoint this loop dropped on purpose. What the loop
+   reports is therefore "every required check that EXISTS has passed", which is
+   not the same sentence as "GitHub will let you merge" — step 7 reads the
+   merge box, and step 6 prefers `--watch`, for exactly this gap.
 
    **Both of the first two were measured on this repo, 2026-08-21**, polling
    `gh pr checks --json name,bucket` every three seconds across a push to an
