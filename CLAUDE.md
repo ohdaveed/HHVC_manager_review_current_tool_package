@@ -1545,12 +1545,14 @@ CI after merges more than once.
 ## Security Reviews
 
 When asked for a security review of a diff or of changed files: do **not**
-start by reading every file. Start with `git diff` — or `gh pr diff` when the
-subject is a pull request — to load the actual changed hunks in one call, then
-summarize the attack surface those hunks expose in 3-5 bullets. That summary is
-what decides where to look next; reading first and summarizing afterwards
-inverts the order and spends the budget before the review has a shape. Read
-only the specific files those bullets flag.
+start by reading every file. Start with `git diff` — or `gh pr diff <number>`
+when the subject is a pull request, **always with the number**, since the bare
+form selects whatever PR belongs to the currently checked-out branch and that is
+routinely not the one under review — to load the actual changed hunks in one
+call, then summarize the attack surface those hunks expose in 3-5 bullets. That
+summary is what decides where to look next; reading first and summarizing
+afterwards inverts the order and spends the budget before the review has a
+shape. Read only the specific files those bullets flag.
 
 A **preliminary assessment** must land within the first 2 tool calls, and
 "nothing confirmed yet — here is the surface and where I am looking next" is a
