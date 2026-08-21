@@ -2,19 +2,25 @@
 name: ship
 description: Rebase, test, commit, push, open PR, watch CI, merge, verify deploy
 disable-model-invocation: true
-allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(gh api *) Bash(bun -e *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) Bash(bun run lint:dead-code:ci) Bash(bun run lint:architecture) Bash(bun run lint:js) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
+allowed-tools: Read Grep Glob Bash(git fetch *) Bash(git status *) Bash(git log *) Bash(git diff *) Bash(git rev-list *) Bash(git branch --show-current) Bash(gh pr view *) Bash(gh pr checks *) Bash(gh pr diff *) Bash(bun run test) Bash(bun run validate) Bash(bun run format:check) Bash(bun run lint:docs) Bash(bun run check:revert) Bash(bun run lint:dead-code:ci) Bash(bun run lint:architecture) Bash(bun run lint:js) mcp__plugin_playwright_playwright__browser_navigate mcp__plugin_playwright_playwright__browser_console_messages mcp__plugin_playwright_playwright__browser_evaluate mcp__plugin_playwright_playwright__browser_close
 ---
 
 **Read the frontmatter as it actually behaves.** `allowed-tools` is a
 PRE-APPROVAL — tools listed there run without a permission prompt — not a
 sandbox. It cannot deny anything. So the list above holds only read-only
 inspection: fetch, status, log, diff, rev-list, the read-only `gh pr`
-subcommands, the five gate scripts, and the four browser tools step 8 needs.
-`gh api *` and `bun -e *` are there for step 6's poll loop, which reads branch
-protection and filters JSON; both are reads, and without them a gate meant to
-run unattended stops for a prompt on its first iteration. The loop's `mktemp`
-and `rm -f` are deliberately NOT listed — `Bash(rm -f *)` pre-approves far more
-than one temp file, and one prompt per run is the cheaper side of that trade.
+subcommands, the eight gate scripts, and the four browser tools step 8 needs.
+**Step 6's poll loop is deliberately not pre-approved, and that costs a
+prompt.** `Bash(gh api *)` and `Bash(bun -e *)` were listed here briefly so the
+loop could run unattended. They were removed: a pre-approval is matched as a
+PREFIX, so `gh api *` covers `-X DELETE` just as well as a GET — `gh api`'s
+`--method` defaults to GET but its field flags switch a request to POST on
+their own — and `bun -e *` is arbitrary JavaScript, free to write files or
+spawn processes. Two patterns that broad would have pre-approved more mutation
+than every command in the paragraph below, which this skill withholds on
+purpose. The loop's `mktemp` and `rm -f` are absent for the identical reason:
+`Bash(rm -f *)` pre-approves far more than one temp file. One prompt per run is
+the cheaper side of that trade, and it is the same trade in all three cases.
 Every mutating command in this workflow — `git commit`, `git push`,
 `git rebase`, `git branch -D`, `gh pr create`, `gh pr merge` — is deliberately
 absent, which means this skill does not pre-approve them. **It does not mean
