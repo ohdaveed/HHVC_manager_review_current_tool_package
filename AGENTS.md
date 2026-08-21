@@ -91,7 +91,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 52 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 53 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
@@ -116,6 +116,14 @@ separately, every file that spells out an INDIVIDUAL label as a literal, which
 is most of the queue: those are string comparisons, so a renamed decision
 leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
+`doc-claims` (the count-claim scanner's own unit tests — pins the
+number-anchored capture against a `[\w-]+` false start, and the gap that
+must admit digit-bearing words like `e2e` rather than letters-only, since a
+letters-only gap would leave `.github/copilot-instructions.md`'s own e2e claim
+unseen by this pattern — not, as an earlier version of this note claimed, what
+let a wrong e2e spec count ship past CI once already; that was a file omitted
+from the old hand-maintained `(file x claim)` matrix, not a regex gap, per
+`build_scripts/doc-claims.js`'s own header comment),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
 `inline-content-edit-adapter` (the pure markdown/HTML serialization boundary
@@ -366,8 +374,8 @@ bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
 Order is enforced two ways. **Core modules enforce it themselves** — a module
 that needs `escapeHtml` imports it, and `js/core/state.js` imports
-`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all
-27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all of
+`pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/review/ux-improvements*.js`, `js/review/review-queue*.js`,
@@ -671,8 +679,8 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
-hierarchy one level deep), and **AI assist** and **Tool status** became
+**Sitemap** was removed outright (a fourth way to navigate the page set,
+drawing a hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
 static Netlify deploy live at the time had no runtime for, so on the build
 managers actually opened they were two permanently-empty panels holding two of
