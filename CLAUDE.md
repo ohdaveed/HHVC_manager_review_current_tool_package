@@ -336,28 +336,15 @@ in time". **Everything under `build_scripts/` is CommonJS now**; keep it that
 way, since `server.ts` named-imports those modules from TypeScript, which is the
 supported direction. Bumping `.bun-version` is fine, just deliberate.
 
-CI runs as a **multi-job graph** (not a single `checks` job):
+CI currently has **two jobs**:
 
-- **`changes`** — classifies the diff into `code` and `docs` outputs; all other
-  jobs gate their `if:` on these outputs.
-- **`docs_only_checks`** — docs-only PRs only: `lint:docs` + `format:check`;
-  heavy jobs are skipped.
-- **`format_validate_lint`** — code-changing PRs and all `main` pushes: full
-  format/revert/validate/lint gauntlet.
-- **`build_railway`** — downstream of `format_validate_lint`. Runs `build:railway`
-  (deploy-integrity check: fails if the committed workshop-form `dist` references
-  assets that were never committed).
-- **`build_singlefile`** — parallel with `build_railway`, downstream of
-  `format_validate_lint`. Runs `build:singlefile`.
-- **`unit`** — downstream of **`build_railway`** (not `format_validate_lint`
-  directly): `build:railway` must complete first so the `STATIC_ROOT` fallback test
-  can distinguish a correct result from a broken one.
-- **`e2e`** — downstream of `format_validate_lint`. Playwright, uploads
-  `playwright-report/` on failure.
+- **`checks`** — format check, revert check, validate, docs lint, dead-code lint,
+  architecture lint, JavaScript lint, `build:railway`, unit tests, and
+  `build:singlefile`.
+- **`e2e`** — Playwright end-to-end tests, uploading `playwright-report/` on
+  failure.
 
-On `push` to `main` all code jobs run unconditionally. A concurrency group
-cancels in-progress runs on the same ref. **Do not refer to a single `checks`
-job as the CI gate.**
+On both `push` (to `main`) and `pull_request`, these two jobs run.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
