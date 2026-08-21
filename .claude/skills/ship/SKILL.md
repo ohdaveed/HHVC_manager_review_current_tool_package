@@ -138,7 +138,12 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
          if (!Array.isArray(j)) { console.log("error"); return }
          if (j.length===0) { console.log("wait"); return } // [].every() is true
          if (j.some(c=>c.bucket==="pending")) { console.log("wait"); return }
-         console.log(j.every(c=>c.bucket==="pass") ? "pass" : "fail")
+         // `skipping` is GitHub's NEUTRAL, which branch protection does not
+         // block on -- treating it as failure aborts a PR the merge button
+         // would take. `cancel` is NOT in that set: a cancelled run never
+         // reported, so it has proved nothing.
+         const ok=c=>c.bucket==="pass"||c.bucket==="skipping"
+         console.log(j.every(ok) ? "pass" : "fail")
        })'
    }
 
@@ -172,8 +177,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      as success. Closed by asking what FINISHED, never what is absent.
    - **Accepting any bucket that is not `pending`.** `gh pr checks --help`
      defines `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so
-     `!= "pending"` exits just as happily on a FAILED job. Closed by requiring
-     `pass`.
+     `!= "pending"` exits just as happily on a FAILED job. Closed by naming the
+     acceptable buckets — `pass` and `skipping`, the latter because it is
+     GitHub's NEUTRAL and branch protection does not block on it, so scoring
+     it as failure aborts a PR the merge button would take. `cancel` stays a
+     failure: a cancelled run never reported, so it proved nothing.
    - **Letting a `gh` failure read as zero checks.** Expired auth or a
      transient 5xx leaves the required list empty and every count at zero, and
      zero compares equal to zero, which reads GREEN. Closed by giving an
