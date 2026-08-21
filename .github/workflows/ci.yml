@@ -23,32 +23,44 @@ jobs:
     name: Detect changed files
     runs-on: ubuntu-latest
     outputs:
-      code: ${{ steps.filter.outputs.code }}
-      docs: ${{ steps.filter.outputs.docs }}
+      code: ${{ steps.filter_code.outputs.code }}
+      docs: ${{ steps.filter_docs.outputs.docs }}
     steps:
       - uses: actions/checkout@v5
-      - id: filter
+
+      # TWO steps, because `predicate-quantifier` is per-invocation and the
+      # two filters need opposite semantics.
+      #
+      # `code` is a positive pattern narrowed by negations, so every rule has
+      # to match or the negations never get a say: under the default `some`,
+      # the leading `**` matches a Markdown file on its own and `code` comes
+      # back true for a docs-only PR.
+      - id: filter_code
         uses: dorny/paths-filter@v3
         with:
-          # `every`, not the default `some`. With `some` a path matches a
-          # filter when ANY of its patterns match, so the leading `**` in
-          # `code` matches a Markdown file and the negations below it never
-          # get a say -- `code` comes back true for a docs-only PR and
-          # `docs_only_checks` never runs at all. The default silently
-          # disables the whole docs-only path rather than failing.
           predicate-quantifier: every
           filters: |
-            docs:
-              - '**/*.md'
-              - 'docs/**'
-              - '.github/*.md'
-              - '.github/**/*.md'
             code:
               - '**'
               - '!**/*.md'
               - '!docs/**'
               - '!.github/*.md'
               - '!.github/**/*.md'
+
+      # `docs` is a list of ALTERNATIVES, so it needs the default `some`. No
+      # file can match `docs/**` and `.github/**/*.md` at once, so running it
+      # with `every` makes `docs` permanently false -- which disables the
+      # docs-only path just as thoroughly as the bug above, in the opposite
+      # direction.
+      - id: filter_docs
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            docs:
+              - '**/*.md'
+              - 'docs/**'
+              - '.github/*.md'
+              - '.github/**/*.md'
 
   docs_only_checks:
     name: Docs-only checks
