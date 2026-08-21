@@ -2,6 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Environment
+
+This repo is worked on from **WSL driving Windows apps** — the shell is Linux,
+and several of the programs it launches are Windows processes, so anything that
+renders in a terminal crosses that boundary before a human sees it.
+
+- **Starship is the source of truth for the prompt and the statusline.** A
+  Starship config already exists; prompt or statusline work means reading and
+  editing that config, not reimplementing its segments in bash. A hand-rolled
+  bash prompt that happens to look right is a second definition of something
+  already defined, free to drift from the config every other shell on this
+  machine actually renders.
+- **Nerd Font glyphs are expected — do not strip them.** They render correctly
+  here. A glyph that arrives as a missing-box placeholder in a diff, a log or a
+  tool's captured output is an artifact of that tool's font rather than a broken
+  character, and substituting ASCII to "fix" it degrades the prompt on a
+  terminal where it was already working.
+
 ## What this is
 
 A static, no-framework mockup tool for manager review of a redesigned HHVC
