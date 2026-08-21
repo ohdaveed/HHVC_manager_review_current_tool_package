@@ -2,10 +2,15 @@
 
 **This is a dated record, not standing documentation.** It captures what was found in
 `.claude/skills/ship/SKILL.md` on 2026-08-21, during PR #184 (`fix/ship-check-race`). Claims here
-were true on that date. Every blocker named below was fixed before the PR merged, so **do not read
-this file as a list of live defects** — read it for the failure shapes, which are the part worth
-keeping. One finding (S4) was **rejected on review as a security regression** and is recorded that
-way rather than quietly dropped. Corrections belong in the skill itself, not here.
+were true on that date. **Do not read this file as a list of live defects** — read it for the
+failure shapes, which are the part worth keeping. Where each finding actually closed:
+
+- **B1, B2, B3, S1, S5, S6** — fixed in PR #184, before it merged.
+- **S2, S3** — superseded by the census/floor split rather than fixed as stated.
+- **S7** — attempted in #184 and still broken; closed in PR #185 (`ef9c2d2`). See below.
+- **S4** — **rejected as a security regression.** Recorded rather than quietly dropped.
+
+Corrections belong in the skill itself, not here.
 
 ## Why this was worth reviewing at all
 
@@ -19,7 +24,7 @@ by extension and a security control by function.**
 
 Five agents ran in parallel, one per risk area, each verifying empirically rather than by reading:
 stubbed `gh` on `PATH` to force failure paths, crafted JSON through the real `bun -e` filter, and
-live `gh` calls to establish actual exit codes. The value came from the stubs — three of the five
+live `gh` calls to establish actual exit codes. The value came from the stubs — three of the ten
 findings below are invisible to a careful read of the snippet and only appear when you run it.
 
 ## Findings, with disposition
@@ -149,9 +154,17 @@ the absence of those entries as the intended design and leave it alone.
 
 ## The general shape
 
-Every defect here is the same one wearing different clothes: **an absence being read as a pass.** No
-pending checks, an empty required list, a filtered-away context, a subset that happens to be green, a
-SHA that quietly stopped referring to the thing that was tested. A gate that answers by counting what
-it can see cannot distinguish "nothing is wrong" from "nothing is there." The fixes all move in one
-direction — classify instead of count, name what must be present, and bind the verdict to a specific
-commit.
+**Most of the gate defects here are one shape wearing different clothes: an absence read as a pass.**
+No pending checks, an empty required list, a filtered-away context, a subset that happens to be
+green, a SHA that quietly stopped referring to the thing that was tested. A gate that answers by
+counting what it can see cannot distinguish "nothing is wrong" from "nothing is there."
+
+**Three findings do not fit that shape, and the summary is worth less if they are forced into it.**
+B2 is the inverse — an absence read as a FAILURE, aborting in the creation window it was written to
+survive. S1 is the same inversion at the bucket level: `skipping` scored as a failure when branch
+protection treats it as a pass. And S4 was not a gate defect at all; it was the review being wrong.
+
+That B1/B2 pair is the more useful lesson than either alone. The same missing check produced a false
+green in one place and a false abort in another, because two branches disagreed about what absence
+meant. The fixes all move in one direction — classify instead of count, decide explicitly what an
+absence means, name what must be present, and bind the verdict to a specific commit.
