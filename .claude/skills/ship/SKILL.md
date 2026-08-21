@@ -64,16 +64,29 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    REVISIONS (`origin/main` against `HEAD`) and reads neither the index nor the
    working tree, so run before the commit it inspects the previous commit and
    passes while the restoring change sits unexamined in the tree.
-5. `SHA=$(git rev-parse HEAD)`, then `git push -u origin HEAD` and
-   `gh pr create --fill`. **Capture the SHA here, not inside step 6's optional
-   polling snippet** — step 7 binds its head comparison and
-   `--match-head-commit` to `$SHA`, and `--watch` is the primary route, so a
-   `SHA` that only exists on the fallback path leaves the default one
-   comparing against an empty variable. If step 2 rebased a
+5. Record the pushed commit to a FILE, then push and open the PR:
+
+   ```sh
+   git rev-parse HEAD > "$(git rev-parse --git-dir)/ship-sha"
+   git push -u origin HEAD && gh pr create --fill
+   ```
+
+   **A shell variable does not survive this workflow.** Steps 6 and 7 run as
+   separate commands — separate shells — so `SHA=$(git rev-parse HEAD)` set
+   here is gone by the time step 7 compares against it, and a step 6 that
+   re-derives it from `git rev-parse HEAD` picks up whatever `HEAD` has become
+   since. That is not hypothetical: step 6 ends by clearing review threads,
+   which usually means new commits. Every later step reads
+   `SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")`. It lives under
+   `.git/` so it is never committed and never collides between clones.
+
+   This run needed exactly that workaround to carry the value between steps,
+   which is why it is the instruction rather than a footnote. If step 2 rebased a
    branch that had already been pushed, this plain push is rejected as
    non-fast-forward and the run stops before a PR exists — capture the remote
    OID beforehand and push with `--force-with-lease=<ref>:<oid>`, which refuses
    if anyone else moved the ref meanwhile.
+
 6. Wait for CI, then clear every review thread. This repo's `main` requires
    conversation resolution, so one unanswered bot comment blocks the merge
    with all checks green.
@@ -115,9 +128,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 
    ```sh
    PR=<the pull request number>
-   # Set in step 5. Re-derive here only if you are running this block alone;
-   # in a full /ship run it is already bound to the commit you pushed.
-   SHA=${SHA:-$(git rev-parse HEAD)}
+   # Read the commit step 5 recorded. NOT `git rev-parse HEAD`: this block
+   # runs in its own shell, and by the time it is re-entered after a review
+   # fix, HEAD is the new commit while the run being judged is still the old
+   # one. Re-push means re-record -- step 5's line again -- then re-enter here.
+   SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")
 
    # Bind to the commit you pushed. `gh pr checks` describes whatever the PR
    # points at RIGHT NOW, which in the seconds after a push is still the
@@ -355,9 +370,10 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      measures local `HEAD` against the base branch, so an unpushed commit still
      reads as an ordinary `0 N`.
    - The head GitHub holds equals the head **whose CI you actually watched**.
-     Step 6 bound its verdict to `$SHA`; carry that variable in rather than
-     recomputing, and require THREE values to agree: `$SHA`, a fresh
-     `git rev-parse HEAD`, and a fresh `gh pr view --json headRefOid`.
+     Step 6 bound its verdict to the commit step 5 recorded, so read it back
+     the same way — `SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")` — and
+     require THREE values to agree: that `$SHA`, a fresh `git rev-parse HEAD`,
+     and a fresh `gh pr view --json headRefOid`.
      Recomputing the local head is the hole, and it is the ordinary path
      rather than an exotic one: step 6 ends by clearing review threads, a
      cleared thread is usually a commit, and that commit moves `HEAD` and the
@@ -380,6 +396,43 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    matches a freshly fetched `origin/main` — not local `HEAD`, which is a
    different commit after a squash merge. A `curl` status code can come from
    the previous deployment and cannot see the console.
+
+   **Ask Railway for that commit; the app does not carry it.** Nothing in this
+   repo stamps a build with its revision — no version route in `server.ts`, no
+   marker in the HTML, no injection in `vite.config.mjs` — so there is nothing
+   to read off the page and the comparison has no left-hand side without this.
+
+   The Railway MCP's `list_deployments` is the direct route, scoped to the
+   `web` service in `production` — unscoped it also lists the Postgres
+   service, whose rows carry no commit at all. It returns
+   `id | status | timestamp | commit` per deployment, newest first, and the
+   rule is about the NEWEST row rather than the newest green one:
+
+   - The newest row must be `SUCCESS` **and** its commit must equal
+     `origin/main`. Both, or you are not looking at your deploy.
+   - Do not scan past it for the first `SUCCESS`. Any newer row in any other
+     state — `REMOVED`, `FAILED`, `CRASHED`, still `BUILDING` or `DEPLOYING`,
+     queued, awaiting approval — means something has happened since the
+     deploy you want to verify, and the enumeration is deliberately not
+     exhaustive here because Railway is free to add states. Treat "newest row
+     is not a matching SUCCESS" as not-yet-verified: wait, or go look.
+   - A row whose commit field is absent fails CLOSED. Missing metadata is not
+     a match, and it is the shape a non-git deploy (an image, a rollback)
+     takes.
+
+   This is the case a page that loads cannot show you: the previous
+   deployment answers 200 perfectly well while the new one is still building
+   or has already crashed.
+
+   **Without that tool, `railway status --json` carries the same field but
+   NOT as a lookup — navigate it, never grep it.** It describes the whole
+   project, so it holds several 40-hex strings and only one is the commit you
+   want: the path is the `production` environment's `serviceInstances` entry
+   whose `serviceName` is **`web`**, then `activeDeployments[0].meta
+.commitHash`. Grepping for a 40-hex matches `imageDigest` too, and the
+   Postgres service instance beside `web` carries no `commitHash` at all —
+   both verified here while writing this.
+
 9. Switch to `main` and pull. `--delete-branch` in step 7 already removed both
    copies; if one survived, delete it by name with `git branch -D <branch>` —
    a squash merge leaves it unmerged in git's view, so `-d` refuses.
