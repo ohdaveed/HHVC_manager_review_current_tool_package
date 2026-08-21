@@ -27,7 +27,11 @@
 // which carries it as "within the first 2\n  tool calls" — a false positive
 // produced by a line break, and the same failure mode AGENTS.md's refactor
 // guidance names: a path or phrase line-wrapped in prose is invisible to a
-// scripted pass. Every comparison here runs over whitespace-collapsed text.
+// scripted pass. So the SHARED-CLAIM searches run over whitespace-collapsed
+// text — and only those. IDENTICAL_SECTIONS deliberately compares raw bodies,
+// because byte identity is what it asserts: normalizing there would wave
+// through a rewrap of one mirror and not the other, which is drift in exactly
+// the sections declared to be word-for-word the same.
 
 import { describe, test, expect } from 'bun:test'
 import { readFileSync, existsSync } from 'node:fs'
