@@ -399,11 +399,27 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    marker in the HTML, no injection in `vite.config.mjs` — so there is nothing
    to read off the page and the comparison has no left-hand side without this.
 
-   The Railway MCP's `list_deployments` is the direct route: it returns
-   `id | status | timestamp | commit` per deployment, and the newest `SUCCESS`
-   row's commit must equal `origin/main`. A `REMOVED` or `FAILED` row above it
-   means the newest deploy is not the one serving, which is exactly what a
-   page that loads cannot show you.
+   The Railway MCP's `list_deployments` is the direct route, scoped to the
+   `web` service in `production` — unscoped it also lists the Postgres
+   service, whose rows carry no commit at all. It returns
+   `id | status | timestamp | commit` per deployment, newest first, and the
+   rule is about the NEWEST row rather than the newest green one:
+
+   - The newest row must be `SUCCESS` **and** its commit must equal
+     `origin/main`. Both, or you are not looking at your deploy.
+   - Do not scan past it for the first `SUCCESS`. Any newer row in any other
+     state — `REMOVED`, `FAILED`, `CRASHED`, still `BUILDING` or `DEPLOYING`,
+     queued, awaiting approval — means something has happened since the
+     deploy you want to verify, and the enumeration is deliberately not
+     exhaustive here because Railway is free to add states. Treat "newest row
+     is not a matching SUCCESS" as not-yet-verified: wait, or go look.
+   - A row whose commit field is absent fails CLOSED. Missing metadata is not
+     a match, and it is the shape a non-git deploy (an image, a rollback)
+     takes.
+
+   This is the case a page that loads cannot show you: the previous
+   deployment answers 200 perfectly well while the new one is still building
+   or has already crashed.
 
    **Without that tool, `railway status --json` carries the same field but
    NOT as a lookup — navigate it, never grep it.** It describes the whole
