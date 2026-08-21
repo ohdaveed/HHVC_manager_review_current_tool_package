@@ -82,6 +82,13 @@
 .form-success {
   border-left: 4px solid var(--sfds-green, #026800);
   background: var(--sfds-success-bg, #ecf8ed);
+  /* PIN THE INK TO THE BACKGROUND. This block sets a light background and used
+     to inherit its colour from `body`, which `css/theme.css` flips to #f0f1f2
+     under `prefers-color-scheme: dark` -- 1.03:1 against #ecf8ed, an
+     invisible panel. This sub-app has no dark-mode block of its own, so the
+     pair has to be stated together or the next theme change breaks it again.
+     #14231a on #ecf8ed is 14.95:1. */
+  color: #14231a;
   padding: 1rem 1rem 1rem 1.1rem;
   border-radius: 6px;
 }
@@ -89,6 +96,17 @@
 .form-success h2 {
   margin: 0 0 0.5rem;
   font-size: 1.2rem;
+  /* INHERIT, explicitly. Pinning the colour on `.form-success` is not enough
+     for this heading: `css/styles.css` declares `h2 { color: var(--text-primary) }`
+     on the element itself, and an explicit declaration beats an inherited
+     value however specific the ancestor is. In dark mode that token is
+     #f0f1f2 -- 1.03:1 on this panel's #ecf8ed, an invisible heading. `.form-success h2`
+     outranks the bare `h2`, so this takes the panel's pinned 14.95:1 ink.
+     The link below it needs no such rule: `a` resolves to #495ed4, which is
+     5.01:1 here. `css/sfds.css` does re-declare that token inside its
+     dark block, but to the SAME literal, so the pairing holds in both
+     modes -- checked rather than assumed. */
+  color: inherit;
 }
 
 .form-success p {
@@ -98,3 +116,60 @@
 .required-mark {
   color: #8f1d15;
 }
+
+/* --------------------------------------------------------------------------
+   Design-reference affordances
+   --------------------------------------------------------------------------
+   This form has no intake backend and never sends anything. The banner and
+   the captured-value table are what make that legible to a reviewer: an
+   earlier version simply attempted a POST, which since Netlify's retirement
+   fails with a 405 and reads as a broken form rather than as a mock.
+   -------------------------------------------------------------------------- */
+
+.form-mock-banner {
+  /* Amber rather than the error red used by .form-error: this is a standing
+     property of the page, not something that went wrong. Contrast checked
+     against the note background: #7a4a00 on #fff8e6 is 7.06:1, above the 4.5:1
+     WCAG AA floor for body text. */
+  background: #fff8e6;
+  border-left: 4px solid #b26a00;
+  color: #7a4a00;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+}
+
+.form-summary {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.form-summary th,
+.form-summary td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.75rem;
+  /* Inherits .form-success's pinned ink. The rule sits INSIDE that panel, so
+     it must not reintroduce a colour of its own. Border is 3.37:1 against the
+     panel, above the 3:1 WCAG floor for a non-text boundary. */
+  border-bottom: 1px solid #5c9169;
+}
+
+.form-summary th {
+  /* The label column is the point of the table — it IS the field inventory —
+     so it carries the weight rather than the value beside it. */
+  font-weight: 600;
+  width: 40%;
+}
+
+.form-summary td em {
+  /* 7.41:1 against the panel's #ecf8ed -- measured there, not against white,
+     which is not the background this text ever sits on. */
+  color: #41544a;
+}
+
+/*
+  `.visually-hidden` is deliberately NOT defined here. This page links
+  /css/styles.css, which already declares it; a second copy would be free to
+  drift from the one the rest of the tool uses.
+*/

@@ -1407,11 +1407,14 @@ const server = serve({
     // `response.ok` as "the server took it" got a false success for a request
     // nothing received and nothing stored.
     //
-    // That is not hypothetical. forms/mosquito-workshop-request/ POSTs to "/"
-    // by the Netlify Forms convention; there is no Netlify handler on Railway,
-    // so it rendered a confirmation screen for every silently discarded
-    // submission. A false success is strictly worse than a visible failure,
-    // because nobody retries and nobody reports it.
+    // That is not hypothetical. forms/mosquito-workshop-request/ USED TO POST
+    // to "/" by the Netlify Forms convention; there is no Netlify handler on
+    // Railway, so it rendered a confirmation screen for every silently
+    // discarded submission. A false success is strictly worse than a visible
+    // failure, because nobody retries and nobody reports it. That form no
+    // longer submits at all — it is a design reference that previews what it
+    // captures — so this guard now protects any FUTURE client that POSTs
+    // here, which is reason enough to keep it.
     //
     // 405 rather than 404: the path DOES exist, the verb is what is wrong, and
     // Allow tells a client which verbs are real. The /api/* routes are matched

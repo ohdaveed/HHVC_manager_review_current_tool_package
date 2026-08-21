@@ -1,0 +1,117 @@
+#!/bin/sh
+# commit-msg — require the `Claude-Session` trailer on AI-assisted commits.
+#
+# WHY THIS FILE IS TRACKED AND .git/hooks IS NOT. Hooks under `.git/hooks` are
+# per-clone and never committed, so a rule written there exists only on the
+# machine that wrote it. This is the real copy; `bun run hooks:install`
+# symlinks `.git/hooks/commit-msg` at it.
+#
+# WHY NOT `core.hooksPath`. That is the usual way to ship tracked hooks, and
+# here it would be a SECURITY REGRESSION: it is already set globally to
+# ggshield's hook directory, and a repo-local value overrides the global one
+# outright, silently disabling the secret scan that runs on pre-push. It is
+# not needed either — ggshield's `_dispatch` forwards every hook to
+# `$(git rev-parse --git-dir)/hooks/<name>` when that file is executable, so
+# a repo-local hook already runs. Leave `core.hooksPath` alone.
+#
+# THE RULE IS A PAIRING, NOT A BLANKET REQUIREMENT. AGENTS.md asks
+# AI-assisted commits to carry BOTH `Co-Authored-By` and `Claude-Session`. A
+# human's own commit is not AI-assisted, and a hook demanding the trailer on
+# every commit would block ordinary work. The only thing in a message that
+# can identify an AI-assisted commit is the `Co-Authored-By` line naming
+# Claude, so that is the trigger, and the check runs in both directions:
+# either trailer implies the other.
+#
+# THE KNOWN GAP, stated rather than hidden: a commit carrying NEITHER trailer
+# is invisible to this hook. Nothing in the message distinguishes it from a
+# human commit, and closing that would mean failing every human commit. The
+# hook raises the floor; it is not a proof of provenance.
+#
+# `git commit --no-verify` bypasses this, as it bypasses every hook. That is
+# git's behaviour, not an oversight here.
+
+set -u
+
+msg_file=${1:-}
+[ -n "$msg_file" ] && [ -f "$msg_file" ] || exit 0
+
+# A merge is NOT exempt. An earlier version returned early whenever
+# MERGE_HEAD existed, reasoning that a merge message is generated rather than
+# authored -- but `git merge -m` takes a message the developer wrote, and that
+# turned every merge into a way around the gate. Measured: `commit-msg` does
+# run for `git merge`, receiving `.git/MERGE_MSG`, and a failing hook stops
+# the merge. The exemption was unnecessary as well as harmful, because the
+# rule below only fires when a Claude trailer is PRESENT and git's own
+# generated merge messages carry none.
+
+# Strip what git will strip, BEFORE asking git to parse trailers. Cleanup runs
+# after this hook, so the file still carries the `#` status block and, under
+# `commit --verbose`, the scissors marker with a RAW diff beneath it. That
+# diff is the subtle one: its lines are not comments, so leaving it in place
+# means the message no longer ENDS in a trailer block and
+# `interpret-trailers` reports nothing at all -- which would read as "no
+# Co-Authored-By" and skip enforcement on exactly the commits that have it.
+# `git stripspace --strip-comments` rather than a `#` sed: the comment
+# character is configurable (`core.commentChar`), and a hand-rolled `#` strip
+# leaves a `;`-commented status block in place, which ends the message in a
+# non-trailer block so the parser finds nothing and an unpaired co-author is
+# accepted. git honours whatever is configured; we should not second-guess it.
+# The scissors and its RAW diff still need removing by hand, because those
+# lines are not comments at all.
+body=$(sed -e '/^diff --git /,$d' "$msg_file" | git stripspace --strip-comments)
+
+# These reference another commit's message rather than carrying their own.
+# `amend!` is deliberately NOT here: it REPLACES a message wholesale, so it
+# needs the trailers as much as an ordinary commit does.
+case "$body" in
+  fixup!* | squash!*) exit 0 ;;
+esac
+
+# Ask git what the trailers are rather than grepping the whole message. A
+# `Claude-Session:` line sitting mid-body with prose under it is not a
+# trailer, and `git interpret-trailers --parse` says so; a whole-message grep
+# counts it and hands out a pass. Verified both ways.
+# `-c trailer.separators=:` is not decoration. The setting is configurable
+# per user and per repo, and a value without a colon (`=`, say) makes
+# `--parse` return NOTHING for this repo's colon-form trailers -- every
+# counter zero, and an unpaired Claude co-author accepted. Measured.
+trailers=$(printf '%s\n' "$body" |
+  git -c trailer.separators=: interpret-trailers --parse 2>/dev/null || true)
+
+# Case-insensitive throughout: git preserves whatever case was typed, so
+# `claude-session:` is the same trailer and must not be a way around this.
+# Match the AGENT, not the string "claude". A human co-author can legitimately
+# be called Claude -- `Co-Authored-By: Claude Dupont <claude@example.com>` --
+# and a substring match classified them as AI and demanded a session id they
+# have no way to produce. The identity that actually signs these commits is an
+# anthropic.com address: 593 of the 593 Co-Authored-By trailers naming the
+# agent in this repository's history use `noreply@anthropic.com`.
+coauthor=$(printf '%s\n' "$trailers" | grep -ciE '^Co-Authored-By:.*@anthropic\.com' || true)
+session_any=$(printf '%s\n' "$trailers" | grep -ciE '^Claude-Session:' || true)
+session=$(printf '%s\n' "$trailers" | grep -ciE '^Claude-Session:[[:space:]]*[^[:space:]]' || true)
+
+fail() {
+  echo "commit-msg: $1" >&2
+  echo >&2
+  echo "  An AI-assisted commit in this repo carries BOTH trailers, in the" >&2
+  echo "  message's final trailer block:" >&2
+  echo >&2
+  echo "    Co-Authored-By: Claude <noreply@anthropic.com>" >&2
+  echo "    Claude-Session: <session id or claude.ai/code URL>" >&2
+  echo >&2
+  echo "  Amend the message to add the missing one, or re-run with" >&2
+  echo "  --no-verify if this commit genuinely is not AI-assisted." >&2
+  exit 1
+}
+
+# Either marker means the commit presents itself as AI-assisted, so both must
+# be there and the session must have a value. Testing them together is what
+# catches a lone, empty `Claude-Session:` -- which set neither counter in an
+# earlier version and passed.
+if [ "$coauthor" -gt 0 ] || [ "$session_any" -gt 0 ]; then
+  [ "$coauthor" -gt 0 ] || fail "Claude-Session: is present, but no Co-Authored-By names Claude."
+  [ "$session_any" -gt 0 ] || fail "Co-Authored-By names Claude, but Claude-Session: is missing."
+  [ "$session" -gt 0 ] || fail "Claude-Session: is present but has no value."
+fi
+
+exit 0
