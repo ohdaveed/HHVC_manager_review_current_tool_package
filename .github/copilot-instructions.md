@@ -124,11 +124,23 @@ in exactly one stylesheet.
 
 ## Workflow & verification
 
-- **Security reviews start from the diff.** Asked to review changed files, run
-  `git diff` (or `git diff --stat` then `git diff <paths>`) and work from the
-  hunks — do not read files one at a time first. Report findings per file as you
-  go, within the first few tool calls; open a full file only when a hunk is
-  ambiguous.
+- **Security reviews start from the diff, naming the subject.** Every bare form
+  defaults to something else, and each prints something reassuring rather than
+  nothing. Uncommitted work: `git diff HEAD` plus `git status --short` — bare
+  `git diff` diffs against the index, so a staged change is invisible, and no
+  diff shows untracked files. A named commit: `git show --first-parent <sha>` —
+  bare `git show` omits the patch on a merge commit, `<sha>^ <sha>` aborts when
+  the parent does not resolve, and a shallow clone needs
+  `git fetch --deepen=1 origin` first (the repository, not the SHA) or the
+  boundary commit reads as an all-new
+  snapshot. A pull request: `gh pr diff <number>` — the bare form picks the
+  current branch's PR. Summarize the attack surface in 3-5 bullets before
+  opening anything else; those bullets decide what gets read. Do not read files
+  one at a time first. A preliminary **assessment** lands within the first 2
+  tool calls, and "nothing confirmed yet, here is the surface" is a valid one:
+  the deadline is on saying something, never on having found something, since a
+  clean diff has no findings. Report findings per file as you go rather than
+  batching them; open a full file only when a hunk is genuinely ambiguous.
 - **Definition of done:** tests pass, changes committed, pushed to origin, PR
   opened if on a branch, CI green. Never leave commits unpushed on a local
   branch, and re-fetch before merging to confirm the remote head has them all.
