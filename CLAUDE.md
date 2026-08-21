@@ -1546,14 +1546,16 @@ CI after merges more than once.
 
 When asked for a security review of a diff or of changed files: do **not**
 start by reading every file. Load the actual changed hunks in one call, using
-the command that matches what is actually under review — `git diff` for
+the command that matches what is actually under review — `git diff HEAD` for
 uncommitted work, `git diff <sha>^ <sha>` when the request names a commit,
-`gh pr diff <number>` when it names a pull request. **Pass the revision or the
-number explicitly.** Bare `git diff` shows only unstaged working-tree changes,
-and bare `gh pr diff` selects whatever PR belongs to the current branch, so on
-any other subject each reports on something that is not the thing being
-reviewed — and a review that reads the wrong diff reports clean on code it
-never saw. Then summarize the attack surface those hunks expose in 3-5 bullets.
+`gh pr diff <number>` when it names a pull request. **`HEAD`, the revision, or
+the number: always name the subject.** Bare `git diff` compares the working
+tree to the INDEX, so a change that is merely staged is invisible to it — a
+staged secret produces an empty diff and a clean-looking review — and bare
+`gh pr diff` selects whatever PR belongs to the current branch. A review that
+reads the wrong diff reports clean on code it never saw. No diff form shows
+untracked files at all, so pair the local case with `git status --short` and
+read anything new. Then summarize the attack surface those hunks expose in 3-5 bullets.
 That summary is what decides where to look next; reading first and summarizing
 afterwards inverts the order and spends the budget before the review has a
 shape. Read only the specific files those bullets flag.
