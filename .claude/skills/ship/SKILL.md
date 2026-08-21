@@ -77,40 +77,57 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 
    ```sh
    # The required checks are whatever branch protection says they are. Do not
-   # write the job names here: that is a second inventory, and a renamed job
-   # would leave this polling forever against an already-green PR.
-   REQUIRED=$(gh api repos/{owner}/{repo}/branches/main/protection \
-     --jq '.required_status_checks.contexts[]')
+   # write the job names here: that is a second inventory of something ci.yml
+   # owns, and a renamed job would leave this polling an already-green PR.
+   # Every step below fails CLOSED — an error reading GitHub must never look
+   # like a pass.
+   REQUIRED=$(gh api "repos/{owner}/{repo}/branches/main/protection" \
+     --jq '.required_status_checks.contexts[]') \
+     || { echo "ABORT: cannot read branch protection"; exit 1; }
    want=$(printf '%s\n' "$REQUIRED" | grep -c .)
+   [ "$want" -gt 0 ] || { echo "ABORT: no required checks resolved"; exit 1; }
 
    # `gh pr checks --jq` accepts no --arg, and jq is not a dependency here, so
-   # bun does the filtering.
-   count() { gh pr checks "$1" --json name,bucket | REQ="$REQUIRED" MODE="$2" bun -e '
-     let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-       const req=(process.env.REQ||"").split("\n").filter(Boolean)
-       let j=[]; try{ j=JSON.parse(s) }catch{}
-       const mine=j.filter(c=>req.includes(c.name))
-       console.log(process.env.MODE==="settled"
-         ? mine.filter(c=>c.bucket!=="pending").length
-         : mine.filter(c=>c.bucket!=="pass").length)
-     })'; }
+   # bun filters. It exits non-zero on anything it cannot answer from.
+   count() {
+     out=$(gh pr checks "$PR" --json name,bucket) || return 1
+     printf '%s' "$out" | REQ="$REQUIRED" MODE="$1" bun -e '
+       let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+         const req=(process.env.REQ||"").split("\n").filter(Boolean)
+         let j
+         try { j=JSON.parse(s) } catch { process.exit(1) }   // unparseable -> fail closed
+         if (!Array.isArray(j) || j.length===0) process.exit(1)
+         const mine=j.filter(c=>req.includes(c.name))
+         if (mine.length !== req.length) process.exit(1)     // a required check missing
+         console.log(process.env.MODE==="settled"
+           ? mine.filter(c=>c.bucket!=="pending").length
+           : mine.filter(c=>c.bucket!=="pass").length)
+       })'
+   }
 
-   until [ "$(count N settled)" = "$want" ]; do sleep 20; done   # exist AND settled
-   [ "$(count N notpass)" = "0" ] || { echo "CI is not green"; exit 1; }
+   until s=$(count settled) && [ "$s" = "$want" ]; do
+     [ -n "${s:-}" ] || { echo "ABORT: cannot read check status"; exit 1; }
+     sleep 20
+   done
+   np=$(count notpass) || { echo "ABORT: cannot read check status"; exit 1; }
+   [ "$np" = "0" ] || { echo "ABORT: CI is not green ($np not passing)"; exit 1; }
    ```
 
-   **Neither half is optional.** The loop exists because waiting for an ABSENCE
-   of pending checks returns instantly in the seconds before GitHub creates
-   them, reporting a stale or missing result as success — which happened twice
-   while this skill was being written. The pass check exists because
-   `gh pr checks --help` defines `bucket` as `pass`, `fail`, `pending`,
-   `skipping` or `cancel`, so waiting only for `!= "pending"` exits just as
-   happily on a FAILED, cancelled or skipped job, and swallows `gh`'s own
-   non-zero exit inside the substitution — the very signal `--watch` would have
-   given you. Keep only the loop and you have traded "merges too early" for
-   "merges on red", which is worse. `gh pr checks` also exits non-zero with
-   `no checks reported on the '<branch>' branch` inside that creation window, so
-   tolerate that rather than reading it as failure.
+   **Three separate ways this reports a false green, all of them closed above.**
+   Waiting for an ABSENCE of pending checks returns instantly in the seconds
+   before GitHub creates them, reporting a stale or missing result as success —
+   that happened twice while this skill was written. `gh pr checks --help`
+   defines `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so
+   waiting only for `!= "pending"` exits just as happily on a FAILED job and
+   swallows `gh`'s non-zero exit inside the substitution. And if either `gh`
+   call fails outright — expired auth, a transient 5xx — an unguarded version
+   leaves `REQUIRED` empty, `want` at zero, and every count at zero, which
+   compares equal and reads GREEN.
+
+   That third one is the worst of the three, because it fires exactly when you
+   have least reason to suspect it. `gh pr checks` also exits non-zero with
+   `no checks reported on the '<branch>' branch` inside the creation window,
+   which is why the loop distinguishes "no answer" from "not yet finished".
 
    Trading one silent wrong answer for another is the trap this whole step
    exists to name.
