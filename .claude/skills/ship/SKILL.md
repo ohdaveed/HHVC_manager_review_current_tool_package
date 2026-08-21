@@ -30,8 +30,8 @@ absent, so each one stops for permission at the moment it runs. That, plus
    forces a force-push into a live review.
 3. `bun install --frozen-lockfile` first — on a fresh checkout the first gate
    otherwise fails for a missing Prettier rather than for anything you changed.
-   Then run what CI's `checks` job runs, in its order: `format:check`,
-   `check:revert`, `validate`, `lint:docs`, `lint:dead-code:ci`,
+   Then run what CI's `checks` job runs, minus `check:revert`, which belongs in
+   step 4: `format:check`, `validate`, `lint:docs`, `lint:dead-code:ci`,
    `lint:architecture`, `lint:js`, `build:railway`, `test`, `build:singlefile`.
    The `e2e` job additionally runs `test:e2e` behind a Chromium install; run it
    locally when the change touches the UI, and otherwise let CI cover it. Stop
@@ -43,6 +43,10 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    `Claude-Session` trailers this repo requires of AI-assisted commits, then
    read it back with `git log -1 --format=%B` and confirm both are present. An
    instruction to include a trailer is not evidence that one was written.
+   Then run `bun run check:revert` — HERE, not in step 3. It compares two
+   REVISIONS (`origin/main` against `HEAD`) and reads neither the index nor the
+   working tree, so run before the commit it inspects the previous commit and
+   passes while the restoring change sits unexamined in the tree.
 5. `git push -u origin HEAD` then `gh pr create --fill`
 6. `gh pr checks --watch`, then clear every review thread. This repo's `main`
    requires conversation resolution, so one unanswered bot comment blocks the
