@@ -1558,7 +1558,8 @@ bare form quietly defaults to something else:
   its stat and then omits the patch, so a secret merged cleanly off a branch
   renders as a review that looks finished. Not `git diff <sha>^ <sha>`: it
   aborts wherever the parent does not resolve, including a root commit. In a
-  shallow clone run `git fetch --deepen 1 <sha>` first — at the boundary Git
+  shallow clone run `git fetch --deepen=1 origin` first (the repository, not
+  the SHA — `git fetch` reads its first positional as the repository) — at the boundary Git
   treats the commit as a root and renders the whole snapshot as
   `new file mode`, which a reader cannot tell from code the commit added.
 - **A pull request:** `gh pr diff <number>`. The bare form selects whatever PR

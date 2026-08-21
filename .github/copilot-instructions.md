@@ -131,7 +131,8 @@ in exactly one stylesheet.
   diff shows untracked files. A named commit: `git show --first-parent <sha>` —
   bare `git show` omits the patch on a merge commit, `<sha>^ <sha>` aborts when
   the parent does not resolve, and a shallow clone needs
-  `git fetch --deepen 1 <sha>` first or the boundary commit reads as an all-new
+  `git fetch --deepen=1 origin` first (the repository, not the SHA) or the
+  boundary commit reads as an all-new
   snapshot. A pull request: `gh pr diff <number>` — the bare form picks the
   current branch's PR. Summarize the attack surface in 3-5 bullets before
   opening anything else; those bullets decide what gets read. Do not read files
