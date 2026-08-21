@@ -23,8 +23,11 @@
 // which is brittle in the direction that matters: it fails on rewordings that
 // are fine and still misses reversals phrased another way. So this gate covers
 // a fact being DELETED from a mirror or DIVERGING between them, and a semantic
-// reversal remains a human reviewer's job. Better a narrow check that holds
-// than a wide one that lies about its reach.
+// reversal remains a human reviewer's job. Nor does a file-scoped claim on a
+// REPEATED identifier catch its defining mention drifting while other mentions
+// remain — which is why only identifiers appearing at most twice per mirror are
+// registered at all. Better a narrow check that holds than a wide one that lies
+// about its reach.
 //
 // WHY NOT COMPARE THE FILES. They are deliberately not byte-identical, and a
 // naive equality check would be wrong rather than merely noisy. Measured on
@@ -119,22 +122,35 @@ const SHARED_CLAIMS = [
   { id: 'attack-surface-bullets', needle: '3-5 bullets' },
   { id: 'assessment-deadline', needle: '2 tool calls' },
 
-  // Identifiers whose exact spelling is load-bearing, searched file-wide.
-  // A mirror that names a different storage key, role or entry point is not
-  // merely stale, it is wrong, and a reader following it writes to the wrong
-  // place. Presence anywhere IS the fact, so these need no section.
-  { id: 'module-graph-root', needle: 'js/main.js', scope: 'file' },
-  { id: 'single-script-host', needle: 'index.html', scope: 'file' },
-  { id: 'theme-token-layer', needle: 'css/theme.css', scope: 'file' },
-  { id: 'page-source-dir', needle: 'pages/*.js', scope: 'file' },
+  // Identifiers searched file-wide, and RARE ENOUGH that presence is the fact.
+  //
+  // A file-scoped claim on a frequently repeated identifier cannot fail in the
+  // way it implies. `server.ts` appears 43 times in AGENTS.md; if the one
+  // sentence that DEFINES it as the server entry point drifted, forty-two
+  // other mentions would still satisfy an `includes`. The claim would then
+  // only detect a mirror dropping the string entirely, which will never
+  // happen — and this repo already has doctrine for that: getRuleResultsFor()
+  // marks rules that cannot fail `scored: false`, because scoring them buries
+  // the rules that do fail under permanent green. Same reasoning, so the same
+  // answer: nine such claims were registered and then removed rather than kept
+  // as decoration.
+  //
+  // Measured occurrences across the three mirrors, which is how the survivors
+  // were chosen rather than by taste:
+  //
+  //   removed:  server.ts 43/28/2   pages/*.js 21/16/4   js/main.js 12/11/5
+  //             index.html 7/11/2   css/theme.css 7/6/2  /api/ai/* 5/4/1
+  //             review:read 5/4/1   review:write 4/3/1   ai:generate 4/3/2
+  //   kept:     hhvcManagerReviewState:v1 2/2/1
+  //             window.HHVC_PAGES['<pageKey>'] 1/1/1
+  //             window.HHVC_DATA = { pages, order } 1/1/1
+  //
+  // For these three, the mention IS the definition, so a wrong storage key or
+  // a wrong global shape fails here — which is the failure worth catching, a
+  // reader who follows the mirror writing to the wrong place.
   { id: 'persisted-state-key', needle: 'hhvcManagerReviewState:v1', scope: 'file' },
   { id: 'page-registry-global', needle: "window.HHVC_PAGES['<pageKey>']", scope: 'file' },
   { id: 'page-data-global', needle: 'window.HHVC_DATA = { pages, order }', scope: 'file' },
-  { id: 'server-entry', needle: 'server.ts', scope: 'file' },
-  { id: 'ai-route-prefix', needle: '/api/ai/*', scope: 'file' },
-  { id: 'role-review-read', needle: 'review:read', scope: 'file' },
-  { id: 'role-review-write', needle: 'review:write', scope: 'file' },
-  { id: 'role-ai-generate', needle: 'ai:generate', scope: 'file' },
 ]
 
 /**
