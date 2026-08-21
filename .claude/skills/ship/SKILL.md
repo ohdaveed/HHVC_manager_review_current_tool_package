@@ -64,7 +64,12 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    REVISIONS (`origin/main` against `HEAD`) and reads neither the index nor the
    working tree, so run before the commit it inspects the previous commit and
    passes while the restoring change sits unexamined in the tree.
-5. `git push -u origin HEAD` then `gh pr create --fill`. If step 2 rebased a
+5. `SHA=$(git rev-parse HEAD)`, then `git push -u origin HEAD` and
+   `gh pr create --fill`. **Capture the SHA here, not inside step 6's optional
+   polling snippet** — step 7 binds its head comparison and
+   `--match-head-commit` to `$SHA`, and `--watch` is the primary route, so a
+   `SHA` that only exists on the fallback path leaves the default one
+   comparing against an empty variable. If step 2 rebased a
    branch that had already been pushed, this plain push is rejected as
    non-fast-forward and the run stops before a PR exists — capture the remote
    OID beforehand and push with `--force-with-lease=<ref>:<oid>`, which refuses
@@ -92,7 +97,9 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 
    ```sh
    PR=<the pull request number>
-   SHA=$(git rev-parse HEAD)
+   # Set in step 5. Re-derive here only if you are running this block alone;
+   # in a full /ship run it is already bound to the commit you pushed.
+   SHA=${SHA:-$(git rev-parse HEAD)}
 
    # Bind to the commit you pushed. `gh pr checks` describes whatever the PR
    # points at RIGHT NOW, which in the seconds after a push is still the
@@ -112,10 +119,19 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # manual dispatch of it against the branch would hold `sha_state` at
    # `running` and time the loop out with CI already green.
    sha_state() {
+     # `completed` is NOT a verdict -- a failed or cancelled run is completed
+     # too. Report the conclusion, so a red run cannot be read as a finished
+     # one. `skipped` counts as success for the same reason `skipping` does
+     # in probe(): branch protection does not block on it.
      gh api "repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=$SHA" \
        --jq 'if .total_count==0 then "none"
              elif ([.workflow_runs[]|select(.status!="completed")]|length)>0
-             then "running" else "done" end' 2>/dev/null
+               then "running"
+             elif ([.workflow_runs[]
+                    |select(.conclusion!="success" and .conclusion!="skipped")]
+                   |length)>0
+               then "failed"
+             else "done" end' 2>/dev/null
    }
 
    # TWO inventories, and which one you get decides what `pass` can mean.
@@ -203,6 +219,7 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    while :; do
      case "$(sha_state)" in
        none|running) v=wait ;;   # no finished run for the commit you pushed
+       failed) v=fail ;;         # the gating run itself went red
        done)
          # A census that came back EMPTY is the one case where "no checks"
          # legitimately means go -- GitHub requires nothing on this base. It
