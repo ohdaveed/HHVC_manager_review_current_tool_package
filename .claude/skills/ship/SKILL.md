@@ -64,16 +64,29 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    REVISIONS (`origin/main` against `HEAD`) and reads neither the index nor the
    working tree, so run before the commit it inspects the previous commit and
    passes while the restoring change sits unexamined in the tree.
-5. `SHA=$(git rev-parse HEAD)`, then `git push -u origin HEAD` and
-   `gh pr create --fill`. **Capture the SHA here, before step 6 rather than
-   inside it** — step 7 binds its head comparison and `--match-head-commit` to
-   `$SHA`, and it has to name the commit you pushed even if step 6 is
-   interrupted or re-entered, so it cannot be a variable that only exists once
-   the poll starts. If step 2 rebased a
+5. Record the pushed commit to a FILE, then push and open the PR:
+
+   ```sh
+   git rev-parse HEAD > "$(git rev-parse --git-dir)/ship-sha"
+   git push -u origin HEAD && gh pr create --fill
+   ```
+
+   **A shell variable does not survive this workflow.** Steps 6 and 7 run as
+   separate commands — separate shells — so `SHA=$(git rev-parse HEAD)` set
+   here is gone by the time step 7 compares against it, and a step 6 that
+   re-derives it from `git rev-parse HEAD` picks up whatever `HEAD` has become
+   since. That is not hypothetical: step 6 ends by clearing review threads,
+   which usually means new commits. Every later step reads
+   `SHA=$(cat "$(git rev-parse --git-dir)/ship-sha")`. It lives under
+   `.git/` so it is never committed and never collides between clones.
+
+   This run needed exactly that workaround to carry the value between steps,
+   which is why it is the instruction rather than a footnote. If step 2 rebased a
    branch that had already been pushed, this plain push is rejected as
    non-fast-forward and the run stops before a PR exists — capture the remote
    OID beforehand and push with `--force-with-lease=<ref>:<oid>`, which refuses
    if anyone else moved the ref meanwhile.
+
 6. Wait for CI, then clear every review thread. This repo's `main` requires
    conversation resolution, so one unanswered bot comment blocks the merge
    with all checks green.
@@ -385,12 +398,21 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    repo stamps a build with its revision — no version route in `server.ts`, no
    marker in the HTML, no injection in `vite.config.mjs` — so there is nothing
    to read off the page and the comparison has no left-hand side without this.
-   The deployment record is where it lives: the Railway MCP's
-   `list_deployments` returns `id | status | timestamp | commit` per
-   deployment, and `railway status --json` carries the same for the active
-   one. Require the newest `SUCCESS` row's commit to equal `origin/main`. A
-   `REMOVED` or `FAILED` row above it means the newest deploy is not the one
-   serving, which is exactly the case a page that loads cannot show you.
+
+   The Railway MCP's `list_deployments` is the direct route: it returns
+   `id | status | timestamp | commit` per deployment, and the newest `SUCCESS`
+   row's commit must equal `origin/main`. A `REMOVED` or `FAILED` row above it
+   means the newest deploy is not the one serving, which is exactly what a
+   page that loads cannot show you.
+
+   **Without that tool, `railway status --json` carries the same field but
+   NOT as a lookup — navigate it, never grep it.** It describes the whole
+   project, so it holds several 40-hex strings and only one is the commit you
+   want: the path is the `production` environment's `serviceInstances` entry
+   whose `serviceName` is **`web`**, then `activeDeployments[0].meta
+.commitHash`. Grepping for a 40-hex matches `imageDigest` too, and the
+   Postgres service instance beside `web` carries no `commitHash` at all —
+   both verified here while writing this.
 
 9. Switch to `main` and pull. `--delete-branch` in step 7 already removed both
    copies; if one survived, delete it by name with `git branch -D <branch>` —
