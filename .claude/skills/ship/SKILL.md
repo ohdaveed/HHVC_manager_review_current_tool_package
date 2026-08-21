@@ -91,9 +91,11 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    #   fail  every required check exists and at least one did not pass
    #   wait  required checks missing or still running -- no verdict yet
    probe() {
-     # Do not `|| return 1` here. `gh pr checks` exits 8 whenever a check is
-     # pending and non-zero with `no checks reported on the '<branch>' branch`
-     # during the creation window; both are answers, not read failures.
+     # Do not `|| return 1` here. In the creation window `gh pr checks` exits
+     # non-zero with `no checks reported on the '<branch>' branch` -- a "not
+     # yet", not a read failure. Measured on gh 2.97.0: `--json` returns 0
+     # while checks are merely PENDING, so the exit 8 in `gh help exit-codes`
+     # is the default output mode only. Drop `--json` and you need this too.
      out=$(gh pr checks "$PR" --json name,bucket 2>/dev/null)
      printf '%s' "$out" | REQ="$REQUIRED" bun -e '
        let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
@@ -134,14 +136,21 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    `REQUIRED` empty, every count at zero, and zero compares equal to zero,
    which reads GREEN.
 
-   The fourth is the one that bites the fix rather than the bug. A version that
-   closes the third by treating every non-zero `gh` exit as fatal aborts on the
-   FIRST poll of every healthy run, because **`gh pr checks` exits 8 whenever a
-   check is pending** — documented under `Additional exit codes` in its own
-   `--help`. It exits non-zero a second way inside the creation window, with
-   the `no checks reported` message quoted in the comment above. Neither is a
-   failure to read. Both times this loop reported nothing while the skill was
-   being written, the run it was meant to watch had not started.
+   The fourth is the one that bites the fix rather than the bug: closing the
+   third by treating every non-zero `gh` exit as fatal turns a "not yet" into
+   an abort. Inside the creation window `gh pr checks` exits non-zero with the
+   `no checks reported` message quoted in the comment above — both times this
+   loop reported nothing while the skill was being written, the run it was
+   meant to watch had not started.
+
+   **Check the exit code you are actually guarding, because `--json` changes
+   it.** `gh help exit-codes` documents 8 for pending, and that is the DEFAULT
+   output mode: measured on gh 2.97.0 against a genuinely pending check,
+   `gh pr checks <n>` exited 8 while `gh pr checks <n> --json name,bucket`
+   exited 0 on the same PR in the same second. So the loop above is not saved
+   by its own guard — it is saved by `--json`, and a later edit that drops the
+   flag, or a poller that never had it, reintroduces the abort at the first
+   pending poll.
 
    So the two halves pull against each other: tightening the guard until no
    read error can read green is exactly what makes a pending check look like a
