@@ -126,8 +126,9 @@ in exactly one stylesheet.
 
 - **Security reviews start from the diff.** Asked to review a diff or changed
   files, load the hunks with the command matching the subject —
-  `git diff HEAD` for uncommitted work, `git diff <sha>^ <sha>` for a named
-  commit, `gh pr diff <number>` for a pull request — always naming the subject,
+  `git diff HEAD` for uncommitted work, `git show <sha>` for a named commit
+  (the `<sha>^ <sha>` form aborts on a root commit and in a shallow clone),
+  `gh pr diff <number>` for a pull request — always naming the subject,
   since bare `git diff` hides staged changes (it diffs against the index) and
   bare `gh pr diff` picks the current branch's PR. Pair the local case with
   `git status --short`: no diff form shows untracked files. Summarize the attack surface those hunks expose in 3-5 bullets before
