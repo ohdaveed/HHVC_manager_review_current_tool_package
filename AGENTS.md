@@ -2928,12 +2928,16 @@ rather than asserting a number that was true on the day it was typed.
 ## Security Reviews
 
 When asked for a security review of a diff or of changed files: do **not**
-start by reading every file. Start with `git diff` — or `gh pr diff <number>`
-when the subject is a pull request, **always with the number**, since the bare
-form selects whatever PR belongs to the currently checked-out branch and that is
-routinely not the one under review — to load the actual changed hunks in one
-call, then summarize the attack surface those hunks expose in 3-5 bullets. That
-summary is what decides where to look next; reading first and summarizing
+start by reading every file. Load the actual changed hunks in one call, using
+the command that matches what is actually under review — `git diff` for
+uncommitted work, `git diff <sha>^ <sha>` when the request names a commit,
+`gh pr diff <number>` when it names a pull request. **Pass the revision or the
+number explicitly.** Bare `git diff` shows only unstaged working-tree changes,
+and bare `gh pr diff` selects whatever PR belongs to the current branch, so on
+any other subject each reports on something that is not the thing being
+reviewed — and a review that reads the wrong diff reports clean on code it
+never saw. Then summarize the attack surface those hunks expose in 3-5 bullets.
+That summary is what decides where to look next; reading first and summarizing
 afterwards inverts the order and spends the budget before the review has a
 shape. Read only the specific files those bullets flag.
 

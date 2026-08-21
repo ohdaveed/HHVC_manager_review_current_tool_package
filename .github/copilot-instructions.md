@@ -125,11 +125,13 @@ in exactly one stylesheet.
 ## Workflow & verification
 
 - **Security reviews start from the diff.** Asked to review a diff or changed
-  files, run `git diff` — or `gh pr diff <number>`, always with the number,
-  since the bare form selects whatever PR belongs to the current branch — and
-  summarize the attack surface those hunks expose in 3-5 bullets before opening
-  anything else; those bullets decide what gets read. Do not read files one at a
-  time first. A preliminary **assessment** lands within the first 2 tool calls,
+  files, load the hunks with the command matching the subject — `git diff` for
+  uncommitted work, `git diff <sha>^ <sha>` for a named commit,
+  `gh pr diff <number>` for a pull request — always passing the revision or
+  number, since both bare forms report on something other than the thing under
+  review. Summarize the attack surface those hunks expose in 3-5 bullets before
+  opening anything else; those bullets decide what gets read. Do not read files
+  one at a time first. A preliminary **assessment** lands within the first 2 tool calls,
   and "nothing confirmed yet, here is the surface" is a valid one: the deadline
   is on saying something, never on having found something, since a clean diff
   has no findings. Report findings per file as you go rather than batching them;
