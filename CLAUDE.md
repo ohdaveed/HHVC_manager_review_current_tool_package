@@ -62,7 +62,7 @@ they state too weakly to act on:
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
-  `checks` job — read the job rather than a list here.** That sentence has been
+  `format_validate_lint` job — read the job rather than a list here.** That sentence has been
   rewritten by every tool that joined it, each time as though it were the only
   addition, and an enumeration in three mirrored files is four copies of one
   fact. What is worth stating is the shape: there is no ESLint and no `tsc`
