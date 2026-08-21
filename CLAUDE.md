@@ -378,10 +378,26 @@ those modules from TypeScript, which is the supported direction. Bumping
 
 **Branch protection's required contexts are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
-context `Format, validate, unit tests` out of existence; until protection was
-updated to `Format, validate, lint` plus `Unit tests (bun test)`, a PR could go
-green and still never satisfy the requirement, because a context that no job
-produces stays permanently pending.
+context `Format, validate, unit tests` out of existence, and a context that no
+job produces stays permanently pending however green the run — so a PR can go
+fully green and still never satisfy the requirement.
+
+**All six gating jobs have to be required, and the reason is counter-intuitive:
+GitHub treats a conditionally SKIPPED job as a PASSING required check.** That
+is what makes this graph's `if:` conditions dangerous to under-require:
+
+- Require only the code-path jobs, and a docs-only PR satisfies every one of
+  them by SKIPPING them, leaving `Docs-only checks` — which is where its real
+  coverage lives — unrequired and therefore optional.
+- Leave the builds unrequired, and a `build_singlefile` failure blocks nothing
+  at all, while a `build_railway` failure SKIPS `unit`, and that skip then
+  reads as a pass. A red build merges.
+
+So the required set is `Format, validate, lint`, `Unit tests (bun test)`,
+`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle` and
+`Build single-file export` — every job except `changes`, which gates the rest
+and cannot itself be skipped. Adding a gated job to this file means adding its
+name here and to protection, or it is advisory.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup

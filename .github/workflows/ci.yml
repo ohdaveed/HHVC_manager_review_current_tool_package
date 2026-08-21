@@ -11,6 +11,12 @@ concurrency:
 
 permissions:
   contents: read
+  # `dorny/paths-filter` reads the pull-request files API on `pull_request`
+  # runs. Declaring any `permissions` block sets every unlisted scope to
+  # `none`, so omitting this leaves the change detector without the access it
+  # needs -- and every downstream job gates on its outputs, so the failure
+  # takes the whole graph with it.
+  pull-requests: read
 
 jobs:
   changes:
