@@ -393,11 +393,20 @@ is what makes this graph's `if:` conditions dangerous to under-require:
   at all, while a `build_railway` failure SKIPS `unit`, and that skip then
   reads as a pass. A red build merges.
 
-So the required set is `Format, validate, lint`, `Unit tests (bun test)`,
-`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle` and
-`Build single-file export` — every job except `changes`, which gates the rest
-and cannot itself be skipped. Adding a gated job to this file means adding its
-name here and to protection, or it is advisory.
+So the required set is **every job in the file**, `Detect changed files`
+included: `Format, validate, lint`, `Unit tests (bun test)`,
+`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
+`Build single-file export` and `Detect changed files`.
+
+The detector is the one people leave out, on the reasoning that it only
+computes outputs and cannot itself be skipped — which is true and beside the
+point. If it FAILS, every job downstream of it is skipped, each of those skips
+reads as a pass, and the PR merges with nothing having been checked at all. An
+action outage or a permissions regression is enough to get there. Requiring it
+is what turns that silent green into a visible red.
+
+Adding a job to this file means adding its name here and to protection, or it
+is advisory.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
