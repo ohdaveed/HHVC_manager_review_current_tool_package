@@ -1545,24 +1545,31 @@ CI after merges more than once.
 ## Security Reviews
 
 When asked for a security review of a diff or of changed files: do **not**
-start by reading every file. Load the actual changed hunks in one call, using
-the command that matches what is actually under review — `git diff HEAD` for
-uncommitted work, `git show --first-parent <sha>` when the request names a
-commit — `--first-parent` because on a MERGE commit bare `git show` prints the
-combined `--cc` format, which names the changed file in its stat and then omits
-the patch, so a leaked secret merged in from a branch renders as a clean-looking
-review; and `git show` rather than `git diff <sha>^ <sha>`, which aborts
-outright on a root commit and in a shallow clone, where the parent it names does
-not resolve —
-`gh pr diff <number>` when it names a pull request. **`HEAD`, the revision, or
-the number: always name the subject.** Bare `git diff` compares the working
-tree to the INDEX, so a change that is merely staged is invisible to it — a
-staged secret produces an empty diff and a clean-looking review — and bare
-`gh pr diff` selects whatever PR belongs to the current branch. A review that
-reads the wrong diff reports clean on code it never saw. No diff form shows
-untracked files at all, so pair the local case with `git status --short` and
-read anything new. Then summarize the attack surface those hunks expose in 3-5 bullets.
-That summary is what decides where to look next; reading first and summarizing
+start by reading every file. Load the changed hunks in one call, with the
+command that matches the subject — and always name the subject, because every
+bare form quietly defaults to something else:
+
+- **Uncommitted work:** `git diff HEAD`, paired with `git status --short`. Bare
+  `git diff` compares the working tree to the INDEX, so a merely staged change
+  is invisible to it — a staged secret yields an empty diff and a clean-looking
+  review — and no diff form shows untracked files at all, so read anything new.
+- **A named commit:** `git show --first-parent <sha>`. On a MERGE commit bare
+  `git show` prints the combined `--cc` format, which names the changed file in
+  its stat and then omits the patch, so a secret merged cleanly off a branch
+  renders as a review that looks finished. Not `git diff <sha>^ <sha>`: it
+  aborts wherever the parent does not resolve, including a root commit. In a
+  shallow clone run `git fetch --deepen 1 <sha>` first — at the boundary Git
+  treats the commit as a root and renders the whole snapshot as
+  `new file mode`, which a reader cannot tell from code the commit added.
+- **A pull request:** `gh pr diff <number>`. The bare form selects whatever PR
+  belongs to the current branch, which is routinely not the one under review.
+
+What those wrong forms share is that each prints something **reassuring**
+rather than nothing. An empty result invites a second look; `secret.txt | 1 +`
+with no patch under it does not.
+
+Then summarize the attack surface those hunks expose in 3-5 bullets. That
+summary is what decides where to look next; reading first and summarizing
 afterwards inverts the order and spends the budget before the review has a
 shape. Read only the specific files those bullets flag.
 
