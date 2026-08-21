@@ -41,10 +41,33 @@ function git(...args) {
  * the install would write into a third party's tree.
  */
 function hookDirs() {
-  const dirs = [git('rev-parse', '--git-common-dir'), git('rev-parse', '--git-dir')].map((d) =>
-    path.resolve(repoRoot, d, 'hooks')
-  )
-  return [...new Set(dirs)]
+  const common = path.resolve(repoRoot, git('rev-parse', '--git-common-dir'), 'hooks')
+  const own = path.resolve(repoRoot, git('rev-parse', '--git-dir'), 'hooks')
+  // Each directory is paired with the checkout its link should point INTO.
+  // The common directory outlives every linked worktree, so its link must
+  // name a checkout that outlives them too — the main one. Pointing it at the
+  // worktree that happened to run the installer leaves the whole clone with a
+  // dangling hook the moment that worktree is removed, and a dangling hook is
+  // an absent gate rather than a loud one.
+  const entries = [{ dir: common, from: mainWorktree() }]
+  if (own !== common) entries.push({ dir: own, from: repoRoot })
+  return entries
+}
+
+/**
+ * The main working tree — the first record of `git worktree list --porcelain`,
+ * which git documents as the main one. Falls back to this checkout when the
+ * listing cannot be read, which is the pre-worktree behaviour.
+ */
+function mainWorktree() {
+  try {
+    for (const line of git('worktree', 'list', '--porcelain').split('\n')) {
+      if (line.startsWith('worktree ')) return line.slice('worktree '.length).trim()
+    }
+  } catch {
+    /* fall through */
+  }
+  return repoRoot
 }
 
 /**
@@ -107,11 +130,18 @@ function install() {
 
   let installed = 0
   let attempted = 0
-  for (const dir of hookDirs()) {
+  for (const { dir, from } of hookDirs()) {
     fs.mkdirSync(dir, { recursive: true })
     for (const name of names) {
       attempted += 1
-      const source = path.join(sourceDir, name)
+      const source = path.join(from, '.githooks', name)
+      if (!fs.existsSync(source)) {
+        // The main checkout can legitimately sit on a revision predating the
+        // hook. Say so rather than linking at a path that does not exist.
+        console.error(`  ${name}: ${source} does not exist; skipping ${dir}`)
+        process.exitCode = 1
+        continue
+      }
       if (!assertExecutable(source, name)) {
         process.exitCode = 1
         continue
