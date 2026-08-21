@@ -6,7 +6,7 @@
 // agreement was maintained entirely by hand. It failed: the Copilot mirror's
 // security-review guidance drifted apart from the other two and was caught
 // only because a reviewer happened to read it. Measured against the commit
-// before the fix (e01870f), every one of the seven facts in SHARED_CLAIMS was
+// before the fix (e01870f), every fact in SHARED_CLAIMS was
 // absent from `.github/copilot-instructions.md` and present in both full
 // mirrors — so this check would have failed on that tree, which is the whole
 // argument for it. Nothing else covers this: markdownlint's MD051 validates a
@@ -35,8 +35,31 @@ import { join } from 'node:path'
 
 const ROOT = join(import.meta.dir, '..')
 
-/** The three instruction files Cross-tool canon binds together. */
-const MIRRORS = ['AGENTS.md', 'CLAUDE.md', '.github/copilot-instructions.md']
+/**
+ * The three instruction files Cross-tool canon binds together, each mapped to
+ * the section that carries the guidance under test.
+ *
+ * Scoping is load-bearing, not tidiness. Searching the whole file lets
+ * unrelated prose satisfy a claim after the real instruction has drifted, and
+ * that was not hypothetical: the commit introducing this test added a
+ * test-inventory entry to `AGENTS.md` and `CLAUDE.md` that quotes
+ * `2 tool calls`, so the phrase appeared in BOTH `Commands` and
+ * `Security Reviews` and deleting the requirement from the latter would have
+ * left this suite green. A gate that its own commit renders vacuous is worse
+ * than no gate, because it reports coverage.
+ *
+ * The heading differs per file because the mirrors are shaped differently:
+ * the two full mirrors carry a `## Security Reviews` section, and the Copilot
+ * mirror compresses it to a bullet under `## Workflow & verification`.
+ */
+const MIRRORS = {
+  'AGENTS.md': 'Security Reviews',
+  'CLAUDE.md': 'Security Reviews',
+  '.github/copilot-instructions.md': 'Workflow & verification',
+}
+
+/** Just the paths, for the checks that do not care about sections. */
+const MIRROR_PATHS = Object.keys(MIRRORS)
 
 /** The two that carry every section in full. The Copilot mirror does not. */
 const FULL_MIRRORS = ['AGENTS.md', 'CLAUDE.md']
@@ -109,16 +132,22 @@ function sectionsOf(text) {
 }
 
 describe('instruction mirrors', () => {
-  // Anti-vacuity, asserted BEFORE anything that iterates the registries. A
-  // check driven by an empty list does not fail — it stops checking, and
-  // reports success while covering nothing. Same guard, and the same reason,
-  // as the minimum row counts in tests/karl-blocks.test.js.
+  // Anti-vacuity, asserted BEFORE anything that iterates the registries: a
+  // check driven by an empty list does not fail, it stops checking, and reports
+  // success while covering nothing.
+  //
+  // Non-empty, but deliberately WITHOUT a numeric floor. This repo bans hard-coded
+  // counts in tests, and a floor here would buy nothing the literal registry
+  // does not already give: unlike tests/karl-blocks.test.js, whose minimums
+  // guard a registry TRANSCRIBED from a prose document that can silently stop
+  // parsing, this list is declared inline. It cannot shrink by accident, only
+  // by an edit a reviewer sees.
   test('the shared-claim registry is non-empty', () => {
-    expect(SHARED_CLAIMS.length).toBeGreaterThanOrEqual(7)
+    expect(SHARED_CLAIMS.length).toBeGreaterThan(0)
   })
 
   test('the identical-section registry is non-empty', () => {
-    expect(IDENTICAL_SECTIONS.length).toBeGreaterThanOrEqual(1)
+    expect(IDENTICAL_SECTIONS.length).toBeGreaterThan(0)
   })
 
   test('every claim id is unique', () => {
@@ -127,17 +156,30 @@ describe('instruction mirrors', () => {
   })
 
   test('every mirror named by the canon exists on disk', () => {
-    for (const path of MIRRORS) expect(existsSync(join(ROOT, path))).toBe(true)
+    for (const path of MIRROR_PATHS) expect(existsSync(join(ROOT, path))).toBe(true)
+  })
+
+  test('every mirror actually has the section it is mapped to', () => {
+    // Without this, a renamed heading silently empties the haystack and every
+    // claim below fails for a reason that names the wrong problem.
+    for (const [path, heading] of Object.entries(MIRRORS)) {
+      const has = sectionsOf(readMirror(path)).get(heading) !== undefined
+      expect({ path, heading, present: has }).toEqual({ path, heading, present: true })
+    }
   })
 
   describe('shared claims appear in all three mirrors', () => {
+    // Normalized bodies of the CARRYING SECTION only, never the whole file.
     const normalized = Object.fromEntries(
-      MIRRORS.map((path) => [path, normalize(readMirror(path))])
+      Object.entries(MIRRORS).map(([path, heading]) => [
+        path,
+        normalize(sectionsOf(readMirror(path)).get(heading) ?? ''),
+      ])
     )
 
     for (const { id, needle } of SHARED_CLAIMS) {
       test(`states "${needle}" (${id})`, () => {
-        const missing = MIRRORS.filter((path) => !normalized[path].includes(needle))
+        const missing = MIRROR_PATHS.filter((path) => !normalized[path].includes(needle))
         // The failure message names the file AND the fact, because "a mirror
         // drifted" is not actionable and "copilot-instructions.md no longer
         // says `gh pr diff <number>`" is.
