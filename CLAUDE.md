@@ -283,12 +283,13 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-two spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-three spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
-SFDS tokens, the chrome type scale, the Karl transcript panel, and
+SFDS tokens, the chrome type scale, the Karl transcript panel, the
+pre-navigation flush of in-progress sidebar edits, and
 workshop-form submission handling,
 sharing plain helper functions in
 `tests/e2e/helpers.js` (no fixture framework). A fourteenth file,

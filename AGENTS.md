@@ -272,12 +272,13 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-two spec files, all UI-driven — navigation, editor panel, review
+twenty-three spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale, the Karl transcript panel,
+the chrome type scale, the Karl transcript panel, the pre-navigation flush of
+in-progress sidebar edits,
 and workshop-form submission handling — sharing plain helper functions in
 `tests/e2e/helpers.js`, no fixture framework. A fourteenth,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two

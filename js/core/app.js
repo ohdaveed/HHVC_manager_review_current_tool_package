@@ -136,19 +136,21 @@ function init() {
   // navigateTo(): init() runs before any module has wrapped window.renderPage,
   // so there is nothing to pick up, and there is no outgoing page whose edits
   // would need flushing. js/review/ux-improvements.js does its own restoreInitialPage()
-  // pass once it has registered its onAfterRender() subscriber.
+  // pass once it has registered its render subscribers.
   //
-  // skipAfterRenderHooks=true: this call happens at module-eval time, before
+  // skipHooks=true: this call happens at module-eval time, before
   // js/review/ux-improvements.js (loaded later in js/main.js) has registered
-  // anything — but renderPage()'s hook dispatch is DEFERRED (setTimeout(0) or
-  // a View Transitions promise), and that registration happens synchronously,
-  // in the same script-evaluation tick, before any deferred callback gets a
-  // turn. Without this flag the bootstrap render's own hook call fires anyway
-  // once ux-improvements.js's subscriber exists, running handleAfterRender()
-  // for a render restoreInitialPage() is about to redo properly — see
-  // renderPage()'s own doc comment on this parameter for the measured bug
-  // (a persisted Karl-tags preference nobody set) that not skipping it
-  // caused.
+  // anything — but renderPage()'s after-hook dispatch is DEFERRED
+  // (setTimeout(0) or a View Transitions promise), and that registration
+  // happens synchronously, in the same script-evaluation tick, before any
+  // deferred callback gets a turn. Without this flag the bootstrap render's
+  // own hook call fires anyway once ux-improvements.js's subscriber exists,
+  // running handleAfterRender() for a render restoreInitialPage() is about to
+  // redo properly — see renderPage()'s own doc comment on this parameter for
+  // the measured bug (a persisted Karl-tags preference nobody set) that not
+  // skipping it caused. The before-channel is skipped by the same flag and
+  // needs no separate argument: at module-eval time there is no subscriber to
+  // call and no outgoing page to flush.
   const params = new URLSearchParams(window.location.search)
   const pageKey = params.get('page')
   renderPage(resolveInitialPageKey(pageKey), true, true)

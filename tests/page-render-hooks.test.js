@@ -14,7 +14,12 @@
  * under-coverage is the failure this repo has now hit four separate times.
  */
 import { describe, expect, test } from 'bun:test'
-import { onAfterRender, runAfterRenderHooks } from '../js/mockup/page-render.js'
+import {
+  onAfterRender,
+  onBeforeRender,
+  runAfterRenderHooks,
+  runBeforeRenderHooks,
+} from '../js/mockup/page-render.js'
 
 describe('onAfterRender', () => {
   test('runs a registered hook with the page key that was rendered', () => {
@@ -55,5 +60,55 @@ describe('onAfterRender', () => {
     runAfterRenderHooks('pestsTopic')
     keep()
     expect(seen).toEqual(['kept'])
+  })
+})
+
+/**
+ * The before-render channel.
+ *
+ * It exists because the pre-navigation flush of in-progress sidebar edits has
+ * to read the OUTGOING page's form values, and applyPageContent() overwrites
+ * two of them (#seoTitleInput and #metaDescriptionInput, via
+ * syncEditorFields()) on every render. What that channel is FOR can only be
+ * proven end to end — tests/e2e/navigation-flush.spec.js does that — so what
+ * is worth pinning here is the property the two channels must not share:
+ * they are separate lists, and registering on one must never dispatch on the
+ * other. A single shared list would pass every test above and still flush
+ * after the render.
+ */
+describe('onBeforeRender', () => {
+  test('runs a registered hook with the page key about to render', () => {
+    const seen = []
+    const off = onBeforeRender((key) => seen.push(key))
+    runBeforeRenderHooks('pestsTopic')
+    off()
+    expect(seen).toEqual(['pestsTopic'])
+  })
+
+  test('a throwing hook does not prevent the next one', () => {
+    const seen = []
+    const a = onBeforeRender(() => {
+      throw new Error('hook blew up')
+    })
+    const b = onBeforeRender(() => seen.push('b ran'))
+    runBeforeRenderHooks('pestsTopic')
+    a()
+    b()
+    expect(seen).toEqual(['b ran'])
+  })
+
+  test('the two channels are independent lists', () => {
+    const seen = []
+    const before = onBeforeRender(() => seen.push('before'))
+    const after = onAfterRender(() => seen.push('after'))
+
+    runBeforeRenderHooks('pestsTopic')
+    expect(seen).toEqual(['before'])
+
+    runAfterRenderHooks('pestsTopic')
+    expect(seen).toEqual(['before', 'after'])
+
+    before()
+    after()
   })
 })

@@ -40,17 +40,45 @@ const INHERIT_BADGE_TEXT = {
   title: 'Card title inherited from linked page',
 }
 
-/* Post-render subscribers, in registration order.
+/* Render subscribers, in registration order — one list per channel.
  *
  * This exists so nothing has to monkey-patch renderPage. A subscriber that
- * needs to run after navigation registers here; page-render calls it and never
+ * needs to run around navigation registers here; page-render calls it and never
  * learns who it was. The dependency therefore points from the subscriber to
  * this module, which is what keeps the import graph acyclic. Replaces the
  * js/review/ux-improvements.js monkey-patch that used to reassign
  * window.renderPage to a wrapper — measurement found that patch responsible
  * for 24 of the edges binding this codebase's single 16-file dependency
- * cycle, nearly double the next contributor. */
+ * cycle, nearly double the next contributor.
+ *
+ * **There are two channels because a wrapper straddled the render and a
+ * subscriber cannot.** The old wrapper did work on BOTH sides of its
+ * `originalRenderPage.call(...)`, and the before-side is not optional: it
+ * flushes in-progress sidebar edits while the DOM still holds the OUTGOING
+ * page's values. applyPageContent() overwrites #seoTitleInput and
+ * #metaDescriptionInput through syncEditorFields() on every render, and
+ * collectCurrentPageReviewState() reads both back out of the live DOM — so a
+ * flush moved to the after-channel writes the incoming page's values into the
+ * outgoing page's record. That is silent review-data loss, it is not
+ * hypothetical (it shipped in d71ff26 and tests/e2e/navigation-flush.spec.js
+ * is the spec that caught it), and no amount of care in the after-hook can
+ * recover a value the render has already replaced. */
+const beforeRenderHooks = []
 const afterRenderHooks = []
+
+/**
+ * Register a callback to run BEFORE every renderPage() touches the DOM.
+ *
+ * Called synchronously, while the outgoing page's content and form values are
+ * still on screen — that is the entire reason this channel exists, so do not
+ * defer the dispatch here as the after channel does.
+ *
+ * @param {(pageKey: string) => void} fn called with the key about to render
+ * @returns {() => void} unsubscribe; calling it twice is harmless
+ */
+function onBeforeRender(fn) {
+  return subscribe(beforeRenderHooks, fn)
+}
 
 /**
  * Register a callback to run after every renderPage() completes.
@@ -59,33 +87,65 @@ const afterRenderHooks = []
  * @returns {() => void} unsubscribe; calling it twice is harmless
  */
 function onAfterRender(fn) {
+  return subscribe(afterRenderHooks, fn)
+}
+
+/**
+ * Shared registration for both channels.
+ *
+ * @param {Array<Function>} hooks the channel's subscriber list
+ * @param {Function} fn the callback to add
+ * @returns {() => void} unsubscribe
+ */
+function subscribe(hooks, fn) {
   if (typeof fn !== 'function') return () => {}
-  afterRenderHooks.push(fn)
+  hooks.push(fn)
   return () => {
-    const at = afterRenderHooks.indexOf(fn)
-    if (at !== -1) afterRenderHooks.splice(at, 1)
+    const at = hooks.indexOf(fn)
+    if (at !== -1) hooks.splice(at, 1)
   }
 }
 
 /**
- * Run every registered hook. A hook that throws is reported and skipped, so one
- * broken subscriber cannot stop the others or abort the render that called it.
+ * Run every hook on one channel. A hook that throws is reported and skipped, so
+ * one broken subscriber cannot stop the others or abort the render that called
+ * it.
+ *
+ * @param {Array<Function>} hooks the channel's subscriber list
+ * @param {string} label channel name, for the console message
+ * @param {string} pageKey the key being rendered
+ */
+function runHooks(hooks, label, pageKey) {
+  // Snapshot before iterating: a hook is allowed to call its own unsubscribe
+  // function (or subscribe a new hook) from inside itself, and mutating the
+  // list mid-iteration would skip or double-run a sibling hook.
+  // .slice() rather than a spread so oxlint's no-useless-spread rule (a
+  // `--deny-warnings` gate on this file) doesn't read it as accidental.
+  for (const fn of hooks.slice()) {
+    try {
+      fn(pageKey)
+    } catch (error) {
+      console.error(label + ' hook failed', error)
+    }
+  }
+}
+
+/**
+ * Run every registered before-render hook.
+ *
+ * @param {string} pageKey the key about to be rendered
+ */
+function runBeforeRenderHooks(pageKey) {
+  runHooks(beforeRenderHooks, 'before-render', pageKey)
+}
+
+/**
+ * Run every registered after-render hook.
  *
  * @param {string} pageKey the key that was just rendered
  */
 function runAfterRenderHooks(pageKey) {
-  // Snapshot before iterating: a hook is allowed to call its own unsubscribe
-  // function (or subscribe a new hook) from inside itself, and mutating
-  // afterRenderHooks mid-iteration would skip or double-run a sibling hook.
-  // .slice() rather than a spread so oxlint's no-useless-spread rule (a
-  // `--deny-warnings` gate on this file) doesn't read it as accidental.
-  for (const fn of afterRenderHooks.slice()) {
-    try {
-      fn(pageKey)
-    } catch (error) {
-      console.error('after-render hook failed', error)
-    }
-  }
+  runHooks(afterRenderHooks, 'after-render', pageKey)
 }
 
 function karlTag(label, kind = 'body', opts = {}) {
@@ -1615,31 +1675,35 @@ function applyPageContent(key) {
 /**
  * @param {string} key page key to render
  * @param {boolean} [skipHistory] true suppresses a history.pushState entry
- * @param {boolean} [skipAfterRenderHooks] true skips calling the
- *   onAfterRender() subscribers for this one render. Exists for exactly one
- *   caller — js/core/app.js's bootstrap render, the very first renderPage()
- *   call in the app's lifecycle, made at module-eval time before
- *   js/review/ux-improvements.js (loaded later in js/main.js) has registered
- *   anything. Under the OLD window.renderPage monkey-patch this render was
- *   safe "for free": nothing had wrapped window.renderPage yet, so the call
- *   could not pick up side effects that did not exist at call time. Hooks
- *   are baked into renderPage() itself now, and dispatch is DEFERRED
- *   (setTimeout(0) or a View Transitions promise) — so by the time this
- *   render's deferred hook call actually runs, js/review/ux-improvements.js has
- *   *already* registered synchronously, in the same script-evaluation tick,
- *   before any deferred callback gets a turn. Measured, not theoretical: with
- *   no guard here, the bootstrap render's hook fired handleAfterRender(),
- *   which stamped state.ui.show_karl_tags = false into localStorage from the
- *   Karl-tags checkbox's untouched, unchecked default — exactly the
- *   "persisted false on an unset preference" hazard documented at
- *   restoreInitialPage()'s two bookkeeping-repaint call sites — and a later
- *   render picked it up via applySavedUiPreferences(), hiding
- *   `.unverified-pill` for a session that never touched the toggle
- *   (`tests/e2e/ai-rewrite.spec.js`'s "flags the applied copy unverified"
- *   caught it). Every OTHER caller in this codebase omits this argument and
- *   gets the normal hooked render.
+ * @param {boolean} [skipHooks] true runs this one render with NEITHER channel
+ *   dispatched — no onBeforeRender() and no onAfterRender() subscribers. One
+ *   flag rather than two, because every caller that wants to skip wants to
+ *   skip both: this is the "render the DOM, run none of the navigation
+ *   bookkeeping" mode, and it reproduces exactly what calling the captured
+ *   pre-wrap function used to do under the old window.renderPage monkey-patch,
+ *   which bypassed the wrapper's flush and its refresh together.
+ *
+ *   Three callers pass it, all for that reason. js/core/app.js's bootstrap
+ *   render is the first renderPage() in the app's lifecycle, made at
+ *   module-eval time before js/review/ux-improvements.js (loaded later in
+ *   js/main.js) has registered anything. Under the old monkey-patch that was
+ *   safe for free — nothing had wrapped window.renderPage yet, so the call
+ *   could not pick up side effects that did not exist at call time. Hooks are
+ *   baked into renderPage() now and after-dispatch is DEFERRED (setTimeout(0)
+ *   or a View Transitions promise), so by the time that render's deferred hook
+ *   runs, ux-improvements.js has *already* registered synchronously in the same
+ *   script-evaluation tick, before any deferred callback gets a turn. Measured,
+ *   not theoretical: with no guard, the bootstrap render's hook stamped
+ *   state.ui.show_karl_tags = false into localStorage from the Karl-tags
+ *   checkbox's untouched, unchecked default, and a later render picked it up
+ *   via applySavedUiPreferences(), hiding `.unverified-pill` for a session that
+ *   never touched the toggle (`tests/e2e/ai-rewrite.spec.js`'s "flags the
+ *   applied copy unverified" caught it). The other two are
+ *   restoreInitialPage()'s bookkeeping repaints — see their own comments.
+ *
+ *   Every OTHER caller omits this argument and gets both channels.
  */
-function renderPage(key, skipHistory = false, skipAfterRenderHooks = false) {
+function renderPage(key, skipHistory = false, skipHooks = false) {
   // Resolve unknown/retired keys instead of silently no-op'ing and leaving
   // the static "Loading…" placeholder on screen. resolveInitialPageKey()
   // already covers the first URL load; this path covers every later caller
@@ -1692,10 +1756,16 @@ function renderPage(key, skipHistory = false, skipAfterRenderHooks = false) {
     if (window.inlineEdit?.isEditing?.()) return
     document.querySelector('#mockPage h1')?.focus()
   }
+  // Synchronously, before EITHER branch touches the DOM. The before-channel's
+  // whole value is that the outgoing page's content and form values are still
+  // on screen when it runs, so it must not be deferred and must not move
+  // inside the startViewTransition callback below — that callback is invoked
+  // after the browser has taken its snapshot, which is already too late.
+  if (!skipHooks) runBeforeRenderHooks(key)
   if (!document.startViewTransition) {
     applyPageContent(key)
     focusRenderedPageHeading()
-    if (!skipAfterRenderHooks) {
+    if (!skipHooks) {
       // Deferred with the same setTimeout(fn, 0) the old js/review/ux-improvements.js
       // wrapper used for its non-transition applyAndRefresh dispatch, and for
       // the same reason: a hook (applySavedPageState, by way of
@@ -1733,7 +1803,7 @@ function renderPage(key, skipHistory = false, skipAfterRenderHooks = false) {
       if (err?.name !== 'AbortError') throw err
     })
     .then(() => {
-      if (!skipAfterRenderHooks) runAfterRenderHooks(key)
+      if (!skipHooks) runAfterRenderHooks(key)
     })
 }
 
@@ -1782,6 +1852,7 @@ export {
   button,
   karlTag,
   onAfterRender,
+  onBeforeRender,
   renderPageMain,
   paragraphList,
   renderAudience,
@@ -1801,4 +1872,5 @@ export {
   renderTextItems,
   renderTopFacts,
   runAfterRenderHooks,
+  runBeforeRenderHooks,
 }

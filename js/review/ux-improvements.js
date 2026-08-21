@@ -5,7 +5,7 @@
    wiring. */
 
 import { hasValidPageData, resolvePageKey } from '../core/utils.js'
-import { onAfterRender, renderPage } from '../mockup/page-render.js'
+import { onAfterRender, onBeforeRender, renderPage } from '../mockup/page-render.js'
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
   if (
@@ -47,22 +47,6 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
   // priority sort mid-navigation, and skews progress counts (the regression
   // behind the 3 e2e navigation failures introduced by fba9ef5).
   let pendingPersist = false
-
-  // Names the page key of a render this module triggered as a bookkeeping
-  // repaint — not real navigation — so the onAfterRender hook registered
-  // below can recognize and skip it. restoreInitialPage()'s two hydration
-  // branches call applySavedPageState() synchronously and THEN render, purely
-  // to repaint any card that inherits from a page hydrated after
-  // js/core/app.js's initial paint; see the comments at those two call sites
-  // for why running the hook's normal work a second time there is actively
-  // wrong, not just redundant. Keyed by page key rather than a bare boolean
-  // because dispatch is now async (see the onAfterRender registration below),
-  // so an unrelated render — the autoSync pull, or the async section_edits
-  // follow-up render — could otherwise interleave and consume the wrong
-  // suppression. Under the old wrapper this had no equivalent: calling the
-  // captured pre-wrap render function directly bypassed the wrapper's
-  // applyAndRefresh entirely, with nothing to "consume."
-  let suppressAfterRenderForKey = null
 
   // The page key whose review-form values are currently loaded in the
   // sidebar. getCurrentKey() (which reads #pageSelect.value) is NOT a safe
@@ -144,33 +128,49 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
   }
 
   /**
-   * The post-render work every navigation used to get from the
-   * renderPageWithUxRefresh wrapper's applyAndRefresh — now delivered as an
-   * onAfterRender subscriber instead (see registerAfterRenderHook() below),
-   * so page-render.js calls this without knowing this module exists, rather
-   * than this module reaching in to wrap window.renderPage.
+   * The PRE-render half of what the renderPageWithUxRefresh wrapper used to do
+   * around its `originalRenderPage.call(...)` — flush any in-progress sidebar
+   * edits while the outgoing page's values are still in the DOM.
    *
-   * The flush this function opens with used to run BEFORE the wrapped
-   * renderPage call, not after it — but renderPage()/applyPageContent() only
-   * ever touch #mockPage, #pageSelect, #urlInput and #browserUrl. None of the
-   * seven review-form fields collectCurrentPageReviewState() reads
-   * (seoTitleInput, metaDescriptionInput, reviewDecision, reviewerInput,
-   * reviewDateInput, reviewNotes, reviewRisks) are touched by a render at
-   * all — only applySavedPageState() below is. So the flush only has to run
-   * before THAT call, not before renderPage(), and moving it here produces
-   * an identical read of the outgoing page's still-live form values.
-   * @param {string} key the page key onAfterRender was called with
+   * **This cannot be folded into handleAfterRender(), and it was tried.**
+   * applyPageContent() calls syncEditorFields(), which overwrites
+   * #seoTitleInput and #metaDescriptionInput with the INCOMING page's
+   * defaults, and collectCurrentPageReviewState() reads both back out of the
+   * live DOM through getValue(). A flush running after the render therefore
+   * writes the destination page's SEO title and meta description into the
+   * outgoing page's record, destroying the reviewer's in-flight edit — silent
+   * review-data loss, which is why the flush lives on its own channel rather
+   * than a few lines further down. tests/e2e/navigation-flush.spec.js is the
+   * regression test; it fails against a version that flushes after the render.
+   *
+   * The debounce window is the whole exposure: settle it first and the edit is
+   * already in localStorage with nothing left to flush, which is why every
+   * other navigation spec in the suite passed while this was broken.
+   * @param {string} key the page key about to render
    */
-  function handleAfterRender(key) {
+  function handleBeforeRender(key) {
     // Compare against reviewFormPageKey (not getCurrentKey()): the page
-    // picker's <select> already reflects the destination by the time this
+    // picker's <select> can already reflect the destination by the time this
     // runs, same reason the old wrapper avoided getCurrentKey() here.
     const outgoingKey =
       reviewFormPageKey ?? (typeof getCurrentKey === 'function' ? getCurrentKey() : null)
     if (key && key !== outgoingKey) {
       flushPendingPersist()
     }
+  }
 
+  /**
+   * The post-render work every navigation used to get from the
+   * renderPageWithUxRefresh wrapper's applyAndRefresh — now delivered as an
+   * onAfterRender subscriber instead (see registerRenderHooks() below),
+   * so page-render.js calls this without knowing this module exists, rather
+   * than this module reaching in to wrap window.renderPage.
+   *
+   * The pre-navigation flush is deliberately NOT here — see
+   * handleBeforeRender() above for the data-loss reason.
+   * @param {string} key the page key onAfterRender was called with
+   */
+  function handleAfterRender(key) {
     // Read after applyPageContent so aliases/unknown keys resolve to the
     // page that actually rendered (View Transitions set currentPageKey
     // inside the transition callback, not before renderPage returns).
@@ -193,21 +193,20 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
   }
 
   /**
-   * Subscribe handleAfterRender() to every render, with one exception:
-   * restoreInitialPage()'s two bookkeeping repaints stamp their own key into
-   * suppressAfterRenderForKey first, and this skips handleAfterRender for
-   * exactly that one render — see the comment on suppressAfterRenderForKey's
-   * declaration and the two call sites in restoreInitialPage() for why
-   * running handleAfterRender's work a second time there is actively wrong.
+   * Subscribe both halves to page-render.js's two channels.
+   *
+   * No exception list and no suppression flag: a caller that wants a render
+   * without this bookkeeping passes renderPage()'s own `skipHooks` argument,
+   * which suppresses both channels at the source. restoreInitialPage()'s two
+   * repaints are the only callers that do, and that is the whole mechanism —
+   * an earlier version kept a module-level "skip the next render with this
+   * key" flag alongside the argument, which was a second answer to the same
+   * question and could not tell a suppressed repaint from a genuine re-render
+   * of the same key arriving first.
    */
-  function registerAfterRenderHook() {
-    onAfterRender((key) => {
-      if (suppressAfterRenderForKey !== null && key === suppressAfterRenderForKey) {
-        suppressAfterRenderForKey = null
-        return
-      }
-      handleAfterRender(key)
-    })
+  function registerRenderHooks() {
+    onBeforeRender(handleBeforeRender)
+    onAfterRender(handleAfterRender)
   }
 
   function restoreInitialPage() {
@@ -251,8 +250,8 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
       // this page renders that inherits from a DIFFERENT, hydrated page
       // needs a full repaint to pick that up — skipHistory=true since this
       // reflects a reapply that already happened, not a new navigation.
-      // Calls the imported renderPage directly, not window.renderPage, and
-      // flags this render for the onAfterRender hook to skip:
+      // Calls the imported renderPage directly, not window.renderPage, with
+      // skipHooks=true (the third argument) so NEITHER channel dispatches:
       // applySavedPageState(deepLinkKey) already ran, synchronously, on the
       // line above, so handleAfterRender() would just repeat that call for
       // no reason — and worse, it would also stamp the reviewer's CURRENT
@@ -263,12 +262,13 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
       // which a later reload then wrongly treats as a deliberate choice and
       // hides Karl annotations that should still be showing. This repaint is
       // bookkeeping, not navigation, so it must not carry navigation's side
-      // effects. Calling the bare import (rather than window.renderPage)
+      // effects. Skipping the before-channel too is correct rather than
+      // incidental: there is no outgoing page here whose edits could need
+      // flushing. Calling the bare import (rather than window.renderPage)
       // also bypasses js/editing/inline-content-edit.js's decoration wrapper for
       // this one render, same as calling the pre-wrap function directly used
       // to — that module hasn't mounted yet this early in startup regardless.
-      suppressAfterRenderForKey = deepLinkKey
-      renderPage(deepLinkKey, true)
+      renderPage(deepLinkKey, true, true)
       refreshUx()
       return
     }
@@ -313,10 +313,9 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
     // already ran on the line above, so this is a bookkeeping repaint, not a
     // navigation, and must not carry handleAfterRender()'s side effects (most
     // importantly, must not stamp an untouched Karl-tags toggle into storage
-    // as though the reviewer had made a real choice) — hence the flag before
-    // calling the bare renderPage import rather than window.renderPage.
-    suppressAfterRenderForKey = initialKey
-    renderPage(initialKey, true)
+    // as though the reviewer had made a real choice) — hence skipHooks=true on
+    // the bare renderPage import rather than window.renderPage.
+    renderPage(initialKey, true, true)
     refreshUx()
   }
 
@@ -326,7 +325,7 @@ import { onAfterRender, renderPage } from '../mockup/page-render.js'
     window.ReviewUx.exportImport.mountReviewDataControls()
     window.reviewStateSync?.mountSyncControls()
     attachRefreshListeners()
-    registerAfterRenderHook()
+    registerRenderHooks()
     window.ReviewUx.stateSync.applySavedUiPreferences()
     restoreInitialPage()
     // Pull the server's copy once the UI is standing, not before: the pull

@@ -189,6 +189,10 @@ import { onAfterRender } from '../mockup/page-render.js'
 
 and, where the wrapper was installed, `onAfterRender(() => refreshUx())` — keeping whatever the wrapper did after calling through. **Delete the `__uxWrapped` guard entirely**; it existed only to make double-wrapping idempotent, and a registry has no such hazard.
 
+> **Correction, applied after this step was first marked done.** "Keeping whatever the wrapper did after calling through" was the wrong instruction, and following it literally shipped a review-data-loss bug in `d71ff26`. The wrapper did work on **both** sides of its `originalRenderPage.call(...)`, and the before-side is not optional: it flushes in-progress sidebar edits while the DOM still holds the OUTGOING page's values. `applyPageContent()` overwrites `#seoTitleInput` and `#metaDescriptionInput` through `syncEditorFields()` on every render, and `collectCurrentPageReviewState()` reads both back out of the live DOM — so a flush moved to the after-hook writes the destination page's SEO title and meta description into the outgoing page's record. A **second channel**, `onBeforeRender()`, dispatched synchronously before either render branch touches the DOM, is what this step actually requires. `tests/e2e/navigation-flush.spec.js` is the regression test; it failed against `d71ff26` and passes now. The whole existing e2e suite passed while this was broken, because every other navigating spec either types nothing first or lets the 300ms debounce settle — the exposure is navigation *inside* that window.
+>
+> The same correction removed `suppressAfterRenderForKey`, a module-level "skip the next render with this key" flag that duplicated `renderPage()`'s own `skipHooks` argument. One mechanism, at the source, suppressing both channels.
+
 - [x] **Step 6: Register the test and update the documented count**
 
 Add `tests/page-render-hooks.test.js` to `package.json`'s explicit `test` list (51 → 52) and update the count in `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md`. `tests/doc-counts.test.js` enforces this.
