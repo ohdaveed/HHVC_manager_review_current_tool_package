@@ -52,14 +52,14 @@ const ROOT = join(import.meta.dir, '..')
  * the two full mirrors carry a `## Security Reviews` section, and the Copilot
  * mirror compresses it to a bullet under `## Workflow & verification`.
  */
-const MIRRORS = {
+const DEFAULT_SECTIONS = {
   'AGENTS.md': 'Security Reviews',
   'CLAUDE.md': 'Security Reviews',
   '.github/copilot-instructions.md': 'Workflow & verification',
 }
 
 /** Just the paths, for the checks that do not care about sections. */
-const MIRROR_PATHS = Object.keys(MIRRORS)
+const MIRROR_PATHS = Object.keys(DEFAULT_SECTIONS)
 
 /** The two that carry every section in full. The Copilot mirror does not. */
 const FULL_MIRRORS = ['AGENTS.md', 'CLAUDE.md']
@@ -75,6 +75,17 @@ const FULL_MIRRORS = ['AGENTS.md', 'CLAUDE.md']
  *
  * Adding to this list is a deliberate act: it asserts the fact belongs in
  * every mirror, including the compressed one.
+ *
+ * A claim may carry its own `sections` map to look somewhere other than
+ * DEFAULT_SECTIONS, so the registry is not bound to one part of the documents.
+ *
+ * KNOWN LIMIT, stated rather than implied: every claim currently registered
+ * comes from the security-review guidance, so drift in any OTHER mirrored
+ * section is still uncaught. That is a gap in this registry's COVERAGE, not in
+ * its mechanism — adding a claim elsewhere needs only a `sections` entry. Which
+ * further facts are load-bearing enough to bind all three mirrors, including
+ * the compressed one, is an editorial judgement rather than a mechanical one,
+ * and is tracked on issue #182 rather than guessed at here.
  */
 const SHARED_CLAIMS = [
   { id: 'local-diff-names-head', needle: 'git diff HEAD' },
@@ -111,7 +122,9 @@ function readMirror(relativePath) {
  * Split a markdown file into its `## ` sections.
  *
  * @param {string} text Raw file contents.
- * @returns {Map<string, string>} heading text to the trimmed body beneath it.
+ * @returns {Map<string, string>} heading text to the RAW body beneath it.
+ *   Deliberately untrimmed: IDENTICAL_SECTIONS asks for byte identity, and a
+ *   trim would let a whitespace-only difference at either boundary pass.
  */
 function sectionsOf(text) {
   const out = new Map()
@@ -120,14 +133,14 @@ function sectionsOf(text) {
   for (const line of text.split('\n')) {
     const match = line.match(/^## (.+)$/)
     if (match) {
-      if (heading !== null) out.set(heading, body.join('\n').trim())
+      if (heading !== null) out.set(heading, body.join('\n'))
       heading = match[1].trim()
       body = []
     } else if (heading !== null) {
       body.push(line)
     }
   }
-  if (heading !== null) out.set(heading, body.join('\n').trim())
+  if (heading !== null) out.set(heading, body.join('\n'))
   return out
 }
 
@@ -159,27 +172,32 @@ describe('instruction mirrors', () => {
     for (const path of MIRROR_PATHS) expect(existsSync(join(ROOT, path))).toBe(true)
   })
 
-  test('every mirror actually has the section it is mapped to', () => {
+  test('every section any claim points at actually exists', () => {
     // Without this, a renamed heading silently empties the haystack and every
-    // claim below fails for a reason that names the wrong problem.
-    for (const [path, heading] of Object.entries(MIRRORS)) {
+    // claim fails for a reason that names the wrong problem.
+    const wanted = new Set()
+    for (const claim of SHARED_CLAIMS) {
+      const map = claim.sections ?? DEFAULT_SECTIONS
+      for (const path of MIRROR_PATHS) wanted.add(`${path}\u0000${map[path]}`)
+    }
+    for (const key of wanted) {
+      const [path, heading] = key.split('\u0000')
       const has = sectionsOf(readMirror(path)).get(heading) !== undefined
       expect({ path, heading, present: has }).toEqual({ path, heading, present: true })
     }
   })
 
   describe('shared claims appear in all three mirrors', () => {
-    // Normalized bodies of the CARRYING SECTION only, never the whole file.
-    const normalized = Object.fromEntries(
-      Object.entries(MIRRORS).map(([path, heading]) => [
-        path,
-        normalize(sectionsOf(readMirror(path)).get(heading) ?? ''),
-      ])
-    )
+    const parsed = Object.fromEntries(MIRROR_PATHS.map((p) => [p, sectionsOf(readMirror(p))]))
 
-    for (const { id, needle } of SHARED_CLAIMS) {
+    /** Normalized body of the CARRYING SECTION only, never the whole file. */
+    const haystackFor = (claim, path) =>
+      normalize(parsed[path].get((claim.sections ?? DEFAULT_SECTIONS)[path]) ?? '')
+
+    for (const claim of SHARED_CLAIMS) {
+      const { id, needle } = claim
       test(`states "${needle}" (${id})`, () => {
-        const missing = MIRROR_PATHS.filter((path) => !normalized[path].includes(needle))
+        const missing = MIRROR_PATHS.filter((path) => !haystackFor(claim, path).includes(needle))
         // The failure message names the file AND the fact, because "a mirror
         // drifted" is not actionable and "copilot-instructions.md no longer
         // says `gh pr diff <number>`" is.
