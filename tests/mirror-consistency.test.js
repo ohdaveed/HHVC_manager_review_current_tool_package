@@ -6,12 +6,25 @@
 // agreement was maintained entirely by hand. It failed: the Copilot mirror's
 // security-review guidance drifted apart from the other two and was caught
 // only because a reviewer happened to read it. Measured against the commit
-// before the fix (e01870f), every fact in SHARED_CLAIMS was
+// before the fix (e01870f), all SEVEN of the security-review claims below were
 // absent from `.github/copilot-instructions.md` and present in both full
 // mirrors — so this check would have failed on that tree, which is the whole
-// argument for it. Nothing else covers this: markdownlint's MD051 validates a
-// fragment against the file it sits IN, and link-check.yml runs weekly and
-// opens an issue rather than failing a merge.
+// argument for it. The twelve identifier claims were already present at that
+// revision and prove nothing about it; they guard a different failure, stated
+// where they are declared. Nothing else covers this: markdownlint's MD051
+// validates a fragment against the file it sits IN, and link-check.yml runs
+// weekly and opens an issue rather than failing a merge.
+//
+// WHAT THIS DOES NOT CATCH. Presence, not polarity. A mirror that keeps a
+// registered token and reverses the sentence around it — "an assessment need
+// NOT land within the first 2 tool calls" — still passes, because substring
+// matching cannot read meaning. Matching polarity instead would mean a
+// per-mirror regex over prose three documents deliberately word differently,
+// which is brittle in the direction that matters: it fails on rewordings that
+// are fine and still misses reversals phrased another way. So this gate covers
+// a fact being DELETED from a mirror or DIVERGING between them, and a semantic
+// reversal remains a human reviewer's job. Better a narrow check that holds
+// than a wide one that lies about its reach.
 //
 // WHY NOT COMPARE THE FILES. They are deliberately not byte-identical, and a
 // naive equality check would be wrong rather than merely noisy. Measured on
