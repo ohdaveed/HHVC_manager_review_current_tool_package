@@ -324,33 +324,64 @@ or `js/core/page-data.js`.**
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on every pull
-request, in two deliberately separate jobs so a formatting or schema failure
-reports in seconds without waiting on a Chromium download, and a flaky
-browser run never masks a unit failure:
+`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
+a graph of seven jobs rather than one long one, so a formatting or schema
+failure reports in seconds without waiting on a Chromium download and a flaky
+browser run never masks a unit failure.
 
-**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
-took `bun-version: latest` until 2026-08-15, so the runtime changed under the
-repo with no commit. Bun 1.3.14 stopped letting CJS `require()` an ESM module;
-`build_scripts/storage.js` was the only ESM file under `build_scripts/`, so
-`server.ts` threw at boot and every suite spawning it reported "did not start
-in time" — passing or failing per run depending on which Bun `latest` resolved
-to. **Everything under `build_scripts/` is CommonJS now**; keep it that way,
-since `server.ts` named-imports those modules from TypeScript, which is the
-supported direction. Bumping `.bun-version` is fine, just deliberate.
+**Every job pins Bun from `.bun-version`, and that pin is load-bearing.** They
+took `bun-version: latest` until 2026-08-15, which meant the runtime changed
+under the repo without a commit. Bun 1.3.14 stopped allowing CJS to `require()`
+an ESM module; `build_scripts/storage.js` was the only ESM file under
+`build_scripts/`, so `server.ts` threw at boot and every suite that spawns it
+reported "did not start in time". Because `latest` resolved differently run to
+run, the same commit passed and failed, and three rounds went into widening
+timeouts before anyone captured the server's stderr. **Everything under
+`build_scripts/` is CommonJS now** — keep it that way; `server.ts` named-imports
+those modules from TypeScript, which is the supported direction. Bumping
+`.bun-version` is a normal change, just a deliberate one.
+`tests/ci-workflow.test.js` asserts the pin across every job.
 
-- **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
-  → `build:railway` → `test`. `build:railway` doubles as a deploy-integrity
-  check: it fails if the committed workshop-form `dist` references assets
-  that were never committed (the "form shell that never hydrates" regression).
-  **It runs before `test` on purpose**, even though that delays a unit
-  failure by a build: one test in `tests/review-api-server.test.js` asserts
-  that a set-but-empty `STATIC_ROOT` still serves the real built app, and it
-  can only tell a correct fallback from a broken one if `dist/` exists. It
-  skips itself when there is no build — so with the fast order it passed by
-  skipping and covered nothing.
+- **changes** — classifies the PR's touched paths into `docs` and `code`
+  outputs. Everything below gates on those, so it is the only job that always
+  runs.
+- **docs_only_checks** — for a pull request touching docs and no code:
+  `lint:docs`, `format:check`, **and the full unit suite**. That last one is
+  not belt-and-braces. Docs are SOURCE DATA here — thirteen test files read
+  them, including `doc-counts` and `doc-claims` (figures against the
+  filesystem), `mirror-consistency` (the three instruction files against each
+  other), `module-paths` (a `js/` path in a doc naming a real file) and
+  `karl-blocks` (parsing `docs/karl-export-field-map.md` against the panel
+  inventory). Linting alone would let a docs-only PR merge with a stale count
+  or a mismatched field map, and only the push to `main` would find out. The
+  whole suite runs rather than a curated list, because a named list is a second
+  inventory of which tests read docs and free to drift from the tests.
+- **format_validate_lint** — `format:check`, `check:revert`, `validate`,
+  `lint:docs`, `lint:dead-code:ci`, `lint:architecture`, `lint:js`. The fast
+  gates, so they report before anything builds.
+- **build_railway** — `build:railway`, which doubles as a deploy-integrity
+  check: it fails if the committed workshop-form `dist` references assets that
+  were never committed (the "form shell that never hydrates" regression). It
+  then **uploads `dist/` as an artifact**.
+- **build_singlefile** — `build:singlefile`, in parallel with the above.
+- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+  is what makes the ordering mean anything.** `needs:` only sequences jobs; a
+  separate runner gets a fresh checkout, and `dist/` is gitignored, so without
+  the artifact the job would test against a tree that has never been built. One
+  test in `tests/review-api-server.test.js` asserts a set-but-empty
+  `STATIC_ROOT` still serves the real built app, and it `skipIf`s itself when
+  `dist/index.html` is absent — so it would pass by skipping and cover nothing,
+  which is the exact gap the old in-job `build:railway` → `test` order existed
+  to close.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
-  `playwright-report/` as an artifact on failure (traces are on-first-retry).
+  `playwright-report/` as an artifact on failure.
+
+**Branch protection's required contexts are job NAMES, not job ids, and they
+have to be changed with this file.** Splitting the old `checks` job renamed the
+context `Format, validate, unit tests` out of existence; until protection was
+updated to `Format, validate, lint` plus `Unit tests (bun test)`, a PR could go
+green and still never satisfy the requirement, because a context that no job
+produces stays permanently pending.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup

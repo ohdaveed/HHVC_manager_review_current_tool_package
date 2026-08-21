@@ -60,6 +60,23 @@ jobs:
         run: bun run lint:docs
       - name: Prettier check
         run: bun run format:check
+      # Docs are SOURCE DATA here, not prose, so lint alone does not cover a
+      # docs-only change. Thirteen test files read them: `doc-counts` and
+      # `doc-claims` check figures against the filesystem, `mirror-consistency`
+      # checks AGENTS.md/CLAUDE.md/copilot-instructions against each other,
+      # `module-paths` checks that a `js/` path in a doc names a real file, and
+      # `karl-blocks` parses docs/karl-export-field-map.md against the panel
+      # inventory the exporter types into. Without this a docs-only PR merges
+      # with a stale count or a mismatched field map, and only the push to
+      # `main` finds out.
+      #
+      # The WHOLE suite rather than a curated list of those files: a named list
+      # is a second inventory of which tests read docs, free to drift from the
+      # tests themselves, and the run is ~30s. What this path still skips is
+      # the expensive half — both builds and Playwright — which is what it
+      # exists to skip.
+      - name: Unit tests (bun test)
+        run: bun run test
 
   format_validate_lint:
     name: Format, validate, lint
