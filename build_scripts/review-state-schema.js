@@ -116,7 +116,14 @@ const sectionEditTextItemSchema = z.union([
  */
 const sectionEditFactItemSchema = z
   .object({
-    label: z.string(),
+    // Non-blank, not merely a string: the interactive commit already refuses a
+    // blank label, but an IMPORTED record never passes through that UI guard,
+    // and a blank fact label renders an empty heading.
+    //
+    // `refine` rather than `.trim().min(1)`, which is a TRANSFORM — it would
+    // store the trimmed string, silently rewriting the reviewer's value on its
+    // way through validation. This validates and stores what it was given.
+    label: z.string().refine((value) => value.trim() !== ''),
     text: z.string(),
     unverified: z.boolean().optional(),
     unverifiedReason: z.string().optional(),

@@ -54,15 +54,23 @@ const EDITABLE_FIELD_SHAPES = [
   { pattern: /^sections\.\d+\.paragraphs$/, kind: 'textArray', example: 'sections.0.paragraphs' },
   { pattern: /^sections\.\d+\.bullets$/, kind: 'textArray', example: 'sections.0.bullets' },
   { pattern: /^sections\.\d+\.table$/, kind: 'table', example: 'sections.0.table' },
-  // A `top-facts` section's fact_items. textArray rather than a kind of its
-  // own: a fact is {label, text} and isValidSectionEditItem accepts it (it
-  // carries a string `text`), while writeScalarValue's taggedText branch
-  // spreads the existing object so an edit to the text keeps the label — the
-  // same mechanism whatToKnow.thingsToKnow already relies on. It gains NO
-  // add/remove affordance from this registration: decorateListControls()
-  // (js/editing/inline-content-edit.js) allowlists paragraphs and bullets by
-  // path, not by kind, so an appended item that carried no `label` — which
-  // renderTopFacts() prints unguarded — cannot be created here.
+  // A `top-facts` section's fact_items, and the one path with a kind of its
+  // OWN rather than a reused one. A fact is {label, text} and
+  // renderTopFacts() prints the label unguarded, so the generic textArray
+  // contract is too loose: it accepts a bare string or an object carrying only
+  // `text`, and a stored value REPLACES the authored array, so such an edit
+  // destroys the real facts and renders blank headings while passing every
+  // validator. See isValidSectionEditFact below for the full rule.
+  //
+  // The strictness is about the STORED ARRAY only. Editing one fact's TEXT
+  // still commits the tagged object like any other body copy —
+  // editableItemKind returns taggedText for `sections.N.facts.M`, and
+  // writeScalarValue's spread is what preserves the label.
+  //
+  // It gains NO add/remove affordance from this registration:
+  // decorateListControls() (js/editing/inline-content-edit.js) allowlists
+  // paragraphs and bullets by PATH, not by kind, so an appended item carrying
+  // no label cannot be created here.
   { pattern: /^sections\.\d+\.facts$/, kind: 'factsArray', example: 'sections.0.facts' },
   {
     pattern: /^sections\.\d+\.callout\.title$/,
@@ -237,14 +245,37 @@ const SECTION_EDIT_PATH_PATTERN = new RegExp(
  * @param {unknown} item
  * @returns {boolean}
  */
+const FACT_ITEM_KEYS = new Set(['label', 'text', 'unverified', 'unverifiedReason'])
+
+/**
+ * One `sections.N.facts` item, validated to the SAME strictness as
+ * build_scripts/review-state-schema.js's sectionEditFactItemSchema.
+ *
+ * Three rules beyond "has both halves", each closing a divergence rather than
+ * being defensive for its own sake:
+ *
+ * - **The label may not be blank.** The interactive commit already refuses one
+ *   (js/editing/inline-content-edit.js), but that is a UI guard, not the
+ *   persistence boundary — an IMPORTED record reaches this function without
+ *   ever passing through it, and a blank fact label renders an empty heading.
+ * - **No unknown keys**, matching the schema's `.strict()`. A shape one side
+ *   accepts and the other rejects is exactly how an edit gets dropped on the
+ *   next load with nothing erroring — the failure this module's header already
+ *   warns about for isValidSectionEditItem.
+ * - **The meta fields are type-checked.** `unverified: 'false'` is a string,
+ *   which the renderer treats as TRUTHY and shows an Unverified pill for,
+ *   while the strict schema rejects it.
+ * @param {unknown} item
+ * @returns {boolean}
+ */
 function isValidSectionEditFact(item) {
-  return (
-    Boolean(item) &&
-    typeof item === 'object' &&
-    !Array.isArray(item) &&
-    typeof item.label === 'string' &&
-    typeof item.text === 'string'
-  )
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return false
+  if (typeof item.label !== 'string' || item.label.trim() === '') return false
+  if (typeof item.text !== 'string') return false
+  if (Object.keys(item).some((key) => !FACT_ITEM_KEYS.has(key))) return false
+  if (item.unverified !== undefined && typeof item.unverified !== 'boolean') return false
+  if (item.unverifiedReason !== undefined && typeof item.unverifiedReason !== 'string') return false
+  return true
 }
 
 function isValidSectionEditItem(item) {

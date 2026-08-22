@@ -641,14 +641,27 @@ function emitSection(context, panel, source, section, index) {
 
   if (section.facts) {
     entry.fields.push({ label: 'Facts title', value: String(heading.value || '') })
-    section.facts.forEach((fact, factIndex) => {
-      entry.fields.push({ label: `Fact ${factIndex + 1} — title`, value: fact.label })
-      entry.fields.push({ label: `Fact ${factIndex + 1} — text`, value: fact.text })
+    // Resolved through the overlay rather than read off `section.facts`. Fact
+    // labels and text became inline-editable in #197, so the authored array is
+    // no longer what a reviewer approved — and this transcript is a paste-ready
+    // instruction a human performs keystroke by keystroke, so emitting
+    // superseded copy here publishes the pre-review draft. The note below used
+    // to state the opposite as a standing fact; it was true when written.
+    const facts = resolveValue(context.page, context.reviewRecord, `sections.${index}.facts`)
+    const factItems = Array.isArray(facts.value) ? facts.value : []
+    factItems.forEach((fact, factIndex) => {
+      entry.fields.push({
+        label: `Fact ${factIndex + 1} — title`,
+        value: String(fact?.label ?? ''),
+      })
+      entry.fields.push({ label: `Fact ${factIndex + 1} — text`, value: itemText(fact) })
     })
     context.consumed.add(`sections.${index}.facts`)
-    entry.notes.push(
-      'Fact items carry no reviewer overlay — this tool records no edit for them, so these are the authored values rather than reviewed ones.'
-    )
+    if (facts.overlaid) {
+      entry.notes.push(
+        'Fact items carry a reviewer overlay — the values above are the reviewed ones, not the authored draft.'
+      )
+    }
     emitSectionProse(context, entry, section, index, { headingAlreadyEmitted: true })
     context.transcript.entries.push(entry)
     return

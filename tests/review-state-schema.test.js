@@ -112,6 +112,30 @@ describe('review-state-schema', () => {
     expect(result.data.section_edits).toEqual({})
   })
 
+  test('drops a facts edit with a blank label, an unknown key, or mistyped meta', () => {
+    const result = validateReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: {
+        'sections.0.facts': [{ label: '   ', text: 'T' }],
+        'sections.1.facts': [{ label: 'L', text: 'T', bogus: 1 }],
+        'sections.2.facts': [{ label: 'L', text: 'T', unverified: 'false' }],
+      },
+    })
+    expect(result.success).toBe(true)
+    expect(result.data.section_edits).toEqual({})
+  })
+
+  // The non-blank check must VALIDATE, never transform: `.trim().min(1)` would
+  // store the trimmed string, silently rewriting the reviewer's value on its
+  // way through validation.
+  test('stores a valid label verbatim, padding included', () => {
+    const result = validateReviewRecord({
+      page_key: 'pestsTopic',
+      section_edits: { 'sections.0.facts': [{ label: ' Cost ', text: 'Free' }] },
+    })
+    expect(result.data.section_edits['sections.0.facts'][0].label).toBe(' Cost ')
+  })
+
   test('keeps a facts edit carrying both halves', () => {
     const result = validateReviewRecord({
       page_key: 'pestsTopic',

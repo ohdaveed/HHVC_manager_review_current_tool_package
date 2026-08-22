@@ -79,6 +79,28 @@ describe('factsArray is stricter than textArray', () => {
     expect(isValidSectionEditValue('factsArray', [{ label: 'L' }])).toBe(false)
   })
 
+  // The interactive commit refuses a blank label, but that is a UI guard, not
+  // the persistence boundary — an IMPORTED record never passes through it.
+  test('rejects a blank or whitespace-only fact label', () => {
+    expect(isValidSectionEditValue('factsArray', [{ label: '', text: 'T' }])).toBe(false)
+    expect(isValidSectionEditValue('factsArray', [{ label: '   ', text: 'T' }])).toBe(false)
+  })
+
+  // Kept in step with sectionEditFactItemSchema's `.strict()`: a shape one
+  // side accepts and the other rejects is how an edit is silently dropped on
+  // the next load with nothing erroring.
+  test('rejects unknown keys and mistyped meta fields', () => {
+    expect(isValidSectionEditValue('factsArray', [{ label: 'L', text: 'T', bogus: 1 }])).toBe(false)
+    // The renderer treats this string as TRUTHY and shows an Unverified pill,
+    // while the strict schema rejects the record outright.
+    expect(
+      isValidSectionEditValue('factsArray', [{ label: 'L', text: 'T', unverified: 'false' }])
+    ).toBe(false)
+    expect(
+      isValidSectionEditValue('factsArray', [{ label: 'L', text: 'T', unverifiedReason: 7 }])
+    ).toBe(false)
+  })
+
   test('accepts a facts array carrying both halves, with optional meta', () => {
     expect(isValidSectionEditValue('factsArray', [{ label: 'L', text: 'T' }])).toBe(true)
     expect(
