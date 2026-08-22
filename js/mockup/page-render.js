@@ -47,9 +47,12 @@ const INHERIT_BADGE_TEXT = {
  * learns who it was. The dependency therefore points from the subscriber to
  * this module, which is what keeps the import graph acyclic. Replaces the
  * js/review/ux-improvements.js monkey-patch that used to reassign
- * window.renderPage to a wrapper — measurement found that patch responsible
- * for 24 of the edges binding this codebase's single 16-file dependency
- * cycle, nearly double the next contributor.
+ * window.renderPage to a wrapper. Measurement made `window.renderPage` the
+ * largest single contributor to this codebase's one window-graph cycle; the
+ * exact figures once quoted here are superseded, so re-derive with
+ * `bun build_scripts/measure-window-graph.js` rather than trusting a
+ * restatement (see the 2026-08-21 correction in
+ * docs/superpowers/specs/2026-08-19-module-coherence-measurement.md).
  *
  * **There are two channels because a wrapper straddled the render and a
  * subscriber cannot.** The old wrapper did work on BOTH sides of its

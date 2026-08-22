@@ -32,6 +32,10 @@ They were derived against `main` @ `1ba718e`. **Verify each before editing.** An
 Read these four facts before writing any code; three of them contradict what the spec originally assumed.
 
 1. **The cycles are a policy problem, not a runtime one.** Edges split 78 mount-time / 120 call-time, and the mount-time edges form **zero cycles**. ES modules resolve call-time cycles through function hoisting. What makes a cycle fatal here is `no-circular`, not the browser.
+
+   > **Qualify this before relying on it (added 2026-08-21).** Hoisting makes the BINDING available, not the state the body reads. A hoisted `function` called during cyclic initialization still throws if its body touches a `const` or a module-level object the other module has not initialized yet — and `const`/arrow exports get no hoisting at all, so a cycle through one is a TDZ error on the binding itself. "Call-time is safe" holds for the shape this codebase uses today (function declarations reading state only after mount); it is not a general licence. Each conversion in Tasks 3–5 needs an import-time smoke test — load the module graph and assert it evaluates — rather than inference from this line.
+   >
+   > The 78/120 split itself is superseded; the re-measurement reads 97/154. Re-derive with `bun build_scripts/measure-window-graph.js`.
 2. **42 of 58 files are already acyclic** and convert with no design decision attached. There is exactly one strongly connected component, of 16 files.
 3. **`window.renderPage` causes 24 of the intra-SCC edges** — nearly double the next contributor. Task 1 removes it, which is why Task 1 is first.
 4. **36 value reads execute at import time**, and 12 are the single pattern `const DATA = window.HHVC_DATA` — one of 24 capture sites for that object tree-wide. That substitution is the highest-leverage edit in the plan.
@@ -224,7 +228,13 @@ and, where the wrapper was installed, `onAfterRender(() => refreshUx())` — kee
 
 Add `tests/page-render-hooks.test.js` to `package.json`'s explicit `test` list (51 → 52) and update the count in `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md`. `tests/doc-counts.test.js` enforces this.
 
-- [ ] **Step 7: Prove the tangle shrank**
+- [x] **Step 7: Prove the tangle shrank** — RUN, and the answer was NO. See the
+      2026-08-21 correction in the measurement doc: `renderPage`'s intra-SCC
+      edges fell 33 → 22, the SCC stayed at 25 files, mount-time edges
+      unchanged at 97. The commands below still passed; they were never
+      sufficient to answer this step's own question, because
+      `lint:architecture` sees static imports only and this graph is built from
+      `window.*`. `bun build_scripts/measure-window-graph.js` is what answers it.
 
 ```bash
 bun run lint:architecture
@@ -239,7 +249,7 @@ bun run test:e2e
 
 `tests/e2e/review-workflow.spec.js` navigates between pages and asserts saved fields restore; that is the path the decorator served.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit** — landed as `d71ff26` + `451e20b` (the flush fix) in PR #191.
 
 ```bash
 git add js/mockup/page-render.js js/review/ux-improvements.js js/core/app.js \

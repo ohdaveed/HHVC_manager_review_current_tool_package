@@ -122,7 +122,7 @@ than a rounding difference.** Measured against this document's own baseline,
 | self-mounting IIFEs | 31 | 31 | matches |
 | namespaces on `window` | 55 | 54 | off by one |
 | edges | 226 | 251 | — |
-| mount-time / call-time | 78 / 120 | 96 / 155 | — |
+| mount-time / call-time | 78 / 120 | 97 / 154 | — |
 | largest SCC | **16 files** | **25 files** | — |
 | `window.renderPage` intra-SCC edges | **24** | **33** | — |
 
@@ -158,7 +158,7 @@ whatever the divergence above:
 
 **Eleven of `window.renderPage`'s 33 intra-SCC edges are gone — a third — and
 the SCC did not shrink by a single file.** Mount-time edges are unchanged at
-96.
+97.
 
 That is the honest result, and it is not a failure of the conversion so much as
 a correction to what Task 1 was ever going to achieve. Removing the
@@ -191,15 +191,22 @@ four moved the mount-time/call-time split rather than the edge or SCC counts:
   kept a reference that is only a string, and a `}` inside a quoted string
   inside an interpolation ended the scan early, blanking the real code after
   it — the more damaging half, since it shrinks the graph silently.
+- **Expression-bodied arrows ran to the end of their block.** Found in the
+  second review round, and the subtlest of the four: this codebase is
+  semicolon-free, so an arrow is not terminated by `;` or `,` and its scope was
+  left open, swallowing every later read in the block. `js/ai/ai-assist-render.js`
+  opens with `const escapeHtml = (value) => window.utils.escapeHtml(value)`, and
+  its later **mount-time** `window.AiAssist` read was counted as call-time —
+  the one direction this measurement must never err in, since understating
+  mount-time understates the TDZ hazard. Arrows now close at a newline whose
+  next line starts a statement.
 
-Corrected figures: the split is **96 / 155**, not 102 / 149. Six edges moved
-from mount-time to call-time, which is the direction all three defects
-predicted — methods and arrow bodies are call-time by definition. **Edge
+Corrected figures: the split is **97 / 154**, not 102 / 149. **Edge
 counts, SCC membership and the `renderPage` figures are unchanged**, so the
 Step 7 conclusion above stands exactly as written.
 
-The four are pinned in `tests/measure-window-graph.test.js` and were verified
-to FAIL against the pre-correction scanner. Three further cases in that file
+All are pinned in `tests/measure-window-graph.test.js` and were verified to
+FAIL against the pre-correction scanner. Three further cases in that file
 (a control-statement block, a nested template, a brace inside a string inside
 an interpolation) pass against both versions and are guards against
 over-correcting rather than proven regressions — a scanner that counted

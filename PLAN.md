@@ -26,9 +26,13 @@ restored from `archive/impl-module-coherence`; it has been re-pushed at
 session owns this branch** — two sessions landing the same work is worse than
 neither doing so.
 
-**State at the time of writing:** every gate green — `test` 1949/0,
-`test:e2e` 190 passed, `format:check`, `lint:js`, `lint:docs`,
-`lint:architecture`, `lint:dead-code:ci`, `validate`, `build:singlefile`.
+**State (updated after the merge and the review round):** every gate green —
+`test` 2075 pass / 0 fail across 57 files, `test:e2e` 202 passed,
+`format:check`, `lint:js`, `lint:docs`, `lint:architecture`,
+`lint:dead-code:ci`, `check:revert`, `validate`, `build:railway`,
+`build:singlefile`. (The pre-merge snapshot this line used to carry — 1949 unit
+and 190 e2e — is superseded; it was taken before `origin/main` brought four
+unit-test files and one spec file with it.)
 
 ---
 
@@ -77,7 +81,7 @@ Two further facts that make this a real task rather than a formality:
 - [x] **3. Decide, on the evidence, what this PR claims.** **Outcome: the
       second one.** `renderPage`'s intra-SCC edges fell 33 → 22 (a third) and
       the SCC did not shrink by a single file — 25 before, 25 after;
-      mount-time edges unchanged at 96. Recorded in the measurement doc's
+      mount-time edges unchanged at 97. Recorded in the measurement doc's
       "Re-measurement, 2026-08-21" section. So the PR claims what actually
       changed — a monkey-patch replaced by a registry, plus the data-loss fix
       — and explicitly does not claim the tangle shrank. The branch still
@@ -97,8 +101,7 @@ Two further facts that make this a real task rather than a formality:
       a reviewer reading the two commits in order is not misled by the first
       one's rationale. Link the Step 7 numbers from task 2.
 
-- [ ] **6. CI green.** `gh pr checks --watch`. All six gating contexts must
-      pass — `Format, validate, lint`, `Unit tests (bun test)`,
+- [ ] **6. CI green.** All **seven** required contexts must pass — `Format, validate, lint`, `Unit tests (bun test)`,
       `Playwright end-to-end tests`, `Docs-only checks`,
       `Build railway bundle`, `Build single-file export` **and
       `Detect changed files`** — seven, not six. The detector is the one

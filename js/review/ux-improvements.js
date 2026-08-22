@@ -355,8 +355,9 @@ import { onAfterRender, onBeforeRender, renderPage } from '../mockup/page-render
      Flushing rather than discarding, deliberately: the pending keystrokes are
      real edits to the page being hidden, and at flush time that page still
      exists, so the save is well formed and lands under the right key. It also
-     leaves pendingPersist false, which makes handleAfterRender()'s own
-     pre-navigation flush a no-op instead of a second write. */
+     leaves pendingPersist false, which makes handleBeforeRender()'s own
+     pre-navigation flush a no-op instead of a second write. The flush lives on
+     the BEFORE channel; handleAfterRender() performs none. */
   window.ReviewUx.flushPendingPersist = flushPendingPersist
 
   if (document.readyState === 'loading') {

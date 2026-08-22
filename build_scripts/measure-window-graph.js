@@ -350,6 +350,35 @@ function functionDepthAt(code) {
       }
       continue
     }
+    // **So does a newline, because this codebase is semicolon-free.** Waiting
+    // for `,` or `;` leaves an arrow's span open to the end of its enclosing
+    // block, which swallows every later read in that block and reports it as
+    // call-time. That is not hypothetical: `js/ai/ai-assist-render.js` opens
+    // with `const escapeHtml = (value) => window.utils.escapeHtml(value)` and
+    // its later MOUNT-time `window.AiAssist` read was being counted on the
+    // wrong side of the split — the one direction this measurement must never
+    // err in, since understating mount-time understates the TDZ hazard.
+    //
+    // Close at a newline only when the next line starts a new STATEMENT: an
+    // identifier, `{`, or `;`. A continuation line in this repo begins with an
+    // operator, `.`, `?`, `:` or a closing bracket, and those keep the arrow
+    // open. Leading `(`/`[` would genuinely continue an expression, but the
+    // code style mandates ASI-safety and the leading-semicolon IIFE idiom
+    // precisely so no line begins that way.
+    if (ch === '\n' && arrows.length > 0) {
+      let j = i + 1
+      while (j < code.length && /[ \t\r]/.test(code[j])) j++
+      const startsStatement = j >= code.length || /[A-Za-z_$;{]/.test(code[j])
+      if (startsStatement) {
+        for (let k = arrows.length - 1; k >= 0; k--) {
+          if (arrows[k].parenDepth === 0 && arrows[k].braceDepth === braces.length) {
+            spans.push([arrows[k].start, i])
+            arrows.splice(k, 1)
+          }
+        }
+      }
+      continue
+    }
 
     if (ch === '{') {
       const { isFunction, transparent } = classifyBrace(i)

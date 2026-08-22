@@ -4,8 +4,9 @@
  * **Why this replaced a monkey-patch.** js/review/ux-improvements.js used to
  * reassign window.renderPage to a wrapper that called the original and then
  * refreshed. That worked, and it forced renderPage onto the global — which
- * measurement showed was responsible for 24 of the 24-plus edges binding the
- * one 16-file dependency cycle in this codebase. A registry inverts it:
+ * measurement showed to be the largest single contributor to this codebase's
+ * one window-graph cycle. (The exact counts once quoted here are superseded;
+ * re-derive with build_scripts/measure-window-graph.js.) A registry inverts it:
  * page-render.js calls back into code it does not import, and every subscriber
  * depends on page-render rather than the reverse.
  *

@@ -272,3 +272,30 @@ describe('scanner defects found in review', () => {
     expect(code).toContain('window.utils.escapeHtml')
   })
 })
+
+describe('expression-bodied arrows in a semicolon-free file', () => {
+  test('an arrow ends at the newline, not at the end of its block', () => {
+    // The shape from js/ai/ai-assist-render.js. Waiting for `,` or `;` in a
+    // semicolon-free codebase leaves the span open and swallows the NEXT
+    // read, reporting a mount-time dependency as call-time — the one
+    // direction this measurement must never err in.
+    const src = 'const esc = (v) => window.utils.escapeHtml(v)\nconst NS = window.AiAssist'
+    const depth = functionDepthAt(src)
+    expect(depth(src.indexOf('window.utils'))).toBeGreaterThan(0)
+    expect(depth(src.indexOf('window.AiAssist'))).toBe(0)
+  })
+
+  test('a continuation line does NOT end the arrow', () => {
+    // `.` at the start of the next line continues the expression, so the
+    // arrow body is still open and the read is still call-time.
+    const src = 'const get = () => window.HHVC_DATA\n  .pages\nconst boot = 1'
+    expect(functionDepthAt(src)(src.indexOf('window'))).toBeGreaterThan(0)
+  })
+
+  test('a multi-line call argument keeps the arrow open', () => {
+    // The newline sits inside parens, so nothing is terminated there.
+    const src = 'const f = () => wrap(\n  window.HHVC_DATA\n)\nconst after = window.Other'
+    const depth = functionDepthAt(src)
+    expect(depth(src.indexOf('window.HHVC_DATA'))).toBeGreaterThan(0)
+  })
+})
