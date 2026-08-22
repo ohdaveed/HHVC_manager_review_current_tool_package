@@ -485,8 +485,9 @@ it is not a supported extension point. What still needs the assignment is the
 twenty-three `window.renderPage(key)` / `window.renderPage?.(key)` call sites
 across the review/UX IIFEs, which reach it through `window` rather than
 importing it. The other historical wrappers were the deleted
-`js/interactive-sitemap.js` and `js/review/manager-review-export.js`, whose
-decorator went with the sidebar label it refreshed), `window.toggleSidebar` (an inline
+`js/interactive-sitemap.js`, and `js/review/manager-review-export.js`, whose
+decorator went with the sidebar label that decorator refreshed),
+`window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).
