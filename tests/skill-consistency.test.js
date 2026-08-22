@@ -368,8 +368,14 @@ describe('commands named in a skill exist', () => {
       .filter((path) => path.endsWith('.md'))
   }
 
+  // Whitespace-collapsed before matching, and the regex admits a run of it —
+  // the same wrapped-prose blindness `mirror-consistency` documents, and the
+  // repo really does carry one: `hhvc-rag-knowledge-base` wraps a citation
+  // between `run` and `ingest`. A same-line-only scan silently omitted it, and
+  // because that file carries other citations the coverage property below
+  // still passed, so a stale wrapped command could have sat there unchecked.
   const citations = skillFiles().flatMap((path) =>
-    [...read(path).matchAll(/bun run ([a-zA-Z][\w:.-]*)/g)].map((match) => ({
+    [...normalize(read(path)).matchAll(/bun run\s+([a-zA-Z][\w:.-]*)/g)].map((match) => ({
       path,
       script: match[1],
     }))
@@ -383,7 +389,7 @@ describe('commands named in a skill exist', () => {
     // file whose raw text contains the phrase must contribute a citation, so a
     // regex that stops matching fails instead of quietly reporting nothing
     // wrong.
-    const mentioning = skillFiles().filter((path) => read(path).includes('bun run'))
+    const mentioning = skillFiles().filter((path) => normalize(read(path)).includes('bun run'))
     const scanned = new Set(citations.map(({ path }) => path))
     expect(mentioning.filter((path) => !scanned.has(path))).toEqual([])
     expect(mentioning.length).toBeGreaterThan(0)
