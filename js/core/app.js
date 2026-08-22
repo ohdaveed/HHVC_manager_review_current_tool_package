@@ -1,13 +1,13 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
 // render. Loaded after js/core/state.js, js/review/ui-controls.js, js/review/editor-panel.js,
 // and js/mockup/page-render.js, all of which it depends on directly, and before
-// js/review/ux-improvements.js, which now subscribes to page-render.js's
-// onAfterRender() registry rather than wrapping renderPage (see navigateTo()'s
-// own comment below — a DIFFERENT module still wraps window.renderPage).
+// js/review/ux-improvements.js, which subscribes to page-render.js's
+// onAfterRender() registry rather than wrapping renderPage. No module wraps
+// window.renderPage any more — see navigateTo()'s own comment below.
 
 import { buildPageSelect, initChecklist, showToast } from '../review/ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
-import { renderPage } from '../mockup/page-render.js'
+import { renderPage, repaintPage } from '../mockup/page-render.js'
 import { resolvePageKey } from './utils.js'
 import { updateSearchPreview } from '../review/editor-panel.js'
 
@@ -117,27 +117,26 @@ function init() {
     }
   })
 
-  // The first render deliberately calls the import directly rather than
-  // navigateTo(): init() runs before any module has wrapped window.renderPage,
-  // so there is nothing to pick up, and there is no outgoing page whose edits
-  // would need flushing. js/review/ux-improvements.js does its own restoreInitialPage()
+  // The first render is a repaint, not a navigation: there is no history entry
+  // to push (this IS the entry) and no outgoing page whose edits would need
+  // flushing. js/review/ux-improvements.js does its own restoreInitialPage()
   // pass once it has registered its render subscribers.
   //
-  // skipHooks=true: this call happens at module-eval time, before
+  // repaintPage() is renderPage(key, skipHistory: true, skipHooks: true).
+  // The hook half matters here: this call happens at module-eval time, before
   // js/review/ux-improvements.js (loaded later in js/main.js) has registered
   // anything — but renderPage()'s after-hook dispatch is DEFERRED
   // (setTimeout(0) or a View Transitions promise), and that registration
   // happens synchronously, in the same script-evaluation tick, before any
-  // deferred callback gets a turn. Without this flag the bootstrap render's
-  // own hook call fires anyway once ux-improvements.js's subscriber exists,
-  // running handleAfterRender() for a render restoreInitialPage() is about to
-  // redo properly — see renderPage()'s own doc comment on this parameter for
+  // deferred callback gets a turn. scheduleAfterRenderHooks() now binds the
+  // subscriber list when the render is SCHEDULED, so that can no longer
+  // happen even unflagged — but skipping stays explicit here, because it also
+  // silences the synchronous before-channel and keeps the guarantee from
+  // depending on js/main.js's import order. See renderPage()'s doc comment for
   // the measured bug (a persisted Karl-tags preference nobody set) that not
-  // skipping it caused. The before-channel is skipped by the same flag and
-  // needs no separate argument: at module-eval time there is no subscriber to
-  // call and no outgoing page to flush.
+  // skipping once caused.
   const params = new URLSearchParams(window.location.search)
   const pageKey = params.get('page')
-  renderPage(resolveInitialPageKey(pageKey), true, true)
+  repaintPage(resolveInitialPageKey(pageKey))
 }
 init()

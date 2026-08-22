@@ -143,12 +143,44 @@ function runBeforeRenderHooks(pageKey) {
 }
 
 /**
- * Run every registered after-render hook.
+ * Run every registered after-render hook, as of NOW.
  *
  * @param {string} pageKey the key that was just rendered
  */
 function runAfterRenderHooks(pageKey) {
   runHooks(afterRenderHooks, 'after-render', pageKey)
+}
+
+/**
+ * Bind the after-render subscriber list for a render that has not finished yet,
+ * returning the dispatcher to call once it has.
+ *
+ * **The binding happens here, not in the returned function, and that is the
+ * point.** After-dispatch is always deferred — a `setTimeout(fn, 0)` or a View
+ * Transitions promise — so a dispatcher that read `afterRenderHooks` when it
+ * FIRED would deliver a render's completion to subscribers that did not exist
+ * when that render was requested. That is not hypothetical: the app's bootstrap
+ * render is made during module evaluation, before js/review/ux-improvements.js
+ * has registered anything, and its deferred hook nonetheless reached
+ * ux-improvements.js's subscriber and stamped `state.ui.show_karl_tags = false`
+ * into localStorage from an untouched checkbox. That was patched at the call
+ * site with renderPage()'s `skipHooks`, which fixes the one render anybody had
+ * noticed; binding here fixes the class, so a future deferred render scheduled
+ * before a subscriber mounts does not need to remember a flag.
+ *
+ * The tradeoff, stated because it is a real semantic choice rather than a free
+ * win: a hook that unsubscribes during the deferral window still fires, and one
+ * that subscribes during it does not. Both readings are defensible; this is
+ * "the subscribers of THIS render". No production subscriber does either today
+ * — js/review/ux-improvements.js and js/editing/inline-content-edit.js both
+ * register once at init, in the same synchronous module-evaluation pass.
+ *
+ * @param {string} pageKey the key being rendered
+ * @returns {() => void} dispatcher bound to the current subscriber list
+ */
+function scheduleAfterRenderHooks(pageKey) {
+  const bound = afterRenderHooks.slice()
+  return () => runHooks(bound, 'after-render', pageKey)
 }
 
 function karlTag(label, kind = 'body', opts = {}) {
@@ -1703,23 +1735,31 @@ function applyPageContent(key) {
  *   pre-wrap function used to do under the old window.renderPage monkey-patch,
  *   which bypassed the wrapper's flush and its refresh together.
  *
- *   Three callers pass it, all for that reason. js/core/app.js's bootstrap
- *   render is the first renderPage() in the app's lifecycle, made at
- *   module-eval time before js/review/ux-improvements.js (loaded later in
- *   js/main.js) has registered anything. Under the old monkey-patch that was
- *   safe for free — nothing had wrapped window.renderPage yet, so the call
- *   could not pick up side effects that did not exist at call time. Hooks are
- *   baked into renderPage() now and after-dispatch is DEFERRED (setTimeout(0)
- *   or a View Transitions promise), so by the time that render's deferred hook
- *   runs, ux-improvements.js has *already* registered synchronously in the same
- *   script-evaluation tick, before any deferred callback gets a turn. Measured,
- *   not theoretical: with no guard, the bootstrap render's hook stamped
- *   state.ui.show_karl_tags = false into localStorage from the Karl-tags
- *   checkbox's untouched, unchecked default, and a later render picked it up
- *   via applySavedUiPreferences(), hiding `.unverified-pill` for a session that
- *   never touched the toggle (`tests/e2e/ai-rewrite.spec.js`'s "flags the
- *   applied copy unverified" caught it). The other two are
- *   restoreInitialPage()'s bookkeeping repaints — see their own comments.
+ *   Three callers pass it. js/core/app.js's bootstrap render is the first
+ *   renderPage() in the app's lifecycle, made at module-eval time before
+ *   js/review/ux-improvements.js (loaded later in js/main.js) has registered
+ *   anything. Under the old monkey-patch that was safe for free — nothing had
+ *   wrapped window.renderPage yet, so the call could not pick up side effects
+ *   that did not exist at call time. Hooks are baked into renderPage() now and
+ *   after-dispatch is DEFERRED (setTimeout(0) or a View Transitions promise),
+ *   which once meant the deferred hook reached subscribers that registered
+ *   synchronously after the call. Measured, not theoretical: with no guard, the
+ *   bootstrap render's hook stamped state.ui.show_karl_tags = false into
+ *   localStorage from the Karl-tags checkbox's untouched, unchecked default,
+ *   and a later render picked it up via applySavedUiPreferences(), hiding
+ *   `.unverified-pill` for a session that never touched the toggle
+ *   (`tests/e2e/ai-rewrite.spec.js`'s "flags the applied copy unverified"
+ *   caught it).
+ *
+ *   **scheduleAfterRenderHooks() now binds that list at schedule time, so the
+ *   bootstrap render can no longer reach a later subscriber even without this
+ *   flag.** It is kept there anyway, and deliberately: it states the intent at
+ *   the call site, it also suppresses the SYNCHRONOUS before-channel, and it
+ *   keeps the guarantee from depending on js/main.js's import order — reorder
+ *   ux-improvements.js ahead of app.js and the binding argument evaporates
+ *   while the flag still holds. The other two callers are
+ *   restoreInitialPage()'s bookkeeping repaints, where subscribers ARE
+ *   registered and the flag is doing the whole job — see their own comments.
  *
  *   Every OTHER caller omits this argument and gets both channels.
  */
@@ -1793,8 +1833,10 @@ function renderPage(key, skipHistory = false, skipHooks = false) {
       // section_edits follow-up render documented on
       // js/review/ux-improvements-state-sync.js's refreshInFlightForKey guard. Calling
       // hooks synchronously here would run that nested render inside this
-      // render's own call stack instead of after it.
-      window.setTimeout(() => runAfterRenderHooks(key), 0)
+      // render's own call stack instead of after it. The subscriber list is
+      // bound NOW rather than when the timer fires — see
+      // scheduleAfterRenderHooks().
+      window.setTimeout(scheduleAfterRenderHooks(key), 0)
     }
     return
   }
@@ -1818,13 +1860,38 @@ function renderPage(key, skipHistory = false, skipHooks = false) {
   // caught before `.then(applyAndRefresh)` ran on it. Reversing this order
   // would silently skip every subscriber (including the one that restores
   // saved review fields) on every interrupted transition.
+  // Bound here, synchronously, for the same reason as the setTimeout path
+  // above: this promise settles long after renderPage() returns.
+  const dispatchAfterHooks = skipHooks ? null : scheduleAfterRenderHooks(key)
   return transition.updateCallbackDone
     .catch((err) => {
       if (err?.name !== 'AbortError') throw err
     })
     .then(() => {
-      if (!skipHooks) runAfterRenderHooks(key)
+      if (dispatchAfterHooks) dispatchAfterHooks()
     })
+}
+
+/**
+ * Repaint a page without navigating: no history entry, no hook dispatch.
+ *
+ * `renderPage(key, true, true)` is what all three callers actually wrote, and
+ * two anonymous booleans at a call site do not say which of renderPage's three
+ * separable jobs — resolve-and-paint, push history, dispatch navigation
+ * bookkeeping — are being turned off. Getting one of them wrong is silent:
+ * a spurious history entry, or an untouched preference stamped into storage
+ * (see the Karl-tags regression on `skipHooks` above). This names the
+ * combination once so the call sites state intent instead of re-deriving it
+ * from a comment.
+ *
+ * This is a thin alias, not a second entry point — it is renderPage with both
+ * flags set, and anything that changes about repainting belongs in renderPage.
+ *
+ * @param {string} key page key to repaint
+ * @returns {*} whatever renderPage returns (a Promise under View Transitions)
+ */
+function repaintPage(key) {
+  return renderPage(key, true, true)
 }
 
 /* Republished as a browser global. This one is load-bearing in a way the
@@ -1893,6 +1960,8 @@ export {
   renderTable,
   renderTextItems,
   renderTopFacts,
+  repaintPage,
   runAfterRenderHooks,
   runBeforeRenderHooks,
+  scheduleAfterRenderHooks,
 }
