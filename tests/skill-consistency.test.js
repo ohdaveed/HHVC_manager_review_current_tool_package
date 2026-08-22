@@ -368,6 +368,13 @@ describe('commands named in a skill exist', () => {
       .filter((path) => path.endsWith('.md'))
   }
 
+  // The script-name class is deliberately wider than the corpus needs — it
+  // admits a leading digit, underscore or `@` and an embedded `/`, because
+  // `bun run` takes any package key and npm-scoped or path-like names are
+  // legal ones. Measured when it was widened: the corpus yields the same 23
+  // citations either way, so this costs nothing today and cannot silently skip
+  // a future citation the narrower class would not have recognized as one.
+  //
   // Whitespace-collapsed before matching, and the regex admits a run of it —
   // the same wrapped-prose blindness `mirror-consistency` documents, and the
   // repo really does carry one: `hhvc-rag-knowledge-base` wraps a citation
@@ -375,7 +382,7 @@ describe('commands named in a skill exist', () => {
   // because that file carries other citations the coverage property below
   // still passed, so a stale wrapped command could have sat there unchecked.
   const citations = skillFiles().flatMap((path) =>
-    [...normalize(read(path)).matchAll(/bun run\s+([a-zA-Z][\w:.-]*)/g)].map((match) => ({
+    [...normalize(read(path)).matchAll(/bun run\s+([\w@][\w:.@\/-]*)/g)].map((match) => ({
       path,
       script: match[1],
     }))
