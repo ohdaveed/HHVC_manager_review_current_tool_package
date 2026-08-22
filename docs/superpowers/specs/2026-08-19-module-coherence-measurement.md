@@ -100,3 +100,76 @@ fails on every one.
 
 This is a design decision the spec does not answer, and it has to be made
 before a plan can be written.
+
+---
+
+## Re-measurement, 2026-08-21 — and a correction to this document
+
+Everything above is dated 2026-08-19 and stays as written; this section records
+what happened when the numbers were re-derived after Task 1 shipped.
+
+**The script this document says produced its numbers was never committed.** It
+exists now, as `build_scripts/measure-window-graph.js`, so the claims below are
+re-runnable (`bun build_scripts/measure-window-graph.js --ref <ref>`).
+
+**It does not reproduce the figures above, and the gap is structural rather
+than a rounding difference.** Measured against this document's own baseline,
+`main` @ `1ba718e`:
+
+| Metric | This doc | Re-measured | |
+| --- | --- | --- | --- |
+| `js/` files | 58 | 58 | matches |
+| self-mounting IIFEs | 31 | 31 | matches |
+| namespaces on `window` | 55 | 54 | off by one |
+| edges | 226 | 251 | — |
+| mount-time / call-time | 78 / 120 | 102 / 149 | — |
+| largest SCC | **16 files** | **25 files** | — |
+| `window.renderPage` intra-SCC edges | **24** | **33** | — |
+
+The 25-file SCC is a strict superset of the 16 listed above. The nine extra are
+the sub-modules that attach to a shared namespace — `review-queue-state.js`,
+`review-queue-rows.js`, `review-queue-render.js`, `review-queue-import.js`,
+`review-queue-undo.js`, `review-insights.js`, `review-insights-data.js`,
+`review-ops-data.js`, `inline-content-edit-render.js`. Each does
+`window.X = window.X || {}` and then reads siblings' contributions back off the
+same object, which forms a clique the original measurement evidently excluded.
+Two ownership models were tried to reproduce the exclusion (attribute a
+namespace to its bare-assignment creator; attribute it only to whoever assigns
+real content) and neither collapses it, because the idempotent idiom means
+several files "create" the same namespace. **The original model is not
+recoverable from this document**, which is the substantive reason to keep a
+script rather than a table.
+
+**What that does and does not invalidate.** The absolute figures above should
+be treated as unverified. The *relative* claim they were used for survives:
+`window.renderPage` is measurably one of the largest single contributors to the
+cycle under either model.
+
+### Step 7 of Task 1: did the tangle shrink?
+
+Measured under one consistent model across three trees, so the comparison holds
+whatever the divergence above:
+
+| Tree | edges | largest SCC | `renderPage` intra-SCC edges |
+| --- | --- | --- | --- |
+| before Task 1 (`d71ff26~1`) | 251 | 25 | 33 |
+| after the registry (`d71ff26`) | 238 | 25 | 22 |
+| after the flush fix (`451e20b`) | 238 | 25 | 22 |
+
+**Eleven of `window.renderPage`'s 33 intra-SCC edges are gone — a third — and
+the SCC did not shrink by a single file.** Mount-time edges are unchanged at
+102.
+
+That is the honest result, and it is not a failure of the conversion so much as
+a correction to what Task 1 was ever going to achieve. Removing the
+`ux-improvements.js` wrapper removed the wrapper's edges. It did not remove
+`window.renderPage = renderPage` in `js/mockup/page-render.js`, which is still
+load-bearing for `js/editing/inline-content-edit.js`'s own wrapper, nor the ~15
+`window.renderPage?.(key)` call sites across the review/UX IIFEs. Seventeen
+files still reference it — the same seventeen this document counted.
+
+**The contradiction above is therefore still open, and Task 5 is where it comes
+due.** Nothing about Task 1 resolves it: keeping `window.renderPage` still
+guarantees an SCC, and `no-circular` would still fail on every file in it. What
+Task 1 bought is a smaller share of that SCC's edges and one monkey-patch fewer,
+which is real but is not "the tangle shrank."

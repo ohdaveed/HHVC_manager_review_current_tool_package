@@ -42,7 +42,7 @@ bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
 bun run start         # production-like: assemble dist/ (build:netlify), then serve it
 bun run validate      # Zod-validate pages/*.js and js/core/page-data.js (schema + invariants)
-bun run test          # Bun test runner over the 52 unit-test files in tests/
+bun run test          # Bun test runner over the 53 unit-test files in tests/
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run export:karl   # write one paste-ready Karl transcript per page into review/karl-transcripts/
@@ -51,7 +51,7 @@ bun run format        # prettier --write on everything
 bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```
 
-**There is a real test suite.** `bun run test` runs **52** Bun unit-test
+**There is a real test suite.** `bun run test` runs **53** Bun unit-test
 files, plus twenty-three Playwright e2e spec files. **The list in `package.json`'s `test`
 script is explicit, not a glob** — a new `tests/*.test.js` that is not named
 there never runs and reports nothing. A happy-dom environment is preloaded

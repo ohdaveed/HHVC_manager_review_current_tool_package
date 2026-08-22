@@ -93,9 +93,10 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 52 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 53 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
+`measure-window-graph`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
