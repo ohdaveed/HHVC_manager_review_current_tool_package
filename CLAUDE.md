@@ -1786,6 +1786,13 @@ GitHub Issues via the `gh` CLI (`origin` is
 `github.com/ohdaveed/HHVC_manager_review_current_tool_package`). See
 `docs/agents/issue-tracker.md`.
 
+### Triage labels
+
+The five canonical roles, each label string equal to its name. Only `wontfix`
+exists on the repo today — create the other four before the first `/triage`
+run, since `gh issue edit --add-label` fails on a missing label rather than
+creating it. See `docs/agents/triage-labels.md`.
+
 ### Domain docs
 
 Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root (neither
