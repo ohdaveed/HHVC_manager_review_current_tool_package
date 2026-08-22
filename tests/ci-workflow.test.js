@@ -40,9 +40,11 @@ function setupBunBlocks() {
 }
 
 /**
- * Every JOB name in the workflow, from the four-space `name:` keys.
+ * Every JOB name in the workflow, from the shallowest `name:` keys below
+   * `jobs:`. Step and artifact names are nested more deeply and are therefore
+   * excluded without depending on a particular workflow indent.
  *
- * Four spaces is the job level. Artifact names sit at ten (`name: dist`,
+ * Artifact names sit at ten (`name: dist`,
  * `name: playwright-report`) under an `upload-artifact` step's `with:`, and
  * folding those in would demand the mirrors enumerate two artifacts as though
  * they were required checks.
@@ -50,7 +52,15 @@ function setupBunBlocks() {
  * @returns {string[]}
  */
 function jobNames() {
-  return [...WORKFLOW.matchAll(/^ {4}name: (.+)$/gm)].map((match) => match[1].trim())
+  const jobs = WORKFLOW.match(/^(\s*)jobs:\s*$/m)
+    if (!jobs) return []
+
+    const names = [...WORKFLOW.slice(jobs.index + jobs[0].length).matchAll(/^(\s*)name:\s+(.+)$/gm)]
+    if (names.length === 0) return []
+    const jobIndent = Math.min(...names.map((match) => match[1].length))
+    return names
+      .filter((match) => match[1].length === jobIndent)
+      .map((match) => match[2].trim())
 }
 
 /**
