@@ -95,7 +95,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 57 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 58 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `page-render-hooks` (the
 `onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
 which replaced js/review/ux-improvements.js's monkey-patch of
@@ -124,6 +124,7 @@ graph, which reads exactly like progress),
 `review-ops-data`,
 `commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
 `mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over),
+`skill-consistency` (the same gate one level down, over the eleven `.claude/skills/hhvc-*/SKILL.md` extracts and the `AGENTS.md` sections they were taken from. `CLAUDE.md` states the rule — the skills are extracts, not a second source of truth, and a correction goes into `AGENTS.md` and then into the skill — and until now only the first half was enforced. The second half failed three times in the eleven files, all found in one audit on 2026-08-22: `hhvc-review-sync-backend` still called the API SQLite-backed long after `build_scripts/storage.js` made it Postgres-when-`DATABASE_URL`, and both `hhvc-page-registry` and `hhvc-inline-content-editing` described `js/review/ux-improvements.js` as WRAPPING `window.renderPage`, which nothing has done since #194. Every one of those sat in the file a session is told to load BEFORE editing the subsystem the claim is about. Nothing else covered them: `module-paths` gates the `js/` paths in these files, `lint:docs` gates their markdown and `doc-claims` gates five counts, but a stale MECHANISM passes all three, because every path it names still exists. It carries a second registry the mirror gate has no equivalent of — RETIRED_MECHANISMS, the exact historical phrasings of things this repo has removed, which may not come back. A shared-fact claim catches a fact going MISSING; a retired-mechanism claim catches one that quietly stopped being true while both sides still read fluently, which is the failure that actually happened. Each retired entry must also be absent from all three mirrors, and that self-check is what keeps the list honest rather than a place to park opinions — which is also why a proximity rule (`wrap` within N characters of `renderPage`) was written first and rejected: it fires on the canon's own correct sentence, so it could not carry the check. Mutation-proven against the real drift — restoring the three skills to `17a09d3` fails six of its assertions, naming each one. Same presence-not-polarity limit as the mirror gate, stated in the file),
 `esm-named-exports` (that a module which is named-imported actually DECLARES
 those ESM exports. `js/karl/karl-blocks.js` published only `window.karlBlocks` and
 `module.exports` while `js/karl/karl-guide-registry.js` named-imported from it —
@@ -2221,9 +2222,14 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   populated. The guard lives in `pullFromServer`, not the click handler, so
   it's unit-testable and inherited by any caller; the button is disabled
   for the duration as well.
-- **Deployment**: run `server.ts` (`bun run start`) with either a generated
+- **Deployment**: run `server.ts` with either a generated
   `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
-  configuration (never committed). **The persistent volume is the SQLite-only
+  configuration (never committed). **Which script depends on whether the build
+  already ran:** `bun run serve` starts the server alone and is what a platform
+  that ran its own build step uses (Railway's `startCommand`); `bun run start`
+  is `build:railway && serve`, right for a fresh checkout and wasteful on a
+  platform that already built — see "Deploying — Railway is the live host" for
+  why that distinction has bitten this deployment. **The persistent volume is the SQLite-only
   half:** with `DATABASE_URL` set the managed database holds the data and no
   volume or `DATA_DB_PATH` is involved (what Railway does); without it the
   deployment falls back to SQLite, which needs a volume mounted and
@@ -2231,9 +2237,16 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   control described above for public or replicated deployments. Local dev and
   any static-only deploy (the `build:railway` bundle served without `server.ts`,
   so these routes have no runtime) are unaffected either way.
-- **Tests**: `tests/review-merge.test.js` (unit) and
+- **Tests**: `tests/review-merge.test.js` (unit),
   `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
-  DB, exercises auth/merge/isolation over real HTTP).
+  DB, exercises auth/merge/isolation over real HTTP), and
+  `tests/review-api-postgres.test.js` — the same routes against a **real
+  Postgres**, **skipped unless one is reachable** (`TEST_DATABASE_URL`, else a
+  local server on the default port), so CI runs it as a no-op. It is the only
+  suite that exercises the production driver's compare-and-swap, which the two
+  drivers express differently and where a lost update is silent; its race test
+  issues two pushes carrying the same baseline and asserts exactly one 409.
+  See the test inventory above for the fuller write-up rather than restating it.
 
 ### AI assist backend (optional)
 
@@ -2667,6 +2680,15 @@ and never sees a driver, a connection or a SQL string.
   only ever come from the server. Letting Postgres parse and reformat them would
   change those comparisons for values differing only in representation, and the
   failure mode is a silently lost update.
+- **The `record` column is `JSONB` on Postgres and `TEXT` on SQLite, and it is
+  passed to the driver as an OBJECT.** Not a schema detail: SQLite hands the
+  column back as a string to parse while the Postgres driver returns an
+  already-parsed object, which is why one helper normalizes both. The binding
+  half is measured and counter-intuitive — interpolating
+  `${JSON.stringify(record)}::jsonb` looks equivalent and stores a jsonb
+  **string scalar** instead, where `jsonb_typeof` returns `"string"` and
+  `record->>'decision'` stops resolving. Anything hand-writing a query or a
+  migration against this column needs both facts.
 - **The compare-and-swap is the load-bearing line.** SQLite gates the conflict
   branch with `WHERE review_pages.updated_at = ?` and reads `changes`; Postgres
   does the same and counts rows `RETURNING`ed. `RETURNING` rather than a

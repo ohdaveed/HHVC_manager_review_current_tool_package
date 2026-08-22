@@ -60,7 +60,13 @@ compare-and-swap that makes a lost update impossible.
   **Sync is automatic as of 2026-08-14** — `startAutoSync()` pulls once at
   init, `scheduleAutoPush()` pushes one page on a 3s debounce AFTER the
   autosave has already written localStorage, and `pushDirtyPages()` sends
-  anything saved while the server was unreachable. History stays bounded
+  anything saved while the server was unreachable. **That catch-up is a push,
+  not an unload handler, and it sends only records with an explicit
+  `local_dirty === true`.** `beforeunload` cannot await a promise and
+  `sendBeacon` cannot carry the `Authorization` header this API requires, so
+  the obvious mechanism is the wrong one; and an ABSENT flag means unknown
+  provenance rather than dirty, so pushing those would blast a browser's
+  legacy history at the server as new work. History stays bounded
   because the client still never merges on the push path: the server merges
   with `updatedBy: 'sync'`, and merging here too would append an entry per
   debounce. The manual Pull/Push buttons remain for explicit use. **No push
@@ -161,9 +167,13 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   populated. The guard lives in `pullFromServer`, not the click handler, so
   it's unit-testable and inherited by any caller; the button is disabled
   for the duration as well.
-- **Deployment**: run `server.ts` (`bun run start`) with either a generated
-  `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
-  configuration (never committed). **Persistence depends on which store is
+- **Deployment**: run `server.ts` with either a generated `REVIEW_API_TOKEN` or
+  the documented `REVIEW_API_PRINCIPALS` secret configuration (never
+  committed). **Which script depends on whether the build already ran:**
+  `bun run serve` starts the server alone and is what a platform that ran its
+  own build step uses (Railway's `startCommand`); `bun run start` is
+  `build:railway && serve`, right for a fresh checkout and wasteful where the
+  build already happened. **Persistence depends on which store is
   configured, and the volume is the SQLite-only half:** set `DATABASE_URL` and
   the managed database holds the data, with no volume and no `DATA_DB_PATH`
   involved (this is what Railway does); leave it unset and the deployment
