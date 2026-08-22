@@ -183,9 +183,9 @@ wiring into the existing autosave path).
   whether it actually wrote a path via `setByPath` — rather than reaching for
   `window.renderPage` itself. **That boolean exists because the obvious
   alternative (re-render unconditionally whenever reapply runs) is a live
-  infinite loop, not a hypothetical one.** `window.renderPage` is already
-  `js/review/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
-  run, so a follow-up render re-enters that wrapper, which schedules its own
+  infinite loop, not a hypothetical one.** By the time `applySavedPageState` can
+  run, `js/review/ux-improvements.js` has registered its `onAfterRender`
+  subscriber, so a follow-up render dispatches that hook, which schedules its own
   deferred `applySavedPageState` call for the same page — which would see
   the same still-true "wrote something" signal and trigger a second render,
   forever (disabling the guard that prevents this produced 17 renders before

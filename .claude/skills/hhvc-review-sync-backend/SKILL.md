@@ -1,6 +1,6 @@
 ---
 name: hhvc-review-sync-backend
-description: "HHVC repo: the optional SQLite-backed review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/sync/review-state-sync.js."
+description: "HHVC repo: the optional review-state sync API and its client — push-vs-pull asymmetry, the never-compare-clocks rule, local_dirty's tri-state, conflict surfacing and resolution binding. Load before editing server.ts's review-state routes or js/sync/review-state-sync.js."
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
@@ -9,9 +9,14 @@ description: "HHVC repo: the optional SQLite-backed review-state sync API and it
 # Review-state sync backend (optional)
 
 `server.ts` optionally serves a small sync API alongside its static file
-serving, backed by SQLite (`bun:sqlite`, no extra dependency) — entirely
-additive, off by default, and fails closed (501) rather than open if
-unconfigured.
+serving, backed by **Postgres when `DATABASE_URL` is set and SQLite
+otherwise** — entirely additive, off by default, and fails closed (501)
+rather than open if unconfigured. Neither driver is reached directly: one
+module, `build_scripts/storage.js`, decides the store and speaks its dialect,
+so `server.ts` calls functions and never sees a driver or a SQL string. See
+"Where review records live" in `AGENTS.md`/`CLAUDE.md` for that seam's own
+rules — the async-in-both-drivers shape, `updated_at` staying TEXT, and the
+compare-and-swap that makes a lost update impossible.
 
 - **Routes**: `GET /api/review-state` (full state, same shape as
   `window.reviewState.read()`); `PUT /api/review-state/pages/:pageKey` (merges
@@ -30,10 +35,24 @@ unconfigured.
   The legacy token remains broad for compatibility; production deployments
   should use per-token principals and grant only `review:read`/`review:write`
   to sync reviewers.
-- **Storage**: SQLite table `review_pages (page_key TEXT PRIMARY KEY, record
-TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
-  `.data/review-state.local.db` for local dev; point at a mounted volume in
-  production).
+- **Storage**: a `review_pages (page_key, record, updated_at)` table, created
+  at boot by `build_scripts/storage.js` in whichever store is configured. On
+  Postgres that is the database `DATABASE_URL` names (Railway injects it from
+  the managed service); on SQLite it is the file at `DATA_DB_PATH` (default:
+  gitignored `.data/review-state.local.db` for local dev; point at a mounted
+  volume in production). **The `record` column is NOT the same type in both:
+  `JSONB NOT NULL` on Postgres, `TEXT NOT NULL` on SQLite** — and that is a
+  behavioural difference, not a schema detail. SQLite hands the column back as
+  a string to be parsed; the Postgres driver returns an already-parsed object,
+  which is why `storage.js` normalizes both through one helper. Two
+  consequences worth carrying into any migration or hand-written query: a
+  Postgres value can be indexed and queried with JSON operators, and the
+  record must be passed to the driver as an OBJECT — interpolating
+  `JSON.stringify(record)::jsonb` stores a jsonb _string scalar_ instead, which
+  measurably breaks `record->>'decision'`. `updated_at` is TEXT in both, never
+  a timestamp type — every
+  freshness check below is a string compare, and letting Postgres reformat
+  those values would silently change them.
 - **Client**: `js/sync/review-state-sync.js`, a no-op unless configured. Its
   settings live under their own `hhvcReviewSyncConfig` localStorage key,
   separate from `hhvcManagerReviewState:v1` on purpose — the token must never
@@ -41,7 +60,13 @@ TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
   **Sync is automatic as of 2026-08-14** — `startAutoSync()` pulls once at
   init, `scheduleAutoPush()` pushes one page on a 3s debounce AFTER the
   autosave has already written localStorage, and `pushDirtyPages()` sends
-  anything saved while the server was unreachable. History stays bounded
+  anything saved while the server was unreachable. **That catch-up is a push,
+  not an unload handler, and it sends only records with an explicit
+  `local_dirty === true`.** `beforeunload` cannot await a promise and
+  `sendBeacon` cannot carry the `Authorization` header this API requires, so
+  the obvious mechanism is the wrong one; and an ABSENT flag means unknown
+  provenance rather than dirty, so pushing those would blast a browser's
+  legacy history at the server as new work. History stays bounded
   because the client still never merges on the push path: the server merges
   with `updatedBy: 'sync'`, and merging here too would append an entry per
   debounce. The manual Pull/Push buttons remain for explicit use. **No push
@@ -142,13 +167,30 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   populated. The guard lives in `pullFromServer`, not the click handler, so
   it's unit-testable and inherited by any caller; the button is disabled
   for the duration as well.
-- **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
-  mounted, `DATA_DB_PATH` pointed at it, and either a generated
-  `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
-  configuration (never committed). Apply the reverse-proxy/identity-aware edge
+- **Deployment**: run `server.ts` with either a generated `REVIEW_API_TOKEN` or
+  the documented `REVIEW_API_PRINCIPALS` secret configuration (never
+  committed). **Which script depends on whether the build already ran:**
+  `bun run serve` starts the server alone and is what a platform that ran its
+  own build step uses (Railway's `startCommand`); `bun run start` is
+  `build:railway && serve`, right for a fresh checkout and wasteful where the
+  build already happened. **Persistence depends on which store is
+  configured, and the volume is the SQLite-only half:** set `DATABASE_URL` and
+  the managed database holds the data, with no volume and no `DATA_DB_PATH`
+  involved (this is what Railway does); leave it unset and the deployment
+  falls back to SQLite, which needs a persistent volume mounted and
+  `DATA_DB_PATH` pointed at it or every restart starts empty. Setting
+  `DATA_DB_PATH` alongside `DATABASE_URL` configures a path nothing reads. Apply the reverse-proxy/identity-aware edge
   control described above for public or replicated deployments. Local dev and
   any static-only deploy (the `build:railway` bundle served without `server.ts`,
   so these routes have no runtime) are unaffected either way.
-- **Tests**: `tests/review-merge.test.js` (unit) and
+- **Tests**: `tests/review-merge.test.js` (unit),
   `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
-  DB, exercises auth/merge/isolation over real HTTP).
+  DB, exercises auth/merge/isolation over real HTTP), and
+  `tests/review-api-postgres.test.js` (the same routes against a **real**
+  Postgres, **skipped unless one is reachable** — `TEST_DATABASE_URL`, else a
+  local server on the default port, so CI runs it as a no-op). That second
+  server suite exists because the two drivers express the compare-and-swap
+  differently and a lost update there is silent: its race test issues two
+  pushes carrying the same baseline and asserts exactly one 409. A change to
+  the sync routes that passes only the SQLite suite has not been tested on the
+  driver the live deployment actually runs.
