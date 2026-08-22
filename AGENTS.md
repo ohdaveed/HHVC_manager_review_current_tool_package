@@ -2108,17 +2108,27 @@ origin that 404s, so sync fails closed and the tool stays local-only. The
   The legacy token remains broad for compatibility; production deployments
   should use per-token principals and grant only `review:read`/`review:write`
   to sync reviewers.
-- **Storage**: SQLite table `review_pages (page_key TEXT PRIMARY KEY, record
-TEXT, updated_at TEXT)` at `DATA_DB_PATH` (default: gitignored
-  `.data/review-state.local.db` for local dev; point at a mounted volume in
-  production).
+- **Storage**: a `review_pages (page_key, record, updated_at)` table, created
+  at boot by `build_scripts/storage.js` in whichever store is configured —
+  Postgres when `DATABASE_URL` is set, SQLite at `DATA_DB_PATH` otherwise
+  (default: gitignored `.data/review-state.local.db` for local dev; point at a
+  mounted volume in production). **The `record` column is NOT the same type in
+  both: `JSONB NOT NULL` on Postgres, `TEXT NOT NULL` on SQLite**, which is a
+  behavioural difference rather than a schema detail — SQLite hands the column
+  back as a string to parse, while the Postgres driver returns an
+  already-parsed object. See "Where review records live" for that seam's own
+  rules.
 - **Client**: `js/sync/review-state-sync.js`, a no-op unless configured. Its
   settings live under their own `hhvcReviewSyncConfig` localStorage key,
   separate from `hhvcManagerReviewState:v1` on purpose — the token must never
-  round-trip through the shareable CSV/JSON export/import/backup files. Sync
-  is manual-trigger only (Pull from server / Push all pages), not a
-  background timer, keeping sync-triggered history entries bounded to
-  explicit actions.
+  round-trip through the shareable CSV/JSON export/import/backup files. **Sync
+  is automatic as of 2026-08-14** — `startAutoSync()` pulls once at init,
+  `scheduleAutoPush()` pushes one page on a 3s debounce AFTER the autosave has
+  written localStorage, and `pushDirtyPages()` sends anything saved while the
+  server was unreachable; the manual Pull/Push buttons remain for explicit
+  use. What keeps sync-triggered history entries bounded is no longer the
+  absence of a timer but the push path never merging client-side — the server
+  merges with `updatedBy: 'sync'`.
 - **Push vs. pull differ on purpose**: push sends one page's full record and
   accepts the server's merged response as authoritative for that page; pull
   is last-write-wins **per page**, never a field-level re-merge client-side
@@ -2211,10 +2221,13 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   populated. The guard lives in `pullFromServer`, not the click handler, so
   it's unit-testable and inherited by any caller; the button is disabled
   for the duration as well.
-- **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
-  mounted, `DATA_DB_PATH` pointed at it, and either a generated
+- **Deployment**: run `server.ts` (`bun run start`) with either a generated
   `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
-  configuration (never committed). Apply the reverse-proxy/identity-aware edge
+  configuration (never committed). **The persistent volume is the SQLite-only
+  half:** with `DATABASE_URL` set the managed database holds the data and no
+  volume or `DATA_DB_PATH` is involved (what Railway does); without it the
+  deployment falls back to SQLite, which needs a volume mounted and
+  `DATA_DB_PATH` pointed at it or every restart starts empty. Apply the reverse-proxy/identity-aware edge
   control described above for public or replicated deployments. Local dev and
   any static-only deploy (the `build:railway` bundle served without `server.ts`,
   so these routes have no runtime) are unaffected either way.

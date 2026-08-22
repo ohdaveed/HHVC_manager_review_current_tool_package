@@ -35,13 +35,22 @@ compare-and-swap that makes a lost update impossible.
   The legacy token remains broad for compatibility; production deployments
   should use per-token principals and grant only `review:read`/`review:write`
   to sync reviewers.
-- **Storage**: a `review_pages (page_key TEXT PRIMARY KEY, record TEXT,
-updated_at TEXT)` table, created at boot by `build_scripts/storage.js` in
-  whichever store is configured. On Postgres that is the database
-  `DATABASE_URL` names (Railway injects it from the managed service); on
-  SQLite it is the file at `DATA_DB_PATH` (default: gitignored
-  `.data/review-state.local.db` for local dev; point at a mounted volume in
-  production). `updated_at` is TEXT in both, never a timestamp type — every
+- **Storage**: a `review_pages (page_key, record, updated_at)` table, created
+  at boot by `build_scripts/storage.js` in whichever store is configured. On
+  Postgres that is the database `DATABASE_URL` names (Railway injects it from
+  the managed service); on SQLite it is the file at `DATA_DB_PATH` (default:
+  gitignored `.data/review-state.local.db` for local dev; point at a mounted
+  volume in production). **The `record` column is NOT the same type in both:
+  `JSONB NOT NULL` on Postgres, `TEXT NOT NULL` on SQLite** — and that is a
+  behavioural difference, not a schema detail. SQLite hands the column back as
+  a string to be parsed; the Postgres driver returns an already-parsed object,
+  which is why `storage.js` normalizes both through one helper. Two
+  consequences worth carrying into any migration or hand-written query: a
+  Postgres value can be indexed and queried with JSON operators, and the
+  record must be passed to the driver as an OBJECT — interpolating
+  `JSON.stringify(record)::jsonb` stores a jsonb _string scalar_ instead, which
+  measurably breaks `record->>'decision'`. `updated_at` is TEXT in both, never
+  a timestamp type — every
   freshness check below is a string compare, and letting Postgres reformat
   those values would silently change them.
 - **Client**: `js/sync/review-state-sync.js`, a no-op unless configured. Its
@@ -152,10 +161,15 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   populated. The guard lives in `pullFromServer`, not the click handler, so
   it's unit-testable and inherited by any caller; the button is disabled
   for the duration as well.
-- **Deployment**: run `server.ts` (`bun run start`) with a persistent volume
-  mounted, `DATA_DB_PATH` pointed at it, and either a generated
+- **Deployment**: run `server.ts` (`bun run start`) with either a generated
   `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
-  configuration (never committed). Apply the reverse-proxy/identity-aware edge
+  configuration (never committed). **Persistence depends on which store is
+  configured, and the volume is the SQLite-only half:** set `DATABASE_URL` and
+  the managed database holds the data, with no volume and no `DATA_DB_PATH`
+  involved (this is what Railway does); leave it unset and the deployment
+  falls back to SQLite, which needs a persistent volume mounted and
+  `DATA_DB_PATH` pointed at it or every restart starts empty. Setting
+  `DATA_DB_PATH` alongside `DATABASE_URL` configures a path nothing reads. Apply the reverse-proxy/identity-aware edge
   control described above for public or replicated deployments. Local dev and
   any static-only deploy (the `build:railway` bundle served without `server.ts`,
   so these routes have no runtime) are unaffected either way.
