@@ -13,16 +13,17 @@ import { hasValidPageData } from '../core/utils.js'
   let isRestoringState = false
 
   // Re-entrancy guard for the section_edits follow-up render triggered by
-  // applySavedPageState below. window.renderPage may be a WRAPPED version by
-  // the time applySavedPageState can run — js/editing/inline-content-edit.js's
-  // wrapRenderPageForDecoration() reassigns it, and until #191 this comment
-  // named js/review/ux-improvements.js's own wrapRenderPage(), which has since
-  // been replaced by page-render.js's hook registry. Calling window.renderPage
-  // from inside applySavedPageState therefore re-enters
-  // that wrapper: originalRenderPage runs synchronously (this is what
-  // actually repaints the DOM — good), but the wrapper then schedules
-  // ANOTHER deferred applyAndRefresh -> applySavedPageState(pageKey) call of
-  // its own. Without this guard, that second call would see the same
+  // applySavedPageState below. Nothing wraps window.renderPage any more — it
+  // is page-render.js's own renderPage, republished (#191 replaced
+  // js/review/ux-improvements.js's wrapRenderPage() with page-render.js's
+  // onBeforeRender/onAfterRender registry, and #194 did the same for
+  // js/editing/inline-content-edit.js's decorator) — but the loop this guards
+  // is unchanged, because it never depended on a wrapper: calling
+  // window.renderPage from inside applySavedPageState repaints the DOM
+  // synchronously (good) and then dispatches the after-render hooks, one of
+  // which is js/review/ux-improvements.js's handleAfterRender(), which
+  // schedules ANOTHER deferred applyAndRefresh -> applySavedPageState(pageKey)
+  // call of its own. Without this guard, that second call would see the same
   // still-true "wrote something" signal from applyContentEditsToPageData
   // (the data hasn't changed) and trigger a THIRD render, which would
   // trigger a fourth applySavedPageState call, forever.

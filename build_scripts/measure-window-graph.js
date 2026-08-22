@@ -446,12 +446,19 @@ function buildGraph(files) {
   const publishers = new Map() // namespace -> Set<path>
   const prepared = files.map((file) => {
     const code = stripNonCode(file.source)
-    const published = findPublishes(code)
+    // Scanned once per file and carried to the edge loop below. `published` is
+    // derived here rather than by calling findPublishes(code), which is the
+    // same enumeration filtered — going through it would make every file's
+    // stripped source pass the reference regex twice and allocate two full
+    // refs arrays. findPublishes stays exported because it is the
+    // single-argument form the tests drive and the rule's stated home.
+    const refs = findReferences(code)
+    const published = new Set(refs.filter((ref) => ref.isPublish).map((ref) => ref.name))
     for (const name of published) {
       if (!publishers.has(name)) publishers.set(name, new Set())
       publishers.get(name).add(file.path)
     }
-    return { ...file, code, published }
+    return { ...file, code, refs, published }
   })
 
   const iifeCount = prepared.filter((f) => /;\(function\s+[\w$]*\s*\(/.test(f.code)).length
@@ -465,7 +472,7 @@ function buildGraph(files) {
   let occurrences = 0
   for (const file of prepared) {
     const depthAt = functionDepthAt(file.code)
-    for (const ref of findReferences(file.code)) {
+    for (const ref of file.refs) {
       if (ref.isPublish) continue
       const owners = publishers.get(ref.name)
       if (!owners) continue

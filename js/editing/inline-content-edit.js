@@ -261,13 +261,13 @@ import { onAfterRender } from '../mockup/page-render.js'
    * decorated once) would otherwise leave #mockPage completely undecorated
    * with nothing left to re-trigger it.
    *
-   * This module loads after js/review/ux-improvements.js in js/main.js, so by the
-   * time this wrapper installs, window.renderPage is already
-   * js/review/ux-improvements.js's own wrapper around the original — this wraps
-   * that, keeping decoration outermost (runs after every render in the
-   * chain, including that wrapper's own deferred section_edits reapply,
-   * which calls window.renderPage — the live, wrapped reference — rather
-   * than a captured original).
+   * Nothing wraps window.renderPage any more, so ordering is no longer a
+   * property of who reassigned it last: this module loads after
+   * js/review/ux-improvements.js in js/main.js, and onAfterRender() dispatches
+   * its subscribers in registration order, so decoration still runs after
+   * that module's own after-render work — including the deferred
+   * section_edits reapply, whose follow-up render dispatches the whole
+   * registry again rather than only a captured original.
    *
    * Decoration must wait for the ACTUAL DOM mutation, not just for
    * original.apply() to return. js/mockup/page-render.js's renderPage() uses
@@ -278,10 +278,10 @@ import { onAfterRender } from '../mockup/page-render.js'
    * already painted by the time it returns. Decorating synchronously right
    * after original.apply() would then run against the PREVIOUS page's
    * stale DOM (or, on the very first render, an empty #mockPage), which is
-   * exactly the bug this wrapper exists to prevent — the same reason
-   * js/mockup/page-render.js's after-render channel defers its dispatch
-   * (js/review/ux-improvements.js's wrapRenderPage(), which used to be the
-   * comparison here, was replaced by that registry in #191).
+   * exactly the bug this subscriber exists to prevent. It no longer has to
+   * arrange that deferral itself: js/mockup/page-render.js's after-render
+   * channel already defers its own dispatch for the same reason, so a
+   * subscriber is called once the DOM has actually been painted.
    * @returns {void}
    */
   function decorateAfterRender() {
