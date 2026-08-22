@@ -329,6 +329,121 @@ describe('facts shared between a skill and its AGENTS.md section', () => {
   )
 })
 
+/* Commands a skill tells a human to run.
+
+   WHY THIS EXISTS. `skill-consistency` above covers the eleven extracts, whose
+   drift risk is disagreeing with AGENTS.md. The OTHER tracked skills — `ship`,
+   `verify`, `verify-railway-backend`, `karl-notes-drift-check` — carry a
+   different one: they are procedures, and a procedure names commands. `ship`
+   alone cites eight `lint:*`/`validate`/`test` scripts and pre-approves several
+   in its `allowed-tools` front matter. Renaming a package script breaks every
+   one of those silently, because a skill is prose to every reader and
+   configuration to nobody — the same argument `tests/ci-workflow.test.js`
+   opens with, applied one level out.
+
+   Not hypothetical in this repo: `build:netlify` was renamed to
+   `build:railway` in 7432f54, and the only reason no skill was left pointing
+   at the old name is that the same commit swept the docs by hand.
+
+   Scoped to `bun run <script>`, deliberately. A skill also names shell
+   commands, `gh` subcommands and file paths; `git ls-files`-derived path
+   coverage already exists in `tests/module-paths.test.js`, and asserting that
+   an arbitrary shell command is valid is not something a test can do. A
+   package script is the one citation with a machine-readable answer. */
+describe('commands named in a skill exist', () => {
+  const SCRIPTS = new Set(Object.keys(JSON.parse(read('package.json')).scripts))
+
+  /**
+   * Every `bun run <script>` cited anywhere under `.claude/skills/`, with the
+   * file that cites it. Tracked files only, matching `docs-file-set.js`: an
+   * untracked skill is covered the moment it is committed.
+   */
+  /**
+   * Tracked markdown under `.claude/skills/`, matching `docs-file-set.js`.
+   *
+   * The `.md` filter also excludes the vendored skills, and that is deliberate
+   * rather than incidental: those are SYMLINKS into `.agents/skills/`, which
+   * `git ls-files` reports as the link path with no `/SKILL.md` suffix. That
+   * tree comes from `mattpocock/skills` (see `skills-lock.json`) and its
+   * contents are not ours to keep current — the same reason
+   * `tests/module-paths.test.js` carries `.agents` in its SKIP set. Gating on
+   * it would let an upstream sync redden this repo's CI over a command it does
+   * not own. Measured: those eleven files cite `bun run` zero times today, so
+   * the exclusion costs no coverage either.
+   */
+  function skillFiles() {
+    return execFileSync('git', ['ls-files', '.claude/skills'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter((path) => path.endsWith('.md'))
+  }
+
+  // The script-name class is deliberately wider than the corpus needs — a
+  // leading digit, underscore, `@` or `+`, and an embedded `/`, `=`, `~` or
+  // `*` — because `bun run` takes any package key and all of those are legal
+  // in one. Measured at each widening: the corpus yields the same 23 citations
+  // throughout, so the extra reach costs nothing today and cannot silently
+  // skip a future citation the narrower class would not have recognized as
+  // one.
+  //
+  // It is a CLASS and not `[^\s`]+` for a measured reason. A whole-token
+  // capture also finds 23, but eight of them are prose: `test)`,
+  // `format:check)` and friends, where a citation ends a parenthetical. The
+  // class is what stops at sentence punctuation, which is why `?` and `!` stay
+  // out of it even though a package key may legally contain them. The trade is
+  // deliberate and asymmetric: a false positive fails CI against correct docs,
+  // while a miss leaves one exotic citation unchecked among twenty-three.
+  //
+  // Leading FLAGS are skipped, so `bun run --silent test` and
+  // `bun run -w build:app` are read as citations of `test` and `build:app`
+  // rather than producing none at all. A flag TAKING A VALUE is deliberately
+  // not modelled — telling `--cwd forms/app` apart from a script name needs
+  // Bun's flag table, which this file has no business carrying — so
+  // `bun run --cwd forms/app build` would be read as `forms/app` and FAIL.
+  // That direction is chosen on purpose: this gate exists to stop silent
+  // under-coverage, and a loud failure someone fixes by rewording a sentence
+  // is better than a citation nobody ever checks. The corpus contains no
+  // flagged invocation of either kind today.
+  //
+  // Whitespace-collapsed before matching, and the regex admits a run of it —
+  // the same wrapped-prose blindness `mirror-consistency` documents, and the
+  // repo really does carry one: `hhvc-rag-knowledge-base` wraps a citation
+  // between `run` and `ingest`. A same-line-only scan silently omitted it, and
+  // because that file carries other citations the coverage property below
+  // still passed, so a stale wrapped command could have sat there unchecked.
+  const citations = skillFiles().flatMap((path) =>
+    [
+      ...normalize(read(path)).matchAll(/bun run\s+(?:-{1,2}[\w-]+\s+)*([\w@+][\w:.@/+=~*-]*)/g),
+    ].map((match) => ({
+      path,
+      script: match[1],
+    }))
+  )
+
+  test('every skill mentioning `bun run` yields at least one citation', () => {
+    // Non-vacuity, derived from the corpus rather than asserted as a
+    // threshold. A hardcoded floor would go red on a legitimate consolidation
+    // that left fewer citations standing, and this repo's own rule is to
+    // derive counts from the source of truth. The property here is exact: a
+    // file whose raw text contains the phrase must contribute a citation, so a
+    // regex that stops matching fails instead of quietly reporting nothing
+    // wrong.
+    const mentioning = skillFiles().filter((path) => normalize(read(path)).includes('bun run'))
+    const scanned = new Set(citations.map(({ path }) => path))
+    expect(mentioning.filter((path) => !scanned.has(path))).toEqual([])
+    expect(mentioning.length).toBeGreaterThan(0)
+  })
+
+  test('every cited script is defined in package.json', () => {
+    const broken = citations
+      .filter(({ script }) => !SCRIPTS.has(script))
+      .map(({ path, script }) => `${path}: bun run ${script}`)
+    expect(broken).toEqual([])
+  })
+})
+
 describe('retired mechanisms do not come back', () => {
   test.each(RETIRED_MECHANISMS)('no skill describes $id', ({ needle, reason }) => {
     for (const skill of Object.keys(SKILL_SECTIONS)) {
