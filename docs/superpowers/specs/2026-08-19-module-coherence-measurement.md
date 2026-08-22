@@ -122,7 +122,7 @@ than a rounding difference.** Measured against this document's own baseline,
 | self-mounting IIFEs | 31 | 31 | matches |
 | namespaces on `window` | 55 | 54 | off by one |
 | edges | 226 | 251 | — |
-| mount-time / call-time | 78 / 120 | 102 / 149 | — |
+| mount-time / call-time | 78 / 120 | 96 / 155 | — |
 | largest SCC | **16 files** | **25 files** | — |
 | `window.renderPage` intra-SCC edges | **24** | **33** | — |
 
@@ -158,7 +158,7 @@ whatever the divergence above:
 
 **Eleven of `window.renderPage`'s 33 intra-SCC edges are gone — a third — and
 the SCC did not shrink by a single file.** Mount-time edges are unchanged at
-102.
+96.
 
 That is the honest result, and it is not a failure of the conversion so much as
 a correction to what Task 1 was ever going to achieve. Removing the
@@ -173,3 +173,35 @@ due.** Nothing about Task 1 resolves it: keeping `window.renderPage` still
 guarantees an SCC, and `no-circular` would still fail on every file in it. What
 Task 1 bought is a smaller share of that SCC's edges and one monkey-patch fewer,
 which is real but is not "the tangle shrank."
+
+### Scanner corrections from the PR #191 review
+
+Four defects in the first version of the scanner were found in review, and all
+four moved the mount-time/call-time split rather than the edge or SCC counts:
+
+- **Method bodies were read as top-level.** The classifier keyed on the
+  `function` keyword and `=>`, so object-method shorthand, class methods and
+  constructors — none of which carry that keyword — had their contents filed as
+  mount-time. `EditorSession`'s constructor reading `window.inlineEditAdapter`
+  is a real instance in this tree.
+- **Expression-bodied arrows opened no scope at all.** `const read = () =>
+  window.X` was recorded as a mount-time read; there is a real instance in
+  `js/ai/ai-assist-render.js`.
+- **`${...}` scanning was not lexical-state aware.** `${'window.FalseEdge'}`
+  kept a reference that is only a string, and a `}` inside a quoted string
+  inside an interpolation ended the scan early, blanking the real code after
+  it — the more damaging half, since it shrinks the graph silently.
+
+Corrected figures: the split is **96 / 155**, not 102 / 149. Six edges moved
+from mount-time to call-time, which is the direction all three defects
+predicted — methods and arrow bodies are call-time by definition. **Edge
+counts, SCC membership and the `renderPage` figures are unchanged**, so the
+Step 7 conclusion above stands exactly as written.
+
+The four are pinned in `tests/measure-window-graph.test.js` and were verified
+to FAIL against the pre-correction scanner. Three further cases in that file
+(a control-statement block, a nested template, a brace inside a string inside
+an interpolation) pass against both versions and are guards against
+over-correcting rather than proven regressions — a scanner that counted
+`if (...) {` as a function body would flip genuinely mount-time reads to
+call-time and hide the hazard this measurement exists to find.

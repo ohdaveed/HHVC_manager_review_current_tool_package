@@ -98,14 +98,39 @@ function stripNonCode(src) {
     if (out[at] !== '\n') out[at] = ' '
   }
 
+  // A mode stack rather than an ad-hoc `${}` brace counter. The counter version
+  // was not lexical-state aware, which cost two real defects: `${'window.X'}`
+  // kept a reference that is only a string, and a `}` inside a quoted string
+  // inside an interpolation ended the scan early, blanking real code after it.
+  // Interpolations nest arbitrarily (a template inside a `${}` inside a
+  // template), so the contents of `${...}` go back through this same loop.
+  const stack = [{ kind: 'code', depth: 0 }]
   let i = 0
-  // Depth of nested `${ }` inside template literals, so a `}` closing an
-  // interpolation returns to string mode rather than ending the template.
-  const templateStack = []
 
   while (i < src.length) {
+    const top = stack[stack.length - 1]
     const ch = src[i]
     const next = src[i + 1]
+
+    if (top.kind === 'template') {
+      if (ch === '\\') {
+        blank(i++)
+        blank(i++)
+        continue
+      }
+      if (ch === '`') {
+        stack.pop()
+        i++
+        continue
+      }
+      if (ch === '$' && next === '{') {
+        stack.push({ kind: 'code', depth: 0 })
+        i += 2
+        continue
+      }
+      blank(i++)
+      continue
+    }
 
     if (ch === '/' && next === '/') {
       while (i < src.length && src[i] !== '\n') blank(i++)
@@ -130,35 +155,26 @@ function stripNonCode(src) {
       continue
     }
     if (ch === '`') {
-      templateStack.push('template')
+      stack.push({ kind: 'template' })
       i++
-      while (i < src.length && templateStack.length > 0) {
-        if (src[i] === '\\') {
-          blank(i++)
-          blank(i++)
-          continue
-        }
-        if (src[i] === '`') {
-          templateStack.pop()
-          i++
-          continue
-        }
-        if (src[i] === '$' && src[i + 1] === '{') {
-          // Leave the interpolation's code intact; scan it for nested strings
-          // by falling back to the outer loop until its matching `}`.
-          i += 2
-          let depth = 1
-          while (i < src.length && depth > 0) {
-            if (src[i] === '{') depth++
-            else if (src[i] === '}') depth--
-            if (depth === 0) break
-            i++
-          }
-          i++
-          continue
-        }
-        blank(i++)
+      continue
+    }
+    if (ch === '{') {
+      top.depth++
+      i++
+      continue
+    }
+    if (ch === '}') {
+      // Closing an interpolation returns to the template that opened it; a
+      // plain block just decrements. Only the innermost code frame can close
+      // an interpolation, and only at its own depth 0.
+      if (top.depth === 0 && stack.length > 1) {
+        stack.pop()
+        i++
+        continue
       }
+      top.depth--
+      i++
       continue
     }
     i++
@@ -211,44 +227,151 @@ function findReferences(code) {
  * @returns {(index: number) => number} function-nesting depth at an index
  */
 function functionDepthAt(code) {
-  // Openings of function bodies, as [openBraceIndex, closeBraceIndex].
+  // Spans of [start, end) that are inside SOME function body.
   const spans = []
-  const stack = []
-  let pendingFunction = null
+  // Brace frames: each records whether it opened a function body, and whether
+  // that function is the transparent file-level IIFE wrapper.
+  const braces = []
+  // Open expression-bodied arrows, awaiting the end of their expression.
+  const arrows = []
 
-  const isIifeWrapper = (atIndex) => {
-    // `;(function name() {` / `(function () {` at the start of a statement —
-    // the repo's named-IIFE idiom. Look back past whitespace for `(`.
-    let j = atIndex - 1
+  const CONTROL = new Set(['if', 'for', 'while', 'switch', 'catch', 'with', 'do', 'else', 'try'])
+
+  const skipBackWs = (at) => {
+    let j = at
     while (j >= 0 && /\s/.test(code[j])) j--
-    return code[j] === '('
+    return j
+  }
+
+  /** Read the identifier ending at `at`, or '' if there isn't one. */
+  const identEndingAt = (at) => {
+    let j = at
+    while (j >= 0 && /[\w$]/.test(code[j])) j--
+    return code.slice(j + 1, at + 1)
+  }
+
+  /** Index of the `(` matching the `)` at `at`, or -1. */
+  const matchParenBack = (at) => {
+    let depth = 0
+    for (let j = at; j >= 0; j--) {
+      if (code[j] === ')') depth++
+      else if (code[j] === '(') {
+        depth--
+        if (depth === 0) return j
+      }
+    }
+    return -1
+  }
+
+  /**
+   * Does the `{` at `at` open a function body?
+   *
+   * Covers every form this codebase actually uses: `function f() {}`,
+   * `() => {}`, and — the case the first version missed — METHOD SYNTAX
+   * (`foo() {}`, `constructor() {}`, `get x() {}`, `async foo() {}`), which has
+   * no `function` keyword at all. Missing it classified every read inside a
+   * class or object method as mount-time, which is exactly backwards: those are
+   * the reads ES modules handle safely.
+   *
+   * @returns {{isFunction: boolean, transparent: boolean}}
+   */
+  const classifyBrace = (at) => {
+    const p = skipBackWs(at - 1)
+    if (p < 0) return { isFunction: false, transparent: false }
+
+    // `=> {`
+    if (code[p] === '>' && code[p - 1] === '=') return { isFunction: true, transparent: false }
+
+    // `) {` — a parameter list, unless it belongs to a control statement.
+    if (code[p] === ')') {
+      const open = matchParenBack(p)
+      if (open === -1) return { isFunction: false, transparent: false }
+      const before = skipBackWs(open - 1)
+      const ident = identEndingAt(before)
+      if (CONTROL.has(ident)) return { isFunction: false, transparent: false }
+      // `(function name() {` / `(function () {` — the repo's named-IIFE idiom,
+      // whose body runs at module-evaluation time and so must stay mount-time.
+      // Walk back past the name to find the `function` keyword and then the
+      // `(` that wraps it.
+      let k = before
+      let word = identEndingAt(k)
+      if (word && word !== 'function') {
+        k = skipBackWs(k - word.length)
+        word = identEndingAt(k)
+      }
+      if (word === 'function') {
+        const q = skipBackWs(k - word.length)
+        if (code[q] === '(') return { isFunction: true, transparent: true }
+      }
+      return { isFunction: true, transparent: false }
+    }
+    return { isFunction: false, transparent: false }
   }
 
   for (let i = 0; i < code.length; i++) {
-    if (code.startsWith('function', i) && /\W/.test(code[i - 1] ?? ' ')) {
-      pendingFunction = { transparent: isIifeWrapper(i) }
-      i += 'function'.length - 1
+    const ch = code[i]
+
+    // An expression-bodied arrow — `const read = () => window.X` — opens a
+    // function scope with no brace at all. It was being counted as mount-time,
+    // which is wrong for the same reason method bodies were.
+    if (ch === '=' && code[i + 1] === '>') {
+      const after = skipBackWs === null ? i + 2 : i + 2
+      let j = after
+      while (j < code.length && /\s/.test(code[j])) j++
+      if (code[j] !== '{') {
+        arrows.push({ start: i, braceDepth: braces.length, parenDepth: 0 })
+      }
+      i++
       continue
     }
-    if (code.startsWith('=>', i)) {
-      pendingFunction = { transparent: false }
-      i += 1
+
+    if (ch === '(' || ch === '[') {
+      for (const a of arrows) a.parenDepth++
       continue
     }
-    if (code[i] === '{') {
-      stack.push(pendingFunction ? { ...pendingFunction, open: i } : null)
-      pendingFunction = null
+    if (ch === ')' || ch === ']') {
+      for (let k = arrows.length - 1; k >= 0; k--) {
+        if (arrows[k].parenDepth === 0 && arrows[k].braceDepth === braces.length) {
+          spans.push([arrows[k].start, i])
+          arrows.splice(k, 1)
+        } else {
+          arrows[k].parenDepth--
+        }
+      }
       continue
     }
-    if (code[i] === '}') {
-      const frame = stack.pop()
-      if (frame && !frame.transparent) spans.push([frame.open, i])
+    // `,` and `;` end an expression-bodied arrow at the same nesting level.
+    if (ch === ',' || ch === ';') {
+      for (let k = arrows.length - 1; k >= 0; k--) {
+        if (arrows[k].parenDepth === 0 && arrows[k].braceDepth === braces.length) {
+          spans.push([arrows[k].start, i])
+          arrows.splice(k, 1)
+        }
+      }
       continue
     }
-    // A `(` or `,` between `function` and its body means we mis-detected;
-    // parameters are fine, so only reset on a statement terminator.
-    if (pendingFunction && code[i] === ';') pendingFunction = null
+
+    if (ch === '{') {
+      const { isFunction, transparent } = classifyBrace(i)
+      braces.push({ open: i, isFunction, transparent })
+      continue
+    }
+    if (ch === '}') {
+      // Any arrow still open inside this block ends with it.
+      for (let k = arrows.length - 1; k >= 0; k--) {
+        if (arrows[k].braceDepth >= braces.length) {
+          spans.push([arrows[k].start, i])
+          arrows.splice(k, 1)
+        }
+      }
+      const frame = braces.pop()
+      if (frame && frame.isFunction && !frame.transparent) spans.push([frame.open, i])
+      continue
+    }
   }
+
+  // Anything still open runs to the end of the file.
+  for (const a of arrows) spans.push([a.start, code.length])
 
   return (index) => spans.filter(([open, close]) => index > open && index < close).length
 }

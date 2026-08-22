@@ -97,7 +97,6 @@ wrong). `bun run test` runs 57 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `page-render-hooks`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `measure-window-graph`,
-`measure-window-graph`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
@@ -482,11 +481,15 @@ invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(`js/review/ux-improvements.js` wraps it to refresh after navigation — the decorator
-only forms if the original is on `window`; it is the last of three, the other
-two having been the deleted `js/interactive-sitemap.js` and
-`js/review/manager-review-export.js`, whose decorator went with the sidebar label it
-refreshed), `window.toggleSidebar` (an inline
+(**no longer wrapped by `js/review/ux-improvements.js`** — that module registers
+with `page-render.js`'s `onBeforeRender`/`onAfterRender` registry now, which
+needs no `window` reference at all. Two things still need the assignment:
+`js/editing/inline-content-edit.js`'s own wrapper, which reads and reassigns it
+to re-decorate after every render, and roughly fifteen
+`window.renderPage?.(key)` call sites across the review/UX IIFEs. The other two
+historical wrappers were the deleted `js/interactive-sitemap.js` and
+`js/review/manager-review-export.js`, whose decorator went with the sidebar label
+it refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).

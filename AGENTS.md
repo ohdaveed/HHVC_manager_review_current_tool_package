@@ -473,11 +473,15 @@ invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(`js/review/ux-improvements.js` wraps it to refresh after navigation — the decorator
-only forms if the original is on `window`; it is the last of three, the other
-two having been the deleted `js/interactive-sitemap.js` and
-`js/review/manager-review-export.js`, whose decorator went with the sidebar label it
-refreshed), `window.toggleSidebar` (an inline
+(**no longer wrapped by `js/review/ux-improvements.js`** — that module registers
+with `page-render.js`'s `onBeforeRender`/`onAfterRender` registry now, which
+needs no `window` reference at all. Two things still need the assignment:
+`js/editing/inline-content-edit.js`'s own wrapper, which reads and reassigns it
+to re-decorate after every render, and roughly fifteen
+`window.renderPage?.(key)` call sites across the review/UX IIFEs. The other two
+historical wrappers were the deleted `js/interactive-sitemap.js` and
+`js/review/manager-review-export.js`, whose decorator went with the sidebar label
+it refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).
@@ -1273,9 +1277,9 @@ wiring into the existing autosave path).
   whether it actually wrote a path via `setByPath` — rather than reaching for
   `window.renderPage` itself. **That boolean exists because the obvious
   alternative (re-render unconditionally whenever reapply runs) is a live
-  infinite loop, not a hypothetical one.** `window.renderPage` is already
-  `js/review/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
-  run, so a follow-up render re-enters that wrapper, which schedules its own
+  infinite loop, not a hypothetical one.** By the time `applySavedPageState` can
+  run, `js/review/ux-improvements.js` has registered its `onAfterRender`
+  subscriber, so a follow-up render dispatches that hook, which schedules its own
   deferred `applySavedPageState` call for the same page — which would see
   the same still-true "wrote something" signal and trigger a second render,
   forever (disabling the guard that prevents this produced 17 renders before
@@ -1441,11 +1445,11 @@ surface so each selector is still declared in exactly one file.
   with exactly the content Restore exists to bring back, blanked. So
   `deletePage()` flushes first (via the newly published
   `window.ReviewUx.flushPendingPersist`), then mutates, then rebuilds the picker,
-  then navigates through the **wrapped** `window.renderPage`. Flushing rather
+  then navigates through `window.renderPage`. Flushing rather
   than discarding: those keystrokes are real edits to the page being deleted, and
   at flush time that page still exists, so the save is well formed — and it
-  leaves `pendingPersist` false, making the wrapper's own pre-navigation flush a
-  no-op instead of a second write.
+  leaves `pendingPersist` false, making the before-render hook's own
+  pre-navigation flush a no-op instead of a second write.
 - **It also consumes the queue's one-step undo.** `undoLastAction` is the only
   queue path that does NOT filter on `DATA.pages`, so a snapshot taken before a
   delete would still offer "Undo Approved · N pages" and then write a record for

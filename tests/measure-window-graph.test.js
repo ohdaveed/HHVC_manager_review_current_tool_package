@@ -214,3 +214,61 @@ describe('stronglyConnectedComponents', () => {
     expect(scc.map((c) => c.length)).toEqual([3, 2])
   })
 })
+
+/**
+ * Regressions from the PR #191 review. Each of the four below was a real
+ * misclassification in the first version of this scanner, and each moved a
+ * published number — the mount-time/call-time split is the figure the whole
+ * "which edges are TDZ-hazardous" claim rests on, so a read filed on the wrong
+ * side of it is not a rounding error.
+ */
+describe('scanner defects found in review', () => {
+  test('a read inside a CLASS METHOD body is call-time', () => {
+    // Method syntax carries no `function` keyword, so a scanner keyed on that
+    // keyword treats the whole body as top-level. Real instance in this tree:
+    // EditorSession's constructor reads window.inlineEditAdapter.
+    const src =
+      'class EditorSession {\n  constructor() {\n    this.a = window.inlineEditAdapter\n  }\n}'
+    expect(functionDepthAt(src)(src.indexOf('window'))).toBeGreaterThan(0)
+  })
+
+  test('a read inside an OBJECT METHOD shorthand body is call-time', () => {
+    const src = 'const api = {\n  refresh() {\n    return window.HHVC_DATA\n  },\n}'
+    expect(functionDepthAt(src)(src.indexOf('window'))).toBeGreaterThan(0)
+  })
+
+  test('a read in an EXPRESSION-BODIED arrow is call-time', () => {
+    // `const read = () => window.X` opens a function scope with no brace at
+    // all. Real instance in this tree: js/ai/ai-assist-render.js.
+    const src = 'const read = () => window.HHVC_DATA'
+    expect(functionDepthAt(src)(src.indexOf('window'))).toBeGreaterThan(0)
+  })
+
+  test('a control-statement block is NOT a function body', () => {
+    // The guard against over-correcting: `if (...) {` also matches ") {", and
+    // counting it would flip genuinely mount-time reads to call-time, hiding
+    // the hazard this measurement exists to find.
+    const src = 'if (ready) {\n  const DATA = window.HHVC_DATA\n}'
+    expect(functionDepthAt(src)(src.indexOf('window'))).toBe(0)
+  })
+
+  test('a string inside a template interpolation is not a reference', () => {
+    // `${'window.FalseEdge'}` is a string, not a read. The brace-counting
+    // version kept it and invented an edge.
+    const code = stripNonCode("const s = `${'window.FalseEdge'}`")
+    expect(code).not.toContain('window.FalseEdge')
+  })
+
+  test('a brace inside a string inside an interpolation does not end the scan', () => {
+    // The other half of the same defect, and the more damaging one: a `}` in a
+    // quoted string ended interpolation scanning early, blanking the real code
+    // that followed and SHRINKING the graph silently.
+    const code = stripNonCode("const s = `${ f('}') }` \nconst real = window.HHVC_DATA")
+    expect(code).toContain('window.HHVC_DATA')
+  })
+
+  test('a template nested inside an interpolation is still scanned', () => {
+    const code = stripNonCode('const s = `${ `${window.utils.escapeHtml(x)}` }`')
+    expect(code).toContain('window.utils.escapeHtml')
+  })
+})

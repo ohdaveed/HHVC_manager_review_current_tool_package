@@ -178,15 +178,28 @@ Some `window` publishing is the design and stays, documented as such:
 
 - ~~`window.renderPage`~~ — **struck 2026-08-19 after measurement.** This entry
   and this section's own commitment that cycles are "broken, not translated"
-  could not both hold. `window.renderPage` is responsible for **24 of the
-  intra-SCC edges** in the one 16-file cycle cluster the graph contains — the
-  largest single contributor, and dropping it plus `showToast` shrinks that
-  cluster to 12 files. Keeping it guarantees the cycles this section exists to
-  remove.
+  could not both hold. `window.renderPage` is the largest single contributor to
+  the one cycle cluster the graph contains, and keeping it guarantees the cycles
+  this section exists to remove.
 
-  **Resolution: a post-render hook registry.** `js/mockup/page-render.js`
-  exports `onAfterRender(fn)`; `js/review/ux-improvements.js` registers a
-  callback instead of monkey-patching a global. Callers plainly
+  **The figures this entry originally carried — 24 intra-SCC edges, a 16-file
+  cluster shrinking to 12 — are superseded and should not be quoted.** They came
+  from a measurement whose script was never committed and does not reproduce;
+  see the 2026-08-21 correction in
+  `docs/superpowers/specs/2026-08-19-module-coherence-measurement.md`, which
+  measures 33 edges in a 25-file SCC and records why the original model is not
+  recoverable. Re-derive with `bun build_scripts/measure-window-graph.js` rather
+  than restating any number from here. What survives unchanged is the RELATIVE
+  claim above: `renderPage` dominates, under either model.
+
+  **Resolution: a render hook registry, with TWO channels.**
+  `js/mockup/page-render.js` exports `onBeforeRender(fn)` and
+  `onAfterRender(fn)`; `js/review/ux-improvements.js` registers callbacks
+  instead of monkey-patching a global. Two channels because the wrapper being
+  replaced did work on BOTH sides of its call, and the before-side is not
+  optional — it flushes in-progress sidebar edits while the outgoing page's
+  values are still in the DOM. Shipping only the after-channel destroyed those
+  edits; see `tests/e2e/navigation-flush.spec.js`. Callers plainly
   `import { renderPage }`. This inverts the dependency — `page-render.js` then
   depends on none of its subscribers — which is what actually breaks the
   cluster. A hook registry rather than a custom event because an event name is

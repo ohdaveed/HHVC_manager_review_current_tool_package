@@ -40,6 +40,33 @@ Read these four facts before writing any code; three of them contradict what the
 
 ### Task 1: The post-render hook registry
 
+> **Superseded in part, 2026-08-21 — read this before following the steps
+> below.** Task 1 shipped, and two things it specified turned out to be wrong.
+>
+> **The registry needs TWO channels, not one.** Every step below names only
+> `onAfterRender`. Building exactly that is what shipped the review-data-loss
+> regression in `d71ff26`: the wrapper being replaced did work on BOTH sides of
+> its `originalRenderPage.call(...)`, and the before-side is not optional — it
+> flushes in-progress sidebar edits while the OUTGOING page's values are still
+> in the DOM. `applyPageContent()` overwrites `#seoTitleInput` and
+> `#metaDescriptionInput` through `syncEditorFields()`, and
+> `collectCurrentPageReviewState()` reads both back out of the live DOM, so a
+> flush on the after-channel writes the destination page's SEO fields into the
+> outgoing page's record. The shipped shape is `onBeforeRender(fn)` +
+> `onAfterRender(fn)`, with `renderPage(key, skipHistory, skipHooks)`
+> suppressing both, and `tests/e2e/navigation-flush.spec.js` as the regression
+> test — it types into the sidebar and navigates INSIDE the 300ms autosave
+> debounce, which no other spec does, which is why 188 green e2e specs missed
+> this.
+>
+> **Step 7's premise did not hold.** The tangle did not shrink: `renderPage`'s
+> intra-SCC edges fell 33 → 22, but the SCC stayed at 25 files. The figures this
+> task quotes (24 edges, a 16-file SCC) come from a measurement that does not
+> reproduce — see the 2026-08-21 correction in
+> `docs/superpowers/specs/2026-08-19-module-coherence-measurement.md` and
+> re-derive with `bun build_scripts/measure-window-graph.js` rather than
+> quoting any number from here.
+
 **Files:**
 - Modify: `js/mockup/page-render.js`, `js/review/ux-improvements.js`, `js/core/app.js`
 - Test: `tests/page-render-hooks.test.js` (create)
@@ -323,6 +350,13 @@ As Task 3, then the full gate set plus `test:e2e` and `build:singlefile`.
 ---
 
 ### Task 5: Convert the remaining SCC
+
+> **Re-measure before scoping this.** Any file count here descends from the
+> superseded measurement; the current largest SCC is 25 files, not 16 or 12.
+> `bun build_scripts/measure-window-graph.js` is the source. Note also that
+> Task 1 did NOT resolve the contradiction the measurement doc raises —
+> `window.renderPage` cannot both survive and let `no-circular` pass — so that
+> decision is still open and belongs to this task.
 
 **Files:** the 12 files still mutually entangled after Task 1 removed `window.renderPage` — `ai/ai-assist.js`, `core/page-registry-ui.js`, `core/page-registry.js`, `editing/inline-content-edit-link-tool.js`, `editing/inline-content-edit.js`, `review/dashboard-guidance.js`, `review/keyboard-shortcuts.js`, `review/review-ops.js`, `review/ux-improvements-export.js`, `review/ux-improvements-state-sync.js`, `review/ux-improvements-workspace.js`, `sync/review-state-sync.js`.
 
