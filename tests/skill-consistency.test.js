@@ -329,6 +329,62 @@ describe('facts shared between a skill and its AGENTS.md section', () => {
   )
 })
 
+/* Commands a skill tells a human to run.
+
+   WHY THIS EXISTS. `skill-consistency` above covers the eleven extracts, whose
+   drift risk is disagreeing with AGENTS.md. The OTHER tracked skills — `ship`,
+   `verify`, `verify-railway-backend`, `karl-notes-drift-check` — carry a
+   different one: they are procedures, and a procedure names commands. `ship`
+   alone cites eight `lint:*`/`validate`/`test` scripts and pre-approves several
+   in its `allowed-tools` front matter. Renaming a package script breaks every
+   one of those silently, because a skill is prose to every reader and
+   configuration to nobody — the same argument `tests/ci-workflow.test.js`
+   opens with, applied one level out.
+
+   Not hypothetical in this repo: `build:netlify` was renamed to
+   `build:railway` in 7432f54, and the only reason no skill was left pointing
+   at the old name is that the same commit swept the docs by hand.
+
+   Scoped to `bun run <script>`, deliberately. A skill also names shell
+   commands, `gh` subcommands and file paths; `git ls-files`-derived path
+   coverage already exists in `tests/module-paths.test.js`, and asserting that
+   an arbitrary shell command is valid is not something a test can do. A
+   package script is the one citation with a machine-readable answer. */
+describe('commands named in a skill exist', () => {
+  const SCRIPTS = new Set(Object.keys(JSON.parse(read('package.json')).scripts))
+
+  /**
+   * Every `bun run <script>` cited anywhere under `.claude/skills/`, with the
+   * file that cites it. Tracked files only, matching `docs-file-set.js`: an
+   * untracked skill is covered the moment it is committed.
+   */
+  const citations = execFileSync('git', ['ls-files', '.claude/skills'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  })
+    .split('\n')
+    .filter((path) => path.endsWith('.md'))
+    .flatMap((path) =>
+      [...read(path).matchAll(/bun run ([a-zA-Z][\w:.-]*)/g)].map((match) => ({
+        path,
+        script: match[1],
+      }))
+    )
+
+  test('the scan finds citations at all, so a broken regex cannot pass as clean', () => {
+    // Same floor as the job-name census: a scan that stops matching reports
+    // nothing wrong rather than reporting that it checked nothing.
+    expect(citations.length).toBeGreaterThan(10)
+  })
+
+  test('every cited script is defined in package.json', () => {
+    const broken = citations
+      .filter(({ script }) => !SCRIPTS.has(script))
+      .map(({ path, script }) => `${path}: bun run ${script}`)
+    expect(broken).toEqual([])
+  })
+})
+
 describe('retired mechanisms do not come back', () => {
   test.each(RETIRED_MECHANISMS)('no skill describes $id', ({ needle, reason }) => {
     for (const skill of Object.keys(SKILL_SECTIONS)) {
