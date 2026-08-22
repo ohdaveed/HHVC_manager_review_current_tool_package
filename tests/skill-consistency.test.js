@@ -39,8 +39,9 @@
 //
 // MUTATION-PROVEN, and against the real drift rather than a synthetic one.
 // Restoring the three skills to their state at `17a09d3` — the commit before
-// the audit — fails six assertions here, naming each: two shared-fact claims
-// on `hhvc-review-sync-backend` and all five retired-mechanism entries. So
+// the audit — fails nine assertions here, naming each: two shared-fact claims
+// on `hhvc-review-sync-backend`, the exactly-once check on those same two, and
+// all five retired-mechanism entries. So
 // this file would have failed on that tree, which is the whole argument for
 // it. The shared-fact claims that pass on both trees prove nothing about that
 // drift; they guard the different failure stated where they are declared.
@@ -137,9 +138,9 @@ const SHARED_CLAIMS = [
   { skill: 'hhvc-react-islands', needle: '`ScopedCssBaseline`' },
   { skill: 'hhvc-react-islands', needle: '`js/react/theme.js`' },
 
-  { skill: 'hhvc-review-insights', needle: '`insightsSignature()`' },
-  { skill: 'hhvc-review-insights', needle: '`--viz-decision-*`' },
-  { skill: 'hhvc-review-insights', needle: '`.hhvc-sr-only`' },
+  { skill: 'hhvc-review-insights', needle: '`insightsSignature()` gates redraws' },
+  { skill: 'hhvc-review-insights', needle: 'Decision fills use `--viz-decision-*`' },
+  { skill: 'hhvc-review-insights', needle: 'beside an `.hhvc-sr-only`' },
 
   { skill: 'hhvc-review-ops', needle: '`findOrphanedRecords`' },
   { skill: 'hhvc-review-ops', needle: '`mountWorkspacePanelIfOpen()`' },
@@ -227,6 +228,29 @@ function read(relativePath) {
 }
 
 /**
+ * A skill's PROSE, with the YAML front matter removed.
+ *
+ * The `description:` field is a summary index — it is what the harness lists
+ * when deciding whether to load the skill — so it legitimately repeats the
+ * identifiers the body defines. Counting it would make the exactly-once rule
+ * below unsatisfiable for four claims whose only second occurrence is there,
+ * and the obvious workaround (lengthen the needle until it is unique again)
+ * would push the registry toward sentence fragments, which is the thing it
+ * deliberately avoids: a sentence is the part an editor rewrites.
+ *
+ * A skill with no front matter is returned whole rather than treated as an
+ * error — the check is about drift, not file shape.
+ *
+ * @param {string} skill Directory name under `.claude/skills/`.
+ * @returns {string} the body, whitespace-collapsed.
+ */
+function skillBody(skill) {
+  const raw = read(`.claude/skills/${skill}/SKILL.md`)
+  const match = raw.match(/^---\n[\s\S]*?\n---\n/)
+  return normalize(match ? raw.slice(match[0].length) : raw)
+}
+
+/**
  * The body of one `### ` section of AGENTS.md.
  *
  * Stops at the next heading of level 2 OR 3, so a section cannot absorb its
@@ -278,19 +302,29 @@ describe('the skill registry covers what is on disk', () => {
 describe('facts shared between a skill and its AGENTS.md section', () => {
   test.each(SHARED_CLAIMS)('$skill still states $needle', ({ skill, needle }) => {
     const section = normalize(agentsSection(SKILL_SECTIONS[skill]) ?? '')
-    const body = normalize(read(`.claude/skills/${skill}/SKILL.md`))
 
     // Both directions, in one assertion each, so the failure message says
     // which side lost the fact rather than only that they disagree.
     expect(section).toContain(needle)
-    expect(body).toContain(needle)
+    expect(skillBody(skill)).toContain(needle)
   })
 
+  // The exactly-once rule runs on BOTH sides, and the skill side is the half
+  // that is easy to leave out — this file did, until a PR review caught it.
+  // The asymmetry made no sense on its own terms: the argument for the rule is
+  // that a repeated needle cannot fail as it implies, because the DEFINING
+  // occurrence can drift while an incidental one keeps the check green, and
+  // that is as true of a skill as of a section. Three claims were lengthened
+  // to their defining phrase rather than dropped when this was applied
+  // (`insightsSignature()` gates redraws, Decision fills use
+  // `--viz-decision-*`, beside an `.hhvc-sr-only`), each of which really did
+  // appear twice in its skill's prose.
   test.each(SHARED_CLAIMS)(
-    '$needle appears exactly once in $skill’s section, so presence is the fact',
+    '$needle appears exactly once on each side for $skill, so presence is the fact',
     ({ skill, needle }) => {
       const section = normalize(agentsSection(SKILL_SECTIONS[skill]) ?? '')
       expect(section.split(needle).length - 1).toBe(1)
+      expect(skillBody(skill).split(needle).length - 1).toBe(1)
     }
   )
 })
@@ -298,8 +332,11 @@ describe('facts shared between a skill and its AGENTS.md section', () => {
 describe('retired mechanisms do not come back', () => {
   test.each(RETIRED_MECHANISMS)('no skill describes $id', ({ needle, reason }) => {
     for (const skill of Object.keys(SKILL_SECTIONS)) {
-      const body = normalize(read(`.claude/skills/${skill}/SKILL.md`))
-      expect(`${skill}: ${body.includes(needle)}`).toBe(`${skill}: false`)
+      // The WHOLE file here, front matter included: one of the two SQLite
+      // phrasings this list retired lived in the `description:` field, where
+      // nothing but the harness ever read it.
+      const whole = normalize(read(`.claude/skills/${skill}/SKILL.md`))
+      expect(`${skill}: ${whole.includes(needle)}`).toBe(`${skill}: false`)
       expect(reason.length).toBeGreaterThan(0)
     }
   })
