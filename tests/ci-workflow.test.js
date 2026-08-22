@@ -70,9 +70,14 @@ function jobNames() {
  * @returns {string}
  */
 function decodeScalar(raw) {
-  const withoutComment = raw.replace(/\s+#.*$/, '').trim()
-  const quoted = withoutComment.match(/^(['"])(.*)\1$/)
-  return quoted ? quoted[2] : withoutComment
+  const trimmed = raw.trim()
+  // Quotes are matched FIRST, and a comment only stripped from what follows
+  // the closing quote. The other order — strip the comment, then unquote —
+  // reads `name: "Deploy #1"` as `"Deploy` and cannot recover, because inside
+  // quotes a `#` is part of the value rather than the start of a comment.
+  const quoted = trimmed.match(/^(['"])(.*?)\1\s*(?:#.*)?$/)
+  if (quoted) return quoted[2]
+  return trimmed.replace(/\s+#.*$/, '').trim()
 }
 
 /**
