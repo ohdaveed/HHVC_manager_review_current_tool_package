@@ -382,7 +382,7 @@ describe('commands named in a skill exist', () => {
   // because that file carries other citations the coverage property below
   // still passed, so a stale wrapped command could have sat there unchecked.
   const citations = skillFiles().flatMap((path) =>
-    [...normalize(read(path)).matchAll(/bun run\s+([\w@][\w:.@\/-]*)/g)].map((match) => ({
+    [...normalize(read(path)).matchAll(/bun run\s+([\w@][\w:.@/-]*)/g)].map((match) => ({
       path,
       script: match[1],
     }))
