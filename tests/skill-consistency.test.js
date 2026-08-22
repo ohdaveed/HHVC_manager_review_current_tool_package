@@ -396,6 +396,17 @@ describe('commands named in a skill exist', () => {
   // deliberate and asymmetric: a false positive fails CI against correct docs,
   // while a miss leaves one exotic citation unchecked among twenty-three.
   //
+  // Leading FLAGS are skipped, so `bun run --silent test` and
+  // `bun run -w build:app` are read as citations of `test` and `build:app`
+  // rather than producing none at all. A flag TAKING A VALUE is deliberately
+  // not modelled — telling `--cwd forms/app` apart from a script name needs
+  // Bun's flag table, which this file has no business carrying — so
+  // `bun run --cwd forms/app build` would be read as `forms/app` and FAIL.
+  // That direction is chosen on purpose: this gate exists to stop silent
+  // under-coverage, and a loud failure someone fixes by rewording a sentence
+  // is better than a citation nobody ever checks. The corpus contains no
+  // flagged invocation of either kind today.
+  //
   // Whitespace-collapsed before matching, and the regex admits a run of it —
   // the same wrapped-prose blindness `mirror-consistency` documents, and the
   // repo really does carry one: `hhvc-rag-knowledge-base` wraps a citation
@@ -403,7 +414,9 @@ describe('commands named in a skill exist', () => {
   // because that file carries other citations the coverage property below
   // still passed, so a stale wrapped command could have sat there unchecked.
   const citations = skillFiles().flatMap((path) =>
-    [...normalize(read(path)).matchAll(/bun run\s+([\w@+][\w:.@/+=~*-]*)/g)].map((match) => ({
+    [
+      ...normalize(read(path)).matchAll(/bun run\s+(?:-{1,2}[\w-]+\s+)*([\w@+][\w:.@/+=~*-]*)/g),
+    ].map((match) => ({
       path,
       script: match[1],
     }))
