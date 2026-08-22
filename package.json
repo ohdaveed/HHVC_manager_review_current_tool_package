@@ -97,7 +97,7 @@
     "// lint:anti-slop": "Runs the vendored anti-slop Oxlint plugin (tools/oxlint/anti-slop) over server.ts and build_scripts/ai/ ONLY, the two places holding decoded external input. The rules are written for TypeScript codebases; pointed at the browser JS they reported 280 findings, 254 of them no-runtime-typeof firing on the `typeof window === 'undefined'` guard this repo's code style mandates. The same scope is pinned in .oxlintrc.json's overrides, so an editor running bare oxlint sees it too. NOT wired into CI: a report to read, not a gate to pass",
     "lint:anti-slop": "oxlint server.ts build_scripts/ai",
     "// lint:architecture": "dependency-cruiser — the load-order and layering invariants AGENTS.md documents, as checks. server.ts is not cruised: dependency-cruiser needs a TypeScript compiler for it and this repo deliberately has no TS toolchain.",
-    "lint:architecture": "depcruise js pages build_scripts --output-type err",
+    "lint:architecture": "depcruise js pages build_scripts server.ts --output-type err",
     "// lint:dead-code": "Knip — files, exports and dependencies nothing reaches. The full report; the exports half is a triage list, not a gate.",
     "lint:dead-code": "knip-bun",
     "// lint:dead-code:ci": "The gated subset, clean as of adoption: an unused FILE, an unused dependency, an unlisted one or an unresolved import fails CI. Unused exports are excluded because this repo publishes deliberately onto window.<Namespace>, which Knip cannot see.",

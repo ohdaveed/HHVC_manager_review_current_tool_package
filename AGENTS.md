@@ -72,8 +72,12 @@ they state too weakly to act on:
   `format_validate_lint` job — read the job rather than a list here.** That sentence has been
   rewritten by every tool that joined it, each time as though it were the only
   addition, and an enumeration in three mirrored files is four copies of one
-  fact. What is worth stating is the shape: there is no ESLint and no `tsc`
-  anywhere in this repo, so Prettier covers formatting, oxlint's core rules
+  fact. What is worth stating is the shape: there is no ESLint and **no type
+  checking** in this repo — `typescript` is a devDependency, but nothing runs
+  `tsc` and no gate type-checks anything; it is installed only so
+  dependency-cruiser can parse `server.ts`, pinned `^6` because depcruise
+  accepts `>=2.0.0 <7.0.0` and warns under v7. So Prettier covers formatting,
+  oxlint's core rules
   cover correctness, Knip covers reachability, dependency-cruiser covers the
   module graph, and markdownlint covers the instruction docs. Each carries its
   own caveat, and each caveat lives with its tool: `lint:js` reads

@@ -49,7 +49,7 @@ bun run export        # regenerate data/page_inventory.{json,csv} + local tracki
 bun run export:karl   # write one paste-ready Karl transcript per page into review/karl-transcripts/
 bun run build         # validate -> export -> workshop form -> dist/ -> single-file HTML
 bun run format        # prettier --write on everything
-bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
+bun run format:check  # prettier --check — this is the lint step (no ESLint, no type checking)
 ```
 
 **There is a real test suite.** `bun run test` runs **57** Bun unit-test
