@@ -140,6 +140,17 @@ describe('the CI workflow', () => {
 describe('the required-context enumeration in the mirrors', () => {
   const MIRRORS = ['AGENTS.md', 'CLAUDE.md']
 
+  test('no two jobs share a name, so each is its own required context', () => {
+    // Without this, the census has a hole a copy-pasted job walks straight
+    // through: duplicate names keep `names.length === ids.length` true, and the
+    // set comparison below collapses the pair into one value, so both mirrors
+    // stay green while the second job has no distinct required context of its
+    // own — and GitHub can only require a context by name.
+    const names = jobNames()
+    const duplicated = names.filter((name, index) => names.indexOf(name) !== index)
+    expect(duplicated).toEqual([])
+  })
+
   test('every job under `jobs:` declares a name, and both parsers see them', () => {
     // A parse that stops matching does not fail, it stops checking — so
     // non-vacuity is established before anything is compared. Derived from the
