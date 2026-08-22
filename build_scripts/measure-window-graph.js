@@ -189,12 +189,18 @@ function stripNonCode(src) {
  * @returns {Set<string>}
  */
 function findPublishes(code) {
-  const published = new Set()
-  // `window.Name =` and `window.Name.sub =`, but not `window.Name ==`/`===`.
-  const re = /\bwindow\.([A-Za-z_$][\w$]*)(?:\.[\w$]+)*\s*(?:\|\|=|\?\?=|=)(?!=)/g
-  let match
-  while ((match = re.exec(code)) !== null) published.add(match[1])
-  return published
+  // Derived from findReferences rather than re-matched, because the rule for
+  // what counts as a publish — `window.Name =` and `window.Name.sub =`, but
+  // not `window.Name ==`/`===` — was previously written out twice, once here
+  // and once as findReferences' `isPublish` test. Two syntactic forms of one
+  // rule can drift, and either direction is silently wrong: a publish read as
+  // a reference invents an edge, a reference read as a publish invents a
+  // publisher and loses one.
+  return new Set(
+    findReferences(code)
+      .filter((ref) => ref.isPublish)
+      .map((ref) => ref.name)
+  )
 }
 
 /**
@@ -206,11 +212,15 @@ function findPublishes(code) {
 function findReferences(code) {
   const refs = []
   const re = /\bwindow\.([A-Za-z_$][\w$]*)/g
+  // Sticky rather than anchored-against-a-substring: the publish test can
+  // never look more than a few characters past the match, but `code.slice()`
+  // copied the whole remainder of the file to find out — ~7 MB of throwaway
+  // substrings across a full run, quadratic in file size.
+  const pub = /(?:\.[\w$]+)*\s*(?:\|\|=|\?\?=|=)(?!=)/y
   let match
   while ((match = re.exec(code)) !== null) {
-    const after = code.slice(match.index + match[0].length)
-    const isPublish = /^(?:\.[\w$]+)*\s*(?:\|\|=|\?\?=|=)(?!=)/.test(after)
-    refs.push({ name: match[1], index: match.index, isPublish })
+    pub.lastIndex = match.index + match[0].length
+    refs.push({ name: match[1], index: match.index, isPublish: pub.test(code) })
   }
   return refs
 }
@@ -236,6 +246,30 @@ function functionDepthAt(code) {
   const arrows = []
 
   const CONTROL = new Set(['if', 'for', 'while', 'switch', 'catch', 'with', 'do', 'else', 'try'])
+
+  // An expression-bodied arrow ends when the scanner reaches a terminator at
+  // the arrow's OWN nesting level — the `,`/`;`/newline cases below all mean
+  // exactly this, and `)`/`]` means it for the arrow that opened at depth 0.
+  const atThisLevel = (a) => a.parenDepth === 0 && a.braceDepth === braces.length
+
+  /**
+   * End every open arrow the predicate matches, recording its span.
+   *
+   * Iterating in reverse is required rather than stylistic: the body splices
+   * out of the array it is walking, and a forward loop would skip the entry
+   * that slides into the vacated index.
+   *
+   * @param {number} end index the matched arrows' spans close at
+   * @param {(arrow: {start: number, braceDepth: number, parenDepth: number}) => boolean} matches
+   * @returns {void}
+   */
+  const closeArrows = (end, matches) => {
+    for (let k = arrows.length - 1; k >= 0; k--) {
+      if (!matches(arrows[k])) continue
+      spans.push([arrows[k].start, end])
+      arrows.splice(k, 1)
+    }
+  }
 
   const skipBackWs = (at) => {
     let j = at
@@ -315,8 +349,7 @@ function functionDepthAt(code) {
     // function scope with no brace at all. It was being counted as mount-time,
     // which is wrong for the same reason method bodies were.
     if (ch === '=' && code[i + 1] === '>') {
-      const after = skipBackWs === null ? i + 2 : i + 2
-      let j = after
+      let j = i + 2
       while (j < code.length && /\s/.test(code[j])) j++
       if (code[j] !== '{') {
         arrows.push({ start: i, braceDepth: braces.length, parenDepth: 0 })
@@ -330,8 +363,10 @@ function functionDepthAt(code) {
       continue
     }
     if (ch === ')' || ch === ']') {
+      // The one case that is not a plain closeArrows(): an arrow this bracket
+      // does NOT close is one nesting level shallower afterwards.
       for (let k = arrows.length - 1; k >= 0; k--) {
-        if (arrows[k].parenDepth === 0 && arrows[k].braceDepth === braces.length) {
+        if (atThisLevel(arrows[k])) {
           spans.push([arrows[k].start, i])
           arrows.splice(k, 1)
         } else {
@@ -342,12 +377,7 @@ function functionDepthAt(code) {
     }
     // `,` and `;` end an expression-bodied arrow at the same nesting level.
     if (ch === ',' || ch === ';') {
-      for (let k = arrows.length - 1; k >= 0; k--) {
-        if (arrows[k].parenDepth === 0 && arrows[k].braceDepth === braces.length) {
-          spans.push([arrows[k].start, i])
-          arrows.splice(k, 1)
-        }
-      }
+      closeArrows(i, atThisLevel)
       continue
     }
     // **So does a newline, because this codebase is semicolon-free.** Waiting
@@ -369,14 +399,7 @@ function functionDepthAt(code) {
       let j = i + 1
       while (j < code.length && /[ \t\r]/.test(code[j])) j++
       const startsStatement = j >= code.length || /[A-Za-z_$;{]/.test(code[j])
-      if (startsStatement) {
-        for (let k = arrows.length - 1; k >= 0; k--) {
-          if (arrows[k].parenDepth === 0 && arrows[k].braceDepth === braces.length) {
-            spans.push([arrows[k].start, i])
-            arrows.splice(k, 1)
-          }
-        }
-      }
+      if (startsStatement) closeArrows(i, atThisLevel)
       continue
     }
 
@@ -386,13 +409,10 @@ function functionDepthAt(code) {
       continue
     }
     if (ch === '}') {
-      // Any arrow still open inside this block ends with it.
-      for (let k = arrows.length - 1; k >= 0; k--) {
-        if (arrows[k].braceDepth >= braces.length) {
-          spans.push([arrows[k].start, i])
-          arrows.splice(k, 1)
-        }
-      }
+      // Any arrow still open inside this block ends with it — including ones
+      // opened DEEPER than the current level, which is why this is the one
+      // caller that does not pass `atThisLevel`.
+      closeArrows(i, (a) => a.braceDepth >= braces.length)
       const frame = braces.pop()
       if (frame && frame.isFunction && !frame.transparent) spans.push([frame.open, i])
       continue
@@ -402,7 +422,18 @@ function functionDepthAt(code) {
   // Anything still open runs to the end of the file.
   for (const a of arrows) spans.push([a.start, code.length])
 
-  return (index) => spans.filter(([open, close]) => index > open && index < close).length
+  // Counted in a loop rather than `spans.filter(...).length`, which allocated
+  // a throwaway array on every one of the ~630 lookups a full run makes. The
+  // documented contract stays a depth: the sole production caller only asks
+  // `> 0`, but narrowing the return to a boolean would churn this file's docs
+  // and four test assertions for no behavior gain.
+  return (index) => {
+    let depth = 0
+    for (const [open, close] of spans) {
+      if (index > open && index < close) depth++
+    }
+    return depth
+  }
 }
 
 /**
@@ -415,12 +446,19 @@ function buildGraph(files) {
   const publishers = new Map() // namespace -> Set<path>
   const prepared = files.map((file) => {
     const code = stripNonCode(file.source)
-    const published = findPublishes(code)
+    // Scanned once per file and carried to the edge loop below. `published` is
+    // derived here rather than by calling findPublishes(code), which is the
+    // same enumeration filtered — going through it would make every file's
+    // stripped source pass the reference regex twice and allocate two full
+    // refs arrays. findPublishes stays exported because it is the
+    // single-argument form the tests drive and the rule's stated home.
+    const refs = findReferences(code)
+    const published = new Set(refs.filter((ref) => ref.isPublish).map((ref) => ref.name))
     for (const name of published) {
       if (!publishers.has(name)) publishers.set(name, new Set())
       publishers.get(name).add(file.path)
     }
-    return { ...file, code, published }
+    return { ...file, code, refs, published }
   })
 
   const iifeCount = prepared.filter((f) => /;\(function\s+[\w$]*\s*\(/.test(f.code)).length
@@ -434,7 +472,7 @@ function buildGraph(files) {
   let occurrences = 0
   for (const file of prepared) {
     const depthAt = functionDepthAt(file.code)
-    for (const ref of findReferences(file.code)) {
+    for (const ref of file.refs) {
       if (ref.isPublish) continue
       const owners = publishers.get(ref.name)
       if (!owners) continue
@@ -442,7 +480,7 @@ function buildGraph(files) {
       const bindingTime = depthAt(ref.index) > 0 ? 'call' : 'mount'
       for (const owner of owners) {
         if (owner === file.path) continue
-        const id = `${file.path} ${owner} ${ref.name}`
+        const id = `${file.path}\0${owner}\0${ref.name}`
         const existing = edgeMap.get(id)
         if (existing) {
           // Mount-time wins: if a namespace is read even once at
@@ -546,7 +584,7 @@ function measure(ref) {
     namespaceCount: publishers.size,
     edgeCount: edges.length,
     occurrenceCount: occurrences,
-    uniqueEdgeCount: new Set(edges.map((e) => `${e.from} ${e.to}`)).size,
+    uniqueEdgeCount: new Set(edges.map((e) => `${e.from}\0${e.to}`)).size,
     iifeCount,
     mountTimeEdges: edges.filter((e) => e.bindingTime === 'mount').length,
     callTimeEdges: edges.filter((e) => e.bindingTime === 'call').length,

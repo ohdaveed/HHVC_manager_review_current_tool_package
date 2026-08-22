@@ -1,13 +1,13 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
 // render. Loaded after js/core/state.js, js/review/ui-controls.js, js/review/editor-panel.js,
 // and js/mockup/page-render.js, all of which it depends on directly, and before
-// js/review/ux-improvements.js, which now subscribes to page-render.js's
-// onAfterRender() registry rather than wrapping renderPage (see navigateTo()'s
-// own comment below — a DIFFERENT module still wraps window.renderPage).
+// js/review/ux-improvements.js, which subscribes to page-render.js's
+// onAfterRender() registry rather than wrapping renderPage. No module wraps
+// window.renderPage any more — see navigateTo()'s own comment below.
 
 import { buildPageSelect, initChecklist, showToast } from '../review/ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
-import { renderPage } from '../mockup/page-render.js'
+import { renderPage, repaintPage } from '../mockup/page-render.js'
 import { resolvePageKey } from './utils.js'
 import { updateSearchPreview } from '../review/editor-panel.js'
 
@@ -19,52 +19,37 @@ import { updateSearchPreview } from '../review/editor-panel.js'
 // logic lives in resolvePageKey() (js/core/utils.js) so it's independently
 // testable; this wrapper only adds the toast side effect.
 /**
- * Navigate to a page through whatever `window.renderPage` currently is.
+ * Navigate to a page.
  *
- * This indirection is load-bearing and must not be "simplified" back to the
- * imported `renderPage`. js/editing/inline-content-edit.js decorates
- * `window.renderPage` once it mounts (wrapRenderPageForDecoration()), reading
- * the current value, closing over it, and reassigning the wrapper, so that
- * decorateListControls()/decorateEditedFields() run after every render
- * regardless of who triggered it.
+ * **This used to route through `window.renderPage` on purpose, and no longer
+ * needs to.** The indirection existed because modules decorated navigation by
+ * reassigning `window.renderPage` to a wrapper, and reassigning it does NOT
+ * rebind this module's `import` — which points at js/mockup/page-render.js's
+ * original export forever. Under the old classic-`<script>` model `renderPage`
+ * was a shared global, so a wrapper replaced the very binding this file called
+ * and the decoration applied for free; as ES modules that silently stopped
+ * being true, and calling the import bypassed every wrapper.
  *
- * It is the only wrapper left. js/review/ux-improvements.js used to be a second
- * one — it reassigned `window.renderPage` the same way — but Task 1 of the
- * module-coherence plan (2026-08-19) converted it to a page-render.js
- * onAfterRender() subscriber instead, which needs no `window` reference at
- * all: page-render.js calls its subscribers directly, so the dependency runs
- * from ux-improvements.js to page-render.js rather than the reverse. Before
- * that there were three: js/review/manager-review-export.js's existed only to
- * refresh a "Current page:" sidebar label that has since been cut, so it went
- * with the label, and js/interactive-sitemap.js, the third, was deleted
- * outright. One wrapper is still one more than zero: the hazard below is
- * unchanged, and a future module adding a second would rely on it.
+ * There are now no wrappers. Four modules had one and all four are gone:
+ * js/interactive-sitemap.js was deleted outright,
+ * js/review/manager-review-export.js's went with the "Current page:" sidebar
+ * label it refreshed, js/review/ux-improvements.js's became an onAfterRender()
+ * subscriber in #191, and js/editing/inline-content-edit.js's became one too.
+ * Every post-render concern reaches page-render.js's hook registry instead, so
+ * it fires for the import and the global alike and there is nothing left for
+ * this lookup to pick up.
  *
- * Reassigning `window.renderPage` does NOT rebind this module's `import`,
- * which points at js/mockup/page-render.js's original export forever. Under the old
- * classic-<script> model `renderPage` was a shared global, so `window.renderPage
- * = wrapper` replaced the very binding this file called and the decorator
- * applied for free; as ES modules that stops being true, silently.
+ * `window.renderPage = renderPage` still exists in page-render.js, but only so
+ * the ~15 self-mounting IIFEs that CALL `window.renderPage?.(key)` keep working
+ * — calling it, not wrapping it. If a future module reintroduces a wrapper,
+ * prefer converting it to onAfterRender() over restoring this indirection.
  *
- * What the undecorated path skips is not cosmetic: without
- * js/editing/inline-content-edit.js's wrapper, a render triggered through the bare
- * import instead of `window.renderPage` leaves #mockPage's add/remove list
- * controls and Edited-field badges undecorated. (The sidebar-edit flush that
- * used to live in this same paragraph — describing js/review/ux-improvements.js's
- * OLD wrapper — moved with that conversion: it is now
- * handleAfterRender()'s concern, reached through page-render.js's
- * runAfterRenderHooks() rather than through this indirection, so it fires
- * whether or not a wrapper is installed on `window.renderPage` at all.)
- *
- * Falls back to the import if nothing has published a wrapper yet, so the
- * function is safe to call at any point in the lifecycle.
  * @param {string} key page key to render
  * @param {boolean} [skipHistory] forwarded; true suppresses a history entry
  * @returns {*} whatever renderPage returns (a Promise under View Transitions)
  */
 function navigateTo(key, skipHistory) {
-  const current = typeof window.renderPage === 'function' ? window.renderPage : renderPage
-  return current(key, skipHistory)
+  return renderPage(key, skipHistory)
 }
 
 function resolveInitialPageKey(key) {
@@ -132,27 +117,26 @@ function init() {
     }
   })
 
-  // The first render deliberately calls the import directly rather than
-  // navigateTo(): init() runs before any module has wrapped window.renderPage,
-  // so there is nothing to pick up, and there is no outgoing page whose edits
-  // would need flushing. js/review/ux-improvements.js does its own restoreInitialPage()
+  // The first render is a repaint, not a navigation: there is no history entry
+  // to push (this IS the entry) and no outgoing page whose edits would need
+  // flushing. js/review/ux-improvements.js does its own restoreInitialPage()
   // pass once it has registered its render subscribers.
   //
-  // skipHooks=true: this call happens at module-eval time, before
+  // repaintPage() is renderPage(key, skipHistory: true, skipHooks: true).
+  // The hook half matters here: this call happens at module-eval time, before
   // js/review/ux-improvements.js (loaded later in js/main.js) has registered
   // anything — but renderPage()'s after-hook dispatch is DEFERRED
   // (setTimeout(0) or a View Transitions promise), and that registration
   // happens synchronously, in the same script-evaluation tick, before any
-  // deferred callback gets a turn. Without this flag the bootstrap render's
-  // own hook call fires anyway once ux-improvements.js's subscriber exists,
-  // running handleAfterRender() for a render restoreInitialPage() is about to
-  // redo properly — see renderPage()'s own doc comment on this parameter for
+  // deferred callback gets a turn. scheduleAfterRenderHooks() now binds the
+  // subscriber list when the render is SCHEDULED, so that can no longer
+  // happen even unflagged — but skipping stays explicit here, because it also
+  // silences the synchronous before-channel and keeps the guarantee from
+  // depending on js/main.js's import order. See renderPage()'s doc comment for
   // the measured bug (a persisted Karl-tags preference nobody set) that not
-  // skipping it caused. The before-channel is skipped by the same flag and
-  // needs no separate argument: at module-eval time there is no subscriber to
-  // call and no outgoing page to flush.
+  // skipping once caused.
   const params = new URLSearchParams(window.location.search)
   const pageKey = params.get('page')
-  renderPage(resolveInitialPageKey(pageKey), true, true)
+  repaintPage(resolveInitialPageKey(pageKey))
 }
 init()

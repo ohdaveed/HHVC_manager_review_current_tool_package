@@ -20,6 +20,7 @@ import {
   onBeforeRender,
   runAfterRenderHooks,
   runBeforeRenderHooks,
+  scheduleAfterRenderHooks,
 } from '../js/mockup/page-render.js'
 
 describe('onAfterRender', () => {
@@ -111,5 +112,61 @@ describe('onBeforeRender', () => {
 
     before()
     after()
+  })
+})
+
+describe('scheduleAfterRenderHooks', () => {
+  // After-dispatch is always deferred (a setTimeout(0) or a View Transitions
+  // promise), so WHEN the subscriber list is read decides whether a render can
+  // deliver its completion to code that did not exist when it was requested.
+  // These pin the binding at schedule time, which is the whole reason the
+  // helper exists rather than the call sites using runAfterRenderHooks().
+  test('dispatches to the subscribers present when it was scheduled', () => {
+    const seen = []
+    const off = onAfterRender(() => seen.push('early'))
+    const dispatch = scheduleAfterRenderHooks('pestsTopic')
+    dispatch()
+    off()
+    expect(seen).toEqual(['early'])
+  })
+
+  test('does NOT dispatch to a hook registered after it was scheduled', () => {
+    const seen = []
+    const dispatch = scheduleAfterRenderHooks('pestsTopic')
+    const late = onAfterRender(() => seen.push('late'))
+    dispatch()
+    late()
+    expect(seen).toEqual([])
+  })
+
+  test('still dispatches to a hook that unsubscribed after it was scheduled', () => {
+    const seen = []
+    const off = onAfterRender(() => seen.push('leaving'))
+    const dispatch = scheduleAfterRenderHooks('pestsTopic')
+    off()
+    dispatch()
+    expect(seen).toEqual(['leaving'])
+  })
+
+  test('passes the page key it was scheduled with', () => {
+    const seen = []
+    const off = onAfterRender((key) => seen.push(key))
+    const dispatch = scheduleAfterRenderHooks('rodentsTopic')
+    dispatch()
+    off()
+    expect(seen).toEqual(['rodentsTopic'])
+  })
+
+  test('a throwing hook does not stop its siblings', () => {
+    const seen = []
+    const a = onAfterRender(() => {
+      throw new Error('hook blew up')
+    })
+    const b = onAfterRender(() => seen.push('b ran'))
+    const dispatch = scheduleAfterRenderHooks('pestsTopic')
+    dispatch()
+    a()
+    b()
+    expect(seen).toEqual(['b ran'])
   })
 })

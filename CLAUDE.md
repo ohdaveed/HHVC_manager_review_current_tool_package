@@ -485,15 +485,17 @@ invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(**no longer wrapped by `js/review/ux-improvements.js`** — that module registers
-with `page-render.js`'s `onBeforeRender`/`onAfterRender` registry now, which
-needs no `window` reference at all. Two things still need the assignment:
-`js/editing/inline-content-edit.js`'s own wrapper, which reads and reassigns it
-to re-decorate after every render, and roughly fifteen
-`window.renderPage?.(key)` call sites across the review/UX IIFEs. The other two
-historical wrappers were the deleted `js/interactive-sitemap.js` and
-`js/review/manager-review-export.js`, whose decorator went with the sidebar label
-it refreshed), `window.toggleSidebar` (an inline
+(**nothing wraps it any more** — `js/review/ux-improvements.js` and
+`js/editing/inline-content-edit.js` both register with `page-render.js`'s
+`onBeforeRender`/`onAfterRender` registry now, which needs no `window`
+reference at all, so `window.renderPage === renderPage` always and reassigning
+it is not a supported extension point. What still needs the assignment is the
+twenty-three `window.renderPage(key)` / `window.renderPage?.(key)` call sites
+across the review/UX IIFEs, which reach it through `window` rather than
+importing it. The other historical wrappers were the deleted
+`js/interactive-sitemap.js`, and `js/review/manager-review-export.js`, whose
+decorator went with the sidebar label that decorator refreshed),
+`window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).

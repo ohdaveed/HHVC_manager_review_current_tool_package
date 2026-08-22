@@ -5,7 +5,7 @@
    wiring. */
 
 import { hasValidPageData, resolvePageKey } from '../core/utils.js'
-import { onAfterRender, onBeforeRender, renderPage } from '../mockup/page-render.js'
+import { onAfterRender, onBeforeRender, repaintPage } from '../mockup/page-render.js'
 ;(function improveManagerReviewUx() {
   const DATA = window.HHVC_DATA
   if (
@@ -250,8 +250,8 @@ import { onAfterRender, onBeforeRender, renderPage } from '../mockup/page-render
       // this page renders that inherits from a DIFFERENT, hydrated page
       // needs a full repaint to pick that up — skipHistory=true since this
       // reflects a reapply that already happened, not a new navigation.
-      // Calls the imported renderPage directly, not window.renderPage, with
-      // skipHooks=true (the third argument) so NEITHER channel dispatches:
+      // repaintPage() is renderPage with skipHistory and skipHooks both set,
+      // so NEITHER channel dispatches:
       // applySavedPageState(deepLinkKey) already ran, synchronously, on the
       // line above, so handleAfterRender() would just repeat that call for
       // no reason — and worse, it would also stamp the reviewer's CURRENT
@@ -264,11 +264,11 @@ import { onAfterRender, onBeforeRender, renderPage } from '../mockup/page-render
       // bookkeeping, not navigation, so it must not carry navigation's side
       // effects. Skipping the before-channel too is correct rather than
       // incidental: there is no outgoing page here whose edits could need
-      // flushing. Calling the bare import (rather than window.renderPage)
-      // also bypasses js/editing/inline-content-edit.js's decoration wrapper for
-      // this one render, same as calling the pre-wrap function directly used
-      // to — that module hasn't mounted yet this early in startup regardless.
-      renderPage(deepLinkKey, true, true)
+      // flushing. js/editing/inline-content-edit.js's decoration is an
+      // onAfterRender() subscriber now, so it is skipped by the same flag
+      // rather than by which reference this line reaches for — that module
+      // hasn't mounted yet this early in startup regardless.
+      repaintPage(deepLinkKey)
       refreshUx()
       return
     }
@@ -313,9 +313,9 @@ import { onAfterRender, onBeforeRender, renderPage } from '../mockup/page-render
     // already ran on the line above, so this is a bookkeeping repaint, not a
     // navigation, and must not carry handleAfterRender()'s side effects (most
     // importantly, must not stamp an untouched Karl-tags toggle into storage
-    // as though the reviewer had made a real choice) — hence skipHooks=true on
-    // the bare renderPage import rather than window.renderPage.
-    renderPage(initialKey, true, true)
+    // as though the reviewer had made a real choice) — hence repaintPage()
+    // rather than a plain render.
+    repaintPage(initialKey)
     refreshUx()
   }
 
