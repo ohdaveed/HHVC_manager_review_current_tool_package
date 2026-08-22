@@ -42,15 +42,36 @@ function setupBunBlocks() {
 /**
  * Every JOB name in the workflow, from the four-space `name:` keys.
  *
- * Four spaces is the job level. Artifact names sit at ten (`name: dist`,
- * `name: playwright-report`) under an `upload-artifact` step's `with:`, and
- * folding those in would demand the mirrors enumerate two artifacts as though
- * they were required checks.
+ * Four spaces is the job level in this file — measured, not assumed: the seven
+ * job names sit at four, the workflow's own `name: CI` at zero, and the two
+ * artifact names (`name: dist`, `name: playwright-report`) at ten, under an
+ * `upload-artifact` step's `with:`. Folding the artifacts in would demand the
+ * mirrors enumerate two uploads as though they were required checks.
  *
  * @returns {string[]}
  */
 function jobNames() {
   return [...WORKFLOW.matchAll(/^ {4}name: (.+)$/gm)].map((match) => match[1].trim())
+}
+
+/**
+ * Every job ID — the two-space keys under `jobs:`.
+ *
+ * Parsed independently of `jobNames()` on purpose. It is the DERIVED floor for
+ * the census below, replacing a hardcoded "at least five", which this repo's
+ * own rule forbids ("do not hardcode counts, derive them from the source of
+ * truth") and which would have gone red on a legitimate refactor that shrank
+ * the workflow. Two parsers reading different keys of the same file cannot
+ * both fall silent and still agree on a count, so `names.length === ids.length`
+ * is a non-vacuity check with no magic number in it — and it is strictly
+ * stronger than a threshold, because it also catches a job that declares no
+ * `name:` at all, which branch protection could never require.
+ *
+ * @returns {string[]}
+ */
+function jobIds() {
+  const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))
+  return [...jobsBlock.matchAll(/^ {2}([A-Za-z_][\w-]*):$/gm)].map((match) => match[1])
 }
 
 /**
@@ -119,10 +140,12 @@ describe('the CI workflow', () => {
 describe('the required-context enumeration in the mirrors', () => {
   const MIRRORS = ['AGENTS.md', 'CLAUDE.md']
 
-  test('the workflow declares at least one named job', () => {
-    // A parse that stops matching does not fail, it stops checking — so the
-    // floor is asserted before anything is compared against it.
-    expect(jobNames().length).toBeGreaterThanOrEqual(5)
+  test('every job under `jobs:` declares a name, and both parsers see them', () => {
+    // A parse that stops matching does not fail, it stops checking — so
+    // non-vacuity is established before anything is compared. Derived from the
+    // workflow's own job IDs rather than a threshold: see jobIds() for why.
+    expect(jobNames().length).toBe(jobIds().length)
+    expect(jobIds().length).toBeGreaterThan(0)
   })
 
   test.each(MIRRORS)('%s still carries the required-set sentence', (mirror) => {

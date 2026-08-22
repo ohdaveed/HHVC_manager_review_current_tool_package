@@ -358,23 +358,35 @@ describe('commands named in a skill exist', () => {
    * file that cites it. Tracked files only, matching `docs-file-set.js`: an
    * untracked skill is covered the moment it is committed.
    */
-  const citations = execFileSync('git', ['ls-files', '.claude/skills'], {
-    cwd: ROOT,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter((path) => path.endsWith('.md'))
-    .flatMap((path) =>
-      [...read(path).matchAll(/bun run ([a-zA-Z][\w:.-]*)/g)].map((match) => ({
-        path,
-        script: match[1],
-      }))
-    )
+  /** Tracked markdown under `.claude/skills/`, matching `docs-file-set.js`. */
+  function skillFiles() {
+    return execFileSync('git', ['ls-files', '.claude/skills'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter((path) => path.endsWith('.md'))
+  }
 
-  test('the scan finds citations at all, so a broken regex cannot pass as clean', () => {
-    // Same floor as the job-name census: a scan that stops matching reports
-    // nothing wrong rather than reporting that it checked nothing.
-    expect(citations.length).toBeGreaterThan(10)
+  const citations = skillFiles().flatMap((path) =>
+    [...read(path).matchAll(/bun run ([a-zA-Z][\w:.-]*)/g)].map((match) => ({
+      path,
+      script: match[1],
+    }))
+  )
+
+  test('every skill mentioning `bun run` yields at least one citation', () => {
+    // Non-vacuity, derived from the corpus rather than asserted as a
+    // threshold. A hardcoded floor would go red on a legitimate consolidation
+    // that left fewer citations standing, and this repo's own rule is to
+    // derive counts from the source of truth. The property here is exact: a
+    // file whose raw text contains the phrase must contribute a citation, so a
+    // regex that stops matching fails instead of quietly reporting nothing
+    // wrong.
+    const mentioning = skillFiles().filter((path) => read(path).includes('bun run'))
+    const scanned = new Set(citations.map(({ path }) => path))
+    expect(mentioning.filter((path) => !scanned.has(path))).toEqual([])
+    expect(mentioning.length).toBeGreaterThan(0)
   })
 
   test('every cited script is defined in package.json', () => {
