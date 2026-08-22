@@ -4,11 +4,11 @@
  * WHY THIS EXISTS
  *
  * On a browser that has never been used, the Overview panel is honest and
- * useless at the same time: 19 rows of "Not reviewed yet", a progress bar at
- * 0/19, an activity chart with nothing to plot and a decision tally that is all
- * zeroes. Everything the panel exists to show needs review history to show it.
- * Presenting the tool from that state means describing the features rather than
- * demonstrating them.
+ * useless at the same time: a row of "Not reviewed yet" for every page, a
+ * progress bar sitting at zero, an activity chart with nothing to plot, and a
+ * decision tally that is all zeroes. Everything the panel exists to show needs
+ * review history to show it. Presenting the tool from that state means
+ * describing the features rather than demonstrating them.
  *
  * The output is a plain JSON backup in the shape `importReviewStateBackup()`
  * accepts, so it goes in through the ordinary Import reviews button. Nothing
@@ -43,10 +43,10 @@ const REVIEWER = 'M. Chen'
 /**
  * The seeded review pass, in the order it "happened".
  *
- * Deliberately NOT all 19 pages. Leaving roughly a third untouched keeps the
- * progress bar short of 100%, keeps "Next needs review" meaningful, and leaves
- * the decision filter chips with something to filter to — a fully-reviewed site
- * removes most of what the Overview tab is for.
+ * Deliberately not every page. Leaving a substantial share unreviewed keeps
+ * the progress bar short of 100%, keeps "Next needs review" meaningful, and
+ * leaves the decision filter chips with something to filter to — a
+ * fully-reviewed site removes most of what the Overview tab is for.
  *
  * `daysAgo` spreads the rounds across a fortnight. The activity card is a time
  * series; seeding every record with the same timestamp draws a single point and

@@ -65,11 +65,11 @@ Two things to add to what those descriptions say — one they omit outright, one
 they state too weakly to act on:
 
 - **`bun install` is required before the first `dev`, `validate`, `test` or
-  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  `build:railway`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
-  `checks` job — read the job rather than a list here.** That sentence has been
+  `format_validate_lint` job — read the job rather than a list here.** That sentence has been
   rewritten by every tool that joined it, each time as though it were the only
   addition, and an enumeration in three mirrored files is four copies of one
   fact. What is worth stating is the shape: there is no ESLint and no `tsc`
@@ -81,7 +81,7 @@ they state too weakly to act on:
   stays a hand-run report; Knip gates only the categories that were clean when
   it was adopted, because it reads this repo's deliberate `window.<Namespace>`
   publishing as ~89 unused exports; `lint:docs` derives its file list from
-  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the deploy bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -91,23 +91,35 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 53 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 57 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `page-render-hooks` (the
-`onAfterRender(fn)` post-render subscriber registry in `js/mockup/page-render.js`,
-added to replace js/review/ux-improvements.js's monkey-patch of
-`window.renderPage` — measurement found that patch responsible for 24 of the
-edges binding this codebase's single 16-file dependency cycle, nearly double
-the next contributor. A registry rather than a custom event, deliberately: an
+`onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
+which replaced js/review/ux-improvements.js's monkey-patch of
+`window.renderPage`. A registry rather than a custom event, deliberately: an
 event name is a string, so a typo unsubscribes silently and nothing fails, and
-silent under-coverage is the failure this repo has now hit four separate
-times), `csv`, `csv-edited-fields-roundtrip`
+silent under-coverage is the failure this repo has now hit four separate times.
+**There are two channels because a wrapper straddled the render and a
+subscriber cannot** — the pre-navigation flush of in-progress sidebar edits has
+to read the OUTGOING page's form values, and `applyPageContent()` overwrites
+two of them via `syncEditorFields()`; a flush moved to the after-channel writes
+the destination page's SEO fields into the outgoing page's record, which
+shipped once and is now covered by `tests/e2e/navigation-flush.spec.js`), `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
 `manager-review-export`/`ux-improvements-export`/`review-queue-state`/
 `review-queue-import` IIFEs rather than stubbing the merge), `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
+`measure-window-graph` (the
+scanner behind `build_scripts/measure-window-graph.js`, which builds the
+`window.<Namespace>` dependency graph dependency-cruiser cannot see — it
+follows static imports only. Driven with hand-built fixtures rather than the
+real corpus, and it pins the PARSING DECISIONS rather than the numbers: a
+scanner that stops recognizing a publish does not throw, it reports a smaller
+graph, which reads exactly like progress),
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
+`commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
+`mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over),
 `esm-named-exports` (that a module which is named-imported actually DECLARES
 those ESM exports. `js/karl/karl-blocks.js` published only `window.karlBlocks` and
 `module.exports` while `js/karl/karl-guide-registry.js` named-imported from it —
@@ -124,6 +136,14 @@ separately, every file that spells out an INDIVIDUAL label as a literal, which
 is most of the queue: those are string comparisons, so a renamed decision
 leaves the chip rendering and silently stops matching), `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`, `validate-compliance-audit`, `doc-counts`
 (reads the counts back out of these docs and compares them to the filesystem),
+`doc-claims` (the count-claim scanner's own unit tests — pins the
+number-anchored capture against a `[\w-]+` false start, and the gap that
+must admit digit-bearing words like `e2e` rather than letters-only, since a
+letters-only gap would leave `.github/copilot-instructions.md`'s own e2e claim
+unseen by this pattern — not, as an earlier version of this note claimed, what
+let a wrong e2e spec count ship past CI once already; that was a file omitted
+from the old hand-maintained `(file x claim)` matrix, not a regex gap, per
+`build_scripts/doc-claims.js`'s own header comment),
 `review-merge`, `inline-content-edit-data` (pure `section_edits` diff/reapply
 logic — no DOM, dual-exported like `review-merge`/`plain-language`),
 `inline-content-edit-adapter` (the pure markdown/HTML serialization boundary
@@ -272,15 +292,22 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-three spec files, all UI-driven — navigation, editor panel, review
+twenty-four spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale, the Karl transcript panel, the pre-navigation flush of
-in-progress sidebar edits,
-and workshop-form submission handling — sharing plain helper functions in
-`tests/e2e/helpers.js`, no fixture framework. A fourteenth,
+the chrome type scale, the Karl transcript panel, the pre-navigation flush
+of in-progress sidebar edits,
+the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist
+— that last one can only live here for the `<strong>`/`<em>` positive
+assertions: happy-dom's DOMPurify strips both even though they are in
+`ALLOWED_TAGS`, so a unit assertion would either pin that artifact or pass
+vacuously against a sanitizer that strips everything (`tests/utils.test.js`
+covers the rest of the safeMarkdown path in unit tests, including image
+stripping, both link renderers, and script removal) —
+sharing plain helper functions in
+`tests/e2e/helpers.js`, no fixture framework. One spec file,
 `review-import-export.spec.js`, was **deleted rather than repaired**: its two
 round-trip tests hand-rolled the merge inside `page.evaluate()` rather than
 calling `importReviewStateBackup()`, so reverting that function to the
@@ -301,12 +328,13 @@ run validate` and `bun run test` after editing anything under `pages/` or
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, in
-two deliberately separate jobs so a formatting or schema failure reports in
-seconds without waiting on a Chromium download, and a flaky browser run never
-masks a unit failure:
+`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
+a graph of seven jobs rather than one long one, so a formatting or schema
+failure reports in seconds without waiting on a Chromium download and a flaky
+browser run never masks a unit failure.
 
-**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
+**Every job that USES Bun pins it from `.bun-version`, and that pin is
+load-bearing.** They
 took `bun-version: latest` until 2026-08-15, which meant the runtime changed
 under the repo without a commit. Bun 1.3.14 stopped allowing CJS to `require()`
 an ESM module; `build_scripts/storage.js` was the only ESM file under
@@ -317,19 +345,77 @@ timeouts before anyone captured the server's stderr. **Everything under
 `build_scripts/` is CommonJS now** — keep it that way; `server.ts` named-imports
 those modules from TypeScript, which is the supported direction. Bumping
 `.bun-version` is a normal change, just a deliberate one.
+`tests/ci-workflow.test.js` asserts the pin, though note its scope: it
+splits the file on `uses: oven-sh/setup-bun` and checks each block it
+finds, so it covers every job that sets Bun up and says nothing about a
+job that does not. `changes` is the one that does not — it runs only
+`dorny/paths-filter` and needs no runtime.
 
-- **checks** — `bun install --frozen-lockfile` → `format:check` → `validate` →
-  `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity check:
-  it fails if the committed workshop-form `dist` references assets that were
-  never committed (the "form shell that never hydrates" regression). **It runs
-  before `test` on purpose**, even though that delays a unit failure by a
-  build: one test in `tests/review-api-server.test.js` asserts that a
-  set-but-empty `STATIC_ROOT` still serves the real built app, and it can only
-  tell a correct fallback from a broken one if `dist/` exists. It skips itself
-  when there is no build — so with the fast order it passed by skipping and
-  covered nothing.
+- **changes** — classifies the PR's touched paths into `docs` and `code`
+  outputs. Everything below gates on those, so it is the only job that always
+  runs.
+- **docs_only_checks** — for a pull request touching docs and no code:
+  `lint:docs`, `format:check`, **and the full unit suite**. That last one is
+  not belt-and-braces. Docs are SOURCE DATA here — thirteen test files read
+  them, including `doc-counts` and `doc-claims` (figures against the
+  filesystem), `mirror-consistency` (the three instruction files against each
+  other), `module-paths` (a `js/` path in a doc naming a real file) and
+  `karl-blocks` (parsing `docs/karl-export-field-map.md` against the panel
+  inventory). Linting alone would let a docs-only PR merge with a stale count
+  or a mismatched field map, and only the push to `main` would find out. The
+  whole suite runs rather than a curated list, because a named list is a second
+  inventory of which tests read docs and free to drift from the tests.
+- **format_validate_lint** — `format:check`, `check:revert`, `validate`,
+  `lint:docs`, `lint:dead-code:ci`, `lint:architecture`, `lint:js`. The fast
+  gates, so they report before anything builds.
+- **build_railway** — `build:railway`, which doubles as a deploy-integrity
+  check: it fails if the committed workshop-form `dist` references assets that
+  were never committed (the "form shell that never hydrates" regression). It
+  then **uploads `dist/` as an artifact**.
+- **build_singlefile** — `build:singlefile`, in parallel with the above.
+- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+  is what makes the ordering mean anything.** `needs:` only sequences jobs; a
+  separate runner gets a fresh checkout, and `dist/` is gitignored, so without
+  the artifact the job would test against a tree that has never been built. One
+  test in `tests/review-api-server.test.js` asserts a set-but-empty
+  `STATIC_ROOT` still serves the real built app, and it `skipIf`s itself when
+  `dist/index.html` is absent — so it would pass by skipping and cover nothing,
+  which is the exact gap the old in-job `build:railway` → `test` order existed
+  to close.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
+
+**Branch protection's required contexts are job NAMES, not job ids, and they
+have to be changed with this file.** Splitting the old `checks` job renamed the
+context `Format, validate, unit tests` out of existence, and a context that no
+job produces stays permanently pending however green the run — so a PR can go
+fully green and still never satisfy the requirement.
+
+**All six gating jobs have to be required, and the reason is counter-intuitive:
+GitHub treats a conditionally SKIPPED job as a PASSING required check.** That
+is what makes this graph's `if:` conditions dangerous to under-require:
+
+- Require only the code-path jobs, and a docs-only PR satisfies every one of
+  them by SKIPPING them, leaving `Docs-only checks` — which is where its real
+  coverage lives — unrequired and therefore optional.
+- Leave the builds unrequired, and a `build_singlefile` failure blocks nothing
+  at all, while a `build_railway` failure SKIPS `unit`, and that skip then
+  reads as a pass. A red build merges.
+
+So the required set is **every job in the file**, `Detect changed files`
+included: `Format, validate, lint`, `Unit tests (bun test)`,
+`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
+`Build single-file export` and `Detect changed files`.
+
+The detector is the one people leave out, on the reasoning that it only
+computes outputs and cannot itself be skipped — which is true and beside the
+point. If it FAILS, every job downstream of it is skipped, each of those skips
+reads as a pass, and the PR merges with nothing having been checked at all. An
+action outage or a permissions regression is enough to get there. Requiring it
+is what turns that silent green into a visible red.
+
+Adding a job to this file means adding its name here and to protection, or it
+is advisory.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
@@ -368,8 +454,8 @@ bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
 Order is enforced two ways. **Core modules enforce it themselves** — a module
 that needs `escapeHtml` imports it, and `js/core/state.js` imports
-`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all
-27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all of
+`pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/review/ux-improvements*.js`, `js/review/review-queue*.js`,
@@ -673,11 +759,14 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
-hierarchy one level deep), and **AI assist** and **Tool status** became
+**Sitemap** was removed outright (a fourth way to navigate the page set,
+drawing a hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
-Netlify deploy has no runtime for, so on the build managers actually open they
-were two permanently-empty panels holding two of six slots. Help stays last, so
+static Netlify deploy live at the time had no runtime for, so on the build
+managers actually opened they were two permanently-empty panels holding two of
+six slots. Railway runs `server.ts`, so they are no longer structurally empty —
+but each still reports nothing until its own optional backend is configured,
+which is why the cut stands. Help stays last, so
 it is the digit that moves whenever the strip changes; `WORKSPACE_TABS`
 (`js/review/ux-improvements-workspace.js`), the tab markup in `index.html` and the
 `1`–`3` cases in `js/review/keyboard-shortcuts.js` must change together. The two
@@ -852,8 +941,8 @@ directly, which is the half that works), so extracting `safeUrl` would push
 exist.
 Separately, **CI never exercises that crossing under Node**:
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
-`build:netlify`, which invokes `bun build_scripts/validate.js`). CI does run
-Node — `build:netlify` ends in `node build_scripts/copy-workshop-form.js` — but
+`build:railway`, which invokes `bun build_scripts/validate.js`). CI does run
+Node — `build:railway` ends in `node build_scripts/copy-workshop-form.js` — but
 that script never touches `data-checks.js`, so the `require(esm)` path is
 uncovered. That path needs
 `require(esm)` enabled — check `process.features.require_module` rather than a
@@ -1279,13 +1368,14 @@ review'}` — the existing object form `normalizeTextItem()` already handles,
 - **No AI, no backend, no capability gating.** Unlike AI assist and the sync
   backend, this feature has no `server.ts` dependency and needs no
   configuration — the click-to-edit affordance is present on every deploy,
-  including the static Netlify build, the moment the page has loaded.
+  including a purely static one with no server at all, the moment the page has
+  loaded.
 
 ### Adding and deleting pages (`js/core/page-registry*.js`)
 
 A reviewer can create a page mockup and delete an existing one from the browser.
 Same posture as every other layer here: `pages/*.js` is never written, no backend
-is involved, and it works on the static Netlify build. Three files, mirroring the
+is involved, and it works on a purely static build. Three files, mirroring the
 inline-content-edit split — `js/core/page-registry-data.js` (pure validation and the
 in-place mutation, dual-exported like `js/review/review-merge.js`),
 `js/core/page-registry.js` (the bootstrap plus the runtime add/delete/restore API on
@@ -1560,9 +1650,10 @@ same person, deliberately.
 - **`js/review/review-ops.js`** — the panel, lazily mounted when Help opens with the
   same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
-**It had a tab of its own — the `5` key — and lost it.** On a default or Netlify
-deploy every value it reported was "not configured" or "none", because both
-optional backends need `server.ts`. That is not worth one of the strip's slots.
+**It had a tab of its own — the `5` key — and lost it.** On any deploy without
+the optional backends configured — which then meant the static Netlify one —
+every value it reported was "not configured" or "none", because both need
+`server.ts`. That is not worth one of the strip's slots.
 The one line a reviewer genuinely needs from it — _reviews are saved in this
 browser only_ — was promoted into the sidebar beside the export controls, where
 the risk it describes actually lives. What stays here is the diagnostics and the
@@ -2115,8 +2206,8 @@ serverRecord)` is the only way out, one page at a time — `'server'` adopts
   `REVIEW_API_TOKEN` or the documented `REVIEW_API_PRINCIPALS` secret
   configuration (never committed). Apply the reverse-proxy/identity-aware edge
   control described above for public or replicated deployments. Local dev and
-  Netlify's static-only deploy (`build:netlify`, no server runtime for these
-  routes) are unaffected either way.
+  any static-only deploy (the `build:railway` bundle served without `server.ts`,
+  so these routes have no runtime) are unaffected either way.
 - **Tests**: `tests/review-merge.test.js` (unit) and
   `tests/review-api-server.test.js` (spawns `server.ts` against a temp SQLite
   DB, exercises auth/merge/isolation over real HTTP).
@@ -2518,16 +2609,18 @@ and it never writes to `pages/*.js`.
   pushes via the Sheets API. It needs a Google service-account key — gitignored,
   and it must stay that way (never commit `*-service-account*.json` or
   `.env.local`).
-- **`bun run build:netlify`** (driven by `netlify.toml`) runs `validate` →
+- **`bun run build:railway`** (what `railway.json` runs as its build command)
+  runs `validate` →
   `build:app` (the real Vite production build) →
   `build_scripts/copy-workshop-form.js`. That copy step does **not** run the
   sub-app's Vite build — it copies whatever is checked into
   `forms/mosquito-workshop-request/dist`, so rebuild that form first
-  (`bun run build:workshop-form`) after editing its `src` or Netlify ships stale
-  assets. It fails loudly if the committed form HTML references assets that were
+  (`bun run build:workshop-form`) after editing its `src` or the deploy ships
+  stale assets. It fails loudly if the committed form HTML references assets that were
   never committed (the "form shell that never hydrates" regression).
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
-  `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
+  `X-Frame-Options`, etc.) that `netlify.toml` declares for the retired static
+  site, so the live Railway deploy and the archived Netlify config agree.
 
 ### Where review records live (`build_scripts/storage.js`)
 
@@ -2586,10 +2679,10 @@ and never sees a driver, a connection or a SQL string.
 **<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
 Railway project `hhvc-manager-review`, service `web`, connected to this repo's
 `main` branch, so a merge redeploys. Config lives in `railway.json`: build
-`bun run build:netlify`, start `bun run serve`.
+`bun run build:railway`, start `bun run serve`.
 
 - **`bun run serve`, not `bun run start`.** The `start` script is
-  `build:netlify && serve` — correct locally, wrong on a platform that already
+  `build:railway && serve` — correct locally, wrong on a platform that already
   ran the build, where it would repeat the whole thing at boot. The bare `build`
   script is wronger still for a server: it also produces the single-file export
   and rebuilds the workshop form.
@@ -2914,12 +3007,46 @@ rather than asserting a number that was true on the day it was typed.
 
 ## Security Reviews
 
-When asked for a security review of changed files: do **not** read files
-one-by-one first. Start with `git diff` (or `git diff --stat` then
-`git diff <paths>`) to load the actual changed hunks in one call, then report
-findings within the first 2-3 tool calls. Report incrementally — emit findings
-per file as you go rather than batching everything to the end. Only read full
-files when a diff hunk is ambiguous.
+When asked for a security review of a diff or of changed files: do **not**
+start by reading every file. Load the changed hunks in one call, with the
+command that matches the subject — and always name the subject, because every
+bare form quietly defaults to something else:
+
+- **Uncommitted work:** `git diff HEAD`, paired with `git status --short`. Bare
+  `git diff` compares the working tree to the INDEX, so a merely staged change
+  is invisible to it — a staged secret yields an empty diff and a clean-looking
+  review — and no diff form shows untracked files at all, so read anything new.
+- **A named commit:** `git show --first-parent <sha>`. On a MERGE commit bare
+  `git show` prints the combined `--cc` format, which names the changed file in
+  its stat and then omits the patch, so a secret merged cleanly off a branch
+  renders as a review that looks finished. Not `git diff <sha>^ <sha>`: it
+  aborts wherever the parent does not resolve, including a root commit. In a
+  shallow clone run `git fetch --deepen=1 origin` first (the repository, not
+  the SHA — `git fetch` reads its first positional as the repository) — at the boundary Git
+  treats the commit as a root and renders the whole snapshot as
+  `new file mode`, which a reader cannot tell from code the commit added.
+- **A pull request:** `gh pr diff <number>`. The bare form selects whatever PR
+  belongs to the current branch, which is routinely not the one under review.
+
+What those wrong forms share is that each prints something **reassuring**
+rather than nothing. An empty result invites a second look; `secret.txt | 1 +`
+with no patch under it does not.
+
+Then summarize the attack surface those hunks expose in 3-5 bullets. That
+summary is what decides where to look next; reading first and summarizing
+afterwards inverts the order and spends the budget before the review has a
+shape. Read only the specific files those bullets flag.
+
+A **preliminary assessment** must land within the first 2 tool calls, and
+"nothing confirmed yet — here is the surface and where I am looking next" is a
+valid one. The deadline is on saying something, never on having found
+something: a clean diff has no findings, and an instruction demanding one by
+call two is an instruction to invent one. `git diff --stat` followed by
+`git diff <paths>` is a legitimate way into a diff too large to read whole, but
+it spends both calls before a word is written — so take the single-call route
+unless the size forces the split. Report incrementally — emit findings per file
+as you go rather than batching everything to the end. Only read a whole file
+when a diff hunk is genuinely ambiguous, and say why.
 
 ## Commits & pull requests
 
@@ -2930,6 +3057,23 @@ files when a diff hunk is ambiguous.
   an explicit **verification line** (e.g. "Verified headless at 1600px and
   850px…"). AI-assisted commits carry `Co-Authored-By` and `Claude-Session`
   trailers.
+- **A `commit-msg` hook enforces that pairing**, and it is a PAIRING check
+  rather than a blanket one: the trigger is a `Co-Authored-By` line naming
+  Claude, so a human's own commit is untouched, and either trailer without the
+  other fails. The rule lives in the TRACKED `.githooks/commit-msg`;
+  `bun run hooks:install` symlinks `.git/hooks/commit-msg` at it, and that is
+  required once per clone because hooks are never committed. **It deliberately
+  does not set `core.hooksPath`** — that setting is already global here,
+  pointing at ggshield, and a repo-local value overrides it outright and
+  silently disables the pre-push secret scan. It is unnecessary anyway, since
+  ggshield's `_dispatch` forwards each hook to
+  `$(git rev-parse --git-dir)/hooks/<name>` whenever that file is executable
+  (which is why the hook's mode bit is part of its contract, and asserted in
+  `tests/commit-msg-hook.test.js` — a non-executable hook is not a broken gate
+  but an absent one, with no error to notice). The known gap, worth stating:
+  a commit carrying NEITHER trailer is invisible to it, because nothing in the
+  message distinguishes that from a human commit. `--no-verify` bypasses it,
+  as it bypasses every hook.
 - **Keep dashboard-UX changes and policy-copy changes in separate PRs** — reduces
   merge conflicts and keeps review focused.
 - **Never hand-edit generated files** (single-file HTML exports,

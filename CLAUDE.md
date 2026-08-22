@@ -58,11 +58,11 @@ Two things to add to what those descriptions say — one they omit outright, one
 they state too weakly to act on:
 
 - **`bun install` is required before the first `dev`, `validate`, `test` or
-  `build:netlify`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
+  `build:railway`** — `js/main.js` imports `@sfgov/design-system` CSS plus the
   third-party libraries, and validate/test need `zod`, `fast-glob` and
   `happy-dom`. Nothing in `package.json` says so.
 - **The lint gates are the `lint:*` steps in `.github/workflows/ci.yml`'s
-  `checks` job — read the job rather than a list here.** That sentence has been
+  `format_validate_lint` job — read the job rather than a list here.** That sentence has been
   rewritten by every tool that joined it, each time as though it were the only
   addition, and an enumeration in three mirrored files is four copies of one
   fact. What is worth stating is the shape: there is no ESLint and no `tsc`
@@ -74,7 +74,7 @@ they state too weakly to act on:
   stays a hand-run report; Knip gates only the categories that were clean when
   it was adopted, because it reads this repo's deliberate `window.<Namespace>`
   publishing as ~89 unused exports; `lint:docs` derives its file list from
-  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the Netlify bundle build,
+  `git ls-files` rather than globbing. Plenty else fails a CI run — `validate`, the deploy bundle build,
   the single-file build, the unit tests, Playwright — but not one of those
   checks style. `lint:anti-slop` is a second linter, but a deliberately
   un-gated one scoped to `server.ts` and `build_scripts/ai/` — see Formatting
@@ -93,15 +93,19 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 53 Bun unit-test files under `tests/`: `utils`,
-`data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
+wrong). `bun run test` runs 57 Bun unit-test files under `tests/`: `utils`,
+`data-validation`, `page-render`, `page-render-hooks`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
+`measure-window-graph`,
 `measure-window-graph`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
+`check-revert`,
 `ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `ci-workflow`, `esm-named-exports` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
+`commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
+`mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over)),
 `card-inheritance` (the shared `inherits`/`title-only`/`authored` classifier
 plus the audit built on it — `authored` must beat everything so a Table block
 is never blanked, and `title-only` must beat `inherits` since Related notes
@@ -117,6 +121,14 @@ an INDIVIDUAL label as a literal, which is most of the queue: those are string
 comparisons, so a renamed decision leaves the chip rendering and silently stops
 matching), `doc-counts` (reads the counts back out of these docs and
 compares them to the filesystem — this very list is what it checks),
+`doc-claims` (the count-claim scanner's own unit tests — pins the
+number-anchored capture against a `[\w-]+` false start, and the gap that
+must admit digit-bearing words like `e2e` rather than letters-only, since a
+letters-only gap would leave `.github/copilot-instructions.md`'s own e2e claim
+unseen by this pattern — not, as an earlier version of this note claimed, what
+let a wrong e2e spec count ship past CI once already; that was a file omitted
+from the old hand-maintained `(file x claim)` matrix, not a regex gap, per
+`build_scripts/doc-claims.js`'s own header comment),
 `inline-content-edit-data` (pure `section_edits` diff/reapply logic against
 `ORIGINAL_DATA`, no DOM, dual-exported like `review-merge`),
 `inline-content-edit-adapter` (the pure markdown/HTML serialization boundary
@@ -284,16 +296,21 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-three spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-four spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
 SFDS tokens, the chrome type scale, the Karl transcript panel, the
 pre-navigation flush of in-progress sidebar edits, and
-workshop-form submission handling,
+the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist —
+which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
+since happy-dom's DOMPurify strips both despite them being allow-listed, so a
+unit assertion would either pin that artifact or pass vacuously
+(`tests/utils.test.js` covers the rest of the safeMarkdown path in unit tests,
+including image stripping, both link renderers, and script removal),
 sharing plain helper functions in
-`tests/e2e/helpers.js` (no fixture framework). A fourteenth file,
+`tests/e2e/helpers.js` (no fixture framework). One spec file,
 `review-import-export.spec.js`, was deleted rather than repaired: its
 round-trip tests hand-rolled the merge inside `page.evaluate()` instead of
 calling `importReviewStateBackup()`, so it stayed green against the wholesale
@@ -320,33 +337,94 @@ or `js/core/page-data.js`.**
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on every pull
-request, in two deliberately separate jobs so a formatting or schema failure
-reports in seconds without waiting on a Chromium download, and a flaky
-browser run never masks a unit failure:
+`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
+a graph of seven jobs rather than one long one, so a formatting or schema
+failure reports in seconds without waiting on a Chromium download and a flaky
+browser run never masks a unit failure.
 
-**Both jobs pin Bun from `.bun-version`, and that pin is load-bearing.** They
-took `bun-version: latest` until 2026-08-15, so the runtime changed under the
-repo with no commit. Bun 1.3.14 stopped letting CJS `require()` an ESM module;
-`build_scripts/storage.js` was the only ESM file under `build_scripts/`, so
-`server.ts` threw at boot and every suite spawning it reported "did not start
-in time" — passing or failing per run depending on which Bun `latest` resolved
-to. **Everything under `build_scripts/` is CommonJS now**; keep it that way,
-since `server.ts` named-imports those modules from TypeScript, which is the
-supported direction. Bumping `.bun-version` is fine, just deliberate.
+**Every job that USES Bun pins it from `.bun-version`, and that pin is
+load-bearing.** They
+took `bun-version: latest` until 2026-08-15, which meant the runtime changed
+under the repo without a commit. Bun 1.3.14 stopped allowing CJS to `require()`
+an ESM module; `build_scripts/storage.js` was the only ESM file under
+`build_scripts/`, so `server.ts` threw at boot and every suite that spawns it
+reported "did not start in time". Because `latest` resolved differently run to
+run, the same commit passed and failed, and three rounds went into widening
+timeouts before anyone captured the server's stderr. **Everything under
+`build_scripts/` is CommonJS now** — keep it that way; `server.ts` named-imports
+those modules from TypeScript, which is the supported direction. Bumping
+`.bun-version` is a normal change, just a deliberate one.
+`tests/ci-workflow.test.js` asserts the pin, though note its scope: it
+splits the file on `uses: oven-sh/setup-bun` and checks each block it
+finds, so it covers every job that sets Bun up and says nothing about a
+job that does not. `changes` is the one that does not — it runs only
+`dorny/paths-filter` and needs no runtime.
 
-- **checks** — `bun install --frozen-lockfile` → `format:check` → `validate`
-  → `build:netlify` → `test`. `build:netlify` doubles as a deploy-integrity
-  check: it fails if the committed workshop-form `dist` references assets
-  that were never committed (the "form shell that never hydrates" regression).
-  **It runs before `test` on purpose**, even though that delays a unit
-  failure by a build: one test in `tests/review-api-server.test.js` asserts
-  that a set-but-empty `STATIC_ROOT` still serves the real built app, and it
-  can only tell a correct fallback from a broken one if `dist/` exists. It
-  skips itself when there is no build — so with the fast order it passed by
-  skipping and covered nothing.
+- **changes** — classifies the PR's touched paths into `docs` and `code`
+  outputs. Everything below gates on those, so it is the only job that always
+  runs.
+- **docs_only_checks** — for a pull request touching docs and no code:
+  `lint:docs`, `format:check`, **and the full unit suite**. That last one is
+  not belt-and-braces. Docs are SOURCE DATA here — thirteen test files read
+  them, including `doc-counts` and `doc-claims` (figures against the
+  filesystem), `mirror-consistency` (the three instruction files against each
+  other), `module-paths` (a `js/` path in a doc naming a real file) and
+  `karl-blocks` (parsing `docs/karl-export-field-map.md` against the panel
+  inventory). Linting alone would let a docs-only PR merge with a stale count
+  or a mismatched field map, and only the push to `main` would find out. The
+  whole suite runs rather than a curated list, because a named list is a second
+  inventory of which tests read docs and free to drift from the tests.
+- **format_validate_lint** — `format:check`, `check:revert`, `validate`,
+  `lint:docs`, `lint:dead-code:ci`, `lint:architecture`, `lint:js`. The fast
+  gates, so they report before anything builds.
+- **build_railway** — `build:railway`, which doubles as a deploy-integrity
+  check: it fails if the committed workshop-form `dist` references assets that
+  were never committed (the "form shell that never hydrates" regression). It
+  then **uploads `dist/` as an artifact**.
+- **build_singlefile** — `build:singlefile`, in parallel with the above.
+- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+  is what makes the ordering mean anything.** `needs:` only sequences jobs; a
+  separate runner gets a fresh checkout, and `dist/` is gitignored, so without
+  the artifact the job would test against a tree that has never been built. One
+  test in `tests/review-api-server.test.js` asserts a set-but-empty
+  `STATIC_ROOT` still serves the real built app, and it `skipIf`s itself when
+  `dist/index.html` is absent — so it would pass by skipping and cover nothing,
+  which is the exact gap the old in-job `build:railway` → `test` order existed
+  to close.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
-  `playwright-report/` as an artifact on failure (traces are on-first-retry).
+  `playwright-report/` as an artifact on failure.
+
+**Branch protection's required contexts are job NAMES, not job ids, and they
+have to be changed with this file.** Splitting the old `checks` job renamed the
+context `Format, validate, unit tests` out of existence, and a context that no
+job produces stays permanently pending however green the run — so a PR can go
+fully green and still never satisfy the requirement.
+
+**All six gating jobs have to be required, and the reason is counter-intuitive:
+GitHub treats a conditionally SKIPPED job as a PASSING required check.** That
+is what makes this graph's `if:` conditions dangerous to under-require:
+
+- Require only the code-path jobs, and a docs-only PR satisfies every one of
+  them by SKIPPING them, leaving `Docs-only checks` — which is where its real
+  coverage lives — unrequired and therefore optional.
+- Leave the builds unrequired, and a `build_singlefile` failure blocks nothing
+  at all, while a `build_railway` failure SKIPS `unit`, and that skip then
+  reads as a pass. A red build merges.
+
+So the required set is **every job in the file**, `Detect changed files`
+included: `Format, validate, lint`, `Unit tests (bun test)`,
+`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
+`Build single-file export` and `Detect changed files`.
+
+The detector is the one people leave out, on the reasoning that it only
+computes outputs and cannot itself be skipped — which is true and beside the
+point. If it FAILS, every job downstream of it is skipped, each of those skips
+reads as a pass, and the PR merges with nothing having been checked at all. An
+action outage or a permissions regression is enough to get there. Requiring it
+is what turns that silent green into a visible red.
+
+Adding a job to this file means adding its name here and to protection, or it
+is advisory.
 
 **A second workflow, `.github/workflows/link-check.yml`, runs weekly rather than
 per-PR.** It checks the links in this repo's own DOCUMENTATION — never mockup
@@ -385,8 +463,8 @@ bundles are both gone; Fuse.js, defu and papaparse are npm imports now.
 
 Order is enforced two ways. **Core modules enforce it themselves** — a module
 that needs `escapeHtml` imports it, and `js/core/state.js` imports
-`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all
-27 `pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
+`js/core/page-registry.js`, which imports `js/core/page-data.js` first, which imports all of
+`pages/*.js`, so `window.HHVC_DATA` is always populated before anything reads
 it — and the reviewer's added/deleted pages are applied before `ORIGINAL_DATA` is
 cloned. **The self-mounting IIFE subsystems still depend on
 listed order** — `js/review/ux-improvements*.js`, `js/review/review-queue*.js`,
@@ -578,11 +656,14 @@ do the work, each attaching functions to an internal `window.<Namespace>` object
 
 The workspace tab strip is `['overview', 'checks', 'help']`, numbered left to
 right by the `1`–`3` shortcuts. It carried six until a UX review cut three:
-**Sitemap** was removed outright (a fourth way to navigate 24 pages, drawing a
-hierarchy one level deep), and **AI assist** and **Tool status** became
+**Sitemap** was removed outright (a fourth way to navigate the page set,
+drawing a hierarchy one level deep), and **AI assist** and **Tool status** became
 collapsed `<details>` at the end of Help — both depend on `server.ts`, which the
-Netlify deploy has no runtime for, so on the build managers actually open they
-were two permanently-empty panels holding two of six slots. Help stays last, so
+static Netlify deploy live at the time had no runtime for, so on the build
+managers actually opened they were two permanently-empty panels holding two of
+six slots. Railway runs `server.ts`, so they are no longer structurally empty —
+but each still reports nothing until its own optional backend is configured,
+which is why the cut stands. Help stays last, so
 it is the digit that moves whenever the strip changes; `WORKSPACE_TABS`
 (`js/review/ux-improvements-workspace.js`), the tab markup in `index.html` and the
 `1`–`3` cases in `js/review/keyboard-shortcuts.js` must change together. The two
@@ -730,8 +811,8 @@ directly, which is the half that works), so extracting `safeUrl` would push
 `js/mockup/page-render.js` onto window indirection for no gain. Separately,
 **CI never exercises that crossing under Node** —
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
-`build:netlify`, which invokes `bun build_scripts/validate.js`). CI _does_ run
-Node, at the end of `build:netlify` (`node build_scripts/copy-workshop-form.js`),
+`build:railway`, which invokes `bun build_scripts/validate.js`). CI _does_ run
+Node, at the end of `build:railway` (`node build_scripts/copy-workshop-form.js`),
 but that script never touches `data-checks.js`, so the `require(esm)` path is
 _not_ covered. (That path
 needs `require(esm)` enabled — check `process.features.require_module` rather
@@ -1131,7 +1212,8 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
   in `build_scripts/sheet-config.json`) and optionally pushes via the Sheets
   API. It needs a Google service-account key, which is gitignored and must
   stay that way — never commit `*-service-account*.json` or `.env.local`.
-- **`bun run build:netlify`** (driven by `netlify.toml`) runs `validate` →
+- **`bun run build:railway`** (what `railway.json` runs as its build command)
+  runs `validate` →
   `build:app` (the real Vite production build into `dist/`) →
   `build_scripts/copy-workshop-form.js`. That last script is the surviving
   half of the old `build-netlify-dist.js`: everything it used to copy by hand
@@ -1149,7 +1231,8 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
   the root bundle is ignored as `/dist/`, anchored on purpose so it doesn't
   also swallow that sub-app's committed `dist/`.
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
-  `X-Frame-Options`, etc.) that `netlify.toml` sets for the deployed site.
+  `X-Frame-Options`, etc.) that `netlify.toml` declares for the retired static
+  site, so the live Railway deploy and the archived Netlify config agree.
 
 ### Where review records live (`build_scripts/storage.js`)
 
@@ -1183,10 +1266,10 @@ and never sees a driver or a SQL string.
 
 **<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
 Railway project `hhvc-manager-review`, service `web`, connected to `main`, so a
-merge redeploys. Config lives in `railway.json`: build `bun run build:netlify`,
+merge redeploys. Config lives in `railway.json`: build `bun run build:railway`,
 start `bun run serve`.
 
-- **`bun run serve`, not `bun run start`** — `start` is `build:netlify && serve`,
+- **`bun run serve`, not `bun run start`** — `start` is `build:railway && serve`,
   which would repeat the whole build at boot on a platform that already ran it.
 - **`server.ts` must exit 0 on SIGTERM.** Railway retires a deployment by
   sending SIGTERM and reads the exit status that follows as its verdict. With no
@@ -1234,7 +1317,7 @@ start `bun run serve`.
 - **`forms/mosquito-workshop-request/`** — an independent Vite app (own
   `package.json`, `vite.config.js`, `src/main.js`) for one embedded form. Not
   wired into the main Bun dev server; built separately via
-  `bun run build:workshop-form` or the Netlify build.
+  `bun run build:workshop-form` or the deploy build (`build:railway`).
 - **`review/`** — reference/output for the manager review process
   (`manager_review_packet.md`, `manager_decision_log.csv`,
   `page_approval_checklist.csv`, `mockup_tracking_sheet.csv`), distinct from
@@ -1537,12 +1620,46 @@ CI after merges more than once.
 
 ## Security Reviews
 
-When asked for a security review of changed files: do **not** read files
-one-by-one first. Start with `git diff` (or `git diff --stat` then
-`git diff <paths>`) to load the actual changed hunks in one call, then report
-findings within the first 2-3 tool calls. Report incrementally — emit findings
-per file as you go rather than batching everything to the end. Only read full
-files when a diff hunk is ambiguous.
+When asked for a security review of a diff or of changed files: do **not**
+start by reading every file. Load the changed hunks in one call, with the
+command that matches the subject — and always name the subject, because every
+bare form quietly defaults to something else:
+
+- **Uncommitted work:** `git diff HEAD`, paired with `git status --short`. Bare
+  `git diff` compares the working tree to the INDEX, so a merely staged change
+  is invisible to it — a staged secret yields an empty diff and a clean-looking
+  review — and no diff form shows untracked files at all, so read anything new.
+- **A named commit:** `git show --first-parent <sha>`. On a MERGE commit bare
+  `git show` prints the combined `--cc` format, which names the changed file in
+  its stat and then omits the patch, so a secret merged cleanly off a branch
+  renders as a review that looks finished. Not `git diff <sha>^ <sha>`: it
+  aborts wherever the parent does not resolve, including a root commit. In a
+  shallow clone run `git fetch --deepen=1 origin` first (the repository, not
+  the SHA — `git fetch` reads its first positional as the repository) — at the boundary Git
+  treats the commit as a root and renders the whole snapshot as
+  `new file mode`, which a reader cannot tell from code the commit added.
+- **A pull request:** `gh pr diff <number>`. The bare form selects whatever PR
+  belongs to the current branch, which is routinely not the one under review.
+
+What those wrong forms share is that each prints something **reassuring**
+rather than nothing. An empty result invites a second look; `secret.txt | 1 +`
+with no patch under it does not.
+
+Then summarize the attack surface those hunks expose in 3-5 bullets. That
+summary is what decides where to look next; reading first and summarizing
+afterwards inverts the order and spends the budget before the review has a
+shape. Read only the specific files those bullets flag.
+
+A **preliminary assessment** must land within the first 2 tool calls, and
+"nothing confirmed yet — here is the surface and where I am looking next" is a
+valid one. The deadline is on saying something, never on having found
+something: a clean diff has no findings, and an instruction demanding one by
+call two is an instruction to invent one. `git diff --stat` followed by
+`git diff <paths>` is a legitimate way into a diff too large to read whole, but
+it spends both calls before a word is written — so take the single-call route
+unless the size forces the split. Report incrementally — emit findings per file
+as you go rather than batching everything to the end. Only read a whole file
+when a diff hunk is genuinely ambiguous, and say why.
 
 ## Commits & pull requests
 
@@ -1554,6 +1671,23 @@ files when a diff hunk is ambiguous.
   changes + an explicit **verification line** (e.g. "Verified headless at
   1600px and 850px…"). AI-assisted commits carry `Co-Authored-By` and
   `Claude-Session` trailers.
+- **A `commit-msg` hook enforces that pairing**, and it is a PAIRING check
+  rather than a blanket one: the trigger is a `Co-Authored-By` line naming
+  Claude, so a human's own commit is untouched, and either trailer without the
+  other fails. The rule lives in the TRACKED `.githooks/commit-msg`;
+  `bun run hooks:install` symlinks `.git/hooks/commit-msg` at it, and that is
+  required once per clone because hooks are never committed. **It deliberately
+  does not set `core.hooksPath`** — that setting is already global here,
+  pointing at ggshield, and a repo-local value overrides it outright and
+  silently disables the pre-push secret scan. It is unnecessary anyway, since
+  ggshield's `_dispatch` forwards each hook to
+  `$(git rev-parse --git-dir)/hooks/<name>` whenever that file is executable
+  (which is why the hook's mode bit is part of its contract, and asserted in
+  `tests/commit-msg-hook.test.js` — a non-executable hook is not a broken gate
+  but an absent one, with no error to notice). The known gap, worth stating:
+  a commit carrying NEITHER trailer is invisible to it, because nothing in the
+  message distinguishes that from a human commit. `--no-verify` bypasses it,
+  as it bypasses every hook.
 - **Keep dashboard-UX changes and policy-copy changes in separate PRs** —
   reduces merge conflicts and keeps review focused.
 - **Never hand-edit generated files** (single-file HTML exports,
@@ -1660,7 +1794,7 @@ exists yet; created lazily by `/domain-modeling`). See
   on a failed `Read` against a guessed path before self-correcting via
   `Glob`/`pwd`.
 - **`node_modules/` may be absent on a fresh clone or sandbox.** `bun install`
-  is required before `dev`, `validate`, `test`, or `build:netlify` — the first
+  is required before `dev`, `validate`, `test`, or `build:railway` — the first
   three need `zod`/`fast-glob`/`papaparse`, and `index.html` links
   `@sfgov/design-system` CSS straight out of `node_modules`.
 - **Land brainstorming/exploration sessions on a decision.** Open-ended

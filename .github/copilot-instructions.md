@@ -31,18 +31,19 @@ up an unbounded generation bill). Cross-origin browser callers are
 denied unless explicitly allowlisted, and process-local limits are only a
 supplement to reverse-proxy/identity-aware-edge controls in public,
 multi-instance production. See `AGENTS.md`'s “Optional API access hardening”
-for the exact environment format and failure behavior. Netlify's static deploy
-has no server runtime, so it simply has none of them. Nothing else in the tool
-depends on any of them.
+for the exact environment format and failure behavior. Railway runs `server.ts`,
+so the live deploy has a runtime for them; a static-only host has none of them at
+all. Nothing else in the tool depends on any of them.
 
 ## Commands
 
 ```bash
 bun install          # install deps (required before first `dev`)
 bun run dev           # Vite dev server (HMR) at http://127.0.0.1:8080
-bun run start         # production-like: assemble dist/ (build:netlify), then serve it
+bun run start         # production-like: assemble dist/ (build:railway), then serve it
 bun run validate      # Zod-validate pages/*.js and js/core/page-data.js (schema + invariants)
-bun run test          # Bun test runner over the 53 unit-test files in tests/
+bun run test          # Bun test runner over the 57 unit-test files in tests/
+bun run hooks:install # Once per clone: installs the commit-msg trailer gate (.githooks/)
 bun run test:e2e      # Playwright end-to-end tests
 bun run export        # regenerate data/page_inventory.{json,csv} + local tracking sheet
 bun run export:karl   # write one paste-ready Karl transcript per page into review/karl-transcripts/
@@ -51,8 +52,8 @@ bun run format        # prettier --write on everything
 bun run format:check  # prettier --check — this is the lint step (no ESLint/tsc)
 ```
 
-**There is a real test suite.** `bun run test` runs **53** Bun unit-test
-files, plus twenty-three Playwright e2e spec files. **The list in `package.json`'s `test`
+**There is a real test suite.** `bun run test` runs **57** Bun unit-test
+files, plus twenty-four Playwright e2e spec files. **The list in `package.json`'s `test`
 script is explicit, not a glob** — a new `tests/*.test.js` that is not named
 there never runs and reports nothing. A happy-dom environment is preloaded
 via `bunfig.toml` so the ES modules can be imported directly. `bun run validate` is a
@@ -124,11 +125,23 @@ in exactly one stylesheet.
 
 ## Workflow & verification
 
-- **Security reviews start from the diff.** Asked to review changed files, run
-  `git diff` (or `git diff --stat` then `git diff <paths>`) and work from the
-  hunks — do not read files one at a time first. Report findings per file as you
-  go, within the first few tool calls; open a full file only when a hunk is
-  ambiguous.
+- **Security reviews start from the diff, naming the subject.** Every bare form
+  defaults to something else, and each prints something reassuring rather than
+  nothing. Uncommitted work: `git diff HEAD` plus `git status --short` — bare
+  `git diff` diffs against the index, so a staged change is invisible, and no
+  diff shows untracked files. A named commit: `git show --first-parent <sha>` —
+  bare `git show` omits the patch on a merge commit, `<sha>^ <sha>` aborts when
+  the parent does not resolve, and a shallow clone needs
+  `git fetch --deepen=1 origin` first (the repository, not the SHA) or the
+  boundary commit reads as an all-new
+  snapshot. A pull request: `gh pr diff <number>` — the bare form picks the
+  current branch's PR. Summarize the attack surface in 3-5 bullets before
+  opening anything else; those bullets decide what gets read. Do not read files
+  one at a time first. A preliminary **assessment** lands within the first 2
+  tool calls, and "nothing confirmed yet, here is the surface" is a valid one:
+  the deadline is on saying something, never on having found something, since a
+  clean diff has no findings. Report findings per file as you go rather than
+  batching them; open a full file only when a hunk is genuinely ambiguous.
 - **Definition of done:** tests pass, changes committed, pushed to origin, PR
   opened if on a branch, CI green. Never leave commits unpushed on a local
   branch, and re-fetch before merging to confirm the remote head has them all.

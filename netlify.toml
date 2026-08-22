@@ -1,5 +1,5 @@
 # Netlify config for the HHVC manager-review mockup (static site, no backend).
-# `bun run build:netlify` validates page data, runs the Vite production build
+# `bun run build:railway` validates page data, runs the Vite production build
 # into dist/, and copies the committed workshop-form sub-app in alongside it.
 # The optional /api/review-state sync backend has no runtime here, so a Netlify
 # deploy is read-only/no-sync by design.
@@ -20,14 +20,15 @@
   # tool can never silently diverge from main behind a URL someone bookmarked.
   ignore = "exit 0"
 
-  # Bun, not npm. This said `npm run build:netlify` while the comment above it
-  # said `bun`, and the repo commits only bun.lock — no package-lock.json. npm
+  # Bun, not npm. This said `npm run build:netlify` — the script's former name,
+  # renamed to `build:railway` once Railway became the host — while the comment
+  # above it said `bun`, and the repo commits only bun.lock — no package-lock.json. npm
   # therefore resolved every dependency fresh from the `^` ranges in
   # package.json, so the deployed artifact could be built against versions no
   # CI run ever exercised, while CI itself uses `bun install --frozen-lockfile`.
   # A lockfile that governs CI but not production is worse than no lockfile,
   # because it looks like it is doing the job.
-  command = "bun run build:netlify"
+  command = "bun run build:railway"
   publish = "dist"
 
 # No build plugins are declared here, deliberately — which is NOT the same as

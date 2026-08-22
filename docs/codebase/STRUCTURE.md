@@ -44,7 +44,7 @@ graph's root:
 - Dev UI: Vite via `bun run dev` (`start-dev.sh`); optional API: `bun run dev:api`
 - CLI jobs: `build_scripts/validate.js`, `extract-pages.js`, `sync-tracking-sheet.js`, `push-tracking-sheet.js`, AI under `build_scripts/ai/`
 - Workshop form entry: `forms/mosquito-workshop-request/` (own Vite build)
-- How entry is selected: `package.json` scripts; Netlify uses `bun run build:netlify` → publish `dist`
+- How entry is selected: `package.json` scripts; Railway runs `bun run build:railway` then `bun run serve` (`railway.json`)
 
 ### 3) Module Boundaries
 

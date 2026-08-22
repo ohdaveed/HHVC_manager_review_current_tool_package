@@ -10,7 +10,7 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
   ],
   reading: 'Grade 7',
   editorNote:
-    'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md). Spotlight, Additional-content Accordion sections, and Top facts now render as their own real-Karl-matching components (verified live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity) — remaining Campaign page-level fields with no mockup equivalent: Primary agency, Logo, Background header image, Color theme (no source image assets exist for this illustrative program). Workshop form: /forms/mosquito-workshop-request/ (mock). SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
+    'Campaign page mock. Maps conceptually to Karl\'s "Campaign" content type (see docs/wagtail-content-mapping.md). Spotlight, Additional-content Accordion sections, and Top facts now render as their own real-Karl-matching components (verified live against sf.gov/shop-dine-sf and sf.gov/1865-til-infinity) — remaining Campaign page-level fields with no mockup equivalent: Primary agency, Logo, Background header image, Color theme (no source image assets exist for this illustrative program). Workshop form: the CTA links OUT to a Fillout form, matching how SF.gov form pages behave — the page describes the service and hands off to the real form rather than embedding one. The URL is a REPLACE-ME sentinel: no Fillout form exists for this workshop yet. The embedded mock at forms/mosquito-workshop-request/ is retained as a design reference for what that form should capture, but nothing links to it and it has no intake backend. SME placeholder — production form URL, intake backend, capacity, service area, lead time, and standards crosswalk below are illustrative example content for mockup review; confirm actual values with HHVC before publication. In Karl Button: screenreader label “Go to mosquito workshop request form.”',
   editorStatus: 'placeholder',
   sections: [
     {
@@ -80,15 +80,20 @@ window.HHVC_PAGES['mosquitoWorkshop'] = {
     },
     {
       heading: 'Request a workshop',
-      karl: 'Maps to Spotlight 2: Spotlight title = this heading, Spotlight description = the paragraphs below, and "Request a workshop online" becomes Spotlight 2\'s nested Button link (Link text = button label, target = buttonUrl). Spotlight also needs a Spotlight image with no mockup equivalent — flag for Digital Services.',
+      karl: 'Maps to Spotlight 2: Spotlight title = this heading, Spotlight description = the paragraphs below, and "Request a workshop online" becomes Spotlight 2\'s nested Button link (Link text = button label, target = buttonUrl). Spotlight also needs a Spotlight image with no mockup equivalent — flag for Digital Services. The button leaves SF.gov for a Fillout form, which is how SF.gov form pages work — the page describes the service and links out to the real form rather than embedding one (confirmed live: sf.gov/pay-your-annual-healthy-housing-fee-apartment-buildings links "Pay online" out to services.paysf.co). SME placeholder: the Fillout form does not exist yet and the URL below is a deliberate REPLACE-ME sentinel, not a live link; HHVC must create the form and supply the production URL before publication (sectionSchema has no top-level unverified flag, so this caveat lives here and on the paragraph rather than on the button itself).',
       kind: 'body',
       component: 'spotlight',
       paragraphs: [
-        'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability. Submitted requests currently route to the Mosquito Control Program for scheduling (illustrative — confirm the actual intake backend with HHVC before publication).',
+        {
+          text: 'Use the online request form to tell us about your organization, audience, dates, and event space. HHVC will follow up about availability.',
+          unverified: true,
+          unverifiedReason:
+            'SME placeholder — the request form is illustrative example content for mockup review. No Fillout form has been built for this workshop yet, so the button below points at a REPLACE-ME sentinel URL rather than a live form. Confirm the production Fillout URL, the intake backend, and who receives submissions with HHVC before publication.',
+        },
         'You can also contact the Mosquito Control Program directly if you have questions before submitting the form.',
       ],
       button: 'Request a workshop online',
-      buttonUrl: '/forms/mosquito-workshop-request/',
+      buttonUrl: 'https://forms.fillout.com/t/REPLACE-WITH-REAL-FORM-ID',
     },
     {
       heading: 'Questions before you apply',

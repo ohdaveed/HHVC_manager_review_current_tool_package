@@ -452,8 +452,8 @@ test.describe('AI assist panel', () => {
     // the test races the first-run onboarding for focus. See focusMockPage.
     await focusMockPage(page)
     // It had the 4 key while it was a tab. It is inert without a configured
-    // server — which the Netlify deploy has no runtime for — so it is a
-    // collapsed section in Help now.
+    // server — which the static Netlify deploy live at the time had no runtime
+    // for — so it is a collapsed section in Help now.
     await page.keyboard.press('3')
 
     await expect(page.locator('[data-workspace-panel="help"]')).toBeVisible()
