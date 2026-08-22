@@ -51,7 +51,28 @@ function setupBunBlocks() {
  * @returns {string[]}
  */
 function jobNames() {
-  return [...WORKFLOW.matchAll(/^ {4}name: (.+)$/gm)].map((match) => match[1].trim())
+  return [...WORKFLOW.matchAll(/^ {4}name: (.+)$/gm)].map((match) => decodeScalar(match[1]))
+}
+
+/**
+ * A YAML scalar as a reader sees it: trailing comment stripped, surrounding
+ * quotes removed.
+ *
+ * No job in `ci.yml` is quoted or commented today, so this changes nothing
+ * now. It exists because the alternative failure is confusing rather than
+ * informative: a name written `"Tests: unit"` — which YAML requires the moment
+ * a value contains a colon-space — would otherwise be compared as
+ * `"Tests: unit"`, quotes included, against a mirror that sensibly writes
+ * `Tests: unit`. The census would fail correctly and for a reason nobody could
+ * read off the diff.
+ *
+ * @param {string} raw The text after `name:`.
+ * @returns {string}
+ */
+function decodeScalar(raw) {
+  const withoutComment = raw.replace(/\s+#.*$/, '').trim()
+  const quoted = withoutComment.match(/^(['"])(.*)\1$/)
+  return quoted ? quoted[2] : withoutComment
 }
 
 /**
