@@ -5,14 +5,26 @@ onto `main`, deployed and verified. Tasks 2–6 are explicitly **out of scope** 
 they stay planned in `docs/superpowers/plans/2026-08-19-module-coherence.md`
 and are a separate branch after this lands.
 
-**Branch:** `impl/module-coherence`, currently `451e20b`, pushed, 15 behind
-`origin/main`. Two commits of real work:
+**Branch:** `impl/module-coherence`, currently `afc418f`, pushed, **16 behind
+`origin/main`** (which moved under this branch on 2026-08-21, including a CI
+restructure). Three commits of real work:
 
 - `d71ff26` — the post-render hook registry, replacing the
   `window.renderPage` monkey-patch.
 - `451e20b` — the before-render channel, fixing the review-data-loss
   regression `d71ff26` shipped, and collapsing the duplicate suppression
   mechanism.
+- `afc418f` — `build_scripts/measure-window-graph.js` and its tests, making
+  the measurement this whole conversion rests on reproducible, plus what it
+  actually shows (task 3 below).
+
+**Contention warning, 2026-08-21.** A second Claude session is working this
+same branch from the main checkout and has asked this session to stand down
+after securing its work. The remote branch was deleted at one point and
+restored from `archive/impl-module-coherence`; it has been re-pushed at
+`afc418f`. **Before acting on any task below, confirm with the user which
+session owns this branch** — two sessions landing the same work is worse than
+neither doing so.
 
 **State at the time of writing:** every gate green — `test` 1949/0,
 `test:e2e` 190 passed, `format:check`, `lint:js`, `lint:docs`,
@@ -49,7 +61,7 @@ Two further facts that make this a real task rather than a formality:
 
 ## Tasks
 
-- [ ] **1. Rebuild the window-graph measurement as a committed script.**
+- [x] **1. Rebuild the window-graph measurement as a committed script.**
       Write `build_scripts/measure-window-graph.js` (CommonJS, like everything
       else under `build_scripts/`): scan tracked `js/**/*.js` for
       `window.<name>` reads and writes, build the graph the measurement doc
@@ -58,20 +70,27 @@ Two further facts that make this a real task rather than a formality:
       `d71ff26~1` — if it cannot, say so in the file rather than tuning it
       until it agrees.
 
-- [ ] **2. Measure `main` and this branch, and write down both numbers.**
+- [x] **2. Measure `main` and this branch, and write down both numbers.**
       Run the script at `origin/main` and at `451e20b`. Record SCC size and
       the `window.renderPage` edge count for each. This is the Step 7 evidence.
 
-- [ ] **3. Decide, on the evidence, what this PR claims.** Three outcomes,
-      all acceptable; pick by the numbers, not by what was hoped for: - The tangle shrank materially → tick Step 7, PR claims it, cite the
-      script. - It shrank slightly or not at all → the PR claims what actually
-      changed (a monkey-patch replaced by a registry, plus a data-loss fix)
-      and Step 7 is amended to record the negative result. **A negative
-      result is not a reason to withhold the branch** — the data-loss fix in
-      `451e20b` stands on its own. - The script says the premise was wrong → stop, record it in the
-      measurement doc, and raise it before Tasks 2–6 are built on it.
+- [x] **3. Decide, on the evidence, what this PR claims.**
 
-- [ ] **4. Sync with `origin/main`.** Currently 15 behind. **Merge, do not
+      **Outcome: the second one.** Measured under one consistent model,
+                  `renderPage`'s intra-SCC edges fell 33 → 22 (a third), and the SCC did
+                  not shrink by a single file — 25 before, 25 after. Mount-time edges
+                  unchanged at 102. Recorded in the measurement doc's own
+                  "Re-measurement, 2026-08-21" section.
+
+                  So **the PR claims what actually changed** — a monkey-patch replaced by
+                  a registry, plus the data-loss fix — and explicitly does not claim the
+                  tangle shrank. The branch still lands: `451e20b` stands on its own.
+                  Note for Task 5 later: the measurement doc's central contradiction
+                  (`window.renderPage` cannot both survive and let `no-circular` pass) is
+                  untouched by Task 1 and comes due there.
+
+- [ ] **4. Sync with `origin/main`.** Currently **16 behind**, and `main` has
+      restructured CI underneath this branch. **Merge, do not
       rebase** — the branch is pushed, and rebasing a pushed branch is a
       force-push needing separate approval under the repo's destructive-git
       rule. Re-run the full gate set after the merge, not before.
@@ -85,8 +104,12 @@ Two further facts that make this a real task rather than a formality:
 - [ ] **6. CI green.** `gh pr checks --watch`. All six gating contexts must
       pass — `Format, validate, lint`, `Unit tests (bun test)`,
       `Playwright end-to-end tests`, `Docs-only checks`,
-      `Build railway bundle`, `Build single-file export`. A skipped required
-      job reads as passing, so confirm each actually ran.
+      `Build railway bundle`, `Build single-file export` **and
+      `Detect changed files`** — seven, not six. The detector is the one
+      people leave out, on the reasoning that it only computes outputs and
+      cannot be skipped; if it FAILS, every downstream job is skipped, each
+      skip reads as a pass, and the PR merges with nothing checked. A skipped
+      required job reads as passing, so confirm each actually ran.
 
 - [ ] **7. Merge to `main`. The merge is the deploy.** Railway is connected to
       `main`; a branch push builds nothing. Before merging, re-fetch and
