@@ -183,8 +183,25 @@
    */
   function isPlainStringField(path) {
     return (
-      path === 'title' || path === 'summary' || path === 'primaryCta' || /\.heading$/.test(path)
+      path === 'title' ||
+      path === 'summary' ||
+      path === 'primaryCta' ||
+      /\.heading$/.test(path) ||
+      // A {label, text} item's label — a whatToKnow entry's or a top-facts
+      // fact's — is printed with escapeHtml() as that entry's own H3. It has
+      // no {text, unverified} slot, so the tagged form renders as the literal
+      // "[object Object]" exactly like the four above.
+      /\.\d+\.label$/.test(path)
     )
+  }
+
+  /**
+   * A non-array object — the shape a {label, text} item takes.
+   * @param {unknown} value
+   * @returns {boolean}
+   */
+  function isPlainObject(value) {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
   }
 
   /**
@@ -211,9 +228,19 @@
     }
 
     state.previousValue = window.utils.getByPath(page, state.fieldPath)
+    // Spread whatever the item already was, rather than replacing it. A
+    // whatToKnow entry and a top-facts fact are both {label, text}, and the
+    // label is what each renderer prints as the entry's own H3 — writing the
+    // bare tagged object deleted that heading the moment a rewrite was
+    // applied to the paragraph under it. Mirrors writeScalarValue() in
+    // js/editing/inline-content-edit.js, which draws the same line for the same
+    // reason; that path was unified for this exact defect, and this one was
+    // left behind.
+    const carried = isPlainObject(state.previousValue) ? state.previousValue : {}
     const newValue = isPlainStringField(state.fieldPath)
       ? text
       : {
+          ...carried,
           text,
           unverified: true,
           unverifiedReason: 'AI-rewritten draft — verify before publishing',

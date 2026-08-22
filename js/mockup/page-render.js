@@ -290,11 +290,21 @@ function renderAudience(audience = []) {
  */
 function bulletList(bullets = [], pathPrefix = '') {
   if (!bullets.length) return ''
+  // The path sits on a <span> INSIDE the <li>, never on the <li> itself —
+  // the same rule renderTable() follows for a cell, and for the same reason:
+  // EditorSession.open() (js/editing/inline-content-edit.js) mounts by
+  // target.replaceWith(holder) and that holder is a <div>, so annotating the
+  // <li> puts a <div> as a direct child of <ul> for as long as the editor is
+  // open. Invalid content model, and this was the last place the rule was not
+  // followed. The span wraps the pill too, matching paragraphList()'s <p>,
+  // where the pill likewise disappears while the editor is open and returns
+  // on the next render.
   return `<ul>${bullets
     .map((b, index) => {
       const item = normalizeTextItem(b)
       const attr = pathPrefix ? ` data-rewrite-field="${escapeHtml(`${pathPrefix}.${index}`)}"` : ''
-      return `<li${attr}>${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}</li>`
+      const body = `${formatMarkdown(item.text)}${item.unverified ? unverifiedPill(item.unverifiedReason) : ''}`
+      return attr ? `<li><span${attr}>${body}</span></li>` : `<li>${body}</li>`
     })
     .join('')}</ul>`
 }
@@ -1049,11 +1059,18 @@ function renderWhatToKnow(whatToKnow, page) {
   // to one shared "Things to know" list, same as before this change.
   const itemAttr = (item) => (item.path ? ` data-rewrite-field="${escapeHtml(item.path)}"` : '')
   const itemPill = (item) => (item.unverified ? unverifiedPill(item.unverifiedReason) : '')
+  // The label is the entry's own H3, and was the one piece of visible copy in
+  // this box a reviewer could not touch: editing "who must pay" worked while
+  // the heading "Who must pay" above it did not. It addresses the same item as
+  // itemAttr's path with a `.label` suffix, and stores through the
+  // whatToKnow.thingsToKnow/items container the same way the text does.
+  const labelAttr = (item) =>
+    item.path ? ` data-rewrite-field="${escapeHtml(`${item.path}.label`)}"` : ''
   const labeledHtml = normalizedThings
     .filter((t) => t.label)
     .map(
       (t) =>
-        `<div class="what-to-know-subsection"><h3>${escapeHtml(t.label)}</h3><p${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</p></div>`
+        `<div class="what-to-know-subsection"><h3${labelAttr(t)}>${escapeHtml(t.label)}</h3><p${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</p></div>`
     )
     .join('')
   const unlabeled = normalizedThings.filter((t) => !t.label)
@@ -1066,8 +1083,14 @@ function renderWhatToKnow(whatToKnow, page) {
       ? unlabeled
           .map((t) => `<p${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</p>`)
           .join('')
-      : `<ul>${unlabeled
-          .map((t) => `<li${itemAttr(t)}>${formatMarkdown(t.text)}${itemPill(t)}</li>`)
+      : // Same <span>-inside-<li> rule as bulletList() above: a <div> holder
+        // replacing an annotated <li> is invalid inside a <ul>.
+        `<ul>${unlabeled
+          .map((t) => {
+            const body = `${formatMarkdown(t.text)}${itemPill(t)}`
+            const attr = itemAttr(t)
+            return attr ? `<li><span${attr}>${body}</span></li>` : `<li>${body}</li>`
+          })
           .join('')}</ul>`
   const unlabeledHtml = unlabeled.length
     ? `<div class="what-to-know-subsection"><h3>Things to know</h3>${unlabeledItemsHtml}</div>`
@@ -1165,10 +1188,19 @@ function renderTopFacts(section) {
   const base =
     typeof section.__sectionIndex === 'number' ? `sections.${section.__sectionIndex}` : ''
   const headingPathAttr = base ? ` data-rewrite-field="${base}.heading"` : ''
+  // Both halves of a fact are visible copy, so both carry a path. The label
+  // renders as the fact's own H3 and is addressed as a `.label` sub-field —
+  // stored through the `sections.N.facts` container rather than under its own
+  // key, since computeSectionEdits diffs that array whole. `base` gates them:
+  // a section that never went through partitionSections() has no
+  // __sectionIndex, and a path built on `sections..facts` would address
+  // nothing.
+  const factAttr = (index, suffix) =>
+    base ? ` data-rewrite-field="${escapeHtml(`${base}.facts.${index}${suffix}`)}"` : ''
   const factsHtml = facts
     .map(
-      (f) =>
-        `<div class="what-to-know-subsection"><h3>${escapeHtml(f.label)}</h3><p>${formatMarkdown(f.text)}${f.unverified ? unverifiedPill(f.unverifiedReason) : ''}</p></div>`
+      (f, index) =>
+        `<div class="what-to-know-subsection"><h3${factAttr(index, '.label')}>${escapeHtml(f.label)}</h3><p${factAttr(index, '')}>${formatMarkdown(f.text)}${f.unverified ? unverifiedPill(f.unverifiedReason) : ''}</p></div>`
     )
     .join('')
   // `top-facts` is a Karl panel of its own on Campaign (`facts_title` +

@@ -1,6 +1,6 @@
 ---
 name: hhvc-inline-content-editing
-description: 'HHVC repo: click-to-edit on the rendered mockup — the EDITABLE_FIELD_SHAPES scope list and its four value kinds, why cards carry no data-rewrite-field, why a stamped-but-unlisted path silently loses edits, section_edits being derived not accumulated, the reapply/re-render infinite-loop guard, and the CSV round-trip limitation. Load before editing js/editing/inline-content-edit*.js.'
+description: 'HHVC repo: click-to-edit on the rendered mockup — the EDITABLE_FIELD_SHAPES scope list and its five value kinds, why cards carry no data-rewrite-field, why a stamped-but-unlisted path silently loses edits, section_edits being derived not accumulated, the reapply/re-render infinite-loop guard, and the CSV round-trip limitation. Load before editing js/editing/inline-content-edit*.js.'
 ---
 
 <!-- Extracted from CLAUDE.md/AGENTS.md on 2026-08-13. AGENTS.md remains the
@@ -25,10 +25,11 @@ wiring into the existing autosave path).
 
 - **Scope is one list, in one place: `EDITABLE_FIELD_SHAPES` in
   `js/editing/inline-content-edit-data.js`.** It covers a page's title, summary and
-  primary CTA; a section's heading, paragraphs, bullets, table and callout; a
+  primary CTA; a section's heading, paragraphs, bullets, table, callout and
+  `top-facts` facts; a
   step's title, text, bullets and callout; and the page-level `whatToKnow`,
   `spotlight` and `contact` blocks. Each entry declares the value shape its
-  stored `section_edits` entry takes — `string`, `textArray`, `stringArray` or
+  stored `section_edits` entry takes — `string`, `textArray`, `factsArray`, `stringArray` or
   `table` — and `tests/inline-content-edit-data.test.js` asserts the whole list
   by value, so widening scope is a deliberate edit to a list rather than a
   regex loosened in passing. Add/remove is still supported on exactly two

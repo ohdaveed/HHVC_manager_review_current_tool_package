@@ -54,6 +54,24 @@ const EDITABLE_FIELD_SHAPES = [
   { pattern: /^sections\.\d+\.paragraphs$/, kind: 'textArray', example: 'sections.0.paragraphs' },
   { pattern: /^sections\.\d+\.bullets$/, kind: 'textArray', example: 'sections.0.bullets' },
   { pattern: /^sections\.\d+\.table$/, kind: 'table', example: 'sections.0.table' },
+  // A `top-facts` section's fact_items, and the one path with a kind of its
+  // OWN rather than a reused one. A fact is {label, text} and
+  // renderTopFacts() prints the label unguarded, so the generic textArray
+  // contract is too loose: it accepts a bare string or an object carrying only
+  // `text`, and a stored value REPLACES the authored array, so such an edit
+  // destroys the real facts and renders blank headings while passing every
+  // validator. See isValidSectionEditFact below for the full rule.
+  //
+  // The strictness is about the STORED ARRAY only. Editing one fact's TEXT
+  // still commits the tagged object like any other body copy —
+  // editableItemKind returns taggedText for `sections.N.facts.M`, and
+  // writeScalarValue's spread is what preserves the label.
+  //
+  // It gains NO add/remove affordance from this registration:
+  // decorateListControls() (js/editing/inline-content-edit.js) allowlists
+  // paragraphs and bullets by PATH, not by kind, so an appended item carrying
+  // no label cannot be created here.
+  { pattern: /^sections\.\d+\.facts$/, kind: 'factsArray', example: 'sections.0.facts' },
   {
     pattern: /^sections\.\d+\.callout\.title$/,
     kind: 'string',
@@ -104,10 +122,24 @@ const EDITABLE_FIELD_SHAPES = [
 ]
 
 /**
+ * Item containers whose entries are {label, text} objects, whose `label` each
+ * renderer prints as that entry's own H3. Matched against a full item-label
+ * path (`whatToKnow.thingsToKnow.0.label`), not a container path.
+ *
+ * Separate from EDITABLE_FIELD_SHAPES on purpose — see editableItemKind below
+ * for why a label must not become a registered stored-key pattern.
+ */
+const LABELLED_ITEM_CONTAINERS = [
+  /^whatToKnow\.thingsToKnow\.\d+\.label$/,
+  /^whatToKnow\.items\.\d+\.label$/,
+  /^sections\.\d+\.facts\.\d+\.label$/,
+]
+
+/**
  * The kind of container a section_edits path addresses, or null when the
  * path is outside the feature entirely.
  * @param {string} path
- * @returns {'string'|'textArray'|'stringArray'|'table'|null}
+ * @returns {'string'|'textArray'|'factsArray'|'stringArray'|'table'|null}
  */
 function editableFieldKind(path) {
   if (typeof path !== 'string') return null
@@ -134,6 +166,28 @@ function editableItemKind(path) {
   if (typeof path !== 'string') return null
   const ownKind = editableFieldKind(path)
   if (ownKind) return ownKind === 'string' ? 'plainString' : null
+  // An item's `label` sub-field, addressed directly: a whatToKnow entry and a
+  // top-facts fact are both {label, text}, and each renderer prints that label
+  // as the entry's own H3. It is deliberately NOT registered in
+  // EDITABLE_FIELD_SHAPES, because that list feeds SECTION_EDIT_PATH_PATTERN —
+  // the gate on what a STORED section_edits key may be — and a label is never
+  // stored under its own key. It rides along inside its container's array,
+  // which computeSectionEdits already diffs whole. Registering it would widen
+  // the stored-key surface to admit a scalar write into a sub-field, reachable
+  // from an older or hand-edited blob, for no gain.
+  //
+  // plainString, never taggedText: the value lands in an H3, and the tagged
+  // {text, unverified} object has no rendering there — escapeHtml would print
+  // "[object Object]" as the heading, and a heading cannot carry the
+  // Unverified pill that justifies the tagged form in the first place.
+  // Allowlisted by container rather than inferred from kind: only these three
+  // hold {label, text} items. Deriving it from `kind === 'textArray'` instead
+  // would classify `sections.0.bullets.0.label` as editable, and a bullet item
+  // has no label — setByPath would graft one onto a string-or-{text} item that
+  // no renderer reads. Nothing stamps that path today, which is exactly why an
+  // allowlist is worth more than the inference: it stays wrong-proof when a
+  // future renderer starts stamping label paths of its own.
+  if (LABELLED_ITEM_CONTAINERS.some((pattern) => pattern.test(path))) return 'plainString'
   // An item path: drop trailing index segments until a registered container
   // path is left. A table cell needs two (row, then column); every array
   // item needs one.
@@ -146,6 +200,11 @@ function editableItemKind(path) {
     container = container.slice(0, cut)
     const kind = editableFieldKind(container)
     if (kind === 'textArray') return 'taggedText'
+    // factsArray is stricter than textArray about the STORED ARRAY (both
+    // halves required — see the shape list), but a fact's TEXT still commits
+    // the tagged object exactly like any other body copy: writeScalarValue
+    // spreads the existing {label, text} so the label survives the edit.
+    if (kind === 'factsArray') return 'taggedText'
     if (kind === 'stringArray') return 'plainString'
     if (kind === 'table') return depth === 1 ? 'plainString' : null
     if (kind) return null
@@ -186,6 +245,39 @@ const SECTION_EDIT_PATH_PATTERN = new RegExp(
  * @param {unknown} item
  * @returns {boolean}
  */
+const FACT_ITEM_KEYS = new Set(['label', 'text', 'unverified', 'unverifiedReason'])
+
+/**
+ * One `sections.N.facts` item, validated to the SAME strictness as
+ * build_scripts/review-state-schema.js's sectionEditFactItemSchema.
+ *
+ * Three rules beyond "has both halves", each closing a divergence rather than
+ * being defensive for its own sake:
+ *
+ * - **The label may not be blank.** The interactive commit already refuses one
+ *   (js/editing/inline-content-edit.js), but that is a UI guard, not the
+ *   persistence boundary — an IMPORTED record reaches this function without
+ *   ever passing through it, and a blank fact label renders an empty heading.
+ * - **No unknown keys**, matching the schema's `.strict()`. A shape one side
+ *   accepts and the other rejects is exactly how an edit gets dropped on the
+ *   next load with nothing erroring — the failure this module's header already
+ *   warns about for isValidSectionEditItem.
+ * - **The meta fields are type-checked.** `unverified: 'false'` is a string,
+ *   which the renderer treats as TRUTHY and shows an Unverified pill for,
+ *   while the strict schema rejects it.
+ * @param {unknown} item
+ * @returns {boolean}
+ */
+function isValidSectionEditFact(item) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return false
+  if (typeof item.label !== 'string' || item.label.trim() === '') return false
+  if (typeof item.text !== 'string') return false
+  if (Object.keys(item).some((key) => !FACT_ITEM_KEYS.has(key))) return false
+  if (item.unverified !== undefined && typeof item.unverified !== 'boolean') return false
+  if (item.unverifiedReason !== undefined && typeof item.unverifiedReason !== 'string') return false
+  return true
+}
+
 function isValidSectionEditItem(item) {
   if (typeof item === 'string') return true
   return (
@@ -203,13 +295,14 @@ function isValidSectionEditItem(item) {
  * (build_scripts/review-state-schema.js, js/review/review-state-validation.js) can
  * express the same rule against their own path matching. A path with no kind
  * has already been rejected by the caller.
- * @param {'string'|'textArray'|'stringArray'|'table'|null} kind
+ * @param {'string'|'textArray'|'factsArray'|'stringArray'|'table'|null} kind
  * @param {unknown} value
  * @returns {boolean}
  */
 function isValidSectionEditValue(kind, value) {
   if (kind === 'string') return typeof value === 'string'
   if (kind === 'textArray') return Array.isArray(value) && value.every(isValidSectionEditItem)
+  if (kind === 'factsArray') return Array.isArray(value) && value.every(isValidSectionEditFact)
   if (kind === 'stringArray')
     return Array.isArray(value) && value.every((item) => typeof item === 'string')
   if (kind === 'table')
@@ -290,6 +383,7 @@ function editableContainerPaths(page, originalPage) {
       `sections.${i}.paragraphs`,
       `sections.${i}.bullets`,
       `sections.${i}.table`,
+      `sections.${i}.facts`,
       `sections.${i}.callout.title`,
       `sections.${i}.callout.text`
     )

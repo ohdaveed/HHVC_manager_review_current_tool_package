@@ -545,7 +545,15 @@ import { onAfterRender } from '../mockup/page-render.js'
       const wrapper = document.createElement('span')
       wrapper.innerHTML = addHtml
       if (located && located.itemElements.length) {
-        const lastItem = located.itemElements[located.itemElements.length - 1]
+        const annotated = located.itemElements[located.itemElements.length - 1]
+        // Climb to the <li> when the annotated element is a <span> inside one.
+        // bulletList() (js/mockup/page-render.js) moved the path onto an inner
+        // <span> so the editor's <div> holder never becomes a direct child of
+        // <ul> — which also moved this anchor's parentNode from the <ul> down
+        // to the <li>, and inserting the add control's own <li> there would
+        // nest one list item inside another. Paragraphs are unaffected: their
+        // annotated <p> has no <li> ancestor, so closest() returns null.
+        const lastItem = annotated.closest('li') || annotated
         // Bullets share one <ul> parent; paragraphs are bare siblings with a
         // shared parent too (the section's own container element in both
         // cases), so inserting after the last item's parentNode position
@@ -969,9 +977,26 @@ import { onAfterRender } from '../mockup/page-render.js'
       }
       const isPageLevelScalar =
         this.path === 'title' || this.path === 'summary' || this.path === 'primaryCta'
-      if (isPageLevelScalar && newText.trim() === '') {
+      // A {label, text} item's label is rejected blank for a reason the three
+      // above do not share: clearing it removes its own editing affordance.
+      // renderWhatToKnow() splits entries with `.filter((t) => t.label)`, so a
+      // blanked label drops the entry out of the labeled group entirely — it
+      // re-renders as a bare paragraph in the shared "Things to know" list,
+      // with no annotated H3 left to click and no reset control to restore it.
+      // A one-way door, the same shape as the emptied-list trap
+      // decorateListControls() already works around.
+      //
+      // Applied to facts labels too, though renderTopFacts() has no such
+      // filter and would keep rendering an (empty) annotated H3: a blank
+      // heading is a broken heading rather than an edit, so the rule is worth
+      // more as one the reviewer can predict than as one scoped to whichever
+      // renderer happens to filter.
+      const isItemLabel = /\.\d+\.label$/.test(this.path)
+      if ((isPageLevelScalar || isItemLabel) && newText.trim() === '') {
         window.showToast?.(
-          "Title, summary, and the primary CTA can't be cleared to blank — edit the text instead of deleting it.",
+          isItemLabel
+            ? "A heading can't be cleared to blank — edit the text instead of deleting it."
+            : "Title, summary, and the primary CTA can't be cleared to blank — edit the text instead of deleting it.",
           'warn'
         )
         rerender()

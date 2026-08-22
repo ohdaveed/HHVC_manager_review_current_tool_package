@@ -61,6 +61,7 @@ import { DECISION_LABELS } from '../core/utils.js'
     [/^sections\.\d+\.paragraphs$/, 'textArray'],
     [/^sections\.\d+\.bullets$/, 'textArray'],
     [/^sections\.\d+\.table$/, 'table'],
+    [/^sections\.\d+\.facts$/, 'factsArray'],
     [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
     [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
     [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],
@@ -84,6 +85,24 @@ import { DECISION_LABELS } from '../core/utils.js'
 
   function isPlainObject(value) {
     return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+  }
+
+  // Kept textually in step with js/editing/inline-content-edit-data.js's copy of
+  // the same name — see that one's comment for why each rule is here. The two
+  // sit on either side of the same value, so a shape one accepts and the other
+  // rejects is how an edit is silently dropped on the next load.
+  const FACT_ITEM_KEYS = new Set(['label', 'text', 'unverified', 'unverifiedReason'])
+
+  function isValidSectionEditFact(item) {
+    if (!isPlainObject(item)) return false
+    if (typeof item.label !== 'string' || item.label.trim() === '') return false
+    if (typeof item.text !== 'string') return false
+    if (Object.keys(item).some((key) => !FACT_ITEM_KEYS.has(key))) return false
+    if (item.unverified !== undefined && typeof item.unverified !== 'boolean') return false
+    if (item.unverifiedReason !== undefined && typeof item.unverifiedReason !== 'string') {
+      return false
+    }
+    return true
   }
 
   function isValidSectionEditItem(item) {
@@ -113,6 +132,11 @@ import { DECISION_LABELS } from '../core/utils.js'
       }
       if (!Array.isArray(value)) continue
       if (kind === 'textArray' && value.every(isValidSectionEditItem)) clean[path] = value
+      // Stricter than textArray on purpose: renderTopFacts() prints a fact's
+      // label unguarded, so an item carrying only `text` would render a blank
+      // heading. Mirrors sectionEditFactItemSchema in
+      // build_scripts/review-state-schema.js.
+      if (kind === 'factsArray' && value.every(isValidSectionEditFact)) clean[path] = value
       if (kind === 'stringArray' && value.every((item) => typeof item === 'string')) {
         clean[path] = value
       }

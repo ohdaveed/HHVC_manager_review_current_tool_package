@@ -60,6 +60,7 @@ const SECTION_EDIT_VALUE_KINDS = [
   [/^sections\.\d+\.paragraphs$/, 'textArray'],
   [/^sections\.\d+\.bullets$/, 'textArray'],
   [/^sections\.\d+\.table$/, 'table'],
+  [/^sections\.\d+\.facts$/, 'factsArray'],
   [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
   [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
   [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],
@@ -76,7 +77,7 @@ const SECTION_EDIT_VALUE_KINDS = [
  * The value kind a section_edits path addresses, or null when the path is
  * outside the feature.
  * @param {string} path
- * @returns {'string'|'textArray'|'stringArray'|'table'|null}
+ * @returns {'string'|'textArray'|'factsArray'|'stringArray'|'table'|null}
  */
 function sectionEditValueKind(path) {
   const entry = SECTION_EDIT_VALUE_KINDS.find(([pattern]) => pattern.test(path))
@@ -108,6 +109,28 @@ const sectionEditTextItemSchema = z.union([
 ])
 
 /**
+ * One `sections.N.facts` entry: BOTH halves required, unlike a text item.
+ * Kept as its own schema rather than a widened sectionEditTextItemSchema —
+ * that one is shared by every textArray path, and requiring a label there
+ * would reject an ordinary paragraph.
+ */
+const sectionEditFactItemSchema = z
+  .object({
+    // Non-blank, not merely a string: the interactive commit already refuses a
+    // blank label, but an IMPORTED record never passes through that UI guard,
+    // and a blank fact label renders an empty heading.
+    //
+    // `refine` rather than `.trim().min(1)`, which is a TRANSFORM — it would
+    // store the trimmed string, silently rewriting the reviewer's value on its
+    // way through validation. This validates and stores what it was given.
+    label: z.string().refine((value) => value.trim() !== ''),
+    text: z.string(),
+    unverified: z.boolean().optional(),
+    unverifiedReason: z.string().optional(),
+  })
+  .strict()
+
+/**
  * Validate one section_edits entry against the contract above.
  * @param {string} path
  * @param {unknown} value
@@ -122,9 +145,17 @@ function validateSectionEditEntry(path, value) {
   const schema =
     kind === 'textArray'
       ? z.array(sectionEditTextItemSchema)
-      : kind === 'stringArray'
-        ? z.array(z.string())
-        : z.array(z.array(z.string()))
+      : // A top-facts fact is {label, text} and renderTopFacts() prints the
+        // label unguarded, so a generic textArray is too loose here: a bare
+        // string, or an object carrying only `text`, would pass, replace the
+        // authored facts array wholesale, and render a blank heading. Both
+        // halves are required; the tagged meta fields stay optional, since an
+        // edited fact still commits `unverified`.
+        kind === 'factsArray'
+        ? z.array(sectionEditFactItemSchema)
+        : kind === 'stringArray'
+          ? z.array(z.string())
+          : z.array(z.array(z.string()))
   const parsed = schema.safeParse(value)
   return parsed.success ? { ok: true, value: parsed.data } : { ok: false }
 }

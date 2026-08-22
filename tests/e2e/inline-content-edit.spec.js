@@ -244,6 +244,95 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await expect(page.locator('#mockPage h2', { hasText: 'Edited Heading Text' })).toHaveCount(0)
   })
 
+  // #125's three surfaces. These are H3 headings that render a {label, text}
+  // item's LABEL — visible copy that had no click-to-edit affordance at all,
+  // on nine Transaction pages and both Campaign pages. Driven here rather than
+  // only in units because the label commits as a plainString through a path
+  // (`...N.label`) that is addressable but never stored under its own key: it
+  // rides along inside its container's array, and only a real round trip
+  // through persist + reload proves that storage story actually holds.
+  test('a whatToKnow entry label is editable and persists across reload', async ({ page }) => {
+    await gotoFresh(page)
+    await selectPage(page, 'payFee')
+
+    const label = page.locator('#mockPage h3[data-rewrite-field$=".label"]').first()
+    await expect(label).toBeVisible()
+    const path = await label.getAttribute('data-rewrite-field')
+    await label.click()
+
+    const block = await editorJsBlock(page)
+    await replaceEditorJsFieldText(page, block, 'Edited Label Text')
+    await commitEditorJsField(page)
+
+    const selector = `#mockPage h3[data-rewrite-field="${path}"]`
+    await expect(page.locator(selector)).toContainText('Edited Label Text')
+    await settleDebounce(page)
+
+    await page.reload()
+    await selectPage(page, 'payFee')
+    await expect(page.locator(selector)).toContainText('Edited Label Text')
+  })
+
+  // Clearing a label is a ONE-WAY DOOR without this guard, and that is why it
+  // is rejected rather than merely discouraged: renderWhatToKnow() splits
+  // entries with `.filter((t) => t.label)`, so a blanked label drops the entry
+  // out of the labeled group entirely — it re-renders as a bare paragraph in
+  // the shared "Things to know" list, leaving no annotated H3 to click and no
+  // reset control to bring it back.
+  test('a whatToKnow label cannot be cleared to blank', async ({ page }) => {
+    await gotoFresh(page)
+    await selectPage(page, 'payFee')
+
+    const label = page.locator('#mockPage h3[data-rewrite-field$=".label"]').first()
+    const path = await label.getAttribute('data-rewrite-field')
+    const original = (await label.textContent())?.trim()
+    await label.click()
+
+    await replaceEditorJsFieldText(page, await editorJsBlock(page), '')
+    await commitEditorJsField(page)
+
+    // Still there, still annotated, still clickable — the affordance survives.
+    const restored = page.locator(`#mockPage h3[data-rewrite-field="${path}"]`)
+    await expect(restored).toBeVisible()
+    await expect(restored).toContainText(original)
+  })
+
+  // The paragraph BELOW that heading stores under the same container array, so
+  // this is the case where the two halves could overwrite each other: the label
+  // is written by setByPath and the text by writeScalarValue's taggedText
+  // spread. Editing both in turn must leave both standing.
+  test('a top-facts label and its text are independently editable', async ({ page }) => {
+    await gotoFresh(page)
+    await selectPage(page, 'ipmEducation')
+
+    // Scoped to `.facts.` rather than `sections.`: a section's own H3 headings
+    // carry `sections.N.heading` and would match a looser prefix first.
+    const label = page.locator('#mockPage h3[data-rewrite-field*=".facts."]').first()
+    await expect(label).toBeVisible()
+    const labelPath = await label.getAttribute('data-rewrite-field')
+    const textPath = labelPath.replace(/\.label$/, '')
+
+    await label.click()
+    await replaceEditorJsFieldText(page, await editorJsBlock(page), 'Fact Label Edited')
+    await commitEditorJsField(page)
+    await expect(page.locator(`#mockPage [data-rewrite-field="${labelPath}"]`)).toContainText(
+      'Fact Label Edited'
+    )
+
+    await page.locator(`#mockPage p[data-rewrite-field="${textPath}"]`).click()
+    await replaceEditorJsFieldText(page, await editorJsBlock(page), 'Fact Text Edited')
+    await commitEditorJsField(page)
+
+    // Both, not just the second: writing the text spreads the existing item
+    // rather than replacing it, so the label edit above must still be there.
+    await expect(page.locator(`#mockPage [data-rewrite-field="${textPath}"]`)).toContainText(
+      'Fact Text Edited'
+    )
+    await expect(page.locator(`#mockPage [data-rewrite-field="${labelPath}"]`)).toContainText(
+      'Fact Label Edited'
+    )
+  })
+
   test('a title edit persists across reload', async ({ page }) => {
     await gotoFresh(page)
     const title = page.locator('#mockPage h1[data-rewrite-field="title"]')
