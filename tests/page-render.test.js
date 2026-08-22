@@ -429,8 +429,10 @@ describe('campaign page layout', () => {
     }
     const html = ctx.renderPageMain(page)
     expect(html).toContain('class="top-facts"')
-    expect(html).toContain('<h3>Contact</h3><p>Call 311.</p>')
-    expect(html).toContain('<h3>Group size</h3>')
+    expect(html).toContain(
+      '<h3 data-rewrite-field="sections.0.facts.0.label">Contact</h3><p data-rewrite-field="sections.0.facts.0">Call 311.</p>'
+    )
+    expect(html).toContain('<h3 data-rewrite-field="sections.0.facts.1.label">Group size</h3>')
     expect(html).toContain('unverified-pill')
   })
 
@@ -736,6 +738,25 @@ describe('data-rewrite-field annotation', () => {
     )
     expect(html).toContain('data-rewrite-field="sections.1.steps.0.text.0"')
     expect(html).toContain('data-rewrite-field="sections.1.steps.0.bullets.0"')
+  })
+
+  // The <li> itself must stay unannotated. EditorSession.open() mounts by
+  // replacing its target with a <div>, so a path on the <li> puts a <div> as a
+  // direct child of <ul> for as long as the editor is open — invalid content
+  // model, and the last place the <span>-inside rule was not followed.
+  test('puts a bullet path on an inner span, never on the <li>', () => {
+    const html = ctx.bulletList(['a'], 'sections.3.bullets')
+    expect(html).toContain('<li><span data-rewrite-field="sections.3.bullets.0">')
+    expect(html).not.toContain('<li data-rewrite-field')
+  })
+
+  test('keeps the Unverified pill inside the annotated span, as paragraphs do', () => {
+    const html = ctx.bulletList(
+      [{ text: 'a', unverified: true, unverifiedReason: 'why' }],
+      'sections.0.bullets'
+    )
+    const span = html.slice(html.indexOf('<span'), html.indexOf('</span>'))
+    expect(span).toContain('unverified')
   })
 
   test('emits no attribute when no path prefix is passed', () => {
@@ -1415,7 +1436,7 @@ describe('renderWhatToKnow', () => {
     }
     const html = ctx.renderPageMain(page)
     expect(html).toContain(
-      '<h3>What to report</h3><p data-rewrite-field="whatToKnow.thingsToKnow.0">Call 311 for help.</p>'
+      '<h3 data-rewrite-field="whatToKnow.thingsToKnow.0.label">What to report</h3><p data-rewrite-field="whatToKnow.thingsToKnow.0">Call 311 for help.</p>'
     )
     expect(html).not.toContain('<h3>Things to know</h3>')
   })
@@ -1492,5 +1513,33 @@ describe('Karl tag values for text-bearing arrays', () => {
     expect(html).not.toContain('[object Object]')
     expect(html).toContain('One.')
     expect(html).toContain('Two.')
+  })
+})
+
+// APPENDED BELOW THE SNAPSHOTS for the reason the NOTE ON PLACEMENT above
+// gives: renderTopFacts() calls karlTag(), which draws from the module-global
+// panel counter the "renderCards / renderCardList" snapshots assert on. Placed
+// in the data-rewrite-field block where it belongs topically, it shifted every
+// karl-guide-NNN id and failed two snapshots that have nothing to do with
+// top-facts.
+describe('data-rewrite-field annotation on top-facts', () => {
+  test('annotates top-facts label and text under the section index', () => {
+    const section = {
+      heading: 'Facts',
+      karl: 'k',
+      __sectionIndex: 4,
+      facts: [{ label: 'Cost', text: 'Free' }],
+    }
+    const html = ctx.renderTopFacts(section)
+    expect(html).toContain('<h3 data-rewrite-field="sections.4.facts.0.label"')
+    expect(html).toContain('<p data-rewrite-field="sections.4.facts.0"')
+  })
+
+  // No __sectionIndex means the section never went through
+  // partitionSections(), so a path built on it would address `sections..facts`
+  // — a field that does not exist. No field, no affordance.
+  test('emits no facts attribute for a section with no source index', () => {
+    const html = ctx.renderTopFacts({ heading: 'F', karl: 'k', facts: [{ label: 'L', text: 'T' }] })
+    expect(html).not.toContain('data-rewrite-field')
   })
 })

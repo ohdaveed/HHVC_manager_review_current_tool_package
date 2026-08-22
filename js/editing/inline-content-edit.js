@@ -545,7 +545,15 @@ import { onAfterRender } from '../mockup/page-render.js'
       const wrapper = document.createElement('span')
       wrapper.innerHTML = addHtml
       if (located && located.itemElements.length) {
-        const lastItem = located.itemElements[located.itemElements.length - 1]
+        const annotated = located.itemElements[located.itemElements.length - 1]
+        // Climb to the <li> when the annotated element is a <span> inside one.
+        // bulletList() (js/mockup/page-render.js) moved the path onto an inner
+        // <span> so the editor's <div> holder never becomes a direct child of
+        // <ul> — which also moved this anchor's parentNode from the <ul> down
+        // to the <li>, and inserting the add control's own <li> there would
+        // nest one list item inside another. Paragraphs are unaffected: their
+        // annotated <p> has no <li> ancestor, so closest() returns null.
+        const lastItem = annotated.closest('li') || annotated
         // Bullets share one <ul> parent; paragraphs are bare siblings with a
         // shared parent too (the section's own container element in both
         // cases), so inserting after the last item's parentNode position

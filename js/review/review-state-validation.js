@@ -61,6 +61,7 @@ import { DECISION_LABELS } from '../core/utils.js'
     [/^sections\.\d+\.paragraphs$/, 'textArray'],
     [/^sections\.\d+\.bullets$/, 'textArray'],
     [/^sections\.\d+\.table$/, 'table'],
+    [/^sections\.\d+\.facts$/, 'textArray'],
     [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
     [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
     [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],

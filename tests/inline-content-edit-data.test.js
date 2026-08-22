@@ -28,6 +28,7 @@ describe('EDITABLE_FIELD_SHAPES', () => {
       'sections.0.heading': 'string',
       'sections.0.paragraphs': 'textArray',
       'sections.0.bullets': 'textArray',
+      'sections.0.facts': 'textArray',
       'sections.0.table': 'table',
       'sections.0.callout.title': 'string',
       'sections.0.callout.text': 'string',
@@ -62,6 +63,45 @@ describe('EDITABLE_FIELD_SHAPES', () => {
   test('excludes editor-only annotations', () => {
     expect(editableFieldKind('sections.0.karl')).toBe(null)
     expect(editableFieldKind('editorNote')).toBe(null)
+  })
+})
+
+describe('editableItemKind — {label, text} item labels', () => {
+  // A label is ADDRESSABLE but never STORED under its own key: it rides along
+  // inside its container's array, which computeSectionEdits diffs whole. That
+  // split is why these paths are absent from EDITABLE_FIELD_SHAPES, and the
+  // next test pins the absence so a later "tidy-up" cannot quietly register
+  // them and widen the stored-key surface.
+  test('classifies a labelled item label as plainString, never taggedText', () => {
+    expect(editableItemKind('whatToKnow.thingsToKnow.0.label')).toBe('plainString')
+    expect(editableItemKind('whatToKnow.items.3.label')).toBe('plainString')
+    expect(editableItemKind('sections.2.facts.1.label')).toBe('plainString')
+  })
+
+  // The value lands in an H3. The tagged {text, unverified} object would print
+  // as the literal "[object Object]" there, and a heading carries no Unverified
+  // pill, so taggedText is not merely unnecessary — it is unrenderable.
+  test('classifies the item TEXT beside it as taggedText', () => {
+    expect(editableItemKind('sections.2.facts.1')).toBe('taggedText')
+    expect(editableItemKind('whatToKnow.thingsToKnow.0')).toBe('taggedText')
+  })
+
+  // The allowlist earns its keep here. Deriving label-editability from
+  // `kind === 'textArray'` would accept every one of these: a bullet, a
+  // paragraph and a step's text are strings or {text} items with no label at
+  // all, so setByPath would graft a field onto an item no renderer reads.
+  test('rejects a label path on a container whose items have no label', () => {
+    expect(editableItemKind('sections.0.bullets.0.label')).toBe(null)
+    expect(editableItemKind('sections.0.paragraphs.0.label')).toBe(null)
+    expect(editableItemKind('sections.0.steps.0.text.0.label')).toBe(null)
+    expect(editableItemKind('contact.phone.0.label')).toBe(null)
+    expect(editableItemKind('spotlight.paragraphs.0.label')).toBe(null)
+  })
+
+  test('keeps item-label paths out of the stored-key pattern', () => {
+    const registered = EDITABLE_FIELD_SHAPES.map((entry) => entry.example)
+    expect(registered).not.toContain('whatToKnow.thingsToKnow.0.label')
+    expect(registered).not.toContain('sections.0.facts.0.label')
   })
 })
 

@@ -54,6 +54,16 @@ const EDITABLE_FIELD_SHAPES = [
   { pattern: /^sections\.\d+\.paragraphs$/, kind: 'textArray', example: 'sections.0.paragraphs' },
   { pattern: /^sections\.\d+\.bullets$/, kind: 'textArray', example: 'sections.0.bullets' },
   { pattern: /^sections\.\d+\.table$/, kind: 'table', example: 'sections.0.table' },
+  // A `top-facts` section's fact_items. textArray rather than a kind of its
+  // own: a fact is {label, text} and isValidSectionEditItem accepts it (it
+  // carries a string `text`), while writeScalarValue's taggedText branch
+  // spreads the existing object so an edit to the text keeps the label — the
+  // same mechanism whatToKnow.thingsToKnow already relies on. It gains NO
+  // add/remove affordance from this registration: decorateListControls()
+  // (js/editing/inline-content-edit.js) allowlists paragraphs and bullets by
+  // path, not by kind, so an appended item that carried no `label` — which
+  // renderTopFacts() prints unguarded — cannot be created here.
+  { pattern: /^sections\.\d+\.facts$/, kind: 'textArray', example: 'sections.0.facts' },
   {
     pattern: /^sections\.\d+\.callout\.title$/,
     kind: 'string',
@@ -104,6 +114,20 @@ const EDITABLE_FIELD_SHAPES = [
 ]
 
 /**
+ * Item containers whose entries are {label, text} objects, whose `label` each
+ * renderer prints as that entry's own H3. Matched against a full item-label
+ * path (`whatToKnow.thingsToKnow.0.label`), not a container path.
+ *
+ * Separate from EDITABLE_FIELD_SHAPES on purpose — see editableItemKind below
+ * for why a label must not become a registered stored-key pattern.
+ */
+const LABELLED_ITEM_CONTAINERS = [
+  /^whatToKnow\.thingsToKnow\.\d+\.label$/,
+  /^whatToKnow\.items\.\d+\.label$/,
+  /^sections\.\d+\.facts\.\d+\.label$/,
+]
+
+/**
  * The kind of container a section_edits path addresses, or null when the
  * path is outside the feature entirely.
  * @param {string} path
@@ -134,6 +158,28 @@ function editableItemKind(path) {
   if (typeof path !== 'string') return null
   const ownKind = editableFieldKind(path)
   if (ownKind) return ownKind === 'string' ? 'plainString' : null
+  // An item's `label` sub-field, addressed directly: a whatToKnow entry and a
+  // top-facts fact are both {label, text}, and each renderer prints that label
+  // as the entry's own H3. It is deliberately NOT registered in
+  // EDITABLE_FIELD_SHAPES, because that list feeds SECTION_EDIT_PATH_PATTERN —
+  // the gate on what a STORED section_edits key may be — and a label is never
+  // stored under its own key. It rides along inside its container's array,
+  // which computeSectionEdits already diffs whole. Registering it would widen
+  // the stored-key surface to admit a scalar write into a sub-field, reachable
+  // from an older or hand-edited blob, for no gain.
+  //
+  // plainString, never taggedText: the value lands in an H3, and the tagged
+  // {text, unverified} object has no rendering there — escapeHtml would print
+  // "[object Object]" as the heading, and a heading cannot carry the
+  // Unverified pill that justifies the tagged form in the first place.
+  // Allowlisted by container rather than inferred from kind: only these three
+  // hold {label, text} items. Deriving it from `kind === 'textArray'` instead
+  // would classify `sections.0.bullets.0.label` as editable, and a bullet item
+  // has no label — setByPath would graft one onto a string-or-{text} item that
+  // no renderer reads. Nothing stamps that path today, which is exactly why an
+  // allowlist is worth more than the inference: it stays wrong-proof when a
+  // future renderer starts stamping label paths of its own.
+  if (LABELLED_ITEM_CONTAINERS.some((pattern) => pattern.test(path))) return 'plainString'
   // An item path: drop trailing index segments until a registered container
   // path is left. A table cell needs two (row, then column); every array
   // item needs one.
@@ -290,6 +336,7 @@ function editableContainerPaths(page, originalPage) {
       `sections.${i}.paragraphs`,
       `sections.${i}.bullets`,
       `sections.${i}.table`,
+      `sections.${i}.facts`,
       `sections.${i}.callout.title`,
       `sections.${i}.callout.text`
     )
