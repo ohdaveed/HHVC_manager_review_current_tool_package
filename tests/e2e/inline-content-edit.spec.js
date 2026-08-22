@@ -273,6 +273,30 @@ test.describe('inline content editing (Editor.js widget)', () => {
     await expect(page.locator(selector)).toContainText('Edited Label Text')
   })
 
+  // Clearing a label is a ONE-WAY DOOR without this guard, and that is why it
+  // is rejected rather than merely discouraged: renderWhatToKnow() splits
+  // entries with `.filter((t) => t.label)`, so a blanked label drops the entry
+  // out of the labeled group entirely — it re-renders as a bare paragraph in
+  // the shared "Things to know" list, leaving no annotated H3 to click and no
+  // reset control to bring it back.
+  test('a whatToKnow label cannot be cleared to blank', async ({ page }) => {
+    await gotoFresh(page)
+    await selectPage(page, 'payFee')
+
+    const label = page.locator('#mockPage h3[data-rewrite-field$=".label"]').first()
+    const path = await label.getAttribute('data-rewrite-field')
+    const original = (await label.textContent())?.trim()
+    await label.click()
+
+    await replaceEditorJsFieldText(page, await editorJsBlock(page), '')
+    await commitEditorJsField(page)
+
+    // Still there, still annotated, still clickable — the affordance survives.
+    const restored = page.locator(`#mockPage h3[data-rewrite-field="${path}"]`)
+    await expect(restored).toBeVisible()
+    await expect(restored).toContainText(original)
+  })
+
   // The paragraph BELOW that heading stores under the same container array, so
   // this is the case where the two halves could overwrite each other: the label
   // is written by setByPath and the text by writeScalarValue's taggedText

@@ -63,7 +63,7 @@ const EDITABLE_FIELD_SHAPES = [
   // (js/editing/inline-content-edit.js) allowlists paragraphs and bullets by
   // path, not by kind, so an appended item that carried no `label` — which
   // renderTopFacts() prints unguarded — cannot be created here.
-  { pattern: /^sections\.\d+\.facts$/, kind: 'textArray', example: 'sections.0.facts' },
+  { pattern: /^sections\.\d+\.facts$/, kind: 'factsArray', example: 'sections.0.facts' },
   {
     pattern: /^sections\.\d+\.callout\.title$/,
     kind: 'string',
@@ -131,7 +131,7 @@ const LABELLED_ITEM_CONTAINERS = [
  * The kind of container a section_edits path addresses, or null when the
  * path is outside the feature entirely.
  * @param {string} path
- * @returns {'string'|'textArray'|'stringArray'|'table'|null}
+ * @returns {'string'|'textArray'|'factsArray'|'stringArray'|'table'|null}
  */
 function editableFieldKind(path) {
   if (typeof path !== 'string') return null
@@ -192,6 +192,11 @@ function editableItemKind(path) {
     container = container.slice(0, cut)
     const kind = editableFieldKind(container)
     if (kind === 'textArray') return 'taggedText'
+    // factsArray is stricter than textArray about the STORED ARRAY (both
+    // halves required — see the shape list), but a fact's TEXT still commits
+    // the tagged object exactly like any other body copy: writeScalarValue
+    // spreads the existing {label, text} so the label survives the edit.
+    if (kind === 'factsArray') return 'taggedText'
     if (kind === 'stringArray') return 'plainString'
     if (kind === 'table') return depth === 1 ? 'plainString' : null
     if (kind) return null
@@ -232,6 +237,16 @@ const SECTION_EDIT_PATH_PATTERN = new RegExp(
  * @param {unknown} item
  * @returns {boolean}
  */
+function isValidSectionEditFact(item) {
+  return (
+    Boolean(item) &&
+    typeof item === 'object' &&
+    !Array.isArray(item) &&
+    typeof item.label === 'string' &&
+    typeof item.text === 'string'
+  )
+}
+
 function isValidSectionEditItem(item) {
   if (typeof item === 'string') return true
   return (
@@ -249,13 +264,14 @@ function isValidSectionEditItem(item) {
  * (build_scripts/review-state-schema.js, js/review/review-state-validation.js) can
  * express the same rule against their own path matching. A path with no kind
  * has already been rejected by the caller.
- * @param {'string'|'textArray'|'stringArray'|'table'|null} kind
+ * @param {'string'|'textArray'|'factsArray'|'stringArray'|'table'|null} kind
  * @param {unknown} value
  * @returns {boolean}
  */
 function isValidSectionEditValue(kind, value) {
   if (kind === 'string') return typeof value === 'string'
   if (kind === 'textArray') return Array.isArray(value) && value.every(isValidSectionEditItem)
+  if (kind === 'factsArray') return Array.isArray(value) && value.every(isValidSectionEditFact)
   if (kind === 'stringArray')
     return Array.isArray(value) && value.every((item) => typeof item === 'string')
   if (kind === 'table')

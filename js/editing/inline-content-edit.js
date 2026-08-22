@@ -977,9 +977,26 @@ import { onAfterRender } from '../mockup/page-render.js'
       }
       const isPageLevelScalar =
         this.path === 'title' || this.path === 'summary' || this.path === 'primaryCta'
-      if (isPageLevelScalar && newText.trim() === '') {
+      // A {label, text} item's label is rejected blank for a reason the three
+      // above do not share: clearing it removes its own editing affordance.
+      // renderWhatToKnow() splits entries with `.filter((t) => t.label)`, so a
+      // blanked label drops the entry out of the labeled group entirely — it
+      // re-renders as a bare paragraph in the shared "Things to know" list,
+      // with no annotated H3 left to click and no reset control to restore it.
+      // A one-way door, the same shape as the emptied-list trap
+      // decorateListControls() already works around.
+      //
+      // Applied to facts labels too, though renderTopFacts() has no such
+      // filter and would keep rendering an (empty) annotated H3: a blank
+      // heading is a broken heading rather than an edit, so the rule is worth
+      // more as one the reviewer can predict than as one scoped to whichever
+      // renderer happens to filter.
+      const isItemLabel = /\.\d+\.label$/.test(this.path)
+      if ((isPageLevelScalar || isItemLabel) && newText.trim() === '') {
         window.showToast?.(
-          "Title, summary, and the primary CTA can't be cleared to blank — edit the text instead of deleting it.",
+          isItemLabel
+            ? "A heading can't be cleared to blank — edit the text instead of deleting it."
+            : "Title, summary, and the primary CTA can't be cleared to blank — edit the text instead of deleting it.",
           'warn'
         )
         rerender()

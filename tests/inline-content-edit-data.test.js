@@ -9,6 +9,7 @@ const {
   EDITABLE_FIELD_SHAPES,
   editableFieldKind,
   editableItemKind,
+  isValidSectionEditValue,
 } = require('../js/editing/inline-content-edit-data.js')
 
 describe('EDITABLE_FIELD_SHAPES', () => {
@@ -28,7 +29,7 @@ describe('EDITABLE_FIELD_SHAPES', () => {
       'sections.0.heading': 'string',
       'sections.0.paragraphs': 'textArray',
       'sections.0.bullets': 'textArray',
-      'sections.0.facts': 'textArray',
+      'sections.0.facts': 'factsArray',
       'sections.0.table': 'table',
       'sections.0.callout.title': 'string',
       'sections.0.callout.text': 'string',
@@ -63,6 +64,42 @@ describe('EDITABLE_FIELD_SHAPES', () => {
   test('excludes editor-only annotations', () => {
     expect(editableFieldKind('sections.0.karl')).toBe(null)
     expect(editableFieldKind('editorNote')).toBe(null)
+  })
+})
+
+describe('factsArray is stricter than textArray', () => {
+  // renderTopFacts() prints a fact's label with escapeHtml() and no guard, so
+  // an item carrying only `text` renders a blank heading — and, because the
+  // stored value REPLACES the authored array, it destroys the real facts on
+  // the way. A generic textArray accepts exactly that, which is why facts
+  // needed a kind of its own rather than reusing one.
+  test('rejects a facts array whose items carry no label', () => {
+    expect(isValidSectionEditValue('factsArray', [{ text: 'no label' }])).toBe(false)
+    expect(isValidSectionEditValue('factsArray', ['a bare string'])).toBe(false)
+    expect(isValidSectionEditValue('factsArray', [{ label: 'L' }])).toBe(false)
+  })
+
+  test('accepts a facts array carrying both halves, with optional meta', () => {
+    expect(isValidSectionEditValue('factsArray', [{ label: 'L', text: 'T' }])).toBe(true)
+    expect(
+      isValidSectionEditValue('factsArray', [
+        { label: 'L', text: 'T', unverified: true, unverifiedReason: 'why' },
+      ])
+    ).toBe(true)
+  })
+
+  // The strictness is about the STORED ARRAY. Editing one fact's text still
+  // commits the tagged object like any other body copy — writeScalarValue's
+  // spread is what keeps the label — so this must not have changed.
+  test('leaves a fact item editable as taggedText', () => {
+    expect(editableItemKind('sections.0.facts.1')).toBe('taggedText')
+  })
+
+  // A paragraph is not a fact: requiring a label on the shared text-item
+  // schema would have rejected ordinary body copy.
+  test('still accepts a label-less item on a plain textArray path', () => {
+    expect(isValidSectionEditValue('textArray', [{ text: 'ordinary' }])).toBe(true)
+    expect(isValidSectionEditValue('textArray', ['ordinary'])).toBe(true)
   })
 })
 
