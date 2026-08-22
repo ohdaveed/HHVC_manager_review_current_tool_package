@@ -61,7 +61,7 @@ import { DECISION_LABELS } from '../core/utils.js'
     [/^sections\.\d+\.paragraphs$/, 'textArray'],
     [/^sections\.\d+\.bullets$/, 'textArray'],
     [/^sections\.\d+\.table$/, 'table'],
-    [/^sections\.\d+\.facts$/, 'textArray'],
+    [/^sections\.\d+\.facts$/, 'factsArray'],
     [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
     [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
     [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],
@@ -90,6 +90,10 @@ import { DECISION_LABELS } from '../core/utils.js'
   function isValidSectionEditItem(item) {
     if (typeof item === 'string') return true
     return isPlainObject(item) && typeof item.text === 'string'
+    }
+
+    function isValidFactsEditItem(item) {
+      return isPlainObject(item) && typeof item.label === 'string' && typeof item.text === 'string'
   }
 
   /**
@@ -113,7 +117,8 @@ import { DECISION_LABELS } from '../core/utils.js'
         continue
       }
       if (!Array.isArray(value)) continue
-      if (kind === 'textArray' && value.every(isValidSectionEditItem)) clean[path] = value
+      if (kind === 'factsArray' && value.every(isValidFactsEditItem)) clean[path] = value
+        if (kind === 'textArray' && value.every(isValidSectionEditItem)) clean[path] = value
       if (kind === 'stringArray' && value.every((item) => typeof item === 'string')) {
         clean[path] = value
       }

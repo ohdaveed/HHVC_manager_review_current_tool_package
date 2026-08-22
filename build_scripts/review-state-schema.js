@@ -60,7 +60,7 @@ const SECTION_EDIT_VALUE_KINDS = [
   [/^sections\.\d+\.paragraphs$/, 'textArray'],
   [/^sections\.\d+\.bullets$/, 'textArray'],
   [/^sections\.\d+\.table$/, 'table'],
-  [/^sections\.\d+\.facts$/, 'textArray'],
+  [/^sections\.\d+\.facts$/, 'factsArray'],
   [/^sections\.\d+\.callout\.(title|text)$/, 'string'],
   [/^sections\.\d+\.steps\.\d+\.title$/, 'string'],
   [/^sections\.\d+\.steps\.\d+\.(text|bullets)$/, 'textArray'],
@@ -97,7 +97,9 @@ const SECTION_EDIT_PATH_PATTERN = new RegExp(
  * blank IS allowed" case) — reusing the stricter schema here would reject
  * exactly what this feature itself produces.
  */
-const sectionEditTextItemSchema = z.union([
+const sectionEditFactsItemSchema = z.object({ label: z.string(), text: z.string() }).passthrough()
+
+  const sectionEditTextItemSchema = z.union([
   z.string(),
   z
     .object({
@@ -121,8 +123,8 @@ function validateSectionEditEntry(path, value) {
     return typeof value === 'string' ? { ok: true, value } : { ok: false }
   }
   const schema =
-    kind === 'textArray'
-      ? z.array(sectionEditTextItemSchema)
+    (kind === 'textArray' || kind === 'factsArray')
+      ? z.array(kind === 'factsArray' ? sectionEditFactsItemSchema : sectionEditTextItemSchema)
       : kind === 'stringArray'
         ? z.array(z.string())
         : z.array(z.array(z.string()))
