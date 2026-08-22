@@ -358,7 +358,19 @@ describe('commands named in a skill exist', () => {
    * file that cites it. Tracked files only, matching `docs-file-set.js`: an
    * untracked skill is covered the moment it is committed.
    */
-  /** Tracked markdown under `.claude/skills/`, matching `docs-file-set.js`. */
+  /**
+   * Tracked markdown under `.claude/skills/`, matching `docs-file-set.js`.
+   *
+   * The `.md` filter also excludes the vendored skills, and that is deliberate
+   * rather than incidental: those are SYMLINKS into `.agents/skills/`, which
+   * `git ls-files` reports as the link path with no `/SKILL.md` suffix. That
+   * tree comes from `mattpocock/skills` (see `skills-lock.json`) and its
+   * contents are not ours to keep current — the same reason
+   * `tests/module-paths.test.js` carries `.agents` in its SKIP set. Gating on
+   * it would let an upstream sync redden this repo's CI over a command it does
+   * not own. Measured: those eleven files cite `bun run` zero times today, so
+   * the exclusion costs no coverage either.
+   */
   function skillFiles() {
     return execFileSync('git', ['ls-files', '.claude/skills'], {
       cwd: ROOT,
@@ -368,12 +380,21 @@ describe('commands named in a skill exist', () => {
       .filter((path) => path.endsWith('.md'))
   }
 
-  // The script-name class is deliberately wider than the corpus needs — it
-  // admits a leading digit, underscore or `@` and an embedded `/`, because
-  // `bun run` takes any package key and npm-scoped or path-like names are
-  // legal ones. Measured when it was widened: the corpus yields the same 23
-  // citations either way, so this costs nothing today and cannot silently skip
-  // a future citation the narrower class would not have recognized as one.
+  // The script-name class is deliberately wider than the corpus needs — a
+  // leading digit, underscore, `@` or `+`, and an embedded `/`, `=`, `~` or
+  // `*` — because `bun run` takes any package key and all of those are legal
+  // in one. Measured at each widening: the corpus yields the same 23 citations
+  // throughout, so the extra reach costs nothing today and cannot silently
+  // skip a future citation the narrower class would not have recognized as
+  // one.
+  //
+  // It is a CLASS and not `[^\s`]+` for a measured reason. A whole-token
+  // capture also finds 23, but eight of them are prose: `test)`,
+  // `format:check)` and friends, where a citation ends a parenthetical. The
+  // class is what stops at sentence punctuation, which is why `?` and `!` stay
+  // out of it even though a package key may legally contain them. The trade is
+  // deliberate and asymmetric: a false positive fails CI against correct docs,
+  // while a miss leaves one exotic citation unchecked among twenty-three.
   //
   // Whitespace-collapsed before matching, and the regex admits a run of it —
   // the same wrapped-prose blindness `mirror-consistency` documents, and the
@@ -382,7 +403,7 @@ describe('commands named in a skill exist', () => {
   // because that file carries other citations the coverage property below
   // still passed, so a stale wrapped command could have sat there unchecked.
   const citations = skillFiles().flatMap((path) =>
-    [...normalize(read(path)).matchAll(/bun run\s+([\w@][\w:.@/-]*)/g)].map((match) => ({
+    [...normalize(read(path)).matchAll(/bun run\s+([\w@+][\w:.@/+=~*-]*)/g)].map((match) => ({
       path,
       script: match[1],
     }))
