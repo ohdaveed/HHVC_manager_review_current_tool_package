@@ -91,13 +91,31 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 55 Bun unit-test files under `tests/` —
-`utils`, `data-validation`, `page-render`, `csv`, `csv-edited-fields-roundtrip`
+isn't). `bun run test` runs 57 Bun unit-test files under `tests/` —
+`utils`, `data-validation`, `page-render`, `page-render-hooks` (the
+`onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
+which replaced js/review/ux-improvements.js's monkey-patch of
+`window.renderPage`. A registry rather than a custom event, deliberately: an
+event name is a string, so a typo unsubscribes silently and nothing fails, and
+silent under-coverage is the failure this repo has now hit four separate times.
+**There are two channels because a wrapper straddled the render and a
+subscriber cannot** — the pre-navigation flush of in-progress sidebar edits has
+to read the OUTGOING page's form values, and `applyPageContent()` overwrites
+two of them via `syncEditorFields()`; a flush moved to the after-channel writes
+the destination page's SEO fields into the outgoing page's record, which
+shipped once and is now covered by `tests/e2e/navigation-flush.spec.js`), `csv`, `csv-edited-fields-roundtrip`
 (the `edited_title`/`edited_summary` CSV export/import round trip added in
 Task 9 of the inline-content-editing feature; mounts the REAL
 `manager-review-export`/`ux-improvements-export`/`review-queue-state`/
 `review-queue-import` IIFEs rather than stubbing the merge), `review-state-schema`,
 `reading-level`, `plain-language`, `page-import-checks`, `mockup-image-export`,
+`measure-window-graph` (the
+scanner behind `build_scripts/measure-window-graph.js`, which builds the
+`window.<Namespace>` dependency graph dependency-cruiser cannot see — it
+follows static imports only. Driven with hand-built fixtures rather than the
+real corpus, and it pins the PARSING DECISIONS rather than the numbers: a
+scanner that stops recognizing a publish does not throw, it reports a smaller
+graph, which reads exactly like progress),
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`,
 `commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
@@ -274,12 +292,13 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-three spec files, all UI-driven — navigation, editor panel, review
+twenty-four spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale, the Karl transcript panel,
+the chrome type scale, the Karl transcript panel, the pre-navigation flush
+of in-progress sidebar edits,
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist
 — that last one can only live here for the `<strong>`/`<em>` positive
 assertions: happy-dom's DOMPurify strips both even though they are in
@@ -454,11 +473,15 @@ invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(`js/review/ux-improvements.js` wraps it to refresh after navigation — the decorator
-only forms if the original is on `window`; it is the last of three, the other
-two having been the deleted `js/interactive-sitemap.js` and
-`js/review/manager-review-export.js`, whose decorator went with the sidebar label it
-refreshed), `window.toggleSidebar` (an inline
+(**no longer wrapped by `js/review/ux-improvements.js`** — that module registers
+with `page-render.js`'s `onBeforeRender`/`onAfterRender` registry now, which
+needs no `window` reference at all. Two things still need the assignment:
+`js/editing/inline-content-edit.js`'s own wrapper, which reads and reassigns it
+to re-decorate after every render, and roughly fifteen
+`window.renderPage?.(key)` call sites across the review/UX IIFEs. The other two
+historical wrappers were the deleted `js/interactive-sitemap.js` and
+`js/review/manager-review-export.js`, whose decorator went with the sidebar label
+it refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).
@@ -1254,9 +1277,9 @@ wiring into the existing autosave path).
   whether it actually wrote a path via `setByPath` — rather than reaching for
   `window.renderPage` itself. **That boolean exists because the obvious
   alternative (re-render unconditionally whenever reapply runs) is a live
-  infinite loop, not a hypothetical one.** `window.renderPage` is already
-  `js/review/ux-improvements.js`'s wrapper by the time `applySavedPageState` can
-  run, so a follow-up render re-enters that wrapper, which schedules its own
+  infinite loop, not a hypothetical one.** By the time `applySavedPageState` can
+  run, `js/review/ux-improvements.js` has registered its `onAfterRender`
+  subscriber, so a follow-up render dispatches that hook, which schedules its own
   deferred `applySavedPageState` call for the same page — which would see
   the same still-true "wrote something" signal and trigger a second render,
   forever (disabling the guard that prevents this produced 17 renders before
@@ -1422,11 +1445,11 @@ surface so each selector is still declared in exactly one file.
   with exactly the content Restore exists to bring back, blanked. So
   `deletePage()` flushes first (via the newly published
   `window.ReviewUx.flushPendingPersist`), then mutates, then rebuilds the picker,
-  then navigates through the **wrapped** `window.renderPage`. Flushing rather
+  then navigates through `window.renderPage`. Flushing rather
   than discarding: those keystrokes are real edits to the page being deleted, and
   at flush time that page still exists, so the save is well formed — and it
-  leaves `pendingPersist` false, making the wrapper's own pre-navigation flush a
-  no-op instead of a second write.
+  leaves `pendingPersist` false, making the before-render hook's own
+  pre-navigation flush a no-op instead of a second write.
 - **It also consumes the queue's one-step undo.** `undoLastAction` is the only
   queue path that does NOT filter on `DATA.pages`, so a snapshot taken before a
   delete would still offer "Undo Approved · N pages" and then write a record for

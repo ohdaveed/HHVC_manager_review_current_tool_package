@@ -93,9 +93,10 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 55 Bun unit-test files under `tests/`: `utils`,
-`data-validation`, `page-render`, `csv`, `review-state-schema`, `reading-level`,
+wrong). `bun run test` runs 57 Bun unit-test files under `tests/`: `utils`,
+`data-validation`, `page-render`, `page-render-hooks`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
+`measure-window-graph`,
 `review-insights-data`, `review-insights-charts`, `review-insights-render`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
@@ -273,7 +274,17 @@ which only works once the file is tracked, since the scan reads `git
 ls-files`. That is not incidental: the test's own header comment quotes a
 now-deleted module as a worked example, so once this file joined the tracked
 tree it had to add that quoted path to its own EXEMPT list rather than widen
-SKIP or weaken the regex to make the self-reference disappear).
+SKIP or weaken the regex to make the self-reference disappear), and
+`page-render-hooks` (the `onAfterRender(fn)` post-render subscriber registry
+in `js/mockup/page-render.js`, added to replace js/review/ux-improvements.js's
+monkey-patch of `window.renderPage` — measurement found that patch responsible
+for 24 of the edges binding this codebase's single 16-file dependency cycle,
+nearly double the next contributor. A registry rather than a custom event,
+deliberately: an event name is a string, so a typo unsubscribes silently and
+nothing fails, and silent under-coverage is the failure this repo has now hit
+four separate times. Asserts registration order, that a throwing hook does not
+block its siblings, and that unsubscribe stops only the hook it was returned
+for).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -284,12 +295,13 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-three spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-four spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
-SFDS tokens, the chrome type scale, the Karl transcript panel, and
+SFDS tokens, the chrome type scale, the Karl transcript panel, the
+pre-navigation flush of in-progress sidebar edits, and
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist —
 which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
 since happy-dom's DOMPurify strips both despite them being allow-listed, so a
@@ -469,11 +481,15 @@ invisible to the graph, so that edge is still enforced only by this list.
 
 A few functions are deliberately republished onto `window`, because callers
 depend on the implicit globals the old shared scope provided: `window.renderPage`
-(`js/review/ux-improvements.js` wraps it to refresh after navigation — the decorator
-only forms if the original is on `window`; it is the last of three, the other
-two having been the deleted `js/interactive-sitemap.js` and
-`js/review/manager-review-export.js`, whose decorator went with the sidebar label it
-refreshed), `window.toggleSidebar` (an inline
+(**no longer wrapped by `js/review/ux-improvements.js`** — that module registers
+with `page-render.js`'s `onBeforeRender`/`onAfterRender` registry now, which
+needs no `window` reference at all. Two things still need the assignment:
+`js/editing/inline-content-edit.js`'s own wrapper, which reads and reassigns it
+to re-decorate after every render, and roughly fifteen
+`window.renderPage?.(key)` call sites across the review/UX IIFEs. The other two
+historical wrappers were the deleted `js/interactive-sitemap.js` and
+`js/review/manager-review-export.js`, whose decorator went with the sidebar label
+it refreshed), `window.toggleSidebar` (an inline
 `onclick` in `index.html`), `window.showToast` and `window.updateSearchPreview`
 (called optionally by the IIFE layers, which degrade to silence rather than
 throw), and `window.ORIGINAL_DATA` (read by `js/sync/review-state-sync.js`).

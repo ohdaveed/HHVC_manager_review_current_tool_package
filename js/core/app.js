@@ -1,7 +1,9 @@
 // App bootstrap: wires up DOM event listeners and kicks off the initial
 // render. Loaded after js/core/state.js, js/review/ui-controls.js, js/review/editor-panel.js,
 // and js/mockup/page-render.js, all of which it depends on directly, and before
-// js/review/ux-improvements.js, which wraps renderPage once init() has run.
+// js/review/ux-improvements.js, which now subscribes to page-render.js's
+// onAfterRender() registry rather than wrapping renderPage (see navigateTo()'s
+// own comment below — a DIFFERENT module still wraps window.renderPage).
 
 import { buildPageSelect, initChecklist, showToast } from '../review/ui-controls.js'
 import { currentPageKey, pageData } from './state.js'
@@ -20,29 +22,39 @@ import { updateSearchPreview } from '../review/editor-panel.js'
  * Navigate to a page through whatever `window.renderPage` currently is.
  *
  * This indirection is load-bearing and must not be "simplified" back to the
- * imported `renderPage`. js/review/ux-improvements.js decorates `window.renderPage`
- * after init() runs, reading the current value, closing over it, and
- * reassigning the wrapper.
+ * imported `renderPage`. js/editing/inline-content-edit.js decorates
+ * `window.renderPage` once it mounts (wrapRenderPageForDecoration()), reading
+ * the current value, closing over it, and reassigning the wrapper, so that
+ * decorateListControls()/decorateEditedFields() run after every render
+ * regardless of who triggered it.
  *
- * It is the only wrapper left, and the count is worth stating carefully
- * because this comment used to claim three and then name two — listing
- * js/review/manager-review-export.js twice, the one module that provably no longer
- * wraps at all (see its own header). js/interactive-sitemap.js, the third,
- * was deleted outright. One wrapper is still one more than zero: the hazard
- * below is unchanged, and a future module adding a second would rely on it.
+ * It is the only wrapper left. js/review/ux-improvements.js used to be a second
+ * one — it reassigned `window.renderPage` the same way — but Task 1 of the
+ * module-coherence plan (2026-08-19) converted it to a page-render.js
+ * onAfterRender() subscriber instead, which needs no `window` reference at
+ * all: page-render.js calls its subscribers directly, so the dependency runs
+ * from ux-improvements.js to page-render.js rather than the reverse. Before
+ * that there were three: js/review/manager-review-export.js's existed only to
+ * refresh a "Current page:" sidebar label that has since been cut, so it went
+ * with the label, and js/interactive-sitemap.js, the third, was deleted
+ * outright. One wrapper is still one more than zero: the hazard below is
+ * unchanged, and a future module adding a second would rely on it.
  *
  * Reassigning `window.renderPage` does NOT rebind this module's `import`,
  * which points at js/mockup/page-render.js's original export forever. Under the old
  * classic-<script> model `renderPage` was a shared global, so `window.renderPage
- * = wrapper` replaced the very binding this file called and the decorators
+ * = wrapper` replaced the very binding this file called and the decorator
  * applied for free; as ES modules that stops being true, silently.
  *
- * What the undecorated path skips is not cosmetic: the js/review/ux-improvements.js
- * wrapper flushes in-progress sidebar edits BEFORE the page switch. Without
- * it, keystrokes still inside the autosave debounce are either dropped or
- * written under the incoming page's key, and applySavedPageState() never runs
- * for the destination — so the reviewer's saved decision/notes are not
- * restored. That is a review-data-loss bug this repo had already fixed once.
+ * What the undecorated path skips is not cosmetic: without
+ * js/editing/inline-content-edit.js's wrapper, a render triggered through the bare
+ * import instead of `window.renderPage` leaves #mockPage's add/remove list
+ * controls and Edited-field badges undecorated. (The sidebar-edit flush that
+ * used to live in this same paragraph — describing js/review/ux-improvements.js's
+ * OLD wrapper — moved with that conversion: it is now
+ * handleAfterRender()'s concern, reached through page-render.js's
+ * runAfterRenderHooks() rather than through this indirection, so it fires
+ * whether or not a wrapper is installed on `window.renderPage` at all.)
  *
  * Falls back to the import if nothing has published a wrapper yet, so the
  * function is safe to call at any point in the lifecycle.
@@ -124,9 +136,23 @@ function init() {
   // navigateTo(): init() runs before any module has wrapped window.renderPage,
   // so there is nothing to pick up, and there is no outgoing page whose edits
   // would need flushing. js/review/ux-improvements.js does its own restoreInitialPage()
-  // pass once its wrapper is installed.
+  // pass once it has registered its render subscribers.
+  //
+  // skipHooks=true: this call happens at module-eval time, before
+  // js/review/ux-improvements.js (loaded later in js/main.js) has registered
+  // anything — but renderPage()'s after-hook dispatch is DEFERRED
+  // (setTimeout(0) or a View Transitions promise), and that registration
+  // happens synchronously, in the same script-evaluation tick, before any
+  // deferred callback gets a turn. Without this flag the bootstrap render's
+  // own hook call fires anyway once ux-improvements.js's subscriber exists,
+  // running handleAfterRender() for a render restoreInitialPage() is about to
+  // redo properly — see renderPage()'s own doc comment on this parameter for
+  // the measured bug (a persisted Karl-tags preference nobody set) that not
+  // skipping it caused. The before-channel is skipped by the same flag and
+  // needs no separate argument: at module-eval time there is no subscriber to
+  // call and no outgoing page to flush.
   const params = new URLSearchParams(window.location.search)
   const pageKey = params.get('page')
-  renderPage(resolveInitialPageKey(pageKey), true)
+  renderPage(resolveInitialPageKey(pageKey), true, true)
 }
 init()
