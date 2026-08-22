@@ -19,8 +19,8 @@ the same person, deliberately.
 - **`js/review/review-ops.js`** — the panel, lazily mounted when Help opens with the
   same `mountWorkspacePanelIfOpen()` catch-up the AI assist panel uses.
 
-**It had a tab of its own — the `5` key — and lost it.** On a default or
-deploy without the optional backends configured — which then meant the static
+**It had a tab of its own — the `5` key — and lost it.** On any deploy without
+the optional backends configured — which then meant the static
 Netlify one — every value it reported was "not configured" or "none", because
 both optional backends need `server.ts`; that is not worth one of the strip's
 slots. The one line a reviewer genuinely needs from it — _reviews are saved in

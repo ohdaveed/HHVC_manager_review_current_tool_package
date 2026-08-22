@@ -76,11 +76,11 @@ surface so each selector is still declared in exactly one file.
   with exactly the content Restore exists to bring back, blanked. So
   `deletePage()` flushes first (via the newly published
   `window.ReviewUx.flushPendingPersist`), then mutates, then rebuilds the picker,
-  then navigates through the **wrapped** `window.renderPage`. Flushing rather
+  then navigates through `window.renderPage`. Flushing rather
   than discarding: those keystrokes are real edits to the page being deleted, and
   at flush time that page still exists, so the save is well formed — and it
-  leaves `pendingPersist` false, making the wrapper's own pre-navigation flush a
-  no-op instead of a second write.
+  leaves `pendingPersist` false, making the before-render hook's own
+  pre-navigation flush a no-op instead of a second write.
 - **It also consumes the queue's one-step undo.** `undoLastAction` is the only
   queue path that does NOT filter on `DATA.pages`, so a snapshot taken before a
   delete would still offer "Undo Approved · N pages" and then write a record for
