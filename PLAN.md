@@ -74,20 +74,16 @@ Two further facts that make this a real task rather than a formality:
       Run the script at `origin/main` and at `451e20b`. Record SCC size and
       the `window.renderPage` edge count for each. This is the Step 7 evidence.
 
-- [x] **3. Decide, on the evidence, what this PR claims.**
-
-      **Outcome: the second one.** Measured under one consistent model,
-                  `renderPage`'s intra-SCC edges fell 33 → 22 (a third), and the SCC did
-                  not shrink by a single file — 25 before, 25 after. Mount-time edges
-                  unchanged at 102. Recorded in the measurement doc's own
-                  "Re-measurement, 2026-08-21" section.
-
-                  So **the PR claims what actually changed** — a monkey-patch replaced by
-                  a registry, plus the data-loss fix — and explicitly does not claim the
-                  tangle shrank. The branch still lands: `451e20b` stands on its own.
-                  Note for Task 5 later: the measurement doc's central contradiction
-                  (`window.renderPage` cannot both survive and let `no-circular` pass) is
-                  untouched by Task 1 and comes due there.
+- [x] **3. Decide, on the evidence, what this PR claims.** **Outcome: the
+      second one.** `renderPage`'s intra-SCC edges fell 33 → 22 (a third) and
+      the SCC did not shrink by a single file — 25 before, 25 after;
+      mount-time edges unchanged at 102. Recorded in the measurement doc's
+      "Re-measurement, 2026-08-21" section. So the PR claims what actually
+      changed — a monkey-patch replaced by a registry, plus the data-loss fix
+      — and explicitly does not claim the tangle shrank. The branch still
+      lands: `451e20b` stands on its own. Note for Task 5: the measurement
+      doc's central contradiction (`window.renderPage` cannot both survive and
+      let `no-circular` pass) is untouched by Task 1 and comes due there.
 
 - [ ] **4. Sync with `origin/main`.** Currently **16 behind**, and `main` has
       restructured CI underneath this branch. **Merge, do not

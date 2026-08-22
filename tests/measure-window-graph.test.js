@@ -116,26 +116,26 @@ describe('functionDepthAt', () => {
 
 describe('buildGraph', () => {
   const files = [
-    { path: 'js/a.js', source: 'window.Alpha = {}\nfunction go() { return window.Beta.x }' },
-    { path: 'js/b.js', source: 'window.Beta = {}\nconst boot = window.Alpha' },
-    { path: 'js/c.js', source: 'const unused = 1' },
+    { path: 'fixture/a.js', source: 'window.Alpha = {}\nfunction go() { return window.Beta.x }' },
+    { path: 'fixture/b.js', source: 'window.Beta = {}\nconst boot = window.Alpha' },
+    { path: 'fixture/c.js', source: 'const unused = 1' },
   ]
 
   test('an edge runs from the reader to the publisher', () => {
     const { edges } = buildGraph(files)
     expect(edges.find((e) => e.namespace === 'Beta')).toMatchObject({
-      from: 'js/a.js',
-      to: 'js/b.js',
+      from: 'fixture/a.js',
+      to: 'fixture/b.js',
     })
   })
 
   test('reading a namespace nobody publishes is not an edge', () => {
-    const { edges } = buildGraph([{ path: 'js/x.js', source: 'window.NotPublished.go()' }])
+    const { edges } = buildGraph([{ path: 'fixture/x.js', source: 'window.NotPublished.go()' }])
     expect(edges).toEqual([])
   })
 
   test('a file reading its own published namespace is not a self-edge', () => {
-    const { edges } = buildGraph([{ path: 'js/x.js', source: 'window.X = {}\nwindow.X.go()' }])
+    const { edges } = buildGraph([{ path: 'fixture/x.js', source: 'window.X = {}\nwindow.X.go()' }])
     expect(edges).toEqual([])
   })
 
@@ -143,8 +143,11 @@ describe('buildGraph', () => {
     // The distinction between a dependency and its mention count. Counting
     // occurrences reported 786 "edges" for a graph with 239 file pairs.
     const { edges } = buildGraph([
-      { path: 'js/p.js', source: 'window.P = {}' },
-      { path: 'js/q.js', source: 'function a(){ window.P.x() }\nfunction b(){ window.P.y() }' },
+      { path: 'fixture/p.js', source: 'window.P = {}' },
+      {
+        path: 'fixture/q.js',
+        source: 'function a(){ window.P.x() }\nfunction b(){ window.P.y() }',
+      },
     ])
     expect(edges).toHaveLength(1)
     expect(edges[0].occurrences).toBe(2)
@@ -154,8 +157,8 @@ describe('buildGraph', () => {
     // The hazard is asymmetric: one import-time read is enough to expose the
     // TDZ, however many safe call-time reads sit beside it.
     const { edges } = buildGraph([
-      { path: 'js/p.js', source: 'window.P = {}' },
-      { path: 'js/q.js', source: 'function a(){ window.P.x() }\nconst boot = window.P' },
+      { path: 'fixture/p.js', source: 'window.P = {}' },
+      { path: 'fixture/q.js', source: 'function a(){ window.P.x() }\nconst boot = window.P' },
     ])
     expect(edges[0].bindingTime).toBe('mount')
   })
