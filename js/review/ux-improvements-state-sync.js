@@ -13,10 +13,12 @@ import { hasValidPageData } from '../core/utils.js'
   let isRestoringState = false
 
   // Re-entrancy guard for the section_edits follow-up render triggered by
-  // applySavedPageState below. window.renderPage is always the WRAPPED
-  // version by the time applySavedPageState can run (js/review/ux-improvements.js's
-  // wrapRenderPage() installs it before restoreInitialPage()/any navigation
-  // calls this), so calling it from inside applySavedPageState re-enters
+  // applySavedPageState below. window.renderPage may be a WRAPPED version by
+  // the time applySavedPageState can run — js/editing/inline-content-edit.js's
+  // wrapRenderPageForDecoration() reassigns it, and until #191 this comment
+  // named js/review/ux-improvements.js's own wrapRenderPage(), which has since
+  // been replaced by page-render.js's hook registry. Calling window.renderPage
+  // from inside applySavedPageState therefore re-enters
   // that wrapper: originalRenderPage runs synchronously (this is what
   // actually repaints the DOM — good), but the wrapper then schedules
   // ANOTHER deferred applyAndRefresh -> applySavedPageState(pageKey) call of

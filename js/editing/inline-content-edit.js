@@ -226,9 +226,13 @@
    * Wrap window.renderPage so every render — regardless of who triggers it —
    * is followed by decorateListControls()/decorateEditedFields(). This is
    * the same "wrap window.renderPage, run extra work after" pattern
-   * js/review/ux-improvements.js's wrapRenderPage() and
-   * js/review/manager-review-export.js's (removed) wrapper used; see CLAUDE.md's
-   * "Some functions are deliberately published onto window" section.
+   * js/review/ux-improvements.js's (removed) wrapRenderPage() and
+   * js/review/manager-review-export.js's (removed) wrapper used. Both are gone
+   * as of #191, which replaced them with js/mockup/page-render.js's
+   * onBeforeRender/onAfterRender registry; this wrapper is now the LAST
+   * remaining user of the pattern, and the registry is where new post-render
+   * work belongs. See CLAUDE.md's "Some functions are deliberately published
+   * onto window" section.
    *
    * Required because renderPageMain()'s output carries neither the add/
    * remove controls nor the Edited-badge/reset decorations (Task 1 kept the
@@ -263,9 +267,10 @@
    * already painted by the time it returns. Decorating synchronously right
    * after original.apply() would then run against the PREVIOUS page's
    * stale DOM (or, on the very first render, an empty #mockPage), which is
-   * exactly the bug this wrapper exists to prevent — mirrors
-   * js/review/ux-improvements.js's own wrapRenderPage(), which defers its
-   * post-render work the same way for the same reason.
+   * exactly the bug this wrapper exists to prevent — the same reason
+   * js/mockup/page-render.js's after-render channel defers its dispatch
+   * (js/review/ux-improvements.js's wrapRenderPage(), which used to be the
+   * comparison here, was replaced by that registry in #191).
    * @returns {void}
    */
   function wrapRenderPageForDecoration() {
