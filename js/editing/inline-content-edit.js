@@ -9,6 +9,7 @@
    affordance is present whenever the page has loaded. Loads after
    js/editing/inline-content-edit-render.js and after js/review/ux-improvements.js (for
    window.ReviewUx.stateSync.saveCurrentPageToLocalStorage). */
+import { onAfterRender } from '../mockup/page-render.js'
 ;(function mountInlineContentEdit() {
   if (typeof window === 'undefined') return
   if (!window.InlineEdit?.render) return
@@ -202,9 +203,9 @@
 
   /**
    * Re-render the mockup for the current page. Decoration (add/remove
-   * controls, Edited badges) is NOT done here directly — it happens inside
-   * wrapRenderPageForDecoration()'s wrapper around window.renderPage below,
-   * so every render this module didn't itself trigger (page-picker
+   * controls, Edited badges) is NOT done here directly — it happens in the
+   * decorateAfterRender() subscriber registered in init(), so every render
+   * this module didn't itself trigger (page-picker
    * navigation, js/review/ux-improvements.js's restoreInitialPage(), the async
    * section_edits follow-up render) gets decorated too, not just the ones
    * this function causes.
@@ -223,16 +224,26 @@
   }
 
   /**
-   * Wrap window.renderPage so every render — regardless of who triggers it —
-   * is followed by decorateListControls()/decorateEditedFields(). This is
-   * the same "wrap window.renderPage, run extra work after" pattern
-   * js/review/ux-improvements.js's (removed) wrapRenderPage() and
-   * js/review/manager-review-export.js's (removed) wrapper used. Both are gone
-   * as of #191, which replaced them with js/mockup/page-render.js's
-   * onBeforeRender/onAfterRender registry; this wrapper is now the LAST
-   * remaining user of the pattern, and the registry is where new post-render
-   * work belongs. See CLAUDE.md's "Some functions are deliberately published
-   * onto window" section.
+   * Run decorateListControls()/decorateEditedFields() after every render.
+   *
+   * This used to WRAP window.renderPage, the last surviving user of the
+   * "reassign window.renderPage, run extra work after" pattern that #191
+   * removed from js/review/ux-improvements.js and that
+   * js/review/manager-review-export.js had already dropped. It is a plain
+   * onAfterRender() subscriber now, which matters for more than tidiness:
+   * a wrapper and the registry are two mechanisms for one concern, with
+   * unrelated suppression semantics — renderPage's `skipHooks` silenced the
+   * registry but not the wrapper, and calling the bare import silenced the
+   * wrapper but not the registry, so which renders got decorated depended on
+   * which reference the caller happened to reach for.
+   *
+   * **This changes one ordering, deliberately.** The wrapper decorated off
+   * renderPage's return value: a thenable (the View Transitions path) meant
+   * it ran AFTER the after-render hooks, but the non-transition path returns
+   * nothing, so there it ran synchronously BEFORE them. Decoration now runs
+   * after the hooks on both paths — the transition path's order, and the
+   * defensible one, since applySavedPageState() (a hook) is what restores the
+   * saved-edit state decorateEditedFields() reads to place its badges.
    *
    * Required because renderPageMain()'s output carries neither the add/
    * remove controls nor the Edited-badge/reset decorations (Task 1 kept the
@@ -273,20 +284,9 @@
    * comparison here, was replaced by that registry in #191).
    * @returns {void}
    */
-  function wrapRenderPageForDecoration() {
-    const original = window.renderPage
-    if (typeof original !== 'function' || original.__inlineEditWrapped) return
-    window.renderPage = function (...args) {
-      const result = original.apply(this, args)
-      const decorate = () => {
-        decorateListControls()
-        decorateEditedFields()
-      }
-      if (result && typeof result.then === 'function') result.then(decorate, decorate)
-      else decorate()
-      return result
-    }
-    window.renderPage.__inlineEditWrapped = true
+  function decorateAfterRender() {
+    decorateListControls()
+    decorateEditedFields()
   }
 
   /**
@@ -491,7 +491,7 @@
    * Idempotent per item/container: init() can call this twice for the same
    * painted DOM (a synchronous catch-up call, then a deferred
    * requestAnimationFrame one guarding against a View-Transitions-async
-   * initial render — see init() below), and wrapRenderPageForDecoration()
+   * initial render — see init() below), and the onAfterRender() subscriber
    * adds a third call site. Guarding here, rather than trying to make those
    * call sites mutually exclusive, keeps each call site simple and correct
    * on its own regardless of how many times it fires against the same DOM.
@@ -1272,30 +1272,25 @@
    */
   function init() {
     ensureBound()
-    wrapRenderPageForDecoration()
-    const decorate = () => {
-      decorateListControls()
-      decorateEditedFields()
-    }
+    onAfterRender(decorateAfterRender)
     // Decorate once here for the render that already happened before this
     // module loaded (js/core/app.js's initial renderPage() call, which predates
     // this module in js/main.js's import order and therefore predates the
-    // wrapper installed just above — every render from this point on goes
-    // through that wrapper instead).
-    decorate()
+    // subscription just above — every render from this point on dispatches it).
+    decorateAfterRender()
     // The call above is enough UNLESS js/mockup/page-render.js's renderPage()
     // routed through document.startViewTransition() for that initial
     // render: in a real browser that supports it, the actual DOM mutation
     // happens asynchronously inside the transition's callback, so the
     // renderPage() call js/core/app.js already made had returned a pending
     // promise by the time this function runs, with #mockPage not yet
-    // repainted — the decorate() call above then ran against stale
+    // repainted — the decorateAfterRender() call above then ran against stale
     // (possibly empty) DOM and found nothing to decorate. There's no handle
     // to that specific promise to await (js/core/app.js never exposed it), so
     // this schedules a second, deferred pass via a double
     // requestAnimationFrame — the standard "wait for the next real paint"
     // idiom — gated on View Transitions support existing at all: without
-    // it, renderPage() is fully synchronous, the sync decorate() above
+    // it, renderPage() is fully synchronous, the sync decorateAfterRender() above
     // already caught everything, and scheduling a redundant deferred pass
     // would only cost a wasted rAF round-trip (harmless, but pointless).
     // happy-dom has no startViewTransition, so this branch never schedules
@@ -1303,7 +1298,7 @@
     // is instead verified live (see the Playwright smoke test in Task 7's
     // report).
     if (typeof document.startViewTransition === 'function') {
-      requestAnimationFrame(() => requestAnimationFrame(decorate))
+      requestAnimationFrame(() => requestAnimationFrame(decorateAfterRender))
     }
   }
 

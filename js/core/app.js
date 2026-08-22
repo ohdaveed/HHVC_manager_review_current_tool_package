@@ -19,52 +19,37 @@ import { updateSearchPreview } from '../review/editor-panel.js'
 // logic lives in resolvePageKey() (js/core/utils.js) so it's independently
 // testable; this wrapper only adds the toast side effect.
 /**
- * Navigate to a page through whatever `window.renderPage` currently is.
+ * Navigate to a page.
  *
- * This indirection is load-bearing and must not be "simplified" back to the
- * imported `renderPage`. js/editing/inline-content-edit.js decorates
- * `window.renderPage` once it mounts (wrapRenderPageForDecoration()), reading
- * the current value, closing over it, and reassigning the wrapper, so that
- * decorateListControls()/decorateEditedFields() run after every render
- * regardless of who triggered it.
+ * **This used to route through `window.renderPage` on purpose, and no longer
+ * needs to.** The indirection existed because modules decorated navigation by
+ * reassigning `window.renderPage` to a wrapper, and reassigning it does NOT
+ * rebind this module's `import` — which points at js/mockup/page-render.js's
+ * original export forever. Under the old classic-`<script>` model `renderPage`
+ * was a shared global, so a wrapper replaced the very binding this file called
+ * and the decoration applied for free; as ES modules that silently stopped
+ * being true, and calling the import bypassed every wrapper.
  *
- * It is the only wrapper left. js/review/ux-improvements.js used to be a second
- * one — it reassigned `window.renderPage` the same way — but Task 1 of the
- * module-coherence plan (2026-08-19) converted it to a page-render.js
- * onAfterRender() subscriber instead, which needs no `window` reference at
- * all: page-render.js calls its subscribers directly, so the dependency runs
- * from ux-improvements.js to page-render.js rather than the reverse. Before
- * that there were three: js/review/manager-review-export.js's existed only to
- * refresh a "Current page:" sidebar label that has since been cut, so it went
- * with the label, and js/interactive-sitemap.js, the third, was deleted
- * outright. One wrapper is still one more than zero: the hazard below is
- * unchanged, and a future module adding a second would rely on it.
+ * There are now no wrappers. Four modules had one and all four are gone:
+ * js/interactive-sitemap.js was deleted outright,
+ * js/review/manager-review-export.js's went with the "Current page:" sidebar
+ * label it refreshed, js/review/ux-improvements.js's became an onAfterRender()
+ * subscriber in #191, and js/editing/inline-content-edit.js's became one too.
+ * Every post-render concern reaches page-render.js's hook registry instead, so
+ * it fires for the import and the global alike and there is nothing left for
+ * this lookup to pick up.
  *
- * Reassigning `window.renderPage` does NOT rebind this module's `import`,
- * which points at js/mockup/page-render.js's original export forever. Under the old
- * classic-<script> model `renderPage` was a shared global, so `window.renderPage
- * = wrapper` replaced the very binding this file called and the decorator
- * applied for free; as ES modules that stops being true, silently.
+ * `window.renderPage = renderPage` still exists in page-render.js, but only so
+ * the ~15 self-mounting IIFEs that CALL `window.renderPage?.(key)` keep working
+ * — calling it, not wrapping it. If a future module reintroduces a wrapper,
+ * prefer converting it to onAfterRender() over restoring this indirection.
  *
- * What the undecorated path skips is not cosmetic: without
- * js/editing/inline-content-edit.js's wrapper, a render triggered through the bare
- * import instead of `window.renderPage` leaves #mockPage's add/remove list
- * controls and Edited-field badges undecorated. (The sidebar-edit flush that
- * used to live in this same paragraph — describing js/review/ux-improvements.js's
- * OLD wrapper — moved with that conversion: it is now
- * handleAfterRender()'s concern, reached through page-render.js's
- * runAfterRenderHooks() rather than through this indirection, so it fires
- * whether or not a wrapper is installed on `window.renderPage` at all.)
- *
- * Falls back to the import if nothing has published a wrapper yet, so the
- * function is safe to call at any point in the lifecycle.
  * @param {string} key page key to render
  * @param {boolean} [skipHistory] forwarded; true suppresses a history entry
  * @returns {*} whatever renderPage returns (a Promise under View Transitions)
  */
 function navigateTo(key, skipHistory) {
-  const current = typeof window.renderPage === 'function' ? window.renderPage : renderPage
-  return current(key, skipHistory)
+  return renderPage(key, skipHistory)
 }
 
 function resolveInitialPageKey(key) {

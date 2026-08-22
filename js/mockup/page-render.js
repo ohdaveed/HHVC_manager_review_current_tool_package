@@ -1837,13 +1837,15 @@ function renderPage(key, skipHistory = false, skipHooks = false) {
    since page-render.js calls its subscribers directly rather than being
    monkey-patched by them.
 
-   Two things still need this assignment. First,
-   js/editing/inline-content-edit.js's own wrapper (wrapRenderPageForDecoration())
-   still reads and reassigns `window.renderPage` the same way ux-improvements.js's
-   used to, to run decorateListControls()/decorateEditedFields() after every
-   render regardless of who triggered it — without this line its
-   `typeof original !== 'function'` guard returns early and #mockPage's
-   add/remove controls and Edited badges silently stop appearing. Second,
+   js/editing/inline-content-edit.js's wrapper is gone too — it decorated
+   #mockPage's add/remove controls and Edited badges by reassigning
+   `window.renderPage`, and is now an onAfterRender() subscriber like
+   ux-improvements.js's. **No module wraps this function any more**, so if you
+   are here to add post-render work, subscribe above rather than reassigning
+   below; a wrapper only decorates callers that reach for the global, which
+   silently excludes anyone using the import.
+
+   What still needs this assignment is calling, not wrapping:
    roughly fifteen call sites across the review/UX IIFEs (js/ai/ai-rewrite.js,
    js/core/page-registry.js, js/review/review-queue.js,
    js/review/keyboard-shortcuts.js, js/review/ux-improvements-workspace.js,
