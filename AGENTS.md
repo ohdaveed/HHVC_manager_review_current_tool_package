@@ -313,13 +313,14 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-five spec files, all UI-driven — navigation, editor panel, review
+twenty-six spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
 the chrome type scale, the Karl transcript panel, the Karl guide panel's
-field rows on a real Transaction page, the pre-navigation flush
+field rows on a real Transaction page, the Karl tag categories rendering
+distinctly in both colour schemes, the pre-navigation flush
 of in-progress sidebar edits,
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist
 — that last one can only live here for the `<strong>`/`<em>` positive
@@ -700,6 +701,19 @@ to.
   indicators, search-result preview, per-field reset.
 - **`js/mockup/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
+- **A Karl tag carries two axes, and only one of them is safe to rename.**
+  `kind` (`meta`/`body`/`placement`/`editor`) is what Karl field resolution
+  reads: most `karlTag()` call sites in `js/mockup/page-render.js` pass a bare
+  kind literal with no `context.role` at all, and `guideForContext()` falls back
+  to the kind when no role is given — so for those call sites the kind IS the
+  role, and renaming one silently changes which Karl field the guide panel
+  claims to have measured. `data-category` — derived by
+  `js/mockup/karl-category.js` from `kind`, `context.role`, `context.linkShape`
+  and the inheritance fact — carries **colour only**. Nothing resolves a field
+  through it, so a category may be renamed or re-coloured freely. Colour lives on
+  `[data-category]` in `css/ux-improvements.css` and must never move back onto
+  `[data-kind]`; the kind survives as the word printed inside `.karl-tag-kind`,
+  which is what keeps colour from being the only encoding.
 - **`js/core/page-registry-data.js`** — pure validation for a page a reviewer
   authored in the browser, plus `applyRegistryToData()`, the only function that
   mutates `order`/`pages` for the add/delete feature. Dual-exported and

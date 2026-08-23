@@ -317,13 +317,14 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-five spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-six spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
 SFDS tokens, the chrome type scale, the Karl transcript panel, the Karl
-guide panel's field rows on a real Transaction page, the
+guide panel's field rows on a real Transaction page, the Karl tag
+categories rendering distinctly in both colour schemes, the
 pre-navigation flush of in-progress sidebar edits, and
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist —
 which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
@@ -587,6 +588,19 @@ belong to.
 - **`js/mockup/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
   `body`, `placement`, `editor`) and legend markup used by `karlTag()` and the
   workspace legend. Loads after `js/core/utils.js` for `escapeHtml`.
+- **`js/mockup/karl-category.js`** — the pure classifier deriving a tag's
+  `data-category` (`metadata`/`block`/`action`/`callout`/`inherited`/`editor`)
+  from signals already in scope at `karlTag()`. **A Karl tag has two axes and
+  only one of them is safe to rename.** `kind` is what Karl field resolution
+  reads — most `karlTag()` call sites in `js/mockup/page-render.js` pass a bare
+  kind literal with no `context.role`, and `guideForContext()` falls back to the
+  kind when no role is given, so for those call sites the kind IS the role and
+  renaming one silently changes which Karl field the guide panel claims to have
+  measured. `data-category` carries **colour only**; nothing resolves a field
+  through it, so it may be renamed or re-coloured freely. Colour lives on
+  `[data-category]` in `css/ux-improvements.css` and must not move back onto
+  `[data-kind]` — the kind survives as the word printed in `.karl-tag-kind`,
+  which is what keeps colour from being the only encoding.
 - **`js/core/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone used
   for field-reset), `pageData`, `pageOrder`, `currentPageKey`.
 - **`js/review/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the

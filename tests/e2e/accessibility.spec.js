@@ -1,6 +1,5 @@
 const { test, expect } = require('@playwright/test')
-const AxeBuilder = require('@axe-core/playwright').default
-const { gotoFresh, openWorkspaceTab, selectPage } = require('./helpers')
+const { gotoFresh, openWorkspaceTab, selectPage, expectNoSeriousViolations } = require('./helpers')
 
 // One representative page per content type in use (see docs/wagtail-content-mapping.md);
 // Scanning every page and state would be slow for little extra signal.
@@ -34,26 +33,6 @@ const REPRESENTATIVE_PAGES = [
    fade OUT (not settled). The fix was to ask the element what it is doing
    (`getAnimations()` plus a terminal opacity) rather than to read the class,
    and that is the shape any replacement should take. */
-
-async function expectNoSeriousViolations(page) {
-  // color-contrast is ENABLED. It used to be disabled here, which meant the
-  // suite could not catch the most common WCAG failure in the product it
-  // guards. The css/theme.css token layer now carries measured ratios for
-  // every text/surface pairing in both themes, so the rule has something
-  // deliberate to check rather than a pile of ad-hoc colours.
-  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
-  // Map to a compact summary so a failure prints the offending rules and
-  // nodes instead of dumping full Axe violation objects.
-  const serious = results.violations
-    .filter((v) => v.impact === 'critical' || v.impact === 'serious')
-    .map((v) => ({
-      id: v.id,
-      impact: v.impact,
-      description: v.description,
-      nodes: v.nodes.map((n) => n.html),
-    }))
-  expect(serious).toEqual([])
-}
 
 test.describe('accessibility', () => {
   test('Karl annotations default off and do not expand a service action name', async ({ page }) => {
