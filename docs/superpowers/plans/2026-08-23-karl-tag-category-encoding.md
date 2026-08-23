@@ -65,7 +65,7 @@ A pure module with no imports and no globals, so it can be reasoned about and te
   - `KARL_CATEGORIES` — an object keyed by category id, each `{ label, hint }`. Ids: `metadata`, `block`, `action`, `callout`, `inherited`, `editor`.
   - `karlCategory({ kind, role, linkShape, inheritanceFact }) => string` — always one of those six ids, never `undefined`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/karl-category.test.js`:
 
@@ -203,14 +203,14 @@ describe('karlCategory', () => {
 })
 ```
 
-- [ ] **Step 2: Register the test file, then run it to verify it fails**
+- [x] **Step 2: Register the test file, then run it to verify it fails**
 
 `package.json`'s `test` script names each test file explicitly rather than globbing, so add `tests/karl-category.test.js` to it. Put it next to `tests/karl-tag-meta.test.js` so the Karl files stay together.
 
 Run: `bun test tests/karl-category.test.js`
 Expected: FAIL — `Cannot find module '../js/mockup/karl-category.js'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `js/mockup/karl-category.js`:
 
@@ -324,12 +324,12 @@ function karlCategory({ kind, role, linkShape, inheritanceFact } = {}) {
 export { KARL_CATEGORIES, karlCategory }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `bun test tests/karl-category.test.js && bun run test && bun run validate`
 Expected: PASS. The full suite must still be green — this task adds a module nothing imports yet, so nothing else can move.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/mockup/karl-category.js tests/karl-category.test.js package.json
@@ -348,7 +348,7 @@ git commit -m "feat: add the Karl tag category classifier"
 - Consumes: `karlCategory` from `js/mockup/karl-category.js` (Task 1).
 - Produces: every `.karl-tag` element carries `data-category="<id>"` in addition to its existing `data-kind`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `tests/karl-guide.test.js`. Import `karlTag` from `js/mockup/page-render.js` if it is not already imported there.
 
@@ -393,12 +393,12 @@ describe('a Karl tag carries its category alongside its kind', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `bun test tests/karl-guide.test.js`
 Expected: FAIL — `Expected to contain "data-category="block""`. The `data-kind` assertions should already pass; that is the point, they pin what must not move.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 In `js/mockup/page-render.js`, add to the imports:
 
@@ -428,14 +428,14 @@ data-kind="${escapeHtml(kind)}" data-category="${escapeHtml(category)}"
 
 Change nothing else in the template.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `bun test tests/karl-guide.test.js && bun run test && bun run validate`
 Expected: PASS.
 
 **The page-render snapshot will change** — every tag gains an attribute. Inspect the snapshot diff before accepting it and confirm it is purely additive: the only difference on each line should be an inserted `data-category="…"`. If anything else moved, stop and report it rather than accepting the snapshot.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add js/mockup/page-render.js tests/karl-guide.test.js tests/__snapshots__/page-render.test.js.snap

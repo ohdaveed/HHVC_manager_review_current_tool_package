@@ -21,6 +21,7 @@ import {
   guideForContext,
   resolveFieldRef,
 } from '../js/karl/karl-guide-registry.js'
+import { karlTag } from '../js/mockup/page-render.js'
 import { renderKarlGuidePanel, renderKarlTagLegend } from '../js/mockup/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
@@ -614,5 +615,44 @@ describe('the Help Center is background reference, not panel authority', () => {
       'panel-8'
     )
     expect(html).not.toContain('gitbook.io')
+  })
+})
+
+describe('a Karl tag carries its category alongside its kind', () => {
+  test('the kind attribute is unchanged and the category is added', () => {
+    const html = karlTag('Body section', 'body')
+    expect(html).toContain('data-kind="body"')
+    expect(html).toContain('data-category="block"')
+  })
+
+  test('an editor note is categorised editor and still kinded editor', () => {
+    const html = karlTag('Editor-only QA note / Do not publish', 'editor')
+    expect(html).toContain('data-kind="editor"')
+    expect(html).toContain('data-category="editor"')
+  })
+
+  test('a button link tag is categorised as an action', () => {
+    const html = karlTag('Step action', 'placement', {
+      context: { role: 'what-to-do', linkShape: 'button-link' },
+    })
+    expect(html).toContain('data-category="action"')
+    expect(html).toContain('data-kind="placement"')
+  })
+
+  test('an inheriting card tag is categorised as a link picker', () => {
+    const html = karlTag('Linked page item', 'placement', {
+      inheritanceFact: 'title-and-text',
+    })
+    expect(html).toContain('data-category="inherited"')
+  })
+
+  // The whole reason the category is a separate attribute. If a future edit
+  // ever routes the category into `kind`, Karl field resolution changes for the
+  // 14 call sites that pass no explicit role — and this goes red first.
+  test('the category never replaces the kind for any of the four kinds', () => {
+    for (const kind of ['meta', 'body', 'placement', 'editor']) {
+      const html = karlTag('Some note', kind)
+      expect(html).toContain(`data-kind="${kind}"`)
+    }
   })
 })
