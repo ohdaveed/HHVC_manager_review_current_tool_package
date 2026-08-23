@@ -278,7 +278,7 @@ const UNRESOLVED = {
    record of a measurement. */
 const FIELD_GUIDANCE = {
   'button-link': {
-    text: 'Aim for about 25 characters of link text — Karl Help Center style guidance.',
+    text: 'Use no more than 25 characters of link text — Karl Help Center style guidance.',
     schema: 'The field itself accepts 255 (measured 2026-08-15).',
   },
 }
@@ -432,7 +432,7 @@ function fieldMetaFor(ref) {
     return {
       rawName: ref.field.rawName,
       uiLabel: ref.field.label,
-      required: ref.field.required ? 'yes' : 'not recorded',
+      required: ref.field.required ? 'yes' : 'no',
       repeatable: 'single',
       blockTypes: '',
     }

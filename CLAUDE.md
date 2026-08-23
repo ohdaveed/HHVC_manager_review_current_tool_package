@@ -97,7 +97,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 59 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 58 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `page-render-hooks`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `measure-window-graph`,
@@ -105,7 +105,7 @@ wrong). `bun run test` runs 59 Bun unit-test files under `tests/`: `utils`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
 `check-revert`,
-`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `karl-category`, `ci-workflow`, `esm-named-exports` — self-explanatory by name — plus a handful
+`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `ci-workflow`, `esm-named-exports` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
 `commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
 `mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over)),
@@ -178,9 +178,9 @@ substituting the boolean would claim a measurement that was never taken.
 Style guidance lives in a separate Guidance row instead of folding into
 Rules, printed next to the measured schema value it is judged against — the
 motivating case is `docs/karl-export-field-map.md`'s obsolete-register entry
-`O14`, where the Help Center's "25 characters" advice for a Button link is
-stale next to a live field measured at `maxlength="255"`, a mismatch a
-merged row would hide. And a guide whose reference names a panel missing
+`O14`, where the Help Center's 25-character cap for a Button link is the editorial rule,
+while the live field measured at `maxlength="255"` is permissive. A merged row
+would hide that enforcement gap. And a guide whose reference names a panel missing
 from that page type's inventory — Campaign, About us, or Report plus
 `description` is the live case — renders no field block at all, so a
 mockup-only guide never gets to look like a measured one),
@@ -561,7 +561,7 @@ directory:
 | Folder          | Owns                                                                                                                                                                                                                                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `js/core/`      | Bootstrap, shared state and the cross-cutting vocabulary: `utils.js`, `state.js`, `app.js`, `page-data.js`, `page-registry*.js`, `card-inheritance.js`, `third-party-globals.js`                                                                                                                                         |
-| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `karl-category.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                          |
+| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                                              |
 | `js/review/`    | The review/UX layers on top of the core: `review-queue*.js`, `review-insights*.js`, `review-ops*.js`, `ux-improvements*.js`, `dashboard-guidance.js`, `editor-panel.js`, `keyboard-shortcuts.js`, `manager-review-export.js`, `review-merge.js`, `review-state-store.js`, `review-state-validation.js`, `ui-controls.js` |
 | `js/editing/`   | Click-to-edit inline content editing on the rendered mockup: `inline-content-edit*.js`                                                                                                                                                                                                                                   |
 | `js/ai/`        | The optional AI assist and AI rewrite features, invisible unless `/api/ai/*` is configured: `ai-assist*.js`, `ai-rewrite*.js`                                                                                                                                                                                            |
