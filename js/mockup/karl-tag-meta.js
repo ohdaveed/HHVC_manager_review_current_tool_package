@@ -240,7 +240,7 @@ function renderKarlTagLegend(variant = 'full') {
             <li>Page references, Button links, Resources links, Campaign Related links, and Draftail links accept different fields.</li>
             <li><span class="karl-tag-inherit">Inherited value</span> means Karl reads the linked page; Related and Resource Collection entries are title-only.</li>
             <li>Audience, reading targets, QA metadata, and unresolved fields are mockup guidance, not publishable Karl fields.</li>
-            <li>The <a href="https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-and-karl-foundations/sf.gov-concepts-and-structure/content-types" target="_blank" rel="noopener noreferrer">Karl Help Center<span aria-hidden="true"> ↗</span></a> documents the CMS; where it disagrees with a tag's measured path, the measured path is what the live form does.</li>
+            <li>The <a href="https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-and-karl-foundations/sf.gov-concepts-and-structure/content-types" target="_blank" rel="noopener noreferrer">Karl Help Center<span aria-hidden="true"> ↗</span></a> documents the CMS; where it addresses a field, its documented build rule governs; the measured path remains authoritative for raw field names and panel inventory.</li>
           </ul>
         </div>`
       : ''
