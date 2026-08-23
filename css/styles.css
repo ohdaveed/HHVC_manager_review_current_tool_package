@@ -1906,6 +1906,26 @@ a:focus {
   font-size: var(--ds-text-label);
   line-height: 1.35;
 }
+/* The global `a { color: var(--sfds-color-action) }` rule is SFDS's action
+   blue, tuned for light backgrounds only. `.karl-tag-legend` above
+   deliberately takes `background: var(--surface-panel)` because this legend
+   is Help-tab chrome that FOLLOWS dark mode -- unlike the karl-tag badges it
+   explains, which stay fixed to show what those badges look like inside the
+   always-light mockup. In dark mode `--surface-panel` resolves to the dark
+   panel surface, and the global rule's light-mode blue lands on it: axe
+   flags the Karl Help Center link inside this list at a measured 3.2:1,
+   under the 4.5:1 a link needs. `--legacy-action-blue` is the token
+   `css/theme.css` already re-points to `--brand-70` for exactly this failure
+   -- 8.02:1 on the dark panel, documented at css/theme.css:655-661 -- so this
+   scopes that same fix to the one link this legend renders, rather than
+   letting the global rule keep losing to a background it was never tuned
+   against. */
+.karl-tag-legend-notes-list a {
+  color: var(--legacy-action-blue);
+}
+.karl-tag-legend-notes-list a:hover {
+  color: var(--legacy-action-blue-hover);
+}
 @media (max-width: 980px) {
   .app {
     grid-template-columns: 1fr;
