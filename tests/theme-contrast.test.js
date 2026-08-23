@@ -482,3 +482,155 @@ describe('toast controls, composited against every variant', () => {
     }
   })
 })
+
+describe('the teal family, for the link-picker tag category', () => {
+  /* Six Karl tag categories need six colour families and five existed, so this
+     is the sixth. It is asserted here rather than trusted because every
+     dark-mode contrast bug this repo has had came from a literal sitting where
+     a token belonged and failing no test.
+
+     **The floors are the incumbent palette's own, measured, not invented.** The
+     plan for this task asked for 3:1 of the border on its own background —
+     which no sibling meets: the five light `-border` steps measure 1.26 to
+     1.49 there, and only `danger` clears 3. Holding the newcomer to a bar the
+     other five miss would render one chip with a visibly heavier outline than
+     its neighbours and prove nothing about legibility, since a tag is
+     identified by its fill and its printed kind word, never by its 1px edge.
+     So the assertions below say: the teal must not be the weakest link in any
+     dimension the siblings are already measured on. That is a real constraint
+     — it fails on a badly chosen value — and it is one the palette can
+     actually satisfy. */
+
+  /* The light values live in css/styles.css's `:root`, not in css/theme.css —
+     css/theme.css declares this family only in its dark block and in the
+     `.browser-shell` light re-pin. Three scopes, and a token missing from any
+     one of them resolves to nothing, which silently drops the declaration that
+     reads it. */
+  const SHELL = css.slice(SHELL_START)
+
+  const LIGHT_SIBLING_BG = {
+    info: '--legacy-info-light',
+    purple: '--legacy-purple-bg',
+    success: '--legacy-success-bg',
+    warning: '--legacy-warning-bg',
+    danger: '--legacy-danger-bg',
+  }
+
+  const DARK_SIBLING_BG = {
+    info: '--ext-dark-brand-soft',
+    purple: '--ext-dark-purple-bg',
+    success: '--ext-dark-success-bg',
+    warning: '--ext-dark-warning-bg',
+    danger: '--ext-dark-danger-bg',
+  }
+
+  /**
+   * The smallest CIE76 separation any two of a set of colours already have.
+   *
+   * Measured rather than hardcoded so the assertion stays honest as the palette
+   * moves: what it asks of the newcomer is exactly what the incumbents already
+   * deliver, no more and no less.
+   *
+   * @param {string[]} values Six-digit hexes, all from ONE mode.
+   * @returns {number}
+   */
+  function existingFloor(values) {
+    let floor = Infinity
+    for (let i = 0; i < values.length; i += 1) {
+      for (let j = i + 1; j < values.length; j += 1) {
+        floor = Math.min(floor, deltaE(values[i], values[j]))
+      }
+    }
+    return floor
+  }
+
+  test('the family is declared in every scope its siblings are declared in', () => {
+    /* `purple` is the reference family: wherever it is declared, teal must be
+       too. A token declared in only some scopes resolves to nothing in the
+       rest, and a `var()` that resolves to nothing drops its declaration with
+       nothing going red. */
+    for (const [scopeName, scope] of [
+      ['the dark block', DARK],
+      ['the .browser-shell light re-pin', SHELL],
+    ]) {
+      for (const suffix of ['bg', 'border', 'text']) {
+        expect(`${scopeName}: --legacy-teal-${suffix}`).toBe(
+          new RegExp(`--legacy-teal-${suffix}:`).test(scope)
+            ? `${scopeName}: --legacy-teal-${suffix}`
+            : `${scopeName}: MISSING --legacy-teal-${suffix}`
+        )
+      }
+    }
+    for (const suffix of ['bg', 'border', 'text']) {
+      expect(new RegExp(`--legacy-teal-${suffix}:`).test(STYLES)).toBe(true)
+    }
+  })
+
+  test('light: the label text clears 4.5:1 on its own background', () => {
+    expect(
+      contrast(hex(STYLES, '--legacy-teal-text'), hex(STYLES, '--legacy-teal-bg'))
+    ).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test('light: the label text is no weaker than the weakest sibling', () => {
+    /* The siblings run 6.91:1 to 9.81:1. A value that merely clears AA would
+       read as a different tier of emphasis beside them, which is a design
+       defect rather than an accessibility one — and this is the assertion that
+       rejected the brief's proposed `#0e7490`, measured at 4.79:1. */
+    const siblings = [
+      [hex(STYLES, '--legacy-info-dark'), hex(STYLES, '--legacy-info-light')],
+      [hex(STYLES, '--legacy-purple-text'), hex(STYLES, '--legacy-purple-bg')],
+      [hex(STYLES, '--legacy-success-text'), hex(STYLES, '--legacy-success-bg')],
+      [hex(STYLES, '--legacy-warning-text'), hex(STYLES, '--legacy-warning-bg')],
+      [hex(STYLES, '--legacy-danger-text'), hex(STYLES, '--legacy-danger-bg')],
+    ].map(([fg, bg]) => contrast(fg, bg))
+    expect(
+      contrast(hex(STYLES, '--legacy-teal-text'), hex(STYLES, '--legacy-teal-bg'))
+    ).toBeGreaterThanOrEqual(Math.min(...siblings))
+  })
+
+  test('light: the border is no weaker on its own background than the weakest sibling', () => {
+    const siblings = [
+      [hex(STYLES, '--legacy-info-border'), hex(STYLES, '--legacy-info-light')],
+      [hex(STYLES, '--legacy-purple-border'), hex(STYLES, '--legacy-purple-bg')],
+      [hex(STYLES, '--legacy-success-border'), hex(STYLES, '--legacy-success-bg')],
+      [hex(STYLES, '--legacy-warning-border'), hex(STYLES, '--legacy-warning-bg')],
+    ].map(([line, bg]) => contrast(line, bg))
+    expect(
+      contrast(hex(STYLES, '--legacy-teal-border'), hex(STYLES, '--legacy-teal-bg'))
+    ).toBeGreaterThanOrEqual(Math.min(...siblings))
+  })
+
+  test('light: the fill separates from all five siblings by the palette’s own floor', () => {
+    const siblings = Object.values(LIGHT_SIBLING_BG).map((name) => hex(STYLES, name))
+    const teal = hex(STYLES, '--legacy-teal-bg')
+    const floor = existingFloor(siblings)
+    for (const value of siblings) {
+      expect(deltaE(teal, value)).toBeGreaterThanOrEqual(floor)
+    }
+  })
+
+  test('dark: the label text clears 4.5:1 on its own background', () => {
+    expect(
+      contrast(hex(DARK, '--legacy-teal-text'), hex(DARK, '--legacy-teal-bg'))
+    ).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test('dark: the border clears 3:1 on the dark panel, as its siblings do', () => {
+    /* Dark IS asserted at 3:1 where light is not, because the dark `-line`
+       steps were tuned against the panel for exactly this and all four measure
+       3.02 to 3.08 there. The bar exists in this mode; the newcomer meets it. */
+    expect(
+      contrast(hex(DARK, '--legacy-teal-border'), hex(DARK, '--surface-panel'))
+    ).toBeGreaterThanOrEqual(3)
+  })
+
+  test('dark: the fill separates from all five siblings by the palette’s own floor', () => {
+    const siblings = Object.values(DARK_SIBLING_BG).map((name) => hex(DARK, name))
+    const teal = hex(DARK, '--legacy-teal-bg')
+    const floor = existingFloor(siblings)
+    for (const value of siblings) {
+      expect(deltaE(teal, value)).toBeGreaterThanOrEqual(floor)
+    }
+  })
+})

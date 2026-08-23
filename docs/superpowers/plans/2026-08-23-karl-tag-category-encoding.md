@@ -457,7 +457,7 @@ Five `--legacy-*` colour families exist; six categories need six. This adds the 
 - Consumes: nothing.
 - Produces: `--legacy-teal-bg`, `--legacy-teal-border`, `--legacy-teal-text`, declared in every scope its sibling families are declared in.
 
-- [ ] **Step 1: Find the sibling families and match their scopes exactly**
+- [x] **Step 1: Find the sibling families and match their scopes exactly**
 
 Run:
 
@@ -467,7 +467,7 @@ grep -n -- "--legacy-purple-bg\|--legacy-purple-border\|--legacy-purple-text" cs
 
 `--legacy-teal-*` must be declared in **every scope** those appear in, and no others. A token declared in only some scopes resolves to nothing in the rest, and a `var()` that resolves to nothing silently drops the declaration — the exact failure that shipped a serious dark-mode contrast violation on the sibling branch.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Add to `tests/theme-contrast.test.js`, following the file's existing structure — it reads `css/theme.css` in three named scopes and measures WCAG ratios and CIE76 ΔE **within** a mode, never across. Match how the existing pairs are declared and asserted; do not invent a second measurement style.
 
@@ -476,19 +476,19 @@ Assert, for both light and dark:
 - `--legacy-teal-border` on `--legacy-teal-bg` clears **3:1** (a non-text boundary).
 - `--legacy-teal-bg` is separated from each of the five sibling category backgrounds by a CIE76 ΔE the file's existing sibling assertions use — measured within the same mode only.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `bun test tests/theme-contrast.test.js`
 Expected: FAIL — the token is undeclared, so the parsed value is missing.
 
-- [ ] **Step 4: Declare the tokens and iterate until the ratios pass**
+- [x] **Step 4: Declare the tokens and iterate until the ratios pass**
 
 Pick real values and measure; do not copy a hex from the brief's table. The brief proposes `#0E7490` / `#CFFAFE`, which is a starting point and not a measurement — the test is the authority. Give each declaration an inline comment carrying its measured ratio, matching how the sibling families and `--legacy-action-blue` are annotated in this repo.
 
 Run: `bun test tests/theme-contrast.test.js`
 Expected: PASS in both modes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add css/styles.css css/theme.css tests/theme-contrast.test.js

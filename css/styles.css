@@ -27,6 +27,18 @@
   --legacy-purple-bg: #f5efff;
   --legacy-purple-border: #decdf6;
   --legacy-purple-text: #4a2a7a;
+  /* The sixth family, added for the Karl tag `inherited` (link picker)
+     category — five families existed and six categories need six. Measured,
+     not chosen: the text is 7.49:1 on its own fill, which sits inside the band
+     the other five occupy (6.91:1 to 9.81:1) rather than merely clearing AA,
+     and the border is 1.49:1 there, the top of the 1.26-1.49 band those five
+     borders occupy. The fill is at least 11.69 CIE76 from every sibling fill,
+     where the tightest existing pair is 6.30 apart. tests/theme-contrast.test.js
+     measures each of those against the incumbents rather than against a
+     literal, so a hand-picked replacement has to earn the same numbers. */
+  --legacy-teal-bg: #cffafe;
+  --legacy-teal-border: #7fd6e3; /* 1.49:1 on its own bg */
+  --legacy-teal-text: #0b5566; /* 7.49:1 on its own bg */
   --legacy-accent-light: #e9eef9;
   --legacy-blue-soft-bg: #f1f4ff;
   --page-max: 1120px;
