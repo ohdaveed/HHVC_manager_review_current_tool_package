@@ -30,7 +30,23 @@ deliberately shallower and maps to nothing that exists today.
 Measured from `pages/*.js` via `build_scripts/load-pages.js`, 2026-08-15. 29 pages, 8 distinct
 `type` values. Types Karl offers but this mockup does not use (`Data story`, `Document Collection
 Search`, `Event`, `Form`, `Location`, `Meeting`, `News`, `Profile`, `Step by step`) are out of
-scope by definition and are not mapped here.
+scope by definition and are not mapped here — but they are all named, with their `<model>` and
+capture status, under "Types not yet in use" below.
+
+**This document covers 17 types; the Help Center's chooser offers 14.** Checked 2026-08-23
+against `content-types/choosing-a-content-type`, which groups its 14 under three page goals
+(Service, Outreach, Department support). The comparison runs both ways and only one direction is
+non-empty: **every type the chooser offers is accounted for here**, and three types here are
+absent from it — `Topic`, `Form` and `Document Collection Search`.
+
+**Absence from the chooser is a real constraint, not an omission, and it comes in two grades.**
+`Agency` **is** in the chooser and still carries "Digital Services must create this content type
+for you", so being listed is not the same as being self-serve. The three above are not offered at
+all. That matters twice over for this mockup: `Topic` is a type it actually uses
+(`healthyHousingTopic`), and `Form` is the type whose plausible use the table below records as
+`forms/mosquito-workshop-request/` — the sub-app this repo really ships. An editor handed a
+transcript for either cannot begin by picking the type. `Document Collection Search` has no
+identified use, so it is noted for completeness only.
 
 | `type` value          | Pages | Sections | Steps | Page keys                                                                                                                                                                                                                                                         | Nested-block evidence |
 | --------------------- | ----- | -------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |

@@ -1563,10 +1563,11 @@ surface so each selector is still declared in exactly one file.
   as accordions and a brand-new page whose only content is collapsed reads as an
   empty page.
 - **`type` is constrained to the five the picker groups by**, which is
-  deliberately narrower than `build_scripts/schema.js` (bare `min(1)`). Authored
-  pages legitimately use `Agency` and `Report` and land in the Information
-  optgroup; a reviewer choosing from a `<select>` should not be able to create
-  that mismatch by accident.
+  deliberately narrower than `build_scripts/schema.js`'s eight-value
+  `z.enum(PAGE_TYPES)` — a narrowing of a closed enum, not of an open string.
+  Authored pages legitimately use `Agency` and `Report` and land in the
+  Information optgroup; a reviewer choosing from a `<select>` should not be able
+  to create that mismatch by accident.
 - **A page key is constrained to `/^[A-Za-z][A-Za-z0-9]*$/` and rejects
   `__proto__`/`prototype`/`constructor`.** The key becomes an object property on
   `window.HHVC_PAGES`, an `<option>` value and a `?page=` parameter.
@@ -1743,10 +1744,17 @@ orphan pruning, which a reviewer opens deliberately.
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 `build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
 has coverage independent of current page content). A page has `slug`,
-`type` (a free-form string, only `min(1)` checked — **eight** values are in use:
+`type` (a **closed enum** — `z.enum(PAGE_TYPES)`, not a bare string — whose
+**eight** permitted values are all in use:
 `Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
 `Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
-matching Karl content-type names. This list read six until 2026-08-15, omitting
+matching Karl content-type names. It is closed rather than open because
+`js/karl/karl-blocks.js` keys its per-type panel inventory on this value: an
+unrecognised type selects no inventory, so a typo would export an **empty
+transcript rather than failing**, and an empty transcript reads like a page with
+no content instead of like a bug. Adding a ninth type means capturing its form in
+`docs/karl-export-field-map.md` and adding its panel inventory, in that order.
+The list read six until 2026-08-15, omitting
 `Topic` and `About us`; a census via `build_scripts/load-pages.js` is what
 corrects it, so re-derive rather than trusting a restatement), `title`,
 `summary`, `audience[]`,
