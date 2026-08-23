@@ -21,7 +21,7 @@ import {
   guideForContext,
   resolveFieldRef,
 } from '../js/karl/karl-guide-registry.js'
-import { renderKarlGuidePanel } from '../js/mockup/karl-tag-meta.js'
+import { renderKarlGuidePanel, renderKarlTagLegend } from '../js/mockup/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
 
@@ -589,5 +589,30 @@ describe('style guidance is never dressed as a schema constraint', () => {
     expect(renderKarlGuidePanel(buttonGuide(), 'panel-7')).not.toMatch(
       /<(div|p|ul|ol|li|h[1-6])[\s>]/
     )
+  })
+})
+
+describe('the Help Center is background reference, not panel authority', () => {
+  test('the full legend links to the Karl Help Center', () => {
+    const html = renderKarlTagLegend('full')
+    expect(html).toContain('sfdigitalservices.gitbook.io')
+    expect(html).toContain('rel="noopener noreferrer"')
+    expect(html).toContain('target="_blank"')
+  })
+
+  test('the link says the measured path wins', () => {
+    expect(renderKarlTagLegend('full')).toMatch(/measured/i)
+  })
+
+  test('the compact legend stays a colour key with no prose', () => {
+    expect(renderKarlTagLegend('compact')).not.toContain('gitbook.io')
+  })
+
+  test('no guide panel carries the link', () => {
+    const html = renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Transaction' }, context: { role: 'what-to-do' } }),
+      'panel-8'
+    )
+    expect(html).not.toContain('gitbook.io')
   })
 })
