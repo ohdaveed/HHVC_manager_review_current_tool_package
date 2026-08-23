@@ -178,7 +178,10 @@
 }
 .karl-guide-field code {
   padding: 0 var(--ds-space-1);
-  border-radius: 3px;
+  /* --ds-radius-sm (4px), not the 3px literal this shipped with: there is no
+     3px step on the radius scale, and a literal sitting where a token belongs
+     is what every dark-mode and rescale bug in this repo has grown out of. */
+  border-radius: var(--ds-radius-sm);
   background: var(--surface-sunken);
   color: var(--text-primary);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;

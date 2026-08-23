@@ -171,16 +171,22 @@ also covers the panel's newer Field and Rules rows: the raw Wagtail field
 name and its form rules are read straight from `js/karl/karl-blocks.js`
 rather than restated in the panel code, so a wrong value has to be wrong in
 that guarded inventory first — `tests/karl-blocks.test.js` is what would
-catch it. The Rules row is pinned to print the inventory's literal
-`requiredDoc`/`repeatableDoc` strings, never the plain booleans stored beside
-them, because `not recorded` is a real answer distinct from `Optional` and
-substituting the boolean would claim a measurement that was never taken.
-Style guidance lives in a separate Guidance row instead of folding into
-Rules, printed next to the measured schema value it is judged against — the
-motivating case is `docs/karl-export-field-map.md`'s obsolete-register entry
-`O14`, where the Help Center's "25 characters" advice for a Button link is
-stale next to a live field measured at `maxlength="255"`, a mismatch a
-merged row would hide. And a guide whose reference names a panel missing
+catch it. For a Content-tab panel the Rules row is pinned to print the
+inventory's literal `requiredDoc`/`repeatableDoc` strings, never the plain
+booleans stored beside them, because `not recorded` is a real answer distinct
+from `Optional` and substituting the boolean would claim a measurement that
+was never taken. **The Promote tab is the one exception, and it is about
+evidence rather than shape:** `PROMOTE_PANEL` carries no `*Doc` strings
+because the field map fills in that table's Required column for every row —
+`seo_title` and `search_description` are recorded `no` — so there the boolean
+IS the measurement, and printing `not recorded` would conceal a fact the
+field map states outright. Editorial rules live in a separate Guidance row
+instead of folding into Rules, printed next to the measured schema value they
+are judged against — the motivating case is `docs/karl-export-field-map.md`'s
+obsolete-register entry `O14`, where the Help Center's 25-character cap for a
+Button link is the rule an editor is held to (E3) while the live field
+measured at `maxlength="255"` (E1) simply will not enforce it, a gap a merged
+row would hide. And a guide whose reference names a panel missing
 from that page type's inventory — Campaign, About us, or Report plus
 `description` is the live case — renders no field block at all, so a
 mockup-only guide never gets to look like a measured one),

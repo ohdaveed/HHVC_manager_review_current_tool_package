@@ -83,7 +83,13 @@ function guideCopyValues(values = []) {
    `Optional`. See fieldMetaFor()'s header for why that distinction is the whole
    point.
 
-   Phrasing content only, like the rest of this panel. */
+   Phrasing content only, like the rest of this panel.
+
+   @param {{rawName: string, uiLabel: string, required?: string,
+     repeatable?: string, blockTypes?: string}|undefined} field A
+     fieldMetaFor() result, or undefined when the guide resolved no field.
+   @returns {string} The Field and Rules rows as inline-level HTML, or the
+     empty string when there is no field to describe. */
 function renderKarlGuideField(field) {
   if (!field) return ''
   const rules = [
@@ -102,7 +108,13 @@ function renderKarlGuideField(field) {
 /* The guidance row. Separated from Rules by its own label word and its own
    class — never by colour alone, since colour is not an encoding a reviewer can
    read out loud, and this distinction is the one that decides whether a
-   reviewer treats a number as something the form will enforce. */
+   reviewer treats a number as something the form will enforce.
+
+   @param {{text?: string, schema?: string}|undefined} guidance A
+     FIELD_GUIDANCE entry: `text` is the editorial rule, `schema` the measured
+     form behaviour printed beside it.
+   @returns {string} The Guidance row as inline-level HTML, or the empty string
+     when no guidance is recorded for this field. */
 function renderKarlGuideGuidance(guidance) {
   if (!guidance?.text) return ''
   const schema = guidance.schema
@@ -246,7 +258,7 @@ function renderKarlTagLegend(variant = 'full') {
             <li>Page references, Button links, Resources links, Campaign Related links, and Draftail links accept different fields.</li>
             <li><span class="karl-tag-inherit">Inherited value</span> means Karl reads the linked page; Related and Resource Collection entries are title-only.</li>
             <li>Audience, reading targets, QA metadata, and unresolved fields are mockup guidance, not publishable Karl fields.</li>
-            <li>The <a href="https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-and-karl-foundations/sf.gov-concepts-and-structure/content-types" target="_blank" rel="noopener noreferrer">Karl Help Center<span aria-hidden="true"> ↗</span></a> documents the CMS; where it disagrees with a tag's measured path, the measured path is what the live form does.</li>
+            <li>The <a href="https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-and-karl-foundations/sf.gov-concepts-and-structure/content-types" target="_blank" rel="noopener noreferrer">Karl Help Center<span aria-hidden="true"> ↗</span></a> says how a page should be built and is the rule to follow; a tag's measured path says what the live form contains, which is where raw field names and panel order come from.</li>
           </ul>
         </div>`
       : ''

@@ -420,6 +420,21 @@ describe('the guide carries the field the path leads to', () => {
     expect(meta.uiLabel).toBe('Title tag')
   })
 
+  // The Promote tab is the one place where `required: false` is a MEASUREMENT
+  // rather than a stand-in for a missing one. The field map documents that tab
+  // as a single table (docs/karl-export-field-map.md:161-163, closed as `U11`
+  // at E1) whose Required column reads `no` for both of these rows, so
+  // printing `not recorded` here would conceal a fact the field map states
+  // outright — the opposite of the failure the panel wording guards against
+  // everywhere else.
+  test('a Promote field reports the optionality the field map records', () => {
+    expect(fieldMetaFor(resolveFieldRef('transaction', 'seoTitle', {})).required).toBe('no')
+    expect(fieldMetaFor(resolveFieldRef('transaction', 'metaDescription', {})).required).toBe('no')
+    expect(fieldMetaFor(resolveFieldRef('transaction', 'seoTitle', {})).required).not.toBe(
+      'not recorded'
+    )
+  })
+
   // The whole point of resolvePath() returning '' is that an unrecorded
   // destination stays visibly unrecorded. A field block appearing without one
   // would put a confident field name under a "Mockup only" badge.
@@ -553,20 +568,30 @@ describe('style guidance is never dressed as a schema constraint', () => {
       context: { role: 'what-to-do', linkShape: 'button-link' },
     })
 
-  test('a Button link carries the Help Center length guidance', () => {
+  test('a Button link carries the Help Center length cap', () => {
     expect(buttonGuide().guidance.text).toContain('25')
+  })
+
+  // The cap is a RULE under the precedence revised 2026-08-23, not an
+  // approximation, and the guidance row is the only place a reviewer reads it.
+  // Wording it as "aim for about 25" is what this pins against: an editorial
+  // constraint softened into a preference reads as permission to exceed it.
+  test('it states the cap rather than approximating it', () => {
+    expect(buttonGuide().guidance.text).not.toMatch(/about|aim/i)
   })
 
   test('it names the measured schema value beside it', () => {
     expect(buttonGuide().guidance.schema).toContain('255')
   })
 
-  // O14 in docs/karl-export-field-map.md: the live field was measured at
-  // maxlength="255" on 2026-08-15, and the 25 is Help Center style advice. U19
-  // records ten mockup labels shortened on that advice rather than on a
-  // constraint. Printing 25 in the Rules row would put a measured-looking
-  // falsehood in the one panel whose job is separating measured destinations
-  // from chosen ones.
+  // O14 in docs/karl-export-field-map.md: the Help Center's 25-character cap
+  // is the rule (E3), and the live field's measured `maxlength="255"` (E1,
+  // 2026-08-15) is a gap in the form rather than permission — U19 records ten
+  // mockup labels shortened to the cap. The 25 still may not appear in the
+  // Rules row, and the reason survives the precedence reversal: Rules prints
+  // what the FORM does, so an editorial cap sitting there would report a
+  // constraint the form does not enforce, in the one panel whose job is
+  // separating measured destinations from chosen ones.
   test('the 25 never appears in the rules row', () => {
     const html = renderKarlGuidePanel(buttonGuide(), 'panel-4')
     const rules = html.slice(html.indexOf('karl-guide-rules'), html.indexOf('karl-guide-guidance'))
@@ -594,7 +619,7 @@ describe('style guidance is never dressed as a schema constraint', () => {
   })
 })
 
-describe('the Help Center is background reference, not panel authority', () => {
+describe('the legend states the precedence the field map records', () => {
   test('the full legend links to the Karl Help Center', () => {
     const html = renderKarlTagLegend('full')
     expect(html).toContain('sfdigitalservices.gitbook.io')
@@ -602,8 +627,22 @@ describe('the Help Center is background reference, not panel authority', () => {
     expect(html).toContain('target="_blank"')
   })
 
-  test('the link says the measured path wins', () => {
-    expect(renderKarlTagLegend('full')).toMatch(/measured/i)
+  // Both halves, because the precedence has two of them and stating either one
+  // alone is what the legend got wrong. Under the reversal recorded in
+  // docs/karl-export-field-map.md ("Precedence, revised 2026-08-23") the Help
+  // Center governs how a page should be BUILT, while the measured live form is
+  // still the only source for raw field names and panel order. A legend that
+  // says the measured path wins outright contradicts the field map in the UI;
+  // one that says the Help Center wins outright would send a reviewer to a doc
+  // that never prints a raw Wagtail name.
+  test('the link says the Help Center is the rule to follow', () => {
+    expect(renderKarlTagLegend('full')).toMatch(/should be built/i)
+    expect(renderKarlTagLegend('full')).not.toMatch(/the measured path is what the live form does/i)
+  })
+
+  test('and that the measured path is still what the form contains', () => {
+    expect(renderKarlTagLegend('full')).toMatch(/measured path/i)
+    expect(renderKarlTagLegend('full')).toMatch(/raw field names/i)
   })
 
   test('the compact legend stays a colour key with no prose', () => {

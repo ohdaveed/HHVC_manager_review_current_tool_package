@@ -102,5 +102,26 @@ for (const scheme of ['light', 'dark']) {
       expect(swatches).toBe(6)
       await expectNoSeriousViolations(page)
     })
+
+    // The mockup test above can only compare the categories a given page
+    // happens to render — payFee produces several, not all six — so a missing
+    // selector or a duplicated fill in one of the unused families would pass
+    // it. The legend is the one place all six are on screen at once, in both
+    // modes, and its swatches carry the same `data-category` the tags do, so
+    // reading their computed fills here closes that gap. The unit tests in
+    // tests/theme-contrast.test.js measure the same six families at the TOKEN
+    // level; this measures what the cascade actually produced.
+    test('all six category swatches are drawn in six different fills', async ({ page }) => {
+      await openWorkspaceTab(page, 'help')
+      const fills = await page.$$eval('.karl-tag-legend--full .karl-tag-legend-swatch', (nodes) =>
+        nodes.map((el) => ({
+          category: el.getAttribute('data-category'),
+          fill: getComputedStyle(el).backgroundColor,
+        }))
+      )
+      expect(fills.length).toBe(6)
+      expect(new Set(fills.map((f) => f.category)).size).toBe(6)
+      expect(new Set(fills.map((f) => f.fill)).size).toBe(6)
+    })
   })
 }

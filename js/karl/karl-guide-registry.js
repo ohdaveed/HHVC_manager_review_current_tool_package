@@ -258,28 +258,35 @@ const UNRESOLVED = {
   U2: 'Karl Callout has no separate title field; fold the title into the rich text or get a CMS decision.',
 }
 
-/* Style advice this repo's record actually supports, keyed by link shape.
+/* The editorial rules this repo's record actually supports, keyed by link
+   shape.
 
    **Guidance and schema are different claims and this table keeps them apart
-   in the data, not just in the CSS.** docs/karl-export-field-map.md's obsolete
-   register entry O14 records the live `Button link` text field at
-   `maxlength="255"`, measured 2026-08-15 on a Transaction `section_specifics`
-   block, and records the Help Center's "can only be 25 characters" as style
-   guidance rather than a schema limit. U19 records ten mockup labels shortened
-   on that guidance — on advice, not on constraint.
+   in the data, not just in the CSS.** Under the precedence revised 2026-08-23
+   (docs/karl-export-field-map.md, "Precedence, revised 2026-08-23"), the Karl
+   Editor Help Center governs how a field should be BUILT, so its "can only be
+   25 characters" is the rule an editor is held to — obsolete register entry
+   O14. The live `Button link` text field was measured at `maxlength="255"`
+   (E1, 2026-08-15 on a Transaction `section_specifics` block), which means an
+   over-length label saves rather than failing: a gap in the form, not
+   permission to exceed the cap. U19 records ten mockup labels shortened to it.
 
-   Printing 25 as a limit would be a measured-looking falsehood in the one panel
-   whose whole job is separating a measured destination from a chosen one, which
+   **The 25 still may not appear in the Rules row**, and the reason changed
+   with the precedence rather than going away. Rules prints what the FORM does,
+   sourced from the js/karl/karl-blocks.js inventory; putting an editorial cap
+   there would report a constraint the form does not enforce, in the one panel
+   whose whole job is separating a measured destination from a chosen one. That
    is the same failure guideStatusLabel() checks `inferred` before the evidence
-   line to avoid.
+   line to avoid. Guidance is the row that carries a rule the form will not
+   police, which is why it prints the measured 255 beside it.
 
    **One entry, and add another only when the field map records one** — exactly
    the rule stated on UNRESOLVED above. This is a display string, not a second
    record of a measurement. */
 const FIELD_GUIDANCE = {
   'button-link': {
-    text: 'Aim for about 25 characters of link text — Karl Help Center style guidance.',
-    schema: 'The field itself accepts 255 (measured 2026-08-15).',
+    text: 'Link text is capped at 25 characters — Karl Help Center rule (E3).',
+    schema: 'The field itself accepts 255 (E1, measured 2026-08-15): the form does not enforce it.',
   },
 }
 
@@ -413,14 +420,23 @@ function resolveFieldRef(pageType, role, context) {
  * The display facts for one field reference: raw Wagtail name, UI label, and
  * the required/repeatable/block-type wording the field map records.
  *
- * **Every value is a string, and the `*Doc` strings are preferred over the
- * booleans beside them.** js/karl/karl-blocks.js carries both — `required:
- * false` alongside `requiredDoc: 'not recorded'` — and they make different
- * claims. The boolean is this repo's coercion of an absent measurement into a
- * default; the string is what docs/karl-export-field-map.md actually says.
- * Rendering "Optional" from the boolean would tell a reviewer the live form was
- * measured and found to permit an empty value, which nobody measured. Same
- * posture as resolvePath() returning '' rather than guessing.
+ * **Every value is a string, and for a CONTENT-TAB PANEL the `*Doc` strings are
+ * preferred over the booleans beside them.** js/karl/karl-blocks.js carries
+ * both — `required: false` alongside `requiredDoc: 'not recorded'` — and they
+ * make different claims. The boolean is this repo's coercion of an absent
+ * measurement into a default; the string is what docs/karl-export-field-map.md
+ * actually says. Rendering "Optional" from the boolean would tell a reviewer
+ * the live form was measured and found to permit an empty value, which nobody
+ * measured. Same posture as resolvePath() returning '' rather than guessing.
+ *
+ * **The Promote tab is the exception, and it is an exception about evidence
+ * rather than about shape.** `PROMOTE_PANEL` carries no `*Doc` strings because
+ * the field map documents that tab as a single table whose Required column is
+ * filled in for every row — `seo_title` and `search_description` are recorded
+ * `no` (docs/karl-export-field-map.md:162-163), closed as `U11` at E1. So here
+ * the boolean IS the measurement rather than a stand-in for a missing one, and
+ * printing `not recorded` would conceal a fact the field map states outright.
+ * The wording follows the column: `yes` / `no`, not `Required` / `Optional`.
  *
  * @param {object|null} ref A resolveFieldRef() result.
  * @returns {{rawName: string, uiLabel: string, required: string, repeatable: string,
@@ -432,7 +448,7 @@ function fieldMetaFor(ref) {
     return {
       rawName: ref.field.rawName,
       uiLabel: ref.field.label,
-      required: ref.field.required ? 'yes' : 'not recorded',
+      required: ref.field.required ? 'yes' : 'no',
       repeatable: 'single',
       blockTypes: '',
     }

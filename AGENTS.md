@@ -192,16 +192,25 @@ the markup. The panel also carries a raw Wagtail field name and its form
 rules now, read from `js/karl/karl-blocks.js` rather than restated — so a
 wrong value has to be wrong in that guarded inventory first, where
 `tests/karl-blocks.test.js` catches it, before it can mislead a reviewer here.
-The Rules row prints the inventory's `requiredDoc`/`repeatableDoc` strings
-verbatim and never the plain booleans sitting beside them: `not recorded` is
-a real, distinct answer, not a synonym for `Optional`, and rendering the
-boolean instead would report a measurement nobody actually took. Style
-advice is kept out of that row entirely and rendered in its own Guidance row
-next to the measured schema value it is judged against — `docs/karl-export-field-map.md`'s
-obsolete-register entry `O14` is the reason: the Help Center's "25 characters"
-guidance for a Button link is stale advice against a live field measured at
-`maxlength="255"`, and collapsing the two into one row would make that
-staleness invisible. A page type whose reference resolves to a panel absent
+For a Content-tab panel the Rules row prints the inventory's
+`requiredDoc`/`repeatableDoc` strings verbatim and never the plain booleans
+sitting beside them: `not recorded` is a real, distinct answer, not a synonym
+for `Optional`, and rendering the boolean instead would report a measurement
+nobody actually took. **The Promote tab is the one exception, and it is an
+exception about evidence rather than about shape:** `PROMOTE_PANEL` carries no
+`*Doc` strings because the field map documents that tab as a single table
+whose Required column is filled in for every row — `seo_title` and
+`search_description` are recorded `no`, closed as `U11` at E1 — so there the
+boolean IS the measurement rather than a stand-in for a missing one, and
+printing `not recorded` would conceal a fact the field map states outright.
+Editorial rules are kept out of that row entirely and rendered in their own
+Guidance row next to the measured schema value they are judged against —
+`docs/karl-export-field-map.md`'s obsolete-register entry `O14` is the reason:
+under the precedence revised 2026-08-23 the Help Center's 25-character cap for
+a Button link is the rule an editor is held to (E3), while the same field
+measured at `maxlength="255"` (E1) will not enforce it, and collapsing the two
+into one row would hide that gap behind a number the form never checks. A page
+type whose reference resolves to a panel absent
 from that type's inventory — Campaign, About us, or Report plus
 `description` is the live case — carries no field block at all, so a
 "mockup only" guide can never dress up a guess as a confident field name),
