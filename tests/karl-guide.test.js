@@ -543,3 +543,51 @@ describe('the guide panel shows the field, not just the screen', () => {
     expect(html).toContain('a&quot;b')
   })
 })
+
+describe('style guidance is never dressed as a schema constraint', () => {
+  const buttonGuide = () =>
+    guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do', linkShape: 'button-link' },
+    })
+
+  test('a Button link carries the Help Center length guidance', () => {
+    expect(buttonGuide().guidance.text).toContain('25')
+  })
+
+  test('it names the measured schema value beside it', () => {
+    expect(buttonGuide().guidance.schema).toContain('255')
+  })
+
+  // O14 in docs/karl-export-field-map.md: the live field was measured at
+  // maxlength="255" on 2026-08-15, and the 25 is Help Center style advice. U19
+  // records ten mockup labels shortened on that advice rather than on a
+  // constraint. Printing 25 in the Rules row would put a measured-looking
+  // falsehood in the one panel whose job is separating measured destinations
+  // from chosen ones.
+  test('the 25 never appears in the rules row', () => {
+    const html = renderKarlGuidePanel(buttonGuide(), 'panel-4')
+    const rules = html.slice(html.indexOf('karl-guide-rules'), html.indexOf('karl-guide-guidance'))
+    expect(rules).not.toContain('25')
+  })
+
+  test('the guidance row is labelled as guidance in words, not by colour alone', () => {
+    const html = renderKarlGuidePanel(buttonGuide(), 'panel-5')
+    expect(html).toContain('karl-guide-guidance')
+    expect(html).toMatch(/Guidance/)
+  })
+
+  test('a field with no recorded guidance renders no guidance row', () => {
+    const html = renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Transaction' }, context: { role: 'what-to-do' } }),
+      'panel-6'
+    )
+    expect(html).not.toContain('karl-guide-guidance')
+  })
+
+  test('the guidance row emits no block-level element', () => {
+    expect(renderKarlGuidePanel(buttonGuide(), 'panel-7')).not.toMatch(
+      /<(div|p|ul|ol|li|h[1-6])[\s>]/
+    )
+  })
+})

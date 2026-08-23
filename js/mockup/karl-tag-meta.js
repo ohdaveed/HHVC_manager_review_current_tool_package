@@ -98,6 +98,18 @@ function renderKarlGuideField(field) {
   return `<span class="karl-guide-field"><strong>Field:</strong> <code>${escapeHtml(field.rawName)}</code><span class="karl-guide-field-label">${escapeHtml(field.uiLabel)}</span></span>${rulesRow}`
 }
 
+/* The guidance row. Separated from Rules by its own label word and its own
+   class — never by colour alone, since colour is not an encoding a reviewer can
+   read out loud, and this distinction is the one that decides whether a
+   reviewer treats a number as something the form will enforce. */
+function renderKarlGuideGuidance(guidance) {
+  if (!guidance?.text) return ''
+  const schema = guidance.schema
+    ? `<span class="karl-guide-guidance-schema">${escapeHtml(guidance.schema)}</span>`
+    : ''
+  return `<span class="karl-guide-guidance"><strong>Guidance:</strong> ${escapeHtml(guidance.text)}${schema}</span>`
+}
+
 function renderKarlGuidePanel(guide, panelId) {
   const values = guideCopyValues(guide.values)
   const unresolved = guide.unresolvedId
@@ -111,7 +123,7 @@ function renderKarlGuidePanel(guide, panelId) {
         )
         .join('')}</span>`
     : ''
-  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${renderKarlGuideField(guide.field)}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
+  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${renderKarlGuideField(guide.field)}${renderKarlGuideGuidance(guide.guidance)}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
 }
 const KARL_TAG_KINDS = {
   meta: {

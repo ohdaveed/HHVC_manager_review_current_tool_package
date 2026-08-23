@@ -258,6 +258,31 @@ const UNRESOLVED = {
   U2: 'Karl Callout has no separate title field; fold the title into the rich text or get a CMS decision.',
 }
 
+/* Style advice this repo's record actually supports, keyed by link shape.
+
+   **Guidance and schema are different claims and this table keeps them apart
+   in the data, not just in the CSS.** docs/karl-export-field-map.md's obsolete
+   register entry O14 records the live `Button link` text field at
+   `maxlength="255"`, measured 2026-08-15 on a Transaction `section_specifics`
+   block, and records the Help Center's "can only be 25 characters" as style
+   guidance rather than a schema limit. U19 records ten mockup labels shortened
+   on that guidance — on advice, not on constraint.
+
+   Printing 25 as a limit would be a measured-looking falsehood in the one panel
+   whose whole job is separating a measured destination from a chosen one, which
+   is the same failure guideStatusLabel() checks `inferred` before the evidence
+   line to avoid.
+
+   **One entry, and add another only when the field map records one** — exactly
+   the rule stated on UNRESOLVED above. This is a display string, not a second
+   record of a measurement. */
+const FIELD_GUIDANCE = {
+  'button-link': {
+    text: 'Aim for about 25 characters of link text — Karl Help Center style guidance.',
+    schema: 'The field itself accepts 255 (measured 2026-08-15).',
+  },
+}
+
 function normalizePageType(type) {
   return String(type || '')
     .trim()
@@ -304,6 +329,7 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
         : buildSteps(pageType, role, guideContext, path, inferred),
     evidence: isUnresolved ? 'U' : explicit.evidence || (inferred || !path ? 'U' : 'E1'),
     field: explicit.field || fieldMetaFor(ref),
+    guidance: explicit.guidance || FIELD_GUIDANCE[guideContext.linkShape],
     status: isUnresolved
       ? 'unresolved'
       : explicit.status || (inferred ? 'inferred' : path ? 'confirmed' : 'mockup-only'),
@@ -511,6 +537,7 @@ function linkShapeMeta(shape) {
 
 export {
   BUTTON_HOSTS,
+  FIELD_GUIDANCE,
   INFERRED_PATHS,
   LINK_SHAPES,
   META_PANELS,

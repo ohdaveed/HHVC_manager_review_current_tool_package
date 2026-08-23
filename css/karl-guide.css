@@ -292,3 +292,19 @@ body.hide-karl-tags .karl-guide {
     transition: none;
   }
 }
+
+/* Guidance reads as advice, Rules read as measurement. The separation is
+   carried by the label word first — the class only reinforces it, because a
+   reviewer reading the panel aloud or with colour vision differences still has
+   to get the distinction. */
+.karl-guide-guidance {
+  display: block;
+  margin-top: var(--ds-space-1);
+  font-size: var(--ds-text-micro);
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.karl-guide-guidance-schema {
+  margin-left: var(--ds-space-1);
+  font-style: normal;
+}
