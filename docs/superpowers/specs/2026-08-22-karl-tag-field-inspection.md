@@ -69,7 +69,7 @@ The brief spans four subsystems. **This spec approves one of them.**
 | # | Subsystem | Disposition |
 | - | --------- | ----------- |
 | 1 | Field-metadata surfacing (items 2 and 4) | **In scope — this spec** |
-| 2 | Five-way semantic colour taxonomy | **Blocked on a decision** — see below |
+| 2 | Five-way semantic colour taxonomy | **Ruled and planned separately** — `docs/superpowers/plans/2026-08-23-karl-tag-category-encoding.md` |
 | 3 | Blueprint mode with dotted block outlines | **Deferred** — no existing surface |
 | 4 | Sidebar drawer, JSON snippet, character counter | **Rejected** — see below |
 
@@ -156,6 +156,42 @@ categories become a *second* attribute rendered alongside the existing kind
 (additive, no call-site churn), or the four kinds are replaced and every call
 site is re-audited against `ROLE_PANELS`. The first is cheap; the second is a
 project.
+
+### Ruled 2026-08-23 — the first shape, and the measurement that decided it
+
+**The categories are DERIVED, and `kind` is never renamed or re-read.** Counted
+across `js/mockup/page-render.js`: there are 34 `karlTag()` calls, of which 19
+pass an explicit `context.role` and **14 pass a bare kind literal with no role
+at all** (7 `placement`, 4 `body`, 2 `editor`, 1 `meta`). Because
+`guideForContext()` computes `role = context.role || context.component || kind`,
+those 14 sites use the KIND STRING as their role. Renaming the kinds therefore
+changes `role` for every one of them, and any new name absent from
+`ROLE_PANELS`/`ROLE_ALIASES` resolves to `''` and reports "Mockup only" — which
+is the wrong-answer-delivered-confidently failure this whole subsystem exists to
+prevent, arriving through the front door.
+
+So a new pure classifier reads the signals already in scope at `karlTag()` —
+`kind`, `context.role`, `context.linkShape`, `inheritanceFact` — and returns a
+category. Nothing that feeds role resolution is touched.
+
+**Colour moves to the category; the kind keeps its WORD.** The two cannot both
+own colour on one chip. They do not have to: each tag already prints its kind in
+words (`METADATA`, `BODY`, `PLACEMENT`, `EDITOR ONLY`) in `.karl-tag-kind`, so
+the kind survives as a text encoding while the category takes the fill. That
+also keeps the encoding non-colour-dependent, which the Karl-tag legend's own
+removal note argues for.
+
+**There are SIX buckets, not five, and that is the real cost.** The brief's five
+categories do not cover `editor` — QA notes that are not Karl fields at all and
+must stay visually distinct from anything publishable. Five `--legacy-*` colour
+families exist today (`info`, `purple`, `warning`, `success`, `danger`), each
+with a bg/border/text triple. Mapping: Metadata→`info`, StreamField→`purple`,
+Actions/CTAs→`success`, Callouts→`warning`, Editor-only→`danger` (red reads as
+"do not publish" far better than the green it carries today), which leaves
+**Inherited/Link pickers needing one new family**. That is one new token triple
+in both modes, with measured WCAG ratios and within-mode ΔE added to
+`tests/theme-contrast.test.js` — not a free change, and stated here rather than
+discovered later.
 
 ## Deferred: blueprint mode
 
