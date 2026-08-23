@@ -67,6 +67,37 @@ function guideCopyValues(values = []) {
    `role="heading" aria-level="4"` keeps the values heading a heading. The
    ordinals the `<ol>` used to draw come from a CSS counter — see
    css/karl-guide.css, where they have to stay in step with this markup. */
+/* The Field and Rules rows, built only from `guide.field` — which
+   js/karl/karl-guide-registry.js populates from js/karl/karl-blocks.js, the
+   transcribed inventory tests/karl-blocks.test.js guards against
+   docs/karl-export-field-map.md. Nothing here restates a Karl fact; a wrong
+   value has to be wrong in the inventory first, where CI can see it.
+
+   Two rows rather than one because they answer different questions. Field
+   answers "what am I typing into", and the raw Wagtail name is the half a UI
+   breadcrumb cannot give — an editor comparing the mockup against an export, or
+   reading a colleague's note, has the raw name and not the label. Rules answers
+   "what will the form let me do", and it prints the field map's own words:
+   `not recorded` is a real answer there and is NOT the same claim as
+   `Optional`. See fieldMetaFor()'s header for why that distinction is the whole
+   point.
+
+   Phrasing content only, like the rest of this panel. */
+function renderKarlGuideField(field) {
+  if (!field) return ''
+  const rules = [
+    field.required ? `Required: ${field.required}` : '',
+    field.repeatable || '',
+    field.blockTypes || '',
+  ].filter(Boolean)
+  const rulesRow = rules.length
+    ? `<span class="karl-guide-rules"><strong>Rules:</strong> ${rules
+        .map((rule) => `<span class="karl-guide-rule">${escapeHtml(rule)}</span>`)
+        .join('<span class="karl-guide-rule-sep" aria-hidden="true">·</span>')}</span>`
+    : ''
+  return `<span class="karl-guide-field"><strong>Field:</strong> <code>${escapeHtml(field.rawName)}</code><span class="karl-guide-field-label">${escapeHtml(field.uiLabel)}</span></span>${rulesRow}`
+}
+
 function renderKarlGuidePanel(guide, panelId) {
   const values = guideCopyValues(guide.values)
   const unresolved = guide.unresolvedId
@@ -80,7 +111,7 @@ function renderKarlGuidePanel(guide, panelId) {
         )
         .join('')}</span>`
     : ''
-  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
+  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${renderKarlGuideField(guide.field)}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
 }
 const KARL_TAG_KINDS = {
   meta: {

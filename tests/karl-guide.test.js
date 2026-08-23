@@ -478,3 +478,68 @@ describe('the guide carries the field the path leads to', () => {
     expect(transactionGuide.field.rawName).toBe('description')
   })
 })
+
+describe('the guide panel shows the field, not just the screen', () => {
+  const transactionStep = () =>
+    renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Transaction' }, context: { role: 'what-to-do' } }),
+      'panel-1'
+    )
+
+  test('the raw Wagtail field name renders in a code element', () => {
+    expect(transactionStep()).toContain('<code>section_specifics</code>')
+  })
+
+  test('the UI label renders beside it', () => {
+    expect(transactionStep()).toContain('Section specifics')
+  })
+
+  test("the rules row prints the doc's required and repeatable wording", () => {
+    const html = transactionStep()
+    expect(html).toContain('not recorded')
+    expect(html).toContain('repeatable')
+  })
+
+  test('the block-type chooser renders', () => {
+    expect(transactionStep()).toContain('Button link | Phone number | Text')
+  })
+
+  // Same invariant the existing "the guide panel is phrasing content" block
+  // asserts for the rest of the panel, restated for the new rows: the panel
+  // renders inside a <span> that can sit inside a <p>, and a block-level start
+  // tag closes that paragraph, so the panel escapes the ancestor it is
+  // positioned against and reopens elsewhere on the page.
+  test('the new rows emit no block-level element', () => {
+    const html = transactionStep()
+    expect(html).not.toMatch(/<(div|p|ul|ol|li|h[1-6])[\s>]/)
+  })
+
+  test('a guide with no field renders no field row at all', () => {
+    const html = renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Information' }, context: { role: 'contact' } }),
+      'panel-2'
+    )
+    expect(html).not.toContain('karl-guide-field')
+    expect(html).not.toContain('karl-guide-rules')
+  })
+
+  test('field values are escaped', () => {
+    const html = renderKarlGuidePanel(
+      {
+        path: 'Content',
+        steps: [],
+        field: {
+          rawName: '<script>x</script>',
+          uiLabel: 'a"b',
+          required: 'yes',
+          repeatable: 'single',
+          blockTypes: '',
+        },
+      },
+      'panel-3'
+    )
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('&lt;script&gt;')
+    expect(html).toContain('a&quot;b')
+  })
+})

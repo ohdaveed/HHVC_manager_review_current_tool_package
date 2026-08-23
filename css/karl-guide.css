@@ -165,6 +165,33 @@
   line-height: 1.35;
 }
 
+/* Field and Rules rows. Both are inline-level by construction: the panel is a
+   <span> subtree, so `display: block` here would be a layout claim on a
+   phrasing element, not a structural one, and it is what makes each row its own
+   line without introducing a block-level TAG. */
+.karl-guide-field,
+.karl-guide-rules {
+  display: block;
+  margin-top: var(--ds-space-1);
+  font-size: var(--ds-text-micro);
+  color: var(--text-secondary);
+}
+.karl-guide-field code {
+  padding: 0 var(--ds-space-1);
+  border-radius: 3px;
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.karl-guide-field-label {
+  margin-left: var(--ds-space-1);
+  font-style: italic;
+}
+.karl-guide-rule-sep {
+  margin: 0 var(--ds-space-1);
+  color: var(--text-secondary);
+}
+
 .karl-guide-path span,
 .karl-guide-value code {
   display: block;
