@@ -1978,9 +1978,13 @@ document is filed under.
   chunks.
 - **`karl` and `karl-gitbook` are separate on purpose**: the CMS as MEASURED
   versus the CMS as DOCUMENTED. They have disagreed four times over (see the
-  field map's obsolete register), and collapsing them would let a Help Center
-  claim the live admin contradicts be cited with a measurement's authority. The
-  prompt says the measurement wins.
+  field map's obsolete register), and collapsing them would lose the distinction
+  the precedence rule turns on. **Since the 2026-08-23 reversal the prompt says
+  the HELP CENTER wins** where both describe the same field — the form is more
+  permissive than the guidance, and measuring that a form accepts something is
+  not a licence to do it. `karl` stays authoritative for raw Wagtail field
+  names, panel order, and any field the guide does not discuss, because the Help
+  Center's silence is not a claim.
 - **A superseded document cannot be admitted, because it cannot carry its own
   warning.** The chunker prefixes each chunk with its HEADING PATH, never with
   the file's opening banner — so `docs/wagtail-content-mapping.md`'s "specific

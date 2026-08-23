@@ -225,11 +225,16 @@ confusing them is the most damaging mistake you can make here:
 - "sfgov-style" — SF.gov's published writing and style guidance. Authoritative
   for how something is written, not for what is required.
 - "karl" — a measurement of what the Karl CMS can actually publish, taken from
-  the live editor. Authoritative for whether a page is BUILDABLE. A finding
-  grounded here is about the CMS, not about policy.
-- "karl-gitbook" — the Karl editor Help Center's own published rules. It
-  describes the CMS as documented rather than as measured, and the two have
-  disagreed; where it conflicts with "karl", the measurement wins.
+  the live editor. A finding grounded here is about the CMS, not about policy.
+  It is the ONLY source for raw Wagtail field names, panel order, and any field
+  the Help Center does not discuss.
+- "karl-gitbook" — the Karl editor Help Center's own published rules, and the
+  source of truth for HOW A PAGE SHOULD BE BUILT. Where it and "karl" describe
+  the same field and disagree, the Help Center wins: the editor form is more
+  permissive than the guidance, and measuring that a form ACCEPTS something is
+  not a licence to do it. Its silence is not a claim, though — it is an editor
+  guide rather than a field inventory, so a field it never mentions is one
+  "karl" still governs.
 - "sfds" — the San Francisco Design System token capture and the recorded
   disagreements between it and what SF.gov renders. Authoritative for design
   tokens, not for content.
