@@ -23,14 +23,20 @@ own Definition of Done says never to leave commits unpushed on a local branch.
 
 ## PR 1 — Correct stale claims in place
 
-- [ ] `build_scripts/ai/prompts.js` — the missed propagation site. It still tells the model
+- [x] `build_scripts/ai/prompts.js` — the missed propagation site. It still told the model
       "where it conflicts with `karl`, the measurement wins"; `docs/karl-export-field-map.md`
       reversed that on 2026-08-23 so the Help Center governs. Commit `0fc3802` claimed to
       propagate the reversal to every site that states it and did not touch this one.
-- [ ] `AGENTS.md` + both mirrors — page `type` is a **closed enum**
-      (`build_scripts/schema.js`), not "a free-form string, only `min(1)` checked".
-- [ ] `js/core/page-registry-data.js` — same false premise used as the written rationale for
-      the five-type picker. The narrowing is right; the stated reason is not.
+      Fixed in `877cc55`, along with the three docs that described the prompt's old behaviour.
+- [x] `AGENTS.md` + `js/core/page-registry-data.js` — page `type` is a **closed enum**
+      (`z.enum(PAGE_TYPES)`, eight values), not "a free-form string, only `min(1)` checked".
+      The registry used the same false premise as its written rationale for the five-type
+      picker; the narrowing is right, the stated reason was not. Fixed in `d73890f`.
+- [x] `docs/karl-export-field-map.md` — the chooser/field-map delta, computed both ways:
+      chooser 14, field map 17, nothing in the chooser unaccounted for, and `Topic` / `Form` /
+      `Document Collection Search` present here but not offered there. Landed in `d73890f`;
+      **this supersedes PR 4a's narrower "Topic is the one absent type" framing.**
+      Side effect: all 99 `docLine` citations in `js/karl/karl-blocks.js` shifted +16.
 - [ ] `docs/codebase/` — SQLite→Postgres drift (`storage.js` owns the driver seam; there is no
       `server.ts` `getDb()`).
 - [ ] `docs/codebase/` — "no UI framework" vs the live React 19 + MUI islands.
