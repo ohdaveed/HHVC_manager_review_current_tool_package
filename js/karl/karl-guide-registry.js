@@ -320,10 +320,27 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * those, and re-deriving them at the call site would be a second lookup free to
  * disagree with this one.
  *
- * Returns null for exactly the cases resolvePath() returns '' for: an
- * unresolved context, an unknown page type, and a role naming no panel. That
- * parity is asserted in tests/karl-guide.test.js and is what lets resolvePath()
- * be a pure formatter over this function.
+ * The null case is symmetric with resolvePath()'s '': an unresolved context,
+ * an unknown page type, and a role naming no panel all return null here and ''
+ * there. The non-null case is NOT symmetric, and that asymmetry is
+ * deliberate rather than a gap to close. A `kind: 'panel'` ref only records
+ * that SOME lookup table (META_PANELS, ROLE_PANELS, BUTTON_HOSTS, …) named a
+ * rawName for this role — it does not confirm that rawName resolves to a
+ * real panel in this karlType's inventory. resolvePath() makes that second
+ * check itself, by handing the ref to panelByRawName()/breadcrumbFor() and
+ * printing '' when the lookup misses. A caller holding a `kind: 'panel'` ref
+ * must re-run that same check with panelByRawName() before treating the ref
+ * as a confirmed destination — concretely, `resolveFieldRef('campaign',
+ * 'description', {})` returns a non-null ref naming rawName 'description',
+ * because META_PANELS.description is type-agnostic, but Campaign, About us
+ * and Report carry no 'description' panel in the field-map transcription
+ * (only Transaction, Information, Topic, Agency and Resource Collection do),
+ * so resolvePath() for that same call correctly returns ''. Skipping the
+ * re-check would stamp `description` as an E1-confirmed Karl destination on
+ * three page types where no such field exists — the exact "measured answer
+ * that was never measured" failure this guide exists to prevent. This
+ * asymmetry, including the description/Campaign case, is pinned in
+ * tests/karl-guide.test.js.
  *
  * @param {string} pageType normalizePageType() output, e.g. 'about-us'.
  * @param {string} role Section/field role, or the tag kind when the call site

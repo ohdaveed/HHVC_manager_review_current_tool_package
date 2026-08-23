@@ -346,4 +346,31 @@ describe('field references survive path resolution', () => {
     )
     expect(guideFor('Transaction', 'content', { unresolvedId: 'U1' }).path).toBe('')
   })
+
+  // A non-null `kind: 'panel'` ref is not proof the panel resolves — it only
+  // records that some lookup table (META_PANELS here) named a rawName for
+  // this role. META_PANELS.description is type-agnostic, but Campaign, About
+  // us and Report carry no 'description' panel in the field-map
+  // transcription, so resolvePath() correctly reports '' / mockup-only for
+  // them even though resolveFieldRef() handed back a reference. This is
+  // deliberate asymmetry, not a bug to fix by tightening resolveFieldRef():
+  // the confirming check belongs to panelByRawName()/breadcrumbFor(), which
+  // is what resolvePath() (and any future consumer of a panel ref) must run
+  // before treating the reference as a measured Karl destination. Transaction
+  // is the contrasting case, where the same role DOES resolve.
+  test('a non-null panel ref does not guarantee the panel resolves', () => {
+    const campaignRef = resolveFieldRef('campaign', 'description', {})
+    expect(campaignRef).toEqual({
+      kind: 'panel',
+      karlType: 'Campaign',
+      rawName: 'description',
+      within: undefined,
+    })
+    const campaignGuide = guideFor('Campaign', 'description')
+    expect(campaignGuide.path).toBe('')
+    expect(campaignGuide.status).toBe('mockup-only')
+
+    const transactionGuide = guideFor('Transaction', 'description')
+    expect(transactionGuide.path).toBe('Content → Description')
+  })
 })
