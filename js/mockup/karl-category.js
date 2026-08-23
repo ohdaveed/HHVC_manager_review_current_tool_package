@@ -3,7 +3,7 @@
 
    **Why this is derived rather than authored, and why `kind` is not renamed.**
    js/karl/karl-guide-registry.js computes `role = context.role ||
-   context.component || kind`, and 14 of the 34 karlTag() call sites in
+   context.component || kind`, and 14 of the 31 karlTag() call sites in
    js/mockup/page-render.js pass a bare kind literal with no role — so for those
    sites the kind string IS the role that resolves a Karl field path. Renaming
    the kinds to carry semantic categories would change `role` for all 14, and

@@ -2,7 +2,7 @@
 // different question from the tag's `kind`.
 //
 // **Why this is a separate axis rather than a rename.** `guideForContext()`
-// computes `role = context.role || context.component || kind`, and 14 of the 34
+// computes `role = context.role || context.component || kind`, and 14 of the 31
 // karlTag() call sites pass a bare kind literal with no role — so for those,
 // the kind string IS the role that resolves a Karl field path. Renaming kinds
 // to carry semantic categories would silently resolve those to '' and report

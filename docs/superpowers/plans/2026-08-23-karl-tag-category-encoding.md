@@ -599,7 +599,7 @@ git commit -m "feat: colour Karl tags by category and key the legend to it"
 - `gotoFresh(page, path)` takes a **path**, not a page key. Navigate with `await gotoFresh(page)` then `await selectPage(page, 'payFee')`.
 - `#tagToggle` is a visually hidden checkbox — click its `.karl-switch` label rather than calling `.check()`/`.uncheck()` on the input.
 
-- [ ] **Step 1: Write the spec**
+- [x] **Step 1: Write the spec**
 
 Create `tests/e2e/karl-category.spec.js` asserting, on a real page:
 - A step tag carries both `data-kind` and `data-category`, and its `data-kind` is still one of the four original kinds.
@@ -607,23 +607,23 @@ Create `tests/e2e/karl-category.spec.js` asserting, on a real page:
 - The kind word is still rendered inside each tag, so the encoding survives without colour.
 - **In dark mode** (`page.emulateMedia({ colorScheme: 'dark' })`), every category's tag still renders and the legend's Help-tab panel passes the axe check the suite already uses. Reuse `accessibility.spec.js`'s existing helper rather than writing a second axe harness.
 
-- [ ] **Step 2: Run it, and the full suite**
+- [x] **Step 2: Run it, and the full suite**
 
 Run: `bunx playwright test karl-category.spec.js`, then `bun run test:e2e`.
 Expected: PASS. If an assertion misses, debug the source — do not relax it.
 
-- [ ] **Step 3: Mirror the rule into the two full instruction files**
+- [x] **Step 3: Mirror the rule into the two full instruction files**
 
 Add to `AGENTS.md` and `CLAUDE.md`, in each file's own voice, the fact a future session most needs and cannot recover from the code alone: **Karl tags carry two axes — `kind` feeds Karl field resolution and must never be renamed, while `data-category` carries colour only.** State the reason: 14 of the 34 `karlTag()` call sites pass a bare kind literal with no `context.role`, so their kind IS their role.
 
 Do **not** add this to `.github/copilot-instructions.md`. That file is a 167-line pointer carrying no per-subsystem inventories, and the canon's own rule is that pointer files which restated summaries rotted into instructions that were actively wrong. Add no numeric claim beyond the two above — `tests/doc-counts.test.js` and `tests/doc-claims.test.js` scan these files for number-anchored claims and check them against the filesystem, so any count you write must be true and re-derivable.
 
-- [ ] **Step 4: Run the doc gates**
+- [x] **Step 4: Run the doc gates**
 
 Run: `bun run lint:docs && bun test tests/mirror-consistency.test.js tests/doc-counts.test.js tests/doc-claims.test.js && bun run test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tests/e2e/karl-category.spec.js AGENTS.md CLAUDE.md

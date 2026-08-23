@@ -703,7 +703,8 @@ to.
   including `karlTag()` for Karl CMS placement annotations.
 - **A Karl tag carries two axes, and only one of them is safe to rename.**
   `kind` (`meta`/`body`/`placement`/`editor`) is what Karl field resolution
-  reads: most `karlTag()` call sites in `js/mockup/page-render.js` pass a bare
+  reads: nearly half the `karlTag()` call sites in `js/mockup/page-render.js`
+  pass a bare
   kind literal with no `context.role` at all, and `guideForContext()` falls back
   to the kind when no role is given — so for those call sites the kind IS the
   role, and renaming one silently changes which Karl field the guide panel

@@ -592,7 +592,8 @@ belong to.
   `data-category` (`metadata`/`block`/`action`/`callout`/`inherited`/`editor`)
   from signals already in scope at `karlTag()`. **A Karl tag has two axes and
   only one of them is safe to rename.** `kind` is what Karl field resolution
-  reads — most `karlTag()` call sites in `js/mockup/page-render.js` pass a bare
+  reads — nearly half the `karlTag()` call sites in `js/mockup/page-render.js`
+  pass a bare
   kind literal with no `context.role`, and `guideForContext()` falls back to the
   kind when no role is given, so for those call sites the kind IS the role and
   renaming one silently changes which Karl field the guide panel claims to have
