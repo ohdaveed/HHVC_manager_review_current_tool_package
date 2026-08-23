@@ -355,6 +355,34 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * @returns {{kind: 'panel', karlType: string, rawName: string, within: string|undefined}
  *   |{kind: 'promote', field: object}|null} The reference, or null when none is recorded.
  */
+function resolveFieldRef(pageType, role, context) {
+  if (context.unresolvedId) return null
+  const karlType = PAGE_TYPE_LABELS[pageType]
+  if (!karlType) return null
+  const panelRef = (ref) =>
+    ref ? { kind: 'panel', karlType, rawName: ref.rawName, within: ref.within } : null
+
+  if (META_PANELS[role]) return panelRef(META_PANELS[role])
+  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
+  if (promote) return { kind: 'promote', field: promote }
+
+  if (context.linkShape === 'button-link') return panelRef(BUTTON_HOSTS[`${pageType}.${role}`])
+  if (context.linkShape === 'campaign-related') return panelRef(ROLE_PANELS.campaign.related)
+
+  const roles = ROLE_PANELS[pageType]
+  if (context.linkShape === 'page-reference') {
+    if (role === 'related') return panelRef(roles?.related)
+    return panelRef(roles?.[ROLE_ALIASES[role] || role])
+  }
+  if (role === 'image') {
+    return pageType === 'information'
+      ? panelRef({ rawName: 'information_section', within: 'Image' })
+      : null
+  }
+  if (NON_FIELD_ROLES.has(role)) return null
+  return panelRef(roles?.[ROLE_ALIASES[role] || role])
+}
+
 /**
  * The display facts for one field reference: raw Wagtail name, UI label, and
  * the required/repeatable/block-type wording the field map records.
@@ -392,34 +420,6 @@ function fieldMetaFor(ref) {
     repeatable: panel.repeatableDoc || '',
     blockTypes: panel.blockTypesDoc || '',
   }
-}
-
-function resolveFieldRef(pageType, role, context) {
-  if (context.unresolvedId) return null
-  const karlType = PAGE_TYPE_LABELS[pageType]
-  if (!karlType) return null
-  const panelRef = (ref) =>
-    ref ? { kind: 'panel', karlType, rawName: ref.rawName, within: ref.within } : null
-
-  if (META_PANELS[role]) return panelRef(META_PANELS[role])
-  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
-  if (promote) return { kind: 'promote', field: promote }
-
-  if (context.linkShape === 'button-link') return panelRef(BUTTON_HOSTS[`${pageType}.${role}`])
-  if (context.linkShape === 'campaign-related') return panelRef(ROLE_PANELS.campaign.related)
-
-  const roles = ROLE_PANELS[pageType]
-  if (context.linkShape === 'page-reference') {
-    if (role === 'related') return panelRef(roles?.related)
-    return panelRef(roles?.[ROLE_ALIASES[role] || role])
-  }
-  if (role === 'image') {
-    return pageType === 'information'
-      ? panelRef({ rawName: 'information_section', within: 'Image' })
-      : null
-  }
-  if (NON_FIELD_ROLES.has(role)) return null
-  return panelRef(roles?.[ROLE_ALIASES[role] || role])
 }
 
 /**

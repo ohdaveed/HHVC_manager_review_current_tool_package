@@ -450,4 +450,31 @@ describe('the guide carries the field the path leads to', () => {
     expect(guide.path).toBe('Content → Somewhere the author chose')
     expect(guide.field).toBeUndefined()
   })
+
+  // The production-reachable case fieldMetaFor()'s `if (!panel) return
+  // undefined` guard exists for. META_PANELS.description is type-agnostic, so
+  // resolveFieldRef() hands back a non-null `{kind: 'panel', rawName:
+  // 'description', ...}` ref for EVERY page type — but panelByRawName() has no
+  // 'description' entry for Campaign, About us, or Report, only for
+  // Transaction, Information, Topic, Agency and Resource Collection. Without
+  // this second check, a Campaign guide reporting `status: 'mockup-only'`
+  // would ALSO print a confident field name for a field that does not exist on
+  // that page type — a measured-looking answer nobody measured. The
+  // contrasting Transaction case is asserted in the same test so this cannot
+  // pass by the guard never firing at all.
+  test('a page type with no description panel carries no field, even though the ref resolved', () => {
+    const campaignGuide = guideForContext({
+      page: { type: 'Campaign' },
+      context: { role: 'description' },
+    })
+    expect(campaignGuide.path).toBe('')
+    expect(campaignGuide.status).toBe('mockup-only')
+    expect(campaignGuide.field).toBeUndefined()
+
+    const transactionGuide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'description' },
+    })
+    expect(transactionGuide.field.rawName).toBe('description')
+  })
 })
