@@ -13,13 +13,22 @@ dropped several contracts this repo treats as load-bearing.
 
 ## Branching note
 
-This work stacks on `content/article11-spotlight-button-cap`, **not** on `origin/main`. That
-branch carries 22 unpushed commits including the 2026-08-23 precedence reversal
-(`dec5fbd`, `0fc3802`), which several of these corrections depend on. Branching from
-`origin/main` would produce corrections that contradict the tree they land in.
+This work is the third branch in an existing stack, and its PR must target
+`content/article11-spotlight-button-cap` rather than `main`:
 
-**Open question for the maintainer:** those 22 commits have been sitting unpushed. The repo's
-own Definition of Done says never to leave commits unpushed on a local branch.
+| PR   | Head                                     | Base                                     | State                  |
+| ---- | ---------------------------------------- | ---------------------------------------- | ---------------------- |
+| #204 | `feat/karl-tag-field-inspection`         | `main`                                   | open                   |
+| #206 | `content/article11-spotlight-button-cap` | `feat/karl-tag-field-inspection`         | open, all checks green |
+| this | `docs/correct-stale-claims`              | `content/article11-spotlight-button-cap` | —                      |
+
+It has to stack there rather than branch from `main`, because several corrections depend on
+the 2026-08-23 precedence reversal (`dec5fbd`, `0fc3802`) that lives in #204/#206. Branching
+from `main` would produce corrections that contradict the tree they land in.
+
+An earlier draft of this file called those 26 commits "unpushed" and flagged it as a
+Definition-of-Done violation. That was wrong: they are pushed, with open PRs. They are
+**unmerged to `main`**, which is what a review stack normally looks like.
 
 ## PR 1 — Correct stale claims in place
 
