@@ -17,6 +17,7 @@ import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import {
   BUTTON_HOSTS,
   ROLE_PANELS,
+  fieldMetaFor,
   guideForContext,
   resolveFieldRef,
 } from '../js/karl/karl-guide-registry.js'
@@ -372,5 +373,81 @@ describe('field references survive path resolution', () => {
 
     const transactionGuide = guideFor('Transaction', 'description')
     expect(transactionGuide.path).toBe('Content → Description')
+  })
+})
+
+describe('the guide carries the field the path leads to', () => {
+  test('a Transaction step guide names the raw Wagtail field', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+    })
+    expect(guide.field.rawName).toBe('section_specifics')
+    expect(guide.field.uiLabel).toBe('Section specifics')
+  })
+
+  // The inventory records required:false AND requiredDoc:'not recorded' for this
+  // panel, and they are different claims: the boolean is this repo coercing an
+  // absent measurement into a default, the string is what the field map says.
+  // Rendering "Optional" would report a measurement nobody took.
+  test("required and repeatable render the doc's own words, never the booleans", () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+    })
+    expect(guide.field.required).toBe('not recorded')
+    expect(guide.field.repeatable).toBe('repeatable')
+    expect(guide.field.required).not.toBe('Optional')
+    expect(typeof guide.field.required).toBe('string')
+    expect(typeof guide.field.repeatable).toBe('string')
+  })
+
+  test('the block-type chooser contents come through verbatim', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+    })
+    expect(guide.field.blockTypes).toBe(
+      'chooser: Address | Callout | Document | Email | Button link | Phone number | Text'
+    )
+  })
+
+  test('a Promote field carries its own label and raw name', () => {
+    const meta = fieldMetaFor(resolveFieldRef('transaction', 'seoTitle', {}))
+    expect(meta.rawName).toBe('seo_title')
+    expect(meta.uiLabel).toBe('Title tag')
+  })
+
+  // The whole point of resolvePath() returning '' is that an unrecorded
+  // destination stays visibly unrecorded. A field block appearing without one
+  // would put a confident field name under a "Mockup only" badge.
+  test('a guide with no path carries no field at all', () => {
+    const guide = guideForContext({
+      page: { type: 'Information' },
+      context: { role: 'contact' },
+    })
+    expect(guide.path).toBe('')
+    expect(guide.field).toBeUndefined()
+  })
+
+  test('an unresolved guide carries no field either', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'content', unresolvedId: 'U1' },
+    })
+    expect(guide.field).toBeUndefined()
+  })
+
+  // An authored guide.path is not second-guessed elsewhere in this function,
+  // and a derived field block under it would claim a destination the author
+  // did not name.
+  test('an explicitly authored path carries no derived field', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+      guide: { path: 'Content → Somewhere the author chose' },
+    })
+    expect(guide.path).toBe('Content → Somewhere the author chose')
+    expect(guide.field).toBeUndefined()
   })
 })

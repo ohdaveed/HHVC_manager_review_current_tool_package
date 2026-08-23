@@ -285,9 +285,14 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
   // schema never sees.
   const unresolvedId = guideContext.unresolvedId
   const isUnresolved = Boolean(unresolvedId) && Boolean(UNRESOLVED[unresolvedId])
+  // The reference is resolved once and the path formatted from it, so the field
+  // block below cannot name a different destination than the breadcrumb does.
+  const ref = isUnresolved || explicit.path ? null : resolveFieldRef(pageType, role, guideContext)
   const path = isUnresolved ? '' : explicit.path || resolvePath(pageType, role, guideContext)
   // Only a DERIVED path can be inferred. An explicitly authored `guide.path`
-  // carries its own evidence and status and is not second-guessed here.
+  // carries its own evidence and status and is not second-guessed here — and
+  // for the same reason it carries no derived field block, which would claim a
+  // destination the author did not name.
   const inferred = !explicit.path && Boolean(path) && isInferredPath(pageType, role)
   const resolvedValues = explicit.values || values
   const result = {
@@ -298,6 +303,7 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
         ? explicit.steps
         : buildSteps(pageType, role, guideContext, path, inferred),
     evidence: isUnresolved ? 'U' : explicit.evidence || (inferred || !path ? 'U' : 'E1'),
+    field: explicit.field || fieldMetaFor(ref),
     status: isUnresolved
       ? 'unresolved'
       : explicit.status || (inferred ? 'inferred' : path ? 'confirmed' : 'mockup-only'),
@@ -349,6 +355,45 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * @returns {{kind: 'panel', karlType: string, rawName: string, within: string|undefined}
  *   |{kind: 'promote', field: object}|null} The reference, or null when none is recorded.
  */
+/**
+ * The display facts for one field reference: raw Wagtail name, UI label, and
+ * the required/repeatable/block-type wording the field map records.
+ *
+ * **Every value is a string, and the `*Doc` strings are preferred over the
+ * booleans beside them.** js/karl/karl-blocks.js carries both — `required:
+ * false` alongside `requiredDoc: 'not recorded'` — and they make different
+ * claims. The boolean is this repo's coercion of an absent measurement into a
+ * default; the string is what docs/karl-export-field-map.md actually says.
+ * Rendering "Optional" from the boolean would tell a reviewer the live form was
+ * measured and found to permit an empty value, which nobody measured. Same
+ * posture as resolvePath() returning '' rather than guessing.
+ *
+ * @param {object|null} ref A resolveFieldRef() result.
+ * @returns {{rawName: string, uiLabel: string, required: string, repeatable: string,
+ *   blockTypes: string}|undefined} Undefined when there is nothing to show.
+ */
+function fieldMetaFor(ref) {
+  if (!ref) return undefined
+  if (ref.kind === 'promote') {
+    return {
+      rawName: ref.field.rawName,
+      uiLabel: ref.field.label,
+      required: ref.field.required ? 'yes' : 'not recorded',
+      repeatable: 'single',
+      blockTypes: '',
+    }
+  }
+  const panel = panelByRawName(ref.karlType, ref.rawName)
+  if (!panel) return undefined
+  return {
+    rawName: panel.rawName,
+    uiLabel: panel.uiLabel,
+    required: panel.requiredDoc || 'not recorded',
+    repeatable: panel.repeatableDoc || '',
+    blockTypes: panel.blockTypesDoc || '',
+  }
+}
+
 function resolveFieldRef(pageType, role, context) {
   if (context.unresolvedId) return null
   const karlType = PAGE_TYPE_LABELS[pageType]
@@ -472,6 +517,7 @@ export {
   ROLE_PANELS,
   PAGE_TYPE_LABELS,
   UNRESOLVED,
+  fieldMetaFor,
   guideForContext,
   linkShapeMeta,
   normalizePageType,
