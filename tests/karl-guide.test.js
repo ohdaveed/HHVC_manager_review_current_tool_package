@@ -21,6 +21,7 @@ import {
   guideForContext,
   resolveFieldRef,
 } from '../js/karl/karl-guide-registry.js'
+import { KARL_CATEGORIES } from '../js/mockup/karl-category.js'
 import { karlTag } from '../js/mockup/page-render.js'
 import { renderKarlGuidePanel, renderKarlTagLegend } from '../js/mockup/karl-tag-meta.js'
 
@@ -654,5 +655,29 @@ describe('a Karl tag carries its category alongside its kind', () => {
       const html = karlTag('Some note', kind)
       expect(html).toContain(`data-kind="${kind}"`)
     }
+  })
+})
+
+describe('the legend explains categories, and never colour alone', () => {
+  test('the full legend lists every category by name', () => {
+    const html = renderKarlTagLegend('full')
+    for (const meta of Object.values(KARL_CATEGORIES)) {
+      expect(html).toContain(meta.label)
+    }
+  })
+
+  test('each legend swatch is keyed by category, not by kind', () => {
+    const html = renderKarlTagLegend('full')
+    for (const id of Object.keys(KARL_CATEGORIES)) {
+      expect(html).toContain(`data-category="${id}"`)
+    }
+  })
+
+  // The tags themselves still print their kind in words. That is what keeps the
+  // encoding readable without colour, and it is why moving colour to the
+  // category costs nothing in accessibility terms.
+  test('a tag still names its kind in words', () => {
+    expect(karlTag('Body section', 'body')).toContain('Body')
+    expect(karlTag('Editor note', 'editor')).toContain('Editor only')
   })
 })

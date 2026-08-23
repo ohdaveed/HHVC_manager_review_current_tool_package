@@ -2,6 +2,7 @@
 // escapeHtml is available for legend rendering.
 
 import { escapeHtml } from '../core/utils.js'
+import { KARL_CATEGORIES } from './karl-category.js'
 import {
   guideForContext,
   linkShapeMeta,
@@ -218,9 +219,14 @@ function parseKarlLabel(label) {
 }
 
 function renderKarlTagLegend(variant = 'full') {
-  const items = Object.entries(KARL_TAG_KINDS)
-    .map(([kind, meta]) => {
-      const swatch = `<span class="karl-tag karl-tag-legend-swatch" data-kind="${kind}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span></span>`
+  /* Keyed by CATEGORY rather than by kind, because the category is what
+     carries colour — see js/mockup/karl-category.js for why the two are
+     separate axes. KARL_TAG_KINDS stays where it is: karlKindMeta() still
+     supplies the word each tag prints, which is the encoding that survives
+     without colour. */
+  const items = Object.entries(KARL_CATEGORIES)
+    .map(([category, meta]) => {
+      const swatch = `<span class="karl-tag karl-tag-legend-swatch" data-category="${category}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span></span>`
       if (variant === 'compact') {
         return `<li class="karl-tag-legend-item karl-tag-legend-item--compact" title="${escapeHtml(meta.hint)}">${swatch}</li>`
       }

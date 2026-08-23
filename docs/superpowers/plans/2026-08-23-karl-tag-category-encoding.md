@@ -508,13 +508,13 @@ git commit -m "feat: add the teal token family for the link-picker tag category"
 - Consumes: `data-category` (Task 2), the teal tokens (Task 3), `KARL_CATEGORIES` (Task 1).
 - Produces: `.karl-tag[data-category='…']` colour rules; a legend keyed by category.
 
-- [ ] **Step 1: Read what is there now, and why it is written that way**
+- [x] **Step 1: Read what is there now, and why it is written that way**
 
 Read `css/ux-improvements.css` around lines 1022–1145 and the boxed comment in `css/styles.css` near line 1803. Two facts you must preserve:
 - The `!important` flags are load-bearing here. This is the self-aware override layer, and the base `.karl-tag` rules it overrides are in `css/styles.css`.
 - Per-kind colour must NOT be restored in `css/styles.css`. That boxed comment records a merge of two files in which neither block described what actually rendered.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Append to `tests/karl-guide.test.js`:
 
@@ -546,12 +546,12 @@ describe('the legend explains categories, and never colour alone', () => {
 
 Import `KARL_CATEGORIES` into the test file.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `bun test tests/karl-guide.test.js`
 Expected: FAIL — the legend still iterates `KARL_TAG_KINDS`.
 
-- [ ] **Step 4: Rewrite the colour blocks and the legend**
+- [x] **Step 4: Rewrite the colour blocks and the legend**
 
 In `css/ux-improvements.css`, replace the four `.karl-tag[data-kind='…']` colour blocks and their four `.karl-tag[data-kind='…'] .karl-tag-kind` blocks with six `[data-category='…']` equivalents, keeping the `!important` flags and the shared base block. Mapping:
 
@@ -570,12 +570,12 @@ Also update the dark-mode `.karl-tag.karl-tag-legend-swatch[data-kind]` selector
 
 In `js/mockup/karl-tag-meta.js`, change `renderKarlTagLegend` to iterate `KARL_CATEGORIES` and emit `data-category` on each swatch. Import `KARL_CATEGORIES` from `./karl-category.js`. Leave `KARL_TAG_KINDS` in place — `karlKindMeta()` still supplies the word each tag prints.
 
-- [ ] **Step 5: Run everything**
+- [x] **Step 5: Run everything**
 
 Run: `bun run test && bun run validate && bun run format && bun run format:check && bun run lint:js`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add css/ux-improvements.css js/mockup/karl-tag-meta.js tests/karl-guide.test.js

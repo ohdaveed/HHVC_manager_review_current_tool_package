@@ -1822,10 +1822,13 @@ a:focus {
 
    The whole tag colour system now lives in css/ux-improvements.css, beside the
    WCAG contrast note explaining why the kinds are flattened to one background
-   and re-separated by a 4px border-left strip that carries no text. Do not
-   restore per-kind `background`/`color` here: that argument is a contrast
-   judgement, and splitting it back across two files is how it gets half
-   revised. */
+   and re-separated by a 4px border-left strip that carries no text. Those
+   selectors are `[data-category]` rather than `[data-kind]` now — colour keys
+   on what a tag POINTS AT, while the kind stays the word the tag prints — but
+   nothing about the rule below changes: do not restore per-tag
+   `background`/`color` here, under either attribute. That argument is a
+   contrast judgement, and splitting it back across two files is how it gets
+   half revised. */
 .unverified-pill {
   display: inline-flex;
   align-items: center;
