@@ -188,7 +188,23 @@ all**: the panel renders inside a `<span>` that renders wherever its tag does,
 so a `<div>` within it closes an enclosing paragraph early and the panel
 escapes the positioned ancestor it anchors to, opening elsewhere on the page.
 That had been a rule three call sites had to remember; it is now a property of
-the markup),
+the markup. The panel also carries a raw Wagtail field name and its form
+rules now, read from `js/karl/karl-blocks.js` rather than restated — so a
+wrong value has to be wrong in that guarded inventory first, where
+`tests/karl-blocks.test.js` catches it, before it can mislead a reviewer here.
+The Rules row prints the inventory's `requiredDoc`/`repeatableDoc` strings
+verbatim and never the plain booleans sitting beside them: `not recorded` is
+a real, distinct answer, not a synonym for `Optional`, and rendering the
+boolean instead would report a measurement nobody actually took. Style
+advice is kept out of that row entirely and rendered in its own Guidance row
+next to the measured schema value it is judged against — `docs/karl-export-field-map.md`'s
+obsolete-register entry `O14` is the reason: the Help Center's "25 characters"
+guidance for a Button link is stale advice against a live field measured at
+`maxlength="255"`, and collapsing the two into one row would make that
+staleness invisible. A page type whose reference resolves to a panel absent
+from that type's inventory — Campaign, About us, or Report plus
+`description` is the live case — carries no field block at all, so a
+"mockup only" guide can never dress up a guess as a confident field name),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB),
 `review-api-postgres` (the same routes against a **real Postgres**, and
@@ -297,12 +313,13 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-four spec files, all UI-driven — navigation, editor panel, review
+twenty-five spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale, the Karl transcript panel, the pre-navigation flush
+the chrome type scale, the Karl transcript panel, the Karl guide panel's
+field rows on a real Transaction page, the pre-navigation flush
 of in-progress sidebar edits,
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist
 — that last one can only live here for the `<strong>`/`<em>` positive

@@ -166,7 +166,24 @@ type and role that produced it. It also asserts the panel emits **no
 block-level element at all** — the panel renders inside a `<span>` that renders
 wherever its tag does, so a `<div>` in it closes an enclosing paragraph early
 and the panel escapes the ancestor it is positioned against; that had been a
-rule three call sites remembered, and is now a property of the markup),
+rule three call sites remembered, and is now a property of the markup. It
+also covers the panel's newer Field and Rules rows: the raw Wagtail field
+name and its form rules are read straight from `js/karl/karl-blocks.js`
+rather than restated in the panel code, so a wrong value has to be wrong in
+that guarded inventory first — `tests/karl-blocks.test.js` is what would
+catch it. The Rules row is pinned to print the inventory's literal
+`requiredDoc`/`repeatableDoc` strings, never the plain booleans stored beside
+them, because `not recorded` is a real answer distinct from `Optional` and
+substituting the boolean would claim a measurement that was never taken.
+Style guidance lives in a separate Guidance row instead of folding into
+Rules, printed next to the measured schema value it is judged against — the
+motivating case is `docs/karl-export-field-map.md`'s obsolete-register entry
+`O14`, where the Help Center's "25 characters" advice for a Button link is
+stale next to a live field measured at `maxlength="255"`, a mismatch a
+merged row would hide. And a guide whose reference names a panel missing
+from that page type's inventory — Campaign, About us, or Report plus
+`description` is the live case — renders no field block at all, so a
+mockup-only guide never gets to look like a measured one),
 `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
 schema so a mismatched required field fails here rather than shipping; asserts
 a malformed registry entry is **dropped rather than thrown on**, since a throw
@@ -300,12 +317,13 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-four spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-five spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
-SFDS tokens, the chrome type scale, the Karl transcript panel, the
+SFDS tokens, the chrome type scale, the Karl transcript panel, the Karl
+guide panel's field rows on a real Transaction page, the
 pre-navigation flush of in-progress sidebar edits, and
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist —
 which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
