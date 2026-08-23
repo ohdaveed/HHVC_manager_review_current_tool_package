@@ -14,7 +14,12 @@
 // PR #153, every one of them a context resolving to a plausible neighbouring
 // field. Each is pinned below by the page type and role that produced it.
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import { BUTTON_HOSTS, ROLE_PANELS, guideForContext } from '../js/karl/karl-guide-registry.js'
+import {
+  BUTTON_HOSTS,
+  ROLE_PANELS,
+  guideForContext,
+  resolveFieldRef,
+} from '../js/karl/karl-guide-registry.js'
 import { renderKarlGuidePanel } from '../js/mockup/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
@@ -293,5 +298,52 @@ describe('Escape closes the guide from anywhere inside it', () => {
     trigger.setAttribute('aria-expanded', 'false')
     trigger.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+})
+
+describe('field references survive path resolution', () => {
+  test('a Transaction step resolves to the Section specifics panel', () => {
+    const ref = resolveFieldRef('transaction', 'what-to-do', {})
+    expect(ref).toEqual({
+      kind: 'panel',
+      karlType: 'Transaction',
+      rawName: 'section_specifics',
+      within: undefined,
+    })
+  })
+
+  test('a Spotlight CTA carries the nested Button link as its within', () => {
+    const ref = resolveFieldRef('campaign', 'spotlight', { linkShape: 'button-link' })
+    expect(ref).toEqual({
+      kind: 'panel',
+      karlType: 'Campaign',
+      rawName: 'spotlight_1',
+      within: 'Button link',
+    })
+  })
+
+  test('a Promote field resolves to a promote ref, not a panel ref', () => {
+    const ref = resolveFieldRef('transaction', 'seoTitle', {})
+    expect(ref?.kind).toBe('promote')
+    expect(ref?.field.rawName).toBe('seo_title')
+  })
+
+  test('an unresolved context has no reference at all', () => {
+    expect(resolveFieldRef('transaction', 'content', { unresolvedId: 'U1' })).toBe(null)
+  })
+
+  // Path parity goes through guideFor(), the helper the rest of this file
+  // already uses, because resolvePath is NOT exported — the existing suite
+  // reaches it only through guideForContext, and widening the module's public
+  // surface to let a test call it directly would make the refactor bigger than
+  // the feature.
+  test('the formatted path is exactly what it was before', () => {
+    expect(guideFor('Transaction', 'what-to-do').path).toBe(
+      'Content → What to Do → Section specifics'
+    )
+    expect(guideFor('Campaign', 'spotlight', { linkShape: 'button-link' }).path).toBe(
+      'Content → Spotlight 1 → Button link'
+    )
+    expect(guideFor('Transaction', 'content', { unresolvedId: 'U1' }).path).toBe('')
   })
 })

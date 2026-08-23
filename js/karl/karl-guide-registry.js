@@ -310,6 +310,57 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
 }
 
 /**
+ * Resolve WHICH Karl field a tag belongs to, as a reference rather than a
+ * formatted string.
+ *
+ * resolvePath() used to do this lookup and keep only the breadcrumb, throwing
+ * away the panel object — which carries the raw Wagtail name, the
+ * required/repeatable wording and the block-type chooser contents that
+ * js/karl/karl-blocks.js transcribes from the field map. The guide panel needs
+ * those, and re-deriving them at the call site would be a second lookup free to
+ * disagree with this one.
+ *
+ * Returns null for exactly the cases resolvePath() returns '' for: an
+ * unresolved context, an unknown page type, and a role naming no panel. That
+ * parity is asserted in tests/karl-guide.test.js and is what lets resolvePath()
+ * be a pure formatter over this function.
+ *
+ * @param {string} pageType normalizePageType() output, e.g. 'about-us'.
+ * @param {string} role Section/field role, or the tag kind when the call site
+ *   supplied no role.
+ * @param {{unresolvedId?: string, linkShape?: string}} context Guide context.
+ * @returns {{kind: 'panel', karlType: string, rawName: string, within: string|undefined}
+ *   |{kind: 'promote', field: object}|null} The reference, or null when none is recorded.
+ */
+function resolveFieldRef(pageType, role, context) {
+  if (context.unresolvedId) return null
+  const karlType = PAGE_TYPE_LABELS[pageType]
+  if (!karlType) return null
+  const panelRef = (ref) =>
+    ref ? { kind: 'panel', karlType, rawName: ref.rawName, within: ref.within } : null
+
+  if (META_PANELS[role]) return panelRef(META_PANELS[role])
+  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
+  if (promote) return { kind: 'promote', field: promote }
+
+  if (context.linkShape === 'button-link') return panelRef(BUTTON_HOSTS[`${pageType}.${role}`])
+  if (context.linkShape === 'campaign-related') return panelRef(ROLE_PANELS.campaign.related)
+
+  const roles = ROLE_PANELS[pageType]
+  if (context.linkShape === 'page-reference') {
+    if (role === 'related') return panelRef(roles?.related)
+    return panelRef(roles?.[ROLE_ALIASES[role] || role])
+  }
+  if (role === 'image') {
+    return pageType === 'information'
+      ? panelRef({ rawName: 'information_section', within: 'Image' })
+      : null
+  }
+  if (NON_FIELD_ROLES.has(role)) return null
+  return panelRef(roles?.[ROLE_ALIASES[role] || role])
+}
+
+/**
  * Resolve the Karl field path a tag's guide should print, or '' when this
  * repo has no recorded destination for it.
  *
@@ -323,6 +374,8 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * classifier returns `unknown` for is FLAGged rather than given a guessed
  * instruction a human then executes.
  *
+ * Implemented over resolveFieldRef(); see that function for the reference shape.
+ *
  * @param {string} pageType normalizePageType() output, e.g. 'about-us'.
  * @param {string} role Section/field role, or the tag kind when the call site
  *   supplied no role.
@@ -330,41 +383,10 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * @returns {string} A Karl path, or '' when none is recorded.
  */
 function resolvePath(pageType, role, context) {
-  if (context.unresolvedId) return ''
-  const karlType = PAGE_TYPE_LABELS[pageType]
-  if (!karlType) return ''
-  const crumb = (ref) =>
-    ref ? breadcrumbFor(karlType, panelByRawName(karlType, ref.rawName), ref.within) : ''
-
-  // Metadata first, so it cannot fall through to the body panels below. Title
-  // and Description are Content-tab panels of each type, so they resolve
-  // through the inventory and carry that type's own label; the Promote three
-  // are one shared table and come straight from PROMOTE_PANEL.
-  if (META_PANELS[role]) return crumb(META_PANELS[role])
-  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
-  if (promote) return `${PROMOTE_PANEL.uiLabel} → ${promote.label}`
-
-  // A button belongs to its HOST block, not to a field of its own. An
-  // unattested host reports unmapped, which is also what `U1` says about the
-  // twelve section-level buttons sitting outside a step or a spotlight.
-  if (context.linkShape === 'button-link') return crumb(BUTTON_HOSTS[`${pageType}.${role}`])
-  if (context.linkShape === 'campaign-related') return crumb(ROLE_PANELS.campaign.related)
-
-  const roles = ROLE_PANELS[pageType]
-  if (context.linkShape === 'page-reference') {
-    if (role === 'related') return crumb(roles?.related)
-    // No `content` fallback. A page-reference whose role names no panel is a
-    // link this repo cannot place, and answering with the body path made every
-    // such card read as a confirmed instruction to paste it into prose.
-    return crumb(roles?.[ROLE_ALIASES[role] || role])
-  }
-  if (role === 'image') {
-    return pageType === 'information'
-      ? crumb({ rawName: 'information_section', within: 'Image' })
-      : ''
-  }
-  if (NON_FIELD_ROLES.has(role)) return ''
-  return crumb(roles?.[ROLE_ALIASES[role] || role])
+  const ref = resolveFieldRef(pageType, role, context)
+  if (!ref) return ''
+  if (ref.kind === 'promote') return `${PROMOTE_PANEL.uiLabel} → ${ref.field.label}`
+  return breadcrumbFor(ref.karlType, panelByRawName(ref.karlType, ref.rawName), ref.within)
 }
 
 function buildSteps(pageType, role, context, path, inferred = false) {
@@ -437,5 +459,6 @@ export {
   linkShapeMeta,
   normalizePageType,
   pageTypeLabel,
+  resolveFieldRef,
   unresolvedDescription,
 }
