@@ -6,7 +6,7 @@ pre-commit:
   commands:
     format:
       glob: '*.{js,ts,jsx,tsx,json,jsonc,md,yml,yaml,css}'
-      run: bunx prettier --write {staged_files}
+      run: bunx prettier --write "{staged_files}"
       stage_fixed: true
     lint-js:
       run: bun run lint:js
