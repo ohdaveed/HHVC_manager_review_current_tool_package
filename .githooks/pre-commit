@@ -1,0 +1,22 @@
+#!/bin/sh
+# pre-commit — run local quality gates via Lefthook.
+#
+# WHY THIS FILE IS TRACKED AND .git/hooks IS NOT. Hooks under `.git/hooks` are
+# per-clone and never committed, so tracked copies live in `.githooks/` and
+# `bun run hooks:install` symlinks `.git/hooks/pre-commit` at it.
+#
+# If LEFTHOOK=0 is set, skip execution.
+if [ "${LEFTHOOK:-}" = "0" ] || [ "${LEFTHOOK:-}" = "false" ]; then
+  exit 0
+fi
+
+if command -v bunx >/dev/null 2>&1; then
+  exec bunx lefthook run pre-commit "$@"
+elif command -v npx >/dev/null 2>&1; then
+  exec npx lefthook run pre-commit "$@"
+elif command -v lefthook >/dev/null 2>&1; then
+  exec lefthook run pre-commit "$@"
+else
+  echo "pre-commit: lefthook not found, skipping hook"
+  exit 0
+fi

@@ -2,11 +2,11 @@
 # Runs locally before commits to catch formatting, linting, validation, and commit trailer issues.
 
 pre-commit:
-  parallel: true
+  parallel: false
   commands:
     format:
       glob: '*.{js,ts,jsx,tsx,json,jsonc,md,yml,yaml,css}'
-      run: bunx prettier --write {staged_files}
+      run: bunx prettier --write "{staged_files}"
       stage_fixed: true
     lint-js:
       run: bun run lint:js
