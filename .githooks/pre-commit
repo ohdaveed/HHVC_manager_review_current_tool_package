@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run the repository's Lefthook checks through the worktree-safe hook installer.
+# Do not run `lefthook install`: .git/hooks is shared by linked worktrees.
+exec bunx lefthook run pre-commit
