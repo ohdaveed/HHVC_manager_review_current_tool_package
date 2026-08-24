@@ -2,5 +2,13 @@
   "editor.formatOnSave": false,
   "editor.formatOnPaste": false,
   "editor.formatOnType": false,
-  "prettier.requireConfig": true
+  "prettier.requireConfig": true,
+  "yaml.schemas": {
+    "https://json.schemastore.org/lefthook.json": [
+      "lefthook.yml",
+      ".lefthook.yml",
+      "lefthook.yaml",
+      ".lefthook.yaml"
+    ]
+  }
 }
