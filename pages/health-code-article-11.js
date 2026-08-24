@@ -19,7 +19,7 @@ window.HHVC_PAGES['article11Guide'] = {
     paragraphs: [
       'This guide is a plain-language summary, not the legal code. Use the municipal code for the complete and current text.',
     ],
-    button: 'View Health Code Article 11',
+    button: 'View Article 11',
     buttonUrl: 'https://codelibrary.amlegal.com/codes/san_francisco/latest/sf_health/0-0-0-1890',
     karl: 'Report Spotlight -> external Button link. The report points to the official municipal code rather than reproducing every Article 11 provision.',
   },
