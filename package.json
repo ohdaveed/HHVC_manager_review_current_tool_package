@@ -38,6 +38,7 @@
     "fuse.js": "^7.4.2",
     "googleapis": "^174.0.1",
     "knip": "^6.32.2",
+    "lefthook": "^2.1.10",
     "markdownlint-cli2": "^0.23.2",
     "modern-screenshot": "^4.7.0",
     "oxlint": "1.78.0",
