@@ -17,6 +17,6 @@ elif command -v npx >/dev/null 2>&1; then
 elif command -v lefthook >/dev/null 2>&1; then
   exec lefthook run pre-commit "$@"
 else
-  echo "pre-commit: lefthook not found, skipping hook"
-  exit 0
+  echo "pre-commit: lefthook not found. Run 'bun install' or check PATH to enable pre-commit checks." >&2
+  exit 1
 fi
