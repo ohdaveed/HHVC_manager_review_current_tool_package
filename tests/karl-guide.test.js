@@ -686,6 +686,13 @@ describe('a Karl tag carries its category alongside its kind', () => {
     expect(html).toContain('data-category="inherited"')
   })
 
+  test('a component-only context derives the category from component', () => {
+    const calloutHtml = karlTag('Callout block', 'body', {
+      context: { component: 'callout' },
+    })
+    expect(calloutHtml).toContain('data-category="callout"')
+  })
+
   // The whole reason the category is a separate attribute. If a future edit
   // ever routes the category into `kind`, Karl field resolution changes for the
   // 14 call sites that pass no explicit role — and this goes red first.
