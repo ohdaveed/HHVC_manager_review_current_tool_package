@@ -33,20 +33,37 @@ Search`, `Event`, `Form`, `Location`, `Meeting`, `News`, `Profile`, `Step by ste
 scope by definition and are not mapped here — but they are all named, with their `<model>` and
 capture status, under "Types not yet in use" below.
 
-**This document covers 17 types; the Help Center's chooser offers 14.** Checked 2026-08-23
+**This document covers 17 types; the Help Center's guidance page lists 14.** Checked 2026-08-23
 against `content-types/choosing-a-content-type`, which groups its 14 under three page goals
 (Service, Outreach, Department support). The comparison runs both ways and only one direction is
-non-empty: **every type the chooser offers is accounted for here**, and three types here are
-absent from it — `Topic`, `Form` and `Document Collection Search`.
+non-empty: **every type that page lists is accounted for here**, and three types here are absent
+from it — `Topic`, `Form` and `Document Collection Search`.
 
-**Absence from the chooser is a real constraint, not an omission, and it comes in two grades.**
-`Agency` **is** in the chooser and still carries "Digital Services must create this content type
-for you", so being listed is not the same as being self-serve. The three above are not offered at
-all. That matters twice over for this mockup: `Topic` is a type it actually uses
-(`healthyHousingTopic`), and `Form` is the type whose plausible use the table below records as
-`forms/mosquito-workshop-request/` — the sub-app this repo really ships. An editor handed a
-transcript for either cannot begin by picking the type. `Document Collection Search` has no
-identified use, so it is noted for completeness only.
+**Two different things are called "the chooser", and conflating them produced a wrong claim that
+stood here until 2026-08-24.** The Help Center's `choosing-a-content-type` is a **guidance page**
+about which type to pick for a given goal. Karl's **"Create a page" type chooser** is the control
+in the admin, and the live-admin record below (see "Reaching the form") measured it at E1 listing
+**all 17** — a reading `docs/wagtail-content-mapping.md:32-35` independently corroborates for
+`Topic`, `Form` and `Document Collection Search` specifically. So absence from the guidance page
+is **an editorial signal about which type suits a goal, not evidence the CMS withholds it**, and
+the earlier claim that an editor "cannot begin by picking the type" was a statement about the form
+sourced from a document that does not describe the form.
+
+This is not a precedence question. The 2026-08-23 reversal gives E3 authority over **how a page
+should be built**; **whether a control offers an option** is a fact about the form, which is E1's
+half and the one place the reversal explicitly leaves with the live capture.
+
+**The restriction that IS real is a permission, and it is stated as one.** `Agency` appears on the
+guidance page and still carries "Digital Services must create this content type for you" — the Help
+Center saying so directly, which is E3 describing a workflow rule rather than this document
+inferring one from an omission. Record only restrictions verified that way.
+
+The three absent types still matter to this mockup, as a documentation gap rather than a blocked
+workflow: `Topic` is a type it actually uses (`healthyHousingTopic`), and `Form` is the type whose
+plausible use the table below records as `forms/mosquito-workshop-request/` — the sub-app this repo
+really ships. An editor handed a transcript for either can pick the type, but has no Help Center
+page to consult about it. `Document Collection Search` has no identified use, so it is noted for
+completeness only.
 
 | `type` value          | Pages | Sections | Steps | Page keys                                                                                                                                                                                                                                                         | Nested-block evidence |
 | --------------------- | ----- | -------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |

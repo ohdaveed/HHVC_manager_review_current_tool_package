@@ -8,8 +8,10 @@ blockers and decisions here, not only in chat.
 
 A documentation audit found that a large share of this repo's docs are confidently wrong, and
 the wrongness clusters in the files a newcomer opens first. Separately, the Svelte + Supabase
-rebuild at `/home/ohdaveed/hhvc-manager-review-svelte` is already ~41 commits in and has
-dropped several contracts this repo treats as load-bearing.
+rebuild in the sibling `hhvc-manager-review-svelte` repository is already ~41 commits in and
+has dropped several contracts this repo treats as load-bearing. (Named as a repository rather
+than as a checkout path: the absolute path this line used to carry was one developer's
+machine, and it is wrong for everyone else reading the file.)
 
 ## Branching note
 

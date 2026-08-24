@@ -136,10 +136,11 @@ surface so each selector is still declared in exactly one file.
   as accordions and a brand-new page whose only content is collapsed reads as an
   empty page.
 - **`type` is constrained to the five the picker groups by**, which is
-  deliberately narrower than `build_scripts/schema.js` (bare `min(1)`). Authored
-  pages legitimately use `Agency` and `Report` and land in the Information
-  optgroup; a reviewer choosing from a `<select>` should not be able to create
-  that mismatch by accident.
+  deliberately narrower than `build_scripts/schema.js`'s eight-value
+  `z.enum(PAGE_TYPES)` — a narrowing of a closed enum, not of an open string.
+  Authored pages legitimately use `Agency` and `Report` and land in the
+  Information optgroup; a reviewer choosing from a `<select>` should not be able
+  to create that mismatch by accident.
 - **A page key is constrained to `/^[A-Za-z][A-Za-z0-9]*$/` and rejects
   `__proto__`/`prototype`/`constructor`.** The key becomes an object property on
   `window.HHVC_PAGES`, an `<option>` value and a `?page=` parameter.

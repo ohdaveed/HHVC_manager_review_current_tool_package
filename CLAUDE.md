@@ -996,10 +996,15 @@ A collapsed section at the end of the **Help** tab reporting what this browser i
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 `build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
 has coverage independent of current page content). A page has `slug`,
-`type` (a free-form string, only `min(1)` checked — **eight** values are in use:
+`type` (a **closed enum** — `z.enum(PAGE_TYPES)`, not a bare string — whose
+**eight** permitted values are all in use:
 `Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
 `Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
-matching Karl content-type names. This list read six until 2026-08-15, omitting
+matching Karl content-type names. It is closed rather than open because
+`js/karl/karl-blocks.js` keys its per-type panel inventory on this value: an
+unrecognised type selects no inventory, so a typo would export an **empty
+transcript rather than failing**, and an empty transcript reads like a page with
+no content instead of like a bug. This list read six until 2026-08-15, omitting
 `Topic` and `About us`; a census via `build_scripts/load-pages.js` is what
 corrects it, so re-derive rather than trusting a restatement), `title`,
 `summary`, `audience[]`,
