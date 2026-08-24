@@ -1,0 +1,45 @@
+# Lefthook Git hooks configuration for HHVC manager review mockup tool.
+# Runs locally before commits to catch formatting, linting, validation, and commit trailer issues.
+
+no_auto_install: true
+
+colors:
+  cyan: 14
+  gray: 244
+  green: '#32CD32'
+  red: '#FF1493'
+  yellow: '#F0E68C'
+
+pre-commit:
+  parallel: false
+  commands:
+    format:
+      glob: '*.{js,ts,jsx,tsx,json,jsonc,md,yml,yaml,css}'
+      run: bunx prettier --write "{staged_files}"
+      stage_fixed: true
+      env:
+        FORCE_COLOR: '1'
+        CLICOLOR_FORCE: '1'
+    lint-js:
+      run: bun run lint:js
+      env:
+        FORCE_COLOR: '1'
+        CLICOLOR_FORCE: '1'
+    lint-docs:
+      run: bun run lint:docs
+      env:
+        FORCE_COLOR: '1'
+        CLICOLOR_FORCE: '1'
+    validate:
+      run: bun run validate
+      env:
+        FORCE_COLOR: '1'
+        CLICOLOR_FORCE: '1'
+
+commit-msg:
+  commands:
+    session-trailer:
+      run: .githooks/commit-msg {1}
+      env:
+        FORCE_COLOR: '1'
+        CLICOLOR_FORCE: '1'
