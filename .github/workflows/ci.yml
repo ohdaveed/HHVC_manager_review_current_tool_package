@@ -117,13 +117,20 @@ jobs:
       # the expensive half — both builds and Playwright — which is what it
       # exists to skip.
       #
-      # UNVERIFIED: `bun run test` runs the same fixed file list as the `unit`
-      # job below, and `unit` downloads a built `dist/` before running it.
-      # If any test in that list (measure-window-graph.test.js is the likely
-      # candidate) reads build output rather than source, it has no `dist/`
-      # here and will fail or silently miss what it's meant to check. Confirm
-      # that test's setup before trusting this job as a stand-in for the full
-      # build+test path.
+      # VERIFIED 2026-08-24. `bun run test` runs the same fixed file list as
+      # the `unit` job below, and `unit` downloads a built `dist/` first.
+      # Exactly ONE test in that list reads build output — `review-api-server`'s
+      # "still serves the built application from dist/", which `test.skipIf`s
+      # itself when `dist/index.html` is absent. So it SKIPS here rather than
+      # failing. (`measure-window-graph.test.js` was the suspected candidate
+      # and is not one: it imports source modules and reads no build output.)
+      #
+      # That skip is left in place deliberately. The assertion is about
+      # `STATIC_ROOT` falling back to `dist/` rather than the repo root — a
+      # server behaviour no docs-only change can alter — and it runs unskipped
+      # in `unit` on every PR that touches code. Building `dist/` here to
+      # un-skip one assertion would put a full Vite build on the path that
+      # exists precisely to skip the expensive half.
       - name: Unit tests (bun test)
         run: bun run test
 
