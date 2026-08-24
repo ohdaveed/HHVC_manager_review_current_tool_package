@@ -1749,10 +1749,14 @@ has coverage independent of current page content). A page has `slug`,
 `Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
 `Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
 matching Karl content-type names. It is closed rather than open because
-`js/karl/karl-blocks.js` keys its per-type panel inventory on this value: an
-unrecognised type selects no inventory, so a typo would export an **empty
-transcript rather than failing**, and an empty transcript reads like a page with
-no content instead of like a bug. Adding a ninth type means capturing its form in
+`js/karl/karl-blocks.js` keys its per-type panel inventory on this value, and an
+unrecognised type selects no inventory. **The export is not silent about that** —
+`buildTranscript()` emits a single `UNMAPPED` entry reading
+`No Karl panel inventory for content type "X"` (`js/karl/karl-transcript.js:309`),
+which names the problem clearly. What the closed enum buys is **when** that
+failure arrives: unclosed, a typo'd type is caught at EXPORT time, on a page
+already authored and reviewed; closed, `bun run validate` rejects it at
+authoring time, before anyone builds on it. Adding a ninth type means capturing its form in
 `docs/karl-export-field-map.md` and adding its panel inventory, in that order.
 The list read six until 2026-08-15, omitting
 `Topic` and `About us`; a census via `build_scripts/load-pages.js` is what

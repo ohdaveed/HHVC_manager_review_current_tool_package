@@ -52,8 +52,12 @@ original, as an ancestor. Git then sees the same edit arriving from two unrelate
 
 **The collision site is exactly one file:** `docs/karl-export-field-map.md` is the only path
 both PRs touch (`comm -12` over the two net diffs). #206 rewrites three register rows there
-(`U19`, `U24`, `O14`); #207 adds the chooser/field-map delta and shifted all 99 `docLine`
-citations in `js/karl/karl-blocks.js` by +16. A careless conflict resolution that drops #207's
+(`U19`, `U24`, `O14`); #207 adds the chooser/field-map delta and shifts all 99 `docLine`
+citations in `js/karl/karl-blocks.js`. **The shift is +33 against `main`, not the +16 this line
+carried** — `+16` was the intermediate figure after `0078a7d`, and the P2 rewrite in `43affc7`
+moved the same citations a further +17. Measured, not counted by hand: 98 of the 99 are exactly
++33, and the outlier is `U1` at +234 because that one was also CORRECTED, from a Report
+coverage row onto its real Unresolved-register row. A careless conflict resolution that drops #207's
 line shift leaves `tests/karl-blocks.test.js` red, and one that drops #206's `U24` closure
 reopens a register entry against a page that no longer violates it.
 
@@ -157,7 +161,15 @@ under a heading whose PR has merged, or the checklist starts lying about what sh
 
 ## PR 4 — Reconcile against the Karl content-type chooser
 
-- [ ] Topic is not editor-creatable; say so beside the Agency constraint.
+- [x] ~~Topic is not editor-creatable; say so beside the Agency constraint.~~
+      **Struck 2026-08-24 — this item was wrong and acting on it would undo
+      `43affc7`.** Topic IS offered: the live "Create a page" chooser was
+      measured at E1 listing all 17 types, and `docs/wagtail-content-mapping.md:32-35`
+      corroborates it for Topic specifically. What is true is narrower — Topic
+      has no Help Center guidance page, which is a documentation gap and not a
+      permission. The Agency constraint is a genuine permission and stands,
+      because the Help Center states it directly rather than it being inferred
+      from an absence.
 - [ ] Help Center vs admin labels — **re-derive under the reversed precedence.**
 - [ ] Re-decide `U3`/`U21` against the chooser's heuristics; recommend, do not retype.
 
