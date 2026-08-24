@@ -203,7 +203,7 @@ function karlTag(label, kind = 'body', opts = {}) {
   // for why this reads the signals rather than renaming `kind`.
   const category = karlCategory({
     kind,
-    role: opts.context?.role,
+    role: opts.context?.role || opts.context?.component,
     linkShape: opts.context?.linkShape,
     inheritanceFact: opts.inheritanceFact,
   })
