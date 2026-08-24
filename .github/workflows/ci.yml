@@ -23,6 +23,7 @@ jobs:
   changes:
     name: Detect changed files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       code: ${{ steps.filter_code.outputs.code }}
       docs: ${{ steps.filter_docs.outputs.docs }}
@@ -47,7 +48,6 @@ jobs:
               - '!docs/**'
               - '!.github/*.md'
               - '!.github/**/*.md'
-
       # `docs` is a list of ALTERNATIVES, so it needs the default `some`. No
       # file can match `docs/**` and `.github/**/*.md` at once, so running it
       # with `every` makes `docs` permanently false -- which disables the
@@ -62,10 +62,10 @@ jobs:
               - 'docs/**'
               - '.github/*.md'
               - '.github/**/*.md'
-
   docs_only_checks:
     name: Docs-only checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [changes]
     if: github.event_name == 'pull_request' && needs.changes.outputs.docs == 'true' && needs.changes.outputs.code != 'true'
     steps:
@@ -116,12 +116,21 @@ jobs:
       # tests themselves, and the run is ~30s. What this path still skips is
       # the expensive half — both builds and Playwright — which is what it
       # exists to skip.
+      #
+      # UNVERIFIED: `bun run test` runs the same fixed file list as the `unit`
+      # job below, and `unit` downloads a built `dist/` before running it.
+      # If any test in that list (measure-window-graph.test.js is the likely
+      # candidate) reads build output rather than source, it has no `dist/`
+      # here and will fail or silently miss what it's meant to check. Confirm
+      # that test's setup before trusting this job as a stand-in for the full
+      # build+test path.
       - name: Unit tests (bun test)
         run: bun run test
 
   format_validate_lint:
     name: Format, validate, lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [changes]
     if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
     steps:
@@ -140,7 +149,6 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
           restore-keys: |
             ${{ runner.os }}-bun-
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -168,8 +176,22 @@ jobs:
   build_railway:
     name: Build railway bundle
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [format_validate_lint, changes]
-    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    # `!failure() && !cancelled()` instead of relying on the implicit
+    # `success()` GitHub adds to any `if:` that doesn't reference a status
+    # function itself. That implicit success() returns false not just when
+    # `format_validate_lint` fails, but also when it's merely SKIPPED (docs-
+    # only runs) — a GitHub-acknowledged gap, still open. Right now every job
+    # in this chain repeats the identical boolean below, so a skip upstream
+    # means the same boolean is false downstream too and it's skipped either
+    # way — but that safety is coincidental, not enforced. Spelling out
+    # !failure() && !cancelled() here means this job's own condition is what
+    # decides whether it runs, not an accident of staying in sync with
+    # `format_validate_lint`'s.
+    if: >-
+      !failure() && !cancelled() &&
+      (github.event_name == 'push' || needs.changes.outputs.code == 'true')
     steps:
       - uses: actions/checkout@v5
 
@@ -184,7 +206,6 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
           restore-keys: |
             ${{ runner.os }}-bun-
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -197,12 +218,19 @@ jobs:
           name: dist
           path: dist/
           if-no-files-found: error
+          # Only consumed within this same run (by `unit`, below). Default
+          # retention is 90 days; no reason to pay for that here.
+          retention-days: 1
 
   build_singlefile:
     name: Build single-file export
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [format_validate_lint, changes]
-    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    # See build_railway's comment on this condition.
+    if: >-
+      !failure() && !cancelled() &&
+      (github.event_name == 'push' || needs.changes.outputs.code == 'true')
     steps:
       - uses: actions/checkout@v5
 
@@ -217,7 +245,6 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
           restore-keys: |
             ${{ runner.os }}-bun-
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -227,8 +254,12 @@ jobs:
   unit:
     name: Unit tests (bun test)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [build_railway, changes]
-    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    # See build_railway's comment on this condition.
+    if: >-
+      !failure() && !cancelled() &&
+      (github.event_name == 'push' || needs.changes.outputs.code == 'true')
     steps:
       - uses: actions/checkout@v5
 
@@ -243,7 +274,6 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
           restore-keys: |
             ${{ runner.os }}-bun-
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -259,8 +289,22 @@ jobs:
   e2e:
     name: Playwright end-to-end tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [format_validate_lint, changes]
-    if: (github.event_name == 'push' || needs.changes.outputs.code == 'true') && !github.event.pull_request.draft
+    # See build_railway's comment on the `!failure() && !cancelled()` half.
+    #
+    # `!draft` is the half this job carries and the other three do not, and it
+    # is safe here only because `on.pull_request.types` includes
+    # `ready_for_review`: a skipped required check reads to branch protection
+    # as a PASSING one, so a draft PR skipping the six-minute browser suite
+    # would look green if nothing re-ran on the way out of draft. It does
+    # re-run, so the skip lasts exactly as long as the PR is unmergeable
+    # anyway. Do not add `!draft` to another job without checking that trigger
+    # is still there.
+    if: >-
+      !failure() && !cancelled() &&
+      (github.event_name == 'push' || needs.changes.outputs.code == 'true') &&
+      !github.event.pull_request.draft
     steps:
       - uses: actions/checkout@v5
 
@@ -275,7 +319,6 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
           restore-keys: |
             ${{ runner.os }}-bun-
-
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -283,7 +326,6 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
