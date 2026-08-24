@@ -26,6 +26,7 @@ import {
   parseKarlLabel,
   renderKarlGuidePanel,
 } from './karl-tag-meta.js'
+import { karlCategory } from './karl-category.js'
 import { syncEditorFields, updateReadingTarget } from '../review/editor-panel.js'
 // Side-effect import: js/core/card-inheritance.js publishes window.cardInheritance
 // and exports nothing, so this is what guarantees the classifier exists before
@@ -197,6 +198,15 @@ function karlTag(label, kind = 'body', opts = {}) {
     values: opts.values,
   })
   if (opts.inheritanceFact === 'title-and-text') guide.status = 'inherited'
+  // Derived, never passed in: a call site that could choose its own category
+  // could put a publishable colour on an editor note. See js/mockup/karl-category.js
+  // for why this reads the signals rather than renaming `kind`.
+  const category = karlCategory({
+    kind,
+    role: opts.context?.role || opts.context?.component,
+    linkShape: opts.context?.linkShape,
+    inheritanceFact: opts.inheritanceFact,
+  })
   const panelId = nextKarlGuideId()
   const breadcrumbHtml = parsed.breadcrumb.length
     ? `<span class="karl-tag-breadcrumb">${parsed.breadcrumb
@@ -213,7 +223,7 @@ function karlTag(label, kind = 'body', opts = {}) {
     ? `<span class="karl-tag-rationale">${escapeHtml(parsed.rationale)}</span>`
     : ''
   const triggerLabel = `Open Karl guide: ${parsed.headline || meta.label}`
-  return `<span class="karl-guide" data-karl-guide><button type="button" class="karl-guide-trigger" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="${escapeHtml(triggerLabel)}"><mark class="karl-tag" data-kind="${escapeHtml(kind)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${breadcrumbHtml}<span class="karl-tag-headline">${escapeHtml(parsed.headline)}</span>${flagHtml}${inheritHtml}${rationaleHtml}</span></mark><span class="karl-guide-trigger-icon" aria-hidden="true">+</span></button>${renderKarlGuidePanel(guide, panelId)}</span>`
+  return `<span class="karl-guide" data-karl-guide><button type="button" class="karl-guide-trigger" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="${escapeHtml(triggerLabel)}"><mark class="karl-tag" data-kind="${escapeHtml(kind)}" data-category="${escapeHtml(category)}" aria-hidden="true"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span><span class="karl-tag-text"><strong>Karl:</strong> ${breadcrumbHtml}<span class="karl-tag-headline">${escapeHtml(parsed.headline)}</span>${flagHtml}${inheritHtml}${rationaleHtml}</span></mark><span class="karl-guide-trigger-icon" aria-hidden="true">+</span></button>${renderKarlGuidePanel(guide, panelId)}</span>`
 }
 const EDITOR_QA_STATUS = {
   'needs-review': { icon: '⚠', label: 'Needs review' },

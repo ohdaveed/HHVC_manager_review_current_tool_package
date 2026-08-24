@@ -629,6 +629,9 @@
     --ext-dark-purple-bg: #241a33;
     --ext-dark-purple-line: #725a98; /* 3.07:1 on panel */
     --ext-dark-purple-fg: #cbb0ef; /* 8.65:1 on its bg */
+    --ext-dark-teal-bg: #10282d;
+    --ext-dark-teal-line: #316e79; /* 3.08:1 on panel */
+    --ext-dark-teal-fg: #8ed3dd; /* 9.18:1 on its bg */
 
     /* Neutrals, inverted. */
     --legacy-slate-1: var(--ext-dark-ink-1);
@@ -695,6 +698,9 @@
     --legacy-purple-bg: var(--ext-dark-purple-bg);
     --legacy-purple-border: var(--ext-dark-purple-line);
     --legacy-purple-text: var(--ext-dark-purple-fg);
+    --legacy-teal-bg: var(--ext-dark-teal-bg);
+    --legacy-teal-border: var(--ext-dark-teal-line);
+    --legacy-teal-text: var(--ext-dark-teal-fg);
     --legacy-info-dark: var(--brand-70);
     --legacy-info-light: var(--ext-dark-brand-soft);
     --legacy-info-border: var(--ext-dark-brand-line);
@@ -868,6 +874,9 @@
     --legacy-purple-bg: #f5efff;
     --legacy-purple-border: #decdf6;
     --legacy-purple-text: #4a2a7a;
+    --legacy-teal-bg: #cffafe;
+    --legacy-teal-border: #7fd6e3;
+    --legacy-teal-text: #0b5566;
     --legacy-info-dark: #0046c2;
     --legacy-info-light: #e5f1ff;
     --legacy-info-border: #c7dae5;

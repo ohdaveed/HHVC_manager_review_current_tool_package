@@ -1,6 +1,7 @@
 // Shared helpers for the Playwright e2e suite. Plain functions (no fixture
 // framework) to match this repo's no-framework ethos.
 const { expect } = require('@playwright/test')
+const AxeBuilder = require('@axe-core/playwright').default
 const STORAGE_KEY = 'hhvcManagerReviewState:v1'
 
 const DECISIONS = {
@@ -536,7 +537,39 @@ async function selectPage(page, key) {
   await page.waitForSelector('#mockPage h1')
 }
 
+/**
+ * Fail the test on any critical or serious Axe violation on the current page.
+ *
+ * It lives here rather than in accessibility.spec.js because a second spec now
+ * needs it, and two axe harnesses would be two definitions of what this suite
+ * considers a failure — free to disagree about the tag set or the impact
+ * threshold, which is the shape of drift this repo keeps writing gates against.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @returns {Promise<void>}
+ */
+async function expectNoSeriousViolations(page) {
+  // color-contrast is ENABLED. It used to be disabled here, which meant the
+  // suite could not catch the most common WCAG failure in the product it
+  // guards. The css/theme.css token layer now carries measured ratios for
+  // every text/surface pairing in both themes, so the rule has something
+  // deliberate to check rather than a pile of ad-hoc colours.
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
+  // Map to a compact summary so a failure prints the offending rules and
+  // nodes instead of dumping full Axe violation objects.
+  const serious = results.violations
+    .filter((v) => v.impact === 'critical' || v.impact === 'serious')
+    .map((v) => ({
+      id: v.id,
+      impact: v.impact,
+      description: v.description,
+      nodes: v.nodes.map((n) => n.html),
+    }))
+  expect(serious).toEqual([])
+}
+
 module.exports = {
+  expectNoSeriousViolations,
   waitForShortcuts,
   STORAGE_KEY,
   DECISIONS,

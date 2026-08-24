@@ -258,6 +258,38 @@ const UNRESOLVED = {
   U2: 'Karl Callout has no separate title field; fold the title into the rich text or get a CMS decision.',
 }
 
+/* The editorial rules this repo's record actually supports, keyed by link
+   shape.
+
+   **Guidance and schema are different claims and this table keeps them apart
+   in the data, not just in the CSS.** Under the precedence revised 2026-08-23
+   (docs/karl-export-field-map.md, "Precedence, revised 2026-08-23"), the Karl
+   Editor Help Center governs how a field should be BUILT, so its "can only be
+   25 characters" is the rule an editor is held to — obsolete register entry
+   O14. The live `Button link` text field was measured at `maxlength="255"`
+   (E1, 2026-08-15 on a Transaction `section_specifics` block), which means an
+   over-length label saves rather than failing: a gap in the form, not
+   permission to exceed the cap. U19 records ten mockup labels shortened to it.
+
+   **The 25 still may not appear in the Rules row**, and the reason changed
+   with the precedence rather than going away. Rules prints what the FORM does,
+   sourced from the js/karl/karl-blocks.js inventory; putting an editorial cap
+   there would report a constraint the form does not enforce, in the one panel
+   whose whole job is separating a measured destination from a chosen one. That
+   is the same failure guideStatusLabel() checks `inferred` before the evidence
+   line to avoid. Guidance is the row that carries a rule the form will not
+   police, which is why it prints the measured 255 beside it.
+
+   **One entry, and add another only when the field map records one** — exactly
+   the rule stated on UNRESOLVED above. This is a display string, not a second
+   record of a measurement. */
+const FIELD_GUIDANCE = {
+  'button-link': {
+    text: 'Link text is capped at 25 characters — Karl Help Center rule (E3).',
+    schema: 'The field itself accepts 255 (E1, measured 2026-08-15): the form does not enforce it.',
+  },
+}
+
 function normalizePageType(type) {
   return String(type || '')
     .trim()
@@ -285,9 +317,14 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
   // schema never sees.
   const unresolvedId = guideContext.unresolvedId
   const isUnresolved = Boolean(unresolvedId) && Boolean(UNRESOLVED[unresolvedId])
+  // The reference is resolved once and the path formatted from it, so the field
+  // block below cannot name a different destination than the breadcrumb does.
+  const ref = isUnresolved || explicit.path ? null : resolveFieldRef(pageType, role, guideContext)
   const path = isUnresolved ? '' : explicit.path || resolvePath(pageType, role, guideContext)
   // Only a DERIVED path can be inferred. An explicitly authored `guide.path`
-  // carries its own evidence and status and is not second-guessed here.
+  // carries its own evidence and status and is not second-guessed here — and
+  // for the same reason it carries no derived field block, which would claim a
+  // destination the author did not name.
   const inferred = !explicit.path && Boolean(path) && isInferredPath(pageType, role)
   const resolvedValues = explicit.values || values
   const result = {
@@ -298,6 +335,8 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
         ? explicit.steps
         : buildSteps(pageType, role, guideContext, path, inferred),
     evidence: isUnresolved ? 'U' : explicit.evidence || (inferred || !path ? 'U' : 'E1'),
+    field: explicit.field || fieldMetaFor(ref),
+    guidance: explicit.guidance || FIELD_GUIDANCE[guideContext.linkShape],
     status: isUnresolved
       ? 'unresolved'
       : explicit.status || (inferred ? 'inferred' : path ? 'confirmed' : 'mockup-only'),
@@ -307,6 +346,122 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
     delete result.unresolvedId
   }
   return result
+}
+
+/**
+ * Resolve WHICH Karl field a tag belongs to, as a reference rather than a
+ * formatted string.
+ *
+ * resolvePath() used to do this lookup and keep only the breadcrumb, throwing
+ * away the panel object — which carries the raw Wagtail name, the
+ * required/repeatable wording and the block-type chooser contents that
+ * js/karl/karl-blocks.js transcribes from the field map. The guide panel needs
+ * those, and re-deriving them at the call site would be a second lookup free to
+ * disagree with this one.
+ *
+ * The null case is symmetric with resolvePath()'s '': an unresolved context,
+ * an unknown page type, and a role naming no panel all return null here and ''
+ * there. The non-null case is NOT symmetric, and that asymmetry is
+ * deliberate rather than a gap to close. A `kind: 'panel'` ref only records
+ * that SOME lookup table (META_PANELS, ROLE_PANELS, BUTTON_HOSTS, …) named a
+ * rawName for this role — it does not confirm that rawName resolves to a
+ * real panel in this karlType's inventory. resolvePath() makes that second
+ * check itself, by handing the ref to panelByRawName()/breadcrumbFor() and
+ * printing '' when the lookup misses. A caller holding a `kind: 'panel'` ref
+ * must re-run that same check with panelByRawName() before treating the ref
+ * as a confirmed destination — concretely, `resolveFieldRef('campaign',
+ * 'description', {})` returns a non-null ref naming rawName 'description',
+ * because META_PANELS.description is type-agnostic, but Campaign, About us
+ * and Report carry no 'description' panel in the field-map transcription
+ * (only Transaction, Information, Topic, Agency and Resource Collection do),
+ * so resolvePath() for that same call correctly returns ''. Skipping the
+ * re-check would stamp `description` as an E1-confirmed Karl destination on
+ * three page types where no such field exists — the exact "measured answer
+ * that was never measured" failure this guide exists to prevent. This
+ * asymmetry, including the description/Campaign case, is pinned in
+ * tests/karl-guide.test.js.
+ *
+ * @param {string} pageType normalizePageType() output, e.g. 'about-us'.
+ * @param {string} role Section/field role, or the tag kind when the call site
+ *   supplied no role.
+ * @param {{unresolvedId?: string, linkShape?: string}} context Guide context.
+ * @returns {{kind: 'panel', karlType: string, rawName: string, within: string|undefined}
+ *   |{kind: 'promote', field: object}|null} The reference, or null when none is recorded.
+ */
+function resolveFieldRef(pageType, role, context) {
+  if (context.unresolvedId) return null
+  const karlType = PAGE_TYPE_LABELS[pageType]
+  if (!karlType) return null
+  const panelRef = (ref) =>
+    ref ? { kind: 'panel', karlType, rawName: ref.rawName, within: ref.within } : null
+
+  if (META_PANELS[role]) return panelRef(META_PANELS[role])
+  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
+  if (promote) return { kind: 'promote', field: promote }
+
+  if (context.linkShape === 'button-link') return panelRef(BUTTON_HOSTS[`${pageType}.${role}`])
+  if (context.linkShape === 'campaign-related') return panelRef(ROLE_PANELS.campaign.related)
+
+  const roles = ROLE_PANELS[pageType]
+  if (context.linkShape === 'page-reference') {
+    if (role === 'related') return panelRef(roles?.related)
+    return panelRef(roles?.[ROLE_ALIASES[role] || role])
+  }
+  if (role === 'image') {
+    return pageType === 'information'
+      ? panelRef({ rawName: 'information_section', within: 'Image' })
+      : null
+  }
+  if (NON_FIELD_ROLES.has(role)) return null
+  return panelRef(roles?.[ROLE_ALIASES[role] || role])
+}
+
+/**
+ * The display facts for one field reference: raw Wagtail name, UI label, and
+ * the required/repeatable/block-type wording the field map records.
+ *
+ * **Every value is a string, and for a CONTENT-TAB PANEL the `*Doc` strings are
+ * preferred over the booleans beside them.** js/karl/karl-blocks.js carries
+ * both — `required: false` alongside `requiredDoc: 'not recorded'` — and they
+ * make different claims. The boolean is this repo's coercion of an absent
+ * measurement into a default; the string is what docs/karl-export-field-map.md
+ * actually says. Rendering "Optional" from the boolean would tell a reviewer
+ * the live form was measured and found to permit an empty value, which nobody
+ * measured. Same posture as resolvePath() returning '' rather than guessing.
+ *
+ * **The Promote tab is the exception, and it is an exception about evidence
+ * rather than about shape.** `PROMOTE_PANEL` carries no `*Doc` strings because
+ * the field map documents that tab as a single table whose Required column is
+ * filled in for every row — `seo_title` and `search_description` are recorded
+ * `no` (docs/karl-export-field-map.md:162-163), closed as `U11` at E1. So here
+ * the boolean IS the measurement rather than a stand-in for a missing one, and
+ * printing `not recorded` would conceal a fact the field map states outright.
+ * The wording follows the column: `yes` / `no`, not `Required` / `Optional`.
+ *
+ * @param {object|null} ref A resolveFieldRef() result.
+ * @returns {{rawName: string, uiLabel: string, required: string, repeatable: string,
+ *   blockTypes: string}|undefined} Undefined when there is nothing to show.
+ */
+function fieldMetaFor(ref) {
+  if (!ref) return undefined
+  if (ref.kind === 'promote') {
+    return {
+      rawName: ref.field.rawName,
+      uiLabel: ref.field.label,
+      required: ref.field.required ? 'yes' : 'no',
+      repeatable: 'single',
+      blockTypes: '',
+    }
+  }
+  const panel = panelByRawName(ref.karlType, ref.rawName)
+  if (!panel) return undefined
+  return {
+    rawName: panel.rawName,
+    uiLabel: panel.uiLabel,
+    required: panel.requiredDoc || 'not recorded',
+    repeatable: panel.repeatableDoc || '',
+    blockTypes: panel.blockTypesDoc || '',
+  }
 }
 
 /**
@@ -323,6 +478,8 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * classifier returns `unknown` for is FLAGged rather than given a guessed
  * instruction a human then executes.
  *
+ * Implemented over resolveFieldRef(); see that function for the reference shape.
+ *
  * @param {string} pageType normalizePageType() output, e.g. 'about-us'.
  * @param {string} role Section/field role, or the tag kind when the call site
  *   supplied no role.
@@ -330,41 +487,10 @@ function guideForContext({ page, kind = 'body', context = {}, guide = null, valu
  * @returns {string} A Karl path, or '' when none is recorded.
  */
 function resolvePath(pageType, role, context) {
-  if (context.unresolvedId) return ''
-  const karlType = PAGE_TYPE_LABELS[pageType]
-  if (!karlType) return ''
-  const crumb = (ref) =>
-    ref ? breadcrumbFor(karlType, panelByRawName(karlType, ref.rawName), ref.within) : ''
-
-  // Metadata first, so it cannot fall through to the body panels below. Title
-  // and Description are Content-tab panels of each type, so they resolve
-  // through the inventory and carry that type's own label; the Promote three
-  // are one shared table and come straight from PROMOTE_PANEL.
-  if (META_PANELS[role]) return crumb(META_PANELS[role])
-  const promote = PROMOTE_PANEL.fields.find((field) => field.path === role)
-  if (promote) return `${PROMOTE_PANEL.uiLabel} → ${promote.label}`
-
-  // A button belongs to its HOST block, not to a field of its own. An
-  // unattested host reports unmapped, which is also what `U1` says about the
-  // twelve section-level buttons sitting outside a step or a spotlight.
-  if (context.linkShape === 'button-link') return crumb(BUTTON_HOSTS[`${pageType}.${role}`])
-  if (context.linkShape === 'campaign-related') return crumb(ROLE_PANELS.campaign.related)
-
-  const roles = ROLE_PANELS[pageType]
-  if (context.linkShape === 'page-reference') {
-    if (role === 'related') return crumb(roles?.related)
-    // No `content` fallback. A page-reference whose role names no panel is a
-    // link this repo cannot place, and answering with the body path made every
-    // such card read as a confirmed instruction to paste it into prose.
-    return crumb(roles?.[ROLE_ALIASES[role] || role])
-  }
-  if (role === 'image') {
-    return pageType === 'information'
-      ? crumb({ rawName: 'information_section', within: 'Image' })
-      : ''
-  }
-  if (NON_FIELD_ROLES.has(role)) return ''
-  return crumb(roles?.[ROLE_ALIASES[role] || role])
+  const ref = resolveFieldRef(pageType, role, context)
+  if (!ref) return ''
+  if (ref.kind === 'promote') return `${PROMOTE_PANEL.uiLabel} → ${ref.field.label}`
+  return breadcrumbFor(ref.karlType, panelByRawName(ref.karlType, ref.rawName), ref.within)
 }
 
 function buildSteps(pageType, role, context, path, inferred = false) {
@@ -427,15 +553,18 @@ function linkShapeMeta(shape) {
 
 export {
   BUTTON_HOSTS,
+  FIELD_GUIDANCE,
   INFERRED_PATHS,
   LINK_SHAPES,
   META_PANELS,
   ROLE_PANELS,
   PAGE_TYPE_LABELS,
   UNRESOLVED,
+  fieldMetaFor,
   guideForContext,
   linkShapeMeta,
   normalizePageType,
   pageTypeLabel,
+  resolveFieldRef,
   unresolvedDescription,
 }

@@ -165,6 +165,36 @@
   line-height: 1.35;
 }
 
+/* Field and Rules rows. Both are inline-level by construction: the panel is a
+   <span> subtree, so `display: block` here would be a layout claim on a
+   phrasing element, not a structural one, and it is what makes each row its own
+   line without introducing a block-level TAG. */
+.karl-guide-field,
+.karl-guide-rules {
+  display: block;
+  margin-top: var(--ds-space-1);
+  font-size: var(--ds-text-micro);
+  color: var(--text-secondary);
+}
+.karl-guide-field code {
+  padding: 0 var(--ds-space-1);
+  /* --ds-radius-sm (4px), not the 3px literal this shipped with: there is no
+     3px step on the radius scale, and a literal sitting where a token belongs
+     is what every dark-mode and rescale bug in this repo has grown out of. */
+  border-radius: var(--ds-radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.karl-guide-field-label {
+  margin-left: var(--ds-space-1);
+  font-style: italic;
+}
+.karl-guide-rule-sep {
+  margin: 0 var(--ds-space-1);
+  color: var(--text-secondary);
+}
+
 .karl-guide-path span,
 .karl-guide-value code {
   display: block;
@@ -264,4 +294,20 @@ body.hide-karl-tags .karl-guide {
   .karl-guide-trigger-icon {
     transition: none;
   }
+}
+
+/* Guidance reads as advice, Rules read as measurement. The separation is
+   carried by the label word first — the class only reinforces it, because a
+   reviewer reading the panel aloud or with colour vision differences still has
+   to get the distinction. */
+.karl-guide-guidance {
+  display: block;
+  margin-top: var(--ds-space-1);
+  font-size: var(--ds-text-micro);
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.karl-guide-guidance-schema {
+  margin-left: var(--ds-space-1);
+  font-style: normal;
 }

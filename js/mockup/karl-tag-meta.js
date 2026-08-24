@@ -2,6 +2,7 @@
 // escapeHtml is available for legend rendering.
 
 import { escapeHtml } from '../core/utils.js'
+import { KARL_CATEGORIES } from './karl-category.js'
 import {
   guideForContext,
   linkShapeMeta,
@@ -67,6 +68,61 @@ function guideCopyValues(values = []) {
    `role="heading" aria-level="4"` keeps the values heading a heading. The
    ordinals the `<ol>` used to draw come from a CSS counter — see
    css/karl-guide.css, where they have to stay in step with this markup. */
+/* The Field and Rules rows, built only from `guide.field` — which
+   js/karl/karl-guide-registry.js populates from js/karl/karl-blocks.js, the
+   transcribed inventory tests/karl-blocks.test.js guards against
+   docs/karl-export-field-map.md. Nothing here restates a Karl fact; a wrong
+   value has to be wrong in the inventory first, where CI can see it.
+
+   Two rows rather than one because they answer different questions. Field
+   answers "what am I typing into", and the raw Wagtail name is the half a UI
+   breadcrumb cannot give — an editor comparing the mockup against an export, or
+   reading a colleague's note, has the raw name and not the label. Rules answers
+   "what will the form let me do", and it prints the field map's own words:
+   `not recorded` is a real answer there and is NOT the same claim as
+   `Optional`. See fieldMetaFor()'s header for why that distinction is the whole
+   point.
+
+   Phrasing content only, like the rest of this panel.
+
+   @param {{rawName: string, uiLabel: string, required?: string,
+     repeatable?: string, blockTypes?: string}|undefined} field A
+     fieldMetaFor() result, or undefined when the guide resolved no field.
+   @returns {string} The Field and Rules rows as inline-level HTML, or the
+     empty string when there is no field to describe. */
+function renderKarlGuideField(field) {
+  if (!field) return ''
+  const rules = [
+    field.required ? `Required: ${field.required}` : '',
+    field.repeatable || '',
+    field.blockTypes || '',
+  ].filter(Boolean)
+  const rulesRow = rules.length
+    ? `<span class="karl-guide-rules"><strong>Rules:</strong> ${rules
+        .map((rule) => `<span class="karl-guide-rule">${escapeHtml(rule)}</span>`)
+        .join('<span class="karl-guide-rule-sep" aria-hidden="true">·</span>')}</span>`
+    : ''
+  return `<span class="karl-guide-field"><strong>Field:</strong> <code>${escapeHtml(field.rawName)}</code><span class="karl-guide-field-label">${escapeHtml(field.uiLabel)}</span></span>${rulesRow}`
+}
+
+/* The guidance row. Separated from Rules by its own label word and its own
+   class — never by colour alone, since colour is not an encoding a reviewer can
+   read out loud, and this distinction is the one that decides whether a
+   reviewer treats a number as something the form will enforce.
+
+   @param {{text?: string, schema?: string}|undefined} guidance A
+     FIELD_GUIDANCE entry: `text` is the editorial rule, `schema` the measured
+     form behaviour printed beside it.
+   @returns {string} The Guidance row as inline-level HTML, or the empty string
+     when no guidance is recorded for this field. */
+function renderKarlGuideGuidance(guidance) {
+  if (!guidance?.text) return ''
+  const schema = guidance.schema
+    ? `<span class="karl-guide-guidance-schema">${escapeHtml(guidance.schema)}</span>`
+    : ''
+  return `<span class="karl-guide-guidance"><strong>Guidance:</strong> ${escapeHtml(guidance.text)}${schema}</span>`
+}
+
 function renderKarlGuidePanel(guide, panelId) {
   const values = guideCopyValues(guide.values)
   const unresolved = guide.unresolvedId
@@ -80,7 +136,7 @@ function renderKarlGuidePanel(guide, panelId) {
         )
         .join('')}</span>`
     : ''
-  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
+  return `<span id="${escapeHtml(panelId)}" class="karl-guide-panel" role="group" hidden><span class="karl-guide-panel-header"><strong>Recreate in Karl</strong><span class="karl-guide-status">${escapeHtml(guideStatusLabel(guide))}</span></span><span class="karl-guide-steps" role="list">${guide.steps.map((step) => `<span role="listitem">${escapeHtml(step)}</span>`).join('')}</span>${guide.path ? `<span class="karl-guide-path"><strong>Path:</strong> <span>${escapeHtml(guide.path)}</span></span>` : ''}${renderKarlGuideField(guide.field)}${renderKarlGuideGuidance(guide.guidance)}${guide.linkShape ? `<span class="karl-guide-link-shape"><strong>Link shape:</strong> ${escapeHtml(linkShapeMeta(guide.linkShape)?.label || guide.linkShape)}</span>` : ''}${unresolved}${valueRows}</span>`
 }
 const KARL_TAG_KINDS = {
   meta: {
@@ -175,9 +231,14 @@ function parseKarlLabel(label) {
 }
 
 function renderKarlTagLegend(variant = 'full') {
-  const items = Object.entries(KARL_TAG_KINDS)
-    .map(([kind, meta]) => {
-      const swatch = `<span class="karl-tag karl-tag-legend-swatch" data-kind="${kind}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span></span>`
+  /* Keyed by CATEGORY rather than by kind, because the category is what
+     carries colour — see js/mockup/karl-category.js for why the two are
+     separate axes. KARL_TAG_KINDS stays where it is: karlKindMeta() still
+     supplies the word each tag prints, which is the encoding that survives
+     without colour. */
+  const items = Object.entries(KARL_CATEGORIES)
+    .map(([category, meta]) => {
+      const swatch = `<span class="karl-tag karl-tag-legend-swatch" data-category="${category}"><span class="karl-tag-kind">${escapeHtml(meta.label)}</span></span>`
       if (variant === 'compact') {
         return `<li class="karl-tag-legend-item karl-tag-legend-item--compact" title="${escapeHtml(meta.hint)}">${swatch}</li>`
       }
@@ -197,6 +258,7 @@ function renderKarlTagLegend(variant = 'full') {
             <li>Page references, Button links, Resources links, Campaign Related links, and Draftail links accept different fields.</li>
             <li><span class="karl-tag-inherit">Inherited value</span> means Karl reads the linked page; Related and Resource Collection entries are title-only.</li>
             <li>Audience, reading targets, QA metadata, and unresolved fields are mockup guidance, not publishable Karl fields.</li>
+            <li>The <a href="https://sfdigitalservices.gitbook.io/karl-sf.gov-editor-help-center/sf.gov-and-karl-foundations/sf.gov-concepts-and-structure/content-types" target="_blank" rel="noopener noreferrer">Karl Help Center<span aria-hidden="true"> ↗</span></a> says how a page should be built and is the rule to follow; a tag's measured path says what the live form contains, which is where raw field names and panel order come from.</li>
           </ul>
         </div>`
       : ''

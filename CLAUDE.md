@@ -97,7 +97,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 58 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 59 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `page-render-hooks`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `measure-window-graph`,
@@ -105,7 +105,7 @@ wrong). `bun run test` runs 58 Bun unit-test files under `tests/`: `utils`,
 `review-ops-data`, `knowledge-chunking`, `knowledge-sources`, `knowledge-retrieval`, `knowledge-search`,
 `validate-compliance-audit`, `review-merge`, `review-state-sync`,
 `check-revert`,
-`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `ci-workflow`, `esm-named-exports` — self-explanatory by name — plus a handful
+`ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `karl-category`, `ci-workflow`, `esm-named-exports` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
 `commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
 `mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over)),
@@ -166,7 +166,30 @@ type and role that produced it. It also asserts the panel emits **no
 block-level element at all** — the panel renders inside a `<span>` that renders
 wherever its tag does, so a `<div>` in it closes an enclosing paragraph early
 and the panel escapes the ancestor it is positioned against; that had been a
-rule three call sites remembered, and is now a property of the markup),
+rule three call sites remembered, and is now a property of the markup. It
+also covers the panel's newer Field and Rules rows: the raw Wagtail field
+name and its form rules are read straight from `js/karl/karl-blocks.js`
+rather than restated in the panel code, so a wrong value has to be wrong in
+that guarded inventory first — `tests/karl-blocks.test.js` is what would
+catch it. For a Content-tab panel the Rules row is pinned to print the
+inventory's literal `requiredDoc`/`repeatableDoc` strings, never the plain
+booleans stored beside them, because `not recorded` is a real answer distinct
+from `Optional` and substituting the boolean would claim a measurement that
+was never taken. **The Promote tab is the one exception, and it is about
+evidence rather than shape:** `PROMOTE_PANEL` carries no `*Doc` strings
+because the field map fills in that table's Required column for every row —
+`seo_title` and `search_description` are recorded `no` — so there the boolean
+IS the measurement, and printing `not recorded` would conceal a fact the
+field map states outright. Editorial rules live in a separate Guidance row
+instead of folding into Rules, printed next to the measured schema value they
+are judged against — the motivating case is `docs/karl-export-field-map.md`'s
+obsolete-register entry `O14`, where the Help Center's 25-character cap for a
+Button link is the rule an editor is held to (E3) while the live field
+measured at `maxlength="255"` (E1) simply will not enforce it, a gap a merged
+row would hide. And a guide whose reference names a panel missing
+from that page type's inventory — Campaign, About us, or Report plus
+`description` is the live case — renders no field block at all, so a
+mockup-only guide never gets to look like a measured one),
 `page-registry-data` (pins `REQUIRED_PAGE_FIELDS` against the real
 schema so a mismatched required field fails here rather than shipping; asserts
 a malformed registry entry is **dropped rather than thrown on**, since a throw
@@ -300,12 +323,14 @@ afterwards since happy-dom's HTTP client breaks `review-api-server`'s real
 requests, and redefines `window`/`document`/`localStorage` as writable so
 `review-state-sync`'s tests can still stub them.
 
-`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-four spec files
+`bun run test:e2e` drives Playwright over `tests/e2e/` — twenty-six spec files
 all UI-driven: navigation, editor panel, review workflow, review
 queue, review-queue undo, stored review data, import/export, keyboard
 shortcuts, workspace panels, accessibility, AI assist, AI rewrite, mockup PNG
 export, Overview insight cards, adding and deleting page mockups, mockup
-SFDS tokens, the chrome type scale, the Karl transcript panel, the
+SFDS tokens, the chrome type scale, the Karl transcript panel, the Karl
+guide panel's field rows on a real Transaction page, the Karl tag
+categories rendering distinctly in both colour schemes, the
 pre-navigation flush of in-progress sidebar edits, and
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist —
 which can ONLY be asserted here for the `<strong>`/`<em>` positive assertions,
@@ -543,7 +568,7 @@ directory:
 | Folder          | Owns                                                                                                                                                                                                                                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `js/core/`      | Bootstrap, shared state and the cross-cutting vocabulary: `utils.js`, `state.js`, `app.js`, `page-data.js`, `page-registry*.js`, `card-inheritance.js`, `third-party-globals.js`                                                                                                                                         |
-| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                                              |
+| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `karl-category.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                          |
 | `js/review/`    | The review/UX layers on top of the core: `review-queue*.js`, `review-insights*.js`, `review-ops*.js`, `ux-improvements*.js`, `dashboard-guidance.js`, `editor-panel.js`, `keyboard-shortcuts.js`, `manager-review-export.js`, `review-merge.js`, `review-state-store.js`, `review-state-validation.js`, `ui-controls.js` |
 | `js/editing/`   | Click-to-edit inline content editing on the rendered mockup: `inline-content-edit*.js`                                                                                                                                                                                                                                   |
 | `js/ai/`        | The optional AI assist and AI rewrite features, invisible unless `/api/ai/*` is configured: `ai-assist*.js`, `ai-rewrite*.js`                                                                                                                                                                                            |
@@ -569,6 +594,20 @@ belong to.
 - **`js/mockup/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
   `body`, `placement`, `editor`) and legend markup used by `karlTag()` and the
   workspace legend. Loads after `js/core/utils.js` for `escapeHtml`.
+- **`js/mockup/karl-category.js`** — the pure classifier deriving a tag's
+  `data-category` (`metadata`/`block`/`action`/`callout`/`inherited`/`editor`)
+  from signals already in scope at `karlTag()`. **A Karl tag has two axes and
+  only one of them is safe to rename.** `kind` is what Karl field resolution
+  reads — nearly half the `karlTag()` call sites in `js/mockup/page-render.js`
+  pass a bare
+  kind literal with no `context.role`, and `guideForContext()` falls back to the
+  kind when no role is given, so for those call sites the kind IS the role and
+  renaming one silently changes which Karl field the guide panel claims to have
+  measured. `data-category` carries **colour only**; nothing resolves a field
+  through it, so it may be renamed or re-coloured freely. Colour lives on
+  `[data-category]` in `css/ux-improvements.css` and must not move back onto
+  `[data-kind]` — the kind survives as the word printed in `.karl-tag-kind`,
+  which is what keeps colour from being the only encoding.
 - **`js/core/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone used
   for field-reset), `pageData`, `pageOrder`, `currentPageKey`.
 - **`js/review/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the

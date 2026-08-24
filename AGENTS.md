@@ -95,7 +95,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 58 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 59 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `page-render-hooks` (the
 `onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
 which replaced js/review/ux-improvements.js's monkey-patch of
@@ -188,7 +188,32 @@ all**: the panel renders inside a `<span>` that renders wherever its tag does,
 so a `<div>` within it closes an enclosing paragraph early and the panel
 escapes the positioned ancestor it anchors to, opening elsewhere on the page.
 That had been a rule three call sites had to remember; it is now a property of
-the markup),
+the markup. The panel also carries a raw Wagtail field name and its form
+rules now, read from `js/karl/karl-blocks.js` rather than restated — so a
+wrong value has to be wrong in that guarded inventory first, where
+`tests/karl-blocks.test.js` catches it, before it can mislead a reviewer here.
+For a Content-tab panel the Rules row prints the inventory's
+`requiredDoc`/`repeatableDoc` strings verbatim and never the plain booleans
+sitting beside them: `not recorded` is a real, distinct answer, not a synonym
+for `Optional`, and rendering the boolean instead would report a measurement
+nobody actually took. **The Promote tab is the one exception, and it is an
+exception about evidence rather than about shape:** `PROMOTE_PANEL` carries no
+`*Doc` strings because the field map documents that tab as a single table
+whose Required column is filled in for every row — `seo_title` and
+`search_description` are recorded `no`, closed as `U11` at E1 — so there the
+boolean IS the measurement rather than a stand-in for a missing one, and
+printing `not recorded` would conceal a fact the field map states outright.
+Editorial rules are kept out of that row entirely and rendered in their own
+Guidance row next to the measured schema value they are judged against —
+`docs/karl-export-field-map.md`'s obsolete-register entry `O14` is the reason:
+under the precedence revised 2026-08-23 the Help Center's 25-character cap for
+a Button link is the rule an editor is held to (E3), while the same field
+measured at `maxlength="255"` (E1) will not enforce it, and collapsing the two
+into one row would hide that gap behind a number the form never checks. A page
+type whose reference resolves to a panel absent
+from that type's inventory — Campaign, About us, or Report plus
+`description` is the live case — carries no field block at all, so a
+"mockup only" guide can never dress up a guess as a confident field name),
 `review-api-server` (which spawns `server.ts` as a subprocess
 against a temp SQLite DB),
 `review-api-postgres` (the same routes against a **real Postgres**, and
@@ -297,12 +322,14 @@ SKIP or weaken the regex to make the self-reference disappear).
 nothing
 — plus `bun run test:e2e`
 (Playwright, in `tests/e2e/`:
-twenty-four spec files, all UI-driven — navigation, editor panel, review
+twenty-six spec files, all UI-driven — navigation, editor panel, review
 workflow, review queue, review-queue undo, stored review data, import/export,
 keyboard shortcuts, workspace panels, accessibility, AI assist, the
 selection-driven AI rewrite, inline content editing, mockup PNG export, the
 Overview insight cards, adding and deleting page mockups, mockup SFDS tokens,
-the chrome type scale, the Karl transcript panel, the pre-navigation flush
+the chrome type scale, the Karl transcript panel, the Karl guide panel's
+field rows on a real Transaction page, the Karl tag categories rendering
+distinctly in both colour schemes, the pre-navigation flush
 of in-progress sidebar edits,
 the workshop form as a design reference that submits nowhere, and the safeMarkdown sanitizer allowlist
 — that last one can only live here for the `<strong>`/`<em>` positive
@@ -650,7 +677,7 @@ in nine feature folders under `js/` rather than one flat directory:
 | Folder          | Owns                                                                                                                                                                                                                                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `js/core/`      | Bootstrap, shared state and the cross-cutting vocabulary: `utils.js`, `state.js`, `app.js`, `page-data.js`, `page-registry*.js`, `card-inheritance.js`, `third-party-globals.js`                                                                                                                                         |
-| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                                              |
+| `js/mockup/`    | Renders `#mockPage` from page data: `page-render.js`, `karl-tag-meta.js`, `karl-category.js`, `inline-link-target.js`, `mockup-image-export.js`                                                                                                                                                                          |
 | `js/review/`    | The review/UX layers on top of the core: `review-queue*.js`, `review-insights*.js`, `review-ops*.js`, `ux-improvements*.js`, `dashboard-guidance.js`, `editor-panel.js`, `keyboard-shortcuts.js`, `manager-review-export.js`, `review-merge.js`, `review-state-store.js`, `review-state-validation.js`, `ui-controls.js` |
 | `js/editing/`   | Click-to-edit inline content editing on the rendered mockup: `inline-content-edit*.js`                                                                                                                                                                                                                                   |
 | `js/ai/`        | The optional AI assist and AI rewrite features, invisible unless `/api/ai/*` is configured: `ai-assist*.js`, `ai-rewrite*.js`                                                                                                                                                                                            |
@@ -683,6 +710,20 @@ to.
   indicators, search-result preview, per-field reset.
 - **`js/mockup/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
   including `karlTag()` for Karl CMS placement annotations.
+- **A Karl tag carries two axes, and only one of them is safe to rename.**
+  `kind` (`meta`/`body`/`placement`/`editor`) is what Karl field resolution
+  reads: nearly half the `karlTag()` call sites in `js/mockup/page-render.js`
+  pass a bare
+  kind literal with no `context.role` at all, and `guideForContext()` falls back
+  to the kind when no role is given — so for those call sites the kind IS the
+  role, and renaming one silently changes which Karl field the guide panel
+  claims to have measured. `data-category` — derived by
+  `js/mockup/karl-category.js` from `kind`, `context.role`, `context.linkShape`
+  and the inheritance fact — carries **colour only**. Nothing resolves a field
+  through it, so a category may be renamed or re-coloured freely. Colour lives on
+  `[data-category]` in `css/ux-improvements.css` and must never move back onto
+  `[data-kind]`; the kind survives as the word printed inside `.karl-tag-kind`,
+  which is what keeps colour from being the only encoding.
 - **`js/core/page-registry-data.js`** — pure validation for a page a reviewer
   authored in the browser, plus `applyRegistryToData()`, the only function that
   mutates `order`/`pages` for the add/delete feature. Dual-exported and

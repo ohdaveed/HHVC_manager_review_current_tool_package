@@ -14,8 +14,16 @@
 // PR #153, every one of them a context resolving to a plausible neighbouring
 // field. Each is pinned below by the page type and role that produced it.
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
-import { BUTTON_HOSTS, ROLE_PANELS, guideForContext } from '../js/karl/karl-guide-registry.js'
-import { renderKarlGuidePanel } from '../js/mockup/karl-tag-meta.js'
+import {
+  BUTTON_HOSTS,
+  ROLE_PANELS,
+  fieldMetaFor,
+  guideForContext,
+  resolveFieldRef,
+} from '../js/karl/karl-guide-registry.js'
+import { KARL_CATEGORIES } from '../js/mockup/karl-category.js'
+import { karlTag } from '../js/mockup/page-render.js'
+import { renderKarlGuidePanel, renderKarlTagLegend } from '../js/mockup/karl-tag-meta.js'
 
 const { karlGuideSchema } = require('../build_scripts/schema.js')
 
@@ -293,5 +301,429 @@ describe('Escape closes the guide from anywhere inside it', () => {
     trigger.setAttribute('aria-expanded', 'false')
     trigger.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
+  })
+})
+
+describe('field references survive path resolution', () => {
+  test('a Transaction step resolves to the Section specifics panel', () => {
+    const ref = resolveFieldRef('transaction', 'what-to-do', {})
+    expect(ref).toEqual({
+      kind: 'panel',
+      karlType: 'Transaction',
+      rawName: 'section_specifics',
+      within: undefined,
+    })
+  })
+
+  test('a Spotlight CTA carries the nested Button link as its within', () => {
+    const ref = resolveFieldRef('campaign', 'spotlight', { linkShape: 'button-link' })
+    expect(ref).toEqual({
+      kind: 'panel',
+      karlType: 'Campaign',
+      rawName: 'spotlight_1',
+      within: 'Button link',
+    })
+  })
+
+  test('a Promote field resolves to a promote ref, not a panel ref', () => {
+    const ref = resolveFieldRef('transaction', 'seoTitle', {})
+    expect(ref?.kind).toBe('promote')
+    expect(ref?.field.rawName).toBe('seo_title')
+  })
+
+  test('an unresolved context has no reference at all', () => {
+    expect(resolveFieldRef('transaction', 'content', { unresolvedId: 'U1' })).toBe(null)
+  })
+
+  // Path parity goes through guideFor(), the helper the rest of this file
+  // already uses, because resolvePath is NOT exported — the existing suite
+  // reaches it only through guideForContext, and widening the module's public
+  // surface to let a test call it directly would make the refactor bigger than
+  // the feature.
+  test('the formatted path is exactly what it was before', () => {
+    expect(guideFor('Transaction', 'what-to-do').path).toBe(
+      'Content → What to Do → Section specifics'
+    )
+    expect(guideFor('Campaign', 'spotlight', { linkShape: 'button-link' }).path).toBe(
+      'Content → Spotlight 1 → Button link'
+    )
+    expect(guideFor('Transaction', 'content', { unresolvedId: 'U1' }).path).toBe('')
+  })
+
+  // A non-null `kind: 'panel'` ref is not proof the panel resolves — it only
+  // records that some lookup table (META_PANELS here) named a rawName for
+  // this role. META_PANELS.description is type-agnostic, but Campaign, About
+  // us and Report carry no 'description' panel in the field-map
+  // transcription, so resolvePath() correctly reports '' / mockup-only for
+  // them even though resolveFieldRef() handed back a reference. This is
+  // deliberate asymmetry, not a bug to fix by tightening resolveFieldRef():
+  // the confirming check belongs to panelByRawName()/breadcrumbFor(), which
+  // is what resolvePath() (and any future consumer of a panel ref) must run
+  // before treating the reference as a measured Karl destination. Transaction
+  // is the contrasting case, where the same role DOES resolve.
+  test('a non-null panel ref does not guarantee the panel resolves', () => {
+    const campaignRef = resolveFieldRef('campaign', 'description', {})
+    expect(campaignRef).toEqual({
+      kind: 'panel',
+      karlType: 'Campaign',
+      rawName: 'description',
+      within: undefined,
+    })
+    const campaignGuide = guideFor('Campaign', 'description')
+    expect(campaignGuide.path).toBe('')
+    expect(campaignGuide.status).toBe('mockup-only')
+
+    const transactionGuide = guideFor('Transaction', 'description')
+    expect(transactionGuide.path).toBe('Content → Description')
+  })
+})
+
+describe('the guide carries the field the path leads to', () => {
+  test('a Transaction step guide names the raw Wagtail field', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+    })
+    expect(guide.field.rawName).toBe('section_specifics')
+    expect(guide.field.uiLabel).toBe('Section specifics')
+  })
+
+  // The inventory records required:false AND requiredDoc:'not recorded' for this
+  // panel, and they are different claims: the boolean is this repo coercing an
+  // absent measurement into a default, the string is what the field map says.
+  // Rendering "Optional" would report a measurement nobody took.
+  test("required and repeatable render the doc's own words, never the booleans", () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+    })
+    expect(guide.field.required).toBe('not recorded')
+    expect(guide.field.repeatable).toBe('repeatable')
+    expect(guide.field.required).not.toBe('Optional')
+    expect(typeof guide.field.required).toBe('string')
+    expect(typeof guide.field.repeatable).toBe('string')
+  })
+
+  test('the block-type chooser contents come through verbatim', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+    })
+    expect(guide.field.blockTypes).toBe(
+      'chooser: Address | Callout | Document | Email | Button link | Phone number | Text'
+    )
+  })
+
+  test('a Promote field carries its own label and raw name', () => {
+    const meta = fieldMetaFor(resolveFieldRef('transaction', 'seoTitle', {}))
+    expect(meta.rawName).toBe('seo_title')
+    expect(meta.uiLabel).toBe('Title tag')
+  })
+
+  // The Promote tab is the one place where `required: false` is a MEASUREMENT
+  // rather than a stand-in for a missing one. The field map documents that tab
+  // as a single table (docs/karl-export-field-map.md:161-163, closed as `U11`
+  // at E1) whose Required column reads `no` for both of these rows, so
+  // printing `not recorded` here would conceal a fact the field map states
+  // outright — the opposite of the failure the panel wording guards against
+  // everywhere else.
+  test('a Promote field reports the optionality the field map records', () => {
+    expect(fieldMetaFor(resolveFieldRef('transaction', 'seoTitle', {})).required).toBe('no')
+    expect(fieldMetaFor(resolveFieldRef('transaction', 'metaDescription', {})).required).toBe('no')
+    expect(fieldMetaFor(resolveFieldRef('transaction', 'seoTitle', {})).required).not.toBe(
+      'not recorded'
+    )
+  })
+
+  // The whole point of resolvePath() returning '' is that an unrecorded
+  // destination stays visibly unrecorded. A field block appearing without one
+  // would put a confident field name under a "Mockup only" badge.
+  test('a guide with no path carries no field at all', () => {
+    const guide = guideForContext({
+      page: { type: 'Information' },
+      context: { role: 'contact' },
+    })
+    expect(guide.path).toBe('')
+    expect(guide.field).toBeUndefined()
+  })
+
+  test('an unresolved guide carries no field either', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'content', unresolvedId: 'U1' },
+    })
+    expect(guide.field).toBeUndefined()
+  })
+
+  // An authored guide.path is not second-guessed elsewhere in this function,
+  // and a derived field block under it would claim a destination the author
+  // did not name.
+  test('an explicitly authored path carries no derived field', () => {
+    const guide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do' },
+      guide: { path: 'Content → Somewhere the author chose' },
+    })
+    expect(guide.path).toBe('Content → Somewhere the author chose')
+    expect(guide.field).toBeUndefined()
+  })
+
+  // The production-reachable case fieldMetaFor()'s `if (!panel) return
+  // undefined` guard exists for. META_PANELS.description is type-agnostic, so
+  // resolveFieldRef() hands back a non-null `{kind: 'panel', rawName:
+  // 'description', ...}` ref for EVERY page type — but panelByRawName() has no
+  // 'description' entry for Campaign, About us, or Report, only for
+  // Transaction, Information, Topic, Agency and Resource Collection. Without
+  // this second check, a Campaign guide reporting `status: 'mockup-only'`
+  // would ALSO print a confident field name for a field that does not exist on
+  // that page type — a measured-looking answer nobody measured. The
+  // contrasting Transaction case is asserted in the same test so this cannot
+  // pass by the guard never firing at all.
+  test('a page type with no description panel carries no field, even though the ref resolved', () => {
+    const campaignGuide = guideForContext({
+      page: { type: 'Campaign' },
+      context: { role: 'description' },
+    })
+    expect(campaignGuide.path).toBe('')
+    expect(campaignGuide.status).toBe('mockup-only')
+    expect(campaignGuide.field).toBeUndefined()
+
+    const transactionGuide = guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'description' },
+    })
+    expect(transactionGuide.field.rawName).toBe('description')
+  })
+})
+
+describe('the guide panel shows the field, not just the screen', () => {
+  const transactionStep = () =>
+    renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Transaction' }, context: { role: 'what-to-do' } }),
+      'panel-1'
+    )
+
+  test('the raw Wagtail field name renders in a code element', () => {
+    expect(transactionStep()).toContain('<code>section_specifics</code>')
+  })
+
+  test('the UI label renders beside it', () => {
+    expect(transactionStep()).toContain('Section specifics')
+  })
+
+  test("the rules row prints the doc's required and repeatable wording", () => {
+    const html = transactionStep()
+    expect(html).toContain('not recorded')
+    expect(html).toContain('repeatable')
+  })
+
+  test('the block-type chooser renders', () => {
+    expect(transactionStep()).toContain('Button link | Phone number | Text')
+  })
+
+  // Same invariant the existing "the guide panel is phrasing content" block
+  // asserts for the rest of the panel, restated for the new rows: the panel
+  // renders inside a <span> that can sit inside a <p>, and a block-level start
+  // tag closes that paragraph, so the panel escapes the ancestor it is
+  // positioned against and reopens elsewhere on the page.
+  test('the new rows emit no block-level element', () => {
+    const html = transactionStep()
+    expect(html).not.toMatch(/<(div|p|ul|ol|li|h[1-6])[\s>]/)
+  })
+
+  test('a guide with no field renders no field row at all', () => {
+    const html = renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Information' }, context: { role: 'contact' } }),
+      'panel-2'
+    )
+    expect(html).not.toContain('karl-guide-field')
+    expect(html).not.toContain('karl-guide-rules')
+  })
+
+  test('field values are escaped', () => {
+    const html = renderKarlGuidePanel(
+      {
+        path: 'Content',
+        steps: [],
+        field: {
+          rawName: '<script>x</script>',
+          uiLabel: 'a"b',
+          required: 'yes',
+          repeatable: 'single',
+          blockTypes: '',
+        },
+      },
+      'panel-3'
+    )
+    expect(html).not.toContain('<script>')
+    expect(html).toContain('&lt;script&gt;')
+    expect(html).toContain('a&quot;b')
+  })
+})
+
+describe('style guidance is never dressed as a schema constraint', () => {
+  const buttonGuide = () =>
+    guideForContext({
+      page: { type: 'Transaction' },
+      context: { role: 'what-to-do', linkShape: 'button-link' },
+    })
+
+  test('a Button link carries the Help Center length cap', () => {
+    expect(buttonGuide().guidance.text).toContain('25')
+  })
+
+  // The cap is a RULE under the precedence revised 2026-08-23, not an
+  // approximation, and the guidance row is the only place a reviewer reads it.
+  // Wording it as "aim for about 25" is what this pins against: an editorial
+  // constraint softened into a preference reads as permission to exceed it.
+  test('it states the cap rather than approximating it', () => {
+    expect(buttonGuide().guidance.text).not.toMatch(/about|aim/i)
+  })
+
+  test('it names the measured schema value beside it', () => {
+    expect(buttonGuide().guidance.schema).toContain('255')
+  })
+
+  // O14 in docs/karl-export-field-map.md: the Help Center's 25-character cap
+  // is the rule (E3), and the live field's measured `maxlength="255"` (E1,
+  // 2026-08-15) is a gap in the form rather than permission — U19 records ten
+  // mockup labels shortened to the cap. The 25 still may not appear in the
+  // Rules row, and the reason survives the precedence reversal: Rules prints
+  // what the FORM does, so an editorial cap sitting there would report a
+  // constraint the form does not enforce, in the one panel whose job is
+  // separating measured destinations from chosen ones.
+  test('the 25 never appears in the rules row', () => {
+    const html = renderKarlGuidePanel(buttonGuide(), 'panel-4')
+    const rules = html.slice(html.indexOf('karl-guide-rules'), html.indexOf('karl-guide-guidance'))
+    expect(rules).not.toContain('25')
+  })
+
+  test('the guidance row is labelled as guidance in words, not by colour alone', () => {
+    const html = renderKarlGuidePanel(buttonGuide(), 'panel-5')
+    expect(html).toContain('karl-guide-guidance')
+    expect(html).toMatch(/Guidance/)
+  })
+
+  test('a field with no recorded guidance renders no guidance row', () => {
+    const html = renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Transaction' }, context: { role: 'what-to-do' } }),
+      'panel-6'
+    )
+    expect(html).not.toContain('karl-guide-guidance')
+  })
+
+  test('the guidance row emits no block-level element', () => {
+    expect(renderKarlGuidePanel(buttonGuide(), 'panel-7')).not.toMatch(
+      /<(div|p|ul|ol|li|h[1-6])[\s>]/
+    )
+  })
+})
+
+describe('the legend states the precedence the field map records', () => {
+  test('the full legend links to the Karl Help Center', () => {
+    const html = renderKarlTagLegend('full')
+    expect(html).toContain('sfdigitalservices.gitbook.io')
+    expect(html).toContain('rel="noopener noreferrer"')
+    expect(html).toContain('target="_blank"')
+  })
+
+  // Both halves, because the precedence has two of them and stating either one
+  // alone is what the legend got wrong. Under the reversal recorded in
+  // docs/karl-export-field-map.md ("Precedence, revised 2026-08-23") the Help
+  // Center governs how a page should be BUILT, while the measured live form is
+  // still the only source for raw field names and panel order. A legend that
+  // says the measured path wins outright contradicts the field map in the UI;
+  // one that says the Help Center wins outright would send a reviewer to a doc
+  // that never prints a raw Wagtail name.
+  test('the link says the Help Center is the rule to follow', () => {
+    expect(renderKarlTagLegend('full')).toMatch(/should be built/i)
+    expect(renderKarlTagLegend('full')).not.toMatch(/the measured path is what the live form does/i)
+  })
+
+  test('and that the measured path is still what the form contains', () => {
+    expect(renderKarlTagLegend('full')).toMatch(/measured path/i)
+    expect(renderKarlTagLegend('full')).toMatch(/raw field names/i)
+  })
+
+  test('the compact legend stays a colour key with no prose', () => {
+    expect(renderKarlTagLegend('compact')).not.toContain('gitbook.io')
+  })
+
+  test('no guide panel carries the link', () => {
+    const html = renderKarlGuidePanel(
+      guideForContext({ page: { type: 'Transaction' }, context: { role: 'what-to-do' } }),
+      'panel-8'
+    )
+    expect(html).not.toContain('gitbook.io')
+  })
+})
+
+describe('a Karl tag carries its category alongside its kind', () => {
+  test('the kind attribute is unchanged and the category is added', () => {
+    const html = karlTag('Body section', 'body')
+    expect(html).toContain('data-kind="body"')
+    expect(html).toContain('data-category="block"')
+  })
+
+  test('an editor note is categorised editor and still kinded editor', () => {
+    const html = karlTag('Editor-only QA note / Do not publish', 'editor')
+    expect(html).toContain('data-kind="editor"')
+    expect(html).toContain('data-category="editor"')
+  })
+
+  test('a button link tag is categorised as an action', () => {
+    const html = karlTag('Step action', 'placement', {
+      context: { role: 'what-to-do', linkShape: 'button-link' },
+    })
+    expect(html).toContain('data-category="action"')
+    expect(html).toContain('data-kind="placement"')
+  })
+
+  test('an inheriting card tag is categorised as a link picker', () => {
+    const html = karlTag('Linked page item', 'placement', {
+      inheritanceFact: 'title-and-text',
+    })
+    expect(html).toContain('data-category="inherited"')
+  })
+
+  test('a component-only context derives the category from component', () => {
+    const calloutHtml = karlTag('Callout block', 'body', {
+      context: { component: 'callout' },
+    })
+    expect(calloutHtml).toContain('data-category="callout"')
+  })
+
+  // The whole reason the category is a separate attribute. If a future edit
+  // ever routes the category into `kind`, Karl field resolution changes for the
+  // 14 call sites that pass no explicit role — and this goes red first.
+  test('the category never replaces the kind for any of the four kinds', () => {
+    for (const kind of ['meta', 'body', 'placement', 'editor']) {
+      const html = karlTag('Some note', kind)
+      expect(html).toContain(`data-kind="${kind}"`)
+    }
+  })
+})
+
+describe('the legend explains categories, and never colour alone', () => {
+  test('the full legend lists every category by name', () => {
+    const html = renderKarlTagLegend('full')
+    for (const meta of Object.values(KARL_CATEGORIES)) {
+      expect(html).toContain(meta.label)
+    }
+  })
+
+  test('each legend swatch is keyed by category, not by kind', () => {
+    const html = renderKarlTagLegend('full')
+    for (const id of Object.keys(KARL_CATEGORIES)) {
+      expect(html).toContain(`data-category="${id}"`)
+    }
+  })
+
+  // The tags themselves still print their kind in words. That is what keeps the
+  // encoding readable without colour, and it is why moving colour to the
+  // category costs nothing in accessibility terms.
+  test('a tag still names its kind in words', () => {
+    expect(karlTag('Body section', 'body')).toContain('Body')
+    expect(karlTag('Editor note', 'editor')).toContain('Editor only')
   })
 })

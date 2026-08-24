@@ -249,7 +249,7 @@ const KARL_NAV = {
  */
 const PROMOTE_PANEL = {
   uiLabel: 'Promote → For search engines',
-  docLine: 149,
+  docLine: 161,
   fields: [
     { label: 'Slug', rawName: 'slug', path: 'slug', required: true },
     { label: 'Title tag', rawName: 'seo_title', path: 'seoTitle', required: false },
@@ -279,28 +279,28 @@ const UNRESOLVED = [
   {
     id: 'U1',
     shape: 'section-button-outside-step',
-    docLine: 836,
+    docLine: 654,
     reason:
       "Section-level buttons outside a step. Transaction's only Button link slot sits inside a what_to_do Section, and Report's only inside the Spotlight. Blocked on a Digital Services decision.",
   },
   {
     id: 'U3',
     shape: 'information-steps',
-    docLine: 838,
+    docLine: 857,
     reason:
       'Steps on an Information page. Information has no what_to_do-style container. Karl’s Step by step type fits the steps exactly but has no page-level cost and no things_to_know, so retyping would drop whatToKnow entirely. Blocked on a content decision.',
   },
   {
     id: 'U5',
     shape: 'topic-related',
-    docLine: 840,
+    docLine: 859,
     reason:
       'A Related panel on a Topic page. Topic has no `related` field, confirmed at E1. Either the panel moves into content_fields as a Resources block, or the page drops it. Blocked on a content decision.',
   },
   {
     id: 'U20',
     shape: 'agency-subsection-paragraphs',
-    docLine: 855,
+    docLine: 874,
     reason:
       'Intro paragraphs on an Agency Services/Resources section. The Subsection carries a single optional Title and a links list — there is no description field, so the paragraph has nowhere to go. This is U4’s shape measured on Agency rather than Topic, and it needs the same answer. Blocked on a Digital Services decision.',
   },
@@ -311,35 +311,35 @@ const UNRESOLVED = [
   {
     id: 'U21',
     shape: 'campaign-page-summary',
-    docLine: 856,
+    docLine: 875,
     reason:
       'Campaign has no page `description` field, and both Campaign pages declare a summary the mockup renders under the title. `about_campaign` is an About SECTION rather than a page description, so folding it in is a content decision. Blocked on a content decision.',
   },
   {
     id: 'U21',
     shape: 'about-us-page-summary',
-    docLine: 856,
+    docLine: 875,
     reason:
       'About us has no page `description` field — its whole Content tab is four panels — and `aboutHhvcTeam` declares a summary. Blocked on a content decision.',
   },
   {
     id: 'U21',
     shape: 'report-page-summary',
-    docLine: 856,
+    docLine: 875,
     reason:
       'Report has no page `description` field, and `article11Guide` declares a summary. Blocked on a content decision.',
   },
   {
     id: 'U22',
     shape: 'information-page-contact',
-    docLine: 857,
+    docLine: 876,
     reason:
       'Information has no Contact us panel — `get_help` is Transaction’s, and the `Contact` block belongs to Campaign and Agency — yet two Information pages carry `contact`. Blocked on a content decision.',
   },
   {
     id: 'U23',
     shape: 'information-page-whattoknow',
-    docLine: 858,
+    docLine: 877,
     reason:
       'Information has no `cost` and no `things_to_know`; both sit under Transaction’s "What to Know Before You Start" grouping. One Information page carries `whatToKnow`. This is U3’s trade seen from the other side. Blocked on a content decision.',
   },
@@ -361,7 +361,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 305,
+      docLine: 318,
     },
     {
       uiLabel: 'Description',
@@ -377,7 +377,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'summary',
       },
-      docLine: 306,
+      docLine: 319,
     },
     {
       uiLabel: 'Primary agency',
@@ -392,16 +392,16 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 307,
+      docLine: 320,
       note: 'U6 — the mockup has no primary_agency field, and Karl requires it. Supply the parent Agency page by hand.',
     },
     {
       uiLabel: 'Cost',
       rawName: 'cost',
       order: 3,
-      required: true,
+      required: false,
       repeatable: false,
-      requiredDoc: 'yes (radio)',
+      requiredDoc: 'no',
       repeatableDoc: 'max 1 item',
       blockTypesDoc: 'struct, auto-inserted, no chooser',
       sourceDoc: 'whatToKnow.cost',
@@ -409,7 +409,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'whatToKnow.cost',
       },
-      docLine: 308,
+      docLine: 321,
     },
     {
       uiLabel: 'Things to Know',
@@ -418,7 +418,7 @@ const KARL_PANELS = {
       required: false,
       repeatable: true,
       requiredDoc: 'not recorded',
-      repeatableDoc: 'repeatable (3 seen live)',
+      repeatableDoc: 'repeatable, max 2 items (E3; form accepts more)',
       blockTypesDoc: 'one type: title_and_text, no chooser',
       sourceDoc: 'whatToKnow.thingsToKnow[] / .items[]',
       source: {
@@ -426,7 +426,7 @@ const KARL_PANELS = {
         path: 'whatToKnow.thingsToKnow',
         altPaths: ['whatToKnow.items'],
       },
-      docLine: 309,
+      docLine: 322,
     },
     {
       uiLabel: 'What to Do',
@@ -444,7 +444,7 @@ const KARL_PANELS = {
           has: ['steps'],
         },
       },
-      docLine: 310,
+      docLine: 323,
     },
     {
       uiLabel: 'Section title',
@@ -459,7 +459,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 311,
+      docLine: 324,
       subPanelOf: 'what_to_do',
     },
     {
@@ -476,7 +476,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 312,
+      docLine: 325,
       subPanelOf: 'what_to_do',
     },
     {
@@ -492,7 +492,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 313,
+      docLine: 326,
     },
     {
       uiLabel: 'Accordion title and text',
@@ -511,7 +511,7 @@ const KARL_PANELS = {
           flat: false,
         },
       },
-      docLine: 314,
+      docLine: 327,
     },
     {
       uiLabel: 'Custom Section',
@@ -540,7 +540,7 @@ const KARL_PANELS = {
           inferred: true,
         },
       ],
-      docLine: 315,
+      docLine: 328,
     },
     {
       uiLabel: 'Related',
@@ -558,7 +558,7 @@ const KARL_PANELS = {
           cardClass: 'title-only',
         },
       },
-      docLine: 316,
+      docLine: 329,
     },
     {
       uiLabel: 'Why is this Transaction Good for the Community?',
@@ -573,7 +573,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 317,
+      docLine: 330,
     },
     {
       uiLabel: 'Contact us',
@@ -589,7 +589,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'contact',
       },
-      docLine: 318,
+      docLine: 331,
     },
     {
       uiLabel: 'Partner agencies',
@@ -605,7 +605,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'partnerAgencies',
       },
-      docLine: 319,
+      docLine: 332,
     },
     {
       uiLabel: 'Topics',
@@ -620,7 +620,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 320,
+      docLine: 333,
       note: 'topicTag is unmapped metadata — the stored values are Agency labels, not Topic chooser references.',
     },
     {
@@ -636,7 +636,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 321,
+      docLine: 334,
       note: 'Disabled by design — a ConditionalReadOnlyFieldPanel. Never type into it.',
     },
   ],
@@ -655,7 +655,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 356,
+      docLine: 375,
     },
     {
       uiLabel: 'Description',
@@ -671,7 +671,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'summary',
       },
-      docLine: 357,
+      docLine: 376,
     },
     {
       uiLabel: 'Primary agency',
@@ -686,7 +686,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 358,
+      docLine: 377,
       note: 'U6 — supply the parent Agency page by hand; the mockup has no field for it.',
     },
     {
@@ -702,7 +702,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 359,
+      docLine: 378,
     },
     {
       uiLabel: 'Information section',
@@ -728,7 +728,7 @@ const KARL_PANELS = {
           },
         },
       ],
-      docLine: 360,
+      docLine: 379,
     },
     {
       uiLabel: 'Partner agencies',
@@ -744,7 +744,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'partnerAgencies',
       },
-      docLine: 361,
+      docLine: 380,
     },
     {
       uiLabel: 'Topics',
@@ -759,7 +759,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 362,
+      docLine: 381,
       note: 'topicTag is unmapped metadata — the stored values are Agency labels, not Topic chooser references. Do not paste one into this chooser.',
     },
     {
@@ -786,7 +786,7 @@ const KARL_PANELS = {
           },
         },
       ],
-      docLine: 363,
+      docLine: 382,
     },
   ],
   'Resource Collection': [
@@ -804,7 +804,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 387,
+      docLine: 406,
     },
     {
       uiLabel: 'Description',
@@ -820,7 +820,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'summary',
       },
-      docLine: 388,
+      docLine: 407,
     },
     {
       uiLabel: 'Primary agency',
@@ -835,7 +835,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 389,
+      docLine: 408,
       note: 'U6 — supply the parent Agency page by hand; the mockup has no field for it.',
     },
     {
@@ -851,7 +851,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 390,
+      docLine: 409,
     },
     {
       uiLabel: 'Introductory text',
@@ -875,7 +875,7 @@ const KARL_PANELS = {
         },
         emit: 'prose',
       },
-      docLine: 391,
+      docLine: 410,
     },
     {
       uiLabel: 'Body',
@@ -896,7 +896,7 @@ const KARL_PANELS = {
         },
         emit: 'cards',
       },
-      docLine: 392,
+      docLine: 411,
     },
     {
       uiLabel: 'Custom section',
@@ -911,7 +911,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 393,
+      docLine: 412,
     },
     {
       uiLabel: 'Topics',
@@ -926,7 +926,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 394,
+      docLine: 413,
       note: 'topicTag is unmapped metadata — the stored values are Agency labels, not Topic chooser references.',
     },
     {
@@ -943,7 +943,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'partnerAgencies',
       },
-      docLine: 395,
+      docLine: 414,
     },
   ],
   Campaign: [
@@ -961,7 +961,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 425,
+      docLine: 444,
     },
     {
       uiLabel: 'Primary agency',
@@ -976,7 +976,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 426,
+      docLine: 445,
       note: 'U6 — supply the parent Agency page by hand; the mockup has no field for it.',
     },
     {
@@ -992,7 +992,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 427,
+      docLine: 446,
     },
     {
       uiLabel: 'Background header image',
@@ -1007,7 +1007,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 428,
+      docLine: 447,
     },
     {
       uiLabel: 'Color theme',
@@ -1022,7 +1022,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 429,
+      docLine: 448,
     },
     {
       uiLabel: 'Spotlight 1',
@@ -1041,7 +1041,7 @@ const KARL_PANELS = {
         },
         nth: 0,
       },
-      docLine: 430,
+      docLine: 449,
     },
     {
       uiLabel: 'Spotlight 2',
@@ -1060,7 +1060,7 @@ const KARL_PANELS = {
         },
         nth: 1,
       },
-      docLine: 431,
+      docLine: 450,
       note: 'Spotlight 1 and Spotlight 2 are two independent top-level fields, not one repeatable field with two slots, so a third spotlight concept has nowhere to go.',
     },
     {
@@ -1079,7 +1079,7 @@ const KARL_PANELS = {
           component: 'top-facts',
         },
       },
-      docLine: 432,
+      docLine: 451,
     },
     {
       uiLabel: 'Additional content',
@@ -1097,7 +1097,7 @@ const KARL_PANELS = {
           component: 'supporting',
         },
       },
-      docLine: 433,
+      docLine: 452,
     },
     {
       uiLabel: 'About',
@@ -1112,7 +1112,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 434,
+      docLine: 453,
     },
     {
       uiLabel: 'Partner agencies',
@@ -1127,7 +1127,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 435,
+      docLine: 454,
     },
     {
       uiLabel: 'Related',
@@ -1153,7 +1153,7 @@ const KARL_PANELS = {
           },
         },
       ],
-      docLine: 436,
+      docLine: 455,
     },
     {
       uiLabel: 'Contact us',
@@ -1170,7 +1170,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'contact',
       },
-      docLine: 437,
+      docLine: 456,
     },
   ],
   Topic: [
@@ -1188,7 +1188,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 479,
+      docLine: 498,
     },
     {
       uiLabel: 'Primary agency',
@@ -1203,7 +1203,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 480,
+      docLine: 499,
       note: 'U6 — supply the parent Agency page by hand; the mockup has no field for it.',
     },
     {
@@ -1220,7 +1220,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'summary',
       },
-      docLine: 481,
+      docLine: 500,
     },
     {
       uiLabel: 'Set top-level?',
@@ -1235,7 +1235,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 482,
+      docLine: 501,
     },
     {
       uiLabel: 'Child topics (outer StreamField; internally "Page content")',
@@ -1268,7 +1268,7 @@ const KARL_PANELS = {
           },
         },
       ],
-      docLine: 483,
+      docLine: 502,
     },
     {
       uiLabel: 'Partner agencies',
@@ -1284,7 +1284,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'partnerAgencies',
       },
-      docLine: 484,
+      docLine: 503,
     },
   ],
   Agency: [
@@ -1302,7 +1302,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 526,
+      docLine: 545,
     },
     {
       uiLabel: 'Select to show page on agency list',
@@ -1317,7 +1317,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 527,
+      docLine: 546,
     },
     {
       uiLabel: 'Description',
@@ -1333,7 +1333,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'summary',
       },
-      docLine: 528,
+      docLine: 547,
     },
     {
       uiLabel: 'Logo',
@@ -1348,7 +1348,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 529,
+      docLine: 548,
     },
     {
       uiLabel: 'Main image',
@@ -1363,7 +1363,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 530,
+      docLine: 549,
     },
     {
       uiLabel: 'Alert',
@@ -1378,7 +1378,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 531,
+      docLine: 550,
     },
     {
       uiLabel: 'Quick links',
@@ -1393,7 +1393,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 532,
+      docLine: 551,
     },
     {
       uiLabel: 'Meeting information',
@@ -1408,7 +1408,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 533,
+      docLine: 552,
     },
     {
       uiLabel: 'Section title 1',
@@ -1427,7 +1427,7 @@ const KARL_PANELS = {
         },
         field: 'heading',
       },
-      docLine: 534,
+      docLine: 553,
       note: 'Required, and the Help Center is wrong that it defaults to blank — the form pre-fills "Services" and refuses an empty value.',
     },
     {
@@ -1446,7 +1446,7 @@ const KARL_PANELS = {
           component: 'services',
         },
       },
-      docLine: 535,
+      docLine: 554,
     },
     {
       uiLabel: 'Spotlight 1',
@@ -1461,7 +1461,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 536,
+      docLine: 555,
     },
     {
       uiLabel: 'Spotlight 2',
@@ -1476,7 +1476,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 537,
+      docLine: 556,
     },
     {
       uiLabel: 'Highlights',
@@ -1491,7 +1491,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 538,
+      docLine: 557,
     },
     {
       uiLabel: 'Section title 2',
@@ -1510,7 +1510,7 @@ const KARL_PANELS = {
         },
         field: 'heading',
       },
-      docLine: 539,
+      docLine: 558,
       note: 'Required, same as Section title 1. An editor may rename it but not empty it.',
     },
     {
@@ -1529,7 +1529,7 @@ const KARL_PANELS = {
           component: 'resources',
         },
       },
-      docLine: 540,
+      docLine: 559,
     },
     {
       uiLabel: 'About',
@@ -1547,7 +1547,7 @@ const KARL_PANELS = {
           component: 'body',
         },
       },
-      docLine: 541,
+      docLine: 560,
     },
     {
       uiLabel: 'Call to action',
@@ -1562,7 +1562,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 542,
+      docLine: 561,
       subPanelOf: 'about_description',
     },
     {
@@ -1578,7 +1578,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 543,
+      docLine: 562,
       subPanelOf: 'about_description',
     },
     {
@@ -1595,7 +1595,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'partnerAgencies',
       },
-      docLine: 544,
+      docLine: 563,
       subPanelOf: 'about_description',
     },
     {
@@ -1611,7 +1611,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 545,
+      docLine: 564,
     },
     {
       uiLabel: 'Public records',
@@ -1626,7 +1626,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 546,
+      docLine: 565,
       note: 'Required panel with no mockup source: the asterisk marks a required StreamField that renders no input until a block is added.',
     },
     {
@@ -1642,7 +1642,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 547,
+      docLine: 566,
     },
     {
       uiLabel: 'Contact us',
@@ -1658,7 +1658,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'contact',
       },
-      docLine: 548,
+      docLine: 567,
     },
     {
       uiLabel: 'Redirect this page to',
@@ -1673,7 +1673,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 549,
+      docLine: 568,
       note: 'Disabled by design — a ConditionalReadOnlyFieldPanel. Never type into it.',
     },
     {
@@ -1689,7 +1689,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 550,
+      docLine: 569,
       note: 'topicTag is unmapped metadata — the stored values are Agency labels, not Topic chooser references.',
     },
   ],
@@ -1708,7 +1708,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 583,
+      docLine: 602,
     },
     {
       uiLabel: 'Primary agency',
@@ -1723,7 +1723,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 584,
+      docLine: 603,
       note: 'U6 — supply the parent Agency page by hand; the mockup has no field for it.',
     },
     {
@@ -1742,7 +1742,7 @@ const KARL_PANELS = {
           lacks: ['cards'],
         },
       },
-      docLine: 585,
+      docLine: 604,
     },
     {
       uiLabel: 'Resources',
@@ -1761,7 +1761,7 @@ const KARL_PANELS = {
           component: 'resources',
         },
       },
-      docLine: 586,
+      docLine: 605,
     },
   ],
   Report: [
@@ -1779,7 +1779,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'title',
       },
-      docLine: 617,
+      docLine: 636,
     },
     {
       uiLabel: 'Date',
@@ -1795,7 +1795,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'reportDate',
       },
-      docLine: 618,
+      docLine: 637,
     },
     {
       uiLabel: 'Primary agency',
@@ -1810,7 +1810,7 @@ const KARL_PANELS = {
       source: {
         kind: 'none',
       },
-      docLine: 619,
+      docLine: 638,
       note: 'U6 — supply the parent Agency page by hand; the mockup has no field for it.',
     },
     {
@@ -1827,7 +1827,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'spotlight',
       },
-      docLine: 620,
+      docLine: 639,
     },
     {
       uiLabel: 'Content',
@@ -1843,7 +1843,7 @@ const KARL_PANELS = {
         kind: 'sections',
         match: {},
       },
-      docLine: 621,
+      docLine: 640,
     },
     {
       uiLabel: 'Print version',
@@ -1859,7 +1859,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'printVersionUrl',
       },
-      docLine: 622,
+      docLine: 641,
     },
     {
       uiLabel: 'Partner agencies',
@@ -1875,7 +1875,7 @@ const KARL_PANELS = {
         kind: 'path',
         path: 'partnerAgencies',
       },
-      docLine: 623,
+      docLine: 642,
     },
   ],
 }

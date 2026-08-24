@@ -1020,13 +1020,16 @@ ol li {
 
 /* Base: all tags share layout and fallback colours. */
 .karl-tag,
-.karl-tag[data-kind='meta'],
-.karl-tag[data-kind='body'],
-.karl-tag[data-kind='placement'],
-.karl-tag[data-kind='editor'] {
-  /* Removed the uniform --legacy-blue-soft-bg that flattened all four kinds
-     to one background — each kind now gets its own tint below. The fallback
-     here covers any unknown kind value. */
+.karl-tag[data-category='metadata'],
+.karl-tag[data-category='block'],
+.karl-tag[data-category='action'],
+.karl-tag[data-category='callout'],
+.karl-tag[data-category='inherited'],
+.karl-tag[data-category='editor'] {
+  /* Removed the uniform --legacy-blue-soft-bg that flattened every tag to one
+     background — each CATEGORY now gets its own tint below. The fallback here
+     covers any unknown category value, though js/mockup/karl-category.js is a
+     total function and returns `block` rather than nothing. */
   background: var(--legacy-blue-soft-bg) !important;
   border: none !important;
   border-left: 4px solid var(--legacy-purple-border) !important;
@@ -1043,25 +1046,45 @@ ol li {
   line-height: 1.4 !important;
 }
 
-/* Per-kind border-left AND background tint — both attributes updated together
-   so the visual category signal is clear even when the kind badge is clipped.
+/* Per-category border-left AND background tint — both attributes updated
+   together so the visual signal is clear even when the kind badge is clipped.
    Background values are the existing -bg tokens, which already carry correct
-   dark-mode overrides in css/theme.css. */
-.karl-tag[data-kind='meta'] {
+   dark-mode overrides in css/theme.css.
+
+   **Colour keys on the category, not the kind, and that is deliberate.** A
+   `kind` is what Karl field resolution reads — 14 of the 34 karlTag() call
+   sites pass a bare kind literal with no role, so their kind IS their role —
+   so it cannot also be the colour axis without one of the two jobs distorting
+   the other. See js/mockup/karl-category.js. The kind still reads in words
+   inside .karl-tag-kind, so nothing here is colour-only.
+
+   **`editor` moved from green to red**, which is the one reassignment worth
+   stating: an editor-only note means DO NOT PUBLISH, and green is the single
+   colour that reads as approval. It now takes the danger family; `action`
+   takes the green it vacated, where "go" is what green should mean. */
+.karl-tag[data-category='metadata'] {
   border-left-color: var(--legacy-info-border) !important;
   background: var(--legacy-info-light) !important;
 }
-.karl-tag[data-kind='body'] {
+.karl-tag[data-category='block'] {
   border-left-color: var(--legacy-purple-border) !important;
   background: var(--legacy-purple-bg) !important;
 }
-.karl-tag[data-kind='placement'] {
+.karl-tag[data-category='action'] {
+  border-left-color: var(--legacy-success-border) !important;
+  background: var(--legacy-success-bg) !important;
+}
+.karl-tag[data-category='callout'] {
   border-left-color: var(--legacy-warning-border) !important;
   background: var(--legacy-warning-bg) !important;
 }
-.karl-tag[data-kind='editor'] {
-  border-left-color: var(--legacy-success-border) !important;
-  background: var(--legacy-success-bg) !important;
+.karl-tag[data-category='inherited'] {
+  border-left-color: var(--legacy-teal-border) !important;
+  background: var(--legacy-teal-bg) !important;
+}
+.karl-tag[data-category='editor'] {
+  border-left-color: var(--legacy-danger-border) !important;
+  background: var(--legacy-danger-bg) !important;
 }
 
 /* Kind badge: use the category's mid-tone border color as badge background so
@@ -1072,10 +1095,12 @@ ol li {
    4.5:1, not 3:1. Measured in the running app with getComputedStyle rather
    than computed from the token table, because the two disagree:
 
-     meta      — #0046c2 on #c7dae5 = 5.49:1 ✓
-     body      — #4a2a7a on #decdf6 = 7.44:1 ✓
-     placement — #6f4a00 on #f2c94c = 4.98:1 ✓
-     editor    — #075e0a on #a6d8a8 = 4.98:1 ✓
+     metadata  — #0046c2 on #c7dae5 = 5.49:1 ✓
+     block     — #4a2a7a on #decdf6 = 7.44:1 ✓
+     action    — #075e0a on #a6d8a8 = 4.98:1 ✓
+     callout   — #6f4a00 on #f2c94c = 4.98:1 ✓
+     inherited — #0b5566 on #7fd6e3 = 5.04:1 ✓
+     editor    — #fcfcfc on #d92d20 = 4.71:1 ✓
 
    **These light values are what a tag ON THE MOCKUP renders in BOTH themes.**
    `.browser-shell` pins the `--legacy-*` primitives back to their light values
@@ -1085,26 +1110,45 @@ ol li {
    tokens DO resolve dark is the Help-tab legend, which sits outside the
    shell; its dark-mode fix is the block further down.
 
-   Placement and editor sit at 4.98:1, roughly half a point of headroom. If
-   either token moves, re-measure rather than assuming the pair still passes. */
-.karl-tag[data-kind='meta'] .karl-tag-kind {
+   Action and callout sit at 4.98:1 and editor at 4.71:1, well under a point of
+   headroom. If any of those tokens moves, re-measure rather than assuming the
+   pair still passes.
+
+   **`editor` is the one family whose badge does not take its own `-text`
+   token**, and the reason is that `--legacy-danger-border` is not the same
+   KIND of value as the other four: it is a saturated red (#d92d20), not a pale
+   tint, so the family's dark `-text` on it measures 1.85:1 — a hard failure
+   rather than a near miss. The badge takes `--legacy-white` instead, which
+   clears AA on that ground. Outside `.browser-shell` in dark mode the legend
+   override further down replaces this foreground anyway. */
+.karl-tag[data-category='metadata'] .karl-tag-kind {
   background: var(--legacy-info-border) !important;
   color: var(--legacy-info-dark) !important;
   border: none !important;
 }
-.karl-tag[data-kind='body'] .karl-tag-kind {
+.karl-tag[data-category='block'] .karl-tag-kind {
   background: var(--legacy-purple-border) !important;
   color: var(--legacy-purple-text) !important;
   border: none !important;
 }
-.karl-tag[data-kind='placement'] .karl-tag-kind {
+.karl-tag[data-category='action'] .karl-tag-kind {
+  background: var(--legacy-success-border) !important;
+  color: var(--legacy-success-text) !important;
+  border: none !important;
+}
+.karl-tag[data-category='callout'] .karl-tag-kind {
   background: var(--legacy-warning-border) !important;
   color: var(--legacy-warning-text) !important;
   border: none !important;
 }
-.karl-tag[data-kind='editor'] .karl-tag-kind {
-  background: var(--legacy-success-border) !important;
-  color: var(--legacy-success-text) !important;
+.karl-tag[data-category='inherited'] .karl-tag-kind {
+  background: var(--legacy-teal-border) !important;
+  color: var(--legacy-teal-text) !important;
+  border: none !important;
+}
+.karl-tag[data-category='editor'] .karl-tag-kind {
+  background: var(--legacy-danger-border) !important;
+  color: var(--legacy-white) !important;
   border: none !important;
 }
 
@@ -1115,30 +1159,31 @@ ol li {
    resolve to the dark palette. Measured there, three of the four category
    text-on-border pairs fall under AA:
 
-     meta      — #99aced on #32384b = 5.26:1 ✓
-     body      — #cbb0ef on #725a98 = 3.03:1 ✗
-     placement — #f0cd72 on #7d6220 = 3.76:1 ✗
-     editor    — #8fd694 on #35713a = 3.42:1 ✗
+     metadata  — #99aced on #32384b = 5.26:1 ✓
+     block     — #cbb0ef on #725a98 = 3.03:1 ✗
+     callout   — #f0cd72 on #7d6220 = 3.76:1 ✗
+     action    — #8fd694 on #35713a = 3.42:1 ✗
 
    Those pairs are fine at their intended job — each `-text` token is tuned
    against its own `-bg` (a near-black panel fill), where it clears 8:1. The
    badge puts it on the mid-tone `-border` instead, which is a much lighter
    ground, and the pair was never validated for that.
 
-   The fix keeps the per-kind background — the colour coding is the point —
+   The fix keeps the per-category background — the colour coding is the point —
    and swaps the foreground to the dark theme's body-text token (#f0f1f2),
-   which clears AA on all four grounds — measured in the running app after the
-   change: meta 10.30:1, body 5.11:1, placement 5.10:1, editor 5.19:1.
+   which clears AA on all six grounds: metadata 10.30:1, block 5.11:1,
+   action 5.19:1, callout 5.10:1, inherited 5.11:1, editor 5.13:1.
    Scoped to `.karl-tag-legend-swatch` on purpose: a tag
    on the mockup keeps its coloured badge text, since inside the shell these
    tokens are pinned light and already pass.
 
-   The selector carries `.karl-tag` and `[data-kind]` as well as the swatch
-   class on purpose: the per-kind rules above are `.karl-tag[data-kind='x']
-   .karl-tag-kind`, three class-level components with `!important`, so a
-   two-component override loses to them however far down the file it sits. */
+   The selector carries `.karl-tag` and `[data-category]` as well as the swatch
+   class on purpose: the per-category rules above are
+   `.karl-tag[data-category='x'] .karl-tag-kind`, three class-level components
+   with `!important`, so a two-component override loses to them however far
+   down the file it sits. */
 @media (prefers-color-scheme: dark) {
-  .karl-tag.karl-tag-legend-swatch[data-kind] .karl-tag-kind {
+  .karl-tag.karl-tag-legend-swatch[data-category] .karl-tag-kind {
     color: var(--legacy-slate-1) !important;
   }
 }
