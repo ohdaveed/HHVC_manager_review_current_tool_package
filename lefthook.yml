@@ -1,6 +1,13 @@
 # Lefthook Git hooks configuration for HHVC manager review mockup tool.
 # Runs locally before commits to catch formatting, linting, validation, and commit trailer issues.
 
+colors:
+  cyan: 14
+  gray: 244
+  green: '#32CD32'
+  red: '#FF1493'
+  yellow: '#F0E68C'
+
 pre-commit:
   parallel: false
   commands:
