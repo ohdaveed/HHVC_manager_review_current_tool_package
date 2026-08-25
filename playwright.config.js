@@ -48,7 +48,22 @@ module.exports = defineConfig({
   timeout: 60_000,
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  // A standard GitHub runner has 4 vCPUs and this sat at 2, leaving half of
+  // them idle. The cap was a reasonable hedge while the whole suite shared one
+  // `webServer` and one review-state store on a single runner — 4 workers
+  // would have surfaced any cross-test contamination as a flake. Sharding
+  // narrowed that: each shard is its own runner with its own server, so a
+  // worker now contends with three siblings rather than with the entire
+  // suite.
+  //
+  // It is a hedge rather than a proof, so treat a flake here as evidence about
+  // test COUPLING and fix that, rather than as a reason to put the cap back.
+  // The measurement that motivated the raise: `accessibility.spec.js` is 80s
+  // over 16 axe runs, and axe is CPU-bound, so its shard finished 37s SLOWER
+  // than the shard carrying the heavier `page-registry.spec.js`. That is
+  // contention, not assignment — which is also why balancing shards by
+  // duration was measured and rejected.
+  workers: process.env.CI ? 4 : undefined,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: origin,
