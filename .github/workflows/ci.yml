@@ -403,7 +403,9 @@ jobs:
     name: Playwright end-to-end tests
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [e2e]
+    # `build_railway` is needed for its RESULT, not its artifact — see the
+    # skipped-for-two-reasons problem below.
+    needs: [e2e, build_railway]
     # `always()`, so this reports rather than inheriting a skip. A skipped
     # required check reads to branch protection as a PASSING one, so an
     # aggregator that skipped whenever its shards did would turn every shard
@@ -411,15 +413,32 @@ jobs:
     if: always()
     steps:
       # `needs.e2e.result` aggregates the whole matrix: `success` only when
-      # every shard succeeded. `skipped` is a pass on purpose — it is what a
-      # docs-only PR and a draft PR produce, matching what the unsharded job
-      # did, and the `!draft` comment above explains why that is safe.
-      # Anything else (`failure`, `cancelled`) fails.
+      # every shard succeeded.
+      #
+      # `skipped` cannot be read on its own, because `e2e` skips for two very
+      # different reasons and only one of them is benign. Its `if:` carries
+      # `!failure()`, so an upstream FAILURE skips it exactly as a docs-only
+      # or draft PR does — and treating that as a pass would print a green
+      # `Playwright end-to-end tests` when no shard ran at all. Branch
+      # protection would still block on `build_railway`'s own red context, so
+      # this is honesty rather than a hole; a reader scanning the checks must
+      # not be shown a pass for a suite that never executed.
+      #
+      # Hence the upstream result is consulted too: a skip is a pass only when
+      # nothing upstream failed. A draft PR (where `build_railway` succeeds and
+      # `e2e` alone skips) still passes, which is the documented behavior.
       - name: Require every shard to have succeeded
         env:
           SHARD_RESULT: ${{ needs.e2e.result }}
+          BUILD_RESULT: ${{ needs.build_railway.result }}
         run: |
-          echo "E2E matrix result: $SHARD_RESULT"
+          echo "E2E matrix result: $SHARD_RESULT (build_railway: $BUILD_RESULT)"
+          case "$BUILD_RESULT" in
+            failure | cancelled)
+              echo "::error::No shard ran: build_railway reported $BUILD_RESULT"
+              exit 1
+              ;;
+          esac
           case "$SHARD_RESULT" in
             success | skipped) exit 0 ;;
             *)

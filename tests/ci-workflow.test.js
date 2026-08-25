@@ -42,8 +42,8 @@ function setupBunBlocks() {
 /**
  * Every JOB name in the workflow, from the four-space `name:` keys.
  *
- * Four spaces is the job level in this file — measured, not assumed: the seven
- * job names sit at four, the workflow's own `name: CI` at zero, and the two
+ * Four spaces is the job level in this file — measured, not assumed: the job
+ * names sit at four, the workflow's own `name: CI` at zero, and the two
  * artifact names (`name: dist`, `name: playwright-report`) at ten, under an
  * `upload-artifact` step's `with:`. Folding the artifacts in would demand the
  * mirrors enumerate two uploads as though they were required checks.
@@ -109,7 +109,7 @@ function jobIds() {
  * one is not a substitute for that. What it adds is the block text, which is
  * the only way to tell a matrixed job from a plain one.
  *
- * @returns {{id: string, name: string|null, block: string}[]}
+ * @returns {{id: string, name: string|null, block: string}[]} one record per job, in file order.
  */
 function jobBlocks() {
   const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))
@@ -131,8 +131,8 @@ function jobBlocks() {
  * branch protection would leave a PR permanently pending. A matrixed job is
  * therefore not a required context and must not be enumerated as one.
  *
- * @param {{block: string}} job
- * @returns {boolean}
+ * @param {{block: string}} job The job record to test.
+ * @returns {boolean} true when the job declares a `strategy:` block.
  */
 function isMatrixed(job) {
   return /^ {4}strategy:$/m.test(job.block)
@@ -146,8 +146,8 @@ function isMatrixed(job) {
  * the aggregator assertion below failing, not by passing silently, since that
  * assertion demands a match rather than tolerating its absence.
  *
- * @param {{block: string}} job
- * @returns {string[]}
+ * @param {{block: string}} job The job record to read.
+ * @returns {string[]} the job IDs it declares as dependencies, empty when it declares none.
  */
 function needsOf(job) {
   const line = job.block.match(/^ {4}needs: (.+)$/m)
