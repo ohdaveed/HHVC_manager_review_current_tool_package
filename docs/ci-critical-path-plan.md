@@ -100,12 +100,15 @@ tests`.** This is the load-bearing piece. A matrixed job's check contexts
 
 ## Decisions made
 
-- **Not raising `workers` from 2.** The cap is plausibly deliberate: the suite
-  shares one server and one review-state store, and 4 workers could surface
-  cross-test contamination as flakes. Sharding sidesteps it — each shard spawns
-  its own `webServer` on its own runner, so it is isolation by construction.
-  Treat raising workers as a separate experiment later, where a flake would
-  tell you something real about test coupling rather than about CI.
+- **`workers` raised from 2 to 4 — as a separate, measured step.** The plan
+  deferred this deliberately: the cap looked like a hedge against the suite
+  sharing one server and one review-state store, where 4 workers could surface
+  cross-test contamination as flakes. Sharding removed the reason for the hedge
+  — each shard spawns its own `webServer` on its own runner — so the experiment
+  became worth running, and it was run rather than assumed. **See "Workers
+  2 → 4" below for the two-sample result and the standing rule about what to do
+  with a future flake.** `playwright.config.js` now reads
+  `workers: process.env.CI ? 4 : undefined`.
 - **Not touching the docs-only path filter.** It already works — the 20:22 run
   skipped Playwright and finished in 119s.
 
