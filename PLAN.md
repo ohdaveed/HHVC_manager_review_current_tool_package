@@ -129,12 +129,12 @@ under a heading whose PR has merged, or the checklist starts lying about what sh
       `Document Collection Search` present here but not offered there. Landed in `d73890f`;
       **this supersedes PR 4a's narrower "Topic is the one absent type" framing.**
       Side effect: all 99 `docLine` citations in `js/karl/karl-blocks.js` shifted +16.
-- [ ] `docs/codebase/` — SQLite→Postgres drift (`storage.js` owns the driver seam; there is no
+- [x] `docs/codebase/` — SQLite→Postgres drift (`storage.js` owns the driver seam; there is no
       `server.ts` `getDb()`).
-- [ ] `docs/codebase/` — "no UI framework" vs the live React 19 + MUI islands.
-- [ ] `docs/codebase/` — lint gates: CI runs seven steps, not Prettier alone.
-- [ ] `docs/codebase/` — counts: 59 unit test files, 26 e2e specs, 11 stylesheets, 7 CI jobs.
-- [ ] `docs/codebase/CONCERNS.md` §1 — regenerate; its top-ranked risk is itself the stalest
+- [x] `docs/codebase/` — "no UI framework" vs the live React 19 + MUI islands.
+- [x] `docs/codebase/` — lint gates: CI runs seven steps, not Prettier alone.
+- [x] `docs/codebase/` — counts: 59 unit test files, 26 e2e specs, 11 stylesheets, 7 CI jobs.
+- [x] `docs/codebase/CONCERNS.md` §1 — regenerate; its top-ranked risk is itself the stalest
       thing in the file.
 - [ ] `README.md` — regenerate the file tree, add the missing scripts, fix the render pointer,
       resolve the `dev`/`start` contradiction, name Railway. Leave the counts alone.

@@ -4,7 +4,7 @@
 
 ### 1) Test Stack and Commands
 
-- Primary test framework: Bun test (`bun:test`) via explicit file list in `package.json` (22 files on disk and in the script)
+- Primary test framework: Bun test (`bun:test`) via explicit file list in `package.json` (59 files on disk and in the script — a new `tests/*.test.js` runs only once it is named there)
 - Assertion/mocking tools: Bun `expect`; happy-dom globals; Playwright Test; `@axe-core/playwright` for a11y
 - Commands:
 
@@ -19,7 +19,7 @@ bun run format:check
 ### 2) Test Layout
 
 - Test file placement pattern: centralized `tests/` (not co-located with `js/`)
-- Naming convention: `*.test.js` unit/integration; `tests/e2e/*.spec.js` Playwright (16 specs)
+- Naming convention: `*.test.js` unit/integration; `tests/e2e/*.spec.js` Playwright (26 specs)
 - Setup files and where they run:
   - `bunfig.toml` → preload `tests/helpers/browser-env.js` before every Bun test
   - `playwright.config.js` → `webServer: bun run start`, baseURL `http://127.0.0.1:8080`
@@ -46,7 +46,7 @@ bun run format:check
 - Coverage tool + threshold: none found ([TODO])
 - Current reported coverage: [TODO] not measured in CI
 - Known gaps/flaky areas:
-  - Review import/export merge path: automated mainly via `tests/e2e/import-export.spec.js`; AGENTS.md still requires manual export→re-import verification for related changes
+  - Review import/export merge path: automated via `tests/e2e/import-export.spec.js` (both directions end to end) and `tests/e2e/merge-verification.spec.js` (an older snapshot re-imported over live state that has moved on); AGENTS.md still requires manual export→re-import verification for related changes
   - Browser-only modules without `module.exports` cannot be unit-tested directly
   - `CI` uses Playwright retries=1; report artifact on failure
 
