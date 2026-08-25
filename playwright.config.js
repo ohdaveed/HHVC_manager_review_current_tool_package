@@ -23,24 +23,25 @@ const origin = `http://127.0.0.1:${port}`
 // What the webServer runs to get a serving `dist/` on :port.
 //
 // `bun run start` is `validate && build:app && copy-workshop-form && serve`,
-// and on CI the first of those four is redundant: the `e2e` job declares
-// `needs: format_validate_lint`, and that job has already run `bun run
-// validate` to completion against this same commit. Running it again inside a
-// 120s webServer window buys nothing and sits on the critical path, which the
-// `e2e` job IS — it runs 338-380s while the other six jobs finish inside 70s.
+// and on CI all three steps ahead of `serve` are already done elsewhere. The
+// `e2e` job needs `build_railway`, which ran exactly that chain and uploaded
+// its `dist/` as an artifact the job downloads before Playwright starts. So
+// CI serves the artifact and builds nothing.
 //
-// `copy-workshop-form.js` is NOT redundant and must stay: it copies the
-// committed `forms/mosquito-workshop-request/dist` into
-// `dist/forms/mosquito-workshop-request`, which `tests/e2e/workshop-form.spec.js`
-// loads. `vite build` alone does not produce it.
+// Two reasons, and the second is the one that matters. It keeps the build off
+// the critical path, which the `e2e` job IS — 338-380s against ~70s for the
+// other six running in parallel, and four shards would otherwise each pay for
+// their own build. And it means the suite exercises the bytes the deploy
+// ships rather than a rebuild nothing else ever sees, which is the same gap
+// the `unit` job's artifact download was added to close.
 //
-// Off CI the full `start` is what you want. `reuseExistingServer` is on there
-// and a fresh clone has no `dist/` at all, so a serve-only command would hand
-// the reader a 120s webServer timeout against a missing static root — a
-// failure that names the timeout rather than the missing build.
-const serverCommand = process.env.CI
-  ? 'bun run build:app && node build_scripts/copy-workshop-form.js && bun run serve'
-  : 'bun run start'
+// Off CI the full `start` is what you want, and the asymmetry is deliberate
+// rather than an oversight: `reuseExistingServer` is on there and a fresh
+// clone has no `dist/` at all, so a serve-only command would hand the reader
+// a 120s webServer timeout against a missing static root — a failure naming
+// the timeout rather than the missing build. CI can assume a `dist/` because
+// a step verifies one arrived; a laptop cannot.
+const serverCommand = process.env.CI ? 'bun run serve' : 'bun run start'
 
 module.exports = defineConfig({
   testDir: './tests/e2e',

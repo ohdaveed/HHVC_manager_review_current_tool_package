@@ -101,6 +101,65 @@ function jobIds() {
 }
 
 /**
+ * Every job as a `{ id, name, block }` record — the same two keys the two
+ * parsers above read, but kept together so a question can be asked about ONE
+ * job rather than about the file.
+ *
+ * The flat parsers stay: they are each other's non-vacuity check, and this
+ * one is not a substitute for that. What it adds is the block text, which is
+ * the only way to tell a matrixed job from a plain one.
+ *
+ * @returns {{id: string, name: string|null, block: string}[]}
+ */
+function jobBlocks() {
+  const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))
+  const starts = [...jobsBlock.matchAll(/^ {2}([A-Za-z_][\w-]*):$/gm)]
+  return starts.map((match, index) => {
+    const end = index + 1 < starts.length ? starts[index + 1].index : jobsBlock.length
+    const block = jobsBlock.slice(match.index, end)
+    const name = block.match(/^ {4}name: (.+)$/m)
+    return { id: match[1], name: name ? decodeScalar(name[1]) : null, block }
+  })
+}
+
+/**
+ * Whether a job fans out over a matrix.
+ *
+ * This is the whole reason the census below is not simply `jobNames()`. GitHub
+ * suffixes a matrixed job's check contexts — `E2E shard (1)`, `(2)` — so the
+ * literal after `name:` is a context NO job produces, and requiring it in
+ * branch protection would leave a PR permanently pending. A matrixed job is
+ * therefore not a required context and must not be enumerated as one.
+ *
+ * @param {{block: string}} job
+ * @returns {boolean}
+ */
+function isMatrixed(job) {
+  return /^ {4}strategy:$/m.test(job.block)
+}
+
+/**
+ * A job's declared `needs:`, as job IDs.
+ *
+ * Only the inline-array form is parsed, which is the only form `ci.yml` uses.
+ * A block-sequence `needs:` would read as zero dependencies here — caught by
+ * the aggregator assertion below failing, not by passing silently, since that
+ * assertion demands a match rather than tolerating its absence.
+ *
+ * @param {{block: string}} job
+ * @returns {string[]}
+ */
+function needsOf(job) {
+  const line = job.block.match(/^ {4}needs: (.+)$/m)
+  if (!line) return []
+  return line[1]
+    .replace(/[[\]]/g, '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
+/**
  * The paragraph in a mirror that enumerates the required contexts.
  *
  * Scoped rather than file-wide, and that is the whole point: every one of
@@ -190,9 +249,34 @@ describe('the required-context enumeration in the mirrors', () => {
     expect(requiredContextParagraph(text)).not.toBeNull()
   })
 
+  test('every matrixed job is gated by a plain job that depends on it', () => {
+    // The half that keeps the exclusion below from being a hole in the census
+    // rather than a correction to it.
+    //
+    // A matrixed job produces no requirable context, so dropping it from the
+    // enumeration is right — but on its own that means a job can be made
+    // matrixed and thereby made UNREQUIRED, silently, by an edit that adds
+    // four lines and touches no document. What restores the guarantee is an
+    // aggregator: a non-matrixed job that `needs:` it, fails when it fails,
+    // and carries a stable name the enumeration does list. Assert the shape,
+    // so the exclusion always comes with its replacement.
+    const jobs = jobBlocks()
+    const plain = jobs.filter((job) => !isMatrixed(job))
+    for (const job of jobs.filter(isMatrixed)) {
+      const gates = plain.filter((candidate) => needsOf(candidate).includes(job.id))
+      expect(gates.map((gate) => gate.name)).not.toEqual([])
+    }
+  })
+
   test.each(MIRRORS)('%s enumerates exactly the jobs ci.yml defines', (mirror) => {
+    // Matrixed jobs excluded: see isMatrixed() for why their `name:` is not a
+    // context branch protection could ever require, and the assertion above
+    // for what stands in their place.
     const text = readFileSync(join(ROOT, mirror), 'utf8')
     const listed = new Set(requiredContextParagraph(text) ?? [])
-    expect([...listed].sort()).toEqual([...new Set(jobNames())].sort())
+    const required = jobBlocks()
+      .filter((job) => !isMatrixed(job))
+      .map((job) => job.name)
+    expect([...listed].sort()).toEqual([...new Set(required)].sort())
   })
 })

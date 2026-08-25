@@ -367,7 +367,7 @@ or `js/core/page-data.js`.**
 ### CI
 
 `.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
-a graph of seven jobs rather than one long one, so a formatting or schema
+a graph of eight jobs rather than one long one, so a formatting or schema
 failure reports in seconds without waiting on a Chromium download and a flaky
 browser run never masks a unit failure.
 
@@ -420,8 +420,22 @@ job that does not. `changes` is the one that does not — it runs only
   `dist/index.html` is absent — so it would pass by skipping and cover nothing,
   which is the exact gap the old in-job `build:railway` → `test` order existed
   to close.
-- **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
-  `playwright-report/` as an artifact on failure.
+- **e2e** — installs Playwright Chromium, downloads that same `dist/`, and runs
+  `test:e2e` **sharded four ways** (`--shard=N/4`), uploading
+  `playwright-report/` per shard on failure. It is the critical path — it ran
+  338-380s while the other six finished inside 70s — which is what the shard
+  is for. It downloads the build rather than making its own because four
+  shards would otherwise each run `validate + vite build` to stand up their
+  own Playwright `webServer`; `playwright.config.js` serves the artifact on CI
+  and still builds locally, where no `dist/` can be assumed.
+- **e2e_complete** — the aggregator, and the only reason the job above could be
+  sharded. **A matrixed job's check contexts are suffixed** (`E2E shard (1)`…),
+  so the required `Playwright end-to-end tests` context would be produced by
+  nothing and sit permanently pending — the same failure the paragraph below
+  describes. This job carries that name instead, so the protection settings
+  needed no edit for the shard and need none for a future reshard. It passes on
+  a matrix result of `success` or `skipped` (a docs-only or draft PR, matching
+  what the unsharded job did) and fails on anything else.
 
 **Branch protection's required contexts are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the

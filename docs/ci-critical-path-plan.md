@@ -51,14 +51,14 @@ start` is `validate && build:app && copy-workshop-form && serve`, but
       **Gate the command on CI.** Locally `reuseExistingServer` is on and
       nobody has built `dist/`; a serve-only command there is a 120s webServer
       timeout against a missing static root. Keep `bun run start` off CI.
-- [ ] **2. Consume the prebuilt `dist` artifact in `e2e`.** `build_railway`
+- [x] **2. Consume the prebuilt `dist` artifact in `e2e`.** `build_railway`
       already uploads `dist` (`if-no-files-found: error`, 1-day retention) and
       `unit` already downloads it — copy that pattern exactly. Add
       `needs: build_railway`, download to `dist/`, and let the webServer run
       `bun run serve` only. This is what makes e2e test the artifact the deploy
       ships, closing the same class of gap the `unit` job's artifact download
       was added to close.
-- [ ] **3. Shard Playwright 4 ways.** `strategy.matrix.shard: [1,2,3,4]`,
+- [x] **3. Shard Playwright 4 ways.** `strategy.matrix.shard: [1,2,3,4]`,
       `--shard=${{ matrix.shard }}/4`. `fullyParallel: true` is already set.
       Expect **~135s, not ~110s**: each shard is a fresh runner paying
       checkout + setup-bun + cache restore + `bun install` + `bunx playwright
@@ -67,7 +67,7 @@ install --with-deps chromium`, and the `--with-deps` apt step is not
       prefix per shard. 8-way would buy almost nothing over 4-way.
       Billing is roughly neutral: 4 × ~135s ≈ 540 runner-seconds against 357
       today, for ~2.6× the wall clock.
-- [ ] **4. Add an `e2e_complete` aggregator job named `Playwright end-to-end
+- [x] **4. Add an `e2e_complete` aggregator job named `Playwright end-to-end
 tests`.** This is the load-bearing piece. A matrixed job's check contexts
       become suffixed (`… (1)`, `… (2)`), so branch protection's required
       context `Playwright end-to-end tests` would be produced by no job and sit
@@ -79,7 +79,7 @@ tests`.** This is the load-bearing piece. A matrixed job's check contexts
       `needs: [e2e]`, `if: always()`, and fail only on `failure` / `cancelled`
       — **pass on `skipped`**, which matches today's `!draft` and docs-only
       behavior where the whole job skips and reads to protection as a pass.
-- [ ] **5. Teach `tests/ci-workflow.test.js` about matrix jobs.** Its census
+- [x] **5. Teach `tests/ci-workflow.test.js` about matrix jobs.** Its census
       asserts the mirrors enumerate exactly the job names `ci.yml` defines, on
       the premise that each job name is its own required context — which a
       matrixed job breaks. Exclude `strategy:`-bearing jobs from the census,
@@ -87,7 +87,7 @@ tests`.** This is the load-bearing piece. A matrixed job's check contexts
       `needs:`.** Without that second half this is a hole carved in the gate
       rather than a fix; with it, the invariant the test protects (every
       required context is enumerated in both mirrors) is preserved.
-- [ ] **6. Update the mirrors.** `MIRRORS` in that test is `['AGENTS.md',
+- [x] **6. Update the mirrors.** `MIRRORS` in that test is `['AGENTS.md',
 'CLAUDE.md']` only — `.github/copilot-instructions.md` carries no
       required-set sentence, so it is out of scope for the census. Update the
       required-set enumeration and the per-job description list in both, and

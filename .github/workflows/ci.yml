@@ -293,11 +293,32 @@ jobs:
       - name: Unit tests (bun test)
         run: bun run test
 
+  # This job is MATRIXED, so its check contexts are suffixed — `E2E shard (1)`
+  # and so on — and none of them is the context branch protection requires.
+  # `e2e_complete` below carries that name instead. Read its comment before
+  # touching either: the pairing is what lets this job sharded without an edit
+  # to the protection settings, and splitting a job's name away from its
+  # required context is exactly how this repo once left a PR permanently
+  # pending against a context no job produced.
   e2e:
-    name: Playwright end-to-end tests
+    name: E2E shard
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [format_validate_lint, changes]
+    # `build_railway` rather than `format_validate_lint`, which it needs in
+    # turn, so the ordering is unchanged — what this buys is its `dist`
+    # artifact. Four shards would otherwise each run `validate + vite build`
+    # to stand up their own webServer; downloading one build instead amortizes
+    # it across all four, and it is the same build the deploy ships rather
+    # than a fifth one nothing else ever sees.
+    needs: [build_railway, changes]
+    strategy:
+      # Never fail-fast. A cancelled sibling reports no results at all, so one
+      # genuinely broken spec would erase the evidence from the other three
+      # shards — and with `fail-fast` on, a flake in shard 1 costs a full
+      # re-run of the suite instead of a re-run of shard 1.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     # See build_railway's comment on the `!failure() && !cancelled()` half.
     #
     # `!draft` is the half this job carries and the other three do not, and it
@@ -339,13 +360,70 @@ jobs:
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
 
+      - name: Download dist artifact from build job
+        uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist/
+
+      # `download-artifact` succeeds quietly when it writes nothing useful, and
+      # the next thing to notice would be `server.ts` serving a missing static
+      # root until Playwright's 120s webServer timeout fires — a failure that
+      # names the timeout and not the cause. Fail here instead, where the
+      # message is the actual problem. Same reasoning as
+      # `copy-workshop-form.js`'s own asset check.
+      - name: Verify the downloaded build is usable
+        run: test -f dist/index.html && test -d dist/forms/mosquito-workshop-request
+
       - name: Run Playwright tests
-        run: bun run test:e2e
+        run: bun run test:e2e --shard=${{ matrix.shard }}/4
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-report
+          # Per shard: `upload-artifact@v5` rejects a name that already exists
+          # in the run, so a shared name would mean the first failing shard
+          # uploads and every later one errors on the upload rather than on
+          # its own test failure.
+          name: playwright-report-shard-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
+
+  # The aggregator, and the reason the job above could be sharded at all.
+  #
+  # Branch protection requires a context by NAME. Matrixing `e2e` suffixes its
+  # contexts (`E2E shard (1)`…), so the required `Playwright end-to-end tests`
+  # would be produced by nothing and sit permanently pending however green the
+  # run — the same failure this repo hit when splitting the old `checks` job
+  # renamed `Format, validate, unit tests` out of existence. Keeping that name
+  # here means the protection settings need no edit for this change, and none
+  # for a future reshard either.
+  e2e_complete:
+    name: Playwright end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [e2e]
+    # `always()`, so this reports rather than inheriting a skip. A skipped
+    # required check reads to branch protection as a PASSING one, so an
+    # aggregator that skipped whenever its shards did would turn every shard
+    # failure into a silent green.
+    if: always()
+    steps:
+      # `needs.e2e.result` aggregates the whole matrix: `success` only when
+      # every shard succeeded. `skipped` is a pass on purpose — it is what a
+      # docs-only PR and a draft PR produce, matching what the unsharded job
+      # did, and the `!draft` comment above explains why that is safe.
+      # Anything else (`failure`, `cancelled`) fails.
+      - name: Require every shard to have succeeded
+        env:
+          SHARD_RESULT: ${{ needs.e2e.result }}
+        run: |
+          echo "E2E matrix result: $SHARD_RESULT"
+          case "$SHARD_RESULT" in
+            success | skipped) exit 0 ;;
+            *)
+              echo "::error::Playwright shards did not all succeed (matrix result: $SHARD_RESULT)"
+              exit 1
+              ;;
+          esac
