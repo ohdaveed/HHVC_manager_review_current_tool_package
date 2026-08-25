@@ -63,23 +63,23 @@ reopens a register entry against a page that no longer violates it.
 
 ### Step 1 — Land #206 (`content/article11-spotlight-button-cap` → `main`)
 
-- [ ] `git fetch origin && git checkout content/article11-spotlight-button-cap`
-- [ ] `git merge origin/main` — expect clean; #208 touched lefthook config, which #206 does not
-- [ ] `bun run validate && bun run test && bun run format:check && bun run lint:docs`
-- [ ] Push, `gh pr checks 206 --watch`, confirm all six required contexts pass
-- [ ] Merge #206. **Squash**, matching every other merge on `main`
-- [ ] Delete the merged branch
+- [x] `git fetch origin && git checkout content/article11-spotlight-button-cap`
+- [x] `git merge origin/main` — expect clean; #208 touched lefthook config, which #206 does not
+- [x] `bun run validate && bun run test && bun run format:check && bun run lint:docs`
+- [x] Push, `gh pr checks 206 --watch`, confirm all six required contexts pass
+- [x] Merge #206. **Squash**, matching every other merge on `main`
+- [x] Delete the merged branch
 
 ### Step 2 — Re-point and repair #207 (`docs/correct-stale-claims`)
 
-- [ ] Confirm GitHub retargeted #207's base to `main` when #206's branch was deleted; if it
+- [x] Confirm GitHub retargeted #207's base to `main` when #206's branch was deleted; if it
       did not, set it with `gh pr edit 207 --base main`
-- [ ] `git checkout docs/correct-stale-claims && git merge origin/main`
-- [ ] **Resolve the `docs/karl-export-field-map.md` conflict by keeping both halves** — #206's
+- [x] `git checkout docs/correct-stale-claims && git merge origin/main`
+- [x] **Resolve the `docs/karl-export-field-map.md` conflict by keeping both halves** — #206's
       three register rows AND #207's chooser delta. They edit different rows; there is no real
       disagreement, only a squash artifact. `pages/health-code-article-11.js` may also conflict
       spuriously: take `main`'s side, which already has the shortened label
-- [ ] **Verify the merge derived the right tree rather than a plausible one.** The check that
+- [x] **Verify the merge derived the right tree rather than a plausible one.** The check that
       actually proves it: `bun run test` green, since `tests/karl-blocks.test.js` parses the
       field map and re-checks every `docLine`, and `tests/doc-counts.test.js` reads the counts
       back out. A merge that silently dropped either side goes red there
