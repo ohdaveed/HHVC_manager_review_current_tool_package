@@ -92,7 +92,7 @@ tests`.** This is the load-bearing piece. A matrixed job's check contexts
       required-set sentence, so it is out of scope for the census. Update the
       required-set enumeration and the per-job description list in both, and
       state why the aggregator exists.
-- [ ] **7. Verify.** Open the PR, confirm all shards report, confirm
+- [x] **7. Verify.** Open the PR, confirm all shards report, confirm
       `Playwright end-to-end tests` still appears as a single check context,
       confirm total 220 tests still run across the shards (sum the per-shard
       counts — a mis-specified `--shard` silently runs a subset), and record
@@ -111,6 +111,37 @@ tests`.** This is the load-bearing piece. A matrixed job's check contexts
 
 ## Open
 
-- Whether `dist/` artifact upload+download cost (ECharts ~530KB raw plus the
-  font files) eats meaningfully into the per-shard saving. Measure at step 7;
-  if it does, step 1 alone still stands on its own.
+## Measured result (2026-08-25, run 32904736096 on PR #227)
+
+**Run wall clock 404s -> 229s, a 43% cut.** Beat the ~135s shard estimate on
+the shard itself and missed it on the total, for a reason worth recording: the
+estimate costed the shard in isolation and the critical path is
+`Detect changed files` -> `Format, validate, lint` -> `Build railway bundle` ->
+slowest shard -> aggregator, which is 6 + 27 + 19 + 156 + 4 = 212s of job time
+before queueing.
+
+| Job                                      | Time |
+| ---------------------------------------- | ---- |
+| E2E shard (1)                            | 156s |
+| E2E shard (2)                            | 155s |
+| E2E shard (3)                            | 119s |
+| E2E shard (4)                            | 115s |
+| Unit tests (bun test)                    | 43s  |
+| Format, validate, lint                   | 27s  |
+| Build railway bundle                     | 19s  |
+| Build single-file export                 | 18s  |
+| Detect changed files                     | 6s   |
+| Playwright end-to-end tests (aggregator) | 4s   |
+
+Notes for whoever picks this up next:
+
+- **The shards are unbalanced by ~35%** (156s against 115s). Playwright shards
+  by test count, not duration, and 220 ÷ 4 = 55 exactly — so the split is even
+  in tests and uneven in time. The critical path is the SLOWEST shard, so
+  balancing is worth more than adding a fifth: perfect balance would put every
+  shard near 136s.
+- **`build_railway` cost 19s to save four rebuilds**, which settles the open
+  question in this file — the artifact download did not eat the saving.
+- **Sharding cost less than predicted.** The estimate assumed a 40-60s
+  per-shard prefix; the fastest shard finished in 115s total, so the real
+  prefix is well under that.
