@@ -51,8 +51,8 @@ graph's root:
 | Boundary                                                  | What belongs here                                              | What must not be here                          |
 | --------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------- |
 | `pages/*.js`                                              | Page content objects (copy, sections, karl notes)              | Review UI logic; publishing/CMS writes         |
-| `js/core/` (`utils`, `state`, `app`, `page-registry*`, …) | Bootstrap, in-memory state, editor panel                       | Optional API secrets; SQLite                   |
-| `js/mockup/` (`page-render.js`, …)                        | Renders `#mockPage` from page data                             | Optional API secrets; SQLite                   |
+| `js/core/` (`utils`, `state`, `app`, `page-registry*`, …) | Bootstrap, in-memory state, editor panel                       | Optional API secrets; database access          |
+| `js/mockup/` (`page-render.js`, …)                        | Renders `#mockPage` from page data                             | Optional API secrets; database access          |
 | `js/review/`, `js/editing/`, `js/ai/`, `js/sync/`         | localStorage review aids, queue, insights, AI panel UI         | Writing back into `pages/*.js` source          |
 | `js/review/review-merge.js`                               | Shared merge + history construction (browser + server)         | DOM assumptions                                |
 | `build_scripts/`                                          | Node/Bun validation, export, AI providers                      | Browser-only `window` APIs without dual-export |
