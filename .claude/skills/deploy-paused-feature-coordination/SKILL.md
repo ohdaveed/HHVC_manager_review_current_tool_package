@@ -20,32 +20,44 @@ When a feature spans multiple PRs and deploy-on-merge is enabled, each PR merge 
 
 ## Pause Auto-Deployment
 
-**Railway example:**
+**Railway's deploy trigger is the service's Watch Paths setting, not an environment
+variable.** `railway variable set WATCH_PATTERNS ...` creates an ordinary
+build/runtime variable that nothing consumes, so the branch trigger stays live — and
+a variable change itself triggers a redeploy, which is the opposite of pausing.
 
-```bash
-railway variable set WATCH_PATTERNS '__deploys-paused-do-not-match__/**'
+Watch paths are **file-path globs matched against the files a push changed**, never
+branch selectors. Pausing works by setting them to a pattern no file can match:
+
+- Dashboard: service → Settings → Build → **Watch Paths**
+- `railway.json`: `build.watchPatterns`
+- Railway MCP: `update_service` with `watch_patterns`
+
+Use a value that is obviously deliberate, so the next person knows it is a pause and
+not a real filter:
+
+```text
+__deploys-paused-do-not-match__/**
 ```
 
-This makes the tracked branch unmatchable, skipping deployment. Verify the pause with:
-
-```bash
-railway deployments --limit 1
-```
-
-Record the original pattern (usually `main/**` or empty) to restore at the end.
+**Record the previous value before changing it.** The usual resting state is EMPTY
+(no patterns = every push deploys). It is not `main/**` — a branch name in this field
+is a path glob matching nothing, which silently pauses deploys forever.
 
 ## Merge Each PR Individually
 
 1. Resolve any required review threads in the GitHub UI.
 2. Verify all CI checks pass.
-3. Merge the PR and note the commit SHA.
-4. **Verify the deployment skipped:**
+3. Merge the PR and **note the merged commit SHA**, re-read from `origin/main` rather
+   than local `HEAD` — after a squash merge those are different commits.
+4. **Verify the deployment skipped, matched to that SHA:**
 
    ```bash
-   railway deployments --limit 1
+   railway deployments --limit 5
    ```
 
-   Expect `SKIPPED` status on that SHA. This is the proof the pause held.
+   Find the row **whose commit hash equals the SHA from step 3** and confirm it reads
+   `SKIPPED`. Reading only the newest row proves nothing: an unrelated or stale
+   `SKIPPED` entry satisfies that check while this merge deployed.
 
 5. Start the next PR off fresh `main` (don't stack branches).
 
@@ -53,14 +65,25 @@ Record the original pattern (usually `main/**` or empty) to restore at the end.
 
 ## Resume Deployment
 
-After all PRs merge:
+After all PRs merge, restore the watch paths to the value recorded above — usually
+clearing them entirely — through the same setting used to pause.
 
-```bash
-railway variable set WATCH_PATTERNS 'main/**'  # Restore original pattern
-railway deploy
-```
+**Restoring is not retroactive.** Every deployment skipped while paused stays
+skipped, and production keeps serving whatever it served before. Clearing the setting
+only changes what the NEXT push does, so the merged work is still unshipped at this
+point.
 
-Verify the deployment succeeds and includes all PRs.
+To ship it, trigger a deploy of the merged `main`:
+
+- Redeploy the skipped deployment from the Railway dashboard, or
+- Push any commit to `main` and let the connected-branch trigger fire.
+
+**Never use `railway up` / `railway deploy` to resume.** Those upload the CURRENT
+WORKING DIRECTORY, so a feature branch, a git worktree, or uncommitted local changes
+ship in place of the merged `main` you just verified.
+
+Then verify the live artifact: the public URL's status code, its deployed commit
+against the merged SHA, and a clean console. A green build is not a serving deploy.
 
 ## Anti-patterns
 

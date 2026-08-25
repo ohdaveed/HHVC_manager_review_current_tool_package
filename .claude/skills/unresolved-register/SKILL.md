@@ -72,15 +72,32 @@ If a rule precedence reversed (e.g., "Help Center now wins over measured data"):
 - Update tests that encoded the old rule (e.g., `tests/karl-blocks.test.js`)
 - Update JSDoc/prose mentioning the old rule
 
-All four must agree. `tests/mirror-consistency.test.js` enforces mirror parity; `tests/doc-counts.test.js` and `tests/doc-claims.test.js` gate corpus measurements.
+All four must agree — and **no test proves that they do.** Know what the gates
+actually cover before citing one as evidence:
+
+- `tests/mirror-consistency.test.js` checks that a registry of shared FACTS appears
+  in all three instruction files, plus a short list of byte-identical sections. It is
+  presence, not parity and not polarity: a mirror that keeps the token and reverses
+  the sentence around it still passes. The file says so itself.
+- `tests/doc-counts.test.js` and `build_scripts/doc-claims.js` compare selected
+  number-anchored claims in the instruction docs against the filesystem. They do not
+  read the unresolved register, and they do not verify a Karl field-map measurement.
+
+So a green suite is evidence for those specific checks and nothing more. Semantic
+agreement across the four artifacts is still a reading job, and the measurement
+behind a closure is only as good as the command recorded in step 4.
 
 ### 7. Merge on stacked-PR repos
 
-If merging into a feature branch (not main), use async merge:
+If merging into a feature branch (not main), merge through GitHub's documented
+endpoint — `gh pr merge` is the supported path:
 
 ```bash
-gh api repos/<owner>/<repo>/pulls/<number>/merge-async -X PUT -f merge_method=squash
+gh pr merge <number> --squash
 ```
+
+There is no `merge-async` REST operation; `PUT /repos/{owner}/{repo}/pulls/{n}/merge`
+is the underlying API if you need it directly.
 
 Verify the rebase kept both halves:
 
