@@ -74,7 +74,7 @@ bun run dev:api        # optional server.ts API on :8081
   - AI: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MAX_RETRIES`, `ANTHROPIC_TIMEOUT_MS`, `AI_EFFORT`, `AI_REQUEST_TIMEOUT_MS`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`, `GEMINI_MAX_ATTEMPTS`, `GEMINI_TIMEOUT_MS`
   - Sheets push: `GOOGLE_SERVICE_ACCOUNT_JSON` or `GOOGLE_APPLICATION_CREDENTIALS`
   - E2E: `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `CI`
-- Deployment constraints: Railway builds `dist/` and starts `server.ts`, so the optional `/api/*` routes have a runtime and fail closed until configured. Netlify is retired (`netlify.toml` carries `build.ignore = "exit 0"`) and would publish static `dist/` only. In production Railway injects `DATABASE_URL` from its managed Postgres service, so the store is Postgres there; the SQLite path (`DATA_DB_PATH`) is the local-dev and CI fallback, documented as a Railway volume in `.gitignore`.
+- Deployment constraints: Railway builds `dist/` and starts `server.ts`, so the optional `/api/*` routes have a runtime and fail closed until configured. Netlify is retired (`netlify.toml` carries `build.ignore = "exit 0"`) and would publish static `dist/` only. In production Railway injects `DATABASE_URL` from its managed Postgres service, so the store is Postgres there and neither `DATA_DB_PATH` nor a volume is involved; `DATA_DB_PATH` (SQLite) is read only by the fallback branch of `storageDriver()`, which local dev and CI take.
 
 ### 6) Evidence
 
