@@ -20,6 +20,28 @@ const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
 const port = process.env.HHVC_E2E_PORT || process.env.PORT || '8080'
 const origin = `http://127.0.0.1:${port}`
 
+// What the webServer runs to get a serving `dist/` on :port.
+//
+// `bun run start` is `validate && build:app && copy-workshop-form && serve`,
+// and on CI the first of those four is redundant: the `e2e` job declares
+// `needs: format_validate_lint`, and that job has already run `bun run
+// validate` to completion against this same commit. Running it again inside a
+// 120s webServer window buys nothing and sits on the critical path, which the
+// `e2e` job IS — it runs 338-380s while the other six jobs finish inside 70s.
+//
+// `copy-workshop-form.js` is NOT redundant and must stay: it copies the
+// committed `forms/mosquito-workshop-request/dist` into
+// `dist/forms/mosquito-workshop-request`, which `tests/e2e/workshop-form.spec.js`
+// loads. `vite build` alone does not produce it.
+//
+// Off CI the full `start` is what you want. `reuseExistingServer` is on there
+// and a fresh clone has no `dist/` at all, so a serve-only command would hand
+// the reader a 120s webServer timeout against a missing static root — a
+// failure that names the timeout rather than the missing build.
+const serverCommand = process.env.CI
+  ? 'bun run build:app && node build_scripts/copy-workshop-form.js && bun run serve'
+  : 'bun run start'
+
 module.exports = defineConfig({
   testDir: './tests/e2e',
   timeout: 60_000,
@@ -35,7 +57,7 @@ module.exports = defineConfig({
       : {}),
   },
   webServer: {
-    command: 'bun run start',
+    command: serverCommand,
     env: { ...process.env, PORT: port },
     url: origin,
     // Reuse is off whenever HHVC_E2E_PORT is set, not just in CI. Naming a
