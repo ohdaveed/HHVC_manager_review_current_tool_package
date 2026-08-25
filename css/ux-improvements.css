@@ -643,7 +643,13 @@
   background: var(--legacy-white);
 }
 
-/* --legacy-focus-ring, not a literal. These two rules used to hardcode
+/* --focus-ring, not a literal. `--legacy-focus-ring` is gone: it was
+   translucent in both schemes, so every rule reading it failed SC 1.4.11
+   (1.46:1 light, 2.65:1 dark). The history below is kept because it explains
+   why reaching for a literal here is a trap, and the trap has not changed —
+   only the token's name and the fact that it is now opaque and measured.
+
+   HISTORICALLY: --legacy-focus-ring, not a literal. These two rules used to hardcode
    `rgba(42, 96, 175, 0.25)` — byte-identical to the token's LIGHT value, which
    is exactly what made the bug invisible in review. css/theme.css deliberately
    re-points the token in dark mode (to `rgba(153, 172, 237, 0.45)`), so these
@@ -652,7 +658,7 @@
    box and the sync settings, two of the most-used fields in the tool. Every
    other focus ring in the repo already went through the token. */
 .review-queue input[type='search']:focus {
-  outline: 3px solid var(--legacy-focus-ring);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -693,7 +699,7 @@
 }
 
 .sync-config-input:focus {
-  outline: 3px solid var(--legacy-focus-ring);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 

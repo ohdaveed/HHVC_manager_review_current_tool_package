@@ -634,3 +634,83 @@ describe('the teal family, for the link-picker tag category', () => {
     }
   })
 })
+
+/* ------------------------------------------------------------------------ *
+ * Focus indicators — WCAG 2.1 AA SC 1.4.11 (Non-text Contrast), 3:1.
+ *
+ * THIS IS THE ONLY THING THAT CHECKS FOCUS-RING CONTRAST. axe-core ships no
+ * focus-indicator rule, so `tests/e2e/accessibility.spec.js` cannot catch
+ * this class at all — the defect shipped past a green build here AND in the
+ * Svelte rewrite, which is what a missing assertion looks like from the
+ * outside.
+ *
+ * A ring declared with alpha has no luminance of its own. It has to be
+ * COMPOSITED over the backdrop it renders on and then compared against that
+ * same backdrop, within one colour scheme — never across, for the reason the
+ * header of this file already records.
+ * ------------------------------------------------------------------------ */
+
+const UX = readFileSync(join(import.meta.dir, '..', 'css/ux-improvements.css'), 'utf8')
+
+/* `composite()` is the one declared above for the toast rules — same
+   gamma-space blend, and its doc comment records the browser values it was
+   checked against. Redefining it here shadowed it with a different argument
+   order and broke four passing toast tests, which is its own small lesson
+   about appending to a file rather than reading it first. */
+
+/** Every `outline: <width> solid <colour>` declaration in the two stylesheets
+ *  that draw focus rings, as {file, line, colour} rows. */
+function outlineDeclarations() {
+  const rows = []
+  for (const [file, source] of [
+    ['css/styles.css', STYLES],
+    ['css/ux-improvements.css', UX],
+  ]) {
+    source.split('\n').forEach((text, i) => {
+      const m = text.match(/outline:\s*[\d.]+px\s+solid\s+([^;]+);/)
+      if (m) rows.push({ file, line: i + 1, colour: m[1].trim() })
+    })
+  }
+  return rows
+}
+
+describe('focus indicators meet WCAG 1.4.11 (3:1)', () => {
+  /* The structural half. A ratio assertion only covers the colours it was
+     told about; this one fails on ANY newly added translucent ring, which is
+     how this defect returned after being fixed once. */
+  test('no focus ring is drawn with a translucent colour', () => {
+    const translucent = outlineDeclarations().filter(
+      ({ colour }) => /rgba?\([^)]*,\s*0?\.\d+\s*\)/.test(colour) || /transparent/.test(colour)
+    )
+    expect(translucent.map(({ file, line, colour }) => `${file}:${line} ${colour}`)).toEqual([])
+  })
+
+  /* The measured half, per scheme, against the surfaces a ring renders on. */
+  const SURFACES = {
+    light: { scope: () => LIGHT, names: ['--surface-panel', '--surface-page'] },
+    dark: { scope: () => DARK, names: ['--surface-panel', '--surface-page'] },
+  }
+
+  for (const [mode, { scope, names }] of Object.entries(SURFACES)) {
+    test(`${mode}: --focus-ring clears 3:1 against every surface it renders on`, () => {
+      const ring = hex(scope(), '--focus-ring')
+      const short = names
+        .map((name) => ({ name, ratio: Number(contrast(ring, hex(scope(), name)).toFixed(2)) }))
+        .filter(({ ratio }) => ratio < 3)
+      /* Report the offending surface and its measured ratio rather than a
+         bare `false`, so a failure names what to change. */
+      expect(short).toEqual([])
+    })
+  }
+
+  /* Proves the compositing helper reports what a browser draws, using the
+     exact value this suite was written to reject: 25% action blue on white
+     renders as rgb(210,215,244) and measures 1.42:1, not the 5.48:1 the
+     opaque colour would give. Without this, a bug in `composite()` could make
+     every ratio above pass vacuously. */
+  test('composite() reproduces the failure this rule was written for', () => {
+    expect(composite('#495ed4', '#ffffff', 0.25)).toBe('#d2d7f4')
+    expect(Number(contrast('#d2d7f4', '#ffffff').toFixed(2))).toBe(1.42)
+    expect(Number(contrast('#495ed4', '#ffffff').toFixed(2))).toBe(5.48)
+  })
+})
