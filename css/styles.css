@@ -2132,6 +2132,9 @@ a:focus {
 .check.unchecked {
   opacity: 0.65;
 }
+.check.unchecked:focus-visible {
+  opacity: 1;
+}
 .check:hover::before {
   opacity: 0.8;
 }
