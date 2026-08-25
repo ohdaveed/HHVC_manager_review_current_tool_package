@@ -19,7 +19,7 @@
 | `data/`                            | Generated inventory (gitignored); created by `bun run export`                                             | `.gitignore`, `AGENTS.md`                                       |
 | `archive/pages/`                   | Retired page modules kept for reference                                                                   | `archive/pages/README.md`                                       |
 | `AGENTS.md`                        | Canonical tool-agnostic contributor guide                                                                 | `AGENTS.md`                                                     |
-| `.github/workflows/`               | CI (`checks` + `e2e` jobs)                                                                                | `ci.yml`                                                        |
+| `.github/workflows/`               | CI — a graph of seven jobs, all of them required contexts                                                 | `ci.yml`, `link-check.yml`                                      |
 
 `js/` itself holds nine feature folders rather than one flat directory of
 modules — `js/main.js` alone stays directly under `js/`, as the module

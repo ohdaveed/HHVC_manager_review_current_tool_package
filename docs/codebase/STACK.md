@@ -70,7 +70,8 @@ bun run dev:api        # optional server.ts API on :8081
 - No `.env.example` / `.env.template` in repo ([TODO] if one should be added)
 - Required / optional env vars observed in code:
   - Server/static: `HOST`, `PORT`, `STATIC_ROOT`, `API_PORT` (Vite proxy)
-  - Review sync API: `REVIEW_API_TOKEN`, `DATA_DB_PATH`, `REVIEW_API_PRINCIPALS`, `REVIEW_API_ALLOWED_ORIGINS`, `REVIEW_API_RATE_LIMIT`, `REVIEW_API_RATE_WINDOW_MS`
+  - Review sync API: `REVIEW_API_TOKEN`, `REVIEW_API_PRINCIPALS`, `REVIEW_API_ALLOWED_ORIGINS`, `REVIEW_API_RATE_LIMIT`, `REVIEW_API_RATE_WINDOW_MS`, `REVIEW_SESSION_PASSWORD`
+  - Storage: **`DATABASE_URL`** selects the Postgres driver and carries the database credentials; `DATA_DB_PATH` is read only by the SQLite fallback, which runs when `DATABASE_URL` is unset. Setting up from this list without `DATABASE_URL` silently gets SQLite — including for `bun run ingest`, which writes the knowledge chunks wherever the deployment reads them.
   - AI: `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MAX_RETRIES`, `ANTHROPIC_TIMEOUT_MS`, `AI_EFFORT`, `AI_REQUEST_TIMEOUT_MS`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_BASE_URL`, `GEMINI_MAX_ATTEMPTS`, `GEMINI_TIMEOUT_MS`
   - Sheets push: `GOOGLE_SERVICE_ACCOUNT_JSON` or `GOOGLE_APPLICATION_CREDENTIALS`
   - E2E: `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `CI`
