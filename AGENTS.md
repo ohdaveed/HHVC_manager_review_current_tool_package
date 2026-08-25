@@ -360,10 +360,33 @@ run validate` and `bun run test` after editing anything under `pages/` or
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
-a graph of seven jobs rather than one long one, so a formatting or schema
-failure reports in seconds without waiting on a Chromium download and a flaky
-browser run never masks a unit failure.
+`.github/workflows/ci.yml` runs on pushes to `main`, on every pull request, and
+on demand through `workflow_dispatch`, as a graph of eight jobs rather than one
+long one, so a formatting or schema failure reports in seconds without waiting
+on a Chromium download and a flaky browser run never masks a unit failure.
+
+**The manual trigger exists because its absence was felt.** For four
+consecutive commits Actions produced no runs for this repo at all — not failed
+runs, no runs — and with only `push` and `pull_request` triggers there was no
+way to ask for one, so `main` was merged to with a local test run as the only
+evidence. `workflow_dispatch` takes no inputs on purpose: every job decides what
+to run from the event name and the change filter, so a dispatch behaves exactly
+like a push to `main` without anything having to be typed correctly into a form.
+
+**`cancel-in-progress` applies to pull requests only.** Superseding a PR run is
+free, since nobody needs the result for a commit that is no longer the branch
+head. Superseding a `main` run destroys the only record of whether that commit
+of `main` was green, and a cancelled run reads as a failed one — and two merges
+landing inside one six-minute run is an ordinary afternoon here.
+
+**The Bun setup is one composite action, `.github/actions/setup-bun`.** Six jobs
+carried a byte-identical `setup-bun` / `actions/cache` / `bun install` block,
+which meant six copies of one cache key; a key that drifts in a single copy does
+not fail anything, it just makes that job install from the network on every run,
+staying green and getting slower. The checkout deliberately stays in each job:
+a local composite action is read out of the workspace, so `uses: ./.github/...`
+cannot resolve until `actions/checkout` has run in that same job, and the jobs
+need different `fetch-depth` values anyway.
 
 **Every job that USES Bun pins it from `.bun-version`, and that pin is
 load-bearing.** They
@@ -416,6 +439,9 @@ job that does not. `changes` is the one that does not — it runs only
   to close.
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
+- **ci_ok** — the aggregation gate, and the only job with no condition but
+  `always()`. It fails if any job above reported `failure` or `cancelled`, and
+  separately if neither check path ran at all. See below.
 
 **Branch protection's required contexts are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
@@ -437,7 +463,25 @@ is what makes this graph's `if:` conditions dangerous to under-require:
 So the required set is **every job in the file**, `Detect changed files`
 included: `Format, validate, lint`, `Unit tests (bun test)`,
 `Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
-`Build single-file export` and `Detect changed files`.
+`Build single-file export`, `Detect changed files` and `CI passed`.
+
+**`CI passed` is the aggregation gate, and it is the one context worth requiring
+on its own.** Requiring all eight is the belt-and-braces reading of the rule
+above, and it works; the trouble is that it makes the protection settings a
+hand-maintained transcript of a job list that changes, which is the failure this
+whole section is about. The gate collapses that to one name. It runs on every
+event, so it can never be skipped into a pass, and it reads every other job's
+result directly: anything reporting `failure` or `cancelled` fails it, including
+a job whose own skip was caused by an upstream failure, because the upstream job
+is the one reporting `failure`. It accepts `skipped` — that is what lets the
+two-shape graph exist at all — and then closes the worst version of that
+loophole by failing when NEITHER the docs path nor the code path ran, which is
+the state a broken change filter produces and the one where a PR goes green
+having checked nothing.
+
+Until protection is actually pointed at it, the gate is advisory, exactly as the
+rule above says of any unlisted job. It is additive either way: adding it breaks
+no existing required context, which is the opposite of renaming one.
 
 The detector is the one people leave out, on the reasoning that it only
 computes outputs and cannot itself be skipped — which is true and beside the

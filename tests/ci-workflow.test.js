@@ -31,12 +31,45 @@ import { join } from 'node:path'
 
 const ROOT = join(import.meta.dir, '..')
 const WORKFLOW = readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8')
+const SETUP_ACTION = readFileSync(join(ROOT, '.github/actions/setup-bun/action.yml'), 'utf8')
 
-/** Every `oven-sh/setup-bun` step's `with:` block, one string per occurrence. */
+/**
+ * Every `oven-sh/setup-bun` step's `with:` block, one string per occurrence,
+ * across BOTH files that can hold one.
+ *
+ * The composite action is scanned as well as the workflow, and that is not
+ * tidiness — it is the whole assertion. Six jobs used to carry their own
+ * `setup-bun` step; they now share `.github/actions/setup-bun`, so `ci.yml`
+ * contains the string zero times. Reading only the workflow would have found
+ * nothing, checked nothing, and passed. The guard below caught exactly that
+ * when the composite landed, which is the one thing a vacuity guard is for.
+ *
+ * @returns {string[]}
+ */
 function setupBunBlocks() {
-  return WORKFLOW.split(/uses:\s*oven-sh\/setup-bun/)
-    .slice(1)
-    .map((rest) => rest.split(/\n\s*-\s/)[0])
+  return [WORKFLOW, SETUP_ACTION].flatMap((text) =>
+    text
+      .split(/uses:\s*oven-sh\/setup-bun/)
+      .slice(1)
+      .map((rest) => rest.split(/\n\s*-\s/)[0])
+  )
+}
+
+/**
+ * Each job's text, keyed by job id — the slice from its own two-space key to
+ * the next one.
+ *
+ * @returns {Map<string, string>}
+ */
+function jobChunks() {
+  const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))
+  const starts = [...jobsBlock.matchAll(/^ {2}([A-Za-z_][\w-]*):$/gm)]
+  return new Map(
+    starts.map((match, index) => {
+      const end = index + 1 < starts.length ? starts[index + 1].index : jobsBlock.length
+      return [match[1], jobsBlock.slice(match.index, end)]
+    })
+  )
 }
 
 /**
@@ -120,11 +153,41 @@ function requiredContextParagraph(text) {
 }
 
 describe('the CI workflow', () => {
-  test('sets up Bun in more than one job', () => {
-    // The vacuous-pass guard. Rename the action or restructure the file and
-    // the assertions below would otherwise scan nothing and pass silently —
-    // the failure mode `tests/doc-counts.test.js` documents at length.
-    expect(setupBunBlocks().length).toBeGreaterThan(1)
+  test('sets Bun up somewhere the scan can see', () => {
+    // The vacuous-pass guard. Rename the action or move it to a file this test
+    // does not read, and the assertions below would otherwise scan nothing and
+    // pass silently — the failure mode `tests/doc-counts.test.js` documents at
+    // length, and the one this guard actually caught when the six per-job
+    // blocks were replaced by one composite action.
+    //
+    // ONE is now the correct floor, where it used to be two. That is the point
+    // of the composite and not a weakening: the count dropped because the
+    // duplication did, and the far stronger property — that no job runs Bun
+    // without going through a pinned setup — is asserted directly below rather
+    // than approximated by a headcount.
+    expect(setupBunBlocks().length).toBeGreaterThan(0)
+  })
+
+  test('no job runs Bun without a pinned setup', () => {
+    // What the old `> 1` headcount was really standing in for. A job that
+    // invokes `bun` having skipped setup does not fail: the runner has some
+    // Bun on PATH, so the job silently tests against an unpinned runtime —
+    // which is the 1.3.14 story this whole file exists because of.
+    //
+    // Derived from the file rather than an allowlist of exempt jobs: a job is
+    // in scope precisely when one of its own steps shells out to `bun`, so
+    // `changes` (only `dorny/paths-filter`) and `ci_ok` (only `echo` and a
+    // shell loop) are out of scope by their own contents, and a new job that
+    // starts running Bun is in scope the moment it does.
+    const invokesBun = /^\s*run: bunx? /m
+    const inScope = [...jobChunks()].filter(([, chunk]) => invokesBun.test(chunk))
+    expect(inScope.length).toBeGreaterThan(0)
+    for (const [id, chunk] of inScope) {
+      const pinned =
+        chunk.includes('uses: ./.github/actions/setup-bun') ||
+        /uses:\s*oven-sh\/setup-bun/.test(chunk)
+      expect(`${id}: ${pinned}`).toBe(`${id}: true`)
+    }
   })
 
   test('pins Bun from .bun-version in every job, never `latest`', () => {
