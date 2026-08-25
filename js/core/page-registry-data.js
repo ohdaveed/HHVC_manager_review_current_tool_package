@@ -45,12 +45,16 @@ const PROTECTED_PAGE_KEYS = ['pestsTopic']
    copy of that function's hardcoded `groups` map, which restated the same five
    again in a label-stripping regex, so one enum lived at three sites and the
    picker and this form could come to disagree about which types group
-   correctly. build_scripts/schema.js only enforces `type: z.string().min(1)`, so
-   authored pages legitimately carry `Agency` and `Report` too and simply land
-   in the Information optgroup. A reviewer picking from a <select> should not be
-   able to create that mismatch by accident, so the form is constrained to the
-   five that group correctly — deliberately narrower than the schema, not a
-   restatement of it. */
+   correctly. build_scripts/schema.js enforces `type: z.enum(PAGE_TYPES)` over
+   eight values, so this list narrows a CLOSED enum rather than an open string —
+   the note here used to claim the schema only checked `z.string().min(1)`, which
+   made this look like the only constraint rather than the second one. Authored
+   pages legitimately carry the other three (`Agency`, `About us`, `Report`) and
+   simply land in the Information optgroup. A reviewer picking from a <select>
+   should not be able to create that mismatch by accident, so the form is
+   constrained to the five that group correctly — deliberately narrower than the
+   schema, not a restatement of it. Widening this list is safe only as far as
+   PAGE_TYPES; past that the schema rejects the page outright. */
 const ALLOWED_PAGE_TYPES = [
   'Topic',
   'Transaction',

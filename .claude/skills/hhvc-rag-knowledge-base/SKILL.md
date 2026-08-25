@@ -123,8 +123,10 @@ disagreements).
   from a citation back to the manual section the tool's own checks are named
   after. Added 2026-08-16, worth +75 chunks.
 - **`karl` and `karl-gitbook` are separate on purpose** — the CMS as MEASURED
-  versus as DOCUMENTED. They have disagreed four times over, and the prompt
-  says the measurement wins.
+  versus as DOCUMENTED. They have disagreed four times over. **Since the
+  2026-08-23 reversal the prompt says the HELP CENTER wins** where both describe
+  the same field; `karl` stays authoritative for raw field names, panel order,
+  and anything the guide does not discuss, since its silence is not a claim.
 - **The compliance matrix is projected from CSV, not converted.**
   `notebooklm/compliance-standards.csv` is the only place a requirement and the
   code section imposing it share a row, which is what lets a finding name a

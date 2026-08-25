@@ -996,10 +996,20 @@ A collapsed section at the end of the **Help** tab reporting what this browser i
 The enforced Zod schema lives in `build_scripts/schema.js` (shared by
 `build_scripts/validate.js` and `tests/data-validation.test.js`, so the schema
 has coverage independent of current page content). A page has `slug`,
-`type` (a free-form string, only `min(1)` checked — **eight** values are in use:
+`type` (a **closed enum** — `z.enum(PAGE_TYPES)`, not a bare string — whose
+**eight** permitted values are all in use:
 `Transaction` (14 pages), `Information` (6), `Resource Collection` (3),
 `Campaign` (2), `Topic` (1), `Agency` (1), `About us` (1), and `Report` (1),
-matching Karl content-type names. This list read six until 2026-08-15, omitting
+matching Karl content-type names. It is closed rather than open because
+`js/karl/karl-blocks.js` keys its per-type panel inventory on this value, and an
+unrecognised type selects no inventory. **The export is not silent about that** —
+`buildTranscript()` emits a single `UNMAPPED` entry reading
+`No Karl panel inventory for content type "X"`
+(`js/karl/karl-transcript.js:309`), which names the problem clearly. What the
+closed enum buys is **when** that failure arrives: unclosed, a typo'd type is
+caught at EXPORT time, on a page already authored and reviewed; closed,
+`bun run validate` rejects it at authoring time, before anyone builds on it.
+This list read six until 2026-08-15, omitting
 `Topic` and `About us`; a census via `build_scripts/load-pages.js` is what
 corrects it, so re-derive rather than trusting a restatement), `title`,
 `summary`, `audience[]`,
@@ -1203,7 +1213,7 @@ offline static tool.
 
 ### What the RAG corpus contains (`build_scripts/knowledge-sources.js`)
 
-`collectKnowledgeSources()` is the single definition of the corpus — not a glob — and every chunk carries a `category`: `hhvc-standards` (the HHVC Web Governance and Content Standards Manual), `hhvc-policy`, `sfgov-style`, `sfgov-live`, `karl` (the CMS as MEASURED), `karl-gitbook` (the CMS as DOCUMENTED — kept separate because the two have disagreed four times over, and the prompt says the measurement wins), `mockup-draft` and `sfds`. Category comes from the first path segment under `docs/source/`, so a new folder files itself with no code change; **`EXTERNAL_SOURCE_FILES` is the exception**, an explicit `{path, category}` list for documents living outside that tree — and **adding a file to it moves the measured counts**, so re-measure and re-ingest rather than editing the list alone. **`mockup-draft` is about a quarter of the corpus and is the dangerous one**: draft copy nobody approved, including the page being audited, so the system prompt forbids citing it as the authority a finding rests on, and the category is resolved from the matched row rather than the model, which cannot spoof it. **`bun run ingest` is yours to run and is billed** — nothing in CI or the build does it, so a corpus change is not live on a deployment until it runs. Full rationale — the per-category counts, why the compliance matrix is projected from CSV rather than committed, why a superseded document cannot carry its own warning, and the retrieval floor this corpus does not have — in the `hhvc-rag-knowledge-base` skill.
+`collectKnowledgeSources()` is the single definition of the corpus — not a glob — and every chunk carries a `category`: `hhvc-standards` (the HHVC Web Governance and Content Standards Manual), `hhvc-policy`, `sfgov-style`, `sfgov-live`, `karl` (the CMS as MEASURED), `karl-gitbook` (the CMS as DOCUMENTED — kept separate because the two have disagreed four times over, and **since the 2026-08-23 reversal the prompt says the HELP CENTER wins** where both describe the same field, with `karl` still authoritative for raw field names, panel order and anything the guide does not discuss), `mockup-draft` and `sfds`. Category comes from the first path segment under `docs/source/`, so a new folder files itself with no code change; **`EXTERNAL_SOURCE_FILES` is the exception**, an explicit `{path, category}` list for documents living outside that tree — and **adding a file to it moves the measured counts**, so re-measure and re-ingest rather than editing the list alone. **`mockup-draft` is about a quarter of the corpus and is the dangerous one**: draft copy nobody approved, including the page being audited, so the system prompt forbids citing it as the authority a finding rests on, and the category is resolved from the matched row rather than the model, which cannot spoof it. **`bun run ingest` is yours to run and is billed** — nothing in CI or the build does it, so a corpus change is not live on a deployment until it runs. Full rationale — the per-category counts, why the compliance matrix is projected from CSV rather than committed, why a superseded document cannot carry its own warning, and the retrieval floor this corpus does not have — in the `hhvc-rag-knowledge-base` skill.
 
 ### Reviewer sign-in (`/api/session`)
 
