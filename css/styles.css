@@ -2132,6 +2132,17 @@ a:focus {
 .check.unchecked {
   opacity: 0.65;
 }
+/* `opacity` composites the ENTIRE element, its focus ring included — so the
+   muted unchecked state dragged its own 3px ring from 5.48:1 down to 2.79:1
+   against the panel. That is the exact WCAG 1.4.11 failure `--focus-ring` was
+   introduced to fix, arriving by a second mechanism the token cannot defend
+   against: the colour is opaque and the element it is painted on is not.
+   Restoring full opacity for the duration of keyboard focus is enough, since
+   the unchecked state still reads through the 0.5-opacity `::before` circle —
+   the muting is redundant encoding, and the ring is not. */
+.check.unchecked:focus-visible {
+  opacity: 1;
+}
 .check:hover::before {
   opacity: 0.8;
 }

@@ -30,7 +30,7 @@
    DOM, no browser, no import of the app's module graph. */
 
 import { describe, test, expect } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const css = readFileSync(join(import.meta.dir, '..', 'css/theme.css'), 'utf8')
@@ -648,9 +648,18 @@ describe('the teal family, for the link-picker tag category', () => {
  * COMPOSITED over the backdrop it renders on and then compared against that
  * same backdrop, within one colour scheme — never across, for the reason the
  * header of this file already records.
+ *
+ * **The limit, stated rather than left to be discovered:** these tests read
+ * COLOUR. A ring declared with a fully opaque colour still renders
+ * translucent if any ancestor — or the control itself — carries `opacity`,
+ * because `opacity` composites the whole element including its outline. That
+ * is not hypothetical: `.check.unchecked` set `opacity: 0.65` on the button
+ * drawing the ring and took it to 2.79:1 while every assertion here stayed
+ * green, and `css/styles.css` now resets it under `:focus-visible`. Nothing
+ * below can see a reintroduction. Catching that class needs a rendered
+ * browser, so it belongs in `tests/e2e/`, and until it exists this file does
+ * not cover it.
  * ------------------------------------------------------------------------ */
-
-const UX = readFileSync(join(import.meta.dir, '..', 'css/ux-improvements.css'), 'utf8')
 
 /* `composite()` is the one declared above for the toast rules — same
    gamma-space blend, and its doc comment records the browser values it was
@@ -658,14 +667,35 @@ const UX = readFileSync(join(import.meta.dir, '..', 'css/ux-improvements.css'), 
    order and broke four passing toast tests, which is its own small lesson
    about appending to a file rather than reading it first. */
 
-/** Every `outline: <width> solid <colour>` declaration in the two stylesheets
- *  that draw focus rings, as {file, line, colour} rows. */
+/* Every repository-owned stylesheet, DERIVED rather than listed. The first
+   version of this file named two of the eleven, which left the four focus
+   outlines in `css/dashboard.css`, `css/inline-content-edit.css` and
+   `css/karl-guide.css` outside a census whose own comment claimed to cover
+   ANY ring in the repo. Reading the directory is what makes that claim true,
+   and it keeps a twelfth stylesheet covered on the day it is added. */
+const CSS_DIR = join(import.meta.dir, '..', 'css')
+const STYLESHEETS = readdirSync(CSS_DIR)
+  .filter((name) => name.endsWith('.css'))
+  .sort()
+  .map((name) => [`css/${name}`, readFileSync(join(CSS_DIR, name), 'utf8')])
+
+/* An empty derivation is a broken derivation, not a clean sheet: every
+   assertion below passes vacuously against zero inputs. Same posture as
+   `build_scripts/docs-file-set.js`, which fails rather than exit 0 on no
+   files. */
+if (STYLESHEETS.length === 0) throw new Error('No stylesheets found under css/ — check CSS_DIR')
+
+/**
+ * Every `outline: <width> solid <colour>` declaration in every
+ * repository-owned stylesheet.
+ *
+ * @returns {Array<{file: string, line: number, colour: string}>} One row per
+ *   declaration, `colour` being the raw value as written — which is a
+ *   `var(--token)` reference in every current case, hence `tokenDeclarations`.
+ */
 function outlineDeclarations() {
   const rows = []
-  for (const [file, source] of [
-    ['css/styles.css', STYLES],
-    ['css/ux-improvements.css', UX],
-  ]) {
+  for (const [file, source] of STYLESHEETS) {
     source.split('\n').forEach((text, i) => {
       const m = text.match(/outline:\s*[\d.]+px\s+solid\s+([^;]+);/)
       if (m) rows.push({ file, line: i + 1, colour: m[1].trim() })
@@ -674,15 +704,143 @@ function outlineDeclarations() {
   return rows
 }
 
+/**
+ * Every `--token: value;` declaration across those stylesheets.
+ *
+ * A token is collected with ALL the values declared for it, across every
+ * scope and file, because a translucent ring colour is a defect wherever it
+ * is declared — the light `:root`, the dark media block, or the
+ * `.browser-shell` re-pin. This deliberately does NOT use `declared()`, which
+ * reads one named scope of `css/theme.css`: `--legacy-action-blue` is
+ * declared in `css/styles.css`, so a theme-only lookup throws on the very
+ * token `css/karl-guide.css` draws its ring with.
+ *
+ * @returns {Map<string, Set<string>>} Token name to the set of raw values.
+ */
+function tokenDeclarations() {
+  const map = new Map()
+  for (const [, source] of STYLESHEETS) {
+    for (const m of source.matchAll(/(--[a-z0-9-]+)\s*:\s*([^;{}]+);/gi)) {
+      if (!map.has(m[1])) map.set(m[1], new Set())
+      map.get(m[1]).add(m[2].trim())
+    }
+  }
+  return map
+}
+
+/**
+ * Follow a colour through any chain of `var()` references to the concrete
+ * values it can resolve to.
+ *
+ * @param {string} colour A raw CSS colour value, possibly `var(--token)`.
+ * @param {Map<string, Set<string>>} tokens Output of `tokenDeclarations()`.
+ * @param {Set<string>} seen Tokens already visited on THIS path, so a cyclic
+ *   or self-referential declaration terminates instead of recursing forever.
+ * @returns {string[]} Every concrete value the colour can take. An
+ *   unresolvable reference returns itself, so an unknown token is reported as
+ *   written rather than silently dropping out of the census.
+ */
+function resolvedColours(colour, tokens, seen = new Set()) {
+  const ref = colour.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,[^)]*)?\)$/i)
+  if (!ref) return [colour]
+  const name = ref[1]
+  if (seen.has(name)) return []
+  const values = tokens.get(name)
+  if (!values || values.size === 0) return [colour]
+  const path = new Set(seen).add(name)
+  return [...values].flatMap((value) => resolvedColours(value, tokens, path))
+}
+
+/**
+ * Whether a concrete CSS colour value carries alpha below full opacity.
+ *
+ * The predicate this replaces recognized decimal alpha in legacy comma syntax
+ * and the `transparent` keyword, and nothing else — so `#495ed440`,
+ * `rgb(73 94 212 / 25%)` and `rgba(73, 94, 212, 25%)` were all valid CSS that
+ * declared a translucent ring and passed. It caught the original defect only
+ * because that one happened to be written as `color-mix(…, transparent)`,
+ * which is luck rather than coverage.
+ *
+ * @param {string} value A concrete colour value (no `var()` left in it).
+ * @returns {boolean} True when the value is anything less than fully opaque.
+ */
+function isTranslucent(value) {
+  if (/\btransparent\b/i.test(value)) return true
+  /* Eight- and four-digit hex carry alpha in their last byte/nibble. `\b`
+     keeps `#495ed4` from matching the four-digit form on its first half. */
+  const hex8 = value.match(/#[0-9a-f]{6}([0-9a-f]{2})\b/i)
+  if (hex8) return parseInt(hex8[1], 16) < 255
+  const hex4 = value.match(/#[0-9a-f]{3}([0-9a-f])\b/i)
+  if (hex4) return parseInt(hex4[1], 16) < 15
+  const fn = value.match(/\b(?:rgba?|hsla?)\(([^)]*)\)/i)
+  if (fn) {
+    const slash = fn[1].split('/')[1]
+    if (slash !== undefined) return belowOne(slash)
+    const parts = fn[1].split(',')
+    if (parts.length >= 4) return belowOne(parts[3])
+  }
+  return false
+}
+
+/**
+ * Read a CSS alpha component, which may be a number or a percentage.
+ *
+ * @param {string} raw The alpha component as written.
+ * @returns {boolean} True when it denotes less than full opacity. An alpha of
+ *   exactly `1` or `100%` is opaque, so `rgba(0, 0, 0, 1)` is not reported.
+ */
+function belowOne(raw) {
+  const a = raw.trim()
+  return a.endsWith('%') ? parseFloat(a) < 100 : parseFloat(a) < 1
+}
+
 describe('focus indicators meet WCAG 1.4.11 (3:1)', () => {
   /* The structural half. A ratio assertion only covers the colours it was
      told about; this one fails on ANY newly added translucent ring, which is
-     how this defect returned after being fixed once. */
+     how this defect returned after being fixed once.
+
+     It has to resolve `var()` to mean that. Every outline in all eleven
+     stylesheets is written as `var(--token)`, so a predicate applied to the
+     raw declaration tests a string that can never contain alpha, whatever
+     the token behind it holds. Pointing `--focus-ring` at
+     `rgba(73, 94, 212, .25)` in `css/theme.css` used to leave both halves of
+     this suite green. */
   test('no focus ring is drawn with a translucent colour', () => {
-    const translucent = outlineDeclarations().filter(
-      ({ colour }) => /rgba?\([^)]*,\s*0?\.\d+\s*\)/.test(colour) || /transparent/.test(colour)
-    )
-    expect(translucent.map(({ file, line, colour }) => `${file}:${line} ${colour}`)).toEqual([])
+    const tokens = tokenDeclarations()
+    const offenders = []
+    for (const { file, line, colour } of outlineDeclarations()) {
+      for (const value of resolvedColours(colour, tokens)) {
+        if (isTranslucent(value)) offenders.push(`${file}:${line} ${colour} -> ${value}`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  /* Proves the predicate above can actually fail, in each form a ring could
+     be written with. Without this the structural test is indistinguishable
+     from one that returns `[]` unconditionally — which is what it effectively
+     did for three of these five. */
+  test('isTranslucent() recognizes every alpha-bearing colour form', () => {
+    const translucent = [
+      'rgba(73, 94, 212, 0.25)',
+      'rgba(73, 94, 212, 25%)',
+      'rgb(73 94 212 / 25%)',
+      '#495ed440',
+      'color-mix(in srgb, var(--sfds-color-action) 25%, transparent)',
+    ]
+    const opaque = ['#495ed4', 'rgb(73, 94, 212)', 'rgba(73, 94, 212, 1)', 'var(--focus-ring)']
+    expect(translucent.filter((v) => !isTranslucent(v))).toEqual([])
+    expect(opaque.filter((v) => isTranslucent(v))).toEqual([])
+  })
+
+  /* And that the resolver reaches a token's value rather than its name — the
+     specific blindness that made the census above vacuous. */
+  test('resolvedColours() follows a var() chain to its declared values', () => {
+    const tokens = new Map([
+      ['--ring', new Set(['var(--mid)'])],
+      ['--mid', new Set(['rgba(73, 94, 212, 0.25)'])],
+    ])
+    expect(resolvedColours('var(--ring)', tokens)).toEqual(['rgba(73, 94, 212, 0.25)'])
   })
 
   /* The measured half, per scheme, against the surfaces a ring renders on. */
@@ -694,9 +852,13 @@ describe('focus indicators meet WCAG 1.4.11 (3:1)', () => {
   for (const [mode, { scope, names }] of Object.entries(SURFACES)) {
     test(`${mode}: --focus-ring clears 3:1 against every surface it renders on`, () => {
       const ring = hex(scope(), '--focus-ring')
+      /* Filter on the UNROUNDED ratio and round only what is reported. The
+         other order lets a ring that misses the floor pass: #959595 on white
+         measures 2.99535:1, and `toFixed(2)` hands `< 3` a 3.00. */
       const short = names
-        .map((name) => ({ name, ratio: Number(contrast(ring, hex(scope(), name)).toFixed(2)) }))
+        .map((name) => ({ name, ratio: contrast(ring, hex(scope(), name)) }))
         .filter(({ ratio }) => ratio < 3)
+        .map(({ name, ratio }) => ({ name, ratio: Number(ratio.toFixed(2)) }))
       /* Report the offending surface and its measured ratio rather than a
          bare `false`, so a failure names what to change. */
       expect(short).toEqual([])
