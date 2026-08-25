@@ -52,8 +52,8 @@ When a base PR merges and a dependent PR picks up conflicts:
 
 **Do not rebase into a live review.** Force-pushing over a PR that's under review breaks the review thread. Instead:
 
-1. **Derive the correct tree independently.** Check out a fresh branch from the new base, cherry-pick the PR's unique commits.
-2. **Verify byte-for-byte.** (`git diff` empty = correct merge.)
+1. **Derive the correct tree independently.** Record the PR's exact unique-commit range (for example, `git rev-list --reverse <base>..<pr>`), then check out a fresh branch from the new base and cherry-pick exactly that list.
+2. **Verify byte-for-byte against explicit objects.** Compare the rebuilt tree with the PR result, not the working tree: `git diff --exit-code <pr-tip>^{tree} HEAD^{tree}` (and confirm `git diff --cached` and `git diff` are empty). A clean checkout alone does not prove that commits were not omitted or resolved incorrectly.
 3. **Merge rather than rebase,** preserving the original commits and review context.
 
 ### Decision trees when blocked
