@@ -22,9 +22,7 @@ When a feature spans multiple PRs and deploy-on-merge is enabled, each PR merge 
 
 **Railway example:**
 
-```bash
-railway variable set WATCH_PATTERNS '__deploys-paused-do-not-match__/**'
-```
+Change the service's **Build watch paths** (`build.watchPatterns`) in Railway's service settings (or the equivalent Railway API), replacing the existing paths with an unmatchable path such as `__deploys-paused-do-not-match__/**`. Do not use `railway variable set`: that creates an unrelated environment variable and can itself trigger a deployment. Apply the setting with deployment triggering disabled, if the selected Railway interface offers that option.
 
 This makes the tracked branch unmatchable, skipping deployment. Verify the pause with:
 
@@ -39,13 +37,14 @@ Record the original pattern (usually `main/**` or empty) to restore at the end.
 1. Resolve any required review threads in the GitHub UI.
 2. Verify all CI checks pass.
 3. Merge the PR and note the commit SHA.
-4. **Verify the deployment skipped:**
+4. **Verify the deployment skipped for this exact merge:**
 
    ```bash
-   railway deployments --limit 1
+   MERGE_SHA=<sha-recorded-in-step-3>
+   railway deployments --limit 20
    ```
 
-   Expect `SKIPPED` status on that SHA. This is the proof the pause held.
+   Locate the deployment whose commit SHA is exactly `$MERGE_SHA`; do not use an unrelated latest deployment. Expect that deployment to have `SKIPPED` status. If no record for `$MERGE_SHA` exists, stop and investigate—the pause is not proven.
 
 5. Start the next PR off fresh `main` (don't stack branches).
 
@@ -53,14 +52,17 @@ Record the original pattern (usually `main/**` or empty) to restore at the end.
 
 ## Resume Deployment
 
-After all PRs merge:
+After all PRs merge, restore the original `build.watchPatterns` service setting without triggering an intermediate deployment. Then deploy the verified merged `main` commit from a clean checkout:
 
 ```bash
-railway variable set WATCH_PATTERNS 'main/**'  # Restore original pattern
-railway deploy
+git fetch origin main
+git worktree add --detach /tmp/feature-merged-main origin/main
+git -C /tmp/feature-merged-main status --short  # must be empty
+git -C /tmp/feature-merged-main rev-parse HEAD  # record and verify the expected merged SHA
+(cd /tmp/feature-merged-main && railway deploy)
 ```
 
-Verify the deployment succeeds and includes all PRs.
+Verify the deployment succeeds and includes that recorded `main` SHA. Remove the temporary worktree after verification.
 
 ## Anti-patterns
 
