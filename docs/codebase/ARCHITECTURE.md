@@ -4,7 +4,7 @@
 
 ### 1) Architectural Style
 
-- Primary style: Data-driven static SPA (no UI framework) with additive review layers and an optional Bun API sidecar
+- Primary style: Data-driven static SPA with additive review layers and an optional Bun API sidecar. The mockup (`#mockPage`) has no UI framework — string templates only, so it mirrors the SF.gov page under review — while the review workspace (`#reviewWorkspace`) mounts React 19 + MUI islands from `js/react/`
 - Why this classification: Page data modules populate globals; string-template rendering fills `#mockPage`; review features are self-mounting IIFEs over `localStorage`; `server.ts` is optional and fails closed when unconfigured
 - Primary constraints:
   1. Must work fully offline for mockup review without any backend
@@ -27,7 +27,7 @@ index.html -> js/main.js (CSS + modules)
 2. Each `pages/*.js` assigns a page object onto `window.HHVC_PAGES`; `js/core/page-data.js` sets `order` (29 entries) and deleted-key aliases.
 3. Core modules render the mockup and wire editor/sidebar controls from in-memory `pageData`.
 4. Review layers persist decisions/notes/edits in versioned `localStorage`; continuous autosave skips history; round boundaries go through `mergeReviewRecord`.
-5. If configured, browser sync client pushes/pulls per-page records to SQLite via `server.ts`; AI panel posts drafts to `/api/ai/generate` (validated, never written to disk as pages).
+5. If configured, the browser sync client pushes/pulls per-page records through `server.ts` into whichever store `build_scripts/storage.js` selects — Postgres when `DATABASE_URL` is set, SQLite otherwise; AI panel posts drafts to `/api/ai/generate` (validated, never written to disk as pages).
 6. Managers open the Railway deploy, which runs `server.ts`; the sync/AI routes still need secrets configured, and a purely static host would have no runtime for them at all.
 
 ### 3) Layer/Module Responsibilities
