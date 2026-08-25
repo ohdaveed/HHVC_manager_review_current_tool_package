@@ -145,3 +145,55 @@ Notes for whoever picks this up next:
 - **Sharding cost less than predicted.** The estimate assumed a 40-60s
   per-shard prefix; the fastest shard finished in 115s total, so the real
   prefix is well under that.
+
+## Workers 2 → 4 (2026-08-25)
+
+Raised after the duration-balancing idea was measured and **rejected** — see
+below. Two samples each, because run-to-run variance is ±20s and one sample
+could not tell a real effect from noise.
+
+| workers | shard times        | slowest | spread |
+| ------- | ------------------ | ------- | ------ |
+| 2       | 155, 115, 119, 156 | 156s    | 41s    |
+| 2       | 100, 129, 121, 119 | 129s    | 29s    |
+| 4       | 120, 122, 106, 109 | 122s    | 16s    |
+| 4       | 107, 108, 115, 117 | 117s    | 10s    |
+
+Mean slowest shard **142s → 120s**; mean spread **35s → 13s**. The critical
+path is the slowest shard, so that is roughly 22s off it — but **the spread
+collapsing by 63% is the stronger result**, and the one that was predicted:
+it is what contention relief looks like, and it makes the path predictable
+rather than hostage to which shard drew the axe tests.
+
+**Zero flakes across both runs** — 440 test executions at 4 workers. That is
+evidence the old cap was hedging against coupling the suite does not have, not
+proof; treat a future flake here as something to fix in the tests rather than
+as a reason to restore the cap.
+
+(The rerun's reported run wall clock of 534s is an artifact: a re-run keeps the
+original `createdAt`, so the figure spans the gap between the two runs. Shard
+times are the valid measure.)
+
+### Why balancing shards by duration was rejected
+
+- **Summed test-time does not predict shard wall clock here — it came close to
+  inverting it.** Shard 3 carried the single heaviest file
+  (`page-registry.spec.js`, 107s of 651s) and finished FASTEST at 119s; shard 1
+  finished slowest at 156s on less total test-time.
+- **Playwright shards by test, not by file.** `import-export.spec.js` ran in
+  shards 1 and 2, `review-ops.spec.js` in 3 and 4. A file-level bin-pack is
+  therefore a COARSER partition, not a rebalanced one — it would force
+  `page-registry`'s 107s whole into one shard, creating a floor the current
+  split avoids by spreading it.
+- A committed spec-to-duration map is also exactly the hand-maintained test
+  manifest this repo's own guidance names as the thing that defeats
+  partitioning, and it rots silently.
+
+What the numbers pointed at instead was CPU contention: `accessibility.spec.js`
+is 80s over 16 axe runs, axe is CPU-bound, and two workers on four vCPUs
+contend rather than parallelize. Raising workers addressed that directly.
+
+**Next lever, if one is wanted:** the fixed per-shard prefix — checkout,
+setup-bun, `bun install`, `playwright install --with-deps`, artifact download —
+now runs ~48s of a ~120s shard. It is the largest single remaining cost, and
+the `--with-deps` apt step is not covered by the `~/.cache/ms-playwright` cache.
