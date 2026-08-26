@@ -269,7 +269,24 @@ one should be added)`` and line 69's config-source inventory omits the
       `origin/main` in, re-run CI, merge.
 - [ ] **3. #224 `a11y/focus-ring-contrast`.** Same. Merge `origin/main` in,
       re-run CI, merge.
-- [ ] **4. `docs/add-skills` — open a PR first.** Lands _before_ the other
+- [x] **4. `docs/add-skills` — SUPERSEDED. Do not merge; do not open a PR.**
+      Measured 2026-08-26. `da8311e Audit the eleven subsystem skills, fix the
+  drift, and gate it (#200)` is already on `main` and is the same work.
+      Evidence, in the direction that matters — the branch's own changes against
+      what `main` now holds: - Three of its four `SKILL.md` edits are **byte-identical** to `main`. - The fourth, `hhvc-page-registry`, is on `main` **verbatim plus a second
+      hunk** the branch never had (the `z.enum(PAGE_TYPES)` correction). - `tests/skill-consistency.test.js` exists on `main` and is **162 lines
+      richer**; `package.json` already enumerates it. - Its mirror edits still claim **58** unit-test files. `main` says 60.
+      Merging it would therefore REGRESS `main`: −162 lines from the
+      skill-consistency gate, −139/−138 from `AGENTS.md`/`CLAUDE.md`, and the
+      test count rolled back from 60 to 58. The `merge-tree` conflict was the
+      symptom; supersession was the cause.
+      **Retire the branch** (and its worktree at
+      `.claude/worktrees/docs+add-skills`, which is clean) rather than merging.
+      Nothing unique is lost: `git log --cherry-mark` marks all three commits as
+      unmatched only because they were re-applied differently upstream, and each
+      one's content was checked against `main` individually.
+      _Superseded — retained here as the record of why, not as work to do:_
+- [ ] ~~**4. `docs/add-skills` — open a PR first.**~~ Lands _before_ the other
       `AGENTS.md` branches on purpose: it changes the gate itself
       (`tests/skill-consistency.test.js` plus `package.json`'s enumerated test
       list) and touches all three mirrors, so landing it last would make the
