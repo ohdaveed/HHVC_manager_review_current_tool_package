@@ -1,0 +1,94 @@
+# Codecov configuration.
+#
+# Coverage here is a REPORT, never a gate. Two independent things have to be
+# true for that to hold, and only one of them lives in `ci.yml`:
+#
+#   1. The upload step must not fail the `unit` job — `fail_ci_if_error` is
+#      left at its default of false there.
+#   2. Codecov ALSO posts its own commit statuses (`codecov/project` and
+#      `codecov/patch`). Branch protection CAN require these: GitHub
+#      requires status CONTEXTS, and an external app's contexts are eligible
+#      alongside workflow job names. What they are not is JOBS — so
+#      `tests/ci-workflow.test.js`, which parses `ci.yml`, cannot enumerate
+#      them, and this repo's "every job in the workflow must also be a
+#      required context" rule does not reach them. Nothing here would flag
+#      it if one were made required by hand. `informational: true` is what
+#      keeps them non-gating, and it is the only thing that does.
+#
+# Marking both statuses informational is deliberate rather than timid. This
+# repo's gates are about correctness — the schema `validate` enforces, the
+# invariants the suite asserts, the reachability Knip checks. A ratio is not
+# one of those: it moves when a data file is added, and a number that can go
+# red for a reason nobody can act on is how a required check gets routinely
+# bypassed. Turn either one into a gate on purpose, with a target chosen from
+# a measurement, or leave it reporting.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+        # A docs-only PR skips the `unit` job entirely (see `ci.yml`'s
+        # `changes` detector), so no report is uploaded for that commit. The
+        # default behaviour would leave the status failing on a PR that could
+        # not have affected coverage.
+        if_not_found: success
+    patch:
+      default:
+        informational: true
+        if_not_found: success
+
+# `tests/helpers/browser-env.js` is the only file under `tests/` that Bun's
+# profiler reports — it is the happy-dom harness `bunfig.toml` preloads, not
+# a subject under test. Measuring the test harness's own coverage says
+# nothing about the code it exists to exercise.
+#
+# Note what is deliberately NOT ignored: `pages/*.js`. Those 29 files are
+# page data rather than logic and score close to 100%, so they lift the
+# headline ratio above what the `js/` modules alone would report. That is a
+# knob worth turning on purpose if the number is ever used for anything, not
+# a default worth setting quietly.
+ignore:
+  - 'tests/'
+
+# GitHub Checks ANNOTATIONS — the inline red marks Codecov draws on uncovered
+# lines in a pull request's "Files changed" view.
+#
+# Off deliberately, and this is NOT covered by the `informational: true` above.
+# That setting governs the commit STATUSES; annotations are a separate
+# mechanism with its own default of true, so an informational status and a
+# fully annotated diff coexist happily.
+#
+# At ~70% line coverage that means red marks scattered through the diff of
+# every pull request, none of which is a defect — an uncovered line is a fact
+# about this suite's shape, not a problem introduced by the PR under review.
+# This repo has already made exactly this call once: `getRuleResultsFor()`
+# marks Page type, Audience and Reading target `scored: false` because three
+# permanently-green rules buried the one rule a reviewer could act on. Inline
+# annotations across a third of the codebase is that same failure on a
+# different surface.
+github_checks:
+  annotations: false
+
+# Only comment when coverage actually moved.
+#
+# The default is to comment on every pull request. Most PRs here touch docs or
+# CI, which the `changes` detector routes away from the `unit` job entirely —
+# so they upload nothing and could not have changed coverage. A bot comment
+# that says nothing, on a PR where nothing could have happened, is how people
+# learn to scroll past the comment that matters.
+comment:
+  require_changes: true
+
+# Bundle size is a report too, matching the coverage posture above.
+#
+# `informational` is ALREADY Codecov's default here, and restating a default
+# is usually noise worth deleting. It earns its place for one reason:
+# defaults drift. Codecov changed its own token-requirement default between
+# existing and new organizations, which is precisely how a setting flips
+# underneath a repository that never touched it. Pinning it means an upstream
+# change cannot quietly turn bundle size into something that blocks a merge —
+# and the largest chunk here is ECharts at ~500 kB, which is supposed to be
+# large and is already isolated behind a dynamic import. A merge blocked on
+# that would be a merge blocked for a reason nobody can act on.
+bundle_analysis:
+  status: 'informational'
