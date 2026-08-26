@@ -982,10 +982,25 @@ function renderTable(rows = [], pageType = 'generic', caption = '', pathPrefix =
       (r, rowIndex) =>
         `<tr>${r
           .map((c, i) => {
-            const scope = codeTranslation && i === 0 ? ' scope="row"' : ''
+            // A row header is a `<th scope="row">`, never a `<td scope="row">`.
+            // `scope` is only valid on `<th>` — on a `<td>` it is ignored by
+            // assistive technology AND flagged by axe's `scope-attr-valid`, so
+            // the cell it was meant to label announced as ordinary data. This
+            // shipped on 25 nodes of the Article 11 code-translation tables,
+            // whose whole point is that the left column names the code section
+            // the row is about.
+            //
+            // Caught by the `#mockPage .page-body` scan in
+            // tests/e2e/accessibility.spec.js, not by the whole-page one:
+            // `scope-attr-valid` is `moderate`, and the older helper filters to
+            // critical/serious. Table semantics survive export into Karl, which
+            // is why the body gate does not filter by impact.
+            const rowHeader = codeTranslation && i === 0
+            const tag = rowHeader ? 'th' : 'td'
+            const scope = rowHeader ? ' scope="row"' : ''
             // rowIndex + 1: `body` is rows[1..], so the stored path has to
             // count the header row the destructure above removed.
-            return `<td${scope}><span${cellAttr(rowIndex + 1, i)}>${formatMarkdown(c)}</span></td>`
+            return `<${tag}${scope}><span${cellAttr(rowIndex + 1, i)}>${formatMarkdown(c)}</span></${tag}>`
           })
           .join('')}</tr>`
     )
