@@ -49,3 +49,46 @@ coverage:
 # a default worth setting quietly.
 ignore:
   - 'tests/'
+
+# GitHub Checks ANNOTATIONS — the inline red marks Codecov draws on uncovered
+# lines in a pull request's "Files changed" view.
+#
+# Off deliberately, and this is NOT covered by the `informational: true` above.
+# That setting governs the commit STATUSES; annotations are a separate
+# mechanism with its own default of true, so an informational status and a
+# fully annotated diff coexist happily.
+#
+# At ~70% line coverage that means red marks scattered through the diff of
+# every pull request, none of which is a defect — an uncovered line is a fact
+# about this suite's shape, not a problem introduced by the PR under review.
+# This repo has already made exactly this call once: `getRuleResultsFor()`
+# marks Page type, Audience and Reading target `scored: false` because three
+# permanently-green rules buried the one rule a reviewer could act on. Inline
+# annotations across a third of the codebase is that same failure on a
+# different surface.
+github_checks:
+  annotations: false
+
+# Only comment when coverage actually moved.
+#
+# The default is to comment on every pull request. Most PRs here touch docs or
+# CI, which the `changes` detector routes away from the `unit` job entirely —
+# so they upload nothing and could not have changed coverage. A bot comment
+# that says nothing, on a PR where nothing could have happened, is how people
+# learn to scroll past the comment that matters.
+comment:
+  require_changes: true
+
+# Bundle size is a report too, matching the coverage posture above.
+#
+# `informational` is ALREADY Codecov's default here, and restating a default
+# is usually noise worth deleting. It earns its place for one reason:
+# defaults drift. Codecov changed its own token-requirement default between
+# existing and new organizations, which is precisely how a setting flips
+# underneath a repository that never touched it. Pinning it means an upstream
+# change cannot quietly turn bundle size into something that blocks a merge —
+# and the largest chunk here is ECharts at ~500 kB, which is supposed to be
+# large and is already isolated behind a dynamic import. A merge blocked on
+# that would be a merge blocked for a reason nobody can act on.
+bundle_analysis:
+  status: 'informational'
