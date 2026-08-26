@@ -1,237 +1,185 @@
-# Merge train — integrating nine outstanding branches
+# Documentation cleanup, then a Svelte + Supabase porting brief
 
-Tracking file for the merge of every open branch in this repo onto `main`,
-started 2026-08-26. **This file lives on `chore/merge-train`, not on `main` and
-not on any branch under review** — putting it on a PR branch would change that
-PR's contents and cost it a CI re-run. While working on another branch, read it
-with `git show chore/merge-train:PLAN.md`.
+Six PRs, landed in order. Full reasoning and evidence live in the session plan; this file is
+the checklist and the handoff. **`resume from PLAN.md` has to be enough on its own** — record
+blockers and decisions here, not only in chat.
 
-`resume from PLAN.md` has to be enough on its own: blockers, decisions and
-anything deliberately skipped go in this file, not only in chat.
+## Why
 
-## Standing constraints
+A documentation audit found that a large share of this repo's docs are confidently wrong, and
+the wrongness clusters in the files a newcomer opens first. Separately, the Svelte + Supabase
+rebuild in the sibling `hhvc-manager-review-svelte` repository is already ~41 commits in and
+has dropped several contracts this repo treats as load-bearing. (Named as a repository rather
+than as a checkout path: the absolute path this line used to carry was one developer's
+machine, and it is wrong for everyone else reading the file.)
 
-- **Every merge to `main` is a production Railway deploy** (service `web`,
-  connected to `main`). Nine branches is up to eight deploys. Verify the live
-  artifact at the end per the repo's Definition of Done — status code, deployed
-  commit against the merged SHA, clean console — not the pipeline that built it.
-- **The train is strictly serial, and that is measured rather than assumed.**
-  `main` sets `strict: true` (a branch must be up to date before merging) and
-  `enforce_admins: true` (nobody bypasses it). So every merge stales every other
-  open PR: each one then needs `origin/main` merged in, pushed, and a **full CI
-  cycle** before it can land. Eight merges is eight serial cycles, not one. There
-  is no parallel path, and no admin override.
-- **Land everything by SQUASH merge.** `linear: true` disallows merge commits on
-  `main`. Merging `origin/main` _into_ a feature branch stays fine — the squash
-  flattens it on the way in — but "Create a merge commit" is not available.
-- **Resolve every review thread before merging, on every PR.**
-  `required_conversation_resolution` is enabled. This is the measured cause of
-  #230 sitting `MERGEABLE/BLOCKED` with all seven required contexts green and
-  `reviewDecision` empty, and it explains all six stuck PRs at once.
-  Thread resolution needs GraphQL, which the local hook blocks and this session
-  cannot route around — so it is a user action, in the PR UI or via
-  `gh api graphql`, once per PR.
-- **No human approval is required** (`required_pull_request_reviews: null`), so
-  there is no reviewer bottleneck — only the thread-resolution one above.
-- **Never rebase a pushed PR branch.** Merge `origin/main` in instead; a rebase
-  over pushed work is a force-push into a live review and is separately gated.
-- **`mirror-consistency` and `skill-consistency` fail on merges git resolves
-  cleanly.** Two branches editing _different_ sections of `AGENTS.md` /
-  `CLAUDE.md` / `.github/copilot-instructions.md` auto-merge with no conflict
-  markers and still go red, because those gates compare shared facts and a short
-  byte-identical list rather than diffing. A green PR run is not evidence about
-  the post-merge tree.
-- **Definition of Done here is push + PR + green CI**, not a local merge. Three
-  branches currently have no PR at all.
+## Branching note
 
-## Board as measured 2026-08-26
+This work is the third branch in an existing stack. **Updated 2026-08-24** — the table below
+described a stack that no longer exists: #204 has merged and #206 was retargeted at `main`.
 
-| Branch                                      | PR           | ahead/behind `main` | Hub files                                                      |
-| ------------------------------------------- | ------------ | ------------------- | -------------------------------------------------------------- |
-| `chore/doppler-template`                    | #230         | 1/0                 | — (one new file)                                               |
-| `a11y/mockup-body-axe-gate`                 | #225         | 1/3                 | —                                                              |
-| `a11y/focus-ring-contrast`                  | #224         | 2/3                 | —                                                              |
-| `docs/add-skills` (worktree)                | none         | 3/11                | all three mirrors, `skill-consistency.test.js`, `package.json` |
-| `fix/ai-disclosure-citation`                | #222         | 3/3                 | `AGENTS.md`                                                    |
-| `chore/track-claude-skills`                 | #213         | 3/4                 | `.gitignore`, `.claude/settings.json`                          |
-| `docs/skill-coordination-fixes`             | none         | 1/0                 | —                                                              |
-| `chore/refresh-skills-lock`                 | none         | 1/10                | `skills-lock.json`                                             |
-| `claude/content-pages-ui-management-hv6fcy` | #223 (draft) | 1/3                 | `AGENTS.md`, `CLAUDE.md`, **`ci.yml`**                         |
+| PR   | Head                                     | Base                                     | State                                     |
+| ---- | ---------------------------------------- | ---------------------------------------- | ----------------------------------------- |
+| #204 | `feat/karl-tag-field-inspection`         | `main`                                   | **merged** 2026-08-24 01:08 UTC, squashed |
+| #206 | `content/article11-spotlight-button-cap` | `main`                                   | open, checks green, `BEHIND`              |
+| this | `docs/correct-stale-claims`              | `content/article11-spotlight-button-cap` | open, checks green, `BEHIND`              |
 
-## Step 0 — unblock branch protection
+It has to stack there rather than branch from `main`, because several corrections depend on
+the 2026-08-23 precedence reversal (`dec5fbd`, `0fc3802`) that lives in #204/#206. Branching
+from `main` would produce corrections that contradict the tree they land in. That reasoning
+still holds for the CONTENT of #206; #204's half of it is now in `main` directly.
 
-- [x] **Read `main`'s required status contexts.** `gh api` is blocked by a local
-      PreToolUse hook and this session has no sandbox tool, so the user ran it.
-      Result, 2026-08-26 — exactly the seven job names `ci.yml` defines, matching
-      `CLAUDE.md`'s prescribed list with nothing extra and nothing missing:
-      `Playwright end-to-end tests`, `Format, validate, lint`,
-      `Unit tests (bun test)`, `Docs-only checks`, `Build railway bundle`,
-      `Build single-file export`, `Detect changed files`.
-      **This refutes both candidate causes below.** There is no context that no
-      job produces, and `codecov/project` is not required. All seven reported
-      SUCCESS or SKIPPED on #230, so the block is not a status check at all.
-- [ ] **Diagnose why #230 is `MERGEABLE/BLOCKED`.** Measured on 2026-08-26: every
-      context green (`Format, validate, lint`, `Unit tests (bun test)`,
-      `Playwright end-to-end tests`, `Build railway bundle`,
-      `Build single-file export`, `Detect changed files`, `Docs-only checks`
-      skipped, GitGuardian, `codecov/patch`, `codecov/bundles`,
-      `netlify/hhvc/deploy-preview`), `behind=0`, no blocking review (only two
-      `COMMENTED` bot reviews), `reviewDecision` empty. Six PRs open and unmerged
-      says this is protection-wide rather than one PR. Two candidates:
-      (a) a required context no job produces — the failure mode `CLAUDE.md`
-      records after the `checks` job split, which sits permanently pending;
-      (b) `codecov/project` required but never posted (`codecov/patch` and
-      `codecov/bundles` post, `codecov/project` is absent from the rollup).
-- [ ] **Find the non-status cause.** With every required context satisfied,
-      `MERGEABLE/BLOCKED` has to come from a protection setting that is not a
-      status check. Ranked by fit with what is already measured: 1. **Required conversation resolution.** #230 carries two `COMMENTED` bot
-      reviews (`qodo-code-review`, `chatgpt-codex-connector`) plus a CodeRabbit
-      check. Unresolved inline threads block the merge while leaving
-      `reviewDecision` empty and every check green — which is exactly the
-      signature observed, and it would equally explain the other five PRs. 2. **A repository ruleset.** Rulesets are evaluated on top of classic
-      branch protection and do not appear in the `/protection` payload, so a
-      rule added there is invisible to the read above. 3. **Required signatures / linear history / restricted pushes.** Cheap to
-      rule out in the same call.
-      **ANSWERED 2026-08-26.** Measured:
-      `conversation.enabled: true`, `linear.enabled: true`, `strict: true`,
-      `enforce_admins.enabled: true`, `reviews: null`, `restricted: false`,
-      `signatures.enabled: false`. Cause 1 confirmed; no ruleset lookup needed.
-      Corroborating: `qodo-code-review`'s COMMENTED review on #230 has a
-      **zero-length body**, so its content is inline thread comments rather than
-      a summary — an unresolved thread is present to block on.
-- [ ] **Resolve #230's review threads** (`qodo-code-review`, and
-      `chatgpt-codex-connector` if it opened any). Needs GraphQL, which the local
-      hook blocks and this session cannot route around, so it is a user action:
-      the "Resolve conversation" control on each thread in the PR UI. Then
-      confirm `gh pr view 230 --json mergeStateStatus` reads `CLEAN`.
+An earlier draft of this file called those 26 commits "unpushed" and flagged it as a
+Definition-of-Done violation. That was wrong: they are pushed, with open PRs. They are
+**unmerged to `main`**, which is what a review stack normally looks like.
 
-## Pre-flight — the working tree has a dirty state with no home
+## Merge sequence — landing the open stack
 
-- [ ] **`skills-lock.json` carries 12 uncommitted insertions.** Measured: they do
-      _not_ belong to `chore/refresh-skills-lock` — that branch's copy of the file
-      is identical to `HEAD`'s, so this is separate work registering the newly
-      mined skills. Decide its home before any checkout.
-- [ ] **Six untracked `.claude/skills/` directories exist in no branch and no PR**
-      — `ci-e2e-shard-optimization`, `codecov-ci-integration-hhvc`,
-      `infrastructure-by-measurement`, `neon`, `neon-postgres`,
-      `windows-terminal-claude-dev-setup`. A `git clean` destroys them. Their
-      tracking status is decided by #213's `.gitignore` change, so they sequence
-      with step 5.
-- [ ] **`git worktree list` checked** — one worktree exists,
-      `.claude/worktrees/docs+add-skills` on `docs/add-skills`. Never deploy from
-      a worktree; `railway up` uploads the directory it runs in.
+Two PRs are open and both are green. They cannot merge together: #207 sits on #206's branch,
+so GitHub blocks it until #206 lands. `main` has also moved under both (#208, lefthook), so
+each is `BEHIND` and needs `main` merged in before it can go.
 
-## Merge order
+**Merge `main` in; never rebase.** Both PRs are open with review history on them, and a rebase
+of pushed commits is a force-push into a live review — gated by the global rules, and pointless
+here since the repo squash-merges anyway and linear branch history buys nothing.
 
-Ordered by hub-file contention, lowest first, so the mirror and skill gates meet
-one change at a time.
+### The hazard this stack has, stated before it bites
 
-- [ ] **1. #230 `chore/doppler-template` — NO LONGER FREE.** Its three
-      unresolved threads are substantive review findings, all verified against
-      the tree on 2026-08-26 rather than taken on the bots' word. It still goes
-      first (`behind=0`, and `strict: true` would stale it behind anything else),
-      but it needs a fix commit before it lands. - **1a. `docs/codebase/STACK.md` is now stale — CONFIRMED, one line.**
-      Line 70 reads ``No `.env.example` / `.env.template` in repo ([TODO] if
-    one should be added)`` and line 69's config-source inventory omits the
-      new file. `doppler-template.yaml` is not literally either of those names,
-      but it answers that TODO and belongs in that inventory. - **1b. AI routes do not fail closed on a dev machine — CONFIRMED, P2.**
-      `doppler-template.yaml:56` promises that without a key `/api/ai/*`
-      answers 501. `build_scripts/ai/provider-anthropic.js`'s
-      `hasOAuthProfile()` reads `~/.config/anthropic/credentials` and its own
-      header records that the SDK resolves
-      `ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile, so an
-      `ant auth login` profile satisfies the provider gate with
-      `ANTHROPIC_API_KEY` empty. The template leaves `REVIEW_API_TOKEN: ''`,
-      which does hold the first gate at 501 — but the moment a developer fills
-      it, that legacy value is a broad principal carrying `ai:generate`
-      (`CLAUDE.md`, Optional API access hardening), both gates pass, and the
-      dev server can make billed requests. Fix by provisioning a dev principal
-      through `REVIEW_API_PRINCIPALS` without `ai:generate`, or by pinning
-      `ANTHROPIC_CONFIG_DIR` to isolate profile discovery — not by softening
-      the comment. - **1c. `dev_personal` may not be a personal config — UNVERIFIED, P1.**
-      The reviewer's claim is that importing a template that lists
-      `dev_personal` by slug creates an ordinary branch config rather than a
-      user-owned personal one, so Development access cascades to it and the
-      isolation asserted at `doppler-template.yaml:33-37` does not hold. That
-      is a claim about **Doppler's import semantics**, which nothing in this
-      repo can settle; it needs checking against Doppler's own documentation
-      or a test import before the thread is resolved either way.
-- [ ] **2. #225 `a11y/mockup-body-axe-gate`.** Zero mirror contact. Merge
-      `origin/main` in, re-run CI, merge.
-- [ ] **3. #224 `a11y/focus-ring-contrast`.** Same. Merge `origin/main` in,
-      re-run CI, merge.
-- [ ] **4. `docs/add-skills` — open a PR first.** Lands _before_ the other
-      `AGENTS.md` branches on purpose: it changes the gate itself
-      (`tests/skill-consistency.test.js` plus `package.json`'s enumerated test
-      list) and touches all three mirrors, so landing it last would make the
-      stricter gate meet several branches' worth of unvalidated skill text in one
-      merge. `behind=11` — merge `origin/main` in and expect real work.
-- [ ] **5. #222 `fix/ai-disclosure-citation`.** Re-merge `origin/main` after
-      step 4; `skill-consistency` is what would catch a mismatch between
-      `AGENTS.md` and `.claude/skills/hhvc-ai-assist-backend/SKILL.md`. Check
-      whether the `AGENTS.md` section it edits is on the byte-identical list.
-- [ ] **6 and 7 are NOT independent — decide the contradiction before either
-      lands.** Measured 2026-08-26: #213's only `.gitignore` change is a rule
-      ignoring `.claude/skills/starship-prompt-rendering-diagnostics`, whose
-      stated reason is that tracking it would enrol it in `lint:docs`, since that
-      tool derives its file list from `git ls-files` and a machine-local WSL2
-      prompt note would become a CI gate on a repo it says nothing about.
-      `docs/skill-coordination-fixes` **adds that exact path as a tracked file**
-      (neither it nor `multi-session-git-coordination` is tracked on `main`
-      today). The two branches decide the opposite thing about one path.
-      Git merges them cleanly in either order, because they touch different
-      files — and the result is wrong either way: a `.gitignore` rule cannot
-      untrack a tracked file, so the skill ends up tracked, the ignore rule
-      inert and misleading, and the SKILL.md enrolled in `lint:docs`, which is
-      precisely what #213's comment says it was preventing.
-      **DECIDED 2026-08-26 — the starship files give way.**
-      `docs/skill-coordination-fixes` drops
-      `.claude/skills/starship-prompt-rendering-diagnostics/SKILL.md` and
-      `check-prompt.sh`, and #213 keeps its ignore rule intact. That branch then
-      lands only `.claude/skills/multi-session-git-coordination/SKILL.md`, which
-      is genuinely about working in this repo rather than about the author's
-      terminal. Remove them with a NEW commit on that branch, not a rebase or an
-      amend — the branch has no upstream, but a plain commit needs no
-      destructive-git approval and the removal is worth having in the history
-      with its reason attached.
-- [ ] **6. #213 `chore/track-claude-skills`.** Also carries
-      `.claude/settings.json` and three tracked skill files, so it sequences with
-      the pre-flight cleanup above — resolve the six untracked dirs in the same
-      pass.
-- [ ] **7. `docs/skill-coordination-fixes` — open a PR.** `behind=0`, ahead 1,
-      three skill files, no mirror contact. Cheap once the contradiction above is
-      resolved.
-- [ ] **8. `chore/refresh-skills-lock` — verify it still means anything first.**
-      `behind=10`, single file, no PR, and its `skills-lock.json` matches `HEAD`'s.
-      Likely superseded by the uncommitted change noted in pre-flight; if so,
-      delete the branch rather than spending a PR on it.
+**The repo squash-merges** — every commit on `main` has a single parent and a `(#NNN)` suffix,
+and `git merge-base --is-ancestor de33446 origin/main` reports NO. So when #206 lands, `main`
+gains **one** commit carrying its changes, while #207's branch still holds `c808fa7`, the
+original, as an ancestor. Git then sees the same edit arriving from two unrelated commits.
 
-## Deliberately deferred
+**The collision site is exactly one file:** `docs/karl-export-field-map.md` is the only path
+both PRs touch (`comm -12` over the two net diffs). #206 rewrites three register rows there
+(`U19`, `U24`, `O14`); #207 adds the chooser/field-map delta and shifts all 99 `docLine`
+citations in `js/karl/karl-blocks.js`. **The shift is +33 against `main`, not the +16 this line
+carried** — `+16` was the intermediate figure after `0078a7d`, and the P2 rewrite in `43affc7`
+moved the same citations a further +17. Measured, not counted by hand: 98 of the 99 are exactly
++33, and the outlier is `U1` at +234 because that one was also CORRECTED, from a Report
+coverage row onto its real Unresolved-register row. A careless conflict resolution that drops #207's
+line shift leaves `tests/karl-blocks.test.js` red, and one that drops #206's `U24` closure
+reopens a register entry against a page that no longer violates it.
 
-- **#223 `claude/content-pages-ui-management-hv6fcy` (draft) is NOT in this
-  train.** It rewrites `.github/workflows/ci.yml` and adds
-  `.github/actions/setup-bun/action.yml`, so it can rename required status
-  contexts again — and protection has to change in the same breath or every PR
-  goes permanently pending. A CI-graph change does not belong in the middle of a
-  merge train.
-  **Open risk to check before it leaves draft:** it edits `AGENTS.md` and
-  `CLAUDE.md` but **not** `.github/copilot-instructions.md`.
-  The byte-identical half of that risk is now **cleared by measurement**:
-  `IDENTICAL_SECTIONS` in `tests/mirror-consistency.test.js` is one heading long
-  — `Security Reviews` — and neither #223 nor #222 touches it (`git diff` over
-  `AGENTS.md` returns zero matching lines for both).
-  The shared-facts half is **not** cleared and is the live risk: #223 rewrites
-  `ci.yml`, and `tests/ci-workflow.test.js` asserts that the job-name list in
-  the workflow is exactly the list transcribed into all three mirrors — so a
-  renamed job that updates two mirrors and not the third goes red on merge,
-  and branch protection's required contexts have to move with it.
+### Step 1 — Land #206 (`content/article11-spotlight-button-cap` → `main`)
 
-## Closing out
+- [x] `git fetch origin && git checkout content/article11-spotlight-button-cap`
+- [x] `git merge origin/main` — expect clean; #208 touched lefthook config, which #206 does not
+- [x] `bun run validate && bun run test && bun run format:check && bun run lint:docs`
+- [x] Push, `gh pr checks 206 --watch`, confirm all six required contexts pass
+- [x] Merge #206. **Squash**, matching every other merge on `main`
+- [x] Delete the merged branch
 
-- [ ] **Verify the live Railway artifact once at the end** —
-      <https://web-production-9bb3b.up.railway.app>: status code, deployed commit
-      against the merged SHA re-read from `origin/main` (not local `HEAD`, which
-      is a different commit after a squash merge), console clean.
-- [ ] **Delete every merged branch**, locally and on `origin`.
-- [ ] **Decide this file's own fate** — merge it, or delete `chore/merge-train`
-      once the train is done.
+### Step 2 — Re-point and repair #207 (`docs/correct-stale-claims`)
+
+- [x] Confirm GitHub retargeted #207's base to `main` when #206's branch was deleted; if it
+      did not, set it with `gh pr edit 207 --base main`
+- [x] `git checkout docs/correct-stale-claims && git merge origin/main`
+- [x] **Resolve the `docs/karl-export-field-map.md` conflict by keeping both halves** — #206's
+      three register rows AND #207's chooser delta. They edit different rows; there is no real
+      disagreement, only a squash artifact. `pages/health-code-article-11.js` may also conflict
+      spuriously: take `main`'s side, which already has the shortened label
+- [x] **Verify the merge derived the right tree rather than a plausible one.** The check that
+      actually proves it: `bun run test` green, since `tests/karl-blocks.test.js` parses the
+      field map and re-checks every `docLine`, and `tests/doc-counts.test.js` reads the counts
+      back out. A merge that silently dropped either side goes red there
+- [ ] Push, `gh pr checks 207 --watch`, merge (squash), delete branch
+
+### Step 3 — Verify the deploy, not the pipeline
+
+`main` is connected to Railway, so each merge redeploys production.
+
+- [ ] After the last merge: `git fetch origin && git log --oneline -1 origin/main` — read the
+      merged SHA from the remote, not local `HEAD`, which is a different commit after a squash
+- [ ] Load <https://web-production-9bb3b.up.railway.app> headlessly; assert 200, a clean
+      console, and the deployed commit matching that SHA
+- [ ] Spot-check the two things this stack actually changed on screen: the Article 11 Spotlight
+      button reads "View Article 11", and a Karl guide panel shows its Field and Rules rows
+
+### Decision required before Step 2
+
+**#207 is PR 1 of the six-PR programme below, and it is 3 of 14 items done.** Merging it lands
+three real corrections and leaves eleven ticked-nowhere. Two ways to go, and this is a call for
+whoever picks the work up:
+
+- **Land it as-is (recommended).** The three corrections are each independently right, CI is
+  green, and the remaining eleven are additive rather than dependent. Holding a green PR open
+  to accumulate scope is what produced a three-deep stack in the first place, and every day it
+  waits is another day `main` moves under it.
+- **Finish PR 1 first.** Defensible if the eleven remaining items are meant to read as one
+  coherent documentation pass. Costs another `main`-merge cycle and keeps #207 conflict-exposed
+  for longer.
+
+If landing as-is: renumber the leftovers into a new **PR 1b** below rather than leaving them
+under a heading whose PR has merged, or the checklist starts lying about what shipped.
+
+## PR 1 — Correct stale claims in place
+
+- [x] `build_scripts/ai/prompts.js` — the missed propagation site. It still told the model
+      "where it conflicts with `karl`, the measurement wins"; `docs/karl-export-field-map.md`
+      reversed that on 2026-08-23 so the Help Center governs. Commit `0fc3802` claimed to
+      propagate the reversal to every site that states it and did not touch this one.
+      Fixed in `877cc55`, along with the three docs that described the prompt's old behaviour.
+- [x] `AGENTS.md` + `js/core/page-registry-data.js` — page `type` is a **closed enum**
+      (`z.enum(PAGE_TYPES)`, eight values), not "a free-form string, only `min(1)` checked".
+      The registry used the same false premise as its written rationale for the five-type
+      picker; the narrowing is right, the stated reason was not. Fixed in `d73890f`.
+- [x] `docs/karl-export-field-map.md` — the chooser/field-map delta, computed both ways:
+      chooser 14, field map 17, nothing in the chooser unaccounted for, and `Topic` / `Form` /
+      `Document Collection Search` present here but not offered there. Landed in `d73890f`;
+      **this supersedes PR 4a's narrower "Topic is the one absent type" framing.**
+      Side effect: all 99 `docLine` citations in `js/karl/karl-blocks.js` shifted +16.
+- [x] `docs/codebase/` — SQLite→Postgres drift (`storage.js` owns the driver seam; there is no
+      `server.ts` `getDb()`).
+- [x] `docs/codebase/` — "no UI framework" vs the live React 19 + MUI islands.
+- [x] `docs/codebase/` — lint gates: CI runs seven steps, not Prettier alone.
+- [x] `docs/codebase/` — counts: 59 unit test files, 26 e2e specs, 11 stylesheets, 7 CI jobs.
+- [x] `docs/codebase/CONCERNS.md` §1 — regenerate; its top-ranked risk is itself the stalest
+      thing in the file.
+- [ ] `README.md` — regenerate the file tree, add the missing scripts, fix the render pointer,
+      resolve the `dev`/`start` contradiction, name Railway. Leave the counts alone.
+- [ ] `review/manager_review_packet.md` — rewrite against the real 29-page set.
+- [ ] `review/demo-run-of-show.md`, `demo-readiness-notes.md` — counts; several need
+      re-measuring rather than renumbering.
+- [ ] `docs/source/hhvc-policy/README.md` — 35 files missing from the inventory; add the
+      RAG-corpus line.
+- [ ] `docs/agents/domain.md` — drop the `src/` line.
+- [ ] Seven stale "19 pages" code comments.
+
+## PR 2 — Archive dead records
+
+- [ ] `.prettierignore` gets `archive/` **first**, or `format:check` goes red.
+- [ ] Move the safe set (superpowers plans+prompts, chapter drafts, dated audits, draft copy).
+- [ ] Move the four needing referrer updates, each in the same commit as its referrer.
+- [ ] Lift the FY26-27 fee fact out of `docs/AGENT_COORDINATION.md` before archiving it.
+- [ ] Update `docs-file-set.js`, `knowledge-sources.js` comments, and the canon.
+
+## PR 3 — Porting brief and manifest
+
+- [ ] `docs/agents/porting-brief.md` — reading list plus the gap register.
+- [ ] `docs/agents/porting-manifest.json` — with `rebuild_status` per Tier 1 entry.
+
+## PR 4 — Reconcile against the Karl content-type chooser
+
+- [x] ~~Topic is not editor-creatable; say so beside the Agency constraint.~~
+      **Struck 2026-08-24 — this item was wrong and acting on it would undo
+      `43affc7`.** Topic IS offered: the live "Create a page" chooser was
+      measured at E1 listing all 17 types, and `docs/wagtail-content-mapping.md:32-35`
+      corroborates it for Topic specifically. What is true is narrower — Topic
+      has no Help Center guidance page, which is a documentation gap and not a
+      permission. The Agency constraint is a genuine permission and stands,
+      because the Help Center states it directly rather than it being inferred
+      from an absence.
+- [ ] Help Center vs admin labels — **re-derive under the reversed precedence.**
+- [ ] Re-decide `U3`/`U21` against the chooser's heuristics; recommend, do not retype.
+
+## PR 5 — `CONTEXT.md` and `docs/adr/`
+
+- [ ] `CONTEXT.md` glossary, leading with the four term collisions.
+- [ ] 12–20 ADRs plus a README naming what deliberately has none.
+
+## PR 6 — Correct the superseded corpus doc
+
+- [ ] Inline per-section corrections in
+      `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
+- [ ] Local re-ingest only. **Stop and ask before writing to the Railway store.**
