@@ -243,6 +243,21 @@
   --surface-panel: var(--sfds-color-white);
   --surface-sunken: var(--sfds-color-slate-l1);
   --surface-raised: var(--sfds-color-white);
+  /* Focus indicator, WCAG 2.1 AA SC 1.4.11 (Non-text Contrast, 3:1). Opaque
+     on purpose. The 25% wash this replaces rendered rgb(210,215,244) over
+     --surface-panel and measured 1.42:1 — a ring you cannot see is not an
+     indicator. The SFDS action blue measures 5.48:1 on --surface-panel and
+     5.07:1 on --surface-page.
+
+     Nine rules drew this ring in two different spellings before it became a
+     token: seven hardcoded `color-mix(in srgb, var(--sfds-color-action) 25%,
+     transparent)` in css/styles.css and two read --legacy-focus-ring. That is
+     one defect in two costumes, and only the token half had a dark override —
+     so the seven hardcoded rings rendered 1.26:1 in dark mode, worse than
+     light. tests/theme-contrast.test.js now measures the ratio AND fails on
+     any newly added translucent outline, because axe-core has no
+     focus-indicator rule and this shipped past a green build twice. */
+  --focus-ring: var(--sfds-color-action);
   /* A tinted fill INSIDE a panel — toolbar strips, KPI wells, the tab bar.
      Same value as --surface-page, deliberately: a soft area reads as the page
      showing through the panel. It exists as its own name so those rules do not
@@ -679,7 +694,6 @@
     /* Step 70 at 45% — the same colour links take, so a focused control
        reads as brand rather than as a fifth accent. Written as a triple
        because a custom property cannot be interpolated into an rgba(). */
-    --legacy-focus-ring: rgba(153, 172, 237, 0.45);
 
     /* Status families invert the same way: tinted light fills become dark
        washes, and each family's dark text becomes its light foreground —
@@ -742,6 +756,12 @@
     --brand-primary-hover: var(--brand-80); /* 10.80:1 on panel */
     --surface-page: var(--ext-dark-page);
     --surface-panel: var(--ext-dark-panel);
+    /* Dark mode gets its OWN ring rather than inheriting the light one: the
+       action blue measures 3.24:1 on --ext-dark-panel, which clears 3:1 but
+       only just, while this reads 8.02:1. The seven rules that used to
+       hardcode the light wash had no dark variant at all and rendered
+       1.26:1 here — the worst case in either scheme. */
+    --focus-ring: var(--brand-70);
     --surface-soft: var(--ext-dark-page);
     --text-primary: var(--ext-dark-ink-1);
     --text-secondary: var(--ext-dark-ink-3);
@@ -859,7 +879,6 @@
     --legacy-accent-light: #e9eef9;
     --legacy-blue-soft-bg: #f1f4ff;
     --legacy-footer-bg: #001d4e;
-    --legacy-focus-ring: rgba(42, 96, 175, 0.25);
 
     --legacy-success-bg: #ecf8ed;
     --legacy-success-border: #a6d8a8;
@@ -912,6 +931,10 @@
     --brand-primary-hover: var(--sfds-color-blue-dark);
     --surface-page: var(--sfds-color-grey-l1);
     --surface-panel: var(--sfds-color-white);
+    /* The mockup stays LIGHT inside dark mode, so it re-pins the light ring
+       with everything else. Without this line the shell would inherit the
+       dark ring and draw a pale blue outline on a white page. */
+    --focus-ring: var(--sfds-color-action);
     --surface-soft: var(--sfds-color-grey-l1);
     --text-primary: var(--sfds-color-black);
     --text-secondary: var(--sfds-color-slate-l3);
