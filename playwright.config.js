@@ -64,7 +64,19 @@ module.exports = defineConfig({
   // contention, not assignment — which is also why balancing shards by
   // duration was measured and rejected.
   workers: process.env.CI ? 4 : undefined,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // `junit` is added only on CI, and only so Codecov's Test Analytics has a
+  // report to ingest — it tracks failure history and flags tests that are
+  // flaky on `main`, which is worth having HERE and nowhere else in this
+  // repo: the unit suite is 2200+ deterministic tests that do not flake,
+  // while this one drives a real browser and is the job that has actually
+  // cost time (three rounds of widening timeouts chasing a `did not start in
+  // time` that turned out to be `server.ts` failing at boot).
+  //
+  // Locally it stays off. A JUnit file nothing reads is just an untracked
+  // artifact in the working tree, and `list` + `html` are what a human wants.
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }], ['junit', { outputFile: 'test-results/junit.xml' }]]
+    : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: origin,
     trace: 'on-first-retry',
