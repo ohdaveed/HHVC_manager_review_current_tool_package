@@ -325,43 +325,83 @@ skills-lock.json` with a named message, or commit it here on
 Ordered by hub-file contention, lowest first, so the mirror and skill gates meet
 one change at a time.
 
-- [ ] **1. #230 `chore/doppler-template` — NO LONGER FREE. All three findings
-      FIXED in `81a0331`; awaiting thread resolution and a green CI run.** Its three
-      unresolved threads are substantive review findings, all verified against
-      the tree on 2026-08-26 rather than taken on the bots' word. It still goes
-      first (`behind=0`, and `strict: true` would stale it behind anything else),
-      but it needs a fix commit before it lands. - **1a. `docs/codebase/STACK.md` is now stale — CONFIRMED, one line.**
-      Line 70 reads ``No `.env.example` / `.env.template` in repo ([TODO] if
+- [ ] **1. #230 `chore/doppler-template` — FIVE findings now, not three. The
+      first three were fixed in `81a0331`; TWO MORE arrived after it and are
+      fixed in `ab449c7`.** Awaiting thread resolution and a green CI run on
+      `ab449c7`.
+
+      **The lesson worth keeping: a fix commit invites a re-review.** The outage
+                  note recorded "#230's three threads are already resolved, so nothing else
+                  gates it" — true when written, and false 20 minutes later, because the
+                  bots re-reviewed `81a0331` at 16:41Z and 16:54Z and opened two new
+                  threads. Never treat "threads resolved" as a durable property of a PR that
+                  has since been pushed to.
+
+                  **1d — `HOST`/`PORT` omitted from prd. CONFIRMED, P1.** The template said
+                  "DATABASE_URL, HOST and PORT are NOT listed. Railway owns all three."
+                  True of `DATABASE_URL`, which is a reference to the Postgres service;
+                  false of the other two. `server.ts:80-81` defaults to `127.0.0.1:8080`,
+                  and this repo's own deploy canon records that omission shipping a build
+                  that succeeded and then served 502. Both now carry real values — the one
+                  deliberate exception to the file's everything-is-empty rule, which the
+                  header already permits for a non-sensitive setting.
+
+                  **1e — an empty value is not an absent one. CONFIRMED, P2.** Doppler
+                  injects every secret it holds, so `REVIEW_API_PRINCIPALS: ''` arrives as a
+                  PRESENT EMPTY STRING. `parseApiAuthorizationConfiguration` branches on
+                  `raw === undefined` (`server.ts:202`), so it parses the empty string,
+                  fails, and answers **503** on every `/api/*` request rather than the
+                  documented healthy **501**. It fails closed, so this is a wrong documented
+                  state rather than a hole.
+
+                  **1f — the same class, found while verifying 1e and not reported by any
+                  bot.** `DATA_DB_PATH: ''` is read with `??` (`server.ts:145`), which
+                  catches null/undefined and NOT `''`, so an empty value becomes a literal
+                  database path instead of falling back to `.data/review-state.local.db`.
+                  Both keys are now omitted from the configs and documented in the comment
+                  instead. `REVIEW_SESSION_PASSWORD` deliberately KEEPS its empty
+                  placeholder, because `?? ""` then `Boolean(...)` (`server.ts:453,477`)
+                  makes empty and unset genuinely the same state — the distinction is
+                  per-key, not a blanket rule.
+
+                  _Original note on the first three, retained:_ Its three
+                  unresolved threads are substantive review findings, all verified against
+                  the tree on 2026-08-26 rather than taken on the bots' word. It still goes
+                  first (`behind=0`, and `strict: true` would stale it behind anything else),
+                  but it needs a fix commit before it lands. - **1a. `docs/codebase/STACK.md` is now stale — CONFIRMED, one line.**
+                  Line 70 reads ``No `.env.example` / `.env.template` in repo ([TODO] if
+
 one should be added)`` and line 69's config-source inventory omits the
-      new file. `doppler-template.yaml` is not literally either of those names,
-      but it answers that TODO and belongs in that inventory. - **1b. AI routes do not fail closed on a dev machine — CONFIRMED, P2.**
-      `doppler-template.yaml:56` promises that without a key `/api/ai/*`
-      answers 501. `build_scripts/ai/provider-anthropic.js`'s
-      `hasOAuthProfile()` reads `~/.config/anthropic/credentials` and its own
-      header records that the SDK resolves
-      `ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile, so an
-      `ant auth login` profile satisfies the provider gate with
-      `ANTHROPIC_API_KEY` empty. The template leaves `REVIEW_API_TOKEN: ''`,
-      which does hold the first gate at 501 — but the moment a developer fills
-      it, that legacy value is a broad principal carrying `ai:generate`
-      (`CLAUDE.md`, Optional API access hardening), both gates pass, and the
-      dev server can make billed requests. Fix by provisioning a dev principal
-      through `REVIEW_API_PRINCIPALS` without `ai:generate`, or by pinning
-      `ANTHROPIC_CONFIG_DIR` to isolate profile discovery — not by softening
-      the comment. - **1c. `dev_personal` may not be a personal config — UNVERIFIED, P1.**
-      The reviewer's claim is that importing a template that lists
-      `dev_personal` by slug creates an ordinary branch config rather than a
-      user-owned personal one, so Development access cascades to it and the
-      isolation asserted at `doppler-template.yaml:33-37` does not hold. That
-      is a claim about **Doppler's import semantics**, which nothing in this
-      repo can settle; it needs checking against Doppler's own documentation
-      or a test import before the thread is resolved either way.
-      **ANSWERED 2026-08-26 — the reviewer was right.** Doppler's own docs
-      (<https://docs.doppler.com/docs/branch-configs>) state that Personal
-      Configs are a FEATURE a project Admin enables per environment, after which
-      Doppler creates one `dev_personal` branch per user that only that user can
-      access. Listing the slug creates an ordinary shared branch config instead.
-      The slug is removed and the comment now records why.
+new file. `doppler-template.yaml` is not literally either of those names,
+but it answers that TODO and belongs in that inventory. - **1b. AI routes do not fail closed on a dev machine — CONFIRMED, P2.**
+`doppler-template.yaml:56` promises that without a key `/api/ai/*`
+answers 501. `build_scripts/ai/provider-anthropic.js`'s
+`hasOAuthProfile()` reads `~/.config/anthropic/credentials` and its own
+header records that the SDK resolves
+`ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile, so an
+`ant auth login` profile satisfies the provider gate with
+`ANTHROPIC_API_KEY` empty. The template leaves `REVIEW_API_TOKEN: ''`,
+which does hold the first gate at 501 — but the moment a developer fills
+it, that legacy value is a broad principal carrying `ai:generate`
+(`CLAUDE.md`, Optional API access hardening), both gates pass, and the
+dev server can make billed requests. Fix by provisioning a dev principal
+through `REVIEW_API_PRINCIPALS` without `ai:generate`, or by pinning
+`ANTHROPIC_CONFIG_DIR` to isolate profile discovery — not by softening
+the comment. - **1c. `dev_personal` may not be a personal config — UNVERIFIED, P1.**
+The reviewer's claim is that importing a template that lists
+`dev_personal` by slug creates an ordinary branch config rather than a
+user-owned personal one, so Development access cascades to it and the
+isolation asserted at `doppler-template.yaml:33-37` does not hold. That
+is a claim about **Doppler's import semantics**, which nothing in this
+repo can settle; it needs checking against Doppler's own documentation
+or a test import before the thread is resolved either way.
+**ANSWERED 2026-08-26 — the reviewer was right.** Doppler's own docs
+(<https://docs.doppler.com/docs/branch-configs>) state that Personal
+Configs are a FEATURE a project Admin enables per environment, after which
+Doppler creates one `dev_personal` branch per user that only that user can
+access. Listing the slug creates an ordinary shared branch config instead.
+The slug is removed and the comment now records why.
+
 - [ ] **2. #225 `a11y/mockup-body-axe-gate`.** Zero mirror contact. Merge
       `origin/main` in, re-run CI, merge.
 - [ ] **3. #224 `a11y/focus-ring-contrast`.** Same. Merge `origin/main` in,
