@@ -64,6 +64,30 @@ anything deliberately skipped go in this file, not only in chat.
 - **Definition of Done here is push + PR + green CI**, not a local merge. Three
   branches currently have no PR at all.
 
+## ⚠ LIVE STATE — Railway autodeploy is OFF
+
+**Turned off by the user on 2026-08-26, before the first merge.** Reported in
+chat rather than read back from the API — the Railway MCP surface here exposes
+`get_service_config` (source, builder, commands, variable count) but no
+autodeploy flag, so this line is a record of what was done, not a verification
+of it. Confirm in the dashboard before trusting it.
+
+**THIS MUST BE UNDONE AT THE END OF THE TRAIN.** A repo whose `main` silently
+stops deploying looks identical to one that is merely quiet, and the failure is
+discovered by a reviewer opening a stale URL. The resume step is not just the
+toggle:
+
+1. Service `web` → Settings → **Enable** automatic deployments.
+2. **Deploy Latest Commit** from the command palette (⌘K) — enabling alone waits
+   for the next push, and per Railway's troubleshooting an empty commit will not
+   trigger one where watch paths are set.
+3. Verify the live artifact: <https://web-production-9bb3b.up.railway.app> —
+   status code, deployed commit against `origin/main` re-fetched (not local
+   `HEAD`, which differs after a squash merge), console clean.
+
+Harmless while it stays off during the GitHub Actions outage below: nothing can
+merge, so nothing would deploy regardless.
+
 ## BLOCKED 2026-08-26 ~16:40Z — GitHub Actions major outage
 
 **The whole train is stalled on GitHub, not on this repo.** `81a0331` was pushed
@@ -286,6 +310,8 @@ one should be added)`` and line 69's config-source inventory omits the
       <https://web-production-9bb3b.up.railway.app>: status code, deployed commit
       against the merged SHA re-read from `origin/main` (not local `HEAD`, which
       is a different commit after a squash merge), console clean.
+- [ ] **RE-ENABLE Railway autodeploy** (see the LIVE STATE section at the top),
+      then **Deploy Latest Commit**, then verify. Turned off 2026-08-26.
 - [ ] **Delete every merged branch**, locally and on `origin`.
 - [ ] **Decide this file's own fate** — merge it, or delete `chore/merge-train`
       once the train is done.
