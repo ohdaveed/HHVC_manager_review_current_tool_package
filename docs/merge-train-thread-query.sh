@@ -43,6 +43,15 @@ set -uo pipefail
 REPO_OWNER="ohdaveed"
 REPO_NAME="HHVC_manager_review_current_tool_package"
 
+if ! command -v gh >/dev/null 2>&1; then
+  echo "error: the GitHub CLI (gh) is not on PATH." >&2
+  exit 1
+fi
+if ! command -v jq >/dev/null 2>&1; then
+  echo "error: jq is not on PATH." >&2
+  exit 1
+fi
+
 # With no arguments, query every open non-draft PR. Derived rather than
 # hardcoded on purpose: an earlier version of this script listed a fixed set of
 # PR numbers, which was correct for about an hour and then described a set that
@@ -51,7 +60,15 @@ REPO_NAME="HHVC_manager_review_current_tool_package"
 if [ "$#" -gt 0 ]; then
   PRS=("$@")
 else
-  mapfile -t PRS < <(gh pr list --state open --draft=false --json number --jq '.[].number')
+  if ! pr_list=$(gh pr list --state open --draft=false --json number --jq '.[].number'); then
+    echo "error: could not discover open pull requests." >&2
+    exit 1
+  fi
+  if [ -n "$pr_list" ]; then
+    mapfile -t PRS <<<"$pr_list"
+  else
+    PRS=()
+  fi
 fi
 
 if [ "${#PRS[@]}" -eq 0 ]; then
@@ -59,10 +76,6 @@ if [ "${#PRS[@]}" -eq 0 ]; then
   exit 0
 fi
 
-if ! command -v gh >/dev/null 2>&1; then
-  echo "error: the GitHub CLI (gh) is not on PATH." >&2
-  exit 1
-fi
 
 # `first: 100` rather than a page loop: no PR here carries anything close to 100
 # threads, and a silent truncation is worse than an obvious one — the count line
@@ -117,7 +130,13 @@ for n in "${PRS[@]}"; do
     continue
   fi
 
-  threads_total=$(printf '%s' "$raw" |
+  if ! parsed=$(printf '%s' "$raw" | jq -er 'if ((.errors // []) | length) > 0 or .data.repository == null or .data.repository.pullRequest == null then error("invalid GraphQL response") else [(.data.repository.pullRequest.reviewThreads.totalCount), (.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | [ .id, (.comments.nodes[0].author.login // "unknown"), (.path // "(PR-level)"), (if .isOutdated then "outdated" else "current" end), ((.comments.nodes[0].body // "") | gsub("[\n\r]+"; " ") | .[0:90]) ] | @tsv)] | .[] end'); then
+      errors=$((errors + 1)); echo "  ERROR parsing response for PR #${n} — this PR was NOT checked." >&2; continue
+    fi
+    threads_total=$(printf '%s' "$parsed" | head -n1)
+    unresolved=$(printf '%s\n' "$parsed" | tail -n +2)
+
+    #
     jq -r '.data.repository.pullRequest.reviewThreads.totalCount // 0')
 
   # An unresolved thread blocks the merge whether or not it is OUTDATED — a
