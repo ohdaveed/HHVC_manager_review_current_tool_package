@@ -9,3 +9,68 @@
 # already too late.
 [test]
 preload = ["./tests/helpers/browser-env.js"]
+
+# Which files are COVERAGE SUBJECTS. This list exists because Bun's coverage
+# only reports files a test actually loaded — an unimported module is absent
+# from lcov.info entirely rather than recorded at zero — so without it the
+# ratio silently measures whichever subset the suite happened to import, and
+# adding a module nobody imports RAISES the reported percentage.
+#
+# Every pattern below names something that cannot be instrumented without
+# running it, which is not the same as untested:
+#
+#   - `js/main.js` is the root of the module graph. Importing it pulls in
+#     every stylesheet and every self-mounting subsystem.
+#   - The `js/` entries are the IIFE subsystems and bootstraps that do real
+#     work at import time — mounting DOM, registering listeners, calling
+#     renderPage. `js/main.js`'s import order is what sequences them; loading
+#     one in isolation to instrument it exercises a state the app never has.
+#   - `build_scripts/audit/**` are one-off research scripts that fetch over
+#     the network.
+#   - The remaining `build_scripts/` entries are CLI entry points that run
+#     their work on import rather than exporting it.
+#
+# What is deliberately NOT excluded: modules that are simply untested but
+# importable — `build_scripts/docs-file-set.js`, `build_scripts/ai/index.js`,
+# `build_scripts/ai/compliance-audit.js`. Those belong in the denominator,
+# and the fix for them is a test that imports them, not an exemption.
+#
+# Note that several files here ARE tested, just not by execution:
+# `tests/react-theme.test.js` reads `js/react/theme.js` with readFileSync and
+# asserts on its text, as `sfds-tokens`, `theme-contrast`, `font-loading` and
+# `module-paths` do for their own subjects. A coverage tool cannot see that,
+# which is the other half of why a percentage here is a report and not a gate.
+coveragePathIgnorePatterns = [
+  "js/main.js",
+  "js/core/app.js",
+  "js/core/third-party-globals.js",
+  "js/core/page-registry-ui.js",
+  "js/review/ux-improvements.js",
+  "js/review/ux-improvements-workspace.js",
+  "js/review/review-queue.js",
+  "js/review/review-queue-render.js",
+  "js/review/review-queue-rows.js",
+  "js/review/review-queue-undo.js",
+  "js/review/dashboard-guidance.js",
+  "js/review/keyboard-shortcuts.js",
+  "js/review/review-ops.js",
+  "js/ai/ai-assist.js",
+  "js/ai/ai-assist-render.js",
+  "js/ai/ai-rewrite.js",
+  "js/ai/ai-rewrite-render.js",
+  "js/karl/karl-transcript-panel.js",
+  "js/react/mount.js",
+  "js/react/checks-panel.jsx",
+  "build_scripts/audit/**",
+  "build_scripts/validate.js",
+  "build_scripts/lint-docs.js",
+  "build_scripts/check-links.js",
+  "build_scripts/ingest-knowledge.js",
+  "build_scripts/export-karl-transcript.js",
+  "build_scripts/extract-pages.js",
+  "build_scripts/sync-tracking-sheet.js",
+  "build_scripts/push-tracking-sheet.js",
+  "build_scripts/copy-workshop-form.js",
+  "build_scripts/install-git-hooks.js",
+  "build_scripts/make-demo-review-state.js",
+]

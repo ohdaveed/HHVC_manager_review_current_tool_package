@@ -95,7 +95,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 59 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 60 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `page-render-hooks` (the
 `onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
 which replaced js/review/ux-improvements.js's monkey-patch of
@@ -405,7 +405,15 @@ job that does not. `changes` is the one that does not — it runs only
   were never committed (the "form shell that never hydrates" regression). It
   then **uploads `dist/` as an artifact**.
 - **build_singlefile** — `build:singlefile`, in parallel with the above.
-- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+- **unit** — downloads that `dist/` artifact, then runs `test:coverage`, which
+  is the same enumerated suite as `test` with an lcov profile added, and
+  uploads that profile to Codecov. **The coverage half is a report, never a
+  gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
+  own `codecov/project` and `codecov/patch` statuses informational, which is
+  what keeps them non-gating. Branch protection CAN require those contexts —
+  GitHub requires status contexts, not only job names — but they are not jobs
+  in `ci.yml`, so `tests/ci-workflow.test.js` cannot enumerate them and the
+  rule that every job be a required context does not reach them. **The download
   is what makes the ordering mean anything.** `needs:` only sequences jobs; a
   separate runner gets a fresh checkout, and `dist/` is gitignored, so without
   the artifact the job would test against a tree that has never been built. One
