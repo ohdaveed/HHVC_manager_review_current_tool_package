@@ -1,0 +1,175 @@
+# Doppler Project Template — the shape of this repo's secrets, not their values.
+#
+# What this file is FOR: `.env.example` can only describe one flat set of keys,
+# which is wrong here because the four environments need genuinely different
+# sets — dev needs a local SQLite path and no AI keys at all, prd needs the AI
+# keys and no SQLite path. This records that per-environment, so "which
+# variables does staging actually need" has an answer in the repo rather than
+# only in the Doppler dashboard.
+#
+# It also makes the project reproducible: import this at
+# https://dashboard.doppler.com/workplace/template/import?template=<url-encoded raw URL>
+# and Doppler creates the projects, environments and empty secrets in one step.
+#
+# WHAT MUST NEVER GO IN HERE: secret values. Doppler's guidance is "Don't
+# hard-code secrets in your template file, even if in a private repository" —
+# note SECRETS rather than values. Doppler's own sample template populates
+# plain configuration (`ENV: development`), so a non-sensitive setting may
+# legitimately carry its value.
+#
+# Everything below is empty regardless, because everything below except
+# GEMINI_MODEL is a genuine secret. GEMINI_MODEL is only a model name and could
+# carry its value; it is left empty so this file has one rule rather than two.
+# This repository is PUBLIC, which makes the distinction worth stating rather
+# than assuming.
+projects:
+  - name: hhvc-manager-review
+    description: HHVC manager-review mockup tool — Railway web service, optional sync + AI APIs, Postgres
+    environments:
+      - name: Development
+        slug: dev
+        configs:
+          - slug: dev
+          # NO `dev_personal` HERE, deliberately — and the omission is the whole
+          # point rather than an oversight. A personal config is not a config you
+          # list: per
+          # https://docs.doppler.com/docs/branch-configs#personal-configs it is a
+          # FEATURE a project Admin enables per environment, after which Doppler
+          # creates one `dev_personal` branch per user that only that user can
+          # access. Listing the slug here would instead create an ordinary shared
+          # branch config wearing that name, which every Development collaborator
+          # inherits access to — the exact opposite of the isolation the name
+          # promises, and worse than having no personal config at all, because it
+          # looks like one. Enable the feature in the dashboard instead.
+      - name: Staging
+        slug: stg
+        configs:
+          - slug: stg
+      - name: Production
+        slug: prd
+        configs:
+          - slug: prd
+      # Deliberately its own environment rather than a corner of prd. A service
+      # token scoped here can read CI credentials and NOTHING else, so a token
+      # leaked through an Actions log cannot reach the AI keys or the session
+      # password.
+      - name: CI-CD
+        slug: ci-cd
+        configs:
+          - slug: ci-cd
+    secrets:
+      # Local development. The AI keys are absent, but absence is NOT what keeps
+      # a dev server from spending API credit, and an earlier version of this
+      # comment claimed it was. `/api/ai/*` has two gates, and omitting
+      # `ANTHROPIC_API_KEY` clears neither of them on a developer's own machine:
+      #
+      #   - The PROVIDER gate does not read the environment alone.
+      #     `build_scripts/ai/provider-anthropic.js`'s `hasOAuthProfile()` scans
+      #     `~/.config/anthropic/credentials`, because the SDK resolves
+      #     `ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile.
+      #     Anyone who has run `ant auth login` is already configured, key or no
+      #     key.
+      #   - The AUTHORIZATION gate is what actually holds, and only while it is
+      #     left empty. `REVIEW_API_TOKEN` is the LEGACY scalar, and per the API
+      #     access-hardening section in AGENTS.md a value there provisions one
+      #     broad principal carrying every role — `ai:generate` included. Filling
+      #     it in to try out review sync therefore silently unlocks billed
+      #     generation too.
+      #
+      # So dev uses `REVIEW_API_PRINCIPALS` rather than the legacy scalar. Fill
+      # it with a single least-privilege principal and the AI routes stay 403
+      # however the machine is authenticated:
+      #
+      #   [{"principal":"dev","token":"<a local secret>",
+      #     "roles":["review:read","review:write"]}]
+      #
+      # ── AN EMPTY VALUE IS NOT THE SAME AS AN ABSENT ONE. ──────────────────
+      # This is the rule that governs which keys appear below, and it is easy to
+      # get backwards. Doppler injects every secret it holds, so a key listed
+      # here with `''` arrives at the process as a PRESENT EMPTY STRING — which
+      # `server.ts` does not treat as "unset" for two of these keys:
+      #
+      #   - REVIEW_API_PRINCIPALS: `parseApiAuthorizationConfiguration` branches
+      #     on `raw === undefined` (server.ts:202). An empty string is not
+      #     undefined, so it falls through to the parser, fails, and yields
+      #     `state: "invalid"` — every `/api/*` request answers 503, not the
+      #     documented healthy 501 of an unconfigured deploy. It still fails
+      #     CLOSED, so this is a wrong documented state rather than a hole, but
+      #     it sends the next person debugging a 503 they were told to expect
+      #     never to see.
+      #   - DATA_DB_PATH: read with `??` (server.ts:145), which catches null and
+      #     undefined and NOT `''`, so an empty value is used as a literal
+      #     database path rather than falling back to the intended
+      #     `.data/review-state.local.db`.
+      #
+      # Both are therefore LISTED IN THIS COMMENT AND OMITTED FROM THE CONFIG
+      # below. Add them in Doppler once you have a real value; leaving them
+      # absent is the working state.
+      #
+      # REVIEW_SESSION_PASSWORD is safe to carry an empty placeholder and stays
+      # below: it is read with `?? ""` and then gated on `Boolean(...)`
+      # (server.ts:453,477), so empty and unset are genuinely the same state —
+      # sign-in unavailable, bearer tokens only. Same for the legacy
+      # REVIEW_API_TOKEN, which is not listed here for the separate reason given
+      # above.
+      #
+      # DATABASE_URL is absent for an unrelated reason —
+      # `build_scripts/storage.js` falls back to SQLite at DATA_DB_PATH when it
+      # is unset, and that fallback is the intended local path.
+      #
+      # HOST and PORT are absent because `server.ts` already defaults to
+      # 127.0.0.1:8080, which is correct on a laptop and wrong in a container.
+      # Note they must be absent rather than empty for the same reason as above:
+      # `HOST: ''` would bind to the empty string, and `PORT: ''` parses to NaN.
+      dev:
+        REVIEW_SESSION_PASSWORD: ''
+      # Staging has no Railway environment to deploy to yet. Left empty
+      # deliberately: an environment holding values nobody deploys reads as
+      # authoritative while being stale, which is worse than an obviously empty
+      # one.
+      stg: {}
+      # Production. REVIEW_API_PRINCIPALS is a JSON array of
+      # {principal, token, roles} objects rather than a scalar token — see the
+      # API access-hardening section in AGENTS.md. Its array shape is also what
+      # makes zero-downtime rotation possible: add the new principal, verify,
+      # then remove the old.
+      #
+      # DATABASE_URL is NOT listed, and that one really is Railway-owned: it is
+      # a REFERENCE to the Postgres service, so syncing a value from here would
+      # overwrite the reference with a literal and lose the private-network
+      # hostname.
+      #
+      # HOST and PORT are a different case, and an earlier version of this
+      # comment got it wrong by lumping all three together as "Railway owns all
+      # three." Railway does not set either one. `server.ts` defaults to
+      # `127.0.0.1:8080` (server.ts:80-81), which is correct on a laptop and
+      # unreachable inside a container — and the deployment canon records that
+      # this exact omission already shipped a build that succeeded and then
+      # served 502, with the only evidence one log line reading
+      # `running at http://127.0.0.1:8080`. So they are deployment CONFIGURATION
+      # this template must reproduce, not secrets and not Railway's to provide.
+      #
+      # They carry real values rather than empty placeholders, which is the one
+      # deliberate exception to this file's everything-is-empty rule — the
+      # header already allows it ("a non-sensitive setting may legitimately
+      # carry its value"), and here it is required rather than merely allowed:
+      # `HOST` is read with `??`, so `''` would bind to the empty string rather
+      # than defaulting, and `PORT: ''` parses to NaN. An empty placeholder
+      # would be strictly worse than the omission it replaces.
+      #
+      # PORT must match the Railway domain's target port. 8080 is the current
+      # one; change both together if it ever moves.
+      #
+      # REVIEW_API_PRINCIPALS is omitted here for the same reason it is omitted
+      # from dev — see the empty-value rule in the dev comment above. A
+      # present-but-empty value makes `/api/*` answer 503 rather than the
+      # documented 501, so add it in Doppler once the real JSON array exists.
+      prd:
+        ANTHROPIC_API_KEY: ''
+        GEMINI_API_KEY: ''
+        GEMINI_MODEL: ''
+        REVIEW_SESSION_PASSWORD: ''
+        HOST: '0.0.0.0'
+        PORT: '8080'
+      ci-cd:
+        CODECOV_TOKEN: ''
