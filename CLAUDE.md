@@ -97,7 +97,7 @@ owns the optional sync API and now serves `dist/` rather than the repo root
 (override with `STATIC_ROOT`).
 
 **There IS a real test suite** (older docs sometimes claim otherwise — they're
-wrong). `bun run test` runs 59 Bun unit-test files under `tests/`: `utils`,
+wrong). `bun run test` runs 60 Bun unit-test files under `tests/`: `utils`,
 `data-validation`, `page-render`, `page-render-hooks`, `csv`, `review-state-schema`, `reading-level`,
 `plain-language`, `page-import-checks`, `mockup-image-export`,
 `measure-window-graph`,
@@ -312,7 +312,25 @@ deliberately: an event name is a string, so a typo unsubscribes silently and
 nothing fails, and silent under-coverage is the failure this repo has now hit
 four separate times. Asserts registration order, that a throwing hook does not
 block its siblings, and that unsubscribe stops only the hook it was returned
-for).
+for), and
+`module-loadability` (the export contract of the four modules nothing else
+imports — `build_scripts/ai/index.js`, `build_scripts/ai/compliance-audit.js`,
+`build_scripts/docs-file-set.js` and `js/react/theme.js`. It looks like
+ceremony and is not: **Bun's coverage reports only files a test actually
+LOADED**, so an unimported module is absent from `coverage/lcov.info`
+entirely rather than recorded at zero, and adding a module nobody imports
+RAISES the reported percentage. These four are what remained after
+`bunfig.toml`'s `coveragePathIgnorePatterns` declared the files that cannot be
+instrumented without running them. The honest way to put them in the
+denominator is a real import, never a synthesized zero-hit record: a
+fabricated row has to guess which lines are executable, and would report
+`js/react/theme.js` as untested when `tests/react-theme.test.js` covers it by
+reading its source as TEXT — which is also why coverage here is a report
+rather than a gate, since a tool that measures execution cannot see this
+repo's text-level assertions at all. The assertions are export-surface
+contracts rather than `toBeDefined()` filler, because `build_scripts/ai/` is
+consumed by `server.ts` across the CJS boundary, where a dropped export
+surfaces as `undefined is not a function` at request time).
 **That list is spelled out explicitly in `package.json`'s `test` script rather
 than globbed**, so a newly added `tests/*.test.js` runs only once it is named
 there; until then it passes locally when invoked by hand and covers nothing in
@@ -411,7 +429,15 @@ job that does not. `changes` is the one that does not — it runs only
   were never committed (the "form shell that never hydrates" regression). It
   then **uploads `dist/` as an artifact**.
 - **build_singlefile** — `build:singlefile`, in parallel with the above.
-- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+- **unit** — downloads that `dist/` artifact, then runs `test:coverage`, which
+  is the same enumerated suite as `test` with an lcov profile added, and
+  uploads that profile to Codecov. **The coverage half is a report, never a
+  gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
+  own `codecov/project` and `codecov/patch` statuses informational, which is
+  what keeps them non-gating. Branch protection CAN require those contexts —
+  GitHub requires status contexts, not only job names — but they are not jobs
+  in `ci.yml`, so `tests/ci-workflow.test.js` cannot enumerate them and the
+  rule that every job be a required context does not reach them. **The download
   is what makes the ordering mean anything.** `needs:` only sequences jobs; a
   separate runner gets a fresh checkout, and `dist/` is gitignored, so without
   the artifact the job would test against a tree that has never been built. One
@@ -420,6 +446,7 @@ job that does not. `changes` is the one that does not — it runs only
   `dist/index.html` is absent — so it would pass by skipping and cover nothing,
   which is the exact gap the old in-job `build:railway` → `test` order existed
   to close.
+
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
 
