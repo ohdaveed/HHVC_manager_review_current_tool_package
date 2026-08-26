@@ -229,17 +229,31 @@ jobs:
       # away from silently failing, and a silent failure is exactly what this
       # plugin's whole gate was rewritten to avoid.
       #
-      # Safe to expose: this workflow triggers on `pull_request`, NOT
-      # `pull_request_target`, so GitHub withholds secrets from fork PRs
-      # entirely — a fork build simply falls back to the tokenless path.
-      # Scoped to the step rather than the job so nothing else in this job
-      # can read it.
+      # PUSH BUILDS ONLY, and fork-secret withholding is NOT what makes this
+      # safe. GitHub withholds secrets from FORK pull requests, but a pull
+      # request from a branch in this repository receives them normally — and
+      # `build:railway` runs `validate` (which loads every `pages/*.js`),
+      # `vite build` (which executes `vite.config.mjs`, every plugin and every
+      # npm dependency) and `copy-workshop-form.js`. All of that is mutable by
+      # the pull request under test, so a malicious branch or a compromised
+      # dependency could read the token and poison this project's Codecov
+      # data.
+      #
+      # So the token is passed only when `github.event_name == 'push'`, which
+      # for this workflow means a merge to `main` and code that has already
+      # been reviewed. Pull-request builds get an empty value and fall back to
+      # the tokenless path, which is exactly what they were doing before the
+      # token was wired at all — the organization has token authentication for
+      # public repositories set to Not required, so those uploads qualify.
+      #
+      # Scoped to the step rather than the job, so nothing else in `build_railway`
+      # can read it even on a push.
       #
       # `build_singlefile` deliberately gets no token: the plugin does not run
       # in `singlefile` mode at all.
       - name: Vite build + deploy bundle assembly (deploy-integrity check)
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODECOV_TOKEN: ${{ github.event_name == 'push' && secrets.CODECOV_TOKEN || '' }}
         run: bun run build:railway
 
       - name: Upload dist artifact for downstream unit tests
