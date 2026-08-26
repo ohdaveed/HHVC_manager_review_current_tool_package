@@ -98,11 +98,31 @@ one change at a time.
       step 4; `skill-consistency` is what would catch a mismatch between
       `AGENTS.md` and `.claude/skills/hhvc-ai-assist-backend/SKILL.md`. Check
       whether the `AGENTS.md` section it edits is on the byte-identical list.
-- [ ] **6. #213 `chore/track-claude-skills`.** Its `.gitignore` change decides
-      tracking semantics for `.claude/skills/`, so it sequences with the
-      pre-flight cleanup above — resolve the six untracked dirs in the same pass.
+- [ ] **6 and 7 are NOT independent — decide the contradiction before either
+      lands.** Measured 2026-08-26: #213's only `.gitignore` change is a rule
+      ignoring `.claude/skills/starship-prompt-rendering-diagnostics`, whose
+      stated reason is that tracking it would enrol it in `lint:docs`, since that
+      tool derives its file list from `git ls-files` and a machine-local WSL2
+      prompt note would become a CI gate on a repo it says nothing about.
+      `docs/skill-coordination-fixes` **adds that exact path as a tracked file**
+      (neither it nor `multi-session-git-coordination` is tracked on `main`
+      today). The two branches decide the opposite thing about one path.
+      Git merges them cleanly in either order, because they touch different
+      files — and the result is wrong either way: a `.gitignore` rule cannot
+      untrack a tracked file, so the skill ends up tracked, the ignore rule
+      inert and misleading, and the SKILL.md enrolled in `lint:docs`, which is
+      precisely what #213's comment says it was preventing.
+      **Resolution required before merging either — this is the user's call:**
+      either drop the ignore line from #213 and accept the skill as tracked
+      (and `lint:docs`-gated), or drop the starship files from
+      `docs/skill-coordination-fixes` and keep the ignore.
+- [ ] **6. #213 `chore/track-claude-skills`.** Also carries
+      `.claude/settings.json` and three tracked skill files, so it sequences with
+      the pre-flight cleanup above — resolve the six untracked dirs in the same
+      pass.
 - [ ] **7. `docs/skill-coordination-fixes` — open a PR.** `behind=0`, ahead 1,
-      three skill files, no mirror contact. Cheap.
+      three skill files, no mirror contact. Cheap once the contradiction above is
+      resolved.
 - [ ] **8. `chore/refresh-skills-lock` — verify it still means anything first.**
       `behind=10`, single file, no PR, and its `skills-lock.json` matches `HEAD`'s.
       Likely superseded by the uncommitted change noted in pre-flight; if so,
@@ -117,9 +137,16 @@ one change at a time.
   goes permanently pending. A CI-graph change does not belong in the middle of a
   merge train.
   **Open risk to check before it leaves draft:** it edits `AGENTS.md` and
-  `CLAUDE.md` but **not** `.github/copilot-instructions.md`. If its edit lands in
-  a byte-identical section, or adds a fact registered as shared,
-  `mirror-consistency` goes red on merge and neither PR's own CI ever saw it.
+  `CLAUDE.md` but **not** `.github/copilot-instructions.md`.
+  The byte-identical half of that risk is now **cleared by measurement**:
+  `IDENTICAL_SECTIONS` in `tests/mirror-consistency.test.js` is one heading long
+  — `Security Reviews` — and neither #223 nor #222 touches it (`git diff` over
+  `AGENTS.md` returns zero matching lines for both).
+  The shared-facts half is **not** cleared and is the live risk: #223 rewrites
+  `ci.yml`, and `tests/ci-workflow.test.js` asserts that the job-name list in
+  the workflow is exactly the list transcribed into all three mirrors — so a
+  renamed job that updates two mirrors and not the third goes red on merge,
+  and branch protection's required contexts have to move with it.
 
 ## Closing out
 
