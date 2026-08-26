@@ -114,7 +114,15 @@ backlog rather than full recovery. The incident was still `investigating` at
 chat rather than read back from the API — the Railway MCP surface here exposes
 `get_service_config` (source, builder, commands, variable count) but no
 autodeploy flag, so this line is a record of what was done, not a verification
-of it. Confirm in the dashboard before trusting it.
+of it. **Reconfirmed directly by the user on 2026-08-26 ("i can confirm it is
+off. i turned it off"), so treat the toggle itself as settled** — no dashboard
+re-check needed.
+
+The merge-1 deployment comparison below still stands, and is not redundant with
+that confirmation: it answers a different question. The user's word settles that
+the toggle was set; the deployment list settles whether it actually took effect
+on the next push to `main`. A saved-but-ineffective setting looks exactly like a
+correctly paused one until something merges.
 
 **THIS MUST BE UNDONE AT THE END OF THE TRAIN.** A repo whose `main` silently
 stops deploying looks identical to one that is merely quiet, and the failure is
