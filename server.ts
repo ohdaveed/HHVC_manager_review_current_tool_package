@@ -1043,9 +1043,13 @@ async function handleReviewStateApi(req: Request, url: URL): Promise<Response> {
 //
 // Nothing here writes to disk or to review state. Generated drafts are returned
 // to the browser to preview, copy, and download — they never touch pages/*.js.
-// HHVC standards manual §1.11 forbids any automated approval, and SF.gov's AI
-// guidelines require generative-AI use to be disclosed, so every response
-// carries a `disclosure` string the client renders alongside the draft.
+// HHVC standards manual §1.11 bars an automated agent from setting a page
+// status to "Approved to Move = Yes", and SF.gov's AI guidelines require
+// generative-AI use to be disclosed, so every response carries a `disclosure`
+// string the client renders alongside the draft. The rule is quoted verbatim in
+// docs/source/sfgov-style/writing-and-style.md; state what it actually says
+// rather than the broader "forbids any automated approval", which reads as a
+// blanket ban this tool would not otherwise be entitled to claim.
 
 /**
  * Whole-request budget for a generation, covering both validation attempts and
