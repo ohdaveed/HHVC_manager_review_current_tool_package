@@ -1,0 +1,91 @@
+# Doppler Project Template — the shape of this repo's secrets, not their values.
+#
+# What this file is FOR: `.env.example` can only describe one flat set of keys,
+# which is wrong here because the four environments need genuinely different
+# sets — dev needs a local SQLite path and no AI keys at all, prd needs the AI
+# keys and no SQLite path. This records that per-environment, so "which
+# variables does staging actually need" has an answer in the repo rather than
+# only in the Doppler dashboard.
+#
+# It also makes the project reproducible: import this at
+# https://dashboard.doppler.com/workplace/template/import?template=<url-encoded raw URL>
+# and Doppler creates the projects, environments and empty secrets in one step.
+#
+# WHAT MUST NEVER GO IN HERE: secret values. Doppler's guidance is "Don't
+# hard-code secrets in your template file, even if in a private repository" —
+# note SECRETS rather than values. Doppler's own sample template populates
+# plain configuration (`ENV: development`), so a non-sensitive setting may
+# legitimately carry its value.
+#
+# Everything below is empty regardless, because everything below except
+# GEMINI_MODEL is a genuine secret. GEMINI_MODEL is only a model name and could
+# carry its value; it is left empty so this file has one rule rather than two.
+# This repository is PUBLIC, which makes the distinction worth stating rather
+# than assuming.
+projects:
+  - name: hhvc-manager-review
+    description: HHVC manager-review mockup tool — Railway web service, optional sync + AI APIs, Postgres
+    environments:
+      - name: Development
+        slug: dev
+        configs:
+          - slug: dev
+          # Personal branch config: overrides that stay on one machine. Access
+          # to an Environment cascades to every branch config under it EXCEPT
+          # personal ones, which is what makes this the right place for a
+          # developer-specific override.
+          - slug: dev_personal
+      - name: Staging
+        slug: stg
+        configs:
+          - slug: stg
+      - name: Production
+        slug: prd
+        configs:
+          - slug: prd
+      # Deliberately its own environment rather than a corner of prd. A service
+      # token scoped here can read CI credentials and NOTHING else, so a token
+      # leaked through an Actions log cannot reach the AI keys or the session
+      # password.
+      - name: CI-CD
+        slug: ci-cd
+        configs:
+          - slug: ci-cd
+    secrets:
+      # Local development. The AI keys are ABSENT on purpose: with no provider
+      # key the `/api/ai/*` routes answer 501, which is the documented
+      # fail-closed state and means a dev server cannot spend production API
+      # credit. DATABASE_URL is absent for the same class of reason —
+      # `build_scripts/storage.js` falls back to SQLite at DATA_DB_PATH when it
+      # is unset, and that fallback is the intended local path.
+      #
+      # HOST and PORT are absent because `server.ts` already defaults to
+      # 127.0.0.1:8080, which is correct on a laptop and wrong in a container.
+      dev:
+        DATA_DB_PATH: ''
+        REVIEW_API_TOKEN: ''
+        REVIEW_SESSION_PASSWORD: ''
+      # Staging has no Railway environment to deploy to yet. Left empty
+      # deliberately: an environment holding values nobody deploys reads as
+      # authoritative while being stale, which is worse than an obviously empty
+      # one.
+      stg: {}
+      # Production. REVIEW_API_PRINCIPALS is a JSON array of
+      # {principal, token, roles} objects rather than a scalar token — see the
+      # API access-hardening section in AGENTS.md. Its array shape is also what
+      # makes zero-downtime rotation possible: add the new principal, verify,
+      # then remove the old.
+      #
+      # DATABASE_URL, HOST and PORT are NOT listed. Railway owns all three —
+      # DATABASE_URL is a reference to the Postgres service, and HOST=0.0.0.0
+      # plus a PORT matching the domain target are deployment facts rather than
+      # application secrets. Syncing them from here would overwrite the
+      # reference with a literal and lose the private-network hostname.
+      prd:
+        ANTHROPIC_API_KEY: ''
+        GEMINI_API_KEY: ''
+        GEMINI_MODEL: ''
+        REVIEW_API_PRINCIPALS: ''
+        REVIEW_SESSION_PASSWORD: ''
+      ci-cd:
+        CODECOV_TOKEN: ''
