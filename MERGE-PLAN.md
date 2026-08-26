@@ -64,6 +64,33 @@ anything deliberately skipped go in this file, not only in chat.
 - **Definition of Done here is push + PR + green CI**, not a local merge. Three
   branches currently have no PR at all.
 
+## BLOCKED 2026-08-26 ~16:40Z — GitHub Actions major outage
+
+**The whole train is stalled on GitHub, not on this repo.** `81a0331` was pushed
+to `chore/doppler-template` at 16:36Z and GitHub created **no workflow run object
+at all** for it — not queued, not skipped, absent. Ruled out in order:
+
+- The `CI` workflow is `active` (`gh workflow list`).
+- `ci.yml`'s trigger is `pull_request: types: [opened, synchronize, reopened,
+ready_for_review]`, so a push to a PR branch is covered. The first suspicion —
+  a missing `synchronize` — was wrong.
+- GitHub knows the PR head is `81a0331` with 2 commits, so the push landed.
+- <https://www.githubstatus.com/api/v2/components.json> reports **Actions:
+  `major_outage`** while Webhooks, Git Operations, API Requests and Pull
+  Requests are all `operational` (page updated 16:14:16Z). That asymmetry is
+  exactly the observed behaviour.
+
+**Consequence:** with `strict: true`, nothing merges without fresh green required
+contexts, and no context can report while Actions is down. Re-triggering,
+reopening the PR, or pushing empty commits achieves nothing during the outage.
+
+**On recovery:** re-trigger CI for `81a0331` (an empty commit or a close/reopen
+of #230), confirm the seven required contexts report, then resume at step 1. The
+three review threads on #230 are already resolved, so nothing else gates it.
+
+**Not urgent until then:** turning Railway autodeploy off. It only needs to
+happen before the first merge, and no merge is possible yet.
+
 ## Board as measured 2026-08-26
 
 | Branch                                      | PR           | ahead/behind `main` | Hub files                                                      |
