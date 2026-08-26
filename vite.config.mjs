@@ -29,9 +29,27 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     ...(mode === 'singlefile' ? [viteSingleFile()] : []),
-    // Bundle-size reporting to Codecov. Last in the array on purpose — the
-    // plugin measures the finished bundle, so anything that rewrites output
-    // has to run before it.
+    // Bundle-size reporting to Codecov, for the PRODUCTION bundle only.
+    //
+    // Excluded from `singlefile` mode deliberately. `build:railway` and
+    // `build_singlefile` are separate CI jobs, both run with CI=true, and
+    // both emit from this one config — so an unconditional plugin uploaded
+    // two materially different artifacts under one `bundleName` for one
+    // commit: the chunked `dist/` Railway serves, and the portable
+    // `dist-singlefile/` with every script and stylesheet inlined. Codecov
+    // cannot tell them apart, so the report is ambiguous at best and one
+    // upload replaces the other at worst. Measured before the fix:
+    // `build:singlefile` took 486ms with the plugin off and 2.10s with it
+    // on, so it really was running and really would have uploaded.
+    //
+    // Only `dist/` is tracked because only `dist/` is served. The
+    // single-file export's size is a derived quantity — essentially those
+    // same chunks inlined — and this repo does not add a report nobody
+    // acts on. If it ever needs tracking, give it its OWN `bundleName`
+    // rather than removing this guard.
+    //
+    // Still last in the array — the plugin measures the finished bundle, so
+    // anything that rewrites output has to run before it.
     //
     // The gate is CI, NOT token presence. Codecov's own onboarding snippet
     // reads `process.env.CODECOV_TOKEN !== undefined`, which assumes a token
@@ -48,11 +66,15 @@ export default defineConfig(({ mode }) => ({
     // reports the difference itself via `[PLUGIN_TIMINGS]`. `uploadToken`
     // stays wired because a token is still honoured if one is present, and
     // ignored outright when the upload qualifies as tokenless.
-    codecovVitePlugin({
-      enableBundleAnalysis: process.env.CI === 'true',
-      bundleName: 'hhvc-manager-review',
-      uploadToken: process.env.CODECOV_TOKEN,
-    }),
+    ...(mode === 'singlefile'
+      ? []
+      : [
+          codecovVitePlugin({
+            enableBundleAnalysis: process.env.CI === 'true',
+            bundleName: 'hhvc-manager-review',
+            uploadToken: process.env.CODECOV_TOKEN,
+          }),
+        ]),
   ],
   build: {
     outDir: mode === 'singlefile' ? 'dist-singlefile' : 'dist',
