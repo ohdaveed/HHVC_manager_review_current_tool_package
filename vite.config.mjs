@@ -63,9 +63,15 @@ export default defineConfig(({ mode }) => ({
     //
     // It also keeps the cost off local builds. Measured on Vite 8.2.0:
     // 410ms with the plugin disabled, 6.13s with it enabled — and rolldown
-    // reports the difference itself via `[PLUGIN_TIMINGS]`. `uploadToken`
-    // stays wired because a token is still honoured if one is present, and
-    // ignored outright when the upload qualifies as tokenless.
+    // reports the difference itself via `[PLUGIN_TIMINGS]`.
+    //
+    // `uploadToken` reads the ENVIRONMENT, which is why `ci.yml` sets
+    // `CODECOV_TOKEN` on the `build:railway` step explicitly. The coverage
+    // upload next door passes the secret as an action INPUT, and an input is
+    // not an environment variable — so before that was wired, this value was
+    // always undefined and every bundle upload went out tokenless. That works
+    // while the Codecov organization has token authentication for public
+    // repos set to NOT required, and fails silently the moment it does not.
     ...(mode === 'singlefile'
       ? []
       : [

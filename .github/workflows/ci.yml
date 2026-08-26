@@ -216,7 +216,30 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # `CODECOV_TOKEN` is exposed HERE, to this step only, because the
+      # Codecov Vite plugin reads it from the environment during the build —
+      # unlike the coverage upload in `unit`, which takes the secret as an
+      # ACTION INPUT. An input is not an environment variable and is not
+      # inherited by another job, so without this the plugin's `uploadToken`
+      # was always undefined and every bundle upload went out tokenless.
+      #
+      # That happens to work today: this repository is public and the Codecov
+      # organization has token authentication for public repos set to NOT
+      # required, so tokenless uploads qualify. But it is one admin toggle
+      # away from silently failing, and a silent failure is exactly what this
+      # plugin's whole gate was rewritten to avoid.
+      #
+      # Safe to expose: this workflow triggers on `pull_request`, NOT
+      # `pull_request_target`, so GitHub withholds secrets from fork PRs
+      # entirely — a fork build simply falls back to the tokenless path.
+      # Scoped to the step rather than the job so nothing else in this job
+      # can read it.
+      #
+      # `build_singlefile` deliberately gets no token: the plugin does not run
+      # in `singlefile` mode at all.
       - name: Vite build + deploy bundle assembly (deploy-integrity check)
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: bun run build:railway
 
       - name: Upload dist artifact for downstream unit tests
