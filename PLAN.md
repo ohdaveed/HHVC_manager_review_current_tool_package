@@ -15,6 +15,24 @@ anything deliberately skipped go in this file, not only in chat.
   connected to `main`). Nine branches is up to eight deploys. Verify the live
   artifact at the end per the repo's Definition of Done — status code, deployed
   commit against the merged SHA, clean console — not the pipeline that built it.
+- **The train is strictly serial, and that is measured rather than assumed.**
+  `main` sets `strict: true` (a branch must be up to date before merging) and
+  `enforce_admins: true` (nobody bypasses it). So every merge stales every other
+  open PR: each one then needs `origin/main` merged in, pushed, and a **full CI
+  cycle** before it can land. Eight merges is eight serial cycles, not one. There
+  is no parallel path, and no admin override.
+- **Land everything by SQUASH merge.** `linear: true` disallows merge commits on
+  `main`. Merging `origin/main` _into_ a feature branch stays fine — the squash
+  flattens it on the way in — but "Create a merge commit" is not available.
+- **Resolve every review thread before merging, on every PR.**
+  `required_conversation_resolution` is enabled. This is the measured cause of
+  #230 sitting `MERGEABLE/BLOCKED` with all seven required contexts green and
+  `reviewDecision` empty, and it explains all six stuck PRs at once.
+  Thread resolution needs GraphQL, which the local hook blocks and this session
+  cannot route around — so it is a user action, in the PR UI or via
+  `gh api graphql`, once per PR.
+- **No human approval is required** (`required_pull_request_reviews: null`), so
+  there is no reviewer bottleneck — only the thread-resolution one above.
 - **Never rebase a pushed PR branch.** Merge `origin/main` in instead; a rebase
   over pushed work is a force-push into a live review and is separately gated.
 - **`mirror-consistency` and `skill-consistency` fail on merges git resolves
@@ -74,10 +92,18 @@ anything deliberately skipped go in this file, not only in chat.
       branch protection and do not appear in the `/protection` payload, so a
       rule added there is invisible to the read above. 3. **Required signatures / linear history / restricted pushes.** Cheap to
       rule out in the same call.
-      Next command for the user:
-      `! gh api repos/:owner/:repo/branches/main/protection --jq '{conversation: .required_conversation_resolution, signatures: .required_signatures, linear: .required_linear_history, admins: .enforce_admins, reviews: .required_pull_request_reviews, strict: .required_status_checks.strict, restricted: (.restrictions != null)}'`
-- [ ] **Clear the cause** — resolve the threads, or amend the ruleset — and
-      confirm #230 flips off `BLOCKED`.
+      **ANSWERED 2026-08-26.** Measured:
+      `conversation.enabled: true`, `linear.enabled: true`, `strict: true`,
+      `enforce_admins.enabled: true`, `reviews: null`, `restricted: false`,
+      `signatures.enabled: false`. Cause 1 confirmed; no ruleset lookup needed.
+      Corroborating: `qodo-code-review`'s COMMENTED review on #230 has a
+      **zero-length body**, so its content is inline thread comments rather than
+      a summary — an unresolved thread is present to block on.
+- [ ] **Resolve #230's review threads** (`qodo-code-review`, and
+      `chatgpt-codex-connector` if it opened any). Needs GraphQL, which the local
+      hook blocks and this session cannot route around, so it is a user action:
+      the "Resolve conversation" control on each thread in the PR UI. Then
+      confirm `gh pr view 230 --json mergeStateStatus` reads `CLEAN`.
 
 ## Pre-flight — the working tree has a dirty state with no home
 
