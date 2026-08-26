@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import { viteSingleFile } from 'vite-plugin-singlefile'
 import react from '@vitejs/plugin-react'
+import { codecovVitePlugin } from '@codecov/vite-plugin'
 
 /* Build config for the manager-review tool.
 
@@ -25,7 +26,62 @@ export default defineConfig(({ mode }) => ({
   // single-file export in particular is meant to be emailed around and
   // double-clicked.
   base: './',
-  plugins: [react(), ...(mode === 'singlefile' ? [viteSingleFile()] : [])],
+  plugins: [
+    react(),
+    ...(mode === 'singlefile' ? [viteSingleFile()] : []),
+    // Bundle-size reporting to Codecov, for the PRODUCTION bundle only.
+    //
+    // Excluded from `singlefile` mode deliberately. `build:railway` and
+    // `build_singlefile` are separate CI jobs, both run with CI=true, and
+    // both emit from this one config — so an unconditional plugin uploaded
+    // two materially different artifacts under one `bundleName` for one
+    // commit: the chunked `dist/` Railway serves, and the portable
+    // `dist-singlefile/` with every script and stylesheet inlined. Codecov
+    // cannot tell them apart, so the report is ambiguous at best and one
+    // upload replaces the other at worst. Measured before the fix:
+    // `build:singlefile` took 486ms with the plugin off and 2.10s with it
+    // on, so it really was running and really would have uploaded.
+    //
+    // Only `dist/` is tracked because only `dist/` is served. The
+    // single-file export's size is a derived quantity — essentially those
+    // same chunks inlined — and this repo does not add a report nobody
+    // acts on. If it ever needs tracking, give it its OWN `bundleName`
+    // rather than removing this guard.
+    //
+    // Still last in the array — the plugin measures the finished bundle, so
+    // anything that rewrites output has to run before it.
+    //
+    // The gate is CI, NOT token presence. Codecov's own onboarding snippet
+    // reads `process.env.CODECOV_TOKEN !== undefined`, which assumes a token
+    // exists — and this repository is PUBLIC, so uploads can be tokenless
+    // (Codecov skips the token check when a public repo's organization has
+    // disabled token authentication). Under that setup `CODECOV_TOKEN` is
+    // never set, the onboarding gate is permanently false, and bundle
+    // analysis silently never runs: no error, no output, just a dependency
+    // doing nothing. Gating on CI keeps it working whether or not a token is
+    // configured.
+    //
+    // It also keeps the cost off local builds. Measured on Vite 8.2.0:
+    // 410ms with the plugin disabled, 6.13s with it enabled — and rolldown
+    // reports the difference itself via `[PLUGIN_TIMINGS]`.
+    //
+    // `uploadToken` reads the ENVIRONMENT, which is why `ci.yml` sets
+    // `CODECOV_TOKEN` on the `build:railway` step explicitly. The coverage
+    // upload next door passes the secret as an action INPUT, and an input is
+    // not an environment variable — so before that was wired, this value was
+    // always undefined and every bundle upload went out tokenless. That works
+    // while the Codecov organization has token authentication for public
+    // repos set to NOT required, and fails silently the moment it does not.
+    ...(mode === 'singlefile'
+      ? []
+      : [
+          codecovVitePlugin({
+            enableBundleAnalysis: process.env.CI === 'true',
+            bundleName: 'hhvc-manager-review',
+            uploadToken: process.env.CODECOV_TOKEN,
+          }),
+        ]),
+  ],
   build: {
     outDir: mode === 'singlefile' ? 'dist-singlefile' : 'dist',
     emptyOutDir: true,

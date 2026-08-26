@@ -30,7 +30,10 @@ data/page_inventory.csv
 /single-file-export-current-source.html
 
 # Local dev SQLite DB for the optional /api/review-state sync backend
-# (server.ts). Production points DATA_DB_PATH at a Railway volume instead.
+# (server.ts). Production does NOT use this path: Railway injects DATABASE_URL
+# from its managed Postgres service, and build_scripts/storage.js selects the
+# Postgres driver whenever that variable is set. DATA_DB_PATH is read only by
+# the SQLite fallback branch, which local dev and CI take.
 /.data/
 
 # Deploy bundle (root only), the output Railway builds and serves. Anchored with
@@ -45,6 +48,12 @@ data/page_inventory.csv
 # Playwright
 test-results/
 playwright-report/
+
+# Coverage profile written by `bun run test:coverage` and uploaded to Codecov
+# from CI. Anchored for the same reason /dist/ is: an unanchored "coverage/"
+# would also match any future coverage directory inside the workshop-form
+# sub-app, whose build output is committed rather than generated.
+/coverage/
 
 # OS files
 .DS_Store
