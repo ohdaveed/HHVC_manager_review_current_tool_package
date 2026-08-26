@@ -29,8 +29,27 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     ...(mode === 'singlefile' ? [viteSingleFile()] : []),
+    // Bundle-size reporting to Codecov. Last in the array on purpose — the
+    // plugin measures the finished bundle, so anything that rewrites output
+    // has to run before it.
+    //
+    // The gate is CI, NOT token presence. Codecov's own onboarding snippet
+    // reads `process.env.CODECOV_TOKEN !== undefined`, which assumes a token
+    // exists — and this repository is PUBLIC, so uploads can be tokenless
+    // (Codecov skips the token check when a public repo's organization has
+    // disabled token authentication). Under that setup `CODECOV_TOKEN` is
+    // never set, the onboarding gate is permanently false, and bundle
+    // analysis silently never runs: no error, no output, just a dependency
+    // doing nothing. Gating on CI keeps it working whether or not a token is
+    // configured.
+    //
+    // It also keeps the cost off local builds. Measured on Vite 8.2.0:
+    // 410ms with the plugin disabled, 6.13s with it enabled — and rolldown
+    // reports the difference itself via `[PLUGIN_TIMINGS]`. `uploadToken`
+    // stays wired because a token is still honoured if one is present, and
+    // ignored outright when the upload qualifies as tokenless.
     codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      enableBundleAnalysis: process.env.CI === 'true',
       bundleName: 'hhvc-manager-review',
       uploadToken: process.env.CODECOV_TOKEN,
     }),
