@@ -126,8 +126,36 @@ anything deliberately skipped go in this file, not only in chat.
 Ordered by hub-file contention, lowest first, so the mirror and skill gates meet
 one change at a time.
 
-- [ ] **1. #230 `chore/doppler-template`.** One new file, `behind=0`, green.
-      Free, and merging it proves protection is unstuck.
+- [ ] **1. #230 `chore/doppler-template` — NO LONGER FREE.** Its three
+      unresolved threads are substantive review findings, all verified against
+      the tree on 2026-08-26 rather than taken on the bots' word. It still goes
+      first (`behind=0`, and `strict: true` would stale it behind anything else),
+      but it needs a fix commit before it lands. - **1a. `docs/codebase/STACK.md` is now stale — CONFIRMED, one line.**
+      Line 70 reads ``No `.env.example` / `.env.template` in repo ([TODO] if
+    one should be added)`` and line 69's config-source inventory omits the
+      new file. `doppler-template.yaml` is not literally either of those names,
+      but it answers that TODO and belongs in that inventory. - **1b. AI routes do not fail closed on a dev machine — CONFIRMED, P2.**
+      `doppler-template.yaml:56` promises that without a key `/api/ai/*`
+      answers 501. `build_scripts/ai/provider-anthropic.js`'s
+      `hasOAuthProfile()` reads `~/.config/anthropic/credentials` and its own
+      header records that the SDK resolves
+      `ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile, so an
+      `ant auth login` profile satisfies the provider gate with
+      `ANTHROPIC_API_KEY` empty. The template leaves `REVIEW_API_TOKEN: ''`,
+      which does hold the first gate at 501 — but the moment a developer fills
+      it, that legacy value is a broad principal carrying `ai:generate`
+      (`CLAUDE.md`, Optional API access hardening), both gates pass, and the
+      dev server can make billed requests. Fix by provisioning a dev principal
+      through `REVIEW_API_PRINCIPALS` without `ai:generate`, or by pinning
+      `ANTHROPIC_CONFIG_DIR` to isolate profile discovery — not by softening
+      the comment. - **1c. `dev_personal` may not be a personal config — UNVERIFIED, P1.**
+      The reviewer's claim is that importing a template that lists
+      `dev_personal` by slug creates an ordinary branch config rather than a
+      user-owned personal one, so Development access cascades to it and the
+      isolation asserted at `doppler-template.yaml:33-37` does not hold. That
+      is a claim about **Doppler's import semantics**, which nothing in this
+      repo can settle; it needs checking against Doppler's own documentation
+      or a test import before the thread is resolved either way.
 - [ ] **2. #225 `a11y/mockup-body-axe-gate`.** Zero mirror contact. Merge
       `origin/main` in, re-run CI, merge.
 - [ ] **3. #224 `a11y/focus-ring-contrast`.** Same. Merge `origin/main` in,
