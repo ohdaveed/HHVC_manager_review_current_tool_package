@@ -461,7 +461,17 @@ job that does not. `changes` is the one that does not — it runs only
   describes. This job carries that name instead, so the protection settings
   needed no edit for the shard and need none for a future reshard. It passes on
   a matrix result of `success` or `skipped` (a docs-only or draft PR, matching
-  what the unsharded job did) and fails on anything else.
+  what the unsharded job did) and fails on anything else — **but a skipped
+  matrix is only a pass when nothing upstream failed**, and it checks EVERY
+  upstream job rather than just the one it depends on for the artifact.
+  `build_railway` alone was not enough: every job in that chain carries
+  `!failure()`, so a `format_validate_lint` FAILURE makes `build_railway`
+  SKIP rather than fail, and a skip read as benign printed a green
+  `Playwright end-to-end tests` for a suite where no shard ran. `changes` is
+  checked for the same reason one level further up. Only `failure` and
+  `cancelled` are rejected — a skip has to stay acceptable, since
+  `format_validate_lint` skips by design on the docs-only path and treating
+  that as an error would make docs PRs unmergeable.
 
 **Branch protection's required contexts are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the

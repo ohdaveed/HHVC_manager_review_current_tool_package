@@ -465,7 +465,7 @@ jobs:
     timeout-minutes: 5
     # `build_railway` is needed for its RESULT, not its artifact — see the
     # skipped-for-two-reasons problem below.
-    needs: [e2e, build_railway]
+    needs: [e2e, build_railway, format_validate_lint, changes]
     # `always()`, so this reports rather than inheriting a skip. A skipped
     # required check reads to branch protection as a PASSING one, so an
     # aggregator that skipped whenever its shards did would turn every shard
@@ -491,14 +491,34 @@ jobs:
         env:
           SHARD_RESULT: ${{ needs.e2e.result }}
           BUILD_RESULT: ${{ needs.build_railway.result }}
+          LINT_RESULT: ${{ needs.format_validate_lint.result }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
         run: |
-          echo "E2E matrix result: $SHARD_RESULT (build_railway: $BUILD_RESULT)"
-          case "$BUILD_RESULT" in
-            failure | cancelled)
-              echo "::error::No shard ran: build_railway reported $BUILD_RESULT"
-              exit 1
-              ;;
-          esac
+          echo "E2E matrix result: $SHARD_RESULT (build_railway: $BUILD_RESULT," \
+               "format_validate_lint: $LINT_RESULT, changes: $CHANGES_RESULT)"
+          # EVERY upstream job, not just the immediate one. `build_railway`
+          # alone was not enough: it carries `!failure()`, so when
+          # `format_validate_lint` fails `build_railway` SKIPS rather than
+          # failing, the skip passed the check below, and this job printed a
+          # green `Playwright end-to-end tests` for a suite that never ran.
+          # `changes` is here for the same reason one level further up — the
+          # detector failing skips the entire graph, and each of those skips
+          # otherwise reads as a pass.
+          #
+          # Only failure and cancelled are rejected. A SKIP must stay
+          # acceptable: on a docs-only PR `format_validate_lint` skips by
+          # design, and treating that as an error would make the docs path
+          # unmergeable.
+          for upstream in "build_railway:$BUILD_RESULT" \
+                          "format_validate_lint:$LINT_RESULT" \
+                          "changes:$CHANGES_RESULT"; do
+            case "${upstream#*:}" in
+              failure | cancelled)
+                echo "::error::No shard ran: ${upstream%%:*} reported ${upstream#*:}"
+                exit 1
+                ;;
+            esac
+          done
           case "$SHARD_RESULT" in
             success | skipped) exit 0 ;;
             *)
