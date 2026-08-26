@@ -132,6 +132,16 @@ toggle did not take, and the train stops until it does. The record above is what
 the user reported doing; it is not a read-back, and the Railway MCP surface here
 exposes no autodeploy flag to read it back from.
 
+**BASELINE MEASURED 2026-08-26 17:5xZ — compare against this exact row.** The
+`web` service's most recent deployment is `f98c5b09-f3c9-48bf-99de-7e32f22b8c12`,
+status `SUCCESS`, created `2026-08-26 03:40:25 UTC`, commit
+`9238873cc54fc3410a1e97dc2ae832df67b95381` — which is `origin/main`'s current
+head, so the live artifact and `main` agree right now and nothing has deployed
+since. **After the first merge, list deployments again: any row newer than
+`f98c5b09` means the pause did not take.** Capturing the baseline is what makes
+that check decisive — without it, "there is a recent deployment" is ambiguous
+between the pause failing and this pre-existing one.
+
 ## RESOLVED 2026-08-26 ~17:07Z — the Actions outage is over
 
 **Measured, not assumed.** `gh run list` shows a completed `CI` run with
