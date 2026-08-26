@@ -290,8 +290,37 @@ jobs:
           name: dist
           path: dist/
 
+      # `test:coverage` forwards --coverage to the same enumerated file list
+      # `test` runs, so this is the identical suite plus coverage/lcov.info.
+      # The pass/fail verdict this job reports is unchanged.
       - name: Unit tests (bun test)
-        run: bun run test
+        run: bun run test:coverage
+
+      # Advisory, not a gate. `fail_ci_if_error` is left at its default of
+      # false so a Codecov outage cannot turn a green suite red — a
+      # third-party service must never be able to block a merge here. The
+      # commit statuses Codecov posts separately (`codecov/project` and
+      # `codecov/patch`) are NOT jobs in this file, so they are invisible to
+      # `tests/ci-workflow.test.js` and to branch protection; `codecov.yml`
+      # at the repo root marks both informational for the same reason.
+      #
+      # No `if: always()` on purpose: when the suite above fails there is no
+      # meaningful profile to publish, and uploading one would report
+      # coverage for a run that never finished.
+      #
+      # Only this job uploads. `docs_only_checks` runs the same suite, but a
+      # docs-only PR would produce a second upload for the same commit with
+      # no code change behind it; `codecov.yml`'s `if_not_found: success`
+      # keeps that PR's statuses green instead.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          # Without a search restriction the CLI walks the tree and can pick
+          # up the workshop-form sub-app's committed build output.
+          disable_search: true
+          flags: unit
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   e2e:
     name: Playwright end-to-end tests

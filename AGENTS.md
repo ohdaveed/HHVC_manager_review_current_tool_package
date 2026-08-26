@@ -405,7 +405,14 @@ job that does not. `changes` is the one that does not — it runs only
   were never committed (the "form shell that never hydrates" regression). It
   then **uploads `dist/` as an artifact**.
 - **build_singlefile** — `build:singlefile`, in parallel with the above.
-- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+- **unit** — downloads that `dist/` artifact, then runs `test:coverage`, which
+  is the same enumerated suite as `test` with an lcov profile added, and
+  uploads that profile to Codecov. **The coverage half is a report, never a
+  gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
+  own `codecov/project` and `codecov/patch` statuses informational, because
+  those are not jobs in `ci.yml` and so are invisible to both
+  `tests/ci-workflow.test.js` and branch protection. **The download
+
   is what makes the ordering mean anything.** `needs:` only sequences jobs; a
   separate runner gets a fresh checkout, and `dist/` is gitignored, so without
   the artifact the job would test against a tree that has never been built. One
@@ -414,6 +421,7 @@ job that does not. `changes` is the one that does not — it runs only
   `dist/index.html` is absent — so it would pass by skipping and cover nothing,
   which is the exact gap the old in-job `build:railway` → `test` order existed
   to close.
+
 - **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
   `playwright-report/` as an artifact on failure.
 
