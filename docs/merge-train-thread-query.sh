@@ -51,6 +51,11 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v jq >/dev/null 2>&1; then
+  echo "error: jq is not on PATH." >&2
+  exit 1
+fi
+
 # `first: 100` rather than a page loop: no PR here carries anything close to 100
 # threads, and a silent truncation is worse than an obvious one — the count line
 # printed per PR is what would make a truncation visible.
@@ -104,12 +109,26 @@ for n in "${PRS[@]}"; do
     continue
   fi
 
-  threads_total=$(printf '%s' "$raw" |
-    jq -r '.data.repository.pullRequest.reviewThreads.totalCount // 0')
+  if ! printf '%s' "$raw" | jq -e '
+      (.data.repository.pullRequest.reviewThreads | type == "object") and
+      (.data.repository.pullRequest.reviewThreads.totalCount | type == "number") and
+      (.data.repository.pullRequest.reviewThreads.nodes | type == "array")
+    ' >/dev/null; then
+      errors=$((errors + 1))
+      echo "  ERROR parsing PR #${n} response — this PR was NOT checked:"
+      continue
+    fi
+
+    if ! threads_total=$(printf '%s' "$raw" |
+    jq -r '.data.repository.pullRequest.reviewThreads.totalCount // 0'); then
+      errors=$((errors + 1))
+      echo "  ERROR parsing PR #${n} response — this PR was NOT checked:"
+      continue
+    fi
 
   # An unresolved thread blocks the merge whether or not it is OUTDATED — a
   # thread on a line the fix commit already changed still has to be resolved.
-  unresolved=$(printf '%s' "$raw" | jq -r '
+  if ! unresolved=$(printf '%s' "$raw" | jq -r '
     .data.repository.pullRequest.reviewThreads.nodes[]
     | select(.isResolved == false)
     | [
@@ -119,7 +138,11 @@ for n in "${PRS[@]}"; do
         (if .isOutdated then "outdated" else "current" end),
         ((.comments.nodes[0].body // "") | gsub("[\n\r]+"; " ") | .[0:90])
       ]
-    | @tsv')
+    | @tsv'); then
+      errors=$((errors + 1))
+      echo "  ERROR parsing PR #${n} unresolved threads — this PR was NOT checked:"
+      continue
+    fi
 
   if [ -z "$unresolved" ]; then
     echo "  no unresolved threads  (${threads_total} thread(s) total)"
