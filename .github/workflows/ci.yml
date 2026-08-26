@@ -300,9 +300,13 @@ jobs:
       # false so a Codecov outage cannot turn a green suite red — a
       # third-party service must never be able to block a merge here. The
       # commit statuses Codecov posts separately (`codecov/project` and
-      # `codecov/patch`) are NOT jobs in this file, so they are invisible to
-      # `tests/ci-workflow.test.js` and to branch protection; `codecov.yml`
-      # at the repo root marks both informational for the same reason.
+      # `codecov/patch`) are NOT jobs in this file, so
+      # `tests/ci-workflow.test.js` cannot enumerate them and the rule that
+      # every job here must also be a required context does not reach them.
+      # Branch protection COULD still require them — GitHub requires status
+      # contexts, not only job names — so `codecov.yml` at the repo root
+      # marks both informational, which is what actually keeps them
+      # non-gating.
       #
       # No `if: always()` on purpose: when the suite above fails there is no
       # meaningful profile to publish, and uploading one would report

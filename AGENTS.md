@@ -409,10 +409,11 @@ job that does not. `changes` is the one that does not — it runs only
   is the same enumerated suite as `test` with an lcov profile added, and
   uploads that profile to Codecov. **The coverage half is a report, never a
   gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
-  own `codecov/project` and `codecov/patch` statuses informational, because
-  those are not jobs in `ci.yml` and so are invisible to both
-  `tests/ci-workflow.test.js` and branch protection. **The download
-
+  own `codecov/project` and `codecov/patch` statuses informational, which is
+  what keeps them non-gating. Branch protection CAN require those contexts —
+  GitHub requires status contexts, not only job names — but they are not jobs
+  in `ci.yml`, so `tests/ci-workflow.test.js` cannot enumerate them and the
+  rule that every job be a required context does not reach them. **The download
   is what makes the ordering mean anything.** `needs:` only sequences jobs; a
   separate runner gets a fresh checkout, and `dist/` is gitignored, so without
   the artifact the job would test against a tree that has never been built. One

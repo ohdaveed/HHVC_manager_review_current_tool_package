@@ -6,11 +6,14 @@
 #   1. The upload step must not fail the `unit` job — `fail_ci_if_error` is
 #      left at its default of false there.
 #   2. Codecov ALSO posts its own commit statuses (`codecov/project` and
-#      `codecov/patch`), which are not jobs in `ci.yml` at all. Nothing in
-#      this repo can see them: `tests/ci-workflow.test.js` enumerates jobs,
-#      and branch protection requires job names. So a coverage drop would
-#      render as a failing check that no gate here knows how to explain.
-#      `informational: true` is what stops that.
+#      `codecov/patch`). Branch protection CAN require these: GitHub
+#      requires status CONTEXTS, and an external app's contexts are eligible
+#      alongside workflow job names. What they are not is JOBS — so
+#      `tests/ci-workflow.test.js`, which parses `ci.yml`, cannot enumerate
+#      them, and this repo's "every job in the workflow must also be a
+#      required context" rule does not reach them. Nothing here would flag
+#      it if one were made required by hand. `informational: true` is what
+#      keeps them non-gating, and it is the only thing that does.
 #
 # Marking both statuses informational is deliberate rather than timid. This
 # repo's gates are about correctness — the schema `validate` enforces, the
