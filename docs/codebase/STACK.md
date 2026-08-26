@@ -67,7 +67,7 @@ bun run dev:api        # optional server.ts API on :8081
 ### 5) Environment and Config
 
 - Config sources: `vite.config.mjs`, `railway.json`, `netlify.toml`, `bunfig.toml`, `playwright.config.js`, `build_scripts/sheet-config.json`, `doppler-template.yaml`, gitignored `.env.local`
-- No `.env.example` / `.env.template`, and deliberately not: a flat dotenv file can only describe ONE set of keys, and the four environments here need genuinely different ones (dev takes a SQLite path and no AI keys; prd takes the AI keys and no SQLite path). `doppler-template.yaml` records that shape per environment instead, and carries no values.
+- No `.env.example` / `.env.template`, and deliberately not: a flat dotenv file can only describe ONE set of keys, and the four environments here need genuinely different ones. `doppler-template.yaml` records that shape per environment instead. Two details of it are easy to state backwards, so state them exactly: **dev carries no SQLite path** — `DATA_DB_PATH` is omitted so `server.ts` falls back to `.data/review-state.local.db`, because Doppler injects a listed key as a PRESENT EMPTY STRING and `??` does not treat `''` as absent. And the template **carries no SECRET values, but is not valueless**: `HOST: '0.0.0.0'` and `PORT: '8080'` are non-sensitive production configuration that Railway does not supply and `server.ts` will not default correctly to inside a container. Every genuine secret is empty.
 - Required / optional env vars observed in code:
   - Server/static: `HOST`, `PORT`, `STATIC_ROOT`, `API_PORT` (Vite proxy)
   - Review sync API: `REVIEW_API_TOKEN`, `REVIEW_API_PRINCIPALS`, `REVIEW_API_ALLOWED_ORIGINS`, `REVIEW_API_RATE_LIMIT`, `REVIEW_API_RATE_WINDOW_MS`, `REVIEW_SESSION_PASSWORD`
