@@ -83,15 +83,45 @@ projects:
       #   [{"principal":"dev","token":"<a local secret>",
       #     "roles":["review:read","review:write"]}]
       #
+      # ── AN EMPTY VALUE IS NOT THE SAME AS AN ABSENT ONE. ──────────────────
+      # This is the rule that governs which keys appear below, and it is easy to
+      # get backwards. Doppler injects every secret it holds, so a key listed
+      # here with `''` arrives at the process as a PRESENT EMPTY STRING — which
+      # `server.ts` does not treat as "unset" for two of these keys:
+      #
+      #   - REVIEW_API_PRINCIPALS: `parseApiAuthorizationConfiguration` branches
+      #     on `raw === undefined` (server.ts:202). An empty string is not
+      #     undefined, so it falls through to the parser, fails, and yields
+      #     `state: "invalid"` — every `/api/*` request answers 503, not the
+      #     documented healthy 501 of an unconfigured deploy. It still fails
+      #     CLOSED, so this is a wrong documented state rather than a hole, but
+      #     it sends the next person debugging a 503 they were told to expect
+      #     never to see.
+      #   - DATA_DB_PATH: read with `??` (server.ts:145), which catches null and
+      #     undefined and NOT `''`, so an empty value is used as a literal
+      #     database path rather than falling back to the intended
+      #     `.data/review-state.local.db`.
+      #
+      # Both are therefore LISTED IN THIS COMMENT AND OMITTED FROM THE CONFIG
+      # below. Add them in Doppler once you have a real value; leaving them
+      # absent is the working state.
+      #
+      # REVIEW_SESSION_PASSWORD is safe to carry an empty placeholder and stays
+      # below: it is read with `?? ""` and then gated on `Boolean(...)`
+      # (server.ts:453,477), so empty and unset are genuinely the same state —
+      # sign-in unavailable, bearer tokens only. Same for the legacy
+      # REVIEW_API_TOKEN, which is not listed here for the separate reason given
+      # above.
+      #
       # DATABASE_URL is absent for an unrelated reason —
       # `build_scripts/storage.js` falls back to SQLite at DATA_DB_PATH when it
       # is unset, and that fallback is the intended local path.
       #
       # HOST and PORT are absent because `server.ts` already defaults to
       # 127.0.0.1:8080, which is correct on a laptop and wrong in a container.
+      # Note they must be absent rather than empty for the same reason as above:
+      # `HOST: ''` would bind to the empty string, and `PORT: ''` parses to NaN.
       dev:
-        DATA_DB_PATH: ''
-        REVIEW_API_PRINCIPALS: ''
         REVIEW_SESSION_PASSWORD: ''
       # Staging has no Railway environment to deploy to yet. Left empty
       # deliberately: an environment holding values nobody deploys reads as
@@ -104,16 +134,42 @@ projects:
       # makes zero-downtime rotation possible: add the new principal, verify,
       # then remove the old.
       #
-      # DATABASE_URL, HOST and PORT are NOT listed. Railway owns all three —
-      # DATABASE_URL is a reference to the Postgres service, and HOST=0.0.0.0
-      # plus a PORT matching the domain target are deployment facts rather than
-      # application secrets. Syncing them from here would overwrite the
-      # reference with a literal and lose the private-network hostname.
+      # DATABASE_URL is NOT listed, and that one really is Railway-owned: it is
+      # a REFERENCE to the Postgres service, so syncing a value from here would
+      # overwrite the reference with a literal and lose the private-network
+      # hostname.
+      #
+      # HOST and PORT are a different case, and an earlier version of this
+      # comment got it wrong by lumping all three together as "Railway owns all
+      # three." Railway does not set either one. `server.ts` defaults to
+      # `127.0.0.1:8080` (server.ts:80-81), which is correct on a laptop and
+      # unreachable inside a container — and the deployment canon records that
+      # this exact omission already shipped a build that succeeded and then
+      # served 502, with the only evidence one log line reading
+      # `running at http://127.0.0.1:8080`. So they are deployment CONFIGURATION
+      # this template must reproduce, not secrets and not Railway's to provide.
+      #
+      # They carry real values rather than empty placeholders, which is the one
+      # deliberate exception to this file's everything-is-empty rule — the
+      # header already allows it ("a non-sensitive setting may legitimately
+      # carry its value"), and here it is required rather than merely allowed:
+      # `HOST` is read with `??`, so `''` would bind to the empty string rather
+      # than defaulting, and `PORT: ''` parses to NaN. An empty placeholder
+      # would be strictly worse than the omission it replaces.
+      #
+      # PORT must match the Railway domain's target port. 8080 is the current
+      # one; change both together if it ever moves.
+      #
+      # REVIEW_API_PRINCIPALS is omitted here for the same reason it is omitted
+      # from dev — see the empty-value rule in the dev comment above. A
+      # present-but-empty value makes `/api/*` answer 503 rather than the
+      # documented 501, so add it in Doppler once the real JSON array exists.
       prd:
         ANTHROPIC_API_KEY: ''
         GEMINI_API_KEY: ''
         GEMINI_MODEL: ''
-        REVIEW_API_PRINCIPALS: ''
         REVIEW_SESSION_PASSWORD: ''
+        HOST: '0.0.0.0'
+        PORT: '8080'
       ci-cd:
         CODECOV_TOKEN: ''
