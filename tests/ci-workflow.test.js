@@ -199,6 +199,38 @@ describe('the CI workflow', () => {
     const pinned = readFileSync(join(ROOT, '.bun-version'), 'utf8').trim()
     expect(pinned).toMatch(/^\d+\.\d+\.\d+$/)
   })
+
+  /* Node gets the same treatment, for the same reason and with one extra
+     wrinkle: Bun was pinned to `latest` and drifted, whereas Node was not set
+     up AT ALL and ran on whatever `ubuntu-latest` shipped — which is the same
+     unpinned-runtime hazard with even less to point at when it moves, since
+     there is no version string anywhere in the repository to inspect.
+
+     Only ONE job needs this. `build:railway` ends in
+     `node build_scripts/copy-workshop-form.js`; every other step runs under
+     Bun. So unlike the Bun assertions above, this does not sweep all jobs —
+     it asserts the step exists somewhere and is file-pinned. */
+  test('sets Node up, pinned from .node-version rather than inline', () => {
+    expect(WORKFLOW).toContain('actions/setup-node')
+    expect(WORKFLOW).toContain('node-version-file: .node-version')
+    // An inline `node-version:` literal would put the version in two places.
+    expect(WORKFLOW).not.toMatch(/node-version:\s*\d/)
+  })
+
+  test('.node-version holds a concrete version', () => {
+    // A bare major (`24`) still floats across minors, which is the drift this
+    // pin exists to prevent — same bar as .bun-version.
+    const pinned = readFileSync(join(ROOT, '.node-version'), 'utf8').trim()
+    expect(pinned).toMatch(/^\d+\.\d+\.\d+$/)
+  })
+
+  test('the Node setup sits in the one job that actually runs Node', () => {
+    // Guards against the step being added to a job that does not need it, or
+    // `build:railway` moving to a job with no Node set up.
+    const railway = WORKFLOW.split(/^  build_railway:$/m)[1] ?? ''
+    expect(railway).toContain('actions/setup-node')
+    expect(railway).toContain('bun run build:railway')
+  })
 })
 
 /* The required-context census.
