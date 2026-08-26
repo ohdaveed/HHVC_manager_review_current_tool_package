@@ -95,7 +95,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 59 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 60 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `page-render-hooks` (the
 `onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
 which replaced js/review/ux-improvements.js's monkey-patch of
