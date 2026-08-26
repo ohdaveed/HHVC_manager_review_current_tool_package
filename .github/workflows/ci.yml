@@ -326,11 +326,32 @@ jobs:
           flags: unit
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  # This job is MATRIXED, so its check contexts are suffixed — `E2E shard (1)`
+  # and so on — and none of them is the context branch protection requires.
+  # `e2e_complete` below carries that name instead. Read its comment before
+  # touching either: the pairing is what lets this job sharded without an edit
+  # to the protection settings, and splitting a job's name away from its
+  # required context is exactly how this repo once left a PR permanently
+  # pending against a context no job produced.
   e2e:
-    name: Playwright end-to-end tests
+    name: E2E shard
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [format_validate_lint, changes]
+    # `build_railway` rather than `format_validate_lint`, which it needs in
+    # turn, so the ordering is unchanged — what this buys is its `dist`
+    # artifact. Four shards would otherwise each run `validate + vite build`
+    # to stand up their own webServer; downloading one build instead amortizes
+    # it across all four, and it is the same build the deploy ships rather
+    # than a fifth one nothing else ever sees.
+    needs: [build_railway, changes]
+    strategy:
+      # Never fail-fast. A cancelled sibling reports no results at all, so one
+      # genuinely broken spec would erase the evidence from the other three
+      # shards — and with `fail-fast` on, a flake in shard 1 costs a full
+      # re-run of the suite instead of a re-run of shard 1.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     # See build_railway's comment on the `!failure() && !cancelled()` half.
     #
     # `!draft` is the half this job carries and the other three do not, and it
@@ -372,13 +393,136 @@ jobs:
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
 
+      - name: Download dist artifact from build job
+        uses: actions/download-artifact@v5
+        with:
+          name: dist
+          path: dist/
+
+      # `download-artifact` succeeds quietly when it writes nothing useful, and
+      # the next thing to notice would be `server.ts` serving a missing static
+      # root until Playwright's 120s webServer timeout fires — a failure that
+      # names the timeout and not the cause. Fail here instead, where the
+      # message is the actual problem. Same reasoning as
+      # `copy-workshop-form.js`'s own asset check.
+      - name: Verify the downloaded build is usable
+        run: test -f dist/index.html && test -d dist/forms/mosquito-workshop-request
+
       - name: Run Playwright tests
-        run: bun run test:e2e
+        run: bun run test:e2e --shard=${{ matrix.shard }}/4
+
+      # `!cancelled()` rather than the bare default, and it is the OPPOSITE of
+      # the deliberate omission on the coverage upload in `unit`. Both are
+      # right: a failed suite has no meaningful coverage profile, so uploading
+      # one would report coverage for a run that never finished — but a failed
+      # suite carries the MOST meaningful test results, and skipping the upload
+      # on failure would drop exactly the data this feature exists to collect.
+      #
+      # Advisory like every other Codecov step here: no `fail_ci_if_error`, so
+      # an outage cannot turn a green suite red.
+      #
+      # Flagged per shard because all four upload to the same commit. Without
+      # distinct flags Codecov sees four reports for one run rather than four
+      # quarters of it.
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        # `@v1` — the only major alias this action publishes (latest v1.2.1,
+        # confirmed with `git ls-remote --tags`). Codecov's own docs show
+        # `@v5` in their main snippet, which does not exist and fails the job
+        # at "Prepare all required actions" before a single test runs. The
+        # coverage action next door genuinely is at v5; the two are versioned
+        # independently.
+        uses: codecov/test-results-action@v1
+        with:
+          files: ./test-results/junit.xml
+          flags: e2e-shard-${{ matrix.shard }}
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-report
+          # Per shard: `upload-artifact@v5` rejects a name that already exists
+          # in the run, so a shared name would mean the first failing shard
+          # uploads and every later one errors on the upload rather than on
+          # its own test failure.
+          name: playwright-report-shard-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
+
+  # The aggregator, and the reason the job above could be sharded at all.
+  #
+  # Branch protection requires a context by NAME. Matrixing `e2e` suffixes its
+  # contexts (`E2E shard (1)`…), so the required `Playwright end-to-end tests`
+  # would be produced by nothing and sit permanently pending however green the
+  # run — the same failure this repo hit when splitting the old `checks` job
+  # renamed `Format, validate, unit tests` out of existence. Keeping that name
+  # here means the protection settings need no edit for this change, and none
+  # for a future reshard either.
+  e2e_complete:
+    name: Playwright end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # `build_railway` is needed for its RESULT, not its artifact — see the
+    # skipped-for-two-reasons problem below.
+    needs: [e2e, build_railway, format_validate_lint, changes]
+    # `always()`, so this reports rather than inheriting a skip. A skipped
+    # required check reads to branch protection as a PASSING one, so an
+    # aggregator that skipped whenever its shards did would turn every shard
+    # failure into a silent green.
+    if: always()
+    steps:
+      # `needs.e2e.result` aggregates the whole matrix: `success` only when
+      # every shard succeeded.
+      #
+      # `skipped` cannot be read on its own, because `e2e` skips for two very
+      # different reasons and only one of them is benign. Its `if:` carries
+      # `!failure()`, so an upstream FAILURE skips it exactly as a docs-only
+      # or draft PR does — and treating that as a pass would print a green
+      # `Playwright end-to-end tests` when no shard ran at all. Branch
+      # protection would still block on `build_railway`'s own red context, so
+      # this is honesty rather than a hole; a reader scanning the checks must
+      # not be shown a pass for a suite that never executed.
+      #
+      # Hence the upstream result is consulted too: a skip is a pass only when
+      # nothing upstream failed. A draft PR (where `build_railway` succeeds and
+      # `e2e` alone skips) still passes, which is the documented behavior.
+      - name: Require every shard to have succeeded
+        env:
+          SHARD_RESULT: ${{ needs.e2e.result }}
+          BUILD_RESULT: ${{ needs.build_railway.result }}
+          LINT_RESULT: ${{ needs.format_validate_lint.result }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+        run: |
+          echo "E2E matrix result: $SHARD_RESULT (build_railway: $BUILD_RESULT," \
+               "format_validate_lint: $LINT_RESULT, changes: $CHANGES_RESULT)"
+          # EVERY upstream job, not just the immediate one. `build_railway`
+          # alone was not enough: it carries `!failure()`, so when
+          # `format_validate_lint` fails `build_railway` SKIPS rather than
+          # failing, the skip passed the check below, and this job printed a
+          # green `Playwright end-to-end tests` for a suite that never ran.
+          # `changes` is here for the same reason one level further up — the
+          # detector failing skips the entire graph, and each of those skips
+          # otherwise reads as a pass.
+          #
+          # Only failure and cancelled are rejected. A SKIP must stay
+          # acceptable: on a docs-only PR `format_validate_lint` skips by
+          # design, and treating that as an error would make the docs path
+          # unmergeable.
+          for upstream in "build_railway:$BUILD_RESULT" \
+                          "format_validate_lint:$LINT_RESULT" \
+                          "changes:$CHANGES_RESULT"; do
+            case "${upstream#*:}" in
+              failure | cancelled)
+                echo "::error::No shard ran: ${upstream%%:*} reported ${upstream#*:}"
+                exit 1
+                ;;
+            esac
+          done
+          case "$SHARD_RESULT" in
+            success | skipped) exit 0 ;;
+            *)
+              echo "::error::Playwright shards did not all succeed (matrix result: $SHARD_RESULT)"
+              exit 1
+              ;;
+          esac
