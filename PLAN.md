@@ -42,9 +42,16 @@ anything deliberately skipped go in this file, not only in chat.
 
 ## Step 0 — unblock branch protection
 
-- [ ] **Read `main`'s required status contexts.** `gh api` is blocked by a local
-      PreToolUse hook and this session has no sandbox tool, so the user runs it:
-      `! gh api repos/:owner/:repo/branches/main/protection --jq '.required_status_checks.contexts'`
+- [x] **Read `main`'s required status contexts.** `gh api` is blocked by a local
+      PreToolUse hook and this session has no sandbox tool, so the user ran it.
+      Result, 2026-08-26 — exactly the seven job names `ci.yml` defines, matching
+      `CLAUDE.md`'s prescribed list with nothing extra and nothing missing:
+      `Playwright end-to-end tests`, `Format, validate, lint`,
+      `Unit tests (bun test)`, `Docs-only checks`, `Build railway bundle`,
+      `Build single-file export`, `Detect changed files`.
+      **This refutes both candidate causes below.** There is no context that no
+      job produces, and `codecov/project` is not required. All seven reported
+      SUCCESS or SKIPPED on #230, so the block is not a status check at all.
 - [ ] **Diagnose why #230 is `MERGEABLE/BLOCKED`.** Measured on 2026-08-26: every
       context green (`Format, validate, lint`, `Unit tests (bun test)`,
       `Playwright end-to-end tests`, `Build railway bundle`,
@@ -57,9 +64,20 @@ anything deliberately skipped go in this file, not only in chat.
       records after the `checks` job split, which sits permanently pending;
       (b) `codecov/project` required but never posted (`codecov/patch` and
       `codecov/bundles` post, `codecov/project` is absent from the rollup).
-- [ ] **Fix protection** to match the seven job names `ci.yml` actually defines,
-      per `CLAUDE.md`'s required-contexts list, and confirm #230 flips off
-      `BLOCKED`.
+- [ ] **Find the non-status cause.** With every required context satisfied,
+      `MERGEABLE/BLOCKED` has to come from a protection setting that is not a
+      status check. Ranked by fit with what is already measured: 1. **Required conversation resolution.** #230 carries two `COMMENTED` bot
+      reviews (`qodo-code-review`, `chatgpt-codex-connector`) plus a CodeRabbit
+      check. Unresolved inline threads block the merge while leaving
+      `reviewDecision` empty and every check green — which is exactly the
+      signature observed, and it would equally explain the other five PRs. 2. **A repository ruleset.** Rulesets are evaluated on top of classic
+      branch protection and do not appear in the `/protection` payload, so a
+      rule added there is invisible to the read above. 3. **Required signatures / linear history / restricted pushes.** Cheap to
+      rule out in the same call.
+      Next command for the user:
+      `! gh api repos/:owner/:repo/branches/main/protection --jq '{conversation: .required_conversation_resolution, signatures: .required_signatures, linear: .required_linear_history, admins: .enforce_admins, reviews: .required_pull_request_reviews, strict: .required_status_checks.strict, restricted: (.restrictions != null)}'`
+- [ ] **Clear the cause** — resolve the threads, or amend the ruleset — and
+      confirm #230 flips off `BLOCKED`.
 
 ## Pre-flight — the working tree has a dirty state with no home
 
