@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@codecov/vite-plugin": "^2.0.1",
     "@editorjs/editorjs": "^2.31.6",
     "@happy-dom/global-registrator": "^20.11.1",
     "@oxlint/plugins": "1.78.0",
