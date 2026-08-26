@@ -112,10 +112,16 @@ one change at a time.
       untrack a tracked file, so the skill ends up tracked, the ignore rule
       inert and misleading, and the SKILL.md enrolled in `lint:docs`, which is
       precisely what #213's comment says it was preventing.
-      **Resolution required before merging either — this is the user's call:**
-      either drop the ignore line from #213 and accept the skill as tracked
-      (and `lint:docs`-gated), or drop the starship files from
-      `docs/skill-coordination-fixes` and keep the ignore.
+      **DECIDED 2026-08-26 — the starship files give way.**
+      `docs/skill-coordination-fixes` drops
+      `.claude/skills/starship-prompt-rendering-diagnostics/SKILL.md` and
+      `check-prompt.sh`, and #213 keeps its ignore rule intact. That branch then
+      lands only `.claude/skills/multi-session-git-coordination/SKILL.md`, which
+      is genuinely about working in this repo rather than about the author's
+      terminal. Remove them with a NEW commit on that branch, not a rebase or an
+      amend — the branch has no upstream, but a plain commit needs no
+      destructive-git approval and the removal is worth having in the history
+      with its reason attached.
 - [ ] **6. #213 `chore/track-claude-skills`.** Also carries
       `.claude/settings.json` and three tracked skill files, so it sequences with
       the pre-flight cleanup above — resolve the six untracked dirs in the same
