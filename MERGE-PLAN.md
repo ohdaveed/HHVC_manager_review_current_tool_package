@@ -75,7 +75,7 @@ anything deliberately skipped go in this file, not only in chat.
       **This refutes both candidate causes below.** There is no context that no
       job produces, and `codecov/project` is not required. All seven reported
       SUCCESS or SKIPPED on #230, so the block is not a status check at all.
-- [ ] **Diagnose why #230 is `MERGEABLE/BLOCKED`.** Measured on 2026-08-26: every
+- [x] **Diagnose why #230 is `MERGEABLE/BLOCKED`.** Measured on 2026-08-26: every
       context green (`Format, validate, lint`, `Unit tests (bun test)`,
       `Playwright end-to-end tests`, `Build railway bundle`,
       `Build single-file export`, `Detect changed files`, `Docs-only checks`
@@ -87,7 +87,7 @@ anything deliberately skipped go in this file, not only in chat.
       records after the `checks` job split, which sits permanently pending;
       (b) `codecov/project` required but never posted (`codecov/patch` and
       `codecov/bundles` post, `codecov/project` is absent from the rollup).
-- [ ] **Find the non-status cause.** With every required context satisfied,
+- [x] **Find the non-status cause.** With every required context satisfied,
       `MERGEABLE/BLOCKED` has to come from a protection setting that is not a
       status check. Ranked by fit with what is already measured: 1. **Required conversation resolution.** #230 carries two `COMMENTED` bot
       reviews (`qodo-code-review`, `chatgpt-codex-connector`) plus a CodeRabbit
@@ -131,7 +131,8 @@ anything deliberately skipped go in this file, not only in chat.
 Ordered by hub-file contention, lowest first, so the mirror and skill gates meet
 one change at a time.
 
-- [ ] **1. #230 `chore/doppler-template` — NO LONGER FREE.** Its three
+- [ ] **1. #230 `chore/doppler-template` — NO LONGER FREE. All three findings
+      FIXED in `81a0331`; awaiting thread resolution and a green CI run.** Its three
       unresolved threads are substantive review findings, all verified against
       the tree on 2026-08-26 rather than taken on the bots' word. It still goes
       first (`behind=0`, and `strict: true` would stale it behind anything else),
@@ -161,6 +162,12 @@ one should be added)`` and line 69's config-source inventory omits the
       is a claim about **Doppler's import semantics**, which nothing in this
       repo can settle; it needs checking against Doppler's own documentation
       or a test import before the thread is resolved either way.
+      **ANSWERED 2026-08-26 — the reviewer was right.** Doppler's own docs
+      (<https://docs.doppler.com/docs/branch-configs>) state that Personal
+      Configs are a FEATURE a project Admin enables per environment, after which
+      Doppler creates one `dev_personal` branch per user that only that user can
+      access. Listing the slug creates an ordinary shared branch config instead.
+      The slug is removed and the comment now records why.
 - [ ] **2. #225 `a11y/mockup-body-axe-gate`.** Zero mirror contact. Merge
       `origin/main` in, re-run CI, merge.
 - [ ] **3. #224 `a11y/focus-ring-contrast`.** Same. Merge `origin/main` in,
