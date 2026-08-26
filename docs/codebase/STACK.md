@@ -66,8 +66,8 @@ bun run dev:api        # optional server.ts API on :8081
 
 ### 5) Environment and Config
 
-- Config sources: `vite.config.mjs`, `railway.json`, `netlify.toml`, `bunfig.toml`, `playwright.config.js`, `build_scripts/sheet-config.json`, gitignored `.env.local`
-- No `.env.example` / `.env.template` in repo ([TODO] if one should be added)
+- Config sources: `vite.config.mjs`, `railway.json`, `netlify.toml`, `bunfig.toml`, `playwright.config.js`, `build_scripts/sheet-config.json`, `doppler-template.yaml`, gitignored `.env.local`
+- No `.env.example` / `.env.template`, and deliberately not: a flat dotenv file can only describe ONE set of keys, and the four environments here need genuinely different ones (dev takes a SQLite path and no AI keys; prd takes the AI keys and no SQLite path). `doppler-template.yaml` records that shape per environment instead, and carries no values.
 - Required / optional env vars observed in code:
   - Server/static: `HOST`, `PORT`, `STATIC_ROOT`, `API_PORT` (Vite proxy)
   - Review sync API: `REVIEW_API_TOKEN`, `REVIEW_API_PRINCIPALS`, `REVIEW_API_ALLOWED_ORIGINS`, `REVIEW_API_RATE_LIMIT`, `REVIEW_API_RATE_WINDOW_MS`, `REVIEW_SESSION_PASSWORD`

@@ -30,11 +30,17 @@ projects:
         slug: dev
         configs:
           - slug: dev
-          # Personal branch config: overrides that stay on one machine. Access
-          # to an Environment cascades to every branch config under it EXCEPT
-          # personal ones, which is what makes this the right place for a
-          # developer-specific override.
-          - slug: dev_personal
+          # NO `dev_personal` HERE, deliberately — and the omission is the whole
+          # point rather than an oversight. A personal config is not a config you
+          # list: per
+          # https://docs.doppler.com/docs/branch-configs#personal-configs it is a
+          # FEATURE a project Admin enables per environment, after which Doppler
+          # creates one `dev_personal` branch per user that only that user can
+          # access. Listing the slug here would instead create an ordinary shared
+          # branch config wearing that name, which every Development collaborator
+          # inherits access to — the exact opposite of the isolation the name
+          # promises, and worse than having no personal config at all, because it
+          # looks like one. Enable the feature in the dashboard instead.
       - name: Staging
         slug: stg
         configs:
@@ -52,10 +58,32 @@ projects:
         configs:
           - slug: ci-cd
     secrets:
-      # Local development. The AI keys are ABSENT on purpose: with no provider
-      # key the `/api/ai/*` routes answer 501, which is the documented
-      # fail-closed state and means a dev server cannot spend production API
-      # credit. DATABASE_URL is absent for the same class of reason —
+      # Local development. The AI keys are absent, but absence is NOT what keeps
+      # a dev server from spending API credit, and an earlier version of this
+      # comment claimed it was. `/api/ai/*` has two gates, and omitting
+      # `ANTHROPIC_API_KEY` clears neither of them on a developer's own machine:
+      #
+      #   - The PROVIDER gate does not read the environment alone.
+      #     `build_scripts/ai/provider-anthropic.js`'s `hasOAuthProfile()` scans
+      #     `~/.config/anthropic/credentials`, because the SDK resolves
+      #     `ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile.
+      #     Anyone who has run `ant auth login` is already configured, key or no
+      #     key.
+      #   - The AUTHORIZATION gate is what actually holds, and only while it is
+      #     left empty. `REVIEW_API_TOKEN` is the LEGACY scalar, and per the API
+      #     access-hardening section in AGENTS.md a value there provisions one
+      #     broad principal carrying every role — `ai:generate` included. Filling
+      #     it in to try out review sync therefore silently unlocks billed
+      #     generation too.
+      #
+      # So dev uses `REVIEW_API_PRINCIPALS` rather than the legacy scalar. Fill
+      # it with a single least-privilege principal and the AI routes stay 403
+      # however the machine is authenticated:
+      #
+      #   [{"principal":"dev","token":"<a local secret>",
+      #     "roles":["review:read","review:write"]}]
+      #
+      # DATABASE_URL is absent for an unrelated reason —
       # `build_scripts/storage.js` falls back to SQLite at DATA_DB_PATH when it
       # is unset, and that fallback is the intended local path.
       #
@@ -63,7 +91,7 @@ projects:
       # 127.0.0.1:8080, which is correct on a laptop and wrong in a container.
       dev:
         DATA_DB_PATH: ''
-        REVIEW_API_TOKEN: ''
+        REVIEW_API_PRINCIPALS: ''
         REVIEW_SESSION_PASSWORD: ''
       # Staging has no Railway environment to deploy to yet. Left empty
       # deliberately: an environment holding values nobody deploys reads as
