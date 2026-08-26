@@ -49,6 +49,12 @@ data/page_inventory.csv
 test-results/
 playwright-report/
 
+# Coverage profile written by `bun run test:coverage` and uploaded to Codecov
+# from CI. Anchored for the same reason /dist/ is: an unanchored "coverage/"
+# would also match any future coverage directory inside the workshop-form
+# sub-app, whose build output is committed rather than generated.
+/coverage/
+
 # OS files
 .DS_Store
 Thumbs.db
