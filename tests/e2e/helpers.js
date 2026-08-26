@@ -568,8 +568,94 @@ async function expectNoSeriousViolations(page) {
   expect(serious).toEqual([])
 }
 
+/* The rules that describe what SURVIVES export into Karl.
+ *
+ * Named explicitly rather than taken from a tag set, for two reasons. First,
+ * `heading-order` and `empty-heading` carry axe's `best-practice` tag, NOT
+ * `wcag2a`/`wcag2aa` — so the whole-page scan above has never checked heading
+ * hierarchy at all, on a tool whose output becomes published headings.
+ * Second, a tag set would drag in shell-shaped rules the mockup body cannot
+ * be responsible for, which is the targeting error #217 and #219 were closed
+ * over.
+ *
+ * Document-level rules (`html-has-lang`, `region`, `page-has-heading-one`)
+ * are deliberately absent: scoped to `#mockPage` they either cannot fire or
+ * would report on the shell's markup wearing the mockup's name. */
+const KARL_BODY_RULES = [
+  'heading-order',
+  'empty-heading',
+  'link-name',
+  'image-alt',
+  'th-has-data-cells',
+  'td-headers-attr',
+  'scope-attr-valid',
+  'list',
+  'listitem',
+  'aria-valid-attr-value',
+  'aria-required-children',
+  'color-contrast',
+]
+
+/**
+ * Fail on any Karl-relevant Axe violation INSIDE the rendered mockup body.
+ *
+ * Scoped with an include selector on `#mockPage`, so the review shell can
+ * neither pass nor fail this gate. The shell is tool chrome that ships
+ * nowhere; the mockup body becomes published SF.gov content. Conformance
+ * obligations attach to the second, which is why the whole-page scans stay
+ * separate rather than being replaced by this one.
+ *
+ * Impact is NOT filtered to critical/serious here, unlike the whole-page
+ * helper: a `moderate` heading-order break is a real defect in content
+ * destined for publication, where the same finding on a toolbar is not.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} label Page key, so a failure names the page.
+ * @returns {Promise<void>}
+ */
+async function expectNoMockupBodyViolations(page, label) {
+  const results = await new AxeBuilder({ page })
+    .include('#mockPage .page-body')
+    .withRules(KARL_BODY_RULES)
+    .analyze()
+  const found = results.violations.map((v) => ({
+    page: label,
+    id: v.id,
+    impact: v.impact,
+    nodes: v.nodes.map((n) => n.html.slice(0, 120)),
+  }))
+  expect(found).toEqual([])
+}
+
+/* Link labels Karl publishes VERBATIM. Axe has no rule for this — `link-name`
+ * only asks whether a link has an accessible name, not whether that name says
+ * anything. "Read more" passes axe and ships to sf.gov as "Read more", which
+ * is a 2.4.4 failure in the published artefact rather than in this tool. */
+const GENERIC_LINK_LABELS =
+  /^(read more|click here|learn more|more|here|link|this|this link|more info|more information|details|continue|go)$/i
+
+/**
+ * Fail when the rendered mockup body carries a link whose label conveys
+ * nothing out of context.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} label Page key, so a failure names the page.
+ * @returns {Promise<void>}
+ */
+async function expectNoGenericLinkText(page, label) {
+  const labels = await page.locator('#mockPage .page-body a').allInnerTexts()
+  const generic = labels
+    .map((t) => t.replace(/\s+/g, ' ').trim())
+    .filter((t) => t && GENERIC_LINK_LABELS.test(t))
+    .map((t) => `${label}: "${t}"`)
+  expect(generic).toEqual([])
+}
+
 module.exports = {
   expectNoSeriousViolations,
+  expectNoMockupBodyViolations,
+  expectNoGenericLinkText,
+  KARL_BODY_RULES,
   waitForShortcuts,
   STORAGE_KEY,
   DECISIONS,

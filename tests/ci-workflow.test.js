@@ -75,8 +75,8 @@ function jobChunks() {
 /**
  * Every JOB name in the workflow, from the four-space `name:` keys.
  *
- * Four spaces is the job level in this file — measured, not assumed: the seven
- * job names sit at four, the workflow's own `name: CI` at zero, and the two
+ * Four spaces is the job level in this file — measured, not assumed: the job
+ * names sit at four, the workflow's own `name: CI` at zero, and the two
  * artifact names (`name: dist`, `name: playwright-report`) at ten, under an
  * `upload-artifact` step's `with:`. Folding the artifacts in would demand the
  * mirrors enumerate two uploads as though they were required checks.
@@ -131,6 +131,65 @@ function decodeScalar(raw) {
 function jobIds() {
   const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))
   return [...jobsBlock.matchAll(/^ {2}([A-Za-z_][\w-]*):$/gm)].map((match) => match[1])
+}
+
+/**
+ * Every job as a `{ id, name, block }` record — the same two keys the two
+ * parsers above read, but kept together so a question can be asked about ONE
+ * job rather than about the file.
+ *
+ * The flat parsers stay: they are each other's non-vacuity check, and this
+ * one is not a substitute for that. What it adds is the block text, which is
+ * the only way to tell a matrixed job from a plain one.
+ *
+ * @returns {{id: string, name: string|null, block: string}[]} one record per job, in file order.
+ */
+function jobBlocks() {
+  const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))
+  const starts = [...jobsBlock.matchAll(/^ {2}([A-Za-z_][\w-]*):$/gm)]
+  return starts.map((match, index) => {
+    const end = index + 1 < starts.length ? starts[index + 1].index : jobsBlock.length
+    const block = jobsBlock.slice(match.index, end)
+    const name = block.match(/^ {4}name: (.+)$/m)
+    return { id: match[1], name: name ? decodeScalar(name[1]) : null, block }
+  })
+}
+
+/**
+ * Whether a job fans out over a matrix.
+ *
+ * This is the whole reason the census below is not simply `jobNames()`. GitHub
+ * suffixes a matrixed job's check contexts — `E2E shard (1)`, `(2)` — so the
+ * literal after `name:` is a context NO job produces, and requiring it in
+ * branch protection would leave a PR permanently pending. A matrixed job is
+ * therefore not a required context and must not be enumerated as one.
+ *
+ * @param {{block: string}} job The job record to test.
+ * @returns {boolean} true when the job declares a `strategy:` block.
+ */
+function isMatrixed(job) {
+  return /^ {4}strategy:$/m.test(job.block)
+}
+
+/**
+ * A job's declared `needs:`, as job IDs.
+ *
+ * Only the inline-array form is parsed, which is the only form `ci.yml` uses.
+ * A block-sequence `needs:` would read as zero dependencies here — caught by
+ * the aggregator assertion below failing, not by passing silently, since that
+ * assertion demands a match rather than tolerating its absence.
+ *
+ * @param {{block: string}} job The job record to read.
+ * @returns {string[]} the job IDs it declares as dependencies, empty when it declares none.
+ */
+function needsOf(job) {
+  const line = job.block.match(/^ {4}needs: (.+)$/m)
+  if (!line) return []
+  return line[1]
+    .replace(/[[\]]/g, '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
 }
 
 /**
@@ -203,6 +262,38 @@ describe('the CI workflow', () => {
     const pinned = readFileSync(join(ROOT, '.bun-version'), 'utf8').trim()
     expect(pinned).toMatch(/^\d+\.\d+\.\d+$/)
   })
+
+  /* Node gets the same treatment, for the same reason and with one extra
+     wrinkle: Bun was pinned to `latest` and drifted, whereas Node was not set
+     up AT ALL and ran on whatever `ubuntu-latest` shipped — which is the same
+     unpinned-runtime hazard with even less to point at when it moves, since
+     there is no version string anywhere in the repository to inspect.
+
+     Only ONE job needs this. `build:railway` ends in
+     `node build_scripts/copy-workshop-form.js`; every other step runs under
+     Bun. So unlike the Bun assertions above, this does not sweep all jobs —
+     it asserts the step exists somewhere and is file-pinned. */
+  test('sets Node up, pinned from .node-version rather than inline', () => {
+    expect(WORKFLOW).toContain('actions/setup-node')
+    expect(WORKFLOW).toContain('node-version-file: .node-version')
+    // An inline `node-version:` literal would put the version in two places.
+    expect(WORKFLOW).not.toMatch(/node-version:\s*\d/)
+  })
+
+  test('.node-version holds a concrete version', () => {
+    // A bare major (`24`) still floats across minors, which is the drift this
+    // pin exists to prevent — same bar as .bun-version.
+    const pinned = readFileSync(join(ROOT, '.node-version'), 'utf8').trim()
+    expect(pinned).toMatch(/^\d+\.\d+\.\d+$/)
+  })
+
+  test('the Node setup sits in the one job that actually runs Node', () => {
+    // Guards against the step being added to a job that does not need it, or
+    // `build:railway` moving to a job with no Node set up.
+    const railway = WORKFLOW.split(/^  build_railway:$/m)[1] ?? ''
+    expect(railway).toContain('actions/setup-node')
+    expect(railway).toContain('bun run build:railway')
+  })
 })
 
 /* The required-context census.
@@ -253,9 +344,34 @@ describe('the required-context enumeration in the mirrors', () => {
     expect(requiredContextParagraph(text)).not.toBeNull()
   })
 
+  test('every matrixed job is gated by a plain job that depends on it', () => {
+    // The half that keeps the exclusion below from being a hole in the census
+    // rather than a correction to it.
+    //
+    // A matrixed job produces no requirable context, so dropping it from the
+    // enumeration is right — but on its own that means a job can be made
+    // matrixed and thereby made UNREQUIRED, silently, by an edit that adds
+    // four lines and touches no document. What restores the guarantee is an
+    // aggregator: a non-matrixed job that `needs:` it, fails when it fails,
+    // and carries a stable name the enumeration does list. Assert the shape,
+    // so the exclusion always comes with its replacement.
+    const jobs = jobBlocks()
+    const plain = jobs.filter((job) => !isMatrixed(job))
+    for (const job of jobs.filter(isMatrixed)) {
+      const gates = plain.filter((candidate) => needsOf(candidate).includes(job.id))
+      expect(gates.map((gate) => gate.name)).not.toEqual([])
+    }
+  })
+
   test.each(MIRRORS)('%s enumerates exactly the jobs ci.yml defines', (mirror) => {
+    // Matrixed jobs excluded: see isMatrixed() for why their `name:` is not a
+    // context branch protection could ever require, and the assertion above
+    // for what stands in their place.
     const text = readFileSync(join(ROOT, mirror), 'utf8')
     const listed = new Set(requiredContextParagraph(text) ?? [])
-    expect([...listed].sort()).toEqual([...new Set(jobNames())].sort())
+    const required = jobBlocks()
+      .filter((job) => !isMatrixed(job))
+      .map((job) => job.name)
+    expect([...listed].sort()).toEqual([...new Set(required)].sort())
   })
 })

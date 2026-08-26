@@ -95,7 +95,7 @@ they state too weakly to act on:
 `start-dev.sh` kills any stale listener on the port before starting.
 
 **There IS a real test suite** (a common stale claim in older docs is that there
-isn't). `bun run test` runs 59 Bun unit-test files under `tests/` —
+isn't). `bun run test` runs 60 Bun unit-test files under `tests/` —
 `utils`, `data-validation`, `page-render`, `page-render-hooks` (the
 `onBeforeRender`/`onAfterRender` subscriber registry in `js/mockup/page-render.js`,
 which replaced js/review/ux-improvements.js's monkey-patch of
@@ -361,7 +361,7 @@ run validate` and `bun run test` after editing anything under `pages/` or
 ### CI
 
 `.github/workflows/ci.yml` runs on pushes to `main`, on every pull request, and
-on demand through `workflow_dispatch`, as a graph of eight jobs rather than one
+on demand through `workflow_dispatch`, as a graph of nine jobs rather than one
 long one, so a formatting or schema failure reports in seconds without waiting
 on a Chromium download and a flaky browser run never masks a unit failure.
 
@@ -428,7 +428,15 @@ job that does not. `changes` is the one that does not — it runs only
   were never committed (the "form shell that never hydrates" regression). It
   then **uploads `dist/` as an artifact**.
 - **build_singlefile** — `build:singlefile`, in parallel with the above.
-- **unit** — downloads that `dist/` artifact, then runs `test`. **The download
+- **unit** — downloads that `dist/` artifact, then runs `test:coverage`, which
+  is the same enumerated suite as `test` with an lcov profile added, and
+  uploads that profile to Codecov. **The coverage half is a report, never a
+  gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
+  own `codecov/project` and `codecov/patch` statuses informational, which is
+  what keeps them non-gating. Branch protection CAN require those contexts —
+  GitHub requires status contexts, not only job names — but they are not jobs
+  in `ci.yml`, so `tests/ci-workflow.test.js` cannot enumerate them and the
+  rule that every job be a required context does not reach them. **The download
   is what makes the ordering mean anything.** `needs:` only sequences jobs; a
   separate runner gets a fresh checkout, and `dist/` is gitignored, so without
   the artifact the job would test against a tree that has never been built. One
@@ -437,8 +445,32 @@ job that does not. `changes` is the one that does not — it runs only
   `dist/index.html` is absent — so it would pass by skipping and cover nothing,
   which is the exact gap the old in-job `build:railway` → `test` order existed
   to close.
-- **e2e** — installs Playwright Chromium and runs `test:e2e`, uploading
-  `playwright-report/` as an artifact on failure.
+- **e2e** — installs Playwright Chromium, downloads that same `dist/`, and runs
+  `test:e2e` **sharded four ways** (`--shard=N/4`), uploading
+  `playwright-report/` per shard on failure. It is the critical path — it ran
+  338-380s while the other six finished inside 70s — which is what the shard
+  is for. It downloads the build rather than making its own because four
+  shards would otherwise each run `validate + vite build` to stand up their
+  own Playwright `webServer`; `playwright.config.js` serves the artifact on CI
+  and still builds locally, where no `dist/` can be assumed.
+- **e2e_complete** — the aggregator, and the only reason the job above could be
+  sharded. **A matrixed job's check contexts are suffixed** (`E2E shard (1)`…),
+  so the required `Playwright end-to-end tests` context would be produced by
+  nothing and sit permanently pending — the same failure the paragraph below
+  describes. This job carries that name instead, so the protection settings
+  needed no edit for the shard and need none for a future reshard. It passes on
+  a matrix result of `success` or `skipped` (a docs-only or draft PR, matching
+  what the unsharded job did) and fails on anything else — **but a skipped
+  matrix is only a pass when nothing upstream failed**, and it checks EVERY
+  upstream job rather than just the one it depends on for the artifact.
+  `build_railway` alone was not enough: every job in that chain carries
+  `!failure()`, so a `format_validate_lint` FAILURE makes `build_railway`
+  SKIP rather than fail, and a skip read as benign printed a green
+  `Playwright end-to-end tests` for a suite where no shard ran. `changes` is
+  checked for the same reason one level further up. Only `failure` and
+  `cancelled` are rejected — a skip has to stay acceptable, since
+  `format_validate_lint` skips by design on the docs-only path and treating
+  that as an error would make docs PRs unmergeable.
 - **ci_ok** — the aggregation gate, and the only job with no condition but
   `always()`. It fails if any job above reported `failure` or `cancelled`, and
   separately if neither check path ran at all. See below.
@@ -2569,8 +2601,12 @@ by default, failing closed.
   `docs/source/sfgov-style/` corpus behind a `cache_control` breakpoint;
   caching is a prefix match, so anything variable in it kills the cache.
 - **Never writes anything** — no filesystem, no review state, no `pages/*.js`.
-  Standards manual §1.11 forbids automated approval and SF.gov's AI guidelines
-  require disclosing generative-AI use, so every successful `generate` result
+  Standards manual §1.11 bars an automated agent from setting a page status to
+  "Approved to Move = Yes" — quoted verbatim in
+  `docs/source/sfgov-style/writing-and-style.md`, and narrower than the
+  "forbids automated approval" this line used to claim — and SF.gov's AI
+  guidelines require disclosing generative-AI use, so every successful
+  `generate` result
   carries a `disclosure` string — scoped to that shape only (`capabilities`
   advertises `disclosureRequired: true`, `models` returns bare ids, errors
   carry none). Both browser export paths carry it: Download and Copy emit the
