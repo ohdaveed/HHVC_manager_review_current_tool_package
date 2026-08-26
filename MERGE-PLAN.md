@@ -64,6 +64,37 @@ anything deliberately skipped go in this file, not only in chat.
 - **Definition of Done here is push + PR + green CI**, not a local merge. Three
   branches currently have no PR at all.
 
+## PREP DONE 2026-08-26 ~17:00Z — every branch staged during the outage
+
+Category-1 work, done while Actions could not schedule runs. **Merge order and
+decisions are unchanged**; this only removes the work each cycle would have
+discovered.
+
+- **Dry-run merged every branch against `origin/main`** with
+  `git merge-tree --write-tree`, which reports conflicts without touching the
+  working tree. Five clean, two conflicting: `docs/add-skills` (all three
+  mirrors, `package.json`, `tests/skill-consistency.test.js`) and #223
+  (`ci.yml` plus two mirrors — deferred anyway).
+- **#231 opened** for `docs/skill-coordination-fixes`, with the starship files
+  dropped per the decision above. The branch now adds only
+  `multi-session-git-coordination/SKILL.md`.
+- **Four PR branches brought up to date** and pushed — #224, #225, #222, #213.
+  Each merged `origin/main` cleanly (never rebased: they are pushed).
+- **Gates run LOCALLY on each**, since CI could not: `format:check`,
+  `lint:docs`, `lint:js`, `validate` and the full `bun run test`.
+  All green — 2268–2275 pass, 0 fail, across 60 files. Note this is evidence the
+  branches are ready, NOT a substitute for the required contexts: branch
+  protection is satisfied only by the seven GitHub jobs, and `test:e2e` was not
+  run locally.
+- **Still outstanding:** `docs/add-skills` (conflict, no PR yet),
+  `chore/refresh-skills-lock` (no PR, supersession unverified), and thread
+  resolution on #213/#222/#224/#225/#231.
+
+**Actions began scheduling again at 16:57Z** — a run for `f56b208` on #230 went
+`in_progress` about 7 minutes after the push, consistent with a draining
+backlog rather than full recovery. The incident was still `investigating` at
+16:49Z.
+
 ## ⚠ LIVE STATE — Railway autodeploy is OFF
 
 **Turned off by the user on 2026-08-26, before the first merge.** Reported in
