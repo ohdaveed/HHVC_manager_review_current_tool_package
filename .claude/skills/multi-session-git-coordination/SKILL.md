@@ -78,12 +78,20 @@ The cost of over-reporting is low; the cost of a silent pause is a day lost.
 
 Before merging a PR or pushing to `main`:
 
-- **Fetch first, and verify the remote head carries every commit you mean to
-  ship.** `git fetch origin`, then `git rev-list --left-right --count
-origin/main...HEAD` and `git log --oneline origin/<branch>..HEAD`. With two
-  sessions pushing, the branch you are about to merge may not be the branch you
-  last pushed, and a stale head has silently dropped commits from a merge
-  before. Local `HEAD` is not evidence about what the remote holds.
+- **Fetch first, then bind the merge to the authoritative PR head.** Read and record
+  `SHA=$(gh pr view <number> --json headRefOid --jq .headRefOid)`, and require
+  that `$SHA`, `git rev-parse HEAD`, and the fetched PR branch ref agree. Also
+  inspect `git rev-list --left-right --count origin/main...HEAD` and
+  `git log --oneline origin/<branch>..HEAD` to verify every commit you mean to
+  ship is present. With two sessions pushing, the branch may change after the
+  fetch, so pass the recorded SHA to `gh pr merge --match-head-commit "$SHA"`.
+  If that rejects a changed head, stop and repeat validation for the new SHA.
+  Local `HEAD` and remote-tracking refs alone are not evidence about what the PR
+  will merge.**
+origin/main...HEAD` and `git log --oneline origin/<branch>..HEAD`.
+  
+  
+  
 - Announce it: "I'm about to merge #212" rather than silently doing it.
 - Confirm the other session(s) know what will happen: Does this trigger a deploy? Will it ship multiple commits? Will it change configuration?
 - Never use `railway deploy` or similar direct-upload tools when sharing the tree. Those upload the _working directory_, not `main`, and would ship unmerged branch content to production.
