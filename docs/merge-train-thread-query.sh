@@ -80,6 +80,13 @@ GRAPHQL
 
 total_unresolved=0
 
+# Counted separately from unresolved threads, and reported loudly at the end.
+# A failed query yields no rows, which is indistinguishable in the per-PR output
+# from a PR that is genuinely clean — so without this the script's summary would
+# read "TOTAL UNRESOLVED: 0" after every query failed, which is the most
+# reassuring possible rendering of "this told you nothing".
+errors=0
+
 for n in "${PRS[@]}"; do
   echo
   echo "===================== PR #${n} ====================="
@@ -91,7 +98,8 @@ for n in "${PRS[@]}"; do
     -f query="$THREAD_QUERY" 2>&1)
 
   if [ $? -ne 0 ]; then
-    echo "  ERROR querying PR #${n}:"
+    errors=$((errors + 1))
+    echo "  ERROR querying PR #${n} — this PR was NOT checked:"
     echo "$raw" | sed 's/^/    /'
     continue
   fi
@@ -135,9 +143,22 @@ done
 
 echo
 echo "=================================================="
-echo "TOTAL UNRESOLVED across the PRs queried: ${total_unresolved}"
+
+if [ "$errors" -gt 0 ]; then
+  echo "!! ${errors} of ${#PRS[@]} PR(s) COULD NOT BE QUERIED."
+  echo "!! The count below covers only the PRs that answered — it is NOT a"
+  echo "!! clean bill of health. Fix the error above (usually \`gh auth login\`)"
+  echo "!! and re-run before acting on this output."
+  echo
+fi
+
+echo "UNRESOLVED threads across the PRs that answered: ${total_unresolved}"
 echo
 echo "NEXT: resolve #230's threads ONLY, then run"
 echo "    gh pr view 230 --json mergeStateStatus,mergeable"
-echo "CLEAN  -> the diagnosis holds; the other five are mechanical."
+echo "CLEAN   -> the diagnosis holds; the other five are mechanical."
 echo "BLOCKED -> stop. Check for a repository ruleset before resolving more."
+
+# Exit non-zero when anything went unqueried, so a caller that chains off this
+# script cannot mistake a total failure for a clean result.
+[ "$errors" -eq 0 ]

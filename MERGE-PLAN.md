@@ -1,4 +1,4 @@
-# Merge train — integrating nine outstanding branches
+# Merge train — integrating six outstanding branches
 
 Tracking file for the merge of every open branch in this repo onto `main`,
 started 2026-08-26. **This file lives on `chore/merge-train`, not on `main` and
@@ -17,7 +17,7 @@ anything deliberately skipped go in this file, not only in chat.
 ## Standing constraints
 
 - **Every merge to `main` is a production Railway deploy** (service `web`,
-  connected to `main`). Nine branches is up to eight deploys.
+  connected to `main`). Six branches is up to six deploys.
   **DECIDED 2026-08-26 — pause, batch, resume.** Autodeploy is turned off before
   the first merge, the train runs, then it is turned back on and ONE deploy
   carries everything. Mechanism: Railway Service Settings' own
@@ -39,7 +39,7 @@ anything deliberately skipped go in this file, not only in chat.
   `main` sets `strict: true` (a branch must be up to date before merging) and
   `enforce_admins: true` (nobody bypasses it). So every merge stales every other
   open PR: each one then needs `origin/main` merged in, pushed, and a **full CI
-  cycle** before it can land. Eight merges is eight serial cycles, not one. There
+  cycle** before it can land. Six merges is six serial cycles, not one. There
   is no parallel path, and no admin override.
 - **Land everything by SQUASH merge.** `linear: true` disallows merge commits on
   `main`. Merging `origin/main` _into_ a feature branch stays fine — the squash
@@ -93,9 +93,15 @@ discovered.
   branches are ready, NOT a substitute for the required contexts: branch
   protection is satisfied only by the seven GitHub jobs, and `test:e2e` was not
   run locally.
-- **Still outstanding:** `docs/add-skills` (conflict, no PR yet),
-  `chore/refresh-skills-lock` (no PR, supersession unverified), and thread
-  resolution on #213/#222/#224/#225/#231.
+- **Still outstanding:** `docs/add-skills` (since retired as superseded — see
+  step 4), `chore/refresh-skills-lock` (no PR, supersession unverified), and
+  thread resolution on **all six PRs — #230 included**.
+  **Correcting this line's earlier version, which listed
+  #213/#222/#224/#225/#231 and omitted #230.** That omission came from the
+  outage note's claim that #230's three threads were already resolved, and that
+  claim does not survive measurement: at 17:52Z #230 still reads `BLOCKED` with
+  every required context green and `behind=0`. Do not read this list as
+  permission to skip #230 — it is the PR the discriminating test runs on.
 
 **Actions began scheduling again at 16:57Z** — a run for `f56b208` on #230 went
 `in_progress` about 7 minutes after the push, consistent with a draining
