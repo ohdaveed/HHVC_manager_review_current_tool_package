@@ -17,9 +17,24 @@ anything deliberately skipped go in this file, not only in chat.
 ## Standing constraints
 
 - **Every merge to `main` is a production Railway deploy** (service `web`,
-  connected to `main`). Nine branches is up to eight deploys. Verify the live
-  artifact at the end per the repo's Definition of Done — status code, deployed
-  commit against the merged SHA, clean console — not the pipeline that built it.
+  connected to `main`). Nine branches is up to eight deploys.
+  **DECIDED 2026-08-26 — pause, batch, resume.** Autodeploy is turned off before
+  the first merge, the train runs, then it is turned back on and ONE deploy
+  carries everything. Mechanism: Railway Service Settings' own
+  **Disable automatic deployments** toggle
+  (<https://docs.railway.com/deployments/github-autodeploys>), not a watch-path
+  trick and not disconnecting the source — it is single-purpose, reverses with
+  **Enable**, and leaves the repo connection and the 11 service variables
+  untouched. Service `web`, id `f111c8e4-0107-4220-908f-f36f35fb8a50`,
+  environment `production`, builder RAILPACK, build `bun run build:railway`,
+  start `bun run serve`.
+  **Resuming does not deploy by itself.** Re-enabling autodeploy waits for the
+  next push, and per Railway's own troubleshooting an empty commit will not
+  trigger one where watch paths are set — so the resume step is Enable, then
+  **Deploy Latest Commit** from the command palette, then verify.
+  Verify the live artifact at the end per the repo's Definition of Done — status
+  code, deployed commit against the merged SHA, clean console — not the pipeline
+  that built it.
 - **The train is strictly serial, and that is measured rather than assumed.**
   `main` sets `strict: true` (a branch must be up to date before merging) and
   `enforce_admins: true` (nobody bypasses it). So every merge stales every other
