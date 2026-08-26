@@ -426,7 +426,13 @@ jobs:
       # quarters of it.
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v5
+        # `@v1` — the only major alias this action publishes (latest v1.2.1,
+        # confirmed with `git ls-remote --tags`). Codecov's own docs show
+        # `@v5` in their main snippet, which does not exist and fails the job
+        # at "Prepare all required actions" before a single test runs. The
+        # coverage action next door genuinely is at v5; the two are versioned
+        # independently.
+        uses: codecov/test-results-action@v1
         with:
           files: ./test-results/junit.xml
           flags: e2e-shard-${{ matrix.shard }}
