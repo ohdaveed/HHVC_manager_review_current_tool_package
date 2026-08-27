@@ -23,9 +23,12 @@ const MAX_ATTEMPTS = 2
 
 /**
  * SF.gov's AI guidelines require disclosure of generative AI in output, and
- * the HHVC standards manual §1.11 forbids any automated approval. This string
- * rides along with every result so the browser cannot render or export a draft
- * without carrying the label.
+ * the HHVC standards manual §1.11 bars an automated agent from setting a page
+ * status to "Approved to Move = Yes" (quoted verbatim in
+ * docs/source/sfgov-style/writing-and-style.md). This string rides along with
+ * every result so the browser cannot render or export a draft without carrying
+ * the label. Keep this wording in step with the same rule's restatement in
+ * server.ts's AI-routes header — they cited it two different ways once already.
  */
 const DISCLOSURE =
   'AI-assisted draft. Not reviewed, not approved, and not publishable as-is. ' +
