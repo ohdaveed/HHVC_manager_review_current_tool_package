@@ -17,12 +17,27 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  # Superseding a PR run is free -- nobody needs the result for a commit that
-  # is no longer the branch head. Superseding a `main` run destroys the only
-  # record of whether that commit of `main` was ever green, and a cancelled
-  # run reads as a failed one. Two merges landing within six minutes of each
-  # other is routine here, so this is a state the repo reaches on its own.
+  # PRs share a group per pull request, so a new push supersedes the old run.
+  # Everything else gets a group of its OWN, because `run_id` is unique per
+  # run -- which is the same as saying pushes and dispatches are never
+  # serialised against each other at all.
+  #
+  # TWO separate mechanisms cancel a run, and `cancel-in-progress` is only one
+  # of them. It governs the RUNNING run. The group governs the PENDING one:
+  # GitHub allows a single pending run per concurrency group and cancels the
+  # previous pending run when a newer one queues, whatever `cancel-in-progress`
+  # says. So keying every `main` push on `github.ref` -- one shared group --
+  # left this exposed: with run A in progress, merge B goes pending, and merge
+  # C arriving cancels B. Commit B then carries a cancelled CI record, which is
+  # exactly the outcome the conditional below was added to prevent, reached by
+  # the other door. Three merges inside one run is a rarer afternoon here than
+  # two, but not a rare one.
+  #
+  # Superseding a PR run stays free -- nobody needs the result for a commit
+  # that is no longer the branch head. Superseding a `main` run destroys the
+  # only record of whether that commit of `main` was ever green, and a
+  # cancelled run reads as a failed one.
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
