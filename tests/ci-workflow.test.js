@@ -44,7 +44,7 @@ const SETUP_ACTION = readFileSync(join(ROOT, '.github/actions/setup-bun/action.y
  * nothing, checked nothing, and passed. The guard below caught exactly that
  * when the composite landed, which is the one thing a vacuity guard is for.
  *
- * @returns {string[]}
+ * @returns {string[]} one `with:` block per `setup-bun` occurrence, across both files.
  */
 function setupBunBlocks() {
   return [WORKFLOW, SETUP_ACTION].flatMap((text) =>
@@ -59,7 +59,7 @@ function setupBunBlocks() {
  * Each job's text, keyed by job id — the slice from its own two-space key to
  * the next one.
  *
- * @returns {Map<string, string>}
+ * @returns {Map<string, string>} each job's own text, keyed by job id, in file order.
  */
 function jobChunks() {
   const jobsBlock = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:'))

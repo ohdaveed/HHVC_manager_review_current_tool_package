@@ -373,11 +373,21 @@ evidence. `workflow_dispatch` takes no inputs on purpose: every job decides what
 to run from the event name and the change filter, so a dispatch behaves exactly
 like a push to `main` without anything having to be typed correctly into a form.
 
-**`cancel-in-progress` applies to pull requests only.** Superseding a PR run is
-free, since nobody needs the result for a commit that is no longer the branch
-head. Superseding a `main` run destroys the only record of whether that commit
-of `main` was green, and a cancelled run reads as a failed one — and two merges
-landing inside one six-minute run is an ordinary afternoon here.
+**Cancellation is scoped to pull requests, and that takes TWO settings rather
+than one.** Superseding a PR run is free, since nobody needs the result for a
+commit that is no longer the branch head. Superseding a `main` run destroys the
+only record of whether that commit of `main` was green, and a cancelled run
+reads as a failed one — and two merges landing inside one six-minute run is an
+ordinary afternoon here.
+
+`cancel-in-progress` governs only the RUNNING run. The concurrency GROUP
+governs the pending one: GitHub permits a single pending run per group and
+cancels the previous pending run when a newer one queues, regardless of
+`cancel-in-progress`. Keying every `main` push on `github.ref` therefore left
+the hole open at the other door — run A in progress, merge B pending, merge C
+arrives and cancels B — so `main` pushes and dispatches key on `github.run_id`
+instead, giving each its own group and serialising nothing. Changing one of
+those two settings without the other reopens the case it was closed for.
 
 **The Bun setup is one composite action, `.github/actions/setup-bun`.** Six jobs
 carried a byte-identical `setup-bun` / `actions/cache` / `bun install` block,
