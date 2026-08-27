@@ -2557,8 +2557,12 @@ by default, failing closed.
   `docs/source/sfgov-style/` corpus behind a `cache_control` breakpoint;
   caching is a prefix match, so anything variable in it kills the cache.
 - **Never writes anything** — no filesystem, no review state, no `pages/*.js`.
-  Standards manual §1.11 forbids automated approval and SF.gov's AI guidelines
-  require disclosing generative-AI use, so every successful `generate` result
+  Standards manual §1.11 bars an automated agent from setting a page status to
+  "Approved to Move = Yes" — quoted verbatim in
+  `docs/source/sfgov-style/writing-and-style.md`, and narrower than the
+  "forbids automated approval" this line used to claim — and SF.gov's AI
+  guidelines require disclosing generative-AI use, so every successful
+  `generate` result
   carries a `disclosure` string — scoped to that shape only (`capabilities`
   advertises `disclosureRequired: true`, `models` returns bare ids, errors
   carry none). Both browser export paths carry it: Download and Copy emit the

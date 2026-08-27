@@ -58,7 +58,6 @@
      repoints the remaining --radius consumers and drops this line. */
   --radius: var(--ext-radius-8);
   --shadow: 0 10px 24px rgba(0, 43, 72, 0.1);
-  --legacy-focus-ring: rgba(42, 96, 175, 0.25);
   --legacy-footer-bg: #001d4e;
   --serp-title-color: var(--sfds-color-action);
   --serp-url-color: var(--sfds-color-green-l4);
@@ -388,11 +387,13 @@ details.control-group > summary:hover::after {
   border-color: var(--sfds-color-action);
 }
 details.control-group > summary:focus-visible {
-  /* JUDGEMENT, not a lookup: SFDS publishes no translucent focus-ring
-     token, so this recreates the legacy ring (25% alpha over the action
-     blue) as a color-mix() against the real SFDS action colour instead
-     of inventing a new rgba() literal. */
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  /* Was a `color-mix()` recreating the legacy 25%-alpha ring, on the
+     reasoning that SFDS publishes no translucent focus-ring token. That was
+     a reasonable call and it still failed: SFDS not publishing a token does
+     not lower SC 1.4.11's 3:1 bar, and the wash measured 1.42:1 on white.
+     `--focus-ring` is opaque and carries its own dark value; the ratios live
+     with the token in css/theme.css. */
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -488,7 +489,7 @@ input[type='date']:focus,
 textarea:focus,
 button:focus,
 a:focus {
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 .field-help {
@@ -711,7 +712,7 @@ a:focus {
   background: var(--sfds-color-white);
 }
 .site-search input:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: -2px;
 }
 .site-search button {
@@ -1395,7 +1396,7 @@ a:focus {
   color: var(--sfds-color-action);
 }
 .accordion-trigger:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 /* A bare two-border square rotated into a chevron, painted in currentColor so
@@ -2114,7 +2115,7 @@ a:focus {
   cursor: pointer;
 }
 .check:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -2130,6 +2131,17 @@ a:focus {
 }
 .check.unchecked {
   opacity: 0.65;
+}
+/* `opacity` composites the ENTIRE element, its focus ring included — so the
+   muted unchecked state dragged its own 3px ring from 5.48:1 down to 2.79:1
+   against the panel. That is the exact WCAG 1.4.11 failure `--focus-ring` was
+   introduced to fix, arriving by a second mechanism the token cannot defend
+   against: the colour is opaque and the element it is painted on is not.
+   Restoring full opacity for the duration of keyboard focus is enough, since
+   the unchecked state still reads through the 0.5-opacity `::before` circle —
+   the muting is redundant encoding, and the ring is not. */
+.check.unchecked:focus-visible {
+  opacity: 1;
 }
 .check:hover::before {
   opacity: 0.8;
@@ -2152,7 +2164,7 @@ a:focus {
 }
 
 .inline-link:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: var(--radius);
 }
@@ -2365,7 +2377,7 @@ body.hide-karl-tags .unverified-pill {
 }
 
 .error-banner-dismiss:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--sfds-color-action) 25%, transparent);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 @keyframes toastIn {
