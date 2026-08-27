@@ -138,3 +138,68 @@ test.describe('accessibility', () => {
     await expectNoSeriousViolations(page)
   })
 })
+
+/* ------------------------------------------------------------------------ *
+ * The mockup body — what actually gets published (#220)
+ *
+ * This tool is a MOCKUP AUTHORING tool. The page bodies rendered inside
+ * `#mockPage` become published SF.gov content by way of Karl; the review
+ * shell around them — sidebar, workspace, browser chrome, export controls —
+ * ships nowhere. WCAG obligations attach to the first. #217 and #219 were
+ * closed as wrong-target for asserting against the second.
+ *
+ * These scans are therefore scoped with an axe include selector on
+ * `#mockPage`, so a shell violation can neither pass nor fail this gate.
+ *
+ * They are ADDED to the whole-page scans above rather than replacing them.
+ * Those currently pass, having been fixed in 507e258 after the 2026-08-06
+ * audit found 44 contrast failures hiding behind tabs the scan never opened.
+ * Un-gating something green buys nothing and loses the regression detector
+ * that caught them; if the shell ever goes red and the fix is genuinely not
+ * worth making under "the shell ships nowhere", un-gate THEN, with a real
+ * failure in hand.
+ *
+ * Coverage is one representative page per Karl content type, DERIVED from the
+ * real page data. The hardcoded list above names six and calls itself "one
+ * per content type in use" — there are eight, so `Topic` and `About us` have
+ * never been scanned by it. Deriving also means a ninth type cannot be added
+ * without this gate noticing.
+ *
+ * KNOWN BLIND SPOT, stated rather than discovered later: one page per type
+ * cannot see WITHIN-type variance — Transaction has fourteen pages and only
+ * the first is scanned here. The cheap fix if something slips through is a
+ * non-browser structural lint over all 29 page data modules, not more axe
+ * runs at ~2s each.
+ * ------------------------------------------------------------------------ */
+
+const { loadPageData } = require('../../build_scripts/load-pages')
+const { expectNoMockupBodyViolations, expectNoGenericLinkText } = require('./helpers')
+
+/** One page key per content type, in `order` sequence so the pick is stable. */
+function representativePerType() {
+  const data = loadPageData()
+  const seen = new Map()
+  for (const [key] of data.order) {
+    const type = data.pages[key] && data.pages[key].type
+    if (type && !seen.has(type)) seen.set(type, key)
+  }
+  return [...seen.entries()].map(([type, key]) => ({ type, key }))
+}
+
+test.describe('mockup body: what survives export into Karl', () => {
+  for (const { type, key } of representativePerType()) {
+    test(`${type} page "${key}" body passes the Karl-relevant rules`, async ({ page }) => {
+      await gotoFresh(page)
+      if (key !== 'pestsTopic') await selectPage(page, key)
+      await page.waitForSelector('#mockPage h1')
+      await expectNoMockupBodyViolations(page, key)
+    })
+
+    test(`${type} page "${key}" ships no generic link label`, async ({ page }) => {
+      await gotoFresh(page)
+      if (key !== 'pestsTopic') await selectPage(page, key)
+      await page.waitForSelector('#mockPage h1')
+      await expectNoGenericLinkText(page, key)
+    })
+  }
+})
