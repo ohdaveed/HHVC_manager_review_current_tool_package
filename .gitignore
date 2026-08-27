@@ -216,6 +216,14 @@ agent-evals-regression-gate.zip
 .agents/skills/setup-matt-pocock-skills/agents/openai.yaml
 .agents/skills/writing-for-agents/agents/openai.yaml
 .claude/.headroom_wrap_marker.json
+
+# Claude Code auto-memory. Conversation-derived notes (user, feedback, project,
+# reference) that Claude writes without prompting, and
+# ~/.claude/projects/<repo>/memory is symlinked here — so turning auto-memory on
+# materializes them inside the worktree. Client-derived detail must never reach
+# a commit, and the entry goes in before the feature is enabled so there is no
+# window where the notes land unignored.
+.claude/memory/
 .claude/skills/ask-matt
 .claude/skills/code-review
 .claude/skills/codebase-design
