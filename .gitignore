@@ -224,40 +224,53 @@ agent-evals-regression-gate.zip
 # a commit, and the entry goes in before the feature is enabled so there is no
 # window where the notes land unignored.
 .claude/memory/
-.claude/skills/ask-matt
-.claude/skills/code-review
-.claude/skills/codebase-design
-.claude/skills/diagnosing-bugs
-.claude/skills/domain-modeling
-.claude/skills/grill-me
-.claude/skills/grill-with-docs
-.claude/skills/grilling
-.claude/skills/handoff
-.claude/skills/implement
-.claude/skills/improve-codebase-architecture
-.claude/skills/prototype
-.claude/skills/research
-.claude/skills/resolving-merge-conflicts
-.claude/skills/setup-matt-pocock-skills
-.claude/skills/tdd
-.claude/skills/teach
-.claude/skills/to-questionnaire
-.claude/skills/to-spec
-.claude/skills/to-tickets
-.claude/skills/triage
-.claude/skills/wait-what
-.claude/skills/wayfinder
-.claude/skills/wizard
-.claude/skills/writing-for-agents
-.claude/skills/anti-ui-slop
-.claude/skills/modern-web-guidance
-
-# A diagnostics skill for THIS MACHINE's Starship prompt rendering under WSL2 —
-# mined from a local session, and about the terminal this tool is edited in
-# rather than about the tool itself. Tracking it would also enrol it in
-# `lint:docs`, whose file list comes from `git ls-files`, so a machine-local
-# note would become a CI gate on a repo it says nothing about.
-.claude/skills/starship-prompt-rendering-diagnostics
+# Agent skills: IGNORE BY DEFAULT, then re-include the ones this repo owns.
+#
+# This was a hand-maintained list of personal and plugin skills to ignore, one
+# name per line. Such a list drifts by construction: every plugin install or
+# `skillify pull` drops new directories here, each absent from the list, so they
+# pile up in `git status` and can fail `format:check` on files this repo does not
+# own and cannot fix. That has happened twice. Inverting the default fixes the
+# class rather than the instance — a newly installed skill is invisible until
+# someone deliberately re-includes it.
+#
+# The old list also carried a second reason worth keeping: tracking a
+# machine-local skill enrols it in `lint:docs`, whose file set comes from
+# `git ls-files`, so a note about this laptop's terminal would become a CI gate
+# on a repo it says nothing about.
+#
+# THE NEGATIONS ARE NOT PROTECTING WHAT IS ALREADY COMMITTED. `.gitignore` never
+# untracks anything, so all 31 tracked skills stay tracked with or without them.
+# They exist so a file ADDED INSIDE a repo-owned skill — a `references/` doc, a
+# second markdown file — still appears in `git status` instead of being silently
+# swallowed. That silent swallowing is the one regression this arrangement could
+# introduce, and the negations are what prevent it.
+#
+# Adding a repo skill means adding its negation below. That is the trade: one
+# deliberate line when THIS REPO gains a skill, instead of one reactive line
+# every time THIS MACHINE does.
+.claude/skills/*
+!.claude/skills/hhvc-*/
+!.claude/skills/HHVC_manager_review_current_tool_package/
+!.claude/skills/claude-handoff/
+!.claude/skills/deploy-paused-feature-coordination/
+!.claude/skills/git-guardrails-claude-code/
+!.claude/skills/karl-notes-drift-check/
+!.claude/skills/loop-me/
+!.claude/skills/migrate-to-shoehorn/
+!.claude/skills/multi-session-git-coordination/
+!.claude/skills/remove-ai-slop/
+!.claude/skills/scaffold-exercises/
+!.claude/skills/setup-pre-commit/
+!.claude/skills/setup-ts-deep-modules/
+!.claude/skills/ship/
+!.claude/skills/stacked-branch-coordination/
+!.claude/skills/unresolved-register/
+!.claude/skills/verify/
+!.claude/skills/verify-railway-backend/
+!.claude/skills/writing-beats/
+!.claude/skills/writing-fragments/
+!.claude/skills/writing-shape/
 agent-evals-regression-gate/agent-evals-regression-gate/SKILL.md
 
 # Scratch capture of a `bun run test` run, redirected to the repo root rather
