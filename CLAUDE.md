@@ -501,9 +501,14 @@ you see `BLOCKED` here, wait for the checks before hunting for a thread.
 Merge commits are refused outright, so the choice on any PR is squash or
 rebase-and-merge, and every recent commit on `main` is a squash.
 
-**The required-context list further down has not been re-verified against
-`main-2`'s `required_status_checks`**; it states what MUST be required, which
-none of the above changes, not what currently is.
+**The required-context list further down is VERIFIED against `main-2`'s
+`required_status_checks` as of 2026-08-28** — the seven names below are exactly
+the seven configured, in both directions. Every required context is a real job,
+so none can sit permanently pending; and the one job that is deliberately NOT
+required is `E2E shard`, for the reason the matrix note below gives: it is
+sharded, so it only ever produces suffixed contexts (`E2E shard (1)`…) and the
+bare name is produced by nothing. `Playwright end-to-end tests` is required in
+its place, which is the whole reason that aggregator job exists.
 
 **The rulesets' required status checks are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
@@ -522,7 +527,9 @@ is what makes this graph's `if:` conditions dangerous to under-require:
   at all, while a `build_railway` failure SKIPS `unit`, and that skip then
   reads as a pass. A red build merges.
 
-So the required set is **every job in the file**, `Detect changed files`
+So the required set is **every job in the file that produces a context under
+its own name** — which is all of them except the sharded `E2E shard`, whose
+aggregator `Playwright end-to-end tests` stands in for it. `Detect changed files`
 included: `Format, validate, lint`, `Unit tests (bun test)`,
 `Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
 `Build single-file export` and `Detect changed files`.
