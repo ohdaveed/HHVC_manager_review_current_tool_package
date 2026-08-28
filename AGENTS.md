@@ -504,11 +504,23 @@ is what makes this graph's `if:` conditions dangerous to under-require:
   reads as a pass. A red build merges.
 
 So the required set is **every job in the file that produces a context under
-its own name** — which is all of them except the sharded `E2E shard`, whose
-aggregator `Playwright end-to-end tests` stands in for it. `Detect changed files`
-included: `Format, validate, lint`, `Unit tests (bun test)`,
-`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
-`Build single-file export` and `Detect changed files`.
+its own name**, `Detect changed files` included: `Format, validate, lint`,
+`Unit tests (bun test)`, `Playwright end-to-end tests`, `Docs-only checks`,
+`Build railway bundle`, `Build single-file export` and `Detect changed files`.
+
+**That is seven of the eight jobs, and the omission is correct rather than an
+oversight.** The eighth is the sharded E2E matrix, which only ever produces
+suffixed contexts and whose bare name is therefore requirable by nothing — see
+the matrix note above. Its aggregator, already listed, stands in for it.
+Nothing else may be dropped from the list on similar reasoning without an
+aggregator to replace it.
+
+**Keep the paragraph above free of any other backticked job name.**
+`tests/ci-workflow.test.js` locates it by its opening words, slices to the next
+blank line, and treats every backticked string inside as a listed context — so
+an explanatory mention of another job placed in that paragraph reads as an
+extra requirement and fails the test. That is why this explanation is a
+separate paragraph.
 
 The detector is the one people leave out, on the reasoning that it only
 computes outputs and cannot itself be skipped — which is true and beside the
