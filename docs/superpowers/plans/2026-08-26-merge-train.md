@@ -9,6 +9,14 @@
 > deploy-pause mechanism, and the `BLOCKED`-with-everything-green diagnosis —
 > outlives the operation it was written for.
 >
+> **CORRECTION, 2026-08-28.** This file's "ONE REMAINING BLOCKER" section
+> diagnoses `required_conversation_resolution` as holding all six PRs. That is
+> WRONG. `main` has no classic branch protection at all (`/protection` answers
+> 404); it is gated by two rulesets, and neither carries a `pull_request` rule,
+> so no thread-resolution requirement exists. The `BLOCKED` states were pending
+> CI. The record below is left as written, per this repo's rule that a dated
+> note keeps what it said on its date.
+>
 > It is filed under `docs/superpowers/` deliberately: that directory is excluded
 > from `.prettierignore` and from `build_scripts/docs-file-set.js`'s file set, and
 > this file does not converge under Prettier — three `--write` passes each left it

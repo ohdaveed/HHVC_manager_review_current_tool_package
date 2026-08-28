@@ -457,9 +457,29 @@ returns two active branch rulesets — `main-1` (21589341) and `main-2`
 not Settings → Branches, and a ruleset does NOT appear in the `/protection`
 payload — which is why the older wording below survived so long: every check of
 the wrong endpoint came back empty and read as "nothing configured" rather than
-as "looking in the wrong place". **The required-context list further down has
-not been re-verified against those two rulesets**; it states what MUST be
-required, which is unchanged, not what currently is.
+as "looking in the wrong place". The two rulesets carry these rules, and nothing else:
+
+| Ruleset             | Rules                                               |
+| ------------------- | --------------------------------------------------- |
+| `main-1` (21589341) | `deletion`, `non_fast_forward`                      |
+| `main-2` (21589342) | `required_linear_history`, `required_status_checks` |
+
+Two consequences follow, and the first corrects a claim this repo acted on for
+days. **There is NO `pull_request` rule, so nothing requires review-thread
+resolution and nothing requires an approving review.** The merge train's
+"one remaining blocker" was diagnosed as `required_conversation_resolution`
+holding every PR; no such rule exists. Measured on 2026-08-28, two PRs
+(#235 and #213) each read `BLOCKED` with every context green, and each cleared
+on its own once CI finished — the state was PENDING CHECKS, not an unresolved thread. If
+you see `BLOCKED` here, wait for the checks before hunting for a thread.
+
+**Second, `required_linear_history` is what makes squash the only real option.**
+Merge commits are refused outright, so the choice on any PR is squash or
+rebase-and-merge, and every recent commit on `main` is a squash.
+
+**The required-context list further down has not been re-verified against
+`main-2`'s `required_status_checks`**; it states what MUST be required, which
+none of the above changes, not what currently is.
 
 **The rulesets' required status checks are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
