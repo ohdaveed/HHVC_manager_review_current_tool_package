@@ -4,6 +4,20 @@ Six PRs, landed in order. Full reasoning and evidence live in the session plan; 
 the checklist and the handoff. **`resume from PLAN.md` has to be enough on its own** — record
 blockers and decisions here, not only in chat.
 
+## Status — reconciled 2026-08-28
+
+**The stack this file was written around has fully landed, and nothing is open.** `main` is at
+`ec72328`, the working tree is clean, there are no open PRs, and no remote branch other than
+`main` survives. The last three runs on `main` are green.
+
+This file had gone stale: it was last committed on 2026-08-25 (#212) and its top half still
+described #206 and #207 as open PRs, while eighteen further commits landed on `main` behind
+its back. Everything below this heading has been re-derived from the repository rather than
+carried forward, so a reader can trust the boxes again.
+
+**What remains is the documentation programme itself** — PR 1b through PR 6 below. None of it
+is blocked, none of it depends on anything unmerged, and the items can be taken in any order.
+
 ## Why
 
 A documentation audit found that a large share of this repo's docs are confidently wrong, and
@@ -13,107 +27,52 @@ has dropped several contracts this repo treats as load-bearing. (Named as a repo
 than as a checkout path: the absolute path this line used to carry was one developer's
 machine, and it is wrong for everyone else reading the file.)
 
-## Branching note
+## Record — how the stack landed
 
-This work is the third branch in an existing stack. **Updated 2026-08-24** — the table below
-described a stack that no longer exists: #204 has merged and #206 was retargeted at `main`.
+The three-deep stack is history now, kept here because the merge hazard it carried will recur
+the next time two PRs touch `docs/karl-export-field-map.md`.
 
-| PR   | Head                                     | Base                                     | State                                     |
-| ---- | ---------------------------------------- | ---------------------------------------- | ----------------------------------------- |
-| #204 | `feat/karl-tag-field-inspection`         | `main`                                   | **merged** 2026-08-24 01:08 UTC, squashed |
-| #206 | `content/article11-spotlight-button-cap` | `main`                                   | open, checks green, `BEHIND`              |
-| this | `docs/correct-stale-claims`              | `content/article11-spotlight-button-cap` | open, checks green, `BEHIND`              |
+| PR   | Head                                     | Landed                      |
+| ---- | ---------------------------------------- | --------------------------- |
+| #204 | `feat/karl-tag-field-inspection`         | merged 2026-08-24, squashed |
+| #206 | `content/article11-spotlight-button-cap` | merged 2026-08-24, squashed |
+| #207 | `docs/correct-stale-claims`              | merged 2026-08-25, squashed |
 
-It has to stack there rather than branch from `main`, because several corrections depend on
-the 2026-08-23 precedence reversal (`dec5fbd`, `0fc3802`) that lives in #204/#206. Branching
-from `main` would produce corrections that contradict the tree they land in. That reasoning
-still holds for the CONTENT of #206; #204's half of it is now in `main` directly.
+**The hazard, for next time.** The repo squash-merges, so when the base PR of a stack lands,
+`main` gains one new commit carrying its changes while the child branch still holds the
+original as an ancestor — Git then sees the same edit arriving from two unrelated commits. The
+collision site here was exactly one file: #206 rewrote three register rows in
+`docs/karl-export-field-map.md` (`U19`, `U24`, `O14`) while #207 added the chooser/field-map
+delta and shifted all 99 `docLine` citations in `js/karl/karl-blocks.js` by +33. The
+resolution that works is **keep both halves** — they edit different rows, and the apparent
+conflict is a squash artifact rather than a disagreement. The check that proves the merge
+derived the right tree rather than a plausible one is `bun run test`, since
+`tests/karl-blocks.test.js` re-parses the field map against every `docLine` and
+`tests/doc-counts.test.js` reads the counts back out.
 
-An earlier draft of this file called those 26 commits "unpushed" and flagged it as a
-Definition-of-Done violation. That was wrong: they are pushed, with open PRs. They are
-**unmerged to `main`**, which is what a review stack normally looks like.
+**The open decision recorded here was taken, and it went the recommended way:** #207 landed
+as-is with three of its fourteen items done, rather than being held open to accumulate scope.
+Its eleven leftovers are renumbered below as **PR 1b**, exactly as this file said they must be
+— leaving them under a heading whose PR has merged would make the checklist lie about what
+shipped.
 
-## Merge sequence — landing the open stack
-
-Two PRs are open and both are green. They cannot merge together: #207 sits on #206's branch,
-so GitHub blocks it until #206 lands. `main` has also moved under both (#208, lefthook), so
-each is `BEHIND` and needs `main` merged in before it can go.
-
-**Merge `main` in; never rebase.** Both PRs are open with review history on them, and a rebase
-of pushed commits is a force-push into a live review — gated by the global rules, and pointless
-here since the repo squash-merges anyway and linear branch history buys nothing.
-
-### The hazard this stack has, stated before it bites
-
-**The repo squash-merges** — every commit on `main` has a single parent and a `(#NNN)` suffix,
-and `git merge-base --is-ancestor de33446 origin/main` reports NO. So when #206 lands, `main`
-gains **one** commit carrying its changes, while #207's branch still holds `c808fa7`, the
-original, as an ancestor. Git then sees the same edit arriving from two unrelated commits.
-
-**The collision site is exactly one file:** `docs/karl-export-field-map.md` is the only path
-both PRs touch (`comm -12` over the two net diffs). #206 rewrites three register rows there
-(`U19`, `U24`, `O14`); #207 adds the chooser/field-map delta and shifts all 99 `docLine`
-citations in `js/karl/karl-blocks.js`. **The shift is +33 against `main`, not the +16 this line
-carried** — `+16` was the intermediate figure after `0078a7d`, and the P2 rewrite in `43affc7`
-moved the same citations a further +17. Measured, not counted by hand: 98 of the 99 are exactly
-+33, and the outlier is `U1` at +234 because that one was also CORRECTED, from a Report
-coverage row onto its real Unresolved-register row. A careless conflict resolution that drops #207's
-line shift leaves `tests/karl-blocks.test.js` red, and one that drops #206's `U24` closure
-reopens a register entry against a page that no longer violates it.
-
-### Step 1 — Land #206 (`content/article11-spotlight-button-cap` → `main`)
-
-- [x] `git fetch origin && git checkout content/article11-spotlight-button-cap`
-- [x] `git merge origin/main` — expect clean; #208 touched lefthook config, which #206 does not
-- [x] `bun run validate && bun run test && bun run format:check && bun run lint:docs`
-- [x] Push, `gh pr checks 206 --watch`, confirm all six required contexts pass
-- [x] Merge #206. **Squash**, matching every other merge on `main`
-- [x] Delete the merged branch
-
-### Step 2 — Re-point and repair #207 (`docs/correct-stale-claims`)
-
-- [x] Confirm GitHub retargeted #207's base to `main` when #206's branch was deleted; if it
-      did not, set it with `gh pr edit 207 --base main`
-- [x] `git checkout docs/correct-stale-claims && git merge origin/main`
-- [x] **Resolve the `docs/karl-export-field-map.md` conflict by keeping both halves** — #206's
-      three register rows AND #207's chooser delta. They edit different rows; there is no real
-      disagreement, only a squash artifact. `pages/health-code-article-11.js` may also conflict
-      spuriously: take `main`'s side, which already has the shortened label
-- [x] **Verify the merge derived the right tree rather than a plausible one.** The check that
-      actually proves it: `bun run test` green, since `tests/karl-blocks.test.js` parses the
-      field map and re-checks every `docLine`, and `tests/doc-counts.test.js` reads the counts
-      back out. A merge that silently dropped either side goes red there
-- [ ] Push, `gh pr checks 207 --watch`, merge (squash), delete branch
-
-### Step 3 — Verify the deploy, not the pipeline
+## Deploy verification — partly done, and the gap is stated
 
 `main` is connected to Railway, so each merge redeploys production.
 
-- [ ] After the last merge: `git fetch origin && git log --oneline -1 origin/main` — read the
-      merged SHA from the remote, not local `HEAD`, which is a different commit after a squash
-- [ ] Load <https://web-production-9bb3b.up.railway.app> headlessly; assert 200, a clean
-      console, and the deployed commit matching that SHA
-- [ ] Spot-check the two things this stack actually changed on screen: the Article 11 Spotlight
-      button reads "View Article 11", and a Karl guide panel shows its Field and Rules rows
+- [x] The merged SHA was read from the remote rather than local `HEAD`: `origin/main` is
+      `ec72328`, and CI is green on it.
+- [x] <https://web-production-9bb3b.up.railway.app> answers **200**, and `/api/review-state`
+      answers **401** — authorization configured, which is the healthy state for that route
+      (a 501 there would mean the variables were lost).
+- [ ] **Not done, and not to be claimed:** nobody has loaded the deploy headlessly to assert a
+      clean console, and nobody has confirmed the commit the deploy is serving matches
+      `ec72328`. A status code is not either of those.
+- [ ] **Not done:** the on-screen spot-check of what the stack changed — the Article 11
+      Spotlight button reading "View Article 11", and a Karl guide panel showing its Field and
+      Rules rows.
 
-### Decision required before Step 2
-
-**#207 is PR 1 of the six-PR programme below, and it is 3 of 14 items done.** Merging it lands
-three real corrections and leaves eleven ticked-nowhere. Two ways to go, and this is a call for
-whoever picks the work up:
-
-- **Land it as-is (recommended).** The three corrections are each independently right, CI is
-  green, and the remaining eleven are additive rather than dependent. Holding a green PR open
-  to accumulate scope is what produced a three-deep stack in the first place, and every day it
-  waits is another day `main` moves under it.
-- **Finish PR 1 first.** Defensible if the eleven remaining items are meant to read as one
-  coherent documentation pass. Costs another `main`-merge cycle and keeps #207 conflict-exposed
-  for longer.
-
-If landing as-is: renumber the leftovers into a new **PR 1b** below rather than leaving them
-under a heading whose PR has merged, or the checklist starts lying about what shipped.
-
-## PR 1 — Correct stale claims in place
+## PR 1 — Correct stale claims in place (merged as #207)
 
 - [x] `build_scripts/ai/prompts.js` — the missed propagation site. It still told the model
       "where it conflicts with `karl`, the measurement wins"; `docs/karl-export-field-map.md`
@@ -127,8 +86,8 @@ under a heading whose PR has merged, or the checklist starts lying about what sh
 - [x] `docs/karl-export-field-map.md` — the chooser/field-map delta, computed both ways:
       chooser 14, field map 17, nothing in the chooser unaccounted for, and `Topic` / `Form` /
       `Document Collection Search` present here but not offered there. Landed in `d73890f`;
-      **this supersedes PR 4a's narrower "Topic is the one absent type" framing.**
-      Side effect: all 99 `docLine` citations in `js/karl/karl-blocks.js` shifted +16.
+      **this supersedes PR 4's narrower "Topic is the one absent type" framing.**
+      Side effect: all 99 `docLine` citations in `js/karl/karl-blocks.js` shifted.
 - [x] `docs/codebase/` — SQLite→Postgres drift (`storage.js` owns the driver seam; there is no
       `server.ts` `getDb()`).
 - [x] `docs/codebase/` — "no UI framework" vs the live React 19 + MUI islands.
@@ -136,25 +95,42 @@ under a heading whose PR has merged, or the checklist starts lying about what sh
 - [x] `docs/codebase/` — counts: 59 unit test files, 26 e2e specs, 11 stylesheets, 7 CI jobs.
 - [x] `docs/codebase/CONCERNS.md` §1 — regenerate; its top-ranked risk is itself the stalest
       thing in the file.
+
+## PR 1b — The eleven corrections #207 did not carry
+
+Re-verified against the tree on 2026-08-28; every one of these is still open.
+
 - [ ] `README.md` — regenerate the file tree, add the missing scripts, fix the render pointer,
-      resolve the `dev`/`start` contradiction, name Railway. Leave the counts alone.
-- [ ] `review/manager_review_packet.md` — rewrite against the real 29-page set.
+      resolve the `dev`/`start` contradiction. Leave the counts alone. **Two notes from the
+      re-check:** Railway is already named (`README.md:169`), so that half of the item is done;
+      the render pointer is not — `README.md:287` still sends a reader to `js/core/app.js` for
+      render behaviour, which has lived in `js/mockup/page-render.js` since the module split.
+- [ ] `review/manager_review_packet.md` — rewrite against the real 29-page set. Still opens
+      "HHVC Manager Review Packet — 19-Page Agency IA" and repeats the figure in its summary.
 - [ ] `review/demo-run-of-show.md`, `demo-readiness-notes.md` — counts; several need
       re-measuring rather than renumbering.
 - [ ] `docs/source/hhvc-policy/README.md` — 35 files missing from the inventory; add the
       RAG-corpus line.
-- [ ] `docs/agents/domain.md` — drop the `src/` line.
-- [ ] Seven stale "19 pages" code comments.
+- [ ] `docs/agents/domain.md` — drop the `src/` line. **There are two**, at lines 9 and 23.
+- [ ] Seven stale "19 pages" code comments. Confirmed still seven:
+      `js/review/keyboard-shortcuts.js:256`, `js/review/ux-improvements-state-sync.js:774`,
+      `js/standards/plain-language.js:1162` and `:1199`, `js/standards/reading-level.js:14`,
+      `js/sync/review-state-sync.js:870`, `tests/e2e/workspace-panels.spec.js:5`.
 
 ## PR 2 — Archive dead records
 
-- [ ] `.prettierignore` gets `archive/` **first**, or `format:check` goes red.
+- [ ] `.prettierignore` gets `archive/` **first**, or `format:check` goes red. **Still absent
+      from that file, and the directory now exists for unrelated reasons** — `7d66723` created
+      `archive/` for the consolidation-proposal pages and #239 added the merge-train record —
+      so this item is now a live risk rather than a hypothetical one.
 - [ ] Move the safe set (superpowers plans+prompts, chapter drafts, dated audits, draft copy).
 - [ ] Move the four needing referrer updates, each in the same commit as its referrer.
 - [ ] Lift the FY26-27 fee fact out of `docs/AGENT_COORDINATION.md` before archiving it.
 - [ ] Update `docs-file-set.js`, `knowledge-sources.js` comments, and the canon.
 
 ## PR 3 — Porting brief and manifest
+
+Neither file exists yet.
 
 - [ ] `docs/agents/porting-brief.md` — reading list plus the gap register.
 - [ ] `docs/agents/porting-manifest.json` — with `rebuild_status` per Tier 1 entry.
@@ -175,6 +151,8 @@ under a heading whose PR has merged, or the checklist starts lying about what sh
 
 ## PR 5 — `CONTEXT.md` and `docs/adr/`
 
+Neither exists yet, so a session picking this up starts from nothing.
+
 - [ ] `CONTEXT.md` glossary, leading with the four term collisions.
 - [ ] 12–20 ADRs plus a README naming what deliberately has none.
 
@@ -183,3 +161,17 @@ under a heading whose PR has merged, or the checklist starts lying about what sh
 - [ ] Inline per-section corrections in
       `docs/source/hhvc-policy/karl-content-type-field-reference.md`.
 - [ ] Local re-ingest only. **Stop and ask before writing to the Railway store.**
+
+## Not in this programme, but open
+
+Five issues sit on the tracker and none of them belong to the PRs above. Recorded here so a
+session resuming from this file does not mistake the checklist for the whole backlog.
+
+- **#221** `chore: add .gitattributes — CRLF churn is masking real diffs` (`ready-for-agent`)
+- **#220** `test: axe suite has documented blind spots that let contrast failures ship`
+  (`ready-for-agent`)
+- **#216** `a11y: no skip link anywhere (WCAG 2.4.1 Bypass Blocks)` (`ready-for-agent`)
+- **#199** `ai-rewrite's plain-string list has not tracked the widened data-rewrite-field
+surface` (`needs-triage`)
+- **#196** `measure-window-graph: a multiline expression-bodied arrow is closed before its
+body` (`needs-triage`)
