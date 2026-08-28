@@ -7,8 +7,8 @@ blockers and decisions here, not only in chat.
 ## Status — reconciled 2026-08-28
 
 **The stack this file was written around has fully landed, and nothing is open.** `main` is at
-`ec72328`, the working tree is clean, there are no open PRs, and no remote branch other than
-`main` survives. The last three runs on `main` are green.
+`d1e85d3`, the working tree is clean, there are no open PRs, and no remote branch other than
+`main` survives. The last several runs on `main` are green.
 
 This file had gone stale: it was last committed on 2026-08-25 (#212) and its top half still
 described #206 and #207 as open PRs, while eighteen further commits landed on `main` behind
@@ -56,21 +56,26 @@ Its eleven leftovers are renumbered below as **PR 1b**, exactly as this file sai
 — leaving them under a heading whose PR has merged would make the checklist lie about what
 shipped.
 
-## Deploy verification — partly done, and the gap is stated
+## Deploy verification — done at `d1e85d3` on 2026-08-28
 
-`main` is connected to Railway, so each merge redeploys production.
+`main` is connected to Railway, so each merge redeploys production. Every line below was
+observed rather than inferred, and each names the commit it was observed against — a
+verification that does not name its commit stops being evidence the next time `main` moves.
 
 - [x] The merged SHA was read from the remote rather than local `HEAD`: `origin/main` is
-      `ec72328`, and CI is green on it.
+      `d1e85d3`, and CI is green on it.
 - [x] <https://web-production-9bb3b.up.railway.app> answers **200**, and `/api/review-state`
       answers **401** — authorization configured, which is the healthy state for that route
       (a 501 there would mean the variables were lost).
-- [ ] **Not done, and not to be claimed:** nobody has loaded the deploy headlessly to assert a
-      clean console, and nobody has confirmed the commit the deploy is serving matches
-      `ec72328`. A status code is not either of those.
-- [ ] **Not done:** the on-screen spot-check of what the stack changed — the Article 11
-      Spotlight button reading "View Article 11", and a Karl guide panel showing its Field and
-      Rules rows.
+- [x] **The deploy is serving that commit, read out of Railway rather than assumed:**
+      deployment `3dd51a87` reports `SUCCESS` against
+      `d1e85d34e3ee9d8b880207003b8dc754afbdcb78`.
+- [x] **Loaded headlessly, console clean** — 2 console entries, 0 errors and 0 warnings.
+- [x] **The on-screen spot-check of what the stack changed.** On `?page=article11Guide`: the
+      Spotlight button renders "View Article 11 ↗", which is #206's 25-character cap, and the
+      Karl guide panels render their Field and Rules rows — including the Guidance row that
+      states the Help Center's 25-character rule (E3) beside the field's measured
+      `maxlength="255"` (E1), which is #204's half.
 
 ## PR 1 — Correct stale claims in place (merged as #207)
 
