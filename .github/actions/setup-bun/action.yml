@@ -1,0 +1,40 @@
+name: Set up Bun with a warm install cache
+description: >-
+  The Bun toolchain, the install cache and `bun install --frozen-lockfile` —
+  the three steps every job in ci.yml repeated verbatim.
+
+# WHY THIS EXISTS, and why the checkout is NOT in it.
+#
+# Six jobs each carried an identical setup-bun / actions/cache / bun install
+# block, which meant six copies of the cache key. A key that drifts in one
+# copy does not fail: that job silently installs from the network on every
+# run, stays green, and just gets slower — the kind of rot nothing reports.
+# One definition cannot disagree with itself.
+#
+# The checkout stays in the calling job, and not out of preference. A LOCAL
+# composite action is read from the workspace, so `uses: ./.github/actions/...`
+# cannot resolve until `actions/checkout` has already run in that same job.
+# Folding the checkout in here would make every job fail to even start. The
+# jobs also need different `fetch-depth` values (`check:revert` needs full
+# history), so the step is genuinely per-job anyway.
+
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version-file: .bun-version
+
+    - name: Cache Bun install cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.bun/install/cache
+        key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+      # Required on every `run` step in a composite action; there is no
+      # workflow-level default to inherit here.
+      shell: bash

@@ -5,10 +5,40 @@ on:
     branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # Manual runs, because for four consecutive commits this workflow produced
+  # NO runs at all -- Actions simply stopped creating them -- and with only
+  # `push` and `pull_request` triggers there was no way to ask for one. `main`
+  # was merged to with the local test suite as the only evidence. An escape
+  # hatch that costs one line is worth having before it is needed again.
+  #
+  # It is deliberately input-less: every job below decides what to run from
+  # the event name and the change filter, so a dispatch behaves exactly like a
+  # push to `main` and needs nothing typed into a form to be correct.
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # PRs share a group per pull request, so a new push supersedes the old run.
+  # Everything else gets a group of its OWN, because `run_id` is unique per
+  # run -- which is the same as saying pushes and dispatches are never
+  # serialised against each other at all.
+  #
+  # TWO separate mechanisms cancel a run, and `cancel-in-progress` is only one
+  # of them. It governs the RUNNING run. The group governs the PENDING one:
+  # GitHub allows a single pending run per concurrency group and cancels the
+  # previous pending run when a newer one queues, whatever `cancel-in-progress`
+  # says. So keying every `main` push on `github.ref` -- one shared group --
+  # left this exposed: with run A in progress, merge B goes pending, and merge
+  # C arriving cancels B. Commit B then carries a cancelled CI record, which is
+  # exactly the outcome the conditional below was added to prevent, reached by
+  # the other door. Three merges inside one run is a rarer afternoon here than
+  # two, but not a rare one.
+  #
+  # Superseding a PR run stays free -- nobody needs the result for a commit
+  # that is no longer the branch head. Superseding a `main` run destroys the
+  # only record of whether that commit of `main` was ever green, and a
+  # cancelled run reads as a failed one.
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -76,18 +106,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
-      - name: Cache Bun install cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup-bun
       - name: Docs lint (markdownlint)
         run: bun run lint:docs
       - name: Prettier check
@@ -139,25 +158,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.code == 'true'
+    if: github.event_name != 'pull_request' || needs.changes.outputs.code == 'true'
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
-
-      - name: Cache Bun install cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup-bun
 
       - name: Prettier check (the lint step)
         run: bun run format:check
@@ -198,26 +205,17 @@ jobs:
     # `format_validate_lint`'s.
     if: >-
       !failure() && !cancelled() &&
-      (github.event_name == 'push' || needs.changes.outputs.code == 'true')
+      (github.event_name != 'pull_request' || needs.changes.outputs.code == 'true')
     steps:
       - uses: actions/checkout@v5
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
+      - uses: ./.github/actions/setup-bun
 
-      - name: Cache Bun install cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
       # This is the ONE job in the graph that runs Node rather than Bun:
       # `build:railway` ends in `node build_scripts/copy-workshop-form.js`.
-      # Until now nothing set Node up at all, so that step ran on whatever the
-      # `ubuntu-latest` image happened to ship — an unpinned runtime that can
-      # change under the repository with no commit to point at.
+      # Nothing set Node up at all until it was pinned, so that step ran on
+      # whatever the `ubuntu-latest` image happened to ship — an unpinned
+      # runtime that can change under the repository with no commit to point at.
       #
       # That is not hypothetical here. `bun-version: latest` did exactly this:
       # Bun 1.3.14 stopped allowing CJS to `require()` an ESM module, the same
@@ -227,12 +225,14 @@ jobs:
       # Pinned from a FILE rather than an inline literal, matching
       # `.bun-version`, so the version lives in one place and a bump is a
       # visible one-line commit.
+      #
+      # It stays OUT of the `setup-bun` composite deliberately. That action is
+      # shared by six jobs and describes the Bun toolchain; only this one job
+      # runs Node, and folding a Node install into it would slow five jobs down
+      # to express a dependency they do not have.
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
 
       # `CODECOV_TOKEN` is exposed HERE, to this step only, because the
       # Codecov Vite plugin reads it from the environment during the build —
@@ -292,23 +292,11 @@ jobs:
     # See build_railway's comment on this condition.
     if: >-
       !failure() && !cancelled() &&
-      (github.event_name == 'push' || needs.changes.outputs.code == 'true')
+      (github.event_name != 'pull_request' || needs.changes.outputs.code == 'true')
     steps:
       - uses: actions/checkout@v5
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
-
-      - name: Cache Bun install cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup-bun
 
       - name: Single-file export build
         run: bun run build:singlefile
@@ -321,23 +309,11 @@ jobs:
     # See build_railway's comment on this condition.
     if: >-
       !failure() && !cancelled() &&
-      (github.event_name == 'push' || needs.changes.outputs.code == 'true')
+      (github.event_name != 'pull_request' || needs.changes.outputs.code == 'true')
     steps:
       - uses: actions/checkout@v5
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
-
-      - name: Cache Bun install cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - uses: ./.github/actions/setup-bun
 
       - name: Download dist artifact from build job
         uses: actions/download-artifact@v5
@@ -419,22 +395,13 @@ jobs:
     # is still there.
     if: >-
       !failure() && !cancelled() &&
-      (github.event_name == 'push' || needs.changes.outputs.code == 'true') &&
+      (github.event_name != 'pull_request' || needs.changes.outputs.code == 'true') &&
       !github.event.pull_request.draft
     steps:
       - uses: actions/checkout@v5
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: .bun-version
+      - uses: ./.github/actions/setup-bun
 
-      - name: Cache Bun install cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock', 'package.json', '.bun-version') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
@@ -442,9 +409,6 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
 
@@ -581,3 +545,79 @@ jobs:
               exit 1
               ;;
           esac
+
+  # ---------------------------------------------------------------------------
+  # THE ONE CHECK BRANCH PROTECTION SHOULD REQUIRE.
+  #
+  # Every job above is conditionally skipped, and a skipped required check
+  # reads to branch protection as a PASSING one -- a GitHub-acknowledged gap
+  # that the comments above already work around one job at a time. That
+  # makes naming the real jobs as required checks unsafe in both directions:
+  # require `Unit tests` and a docs-only PR passes it by never running it;
+  # require the docs job and every code PR passes it the same way. There is no
+  # stable set to name, because the graph deliberately has two mutually
+  # exclusive shapes.
+  #
+  # This job has no condition but `always()`, so it is the one check that runs
+  # on every event and can therefore be required. It fails if ANY job reported
+  # `failure` or `cancelled`. Reading `skipped` as acceptable is what makes the
+  # two-shape graph expressible, and it is not the hole it looks like: a job
+  # skipped because an upstream job failed is `skipped`, but that upstream job
+  # is itself `failure` and is caught here.
+  #
+  # What it genuinely does NOT catch is an `if:` condition edited into never
+  # firing -- every job skips, and the gate passes. The second step below
+  # closes the worst version of that (nothing checked anything at all);
+  # the rest is the residual risk of the pattern, and it is strictly smaller
+  # than requiring individual jobs, which has this hole AND no aggregation.
+  #
+  # A job added above must be added to `needs` here or it is not covered.
+  # ---------------------------------------------------------------------------
+  ci_ok:
+    name: CI passed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: always()
+    needs:
+      - changes
+      - docs_only_checks
+      - format_validate_lint
+      - build_railway
+      - build_singlefile
+      - unit
+      - e2e
+      - e2e_complete
+    steps:
+      - name: Require every job to have succeeded or skipped by design
+        env:
+          # `join` over the object filter gives one space-separated word
+          # per job in `needs`, in declaration order.
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *)
+                echo "::error::A CI job reported '$result'."
+                exit 1
+                ;;
+            esac
+          done
+
+      # The tripwire for a change filter that matches nothing. `code` and
+      # `docs` are meant to be exhaustive between them, so exactly one of these
+      # two jobs runs on every pull request. Both skipping means the graph
+      # checked NOTHING and reported green -- which is the failure mode a
+      # paths-filtered workflow fails in, and this file has already had the
+      # filter wrong in both directions once each.
+      - name: Require one of the two check paths to have run
+        env:
+          DOCS_PATH: ${{ needs.docs_only_checks.result }}
+          CODE_PATH: ${{ needs.format_validate_lint.result }}
+        run: |
+          if [ "$DOCS_PATH" != 'success' ] && [ "$CODE_PATH" != 'success' ]; then
+            echo "::error::Neither the docs-only path ($DOCS_PATH) nor the code path ($CODE_PATH) ran; nothing was checked."
+            exit 1
+          fi
+          echo 'CI is green.'

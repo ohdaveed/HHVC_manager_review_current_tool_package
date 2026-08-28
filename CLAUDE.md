@@ -384,10 +384,43 @@ or `js/core/page-data.js`.**
 
 ### CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` and every pull request, as
-a graph of eight jobs rather than one long one, so a formatting or schema
-failure reports in seconds without waiting on a Chromium download and a flaky
-browser run never masks a unit failure.
+`.github/workflows/ci.yml` runs on pushes to `main`, on every pull request, and
+on demand through `workflow_dispatch`, as a graph of nine jobs rather than one
+long one, so a formatting or schema failure reports in seconds without waiting
+on a Chromium download and a flaky browser run never masks a unit failure.
+
+**The manual trigger exists because its absence was felt.** For four
+consecutive commits Actions produced no runs for this repo at all — not failed
+runs, no runs — and with only `push` and `pull_request` triggers there was no
+way to ask for one, so `main` was merged to with a local test run as the only
+evidence. `workflow_dispatch` takes no inputs on purpose: every job decides what
+to run from the event name and the change filter, so a dispatch behaves exactly
+like a push to `main` without anything having to be typed correctly into a form.
+
+**Cancellation is scoped to pull requests, and that takes TWO settings rather
+than one.** Superseding a PR run is free, since nobody needs the result for a
+commit that is no longer the branch head. Superseding a `main` run destroys the
+only record of whether that commit of `main` was green, and a cancelled run
+reads as a failed one — and two merges landing inside one six-minute run is an
+ordinary afternoon here.
+
+`cancel-in-progress` governs only the RUNNING run. The concurrency GROUP
+governs the pending one: GitHub permits a single pending run per group and
+cancels the previous pending run when a newer one queues, regardless of
+`cancel-in-progress`. Keying every `main` push on `github.ref` therefore left
+the hole open at the other door — run A in progress, merge B pending, merge C
+arrives and cancels B — so `main` pushes and dispatches key on `github.run_id`
+instead, giving each its own group and serialising nothing. Changing one of
+those two settings without the other reopens the case it was closed for.
+
+**The Bun setup is one composite action, `.github/actions/setup-bun`.** Six jobs
+carried a byte-identical `setup-bun` / `actions/cache` / `bun install` block,
+which meant six copies of one cache key; a key that drifts in a single copy does
+not fail anything, it just makes that job install from the network on every run,
+staying green and getting slower. The checkout deliberately stays in each job:
+a local composite action is read out of the workspace, so `uses: ./.github/...`
+cannot resolve until `actions/checkout` has run in that same job, and the jobs
+need different `fetch-depth` values anyway.
 
 **Every job that USES Bun pins it from `.bun-version`, and that pin is
 load-bearing.** They
@@ -472,6 +505,9 @@ job that does not. `changes` is the one that does not — it runs only
   `cancelled` are rejected — a skip has to stay acceptable, since
   `format_validate_lint` skips by design on the docs-only path and treating
   that as an error would make docs PRs unmergeable.
+- **ci_ok** — the aggregation gate, and the only job with no condition but
+  `always()`. It fails if any job above reported `failure` or `cancelled`, and
+  separately if neither check path ran at all. See below.
 
 **Measured 2026-08-28: this repo is gated by repository RULESETS, not by
 classic branch protection.** `GET /repos/{owner}/{repo}/branches/main/protection`
@@ -501,9 +537,12 @@ you see `BLOCKED` here, wait for the checks before hunting for a thread.
 Merge commits are refused outright, so the choice on any PR is squash or
 rebase-and-merge, and every recent commit on `main` is a squash.
 
-**The required-context list further down is VERIFIED against `main-2`'s
-`required_status_checks` as of 2026-08-28** — the seven names below are exactly
-the seven configured, in both directions. Every required context is a real job,
+**The required-context list further down was VERIFIED against `main-2`'s
+`required_status_checks` on 2026-08-28, and this PR deliberately puts it one
+ahead.** Seven names were configured and seven were documented, matching in
+both directions. The list now carries an eighth, `CI passed`, which this change
+adds to `ci.yml` — so until someone adds that context to `main-2`, the document
+states what SHOULD be required and the ruleset enforces one fewer. Every required context is a real job,
 so none can sit permanently pending; and the one job that is deliberately NOT
 required is `E2E shard`, for the reason the matrix note below gives: it is
 sharded, so it only ever produces suffixed contexts (`E2E shard (1)`…) and the
@@ -530,10 +569,11 @@ is what makes this graph's `if:` conditions dangerous to under-require:
 So the required set is **every job in the file that produces a context under
 its own name**, `Detect changed files` included: `Format, validate, lint`,
 `Unit tests (bun test)`, `Playwright end-to-end tests`, `Docs-only checks`,
-`Build railway bundle`, `Build single-file export` and `Detect changed files`.
+`Build railway bundle`, `Build single-file export`, `Detect changed files` and
+`CI passed`.
 
-**That is seven of the eight jobs, and the omission is correct rather than an
-oversight.** The eighth is the sharded E2E matrix, which only ever produces
+**That is eight of the nine jobs, and the omission is correct rather than an
+oversight.** The ninth is the sharded E2E matrix, which only ever produces
 suffixed contexts and whose bare name is therefore requirable by nothing — see
 the matrix note above. Its aggregator, already listed, stands in for it.
 Nothing else may be dropped from the list on similar reasoning without an
@@ -545,6 +585,24 @@ blank line, and treats every backticked string inside as a listed context — so
 an explanatory mention of another job placed in that paragraph reads as an
 extra requirement and fails the test. That is why this explanation is a
 separate paragraph.
+
+**`CI passed` is the aggregation gate, and it is the one context worth requiring
+on its own.** Requiring all eight is the belt-and-braces reading of the rule
+above, and it works; the trouble is that it makes the ruleset a hand-maintained
+transcript of a job list that changes, which is the failure this whole section
+is about. The gate collapses that to one name. It runs on every event, so it can
+never be skipped into a pass, and it reads every other job's result directly:
+anything reporting `failure` or `cancelled` fails it, including a job whose own
+skip was caused by an upstream failure, because the upstream job is the one
+reporting `failure`. It accepts `skipped` — that is what lets the two-shape
+graph exist at all — and then closes the worst version of that loophole by
+failing when NEITHER the docs path nor the code path ran, which is the state a
+broken change filter produces and the one where a PR goes green having checked
+nothing.
+
+Until the ruleset is actually pointed at it, the gate is advisory, exactly as
+the rule above says of any unlisted job. It is additive either way: adding it
+breaks no existing required context, which is the opposite of renaming one.
 
 The detector is the one people leave out, on the reasoning that it only
 computes outputs and cannot itself be skipped — which is true and beside the
