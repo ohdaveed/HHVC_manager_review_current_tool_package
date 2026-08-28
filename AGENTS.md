@@ -443,7 +443,7 @@ job that does not. `changes` is the one that does not — it runs only
   uploads that profile to Codecov. **The coverage half is a report, never a
   gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
   own `codecov/project` and `codecov/patch` statuses informational, which is
-  what keeps them non-gating. Branch protection CAN require those contexts —
+  what keeps them non-gating. A ruleset CAN require those contexts —
   GitHub requires status contexts, not only job names — but they are not jobs
   in `ci.yml`, so `tests/ci-workflow.test.js` cannot enumerate them and the
   rule that every job be a required context does not reach them. **The download
@@ -485,7 +485,47 @@ job that does not. `changes` is the one that does not — it runs only
   `always()`. It fails if any job above reported `failure` or `cancelled`, and
   separately if neither check path ran at all. See below.
 
-**Branch protection's required contexts are job NAMES, not job ids, and they
+**Measured 2026-08-28: this repo is gated by repository RULESETS, not by
+classic branch protection.** `GET /repos/{owner}/{repo}/branches/main/protection`
+answers `404 Branch not protected`, while `GET /repos/{owner}/{repo}/rulesets`
+returns two active branch rulesets — `main-1` (21589341) and `main-2`
+(21589342). The settings therefore live under **Settings → Rules → Rulesets**,
+not Settings → Branches, and a ruleset does NOT appear in the `/protection`
+payload — which is why the older wording below survived so long: every check of
+the wrong endpoint came back empty and read as "nothing configured" rather than
+as "looking in the wrong place". The two rulesets carry these rules, and nothing else:
+
+| Ruleset             | Rules                                               |
+| ------------------- | --------------------------------------------------- |
+| `main-1` (21589341) | `deletion`, `non_fast_forward`                      |
+| `main-2` (21589342) | `required_linear_history`, `required_status_checks` |
+
+Two consequences follow, and the first corrects a claim this repo acted on for
+days. **There is NO `pull_request` rule, so nothing requires review-thread
+resolution and nothing requires an approving review.** The merge train's
+"one remaining blocker" was diagnosed as `required_conversation_resolution`
+holding every PR; no such rule exists. Measured on 2026-08-28, two PRs
+(#235 and #213) each read `BLOCKED` with every context green, and each cleared
+on its own once CI finished — the state was PENDING CHECKS, not an unresolved thread. If
+you see `BLOCKED` here, wait for the checks before hunting for a thread.
+
+**Second, `required_linear_history` is what makes squash the only real option.**
+Merge commits are refused outright, so the choice on any PR is squash or
+rebase-and-merge, and every recent commit on `main` is a squash.
+
+**The required-context list further down was VERIFIED against `main-2`'s
+`required_status_checks` on 2026-08-28, and this PR deliberately puts it one
+ahead.** Seven names were configured and seven were documented, matching in
+both directions. The list now carries an eighth, `CI passed`, which this change
+adds to `ci.yml` — so until someone adds that context to `main-2`, the document
+states what SHOULD be required and the ruleset enforces one fewer. Every required context is a real job,
+so none can sit permanently pending; and the one job that is deliberately NOT
+required is `E2E shard`, for the reason the matrix note below gives: it is
+sharded, so it only ever produces suffixed contexts (`E2E shard (1)`…) and the
+bare name is produced by nothing. `Playwright end-to-end tests` is required in
+its place, which is the whole reason that aggregator job exists.
+
+**The rulesets' required status checks are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
 context `Format, validate, unit tests` out of existence, and a context that no
 job produces stays permanently pending however green the run — so a PR can go
@@ -502,28 +542,43 @@ is what makes this graph's `if:` conditions dangerous to under-require:
   at all, while a `build_railway` failure SKIPS `unit`, and that skip then
   reads as a pass. A red build merges.
 
-So the required set is **every job in the file**, `Detect changed files`
-included: `Format, validate, lint`, `Unit tests (bun test)`,
-`Playwright end-to-end tests`, `Docs-only checks`, `Build railway bundle`,
-`Build single-file export`, `Detect changed files` and `CI passed`.
+So the required set is **every job in the file that produces a context under
+its own name**, `Detect changed files` included: `Format, validate, lint`,
+`Unit tests (bun test)`, `Playwright end-to-end tests`, `Docs-only checks`,
+`Build railway bundle`, `Build single-file export`, `Detect changed files` and
+`CI passed`.
+
+**That is eight of the nine jobs, and the omission is correct rather than an
+oversight.** The ninth is the sharded E2E matrix, which only ever produces
+suffixed contexts and whose bare name is therefore requirable by nothing — see
+the matrix note above. Its aggregator, already listed, stands in for it.
+Nothing else may be dropped from the list on similar reasoning without an
+aggregator to replace it.
+
+**Keep the paragraph above free of any other backticked job name.**
+`tests/ci-workflow.test.js` locates it by its opening words, slices to the next
+blank line, and treats every backticked string inside as a listed context — so
+an explanatory mention of another job placed in that paragraph reads as an
+extra requirement and fails the test. That is why this explanation is a
+separate paragraph.
 
 **`CI passed` is the aggregation gate, and it is the one context worth requiring
 on its own.** Requiring all eight is the belt-and-braces reading of the rule
-above, and it works; the trouble is that it makes the protection settings a
-hand-maintained transcript of a job list that changes, which is the failure this
-whole section is about. The gate collapses that to one name. It runs on every
-event, so it can never be skipped into a pass, and it reads every other job's
-result directly: anything reporting `failure` or `cancelled` fails it, including
-a job whose own skip was caused by an upstream failure, because the upstream job
-is the one reporting `failure`. It accepts `skipped` — that is what lets the
-two-shape graph exist at all — and then closes the worst version of that
-loophole by failing when NEITHER the docs path nor the code path ran, which is
-the state a broken change filter produces and the one where a PR goes green
-having checked nothing.
+above, and it works; the trouble is that it makes the ruleset a hand-maintained
+transcript of a job list that changes, which is the failure this whole section
+is about. The gate collapses that to one name. It runs on every event, so it can
+never be skipped into a pass, and it reads every other job's result directly:
+anything reporting `failure` or `cancelled` fails it, including a job whose own
+skip was caused by an upstream failure, because the upstream job is the one
+reporting `failure`. It accepts `skipped` — that is what lets the two-shape
+graph exist at all — and then closes the worst version of that loophole by
+failing when NEITHER the docs path nor the code path ran, which is the state a
+broken change filter produces and the one where a PR goes green having checked
+nothing.
 
-Until protection is actually pointed at it, the gate is advisory, exactly as the
-rule above says of any unlisted job. It is additive either way: adding it breaks
-no existing required context, which is the opposite of renaming one.
+Until the ruleset is actually pointed at it, the gate is advisory, exactly as
+the rule above says of any unlisted job. It is additive either way: adding it
+breaks no existing required context, which is the opposite of renaming one.
 
 The detector is the one people leave out, on the reasoning that it only
 computes outputs and cannot itself be skipped — which is true and beside the
@@ -540,7 +595,7 @@ enumeration above is exactly the set of job names `ci.yml` defines, in both
 directions and in both full mirrors — so a job renamed in the workflow, or one
 added and left off this list, fails CI at the moment of the edit rather than
 months later when a PR sits permanently pending against a context no job
-produces. It cannot read branch protection itself (that needs a token and must
+produces. It cannot read the rulesets itself (that needs a token and must
 not be a test dependency), so the remaining half — copying this list into the
 protection settings — is still yours. The test pins the list a human
 transcribes; it cannot pin the transcription.

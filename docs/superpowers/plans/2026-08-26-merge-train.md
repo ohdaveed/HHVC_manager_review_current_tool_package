@@ -1,0 +1,598 @@
+# Merge train — integrating six outstanding branches
+
+> **ARCHIVED RECORD — the train is finished and this file is not an instruction.**
+> Recovered from the deleted branch `chore/merge-train` at commit `7eff20ccf20dfdbba606b8053451a069cc1ba9f3`,
+> where it lived as `MERGE-PLAN.md`. The branch was deleted on 2026-08-28 once
+> its only other contents had landed on `main`: `docs/merge-train-thread-query.sh`
+> via #235 (in a generalized form) and the `.gitignore` auto-memory entry via
+> #238. Kept here because the reasoning — the squash-merge/ancestry trap, the
+> deploy-pause mechanism, and the `BLOCKED`-with-everything-green diagnosis —
+> outlives the operation it was written for.
+>
+> **CORRECTION, 2026-08-28.** This file's "ONE REMAINING BLOCKER" section
+> diagnoses `required_conversation_resolution` as holding all six PRs. That is
+> WRONG. `main` has no classic branch protection at all (`/protection` answers
+> 404); it is gated by two rulesets, and neither carries a `pull_request` rule,
+> so no thread-resolution requirement exists. The `BLOCKED` states were pending
+> CI. The record below is left as written, per this repo's rule that a dated
+> note keeps what it said on its date.
+>
+> It is filed under `docs/superpowers/` deliberately: that directory is excluded
+> from `.prettierignore` and from `build_scripts/docs-file-set.js`'s file set, and
+> this file does not converge under Prettier — three `--write` passes each left it
+> dirty, oscillating the indentation of its deeply-nested list continuations. In
+> `docs/` proper it would fail `format:check`, which is a hard CI gate.
+
+Tracking file for the merge of every open branch in this repo onto `main`,
+started 2026-08-26. **This file lives on `chore/merge-train`, not on `main` and
+not on any branch under review** — putting it on a PR branch would change that
+PR's contents and cost it a CI re-run. While working on another branch, read it
+with `git show chore/merge-train:MERGE-PLAN.md`.
+
+**Why not `PLAN.md`.** That name was already taken by a live handoff for the
+documentation-cleanup and Svelte porting work, last updated 2026-08-24. This
+file was first written straight over it; the original is restored and this one
+took a distinct name. Two concurrent efforts cannot share one checklist.
+
+`resume from PLAN.md` has to be enough on its own: blockers, decisions and
+anything deliberately skipped go in this file, not only in chat.
+
+## Standing constraints
+
+- **Every merge to `main` is a production Railway deploy** (service `web`,
+  connected to `main`). Six branches is up to six deploys.
+  **DECIDED 2026-08-26 — pause, batch, resume.** Autodeploy is turned off before
+  the first merge, the train runs, then it is turned back on and ONE deploy
+  carries everything. Mechanism: Railway Service Settings' own
+  **Disable automatic deployments** toggle
+  (<https://docs.railway.com/deployments/github-autodeploys>), not a watch-path
+  trick and not disconnecting the source — it is single-purpose, reverses with
+  **Enable**, and leaves the repo connection and the 11 service variables
+  untouched. Service `web`, id `f111c8e4-0107-4220-908f-f36f35fb8a50`,
+  environment `production`, builder RAILPACK, build `bun run build:railway`,
+  start `bun run serve`.
+  **Resuming does not deploy by itself.** Re-enabling autodeploy waits for the
+  next push, and per Railway's own troubleshooting an empty commit will not
+  trigger one where watch paths are set — so the resume step is Enable, then
+  **Deploy Latest Commit** from the command palette, then verify.
+  Verify the live artifact at the end per the repo's Definition of Done — status
+  code, deployed commit against the merged SHA, clean console — not the pipeline
+  that built it.
+- **The train is strictly serial, and that is measured rather than assumed.**
+  `main` sets `strict: true` (a branch must be up to date before merging) and
+  `enforce_admins: true` (nobody bypasses it). So every merge stales every other
+  open PR: each one then needs `origin/main` merged in, pushed, and a **full CI
+  cycle** before it can land. Six merges is six serial cycles, not one. There
+  is no parallel path, and no admin override.
+- **Land everything by SQUASH merge.** `linear: true` disallows merge commits on
+  `main`. Merging `origin/main` _into_ a feature branch stays fine — the squash
+  flattens it on the way in — but "Create a merge commit" is not available.
+- **Resolve every review thread before merging, on every PR.**
+  `required_conversation_resolution` is enabled. This is the measured cause of
+  #230 sitting `MERGEABLE/BLOCKED` with all seven required contexts green and
+  `reviewDecision` empty, and it explains all six stuck PRs at once.
+  Thread resolution needs GraphQL, which the local hook blocks and this session
+  cannot route around — so it is a user action, in the PR UI or via
+  `gh api graphql`, once per PR.
+- **No human approval is required** (`required_pull_request_reviews: null`), so
+  there is no reviewer bottleneck — only the thread-resolution one above.
+- **Never rebase a pushed PR branch.** Merge `origin/main` in instead; a rebase
+  over pushed work is a force-push into a live review and is separately gated.
+- **`mirror-consistency` and `skill-consistency` fail on merges git resolves
+  cleanly.** Two branches editing _different_ sections of `AGENTS.md` /
+  `CLAUDE.md` / `.github/copilot-instructions.md` auto-merge with no conflict
+  markers and still go red, because those gates compare shared facts and a short
+  byte-identical list rather than diffing. A green PR run is not evidence about
+  the post-merge tree.
+- **Definition of Done here is push + PR + green CI**, not a local merge.
+- **Gate each cycle on `main` being green AFTER the merge, not just on the PR
+  being green before it.** This follows directly from the mirror/skill-gate note
+  above: those gates go red on merges git resolves cleanly, so the first evidence
+  of the breakage is the push-to-`main` run, not the PR run. And with
+  `strict: true` every following branch must merge that `main` in — so a red
+  `main` propagates into the next PR's CI and you end up debugging the wrong
+  branch. After each merge, watch the `main` run to completion before starting
+  the next cycle.
+
+## PREP DONE 2026-08-26 ~17:00Z — every branch staged during the outage
+
+Category-1 work, done while Actions could not schedule runs. **Merge order and
+decisions are unchanged**; this only removes the work each cycle would have
+discovered.
+
+- **Dry-run merged every branch against `origin/main`** with
+  `git merge-tree --write-tree`, which reports conflicts without touching the
+  working tree. Five clean, two conflicting: `docs/add-skills` (all three
+  mirrors, `package.json`, `tests/skill-consistency.test.js`) and #223
+  (`ci.yml` plus two mirrors — deferred anyway).
+- **#231 opened** for `docs/skill-coordination-fixes`, with the starship files
+  dropped per the decision above. The branch now adds only
+  `multi-session-git-coordination/SKILL.md`.
+- **Four PR branches brought up to date** and pushed — #224, #225, #222, #213.
+  Each merged `origin/main` cleanly (never rebased: they are pushed).
+- **Gates run LOCALLY on each**, since CI could not: `format:check`,
+  `lint:docs`, `lint:js`, `validate` and the full `bun run test`.
+  All green — 2268–2275 pass, 0 fail, across 60 files. Note this is evidence the
+  branches are ready, NOT a substitute for the required contexts: branch
+  protection is satisfied only by the seven GitHub jobs, and `test:e2e` was not
+  run locally.
+- **Still outstanding:** `docs/add-skills` (since retired as superseded — see
+  step 4), `chore/refresh-skills-lock` (no PR, supersession unverified), and
+  thread resolution on **all six PRs — #230 included**.
+  **Correcting this line's earlier version, which listed
+  #213/#222/#224/#225/#231 and omitted #230.** That omission came from the
+  outage note's claim that #230's three threads were already resolved, and that
+  claim does not survive measurement: at 17:52Z #230 still reads `BLOCKED` with
+  every required context green and `behind=0`. Do not read this list as
+  permission to skip #230 — it is the PR the discriminating test runs on.
+
+**Actions began scheduling again at 16:57Z** — a run for `f56b208` on #230 went
+`in_progress` about 7 minutes after the push, consistent with a draining
+backlog rather than full recovery. The incident was still `investigating` at
+16:49Z.
+
+## ✅ RESOLVED 2026-08-28 — Railway autodeploy is BACK ON, backlog deployed
+
+**The pause described below is over. Nothing in this section is a standing
+instruction any more; it is kept as the record of what was done and why.**
+
+- **Autodeploy re-enabled by the user on 2026-08-28**, and **CONFIRMED
+  BEHAVIOURALLY the same day — twice.** The user's report was never a
+  read-back (the Railway MCP surface here exposes no autodeploy flag), so the
+  proof had to come from a merge. It did: #235 merged at 09:48Z and deployment
+  `da7d5bbc` appeared unattended on `6a0d2724`; #238 merged at 09:56Z and
+  `4fbd18a4` appeared unattended on `0c41397`. Both reached `SUCCESS`. Nothing
+  further is owed on this question.
+- **Deploy Latest Commit run 2026-08-28 09:07:39 UTC.** Deployment
+  `db3c10e2-685f-4868-b443-532929aaa1a4`, status `SUCCESS`, commit
+  `afb9276e68535e198b0f6a4fc3ead431e3e3298f` — which is `origin/main`'s head,
+  re-fetched rather than read from local `HEAD`. The prior deployment
+  `f98c5b09` is now `REMOVED`, so traffic has cut over.
+- **Verified at the artifact, not the pipeline.** Live URL 200; Playwright
+  console clean (0 errors, 0 warnings); and the substantive change confirmed in
+  the _served_ CSS bundle rather than inferred from the merge — nine
+  `outline: 3px solid var(--focus-ring)` rules, zero occurrences of the old
+  `color-mix(... 25%, transparent)` wash, and all three `--focus-ring`
+  declarations free of alpha. Since the previous deployment sat on `9238873`,
+  which predates #224, that opaque ring can only have arrived via this deploy.
+
+**The pause held exactly as intended:** six commits merged to `main` between
+2026-08-26 and 2026-08-28 and not one of them deployed. The baseline comparison
+below is what made that decisive.
+
+### Historical record — the pause, as written while it was in force
+
+**Turned off by the user on 2026-08-26, before the first merge.** Reported in
+chat rather than read back from the API — the Railway MCP surface here exposes
+`get_service_config` (source, builder, commands, variable count) but no
+autodeploy flag, so this line is a record of what was done, not a verification
+of it. **Reconfirmed directly by the user on 2026-08-26 ("i can confirm it is
+off. i turned it off"), so treat the toggle itself as settled** — no dashboard
+re-check needed.
+
+The merge-1 deployment comparison below still stands, and is not redundant with
+that confirmation: it answers a different question. The user's word settles that
+the toggle was set; the deployment list settles whether it actually took effect
+on the next push to `main`. A saved-but-ineffective setting looks exactly like a
+correctly paused one until something merges.
+
+**THIS MUST BE UNDONE AT THE END OF THE TRAIN.** — _Done 2026-08-28; see the
+resolution block above._ A repo whose `main` silently
+stops deploying looks identical to one that is merely quiet, and the failure is
+discovered by a reviewer opening a stale URL. The resume step is not just the
+toggle:
+
+1. Service `web` → Settings → **Enable** automatic deployments.
+2. **Deploy Latest Commit** from the command palette (⌘K) — enabling alone waits
+   for the next push, and per Railway's troubleshooting an empty commit will not
+   trigger one where watch paths are set.
+3. Verify the live artifact: <https://web-production-9bb3b.up.railway.app> —
+   status code, deployed commit against `origin/main` re-fetched (not local
+   `HEAD`, which differs after a squash merge), console clean.
+
+Harmless while nothing can merge — and as of 17:52Z nothing can, because every
+PR is held by unresolved review threads. That stops being true the moment the
+first thread is resolved, so **verify the pause behaviourally at merge 1**:
+list the `web` service's deployments immediately before and after the first
+merge (`mcp__railway__list_deployments`). A new deployment appearing means the
+toggle did not take, and the train stops until it does. The record above is what
+the user reported doing; it is not a read-back, and the Railway MCP surface here
+exposes no autodeploy flag to read it back from.
+
+**BASELINE MEASURED 2026-08-26 17:5xZ — compare against this exact row.** The
+`web` service's most recent deployment is `f98c5b09-f3c9-48bf-99de-7e32f22b8c12`,
+status `SUCCESS`, created `2026-08-26 03:40:25 UTC`, commit
+`9238873cc54fc3410a1e97dc2ae832df67b95381` — which is `origin/main`'s current
+head, so the live artifact and `main` agree right now and nothing has deployed
+since. **After the first merge, list deployments again: any row newer than
+`f98c5b09` means the pause did not take.** Capturing the baseline is what makes
+that check decisive — without it, "there is a recent deployment" is ambiguous
+between the pause failing and this pre-existing one.
+
+## RESOLVED 2026-08-26 ~17:07Z — the Actions outage is over
+
+**Measured, not assumed.** `gh run list` shows a completed `CI` run with
+conclusion `success` for every one of the six train branches, timestamped
+16:57Z–17:07Z — `chore/doppler-template` 16:57, `docs/skill-coordination-fixes`
+16:58, `chore/track-claude-skills` 17:00, `a11y/mockup-body-axe-gate` 17:02,
+`a11y/focus-ring-contrast` 17:05, `fix/ai-disclosure-citation` 17:07. GitHub is
+scheduling and completing runs normally; the backlog drained.
+
+**#230 is fully green.** All seven required contexts pass on head `f56b208`
+(`Format, validate, lint`, `Unit tests (bun test)`, `Playwright end-to-end
+tests`, `Build railway bundle`, `Build single-file export`, `Detect changed
+files`; `Docs-only checks` skipping, which protection accepts), alongside
+GitGuardian, CodeRabbit, `codecov/patch` and `codecov/bundles`.
+
+_Historical record of the outage, retained because it explains the prep pass
+above: `81a0331` was pushed to `chore/doppler-template` at 16:36Z and GitHub
+created no workflow run object at all — not queued, not skipped, absent. The
+`CI` workflow was `active`, its `pull_request` trigger did include
+`synchronize`, and GitHub knew the PR head, so the push had landed.
+`githubstatus.com` reported Actions in `major_outage` while Webhooks, Git
+Operations, API Requests and Pull Requests were all `operational` — exactly
+the observed asymmetry._
+
+## ✅ RESOLVED — review threads cleared, all six merged
+
+**Every branch in this train has landed on `main`** (see the board below). The
+thread-resolution blocker recorded here was cleared by the user; the section is
+kept as the record of the diagnosis.
+
+### Historical record — the blocker, as written while it was in force
+
+**Measured 2026-08-26 17:52Z.** Every non-draft PR reads `BLOCKED`, and #230
+reads `mergeable=MERGEABLE`, `reviewDecision=""`, `behind=0`, every required
+context green. With CI green and nothing behind, `required_conversation_
+resolution` is the only protection setting left that can produce that signature
+— which is the cause diagnosed in step 0.
+
+**This session cannot clear it.** Resolving a thread is a GraphQL mutation, and
+`gh api` is blocked by a local PreToolUse hook whose prescribed alternative
+(the context-mode sandbox) is not exposed in this session. Reading thread state
+is blocked by the same hook. So both halves are a user action — see
+"Step 0" below for the exact command to run.
+
+**Resolve #230 FIRST and alone, then re-read its `mergeStateStatus`.** That is
+the discriminating test: `conversation.enabled: true` has been proven _set_, not
+proven to be the _binding_ constraint — the repository-ruleset candidate was
+dropped without a lookup, and a ruleset does not appear in the `/protection`
+payload. One PR settles it for all six. If #230 flips to `CLEAN`, the diagnosis
+holds and the remaining five are mechanical; if it stays `BLOCKED`, the cause is
+something else and five PRs' worth of resolution clicks would have been spent
+for nothing.
+
+## Board as re-measured 2026-08-26 17:52Z
+
+> **Outcome, 2026-08-28:** every row except #213 and #223 has MERGED, and
+> #235 merged later the same day. Still open: **#213** (`CLEAN`) and **#223**
+> (`CLEAN`, no longer draft). Neither touches the deployed artifact — they are
+> `.claude/` and `.github/` only.
+
+**Every train branch is now `behind=0`.** The prep pass merged `origin/main`
+into each one and nothing has merged since, so the ahead/behind column in the
+previous version of this table is stale and has been replaced. Thread
+resolution is the _only_ thing standing between each of these and a merge.
+
+| Branch                                      | PR           | ahead/behind `main` | CI          | Hub files                              |
+| ------------------------------------------- | ------------ | ------------------- | ----------- | -------------------------------------- |
+| `chore/doppler-template`                    | #230         | 3/0                 | green 16:57 | — (one new file)                       |
+| `docs/skill-coordination-fixes`             | #231         | 2/0                 | green 16:58 | —                                      |
+| `chore/track-claude-skills`                 | #213         | 4/0                 | green 17:00 | `.gitignore`, `.claude/settings.json`  |
+| `a11y/mockup-body-axe-gate`                 | #225         | 2/0                 | green 17:02 | —                                      |
+| `a11y/focus-ring-contrast`                  | #224         | 3/0                 | green 17:05 | —                                      |
+| `fix/ai-disclosure-citation`                | #222         | 4/0                 | green 17:07 | `AGENTS.md`                            |
+| `claude/content-pages-ui-management-hv6fcy` | #223 (draft) | DIRTY               | —           | `AGENTS.md`, `CLAUDE.md`, **`ci.yml`** |
+
+**The train is SIX merges, not eight or nine.** `docs/add-skills` is retired as
+superseded (step 4), `chore/refresh-skills-lock` is very likely superseded by
+the uncommitted lockfile change (step 8), and #223 is deliberately deferred.
+Overstating the cycle count overstates the deploy risk and the time.
+
+## Step 0 — unblock branch protection
+
+- [x] **Read `main`'s required status contexts.** `gh api` is blocked by a local
+      PreToolUse hook and this session has no sandbox tool, so the user ran it.
+      Result, 2026-08-26 — exactly the seven job names `ci.yml` defines, matching
+      `CLAUDE.md`'s prescribed list with nothing extra and nothing missing:
+      `Playwright end-to-end tests`, `Format, validate, lint`,
+      `Unit tests (bun test)`, `Docs-only checks`, `Build railway bundle`,
+      `Build single-file export`, `Detect changed files`.
+      **This refutes both candidate causes below.** There is no context that no
+      job produces, and `codecov/project` is not required. All seven reported
+      SUCCESS or SKIPPED on #230, so the block is not a status check at all.
+- [x] **Diagnose why #230 is `MERGEABLE/BLOCKED`.** Measured on 2026-08-26: every
+      context green (`Format, validate, lint`, `Unit tests (bun test)`,
+      `Playwright end-to-end tests`, `Build railway bundle`,
+      `Build single-file export`, `Detect changed files`, `Docs-only checks`
+      skipped, GitGuardian, `codecov/patch`, `codecov/bundles`,
+      `netlify/hhvc/deploy-preview`), `behind=0`, no blocking review (only two
+      `COMMENTED` bot reviews), `reviewDecision` empty. Six PRs open and unmerged
+      says this is protection-wide rather than one PR. Two candidates:
+      (a) a required context no job produces — the failure mode `CLAUDE.md`
+      records after the `checks` job split, which sits permanently pending;
+      (b) `codecov/project` required but never posted (`codecov/patch` and
+      `codecov/bundles` post, `codecov/project` is absent from the rollup).
+- [x] **Find the non-status cause.** With every required context satisfied,
+      `MERGEABLE/BLOCKED` has to come from a protection setting that is not a
+      status check. Ranked by fit with what is already measured: 1. **Required conversation resolution.** #230 carries two `COMMENTED` bot
+      reviews (`qodo-code-review`, `chatgpt-codex-connector`) plus a CodeRabbit
+      check. Unresolved inline threads block the merge while leaving
+      `reviewDecision` empty and every check green — which is exactly the
+      signature observed, and it would equally explain the other five PRs. 2. **A repository ruleset.** Rulesets are evaluated on top of classic
+      branch protection and do not appear in the `/protection` payload, so a
+      rule added there is invisible to the read above. 3. **Required signatures / linear history / restricted pushes.** Cheap to
+      rule out in the same call.
+      **ANSWERED 2026-08-26.** Measured:
+      `conversation.enabled: true`, `linear.enabled: true`, `strict: true`,
+      `enforce_admins.enabled: true`, `reviews: null`, `restricted: false`,
+      `signatures.enabled: false`. Cause 1 confirmed; no ruleset lookup needed.
+      Corroborating: `qodo-code-review`'s COMMENTED review on #230 has a
+      **zero-length body**, so its content is inline thread comments rather than
+      a summary — an unresolved thread is present to block on.
+- [ ] **Resolve #230's review threads — USER ACTION, and the whole train waits
+      on it.** GraphQL is blocked by the local PreToolUse hook, and the sandbox
+      that hook redirects to is not exposed in this session, so neither reading
+      nor resolving can happen from here. In the Claude Code prompt, a `!` prefix
+      runs a command in-session so its output lands in the conversation.
+      **Step 1 — read what is unresolved, across all six PRs.** Run
+      `! bash docs/merge-train-thread-query.sh`. The query lives in a script
+      rather than inline in this document because the Bash hook pattern-matches
+      command text and refuses to write it into a markdown file — which is worth
+      knowing before trying to "tidy" it back inline.
+      **Step 2 — resolve #230's threads ONLY.** The "Resolve conversation"
+      control on each thread in the PR UI is the simplest route; the script also
+      prints a ready-made `resolveReviewThread` mutation per thread id.
+      **Step 3 — re-read the merge state. This is the discriminating test.** Run
+      `! gh pr view 230 --json mergeStateStatus,mergeable`. `CLEAN` confirms
+      conversation resolution is the binding constraint, and the other five PRs
+      are then mechanical. Still `BLOCKED` means the cause is a repository
+      **ruleset** — evaluated on top of classic branch protection, and absent
+      from the `/protection` payload already read — or something else again. In
+      that case stop and re-diagnose rather than spending five more PRs' worth of
+      resolution clicks on an unproven theory. **Do not resolve the other five
+      before #230 answers.**
+
+## Pre-flight — the working tree has a dirty state with no home
+
+- [ ] **`skills-lock.json` carries 12 uncommitted insertions.** Measured: they do
+      _not_ belong to `chore/refresh-skills-lock` — that branch's copy of the file
+      is identical to `HEAD`'s, so this is separate work registering the newly
+      mined skills. Decide its home before any checkout.
+      **Contents measured 2026-08-26:** exactly two entries, `neon` and
+      `neon-postgres`, both `sourceType: github` from `neondatabase/agent-skills`,
+      each with a `skillPath` and a `computedHash`. So it is a lockfile
+      registration for two of the six untracked skill directories below —
+      `.claude/skills/neon` and `.claude/skills/neon-postgres` — and the other
+      four untracked dirs have no lockfile entry at all. That asymmetry is worth
+      resolving in the same pass rather than committing half a registration.
+      **This change travels with a checkout.** `skills-lock.json` is tracked, and
+      an uncommitted modification follows `git checkout` onto whatever branch is
+      switched to next — so if it is still dirty when step 5 or 6 checks out
+      #213, it lands in that PR's working tree and can be committed into it by
+      accident. Park it before the first checkout: either `git stash push
+skills-lock.json` with a named message, or commit it here on
+      `chore/merge-train`, which is the branch that already holds this file and
+      is not under review.
+- [ ] **Six untracked `.claude/skills/` directories exist in no branch and no PR**
+      — `ci-e2e-shard-optimization`, `codecov-ci-integration-hhvc`,
+      `infrastructure-by-measurement`, `neon`, `neon-postgres`,
+      `windows-terminal-claude-dev-setup`. A `git clean` destroys them. Their
+      tracking status is decided by #213's `.gitignore` change, so they sequence
+      with step 5.
+- [ ] **`git worktree list` checked** — one worktree exists,
+      `.claude/worktrees/docs+add-skills` on `docs/add-skills`. Never deploy from
+      a worktree; `railway up` uploads the directory it runs in.
+
+## Merge order
+
+Ordered by hub-file contention, lowest first, so the mirror and skill gates meet
+one change at a time.
+
+- [x] **MERGED 2026-08-26 as `2463e87`.** 1. #230 `chore/doppler-template` — FIVE findings now, not three. The
+      first three were fixed in `81a0331`; TWO MORE arrived after it and are
+      fixed in `ab449c7`.** Awaiting thread resolution and a green CI run on
+      `ab449c7`.
+
+      **The lesson worth keeping: a fix commit invites a re-review.** The outage
+                          note recorded "#230's three threads are already resolved, so nothing else
+                          gates it" — true when written, and false 20 minutes later, because the
+                          bots re-reviewed `81a0331` at 16:41Z and 16:54Z and opened two new
+                          threads. Never treat "threads resolved" as a durable property of a PR that
+                          has since been pushed to.
+
+                          **1d — `HOST`/`PORT` omitted from prd. CONFIRMED, P1.** The template said
+                          "DATABASE_URL, HOST and PORT are NOT listed. Railway owns all three."
+                          True of `DATABASE_URL`, which is a reference to the Postgres service;
+                          false of the other two. `server.ts:80-81` defaults to `127.0.0.1:8080`,
+                          and this repo's own deploy canon records that omission shipping a build
+                          that succeeded and then served 502. Both now carry real values — the one
+                          deliberate exception to the file's everything-is-empty rule, which the
+                          header already permits for a non-sensitive setting.
+
+                          **1e — an empty value is not an absent one. CONFIRMED, P2.** Doppler
+                          injects every secret it holds, so `REVIEW_API_PRINCIPALS: ''` arrives as a
+                          PRESENT EMPTY STRING. `parseApiAuthorizationConfiguration` branches on
+                          `raw === undefined` (`server.ts:202`), so it parses the empty string,
+                          fails, and answers **503** on every `/api/*` request rather than the
+                          documented healthy **501**. It fails closed, so this is a wrong documented
+                          state rather than a hole.
+
+                          **1f — the same class, found while verifying 1e and not reported by any
+                          bot.** `DATA_DB_PATH: ''` is read with `??` (`server.ts:145`), which
+                          catches null/undefined and NOT `''`, so an empty value becomes a literal
+                          database path instead of falling back to `.data/review-state.local.db`.
+                          Both keys are now omitted from the configs and documented in the comment
+                          instead. `REVIEW_SESSION_PASSWORD` deliberately KEEPS its empty
+                          placeholder, because `?? ""` then `Boolean(...)` (`server.ts:453,477`)
+                          makes empty and unset genuinely the same state — the distinction is
+                          per-key, not a blanket rule.
+
+                          _Original note on the first three, retained:_ Its three
+                          unresolved threads are substantive review findings, all verified against
+                          the tree on 2026-08-26 rather than taken on the bots' word. It still goes
+                          first (`behind=0`, and `strict: true` would stale it behind anything else),
+                          but it needs a fix commit before it lands. - **1a. `docs/codebase/STACK.md` is now stale — CONFIRMED, one line.**
+                          Line 70 reads ``No `.env.example` / `.env.template` in repo ([TODO] if
+
+one should be added)`` and line 69's config-source inventory omits the
+new file. `doppler-template.yaml` is not literally either of those names,
+but it answers that TODO and belongs in that inventory. - **1b. AI routes do not fail closed on a dev machine — CONFIRMED, P2.**
+`doppler-template.yaml:56` promises that without a key `/api/ai/*`
+answers 501. `build_scripts/ai/provider-anthropic.js`'s
+`hasOAuthProfile()` reads `~/.config/anthropic/credentials` and its own
+header records that the SDK resolves
+`ANTHROPIC_API_KEY` → `ANTHROPIC_AUTH_TOKEN` → the active profile, so an
+`ant auth login` profile satisfies the provider gate with
+`ANTHROPIC_API_KEY` empty. The template leaves `REVIEW_API_TOKEN: ''`,
+which does hold the first gate at 501 — but the moment a developer fills
+it, that legacy value is a broad principal carrying `ai:generate`
+(`CLAUDE.md`, Optional API access hardening), both gates pass, and the
+dev server can make billed requests. Fix by provisioning a dev principal
+through `REVIEW_API_PRINCIPALS` without `ai:generate`, or by pinning
+`ANTHROPIC_CONFIG_DIR` to isolate profile discovery — not by softening
+the comment. - **1c. `dev_personal` may not be a personal config — UNVERIFIED, P1.**
+The reviewer's claim is that importing a template that lists
+`dev_personal` by slug creates an ordinary branch config rather than a
+user-owned personal one, so Development access cascades to it and the
+isolation asserted at `doppler-template.yaml:33-37` does not hold. That
+is a claim about **Doppler's import semantics**, which nothing in this
+repo can settle; it needs checking against Doppler's own documentation
+or a test import before the thread is resolved either way.
+**ANSWERED 2026-08-26 — the reviewer was right.** Doppler's own docs
+(<https://docs.doppler.com/docs/branch-configs>) state that Personal
+Configs are a FEATURE a project Admin enables per environment, after which
+Doppler creates one `dev_personal` branch per user that only that user can
+access. Listing the slug creates an ordinary shared branch config instead.
+The slug is removed and the comment now records why.
+
+- [x] **MERGED 2026-08-26 as `70b0587`.** 2. #225 `a11y/mockup-body-axe-gate`. Zero mirror contact. Merge
+      `origin/main` in, re-run CI, merge.
+- [x] **MERGED 2026-08-26 as `418b892`.** 3. #224 `a11y/focus-ring-contrast`. Same. Merge `origin/main` in,
+      re-run CI, merge.
+- [x] **4. `docs/add-skills` — SUPERSEDED. Do not merge; do not open a PR.**
+      Measured 2026-08-26. `da8311e Audit the eleven subsystem skills, fix the
+drift, and gate it (#200)` is already on `main` and is the same work.
+      Evidence, in the direction that matters — the branch's own changes against
+      what `main` now holds: - Three of its four `SKILL.md` edits are **byte-identical** to `main`. - The fourth, `hhvc-page-registry`, is on `main` **verbatim plus a second
+      hunk** the branch never had (the `z.enum(PAGE_TYPES)` correction). - `tests/skill-consistency.test.js` exists on `main` and is **162 lines
+      richer**; `package.json` already enumerates it. - Its mirror edits still claim **58** unit-test files. `main` says 60.
+      Merging it would therefore REGRESS `main`: −162 lines from the
+      skill-consistency gate, −139/−138 from `AGENTS.md`/`CLAUDE.md`, and the
+      test count rolled back from 60 to 58. The `merge-tree` conflict was the
+      symptom; supersession was the cause.
+      **Retire the branch** (and its worktree at
+      `.claude/worktrees/docs+add-skills`, which is clean) rather than merging.
+      Nothing unique is lost: `git log --cherry-mark` marks all three commits as
+      unmatched only because they were re-applied differently upstream, and each
+      one's content was checked against `main` individually.
+      _Superseded — retained here as the record of why, not as work to do:_
+- [ ] ~~**4. `docs/add-skills` — open a PR first.**~~ Lands _before_ the other
+      `AGENTS.md` branches on purpose: it changes the gate itself
+      (`tests/skill-consistency.test.js` plus `package.json`'s enumerated test
+      list) and touches all three mirrors, so landing it last would make the
+      stricter gate meet several branches' worth of unvalidated skill text in one
+      merge. `behind=11` — merge `origin/main` in and expect real work.
+- [x] **MERGED 2026-08-26 as `f5d3539`.** 5. #222 `fix/ai-disclosure-citation`. Re-merge `origin/main` after
+      step 4; `skill-consistency` is what would catch a mismatch between
+      `AGENTS.md` and `.claude/skills/hhvc-ai-assist-backend/SKILL.md`. Check
+      whether the `AGENTS.md` section it edits is on the byte-identical list.
+- [ ] **6 and 7 are NOT independent — decide the contradiction before either
+      lands.** Measured 2026-08-26: #213's only `.gitignore` change is a rule
+      ignoring `.claude/skills/starship-prompt-rendering-diagnostics`, whose
+      stated reason is that tracking it would enrol it in `lint:docs`, since that
+      tool derives its file list from `git ls-files` and a machine-local WSL2
+      prompt note would become a CI gate on a repo it says nothing about.
+      `docs/skill-coordination-fixes` **adds that exact path as a tracked file**
+      (neither it nor `multi-session-git-coordination` is tracked on `main`
+      today). The two branches decide the opposite thing about one path.
+      Git merges them cleanly in either order, because they touch different
+      files — and the result is wrong either way: a `.gitignore` rule cannot
+      untrack a tracked file, so the skill ends up tracked, the ignore rule
+      inert and misleading, and the SKILL.md enrolled in `lint:docs`, which is
+      precisely what #213's comment says it was preventing.
+      **DECIDED 2026-08-26 — the starship files give way.**
+      `docs/skill-coordination-fixes` drops
+      `.claude/skills/starship-prompt-rendering-diagnostics/SKILL.md` and
+      `check-prompt.sh`, and #213 keeps its ignore rule intact. That branch then
+      lands only `.claude/skills/multi-session-git-coordination/SKILL.md`, which
+      is genuinely about working in this repo rather than about the author's
+      terminal. Remove them with a NEW commit on that branch, not a rebase or an
+      amend — the branch has no upstream, but a plain commit needs no
+      destructive-git approval and the removal is worth having in the history
+      with its reason attached.
+- [ ] **6. #213 `chore/track-claude-skills`.** Also carries
+      `.claude/settings.json` and three tracked skill files, so it sequences with
+      the pre-flight cleanup above — resolve the six untracked dirs in the same
+      pass.
+- [x] **MERGED 2026-08-27 as `afb9276`, via #231.** 7. `docs/skill-coordination-fixes`. `behind=0`, ahead 1,
+      three skill files, no mirror contact. Cheap once the contradiction above is
+      resolved.
+- [ ] **8. `chore/refresh-skills-lock` — verify it still means anything first.**
+      `behind=10`, single file, no PR, and its `skills-lock.json` matches `HEAD`'s.
+      Likely superseded by the uncommitted change noted in pre-flight; if so,
+      delete the branch rather than spending a PR on it.
+
+## Deliberately deferred
+
+- **#223 `claude/content-pages-ui-management-hv6fcy` (draft) is NOT in this
+  train.** It rewrites `.github/workflows/ci.yml` and adds
+  `.github/actions/setup-bun/action.yml`, so it can rename required status
+  contexts again — and protection has to change in the same breath or every PR
+  goes permanently pending. A CI-graph change does not belong in the middle of a
+  merge train.
+  **Open risk to check before it leaves draft:** it edits `AGENTS.md` and
+  `CLAUDE.md` but **not** `.github/copilot-instructions.md`.
+  The byte-identical half of that risk is now **cleared by measurement**:
+  `IDENTICAL_SECTIONS` in `tests/mirror-consistency.test.js` is one heading long
+  — `Security Reviews` — and neither #223 nor #222 touches it (`git diff` over
+  `AGENTS.md` returns zero matching lines for both).
+  The shared-facts half is **not** cleared and is the live risk: #223 rewrites
+  `ci.yml`, and `tests/ci-workflow.test.js` asserts that the job-name list in
+  the workflow is exactly the list transcribed into all three mirrors — so a
+  renamed job that updates two mirrors and not the third goes red on merge,
+  and branch protection's required contexts have to move with it.
+
+## Closing out
+
+- [x] **Verified 2026-08-28.** <https://web-production-9bb3b.up.railway.app>
+      returns 200; deployed commit `afb9276e685…` matches `origin/main`
+      re-fetched; Playwright console clean (0 errors, 0 warnings); the #224
+      focus-ring fix confirmed present in the served CSS bundle. Details in the
+      resolution block at the top of this file.
+- [x] **Done 2026-08-28.** Autodeploy re-enabled by the user, Deploy Latest
+      Commit run (deployment `db3c10e2`, `SUCCESS`), artifact verified. **One
+      check still owed:** the toggle is a user report, not a read-back, so
+      confirm it behaviourally at the next merge — a deployment appearing with
+      nobody touching the dashboard is the proof.
+- [x] **Merged branches deleted 2026-08-28.** The six train branches went with
+      their own `gh pr merge --delete-branch`; the three local leftovers
+      (`a11y/focus-ring-contrast`, `ci/pin-node-24`,
+      `fix/ai-disclosure-citation`) were deleted after verifying content, not
+      ancestry — **this repo squash-merges, so `git rev-list origin/main..<b>`
+      reports every merged branch as UNMERGED** and is the wrong test. The
+      right one is a per-file diff against `main`, which was empty for all
+      three.
+- [x] **Two stale duplicates deleted from `origin`:** `ohdaveed-patch-2`
+      (`2f4db8bb2e399c1ba7c83296f18fa5ee2ad2df1e`) and `ohdaveed-patch-2-1`
+      (`ce3bae7f023d493819429381467689c583d82170`) — tree-identical to each
+      other, forked at `d6325f8`, and carrying **nothing** `main` lacks:
+      merging either would have REVERTED `main` (263 insertions against 2,669
+      deletions). Their one post-fork commit's contents — `timeout-minutes`,
+      the `concurrency` group, the `!failure() && !cancelled()` reasoning — are
+      all on `main` already, the concurrency key in an improved form.
+- [ ] **Still on `origin`, deliberately left:** nine `fix/remediation-*`
+      branches and `ohdaveed-patch-1` (#211), all closed WITHOUT merging.
+      Closing them was someone's decision; deleting the branches would quietly
+      ratify it, so they need a call rather than a sweep.
+- [ ] **Decide this file's own fate** — merge it, or delete `chore/merge-train`
+      once the train is done. **Two facts now bear on that choice.** First,
+      this branch holds NOTHING ELSE: `docs/merge-train-thread-query.sh` went
+      to `main` via #235 in a better, generalized form, and the `.gitignore`
+      auto-memory entry via #238 (cherry-picked from `c357962`). This file is
+      the only unique content left. Second, **`MERGE-PLAN.md` fails
+      `format:check`, and did so before any of today's edits** — prettier does
+      not CONVERGE on its deeply-indented list continuations (three
+      `--write` passes, still dirty each time). That has never mattered because
+      this branch has no open PR, but `format:check` is a hard gate in
+      `format_validate_lint`, so opening one means fixing that first.

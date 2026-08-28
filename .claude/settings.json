@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(git rev-list --left-right --count HEAD...origin/main)"]
+  }
+}

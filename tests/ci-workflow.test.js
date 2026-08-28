@@ -124,7 +124,7 @@ function decodeScalar(raw) {
  * both fall silent and still agree on a count, so `names.length === ids.length`
  * is a non-vacuity check with no magic number in it — and it is strictly
  * stronger than a threshold, because it also catches a job that declares no
- * `name:` at all, which branch protection could never require.
+ * `name:` at all, which a ruleset could never require.
  *
  * @returns {string[]}
  */
@@ -161,7 +161,7 @@ function jobBlocks() {
  * This is the whole reason the census below is not simply `jobNames()`. GitHub
  * suffixes a matrixed job's check contexts — `E2E shard (1)`, `(2)` — so the
  * literal after `name:` is a context NO job produces, and requiring it in
- * branch protection would leave a PR permanently pending. A matrixed job is
+ * the ruleset would leave a PR permanently pending. A matrixed job is
  * therefore not a required context and must not be enumerated as one.
  *
  * @param {{block: string}} job The job record to test.
@@ -198,7 +198,7 @@ function needsOf(job) {
  * Scoped rather than file-wide, and that is the whole point: every one of
  * these names also appears in the per-job description list above it, so a
  * file-wide search would be satisfied by prose ABOUT a job while the
- * enumeration that branch protection is copied from had lost it.
+ * enumeration the ruleset's required checks are copied from had lost it.
  *
  * @param {string} text Raw file contents.
  * @returns {string[]|null} the backticked names, or null if the sentence is gone.
@@ -298,22 +298,22 @@ describe('the CI workflow', () => {
 
 /* The required-context census.
 
-   WHY THIS EXISTS. AGENTS.md and CLAUDE.md both warn that "Branch protection's
-   required contexts are job NAMES, not job ids, and they have to be changed
+   WHY THIS EXISTS. AGENTS.md and CLAUDE.md both warn that "The rulesets'
+   required status checks are job NAMES, not job ids, and they have to be changed
    with this file", and that "Adding a job to this file means adding its name
    here and to protection, or it is advisory." Nothing enforced either half.
    Both failure modes are silent in the direction that matters:
 
-   - A job RENAMED in ci.yml leaves branch protection requiring a context no
+   - A job RENAMED in ci.yml leaves the ruleset requiring a context no
      job produces, and a context nothing produces stays permanently pending —
      so a fully green PR can never satisfy it.
    - A job ADDED and not listed is simply not required, and GitHub treats a
      conditionally skipped required check as PASSING, which is why the mirrors
      insist every job be required rather than only the code-path ones.
 
-   This cannot read branch protection — that lives in GitHub's API, needs a
+   This cannot read the rulesets — they live in GitHub's API, need a
    token, and must not be a test dependency. What it CAN do is pin the two
-   documents branch protection is copied from against the workflow itself, so
+   documents the ruleset's required checks are copied from against the workflow itself, so
    the enumeration a human transcribes is never stale at the moment they
    transcribe it. Set equality in both directions, so a rename fails on both
    sides of the same edit. */
@@ -365,7 +365,7 @@ describe('the required-context enumeration in the mirrors', () => {
 
   test.each(MIRRORS)('%s enumerates exactly the jobs ci.yml defines', (mirror) => {
     // Matrixed jobs excluded: see isMatrixed() for why their `name:` is not a
-    // context branch protection could ever require, and the assertion above
+    // context a ruleset could ever require, and the assertion above
     // for what stands in their place.
     const text = readFileSync(join(ROOT, mirror), 'utf8')
     const listed = new Set(requiredContextParagraph(text) ?? [])
