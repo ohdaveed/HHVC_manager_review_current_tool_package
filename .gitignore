@@ -251,6 +251,13 @@ agent-evals-regression-gate.zip
 .claude/skills/writing-for-agents
 .claude/skills/anti-ui-slop
 .claude/skills/modern-web-guidance
+
+# A diagnostics skill for THIS MACHINE's Starship prompt rendering under WSL2 —
+# mined from a local session, and about the terminal this tool is edited in
+# rather than about the tool itself. Tracking it would also enrol it in
+# `lint:docs`, whose file list comes from `git ls-files`, so a machine-local
+# note would become a CI gate on a repo it says nothing about.
+.claude/skills/starship-prompt-rendering-diagnostics
 agent-evals-regression-gate/agent-evals-regression-gate/SKILL.md
 
 # Scratch capture of a `bun run test` run, redirected to the repo root rather
