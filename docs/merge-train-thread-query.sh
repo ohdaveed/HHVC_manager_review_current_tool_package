@@ -43,6 +43,28 @@ set -uo pipefail
 REPO_OWNER="ohdaveed"
 REPO_NAME="HHVC_manager_review_current_tool_package"
 
+# Dependency guards run BEFORE anything uses either tool, and that ordering is
+# the whole point rather than tidiness. The `gh` check used to sit below the
+# block that derives PRS, which calls `gh` — so on a machine without it the
+# derivation produced an empty array, the emptiness check reported "No open
+# non-draft pull requests to check." and exited 0, and the guard was never
+# reached. A missing dependency rendered as a clean bill of health, which is the
+# same defect this script's own summary logic was fixed for: a total failure
+# must never be indistinguishable from a clean result.
+if ! command -v gh >/dev/null 2>&1; then
+  echo "error: the GitHub CLI (gh) is not on PATH." >&2
+  exit 1
+fi
+
+# `jq` is a separate dependency from `gh`'s built-in `--jq`. The call below uses
+# gh's own filter, but the thread parsing further down pipes through the real jq
+# binary, so a machine with gh and without jq would get past this point and fail
+# mid-run with a parse that yields nothing.
+if ! command -v jq >/dev/null 2>&1; then
+  echo "error: jq is not on PATH." >&2
+  exit 1
+fi
+
 # With no arguments, query every open non-draft PR. Derived rather than
 # hardcoded on purpose: an earlier version of this script listed a fixed set of
 # PR numbers, which was correct for about an hour and then described a set that
@@ -57,11 +79,6 @@ fi
 if [ "${#PRS[@]}" -eq 0 ]; then
   echo "No open non-draft pull requests to check."
   exit 0
-fi
-
-if ! command -v gh >/dev/null 2>&1; then
-  echo "error: the GitHub CLI (gh) is not on PATH." >&2
-  exit 1
 fi
 
 # `first: 100` rather than a page loop: no PR here carries anything close to 100
