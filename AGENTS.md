@@ -514,11 +514,19 @@ Merge commits are refused outright, so the choice on any PR is squash or
 rebase-and-merge, and every recent commit on `main` is a squash.
 
 **The required-context list further down was VERIFIED against `main-2`'s
-`required_status_checks` on 2026-08-28, and this PR deliberately puts it one
-ahead.** Seven names were configured and seven were documented, matching in
-both directions. The list now carries an eighth, `CI passed`, which this change
-adds to `ci.yml` — so until someone adds that context to `main-2`, the document
-states what SHOULD be required and the ruleset enforces one fewer. Every required context is a real job,
+`required_status_checks` on 2026-08-28, and the two now match exactly.** All
+eight documented names are configured, in both directions: `ci.yml` defines
+nine jobs, eight of them non-matrixed, and those eight are precisely the eight
+required. `CI passed` was added to the ruleset once it landed, so the gate is
+enforcing rather than advisory.
+
+**`CI passed` is required ALONGSIDE the other seven, not instead of them.**
+That is belt-and-braces and it works, but the section below argues the gate is
+worth requiring on its own: it reads every other job's result directly, so the
+seven are a hand-maintained transcript of a list that changes, which is the
+failure this whole section is about. Dropping them is a safe simplification
+whenever someone wants it — the gate already fails on anything they would have
+caught. Nothing is wrong today; this is an option, not a defect. Every required context is a real job,
 so none can sit permanently pending; and the one job that is deliberately NOT
 required is `E2E shard`, for the reason the matrix note below gives: it is
 sharded, so it only ever produces suffixed contexts (`E2E shard (1)`…) and the
