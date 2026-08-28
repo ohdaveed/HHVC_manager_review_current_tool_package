@@ -434,7 +434,7 @@ job that does not. `changes` is the one that does not — it runs only
   uploads that profile to Codecov. **The coverage half is a report, never a
   gate** — the upload cannot fail the job, and `codecov.yml` marks Codecov's
   own `codecov/project` and `codecov/patch` statuses informational, which is
-  what keeps them non-gating. Branch protection CAN require those contexts —
+  what keeps them non-gating. A ruleset CAN require those contexts —
   GitHub requires status contexts, not only job names — but they are not jobs
   in `ci.yml`, so `tests/ci-workflow.test.js` cannot enumerate them and the
   rule that every job be a required context does not reach them. **The download
@@ -473,7 +473,19 @@ job that does not. `changes` is the one that does not — it runs only
   `format_validate_lint` skips by design on the docs-only path and treating
   that as an error would make docs PRs unmergeable.
 
-**Branch protection's required contexts are job NAMES, not job ids, and they
+**Measured 2026-08-28: this repo is gated by repository RULESETS, not by
+classic branch protection.** `GET /repos/{owner}/{repo}/branches/main/protection`
+answers `404 Branch not protected`, while `GET /repos/{owner}/{repo}/rulesets`
+returns two active branch rulesets — `main-1` (21589341) and `main-2`
+(21589342). The settings therefore live under **Settings → Rules → Rulesets**,
+not Settings → Branches, and a ruleset does NOT appear in the `/protection`
+payload — which is why the older wording below survived so long: every check of
+the wrong endpoint came back empty and read as "nothing configured" rather than
+as "looking in the wrong place". **The required-context list further down has
+not been re-verified against those two rulesets**; it states what MUST be
+required, which is unchanged, not what currently is.
+
+**The rulesets' required status checks are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the
 context `Format, validate, unit tests` out of existence, and a context that no
 job produces stays permanently pending however green the run — so a PR can go
@@ -510,7 +522,7 @@ enumeration above is exactly the set of job names `ci.yml` defines, in both
 directions and in both full mirrors — so a job renamed in the workflow, or one
 added and left off this list, fails CI at the moment of the edit rather than
 months later when a PR sits permanently pending against a context no job
-produces. It cannot read branch protection itself (that needs a token and must
+produces. It cannot read the rulesets itself (that needs a token and must
 not be a test dependency), so the remaining half — copying this list into the
 protection settings — is still yours. The test pins the list a human
 transcribes; it cannot pin the transcription.
