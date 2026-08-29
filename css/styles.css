@@ -2327,7 +2327,16 @@ body.hide-karl-tags .unverified-pill {
   font-size: var(--ds-text-label);
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  /* border-color ONLY, and the list is exhaustive rather than conservative:
+     the hover rule below is this control's single state change, and the
+     .inline-edit-undo-action variant (css/inline-content-edit.css) sets
+     `border: none`, so it has nothing to transition either way. This was
+     `all` until 2026-08-29, which also animated the UA focus ring's
+     outline-color — a focus indicator should appear at once rather than fade
+     in, so narrowing this fixes a second thing on the way past. Adding a
+     property to the hover rule means adding it here too; `all` is what made
+     that free, and free is how the outline got animated unnoticed. */
+  transition: border-color 0.2s ease;
 }
 /* Hover moves the BORDER and deliberately leaves the fill alone. The old rule
    raised the fill to 22%, which drops the label to 3.49:1 on --toast-info-bg —
