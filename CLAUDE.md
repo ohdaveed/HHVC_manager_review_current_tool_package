@@ -4,39 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A static, no-framework mockup tool for manager review of a redesigned HHVC
-(Healthy Housing and Vector Control) section of SF.gov. It is **bundled by
-Vite** from a single ES-module entry point (`js/main.js`), and `server.ts`
-serves the build output plus the optional sync API. Bun runs the CLI scripts
-(validate/export/build) and the test suite. **The mockup has no UI framework** —
+A static, no-framework mockup tool for **manager review** of a redesigned HHVC
+(Healthy Housing and Vector Control) section of SF.gov. It is **bundled by Vite**
+from a single ES-module entry point (`js/main.js`), and `server.ts` serves the
+build output plus the optional sync API. **Bun** powers the CLI scripts
+(validate/export/build) and the test runner. **The mockup has no UI framework** —
 it renders through data-driven string templates, not components, and that is a
 constraint rather than an accident: `#mockPage` has to look like the SF.gov page
-under review. The **review workspace** is different — it now hosts React + MUI
-islands scoped to `#reviewWorkspace`, loaded on demand (see "React islands in
-the workspace" below).
-Reviewer state lives in the browser's `localStorage` by default, and the tool
-works fully offline with no server at all beyond serving static files —
-**no backend/database/external service is required.** `server.ts` also hosts
-an **optional**
-review-state sync backend (Postgres when `DATABASE_URL` is set, SQLite
-otherwise; see "Review-state sync backend" below, and the
-`hhvc-review-sync-backend` skill for the full write-up) that reviewers can opt into per-browser to sync decisions across
-machines; it's off unless deployed and configured, and every other part of
-the tool is unaffected if it's never used.
+under review. The **review workspace** is a different matter — it now hosts
+React + MUI islands (see [React islands in the workspace](#react-islands-in-the-workspace)),
+scoped to `#reviewWorkspace` and loaded on demand. Reviewer state lives in the browser's `localStorage` by
+default, and the tool works fully offline with **no backend/database/external
+service required.** `server.ts` also hosts an **optional** review-state sync
+backend (Postgres when `DATABASE_URL` is set, SQLite otherwise — see
+[Review-state sync backend](#review-state-sync-backend-optional))
+that reviewers can opt into per-browser to sync decisions across
+machines/reviewers — it's off unless deployed and configured, and every other
+part of the tool works identically whether or not it's ever used.
 
-A separate Vite sub-app lives at `forms/mosquito-workshop-request/` (a real
-build step, built independently — see Build outputs below).
+A separate **Vite** sub-app lives at `forms/mosquito-workshop-request/` (a real
+build step, built independently — see [Build outputs](#build-outputs)).
 
-The repo currently holds **29 pages** under `pages/`. If `bun` isn't on
-`PATH` it installs to `~/.bun/bin`; run `export PATH="$HOME/.bun/bin:$PATH"`.
+The repo currently holds **29 pages** under `pages/`. If `bun` is not found,
+it installs to `~/.bun/bin`; run `export PATH="$HOME/.bun/bin:$PATH"`. Run
+`bun install` before the first `dev` — `js/main.js` imports
+`@sfgov/design-system` CSS and the third-party libraries for Vite to bundle.
 
 ## Definition of Done
 
-Work is not complete until: full test suite passes, changes are committed,
-pushed to origin, PR opened (if on a branch), and CI is green. Never leave
+Work is not complete until: the full test suite passes, changes are committed,
+pushed to origin, a PR is opened (if on a branch), and CI is green. Never leave
 commits sitting unpushed on a local branch. Before merging a PR, re-fetch and
-confirm the remote head includes all local commits (a stale head has silently
-dropped commits before).
+confirm the remote head includes all local commits — a stale head has silently
+dropped commits before.
 
 ## Commands
 
@@ -108,7 +108,7 @@ wrong). `bun run test` runs 60 Bun unit-test files under `tests/`: `utils`,
 `ai-assist-schema`, `ai-assist-env`, `karl-tag-meta`, `karl-category`, `ci-workflow`, `esm-named-exports` — self-explanatory by name — plus a handful
 whose non-obvious "why" is worth keeping:
 `commit-msg-hook` (the trailer gate in `.githooks/commit-msg`, driven as REAL shell against real message files rather than reimplemented in JS — a second copy of the rule in the test would pass while the shipped rule was broken. Most of its assertions are about what must NOT be rejected, because the damaging failure is not a missed trailer, which amending fixes, but a hook that blocks ordinary human commits: the habit that produces is `--no-verify`, and a routinely bypassed hook enforces nothing. It also asserts the file's EXECUTABLE BIT, which is part of the contract rather than packaging — ggshield's `_dispatch` guards on `[ -x ]` and exits 0 without it, so a non-executable hook is an absent gate rather than a broken one, with no error to notice),
-`mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over)),
+`mirror-consistency` (the gate over Cross-tool canon's central claim — that `AGENTS.md`, `CLAUDE.md` and `.github/copilot-instructions.md` state the same facts — which until now nothing enforced and hand-maintenance had already let slip: the Copilot mirror's security-review guidance drifted apart from the other two and was caught only because a reviewer read it. It does NOT compare the files, which are deliberately not identical — only one of the eleven headings the two full mirrors share is byte-identical, since `CLAUDE.md` extracts eleven subsystem write-ups to skills — so it checks shared FACTS instead, as a registry of commands and figures that must appear in all three however each words them, plus a short list of sections required to be byte-identical. The shared-fact searches — and only those — run over whitespace-collapsed text: written with a literal match one reported `2 tool calls` missing from a mirror that carries it across a line break, the same wrapped-prose blindness the refactor guidance warns about. The byte-identical check normalizes nothing, since a rewrap of one mirror and not the other is precisely the drift it exists to catch. Mutation-proven, and proven against the real drift — all seven of its security-review claims were absent from the Copilot mirror at `e01870f` and present in both full mirrors, so it would have failed on that tree; its three identifier claims were already present there and prove nothing about it, guarding instead against a mirror naming a wrong storage key or global shape — and there are only three because a file-wide claim on a REPEATED identifier cannot fail as it implies: `server.ts` appears 43 times in AGENTS.md, so its defining sentence could drift while forty-two other mentions kept the check green. Nine such claims were registered and then removed rather than kept as decoration, on the same reasoning that marks unfailable rules `scored: false`. It checks presence, not polarity: a mirror that keeps a token and reverses the sentence around it still passes, which is a limit stated in the file rather than papered over),
 `skill-consistency` (the same gate one level down, over the eleven `.claude/skills/hhvc-*/SKILL.md` extracts and the `AGENTS.md` sections they were taken from. `CLAUDE.md` states the rule — the skills are extracts, not a second source of truth, and a correction goes into `AGENTS.md` and then into the skill — and until now only the first half was enforced. The second half failed three times in the eleven files, all found in one audit on 2026-08-22: `hhvc-review-sync-backend` still called the API SQLite-backed long after `build_scripts/storage.js` made it Postgres-when-`DATABASE_URL`, and both `hhvc-page-registry` and `hhvc-inline-content-editing` described `js/review/ux-improvements.js` as WRAPPING `window.renderPage`, which nothing has done since #194. Every one of those sat in the file a session is told to load BEFORE editing the subsystem the claim is about. Nothing else covered them: `module-paths` gates the `js/` paths in these files, `lint:docs` gates their markdown and `doc-claims` gates five counts, but a stale MECHANISM passes all three, because every path it names still exists. It carries a second registry the mirror gate has no equivalent of — RETIRED_MECHANISMS, the exact historical phrasings of things this repo has removed, which may not come back. A shared-fact claim catches a fact going MISSING; a retired-mechanism claim catches one that quietly stopped being true while both sides still read fluently, which is the failure that actually happened. Each retired entry must also be absent from all three mirrors, and that self-check is what keeps the list honest rather than a place to park opinions — which is also why a proximity rule (`wrap` within N characters of `renderPage`) was written first and rejected: it fires on the canon's own correct sentence, so it could not carry the check. Mutation-proven against the real drift — restoring the three skills to `17a09d3` fails nine of its assertions, naming each one. Same presence-not-polarity limit as the mirror gate, stated in the file. It carries one check that is not about the extracts at all: every `bun run <script>` cited by ANY tracked skill must exist in `package.json`. The other skills — `ship`, `verify`, `verify-railway-backend`, `karl-notes-drift-check` — are procedures rather than extracts, and a procedure names commands; `ship` alone cites eight gate scripts and pre-approves several in its `allowed-tools` front matter, all of which a rename breaks silently. `build:netlify` really was renamed to `build:railway`, and only a hand-sweep in the same commit kept a skill from being left pointing at it),
 `card-inheritance` (the shared `inherits`/`title-only`/`authored` classifier
 plus the audit built on it — `authored` must beat everything so a Table block
@@ -223,7 +223,7 @@ and introduces no HTML into copy rendered through `formatMarkdown`),
 stops a hand-authored value from claiming that authority again, which is the
 exact defect this branch exists to fix), `react-theme` (which design
 tokens the MUI bridge reads, and that each has a fallback — a token read with
-no fallback resolves to `''` before the stylesheets apply, and MUI turns an
+no fallback resolves to '' before the stylesheets apply, and MUI turns an
 empty palette value into a crash rather than a default — plus which parts of
 the chrome scale the bridge maps at all, since MUI's own sizes and its 8px
 spacing factor are a real scale rather than an absent one, so an unmapped
@@ -727,10 +727,9 @@ A Karl Services/Resources subsection entry, a Related-panel entry, and a Resourc
 
 ### Core module split (formerly one `app.js`)
 
-The old monolithic `app.js` was split into focused modules — **do not
-re-monolith them.** Those modules, plus every review/UX and optional-feature
-layer, now live in nine feature folders under `js/` rather than one flat
-directory:
+The old monolithic `app.js` was split into focused modules — **do not re-monolith
+them.** Those modules, plus every review/UX and optional-feature layer, now live
+in nine feature folders under `js/` rather than one flat directory:
 
 | Folder          | Owns                                                                                                                                                                                                                                                                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -744,46 +743,44 @@ directory:
 | `js/standards/` | Content-standards scoring: `reading-level.js`, `plain-language.js`                                                                                                                                                                                                                                                       |
 | `js/react/`     | The React 19 + MUI islands mounted inside `#reviewWorkspace`: `mount.js`, `theme.js`, `checks-panel.jsx`                                                                                                                                                                                                                 |
 
-`js/main.js` is the one file that stays directly under `js/` — it is the root
-of the module graph, imported by nothing, so it has no folder of its own to
-belong to.
+`js/main.js` is the one file that stays directly under `js/` — it is the root of
+the module graph, imported by nothing, so it has no folder of its own to belong
+to.
 
 - **`js/core/utils.js`** — 849 lines publishing 36 entries on `window.utils`, also
   exported as bare top-level functions. Loads first. Beyond the obvious
   (`escapeHtml`, `today`, `debounce`, CSV parse/serialize/download, DOM
-  get/set) it owns **`safeUrl`/`urlProbe`** (the scheme guard described below),
-  the **decision vocabulary** (`DECISIONS` and its derived maps — the canonical
-  list nothing else may restate), and `buildReviewRecord`/
-  `REVIEW_RECORD_FIELDS`. **Add new cross-cutting helpers here** rather than
-  duplicating logic — though the module has drifted toward a grab-bag, and
-  `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` sit here as a layer
-  inversion: the bottom-most module reaching up into the workspace DOM.
-- **`js/mockup/karl-tag-meta.js`** — the shared `KARL_TAG_KINDS` table (`meta`,
-  `body`, `placement`, `editor`) and legend markup used by `karlTag()` and the
-  workspace legend. Loads after `js/core/utils.js` for `escapeHtml`.
-- **`js/mockup/karl-category.js`** — the pure classifier deriving a tag's
-  `data-category` (`metadata`/`block`/`action`/`callout`/`inherited`/`editor`)
-  from signals already in scope at `karlTag()`. **A Karl tag has two axes and
-  only one of them is safe to rename.** `kind` is what Karl field resolution
-  reads — nearly half the `karlTag()` call sites in `js/mockup/page-render.js`
-  pass a bare
-  kind literal with no `context.role`, and `guideForContext()` falls back to the
-  kind when no role is given, so for those call sites the kind IS the role and
-  renaming one silently changes which Karl field the guide panel claims to have
-  measured. `data-category` carries **colour only**; nothing resolves a field
-  through it, so it may be renamed or re-coloured freely. Colour lives on
-  `[data-category]` in `css/ux-improvements.css` and must not move back onto
-  `[data-kind]` — the kind survives as the word printed in `.karl-tag-kind`,
-  which is what keeps colour from being the only encoding.
-- **`js/core/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone used
-  for field-reset), `pageData`, `pageOrder`, `currentPageKey`.
+  get/set) it owns three things worth knowing by name: **`safeUrl`/`urlProbe`**,
+  the scheme guard the security section below is about; the **decision
+  vocabulary** (`DECISIONS` and everything derived from it), which is the
+  canonical list the rest of the tool must not restate; and
+  `buildReviewRecord`/`REVIEW_RECORD_FIELDS`, the persisted record shape.
+  **Add new cross-cutting helpers here rather than duplicating logic** — but
+  note the module has drifted toward a grab-bag, and
+  `isWorkspacePanelOpen`/`mountWorkspacePanelIfOpen` are a layer inversion
+  living here: the bottom-most module reaching up into the workspace DOM.
+- **`js/core/state.js`** — core state: `DATA`/`ORIGINAL_DATA` (a deep clone for
+  field-reset), `pageData`, `pageOrder`, `currentPageKey`.
 - **`js/review/ui-controls.js`** — toasts, sidebar collapse/scroll persistence, the
-  page-picker `<select>`, and the review checklist.
-- **`js/review/editor-panel.js`** — SEO/editor panel: syncing input fields with the
-  current page, dirty-state indicators, search-result preview, per-field reset.
-- **`js/mockup/page-render.js`** — turns `pages/*.js` page objects into the `#mockPage`
-  HTML, including `karlTag()` for Karl CMS placement annotations and the
-  `unverifiedPill()` warning badge.
+  page-picker `<select>`, review checklist.
+- **`js/review/editor-panel.js`** — SEO/editor panel: input↔page sync, dirty-state
+  indicators, search-result preview, per-field reset.
+- **`js/mockup/page-render.js`** — turns `pages/*.js` objects into `#mockPage` HTML,
+  including `karlTag()` for Karl CMS placement annotations.
+- **A Karl tag carries two axes, and only one of them is safe to rename.**
+  `kind` (`meta`/`body`/`placement`/`editor`) is what Karl field resolution
+  reads: nearly half the `karlTag()` call sites in `js/mockup/page-render.js`
+  pass a bare
+  kind literal with no `context.role` at all, and `guideForContext()` falls back
+  to the kind when no role is given — so for those call sites the kind IS the
+  role, and renaming one silently changes which Karl field the guide panel
+  claims to have measured. `data-category` — derived by
+  `js/mockup/karl-category.js` from `kind`, `context.role`, `context.linkShape`
+  and the inheritance fact — carries **colour only**. Nothing resolves a field
+  through it, so a category may be renamed or re-coloured freely. Colour lives on
+  `[data-category]` in `css/ux-improvements.css` and must never move back onto
+  `[data-kind]`; the kind survives as the word printed inside `.karl-tag-kind`,
+  which is what keeps colour from being the only encoding.
 - **`js/core/page-registry-data.js`** — pure validation for a page a reviewer
   authored in the browser, plus `applyRegistryToData()`, the only function that
   mutates `order`/`pages` for the add/delete feature. Dual-exported and
@@ -793,36 +790,35 @@ belong to.
   module scope — `js/core/utils.js` is not guaranteed to have run yet.
 - **`js/core/page-registry.js`** — applies that registry onto `window.HHVC_DATA` and
   publishes `window.pageRegistry`. Must run before `js/core/state.js`'s
-  `ORIGINAL_DATA` clone; see the `hhvc-page-registry` skill for why.
+  `ORIGINAL_DATA` clone; see "Adding and deleting pages" below.
 - **`js/core/card-inheritance.js`** — the shared classifier deciding whether a
-  section's cards publish the destination page's title and summary
-  (`inherits`), its title alone (`title-only`), or their own authored words
-  (`authored`). It imports nothing and reads no global, so it has no load-order
-  dependency of its own — it must simply be evaluated before anything calls
-  `window.cardInheritance`, which `js/mockup/page-render.js`'s own import of it
-  enforces. Dual-exported (`window.cardInheritance` plus `module.exports`)
-  exactly like `js/review/review-merge.js`, and for the same reason: see "Card
-  descriptions are inherited, not printed" above — the browser renderer and the
-  Node audit must share one classifier rather than two copies free to drift.
-- **`js/core/app.js`** — bootstraps DOM event listeners (`init()`) and kicks off
-  the first `renderPage('pestsTopic')`.
-- **`js/review/manager-review-export.js`** — manager review CSV/JSON export
-  snapshot, published on `window.ReviewExport` for the consolidated export
-  control. It no longer wraps `renderPage`: that decorator existed only to
-  refresh a sidebar label that has been cut.
-- **`js/standards/reading-level.js`** — Flesch-Kincaid grade level for body copy, backed
-  by `text-readability` (a runtime dependency, bundled: 40 kB raw / 17.9 kB
-  gzip). **There used to be two implementations and now there is one.** This
-  file carried a hand-rolled formula from the no-build-step era while
-  `build_scripts/reading-level.js` wrapped the library for Node — and only the
-  Node copy had tests, while only this one shipped. They disagreed by 1.14
-  grades on average across the 29 pages, always in the direction of "easier
-  than it is", so nine pages reported hitting a reading target they miss. The
-  Node copy is deleted; `tests/reading-level.test.js` now imports this one.
-- **`js/review/review-state-validation.js`** — browser-side validation of the
-  `hhvcManagerReviewState:v1` blob, mirroring
-  `build_scripts/review-state-schema.js`'s Zod rules without shipping Zod to
-  the browser. Keep the two in step when the persisted shape changes.
+  section's cards publish the destination page's title and summary, its title
+  alone, or their own authored words. Imports nothing and reads no global, so it
+  has no load-order dependency of its own. Dual-exported
+  (`window.cardInheritance` plus `module.exports`) exactly like
+  `js/review/review-merge.js`, and for the same reason — see "Card descriptions are
+  inherited, not printed" above: the browser renderer and the Node audit must
+  share one classifier rather than two copies that can silently drift apart.
+- **`js/core/app.js`** — bootstraps DOM event listeners (`init()`) and renders the
+  first page (`pestsTopic`).
+- **`js/review/manager-review-export.js`** — manager review CSV/JSON snapshot,
+  published on `window.ReviewExport` for the consolidated export control. It no
+  longer wraps `renderPage`: that decorator existed only to refresh a sidebar
+  label that has been cut.
+- **`js/standards/reading-level.js`** — Flesch-Kincaid grade for body copy, behind
+  `window.readingLevel`, backed by `text-readability` (a runtime dependency;
+  40 kB raw / 17.9 kB gzip in the app chunk). **There used to be two
+  implementations of this and now there is one.** This file carried a
+  hand-rolled formula from the no-build-step era, and `build_scripts/reading-level.js`
+  wrapped the library for Node — but only the Node copy had tests and only this
+  one shipped, which is how they drifted 1.14 grades apart on average across
+  the 29 pages without a red test anywhere. The drift ran toward "easier than
+  it is" in aggregate, so nine pages reported hitting a reading target they
+  miss — a check biased in exactly the direction that makes it useless. The
+  Node copy is deleted and `tests/reading-level.test.js` imports this one. Do
+  not reintroduce a second copy to avoid the dependency: the gap was
+  rule-based syllable counting, which no regex approximates closely enough to
+  matter.
 
 ### Review/UX layers are additive, on top of the core
 
@@ -908,143 +904,120 @@ that did not exist yet.
 
 ### What the UX review removed, and why not to re-add it
 
-- **The Karl-tag legend above the mockup.** A toggle, a four-row `TAG COLORS`
-  key, an explanatory sentence and a "What are Karl tags?" disclosure occupied
-  ~495px — half a screen — between the toolbar and the SF.gov header, on every
-  page and every load. The key decoded something that was never encoded in
-  colour alone: each tag already reads `METADATA`, `BODY`, `PLACEMENT` or
-  `EDITOR ONLY` in words. The switch moved into `.canvas-toolbar`; the legend
-  renders once, in Help, via `renderKarlTagLegend()`. `mountKarlTagLegend()` is
-  gone with both of its mount points — `#karlTagLegendCompact` had no element in
-  `index.html` at all and had been a no-op for some time.
+- **The Karl-tag legend above the mockup.** A toggle, a four-row colour key, an
+  explanatory sentence and a "What are Karl tags?" disclosure occupied ~495px —
+  half a screen — between the toolbar and the SF.gov header, on every page and
+  every load. The key decoded something that was never encoded in colour alone:
+  each tag already reads `METADATA`, `BODY`, `PLACEMENT` or `EDITOR ONLY` in
+  words. The switch moved to `.canvas-toolbar`; the legend renders once, in Help.
 - **Three of four Overview KPI tiles.** "Visible" restated the "N of 19" printed
   directly above it. "Blocked" showed `stats.blocked`, which counts Blocked
-  **plus** Revise and resubmit (`js/review/review-queue-rows.js`) — so it read 5 while
-  the Blocked filter chip forty pixels away read 2. Both numbers were correct
-  and the label was not, and a panel that visibly disagrees with itself in its
-  first two rows spends the credibility the rest of it needs. The decision tally
-  belongs to the filter chips, which count and filter with one control.
-- **The open page's name, printed four times.** The sidebar picker, a "Current
-  page:" label directly under it, a "Viewing: …" badge in the toolbar, and the
-  sticky bar. The middle two are gone — and with the label went the only reason
+  **plus** Revise and resubmit — so it read 5 while the Blocked filter chip forty
+  pixels away read 2. Both numbers were right and the label was not, and a panel
+  that visibly disagrees with itself in its first two rows spends the
+  credibility the rest of it needs. The decision tally belongs to the chips,
+  which count and filter with one control.
+- **The page's name, printed four times.** The sidebar picker, a "Current page:"
+  label under it, a "Viewing: …" badge in the toolbar, and the sticky bar. The
+  middle two are gone — and with the label went the only reason
   `js/review/manager-review-export.js` wrapped `renderPage` at all, so that decorator
-  went with it.
+  went too.
 - **The decision `<select>`.** It sat directly above five chips writing the same
-  field: two controls, one value. `#reviewDecision` survives as an
-  `<input type="hidden">` rather than being deleted, because it is the field
-  every persistence path reads and writes through `getValue`/`setValue`, and its
-  `change` event is what autosave, `isDecisionRound()` and the sticky bar all
-  listen for. The chips carry the visible and accessible semantics. E2E specs
-  set it through `setDecision()` in `tests/e2e/helpers.js`, not `selectOption`.
+  field. `#reviewDecision` survives as an `<input type="hidden">` because it is
+  the field every persistence path reads through `getValue`/`setValue` and whose
+  `change` event autosave, the history-round detection and the sticky bar all
+  listen for; the chips carry the visible and accessible semantics.
 - **Six of nine export/import controls.** Five ways to get review data out, in
   two formats, split across the sidebar and the Overview panel, with nothing on
   screen distinguishing "Export current review JSON" from "Download backup
   (JSON)" from "Export saved local reviews CSV". There is now one **Export
-  reviews** button with a scope `<select>` (`runExport()` dispatches on it) and
-  one **Import reviews** button whose file input accepts either format
-  (`importReviewFile()` routes by extension). The queue's separate "Import CSV"
-  button is gone. Fewer doors into the merge path is a safety property here, not
-  just tidiness — see "Local persistence" below for the regression that makes
-  this the highest-consequence surface in the tool.
+  reviews** button with a scope `<select>` (`runExport()` dispatches) and one
+  **Import reviews** button whose file input takes either format
+  (`importReviewFile()` routes by extension). Fewer doors into the merge path is
+  a safety property here, not only tidiness — see [Local persistence](#local-persistence).
 
 ### Checks that cannot fail are not scored
 
 `getRuleResultsFor()` marks **Page type**, **Audience** and **Reading target**
-with `scored: false`. All three are required by `build_scripts/schema.js` and
+`scored: false`. All three are required by `build_scripts/schema.js` and
 enforced by `bun run validate` in CI, so no page that can ship will ever fail
 them: scoring them handed every page three free passes, lifting every ratio by a
 constant and burying the rules that do fail under a wall of permanent green.
-(Note that **Reading target** only checks that a target is _declared_ — whether
-the copy hits it is `Computed reading level`, which is scored and does fail.)
-
 `window.reviewChecks.scoredRules()` is the filter, and both the Checks panel and
-the queue's `checksPassed`/`checksTotal` go through it. The three still render,
-under a "Page facts" subheading, and the scored list orders **failures first** —
-it used to render in declaration order, so on a page passing all but one rule a
-reviewer scanned a column of green to find the single item they could act on.
+the queue's `checksPassed`/`checksTotal` go through it. They still render, under
+a "Page facts" subheading, and the scored list orders **failures first**.
 
 ### Content-standards scoring
 
-`js/standards/plain-language.js` scores page copy against written standards, not
-preferences. Each check carries `severity` plus a `source`/`section` pair and
-a ready-to-render `citation`:
-
-- **`severity: 'error'`** are the standards manual's mandates. They join the
-  scored rule list behind the Overview tab's "checks passed" ratio, and their
-  citation renders on the Checks tab alongside the rule.
-- **`severity: 'warning'`** are advisory, run to ~115 across the 29 pages, and
-  render separately — folding them into the ratio would make every page look
-  broken.
-- A scored rule must always be **pushed**, passing or failing, never omitted
-  when it can't be computed: dropping one shrinks the denominator and quietly
-  flatters exactly the thinnest pages.
-- `source` exists because not every rule comes from the manual. Two
-  (`house-style`, `list-length`) cite the vendored `docs/source/sfgov-style/`
-  snapshot, and `button-length` cites manual §6.3 (the Karl Button component),
-  not §7.8. Requiring a bare §7.x number is what previously pushed all three
-  into miscitations.
-
-Like `js/review/review-merge.js` it is **dual-export** (`window.plainLanguage` plus
-`module.exports`, no DOM dependency) so the AI output validator and the tests
-run the same implementation the Checks panel does.
+`js/standards/plain-language.js` encodes written standards, not preferences. Each check
+carries `severity` plus a `source`/`section` pair and a ready-to-render
+`citation`. `severity: 'error'` mandates join the scored rule list behind the
+"checks passed" ratio and render their citation on the Checks tab;
+`severity: 'warning'` findings are advisory, run to ~115 across the 29 pages,
+and render separately so they cannot swamp the ratio. A scored rule must always
+be pushed, pass or fail — dropping one shrinks the denominator and flatters the
+thinnest pages. `source` exists because not every rule comes from the manual:
+`house-style` and `list-length` cite the vendored `docs/source/sfgov-style/`
+snapshot, and `button-length` cites manual §6.3 (Karl Button component), not
+§7.8. Requiring a bare §7.x number is what previously forced all three into
+miscitations. Like `js/review/review-merge.js` the module is dual-export
+(`window.plainLanguage` + `module.exports`, no DOM dependency).
 
 ### URL schemes are validated, not just escaped
 
-`escapeHtml` does not neutralize a scheme — `javascript:alert(1)` contains
-none of the five characters it escapes — so every structured `href` in
-`js/mockup/page-render.js` goes through `safeUrl()` from `js/core/utils.js`, **except
-`formatMarkdown()`'s inline `[label](target)` links** (`js/mockup/page-render.js:51`),
-which gate on a bare `/^https?:\/\//` instead. Not a hole today: `escapeHtml`
-runs over the whole string first so the attribute cannot be broken out of, and
-the regex admits only `http(s)`, which `safeUrl` allows anyway. `safeUrl`
-allows
-`http`/`https`/`mailto`/`tel` **and anything without a scheme at all** —
-root-relative (`/forms/…`), document-relative (`help/foo`, `../help`), and bare
-fragment or query targets (`#top`, `?q=1`) all pass through unchanged. It is a
-_scheme_ guard, not a URL allowlist: what it rewrites to the inert `#` is a
-recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) and
+`escapeHtml` does not neutralize a scheme, so every structured `href` in
+`js/mockup/page-render.js` runs through `safeUrl()` from `js/core/utils.js` — with one
+exception worth knowing about: `formatMarkdown()` (`js/mockup/page-render.js:51`)
+gates inline `[label](target)` links on a bare `/^https?:\/\//` test instead.
+That is not a hole today, for two reasons that both have to hold: `escapeHtml`
+runs over the whole string first, so the attribute cannot be broken out of,
+and the regex admits only `http(s)`, which `safeUrl` would allow anyway. It is
+still the one `href` that would not follow `safeUrl` if the scheme rules
+changed. It is a
+**scheme** guard, not a URL allowlist: `http`, `https`, `mailto`, `tel` and
+**anything with no scheme at all** pass unchanged — root-relative
+(`/forms/…`), document-relative (`help/foo`, `../help`), and bare fragment or
+query targets (`#top`, `?q=1`). What it rewrites to the inert `#` is a
+recognized-but-unsafe scheme (`javascript:`, `data:`, `vbscript:`) or
 protocol-relative `//host`, which reads as relative but leaves the origin. It
-strips control characters before testing, since browsers resolve
-`java\tscript:` as `javascript:`.
-
-Two normalization details matter, because `findUnsafeUrls()` decides by
-comparing `safeUrl(value)` against the original. Control characters are removed
-only from the string being _tested_, so an accepted URL keeps them — but
-leading and trailing whitespace is trimmed from the **returned** value. **A
-whitespace-padded but otherwise safe URL is therefore reported as an "unsafe
-URL scheme"**, which is a false positive rather than intended behaviour: the
-check is about schemes, not whitespace hygiene. No page carries a padded URL
-today, so nothing is currently broken. `findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the
-same rule at validation time — in `bun run validate` **and** in the AI output
-validator — and imports `safeUrl` rather than restating it, so the renderer
-and the validator cannot come to disagree about what is safe. That import
-crosses the CJS/ESM boundary — CJS `require()`ing ESM, the direction Bun 1.3.14
-dropped for `build_scripts/storage.js`. **This one is not the same case, and the
-difference was measured** (2026-08-15, Bun 1.3.14): Bun rejects `require()` only
-of an ASYNC module, and `js/core/utils.js` has no top-level await and imports
-nothing, so the crossing works. The line is narrower than "no top-level await" —
-`await Promise.resolve()` requires fine, `await new Promise((r) => setTimeout(r,
-0))` and `await import('node:path')` both throw — so the hazard is one
-_deferring_ await away, surfacing as `bun run validate` dying with a TypeError
-that names neither validate nor the page data.
-`tests/data-validation.test.js` guards it in a **subprocess**; two in-process
-versions were written first and both passed against a deliberately broken
-`js/core/utils.js`, since a sibling test that ESM-imports it leaves it cached.
-**If that guard fails, remove the await — do not restructure `safeUrl`**: it is
-the XSS scheme guard, and on the BROWSER side every dual-export module in
-`js/` is read off `window` rather than named-imported (Node `require`s them
+strips control characters from the string it _tests_ (browsers resolve
+`java\tscript:` as `javascript:`) but **trims whitespace from the value it
+returns**. Since `findUnsafeUrls()` decides by comparing `safeUrl(value)`
+against the original, a whitespace-padded but otherwise safe URL is reported as
+an unsafe scheme — a false positive, not intended behaviour. No page carries
+one today.
+`findUnsafeUrls()` in `build_scripts/data-checks.js` enforces the same rule in
+`bun run validate` and in the AI output validator, importing `safeUrl` rather
+than restating it so renderer and validator cannot drift. That import crosses
+the CJS/ESM boundary — CJS `require()`ing ESM, the direction Bun 1.3.14 dropped
+for `build_scripts/storage.js`. **This one is not the same case, and the
+difference was measured rather than assumed** (2026-08-15, Bun 1.3.14): Bun
+rejects `require()` only of an ASYNC module, and `js/core/utils.js` has no top-level
+await and imports nothing, so it stays synchronously evaluable and the crossing
+works. The boundary is narrower still — `await Promise.resolve()` is already
+settled and requires fine, while `await new Promise((r) => setTimeout(r, 0))`
+and `await import('node:path')` both throw. So the hazard is one _deferring_
+top-level await away, and it would surface as `bun run validate` dying with a
+TypeError naming neither validate nor the page data.
+`tests/data-validation.test.js` guards it in a **subprocess**, which is
+load-bearing: two in-process versions were written first and both passed
+against a deliberately broken `js/core/utils.js`, because a sibling test file that
+ESM-imports it leaves it cached for any later `require()`. **The fix if that
+guard fails is to remove the await, not to restructure `safeUrl`** — it is the
+XSS scheme guard, and on the BROWSER side every dual-export module in `js/`
+is read off `window` rather than named-imported (Node `require`s them
 directly, which is the half that works), so extracting `safeUrl` would push
-`js/mockup/page-render.js` onto window indirection for no gain. Separately,
-**CI never exercises that crossing under Node** —
+`js/mockup/page-render.js` onto window indirection to solve a problem that does not
+exist.
+Separately, **CI never exercises that crossing under Node**:
 every path that loads `data-checks.js` runs under Bun (`bun run validate`, and
-`build:railway`, which invokes `bun build_scripts/validate.js`). CI _does_ run
-Node, at the end of `build:railway` (`node build_scripts/copy-workshop-form.js`),
-but that script never touches `data-checks.js`, so the `require(esm)` path is
-_not_ covered. (That path
-needs `require(esm)` enabled — check `process.features.require_module` rather
-than trusting a version number; it is opt-out by default on current Node 22 but
-was flag-gated in early 22.x.) Anything
-relying on Node-specific interop here would go unnoticed.
+`build:railway`, which invokes `bun build_scripts/validate.js`). CI does run
+Node — `build:railway` ends in `node build_scripts/copy-workshop-form.js` — but
+that script never touches `data-checks.js`, so the `require(esm)` path is
+uncovered. That path needs
+`require(esm)` enabled — check `process.features.require_module` rather than a
+version number; it is opt-out by default on current Node 22 but was flag-gated
+in early 22.x.
 
 ### Overview insight cards (`js/review/review-insights*.js`)
 
@@ -1171,12 +1144,13 @@ matching Karl content-type names. It is closed rather than open because
 `js/karl/karl-blocks.js` keys its per-type panel inventory on this value, and an
 unrecognised type selects no inventory. **The export is not silent about that** —
 `buildTranscript()` emits a single `UNMAPPED` entry reading
-`No Karl panel inventory for content type "X"`
-(`js/karl/karl-transcript.js:309`), which names the problem clearly. What the
-closed enum buys is **when** that failure arrives: unclosed, a typo'd type is
-caught at EXPORT time, on a page already authored and reviewed; closed,
-`bun run validate` rejects it at authoring time, before anyone builds on it.
-This list read six until 2026-08-15, omitting
+`No Karl panel inventory for content type "X"` (`js/karl/karl-transcript.js:309`),
+which names the problem clearly. What the closed enum buys is **when** that
+failure arrives: unclosed, a typo'd type is caught at EXPORT time, on a page
+already authored and reviewed; closed, `bun run validate` rejects it at
+authoring time, before anyone builds on it. Adding a ninth type means capturing its form in
+`docs/karl-export-field-map.md` and adding its panel inventory, in that order.
+The list read six until 2026-08-15, omitting
 `Topic` and `About us`; a census via `build_scripts/load-pages.js` is what
 corrects it, so re-derive rather than trusting a restatement), `title`,
 `summary`, `audience[]`,
@@ -1262,59 +1236,52 @@ empathetic civic writing.
 
 ### Local persistence
 
-All reviewer state (decisions, notes, edited SEO fields, workspace UI prefs)
-is saved client-side under the versioned `localStorage` key
-`hhvcManagerReviewState:v1`. Bump the version suffix if the persisted shape
-changes incompatibly. Workspace UI prefs (`workspace_open`, `workspace_tab`,
-`last_page_key`, `show_karl_tags`) live under `state.ui` in the same blob.
-This localStorage layer is the tool's synchronous, always-available core —
-`window.reviewState.read()/write()/update()` — and stays that way regardless
-of whether the optional sync backend below is ever configured.
+All reviewer state (decisions, notes, edited SEO fields, workspace UI prefs) is
+saved client-side under the versioned key `hhvcManagerReviewState:v1`. Bump the
+version suffix if the persisted shape changes incompatibly. Workspace UI prefs
+(`workspace_open`, `workspace_tab`, `last_page_key`, `show_karl_tags`) live under
+`state.ui` in the same blob. This localStorage layer — synchronous
+`window.reviewState.read()/write()/update()` — is the tool's always-available
+core and is unaffected by whether the optional sync backend below is ever used.
 
-Each page's review record also carries an append-only `history[]` array
-(added alongside the sync backend): `{ timestamp, reviewer, decision, notes,
-risks_or_blockers, updated_by }` entries recording each review "round." A
-history entry is constructed in exactly one place — `mergeReviewRecord()` in
-`js/review/review-merge.js` — and only at discrete round-boundary events: queue bulk
-actions/keyboard shortcuts (`updateLocalReviewForPage` in
-`js/review/review-queue-state.js`), CSV/JSON backup import (`importReviewStateBackup`
-in `js/review/ux-improvements-export.js`), server sync (`server.ts`'s
-`putReviewPage`), and a **decision change made from the sidebar** (the
-`<select>` or a quick-action chip). The continuous per-keystroke/blur autosave
-(`saveCurrentPageToLocalStorage` in `js/review/ux-improvements-state-sync.js`)
-deliberately does **not** go through `mergeReviewRecord` and does **not**
-append a history entry — it just keeps the working snapshot fresh, carrying
-the existing `history` array forward untouched. Routing autosave through the
-merge/history path would flood `history` with one entry per debounced
-keystroke.
+Each page's review record also carries an append-only `history[]` array:
+`{ timestamp, reviewer, decision, notes, risks_or_blockers, updated_by }`
+entries recording each review round. **`mergeReviewRecord()` in
+`js/review/review-merge.js` is the only place a history entry gets constructed**, and
+only at discrete round-boundary events — queue actions/keyboard shortcuts
+(`updateLocalReviewForPage`), CSV/JSON import (`importReviewStateBackup`),
+server sync (`server.ts`'s `putReviewPage`), and a decision change made from
+the sidebar. The continuous per-keystroke/blur autosave
+(`saveCurrentPageToLocalStorage`) deliberately skips `mergeReviewRecord` — it
+just refreshes the working snapshot, carrying `history` forward untouched —
+otherwise every debounced keystroke would append an entry.
 
-The sidebar decision is the one exception that shares the autosave path
-(both persist through the same field listeners in `js/review/ux-improvements.js`),
-so `saveCurrentPageToLocalStorage` singles it out via `isDecisionRound()`:
-one entry when the decision actually _transitions_, never per keystroke.
-A brand-new record only counts when the reviewer moved off the default
-`Needs review`, or typing the first character of a note on an untouched
-page would record a round for every page in the site. Queue actions append
-their own entry before dispatching their sidebar-sync events, so by the
-time autosave runs the decision already matches and nothing double-records.
+The sidebar decision (`<select>` or quick-action chip) is the one exception
+that shares the autosave path, so `saveCurrentPageToLocalStorage` singles it
+out via `isDecisionRound()`: one entry when the decision actually
+_transitions_, never per keystroke, and on a brand-new record only when the
+reviewer moved off the default `Needs review`. Queue actions append their own
+entry before dispatching sidebar-sync events, so autosave sees a matching
+decision and nothing double-records.
 
-**The CSV/JSON import path can destroy existing reviews** — a prior
-regression there replaced the saved state wholesale instead of merging. The
-round-trip logic lives in `js/review/review-queue-import.js` (CSV) and
-`js/review/ux-improvements-export.js`'s `importReviewStateBackup` (JSON backup);
-both merge through the same `mergeReviewRecord` per-page-key path the sync
-backend uses, while `js/review/review-queue.js` wires the handlers and
-`js/review/manager-review-export.js` exports current-page snapshots. **Any change to
-any of these modules, or to `js/review/review-merge.js`, must be verified against the
-round trip itself before being called done:** export a snapshot, re-import it,
-and confirm existing decisions/notes are still present rather than wiped.
+**The review import/export round-trip can destroy existing reviews** — a prior
+regression replaced saved state wholesale instead of merging. The actual
+round-trip logic lives in `js/review/review-queue-import.js` (CSV import) and
+`js/review/ux-improvements-export.js` (saved-state JSON backup/restore), both merging
+through the same `mergeReviewRecord` per-page-key path the sync backend uses;
+`js/review/review-queue.js` wires the handlers and `js/review/manager-review-export.js`
+exports current-page snapshots. **Any change to any of these review
+import/export modules, or to `js/review/review-merge.js`, must be verified against
+the round trip itself**: export a snapshot, re-import it, and confirm existing
+decisions/notes survive rather than being wiped.
 
 **Two e2e specs cover this, and the split between them is the interesting
-part.** Both drive the real UI (export button clicks, file-input imports),
-because `review-import-export.spec.js` — once described here as the API-level
-half — was deleted for not doing so: it hand-rolled the merge inside
-`page.evaluate` instead of calling `importReviewStateBackup()`, so it stayed
-green against the wholesale replace that destroyed reviews once already.
+part** — both drive the real UI (export button clicks, file-input imports),
+because the file that used to be described here as the API-level half,
+`review-import-export.spec.js`, was deleted precisely for not doing so: it
+hand-rolled the merge inside `page.evaluate` instead of calling
+`importReviewStateBackup()`, so it stayed green against the wholesale replace
+that destroyed reviews once already.
 
 - **`tests/e2e/import-export.spec.js`** — both directions end to end, asserting
   `history.at(-1).updated_by === 'import'`, which is what proves merge rather
@@ -1324,7 +1291,7 @@ green against the wholesale replace that destroyed reviews once already.
 - **`tests/e2e/merge-verification.spec.js`** — the shape that misses, and the
   one the warning is actually about: re-importing an **older snapshot on top of
   live state that has moved on**. A page reviewed after the export is absent
-  from the file, so a wholesale replace drops it. Everything routes through the
+  from the file, so a wholesale replace drops it. Everything goes through the
   sidebar fields and the real buttons; nothing touches review state directly.
 
 Nothing can unit-test this path today: both modules are browser-only, with no
@@ -1384,22 +1351,41 @@ offline static tool.
 
 ### Reviewer sign-in (`/api/session`)
 
-The bundle is public so it can never carry a token; Railway made the app and the
-API same-origin, so it can carry a sign-in form instead.
+The API is bearer-gated and the browser bundle is public, so a token can never
+ship in it — which left every reviewer pasting one by hand, and is the reason
+sync went unused for months. **Railway removed the constraint that forced
+that**: `server.ts` serves the app and `/api/*` from one origin, so a cookie it
+sets comes back automatically.
 
 - **`POST /api/session`** takes `{password}`, compares it constant-time against
   `REVIEW_SESSION_PASSWORD`, and sets an `HttpOnly; Secure; SameSite=Strict`
-  cookie. `GET` reports `{active, loginAvailable}` and is deliberately ungated —
-  it is how a browser learns it can become a principal. `DELETE` signs out.
-- **The cookie is a signed assertion, not stored state**:
-  `<principal>.<expiry>.<HMAC>`, verified per request, key derived from the API
-  tokens — so rotating `REVIEW_API_TOKEN` invalidates every session.
-- **A session gets `review:read` + `review:write` only, never `ai:generate`** —
-  a shared password that unlocked paid generation would make one leak an
-  unbounded bill. Cookie-authenticated AI requests get 403.
-- **Bearer beats cookie** when both are present, so a scoped token keeps its
-  own roles.
-- Sign-in is throttled globally (10/min); unset password → **501**, token-only.
+  cookie. `GET` reports `{active, loginAvailable}` — deliberately ungated, since
+  it is how a browser learns it _can_ become a principal, and gating it would be
+  circular. `DELETE` signs out.
+- **The cookie is a signed assertion, not a stored session**:
+  `<principal>.<expiry>.<HMAC>`, verified per request. No session table, nothing
+  to replicate between instances, nothing lost on restart. The key is derived
+  from the configured API tokens, so **rotating `REVIEW_API_TOKEN` invalidates
+  every outstanding session** — which is what you want from a rotation.
+  `REVIEW_SESSION_SECRET` separates the two lifecycles if a deployment wants
+  that.
+- **A session gets `review:read` and `review:write` only — never
+  `ai:generate`.** AI calls cost money per request, so a shared password that
+  also unlocked generation would make one leaked password an unbounded bill. A
+  cookie-authenticated AI request gets 403, not 401.
+- **Bearer tokens still win when both are present.** A script running with a
+  scoped token in a browser that also holds a session must get the token's
+  roles, so the cookie is only consulted after the bearer loop finds nothing.
+- **Sign-in attempts are throttled globally** (10 per minute), not per
+  principal — a sign-in has no principal yet, and keying on client IP is not
+  trustworthy behind a proxy this server does not control. Blunt on purpose.
+- **CSRF control is `SameSite=Strict`**, plus the existing origin allowlist and
+  the JSON content type the routes require; a cross-site form post cannot reach
+  them.
+- **`Secure` is dropped only on plain-HTTP localhost**, or `bun run dev:api`
+  and local verification would silently stop receiving the cookie.
+- Unset `REVIEW_SESSION_PASSWORD` → `POST` answers **501** and sync stays
+  token-only. Fails closed like everything else here.
 
 ### Review-state sync backend (optional)
 
@@ -1409,10 +1395,10 @@ has written localStorage (never instead of it), and `pushDirtyPages()` sends
 work saved while the server was unreachable. No push may precede the first pull,
 or it carries a `synced_at` baseline the browser never observed and earns a 409.
 The client still never merges on the push path — the server does, with
-`updatedBy: 'sync'` — so history stays bounded. The default endpoint is the
+`updatedBy: sync` — so history stays bounded. The default endpoint is the
 page's own origin now, not a baked-in hostname; the token still has no default.
 
-`server.ts` optionally serves a small sync API alongside static files, backed by Postgres or SQLite depending on `DATABASE_URL` (see "Where review records live" above), with `js/sync/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
+`server.ts` optionally serves a small sync API alongside static files, backed by Postgres or SQLite depending on `DATABASE_URL` (see "Where review records live" below), with `js/sync/review-state-sync.js` as its no-op-unless-configured client. Entirely additive, off by default, fails closed (501). Auth is the shared layer described under "Optional API access hardening" above. Full rationale — push/pull asymmetry, the never-compare-clocks rule, `local_dirty`'s tri-state, conflict binding — in the `hhvc-review-sync-backend` skill.
 
 ### AI assist backend (optional)
 
@@ -1428,44 +1414,31 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
 
 ### Build outputs
 
-- **`vite build --mode singlefile`** (`bun run build:singlefile`) inlines
-  every script and stylesheet into one self-contained
-  `dist-singlefile/index.html`, via `vite-plugin-singlefile`. It replaced the
-  hand-rolled `build_scripts/build-single-file.js`, which concatenated
-  `index.html`'s tags in document order — an approach that only worked while
-  there was no bundler. The output, plus `dist/` and
-  `data/page_inventory.{json,csv}`, is a gitignored generated file —
-  **never hand-edit it**; edit sources and re-run `bun run build`.
+- **`bun run build:singlefile`** (`vite build --mode singlefile`, via
+  `vite-plugin-singlefile`) inlines every script and stylesheet into one portable
+  `dist-singlefile/index.html`. It replaced the hand-rolled
+  `build_scripts/build-single-file.js`. That output and `dist/` are
+  **gitignored generated files; never hand-edit.** Edit sources, re-run `bun run build`.
 - **`build_scripts/extract-pages.js`** (first half of `bun run export`)
-  regenerates `data/page_inventory.{json,csv}` from page data. `data/` is
-  absent on a fresh clone (gitignored); this script creates it. Dev/serve
-  never touches `data/` — only build/export does.
+  regenerates `data/page_inventory.{json,csv}`. `data/` is absent on a fresh
+  clone (gitignored); this script creates it. Dev/serve never touches `data/`.
 - **`build_scripts/sync-tracking-sheet.js`** (second half of `bun run export`,
-  also `bun run sync-tracking`) regenerates the Google Sheets–ready tracking
-  CSVs under `review/` from current page data.
-  **`build_scripts/push-tracking-sheet.js`** (`bun run push-tracking`) does a
-  three-way merge against the live Master Control workbook (IDs and tab gids
-  in `build_scripts/sheet-config.json`) and optionally pushes via the Sheets
-  API. It needs a Google service-account key, which is gitignored and must
-  stay that way — never commit `*-service-account*.json` or `.env.local`.
+  also `bun run sync-tracking`) regenerates the Google Sheets–ready tracking CSVs
+  under `review/`. **`build_scripts/push-tracking-sheet.js`**
+  (`bun run push-tracking`) three-way-merges against the live Master Control
+  workbook (IDs/tab gids in `build_scripts/sheet-config.json`) and optionally
+  pushes via the Sheets API. It needs a Google service-account key — gitignored,
+  and it must stay that way (never commit `*-service-account*.json` or
+  `.env.local`).
 - **`bun run build:railway`** (what `railway.json` runs as its build command)
   runs `validate` →
-  `build:app` (the real Vite production build into `dist/`) →
-  `build_scripts/copy-workshop-form.js`. That last script is the surviving
-  half of the old `build-netlify-dist.js`: everything it used to copy by hand
-  (`index.html`, `css/`, `js/`, `pages/`, the `@sfgov/design-system` CSS) is
-  now bundler output, but the workshop form still has to be copied to
-  `dist/forms/mosquito-workshop-request`, since that Vite sub-app is built
-  with `base: '/forms/mosquito-workshop-request/'`. **That copy does not run
-  the sub-app's Vite build** — it copies whatever is checked into the
-  committed `forms/mosquito-workshop-request/dist`, so after editing
-  `forms/mosquito-workshop-request/src` you must run
-  `bun run build:workshop-form` and commit the result, or the deploy ships
-  stale form assets. The script parses the committed HTML's asset references
-  and fails loudly when any are missing, because a deploy once shipped a form
-  shell that loaded its CSS and never hydrated. Note the gitignore subtlety:
-  the root bundle is ignored as `/dist/`, anchored on purpose so it doesn't
-  also swallow that sub-app's committed `dist/`.
+  `build:app` (the real Vite production build) →
+  `build_scripts/copy-workshop-form.js`. That copy step does **not** run the
+  sub-app's Vite build — it copies whatever is checked into
+  `forms/mosquito-workshop-request/dist`, so rebuild that form first
+  (`bun run build:workshop-form`) after editing its `src` or the deploy ships
+  stale assets. It fails loudly if the committed form HTML references assets that were
+  never committed (the "form shell that never hydrates" regression).
 - `server.ts` mirrors the same security headers (`X-Content-Type-Options`,
   `X-Frame-Options`, etc.) that `netlify.toml` declares for the retired static
   site, so the live Railway deploy and the archived Netlify config agree.
@@ -1473,90 +1446,160 @@ A floating button offering an AI rewrite of the body copy a reviewer selects (`j
 ### Where review records live (`build_scripts/storage.js`)
 
 One module decides the store and speaks its dialect; `server.ts` calls functions
-and never sees a driver or a SQL string.
+and never sees a driver, a connection or a SQL string.
 
-- **Postgres when `DATABASE_URL` is set** (Railway injects it from the managed
-  Postgres service); **SQLite at `DATA_DB_PATH` otherwise** — local dev and
-  every server test. The fallback is kept so
-  `tests/review-api-server.test.js` can spawn the real server in CI with no
-  service container.
-- **Every function is async, including the SQLite ones** — `bun:sqlite` is sync
-  and `Bun.SQL` is not, and two shapes would push the difference back into
-  `server.ts`.
+- **Postgres when `DATABASE_URL` is set** — Railway injects it from the managed
+  Postgres service in `hhvc-manager-review`. **SQLite at `DATA_DB_PATH`
+  otherwise**: local dev, `bun run dev:api`, and every server test.
+- **SQLite is kept deliberately, not left behind.**
+  `tests/review-api-server.test.js` spawns the real `server.ts` against a temp
+  DB and asserts twenty-odd behaviours over real HTTP. Keeping the fallback is
+  what lets that suite run with no service container in CI.
+- **Every function is async, including the SQLite ones.** `bun:sqlite` is
+  synchronous and `Bun.SQL` is not; giving them different shapes would push the
+  difference back into `server.ts`, which is what the seam exists to prevent.
 - **`updated_at` is TEXT in both drivers, never a timestamp type.** Every
-  freshness check here is a string compare against ISO strings the server
-  stamps; letting Postgres reformat them would silently change those
-  comparisons, and the failure mode is a lost update.
-- **The compare-and-swap is the load-bearing line** — SQLite reads `changes`,
-  Postgres counts rows `RETURNING`ed. `tests/review-api-postgres.test.js` proves
-  the Postgres half by racing two pushes off one baseline.
-- **DDL runs at boot, not lazily**, so two replicas cannot race the same
-  `CREATE TABLE`.
+  freshness check in this system is a string compare — the server's
+  `existing.updated_at > patch.synced_at`, the client's
+  `serverRecord.updated_at > localRecord.synced_at` — against ISO strings that
+  only ever come from the server. Letting Postgres parse and reformat them would
+  change those comparisons for values differing only in representation, and the
+  failure mode is a silently lost update.
+- **The `record` column is `JSONB` on Postgres and `TEXT` on SQLite, and it is
+  passed to the driver as an OBJECT.** Not a schema detail: SQLite hands the
+  column back as a string to parse while the Postgres driver returns an
+  already-parsed object, which is why one helper normalizes both. The binding
+  half is measured and counter-intuitive — interpolating
+  `${JSON.stringify(record)}::jsonb` looks equivalent and stores a jsonb
+  **string scalar** instead, where `jsonb_typeof` returns `"string"` and
+  `record->>'decision'` stops resolving. Anything hand-writing a query or a
+  migration against this column needs both facts.
+- **The compare-and-swap is the load-bearing line.** SQLite gates the conflict
+  branch with `WHERE review_pages.updated_at = ?` and reads `changes`; Postgres
+  does the same and counts rows `RETURNING`ed. `RETURNING` rather than a
+  driver-specific rows-affected field, because it is the portable way to tell a
+  skipped conflict branch from a real write.
+- **DDL runs at boot, not lazily on the first request.** Lazy was fine for a
+  file only one process opens; two Postgres replicas racing the same
+  `CREATE TABLE` on their first requests is not.
 - **`knowledge_chunks` lives behind this seam too**, so `bun run ingest` writes
-  wherever the deployment reads. Embeddings are raw Float32 bytes in both — a
-  BLOB in SQLite, `bytea` in Postgres.
-- Bun's Postgres client is built in (`Bun.SQL`), so this added no npm
-  dependency.
+  wherever the deployment reads. Embeddings are raw little-endian Float32 bytes
+  in both drivers — a BLOB in SQLite, `bytea` in Postgres.
+- **The seam is verified on Postgres, not assumed**: the deployed database held
+  **816 chunks across 78 documents** after a re-ingest on 2026-08-17, matching
+  the on-disk measurement category for category. **That is a record of what one
+  ingest wrote, not a standing guarantee** — the deployed count drifts behind
+  the corpus the moment an ingested document is edited without a re-ingest, and
+  it had twice: a reading of `chunkCount: 768` predated both
+  `docs/karl-export-field-map.md` joining the `karl` category and the `sfds`
+  category existing at all, and a later 812 was 4 short from edits to that
+  file's own register. Read the live count from `/api/ai/capabilities` rather
+  than from this line.
+- **Ingesting against the deployed Postgres needs two services' variables**, and
+  `railway run` supplies one service's at a time: `DATABASE_URL` belongs to the
+  Postgres service and `GEMINI_API_KEY` to `web`. The deployed `DATABASE_URL`
+  also names `postgres.railway.internal`, which does not resolve off-platform —
+  rebuild it against `RAILWAY_TCP_PROXY_DOMAIN`/`RAILWAY_TCP_PROXY_PORT` rather
+  than reusing the value the service itself sees.
+- **Bun's Postgres client is built in** (`Bun.SQL`, Bun 1.3+), so this added no
+  npm dependency — the same reason `bun:sqlite` was used in the first place.
 
 ### Deploying — Railway is the live host
 
 **<https://web-production-9bb3b.up.railway.app>** is the deploy reviewers open.
-Railway project `hhvc-manager-review`, service `web`, connected to `main`, so a
-merge redeploys. Config lives in `railway.json`: build `bun run build:railway`,
-start `bun run serve`.
+Railway project `hhvc-manager-review`, service `web`, connected to this repo's
+`main` branch, so a merge redeploys. Config lives in `railway.json`: build
+`bun run build:railway`, start `bun run serve`.
 
-- **`bun run serve`, not `bun run start`** — `start` is `build:railway && serve`,
-  which would repeat the whole build at boot on a platform that already ran it.
-- **`server.ts` must exit 0 on SIGTERM.** Railway retires a deployment by
-  sending SIGTERM and reads the exit status that follows as its verdict. With no
-  handler the process is simply killed, `bun run` reports 128 + 15 = 143, and
-  Railway mails "Deploy Crashed!" about a container it stopped on purpose — on
-  every deploy to `main`, with the only trace one line in the OUTGOING
+- **`bun run serve`, not `bun run start`.** The `start` script is
+  `build:railway && serve` — correct locally, wrong on a platform that already
+  ran the build, where it would repeat the whole thing at boot. The bare `build`
+  script is wronger still for a server: it also produces the single-file export
+  and rebuilds the workshop form.
+- **`server.ts` must exit 0 on SIGTERM, and that is a deploy concern rather
+  than tidiness.** Railway retires a deployment by sending SIGTERM and reads the
+  exit status that follows as the verdict on it. With no handler the default
+  disposition kills the process, `bun run` reports it as terminated by a signal
+  (128 + 15 = 143), and Railway mails "Deploy Crashed!" about a container it
+  stopped on purpose — which it did on every deploy to `main`, on both services
+  then deployed, with the only trace being one line in the OUTGOING
   deployment's log: `error: script "serve" was terminated by signal SIGTERM`.
-  The handler drains via `server.stop(false)` (`true` would sever in-flight
-  responses) raced against a 10s timer, so a hung request cannot hold the
-  process into SIGKILL and reach 143 the slow way.
+  A crash alert that fires on every healthy deploy trains its reader to ignore
+  the one that matters. The handler drains via `server.stop(false)` — `false`
+  is load-bearing, since `true` severs in-flight responses — and races that
+  against a 10s timer so a request that never completes cannot hold the process
+  into Railway's SIGKILL and return the same 143 by a slower route.
   `tests/review-api-server.test.js` asserts `signalCode` is null as well as
-  `exitCode` 0 — a signal-killed process reports `'SIGTERM'` there whatever the
-  code says. The start command stays `bun run serve`: with the handler in place
-  the script wrapper propagates the clean exit, so bypassing it buys nothing.
-- **`HOST=0.0.0.0` is required, as a variable rather than a code change.**
-  `server.ts` defaults to `127.0.0.1`, which is right locally and unreachable in
-  a container: the first deploy built and started cleanly and still served 502,
-  the only evidence being the log line
-  `HHVC mockup server running at http://127.0.0.1:8080`. `PORT=8080` is set too,
-  and the domain's target port must match it.
-- **Railway runs `server.ts`, so the optional APIs finally have a runtime** —
-  impossible on Netlify. They still fail closed: with neither
-  `REVIEW_API_TOKEN` nor `REVIEW_API_PRINCIPALS` set, `/api/review-state` and
-  `/api/ai/capabilities` answer **501**, the healthy resting state of an
-  unconfigured deploy. 502 is the broken one.
+  `exitCode` 0, because a signal-killed process reports `'SIGTERM'` there
+  whatever the code says. **The `railway.json` start command stays
+  `bun run serve`** — measured, not assumed: with the handler installed the
+  script wrapper propagates the clean exit and stops printing the error line,
+  so bypassing it buys nothing.
+- **`HOST=0.0.0.0` is required and is a variable, not a code change.**
+  `server.ts` defaults to `process.env.HOST ?? "127.0.0.1"`, which is right for
+  local dev and unreachable inside a container — the first Railway deploy built
+  and started cleanly and still served 502, with the only evidence being one log
+  line: `HHVC mockup server running at http://127.0.0.1:8080`. The service also
+  sets `PORT=8080`, and the generated domain's target port must match; a domain
+  created before the port is known shows `Target port: -` and cannot route.
+- **Railway runs `server.ts`, so the optional APIs finally have a runtime.**
+  On Netlify they were structurally impossible. They still fail closed: with
+  neither `REVIEW_API_TOKEN` nor `REVIEW_API_PRINCIPALS` set, `/api/review-state`
+  and `/api/ai/capabilities` both answer **501**, which is the healthy resting
+  state of an unconfigured deploy rather than a broken one. 502 is the broken
+  one — see the `HOST=0.0.0.0` note above.
 - **On the live deploy those routes now answer 401, not 501** (verified
-  2026-08-15). Authorization is configured there, so **a 501 now would mean the
-  variables were lost.** A 503 has two causes only the response body
-  separates: `API CORS configuration is invalid.` means
-  `REVIEW_API_ALLOWED_ORIGINS` is malformed, while
-  `API authorization configuration is invalid.` means `REVIEW_API_PRINCIPALS`
-  is. The CORS check answers before the authorization gate runs, so a bare 503
-  is not evidence about auth — read the body, and report authorization as
-  **unknown** when CORS is the one that won. Presence was inferred from the
-  status code, not read out of the service — never print a variable's value.
-  **A 401 from `/api/ai/capabilities` says nothing about the provider keys**:
-  authorization is the first of two gates, so an unauthenticated caller never
-  reaches the capability report. Full procedure in the
-  `verify-railway-backend` skill.
-- **Netlify is retired but not deleted** — `netlify.toml` carries
-  `build.ignore = "exit 0"` (skip every build). Delete that line to re-enable it.
+  2026-08-15 against both). Authorization is configured there, so 501 has
+  stopped being the expected reading for this host: **a 501 now would mean the
+  variables were lost.** A 503 has two causes, and the response body is the
+  only thing that separates them:
+  `API CORS configuration is invalid.` means `REVIEW_API_ALLOWED_ORIGINS` is
+  malformed, while `API authorization configuration is invalid.` means
+  `REVIEW_API_PRINCIPALS` is. The CORS check runs first and answers before the
+  authorization gate is reached, so a bare 503 is not evidence about auth at
+  all — read the body, and report authorization as **unknown** when the CORS
+  error is the one that won. Presence of the credentials was inferred from the
+  status code rather than read out of the service — never print a variable's
+  value.
+  **A 401 from `/api/ai/capabilities` says nothing about whether the provider
+  keys are set.** The two gates run in order — API authorization first,
+  provider key second — so an unauthenticated caller is rejected before the
+  capability report is ever reached, and `{anthropic: false, gemini: false}`
+  is only observable from behind a valid token. The `verify-railway-backend`
+  skill carries the full procedure, including the GitHub deployments-API
+  fallback for sessions whose Railway MCP cannot list projects or deployments.
+- **Netlify is retired but not deleted.** `netlify.toml` now carries
+  `build.ignore = "exit 0"`, which tells Netlify to skip every build; the file
+  itself is kept for its record of how the static bundle is assembled and of two
+  plugin traps. Delete that one line to turn Netlify back on. The site's last
+  deploy stopped at `38d152c` and was serving 503 when Railway took over.
+
+- **A merge triggers the deploy; it does not prove one served.** The branch
+  connection above cuts both ways: a push to a feature branch builds nothing,
+  so a green branch push is not a shipped change — only the merge starts a
+  deploy at all. And starting one is not finishing one: both halves of
+  `railway.json` have completed successfully while the site answered 502 (see
+  `HOST=0.0.0.0` above) or 503. **After any merge that changes site content or
+  JS, verify the artifact rather than the pipeline**: load the live URL
+  headlessly with Playwright, assert zero console errors, and confirm the
+  deployed commit matches **the merged SHA read from a freshly fetched
+  `origin/main`** — not local `HEAD`, which is a different commit after a
+  squash merge and stale whenever someone else's work lands first, so checking
+  it can pass against a revision that was never deployed. Build success and
+  deploy success are different claims, and only the second one is the one being
+  made.
+- **Never deploy from a git worktree checkout.** `railway up` uploads the
+  directory it is invoked in, so from a worktree it ships that tree's state
+  rather than `main` — a deploy that succeeds and serves the wrong commit,
+  which the hash check above is what catches. Switch to a normal clone of
+  `main` first.
 
 ### Other directories
 
-- **`forms/mosquito-workshop-request/`** — an independent Vite app (own
-  `package.json`, `vite.config.js`, `src/main.js`) for one embedded form. Not
-  wired into the main Bun dev server; built separately via
-  `bun run build:workshop-form` or the deploy build (`build:railway`).
+- **`forms/mosquito-workshop-request/`** — independent Vite app (own
+  `package.json`, `vite.config.js`, `src/main.js`), built separately.
 - **`review/`** — reference/output for the manager review process
-  (`manager_review_packet.md`, `manager_decision_log.csv`,
-  `page_approval_checklist.csv`, `mockup_tracking_sheet.csv`), distinct from
+  (`manager_review_packet.md`, `manager_decision_log.csv`, etc.), distinct from
   the in-browser `localStorage` review state.
 - **`docs/`** — **`karl-export-field-map.md`** (the current per-content-type
   field map: live UI labels, navigation paths, block and raw Wagtail field
@@ -1570,13 +1613,10 @@ start `bun run serve`.
   dated research/audit notes. **Those dated notes are records, not
   documentation** — a count or claim that was right on its date stays in the
   file; corrections go in the field map's obsolete register instead.
-- **`docs/source/hhvc-policy/`** — source policy documents (PDFs and their
-  markdown extracts) that page copy is based on; not code.
-- **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning and
-  design docs from prior work sessions; useful background, not standing
-  instructions.
-- **`.playwright-mcp/`** — scratch console logs/snapshots from prior
-  Playwright MCP sessions; not part of the source.
+- **`docs/source/hhvc-policy/`** — source policy documents (PDFs + markdown
+  extracts) page copy is based on; not code.
+- **`docs/superpowers/plans/` and `docs/superpowers/specs/`** — planning/design
+  docs from prior sessions; useful background, not standing instructions.
 
 ## Code style & idioms
 
@@ -1586,27 +1626,26 @@ Prettier is the **formatting gate CI enforces** (`.prettierrc.json`), alongside
 `lint:js` for oxlint's core rules, Knip for reachability (see `knip.jsonc`),
 dependency-cruiser for the module graph (see `.dependency-cruiser.cjs`) and
 `lint:docs` for the markdown (see `.markdownlint-cli2.jsonc`): **no
-semicolons**, single quotes, 2-space indentation, `printWidth: 100`, ES5
-trailing commas. Code must be ASI-safe and semicolon-free. Run
-`bun run format` before committing; `bun run format:check` is the lint step
-and CI fails on it. `.prettierignore` excludes `data/`, `node_modules/`,
-`dist/`, `server.ts`, the vendored `tools/oxlint/anti-slop/`, the generated
-single-file HTML exports, and the reference/planning dirs (`docs/source/`,
-`docs/superpowers/`, `review/`, `.playwright-mcp/`).
+semicolons**, single quotes, 2-space indentation, `printWidth: 100`, ES5 trailing
+commas. Code must be ASI-safe and semicolon-free. Run `bun run format` before
+committing; `bun run format:check` is the lint step. `.prettierignore` excludes
+`data/`, `server.ts`, the vendored `tools/oxlint/anti-slop/`, the generated
+single-file HTML exports, and reference/planning dirs.
 
-**`bun run lint:anti-slop` is a second linter, and deliberately not a gate.**
-It runs the vendored [anti-slop](https://github.com/dmmulroy/anti-slop) Oxlint
-plugin (`tools/oxlint/anti-slop/`, MIT, see its `NOTICE.md`) over **`server.ts`
-and `build_scripts/ai/` only** — the two places that decode external input,
-where its rules about widening and unchecked assertions are about the code
-rather than about a style this repo doesn't use. The narrow scope is not
-timidity: pointed at the browser JS the same rules reported 280 findings, 254
-of them `no-runtime-typeof` firing on the `typeof window === 'undefined'` guard
-this repo's own code style mandates, which is a linter arguing with the
-codebase rather than improving it. `.oxlintrc.json` pins the same scope in its
-`overrides`, so an editor running bare `oxlint` sees it too. Nothing in
-`.github/workflows/ci.yml` invokes it — it is a report to read, and adding it
-to CI would be a decision to make on purpose, not a gap to close.
+**`bun run lint:anti-slop` is a second linter, and deliberately not a gate.** It
+runs the vendored [anti-slop](https://github.com/dmmulroy/anti-slop) Oxlint
+plugin (`tools/oxlint/anti-slop/`, MIT-licensed, provenance and upstream commit
+in its `NOTICE.md`) over **`server.ts` and `build_scripts/ai/` only** — the two
+places that decode external input, where its rules about widening and unchecked
+assertions are about the code rather than about a style this repo doesn't use.
+The narrow scope is not timidity: pointed at the browser JS the same rules
+reported 280 findings, 254 of them `no-runtime-typeof` firing on the
+`typeof window === 'undefined'` guard this repo's own code style mandates, which
+is a linter arguing with the codebase rather than improving it. `.oxlintrc.json`
+pins the same scope in its `overrides`, so an editor running bare `oxlint` sees
+it too. Nothing in `.github/workflows/ci.yml` invokes it — it is a report to
+read, and adding it to CI would be a decision to make on purpose, not a gap to
+close.
 
 **`typos` was measured and REJECTED, on 2026-08-17 — do not re-propose it
 without new evidence.** It was the obvious next docs tool, and the premise was
@@ -1630,10 +1669,10 @@ run it by hand if you want the report, but it is not a gate here.
 `.oxlintrc.ci.json`, which loads no plugin at all and enables oxlint's own core
 rules across `js/`, `pages/`, `build_scripts/` and `tests/` — those had never
 run anywhere, since `.oxlintrc.json` sets `"rules": {}`. Two configs rather than
-one because the two answer different questions: anti-slop is an opinion about
-how to write TypeScript at an I/O boundary, and the core rules are correctness.
-Two stylistic `unicorn` rules are off in the CI config for the same reason
-anti-slop is not gated — `no-useless-fallback-in-spread` and
+one because they answer different questions: anti-slop is an opinion about how
+to write TypeScript at an I/O boundary, and the core rules are correctness. Two
+stylistic `unicorn` rules are off in the CI config for the same reason anti-slop
+is not gated — `no-useless-fallback-in-spread` and
 `prefer-string-starts-ends-with` cluster in `js/review/ux-improvements-export.js` and
 `js/editing/inline-content-edit.js`, and churning the import/export merge path for style
 is the trade this repo already refused once.
@@ -1643,60 +1682,54 @@ is the trade this repo already refused once.
 - **This is plain browser JS — not TypeScript — but it IS bundled, and
   `js/*.js` ARE ES modules.** Use `import`/`export` with explicit relative
   specifiers including the `.js` extension (`import { escapeHtml } from
-'./utils.js'`). Vite builds it; `server.ts` is the one TypeScript file, and
-  it's Prettier-excluded. (Older notes in this repo describing "no build step,
-  no ES modules" predate the Vite migration.)
+'./utils.js'`). Vite builds it; `server.ts` is the one TypeScript file.
+  (Notes elsewhere describing "no build step, no ES modules" predate the Vite
+  migration.)
 - **File naming:** lowercase — single words for the core modules (`app.js`,
   `state.js`, `utils.js`), hyphenated for multi-word ones
   (`review-queue-state.js`, `page-render.js`); never camelCase. Match sibling
   files.
 - **Two deliberate module patterns:** (1) plain modules for the core files —
-  bare `const`/`function` declarations plus an `export { … }` block at the
-  bottom, and a `window.X = X` line for the handful other code reaches
-  through `window` (see the load-order section); (2) **named IIFEs with a
-  leading semicolon** —
-  `;(function mountX(){…})()` — for newer stateful subsystems (the leading `;`
-  is required because there are no statement-terminating semicolons). Expose
-  via `window.<Namespace>` with the idempotent `window.X = window.X || {}`
-  idiom.
+  bare `const`/`function` declarations plus an `export { … }` block at the bottom,
+  and a `window.X = X` line for the few things other code reaches through
+  `window`; (2) **named IIFEs with a leading semicolon** — `;(function mountX(){…})()`
+  — for newer stateful subsystems (the leading `;` is required because there are
+  no statement-terminating semicolons). Expose via `window.<Namespace>` with the
+  idempotent `window.X = window.X || {}` idiom.
 - **Naming:** `camelCase` for JS identifiers, `UPPER_SNAKE_CASE` for module
-  constants, `snake_case` for serialized/CSV data fields (`review_date`,
-  `local_dirty`, `synced_at`). That camelCase-code / snake_case-data boundary
-  is firm.
+  constants, `snake_case` for serialized/CSV data fields (`review_date`). That
+  camelCase-code / snake_case-data boundary is firm.
 - **Defensive by default:** run every value that reaches `innerHTML` through
-  `escapeHtml`; use optional chaining + `?? ''` coercion and guard-clause
-  early returns; guard test/SSR contexts with a
-  `typeof window === 'undefined'` early return; `csvEscape` includes
-  spreadsheet formula-injection protection (`build_scripts/csv.js` preserves
-  the same neutralization on the Node side). Prefer reusing `js/core/utils.js`
-  helpers over inlining new logic.
+  `escapeHtml`; use optional chaining + `?? ''` coercion and guard-clause early
+  returns; guard test/SSR contexts with a `typeof window === 'undefined'` early
+  return; `csvEscape` includes spreadsheet formula-injection protection. Prefer
+  reusing `js/core/utils.js` helpers over inlining new logic.
 - **State:** in-memory module singletons + versioned `localStorage` updated via
   functional updater callbacks (`updateLocalState((s) => { …; return s })`) +
   `HHVC_DATA`/`HHVC_PAGES` globals; `ORIGINAL_DATA` is a deep clone for reset.
 
 ### Comment & documentation voice — the most distinctive trait
 
-Write **detailed, explanatory** comments and docs, not terse ones (the
-author's stated preference: verbose, comment-heavy, explain the reasoning).
-Every module opens with a header block stating its role **and its load-order
-dependency**. Functions carry full JSDoc (`@param`/`@returns`). Comments
-justify the _why_ — product rationale, trade-offs, and exact WCAG contrast
-math in CSS — not restatements of the code. Prose docs use plain-English
-framing with `**Bold label:**` bullets that state a non-obvious fact _and why
-it matters_, and annotate config inline (e.g. the `"// script": "description"`
-keys in `package.json`, and the explanatory comments throughout `.gitignore`
-and `ci.yml`). Match this voice.
+Write **detailed, explanatory** comments and docs, not terse ones (the author's
+stated preference: verbose, comment-heavy, explain the reasoning). Every module
+opens with a header block stating its role **and its load-order dependency**.
+Functions carry full JSDoc (`@param`/`@returns`). Comments justify the _why_ —
+product rationale, trade-offs, and exact WCAG contrast math in CSS — not
+restatements of the code. Prose docs use plain-English framing with
+`**Bold label:**` bullets that state a non-obvious fact _and why it matters_, and
+annotate config inline (e.g. the `"// script": "description"` keys in
+`package.json`, and the explanatory comments throughout `.gitignore` and
+`ci.yml`). Match this voice.
 
 ### CSS
 
-Design-token-first: raw `--legacy-*` tokens (the hand-authored palette this
-tool shipped before adopting SFDS, scheduled for migration) → a semantic
+Design-token-first: raw `--legacy-*` tokens (the hand-authored palette this tool
+shipped before adopting SFDS, scheduled for migration) → a semantic
 `--brand-*`/`--surface-*`/`--text-*` layer with baked-in `var(fallback)`
-values, so reviewers retheme by touching tokens only.
-Hand-authored, no preprocessor. Boxed section-banner comments; justify
-color/accessibility choices in-comment with the contrast math. `!important` is
-used liberally **only** in the self-aware override layer
-(`css/ux-improvements.css`). Dark mode via
+values, so reviewers retheme by touching tokens only. Hand-authored, no
+preprocessor. Boxed section-banner comments; justify color/accessibility choices
+in-comment with the contrast math. `!important` is used liberally **only** in the
+self-aware override layer (`css/ux-improvements.css`). Dark mode via
 `@media (prefers-color-scheme: dark)` token overrides; responsive type via
 `clamp()`.
 
@@ -1785,20 +1818,22 @@ Bun test: `import { describe, test, expect } from 'bun:test'`, importing the
 modules under test directly. `tests/helpers/browser-env.js` — preloaded via
 `bunfig.toml` — registers a happy-dom global environment before the loader runs,
 restores Bun's native fetch, and clears localStorage after every test. The old
-`tests/helpers/load-scripts.js` harness evaluated the classic `<script>` files
-into a shared context, which ES modules made impossible. `describe` blocks are named after the unit under
-test; `test` names are **behavioral verb sentences** ("escapes all five HTML
-special characters"). Prefer exact-string assertions over loose matching. The
-XSS/escaping surface (`page-render.test.js`) is exhaustively covered — one
-assertion per render function. Use `test.todo` (with a reasoning comment) to
-document a known-but-unfixed bug rather than asserting wrong behavior. Tests
-that stub globals must restore them, or they pollute sibling test files.
+`tests/helpers/load-scripts.js` vm harness is gone — it evaluated classic scripts
+into a shared context, which ES modules made impossible. `describe` blocks are named after the unit under test;
+`test` names are **behavioral verb sentences** ("escapes all five HTML special
+characters"). Prefer exact-string assertions over loose matching. The XSS/escaping
+surface (`page-render.test.js`) is exhaustively covered — one assertion per render
+function. Use `test.todo` (with a reasoning comment) to document a
+known-but-unfixed bug rather than asserting wrong behavior. Tests that stub
+globals must restore them, or they pollute sibling test files.
 
 ### Test data invariants
 
-Do not hardcode counts (page counts, doc counts, section counts) in tests or
-assertions — derive them from the source of truth. Hardcoded counts have broken
-CI after merges more than once.
+Do not hardcode counts — page counts, doc counts, section counts — in tests or
+assertions. Derive them from the source of truth instead; hardcoded counts have
+broken CI after merges more than once. `tests/doc-counts.test.js` is the model:
+it reads the counts back out of the docs and compares them to the filesystem,
+rather than asserting a number that was true on the day it was typed.
 
 ## Editing rules (quick reference)
 
@@ -1808,10 +1843,10 @@ CI after merges more than once.
 - Review/UX layers → `js/review/ux-improvements.js`, `js/review/review-queue.js`,
   `js/review/dashboard-guidance.js`, `js/review/keyboard-shortcuts.js`,
   `js/review/manager-review-export.js`, `css/ux-improvements.css`.
-- Shared merge/history logic → `js/review/review-merge.js` (loaded both as a browser
-  `<script>` and imported directly by `server.ts` — the only place a `history`
-  entry should ever be constructed). Optional sync backend → `server.ts` (API
-  routes) and `js/sync/review-state-sync.js` (client pull/push + settings UI).
+- Shared merge/history logic → `js/review/review-merge.js` (the only place a
+  `history` entry should be constructed; loaded both as a browser `<script>`
+  and imported directly by `server.ts`). Optional sync backend → `server.ts`
+  (API routes) and `js/sync/review-state-sync.js` (client pull/push + settings UI).
 - Adding/deleting page mockups → `js/core/page-registry-data.js` (pure validation +
   the in-place `order`/`pages` mutation), `js/core/page-registry.js` (the bootstrap,
   which MUST stay imported by `js/core/state.js` so it runs before the `ORIGINAL_DATA`
@@ -1845,14 +1880,9 @@ CI after merges more than once.
   authors", taken from `git ls-files` rather than globbed. A third caller reuses
   it; it never re-globs. Both tools treat an empty file list as a broken
   derivation and fail, because each exits 0 when handed no inputs.
-- Any new file under `pages/` needs an `import` in `js/core/page-data.js` (enforced
-  by `build_scripts/page-import-checks.js`, so `bun run validate` fails without
-  it) plus an `order` entry. A new `js/` module is imported by whoever needs it,
-  or added to `js/main.js` if it is a self-mounting IIFE. **`index.html` has
-  exactly one `<script>` tag** — do not add tags to it.
-- After editing `pages/*.js` or `js/core/page-data.js`, run `bun run validate`
-  **and** `bun run test`. After touching the import/export round-trip,
-  manually verify it (export → re-import → decisions survive).
+- After editing `pages/*.js` or `js/core/page-data.js`, run `bun run validate` **and**
+  `bun run test`. After touching the import/export round-trip, manually verify it
+  (export → re-import → decisions survive).
 
 ## Security Reviews
 
@@ -1899,14 +1929,13 @@ when a diff hunk is genuinely ambiguous, and say why.
 
 ## Commits & pull requests
 
-- **Imperative mood.** Prefer **Conventional-Commits prefixes** for code
-  changes (`fix:`, `feat:`, `style:`, `content:`); keep the subject ≤ ~72
-  chars.
+- **Imperative mood.** Prefer **Conventional-Commits prefixes** for code changes
+  (`fix:`, `feat:`, `style:`, `content:`); keep the subject ≤ ~72 chars.
 - **Bodies scale with complexity:** a one-liner for CSV/doc refreshes; for
-  behavior/layout changes, a problem statement + a dash-bulleted list of
-  changes + an explicit **verification line** (e.g. "Verified headless at
-  1600px and 850px…"). AI-assisted commits carry `Co-Authored-By` and
-  `Claude-Session` trailers.
+  behavior/layout changes, a problem statement + a dash-bulleted list of changes +
+  an explicit **verification line** (e.g. "Verified headless at 1600px and
+  850px…"). AI-assisted commits carry `Co-Authored-By` and `Claude-Session`
+  trailers.
 - **A `commit-msg` hook enforces that pairing**, and it is a PAIRING check
   rather than a blanket one: the trigger is a `Co-Authored-By` line naming
   Claude, so a human's own commit is untouched, and either trailer without the
@@ -1924,13 +1953,12 @@ when a diff hunk is genuinely ambiguous, and say why.
   a commit carrying NEITHER trailer is invisible to it, because nothing in the
   message distinguishes that from a human commit. `--no-verify` bypasses it,
   as it bypasses every hook.
-- **Keep dashboard-UX changes and policy-copy changes in separate PRs** —
-  reduces merge conflicts and keeps review focused.
+- **Keep dashboard-UX changes and policy-copy changes in separate PRs** — reduces
+  merge conflicts and keeps review focused.
 - **Never hand-edit generated files** (single-file HTML exports,
   `data/page_inventory.*`) — edit sources and rebuild.
-- **Review exports** (`review/*.csv`, saved local-review CSV/JSON) are for
-  manager decisions only — **never treat them as automatic publication
-  approval.**
+- **Review exports** (`review/*.csv`, saved local-review CSV/JSON) are for manager
+  decisions only — **never treat them as automatic publication approval.**
 
 ## Deployment
 
@@ -1961,9 +1989,8 @@ content or JS:
 ## Karl CMS
 
 Login URL for the Karl (Wagtail-based) CMS admin:
-`https://api.sf.gov/sso/login?next=/admin/`. Keep user-specific credentials
-and private MCP config out of the repo (in `~/.codex/config.toml` or
-equivalent).
+`https://api.sf.gov/sso/login?next=/admin/`. Keep user-specific credentials and
+private MCP config out of the repo (in `~/.codex/config.toml` or equivalent).
 
 ## Agent skills
 
@@ -2058,11 +2085,11 @@ exists yet; created lazily by `/domain-modeling`). See
 
 ### Concurrency safety
 
-Multiple Claude sessions may be running against this repo. Before editing, run
-`git status`; if the working tree changed since you last read a file, re-read it
-before editing. Never run destructive shell one-liners against config files
-(`jq` writes to `~/.claude.json`, `mv` on dotfiles) without writing to a temp
-file first and verifying non-zero size.
+More than one agent session may be working in this repo at once. Before
+editing, run `git status`; if the working tree has changed since you last read
+a file, re-read it before editing. Never run a destructive shell one-liner
+against a config file — a `jq` write to `~/.claude.json`, an `mv` over a
+dotfile — without writing to a temp file first and verifying it is non-empty.
 
 ## Cross-tool canon
 
