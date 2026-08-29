@@ -20,6 +20,7 @@ data/page_inventory.csv
 # concatenation that used to emit manager-review-single-file.html and
 # single-file-export-current-source.html at the repo root.
 /dist-singlefile/
+/dist-svelte/
 
 # Those two root-level exports, which linger in older working copies. Nothing
 # regenerates them any more — the script that did was deleted with the Vite
