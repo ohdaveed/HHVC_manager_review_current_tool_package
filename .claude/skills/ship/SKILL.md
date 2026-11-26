@@ -37,7 +37,7 @@ that pre-approves the merge, which is the deploy.
 1. Refuse to run from `main`. Check `git branch --show-current`; if it is the
    default branch, stop and ask for a feature branch. Step 5 would otherwise
    push `HEAD` straight to `origin/main` — deploying with no PR if the
-   credentials can bypass branch protection, and failing at `gh pr create`
+   credentials can bypass the ruleset, and failing at `gh pr create`
    (which defaults head to the current branch and base to the default branch)
    if they cannot.
 2. `git fetch origin`. Rebase only if main actually moved — check
@@ -155,14 +155,14 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      # `completed` is NOT a verdict -- a failed or cancelled run is completed
      # too. Report the conclusion, so a red run cannot be read as a finished
      # one. `skipped` counts as success for the same reason `skipping` does
-     # in probe(): branch protection does not block on it.
+     # in probe(): the ruleset does not block on it.
      # Judge the LATEST run only. A sha can carry several -- close/reopen the
      # PR, or re-run after a red build -- and scanning them all lets a
      # superseded failure pin this at `failed` forever, aborting a commit
      # whose replacement run is green. `completed` is not a verdict either:
      # a failed or cancelled run is completed too, so read the conclusion.
      # `skipped` counts as success for the same reason `skipping` does in
-     # probe() -- branch protection does not block on it.
+     # probe() -- the ruleset does not block on it.
      gh api "repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=$SHA" \
        --jq 'if .total_count==0 then "none" else
                ([.workflow_runs[]]|sort_by(.created_at)|last) as $r
@@ -174,17 +174,23 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    }
 
    # TWO inventories, and which one you get decides what `pass` can mean.
-   # Branch protection is the COMPLETE list, so a context it names that
-   # produced no check is visible as MISSING -- the case that matters is a job
-   # renamed in ci.yml before protection is updated, which leaves a required
-   # context nothing will ever satisfy. It needs Administration permission.
-   # `--required` needs none, but the SERVER filters it to checks that EXIST,
-   # so that same renamed context is absent rather than pending and the
-   # all-pass subset left behind reads as a pass while GitHub still blocks the
-   # merge. So take the census when it is readable and fall back to the floor
-   # when it is not, rather than aborting a collaborator who can merge but
-   # cannot read protection. `contexts` carries a closing-down notice from
-   # GitHub; when it goes, `checks[].context` beside it is the replacement.
+   # The RULESET is the COMPLETE list, so a context it names that produced no
+   # check is visible as MISSING -- the case that matters is a job renamed in
+   # ci.yml before the ruleset is updated, which leaves a required context
+   # nothing will ever satisfy. `--required` is the floor: it needs no extra
+   # permission, but the SERVER filters it to checks that EXIST, so that same
+   # renamed context is absent rather than pending and the all-pass subset
+   # left behind reads as a pass while GitHub still blocks the merge.
+   #
+   # READ THE RULES ENDPOINT, NOT `/protection`. This repo is gated by
+   # repository rulesets, and `branches/$BASE/protection` is the CLASSIC
+   # endpoint: it answers 404 (or 403 without admin) regardless of how
+   # thoroughly the branch is actually gated. This probe read it until
+   # 2026-11-26 and therefore never once took the census here -- it printed
+   # its "unreadable" notice on every run, which read as a permissions quirk
+   # rather than as a probe pointed at the wrong resource.
+   # `rules/branches/$BASE` returns the rules in EFFECT whatever ruleset they
+   # came from, and answers for an ordinary read token.
    BASE=$(gh pr view "$PR" --json baseRefName --jq .baseRefName) \
      || { echo "ABORT: cannot read the PR's base branch"; exit 1; }
    # Readable-but-requires-nothing and unreadable BOTH leave REQUIRED empty,
@@ -193,13 +199,14 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    # The `[]?` guard is load-bearing -- without it jq exits NON-ZERO when
    # `required_status_checks` is absent, which IS the readable-empty case, so
    # the error path swallows the very state being separated out. Measured.
-   if REQUIRED=$(gh api "repos/{owner}/{repo}/branches/$BASE/protection" \
-        --jq '.required_status_checks.contexts[]? // empty' 2>/dev/null); then
+   if REQUIRED=$(gh api "repos/{owner}/{repo}/rules/branches/$BASE" \
+        --jq '.[] | select(.type == "required_status_checks")
+                  | .parameters.required_status_checks[].context' 2>/dev/null); then
      CENSUS=yes
    else
      CENSUS=no
      REQUIRED=""
-     echo "NOTE: branch protection unreadable; verdict is a floor, not a census" >&2
+     echo "NOTE: ruleset rules unreadable; verdict is a floor, not a census" >&2
    fi
 
    probe() {
@@ -243,7 +250,7 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
          }
          if (req.length) j=j.filter(c=>req.includes(c.name))
          if (j.some(c=>c.bucket==="pending")) { console.log("wait"); return }
-         // `skipping` is GitHub's NEUTRAL, which branch protection does not
+         // `skipping` is GitHub's NEUTRAL, which the ruleset does not
          // block on -- treating it as failure aborts a PR the merge button
          // would take. `cancel` is NOT in that set: a cancelled run never
          // reported, so it has proved nothing.
@@ -287,7 +294,6 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    **Every way this step has reported a false green, and what closes each.**
    The list grew by one each time the loop was actually run rather than read,
    which is the argument for running it.
-
    - **Waiting for an ABSENCE of pending checks.** Returns instantly in the
      seconds before GitHub creates them, reporting a stale or missing result
      as success. Closed by asking what FINISHED, never what is absent.
@@ -295,7 +301,7 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
      defines `bucket` as `pass`, `fail`, `pending`, `skipping` or `cancel`, so
      `!= "pending"` exits just as happily on a FAILED job. Closed by naming the
      acceptable buckets — `pass` and `skipping`, the latter because it is
-     GitHub's NEUTRAL and branch protection does not block on it, so scoring
+     GitHub's NEUTRAL and the ruleset does not block on it, so scoring
      it as failure aborts a PR the merge button would take. `cancel` stays a
      failure: a cancelled run never reported, so it proved nothing.
    - **Letting a `gh` failure read as zero checks.** Expired auth or a
@@ -328,14 +334,14 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
 
    **One residual this loop does NOT close, stated rather than papered over.**
    `--required` cannot emit a row for a required context that produced no
-   check at all — a job renamed in `ci.yml` before branch protection was
+   check at all — a job renamed in `ci.yml` before the ruleset was
    updated to match, say. `sha_state` does not catch it either: it proves the
    gating run finished, not that every required context exists. So a non-empty
    all-pass subset reads `pass` while GitHub still refuses the merge. Closing
    it needs the complete required-context inventory — which is exactly what
-   the census above reads when branch protection is READABLE, so on an
-   admin-readable base this gap is already closed. **It reopens only when
-   `CENSUS=no`**: a collaborator who can merge but cannot read protection
+   the census above reads when the ruleset is READABLE — which, on the rules
+   endpoint, needs no more than read access, so this gap is normally closed.
+   **It reopens only when `CENSUS=no`**: a caller who cannot read the ruleset
    falls back to the `--required` floor, and there the loop reports "every
    required check that EXISTS has passed", which is not the same sentence as
    "GitHub will let you merge". Step 7's merge box is what covers that case;
@@ -407,7 +413,6 @@ ci.yml` rather than trusting it here — a copy of a list is free to drift
    service, whose rows carry no commit at all. It returns
    `id | status | timestamp | commit` per deployment, newest first, and the
    rule is about the NEWEST row rather than the newest green one:
-
    - The newest row must be `SUCCESS` **and** its commit must equal
      `origin/main`. Both, or you are not looking at your deploy.
    - Do not scan past it for the first `SUCCESS`. Any newer row in any other

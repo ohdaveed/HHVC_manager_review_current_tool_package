@@ -301,7 +301,8 @@ describe('the CI workflow', () => {
    WHY THIS EXISTS. AGENTS.md and CLAUDE.md both warn that "The rulesets'
    required status checks are job NAMES, not job ids, and they have to be changed
    with this file", and that "Adding a job to this file means adding its name
-   here and to protection, or it is advisory." Nothing enforced either half.
+   here, and to the ruleset if the belt-and-braces shape is restored."
+   Nothing enforced either half.
    Both failure modes are silent in the direction that matters:
 
    - A job RENAMED in ci.yml leaves the ruleset requiring a context no
