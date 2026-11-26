@@ -489,10 +489,16 @@ job that does not. `changes` is the one that does not — it runs only
   and still builds locally, where no `dist/` can be assumed.
 - **e2e_complete** — the aggregator, and the only reason the job above could be
   sharded. **A matrixed job's check contexts are suffixed** (`E2E shard (1)`…),
-  so the required `Playwright end-to-end tests` context would be produced by
-  nothing and sit permanently pending — the same failure the paragraph below
-  describes. This job carries that name instead, so the ruleset
-  needed no edit for the shard and needs none for a future reshard. It passes on
+  so the `Playwright end-to-end tests` context the ruleset required AT THE TIME
+  would have been produced by nothing and sat permanently pending — the same
+  failure the paragraph below describes. This job carries that name instead, so
+  the ruleset needed no edit for the shard and needs none for a future reshard.
+  **The ruleset has since narrowed to `CI passed` alone, which retires that
+  original reason without retiring the job:** `ci_ok` reaches the four shards
+  THROUGH this job, and the matrix-gating test in
+  `tests/ci-workflow.test.js` requires every matrixed job to be gated by a plain
+  job that `needs:` it. A single-context ruleset is not licence to delete this
+  one; that test is what would stop you. It passes on
   a matrix result of `success` or `skipped` (a docs-only or draft PR, matching
   what the unsharded job did) and fails on anything else — **but a skipped
   matrix is only a pass when nothing upstream failed**, and it checks EVERY
@@ -573,8 +579,10 @@ prescribed list is a real job, so none of them could sit permanently pending if
 it were required; the one job deliberately left OFF it is `E2E shard`, for the
 reason the matrix note below gives: it is
 sharded, so it only ever produces suffixed contexts (`E2E shard (1)`…) and the
-bare name is produced by nothing. `Playwright end-to-end tests` is required in
-its place, which is the whole reason that aggregator job exists.
+bare name is produced by nothing. `Playwright end-to-end tests` stands in its
+place on the prescribed list, produced by the `e2e_complete` aggregator — which
+is why that job exists, and why it still earns its place now that the ruleset
+names neither of them.
 
 **The rulesets' required status checks are job NAMES, not job ids, and they
 have to be changed with this file.** Splitting the old `checks` job renamed the

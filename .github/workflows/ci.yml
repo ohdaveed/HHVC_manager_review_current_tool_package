@@ -334,7 +334,7 @@ jobs:
       # `codecov/patch`) are NOT jobs in this file, so
       # `tests/ci-workflow.test.js` cannot enumerate them and the rule that
       # every job here must also be a required context does not reach them.
-      # Branch protection COULD still require them — GitHub requires status
+      # A ruleset COULD still require them — GitHub requires status
       # contexts, not only job names — so `codecov.yml` at the repo root
       # marks both informational, which is what actually keeps them
       # non-gating.
@@ -358,7 +358,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   # This job is MATRIXED, so its check contexts are suffixed — `E2E shard (1)`
-  # and so on — and none of them is the context the ruleset requires.
+  # and so on — none of them the stable name a ruleset can require.
   # `e2e_complete` below carries that name instead. Read its comment before
   # touching either: the pairing is what lets this job be sharded without an
   # edit to the ruleset, and splitting a job's name away from its
@@ -471,13 +471,19 @@ jobs:
 
   # The aggregator, and the reason the job above could be sharded at all.
   #
-  # Branch protection requires a context by NAME. Matrixing `e2e` suffixes its
-  # contexts (`E2E shard (1)`…), so the required `Playwright end-to-end tests`
-  # would be produced by nothing and sit permanently pending however green the
-  # run — the same failure this repo hit when splitting the old `checks` job
-  # renamed `Format, validate, unit tests` out of existence. Keeping that name
-  # here means the ruleset needs no edit for this change, and none for a
-  # future reshard either.
+  # A ruleset requires a context by NAME. Matrixing `e2e` suffixes its
+  # contexts (`E2E shard (1)`…), so the `Playwright end-to-end tests` context
+  # the ruleset required AT THE TIME would have been produced by nothing and
+  # sat permanently pending however green the run — the same failure this repo
+  # hit when splitting the old `checks` job renamed `Format, validate, unit
+  # tests` out of existence. Keeping that name here means the ruleset needed no
+  # edit for the shard, and needs none for a future reshard either.
+  #
+  # The ruleset has since narrowed to `CI passed` alone, so that original
+  # reason is now historical — but this job is NOT redundant: `ci_ok` reaches
+  # the four shards through it, and `tests/ci-workflow.test.js` requires every
+  # matrixed job to be gated by a plain job that `needs:` it. Deleting this
+  # would fail that test, which is the point of it.
   e2e_complete:
     name: Playwright end-to-end tests
     runs-on: ubuntu-latest
@@ -547,7 +553,7 @@ jobs:
           esac
 
   # ---------------------------------------------------------------------------
-  # THE ONE CHECK BRANCH PROTECTION SHOULD REQUIRE.
+  # THE ONE CHECK THE RULESET SHOULD REQUIRE -- AND, AS OF 2026-11-26, DOES.
   #
   # Every job above is conditionally skipped, and a skipped required check
   # reads to the ruleset as a PASSING one -- a GitHub-acknowledged gap
