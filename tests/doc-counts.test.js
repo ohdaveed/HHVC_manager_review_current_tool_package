@@ -179,12 +179,22 @@ describe("package.json's explicit test list", () => {
 // negative case, and DERIVER_BY_CLAIM below still wires it to `pageFiles` so
 // a future reappearance of this phrasing is validated against the real page
 // count rather than silently skipped.
+// The `pages` floors are one lower than the claims these files carried before
+// the five community-education pages landed (2026-11-26). The claim that went
+// was the reading-level sentence ("drifted 1.14 grades apart ... across the 29
+// pages"): that figure is a dated measurement of the page set as it stood when
+// the two implementations diverged, so it cannot honestly be bumped to the
+// current count, and it now reads "all 29 pages the repo held then" instead.
+// Leaving it in the live-claim form would have forced a choice between a false
+// number and a red test.
 const CLAIM_FLOORS = {
-  'AGENTS.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 2, stylesheets: 1 },
-  'CLAUDE.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 3, stylesheets: 1 },
+  'AGENTS.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 1, stylesheets: 1 },
+  'CLAUDE.md': { 'unit-tests': 1, 'e2e-specs': 1, pages: 2, stylesheets: 1 },
   '.github/copilot-instructions.md': { 'unit-tests': 2, 'e2e-specs': 1 },
 }
-const GLOBAL_FLOOR = 14
+// 12, not 14: the two dated reading-level sentences described above the
+// floor table no longer count as live claims.
+const GLOBAL_FLOOR = 12
 
 const derivedCounts = {
   unitTestFiles: unitTestFiles.length,

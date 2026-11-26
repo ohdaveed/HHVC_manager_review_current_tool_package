@@ -6,14 +6,17 @@ import { exportSvelteSource, validateBeforeExport } from '../build_scripts/expor
 import { loadPageData } from '../build_scripts/load-pages.js'
 
 describe('exportSvelteSource pipeline', () => {
-  test('exports 29 TypeScript page modules and index.ts to target directory', async () => {
+  test('exports one TypeScript module per page plus index.ts to target directory', async () => {
+    // Expected count is derived from the loader, not hardcoded, so adding a
+    // page does not break this test (see the test-data invariants in AGENTS.md).
+    const pageCount = loadPageData().order.length
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hhvc-svelte-export-test-'))
     try {
       const result = await exportSvelteSource(tmpDir)
-      expect(result.exportedCount).toBe(29)
+      expect(result.exportedCount).toBe(pageCount)
 
       const files = fs.readdirSync(tmpDir)
-      expect(files.length).toBe(30) // 29 pages + index.ts
+      expect(files.length).toBe(pageCount + 1) // pages + index.ts
       expect(files).toContain('index.ts')
 
       // Verify index.ts imports all pages
@@ -32,8 +35,8 @@ describe('exportSvelteSource pipeline', () => {
 
       // Dynamically import exported index.ts
       const exportedModule = await import(path.join(tmpDir, 'index.ts'))
-      expect(Object.keys(exportedModule.pagesByKey).length).toBe(29)
-      expect(exportedModule.allPages.length).toBe(29)
+      expect(Object.keys(exportedModule.pagesByKey).length).toBe(pageCount)
+      expect(exportedModule.allPages.length).toBe(pageCount)
       expect(exportedModule.pagesByKey.insectsReport.title).toBe(
         'Report cockroaches, mosquitoes, and other insects'
       )
