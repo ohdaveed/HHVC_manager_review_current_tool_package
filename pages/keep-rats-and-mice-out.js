@@ -37,13 +37,14 @@ window.HHVC_PAGES['rodentsPrevention'] = {
     },
     {
       heading: 'Cut off their food and water',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The fridge-storage bullet is an HHVC decision 2026-11-26.',
       kind: 'body',
       paragraphs: [
         'Rats and mice stay where they can find food. Taking away food is one of the most important things you can do.',
       ],
       bullets: [
         '**Store food in glass, metal, or hard plastic containers** with tight lids.',
+        '**Keep flour, rice, and nuts in the fridge** if you store them for a long time.',
         '**Clean up crumbs and spills** right away, including under the stove and fridge.',
         '**Do not leave pet food out overnight.** Feed pets only what they will eat at one time. Store large bags of pet food in a metal garbage can with a lid.',
         '**Put garbage in bins with tight lids**, and take it out often.',

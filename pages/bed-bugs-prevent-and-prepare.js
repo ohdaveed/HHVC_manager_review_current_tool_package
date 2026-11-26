@@ -52,7 +52,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Check for bed bugs',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. The 10-to-20-foot range and electronics hiding spots are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix I (Bed Bug FAQ).',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. Outlet covers as a hiding spot is an HHVC decision 2026-11-26. The 10-to-20-foot range and electronics hiding spots are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix I (Bed Bug FAQ).',
       kind: 'body',
       paragraphs: [
         'Bites alone cannot tell you it is bed bugs. Bites from fleas, mosquitoes, and bed bugs look alike. The only way to know is to find the bugs or their signs.',
@@ -63,7 +63,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
         '**Small blood spots** on sheets',
         '**Tiny pale shells** that bed bugs shed as they grow',
         '**Live bugs**, which are reddish brown and flat',
-        '**Hiding spots farther away**, like couch cushions and electronics such as clocks, radios, and TVs. Bed bugs can be 10 to 20 feet from where people sleep or sit.',
+        '**Hiding spots farther away**, like couch cushions, behind outlet covers, and electronics such as clocks, radios, and TVs. Bed bugs can be 10 to 20 feet from where people sleep or sit.',
       ],
     },
     {

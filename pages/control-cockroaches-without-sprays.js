@@ -34,13 +34,14 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
     },
     {
       heading: 'Take away food, water, and hiding places',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Vacuum technique and the small-appliance hiding spots are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix F; the used-appliance check is from SF Environment\'s 2024 "Pest management in your home" handout.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Vacuum technique and the small-appliance hiding spots are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix F; the fridge-storage bullet is an HHVC decision 2026-11-26; the used-appliance check is from SF Environment\'s 2024 "Pest management in your home" handout.',
       kind: 'body',
       paragraphs: [
         'Cockroaches can live on tiny crumbs and drops of water. The less they find, the faster other steps will work.',
       ],
       bullets: [
         '**Store food in sealed containers**, like glass jars or plastic containers that snap shut.',
+        '**Keep flour, rice, and nuts in the fridge** if you store them for a long time.',
         '**Clean up crumbs, grease, and spills right away.** Do not leave dirty dishes out overnight.',
         '**Use a trash can with a tight lid** and a liner, and take trash out every day.',
         '**Fix leaks and wipe up water** around sinks, tubs, and the water heater.',
