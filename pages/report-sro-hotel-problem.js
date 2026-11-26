@@ -84,6 +84,10 @@ window.HHVC_PAGES['sroHotelReport'] = {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
         },
+        {
+          title: 'Bed bugs: prevent them, find them, and get ready for treatment',
+          target: 'bedBugsInfo',
+        },
       ],
     },
   ],

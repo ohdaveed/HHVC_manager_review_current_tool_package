@@ -131,19 +131,19 @@ window.HHVC_PAGES['insectsReport'] = {
         {
           title: 'UC IPM Pest Notes: Cockroaches',
           text: 'University of California guidance on managing cockroaches.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/cockroaches/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/cockroaches/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference in place of a City-maintained prevention page (manager directive: do not reinvent the wheel).',
         },
         {
           title: 'UC IPM Pest Notes: Bed bugs',
           text: 'University of California guidance on identifying and treating bed bugs.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/bed-bugs/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/bed-bugs/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
           title: 'UC IPM Pest Notes: Mosquitoes',
           text: 'University of California guidance on reducing mosquitoes around the home.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/mosquitoes/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/mosquitoes/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
@@ -168,7 +168,7 @@ window.HHVC_PAGES['insectsReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 6 cards below = 6 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
       kind: 'placement',
       cards: [
         {
@@ -186,6 +186,14 @@ window.HHVC_PAGES['insectsReport'] = {
         {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
+        },
+        {
+          title: 'Bed bugs: prevent them, find them, and get ready for treatment',
+          target: 'bedBugsInfo',
+        },
+        {
+          title: 'Get rid of cockroaches without heavy pesticides',
+          target: 'cockroachesPrevention',
         },
       ],
     },

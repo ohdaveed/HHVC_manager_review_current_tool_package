@@ -132,19 +132,19 @@ window.HHVC_PAGES['rodentsReport'] = {
         {
           title: 'UC IPM Pest Notes: Rats',
           text: 'University of California guidance on identifying and managing rats.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/rats/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/rats/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference in place of a City-maintained prevention page (manager directive: do not reinvent the wheel).',
         },
         {
           title: 'UC IPM Pest Notes: House mouse',
           text: 'University of California guidance on managing house mice.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/house-mouse/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/house-mouse/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference.',
         },
         {
           title: 'UC IPM Pest Notes: Raccoons',
           text: 'University of California guidance on managing raccoons around buildings.',
-          url: 'https://ipm.ucanr.edu/home-and-landscape/raccoon/pest-notes/',
+          url: 'https://ipm.ucanr.edu/home-and-landscape/raccoons/',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference covering the raccoon scope folded into this page.',
         },
         {
@@ -163,7 +163,7 @@ window.HHVC_PAGES['rodentsReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 5 cards below = 5 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
       kind: 'placement',
       cards: [
         {
@@ -181,6 +181,10 @@ window.HHVC_PAGES['rodentsReport'] = {
         {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
+        },
+        {
+          title: 'Keep rats and mice out of your home',
+          target: 'rodentsPrevention',
         },
       ],
     },

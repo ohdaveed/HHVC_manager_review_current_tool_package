@@ -153,6 +153,9 @@ window.HHVC_PAGES['filthReport'] = {
           title: 'UC IPM Pest Notes: Pigeons',
           text: 'University of California guidance on managing pigeons around buildings.',
           url: 'https://ipm.ucanr.edu/home-and-landscape/pigeons/pest-notes/',
+          unverified: true,
+          unverifiedReason:
+            'Dead link: this address returned 404 on 2026-11-26, and no current UC IPM pigeon Pest Note could be found (the UC IPM wildlife and bird pages do not cover pigeons). Replace with a confirmed source or remove the card before publication.',
           karl: 'External link inside the supporting_information accordion. Third-party UC IPM reference in place of a City-maintained pigeon page (manager directive: do not reinvent the wheel).',
         },
         {
@@ -177,7 +180,7 @@ window.HHVC_PAGES['filthReport'] = {
     },
     {
       heading: 'Related pages',
-      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 4 cards below = 4 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
+      karl: 'Maps to the related panel: repeatable field "Page *" with a "Choose a page" button. 5 cards below = 5 related "Page" entries. All internal SF.gov pages — Karl Related is a page chooser and cannot hold external links.',
       kind: 'placement',
       cards: [
         {
@@ -195,6 +198,10 @@ window.HHVC_PAGES['filthReport'] = {
         {
           title: 'Tenant rights when reporting housing conditions',
           target: 'tenantRights',
+        },
+        {
+          title: 'Reduce moisture and mold in your home',
+          target: 'reduceMoisture',
         },
       ],
     },

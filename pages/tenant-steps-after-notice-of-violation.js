@@ -103,6 +103,10 @@ window.HHVC_PAGES['tenantNoticeSteps'] = {
           title: 'What happens after you report a housing or pest problem',
           target: 'afterReport',
         },
+        {
+          title: 'What to expect when your building is treated for pests',
+          target: 'pestTreatmentInfo',
+        },
       ],
     },
   ],

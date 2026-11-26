@@ -134,7 +134,7 @@ window.HHVC_PAGES['ipmEducation'] = {
     },
     {
       heading: 'Related pages',
-      karl: "Maps to Campaign's Related field (raw name `related_links`, a repeatable StreamField — confirmed via live admin, 2026-07-06; each entry is a Page block: Link to radio SF.gov page/External URL/None, Page chooser, Link text). All 4 cards below map directly to separate related_links entries (Link to = SF.gov page, Page = target, Link text = title).",
+      karl: "Maps to Campaign's Related field (raw name `related_links`, a repeatable StreamField — confirmed via live admin, 2026-07-06; each entry is a Page block: Link to radio SF.gov page/External URL/None, Page chooser, Link text). All 6 cards below map directly to separate related_links entries (Link to = SF.gov page, Page = target, Link text = title).",
       kind: 'placement',
       component: 'related',
       cards: [
@@ -156,6 +156,16 @@ window.HHVC_PAGES['ipmEducation'] = {
         {
           title: 'Healthy Housing and Vector Control',
           target: 'pestsTopic',
+          karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
+        },
+        {
+          title: 'Get rid of cockroaches without heavy pesticides',
+          target: 'cockroachesPrevention',
+          karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
+        },
+        {
+          title: 'Keep rats and mice out of your home',
+          target: 'rodentsPrevention',
           karl: 'Maps to a related_links entry (Link to = SF.gov page, Page = this target, Link text = this title).',
         },
       ],

@@ -203,6 +203,10 @@ window.HHVC_PAGES['ownerGuidance'] = {
           title: 'Learn what Healthy Housing and Vector Control can inspect',
           target: 'scopeInfo',
         },
+        {
+          title: 'What to expect when your building is treated for pests',
+          target: 'pestTreatmentInfo',
+        },
       ],
     },
   ],
