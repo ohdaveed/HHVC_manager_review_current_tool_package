@@ -48,7 +48,7 @@ window.HHVC_PAGES['reduceMoisture'] = {
       ],
       bullets: [
         '**Open windows for 5 to 15 minutes a day.** This lets damp air out and drier air in, even on a foggy day.',
-        '**Run the fan when you cook or shower.** Leave it on for 15 to 20 minutes after. To test a fan, see if it holds up a square of toilet paper.',
+        '**Run the fan when you cook or shower.** Leave it on for 15 to 20 minutes after. To test a fan, see if it holds up a square of toilet paper. If a fan or vent is broken, tell your landlord.',
         '**Put lids on pots** when you cook.',
         '**Dry laundry in a dryer**, not on racks indoors.',
         '**Move furniture at least 6 inches away from outside walls** so air can flow behind it.',

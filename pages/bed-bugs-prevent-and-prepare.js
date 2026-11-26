@@ -38,7 +38,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
     },
     {
       heading: 'Prevent bed bugs',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the bulleted list below.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the bulleted list below. Encasements and interceptors are from SF Environment\'s 2024 "Pest management in your home" handout; clear plastic bags when moving from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix I.',
       kind: 'body',
       bullets: [
         '**Check used furniture before you bring it home.** Look closely at seams, cracks, and the underside.',
@@ -46,11 +46,13 @@ window.HHVC_PAGES['bedBugsInfo'] = {
         '**Check hotel beds when you travel.** Look behind the headboard and along the mattress seams.',
         '**Wash and dry clothes on the hottest setting** as soon as you get home from a trip.',
         '**Keep luggage out of the bedroom**, such as in a hall closet.',
+        '**Use mattress and box spring encasements** and climb-up interceptor cups under the bed legs.',
+        '**When you move, pack clothes in clear plastic bags** so you can see if anything is hiding.',
       ],
     },
     {
       heading: 'Check for bed bugs',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the two paragraphs plus the bulleted list below. The 10-to-20-foot range and electronics hiding spots are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix I (Bed Bug FAQ).',
       kind: 'body',
       paragraphs: [
         'Bites alone cannot tell you it is bed bugs. Bites from fleas, mosquitoes, and bed bugs look alike. The only way to know is to find the bugs or their signs.',
@@ -61,11 +63,12 @@ window.HHVC_PAGES['bedBugsInfo'] = {
         '**Small blood spots** on sheets',
         '**Tiny pale shells** that bed bugs shed as they grow',
         '**Live bugs**, which are reddish brown and flat',
+        '**Hiding spots farther away**, like couch cushions and electronics such as clocks, radios, and TVs. Bed bugs can be 10 to 20 feet from where people sleep or sit.',
       ],
     },
     {
       heading: 'If you think you have bed bugs',
-      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The 72-hour rule matches the wording already used on the insectsReport and rodentsReport Transaction pages.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The 72-hour rule matches the wording already used on the insectsReport and rodentsReport Transaction pages. The label-before-discarding bullet matches the SFDPH tenant guidelines (treat, bag, and label as bed bug infested) and the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix I.',
       kind: 'body',
       paragraphs: [
         'If you rent, tell your landlord or building manager in writing right away. Bed bugs spread quickly, so do not wait.',
@@ -78,6 +81,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
             "From the Residential Building Owner/Operator Guidelines for Vector Control (Director's Rules excerpt, items 2-3). Confirm these duties still read the same in the v4 Director's Rules draft before publication.",
         },
         '**Do not throw furniture away yet.** Moving infested items can spread bed bugs to other units. Wait until the pest control company tells you what to do.',
+        '**Label anything you throw out.** Seal it in plastic and mark it "infested with bed bugs" so no one takes it home.',
         '**Do not use bug bombs or foggers.** They do not kill bed bugs hiding in cracks, and they can push bugs into other rooms.',
         '**Report it to the City** if your landlord does not start fixing the problem within 72 hours. [Report cockroaches, bed bugs, and other insects](insectsReport)',
       ],
@@ -131,6 +135,7 @@ window.HHVC_PAGES['bedBugsInfo'] = {
         '[UC IPM: Bed bugs](https://ipm.ucanr.edu/home-and-landscape/bed-bugs/). How to identify, find, and control bed bugs.',
         '[CDC: About bed bugs](https://www.cdc.gov/bed-bugs/about/index.html). Bites, health risks, and prevention.',
         '[UC IPM: Hiring a pest control company](https://ipm.ucanr.edu/home-and-landscape/hiring-a-pest-control-company/). Questions to ask before you hire.',
+        '[SF Environment: Pest management in your home (PDF)](https://www.sfenvironment.org/media/13819). A handout in English, Spanish, and Chinese.',
         '[UC IPM: Recursos en español](https://ipm.ucanr.edu/IPMPROJECT/recursos-espanol.html). Guías sobre plagas en español.',
       ],
     },

@@ -53,7 +53,7 @@ window.HHVC_PAGES['pestTreatmentInfo'] = {
     },
     {
       heading: 'Before the visit',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The treatment-plan bullet is from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix I.',
       kind: 'body',
       paragraphs: ['Your checklist comes first. These steps are common for most treatments.'],
       bullets: [
@@ -61,11 +61,12 @@ window.HHVC_PAGES['pestTreatmentInfo'] = {
         '**Put food and dishes away** in sealed containers or the fridge.',
         '**Plan for children and pets.** Ask if anyone needs to leave, and for how long.',
         '**Ask what product will be used** if the notice does not say.',
+        '**Ask for the treatment plan.** The pest control company should give you a plan that lists its methods and products, and what the landlord and tenants need to do.',
       ],
     },
     {
       heading: 'During and after the visit',
-      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The Callout below is its own Callout stream item.',
+      karl: 'Maps to a fifth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. The Caution label rule is from SF Environment\'s 2024 "Pest management in your home" handout. The Callout below is its own Callout stream item.',
       kind: 'body',
       paragraphs: [
         'Most treatments need more than one visit. Pests that were missed or hatched later may still show up for a few weeks.',
@@ -75,6 +76,7 @@ window.HHVC_PAGES['pestTreatmentInfo'] = {
         '**Do not clean away baits or dusts** the technician left in cracks and corners.',
         '**For bed bugs, leave monitors in place.** Monitoring continues for 4 weeks after the last treatment.',
         '**Do not use your own sprays or bug bombs.** They can stop the treatment from working.',
+        '**If you buy a product yourself, choose one labeled "Caution."** Avoid products labeled "Warning" or "Danger."',
         '**Keep notes and photos** of pests you still see, and share them with your landlord in writing.',
       ],
       callout: {
@@ -108,6 +110,7 @@ window.HHVC_PAGES['pestTreatmentInfo'] = {
         '[UC IPM: Understanding pesticides](https://ipm.ucanr.edu/home-and-landscape/understanding-pesticides/). How to read a label and lower your risk.',
         '[UC IPM: Resources for multi-unit housing managers](https://ipm.ucanr.edu/home-and-landscape/resources-for-multi-unit-housing-managers/). For owners and building staff.',
         '[California Structural Pest Control Board](https://www.pestboard.ca.gov/). Check that a pest control company is licensed.',
+        '[SF Environment: Choosing a pest control company](https://www.sfenvironment.org/choosing-pest-control-company). How to check a license and find a company certified in integrated pest management.',
       ],
     },
     {

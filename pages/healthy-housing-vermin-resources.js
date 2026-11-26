@@ -165,6 +165,11 @@ window.HHVC_PAGES['verminResources'] = {
           karl: 'Resource section -> SF.gov page link to the mosquito-control Information page.',
         },
         {
+          title: 'Pest management in your home (PDF in English, Spanish, and Chinese)',
+          url: 'https://www.sfenvironment.org/media/13819',
+          karl: "Resource section -> External link to SF Environment's 2024 trifold handout, one PDF in three languages (checked 2026-11-26). Could be a Document Picker upload instead if HHVC wants the file hosted on SF.gov.",
+        },
+        {
           title: 'Watch a roach-prevention video',
           url: 'https://www.youtube.com/watch?v=S-aJzCk-rNQ',
           karl: 'Resource section -> External link. Source-page video: "Video: Roach Prevention - English." Add translated versions only after confirming their active media links.',
@@ -176,6 +181,11 @@ window.HHVC_PAGES['verminResources'] = {
       karl: 'Resource Collection -> Body -> Resources -> Resource section. Title = this heading. Use partner guidance instead of recreating a long, difficult-to-maintain species-by-species document catalog.',
       kind: 'body',
       cards: [
+        {
+          title: 'SF Environment: Managing pest problems without toxics',
+          url: 'https://www.sfenvironment.org/managing-pest-problems-without-toxics',
+          karl: "Resource section -> External link to SF Environment's do and do not list for rodents, cockroaches, bed bugs, and ants (checked 2026-11-26).",
+        },
         {
           title: 'UC IPM resources for homes and buildings',
           url: 'https://ipm.ucanr.edu/home-and-landscape/',

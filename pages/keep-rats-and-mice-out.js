@@ -28,7 +28,7 @@ window.HHVC_PAGES['rodentsPrevention'] = {
       karl: 'Maps to a second Title and text block: Title = this heading, Text = the bulleted list below.',
       kind: 'body',
       bullets: [
-        '**Droppings**, often near food, under sinks, or along walls',
+        '**Droppings** about the size and shape of a grain of rice, often near food, under sinks, or along walls',
         '**Chewed food packages** or gnaw marks on wood and plastic',
         '**Greasy rub marks** along walls where they travel',
         '**Scratching sounds** in walls or ceilings, mostly at night',
@@ -45,7 +45,7 @@ window.HHVC_PAGES['rodentsPrevention'] = {
       bullets: [
         '**Store food in glass, metal, or hard plastic containers** with tight lids.',
         '**Clean up crumbs and spills** right away, including under the stove and fridge.',
-        '**Do not leave pet food out overnight.** Feed pets only what they will eat at one time.',
+        '**Do not leave pet food out overnight.** Feed pets only what they will eat at one time. Store large bags of pet food in a metal garbage can with a lid.',
         '**Put garbage in bins with tight lids**, and take it out often.',
         '**Do not feed birds, pigeons, or other wildlife.** The food also feeds rats.',
         '**Fix dripping faucets**, or ask your landlord to.',
@@ -89,10 +89,13 @@ window.HHVC_PAGES['rodentsPrevention'] = {
     },
     {
       heading: 'Trap and clean up safely',
-      karl: 'Maps to a sixth Title and text block: Title = this heading, Text = the bulleted list below. Wording matches rodentsReport\'s "While you wait" tips.',
+      karl: 'Maps to a sixth Title and text block: Title = this heading, Text = the bulleted list below. Wording matches rodentsReport\'s "While you wait" tips. Pre-baiting and the no-glue-trap rule are from SF Environment\'s "Managing pest problems without toxics"; the daily check and one-week stopping rule, rice-grain droppings, and metal pet-food storage are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix F.',
       kind: 'body',
       bullets: [
-        '**Use snap traps indoors.** Put them along walls, out of reach of children and pets.',
+        '**Use snap traps indoors.** Put them along walls and in corners, out of reach of children and pets.',
+        '**Leave traps unset for the first day.** Bait them but do not set them, so rats and mice get used to them. Then set them.',
+        '**Check traps every day.** Keep trapping until you catch nothing for a full week.',
+        '**Do not use glue traps.** They are inhumane.',
         '**Do not use poison.** It can harm children, pets, and wildlife.',
         '**Wear gloves and wet droppings down with disinfectant** before you wipe them up.',
         '**Never dry-sweep or vacuum droppings.** That puts germs into the air you breathe.',
@@ -114,6 +117,7 @@ window.HHVC_PAGES['rodentsPrevention'] = {
         '[UC IPM: Rats](https://ipm.ucanr.edu/home-and-landscape/rats/). Signs, prevention, and trapping.',
         '[UC IPM: House mouse](https://ipm.ucanr.edu/home-and-landscape/house-mouse/). How to keep mice out of buildings.',
         '[CDC: How to clean up after rodents](https://www.cdc.gov/healthy-pets/rodent-control/clean-up.html). Step-by-step cleanup that keeps germs out of the air.',
+        '[SF Environment: Managing pest problems without toxics](https://www.sfenvironment.org/managing-pest-problems-without-toxics). Simple do and do not tips for rodents and other pests.',
         '[UC IPM: Recursos en español](https://ipm.ucanr.edu/IPMPROJECT/recursos-espanol.html). Guías sobre plagas en español.',
       ],
     },

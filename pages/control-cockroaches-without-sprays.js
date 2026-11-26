@@ -34,7 +34,7 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
     },
     {
       heading: 'Take away food, water, and hiding places',
-      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: 'Maps to a third Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Vacuum technique and the small-appliance hiding spots are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix F; the used-appliance check is from SF Environment\'s 2024 "Pest management in your home" handout.',
       kind: 'body',
       paragraphs: [
         'Cockroaches can live on tiny crumbs and drops of water. The less they find, the faster other steps will work.',
@@ -45,21 +45,26 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
         '**Use a trash can with a tight lid** and a liner, and take trash out every day.',
         '**Fix leaks and wipe up water** around sinks, tubs, and the water heater.',
         '**Get rid of cardboard boxes, paper bags, and piles of paper.** Cockroaches hide and lay eggs in them.',
-        '**Vacuum cracks and corners.** A vacuum with a HEPA filter keeps allergens out of the air.',
+        '**Vacuum cracks and corners.** Start high and work down. A vacuum with a HEPA filter keeps allergens out of the air. Seal the vacuum bag and throw it out.',
+        '**Clean small appliances.** Cockroaches hide in toasters, microwaves, and clocks. Unplug them, then vacuum and wipe them out.',
+        '**Check used appliances and furniture** before you bring them home.',
       ],
     },
     {
       heading: 'Use baits and traps instead of sprays',
-      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below.',
+      karl: 'Maps to a fourth Title and text block: Title = this heading, Text = the paragraph plus the bulleted list below. Gel placement and the replacement schedule are from the SF Environment / Pestec, Guidelines for IPM in San Francisco Multi-Family Housing Communities (2013; local copy docs/source/hhvc-policy/2026-07-07-pestec-ipm-multifamily-housing.pdf), Appendix F; soapy water and the week-or-two timeline from SF Environment\'s "How can I control insect pests in my house?"; the Caution label rule from SF Environment\'s 2024 handout.',
       kind: 'body',
       paragraphs: [
-        'Baits work slowly, but they work. Cockroaches eat the bait and carry it back to where they hide.',
+        'Baits work slowly, but they work. Cockroaches eat the bait and carry it back to where they hide. It can take a week or two to see full results.',
       ],
       bullets: [
-        '**Use bait stations or gel bait** from a hardware store. Put them under the sink, behind the fridge and stove, and inside cabinets.',
+        '**Use bait stations or gel bait** from a hardware store. Put them under the sink, behind the fridge and stove, and inside cabinets. Put gel in pea-sized dabs about every foot along cracks.',
+        '**Kill cockroaches you see with soapy water.** It works on contact without the risks of a spray.',
         '**Do not spray near baits.** Spray keeps cockroaches away from the bait.',
         '**Use sticky traps to see where they are.** Check them every few days and move baits to the busiest spots.',
+        '**Replace bait stations every 2 to 3 months** and sticky traps every 2 weeks. Switch to a different bait brand each year.',
         '**Keep baits away from children and pets**, and read the label before you use any product.',
+        '**Choose products labeled "Caution."** Avoid products labeled "Warning" or "Danger."',
       ],
     },
     {
@@ -68,7 +73,7 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
       kind: 'body',
       paragraphs: [
         'Cockroaches move between units through gaps around pipes, under sinks, and along walls. In an apartment building, the whole building may need treatment.',
-        'Owners must keep buildings free of pests and seal the gaps cockroaches use, even very small ones.',
+        'Owners must keep buildings free of pests and seal the gaps cockroaches use. Cockroaches can squeeze through cracks as small as 1/8 inch.',
       ],
       bullets: [
         '**Tell your landlord in writing** where you see cockroaches.',
@@ -88,6 +93,8 @@ window.HHVC_PAGES['cockroachesPrevention'] = {
         '[UC IPM: Cockroaches](https://ipm.ucanr.edu/home-and-landscape/cockroaches/). How to identify the kind you have and control it.',
         '[UC IPM: Understanding pesticides](https://ipm.ucanr.edu/home-and-landscape/understanding-pesticides/). How to read a label and lower your risk.',
         '[UC IPM: What is integrated pest management?](https://ipm.ucanr.edu/what-is-ipm/)',
+        '[SF Environment: How can I control insect pests in my house?](https://www.sfenvironment.org/how-can-i-control-insect-pests-my-house)',
+        '[SF Environment: Pest management in your home (PDF)](https://www.sfenvironment.org/media/13819). A handout in English, Spanish, and Chinese.',
         '[UC IPM: Recursos en español](https://ipm.ucanr.edu/IPMPROJECT/recursos-espanol.html). Guías sobre plagas en español.',
       ],
     },
